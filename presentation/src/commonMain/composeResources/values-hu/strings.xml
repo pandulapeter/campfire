@@ -22,9 +22,24 @@
     <string name="retry">Újra</string>
 
     <!-- Import and export -->
-    <string name="import_result">%1$d dal és %2$d lista importálva · %3$d kihagyva</string>
+    <string name="import_result">%1$d dal és %2$d lista importálva · %3$d már megvolt · %4$d kihagyva</string>
     <string name="import_failed">Az importálás nem sikerült</string>
     <string name="export_failed">Az exportálás nem sikerült</string>
+    <string name="import_conflicts">Néhány név foglalt</string>
+    <string name="import_conflicts_summary">Az importálandó fájlok közül %1$d olyan nevet visel, amelyen már egy másik fájl van a könyvtáradban.</string>
+    <string name="import_conflicts_new">%1$d dal és %2$d lista új, ezek mindenképpen importálódnak.</string>
+    <string name="import_conflicts_duplicates">%1$d fájl változatlanul megvan már a könyvtáradban, ezeket nem bántjuk.</string>
+    <string name="import_conflicts_skipped">%1$d fájl se nem dal, se nem lista, ezeket nem lehet importálni.</string>
+    <string name="import_conflicts_files">A foglalt nevek</string>
+    <string name="import_conflicts_more">és még %1$d</string>
+    <string name="import_conflicts_question">Mi legyen velük?</string>
+    <string name="import_conflicts_keep_both">Maradjon mindkettő</string>
+    <string name="import_conflicts_keep_both_description">Importálás a meglévő fájlok mellé, \" (2)\" névvel</string>
+    <string name="import_conflicts_replace">Felülírás</string>
+    <string name="import_conflicts_replace_description">A könyvtáradban lévő fájlok helyére kerülnek. A felülírt fájlok elvesznek.</string>
+    <string name="import_conflicts_skip">Kihagyás</string>
+    <string name="import_conflicts_skip_description">Minden más importálódik, a könyvtáradban lévő fájlok megmaradnak</string>
+    <string name="import_conflicts_confirm">Importálás</string>
 
     <!-- Errors -->
     <string name="error_no_data">Nem sikerült betölteni az adatokat</string>

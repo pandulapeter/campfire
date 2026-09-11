@@ -68,11 +68,13 @@ internal class SongLocalSourceImpl(
         return loadSong(fileName) ?: throw IllegalStateException("The song \"$fileName\" disappeared right after it was written.")
     }
 
-    override suspend fun importSong(desiredFileName: String?, text: String): Song {
-        val desired = desiredFileName ?: ChordProParser.parseMetadata(text).let { songFileName(title = it.title.orEmpty(), artist = it.artist.orEmpty()) }
-        val fileName = fileStorage.uniqueName(StorageDirectory.SONGS, desired)
-        fileStorage.writeText(StorageDirectory.SONGS, fileName, text)
-        return loadSong(fileName) ?: throw IllegalStateException("The song \"$fileName\" disappeared right after it was written.")
+    override fun importFileName(desiredFileName: String?, text: String) = desiredFileName
+        ?: ChordProParser.parseMetadata(text).let { songFileName(title = it.title.orEmpty(), artist = it.artist.orEmpty()) }
+
+    override suspend fun importSong(fileName: String, text: String, shouldReplace: Boolean): Song {
+        val name = if (shouldReplace) fileName else fileStorage.uniqueName(StorageDirectory.SONGS, fileName)
+        fileStorage.writeText(StorageDirectory.SONGS, name, text)
+        return loadSong(name) ?: throw IllegalStateException("The song \"$name\" disappeared right after it was written.")
     }
 
     override suspend fun deleteSong(fileName: String) = fileStorage.delete(StorageDirectory.SONGS, fileName)

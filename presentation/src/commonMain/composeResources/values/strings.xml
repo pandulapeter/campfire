@@ -22,9 +22,24 @@
     <string name="retry">Retry</string>
 
     <!-- Import and export -->
-    <string name="import_result">Imported %1$d songs and %2$d setlists · %3$d skipped</string>
+    <string name="import_result">Imported %1$d songs and %2$d setlists · %3$d already there · %4$d skipped</string>
     <string name="import_failed">Import failed</string>
     <string name="export_failed">Export failed</string>
+    <string name="import_conflicts">Some names are taken</string>
+    <string name="import_conflicts_summary">%1$d of the files you are importing have the name of a different file already in your library.</string>
+    <string name="import_conflicts_new">%1$d songs and %2$d setlists are new and will be imported either way.</string>
+    <string name="import_conflicts_duplicates">%1$d are already in your library, unchanged, and will be left alone.</string>
+    <string name="import_conflicts_skipped">%1$d files are neither songs nor setlists and cannot be imported.</string>
+    <string name="import_conflicts_files">The names that are taken</string>
+    <string name="import_conflicts_more">and %1$d more</string>
+    <string name="import_conflicts_question">What should happen to those?</string>
+    <string name="import_conflicts_keep_both">Keep both</string>
+    <string name="import_conflicts_keep_both_description">Import them next to the files they collide with, named \" (2)\"</string>
+    <string name="import_conflicts_replace">Replace</string>
+    <string name="import_conflicts_replace_description">Write them over what your library has. The replaced files are gone.</string>
+    <string name="import_conflicts_skip">Skip them</string>
+    <string name="import_conflicts_skip_description">Import everything else and keep what your library has</string>
+    <string name="import_conflicts_confirm">Import</string>
 
     <!-- Errors -->
     <string name="error_no_data">Nothing could be loaded</string>

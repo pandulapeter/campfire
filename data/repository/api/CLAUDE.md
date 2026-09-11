@@ -12,7 +12,7 @@
 Repository interfaces only. Consumed by `:domain:implementation`; implemented by `:data:repository:implementation`.
 
 - `SongRepository` — an observable `songs: Flow<DataState<List<Song>>>` plus `loadSongsIfNeeded()`, `rescan()` (re-read
-  the folder, which is what a refresh and the end of an import do), `saveSong`, `createSong`, `importSong`, `deleteSong`.
+  the folder, which is what a refresh and the end of an import do), `saveSong`, `createSong`, `importFileName`, `importSong`, `deleteSong`.
 - `SetlistRepository` — the same shape over `*.setlist.json`, plus `parseSetlist` / `loadSetlistDocument` for the export
   and import paths.
 - `SongContentRepository` — the *text* of the songs that have been opened, cached in memory so that paging through a

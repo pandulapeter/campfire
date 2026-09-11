@@ -9,18 +9,14 @@
  */
 package com.pandulapeter.campfire.domain.implementation.useCases
 
-import com.pandulapeter.campfire.chordpro.ChordProSplitter
+import com.pandulapeter.campfire.data.model.domain.ImportConflictResolution
+import com.pandulapeter.campfire.data.model.domain.ImportPlan
 import com.pandulapeter.campfire.data.model.domain.ImportResult
-import com.pandulapeter.campfire.data.model.domain.ImportedFile
-import com.pandulapeter.campfire.data.model.domain.LibraryFiles
-import com.pandulapeter.campfire.data.repository.api.ArchiveRepository
 import com.pandulapeter.campfire.data.repository.api.SetlistRepository
 import com.pandulapeter.campfire.data.repository.api.SongRepository
 import com.pandulapeter.campfire.domain.api.useCases.ImportFilesUseCase
-import kotlinx.coroutines.CancellationException
 
 class ImportFilesUseCaseImpl internal constructor(
-    private val archiveRepository: ArchiveRepository,
     private val songRepository: SongRepository,
     private val setlistRepository: SetlistRepository,
 ) : ImportFilesUseCase {
@@ -29,74 +25,52 @@ class ImportFilesUseCaseImpl internal constructor(
      * Songs first, setlists second: a setlist points at songs by file name, and a song that had to be renamed to
      * avoid a collision has to be followed to its new name before the setlist next to it in the archive is written.
      */
-    override suspend operator fun invoke(files: List<ImportedFile>): ImportResult {
-        val songFiles = mutableListOf<ImportedFile>()
-        val setlistFiles = mutableListOf<ImportedFile>()
-        val skippedFileNames = mutableListOf<String>()
-
-        fun sort(file: ImportedFile) = when (file.name.substringAfterLast('.', "").lowercase()) {
-            in SONG_EXTENSIONS -> songFiles.add(file)
-            SETLIST_EXTENSION -> setlistFiles.add(file)
-            else -> skippedFileNames.add(file.name)
-        }
-
-        files.forEach { file ->
-            if (file.name.endsWith(ARCHIVE_EXTENSION, ignoreCase = true)) {
-                try {
-                    archiveRepository.unpack(file.bytes).forEach(::sort)
-                } catch (exception: CancellationException) {
-                    throw exception
-                } catch (exception: Exception) {
-                    println("Could not unpack \"${file.name}\": ${exception.message}")
-                    skippedFileNames += file.name
-                }
-            } else {
-                sort(file)
-            }
-        }
-
+    override suspend operator fun invoke(plan: ImportPlan, resolution: ImportConflictResolution): ImportResult {
         val importedSongFileNames = mutableListOf<String>()
+        val duplicateFileNames = mutableListOf<String>()
         // Where each imported file ended up, for the setlists below. Only files that held exactly one song are in
         // here: a file that held several has no single name a setlist could have been pointing at.
         val storedSongFileNames = mutableMapOf<String, String>()
-        songFiles.forEach { file ->
-            val parts = file.text()?.let { ChordProSplitter.split(it) }.orEmpty()
-            if (parts.isEmpty()) {
-                skippedFileNames += file.name
-                return@forEach
-            }
-            parts.forEach { part ->
-                // A file that held a single song keeps the name it arrived with; the parts of a collection are named
-                // after what is in them, since the file they came from named none of them.
-                val song = songRepository.importSong(
-                    desiredFileName = if (parts.size == 1) file.name.substringBeforeLast('.') + LibraryFiles.SONG_EXTENSION else null,
-                    // The splitter trims the blank lines between the songs of a collection; the newline a text file
-                    // ends with is not one of those, and without it an exported library does not import back byte for byte.
-                    text = part + "\n",
-                )
-                importedSongFileNames += song.fileName
-                if (parts.size == 1) {
-                    storedSongFileNames[file.name] = song.fileName
+
+        plan.songs.forEach { entry ->
+            when (entry.action(resolution)) {
+                Action.WRITE, Action.REPLACE -> {
+                    val song = songRepository.importSong(
+                        fileName = entry.fileName,
+                        text = entry.text,
+                        shouldReplace = entry.action(resolution) == Action.REPLACE,
+                    )
+                    importedSongFileNames += song.fileName
+                    entry.sourceFileName?.let { storedSongFileNames[it] = song.fileName }
                 }
+
+                // Already in the library, so the name it arrived under still points at it for the setlists below.
+                Action.DISREGARD -> {
+                    duplicateFileNames += entry.fileName
+                    entry.sourceFileName?.let { storedSongFileNames[it] = entry.fileName }
+                }
+
+                Action.LEAVE_ALONE -> entry.sourceFileName?.let { storedSongFileNames[it] = entry.fileName }
             }
         }
 
         val importedSetlistFileNames = mutableListOf<String>()
         var priority = (setlistRepository.loadSetlistsIfNeeded().orEmpty().maxOfOrNull { it.priority } ?: -1) + 1
-        setlistFiles.forEach { file ->
-            val setlist = file.text()?.let { setlistRepository.parseSetlist(it) }
-            if (setlist == null) {
-                skippedFileNames += file.name
-                return@forEach
+        plan.setlists.forEach { entry ->
+            when (val action = entry.action(resolution)) {
+                Action.WRITE, Action.REPLACE -> importedSetlistFileNames += setlistRepository.importSetlist(
+                    setlist = entry.setlist.copy(
+                        priority = priority++,
+                        entries = entry.setlist.entries.map { setlistEntry ->
+                            setlistEntry.copy(songFileName = storedSongFileNames[setlistEntry.songFileName] ?: setlistEntry.songFileName)
+                        },
+                    ),
+                    shouldReplace = action == Action.REPLACE,
+                ).fileName
+
+                Action.DISREGARD -> duplicateFileNames += entry.fileName
+                Action.LEAVE_ALONE -> Unit
             }
-            importedSetlistFileNames += setlistRepository.importSetlist(
-                setlist.copy(
-                    priority = priority++,
-                    entries = setlist.entries.map { entry ->
-                        entry.copy(songFileName = storedSongFileNames[entry.songFileName] ?: entry.songFileName)
-                    },
-                )
-            ).fileName
         }
 
         // One read of the directory at the end rather than one cache update per file, which for a big archive would
@@ -110,25 +84,31 @@ class ImportFilesUseCaseImpl internal constructor(
         return ImportResult(
             importedSongFileNames = importedSongFileNames,
             importedSetlistFileNames = importedSetlistFileNames,
-            skippedFileNames = skippedFileNames,
+            skippedFileNames = plan.skippedFileNames,
+            duplicateFileNames = duplicateFileNames,
         )
     }
 
-    /** Null when the bytes are not UTF-8 text, which is the one thing every file the app accepts has to be. */
-    private fun ImportedFile.text() = try {
-        bytes.decodeToString(throwOnInvalidSequence = true).removePrefix(BYTE_ORDER_MARK)
-    } catch (exception: Exception) {
-        println("Could not decode \"$name\": ${exception.message}")
-        null
+    /** What one planned file turns into once the answer to the conflicts is known. */
+    private enum class Action {
+        WRITE,
+        REPLACE,
+        DISREGARD,
+        LEAVE_ALONE,
     }
 
-    private companion object {
-        /** The ChordPro family plus plain text, without the dots, which is how a file name is asked for its type. */
-        val SONG_EXTENSIONS = (LibraryFiles.SONG_EXTENSIONS + LibraryFiles.TEXT_EXTENSION).mapTo(mutableSetOf()) { it.removePrefix(".") }
+    private fun ImportPlan.SongEntry.action(resolution: ImportConflictResolution) = action(status, resolution)
 
-        /** ".setlist.json" ends in this, and a plain ".json" is worth trying to parse as a setlist too. */
-        const val SETLIST_EXTENSION = "json"
-        val ARCHIVE_EXTENSION = LibraryFiles.ARCHIVE_EXTENSION
-        const val BYTE_ORDER_MARK = "\uFEFF"
+    private fun ImportPlan.SetlistEntry.action(resolution: ImportConflictResolution) = action(status, resolution)
+
+    private fun action(status: ImportPlan.Status, resolution: ImportConflictResolution) = when (status) {
+        ImportPlan.Status.NEW -> Action.WRITE
+        ImportPlan.Status.IDENTICAL -> Action.DISREGARD
+        ImportPlan.Status.CONFLICTING -> when (resolution) {
+            // The name is taken, so writing under it is what produces the " (2)" the storage layer suffixes.
+            ImportConflictResolution.KEEP_BOTH -> Action.WRITE
+            ImportConflictResolution.REPLACE -> Action.REPLACE
+            ImportConflictResolution.SKIP -> Action.LEAVE_ALONE
+        }
     }
 }

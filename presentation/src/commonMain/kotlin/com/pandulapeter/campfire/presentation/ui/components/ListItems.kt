@@ -27,9 +27,11 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.foundation.lazy.grid.LazyGridState
+import androidx.compose.foundation.selection.selectable
 import androidx.compose.foundation.selection.toggleable
 import androidx.compose.material3.Button
 import androidx.compose.material3.Checkbox
+import androidx.compose.material3.RadioButton
 import androidx.compose.material3.ContainedLoadingIndicator
 import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
 import androidx.compose.material3.Icon
@@ -320,6 +322,21 @@ internal fun CheckboxListItem(
     colors = ListItemDefaults.colors(containerColor = Color.Transparent),
     headlineContent = { Text(title) },
     leadingContent = { Checkbox(checked = isChecked, enabled = isEnabled, onCheckedChange = null) },
+)
+
+@Composable
+internal fun RadioListItem(
+    modifier: Modifier = Modifier,
+    title: String,
+    description: String? = null,
+    isSelected: Boolean,
+    onSelected: () -> Unit,
+) = ListItem(
+    modifier = modifier.selectable(selected = isSelected, role = Role.RadioButton, onClick = onSelected),
+    colors = ListItemDefaults.colors(containerColor = Color.Transparent),
+    headlineContent = { Text(title) },
+    supportingContent = description?.let { { Text(it) } },
+    leadingContent = { RadioButton(selected = isSelected, onClick = null) },
 )
 
 @Composable

@@ -30,7 +30,7 @@ platform types.
 
 **File naming is the storage layer's business.** Callers hand over a title, an artist and some text; the source decides
 what the file is called, sanitises it for every platform's rules and suffixes it until the name is free. That is why
-`createSong` and `importSong` return the `Song` they became rather than taking a file name.
+`createSong` and `importSong` return the `Song` they became rather than taking a file name. `importFileName` is the naming rule on its own, with nothing read or written, so that an import can work out what it would collide with before it collides with it; `importSong` and `importSetlist` take `shouldReplace`, which is the one way either of them writes over a name that is taken.
 
 There is one implementation (`:implementation`), multiplatform, with the platform difference pushed down into
 `FileStorage`.

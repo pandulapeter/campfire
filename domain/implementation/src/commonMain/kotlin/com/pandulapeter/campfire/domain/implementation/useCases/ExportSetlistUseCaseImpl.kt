@@ -15,6 +15,7 @@ import com.pandulapeter.campfire.data.repository.api.ArchiveRepository
 import com.pandulapeter.campfire.data.repository.api.SetlistRepository
 import com.pandulapeter.campfire.data.repository.api.SongContentRepository
 import com.pandulapeter.campfire.domain.api.useCases.ExportSetlistUseCase
+import com.pandulapeter.campfire.domain.implementation.exportFileName
 
 class ExportSetlistUseCaseImpl internal constructor(
     private val setlistRepository: SetlistRepository,
@@ -30,6 +31,8 @@ class ExportSetlistUseCaseImpl internal constructor(
     override suspend operator fun invoke(setlistFileName: String): ExportedFile? {
         val setlist = setlistRepository.loadSetlistsIfNeeded().orEmpty().firstOrNull { it.fileName == setlistFileName } ?: return null
         val document = setlistRepository.loadSetlistDocument(setlistFileName) ?: return null
+        // The entries keep their library names, accents and all: the setlist document points at its songs by file
+        // name, and an import follows those names to wherever the songs land.
         val files = buildMap {
             put(setlistFileName, document.encodeToByteArray())
             setlist.entries.forEach { entry ->
@@ -38,14 +41,12 @@ class ExportSetlistUseCaseImpl internal constructor(
             }
         }
         return ExportedFile(
-            // The stored file name is already a sanitized version of the title, so it is safe to suggest as one.
-            name = setlistFileName.removeSuffix(LibraryFiles.SETLIST_EXTENSION) + ARCHIVE_EXTENSION,
+            name = exportFileName(
+                base = setlistFileName.removeSuffix(LibraryFiles.SETLIST_EXTENSION),
+                extension = LibraryFiles.ARCHIVE_EXTENSION,
+            ),
             mimeType = ExportedFile.ZIP_MIME_TYPE,
             bytes = archiveRepository.pack(files),
         )
-    }
-
-    private companion object {
-        const val ARCHIVE_EXTENSION = ".zip"
     }
 }

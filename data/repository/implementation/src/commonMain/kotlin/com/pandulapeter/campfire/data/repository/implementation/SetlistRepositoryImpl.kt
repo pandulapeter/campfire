@@ -41,7 +41,7 @@ internal class SetlistRepositoryImpl(
 
     override suspend fun parseSetlist(document: String) = setlistLocalSource.parseSetlist(document)
 
-    override suspend fun importSetlist(setlist: Setlist) = setlistLocalSource.importSetlist(setlist)
+    override suspend fun importSetlist(setlist: Setlist, shouldReplace: Boolean) = setlistLocalSource.importSetlist(setlist, shouldReplace)
 
     override suspend fun loadSetlistDocument(fileName: String) = setlistLocalSource.loadSetlistDocument(fileName)
 

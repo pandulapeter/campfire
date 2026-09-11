@@ -13,6 +13,7 @@ import com.pandulapeter.campfire.data.model.domain.ExportedFile
 import com.pandulapeter.campfire.data.repository.api.ArchiveRepository
 import com.pandulapeter.campfire.data.repository.api.SongContentRepository
 import com.pandulapeter.campfire.domain.api.useCases.ExportSongsUseCase
+import com.pandulapeter.campfire.domain.implementation.toSongExportFileName
 
 class ExportSongsUseCaseImpl internal constructor(
     private val songContentRepository: SongContentRepository,
@@ -25,7 +26,11 @@ class ExportSongsUseCaseImpl internal constructor(
             0 -> null
             // One song leaves as itself: a zip around a single text file would only be something to unpack again.
             1 -> contents.first().let {
-                ExportedFile(name = it.fileName, mimeType = ExportedFile.TEXT_MIME_TYPE, bytes = it.text.encodeToByteArray())
+                ExportedFile(
+                    name = it.fileName.toSongExportFileName(),
+                    mimeType = ExportedFile.TEXT_MIME_TYPE,
+                    bytes = it.text.encodeToByteArray(),
+                )
             }
 
             else -> ExportedFile(
@@ -37,6 +42,6 @@ class ExportSongsUseCaseImpl internal constructor(
     }
 
     private companion object {
-        const val ARCHIVE_NAME = "campfire-songs.zip"
+        const val ARCHIVE_NAME = "campfire_songs.zip"
     }
 }

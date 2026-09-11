@@ -64,8 +64,8 @@ internal class SetlistLocalSourceImpl(
         null
     }
 
-    override suspend fun importSetlist(setlist: Setlist): Setlist = setlist
-        .copy(fileName = fileStorage.uniqueName(StorageDirectory.SETLISTS, setlist.fileName))
+    override suspend fun importSetlist(setlist: Setlist, shouldReplace: Boolean): Setlist = setlist
+        .copy(fileName = if (shouldReplace) setlist.fileName else fileStorage.uniqueName(StorageDirectory.SETLISTS, setlist.fileName))
         .also { saveSetlist(it) }
 
     override suspend fun loadSetlistDocument(fileName: String) = fileStorage.readText(StorageDirectory.SETLISTS, fileName)

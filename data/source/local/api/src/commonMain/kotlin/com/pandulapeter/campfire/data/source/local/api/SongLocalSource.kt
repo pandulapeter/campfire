@@ -40,10 +40,17 @@ interface SongLocalSource {
     suspend fun createSong(title: String, artist: String, text: String): Song
 
     /**
-     * Writes [text] under a free file name and returns the song it became: [desiredFileName] when the import has an
-     * original name worth keeping, otherwise one derived from the title and artist in the text itself.
+     * The name [text] wants in the library: [desiredFileName] when the import has an original name worth keeping,
+     * otherwise one derived from the title and artist in the text itself. Nothing is read or written, and a name
+     * that is already taken is returned as it is - deciding what to do about that is the caller's business.
      */
-    suspend fun importSong(desiredFileName: String?, text: String): Song
+    fun importFileName(desiredFileName: String?, text: String): String
+
+    /**
+     * Writes [text] under [fileName] and returns the song it became. The name is suffixed until it is free unless
+     * [shouldReplace] says otherwise, which is the one way an import ever overwrites a file the library already has.
+     */
+    suspend fun importSong(fileName: String, text: String, shouldReplace: Boolean): Song
 
     suspend fun deleteSong(fileName: String)
 

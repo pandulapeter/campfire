@@ -9,11 +9,16 @@
  */
 package com.pandulapeter.campfire.domain.api.useCases
 
+import com.pandulapeter.campfire.data.model.domain.ImportConflictResolution
+import com.pandulapeter.campfire.data.model.domain.ImportPlan
 import com.pandulapeter.campfire.data.model.domain.ImportResult
-import com.pandulapeter.campfire.data.model.domain.ImportedFile
 
 interface ImportFilesUseCase {
 
-    /** Never overwrites: a file whose name is taken lands next to the one it collides with. */
-    suspend operator fun invoke(files: List<ImportedFile>): ImportResult
+    /**
+     * Carries out what [PrepareImportUseCase] worked out. A file the library already has under the same name and
+     * with the same content is never written a second time; [resolution] decides what happens to the ones whose
+     * name is taken by something else, and is the answer the user gave to that question.
+     */
+    suspend operator fun invoke(plan: ImportPlan, resolution: ImportConflictResolution): ImportResult
 }

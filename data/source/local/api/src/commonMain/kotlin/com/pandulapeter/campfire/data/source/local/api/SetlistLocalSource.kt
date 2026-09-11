@@ -30,8 +30,11 @@ interface SetlistLocalSource {
      */
     suspend fun parseSetlist(document: String): Setlist?
 
-    /** Writes [setlist] under a free file name based on the one it carries, and returns it under that name. */
-    suspend fun importSetlist(setlist: Setlist): Setlist
+    /**
+     * Writes [setlist] under the file name it carries, suffixed until it is free unless [shouldReplace] says
+     * otherwise, and returns it under the name it ended up with.
+     */
+    suspend fun importSetlist(setlist: Setlist, shouldReplace: Boolean): Setlist
 
     /** The setlist file exactly as it is stored, so that exporting it changes nothing. Null if it is missing. */
     suspend fun loadSetlistDocument(fileName: String): String?

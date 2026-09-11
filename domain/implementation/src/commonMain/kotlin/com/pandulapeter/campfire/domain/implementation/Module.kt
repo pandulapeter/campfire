@@ -29,6 +29,7 @@ import com.pandulapeter.campfire.domain.api.useCases.ImportFilesUseCase
 import com.pandulapeter.campfire.domain.api.useCases.LoadScreenDataUseCase
 import com.pandulapeter.campfire.domain.api.useCases.NormalizeTextUseCase
 import com.pandulapeter.campfire.domain.api.useCases.ParseChordProUseCase
+import com.pandulapeter.campfire.domain.api.useCases.PrepareImportUseCase
 import com.pandulapeter.campfire.domain.api.useCases.RestoreSyncUseCase
 import com.pandulapeter.campfire.domain.api.useCases.SaveSetlistUseCase
 import com.pandulapeter.campfire.domain.api.useCases.SaveSongContentUseCase
@@ -57,6 +58,7 @@ import com.pandulapeter.campfire.domain.implementation.useCases.ImportFilesUseCa
 import com.pandulapeter.campfire.domain.implementation.useCases.LoadScreenDataUseCaseImpl
 import com.pandulapeter.campfire.domain.implementation.useCases.NormalizeTextUseCaseImpl
 import com.pandulapeter.campfire.domain.implementation.useCases.ParseChordProUseCaseImpl
+import com.pandulapeter.campfire.domain.implementation.useCases.PrepareImportUseCaseImpl
 import com.pandulapeter.campfire.domain.implementation.useCases.RestoreSyncUseCaseImpl
 import com.pandulapeter.campfire.domain.implementation.useCases.SaveSetlistUseCaseImpl
 import com.pandulapeter.campfire.domain.implementation.useCases.SaveSongContentUseCaseImpl
@@ -84,10 +86,11 @@ val domainModule = module {
     factory<GetSyncProvidersUseCase> { GetSyncProvidersUseCaseImpl(get()) }
     factory<GetSyncStateUseCase> { GetSyncStateUseCaseImpl(get()) }
     factory<GetUserPreferencesUseCase> { GetUserPreferencesUseCaseImpl(get()) }
-    factory<ImportFilesUseCase> { ImportFilesUseCaseImpl(get(), get(), get()) }
+    factory<ImportFilesUseCase> { ImportFilesUseCaseImpl(get(), get()) }
     factory<LoadScreenDataUseCase> { LoadScreenDataUseCaseImpl(get(), get(), get()) }
     factory<NormalizeTextUseCase> { NormalizeTextUseCaseImpl() }
     factory<ParseChordProUseCase> { ParseChordProUseCaseImpl() }
+    factory<PrepareImportUseCase> { PrepareImportUseCaseImpl(get(), get(), get(), get()) }
     factory<RestoreSyncUseCase> { RestoreSyncUseCaseImpl(get(), get()) }
     factory<SaveSetlistUseCase> { SaveSetlistUseCaseImpl(get()) }
     factory<SaveSongContentUseCase> { SaveSongContentUseCaseImpl(get()) }

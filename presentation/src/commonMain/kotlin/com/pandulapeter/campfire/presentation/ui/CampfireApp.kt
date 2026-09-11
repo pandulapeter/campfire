@@ -18,9 +18,7 @@ import androidx.compose.animation.core.LinearEasing
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
-import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.BoxScope
 import androidx.compose.foundation.layout.asPaddingValues
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.ExperimentalLayoutApi
@@ -56,7 +54,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.Alignment
-import androidx.compose.ui.layout.onSizeChanged
+import androidx.compose.ui.layout.SubcomposeLayout
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.unit.dp
@@ -141,18 +139,28 @@ fun CampfireApp(
         }
     }
     val userPreferences by viewModel.userPreferences.collectAsStateWithLifecycle()
+    val arePreferencesLoaded by viewModel.arePreferencesLoaded.collectAsStateWithLifecycle()
     ApplyLanguagePreference(userPreferences?.language)
     CampfireTheme(
         uiMode = userPreferences?.uiMode,
         themeColor = userPreferences?.themeColor,
     ) {
-        // Inside the theme, so that the one screen it can put in the way of the app is drawn in the colors the user
-        // chose, and above the language preference, so that it is in the language they chose too.
-        AppUpdateGate {
-            CampfireContent(
-                viewModel = viewModel,
-                urlOpener = urlOpener,
-            )
+        // Nothing is drawn until the preferences have been read: they decide the palette and the language, and the
+        // app would otherwise open on the system's guess at both and correct itself a frame later - in an accent
+        // color the user did not choose, with labels in a language they did not choose either. Waiting costs the
+        // one frame it takes to read a small file, and even that frame is not empty: the window is already painted
+        // in the theme's background, which is the one color the palettes agree on within a light or a dark scheme.
+        if (arePreferencesLoaded) {
+            // Inside the theme, so that the one screen it can put in the way of the app is drawn in the colors the
+            // user chose, and above the language preference, so that it is in the language they chose too.
+            AppUpdateGate {
+                CampfireContent(
+                    viewModel = viewModel,
+                    urlOpener = urlOpener,
+                )
+            }
+        } else {
+            Box(modifier = Modifier.fillMaxSize().background(MaterialTheme.colorScheme.background))
         }
     }
 }
@@ -162,25 +170,25 @@ fun CampfireApp(
 private fun CampfireContent(
     viewModel: CampfireViewModel,
     urlOpener: (String) -> Unit,
-) = BoxWithConstraints(
+) = NavigationChromeScaffold(
     // Painted here as well as on every screen, so that the two screens of a cross fading tab transition blend into
     // the same color they are painted in and the fade stays invisible.
-    modifier = Modifier.fillMaxSize().background(MaterialTheme.colorScheme.background)
-) {
-    val windowSize = WindowSize.fromWidth(maxWidth)
+    modifier = Modifier.fillMaxSize().background(MaterialTheme.colorScheme.background),
+    chrome = { windowSize ->
+        NavigationChrome(
+            windowSize = windowSize,
+            currentTopLevelDestination = viewModel.backStack.lastOrNull { it is CampfireDestination.TopLevel } as? CampfireDestination.TopLevel,
+            onDestinationSelected = viewModel::selectTopLevelDestination,
+        )
+    },
+) { windowWidth, windowSize, chromeThickness ->
     val backStack = viewModel.backStack
-    val currentTopLevelDestination = backStack.lastOrNull { it is CampfireDestination.TopLevel } as? CampfireDestination.TopLevel
     val layoutDirection = LocalLayoutDirection.current
     val density = LocalDensity.current
     val motionScheme = MaterialTheme.motionScheme
     // Makes interrupted transitions retarget instead of getting stuck, see CampfireViewModel.navigationGeneration.
     val navigationMetadata = mapOf(NAVIGATION_GENERATION_METADATA_KEY to viewModel.navigationGeneration)
 
-    // The navigation chrome is laid out once per window size and then never moves: the song details screen is dealt
-    // over it and covers it, rather than the two of them animating at the same time. Its thickness is measured
-    // instead of assumed, because Material keeps the size of both bars (and the insets they cover) to itself; it is
-    // only ever zero on the very first frame, before the first layout pass has run.
-    var chromeThickness by remember { mutableStateOf(0.dp) }
     val railWidth = if (windowSize.usesNavigationRail) chromeThickness else 0.dp
     val navigationBarHeight = if (windowSize.usesNavigationRail) 0.dp else chromeThickness
 
@@ -189,8 +197,8 @@ private fun CampfireContent(
     // Anything a screen has to decide once, before it is first drawn, is decided from these rather than from the
     // width it is being measured at: the column counts of the song lists and the lyrics, and whether the lists have
     // room for their filter side panel.
-    val settledListWidth = maxWidth - railWidth
-    val settledSongDetailsWidth = maxWidth
+    val settledListWidth = windowWidth - railWidth
+    val settledSongDetailsWidth = windowWidth
 
     // What is left of the window insets once the chrome has covered the edge it sits on. The screens hand these to
     // their lists as content padding, so that items scroll under the system bars instead of stopping short of them.
@@ -214,12 +222,6 @@ private fun CampfireContent(
     Box(
         modifier = Modifier.fillMaxSize()
     ) {
-        NavigationChrome(
-            windowSize = windowSize,
-            currentTopLevelDestination = currentTopLevelDestination,
-            onDestinationSelected = viewModel::selectTopLevelDestination,
-            onThicknessChanged = { chromeThickness = it },
-        )
         NavDisplay(
             modifier = Modifier.fillMaxSize(),
             backStack = backStack,
@@ -288,17 +290,17 @@ private fun CampfireContent(
                 }
             },
         )
+        CampfireDialogs(
+            viewModel = viewModel,
+            urlOpener = urlOpener,
+        )
+        Messages(
+            modifier = Modifier
+                .align(Alignment.BottomCenter)
+                .padding(bottom = navigationBarHeight + systemBars.calculateBottomPadding()),
+            viewModel = viewModel,
+        )
     }
-    CampfireDialogs(
-        viewModel = viewModel,
-        urlOpener = urlOpener,
-    )
-    Messages(
-        modifier = Modifier
-            .align(Alignment.BottomCenter)
-            .padding(bottom = navigationBarHeight + systemBars.calculateBottomPadding()),
-        viewModel = viewModel,
-    )
 }
 
 /**
@@ -328,6 +330,7 @@ private fun Messages(
             Res.string.import_result,
             current.result.importedSongFileNames.size,
             current.result.importedSetlistFileNames.size,
+            current.result.duplicateFileNames.size,
             current.result.skippedFileNames.size,
         )
 
@@ -352,27 +355,65 @@ private fun Messages(
 }
 
 /**
+ * Lays the navigation chrome out and hands [content] the size of the window along with the thickness the chrome
+ * takes out of it, all in one pass.
+ *
+ * The thickness has to be *measured*: Material keeps the size of the rail and of the bar - and of the insets they
+ * cover - to itself. Reporting it back as state from the laid out chrome would report it one layout pass too late,
+ * so the app's very first frame would be composed as if the window had no chrome in it at all: the screens would
+ * cover the rail and settle their column counts for the full width, only to be laid out again a frame later. That
+ * frame is not a fleeting one either - it is the first frame of a cold start, and the second one is several
+ * hundred milliseconds behind it while everything the app draws with is still being loaded.
+ *
+ * Subcomposing the chrome ahead of the content is what makes its size available to the composition that needs it.
+ * It costs no layer that was not there already, since the window size the screens are laid out for used to come
+ * through a `BoxWithConstraints`, which is a [SubcomposeLayout] of exactly this kind.
+ *
+ * The chrome is placed *under* [content]: the song details screen is dealt over the whole window and covers it,
+ * rather than the two of them animating side by side.
+ */
+@Composable
+private fun NavigationChromeScaffold(
+    modifier: Modifier = Modifier,
+    chrome: @Composable (windowSize: WindowSize) -> Unit,
+    content: @Composable (windowWidth: Dp, windowSize: WindowSize, chromeThickness: Dp) -> Unit,
+) = SubcomposeLayout(modifier) { constraints ->
+    val windowWidth = constraints.maxWidth.toDp()
+    val windowSize = WindowSize.fromWidth(windowWidth)
+    // Loose constraints, so that the rail and the bar each take only the one dimension they want.
+    val chromePlaceable = subcompose(ChromeSlot.CHROME) { chrome(windowSize) }
+        .single()
+        .measure(constraints.copy(minWidth = 0, minHeight = 0))
+    val chromeThickness = if (windowSize.usesNavigationRail) chromePlaceable.width else chromePlaceable.height
+    val contentPlaceable = subcompose(ChromeSlot.CONTENT) { content(windowWidth, windowSize, chromeThickness.toDp()) }
+        .single()
+        .measure(constraints)
+    layout(constraints.maxWidth, constraints.maxHeight) {
+        // Placed relatively, so that the rail sits on the start edge the screens are inset from rather than always
+        // on the left one.
+        chromePlaceable.placeRelative(
+            x = 0,
+            y = if (windowSize.usesNavigationRail) 0 else constraints.maxHeight - chromePlaceable.height,
+        )
+        contentPlaceable.placeRelative(x = 0, y = 0)
+    }
+}
+
+private enum class ChromeSlot { CHROME, CONTENT }
+
+/**
  * The navigation bar (under 600dp) or navigation rail that every top level screen shares. It belongs to the bottom
  * of the deck rather than to any one screen: it is laid out once for the window and stays there, so it never
  * animates alongside a screen that is sliding, and the song details screen simply covers it.
- *
- * @param onThicknessChanged Reports the width of the rail / the height of the bar, which is how much of the window
- *   is not the top level screens' to use.
  */
 @Composable
-private fun BoxScope.NavigationChrome(
+private fun NavigationChrome(
     windowSize: WindowSize,
     currentTopLevelDestination: CampfireDestination.TopLevel?,
     onDestinationSelected: (CampfireDestination.TopLevel) -> Unit,
-    onThicknessChanged: (Dp) -> Unit,
 ) {
-    val density = LocalDensity.current
     if (windowSize.usesNavigationRail) {
-        NavigationRail(
-            modifier = Modifier
-                .align(Alignment.CenterStart)
-                .onSizeChanged { onThicknessChanged(with(density) { it.width.toDp() }) }
-        ) {
+        NavigationRail {
             CampfireDestination.TopLevel.entries.forEach { destination ->
                 NavigationRailItem(
                     selected = destination == currentTopLevelDestination,
@@ -383,11 +424,7 @@ private fun BoxScope.NavigationChrome(
             }
         }
     } else {
-        NavigationBar(
-            modifier = Modifier
-                .align(Alignment.BottomCenter)
-                .onSizeChanged { onThicknessChanged(with(density) { it.height.toDp() }) }
-        ) {
+        NavigationBar {
             CampfireDestination.TopLevel.entries.forEach { destination ->
                 NavigationBarItem(
                     selected = destination == currentTopLevelDestination,

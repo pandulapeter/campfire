@@ -10,6 +10,7 @@
 package com.pandulapeter.campfire.domain.implementation.useCases
 
 import com.pandulapeter.campfire.domain.api.useCases.NormalizeTextUseCase
+import com.pandulapeter.campfire.domain.implementation.withoutAccent
 
 class NormalizeTextUseCaseImpl internal constructor() : NormalizeTextUseCase {
 
@@ -34,26 +35,5 @@ class NormalizeTextUseCaseImpl internal constructor() : NormalizeTextUseCase {
             }
         }
         return builder?.toString() ?: lowercase
-    }
-
-    // A `when` over the characters rather than a map, so that the lookup doesn't box a Char per character of a song.
-    // The Hungarian and Romanian letters the app was written around, plus the rest of the Latin accents a song title
-    // is likely to carry, so that "Édith" sorts next to "Edith" whichever language the artist sings in.
-    private fun Char.withoutAccent() = when (this) {
-        'á', 'à', 'â', 'ä', 'ã', 'å', 'ă', 'ā' -> 'a'
-        'é', 'è', 'ê', 'ë', 'ě', 'ē' -> 'e'
-        'í', 'ì', 'î', 'ï', 'ī' -> 'i'
-        'ó', 'ò', 'ô', 'ö', 'ő', 'õ', 'ø', 'ō' -> 'o'
-        'ú', 'ù', 'û', 'ü', 'ű', 'ů', 'ū' -> 'u'
-        'ý', 'ÿ' -> 'y'
-        'ç', 'č', 'ć' -> 'c'
-        'ñ', 'ň' -> 'n'
-        'ș', 'š', 'ś' -> 's'
-        'ț', 'ť' -> 't'
-        'ž', 'ź', 'ż' -> 'z'
-        'ď' -> 'd'
-        'ř' -> 'r'
-        'ł' -> 'l'
-        else -> this
     }
 }

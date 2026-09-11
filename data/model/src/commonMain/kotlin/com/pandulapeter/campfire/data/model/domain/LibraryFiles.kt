@@ -41,4 +41,11 @@ object LibraryFiles {
      * put Campfire in the way of every archive and note on the device.
      */
     val IMPORTABLE_EXTENSIONS = SONG_EXTENSIONS + listOf(TEXT_EXTENSION, ARCHIVE_EXTENSION, ".json")
+
+    /**
+     * What stands between the artist and the title in a song's file name: the one piece of a library name that is
+     * structure rather than the user's own text, which is why naming a new song and naming an exported one both have
+     * to know about it.
+     */
+    const val ARTIST_TITLE_SEPARATOR = " - "
 }

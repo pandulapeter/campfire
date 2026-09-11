@@ -17,4 +17,9 @@ data class ImportResult(
     val importedSongFileNames: List<String> = emptyList(),
     val importedSetlistFileNames: List<String> = emptyList(),
     val skippedFileNames: List<String> = emptyList(),
+    /**
+     * Files the library already had under the same name and with the same content. Counted separately from the
+     * skipped ones: nothing went wrong with them, there was simply nothing left to do, see [ImportPlan.Status].
+     */
+    val duplicateFileNames: List<String> = emptyList(),
 )

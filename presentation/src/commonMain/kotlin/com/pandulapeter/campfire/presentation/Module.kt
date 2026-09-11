@@ -26,6 +26,7 @@ val presentationModule = module {
             getSongContent = get(),
             createSong = get(),
             deleteSong = get(),
+            prepareImport = get(),
             importFiles = get(),
             exportSongs = get(),
             exportSetlist = get(),

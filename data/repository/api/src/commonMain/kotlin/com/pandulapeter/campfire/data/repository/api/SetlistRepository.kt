@@ -32,8 +32,11 @@ interface SetlistRepository {
     /** See `SetlistLocalSource.parseSetlist`. */
     suspend fun parseSetlist(document: String): Setlist?
 
-    /** Writes an imported setlist under a free file name and returns it. Ends with a [rescan], like an imported song. */
-    suspend fun importSetlist(setlist: Setlist): Setlist
+    /**
+     * Writes an imported setlist under the file name it carries, suffixed until it is free unless [shouldReplace]
+     * says otherwise, and returns it. The cached list is left alone, like an imported song's.
+     */
+    suspend fun importSetlist(setlist: Setlist, shouldReplace: Boolean): Setlist
 
     /** The stored document of one setlist, for exporting it unchanged. Null if it is missing. */
     suspend fun loadSetlistDocument(fileName: String): String?

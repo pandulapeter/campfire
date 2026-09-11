@@ -86,7 +86,16 @@ preferences/sync-index.json          what the last successful sync run saw
   an export, an import or a sync run. The library's set of tags is whatever the songs carry; the Songs screen's
   filter offers them counted and most used first, and the song details header is where one is put on or taken off.
 - The file name is a song's (and a setlist's) identity. Nothing is ever overwritten implicitly: a new or imported file
-  that collides gets a ` (2)`, ` (3)`… suffix (`FileNames.kt`).
+  that collides gets a ` (2)`, ` (3)`… suffix (`FileNames.kt`). An **import decides before it writes**: every incoming
+  file is held against the name it wants (`PrepareImportUseCase` -> `ImportPlan`), a name taken by something with
+  exactly the same content is disregarded rather than copied, and the ones taken by something *different* are put to
+  the user as one question about the whole batch — keep both, replace, skip, or cancel the import. Replacing is the
+  only thing in the app that ever overwrites a library file, and it takes an answer to that dialog.
+- Inside the library a name is the user's own text, capitals, spaces and accents included; **a file handed to another
+  system leaves under a normalized name** — lowercase unaccented words joined with underscores (`ExportFileNames.kt`),
+  the dash between a song's artist and title kept (`LibraryFiles.ARTIST_TITLE_SEPARATOR`) — because on the way out it is
+  read by shells, services and file systems rather than by the app. The entries inside an exported archive are the
+  exception and keep their library names, since a setlist points at its songs by file name.
 - Only pure logic is tested: `commonTest` unit tests in `:chordpro`, `:data:source:local:implementation` (zip and the
   JVM file storage), `:data:source:remote:*` (hashing, encoders, the OAuth authorization URL) and
   `:data:repository:implementation` (`SyncPlanner`, which decides what happens to every file in a sync run), run on

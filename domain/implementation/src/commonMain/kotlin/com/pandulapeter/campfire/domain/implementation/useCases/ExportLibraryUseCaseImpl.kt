@@ -47,7 +47,7 @@ class ExportLibraryUseCaseImpl internal constructor(
     }
 
     private companion object {
-        const val ARCHIVE_NAME = "campfire-library.zip"
+        const val ARCHIVE_NAME = "campfire_library.zip"
         const val SONGS_DIRECTORY = "songs"
         const val SETLISTS_DIRECTORY = "setlists"
     }

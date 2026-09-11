@@ -31,7 +31,7 @@ internal fun sanitizeFileName(raw: String): String {
 }
 
 internal fun songFileName(title: String, artist: String): String {
-    val base = if (artist.isBlank()) title else "$artist - $title"
+    val base = if (artist.isBlank()) title else artist + LibraryFiles.ARTIST_TITLE_SEPARATOR + title
     return sanitizeFileName(base) + SONG_EXTENSION
 }
 

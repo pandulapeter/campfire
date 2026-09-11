@@ -19,6 +19,8 @@ import androidx.lifecycle.viewModelScope
 import com.pandulapeter.campfire.chordpro.model.ChordProSong
 import com.pandulapeter.campfire.data.model.DataState
 import com.pandulapeter.campfire.data.model.domain.ExportedFile
+import com.pandulapeter.campfire.data.model.domain.ImportConflictResolution
+import com.pandulapeter.campfire.data.model.domain.ImportPlan
 import com.pandulapeter.campfire.data.model.domain.ImportResult
 import com.pandulapeter.campfire.data.model.domain.ImportedFile
 import com.pandulapeter.campfire.data.model.domain.Setlist
@@ -50,6 +52,7 @@ import com.pandulapeter.campfire.domain.api.useCases.ImportFilesUseCase
 import com.pandulapeter.campfire.domain.api.useCases.LoadScreenDataUseCase
 import com.pandulapeter.campfire.domain.api.useCases.NormalizeTextUseCase
 import com.pandulapeter.campfire.domain.api.useCases.ParseChordProUseCase
+import com.pandulapeter.campfire.domain.api.useCases.PrepareImportUseCase
 import com.pandulapeter.campfire.domain.api.useCases.RestoreSyncUseCase
 import com.pandulapeter.campfire.domain.api.useCases.SaveSetlistUseCase
 import com.pandulapeter.campfire.domain.api.useCases.SaveSongContentUseCase
@@ -95,6 +98,7 @@ class CampfireViewModel(
     private val getSongContent: GetSongContentUseCase,
     private val createSong: CreateSongUseCase,
     private val deleteSong: DeleteSongUseCase,
+    private val prepareImport: PrepareImportUseCase,
     private val importFiles: ImportFilesUseCase,
     private val exportSongs: ExportSongsUseCase,
     private val exportSetlist: ExportSetlistUseCase,
@@ -150,13 +154,27 @@ class CampfireViewModel(
     /**
      * Read straight from its own repository rather than out of [screenData], which only has anything once every
      * source has been read: the theme and the language come from here, and waiting for a scan of the whole song
-     * library would leave the app in the system's theme and language for as long as that takes.
-     *
+     * library would leave the app in the system's theme and language for as long as that takes. Both states below
+     * are derived from this one, so that they can never disagree about whether the read has happened.
+     */
+    private val userPreferencesState = getUserPreferences().asEagerState(DataState.Loading(null))
+
+    /**
      * Eager for the same reason as [setlists]: `updateUserPreferences` and `setTransposition` build the preferences
      * they save out of this value, and a null one (which is what a state with no subscriber holds) would silently
      * drop the change.
      */
-    val userPreferences = getUserPreferences().map { it.data }.asEagerState(null)
+    val userPreferences = userPreferencesState.map { it.data }.asEagerState(null)
+
+    /**
+     * False only for as long as the preferences have not been read yet, which is what the app waits for before it
+     * draws anything: they decide the palette it is drawn in and the language it is written in, and a frame drawn
+     * before they arrive is a frame of the system's guess at both.
+     *
+     * Read rather than read *successfully*: a read that failed has no answer left to wait for, and the app has to
+     * open in the defaults rather than not at all.
+     */
+    val arePreferencesLoaded = userPreferencesState.map { it !is DataState.Loading }.asEagerState(false)
 
     /**
      * The one preference enough screens ask about to be worth a state of its own: every list, menu, sheet and app
@@ -337,6 +355,13 @@ class CampfireViewModel(
     val fontScale = combine(userPreferences, pendingFontScale) { userPreferences, pendingFontScale ->
         pendingFontScale ?: userPreferences?.fontScale ?: DEFAULT_FONT_SCALE
     }.asEagerState(DEFAULT_FONT_SCALE)
+
+    /**
+     * The import that has been worked out but not carried out, waiting for the user to answer
+     * [DialogType.ImportConflicts]. Not part of the dialog itself, which holds only what it draws: this is the work,
+     * and it has to outlive whichever screen the import was started from.
+     */
+    private var pendingImportPlan: ImportPlan? = null
 
     /** True while an import is running, which the screens that can start one show as a progress bar. */
     private val _isImporting = MutableStateFlow(false)
@@ -628,11 +653,52 @@ class CampfireViewModel(
     /** Files the system handed over: opened with Campfire, shared to it, or dropped onto it. */
     fun importFiles(files: List<ImportedFile>) = viewModelScope.launch { import(files) }
 
+    /**
+     * The first half of an import only works out what it would do. Nothing is written until the plan turns out to
+     * have nothing worth asking about, or until the user has answered the question it does raise - which is why the
+     * plan is kept here rather than in the dialog: the answer can arrive long after the screen that started this.
+     */
     private suspend fun import(files: List<ImportedFile>) {
-        if (files.isEmpty() || _isImporting.value) return
+        if (files.isEmpty() || _isImporting.value || pendingImportPlan != null) return
+        _isImporting.update { true }
+        val plan = try {
+            prepareImport(files)
+        } catch (exception: CancellationException) {
+            throw exception
+        } catch (exception: Exception) {
+            println("Could not read the files to import: ${exception.message}")
+            _messages.send(Message.ImportFailed)
+            _isImporting.update { false }
+            return
+        }
+        if (plan.hasConflicts) {
+            // Nothing is happening while the question is on screen, and a progress bar under it would say otherwise.
+            _isImporting.update { false }
+            pendingImportPlan = plan
+            showDialog(DialogType.ImportConflicts(plan.summary))
+        } else {
+            applyImportPlan(plan, ImportConflictResolution.KEEP_BOTH)
+        }
+    }
+
+    /** The answer to [DialogType.ImportConflicts], which is the only thing that ever overwrites a library file. */
+    fun resolveImport(resolution: ImportConflictResolution) {
+        val plan = pendingImportPlan ?: return
+        pendingImportPlan = null
+        dismissDialog()
+        viewModelScope.launch { applyImportPlan(plan, resolution) }
+    }
+
+    /** Cancelling leaves the library exactly as it was: the plan is what is thrown away, not a half written import. */
+    fun cancelImport() {
+        pendingImportPlan = null
+        dismissDialog()
+    }
+
+    private suspend fun applyImportPlan(plan: ImportPlan, resolution: ImportConflictResolution) {
         _isImporting.update { true }
         try {
-            _messages.send(Message.ImportFinished(importFiles.invoke(files)))
+            _messages.send(Message.ImportFinished(importFiles.invoke(plan, resolution)))
         } catch (exception: CancellationException) {
             throw exception
         } catch (exception: Exception) {
@@ -1042,6 +1108,12 @@ class CampfireViewModel(
         data class DisconnectSync(val accountName: String) : DialogType
         /** Asked before the editor is left with something in it that has not been written yet, see [navigateBack]. */
         data object UnsavedChanges : DialogType
+
+        /**
+         * Asked when an import would land on names the library has given to other files, see [import]. The plan
+         * itself stays in the view model; this carries only what the dialog puts on screen.
+         */
+        data class ImportConflicts(val summary: ImportPlan.Summary) : DialogType
         /** Asked before the editor throws away everything typed since the last save, see [revertEditorChanges]. */
         data object RevertChanges : DialogType
     }

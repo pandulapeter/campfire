@@ -30,11 +30,15 @@ interface SongRepository {
     /** Writes [text] under a free file name derived from the title and artist, and returns the song it became. */
     suspend fun createSong(title: String, artist: String, text: String): Song
 
+    /** See `SongLocalSource.importFileName`: the name an imported song wants, before anything is written. */
+    fun importFileName(desiredFileName: String?, text: String): String
+
     /**
-     * Writes an imported song under a free name based on [desiredFileName] and returns it. The cached list is left
-     * alone: an import writes many files at once and ends with a single [rescan].
+     * Writes an imported song under [fileName] and returns it, suffixing the name until it is free unless
+     * [shouldReplace] says otherwise. The cached list is left alone: an import writes many files at once and ends
+     * with a single [rescan].
      */
-    suspend fun importSong(desiredFileName: String?, text: String): Song
+    suspend fun importSong(fileName: String, text: String, shouldReplace: Boolean): Song
 
     suspend fun deleteSong(fileName: String)
 }
