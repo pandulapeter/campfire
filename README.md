@@ -73,9 +73,10 @@ Version 4.0 is a rewrite: the online song library is gone and there is **no migr
 an empty library.
 
 ### To do
-- Inconsistent long press gesture usage across Songs / Setlistst
 - Implement .cho (and other) file association
 - Filter badge
+- Setlist.priority should be replaced with timestamp
+- If ALL songs are tagged with the same tag (or language), don't show that chip on the cards
 - Back / Esc should clear the filters before closing the app
 - Songs: sort by year
 - Reload library: only on platforms where automatic reload is not supported
@@ -88,7 +89,6 @@ an empty library.
 - Detail screen opening: why the loading?
 - Fix web Settings screen animation glitches caused by async data
 - Improve the appearance and UI scalability of the Settings screen
-- Add a database of copyright free starter songs
 - Update the screenshots in the Readme
 - Create new screenshots for iOS, Android and desktop
 - Create iOS store listing

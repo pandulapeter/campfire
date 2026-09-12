@@ -101,6 +101,15 @@ preferences/sync-index.json          what the last successful sync run saw
   carries a list of codes and nothing else, and asks the platform what each is called in the language the app is set
   to (`java.util.Locale`, `NSLocale`, `Intl.DisplayNames` behind `:presentation`'s `languageDisplayName`), falling
   back to the code in capitals where it cannot say.
+- **The app is shipped with a handful of songs and one setlist**, in
+  `presentation/src/commonMain/composeResources/files/demo`: public domain campfire standards, bundled as the plain
+  ChordPro and setlist files they are and reaching the library through the ordinary import, so they collide, are
+  numbered and are disregarded when the same file is already there like anything else. They are planted once, on a
+  run that finds no preferences document *and* an empty library — which is what a fresh installation looks like from
+  the inside, and is why a library somebody has been using is never touched — and Settings offers to add them for as
+  long as the library is missing any of them, so a deleted one comes back by being asked for rather than on its own.
+  Each file is named exactly as the library would name the song inside it, which is what lets one list both read the
+  resources and answer whether they are already there.
 - The file name is a song's (and a setlist's) identity. Nothing is ever overwritten implicitly: a new or imported file
   that collides gets a `_2`, `_3`… suffix (`FileNames.kt`). An **import decides before it writes**: every incoming
   file is held against the name it wants (`PrepareImportUseCase` -> `ImportPlan`), a name taken by something with

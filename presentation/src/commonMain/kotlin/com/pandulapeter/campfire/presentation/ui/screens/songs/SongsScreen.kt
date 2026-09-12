@@ -254,6 +254,9 @@ private fun SongList(
                         onNewSong = if (isPerformanceModeEnabled) null else {
                             { viewModel.showDialog(CampfireViewModel.DialogType.NewSong) }
                         },
+                        onDemoLibrary = if (isPerformanceModeEnabled) null else {
+                            { viewModel.importDemoLibrary() }
+                        },
                         onImport = if (isPerformanceModeEnabled) null else {
                             { viewModel.importFiles(filePicker) }
                         },

@@ -19,6 +19,9 @@ platform types.
   the title it has just been given.
 - `UserPreferencesLocalSource` — one document; `loadUserPreferences()` never returns null, because a missing or
   unreadable document means the defaults, which are defined once next to the document itself.
+  `hasStoredUserPreferences()` is what that rule leaves nobody able to ask, and it is asked about the *document*
+  rather than about what is in it: the preferences are the first thing the app writes about itself, so their absence
+  is what an installation that has never been used looks like from the inside.
 - `ArchiveLocalSource` — zip pack and unpack, over bytes. Unpacking hands back only files somebody put in the
   archive: the hidden ones an archiving tool writes for itself (macOS packs an AppleDouble `._name.cho` beside
   every entry, under the extension of the file it belongs to) are dropped where they are read, so no caller has

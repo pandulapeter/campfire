@@ -39,6 +39,8 @@ internal class UserPreferencesLocalSourceImpl(
         text = json.encodeToString(userPreferences.toDocument()),
     )
 
+    override suspend fun hasStoredUserPreferences() = fileStorage.exists(StorageDirectory.PREFERENCES, FILE_NAME)
+
     private companion object {
         const val FILE_NAME = "preferences.json"
 

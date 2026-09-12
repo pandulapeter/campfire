@@ -66,7 +66,7 @@ val buildManifestPlaceholder = "/*{{BUILD}}*/null"
 val transportSuffixes = setOf(".br", ".gz")
 
 /** Text-shaped enough to be worth compressing; the icon already is. */
-val compressibleSuffixes = setOf(".cvr", ".html", ".js", ".json", ".txt", ".wasm", ".xml")
+val compressibleSuffixes = setOf(".cho", ".cvr", ".html", ".js", ".json", ".txt", ".wasm", ".xml")
 
 val distributionDirectory = layout.buildDirectory.dir("dist/wasmJs/productionExecutable")
 val resourceDirectory = layout.projectDirectory.dir("src/wasmJsMain/resources")

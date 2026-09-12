@@ -27,4 +27,10 @@ internal class UserPreferencesRepositoryImpl(
     override suspend fun saveUserPreferences(userPreferences: UserPreferences) = writeData(userPreferences) {
         userPreferencesLocalSource.saveUserPreferences(it)
     }
+
+    /**
+     * Not cached, unlike the preferences themselves: it is asked once as the app starts, and it is the one answer
+     * here that a cache would go on repeating after the very first save has made it false.
+     */
+    override suspend fun hasStoredUserPreferences() = userPreferencesLocalSource.hasStoredUserPreferences()
 }

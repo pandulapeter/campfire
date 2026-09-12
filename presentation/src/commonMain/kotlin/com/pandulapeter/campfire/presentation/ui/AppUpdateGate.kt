@@ -40,6 +40,7 @@ import com.pandulapeter.campfire.presentation.resources.app_update_restart
 import com.pandulapeter.campfire.presentation.resources.app_update_update
 import com.pandulapeter.campfire.presentation.resources.ic_update
 import com.pandulapeter.campfire.presentation.ui.components.EmptyState
+import com.pandulapeter.campfire.presentation.ui.components.EmptyStateAction
 import com.pandulapeter.campfire.presentation.ui.platform.AppUpdateState
 import com.pandulapeter.campfire.presentation.ui.platform.rememberAppUpdateController
 import org.jetbrains.compose.resources.painterResource
@@ -122,8 +123,7 @@ private fun AppUpdateRequiredScreen(
             icon = painterResource(Res.drawable.ic_update),
             title = stringResource(Res.string.app_update_required),
             hint = stringResource(Res.string.app_update_required_hint),
-            actionText = stringResource(Res.string.app_update_update),
-            onAction = onUpdate,
+            actions = listOf(EmptyStateAction(text = stringResource(Res.string.app_update_update), onClick = onUpdate)),
         )
     }
 }

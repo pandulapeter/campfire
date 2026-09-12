@@ -90,6 +90,7 @@ import com.pandulapeter.campfire.presentation.resources.song_details_song_positi
 import com.pandulapeter.campfire.presentation.ui.CampfireViewModel
 import com.pandulapeter.campfire.presentation.ui.components.CampfireTopAppBar
 import com.pandulapeter.campfire.presentation.ui.components.EmptyState
+import com.pandulapeter.campfire.presentation.ui.components.EmptyStateAction
 import com.pandulapeter.campfire.presentation.ui.components.KeepTopAppBarInSync
 import com.pandulapeter.campfire.presentation.ui.components.SongActionsButton
 import com.pandulapeter.campfire.presentation.ui.components.WindowSize
@@ -504,8 +505,7 @@ private fun SongDetailsPage(
                     icon = painterResource(Res.drawable.ic_error),
                     title = stringResource(Res.string.song_details_no_data),
                     hint = stringResource(Res.string.song_details_no_data_hint),
-                    actionText = stringResource(Res.string.retry),
-                    onAction = onRetry,
+                    actions = listOf(EmptyStateAction(text = stringResource(Res.string.retry), onClick = onRetry)),
                 )
             } else {
                 ContainedLoadingIndicator()

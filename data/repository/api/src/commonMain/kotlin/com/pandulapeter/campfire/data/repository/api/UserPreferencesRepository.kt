@@ -21,4 +21,7 @@ interface UserPreferencesRepository {
     suspend fun loadUserPreferencesIfNeeded(): UserPreferences?
 
     suspend fun saveUserPreferences(userPreferences: UserPreferences)
+
+    /** Whether anything has ever been saved, see `UserPreferencesLocalSource.hasStoredUserPreferences`. */
+    suspend fun hasStoredUserPreferences(): Boolean
 }

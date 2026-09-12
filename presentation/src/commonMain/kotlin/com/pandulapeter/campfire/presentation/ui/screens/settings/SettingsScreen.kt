@@ -45,6 +45,7 @@ import com.pandulapeter.campfire.data.source.remote.api.model.AuthorizationCompl
 import com.pandulapeter.campfire.presentation.CAMPFIRE_VERSION_NAME
 import com.pandulapeter.campfire.presentation.localization.stringResource
 import com.pandulapeter.campfire.presentation.resources.Res
+import com.pandulapeter.campfire.presentation.resources.add_demo_songs
 import com.pandulapeter.campfire.presentation.resources.ic_campfire
 import com.pandulapeter.campfire.presentation.resources.ic_coffee
 import com.pandulapeter.campfire.presentation.resources.ic_export
@@ -53,6 +54,7 @@ import com.pandulapeter.campfire.presentation.resources.ic_import
 import com.pandulapeter.campfire.presentation.resources.ic_phone
 import com.pandulapeter.campfire.presentation.resources.ic_privacy_policy
 import com.pandulapeter.campfire.presentation.resources.ic_refresh
+import com.pandulapeter.campfire.presentation.resources.ic_songs
 import com.pandulapeter.campfire.presentation.resources.ic_website
 import com.pandulapeter.campfire.presentation.resources.settings
 import com.pandulapeter.campfire.presentation.resources.settings_about
@@ -163,6 +165,7 @@ internal fun SettingsScreen(
         val syncState by viewModel.syncState.collectAsStateWithLifecycle()
         // Null until the library has been read, so that the row fades in with real counts instead of showing zeroes.
         val librarySummary by viewModel.librarySummary.collectAsStateWithLifecycle()
+        val isDemoLibraryPresent by viewModel.isDemoLibraryPresent.collectAsStateWithLifecycle()
         // The app asked for this as it started; asking again only reads back the answer, see requestLibraryPersistence.
         val libraryPersistence by produceState<LibraryPersistence?>(null) { value = requestLibraryPersistence() }
         val layoutDirection = LocalLayoutDirection.current
@@ -258,6 +261,21 @@ internal fun SettingsScreen(
                     isEmphasized = false,
                     onClick = { viewModel.importFiles(filePicker) },
                 )
+            }
+            // Only until they are all in the library, which is also what brings it back for the ones a user who
+            // wanted none of them has deleted. Null while the library is still being read, so the offer never
+            // appears for a moment over a library that turns out to hold them.
+            if (isDemoLibraryPresent == false) {
+                item(key = "library_demo") {
+                    ActionListItem(
+                        modifier = listItemAnimation(listState),
+                        title = stringResource(Res.string.add_demo_songs),
+                        icon = painterResource(Res.drawable.ic_songs),
+                        isEnabled = !isImporting && !isPerformanceModeEnabled,
+                        isEmphasized = false,
+                        onClick = viewModel::importDemoLibrary,
+                    )
+                }
             }
             item(key = "library_export") {
                 ActionListItem(

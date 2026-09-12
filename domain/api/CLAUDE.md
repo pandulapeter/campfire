@@ -15,8 +15,8 @@ the parser itself.
 
 Conventions: one interface per use case, a single `operator fun invoke(...)`, named `Get*` (observe a flow or read one
 value), `Load*` (trigger a read), `Save*` / `Create*` / `Rename*` / `Delete*` (change something), `Import*` / `Export*` for the file
-paths, or a verb for pure transforms (`NormalizeText`, `ParseChordPro`, `TransposeChordPro`, `TransposeChordProText`,
-`ConvertChordProNotation`).
+paths, `Is*` for a question with a yes or no answer (`IsFirstRun`), or a verb for pure transforms (`NormalizeText`,
+`ParseChordPro`, `TransposeChordPro`, `TransposeChordProText`, `ConvertChordProNotation`).
 
 - `ScreenData` bundles what the song and setlist screens need in one object: the setlists (every one of them, archived
   included, in the order `UserPreferences.SetlistSortingMode` asks for), the songs filtered and sorted the way the
@@ -44,6 +44,10 @@ paths, or a verb for pure transforms (`NormalizeText`, `ParseChordPro`, `Transpo
   than one value at a time: the picker asks about every language before it is closed, and the file is better rewritten
   once than once per checkbox. The codes are normalized by `:chordpro` on the way in, so `en-US`, `EN` and `eng` all
   name the language `en` does.
+- `IsFirstRunUseCase` is the only one that asks about the installation rather than about the library: whether
+  Campfire has ever written its preferences, which is the first thing it writes about itself and therefore the one
+  trace a device that has been used has. It exists for the demo library alone, and has to be asked before anything is
+  saved, so it is read once as the app starts.
 - `NormalizeLanguageCodeUseCase` answers what language a piece of text names, under the code the library files it by:
   the same normalization `SetChordProLanguagesUseCase` puts a code through on its way into a file, offered to the UI so
   that a search field can be typed into with a code rather than a name.

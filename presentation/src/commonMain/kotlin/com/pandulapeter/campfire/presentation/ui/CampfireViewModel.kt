@@ -50,6 +50,7 @@ import com.pandulapeter.campfire.domain.api.useCases.GetSyncProvidersUseCase
 import com.pandulapeter.campfire.domain.api.useCases.GetSyncStateUseCase
 import com.pandulapeter.campfire.domain.api.useCases.GetUserPreferencesUseCase
 import com.pandulapeter.campfire.domain.api.useCases.ImportFilesUseCase
+import com.pandulapeter.campfire.domain.api.useCases.IsFirstRunUseCase
 import com.pandulapeter.campfire.domain.api.useCases.LoadScreenDataUseCase
 import com.pandulapeter.campfire.domain.api.useCases.NormalizeLanguageCodeUseCase
 import com.pandulapeter.campfire.domain.api.useCases.NormalizeTextUseCase
@@ -85,6 +86,7 @@ import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.debounce
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.filterNotNull
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.flow.runningFold
@@ -102,6 +104,7 @@ class CampfireViewModel(
     getSyncState: GetSyncStateUseCase,
     getSyncProviders: GetSyncProvidersUseCase,
     private val loadScreenData: LoadScreenDataUseCase,
+    private val isFirstRun: IsFirstRunUseCase,
     private val getSongContent: GetSongContentUseCase,
     private val createSong: CreateSongUseCase,
     private val deleteSong: DeleteSongUseCase,
@@ -170,18 +173,27 @@ class CampfireViewModel(
     val isLoading = screenData.map { it is DataState.Loading }.asState(true)
 
     /**
+     * True until the app has settled whether it is planting the demo library, and until it has finished if it is,
+     * see [plantDemoLibraryOnFirstRun]. It starts out true rather than being set when the planting begins, because
+     * that decision takes a read of its own and the scan of the library can finish first: an empty library would
+     * then be announced as the answer, a moment before the songs on their way into it arrived.
+     */
+    private val isDemoLibraryPending = MutableStateFlow(true)
+
+    /**
      * False for as long as the song list would have nothing on it but a loading indicator, which is what the launch
      * screen stays up in place of. Either the read has put songs together - the first batch of one that publishes as
      * it goes counts, so a slow read still fills the list in front of the user rather than behind the launch screen -
-     * or it has finished with none, which is an answer to show as much as a library is.
+     * or it has finished with none, which is an answer to show as much as a library is. On the one run where a
+     * library that has finished empty is about to be filled anyway ([isDemoLibraryPending]), neither is true yet.
      *
      * Latched like [arePreferencesLoaded]: a rescan reads the library again and says so, and none of that is a reason
      * to put the launch screen back up over an app the user is already using.
      */
-    val hasLibraryToShow = screenData
-        .runningFold(false) { hasHadSomethingToShow, state ->
-            hasHadSomethingToShow || state !is DataState.Loading || state.data?.songs?.isNotEmpty() == true
-        }
+    val hasLibraryToShow = combine(screenData, isDemoLibraryPending) { state, isDemoLibraryPending ->
+        !isDemoLibraryPending && (state !is DataState.Loading || state.data?.songs?.isNotEmpty() == true)
+    }
+        .runningFold(false) { hasHadSomethingToShow, hasSomethingToShow -> hasHadSomethingToShow || hasSomethingToShow }
         .asEagerState(false)
 
     /**
@@ -334,6 +346,18 @@ class CampfireViewModel(
     val librarySummary = screenData
         .map { state -> state.data?.let { LibrarySummary(songCount = it.unfilteredSongs.size, setlistCount = it.setlists.size) } }
         .asEagerState(null)
+
+    /**
+     * Whether the demo library is in the library already, which is what takes the offer to load it out of the
+     * settings screen. Null until the library has been read, like [librarySummary] and for the same reason: the
+     * offer must not appear for a moment over a library that turns out to hold it.
+     *
+     * It is answered by what is on disk rather than by anything the app remembers doing, so deleting one of the
+     * demo songs brings the offer back - which is what makes it a way to restore them as well as a way to get them.
+     */
+    val isDemoLibraryPresent = screenData
+        .map { state -> state.data?.let { DemoLibrary.isPresentIn(songs = it.unfilteredSongs, setlists = it.setlists) } }
+        .asState(null)
     // Distinct on the sorting mode alone, or every other change to the preferences (a transposition, the text size
     // settling after a pinch) would have the whole library grouped again for nothing.
     val songGroups = combine(searchableSongs, query, userPreferences.map { it?.sortingMode }.distinctUntilChanged()) { songs, query, sortingMode ->
@@ -346,27 +370,31 @@ class CampfireViewModel(
         }
     }.asState(emptyList())
 
+    /** True while an import is running, which the screens that can start one show as a progress bar. */
+    private val _isImporting = MutableStateFlow(false)
+    val isImporting: StateFlow<Boolean> = _isImporting.asStateFlow()
+
     /**
      * What the song list has to show instead of songs, null while it has songs. A library that is empty because
      * the search matched nothing is told apart from one that is empty because the load has not finished (or has
      * failed) here, so that a list without data never sits on a loading indicator that nothing will ever replace.
      */
-    val songsPlaceholder = combine(screenData, songGroups) { screenData, songGroups ->
+    val songsPlaceholder = combine(screenData, songGroups, _isImporting) { screenData, songGroups, isImporting ->
         val data = screenData.data
         when {
             songGroups.isNotEmpty() -> null
             // The library itself, not the filtered list: a library that only holds songs the filters hide is not an
             // empty one, and offering to create a first song there would be answering a question nobody asked.
-            data == null || data.unfilteredSongs.isEmpty() -> screenData.emptyPlaceholder(Placeholder.NO_SONGS)
+            data == null || data.unfilteredSongs.isEmpty() -> screenData.emptyPlaceholder(Placeholder.NO_SONGS, isImporting)
             data.songs.isEmpty() -> Placeholder.ALL_SONGS_HIDDEN
             else -> Placeholder.NO_SEARCH_RESULTS
         }
     }.asState(Placeholder.LOADING)
 
     /** The same for the screens that show the library without the search query, such as the setlists. */
-    val libraryPlaceholder = screenData
-        .map { if (it.data?.unfilteredSongs.isNullOrEmpty()) it.emptyPlaceholder(Placeholder.NO_SONGS) else null }
-        .asState(Placeholder.LOADING)
+    val libraryPlaceholder = combine(screenData, _isImporting) { screenData, isImporting ->
+        if (screenData.data?.unfilteredSongs.isNullOrEmpty()) screenData.emptyPlaceholder(Placeholder.NO_SONGS, isImporting) else null
+    }.asState(Placeholder.LOADING)
 
     private val shouldShowArchivedSetlists = userPreferences.map { it?.shouldShowArchivedSetlists == true }.distinctUntilChanged()
 
@@ -398,10 +426,10 @@ class CampfireViewModel(
      * archived is told apart from one with no setlists at all for the same reason the song list tells its two empty
      * states apart: the first one is answered by the filter above the list rather than by making a setlist.
      */
-    val setlistsPlaceholder = combine(screenData, setlistsWithSongs) { screenData, setlistsWithSongs ->
+    val setlistsPlaceholder = combine(screenData, setlistsWithSongs, _isImporting) { screenData, setlistsWithSongs, isImporting ->
         when {
             setlistsWithSongs.isNotEmpty() -> null
-            screenData.data?.setlists.isNullOrEmpty() -> screenData.emptyPlaceholder(Placeholder.NO_SETLISTS)
+            screenData.data?.setlists.isNullOrEmpty() -> screenData.emptyPlaceholder(Placeholder.NO_SETLISTS, isImporting)
             else -> Placeholder.ALL_SETLISTS_HIDDEN
         }
     }.asState(Placeholder.LOADING)
@@ -430,10 +458,6 @@ class CampfireViewModel(
      */
     private var pendingImportPlan: ImportPlan? = null
 
-    /** True while an import is running, which the screens that can start one show as a progress bar. */
-    private val _isImporting = MutableStateFlow(false)
-    val isImporting: StateFlow<Boolean> = _isImporting.asStateFlow()
-
     /** True while the editor's text is being written, which it shows in place of its "Saved" label. */
     private val _isSavingSong = MutableStateFlow(false)
     val isSavingSong: StateFlow<Boolean> = _isSavingSong.asStateFlow()
@@ -451,6 +475,7 @@ class CampfireViewModel(
 
     init {
         viewModelScope.launch { loadScreenData(false) }
+        viewModelScope.launch { plantDemoLibraryOnFirstRun() }
         // Picks a connected account back up, finishes a consent the app was closed in the middle of, and runs a
         // first sync. Its own coroutine, so that a slow network never holds up the library appearing on screen.
         viewModelScope.launch {
@@ -776,11 +801,66 @@ class CampfireViewModel(
     fun importFiles(files: List<ImportedFile>) = viewModelScope.launch { import(files) }
 
     /**
+     * The songs the app is shipped with, put into the library the way any other batch of files is. The settings
+     * screen offers this for as long as they are not all there, so the same action both plants them and puts back
+     * the ones that have been deleted.
+     */
+    fun importDemoLibrary() = viewModelScope.launch {
+        if (_isImporting.value) return@launch
+        val files = readDemoLibrary()
+        if (files == null) {
+            _messages.send(Message.ImportFailed)
+        } else {
+            import(files)
+        }
+    }
+
+    /**
+     * The one thing the app ever puts into the library without being asked, and it only happens to an installation
+     * that has nothing of its own: a first run whose scan of the library came back empty. Somebody who has been
+     * using Campfire and simply never changed a setting reads as a first run too, which is why the library has to
+     * be empty as well - and if it is, then they are a new user by every measure that matters here.
+     *
+     * Nothing is reported, not even a failure: none of this was asked for, and an empty library is what the user
+     * was going to be shown anyway. The preferences are written at the end instead, which is what records that this
+     * has happened - without it, deleting every demo song would be undone by the next launch.
+     */
+    private suspend fun plantDemoLibraryOnFirstRun() {
+        try {
+            if (isFirstRun()) {
+                // Waited for rather than raced: what is being asked is whether the library is empty, and every
+                // library looks empty while it is still being read.
+                val library = screenData.first { it !is DataState.Loading }.data
+                if (library != null && library.unfilteredSongs.isEmpty() && library.setlists.isEmpty()) {
+                    readDemoLibrary()?.let { files ->
+                        import(files, shouldAnnounceResult = false)
+                        saveUserPreferences(userPreferences.filterNotNull().first())
+                    }
+                }
+            }
+        } finally {
+            // In a finally rather than at the end: whatever went wrong, the app is no longer waiting for this, and
+            // the launch screen is over the whole of it.
+            isDemoLibraryPending.update { false }
+        }
+    }
+
+    /** Null where the bundled files could not be read, which each caller then says as much about as it should. */
+    private suspend fun readDemoLibrary() = try {
+        DemoLibrary.read()
+    } catch (exception: CancellationException) {
+        throw exception
+    } catch (exception: Exception) {
+        println("Could not read the demo library: ${exception.message}")
+        null
+    }
+
+    /**
      * The first half of an import only works out what it would do. Nothing is written until the plan turns out to
      * have nothing worth asking about, or until the user has answered the question it does raise - which is why the
      * plan is kept here rather than in the dialog: the answer can arrive long after the screen that started this.
      */
-    private suspend fun import(files: List<ImportedFile>) {
+    private suspend fun import(files: List<ImportedFile>, shouldAnnounceResult: Boolean = true) {
         if (files.isEmpty() || _isImporting.value || pendingImportPlan != null) return
         _isImporting.update { true }
         val plan = try {
@@ -799,7 +879,7 @@ class CampfireViewModel(
             pendingImportPlan = plan
             showDialog(DialogType.ImportConflicts(plan.summary))
         } else {
-            applyImportPlan(plan, ImportConflictResolution.KEEP_BOTH)
+            applyImportPlan(plan, ImportConflictResolution.KEEP_BOTH, shouldAnnounceResult = shouldAnnounceResult)
         }
     }
 
@@ -817,10 +897,18 @@ class CampfireViewModel(
         dismissDialog()
     }
 
-    private suspend fun applyImportPlan(plan: ImportPlan, resolution: ImportConflictResolution) {
+    /**
+     * @param shouldAnnounceResult False for the import nobody asked for: the demo library planted on a first run is
+     *   the library the user is about to be shown, and a snackbar counting the files of it would be the app
+     *   reporting on something that, as far as anyone can tell, simply came with it.
+     */
+    private suspend fun applyImportPlan(plan: ImportPlan, resolution: ImportConflictResolution, shouldAnnounceResult: Boolean = true) {
         _isImporting.update { true }
         try {
-            _messages.send(Message.ImportFinished(importFiles.invoke(plan, resolution)))
+            val result = importFiles.invoke(plan, resolution)
+            if (shouldAnnounceResult) {
+                _messages.send(Message.ImportFinished(result))
+            }
         } catch (exception: CancellationException) {
             throw exception
         } catch (exception: Exception) {
@@ -1185,10 +1273,16 @@ class CampfireViewModel(
      * failed, and only [whenEmpty] once a load has finished - until then it is still loading, and saying anything
      * else would have the screen answer a question it cannot answer yet.
      */
-    private fun DataState<ScreenData>.emptyPlaceholder(whenEmpty: Placeholder) = when (this) {
-        is DataState.Loading -> Placeholder.LOADING
-        is DataState.Failure -> Placeholder.ERROR
-        is DataState.Idle -> whenEmpty
+    /**
+     * @param isImporting An empty library with an import running is a library being filled rather than an empty
+     *   one, and is worth the same answer as a scan that has not finished. It is what keeps the first launch of the
+     *   app from flashing "Your library is empty" over the songs it is planting, and any import into an empty
+     *   library from doing the same.
+     */
+    private fun DataState<ScreenData>.emptyPlaceholder(whenEmpty: Placeholder, isImporting: Boolean) = when {
+        this is DataState.Loading || isImporting -> Placeholder.LOADING
+        this is DataState.Failure -> Placeholder.ERROR
+        else -> whenEmpty
     }
 
     /** The counts the settings screen shows for the library, only once there is a library to count. */

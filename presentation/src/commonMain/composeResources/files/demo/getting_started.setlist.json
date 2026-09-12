@@ -1,0 +1,31 @@
+{
+    "title": "Getting started",
+    "priority": 0,
+    "isArchived": false,
+    "songs": [
+        {
+            "file": "traditional_spiritual-when_the_saints_go_marching_in.cho",
+            "transposition": 0
+        },
+        {
+            "file": "traditional_spiritual-down_by_the_riverside.cho",
+            "transposition": 0
+        },
+        {
+            "file": "traditional_american-red_river_valley.cho",
+            "transposition": 0
+        },
+        {
+            "file": "traditional_spiritual-swing_low_sweet_chariot.cho",
+            "transposition": 0
+        },
+        {
+            "file": "traditional_american-house_of_the_rising_sun.cho",
+            "transposition": 0
+        },
+        {
+            "file": "traditional_hymn-amazing_grace.cho",
+            "transposition": 0
+        }
+    ]
+}

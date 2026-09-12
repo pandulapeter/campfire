@@ -23,6 +23,7 @@ val presentationModule = module {
             getSyncState = get(),
             getSyncProviders = get(),
             loadScreenData = get(),
+            isFirstRun = get(),
             getSongContent = get(),
             createSong = get(),
             deleteSong = get(),

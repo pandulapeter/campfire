@@ -20,11 +20,11 @@ import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.combinedClickable
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
@@ -61,6 +61,7 @@ import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.lerp
 import androidx.compose.ui.graphics.painter.Painter
+import androidx.compose.ui.platform.LocalWindowInfo
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
@@ -72,6 +73,7 @@ import androidx.compose.ui.unit.dp
 import com.pandulapeter.campfire.data.model.domain.Song
 import com.pandulapeter.campfire.presentation.localization.stringResource
 import com.pandulapeter.campfire.presentation.resources.Res
+import com.pandulapeter.campfire.presentation.resources.add_demo_songs
 import com.pandulapeter.campfire.presentation.resources.error_no_data
 import com.pandulapeter.campfire.presentation.resources.error_no_data_hint
 import com.pandulapeter.campfire.presentation.resources.ic_archive
@@ -93,11 +95,11 @@ import com.pandulapeter.campfire.presentation.resources.setlists_no_data_hint
 import com.pandulapeter.campfire.presentation.resources.songs_all_hidden
 import com.pandulapeter.campfire.presentation.resources.songs_all_hidden_hint
 import com.pandulapeter.campfire.presentation.resources.songs_empty_hint
+import com.pandulapeter.campfire.presentation.resources.songs_empty_import
+import com.pandulapeter.campfire.presentation.resources.songs_empty_new_song
 import com.pandulapeter.campfire.presentation.resources.songs_empty_title
-import com.pandulapeter.campfire.presentation.resources.songs_import
 import com.pandulapeter.campfire.presentation.resources.songs_key
 import com.pandulapeter.campfire.presentation.resources.songs_lyrics_only
-import com.pandulapeter.campfire.presentation.resources.songs_new_song
 import com.pandulapeter.campfire.presentation.resources.songs_no_search_results
 import com.pandulapeter.campfire.presentation.resources.songs_no_search_results_hint
 import com.pandulapeter.campfire.presentation.ui.CampfireViewModel
@@ -578,6 +580,7 @@ internal fun ListPlaceholder(
     placeholder: CampfireViewModel.Placeholder,
     onRetry: () -> Unit,
     onNewSong: (() -> Unit)? = null,
+    onDemoLibrary: (() -> Unit)? = null,
     onImport: (() -> Unit)? = null,
 ) = AnimatedContent(
     modifier = modifier,
@@ -596,18 +599,23 @@ internal fun ListPlaceholder(
             icon = painterResource(Res.drawable.ic_error),
             title = stringResource(Res.string.error_no_data),
             hint = stringResource(Res.string.error_no_data_hint),
-            actionText = stringResource(Res.string.retry),
-            onAction = onRetry,
+            actions = listOf(EmptyStateAction(text = stringResource(Res.string.retry), onClick = onRetry)),
         )
 
+        // All three offers stand or fall with onNewSong: they are the three ways of filling a library, and a
+        // screen with no business offering any of them - performance mode is on - passes none of them. The demo
+        // songs come last of the three: they are the way out for somebody who wants neither of the other two.
         CampfireViewModel.Placeholder.NO_SONGS -> EmptyState(
             icon = painterResource(Res.drawable.ic_songs),
             title = stringResource(Res.string.songs_empty_title),
             hint = stringResource(Res.string.songs_empty_hint),
-            actionText = onNewSong?.let { stringResource(Res.string.songs_new_song) },
-            onAction = onNewSong,
-            secondaryActionText = onNewSong?.let { stringResource(Res.string.songs_import) },
-            onSecondaryAction = onImport,
+            actions = onNewSong?.let { newSong ->
+                listOf(
+                    EmptyStateAction(text = stringResource(Res.string.songs_empty_new_song), onClick = newSong),
+                    EmptyStateAction(text = stringResource(Res.string.songs_empty_import), onClick = onImport),
+                    EmptyStateAction(text = stringResource(Res.string.add_demo_songs), onClick = onDemoLibrary),
+                )
+            }.orEmpty(),
         )
 
         CampfireViewModel.Placeholder.NO_SETLISTS -> EmptyState(
@@ -637,11 +645,20 @@ internal fun ListPlaceholder(
 }
 
 /**
- * @param actionText The label of the button under the hint. Without it the state is text only, which is what an empty
- *   list that is empty for a good reason gets: there is nothing to retry.
- * @param onAction Null next to a non-null [actionText] leaves the button visible but disabled, for an action that
- *   the app will be able to offer but cannot yet.
- * @param secondaryActionText The label of a second, outlined button next to the first one.
+ * One of the buttons under an [EmptyState]'s text. The first of them is filled and the rest are outlined, so that a
+ * list of them reads as the thing to do here followed by the other things that could be done instead.
+ *
+ * @param onClick Null leaves the button visible but disabled, for an action the app will be able to offer but
+ *   cannot yet.
+ */
+internal data class EmptyStateAction(
+    val text: String,
+    val onClick: (() -> Unit)?,
+)
+
+/**
+ * @param actions The buttons under the hint. Empty leaves the state text only, which is what a list that is empty
+ *   for a good reason gets: there is nothing to retry.
  */
 @Composable
 internal fun EmptyState(
@@ -650,10 +667,7 @@ internal fun EmptyState(
     title: String,
     /** Null when the title already says everything, e.g. for a song file that is simply still empty. */
     hint: String? = null,
-    actionText: String? = null,
-    onAction: (() -> Unit)? = null,
-    secondaryActionText: String? = null,
-    onSecondaryAction: (() -> Unit)? = null,
+    actions: List<EmptyStateAction> = emptyList(),
 ) = Column(
     // Always the full width, so that the text is centered on the list rather than on itself.
     modifier = modifier.fillMaxWidth().padding(32.dp),
@@ -679,33 +693,69 @@ internal fun EmptyState(
             textAlign = TextAlign.Center,
         )
     }
-    if (actionText != null || secondaryActionText != null) {
-        Row(
-            modifier = Modifier.padding(top = 16.dp),
-            verticalAlignment = Alignment.CenterVertically,
-        ) {
-            if (actionText != null) {
-                Button(
-                    enabled = onAction != null,
-                    onClick = { onAction?.invoke() },
-                ) {
-                    Text(actionText)
+    if (actions.isNotEmpty()) {
+        // The window rather than the space this is being laid out in: an empty state sits in a lazy list, whose
+        // items are measured with no height at all to compare a width against.
+        val windowSize = LocalWindowInfo.current.containerSize
+        if (windowSize.height > windowSize.width) {
+            // One under the other and all the same width, which is what a portrait window has room for: side by
+            // side these wrap into a ragged two and one, and three labels this long read as a list rather than as
+            // a row anyway.
+            Column(
+                modifier = Modifier.padding(top = 16.dp).widthIn(max = EMPTY_STATE_ACTION_WIDTH),
+                verticalArrangement = Arrangement.spacedBy(EMPTY_STATE_ACTION_GAP),
+            ) {
+                actions.forEachIndexed { index, action ->
+                    EmptyStateActionButton(
+                        modifier = Modifier.fillMaxWidth(),
+                        action = action,
+                        isEmphasized = index == 0,
+                    )
                 }
             }
-            if (actionText != null && secondaryActionText != null) {
-                Spacer(modifier = Modifier.size(8.dp))
-            }
-            if (secondaryActionText != null) {
-                OutlinedButton(
-                    enabled = onSecondaryAction != null,
-                    onClick = { onSecondaryAction?.invoke() },
-                ) {
-                    Text(secondaryActionText)
+        } else {
+            Row(
+                modifier = Modifier.padding(top = 16.dp),
+                horizontalArrangement = Arrangement.spacedBy(EMPTY_STATE_ACTION_GAP),
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                actions.forEachIndexed { index, action ->
+                    EmptyStateActionButton(action = action, isEmphasized = index == 0)
                 }
             }
         }
     }
 }
+
+/** @param isEmphasized Whether this is the first of an [EmptyState]'s actions, which is the filled one. */
+@Composable
+private fun EmptyStateActionButton(
+    modifier: Modifier = Modifier,
+    action: EmptyStateAction,
+    isEmphasized: Boolean,
+) = if (isEmphasized) {
+    Button(
+        modifier = modifier,
+        enabled = action.onClick != null,
+        onClick = { action.onClick?.invoke() },
+    ) {
+        Text(action.text)
+    }
+} else {
+    OutlinedButton(
+        modifier = modifier,
+        enabled = action.onClick != null,
+        onClick = { action.onClick?.invoke() },
+    ) {
+        Text(action.text)
+    }
+}
+
+/** The gap between two of an [EmptyState]'s buttons. */
+private val EMPTY_STATE_ACTION_GAP = 8.dp
+
+/** How wide a stacked column of [EmptyState] buttons grows, so that a portrait tablet does not stretch them. */
+private val EMPTY_STATE_ACTION_WIDTH = 280.dp
 
 /**
  * The x position the text of a [ListItem] starts at, which the pills of the sticky headers line up with.

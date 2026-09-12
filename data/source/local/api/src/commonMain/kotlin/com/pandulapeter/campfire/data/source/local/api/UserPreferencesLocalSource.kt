@@ -21,4 +21,12 @@ interface UserPreferencesLocalSource {
     suspend fun loadUserPreferences(): UserPreferences
 
     suspend fun saveUserPreferences(userPreferences: UserPreferences)
+
+    /**
+     * Whether a preferences document has ever been written. It is the one question [loadUserPreferences] cannot
+     * answer, since for every other caller a missing document simply means the defaults - and it is asked about the
+     * document rather than about what is in it: the preferences are the first thing Campfire writes about itself, so
+     * their absence is what an installation that has never been used looks like from the inside.
+     */
+    suspend fun hasStoredUserPreferences(): Boolean
 }

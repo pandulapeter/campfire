@@ -17,7 +17,9 @@ Repository interfaces only. Consumed by `:domain:implementation`; implemented by
   and import paths.
 - `SongContentRepository` — the *text* of the songs that have been opened, cached in memory so that paging through a
   setlist does not re-read the same files. Deliberately not a `DataState` flow: it is a lookup, not a screen's state.
-- `UserPreferencesRepository` — one document, read once and written whole.
+- `UserPreferencesRepository` — one document, read once and written whole. `hasStoredUserPreferences` is the one
+  thing here that is not about what is in it: the demo library asks it to tell a fresh installation from a device
+  Campfire has been used on, and it is deliberately uncached, since the very first save makes it false.
 - `SyncRepository` — the state machine around sync: `syncState: Flow<SyncState>`, the providers the build has, and
   `restore` / `connect` / `disconnect` / `synchronize` / `cancelSynchronization`. Unlike the others it caches no list — the library keeps
   living in `SongRepository` and `SetlistRepository`, which is why a run that changed files has to be followed by a

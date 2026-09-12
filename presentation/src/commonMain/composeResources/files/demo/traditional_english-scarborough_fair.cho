@@ -1,0 +1,44 @@
+{title: Scarborough Fair}
+{artist: Traditional English}
+{key: Am}
+{capo: 7}
+{time: 3/4}
+{tempo: 88}
+{tag: Fingerpicking}
+{tag: Slow}
+{meta: language en}
+
+{comment_italic: An English ballad first written down in the seventeenth century.}
+
+{start_of_grid: Chord grid}
+| Am . . | Am . . | C . . | Am . . |
+| Am . . | G  . . | Am . . | Am . . |
+{end_of_grid}
+
+{start_of_verse: Verse 1}
+[Am]Are you going to [C]Scarborough [Am]Fair
+[Am]Parsley, [G]sage, rose[Am]mary and thyme
+Re[Am]member me [G]to one who [Am]lives there
+[Am]She once [G]was a true love of [Am]mine
+{end_of_verse}
+
+{start_of_verse: Verse 2}
+[Am]Tell her to make me a [C]cambric [Am]shirt
+[Am]Parsley, [G]sage, rose[Am]mary and thyme
+With[Am]out no seam nor [G]needle[Am]work
+[Am]Then she'll [G]be a true love of [Am]mine
+{end_of_verse}
+
+{start_of_verse: Verse 3}
+[Am]Tell her to find me an [C]acre of [Am]land
+[Am]Parsley, [G]sage, rose[Am]mary and thyme
+Be[Am]tween the salt [G]water and the [Am]sea strand
+[Am]Then she'll [G]be a true love of [Am]mine
+{end_of_verse}
+
+{start_of_verse: Verse 4}
+[Am]Are you going to [C]Scarborough [Am]Fair
+[Am]Parsley, [G]sage, rose[Am]mary and thyme
+Re[Am]member me [G]to one who [Am]lives there
+[Am]She once [G]was a true love of [Am]mine
+{end_of_verse}

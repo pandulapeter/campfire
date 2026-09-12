@@ -26,6 +26,7 @@ import com.pandulapeter.campfire.domain.api.useCases.GetSyncProvidersUseCase
 import com.pandulapeter.campfire.domain.api.useCases.GetSyncStateUseCase
 import com.pandulapeter.campfire.domain.api.useCases.GetUserPreferencesUseCase
 import com.pandulapeter.campfire.domain.api.useCases.ImportFilesUseCase
+import com.pandulapeter.campfire.domain.api.useCases.IsFirstRunUseCase
 import com.pandulapeter.campfire.domain.api.useCases.LoadScreenDataUseCase
 import com.pandulapeter.campfire.domain.api.useCases.NormalizeLanguageCodeUseCase
 import com.pandulapeter.campfire.domain.api.useCases.NormalizeTextUseCase
@@ -59,6 +60,7 @@ import com.pandulapeter.campfire.domain.implementation.useCases.GetSyncProviders
 import com.pandulapeter.campfire.domain.implementation.useCases.GetSyncStateUseCaseImpl
 import com.pandulapeter.campfire.domain.implementation.useCases.GetUserPreferencesUseCaseImpl
 import com.pandulapeter.campfire.domain.implementation.useCases.ImportFilesUseCaseImpl
+import com.pandulapeter.campfire.domain.implementation.useCases.IsFirstRunUseCaseImpl
 import com.pandulapeter.campfire.domain.implementation.useCases.LoadScreenDataUseCaseImpl
 import com.pandulapeter.campfire.domain.implementation.useCases.NormalizeLanguageCodeUseCaseImpl
 import com.pandulapeter.campfire.domain.implementation.useCases.NormalizeTextUseCaseImpl
@@ -95,6 +97,7 @@ val domainModule = module {
     factory<GetSyncStateUseCase> { GetSyncStateUseCaseImpl(get()) }
     factory<GetUserPreferencesUseCase> { GetUserPreferencesUseCaseImpl(get()) }
     factory<ImportFilesUseCase> { ImportFilesUseCaseImpl(get(), get()) }
+    factory<IsFirstRunUseCase> { IsFirstRunUseCaseImpl(get()) }
     factory<LoadScreenDataUseCase> { LoadScreenDataUseCaseImpl(get(), get(), get()) }
     factory<NormalizeLanguageCodeUseCase> { NormalizeLanguageCodeUseCaseImpl() }
     factory<NormalizeTextUseCase> { NormalizeTextUseCaseImpl() }
