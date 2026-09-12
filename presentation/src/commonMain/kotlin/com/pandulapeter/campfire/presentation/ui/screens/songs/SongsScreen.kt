@@ -115,6 +115,9 @@ internal fun SongsScreen(
         isSidePanelVisible = isSidePanelVisible,
     )
     val hasLoadedLibrary = rememberHasLoadedLibrary(isLoading)
+    // The fast scroller's thumb is held far from the list it scrolls, so the button has to be told about the finger
+    // rather than left to work it out from where the list ended up.
+    var isFastScrollerPressed by remember { mutableStateOf(false) }
     KeepTopAppBarInSync(scrollBehavior, listState)
     DismissSheetWhenSidePanelAppears(
         isSidePanelVisible = isSidePanelVisible,
@@ -159,10 +162,13 @@ internal fun SongsScreen(
                     columnCount = columnCount,
                     hasLoadedLibrary = hasLoadedLibrary,
                     contentPadding = listContentPadding,
+                    onFastScrollerPressedChanged = { isFastScrollerPressed = it },
                 )
                 CampfireFloatingActionButton(
                     modifier = Modifier.align(Alignment.BottomEnd),
                     isVisible = !isKeyboardCoveringTheList && !isPerformanceModeEnabled && placeholder.allowsCreatingSongs,
+                    isPushedAway = isFastScrollerPressed,
+                    listState = listState,
                     settledWidth = settledWidth,
                     contentPadding = listContentPadding,
                     icon = painterResource(Res.drawable.ic_add),
@@ -193,6 +199,7 @@ private fun SongList(
     columnCount: Int,
     hasLoadedLibrary: Boolean,
     contentPadding: PaddingValues,
+    onFastScrollerPressedChanged: (Boolean) -> Unit,
 ) {
     val songGroups by viewModel.songGroups.collectAsStateWithLifecycle()
     val query by viewModel.query.collectAsStateWithLifecycle()
@@ -331,6 +338,7 @@ private fun SongList(
             modifier = Modifier.padding(contentPadding),
             gridState = listState,
             labelForItem = { sectionLabels.getOrNull(it) },
+            onPressedChanged = onFastScrollerPressedChanged,
         )
     }
 }

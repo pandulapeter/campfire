@@ -146,6 +146,7 @@ internal fun SetlistsScreen(
                 CampfireFloatingActionButton(
                     modifier = Modifier.align(Alignment.BottomEnd),
                     isVisible = !isPerformanceModeEnabled,
+                    listState = listState,
                     settledWidth = settledWidth,
                     contentPadding = listContentPadding,
                     icon = painterResource(Res.drawable.ic_add),

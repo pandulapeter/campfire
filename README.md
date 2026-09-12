@@ -83,7 +83,6 @@ an empty library.
 - Android: back should clear the search before closing the app
 - Android: predictive back on the detail screen only starts working after the first scroll
 - Implement sticky headers
-- FAB placement interferes with fast scrolling (align scroller differently / make the fab dynamic)
 - New song dialog: add shortcut to import
 - New option: sort by year
 - Detail screen opening: why the loading?
