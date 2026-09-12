@@ -111,8 +111,10 @@ import org.jetbrains.compose.resources.painterResource
  * @param shouldShowChords False under lyrics only mode, where the row says nothing about chords at all: not the
  *   key, and not the "Lyrics only" marker either, which only tells this song from the others while the others are
  *   showing chords.
- * @param onLongClick Opens the song's actions where a dropdown menu would be out of place (touch platforms).
- * @param actions The trailing content of the row, which on desktop is the overflow button and its menu.
+ * @param onLongClick A shortcut to the same actions the row's overflow button opens, on the touch platforms where
+ *   holding a row is a natural way to ask what can be done to it.
+ * @param actions The trailing content of the row, which is the overflow button and whichever way of listing the
+ *   song's actions the platform calls for ([SongActionsButton]).
  */
 @OptIn(ExperimentalMaterial3ExpressiveApi::class, ExperimentalFoundationApi::class)
 @Composable

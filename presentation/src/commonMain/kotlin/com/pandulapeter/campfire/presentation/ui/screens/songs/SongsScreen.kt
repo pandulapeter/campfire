@@ -68,7 +68,7 @@ import com.pandulapeter.campfire.presentation.ui.components.ListPlaceholder
 import com.pandulapeter.campfire.presentation.ui.components.SearchField
 import com.pandulapeter.campfire.presentation.ui.components.SECTION_HEADER_GAP
 import com.pandulapeter.campfire.presentation.ui.components.SectionHeader
-import com.pandulapeter.campfire.presentation.ui.components.SongActionsMenu
+import com.pandulapeter.campfire.presentation.ui.components.SongActionsButton
 import com.pandulapeter.campfire.presentation.ui.components.SongListItem
 import com.pandulapeter.campfire.presentation.ui.components.SongsControls
 import com.pandulapeter.campfire.presentation.ui.components.animateScrollToKey
@@ -294,8 +294,9 @@ private fun SongList(
                             keyboardController?.hide()
                             viewModel.openSong(song)
                         },
-                        // A pointer opens the menu from the row's own button; touch has the long press instead. In
-                        // performance mode there is no menu to open either way, so a row does nothing but open a song.
+                        // A shortcut to what the row's own overflow button opens, where holding a row is a
+                        // natural way to ask for it. In performance mode there is nothing to open either way, so a
+                        // row does nothing but open a song.
                         onLongClick = if (isDesktopPlatform || isPerformanceModeEnabled) {
                             null
                         } else {
@@ -307,17 +308,17 @@ private fun SongList(
                         // The overflow button keeps its distance from the end edge here and nowhere else, because
                         // this is the one list the fast scroller runs down: a thumb dragged without looking is
                         // caught by a target far wider than the thumb itself, and the button was inside it.
-                        actions = if (isDesktopPlatform && !isPerformanceModeEnabled) {
+                        actions = if (isPerformanceModeEnabled) {
+                            null
+                        } else {
                             {
-                                SongActionsMenu(
+                                SongActionsButton(
                                     modifier = Modifier.padding(end = FAST_SCROLLER_CLEARANCE),
                                     viewModel = viewModel,
                                     song = song,
                                     lockedSetlistFileName = null,
                                 )
                             }
-                        } else {
-                            null
                         },
                     )
                 }

@@ -38,6 +38,7 @@ import com.pandulapeter.campfire.presentation.resources.songs_update_file_name
 import com.pandulapeter.campfire.presentation.resources.songs_setlist_assignments
 import com.pandulapeter.campfire.presentation.ui.CampfireViewModel
 import com.pandulapeter.campfire.presentation.ui.platform.LocalFilePicker
+import com.pandulapeter.campfire.presentation.ui.platform.isDesktopPlatform
 import org.jetbrains.compose.resources.painterResource
 
 /**
@@ -147,12 +148,11 @@ internal fun ActionsMenuItem(
 )
 
 /**
- * The overflow button of a song row and the menu it opens. Touch platforms get the same actions from a long press
- * instead, see [CampfireViewModel.DialogType.SongActions] - except on the setlists screen, where the long press
- * reorders the row and the button is the only way in.
+ * The overflow button of a song row and the dropdown menu it opens, which is how [SongActionsButton] lists the
+ * actions where there is a pointer to open a menu with.
  */
 @Composable
-internal fun SongActionsMenu(
+private fun SongActionsMenu(
     modifier: Modifier = Modifier,
     viewModel: CampfireViewModel,
     song: Song,
@@ -173,6 +173,50 @@ internal fun SongActionsMenu(
                 dismiss()
                 onClick()
             },
+        )
+    }
+}
+
+/**
+ * The overflow button of a song row, and whichever way of listing the song's actions the platform calls for: the
+ * [SongActionsMenu] dropdown where there is a pointer to open one with, and the bottom sheet of
+ * [CampfireViewModel.DialogType.SongActions] where the list is read and chosen from with a thumb.
+ *
+ * The button itself is there on every platform, because it is the only thing on a row that says the actions exist:
+ * the long press that opens the same sheet on the songs screen announces itself to nobody, so it is a shortcut for
+ * the reader who already knows about it rather than the way in.
+ */
+@Composable
+internal fun SongActionsButton(
+    modifier: Modifier = Modifier,
+    viewModel: CampfireViewModel,
+    song: Song,
+    lockedSetlistFileName: String?,
+    shouldIncludeSetlistAssignments: Boolean = true,
+) = if (isDesktopPlatform) {
+    SongActionsMenu(
+        modifier = modifier,
+        viewModel = viewModel,
+        song = song,
+        lockedSetlistFileName = lockedSetlistFileName,
+        shouldIncludeSetlistAssignments = shouldIncludeSetlistAssignments,
+    )
+} else {
+    IconButton(
+        modifier = modifier,
+        onClick = {
+            viewModel.showDialog(
+                CampfireViewModel.DialogType.SongActions(
+                    song = song,
+                    lockedSetlistFileName = lockedSetlistFileName,
+                    shouldIncludeSetlistAssignments = shouldIncludeSetlistAssignments,
+                )
+            )
+        },
+    ) {
+        Icon(
+            painter = painterResource(Res.drawable.ic_more),
+            contentDescription = stringResource(Res.string.songs_actions),
         )
     }
 }

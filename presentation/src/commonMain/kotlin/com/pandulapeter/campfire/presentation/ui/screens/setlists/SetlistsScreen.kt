@@ -74,7 +74,7 @@ import com.pandulapeter.campfire.presentation.ui.components.SetlistActionsMenu
 import com.pandulapeter.campfire.presentation.ui.components.SetlistsControls
 import com.pandulapeter.campfire.presentation.ui.components.MissingSongListItem
 import com.pandulapeter.campfire.presentation.ui.components.SongListItem
-import com.pandulapeter.campfire.presentation.ui.components.SongActionsMenu
+import com.pandulapeter.campfire.presentation.ui.components.SongActionsButton
 import com.pandulapeter.campfire.presentation.ui.components.animateScrollToKey
 import com.pandulapeter.campfire.presentation.ui.components.besideSidePanel
 import com.pandulapeter.campfire.presentation.ui.components.hasRoomForSidePanel
@@ -329,7 +329,7 @@ private fun SetlistList(
                                     Row(
                                         verticalAlignment = Alignment.CenterVertically,
                                     ) {
-                                        SetlistEntryActionsMenu(
+                                        SetlistEntryActions(
                                             viewModel = viewModel,
                                             entry = entry,
                                             setlistFileName = setlistWithSongs.setlist.fileName,
@@ -405,19 +405,19 @@ private data class DraggedSetlist(
 )
 
 /**
- * The overflow menu of one row of a setlist. A row whose file has gone missing has no song to act on, so it is
- * offered the only thing that still applies to it - being taken out of the setlist - rather than a menu full of
- * entries that would all fail.
+ * The overflow button of one row of a setlist and the actions behind it. A row whose file has gone missing has no
+ * song to act on, so it is offered the only thing that still applies to it - being taken out of the setlist -
+ * rather than a list full of entries that would all fail.
  */
 @Composable
-private fun SetlistEntryActionsMenu(
+private fun SetlistEntryActions(
     viewModel: CampfireViewModel,
     entry: CampfireViewModel.SetlistWithSongs.Entry,
     setlistFileName: String,
 ) = when (entry) {
     // Nothing is locked: the sheet's box for this very setlist is what unticks the song out of it, which is the
     // swipe written as a list rather than as a gesture.
-    is CampfireViewModel.SetlistWithSongs.Entry.Present -> SongActionsMenu(
+    is CampfireViewModel.SetlistWithSongs.Entry.Present -> SongActionsButton(
         viewModel = viewModel,
         song = entry.song,
         lockedSetlistFileName = null,

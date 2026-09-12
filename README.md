@@ -73,6 +73,19 @@ Version 4.0 is a rewrite: the online song library is gone and there is **no migr
 an empty library.
 
 ### To do
+- Inconsistent long press gesture usage across Songs / Setlistst
+- Implement .cho (and other) file association
+- Filter badge
+- Back / Esc should clear the filters before closing the app
+- Songs: sort by year
+- Reload library: only on platforms where automatic reload is not supported
+- Android: back should clear the search before closing the app
+- Android: predictive back on the detail screen only starts working after the first scroll
+- Implement sticky headers
+- FAB placement interferes with fast scrolling (align scroller differently / make the fab dynamic)
+- New song dialog: add shortcut to import
+- New option: sort by year
+- Detail screen opening: why the loading?
 - Fix web Settings screen animation glitches caused by async data
 - Improve the appearance and UI scalability of the Settings screen
 - Add a database of copyright free starter songs
@@ -81,7 +94,7 @@ an empty library.
 - Create iOS store listing
 - Create GitHub action for TestFlight releases
 - Create App Store and Windows Store Store listings + GitHub actions
-- Add links to each build type referencing the other build types
+- Add links to each build type referencing the other build types + the current store
 
 ### License
 
