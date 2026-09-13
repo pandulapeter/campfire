@@ -16,7 +16,9 @@ import com.pandulapeter.campfire.domain.api.useCases.LoadScreenDataUseCase
 import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.coroutineScope
+import org.koin.core.annotation.Factory
 
+@Factory
 class LoadScreenDataUseCaseImpl internal constructor(
     private val setlistRepository: SetlistRepository,
     private val songRepository: SongRepository,

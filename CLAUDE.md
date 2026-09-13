@@ -23,8 +23,10 @@ Strict `api` / `implementation` module split at every layer. Only `:app:*` modul
 depends on `api` modules and gets wiring via Koin.
 
 ```
-app:android / app:desktop / app:ios / app:web   entry points, Koin startup, platform chrome, "open with" and share
-                                             intents (app:ios also holds the Xcode project, app:web the index.html)
+app:android / app:desktop / app:ios / app:web   entry points, platform chrome, "open with" and share intents (app:ios
+                                             also holds the Xcode project, app:web the index.html)
+  app:di                                     the Koin application: the one place every module is named, and the
+                                             function the four entry points start Koin with
   presentation                               CampfireViewModel, Navigation 3 back stack, Material 3 theme + every screen
                                              (Songs, Setlists, Settings, SongDetails, SongEditor), string resources; the
                                              platform shells (system bars, file pickers, drag and drop, URL opening,
@@ -77,8 +79,19 @@ preferences/sync-index.json          what the last successful sync run saw
   Multiplatform in `jetbrains-compose-material3`); don't add `androidx.compose.material` (M2) back.
 - `:app:android` is a plain Android module, `:app:desktop` a plain JVM one, `:app:ios` Kotlin/Native-only and `:app:web`
   Kotlin/Wasm-only; every other module (`:presentation` and `:chordpro` included) is a multiplatform library.
-- Every module's Koin wiring lives in a top-level `Module.kt` exposing one `val xxxModule = module { ... }`. New
-  bindings go there. `:chordpro` has none: it is a set of stateless objects, reached through use cases.
+- **Koin is wired with Koin Annotations through the Koin compiler plugin** (`io.insert-koin.compiler.plugin`, applied
+  by every module that declares a definition). A class declares itself: `@Single` on repositories, local sources,
+  the platform storage and the authenticators, `@Factory` on use cases, `@KoinViewModel` on `CampfireViewModel`.
+  Each module's top-level `Module.kt` holds one `@Module @ComponentScan object XxxModule`, empty where the classes
+  annotate themselves and holding a `@Single` function where a definition is built rather than constructed (the
+  HTTP client, the list of sync providers). Platform definitions are ordinary annotated classes in the platform
+  source sets (`AndroidFileStorage`, `IosSyncAuthenticator`, …), found by the same scan, so there is no
+  `expect`/`actual` factory between a platform and its Koin definition. `:app:di` names the five module objects in
+  the one `@KoinApplication`, and `startCampfireDependencyGraph()` is what the four entry points start Koin with;
+  the plugin checks the whole graph there at compile time, so a definition asking for something nobody declares
+  fails the build. A dependency only a platform shell provides — the Android `Context` — is marked `@Provided`,
+  which tells that check not to look for it. `:chordpro` has none of this: it is a set of stateless objects, reached
+  through use cases.
 - Implementation classes are `internal` and named `<Interface>Impl`. Use cases are `operator fun invoke`.
 - Repositories extend `BaseLocalDataRepository`, which holds the cached `DataState` and the read-once logic.
 - Layer boundaries are crossed via mappers (`mapper/` packages), never by leaking document/entity types.

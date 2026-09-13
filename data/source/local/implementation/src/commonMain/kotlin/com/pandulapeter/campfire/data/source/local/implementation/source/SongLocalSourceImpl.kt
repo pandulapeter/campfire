@@ -27,7 +27,9 @@ import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.coroutineScope
+import org.koin.core.annotation.Single
 
+@Single
 internal class SongLocalSourceImpl(
     private val fileStorage: FileStorage,
 ) : SongLocalSource {

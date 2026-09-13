@@ -16,16 +16,12 @@ plugins {
 }
 
 dependencies {
-    implementation(project(":data:repository:implementation"))
-    implementation(project(":data:source:local:implementation"))
-    implementation(project(":data:source:remote:implementation"))
-    implementation(project(":domain:implementation"))
+    implementation(project(":app:di"))
+    implementation(project(":data:model"))
     implementation(project(":presentation"))
     implementation(libs.compose.components.resources)
     implementation(compose.desktop.currentOs)
-    implementation(libs.koin.compose)
     implementation(libs.koin.compose.viewmodel)
-    implementation(libs.koin.core)
     runtimeOnly(libs.kotlin.coroutines.swing) // Provides Dispatchers.Main for viewModelScope.
 }
 

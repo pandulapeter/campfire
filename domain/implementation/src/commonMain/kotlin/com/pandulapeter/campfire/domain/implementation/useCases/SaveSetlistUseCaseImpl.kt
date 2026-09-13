@@ -12,7 +12,9 @@ package com.pandulapeter.campfire.domain.implementation.useCases
 import com.pandulapeter.campfire.data.model.domain.Setlist
 import com.pandulapeter.campfire.data.repository.api.SetlistRepository
 import com.pandulapeter.campfire.domain.api.useCases.SaveSetlistUseCase
+import org.koin.core.annotation.Factory
 
+@Factory
 class SaveSetlistUseCaseImpl internal constructor(
     private val setlistRepository: SetlistRepository,
 ) : SaveSetlistUseCase {

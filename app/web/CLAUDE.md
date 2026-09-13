@@ -12,9 +12,8 @@
 Kotlin/Wasm entry point. A `wasmJs` browser target only — the one module that is not multiplatform in the other
 direction.
 
-- `CampfireWebApplication.kt` — `main()` starts Koin through the `KoinApplication` composable
-  (`dataLocalSourceModule + dataRemoteSourceModule + dataRepositoryModule + domainModule + presentationModule`) inside a `ComposeViewport` and
-  hosts `CampfireWebApp`. Add new Koin modules here.
+- `CampfireWebApplication.kt` — `main()` starts Koin through `:app:di`'s `startCampfireDependencyGraph`, then hosts
+  `CampfireWebApp` inside a `ComposeViewport`. The modules are named in `:app:di`, not here.
 - `src/wasmJsMain/resources/index.html` — the page itself, and the loading screen the app is handed over from: the
   icon, the name and a **determinate** progress bar, on the same background the first composed frame paints (the
   `CampfireColorSchemes` palettes, picked by `prefers-color-scheme`), because the binaries are sixteen megabytes and

@@ -13,10 +13,8 @@ package com.pandulapeter.campfire.data.source.remote.implementation.auth
 
 import com.pandulapeter.campfire.data.source.remote.api.SyncAuthenticator
 import com.pandulapeter.campfire.data.source.remote.api.model.AuthorizationCompletionPage
-import org.koin.core.scope.Scope
+import org.koin.core.annotation.Single
 import kotlin.js.ExperimentalWasmJsInterop
-
-internal actual fun Scope.createSyncAuthenticator(): SyncAuthenticator = WebSyncAuthenticator()
 
 /**
  * The web is the platform the interface had to bend for: there is no second window to wait on and no scheme to be
@@ -24,6 +22,7 @@ internal actual fun Scope.createSyncAuthenticator(): SyncAuthenticator = WebSync
  * string when the app starts again, which is what [consumePendingRedirect] is for - and why the PKCE verifier is
  * kept in storage rather than in memory.
  */
+@Single
 internal class WebSyncAuthenticator : SyncAuthenticator {
 
     /** The page itself, without any query or fragment: the exact string registered with the provider. */

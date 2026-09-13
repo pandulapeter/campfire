@@ -23,7 +23,8 @@ editing a plugin does not invalidate the whole main build, and `gradle/settings.
 platform-wide compiler setting belongs — never in a module's own `build.gradle.kts`:
 
 - The targets: Android, `jvm("desktop")`, `iosArm64`, `iosSimulatorArm64` and `wasmJs { browser() }`. A module gets
-  all five or none; the three `:app:*` modules that are single-platform therefore do **not** apply these plugins.
+  all five or none; the four platform `:app:*` modules are single-platform and therefore do **not** apply these
+  plugins, while `:app:di`, which every one of them starts Koin through, does.
 - `archivesName` is derived from the Gradle path (`:data:source:local:api` → `data-source-local-api`). A klib carries
   the name of the artifact it is built into, and half the modules here are called `api` or `implementation`, so the
   default would have several of them claiming the same identity.

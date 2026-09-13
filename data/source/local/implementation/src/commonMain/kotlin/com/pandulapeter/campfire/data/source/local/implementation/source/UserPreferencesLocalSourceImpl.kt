@@ -18,7 +18,9 @@ import com.pandulapeter.campfire.data.source.local.implementation.storage.file.F
 import com.pandulapeter.campfire.data.source.local.implementation.storage.file.StorageDirectory
 import kotlinx.coroutines.CancellationException
 import kotlinx.serialization.json.Json
+import org.koin.core.annotation.Single
 
+@Single
 internal class UserPreferencesLocalSourceImpl(
     private val fileStorage: FileStorage,
 ) : UserPreferencesLocalSource {

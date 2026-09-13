@@ -24,7 +24,9 @@ import com.pandulapeter.campfire.domain.api.useCases.NormalizeTextUseCase
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.map
+import org.koin.core.annotation.Factory
 
+@Factory
 class GetScreenDataUseCaseImpl internal constructor(
     private val normalizeText: NormalizeTextUseCase,
     setlistRepository: SetlistRepository,

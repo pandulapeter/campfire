@@ -9,7 +9,7 @@
  */
 package com.pandulapeter.campfire.data.source.local.implementation.storage.file
 
-import org.koin.core.scope.Scope
+import org.koin.core.annotation.Single
 import java.io.File
 
 /**
@@ -18,7 +18,8 @@ import java.io.File
  * The settings screen shows the resulting path, and cannot see this module, so it derives it the same way; keep the
  * two in step (`presentation/src/desktopMain/.../ui/platform/Platform.desktop.kt`).
  */
-internal actual fun Scope.createFileStorage(): FileStorage = JvmFileStorage(desktopDataDirectory())
+@Single
+internal class DesktopFileStorage : FileStorage by JvmFileStorage(desktopDataDirectory())
 
 private fun desktopDataDirectory(): File {
     val userHome = File(System.getProperty("user.home").orEmpty())

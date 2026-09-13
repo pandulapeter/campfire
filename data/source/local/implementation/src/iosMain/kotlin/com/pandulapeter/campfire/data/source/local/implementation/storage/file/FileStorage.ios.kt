@@ -21,7 +21,7 @@ import kotlinx.cinterop.usePinned
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.IO
 import kotlinx.coroutines.withContext
-import org.koin.core.scope.Scope
+import org.koin.core.annotation.Single
 import platform.Foundation.NSApplicationSupportDirectory
 import platform.Foundation.NSData
 import platform.Foundation.NSDate
@@ -39,15 +39,14 @@ import platform.Foundation.timeIntervalSince1970
 import platform.Foundation.writeToFile
 import platform.posix.memcpy
 
-internal actual fun Scope.createFileStorage(): FileStorage = IosFileStorage()
-
 /**
  * The iOS [FileStorage], on top of `NSFileManager`.
  *
  * The library lives in the documents directory so that it can be exposed to the Files app, while the preferences -
  * which are app state rather than user documents - go to the application support directory, out of the user's way.
  */
-private class IosFileStorage : FileStorage {
+@Single
+internal class IosFileStorage : FileStorage {
 
     private val fileManager = NSFileManager.defaultManager
 

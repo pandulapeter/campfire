@@ -10,6 +10,7 @@
 plugins {
     id("campfire-library")
     alias(libs.plugins.kotlin.serialization)
+    alias(libs.plugins.koin.compiler)
 }
 
 kotlin {
@@ -17,6 +18,7 @@ kotlin {
         commonMain.dependencies {
             api(project(":data:source:local:api"))
             implementation(project(":chordpro"))
+            implementation(libs.koin.annotations)
             implementation(libs.koin.core)
             implementation(libs.kotlin.coroutines)
             implementation(libs.kotlin.serialization.json)

@@ -9,8 +9,11 @@
 -->
 # :data:source:remote:implementation
 
-Implements `:data:source:remote:api`. Koin wiring in `Module.kt` (`dataRemoteSourceModule`). The only module in the
-project that makes a network call, and the only one that sees Ktor.
+Implements `:data:source:remote:api`. Koin wiring: `Module.kt` holds the `@Module @ComponentScan object
+DataRemoteSourceModule`, whose two `@Single` functions build what is not simply constructed — the HTTP client and the
+list of providers — while the stores and the four platform authenticators (`AndroidSyncAuthenticator`, …, each a
+`@Single` in its own source set) declare themselves. The only module in the project that makes a network call, and
+the only one that sees Ktor.
 
 Providers are registered as a `List<SyncProvider>`, and **a provider the build has no credentials for is left out of
 that list entirely** rather than offered and then failing — the settings screen shows what is in it, so a build

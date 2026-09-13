@@ -14,7 +14,9 @@ import com.pandulapeter.campfire.data.repository.api.SetlistRepository
 import com.pandulapeter.campfire.data.repository.api.SongRepository
 import com.pandulapeter.campfire.data.repository.api.UserPreferencesRepository
 import com.pandulapeter.campfire.domain.api.useCases.RenameSongFileUseCase
+import org.koin.core.annotation.Factory
 
+@Factory
 class RenameSongFileUseCaseImpl internal constructor(
     private val songRepository: SongRepository,
     private val setlistRepository: SetlistRepository,

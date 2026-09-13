@@ -12,7 +12,9 @@ package com.pandulapeter.campfire.domain.implementation.useCases
 import com.pandulapeter.campfire.data.model.domain.UserPreferences
 import com.pandulapeter.campfire.data.repository.api.UserPreferencesRepository
 import com.pandulapeter.campfire.domain.api.useCases.SaveUserPreferencesUseCase
+import org.koin.core.annotation.Factory
 
+@Factory
 class SaveUserPreferencesUseCaseImpl internal constructor(
     private val userPreferencesRepository: UserPreferencesRepository,
 ) : SaveUserPreferencesUseCase {

@@ -11,7 +11,9 @@ package com.pandulapeter.campfire.domain.implementation.useCases
 
 import com.pandulapeter.campfire.domain.api.useCases.NormalizeTextUseCase
 import com.pandulapeter.campfire.data.model.domain.withoutAccent
+import org.koin.core.annotation.Factory
 
+@Factory
 class NormalizeTextUseCaseImpl internal constructor() : NormalizeTextUseCase {
 
     /**

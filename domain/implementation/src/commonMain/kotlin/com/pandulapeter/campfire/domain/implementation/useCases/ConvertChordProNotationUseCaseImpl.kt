@@ -13,7 +13,9 @@ import com.pandulapeter.campfire.chordpro.ChordProNotation
 import com.pandulapeter.campfire.chordpro.model.ChordProSong
 import com.pandulapeter.campfire.data.model.domain.UserPreferences
 import com.pandulapeter.campfire.domain.api.useCases.ConvertChordProNotationUseCase
+import org.koin.core.annotation.Factory
 
+@Factory
 class ConvertChordProNotationUseCaseImpl internal constructor() : ConvertChordProNotationUseCase {
 
     override operator fun invoke(song: ChordProSong, spelling: UserPreferences.ChordSpelling): ChordProSong =

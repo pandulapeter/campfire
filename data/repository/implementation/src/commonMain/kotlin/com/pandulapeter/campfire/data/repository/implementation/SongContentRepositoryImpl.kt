@@ -15,7 +15,9 @@ import com.pandulapeter.campfire.data.source.local.api.SongLocalSource
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
+import org.koin.core.annotation.Single
 
+@Single
 internal class SongContentRepositoryImpl(
     private val songLocalSource: SongLocalSource,
 ) : SongContentRepository {

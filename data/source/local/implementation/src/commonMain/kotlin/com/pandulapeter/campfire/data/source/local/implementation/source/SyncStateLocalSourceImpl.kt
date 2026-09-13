@@ -13,7 +13,9 @@ import com.pandulapeter.campfire.data.source.local.api.SyncStateLocalSource
 import com.pandulapeter.campfire.data.source.local.implementation.storage.file.FileStorage
 import com.pandulapeter.campfire.data.source.local.implementation.storage.file.StorageDirectory
 import kotlinx.coroutines.CancellationException
+import org.koin.core.annotation.Single
 
+@Single
 internal class SyncStateLocalSourceImpl(
     private val fileStorage: FileStorage,
 ) : SyncStateLocalSource {

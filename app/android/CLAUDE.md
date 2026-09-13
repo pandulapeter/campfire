@@ -11,7 +11,7 @@
 
 Android application entry point. The only Android module that knows about implementation modules.
 
-- `CampfireAndroidApplication` — starts Koin with `dataLocalSourceModule + dataRemoteSourceModule + dataRepositoryModule + domainModule + presentationModule`. Add new Koin modules here.
+- `CampfireAndroidApplication` — starts Koin through `:app:di`'s `startCampfireDependencyGraph`, handing it the `androidContext` the file storage and the authenticator are built from. The modules are named in `:app:di`, not here.
 - `CampfireActivity` — single `AppCompatActivity`, edge-to-edge, hosts `CampfireAndroidApp` and opens links via Custom Tabs (colored to match the theme the composable reports). System bar appearance is handled inside `CampfireAndroidApp`. It also receives the files the system hands over: `ACTION_VIEW` ("open with") and `ACTION_SEND` / `ACTION_SEND_MULTIPLE` (shared to Campfire), read off the main thread and passed to the UI through a `Channel`. The activity is `singleTask`, so a second file opened while Campfire is running arrives at `onNewIntent` rather than at a new instance.
 
 `AndroidManifest.xml` registers Campfire **only** for the ChordPro extensions (`.cho`, `.chopro`, `.chordpro`, `.crd`, `.chord`, `.pro`), with a wildcard MIME type so that the `pathPattern`s are what actually decide — a `content://` URI has no extension in the eyes of the intent resolver unless a type is declared. Zip and plain text are deliberately not registered: the app reads one when it is handed over, but an app that claims them system wide answers for every archive and note on the device. The share filter is narrowed to `text/plain` for the same reason. Keep this list in step with `LibraryFiles.SONG_EXTENSIONS`.

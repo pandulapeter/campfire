@@ -24,9 +24,7 @@ import kotlinx.coroutines.awaitCancellation
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
-import org.koin.core.scope.Scope
-
-internal actual fun Scope.createSyncAuthenticator(): SyncAuthenticator = DesktopSyncAuthenticator()
+import org.koin.core.annotation.Single
 
 /**
  * The desktop has no custom scheme to be redirected to, so it becomes a web server for the length of one
@@ -38,6 +36,7 @@ internal actual fun Scope.createSyncAuthenticator(): SyncAuthenticator = Desktop
  * The port is fixed rather than chosen by the operating system because a service only redirects to a URI that was
  * registered with it beforehand, character for character, and one that changed every run could not be registered.
  */
+@Single
 internal class DesktopSyncAuthenticator(
     /**
      * Injected so that the socket half of this can be tested without a browser window opening on whoever runs the

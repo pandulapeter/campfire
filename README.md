@@ -73,7 +73,6 @@ Version 4.0 is a rewrite: the online song library is gone and there is **no migr
 an empty library.
 
 ### To do
-- Migrate to annotation-based Koin
 - Song assignment bottom sheet for setlists + search in the bottom sheet
 - Setlist assignment bottom sheet search
 - Setlist descriptions

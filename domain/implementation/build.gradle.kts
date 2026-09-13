@@ -9,6 +9,7 @@
  */
 plugins {
     id("campfire-library")
+    alias(libs.plugins.koin.compiler)
 }
 
 kotlin {
@@ -16,6 +17,7 @@ kotlin {
         commonMain.dependencies {
             api(project(":domain:api"))
             implementation(project(":data:repository:api"))
+            implementation(libs.koin.annotations)
             implementation(libs.koin.core)
             implementation(libs.kotlin.coroutines)
         }

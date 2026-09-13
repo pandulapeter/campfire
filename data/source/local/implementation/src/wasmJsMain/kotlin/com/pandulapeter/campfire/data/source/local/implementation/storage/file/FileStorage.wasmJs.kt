@@ -19,11 +19,9 @@ import kotlinx.coroutines.withContext
 import org.khronos.webgl.Int8Array
 import org.khronos.webgl.toByteArray
 import org.khronos.webgl.toInt8Array
-import org.koin.core.scope.Scope
+import org.koin.core.annotation.Single
 import kotlin.js.ExperimentalWasmJsInterop
 import kotlin.js.Promise
-
-internal actual fun Scope.createFileStorage(): FileStorage = OpfsFileStorage()
 
 /**
  * The web [FileStorage], on top of the Origin Private File System: a sandboxed, per-origin file system that is not
@@ -34,7 +32,8 @@ internal actual fun Scope.createFileStorage(): FileStorage = OpfsFileStorage()
  * The browser has a single thread, so [Dispatchers.Default] is the closest thing to `Dispatchers.IO` here; the OPFS
  * calls themselves are asynchronous anyway.
  */
-private class OpfsFileStorage : FileStorage {
+@Single
+internal class OpfsFileStorage : FileStorage {
 
     override suspend fun list(directory: StorageDirectory) = withContext(Dispatchers.Default) {
         // One string instead of a handle per file: crossing the Kotlin/JS boundary for every entry would be far slower.

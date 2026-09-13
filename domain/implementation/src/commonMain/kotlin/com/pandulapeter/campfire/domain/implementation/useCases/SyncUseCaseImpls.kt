@@ -21,7 +21,9 @@ import com.pandulapeter.campfire.domain.api.useCases.GetSyncProvidersUseCase
 import com.pandulapeter.campfire.domain.api.useCases.GetSyncStateUseCase
 import com.pandulapeter.campfire.domain.api.useCases.RestoreSyncUseCase
 import com.pandulapeter.campfire.domain.api.useCases.SynchronizeLibraryUseCase
+import org.koin.core.annotation.Factory
 
+@Factory
 class GetSyncStateUseCaseImpl internal constructor(
     private val syncRepository: SyncRepository,
 ) : GetSyncStateUseCase {
@@ -29,6 +31,7 @@ class GetSyncStateUseCaseImpl internal constructor(
     override operator fun invoke() = syncRepository.syncState
 }
 
+@Factory
 class GetSyncProvidersUseCaseImpl internal constructor(
     private val syncRepository: SyncRepository,
 ) : GetSyncProvidersUseCase {
@@ -36,6 +39,7 @@ class GetSyncProvidersUseCaseImpl internal constructor(
     override operator fun invoke() = syncRepository.availableProviders
 }
 
+@Factory
 class ConnectSyncProviderUseCaseImpl internal constructor(
     private val syncRepository: SyncRepository,
     private val synchronizeLibrary: SynchronizeLibraryUseCase,
@@ -52,6 +56,7 @@ class ConnectSyncProviderUseCaseImpl internal constructor(
     }
 }
 
+@Factory
 class DisconnectSyncProviderUseCaseImpl internal constructor(
     private val syncRepository: SyncRepository,
 ) : DisconnectSyncProviderUseCase {
@@ -59,6 +64,7 @@ class DisconnectSyncProviderUseCaseImpl internal constructor(
     override suspend operator fun invoke() = syncRepository.disconnect()
 }
 
+@Factory
 class RestoreSyncUseCaseImpl internal constructor(
     private val syncRepository: SyncRepository,
     private val synchronizeLibrary: SynchronizeLibraryUseCase,
@@ -73,6 +79,7 @@ class RestoreSyncUseCaseImpl internal constructor(
     }
 }
 
+@Factory
 class SynchronizeLibraryUseCaseImpl internal constructor(
     private val syncRepository: SyncRepository,
 ) : SynchronizeLibraryUseCase {
@@ -80,6 +87,7 @@ class SynchronizeLibraryUseCaseImpl internal constructor(
     override operator fun invoke() = syncRepository.synchronize()
 }
 
+@Factory
 class CancelSynchronizationUseCaseImpl internal constructor(
     private val syncRepository: SyncRepository,
 ) : CancelSynchronizationUseCase {

@@ -9,16 +9,18 @@
 -->
 # :data:source:local:implementation
 
-File-backed multiplatform implementation of `:data:source:local:api`, on all four platforms. Koin wiring in `Module.kt`
-(`dataLocalSourceModule`).
+File-backed multiplatform implementation of `:data:source:local:api`, on all four platforms. Koin wiring: `Module.kt`
+holds the `@Module @ComponentScan object DataLocalSourceModule`, and every local source is a `@Single`.
 
 - **`storage/file/FileStorage.kt`** is the only thing that differs per platform: flat file access inside the app's own
   data directory, addressed as `(StorageDirectory, file name)` — no paths, no sub-directories. `info` is what `list`
   would say about one file, so that saving a song (or writing one file of an import) does not list the directory
-  — on OPFS a listing opens every file for its size and date, which made an import quadratic. `expect fun
-  Scope.createFileStorage()` has four actuals: `JvmFileStorage` over `java.io.File` (shared between `androidMain` and
+  — on OPFS a listing opens every file for its size and date, which made an import quadratic. The Koin definition
+  is a `@Single` class in each platform source set, found by the module's component scan: `AndroidFileStorage` and
+  `DesktopFileStorage`, both delegating to `JvmFileStorage` over `java.io.File` (shared between `androidMain` and
   `desktopMain`, one copy each because they are separate source sets), `IosFileStorage` over `NSFileManager` and
-  `OpfsFileStorage` over the browser's Origin Private File System. Everything above this line is `commonMain`.
+  `OpfsFileStorage` over the browser's Origin Private File System. The Android one takes the `Context` the app shell
+  hands to Koin, marked `@Provided` since no shared module declares it. Everything above this line is `commonMain`.
   - The directories are `library/songs`, `library/setlists` and `preferences` — songs and setlists sit next to each
     other so that the library exports as one archive, and the preferences sit outside it so that they do not.
   - Text is UTF-8 both ways, and a byte order mark is stripped while reading, because editors on Windows write one.

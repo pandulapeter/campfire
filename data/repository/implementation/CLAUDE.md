@@ -10,7 +10,8 @@
 # :data:repository:implementation
 
 Implements `:data:repository:api` on top of `:data:source:local:api` and — for sync alone —
-`:data:source:remote:api`. Koin wiring in `Module.kt` (`dataRepositoryModule`), all repositories as `single`.
+`:data:source:remote:api`. Koin wiring: `Module.kt` holds the `@Module @ComponentScan object DataRepositoryModule`, and every
+repository is a `@Single`.
 
 `base/BaseLocalDataRepository<T>` holds all the caching logic — new repositories should extend it rather than
 reimplement state handling. It owns a `MutableStateFlow<DataState<T>>` that starts as `Loading(null)` (nothing has been

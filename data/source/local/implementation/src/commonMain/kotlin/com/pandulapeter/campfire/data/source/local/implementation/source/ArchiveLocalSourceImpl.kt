@@ -16,11 +16,13 @@ import com.pandulapeter.campfire.data.source.local.implementation.zip.ZipReader
 import com.pandulapeter.campfire.data.source.local.implementation.zip.ZipWriter
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
+import org.koin.core.annotation.Single
 
 /**
  * Unpacking and packing run on [Dispatchers.Default] rather than IO: nothing here touches the file system, it is all
  * inflating and deflating in memory, and a big archive would otherwise block whichever thread asked for it.
  */
+@Single
 internal class ArchiveLocalSourceImpl : ArchiveLocalSource {
 
     override suspend fun unpack(archive: ByteArray): List<ImportedFile> = withContext(Dispatchers.Default) {

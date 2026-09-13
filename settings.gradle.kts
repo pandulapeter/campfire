@@ -83,6 +83,7 @@ rootProject.name = "Campfire"
 include(
     ":app:android",
     ":app:desktop",
+    ":app:di",
     ":app:ios",
     ":app:web",
     ":chordpro",

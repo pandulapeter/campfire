@@ -10,26 +10,15 @@
 package com.pandulapeter.campfire
 
 import android.app.Application
-import com.pandulapeter.campfire.data.repository.dataRepositoryModule
-import com.pandulapeter.campfire.data.source.local.implementation.dataLocalSourceModule
-import com.pandulapeter.campfire.data.source.remote.implementation.dataRemoteSourceModule
-import com.pandulapeter.campfire.domain.implementation.domainModule
-import com.pandulapeter.campfire.presentation.presentationModule
+import com.pandulapeter.campfire.di.startCampfireDependencyGraph
 import com.pandulapeter.campfire.sync.CampfireSyncService
 import org.koin.android.ext.koin.androidContext
-import org.koin.core.context.startKoin
 
 class CampfireAndroidApplication : Application() {
 
-    private val dataModules
-        get() = dataLocalSourceModule + dataRemoteSourceModule + dataRepositoryModule
-
     override fun onCreate() {
         super.onCreate()
-        startKoin {
-            androidContext(this@CampfireAndroidApplication)
-            modules(dataModules + domainModule + presentationModule)
-        }
+        startCampfireDependencyGraph { androidContext(this@CampfireAndroidApplication) }
         // A run whose process never came back left its notification behind, and this is the first moment anything
         // of Campfire's is running again to take it down. See CampfireSyncService.clearStaleNotification.
         CampfireSyncService.clearStaleNotification(this)

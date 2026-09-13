@@ -15,7 +15,9 @@ import com.pandulapeter.campfire.data.repository.api.SongContentRepository
 import com.pandulapeter.campfire.data.repository.api.SongRepository
 import com.pandulapeter.campfire.data.repository.implementation.base.BaseLocalDataRepository
 import com.pandulapeter.campfire.data.source.local.api.SongLocalSource
+import org.koin.core.annotation.Single
 
+@Single
 internal class SongRepositoryImpl(
     private val songLocalSource: SongLocalSource,
     private val songContentRepository: SongContentRepository,

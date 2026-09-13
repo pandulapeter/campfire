@@ -17,7 +17,7 @@ import kotlinx.cinterop.BetaInteropApi
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.suspendCancellableCoroutine
 import kotlinx.coroutines.withContext
-import org.koin.core.scope.Scope
+import org.koin.core.annotation.Single
 import platform.AuthenticationServices.ASPresentationAnchor
 import platform.AuthenticationServices.ASWebAuthenticationPresentationContextProvidingProtocol
 import platform.AuthenticationServices.ASWebAuthenticationSession
@@ -26,8 +26,6 @@ import platform.UIKit.UIApplication
 import platform.UIKit.UIWindow
 import platform.darwin.NSObject
 import kotlin.coroutines.resume
-
-internal actual fun Scope.createSyncAuthenticator(): SyncAuthenticator = IosSyncAuthenticator()
 
 /**
  * The consent page in an `ASWebAuthenticationSession`, which is the only way on iOS to find out that the user backed
@@ -41,6 +39,7 @@ internal actual fun Scope.createSyncAuthenticator(): SyncAuthenticator = IosSync
  * It is also the better thing for the user: the sheet stays inside the app, and it shares Safari's cookies, so
  * somebody already signed in to Dropbox is not asked to sign in again.
  */
+@Single
 internal class IosSyncAuthenticator : SyncAuthenticator {
 
     private val presentationContextProvider = PresentationAnchorProvider()

@@ -21,7 +21,9 @@ import com.pandulapeter.campfire.data.source.local.implementation.uniqueName
 import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.coroutineScope
+import org.koin.core.annotation.Single
 
+@Single
 internal class LibraryFileLocalSourceImpl(
     private val fileStorage: FileStorage,
 ) : LibraryFileLocalSource {

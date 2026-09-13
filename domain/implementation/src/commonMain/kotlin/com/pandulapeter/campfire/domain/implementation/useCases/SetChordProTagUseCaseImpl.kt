@@ -11,7 +11,9 @@ package com.pandulapeter.campfire.domain.implementation.useCases
 
 import com.pandulapeter.campfire.chordpro.ChordProTags
 import com.pandulapeter.campfire.domain.api.useCases.SetChordProTagUseCase
+import org.koin.core.annotation.Factory
 
+@Factory
 class SetChordProTagUseCaseImpl internal constructor() : SetChordProTagUseCase {
 
     override operator fun invoke(text: String, tag: String, isSelected: Boolean) = if (isSelected) {

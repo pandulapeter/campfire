@@ -435,11 +435,13 @@ private fun ChordProTextField(
                 }
             }
             // The keyboard is already in the content padding this screen was handed, see CampfireApp; applying the
-            // inset a second time here shrank the field to a couple of lines as soon as the keyboard came up.
+            // inset a second time here shrank the field to a couple of lines as soon as the keyboard came up. There
+            // is no top padding for the same reason the bottom one is conditional: it would sit outside the field's
+            // own scrolling, so the text would scroll under a strip of nothing below the toolbar rather than up to
+            // its edge. The toolbar's own bottom padding is the space between the two at rest.
             .padding(
                 start = contentPadding.calculateStartPadding(layoutDirection) + 16.dp,
                 end = contentPadding.calculateEndPadding(layoutDirection) + 16.dp,
-                top = 8.dp,
                 bottom = if (respectsBottomInset) insetBottomPadding else 0.dp,
             ),
         state = textFieldState,

@@ -9,7 +9,6 @@
  */
 package com.pandulapeter.campfire.data.source.local.implementation.storage.file
 
-import org.koin.core.scope.Scope
 
 /** The folders the app keeps its data in. Each maps to one platform directory, created on first use. */
 enum class StorageDirectory {
@@ -65,8 +64,6 @@ interface FileStorage {
     /** Does nothing if the file does not exist. */
     suspend fun delete(directory: StorageDirectory, name: String)
 }
-
-internal expect fun Scope.createFileStorage(): FileStorage
 
 /** The path of a [StorageDirectory] relative to the platform's root, as segments each platform joins its own way. */
 internal val StorageDirectory.pathSegments: List<String>

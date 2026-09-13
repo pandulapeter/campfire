@@ -10,6 +10,7 @@
 plugins {
     id("campfire-compose-library")
     alias(libs.plugins.hyperether.localization)
+    alias(libs.plugins.koin.compiler)
 }
 
 // The app version is declared in gradle.properties; this makes it visible to the shared UI.
@@ -55,6 +56,7 @@ kotlin {
                 implementation(libs.compose.ui)
                 // Only the required-update screen needs one, to stop back navigating the app it is covering.
                 implementation(libs.compose.ui.backhandler)
+                implementation(libs.koin.annotations)
                 implementation(libs.koin.compose)
                 implementation(libs.koin.compose.viewmodel)
                 implementation(libs.koin.core)

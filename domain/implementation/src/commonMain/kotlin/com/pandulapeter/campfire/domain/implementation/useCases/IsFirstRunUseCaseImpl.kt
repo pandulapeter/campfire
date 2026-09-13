@@ -11,7 +11,9 @@ package com.pandulapeter.campfire.domain.implementation.useCases
 
 import com.pandulapeter.campfire.data.repository.api.UserPreferencesRepository
 import com.pandulapeter.campfire.domain.api.useCases.IsFirstRunUseCase
+import org.koin.core.annotation.Factory
 
+@Factory
 class IsFirstRunUseCaseImpl internal constructor(
     private val userPreferencesRepository: UserPreferencesRepository,
 ) : IsFirstRunUseCase {

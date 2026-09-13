@@ -97,8 +97,10 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import kotlin.math.ceil
 import kotlin.math.floor
+import org.koin.core.annotation.KoinViewModel
 
 @OptIn(FlowPreview::class)
+@KoinViewModel
 class CampfireViewModel(
     getScreenData: GetScreenDataUseCase,
     getUserPreferences: GetUserPreferencesUseCase,

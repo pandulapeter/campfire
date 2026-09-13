@@ -25,9 +25,8 @@ import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.selects.select
-import org.koin.core.scope.Scope
-
-internal actual fun Scope.createSyncAuthenticator(): SyncAuthenticator = AndroidSyncAuthenticator(get<Context>().applicationContext)
+import org.koin.core.annotation.Provided
+import org.koin.core.annotation.Single
 
 /**
  * The consent page is opened in the user's own browser, and the redirect comes back as an intent on the custom
@@ -40,8 +39,11 @@ internal actual fun Scope.createSyncAuthenticator(): SyncAuthenticator = Android
  * leave a cancelled authorization waiting forever with no way back. What is observable is the app itself coming
  * forward again, which is what [awaitAbandoned] watches for.
  */
+@Single
 internal class AndroidSyncAuthenticator(
-    private val context: Context,
+    // Provided rather than declared: the context is what the Android app shell hands to Koin as it starts, which no
+    // shared module can see.
+    @Provided private val context: Context,
 ) : SyncAuthenticator {
 
     override suspend fun prepareRedirectUri() = "$REDIRECT_SCHEME://$REDIRECT_HOST"

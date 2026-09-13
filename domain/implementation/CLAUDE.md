@@ -9,8 +9,9 @@
 -->
 # :domain:implementation
 
-Implements `:domain:api` on top of `:data:repository:api`. Koin wiring in `Module.kt` (`domainModule`), all use cases as
-`factory`. Impl classes are public with an `internal constructor`.
+Implements `:domain:api` on top of `:data:repository:api`. Koin wiring: `Module.kt` holds the
+`@Module @ComponentScan object DomainModule`, and every use case is a `@Factory`. Impl classes are public with an
+`internal constructor`.
 
 The ones that carry real logic:
 

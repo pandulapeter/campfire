@@ -49,6 +49,7 @@ import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 import kotlinx.coroutines.withContext
 import kotlinx.serialization.json.Json
+import org.koin.core.annotation.Single
 
 /**
  * The state machine around [SyncEngine], and the only thing above the data layer that knows a service is involved
@@ -57,6 +58,7 @@ import kotlinx.serialization.json.Json
  * @param providers Every provider the build has. One is connected at a time - two would mean two remote folders
  *   with a claim on the same file names, and no answer to which of them a rename in one of them means.
  */
+@Single
 internal class SyncRepositoryImpl(
     private val providers: List<SyncProvider>,
     private val authenticator: SyncAuthenticator,

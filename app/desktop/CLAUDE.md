@@ -9,7 +9,7 @@
 -->
 # :app:desktop
 
-Compose Desktop entry point (`CampfireDesktopApplication.kt`, `main(args)`). Starts Koin through the `KoinApplication` composable (`koinConfiguration { }`) with `dataLocalSourceModule + dataRemoteSourceModule + dataRepositoryModule + domainModule + presentationModule`, then hosts `CampfireDesktopApp` in a `Window` whose `onKeyEvent` is wired to `CampfireViewModel.handleKeyEvent` (Escape dismisses the visible modal, pops the back stack, or exits the application on the root screen). Add new Koin modules here.
+Compose Desktop entry point (`CampfireDesktopApplication.kt`, `main(args)`). Starts Koin through `:app:di`'s `startCampfireDependencyGraph` before the window opens (the graph belongs to the process, so there is no `KoinApplication` composable around the content), then hosts `CampfireDesktopApp` in a `Window` whose `onKeyEvent` is wired to `CampfireViewModel.handleKeyEvent` (Escape dismisses the visible modal, pops the back stack, or exits the application on the root screen). The modules are named in `:app:di`, not here.
 
 The view model is obtained outside `Window` so window resizing doesn't reset it. Window min size is 400x400.
 

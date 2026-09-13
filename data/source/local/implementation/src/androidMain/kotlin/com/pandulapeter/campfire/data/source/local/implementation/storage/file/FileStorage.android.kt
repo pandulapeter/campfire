@@ -10,7 +10,13 @@
 package com.pandulapeter.campfire.data.source.local.implementation.storage.file
 
 import android.content.Context
-import org.koin.core.scope.Scope
+import org.koin.core.annotation.Provided
+import org.koin.core.annotation.Single
 
 /** The app-private `files` directory, which is backed up with the app and removed when it is uninstalled. */
-internal actual fun Scope.createFileStorage(): FileStorage = JvmFileStorage(get<Context>().applicationContext.filesDir)
+@Single
+internal class AndroidFileStorage(
+    // Provided rather than declared: the context is what the Android app shell hands to Koin as it starts, which no
+    // shared module can see.
+    @Provided context: Context,
+) : FileStorage by JvmFileStorage(context.applicationContext.filesDir)

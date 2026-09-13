@@ -13,12 +13,14 @@ import com.pandulapeter.campfire.data.source.local.api.SyncStateLocalSource
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 import kotlinx.serialization.json.Json
+import org.koin.core.annotation.Single
 
 /**
  * The one place the credentials document is read and written. Cached in memory (every request needs the access
  * token) and guarded by a mutex, so that two requests noticing an expired token at the same time cannot both start
  * a refresh and have the loser overwrite the winner's tokens.
  */
+@Single
 internal class SyncCredentialsStore(
     private val syncStateLocalSource: SyncStateLocalSource,
 ) {

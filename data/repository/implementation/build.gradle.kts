@@ -10,6 +10,7 @@
 plugins {
     id("campfire-library")
     alias(libs.plugins.kotlin.serialization)
+    alias(libs.plugins.koin.compiler)
 }
 
 kotlin {
@@ -18,6 +19,7 @@ kotlin {
             implementation(project(":data:repository:api"))
             implementation(project(":data:source:local:api"))
             implementation(project(":data:source:remote:api"))
+            implementation(libs.koin.annotations)
             implementation(libs.koin.core)
             implementation(libs.kotlin.coroutines)
             implementation(libs.kotlin.serialization.json)

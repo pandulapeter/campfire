@@ -13,7 +13,9 @@ import com.pandulapeter.campfire.data.model.domain.Setlist
 import com.pandulapeter.campfire.data.repository.api.SetlistRepository
 import com.pandulapeter.campfire.data.repository.implementation.base.BaseLocalDataRepository
 import com.pandulapeter.campfire.data.source.local.api.SetlistLocalSource
+import org.koin.core.annotation.Single
 
+@Single
 internal class SetlistRepositoryImpl(
     private val setlistLocalSource: SetlistLocalSource,
 ) : BaseLocalDataRepository<List<Setlist>>(), SetlistRepository {

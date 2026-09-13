@@ -14,7 +14,9 @@ import com.pandulapeter.campfire.data.repository.api.ArchiveRepository
 import com.pandulapeter.campfire.data.repository.api.SongContentRepository
 import com.pandulapeter.campfire.domain.api.useCases.ExportSongsUseCase
 import com.pandulapeter.campfire.domain.implementation.toSongExportFileName
+import org.koin.core.annotation.Factory
 
+@Factory
 class ExportSongsUseCaseImpl internal constructor(
     private val songContentRepository: SongContentRepository,
     private val archiveRepository: ArchiveRepository,

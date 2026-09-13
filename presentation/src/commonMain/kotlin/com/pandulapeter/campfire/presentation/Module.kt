@@ -9,49 +9,9 @@
  */
 package com.pandulapeter.campfire.presentation
 
-import com.pandulapeter.campfire.presentation.ui.CampfireViewModel
-import org.koin.core.module.dsl.viewModel
-import org.koin.dsl.module
+import org.koin.core.annotation.ComponentScan
+import org.koin.core.annotation.Module
 
-val presentationModule = module {
-    // Spelled out rather than built with viewModelOf, whose reified overloads stop at twenty-two parameters. Named
-    // arguments, so that the list stays readable and reordering the constructor cannot silently swap two use cases.
-    viewModel {
-        CampfireViewModel(
-            getScreenData = get(),
-            getUserPreferences = get(),
-            getSyncState = get(),
-            getSyncProviders = get(),
-            loadScreenData = get(),
-            isFirstRun = get(),
-            getSongContent = get(),
-            createSong = get(),
-            deleteSong = get(),
-            prepareImport = get(),
-            importFiles = get(),
-            exportSongs = get(),
-            exportSetlist = get(),
-            exportLibrary = get(),
-            createSetlist = get(),
-            saveSetlist = get(),
-            editSetlist = get(),
-            renameSongFile = get(),
-            deleteSetlist = get(),
-            saveSongContent = get(),
-            saveUserPreferences = get(),
-            setChordProLanguages = get(),
-            setChordProTag = get(),
-            connectSyncProvider = get(),
-            disconnectSyncProvider = get(),
-            cancelSynchronization = get(),
-            restoreSync = get(),
-            synchronizeLibrary = get(),
-            normalizeLanguageCode = get(),
-            normalizeText = get(),
-            parseChordPro = get(),
-            transposeChordPro = get(),
-            transposeChordProText = get(),
-            convertChordProNotation = get(),
-        )
-    }
-}
+@Module
+@ComponentScan
+object PresentationModule

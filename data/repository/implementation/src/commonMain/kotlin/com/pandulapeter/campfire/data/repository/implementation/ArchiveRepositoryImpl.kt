@@ -11,7 +11,9 @@ package com.pandulapeter.campfire.data.repository.implementation
 
 import com.pandulapeter.campfire.data.repository.api.ArchiveRepository
 import com.pandulapeter.campfire.data.source.local.api.ArchiveLocalSource
+import org.koin.core.annotation.Single
 
+@Single
 internal class ArchiveRepositoryImpl(
     private val archiveLocalSource: ArchiveLocalSource,
 ) : ArchiveRepository {

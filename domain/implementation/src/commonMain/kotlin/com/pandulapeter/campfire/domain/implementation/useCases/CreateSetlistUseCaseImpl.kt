@@ -11,7 +11,9 @@ package com.pandulapeter.campfire.domain.implementation.useCases
 
 import com.pandulapeter.campfire.data.repository.api.SetlistRepository
 import com.pandulapeter.campfire.domain.api.useCases.CreateSetlistUseCase
+import org.koin.core.annotation.Factory
 
+@Factory
 class CreateSetlistUseCaseImpl internal constructor(
     private val setlistRepository: SetlistRepository,
 ) : CreateSetlistUseCase {

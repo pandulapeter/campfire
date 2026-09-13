@@ -15,7 +15,9 @@ import com.pandulapeter.campfire.data.repository.api.SetlistRepository
 import com.pandulapeter.campfire.data.repository.api.SongContentRepository
 import com.pandulapeter.campfire.data.repository.api.SongRepository
 import com.pandulapeter.campfire.domain.api.useCases.ExportLibraryUseCase
+import org.koin.core.annotation.Factory
 
+@Factory
 class ExportLibraryUseCaseImpl internal constructor(
     private val songRepository: SongRepository,
     private val songContentRepository: SongContentRepository,

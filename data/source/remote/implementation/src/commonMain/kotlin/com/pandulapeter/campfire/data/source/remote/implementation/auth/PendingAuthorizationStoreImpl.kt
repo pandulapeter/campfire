@@ -13,11 +13,13 @@ import com.pandulapeter.campfire.data.model.domain.SyncProviderId
 import com.pandulapeter.campfire.data.source.remote.api.PendingAuthorization
 import com.pandulapeter.campfire.data.source.remote.api.PendingAuthorizationStore
 import com.pandulapeter.campfire.data.source.remote.api.model.RemoteAuthorizationRequest
+import org.koin.core.annotation.Single
 
 /**
  * Kept in the credentials document rather than one of its own: it is the same kind of secret, it has the same
  * lifetime, and one file means one place where an interrupted authorization can be left behind.
  */
+@Single
 internal class PendingAuthorizationStoreImpl(
     private val credentialsStore: SyncCredentialsStore,
 ) : PendingAuthorizationStore {

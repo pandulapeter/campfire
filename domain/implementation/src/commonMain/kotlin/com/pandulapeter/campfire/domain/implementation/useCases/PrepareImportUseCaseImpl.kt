@@ -20,7 +20,9 @@ import com.pandulapeter.campfire.data.repository.api.SongContentRepository
 import com.pandulapeter.campfire.data.repository.api.SongRepository
 import com.pandulapeter.campfire.domain.api.useCases.PrepareImportUseCase
 import kotlinx.coroutines.CancellationException
+import org.koin.core.annotation.Factory
 
+@Factory
 class PrepareImportUseCaseImpl internal constructor(
     private val archiveRepository: ArchiveRepository,
     private val songRepository: SongRepository,
