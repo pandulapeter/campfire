@@ -105,8 +105,9 @@ import org.jetbrains.compose.resources.painterResource
  * a single "display options" action, so that the bar does not get crowded. The text size can also be changed with
  * a pinch or Ctrl / Cmd + scroll on the content itself, see [fontScaleGestures].
  *
- * When there is more than one song to page through, a [SongPagerControls] bar under the lyrics offers the same
- * paging as the swipe gesture, along with the name of the setlist and the position of the current song in it.
+ * When there is more than one song to page through, or the song is read from a setlist of any length, a
+ * [SongPagerControls] bar under the lyrics offers the same paging as the swipe gesture, along with the name of the
+ * setlist and the position of the current song in it.
  *
  * The arrow keys do both without either gesture, see [songKeyboardShortcuts].
  *
@@ -153,6 +154,9 @@ internal fun SongDetailsScreen(
     }
     val currentSong = songs.getOrNull(pagerState.currentPage)
     val canPage = songs.size > 1
+    // A setlist of one song is still a setlist being played, so it keeps the bar that names it; only a song opened
+    // from the library, with nothing before or after it, goes without one.
+    val hasPagerControls = canPage || (destination.setlistFileName != null && songs.isNotEmpty())
     val setlistTitle = destination.setlistFileName?.let { fileName -> setlists.firstOrNull { it.fileName == fileName }?.title }
     val shouldShowChords = userPreferences?.isLyricsOnlyModeEnabled != true
     val isHorizontalFlow = userPreferences?.isHorizontalSectionFlowEnabled == true
@@ -310,7 +314,7 @@ internal fun SongDetailsScreen(
         // The paging bar sits below the pager and covers the bottom inset for it, so the pages only keep the
         // padding that is still theirs to apply.
         val layoutDirection = LocalLayoutDirection.current
-        val pageContentPadding = if (canPage) {
+        val pageContentPadding = if (hasPagerControls) {
             PaddingValues(
                 start = contentPadding.calculateStartPadding(layoutDirection),
                 end = contentPadding.calculateEndPadding(layoutDirection),
@@ -371,7 +375,7 @@ internal fun SongDetailsScreen(
                 )
             }
         }
-        if (canPage) {
+        if (hasPagerControls) {
             SongPagerControls(
                 setlistTitle = setlistTitle,
                 currentPage = pagerState.currentPage,
