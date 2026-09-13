@@ -73,7 +73,21 @@ Version 4.0 is a rewrite: the online song library is gone and there is **no migr
 an empty library.
 
 ### To do
+- Song assignment bottom sheet for setlists + search in the bottom sheet
+- Setlist assignment bottom sheet search
+- Setlist descriptions
+- Fewer demo songs
+- Add demo songs button should be disabled while adding demo songs
+- Tab section horizontal scroll?
+- Empty setlist message should be changed (action button that opens the song search)
+- Rename setlist date sort
+- Setlist with 1 song should also have a footer
+- Fast scroller touch target should be full height
+- Setlists search
+- Search mode instead of always present input field
+- Language picker radio button
 - Implement .cho (and other) file association
+- Pop-up menu vs bottom sheet inconsistency
 - Filter badge
 - Setlist.priority should be replaced with timestamp
 - If ALL songs are tagged with the same tag (or language), don't show that chip on the cards

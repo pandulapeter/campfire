@@ -9,16 +9,15 @@
  */
 package com.pandulapeter.campfire.presentation.ui.screens.songs
 
+import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.calculateEndPadding
 import androidx.compose.foundation.layout.calculateStartPadding
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.ime
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.grid.GridItemSpan
 import androidx.compose.foundation.lazy.grid.LazyGridState
@@ -37,10 +36,8 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.input.nestedscroll.nestedScroll
-import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.unit.Dp
@@ -54,11 +51,9 @@ import com.pandulapeter.campfire.presentation.resources.songs_sort_and_filter
 import com.pandulapeter.campfire.presentation.resources.songs_unknown_artist
 import com.pandulapeter.campfire.presentation.resources.songs_unsorted_label
 import com.pandulapeter.campfire.presentation.ui.CampfireViewModel
-import com.pandulapeter.campfire.presentation.ui.components.CampfireFloatingActionButton
 import com.pandulapeter.campfire.presentation.ui.components.CampfireTopAppBar
 import com.pandulapeter.campfire.presentation.ui.components.ControlsSidePanel
 import com.pandulapeter.campfire.presentation.ui.components.DismissSheetWhenSidePanelAppears
-import com.pandulapeter.campfire.presentation.ui.components.FAB_CLEARANCE
 import com.pandulapeter.campfire.presentation.ui.components.FAST_SCROLLER_CLEARANCE
 import com.pandulapeter.campfire.presentation.ui.components.FastScroller
 import com.pandulapeter.campfire.presentation.ui.components.ImportProgress
@@ -98,13 +93,6 @@ internal fun SongsScreen(
     val isImporting by viewModel.isImporting.collectAsStateWithLifecycle()
     val isPerformanceModeEnabled by viewModel.isPerformanceModeEnabled.collectAsStateWithLifecycle()
     val visibleDialog by viewModel.visibleDialog.collectAsStateWithLifecycle()
-    // The button would sit right where the suggestions and the keyboard go, and searching is not the moment to
-    // start writing a new song anyway. What hides it is the keyboard itself rather than the search field's focus:
-    // dismissing the keyboard leaves the caret in the field, so a button hidden on focus alone never came back -
-    // and on the platforms that have no software keyboard it should never go away in the first place. A keyboard
-    // a dialog raised for its own text field is not this screen's, and the button behind the dialog's scrim is in
-    // nobody's way, so that one leaves it alone - as it already does on the setlists screen.
-    val isKeyboardCoveringTheList = visibleDialog == null && WindowInsets.ime.getBottom(LocalDensity.current) > 0
     val scrollBehavior = TopAppBarDefaults.pinnedScrollBehavior()
     val listState = rememberRetainedLazyGridState(viewModel.songsScrollPosition)
     val isSidePanelVisible = hasRoomForSidePanel(settledWidth)
@@ -115,9 +103,6 @@ internal fun SongsScreen(
         isSidePanelVisible = isSidePanelVisible,
     )
     val hasLoadedLibrary = rememberHasLoadedLibrary(isLoading)
-    // The fast scroller's thumb is held far from the list it scrolls, so the button has to be told about the finger
-    // rather than left to work it out from where the list ended up.
-    var isFastScrollerPressed by remember { mutableStateOf(false) }
     KeepTopAppBarInSync(scrollBehavior, listState)
     DismissSheetWhenSidePanelAppears(
         isSidePanelVisible = isSidePanelVisible,
@@ -140,6 +125,17 @@ internal fun SongsScreen(
                     )
                 },
                 actions = {
+                    // The reasons this one comes and goes are the library being read and the mode being switched,
+                    // both of which happen while the bar is being looked at, so it makes room for itself rather than
+                    // appearing between two frames and pushing the action beside it aside as it lands.
+                    AnimatedVisibility(visible = !isPerformanceModeEnabled && placeholder.allowsCreatingSongs) {
+                        IconButton(onClick = { viewModel.showDialog(CampfireViewModel.DialogType.NewSong) }) {
+                            Icon(
+                                painter = painterResource(Res.drawable.ic_add),
+                                contentDescription = stringResource(Res.string.songs_new_song),
+                            )
+                        }
+                    }
                     if (!isSidePanelVisible) {
                         IconButton(onClick = { viewModel.showDialog(CampfireViewModel.DialogType.SongsControls) }) {
                             Icon(
@@ -151,31 +147,15 @@ internal fun SongsScreen(
                 },
             )
             ImportProgress(isImporting = isImporting)
-            Box(
-                modifier = Modifier.fillMaxSize()
-            ) {
-                SongList(
-                    modifier = Modifier.fillMaxSize(),
-                    viewModel = viewModel,
-                    listState = listState,
-                    placeholder = placeholder,
-                    columnCount = columnCount,
-                    hasLoadedLibrary = hasLoadedLibrary,
-                    contentPadding = listContentPadding,
-                    onFastScrollerPressedChanged = { isFastScrollerPressed = it },
-                )
-                CampfireFloatingActionButton(
-                    modifier = Modifier.align(Alignment.BottomEnd),
-                    isVisible = !isKeyboardCoveringTheList && !isPerformanceModeEnabled && placeholder.allowsCreatingSongs,
-                    isPushedAway = isFastScrollerPressed,
-                    listState = listState,
-                    settledWidth = settledWidth,
-                    contentPadding = listContentPadding,
-                    icon = painterResource(Res.drawable.ic_add),
-                    label = stringResource(Res.string.songs_new_song),
-                    onClick = { viewModel.showDialog(CampfireViewModel.DialogType.NewSong) },
-                )
-            }
+            SongList(
+                modifier = Modifier.fillMaxSize(),
+                viewModel = viewModel,
+                listState = listState,
+                placeholder = placeholder,
+                columnCount = columnCount,
+                hasLoadedLibrary = hasLoadedLibrary,
+                contentPadding = listContentPadding,
+            )
         }
         ControlsSidePanel(
             isVisible = isSidePanelVisible,
@@ -199,7 +179,6 @@ private fun SongList(
     columnCount: Int,
     hasLoadedLibrary: Boolean,
     contentPadding: PaddingValues,
-    onFastScrollerPressedChanged: (Boolean) -> Unit,
 ) {
     val songGroups by viewModel.songGroups.collectAsStateWithLifecycle()
     val query by viewModel.query.collectAsStateWithLifecycle()
@@ -246,7 +225,7 @@ private fun SongList(
                 start = contentPadding.calculateStartPadding(layoutDirection),
                 top = SECTION_HEADER_GAP,
                 end = contentPadding.calculateEndPadding(layoutDirection),
-                bottom = contentPadding.calculateBottomPadding() + FAB_CLEARANCE,
+                bottom = contentPadding.calculateBottomPadding(),
             ),
         ) {
             placeholder?.let {
@@ -338,7 +317,6 @@ private fun SongList(
             modifier = Modifier.padding(contentPadding),
             gridState = listState,
             labelForItem = { sectionLabels.getOrNull(it) },
-            onPressedChanged = onFastScrollerPressedChanged,
         )
     }
 }
@@ -354,9 +332,9 @@ private val CampfireViewModel.SongGroup.Header.fastScrollerLabel: String
     }
 
 /**
- * Whether the button that creates a song belongs on screen. It waits for the library to have been read rather than
- * appearing over the loading indicator and shrinking away again a moment later, and it stays away from the empty
- * state and the error, both of which offer their own action for the same thing.
+ * Whether the toolbar's button for creating a song belongs on screen. It waits for the library to have been read
+ * rather than appearing over the loading indicator and going away again a moment later, and it stays away from the
+ * empty state and the error, both of which offer their own action for the same thing.
  */
 private val CampfireViewModel.Placeholder?.allowsCreatingSongs
     get() = when (this) {

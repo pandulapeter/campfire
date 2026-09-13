@@ -9,8 +9,8 @@
  */
 package com.pandulapeter.campfire.presentation.ui.screens.setlists
 
+import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.animateDpAsState
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.calculateEndPadding
@@ -59,12 +59,10 @@ import com.pandulapeter.campfire.presentation.resources.setlists_reorder_hint
 import com.pandulapeter.campfire.presentation.ui.CampfireViewModel
 import com.pandulapeter.campfire.presentation.ui.components.ActionsMenu
 import com.pandulapeter.campfire.presentation.ui.components.ActionsMenuItem
-import com.pandulapeter.campfire.presentation.ui.components.CampfireFloatingActionButton
 import com.pandulapeter.campfire.presentation.ui.components.CampfireTopAppBar
 import com.pandulapeter.campfire.presentation.ui.components.ControlsSidePanel
 import com.pandulapeter.campfire.presentation.ui.components.DismissSheetWhenSidePanelAppears
 import com.pandulapeter.campfire.presentation.ui.components.DragHandle
-import com.pandulapeter.campfire.presentation.ui.components.FAB_CLEARANCE
 import com.pandulapeter.campfire.presentation.ui.components.ListColumns
 import com.pandulapeter.campfire.presentation.ui.components.ListPlaceholder
 import com.pandulapeter.campfire.presentation.ui.components.KeepTopAppBarInSync
@@ -122,6 +120,16 @@ internal fun SetlistsScreen(
                 scrollBehavior = scrollBehavior,
                 title = { Text(stringResource(Res.string.setlists)) },
                 actions = {
+                    // Performance mode is switched while the bar is being looked at, so the button makes room
+                    // for itself rather than appearing between two frames, as on the songs screen.
+                    AnimatedVisibility(visible = !isPerformanceModeEnabled) {
+                        IconButton(onClick = { viewModel.showDialog(CampfireViewModel.DialogType.NewSetlist) }) {
+                            Icon(
+                                painter = painterResource(Res.drawable.ic_add),
+                                contentDescription = stringResource(Res.string.setlists_new_setlist),
+                            )
+                        }
+                    }
                     if (!isSidePanelVisible) {
                         IconButton(onClick = { viewModel.showDialog(CampfireViewModel.DialogType.SetlistsControls) }) {
                             Icon(
@@ -132,28 +140,13 @@ internal fun SetlistsScreen(
                     }
                 },
             )
-            val listContentPadding = contentPadding.besideSidePanel(isSidePanelVisible)
-            Box(
-                modifier = Modifier.fillMaxSize()
-            ) {
-                SetlistList(
-                    modifier = Modifier.fillMaxSize(),
-                    viewModel = viewModel,
-                    listState = listState,
-                    columnCount = columnCount,
-                    contentPadding = listContentPadding,
-                )
-                CampfireFloatingActionButton(
-                    modifier = Modifier.align(Alignment.BottomEnd),
-                    isVisible = !isPerformanceModeEnabled,
-                    listState = listState,
-                    settledWidth = settledWidth,
-                    contentPadding = listContentPadding,
-                    icon = painterResource(Res.drawable.ic_add),
-                    label = stringResource(Res.string.setlists_new_setlist),
-                    onClick = { viewModel.showDialog(CampfireViewModel.DialogType.NewSetlist) },
-                )
-            }
+            SetlistList(
+                modifier = Modifier.fillMaxSize(),
+                viewModel = viewModel,
+                listState = listState,
+                columnCount = columnCount,
+                contentPadding = contentPadding.besideSidePanel(isSidePanelVisible),
+            )
         }
         ControlsSidePanel(
             isVisible = isSidePanelVisible,
@@ -239,7 +232,7 @@ private fun SetlistList(
             start = contentPadding.calculateStartPadding(layoutDirection),
             top = SECTION_HEADER_GAP,
             end = contentPadding.calculateEndPadding(layoutDirection),
-            bottom = contentPadding.calculateBottomPadding() + FAB_CLEARANCE,
+            bottom = contentPadding.calculateBottomPadding(),
         ),
     ) {
         // The setlists come first: they are what this screen is about. The library only speaks up once there are

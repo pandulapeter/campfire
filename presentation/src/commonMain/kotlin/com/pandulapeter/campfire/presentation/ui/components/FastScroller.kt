@@ -34,7 +34,6 @@ import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableIntStateOf
@@ -72,8 +71,6 @@ import kotlin.math.roundToInt
  * outside the thumb go through to the list.
  *
  * @param labelForItem Returns the label of the section the item at the given index belongs to, or null if none.
- * @param onPressedChanged Reported from the first touch rather than from the first movement, so that whatever has to
- * get out of the thumb's way is already gone by the time the finger travels anywhere.
  */
 @OptIn(ExperimentalMaterial3ExpressiveApi::class)
 @Composable
@@ -81,7 +78,6 @@ internal fun BoxScope.FastScroller(
     modifier: Modifier = Modifier,
     gridState: LazyGridState,
     labelForItem: (index: Int) -> String?,
-    onPressedChanged: (isPressed: Boolean) -> Unit = {},
 ) {
     val coroutineScope = rememberCoroutineScope()
     val minThumbHeight = with(LocalDensity.current) { MIN_THUMB_HEIGHT.toPx() }
@@ -109,14 +105,6 @@ internal fun BoxScope.FastScroller(
         fraction = dragProgress,
     )
     val label = labelForItem(gridState.firstVisibleItemIndex)
-    // Reported from the composition rather than from the gesture itself, which would hold on to the lambda it was
-    // first composed with for as long as the scroller keeps its state. The scroller going away takes the press with
-    // it: the gesture is only there to be ended for as long as the thumb is, and whatever moved out of its way has
-    // nothing left to wait for.
-    DisposableEffect(state.isDragging) {
-        onPressedChanged(state.isDragging)
-        onDispose { onPressedChanged(false) }
-    }
 
     Box(
         modifier = modifier
