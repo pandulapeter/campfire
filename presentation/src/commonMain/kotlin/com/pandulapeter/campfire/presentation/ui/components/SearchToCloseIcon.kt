@@ -9,16 +9,16 @@
  */
 package com.pandulapeter.campfire.presentation.ui.components
 
+import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.Easing
 import androidx.compose.animation.core.FastOutSlowInEasing
 import androidx.compose.animation.core.LinearEasing
-import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.layout.size
 import androidx.compose.material3.LocalContentColor
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
@@ -33,7 +33,9 @@ import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.dp
 import kotlin.math.PI
+import kotlin.math.abs
 import kotlin.math.cos
+import kotlin.math.roundToInt
 
 /**
  * The search action's icon, which is the same mark whether the search is closed or open: a magnifier whose lens
@@ -51,20 +53,36 @@ import kotlin.math.cos
  * waits for which, and by how much — and that is a set of proportions rather than a length. A toolbar icon under a
  * finger has to be done well before an icon being designed in isolation does.
  *
- * @param isClose Which end of the animation to be at. The whole timeline is played to get there.
+ * @param isClose Which end of the animation to be at. The rest of the timeline is played to get there.
+ * @param backProgress How far a back gesture that would close the search has been dragged. While it is above zero
+ *   the mark is held that far back along its timeline, the cross already turning back into the magnifier, so the
+ *   gesture previews what letting go of it does. Whenever it drops back to zero the mark carries on from wherever
+ *   the gesture left it — on to the magnifier if the search closed, back to the cross if the gesture was cancelled —
+ *   rather than jumping to the end it was last animated to first.
  */
 @Composable
 internal fun SearchToCloseIcon(
     modifier: Modifier = Modifier,
     isClose: Boolean,
+    backProgress: Float = 0f,
     contentDescription: String,
     tint: Color = LocalContentColor.current,
 ) {
-    val timeline by animateFloatAsState(
-        targetValue = if (isClose) 1f else 0f,
-        // Linear, since the easing of every stage is its own and is applied to its own slice below.
-        animationSpec = tween(durationMillis = PLAYBACK_DURATION, easing = LinearEasing),
-    )
+    val timeline = remember { Animatable(if (isClose) 1f else 0f) }
+    LaunchedEffect(isClose, backProgress) {
+        if (isClose && backProgress > 0f) {
+            timeline.snapTo(1f - backProgress)
+        } else {
+            val target = if (isClose) 1f else 0f
+            timeline.animateTo(
+                targetValue = target,
+                // Linear, since the easing of every stage is its own and is applied to its own slice below. Only as
+                // long as the part of the timeline that is left, so that a mark let go of halfway through a gesture
+                // finishes at the pace a tap plays the whole of it at.
+                animationSpec = tween(durationMillis = (abs(target - timeline.value) * PLAYBACK_DURATION).roundToInt(), easing = LinearEasing),
+            )
+        }
+    }
     // The lens is the one part that has to be measured to be trimmed, so it is built once and measured once. The
     // straight strokes are trimmed by interpolating their two ends, which costs nothing.
     val lens = remember { lensPath() }
@@ -75,6 +93,7 @@ internal fun SearchToCloseIcon(
             .size(ICON_SIZE)
             .semantics { this.contentDescription = contentDescription }
     ) {
+        val timeline = timeline.value
         scale(scale = size.minDimension / VIEWPORT_SIZE, pivot = Offset.Zero) {
             val stroke = Stroke(width = STROKE_WIDTH)
             val lensTrimStart = timeline.stage(startMillis = 134, durationMillis = 416, easing = AccelerateDecelerateEasing)

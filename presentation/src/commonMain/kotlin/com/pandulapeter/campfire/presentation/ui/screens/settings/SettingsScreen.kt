@@ -38,6 +38,7 @@ import androidx.compose.ui.graphics.painter.Painter
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.pandulapeter.campfire.data.model.domain.UserPreferences
@@ -124,6 +125,7 @@ import com.pandulapeter.campfire.presentation.ui.components.SectionHeader
 import com.pandulapeter.campfire.presentation.ui.components.SegmentedChoice
 import com.pandulapeter.campfire.presentation.ui.components.SettingsSectionTitle
 import com.pandulapeter.campfire.presentation.ui.components.SwitchListItem
+import com.pandulapeter.campfire.presentation.ui.components.TopLevelScreenLayout
 import com.pandulapeter.campfire.presentation.ui.components.animateScrollToKey
 import com.pandulapeter.campfire.presentation.ui.components.listItemAnimation
 import com.pandulapeter.campfire.presentation.ui.components.rememberRetainedLazyListState
@@ -144,6 +146,7 @@ import org.jetbrains.compose.resources.painterResource
 internal fun SettingsScreen(
     modifier: Modifier = Modifier,
     viewModel: CampfireViewModel,
+    railWidth: Dp,
     contentPadding: PaddingValues,
     urlOpener: (String) -> Unit,
 ) {
@@ -153,13 +156,16 @@ internal fun SettingsScreen(
     val isPerformanceModeEnabled by viewModel.isPerformanceModeEnabled.collectAsStateWithLifecycle()
     val filePicker = LocalFilePicker.current
     KeepTopAppBarInSync(scrollBehavior, listState)
-    Column(
-        modifier = modifier.fillMaxSize().nestedScroll(scrollBehavior.nestedScrollConnection)
+    TopLevelScreenLayout(
+        modifier = modifier.nestedScroll(scrollBehavior.nestedScrollConnection),
+        railWidth = railWidth,
+        appBar = {
+            CampfireTopAppBar(
+                scrollBehavior = scrollBehavior,
+                title = { Text(stringResource(Res.string.settings)) },
+            )
+        },
     ) {
-        CampfireTopAppBar(
-            scrollBehavior = scrollBehavior,
-            title = { Text(stringResource(Res.string.settings)) },
-        )
         ImportProgress(isImporting = isImporting)
         val userPreferences by viewModel.userPreferences.collectAsStateWithLifecycle()
         val syncState by viewModel.syncState.collectAsStateWithLifecycle()

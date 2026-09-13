@@ -10,12 +10,14 @@
 package com.pandulapeter.campfire.presentation.ui.components
 
 import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.scaleIn
 import androidx.compose.animation.scaleOut
 import androidx.compose.animation.slideInHorizontally
 import androidx.compose.animation.slideOutHorizontally
+import androidx.compose.foundation.gestures.ScrollableState
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -40,13 +42,13 @@ import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Alignment
-import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.backhandler.BackHandler
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.graphics.SolidColor
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.input.pointer.PointerIcon
 import androidx.compose.ui.input.pointer.pointerHoverIcon
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
@@ -55,6 +57,12 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.navigationevent.NavigationEventInfo
+import androidx.navigationevent.NavigationEventTransitionState
+import androidx.navigationevent.compose.NavigationBackHandler
+import androidx.navigationevent.compose.rememberNavigationEventState
+import kotlinx.coroutines.flow.distinctUntilChanged
+import kotlinx.coroutines.flow.filter
 import com.pandulapeter.campfire.presentation.localization.stringResource
 import com.pandulapeter.campfire.presentation.resources.Res
 import com.pandulapeter.campfire.presentation.resources.close
@@ -78,7 +86,6 @@ import org.jetbrains.compose.resources.painterResource
  * @param title The screen's own name, shown whenever the search is closed.
  * @param placeholder What the field says while it is empty, which also names the search action, see [SearchAction].
  */
-@OptIn(ExperimentalComposeUiApi::class)
 @Composable
 internal fun SearchableTopAppBarTitle(
     modifier: Modifier = Modifier,
@@ -87,14 +94,10 @@ internal fun SearchableTopAppBarTitle(
     searchState: SearchState,
 ) {
     val isOpen by searchState.isOpen.collectAsStateWithLifecycle()
-    val keyboardController = LocalSoftwareKeyboardController.current
-    // The one back handler of the search. The desktop has no use for it - its window key handler sees Escape before
-    // Compose turns it into a back event, so it closes the search there - but on the other three this is what makes
-    // the system's back gesture close the search before it leaves the screen.
-    BackHandler(enabled = isOpen) {
-        keyboardController?.hide()
-        searchState.close()
-    }
+    SearchBackHandler(
+        searchState = searchState,
+        isOpen = isOpen,
+    )
     Box(
         modifier = modifier.fillMaxWidth(),
         contentAlignment = Alignment.CenterStart,
@@ -118,9 +121,77 @@ internal fun SearchableTopAppBarTitle(
             SearchField(
                 modifier = Modifier.fillMaxWidth(),
                 searchState = searchState,
+                isOpen = isOpen,
                 placeholder = placeholder,
             )
         }
+    }
+}
+
+/**
+ * The one back handler of the search, which closes it before a back gesture gets as far as leaving the screen.
+ *
+ * It is a navigation event handler rather than a plain back handler because a plain one only hears about a gesture
+ * once it is over: the whole drag of a predictive back gesture went by with nothing on screen answering it, and the
+ * search then vanished on release. This one is told how far the gesture has come on every frame, which it hands to
+ * [SearchState.backProgress] for the field and the search action to preview the close with — the cross turning back
+ * into the magnifier and the field receding the way it is about to leave — so the drag says what letting go will do.
+ *
+ * The desktop never reaches it: its window key handler sees Escape before Compose turns the key into a back event,
+ * and closes the search there.
+ */
+@Composable
+private fun SearchBackHandler(
+    searchState: SearchState,
+    isOpen: Boolean,
+) {
+    val keyboardController = LocalSoftwareKeyboardController.current
+    val gesture = rememberNavigationEventState(currentInfo = NavigationEventInfo.None)
+    // Registered whether or not the search is open and switched with isBackEnabled instead, since a handler that
+    // comes and goes changes the order the dispatcher picks between handlers in.
+    NavigationBackHandler(
+        state = gesture,
+        isBackEnabled = isOpen,
+        onBackCompleted = {
+            keyboardController?.hide()
+            searchState.close()
+        },
+    )
+    LaunchedEffect(gesture, searchState) {
+        try {
+            snapshotFlow {
+                (gesture.transitionState as? NavigationEventTransitionState.InProgress)
+                    ?.takeIf { it.direction == NavigationEventTransitionState.TRANSITIONING_BACK }
+                    ?.latestEvent
+                    ?.progress
+                    ?: 0f
+            }.collect { searchState.backProgress = it }
+        } finally {
+            // A screen left in the middle of a gesture must not leave the next one it is composed into previewing it.
+            searchState.backProgress = 0f
+        }
+    }
+}
+
+/**
+ * Puts the keyboard away as soon as the list under the search starts moving down, which is what reading the results
+ * looks like: the keyboard is only in the way of them by then, and it covers half of a phone's list. Scrolling back
+ * up leaves it alone, since that is as likely to be on the way back to the field.
+ *
+ * Read from the list's own scroll state rather than from the gesture, so that every way the list is moved down counts
+ * — a drag, the fling after it, the wheel, the fast scroller — and it fires once as a scroll down begins rather than
+ * on every frame of it. The field keeps the focus and the caret, so a tap on it brings the keyboard straight back.
+ */
+@Composable
+internal fun HideKeyboardWhenScrolledDown(
+    scrollableState: ScrollableState,
+) {
+    val keyboardController = LocalSoftwareKeyboardController.current
+    LaunchedEffect(scrollableState, keyboardController) {
+        snapshotFlow { scrollableState.isScrollInProgress && scrollableState.lastScrolledForward }
+            .distinctUntilChanged()
+            .filter { it }
+            .collect { keyboardController?.hide() }
     }
 }
 
@@ -151,6 +222,7 @@ internal fun SearchAction(
     ) {
         SearchToCloseIcon(
             isClose = isOpen,
+            backProgress = searchState.backProgress,
             contentDescription = if (isOpen) stringResource(Res.string.close) else placeholder,
         )
     }
@@ -174,11 +246,15 @@ internal fun SearchAction(
  * tap is one tap more than the action they already took; on a touch platform that is also what brings the keyboard
  * up with it. The caret goes to the end of what is already written, which is what a search that was left open and
  * then come back to has in it.
+ *
+ * While a back gesture that would close the search is being dragged, the field fades and slides the way its exit
+ * takes it, as far as the gesture has come.
  */
 @Composable
 private fun SearchField(
     modifier: Modifier = Modifier,
     searchState: SearchState,
+    isOpen: Boolean,
     placeholder: String,
 ) {
     val keyboardController = LocalSoftwareKeyboardController.current
@@ -187,8 +263,22 @@ private fun SearchField(
         searchState.textFieldState.edit { placeCursorAtEnd() }
         focusRequester.requestFocus()
     }
+    val recession = remember { Animatable(0f) }
+    val returnSpec = MaterialTheme.motionScheme.fastSpatialSpec<Float>()
+    LaunchedEffect(searchState.backProgress, isOpen) {
+        when {
+            searchState.backProgress > 0f -> recession.snapTo(searchState.backProgress)
+            // A gesture let go of without closing the search brings the field back. One that did close it leaves
+            // the field where the gesture had taken it, so that the exit carries on from there instead of the field
+            // jumping back into place for the first frame of it.
+            isOpen -> recession.animateTo(targetValue = 0f, animationSpec = returnSpec)
+        }
+    }
     Surface(
-        modifier = modifier,
+        modifier = modifier.graphicsLayer {
+            alpha = 1f - recession.value * RECEDED_ALPHA_LOSS
+            translationX = recession.value * size.width / TITLE_SLIDE_FRACTION
+        },
         shape = CircleShape,
         color = MaterialTheme.colorScheme.surfaceContainerHigh,
     ) {
@@ -250,6 +340,9 @@ private fun SearchField(
 
 /** How far into its own width each half of the title slot travels as it comes and goes. */
 private const val TITLE_SLIDE_FRACTION = 6
+
+/** How much of the field's opacity a back gesture dragged all the way takes away before it is let go of. */
+private const val RECEDED_ALPHA_LOSS = 0.5f
 
 private val FIELD_HEIGHT = 40.dp
 private val CLEAR_BUTTON_SIZE = 32.dp

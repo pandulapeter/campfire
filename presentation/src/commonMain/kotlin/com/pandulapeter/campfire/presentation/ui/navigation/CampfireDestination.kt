@@ -25,9 +25,6 @@ sealed interface CampfireDestination : NavKey {
 
     sealed interface TopLevel : CampfireDestination {
 
-        val index: Int
-            get() = entries.indexOf(this)
-
         companion object {
             val entries: List<TopLevel> get() = listOf(Songs, Setlists, Settings)
 

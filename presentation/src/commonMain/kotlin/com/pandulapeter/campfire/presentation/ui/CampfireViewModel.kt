@@ -180,9 +180,9 @@ class CampfireViewModel(
      * screens have one at all, and a search left open on a list screen is no business of the song that was opened
      * from it: there, back is back.
      *
-     * The screens answer their own back gesture with a `BackHandler` registered inside them, which is innermost and
-     * therefore wins on its own; this is here for the desktop, whose window key handler decides what Escape means
-     * from outside the composition entirely.
+     * The screens answer their own back gesture with a navigation event handler registered inside them, which is
+     * composed after the navigation's own and therefore wins on its own; this is here for the desktop, whose window
+     * key handler decides what Escape means from outside the composition entirely.
      */
     internal val currentSearch: SearchState?
         get() = when (backStack.lastOrNull()) {
@@ -333,6 +333,20 @@ class CampfireViewModel(
      * still empty on its first frame would open every setlist on its first song.
      */
     val allSongs = screenData.map { it.data?.unfilteredSongs.orEmpty() }.asEagerState(emptyList())
+
+    /**
+     * The labels every song in the library carries, which the song rows leave off: a tag that is on every song tells
+     * one song from no other, and a library that sings in one language has nothing to mark a song with. Counted over
+     * the whole library rather than over what the filters leave, since a tag filter narrows the list to songs that
+     * all carry that tag, and the rows would then lose the very label the reader narrowed them by. Tags are folded
+     * to lowercase the way the filters count them, so two spellings of one word are one tag here too.
+     */
+    val labelsOnEverySong = allSongs.map { songs ->
+        LabelsOnEverySong(
+            tags = songs.map { song -> song.tags.map { it.lowercase() }.toSet() }.reduceOrNull { a, b -> a intersect b }.orEmpty(),
+            languages = songs.map { it.languages.toSet() }.reduceOrNull { a, b -> a intersect b }.orEmpty(),
+        )
+    }.asState(LabelsOnEverySong())
 
     /** The library as the song list shows it: filtered and sorted the way the preferences ask for. */
     private val filteredSongs = screenData.map { it.data?.songs.orEmpty() }
@@ -1375,6 +1389,15 @@ class CampfireViewModel(
         val song: Song,
         val title: String,
         val artist: String,
+    )
+
+    /**
+     * What every song in the library is filed under, see [labelsOnEverySong]. The tags are lowercase, so a song's own
+     * has to be folded before it is looked up here.
+     */
+    data class LabelsOnEverySong(
+        val tags: Set<String> = emptySet(),
+        val languages: Set<String> = emptySet(),
     )
 
     data class SongGroup(

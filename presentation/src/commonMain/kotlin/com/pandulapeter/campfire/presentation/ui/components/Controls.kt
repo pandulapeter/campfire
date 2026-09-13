@@ -23,14 +23,11 @@ import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.WindowInsetsSides
-import androidx.compose.foundation.layout.asPaddingValues
 import androidx.compose.foundation.layout.calculateEndPadding
 import androidx.compose.foundation.layout.calculateStartPadding
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.only
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
@@ -38,14 +35,12 @@ import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.selection.selectable
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FilterChipDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.LocalMinimumInteractiveComponentSize
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
-import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.material3.VerticalDivider
 import androidx.compose.material3.minimumInteractiveComponentSize
 import androidx.compose.material3.ripple
@@ -135,13 +130,13 @@ internal fun songListColumnCount(
 }
 
 /**
- * A screen's controls ([SongsControls], [SetlistsControls]) in a panel that spans the full height of the screen next
- * to its app bar and content, shown on screens that are wide enough for it, see [hasRoomForSidePanel].
+ * A screen's controls ([SongsControls], [SetlistsControls]) in a panel under the app bar and next to the list, shown
+ * on screens that are wide enough for it, see [hasRoomForSidePanel]. The bar spans it the way it spans the navigation
+ * rail at the other end, so that the window reads as one bar over everything the screen holds.
  *
  * @param content The controls themselves, handed the modifier that gives the panel its size and its background, and
  *   the insets the panel is responsible for.
  */
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 internal fun ControlsSidePanel(
     isVisible: Boolean,
@@ -158,8 +153,6 @@ internal fun ControlsSidePanel(
         content(
             Modifier.width(SIDE_PANEL_WIDTH + endPadding).fillMaxHeight().background(MaterialTheme.colorScheme.surfaceContainerLow),
             PaddingValues(
-                // The panel sits next to the app bar instead of below it, so it handles the top inset on its own.
-                top = TopAppBarDefaults.windowInsets.only(WindowInsetsSides.Top).asPaddingValues().calculateTopPadding(),
                 end = endPadding,
                 bottom = contentPadding.calculateBottomPadding(),
             ),

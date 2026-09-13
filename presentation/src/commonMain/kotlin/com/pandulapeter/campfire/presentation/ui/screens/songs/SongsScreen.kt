@@ -11,7 +11,6 @@ package com.pandulapeter.campfire.presentation.ui.screens.songs
 
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.calculateEndPadding
@@ -59,6 +58,7 @@ import com.pandulapeter.campfire.presentation.ui.components.DismissSheetWhenSide
 import com.pandulapeter.campfire.presentation.ui.components.FAST_SCROLLER_CLEARANCE
 import com.pandulapeter.campfire.presentation.ui.components.FastScroller
 import com.pandulapeter.campfire.presentation.ui.components.ImportProgress
+import com.pandulapeter.campfire.presentation.ui.components.HideKeyboardWhenScrolledDown
 import com.pandulapeter.campfire.presentation.ui.components.KeepTopAppBarInSync
 import com.pandulapeter.campfire.presentation.ui.components.ListColumns
 import com.pandulapeter.campfire.presentation.ui.components.ListPlaceholder
@@ -69,6 +69,7 @@ import com.pandulapeter.campfire.presentation.ui.components.SectionHeader
 import com.pandulapeter.campfire.presentation.ui.components.SongActionsButton
 import com.pandulapeter.campfire.presentation.ui.components.SongListItem
 import com.pandulapeter.campfire.presentation.ui.components.SongsControls
+import com.pandulapeter.campfire.presentation.ui.components.TopLevelScreenLayout
 import com.pandulapeter.campfire.presentation.ui.components.animateScrollToKey
 import com.pandulapeter.campfire.presentation.ui.components.besideSidePanel
 import com.pandulapeter.campfire.presentation.ui.components.hasRoomForSidePanel
@@ -88,6 +89,7 @@ internal fun SongsScreen(
     modifier: Modifier = Modifier,
     viewModel: CampfireViewModel,
     settledWidth: Dp,
+    railWidth: Dp,
     contentPadding: PaddingValues,
 ) {
     val isLoading by viewModel.isLoading.collectAsStateWithLifecycle()
@@ -106,17 +108,16 @@ internal fun SongsScreen(
     )
     val hasLoadedLibrary = rememberHasLoadedLibrary(isLoading)
     KeepTopAppBarInSync(scrollBehavior, listState)
+    HideKeyboardWhenScrolledDown(listState)
     DismissSheetWhenSidePanelAppears(
         isSidePanelVisible = isSidePanelVisible,
         isSheetVisible = visibleDialog == CampfireViewModel.DialogType.SongsControls,
         onDismiss = viewModel::dismissDialog,
     )
-    Row(
-        modifier = modifier.fillMaxSize()
-    ) {
-        Column(
-            modifier = Modifier.weight(1f).fillMaxSize().nestedScroll(scrollBehavior.nestedScrollConnection)
-        ) {
+    TopLevelScreenLayout(
+        modifier = modifier,
+        railWidth = railWidth,
+        appBar = {
             CampfireTopAppBar(
                 scrollBehavior = scrollBehavior,
                 title = {
@@ -152,9 +153,14 @@ internal fun SongsScreen(
                     }
                 },
             )
-            ImportProgress(isImporting = isImporting)
+        },
+    ) {
+        ImportProgress(isImporting = isImporting)
+        Row {
             SongList(
-                modifier = Modifier.fillMaxSize(),
+                // Only the list tints the bar: the panel next to it scrolls under the same bar, but the bar is kept in
+                // step with the list's own scroll position, and the two would fight over it.
+                modifier = Modifier.weight(1f).fillMaxSize().nestedScroll(scrollBehavior.nestedScrollConnection),
                 viewModel = viewModel,
                 listState = listState,
                 placeholder = placeholder,
@@ -162,16 +168,16 @@ internal fun SongsScreen(
                 hasLoadedLibrary = hasLoadedLibrary,
                 contentPadding = listContentPadding,
             )
-        }
-        ControlsSidePanel(
-            isVisible = isSidePanelVisible,
-            contentPadding = contentPadding,
-        ) { panelModifier, panelContentPadding ->
-            SongsControls(
-                modifier = panelModifier,
-                viewModel = viewModel,
-                contentPadding = panelContentPadding,
-            )
+            ControlsSidePanel(
+                isVisible = isSidePanelVisible,
+                contentPadding = contentPadding,
+            ) { panelModifier, panelContentPadding ->
+                SongsControls(
+                    modifier = panelModifier,
+                    viewModel = viewModel,
+                    contentPadding = panelContentPadding,
+                )
+            }
         }
     }
 }
@@ -191,6 +197,7 @@ private fun SongList(
     val query = viewModel.songsSearch.textFieldState.text.toString()
     val userPreferences by viewModel.userPreferences.collectAsStateWithLifecycle()
     val transpositions by viewModel.transpositions.collectAsStateWithLifecycle()
+    val labelsOnEverySong by viewModel.labelsOnEverySong.collectAsStateWithLifecycle()
     val isPerformanceModeEnabled by viewModel.isPerformanceModeEnabled.collectAsStateWithLifecycle()
     // Lyrics only mode takes the chords out of the viewer, and the key is the shortest way of writing them down.
     val shouldShowChords = userPreferences?.isLyricsOnlyModeEnabled != true
@@ -286,6 +293,7 @@ private fun SongList(
                         // amount this list knows about: the setlists each hold their own.
                         key = viewModel.renderKey(song, transpositions[song.fileName, null], chordSpelling),
                         shouldShowChords = shouldShowChords,
+                        labelsOnEverySong = labelsOnEverySong,
                         onClick = {
                             keyboardController?.hide()
                             viewModel.openSong(song)

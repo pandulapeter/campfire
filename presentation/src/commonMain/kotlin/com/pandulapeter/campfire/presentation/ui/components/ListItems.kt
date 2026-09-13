@@ -115,6 +115,8 @@ import org.jetbrains.compose.resources.painterResource
  * @param shouldShowChords False under lyrics only mode, where the row says nothing about chords at all: not the
  *   key, and not the "Lyrics only" marker either, which only tells this song from the others while the others are
  *   showing chords.
+ * @param labelsOnEverySong The tags and languages the row leaves off, because every song in the library carries
+ *   them and a label that is on every row tells the reader nothing about this one.
  * @param onLongClick A shortcut to the same actions the row's overflow button opens, on the touch platforms where
  *   holding a row is a natural way to ask what can be done to it.
  * @param actions The trailing content of the row, which is the overflow button and whichever way of listing the
@@ -128,6 +130,7 @@ internal fun SongListItem(
     index: Int? = null,
     key: String? = null,
     shouldShowChords: Boolean = true,
+    labelsOnEverySong: CampfireViewModel.LabelsOnEverySong,
     isBeingDragged: Boolean = false,
     onClick: () -> Unit,
     onLongClick: (() -> Unit)? = null,
@@ -159,6 +162,8 @@ internal fun SongListItem(
 
         else -> null
     }
+    val languages = song.languages.filterNot { it in labelsOnEverySong.languages }
+    val tags = song.tags.filterNot { it.lowercase() in labelsOnEverySong.tags }
     ListItem(
         modifier = modifier.combinedClickable(onClick = onClick, onLongClick = onLongClick),
         colors = ListItemDefaults.colors(containerColor = containerColor),
@@ -175,7 +180,7 @@ internal fun SongListItem(
         // here shares the title's line: a title is the longest thing on the row and the one that must never be
         // pushed out of sight, while the artist is short enough to leave the key room next to it. The languages and
         // tags go under both, since a row of those is as long as somebody chose to make it.
-        supportingContent = if (song.artist.isBlank() && note == null && song.languages.isEmpty() && song.tags.isEmpty()) {
+        supportingContent = if (song.artist.isBlank() && note == null && languages.isEmpty() && tags.isEmpty()) {
             null
         } else {
             {
@@ -226,11 +231,11 @@ internal fun SongListItem(
                             }
                         }
                     }
-                    if (song.languages.isNotEmpty() || song.tags.isNotEmpty()) {
+                    if (languages.isNotEmpty() || tags.isNotEmpty()) {
                         SongLabels(
                             modifier = Modifier.padding(top = if (song.artist.isBlank() && note == null) 0.dp else 4.dp),
-                            languages = song.languages,
-                            tags = song.tags,
+                            languages = languages,
+                            tags = tags,
                         )
                     }
                 }

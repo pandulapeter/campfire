@@ -11,7 +11,6 @@ package com.pandulapeter.campfire.presentation.ui.screens.setlists
 
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.animateDpAsState
-import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.calculateEndPadding
 import androidx.compose.foundation.layout.calculateStartPadding
@@ -67,6 +66,7 @@ import com.pandulapeter.campfire.presentation.ui.components.DismissSheetWhenSide
 import com.pandulapeter.campfire.presentation.ui.components.DragHandle
 import com.pandulapeter.campfire.presentation.ui.components.ListColumns
 import com.pandulapeter.campfire.presentation.ui.components.ListPlaceholder
+import com.pandulapeter.campfire.presentation.ui.components.HideKeyboardWhenScrolledDown
 import com.pandulapeter.campfire.presentation.ui.components.KeepTopAppBarInSync
 import com.pandulapeter.campfire.presentation.ui.components.SearchAction
 import com.pandulapeter.campfire.presentation.ui.components.SearchableTopAppBarTitle
@@ -77,6 +77,7 @@ import com.pandulapeter.campfire.presentation.ui.components.SetlistsControls
 import com.pandulapeter.campfire.presentation.ui.components.MissingSongListItem
 import com.pandulapeter.campfire.presentation.ui.components.SongListItem
 import com.pandulapeter.campfire.presentation.ui.components.SongActionsButton
+import com.pandulapeter.campfire.presentation.ui.components.TopLevelScreenLayout
 import com.pandulapeter.campfire.presentation.ui.components.animateScrollToKey
 import com.pandulapeter.campfire.presentation.ui.components.besideSidePanel
 import com.pandulapeter.campfire.presentation.ui.components.hasRoomForSidePanel
@@ -96,6 +97,7 @@ internal fun SetlistsScreen(
     modifier: Modifier = Modifier,
     viewModel: CampfireViewModel,
     settledWidth: Dp,
+    railWidth: Dp,
     contentPadding: PaddingValues,
 ) {
     val scrollBehavior = TopAppBarDefaults.pinnedScrollBehavior()
@@ -109,17 +111,16 @@ internal fun SetlistsScreen(
         isSidePanelVisible = isSidePanelVisible,
     )
     KeepTopAppBarInSync(scrollBehavior, listState)
+    HideKeyboardWhenScrolledDown(listState)
     DismissSheetWhenSidePanelAppears(
         isSidePanelVisible = isSidePanelVisible,
         isSheetVisible = visibleDialog == CampfireViewModel.DialogType.SetlistsControls,
         onDismiss = viewModel::dismissDialog,
     )
-    Row(
-        modifier = modifier.fillMaxSize()
-    ) {
-        Column(
-            modifier = Modifier.weight(1f).fillMaxSize().nestedScroll(scrollBehavior.nestedScrollConnection)
-        ) {
+    TopLevelScreenLayout(
+        modifier = modifier,
+        railWidth = railWidth,
+        appBar = {
             CampfireTopAppBar(
                 scrollBehavior = scrollBehavior,
                 title = {
@@ -154,23 +155,27 @@ internal fun SetlistsScreen(
                     }
                 },
             )
+        },
+    ) {
+        Row {
             SetlistList(
-                modifier = Modifier.fillMaxSize(),
+                // Only the list tints the bar, as on the songs screen.
+                modifier = Modifier.weight(1f).fillMaxSize().nestedScroll(scrollBehavior.nestedScrollConnection),
                 viewModel = viewModel,
                 listState = listState,
                 columnCount = columnCount,
                 contentPadding = contentPadding.besideSidePanel(isSidePanelVisible),
             )
-        }
-        ControlsSidePanel(
-            isVisible = isSidePanelVisible,
-            contentPadding = contentPadding,
-        ) { panelModifier, panelContentPadding ->
-            SetlistsControls(
-                modifier = panelModifier,
-                viewModel = viewModel,
-                contentPadding = panelContentPadding,
-            )
+            ControlsSidePanel(
+                isVisible = isSidePanelVisible,
+                contentPadding = contentPadding,
+            ) { panelModifier, panelContentPadding ->
+                SetlistsControls(
+                    modifier = panelModifier,
+                    viewModel = viewModel,
+                    contentPadding = panelContentPadding,
+                )
+            }
         }
     }
 }
@@ -186,6 +191,7 @@ private fun SetlistList(
     val setlistsWithSongs by viewModel.setlistsWithSongs.collectAsStateWithLifecycle()
     val userPreferences by viewModel.userPreferences.collectAsStateWithLifecycle()
     val transpositions by viewModel.transpositions.collectAsStateWithLifecycle()
+    val labelsOnEverySong by viewModel.labelsOnEverySong.collectAsStateWithLifecycle()
     val isLoading by viewModel.isLoading.collectAsStateWithLifecycle()
     val hasLoadedLibrary = rememberHasLoadedLibrary(isLoading)
     val isPerformanceModeEnabled by viewModel.isPerformanceModeEnabled.collectAsStateWithLifecycle()
@@ -389,6 +395,7 @@ private fun SetlistList(
                                         spelling = chordSpelling,
                                     ),
                                     shouldShowChords = shouldShowChords,
+                                    labelsOnEverySong = labelsOnEverySong,
                                     isBeingDragged = isBeingDragged,
                                     onClick = { viewModel.openSongInSetlist(setlistWithSongs, entry.song) },
                                     actions = actions,

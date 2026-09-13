@@ -14,6 +14,12 @@ import androidx.compose.foundation.gestures.ScrollableState
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ColumnScope
 import androidx.compose.foundation.layout.RowScope
+import androidx.compose.foundation.layout.ExperimentalLayoutApi
+import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.consumeWindowInsets
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
 import androidx.compose.material3.MaterialTheme
@@ -28,6 +34,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.lerp
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.zIndex
 
@@ -78,6 +85,42 @@ internal fun CampfireTopAppBar(
             )
             bottomContent()
         }
+    }
+}
+
+/**
+ * A top level screen: its app bar across the whole of the window, and everything else under it and next to the
+ * navigation rail, which the shell lays out under the screens and starts below the height of this bar.
+ *
+ * Only the two parts are opaque, and neither covers the rail's column below the bar. The shell draws the rail under
+ * the screens, so it stays where it is while they cross fade, and a screen covering its column - even with nothing
+ * but a transparent layout - would take every tap meant for the rail.
+ *
+ * @param railWidth How much of the window the navigation rail takes from the start edge, or zero next to a bar.
+ * @param content What goes under the app bar, laid out on an opaque surface that blocks touches from reaching the
+ *   screen it covers during a transition.
+ */
+@OptIn(ExperimentalLayoutApi::class)
+@Composable
+internal fun TopLevelScreenLayout(
+    modifier: Modifier = Modifier,
+    railWidth: Dp,
+    appBar: @Composable () -> Unit,
+    content: @Composable ColumnScope.() -> Unit,
+) = Column(
+    modifier = modifier.fillMaxSize(),
+) {
+    appBar()
+    Surface(
+        modifier = Modifier
+            .weight(1f)
+            .fillMaxWidth()
+            .padding(start = railWidth)
+            // The rail covers the insets on its own edge, so nothing inside should apply them a second time.
+            .consumeWindowInsets(PaddingValues(start = railWidth)),
+        color = MaterialTheme.colorScheme.background,
+    ) {
+        Column(content = content)
     }
 }
 

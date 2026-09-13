@@ -11,6 +11,9 @@ package com.pandulapeter.campfire.presentation.ui.components
 
 import androidx.compose.foundation.text.input.TextFieldState
 import androidx.compose.foundation.text.input.clearText
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableFloatStateOf
+import androidx.compose.runtime.setValue
 import androidx.compose.runtime.snapshotFlow
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -43,6 +46,16 @@ internal class SearchState {
      * emptied itself on the first frame of that animation would be read as the text having been deleted.
      */
     val textFieldState = TextFieldState()
+
+    /**
+     * How far a back gesture that would close the search has been dragged, from 0 to 1, and 0 whenever there is no
+     * such gesture. The field and the search action both draw from it, so that the gesture previews what letting go
+     * of it will do instead of the search simply vanishing at the end of a drag that looked like it did nothing.
+     *
+     * Compose state rather than a flow because it changes on every frame of a drag and is only ever read while
+     * drawing. The one back handler of the search is the only thing that writes it, see `SearchableTopAppBarTitle`.
+     */
+    var backProgress by mutableFloatStateOf(0f)
 
     /** What the list is actually narrowed by, which is nothing at all while the search is closed. */
     val activeQuery: Flow<String> = combine(_isOpen, snapshotFlow { textFieldState.text.toString() }) { isOpen, query ->

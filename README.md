@@ -73,13 +73,12 @@ Version 4.0 is a rewrite: the online song library is gone and there is **no migr
 an empty library.
 
 ### To do
+- Migrate to annotation-based Koin
 - Song assignment bottom sheet for setlists + search in the bottom sheet
 - Setlist assignment bottom sheet search
 - Setlist descriptions
-- Migrate to annotation-based Koin
 - Fast scroller on Setlists?
 - Fewer demo songs
-- Async animation issues
 - Add demo songs button should be disabled while adding demo songs
 - Tab section horizontal scroll?
 - Empty setlist message should be changed (action button that opens the song search)
@@ -89,7 +88,6 @@ an empty library.
 - Pop-up menu vs bottom sheet inconsistency
 - Filter badge
 - Setlist.priority should be replaced with timestamp
-- If ALL songs are tagged with the same tag (or language), don't show that chip on the cards
 - Back / Esc should clear the filters before closing the app
 - Songs: sort by year
 - Reload library: only on platforms where automatic reload is not supported
@@ -99,7 +97,7 @@ an empty library.
 - New song dialog: add shortcut to import
 - New option: sort by year
 - Detail screen opening: why the loading?
-- Fix web Settings screen animation glitches caused by async data
+- Fix web Settings screen animation glitches caused by async data. Songs also sometimes has async animation issues
 - Improve the appearance and UI scalability of the Settings screen
 - Update the screenshots in the Readme
 - Create new screenshots for iOS, Android and desktop

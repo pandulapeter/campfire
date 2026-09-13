@@ -330,7 +330,7 @@ internal val FAST_SCROLLER_CLEARANCE = 16.dp
 
 private val TOUCH_TARGET_WIDTH = 48.dp
 private val TRACK_TOUCH_TARGET_WIDTH = 24.dp
-private val TRACK_VERTICAL_PADDING = 16.dp
+private val TRACK_VERTICAL_PADDING = 8.dp
 private val TOUCH_SLACK = 8.dp
 private val THUMB_WIDTH = 6.dp
 private val THUMB_END_PADDING = 4.dp
