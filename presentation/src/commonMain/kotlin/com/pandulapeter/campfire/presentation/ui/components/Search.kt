@@ -10,7 +10,9 @@
 package com.pandulapeter.campfire.presentation.ui.components
 
 import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.EnterExitState
 import androidx.compose.animation.core.Animatable
+import androidx.compose.animation.core.animateFloat
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.scaleIn
@@ -47,14 +49,22 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
+import androidx.compose.ui.geometry.CornerRadius
+import androidx.compose.ui.geometry.RoundRect
+import androidx.compose.ui.geometry.Size
+import androidx.compose.ui.graphics.Outline
+import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.input.pointer.PointerIcon
 import androidx.compose.ui.input.pointer.pointerHoverIcon
+import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.unit.Density
 import androidx.compose.ui.unit.Dp
+import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigationevent.NavigationEventInfo
@@ -113,16 +123,23 @@ internal fun SearchableTopAppBarTitle(
                 overflow = TextOverflow.Ellipsis,
             )
         }
+        val expansionSpec = MaterialTheme.motionScheme.defaultSpatialSpec<Float>()
         AnimatedVisibility(
             visible = isOpen,
-            enter = fadeIn(MaterialTheme.motionScheme.defaultEffectsSpec()) + slideInHorizontally { it / TITLE_SLIDE_FRACTION },
-            exit = fadeOut(MaterialTheme.motionScheme.defaultEffectsSpec()) + slideOutHorizontally { it / TITLE_SLIDE_FRACTION },
+            enter = fadeIn(MaterialTheme.motionScheme.defaultEffectsSpec()),
+            exit = fadeOut(MaterialTheme.motionScheme.defaultEffectsSpec()),
         ) {
+            // An animation of the visibility transition itself rather than a slide: the content is only removed
+            // once it has settled, and the field grows out of its end edge instead of travelling towards it.
+            val expansion by transition.animateFloat(
+                transitionSpec = { expansionSpec },
+            ) { if (it == EnterExitState.Visible) 1f else 0f }
             SearchField(
                 modifier = Modifier.fillMaxWidth(),
                 searchState = searchState,
                 isOpen = isOpen,
                 placeholder = placeholder,
+                expansion = { expansion },
             )
         }
     }
@@ -247,8 +264,18 @@ internal fun SearchAction(
  * up with it. The caret goes to the end of what is already written, which is what a search that was left open and
  * then come back to has in it.
  *
- * While a back gesture that would close the search is being dragged, the field fades and slides the way its exit
+ * It comes and goes by collapsing into its end edge rather than by sliding: the search action sits right past that
+ * edge, and a field that travelled towards it would pass over the very button that is turning into the close mark.
+ * The pill is laid out at its full width throughout and only clipped, so the text inside does not reflow as it goes.
+ * What the pill holds rides its start edge instead, carried into the end as the field leaves and out of it as it
+ * arrives, and is cut off where it meets the end: text that stayed put, or moved any slower than the edge, is read
+ * as standing still while the pill is swept away from under it.
+ *
+ * While a back gesture that would close the search is being dragged, the field fades and collapses the way its exit
  * takes it, as far as the gesture has come.
+ *
+ * @param expansion How much of the field's width is showing, from nothing at all to the whole of it, read while the
+ *   field is drawn so that an animation of it never recomposes the field.
  */
 @Composable
 private fun SearchField(
@@ -256,6 +283,7 @@ private fun SearchField(
     searchState: SearchState,
     isOpen: Boolean,
     placeholder: String,
+    expansion: () -> Float,
 ) {
     val keyboardController = LocalSoftwareKeyboardController.current
     val focusRequester = remember { FocusRequester() }
@@ -274,16 +302,23 @@ private fun SearchField(
             isOpen -> recession.animateTo(targetValue = 0f, animationSpec = returnSpec)
         }
     }
+    // A spatial spring overshoots past the whole width, which would push the text back past its own padding.
+    val widthFraction = { (expansion() * (1f - recession.value * RECEDED_WIDTH_LOSS)).coerceIn(0f, 1f) }
+    val endwards = if (LocalLayoutDirection.current == LayoutDirection.Ltr) 1f else -1f
     Surface(
         modifier = modifier.graphicsLayer {
             alpha = 1f - recession.value * RECEDED_ALPHA_LOSS
-            translationX = recession.value * size.width / TITLE_SLIDE_FRACTION
+            shape = EndAnchoredPillShape(widthFraction = widthFraction())
+            clip = true
         },
         shape = CircleShape,
         color = MaterialTheme.colorScheme.surfaceContainerHigh,
     ) {
         Row(
-            modifier = Modifier.height(FIELD_HEIGHT).padding(start = 16.dp, end = 4.dp),
+            modifier = Modifier
+                .graphicsLayer { translationX = endwards * (1f - widthFraction()) * size.width }
+                .height(FIELD_HEIGHT)
+                .padding(start = 16.dp, end = 4.dp),
             verticalAlignment = Alignment.CenterVertically,
         ) {
             BasicTextField(
@@ -338,11 +373,36 @@ private fun SearchField(
     }
 }
 
-/** How far into its own width each half of the title slot travels as it comes and goes. */
+/**
+ * A pill as wide as [widthFraction] of the bounds it is drawn in, held against their end edge, which is what the
+ * search field is clipped to as it collapses into that edge. Created anew for every frame of the animation, since a
+ * layer only asks a shape for its outline again when it is handed a different one.
+ */
+private data class EndAnchoredPillShape(
+    private val widthFraction: Float,
+) : Shape {
+
+    override fun createOutline(size: Size, layoutDirection: LayoutDirection, density: Density): Outline {
+        val width = size.width * widthFraction
+        val radius = CornerRadius(minOf(width, size.height) / 2)
+        return Outline.Rounded(
+            if (layoutDirection == LayoutDirection.Ltr) {
+                RoundRect(left = size.width - width, top = 0f, right = size.width, bottom = size.height, cornerRadius = radius)
+            } else {
+                RoundRect(left = 0f, top = 0f, right = width, bottom = size.height, cornerRadius = radius)
+            }
+        )
+    }
+}
+
+/** How far into its own width the screen's name travels as it comes and goes. */
 private const val TITLE_SLIDE_FRACTION = 6
 
 /** How much of the field's opacity a back gesture dragged all the way takes away before it is let go of. */
 private const val RECEDED_ALPHA_LOSS = 0.5f
+
+/** How much of the field's width a back gesture dragged all the way collapses before it is let go of. */
+private const val RECEDED_WIDTH_LOSS = 0.25f
 
 private val FIELD_HEIGHT = 40.dp
 private val CLEAR_BUTTON_SIZE = 32.dp

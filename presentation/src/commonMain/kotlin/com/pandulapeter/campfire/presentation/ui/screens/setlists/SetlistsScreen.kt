@@ -399,6 +399,7 @@ private fun SetlistList(
                                     isBeingDragged = isBeingDragged,
                                     onClick = { viewModel.openSongInSetlist(setlistWithSongs, entry.song) },
                                     actions = actions,
+                                    areActionsAtEdge = true,
                                 )
 
                                 // Nothing to open, but it still takes its place in the order and can be removed.

@@ -29,6 +29,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.foundation.lazy.grid.LazyGridState
@@ -108,8 +109,8 @@ import com.pandulapeter.campfire.presentation.ui.CampfireViewModel
 import org.jetbrains.compose.resources.painterResource
 
 /**
- * @param index The song's place in the setlist it is listed in, drawn in front of the row by [ListItemIndex]. Null
- *   on the screens where a song is not in an order of anyone's making and a number would only claim it was.
+ * @param index The song's place in the setlist it is listed in, drawn in front of the title by [ListItemHeadline].
+ *   Null on the screens where a song is not in an order of anyone's making and a number would only claim it was.
  * @param key The key the song sounds in where it is listed, which is a different key in every setlist that
  *   transposes it (`CampfireViewModel.renderKey`), drawn next to the artist. Null for a file that declares none.
  * @param shouldShowChords False under lyrics only mode, where the row says nothing about chords at all: not the
@@ -121,6 +122,8 @@ import org.jetbrains.compose.resources.painterResource
  *   holding a row is a natural way to ask what can be done to it.
  * @param actions The trailing content of the row, which is the overflow button and whichever way of listing the
  *   song's actions the platform calls for ([SongActionsButton]).
+ * @param areActionsAtEdge Whether [actions] end on the edge of the row rather than on the keyline the app bar's
+ *   actions keep, which is what a row ending in a [DragHandle] asks for - see [ListItemActions].
  */
 @OptIn(ExperimentalMaterial3ExpressiveApi::class, ExperimentalFoundationApi::class)
 @Composable
@@ -135,6 +138,7 @@ internal fun SongListItem(
     onClick: () -> Unit,
     onLongClick: (() -> Unit)? = null,
     actions: (@Composable () -> Unit)? = null,
+    areActionsAtEdge: Boolean = false,
 ) {
     // A progress value instead of an animated color, so that the row follows the color scheme immediately while it
     // is animating between the light and the dark theme (a color animation would chase it and trail behind).
@@ -167,13 +171,11 @@ internal fun SongListItem(
     ListItem(
         modifier = modifier.combinedClickable(onClick = onClick, onLongClick = onLongClick),
         colors = ListItemDefaults.colors(containerColor = containerColor),
-        leadingContent = index?.let { { ListItemIndex(index = it) } },
-        trailingContent = actions?.let { { ListItemActions(content = it) } },
+        trailingContent = actions?.let { { ListItemActions(isAtEdge = areActionsAtEdge, content = it) } },
         headlineContent = {
-            Text(
+            ListItemHeadline(
+                index = index,
                 text = song.title,
-                maxLines = 1,
-                overflow = TextOverflow.Ellipsis,
             )
         },
         // Songs written in the app need no artist, and an empty second line would just make the row taller. Nothing
@@ -184,7 +186,9 @@ internal fun SongListItem(
             null
         } else {
             {
-                Column {
+                Column(
+                    modifier = Modifier.listItemIndexIndent(hasIndex = index != null),
+                ) {
                     if (song.artist.isNotBlank() || note != null) {
                         Row(
                             verticalAlignment = Alignment.CenterVertically,
@@ -271,17 +275,17 @@ internal fun MissingSongListItem(
 ) = ListItem(
     modifier = modifier.alpha(0.5f),
     colors = ListItemDefaults.colors(containerColor = MaterialTheme.colorScheme.surface),
-    leadingContent = { ListItemIndex(index = index) },
-    trailingContent = actions?.let { { ListItemActions(content = it) } },
+    // Only ever inside a setlist, so what the actions end in is the drag handle.
+    trailingContent = actions?.let { { ListItemActions(isAtEdge = true, content = it) } },
     headlineContent = {
-        Text(
+        ListItemHeadline(
+            index = index,
             text = songFileName,
-            maxLines = 1,
-            overflow = TextOverflow.Ellipsis,
         )
     },
     supportingContent = {
         Text(
+            modifier = Modifier.listItemIndexIndent(hasIndex = true),
             text = stringResource(Res.string.setlists_missing_song),
             fontStyle = FontStyle.Italic,
             maxLines = 1,
@@ -296,51 +300,99 @@ internal fun MissingSongListItem(
  * of a row and the last control of the bar above it sit on two keylines a few dp apart; this closes that gap, and
  * every row of every list is drawn through here so the one keyline holds down the whole screen.
  *
+ * A row that ends in a [DragHandle] is the exception ([isAtEdge]): the handle is a grip rather than a control and
+ * goes on the very edge of the row, so the whole of the inset is given up. The handle is as wide as the songs
+ * screen keeps its overflow button from the edge, which is what puts the overflow button in front of the handle
+ * on the same keyline as the one on the songs screen ([DRAG_HANDLE_WIDTH]).
+ *
  * An offset rather than a smaller padding: the inset belongs to Material's own layout, and moving what is drawn
  * leaves the width the row reserved for it exactly as it was.
  */
 @Composable
 private fun ListItemActions(
     modifier: Modifier = Modifier,
+    isAtEdge: Boolean,
     content: @Composable () -> Unit,
 ) = Box(
-    modifier = modifier.offset(x = LIST_ITEM_TRAILING_KEYLINE_ADJUSTMENT),
+    modifier = modifier.offset(x = if (isAtEdge) LIST_ITEM_TRAILING_PADDING else LIST_ITEM_TRAILING_KEYLINE_ADJUSTMENT),
 ) {
     content()
 }
 
 /**
+ * The title of a row, with the row's place in its setlist in front of it where it has one. The number is part of
+ * the headline rather than the row's leading slot, for two reasons. The headline starts on [LIST_ITEM_KEYLINE],
+ * which is where the app bar's title and the text of the setlist's own header pill start, and a number in the
+ * leading slot sat between the two on a keyline of its own. And `ListItem` puts its leading slot at the top of a
+ * three line row but in the middle of a shorter one, while the title is the first line of either, so the number
+ * and the title only ever shared a line by accident; here the two are aligned on their baselines, so the number
+ * reads as part of the title's line whatever the row holds under it.
+ *
+ * @param index Null where the row is not numbered, which leaves the title alone on the keyline.
+ */
+@Composable
+private fun ListItemHeadline(
+    modifier: Modifier = Modifier,
+    index: Int?,
+    text: String,
+) = Row(
+    modifier = modifier,
+) {
+    index?.let {
+        ListItemIndex(
+            modifier = Modifier.alignByBaseline(),
+            index = it,
+        )
+    }
+    Text(
+        modifier = Modifier.alignByBaseline(),
+        text = text,
+        maxLines = 1,
+        overflow = TextOverflow.Ellipsis,
+    )
+}
+
+/**
  * The place of a song inside a setlist, counted from one because it is read by whoever is playing the set rather
- * than by the code that orders it. Laid out over a fixed width instead of around the number, so that the titles of a
- * setlist stay on a single keyline however far its numbering has run and a drag that renumbers the rows it passes
- * does not shift them sideways underneath the finger.
+ * than by the code that orders it. Laid out over a fixed width ([LIST_ITEM_INDEX_KEYLINE]) instead of around the
+ * number, so that the titles of a setlist stay on a single keyline however far its numbering has run and a drag
+ * that renumbers the rows it passes does not shift them sideways underneath the finger.
  */
 @Composable
 private fun ListItemIndex(
     modifier: Modifier = Modifier,
     index: Int,
 ) = Text(
-    modifier = modifier.widthIn(min = LIST_ITEM_INDEX_WIDTH),
+    modifier = modifier.width(LIST_ITEM_INDEX_KEYLINE),
     text = (index + 1).toString(),
     style = MaterialTheme.typography.labelLarge,
     color = MaterialTheme.colorScheme.onSurfaceVariant,
-    textAlign = TextAlign.End,
 )
 
 /**
- * The grip that says a row can be dragged somewhere else, and the last thing on a row that has one. It is an icon
- * inside a plain box rather than an [IconButton], because it is never pressed on its own: the caller is the one that
- * puts the reorderable drag modifier on it, and a button's ripple would promise a tap that does nothing. The box is
- * what makes it big enough to catch a finger, so the drag modifier has to go on [modifier] rather than on the icon.
+ * What goes under a [ListItemHeadline] starts where its title starts rather than under the number in front of it,
+ * since the number is the row's and not the title's.
+ */
+private fun Modifier.listItemIndexIndent(hasIndex: Boolean) = padding(start = if (hasIndex) LIST_ITEM_INDEX_KEYLINE else 0.dp)
+
+/**
+ * The grip that says a row can be dragged somewhere else, and the last thing on a row that has one, sitting on the
+ * row's very edge ([ListItemActions]). It is an icon inside a plain box rather than an [IconButton], because it is
+ * never pressed on its own: the caller is the one that puts the reorderable drag modifier on it, and a button's
+ * ripple would promise a tap that does nothing. The box is what makes it big enough to catch a finger, so the drag
+ * modifier has to go on [modifier] rather than on the icon. The icon keeps a hair's breadth from the edge inside
+ * the box ([DRAG_HANDLE_END_PADDING]) rather than the box shrinking by it, since the box's width is what places
+ * the overflow button in front of it.
  */
 @Composable
 internal fun DragHandle(
     modifier: Modifier = Modifier,
 ) = Box(
     modifier = modifier.size(width = DRAG_HANDLE_WIDTH, height = DRAG_HANDLE_HEIGHT),
-    contentAlignment = Alignment.Center,
+    contentAlignment = Alignment.CenterEnd,
 ) {
     Icon(
+        modifier = Modifier.padding(end = DRAG_HANDLE_END_PADDING),
         painter = painterResource(Res.drawable.ic_drag_handle),
         contentDescription = stringResource(Res.string.setlists_reorder),
         tint = MaterialTheme.colorScheme.onSurfaceVariant,
@@ -771,33 +823,43 @@ private val EMPTY_STATE_ACTION_GAP = 8.dp
 private val EMPTY_STATE_ACTION_WIDTH = 280.dp
 
 /**
- * The x position the text of a [ListItem] starts at, which the pills of the sticky headers line up with.
+ * The x position the text of a [ListItem] starts at, which the pills of the sticky headers line up with, as does the
+ * number a [ListItemHeadline] puts in front of a setlist's rows. It is also where a top level screen's app bar
+ * starts its title, so the one line runs down from the bar through the pills into the numbers.
  */
 private val LIST_ITEM_KEYLINE = 16.dp
 
+/** How far `ListItem` insets its trailing slot from the end edge, which is Material's and cannot be passed in. */
+private val LIST_ITEM_TRAILING_PADDING = 16.dp
+
 /**
  * How far a row's trailing controls are moved towards the end edge to reach the keyline the app bar's actions sit
- * on: `ListItem` insets its trailing slot by 16dp and `TopAppBar` its actions by 4dp, and with both controls 48dp
- * wide the difference between the two keylines is the whole of it. See [ListItemActions].
+ * on: `ListItem` insets its trailing slot by [LIST_ITEM_TRAILING_PADDING] and `TopAppBar` its actions by 4dp, and
+ * with both controls 48dp wide the difference between the two keylines is the whole of it. See [ListItemActions].
  */
 private val LIST_ITEM_TRAILING_KEYLINE_ADJUSTMENT = 4.dp
 
 /**
- * The width a [ListItemIndex] is laid out over: two digits and the gap they keep from the title, since a setlist
- * long enough to need three has other problems.
+ * How far after the start of a [ListItemIndex] the title of its row starts: two digits and the gap they keep from
+ * the title, since a setlist long enough to need three has other problems.
  */
-private val LIST_ITEM_INDEX_WIDTH = 24.dp
+private val LIST_ITEM_INDEX_KEYLINE = 24.dp
 
 /**
- * The touch target of a [DragHandle]. It is narrower than the `IconButton` it stands next to, which is what lets the
- * overflow button sit close to the end of the row instead of a hand's width away from it: the handle is not a button,
- * so the width it gives up is empty space around an icon rather than anything that can be pressed, and the drag it
- * offers is on the row's own long press as well.
+ * The touch target of a [DragHandle], which is the distance the songs screen keeps its overflow button from the
+ * edge ([FAST_SCROLLER_CLEARANCE] past the keyline [ListItemActions] puts every other row's last control on): the
+ * handle sits on the edge itself, so this is what puts the overflow button in front of it exactly where the songs
+ * screen has its own. It is narrower than that `IconButton`, and can be, since the handle is not a button: the
+ * width it gives up is empty space around an icon rather than anything that can be pressed, and the drag it offers
+ * is on the row's own long press as well.
  */
-private val DRAG_HANDLE_WIDTH = 32.dp
+private val DRAG_HANDLE_WIDTH = FAST_SCROLLER_CLEARANCE + LIST_ITEM_TRAILING_PADDING - LIST_ITEM_TRAILING_KEYLINE_ADJUSTMENT
 
 /** The height of a [DragHandle], which is a full touch target since it is the one thing on the row that is dragged. */
 private val DRAG_HANDLE_HEIGHT = 48.dp
+
+/** What keeps the lines of a [DragHandle] off the very edge of the row, taken out of its box rather than added to it. */
+private val DRAG_HANDLE_END_PADDING = 4.dp
 
 /**
  * The padding between the edge of a [SectionHeader] pill and its text.
