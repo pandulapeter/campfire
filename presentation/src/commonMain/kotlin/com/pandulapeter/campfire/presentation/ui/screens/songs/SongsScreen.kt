@@ -46,7 +46,9 @@ import com.pandulapeter.campfire.data.model.domain.UserPreferences
 import com.pandulapeter.campfire.presentation.resources.Res
 import com.pandulapeter.campfire.presentation.resources.ic_add
 import com.pandulapeter.campfire.presentation.resources.ic_tune
+import com.pandulapeter.campfire.presentation.resources.songs
 import com.pandulapeter.campfire.presentation.resources.songs_new_song
+import com.pandulapeter.campfire.presentation.resources.songs_search
 import com.pandulapeter.campfire.presentation.resources.songs_sort_and_filter
 import com.pandulapeter.campfire.presentation.resources.songs_unknown_artist
 import com.pandulapeter.campfire.presentation.resources.songs_unsorted_label
@@ -60,7 +62,8 @@ import com.pandulapeter.campfire.presentation.ui.components.ImportProgress
 import com.pandulapeter.campfire.presentation.ui.components.KeepTopAppBarInSync
 import com.pandulapeter.campfire.presentation.ui.components.ListColumns
 import com.pandulapeter.campfire.presentation.ui.components.ListPlaceholder
-import com.pandulapeter.campfire.presentation.ui.components.SearchField
+import com.pandulapeter.campfire.presentation.ui.components.SearchAction
+import com.pandulapeter.campfire.presentation.ui.components.SearchableTopAppBarTitle
 import com.pandulapeter.campfire.presentation.ui.components.SECTION_HEADER_GAP
 import com.pandulapeter.campfire.presentation.ui.components.SectionHeader
 import com.pandulapeter.campfire.presentation.ui.components.SongActionsButton
@@ -87,7 +90,6 @@ internal fun SongsScreen(
     settledWidth: Dp,
     contentPadding: PaddingValues,
 ) {
-    val query by viewModel.query.collectAsStateWithLifecycle()
     val isLoading by viewModel.isLoading.collectAsStateWithLifecycle()
     val placeholder by viewModel.songsPlaceholder.collectAsStateWithLifecycle()
     val isImporting by viewModel.isImporting.collectAsStateWithLifecycle()
@@ -118,13 +120,17 @@ internal fun SongsScreen(
             CampfireTopAppBar(
                 scrollBehavior = scrollBehavior,
                 title = {
-                    SearchField(
-                        modifier = Modifier.fillMaxWidth(),
-                        query = query,
-                        onQueryChanged = viewModel::onQueryChanged,
+                    SearchableTopAppBarTitle(
+                        title = stringResource(Res.string.songs),
+                        placeholder = stringResource(Res.string.songs_search),
+                        searchState = viewModel.songsSearch,
                     )
                 },
                 actions = {
+                    SearchAction(
+                        searchState = viewModel.songsSearch,
+                        placeholder = stringResource(Res.string.songs_search),
+                    )
                     // The reasons this one comes and goes are the library being read and the mode being switched,
                     // both of which happen while the bar is being looked at, so it makes room for itself rather than
                     // appearing between two frames and pushing the action beside it aside as it lands.
@@ -181,7 +187,8 @@ private fun SongList(
     contentPadding: PaddingValues,
 ) {
     val songGroups by viewModel.songGroups.collectAsStateWithLifecycle()
-    val query by viewModel.query.collectAsStateWithLifecycle()
+    // Read straight off the field's own state, which is where the text lives now, see SearchState.
+    val query = viewModel.songsSearch.textFieldState.text.toString()
     val userPreferences by viewModel.userPreferences.collectAsStateWithLifecycle()
     val transpositions by viewModel.transpositions.collectAsStateWithLifecycle()
     val isPerformanceModeEnabled by viewModel.isPerformanceModeEnabled.collectAsStateWithLifecycle()
@@ -340,13 +347,14 @@ private val CampfireViewModel.Placeholder?.allowsCreatingSongs
     get() = when (this) {
         null,
         CampfireViewModel.Placeholder.ALL_SONGS_HIDDEN,
-        CampfireViewModel.Placeholder.NO_SEARCH_RESULTS -> true
+        CampfireViewModel.Placeholder.NO_MATCHING_SONGS -> true
 
         CampfireViewModel.Placeholder.LOADING,
         CampfireViewModel.Placeholder.ERROR,
         CampfireViewModel.Placeholder.NO_SONGS,
         CampfireViewModel.Placeholder.NO_SETLISTS,
-        CampfireViewModel.Placeholder.ALL_SETLISTS_HIDDEN -> false
+        CampfireViewModel.Placeholder.ALL_SETLISTS_HIDDEN,
+        CampfireViewModel.Placeholder.NO_MATCHING_SETLISTS -> false
     }
 
 private const val SYMBOLS_LABEL = "#"

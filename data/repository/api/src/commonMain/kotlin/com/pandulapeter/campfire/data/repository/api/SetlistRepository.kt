@@ -24,7 +24,7 @@ interface SetlistRepository {
     suspend fun rescan()
 
     /** Writes a new, empty setlist under a free file name and returns it. */
-    suspend fun createSetlist(title: String, priority: Int): Setlist
+    suspend fun createSetlist(title: String, description: String, priority: Int): Setlist
 
     /** Creates the file or overwrites it, and updates that one entry of the cached list. */
     suspend fun saveSetlist(setlist: Setlist)

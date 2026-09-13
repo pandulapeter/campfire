@@ -86,7 +86,14 @@ preferences/sync-index.json          what the last successful sync run saw
   library, while a setlist is the list somebody wrote down. What the Setlists screen's own controls ask is the order
   the setlists come in and whether the archived ones are among them. Archiving is how a setlist that has been played
   is put away without the songs in it being lost; it is a field of the `*.setlist.json` file rather than a
-  preference, so it travels through an export, an import or a sync run the way a tag does.
+  preference, so it travels through an export, an import or a sync run the way a tag does. The **description** — an
+  optional sentence about what a setlist is for, shown under its header and read by the screen's search — lives in
+  the file for the same reason.
+- **Both list screens are searched from a button rather than from a field that is always there**: the app bar holds
+  the screen's name until the search is opened, and the one search icon is the one close button (the mark morphs
+  between the two, see `:presentation`). The songs are searched by title and artist; a setlist answers by its own
+  title or description, or by holding a song that does — and a setlist that answers is shown **whole**, since a
+  setlist is the list somebody wrote down and three of its twelve songs is not that list.
 - **Tags are part of the song file**, not a store of their own: ChordPro `{tag}` directives, read by `:chordpro`
   into `Song.tags` at scan time and written back into the text the same way, so a tag travels with the file through
   an export, an import or a sync run. The library's set of tags is whatever the songs carry; the Songs screen's
@@ -134,7 +141,8 @@ preferences/sync-index.json          what the last successful sync run saw
   at its songs by file name.
 - **A file is only ever renamed by the app when the user asks for it, or when nothing is lost by it.** A setlist's
   file follows its title, because that title is written inside the document and the file name records nothing
-  (`RenameSetlistUseCase`). A song's does not: its name is what titles it wherever the file declares no `{title}`, it
+  (`EditSetlistUseCase`, which is also where the description is written, since the two are the whole of what the
+  user gets to say about a setlist). A song's does not: its name is what titles it wherever the file declares no `{title}`, it
   is what a setlist points at, and on the platforms where the library is a folder the user may have chosen it — an
   import is not one of those cases, since nothing has pointed at the incoming name yet. Where
   a song's name and its metadata have drifted apart, `Song.canUpdateFileName` puts an **Update file name** entry in

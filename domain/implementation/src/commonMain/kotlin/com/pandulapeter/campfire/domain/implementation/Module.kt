@@ -17,6 +17,7 @@ import com.pandulapeter.campfire.domain.api.useCases.CreateSongUseCase
 import com.pandulapeter.campfire.domain.api.useCases.DeleteSetlistUseCase
 import com.pandulapeter.campfire.domain.api.useCases.DeleteSongUseCase
 import com.pandulapeter.campfire.domain.api.useCases.DisconnectSyncProviderUseCase
+import com.pandulapeter.campfire.domain.api.useCases.EditSetlistUseCase
 import com.pandulapeter.campfire.domain.api.useCases.ExportLibraryUseCase
 import com.pandulapeter.campfire.domain.api.useCases.ExportSetlistUseCase
 import com.pandulapeter.campfire.domain.api.useCases.ExportSongsUseCase
@@ -33,7 +34,6 @@ import com.pandulapeter.campfire.domain.api.useCases.NormalizeTextUseCase
 import com.pandulapeter.campfire.domain.api.useCases.ParseChordProUseCase
 import com.pandulapeter.campfire.domain.api.useCases.PrepareImportUseCase
 import com.pandulapeter.campfire.domain.api.useCases.RestoreSyncUseCase
-import com.pandulapeter.campfire.domain.api.useCases.RenameSetlistUseCase
 import com.pandulapeter.campfire.domain.api.useCases.RenameSongFileUseCase
 import com.pandulapeter.campfire.domain.api.useCases.SaveSetlistUseCase
 import com.pandulapeter.campfire.domain.api.useCases.SaveSongContentUseCase
@@ -51,6 +51,7 @@ import com.pandulapeter.campfire.domain.implementation.useCases.CreateSongUseCas
 import com.pandulapeter.campfire.domain.implementation.useCases.DeleteSetlistUseCaseImpl
 import com.pandulapeter.campfire.domain.implementation.useCases.DeleteSongUseCaseImpl
 import com.pandulapeter.campfire.domain.implementation.useCases.DisconnectSyncProviderUseCaseImpl
+import com.pandulapeter.campfire.domain.implementation.useCases.EditSetlistUseCaseImpl
 import com.pandulapeter.campfire.domain.implementation.useCases.ExportLibraryUseCaseImpl
 import com.pandulapeter.campfire.domain.implementation.useCases.ExportSetlistUseCaseImpl
 import com.pandulapeter.campfire.domain.implementation.useCases.ExportSongsUseCaseImpl
@@ -67,7 +68,6 @@ import com.pandulapeter.campfire.domain.implementation.useCases.NormalizeTextUse
 import com.pandulapeter.campfire.domain.implementation.useCases.ParseChordProUseCaseImpl
 import com.pandulapeter.campfire.domain.implementation.useCases.PrepareImportUseCaseImpl
 import com.pandulapeter.campfire.domain.implementation.useCases.RestoreSyncUseCaseImpl
-import com.pandulapeter.campfire.domain.implementation.useCases.RenameSetlistUseCaseImpl
 import com.pandulapeter.campfire.domain.implementation.useCases.RenameSongFileUseCaseImpl
 import com.pandulapeter.campfire.domain.implementation.useCases.SaveSetlistUseCaseImpl
 import com.pandulapeter.campfire.domain.implementation.useCases.SaveSongContentUseCaseImpl
@@ -88,6 +88,7 @@ val domainModule = module {
     factory<DeleteSetlistUseCase> { DeleteSetlistUseCaseImpl(get()) }
     factory<DeleteSongUseCase> { DeleteSongUseCaseImpl(get(), get(), get()) }
     factory<DisconnectSyncProviderUseCase> { DisconnectSyncProviderUseCaseImpl(get()) }
+    factory<EditSetlistUseCase> { EditSetlistUseCaseImpl(get()) }
     factory<ExportLibraryUseCase> { ExportLibraryUseCaseImpl(get(), get(), get(), get()) }
     factory<ExportSetlistUseCase> { ExportSetlistUseCaseImpl(get(), get(), get()) }
     factory<ExportSongsUseCase> { ExportSongsUseCaseImpl(get(), get()) }
@@ -104,7 +105,6 @@ val domainModule = module {
     factory<ParseChordProUseCase> { ParseChordProUseCaseImpl() }
     factory<PrepareImportUseCase> { PrepareImportUseCaseImpl(get(), get(), get(), get()) }
     factory<RestoreSyncUseCase> { RestoreSyncUseCaseImpl(get(), get()) }
-    factory<RenameSetlistUseCase> { RenameSetlistUseCaseImpl(get()) }
     factory<RenameSongFileUseCase> { RenameSongFileUseCaseImpl(get(), get(), get()) }
     factory<SaveSetlistUseCase> { SaveSetlistUseCaseImpl(get()) }
     factory<SaveSongContentUseCase> { SaveSongContentUseCaseImpl(get()) }

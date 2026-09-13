@@ -20,14 +20,15 @@ interface SetlistLocalSource {
      * Writes an empty setlist under a file name derived from the title, suffixed until it is free, and returns it.
      * File naming is the storage layer's business, so callers only supply what goes inside.
      */
-    suspend fun createSetlist(title: String, priority: Int): Setlist
+    suspend fun createSetlist(title: String, description: String, priority: Int): Setlist
 
     suspend fun saveSetlist(setlist: Setlist)
 
     /**
      * Saves the setlist under [title] and moves its file to the name that title gives it, returning the setlist as
      * it now is. The file name is the identity of a setlist, so this is a different thing from [saveSetlist]: the
-     * caller ends up with a setlist whose `fileName` may have changed.
+     * caller ends up with a setlist whose `fileName` may have changed. Everything else the setlist carries is
+     * written as it is handed over, the description included, since only the title decides the name.
      *
      * Nothing inside the library points at a setlist by name, so there is nothing to follow the move.
      */

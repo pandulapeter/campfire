@@ -16,6 +16,7 @@ import com.pandulapeter.campfire.data.source.local.implementation.model.SetlistS
 internal fun SetlistDocument.toModel(fileName: String) = Setlist(
     fileName = fileName,
     title = title,
+    description = description,
     priority = priority,
     isArchived = isArchived,
     // A document that was edited by hand can name the same song twice or leave a blank entry behind.
@@ -24,6 +25,7 @@ internal fun SetlistDocument.toModel(fileName: String) = Setlist(
 
 internal fun Setlist.toDocument() = SetlistDocument(
     title = title,
+    description = description,
     priority = priority,
     isArchived = isArchived,
     songs = entries.map { SetlistSongDocument(file = it.songFileName, transposition = it.transposition) },

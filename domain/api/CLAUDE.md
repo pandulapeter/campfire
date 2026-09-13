@@ -27,8 +27,10 @@ paths, `Is*` for a question with a yes or no answer (`IsFirstRun`), or a verb fo
   never reach into one, and an entry missing from there is a file that is really gone. Each of the two filter groups
   is counted after every other filter but before its own, so that selecting one value does not empty the list of the
   ones that could be selected next.
-- `RenameSetlistUseCase` / `RenameSongFileUseCase` are the two that move a file rather than write one. A setlist's
-  file follows its title on its own, since nothing in the library points at a setlist by name; a song's moves only
+- `EditSetlistUseCase` / `RenameSongFileUseCase` are the two that move a file rather than write one. A setlist's
+  file follows its title on its own, since nothing in the library points at a setlist by name — which is why editing
+  one is a single use case: the title it is filed under and the description it carries are written together, and only
+  the first of them decides where the file goes; a song's moves only
   when the user asks (`Song.canUpdateFileName` is what offers it), and everything that named the old one — every
   setlist entry holding the song, its saved transposition — moves with it, which is the same walk
   `DeleteSongUseCase` makes to drop those references.

@@ -28,8 +28,8 @@ internal class SetlistRepositoryImpl(
         reloadData()
     }
 
-    override suspend fun createSetlist(title: String, priority: Int): Setlist {
-        val setlist = setlistLocalSource.createSetlist(title = title, priority = priority)
+    override suspend fun createSetlist(title: String, description: String, priority: Int): Setlist {
+        val setlist = setlistLocalSource.createSetlist(title = title, description = description, priority = priority)
         updateData { current -> current.orEmpty() + setlist }
         return setlist
     }

@@ -86,10 +86,10 @@ import com.pandulapeter.campfire.presentation.resources.ic_redo
 import com.pandulapeter.campfire.presentation.resources.ic_refresh
 import com.pandulapeter.campfire.presentation.resources.ic_save
 import com.pandulapeter.campfire.presentation.resources.ic_undo
+import com.pandulapeter.campfire.presentation.resources.save
 import com.pandulapeter.campfire.presentation.resources.song_editor_preview
 import com.pandulapeter.campfire.presentation.resources.song_editor_redo
 import com.pandulapeter.campfire.presentation.resources.song_editor_revert
-import com.pandulapeter.campfire.presentation.resources.song_editor_save
 import com.pandulapeter.campfire.presentation.resources.song_editor_split
 import com.pandulapeter.campfire.presentation.resources.song_editor_undo
 import com.pandulapeter.campfire.presentation.ui.CampfireViewModel
@@ -265,7 +265,7 @@ private fun LoadedSongEditor(
                 ) {
                     Icon(
                         painter = painterResource(Res.drawable.ic_save),
-                        contentDescription = stringResource(Res.string.song_editor_save),
+                        contentDescription = stringResource(Res.string.save),
                     )
                 }
                 EditorMenu(

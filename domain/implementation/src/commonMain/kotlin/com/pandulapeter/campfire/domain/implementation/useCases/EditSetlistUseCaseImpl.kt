@@ -11,12 +11,13 @@ package com.pandulapeter.campfire.domain.implementation.useCases
 
 import com.pandulapeter.campfire.data.model.domain.Setlist
 import com.pandulapeter.campfire.data.repository.api.SetlistRepository
-import com.pandulapeter.campfire.domain.api.useCases.RenameSetlistUseCase
+import com.pandulapeter.campfire.domain.api.useCases.EditSetlistUseCase
 
-class RenameSetlistUseCaseImpl internal constructor(
+class EditSetlistUseCaseImpl internal constructor(
     private val setlistRepository: SetlistRepository,
-) : RenameSetlistUseCase {
+) : EditSetlistUseCase {
 
-    override suspend operator fun invoke(setlist: Setlist, title: String): Setlist =
-        setlistRepository.renameSetlist(setlist = setlist, title = title.trim())
+    // The description travels inside the setlist that is handed over, since the rename is only ever about the title.
+    override suspend operator fun invoke(setlist: Setlist, title: String, description: String): Setlist =
+        setlistRepository.renameSetlist(setlist = setlist.copy(description = description.trim()), title = title.trim())
 }

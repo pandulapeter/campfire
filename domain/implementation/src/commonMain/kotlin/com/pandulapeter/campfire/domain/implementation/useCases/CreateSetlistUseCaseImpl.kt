@@ -17,8 +17,9 @@ class CreateSetlistUseCaseImpl internal constructor(
 ) : CreateSetlistUseCase {
 
     /** The newest setlist goes on top, so it gets a priority above every existing one. */
-    override suspend operator fun invoke(title: String) = setlistRepository.createSetlist(
+    override suspend operator fun invoke(title: String, description: String) = setlistRepository.createSetlist(
         title = title.trim(),
+        description = description.trim(),
         priority = (setlistRepository.loadSetlistsIfNeeded().orEmpty().maxOfOrNull { it.priority } ?: -1) + 1,
     )
 }

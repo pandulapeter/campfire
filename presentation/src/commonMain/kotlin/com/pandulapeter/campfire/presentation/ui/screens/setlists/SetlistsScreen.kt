@@ -36,6 +36,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -53,6 +54,7 @@ import com.pandulapeter.campfire.presentation.resources.ic_tune
 import com.pandulapeter.campfire.presentation.resources.setlists
 import com.pandulapeter.campfire.presentation.resources.setlists_archived
 import com.pandulapeter.campfire.presentation.resources.setlists_new_setlist
+import com.pandulapeter.campfire.presentation.resources.setlists_search
 import com.pandulapeter.campfire.presentation.resources.setlists_sort_and_filter
 import com.pandulapeter.campfire.presentation.resources.setlists_remove_song
 import com.pandulapeter.campfire.presentation.resources.setlists_reorder_hint
@@ -66,6 +68,8 @@ import com.pandulapeter.campfire.presentation.ui.components.DragHandle
 import com.pandulapeter.campfire.presentation.ui.components.ListColumns
 import com.pandulapeter.campfire.presentation.ui.components.ListPlaceholder
 import com.pandulapeter.campfire.presentation.ui.components.KeepTopAppBarInSync
+import com.pandulapeter.campfire.presentation.ui.components.SearchAction
+import com.pandulapeter.campfire.presentation.ui.components.SearchableTopAppBarTitle
 import com.pandulapeter.campfire.presentation.ui.components.SECTION_HEADER_GAP
 import com.pandulapeter.campfire.presentation.ui.components.SectionHeader
 import com.pandulapeter.campfire.presentation.ui.components.SetlistActionsMenu
@@ -118,8 +122,18 @@ internal fun SetlistsScreen(
         ) {
             CampfireTopAppBar(
                 scrollBehavior = scrollBehavior,
-                title = { Text(stringResource(Res.string.setlists)) },
+                title = {
+                    SearchableTopAppBarTitle(
+                        title = stringResource(Res.string.setlists),
+                        placeholder = stringResource(Res.string.setlists_search),
+                        searchState = viewModel.setlistsSearch,
+                    )
+                },
                 actions = {
+                    SearchAction(
+                        searchState = viewModel.setlistsSearch,
+                        placeholder = stringResource(Res.string.setlists_search),
+                    )
                     // Performance mode is switched while the bar is being looked at, so the button makes room
                     // for itself rather than appearing between two frames, as on the songs screen.
                     AnimatedVisibility(visible = !isPerformanceModeEnabled) {
@@ -224,6 +238,19 @@ private fun SetlistList(
     }
     val layoutDirection = LocalLayoutDirection.current
     val coroutineScope = rememberCoroutineScope()
+
+    // Scroll back to the top whenever the search changes what the list holds, before the new setlists arrive. The
+    // query that was last scrolled to the top is remembered across state restoration, so that coming back from a
+    // song keeps the restored position instead of jumping.
+    val query = viewModel.setlistsSearch.textFieldState.text.toString()
+    var lastScrolledToTopQuery by rememberSaveable { mutableStateOf(query) }
+    LaunchedEffect(query) {
+        if (query != lastScrolledToTopQuery) {
+            lastScrolledToTopQuery = query
+            listState.scrollToItem(0)
+        }
+    }
+
     LazyVerticalGrid(
         columns = ListColumns(columnCount),
         modifier = modifier,
@@ -275,6 +302,21 @@ private fun SetlistList(
                             }
                         },
                     )
+                }
+                // Under the header rather than inside the pill: the pill is the setlist's name and a sentence would
+                // not fit in it, and this is the first thing to read about a setlist once it has been found.
+                if (setlistWithSongs.setlist.description.isNotBlank()) {
+                    item(
+                        key = "description_${setlistWithSongs.setlist.fileName}",
+                        span = { GridItemSpan(maxLineSpan) },
+                    ) {
+                        Text(
+                            modifier = listItemAnimation(listState, hasLoadedLibrary).padding(horizontal = 16.dp, vertical = 8.dp),
+                            text = setlistWithSongs.setlist.description,
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        )
+                    }
                 }
                 if (setlistWithSongs.entries.isEmpty() && !isPerformanceModeEnabled) {
                     item(

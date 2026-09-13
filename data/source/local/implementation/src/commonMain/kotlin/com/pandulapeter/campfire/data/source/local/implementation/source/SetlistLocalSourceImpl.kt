@@ -42,9 +42,16 @@ internal class SetlistLocalSourceImpl(
             }
         }
 
-    override suspend fun createSetlist(title: String, priority: Int): Setlist {
+    override suspend fun createSetlist(title: String, description: String, priority: Int): Setlist {
         val fileName = fileStorage.uniqueName(StorageDirectory.SETLISTS, setlistFileName(title))
-        val setlist = Setlist(fileName = fileName, title = title, priority = priority, isArchived = false, entries = emptyList())
+        val setlist = Setlist(
+            fileName = fileName,
+            title = title,
+            description = description,
+            priority = priority,
+            isArchived = false,
+            entries = emptyList(),
+        )
         saveSetlist(setlist)
         return setlist
     }

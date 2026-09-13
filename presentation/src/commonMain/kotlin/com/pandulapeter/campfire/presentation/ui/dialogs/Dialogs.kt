@@ -72,14 +72,15 @@ import com.pandulapeter.campfire.presentation.resources.import_conflicts_skip
 import com.pandulapeter.campfire.presentation.resources.import_conflicts_skip_description
 import com.pandulapeter.campfire.presentation.resources.import_conflicts_skipped
 import com.pandulapeter.campfire.presentation.resources.import_conflicts_summary
+import com.pandulapeter.campfire.presentation.resources.save
 import com.pandulapeter.campfire.presentation.resources.setlists_delete_setlist
 import com.pandulapeter.campfire.presentation.resources.setlists_duplicate
 import com.pandulapeter.campfire.presentation.resources.setlists_duplicate_title
 import com.pandulapeter.campfire.presentation.resources.setlists_delete_setlist_confirmation
+import com.pandulapeter.campfire.presentation.resources.setlists_description
+import com.pandulapeter.campfire.presentation.resources.setlists_edit_setlist
 import com.pandulapeter.campfire.presentation.resources.setlists_new_setlist
 import com.pandulapeter.campfire.presentation.resources.setlists_new_setlist_title
-import com.pandulapeter.campfire.presentation.resources.setlists_rename
-import com.pandulapeter.campfire.presentation.resources.setlists_rename_title
 import com.pandulapeter.campfire.presentation.resources.settings_sync_disconnect
 import com.pandulapeter.campfire.presentation.resources.settings_sync_disconnect_confirmation
 import com.pandulapeter.campfire.presentation.resources.songs_setlist_assignments
@@ -92,7 +93,6 @@ import com.pandulapeter.campfire.presentation.resources.song_details_tag_suggest
 import com.pandulapeter.campfire.presentation.resources.song_editor_discard
 import com.pandulapeter.campfire.presentation.resources.song_editor_revert
 import com.pandulapeter.campfire.presentation.resources.song_editor_revert_confirmation
-import com.pandulapeter.campfire.presentation.resources.song_editor_save
 import com.pandulapeter.campfire.presentation.resources.song_editor_unsaved_changes
 import com.pandulapeter.campfire.presentation.resources.song_editor_unsaved_changes_confirmation
 import com.pandulapeter.campfire.presentation.resources.songs_delete_song
@@ -134,39 +134,38 @@ internal fun CampfireDialogs(
 ) {
     val visibleDialog by viewModel.visibleDialog.collectAsStateWithLifecycle()
     when (val dialog = visibleDialog) {
-        CampfireViewModel.DialogType.NewSetlist -> TextInputDialog(
+        CampfireViewModel.DialogType.NewSetlist -> SetlistDetailsDialog(
             title = stringResource(Res.string.setlists_new_setlist),
-            label = stringResource(Res.string.setlists_new_setlist_title),
             confirmLabel = stringResource(Res.string.create),
             onDismiss = viewModel::dismissDialog,
-            onConfirm = { title ->
-                viewModel.createSetlist(title)
+            onConfirm = { setlistTitle, description ->
+                viewModel.createSetlist(title = setlistTitle, description = description)
                 viewModel.dismissDialog()
             },
         )
 
-        is CampfireViewModel.DialogType.RenameSetlist -> TextInputDialog(
-            title = stringResource(Res.string.setlists_rename),
-            label = stringResource(Res.string.setlists_rename_title),
-            initialValue = dialog.setlist.title,
-            confirmLabel = stringResource(Res.string.setlists_rename),
+        is CampfireViewModel.DialogType.EditSetlist -> SetlistDetailsDialog(
+            title = stringResource(Res.string.setlists_edit_setlist),
+            initialTitle = dialog.setlist.title,
+            initialDescription = dialog.setlist.description,
+            confirmLabel = stringResource(Res.string.save),
             onDismiss = viewModel::dismissDialog,
-            onConfirm = { title ->
-                viewModel.renameSetlist(dialog.setlist, title)
+            onConfirm = { setlistTitle, description ->
+                viewModel.editSetlist(setlist = dialog.setlist, title = setlistTitle, description = description)
                 viewModel.dismissDialog()
             },
         )
 
         // Named before it is made rather than after: two setlists can carry the same title (a setlist is identified
         // by its file name), so a copy nobody named would sit under the original's title until somebody noticed.
-        is CampfireViewModel.DialogType.DuplicateSetlist -> TextInputDialog(
+        is CampfireViewModel.DialogType.DuplicateSetlist -> SetlistDetailsDialog(
             title = stringResource(Res.string.setlists_duplicate),
-            label = stringResource(Res.string.setlists_new_setlist_title),
-            initialValue = stringResource(Res.string.setlists_duplicate_title, dialog.setlist.title),
+            initialTitle = stringResource(Res.string.setlists_duplicate_title, dialog.setlist.title),
+            initialDescription = dialog.setlist.description,
             confirmLabel = stringResource(Res.string.setlists_duplicate),
             onDismiss = viewModel::dismissDialog,
-            onConfirm = { title ->
-                viewModel.duplicateSetlist(setlist = dialog.setlist, title = title)
+            onConfirm = { setlistTitle, description ->
+                viewModel.duplicateSetlist(setlist = dialog.setlist, title = setlistTitle, description = description)
                 viewModel.dismissDialog()
             },
         )
@@ -286,7 +285,7 @@ private fun UnsavedChangesDialog(
     title = { Text(stringResource(Res.string.song_editor_unsaved_changes)) },
     text = { Text(stringResource(Res.string.song_editor_unsaved_changes_confirmation)) },
     confirmButton = {
-        TextButton(onClick = onSave) { Text(stringResource(Res.string.song_editor_save)) }
+        TextButton(onClick = onSave) { Text(stringResource(Res.string.save)) }
     },
     dismissButton = {
         Row {
@@ -451,8 +450,9 @@ private fun rememberFirstFieldFocusRequester(): FocusRequester {
 }
 
 /**
- * One required line of text and a confirm button that stays disabled until it has something in it. Creating and
- * renaming a setlist are the same dialog with different labels.
+ * One required line of text and a confirm button that stays disabled until it has something in it, which is what
+ * naming a new setlist from the setlist picker takes. Everywhere else a setlist is named, there is a description to
+ * fill in beside the title, see [SetlistDetailsDialog].
  */
 @Composable
 private fun TextInputDialog(
@@ -499,6 +499,81 @@ private fun TextInputDialog(
             TextButton(
                 enabled = isValid,
                 onClick = { onConfirm(value.text) },
+            ) { Text(confirmLabel) }
+        },
+        dismissButton = {
+            TextButton(onClick = onDismiss) { Text(stringResource(Res.string.cancel)) }
+        },
+    )
+}
+
+/**
+ * Everything the user gets to say about a setlist: its title, and the description that goes under its header on the
+ * setlists screen. Creating one, editing one and naming a copy of one are the same dialog with different labels,
+ * since all three are answering the same two questions.
+ *
+ * Only the title is required. The description is what somebody writes for their own sake ("acoustic, two sets, no
+ * encore"), and most setlists never get one - but the setlists screen's search reads it, so a setlist that is hard
+ * to name can still be found by what it is for.
+ */
+@Composable
+private fun SetlistDetailsDialog(
+    title: String,
+    initialTitle: String = "",
+    initialDescription: String = "",
+    confirmLabel: String,
+    onDismiss: () -> Unit,
+    onConfirm: (title: String, description: String) -> Unit,
+) {
+    // A TextFieldValue for the same reason [TextInputDialog] holds one: a dialog that opens on a title the user is
+    // meant to replace starts with all of it selected. The description is opened on for editing rather than for
+    // replacing, so its caret goes to the end of what is already written instead.
+    var setlistTitle by rememberSaveable(stateSaver = TextFieldValue.Saver) {
+        mutableStateOf(TextFieldValue(text = initialTitle, selection = TextRange(0, initialTitle.length)))
+    }
+    var description by rememberSaveable { mutableStateOf(initialDescription) }
+    val isValid = setlistTitle.text.isNotBlank()
+    val focusRequester = rememberFirstFieldFocusRequester()
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = { Text(title) },
+        text = {
+            Column {
+                OutlinedTextField(
+                    modifier = Modifier.fillMaxWidth().focusRequester(focusRequester),
+                    value = setlistTitle,
+                    onValueChange = { newValue ->
+                        val text = newValue.text.replace("\n", "").take(MAX_TITLE_LENGTH)
+                        // Rebuilt only where the text had to be cut, or every keystroke would throw away the
+                        // selection the field is reporting - which is the caret itself, and the run of text a drag
+                        // is picking out.
+                        setlistTitle = if (text == newValue.text) {
+                            newValue
+                        } else {
+                            TextFieldValue(text = text, selection = TextRange(newValue.selection.end.coerceAtMost(text.length)))
+                        }
+                    },
+                    label = { Text(stringResource(Res.string.setlists_new_setlist_title)) },
+                    singleLine = true,
+                    keyboardOptions = KeyboardOptions(imeAction = ImeAction.Next),
+                )
+                Spacer(modifier = Modifier.height(8.dp))
+                // Several lines rather than one, and no Done action on the keyboard: this is a sentence somebody
+                // writes about a setlist, and the return key belongs to it rather than to the dialog.
+                OutlinedTextField(
+                    modifier = Modifier.fillMaxWidth(),
+                    value = description,
+                    onValueChange = { description = it.take(MAX_DESCRIPTION_LENGTH) },
+                    label = { Text(stringResource(Res.string.setlists_description)) },
+                    minLines = DESCRIPTION_LINES,
+                    maxLines = DESCRIPTION_LINES,
+                )
+            }
+        },
+        confirmButton = {
+            TextButton(
+                enabled = isValid,
+                onClick = { onConfirm(setlistTitle.text, description) },
             ) { Text(confirmLabel) }
         },
         dismissButton = {
@@ -892,5 +967,7 @@ private fun CampfireBottomSheet(
 
 private const val MAX_TITLE_LENGTH = 60
 private const val MAX_TAG_LENGTH = 40
+private const val MAX_DESCRIPTION_LENGTH = 300
+private const val DESCRIPTION_LINES = 3
 private val MAX_SUGGESTIONS_HEIGHT = 160.dp
 private val MAX_LANGUAGES_HEIGHT = 320.dp

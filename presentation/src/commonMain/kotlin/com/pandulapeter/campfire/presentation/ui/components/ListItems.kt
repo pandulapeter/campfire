@@ -92,6 +92,8 @@ import com.pandulapeter.campfire.presentation.resources.setlists_missing_song
 import com.pandulapeter.campfire.presentation.resources.setlists_reorder
 import com.pandulapeter.campfire.presentation.resources.setlists_no_data
 import com.pandulapeter.campfire.presentation.resources.setlists_no_data_hint
+import com.pandulapeter.campfire.presentation.resources.setlists_no_search_results
+import com.pandulapeter.campfire.presentation.resources.setlists_no_search_results_hint
 import com.pandulapeter.campfire.presentation.resources.songs_all_hidden
 import com.pandulapeter.campfire.presentation.resources.songs_all_hidden_hint
 import com.pandulapeter.campfire.presentation.resources.songs_empty_hint
@@ -636,10 +638,16 @@ internal fun ListPlaceholder(
             hint = stringResource(Res.string.songs_all_hidden_hint),
         )
 
-        CampfireViewModel.Placeholder.NO_SEARCH_RESULTS -> EmptyState(
+        CampfireViewModel.Placeholder.NO_MATCHING_SONGS -> EmptyState(
             icon = painterResource(Res.drawable.ic_search),
             title = stringResource(Res.string.songs_no_search_results),
             hint = stringResource(Res.string.songs_no_search_results_hint),
+        )
+
+        CampfireViewModel.Placeholder.NO_MATCHING_SETLISTS -> EmptyState(
+            icon = painterResource(Res.drawable.ic_search),
+            title = stringResource(Res.string.setlists_no_search_results),
+            hint = stringResource(Res.string.setlists_no_search_results_hint),
         )
     }
 }

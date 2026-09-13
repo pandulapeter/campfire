@@ -18,6 +18,7 @@ import com.pandulapeter.campfire.data.model.domain.Setlist
 import com.pandulapeter.campfire.presentation.localization.stringResource
 import com.pandulapeter.campfire.presentation.resources.Res
 import com.pandulapeter.campfire.presentation.resources.delete
+import com.pandulapeter.campfire.presentation.resources.edit
 import com.pandulapeter.campfire.presentation.resources.ic_archive
 import com.pandulapeter.campfire.presentation.resources.ic_delete
 import com.pandulapeter.campfire.presentation.resources.ic_duplicate
@@ -29,7 +30,6 @@ import com.pandulapeter.campfire.presentation.resources.setlists_actions
 import com.pandulapeter.campfire.presentation.resources.setlists_archive
 import com.pandulapeter.campfire.presentation.resources.setlists_duplicate
 import com.pandulapeter.campfire.presentation.resources.setlists_export
-import com.pandulapeter.campfire.presentation.resources.setlists_rename
 import com.pandulapeter.campfire.presentation.resources.setlists_unarchive
 import com.pandulapeter.campfire.presentation.ui.CampfireViewModel
 import com.pandulapeter.campfire.presentation.ui.platform.LocalFilePicker
@@ -38,7 +38,8 @@ import org.jetbrains.compose.resources.painterResource
 /**
  * Everything that can be done to one setlist, behind the overflow button of its [SectionHeader] pill: there are more
  * of these than a pill has room for, and all but one of them lead somewhere else anyway - a dialog, a file picker, or
- * the setlist leaving the list it was tapped in.
+ * the setlist leaving the list it was tapped in. "Edit" is where a setlist is renamed, and also the one place its
+ * description is written, since the two are the whole of what the user gets to say about it.
  *
  * The whole button is absent in performance mode, which the header decides: it is every way of changing a setlist in
  * one place, so there is nothing here to keep.
@@ -61,11 +62,11 @@ internal fun SetlistActionsMenu(
         // Each entry closes the menu before it acts, so that it is gone by the time the dialog or the picker it
         // opens is on the screen.
         SetlistActionsMenuItem(
-            title = stringResource(Res.string.setlists_rename),
+            title = stringResource(Res.string.edit),
             icon = painterResource(Res.drawable.ic_edit),
             onClick = {
                 dismiss()
-                viewModel.showDialog(CampfireViewModel.DialogType.RenameSetlist(setlist))
+                viewModel.showDialog(CampfireViewModel.DialogType.EditSetlist(setlist))
             },
         )
         SetlistActionsMenuItem(

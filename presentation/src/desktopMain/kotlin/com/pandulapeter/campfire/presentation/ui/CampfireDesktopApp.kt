@@ -93,9 +93,15 @@ fun CampfireViewModel.handleKeyEvent(keyEvent: KeyEvent, onExit: () -> Unit): Bo
         // back stack behind an open dialog, bottom sheet or overflow menu. Those register their own back handlers:
         // leaving the event unconsumed lets the top one dismiss itself (with its exit animation).
         if (visibleDialog.value != null || isAnyOverflowMenuOpen) return false
+        // The search of whichever list screen is up comes before the back stack, and not only because closing it
+        // is the smaller step: selecting a tab rebuilds the stack around it, so the setlists screen is reached with
+        // the songs screen still under it and every Escape there would otherwise leave the tab with the search
+        // still open behind it. It is closed from here rather than by the back handler the field registers, since
+        // this handler sees the key first and would consume it either way.
+        val search = currentSearch
         when {
+            search?.isOpen?.value == true -> search.close()
             backStack.size > 1 -> navigateBack()
-            query.value.isNotEmpty() -> onQueryChanged("")
             else -> onExit()
         }
         return true

@@ -17,6 +17,12 @@ data class Setlist(
     /** The file name inside the setlists directory, extension included. Unique, and the identity of the setlist. */
     val fileName: String,
     val title: String,
+    /**
+     * What the setlist is for, in the user's own words: empty for most of them, and shown under the header of the
+     * setlist wherever it is not. It lives in the file next to the title, so it travels through an export, an
+     * import or a sync run the way the title does, and the setlists screen's search reads it.
+     */
+    val description: String,
     /** Higher first, so that the newest setlist is on top. */
     val priority: Int,
     /**

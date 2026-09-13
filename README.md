@@ -76,7 +76,10 @@ an empty library.
 - Song assignment bottom sheet for setlists + search in the bottom sheet
 - Setlist assignment bottom sheet search
 - Setlist descriptions
+- Migrate to annotation-based Koin
+- Fast scroller on Setlists?
 - Fewer demo songs
+- Async animation issues
 - Add demo songs button should be disabled while adding demo songs
 - Tab section horizontal scroll?
 - Empty setlist message should be changed (action button that opens the song search)

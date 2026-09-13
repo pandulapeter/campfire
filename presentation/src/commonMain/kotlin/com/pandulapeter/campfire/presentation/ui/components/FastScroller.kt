@@ -26,6 +26,7 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxScope
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.offset
+import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.grid.LazyGridState
@@ -60,6 +61,7 @@ import androidx.compose.ui.unit.Constraints
 import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.util.lerp
+import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
 import kotlin.math.max
 import kotlin.math.roundToInt
@@ -67,8 +69,10 @@ import kotlin.math.roundToInt
 /**
  * Draggable scrollbar of a long lazy grid, in the style of the fast scroller of a contacts app: the thumb sits on the
  * end edge with a wide touch target, and while it is dragged a bubble next to it shows the label of the section that
- * is currently at the top of the list. The scroller stays visible for as long as the list is scrollable. Touches
- * outside the thumb go through to the list.
+ * is currently at the top of the list. The scroller stays visible for as long as the list is scrollable. A narrower
+ * strip runs down the whole edge as the track: pressing it anywhere moves the thumb under the finger, and a track
+ * fades in behind the thumb while it is pointed at or dragged to show how far that reaches. Every other touch goes
+ * through to the list.
  *
  * @param labelForItem Returns the label of the section the item at the given index belongs to, or null if none.
  */
@@ -104,6 +108,7 @@ internal fun BoxScope.FastScroller(
         stop = MaterialTheme.colorScheme.primary,
         fraction = dragProgress,
     )
+    val trackColor = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = TRACK_ALPHA * hoverProgress)
     val label = labelForItem(gridState.firstVisibleItemIndex)
 
     Box(
@@ -111,10 +116,11 @@ internal fun BoxScope.FastScroller(
             .align(Alignment.CenterEnd)
             .fillMaxHeight()
             .width(TOUCH_TARGET_WIDTH + BUBBLE_SPACING + BUBBLE_SIZE)
+            .padding(vertical = TRACK_VERTICAL_PADDING)
             .onSizeChanged { state.trackHeight = it.height }
             .graphicsLayer { this.alpha = alpha }
     ) {
-        // The thumb is only drawn, so that it never gets in the way of the list underneath.
+        // The thumb and the track are only drawn, so that they never get in the way of the list underneath.
         Box(
             modifier = Modifier
                 .align(Alignment.CenterEnd)
@@ -122,6 +128,12 @@ internal fun BoxScope.FastScroller(
                 .width(TOUCH_TARGET_WIDTH)
                 .drawBehind {
                     val thumbWidth = THUMB_WIDTH.toPx()
+                    drawRoundRect(
+                        color = trackColor,
+                        topLeft = Offset(x = size.width - thumbWidth - THUMB_END_PADDING.toPx(), y = 0f),
+                        size = Size(width = thumbWidth, height = size.height),
+                        cornerRadius = CornerRadius(thumbWidth / 2),
+                    )
                     drawRoundRect(
                         color = thumbColor,
                         topLeft = Offset(x = size.width - thumbWidth - THUMB_END_PADDING.toPx(), y = state.thumbTop),
@@ -157,8 +169,19 @@ internal fun BoxScope.FastScroller(
                 )
             }
         }
-        // The touch target only covers the thumb (plus some slack), so that touches elsewhere reach the list.
+        // Two touch targets, so that touches elsewhere reach the list. The track runs the full height, past the overflow
+        // button of every row, so it is kept narrow enough to end where that button starts (with the button moved
+        // inwards by `FAST_SCROLLER_CLEARANCE`); the wider target only follows the thumb, where a finger that is not
+        // looking has to be caught, and only ever covers the one or two rows next to it.
         if (isVisible) {
+            Box(
+                modifier = Modifier
+                    .align(Alignment.TopEnd)
+                    .fillMaxHeight()
+                    .width(TRACK_TOUCH_TARGET_WIDTH)
+                    .hoverable(interactionSource)
+                    .thumbDragGestures(state = state, coroutineScope = coroutineScope, isTrack = true)
+            )
             Box(
                 modifier = Modifier
                     .align(Alignment.TopEnd)
@@ -170,22 +193,34 @@ internal fun BoxScope.FastScroller(
                         layout(placeable.width, height) { placeable.placeRelative(0, (state.thumbTop - slack).roundToInt()) }
                     }
                     .hoverable(interactionSource)
-                    .pointerInput(state) {
-                        awaitEachGesture {
-                            val down = awaitFirstDown()
-                            down.consume()
-                            state.startDrag()
-                            drag(down.id) { change ->
-                                // The delta has to be read before consuming the change, as consumed changes report none.
-                                val fraction = state.dragBy(change.positionChange().y)
-                                change.consume()
-                                coroutineScope.launch { state.scrollToFraction(fraction) }
-                            }
-                            state.endDrag()
-                        }
-                    }
+                    .thumbDragGestures(state = state, coroutineScope = coroutineScope, isTrack = false)
             )
         }
+    }
+}
+
+/**
+ * Drags the thumb for as long as the pointer that pressed this element stays down, wherever it wanders off to. The
+ * track is laid out over the whole height of the scroller, so a press on it is already in the thumb's coordinates.
+ */
+private fun Modifier.thumbDragGestures(
+    state: FastScrollerState,
+    coroutineScope: CoroutineScope,
+    isTrack: Boolean,
+) = pointerInput(state, isTrack) {
+    awaitEachGesture {
+        val down = awaitFirstDown()
+        down.consume()
+        state.startDrag(pressY = if (isTrack) down.position.y else null)?.let { fraction ->
+            coroutineScope.launch { state.scrollToFraction(fraction) }
+        }
+        drag(down.id) { change ->
+            // The delta has to be read before consuming the change, as consumed changes report none.
+            val fraction = state.dragBy(change.positionChange().y)
+            change.consume()
+            coroutineScope.launch { state.scrollToFraction(fraction) }
+        }
+        state.endDrag()
     }
 }
 
@@ -219,9 +254,15 @@ private class FastScrollerState(
             else -> metrics?.scrollFraction ?: 0f
         }
 
-    fun startDrag() {
+    /**
+     * Starts a drag. A press on the track at [pressY] that misses the thumb first centers the thumb under it, which is
+     * what the track is there for; a press on the thumb itself leaves it where it is, so that grabbing the thumb never
+     * scrolls the list by itself. Returns the scroll fraction to follow the jump with, or null if there was none.
+     */
+    fun startDrag(pressY: Float?): Float? {
         draggedThumbTop = thumbTop
         isDragging = true
+        return if (pressY == null || pressY in thumbTop..thumbTop + thumbHeight) null else dragBy(pressY - thumbCenter)
     }
 
     /** Moves the thumb by [delta] pixels and returns the new scroll fraction. */
@@ -288,6 +329,8 @@ private class ScrollMetrics(
 internal val FAST_SCROLLER_CLEARANCE = 16.dp
 
 private val TOUCH_TARGET_WIDTH = 48.dp
+private val TRACK_TOUCH_TARGET_WIDTH = 24.dp
+private val TRACK_VERTICAL_PADDING = 16.dp
 private val TOUCH_SLACK = 8.dp
 private val THUMB_WIDTH = 6.dp
 private val THUMB_END_PADDING = 4.dp
@@ -297,3 +340,4 @@ private val BUBBLE_SPACING = 4.dp
 private val BUBBLE_ELEVATION = 2.dp
 private val BUBBLE_TRANSFORM_ORIGIN = TransformOrigin(pivotFractionX = 1f, pivotFractionY = 0.5f)
 private const val IDLE_THUMB_ALPHA = 0.5f
+private const val TRACK_ALPHA = 0.12f
