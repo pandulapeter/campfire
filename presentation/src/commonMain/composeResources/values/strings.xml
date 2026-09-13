@@ -99,12 +99,14 @@
     <!-- Setlists screen -->
     <string name="setlists">Setlists</string>
     <string name="setlists_no_data">No setlists yet</string>
-    <string name="setlists_no_data_hint">Create a setlist, then add songs to it from the song details screen.</string>
+    <string name="setlists_no_data_hint">Create a setlist, then pick the songs that go into it.</string>
     <string name="setlists_new_setlist">New setlist</string>
     <string name="setlists_new_setlist_title">Setlist title</string>
     <string name="setlists_remove_song">Remove from setlist</string>
     <string name="setlists_reorder">Reorder</string>
     <string name="setlists_actions">Setlist actions</string>
+    <string name="setlists_song_assignments">Song assignments</string>
+    <string name="setlists_add_songs">Add songs</string>
     <string name="setlists_edit_setlist">Edit setlist</string>
     <string name="setlists_description">Description (optional)</string>
     <string name="setlists_duplicate">Duplicate</string>
@@ -114,7 +116,6 @@
     <string name="setlists_archived">Archived</string>
     <string name="setlists_export">Export setlist</string>
     <string name="setlists_missing_song">File not found</string>
-    <string name="setlists_reorder_hint">Drag a song by its handle to reorder it, or use its menu to take it out.</string>
     <string name="setlists_delete_setlist">Delete setlist</string>
     <string name="setlists_delete_setlist_confirmation">Delete the \"%1$s\" setlist? The songs stay in your library.</string>
     <string name="setlists_search">Search in setlists</string>

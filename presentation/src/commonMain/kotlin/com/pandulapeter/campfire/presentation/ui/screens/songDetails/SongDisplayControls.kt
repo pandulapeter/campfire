@@ -17,9 +17,10 @@ import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.layout.wrapContentHeight
@@ -79,6 +80,7 @@ import org.jetbrains.compose.resources.painterResource
 internal fun SongDisplayControls(
     viewModel: CampfireViewModel,
     dialog: CampfireViewModel.DialogType.SongDisplayControls,
+    contentPadding: PaddingValues,
 ) {
     val allSongs by viewModel.allSongs.collectAsStateWithLifecycle()
     val userPreferences by viewModel.userPreferences.collectAsStateWithLifecycle()
@@ -94,7 +96,9 @@ internal fun SongDisplayControls(
     val transposedKey = remember(songText, songTransposition, chordSpelling) {
         songText?.let { viewModel.renderSong(it, songTransposition, chordSpelling).metadata.key }
     }
-    Column {
+    Column(
+        modifier = Modifier.padding(contentPadding)
+    ) {
         SettingsSectionTitle(text = stringResource(Res.string.song_details_display_options))
         if (song?.hasChords == true && userPreferences?.isLyricsOnlyModeEnabled != true && !isPerformanceModeEnabled) {
             ListItem(
@@ -120,7 +124,6 @@ internal fun SongDisplayControls(
                 )
             },
         )
-        Spacer(modifier = Modifier.height(16.dp))
     }
 }
 

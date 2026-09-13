@@ -99,12 +99,14 @@
     <!-- Setlists screen -->
     <string name="setlists">Listák</string>
     <string name="setlists_no_data">Még nincsenek listák</string>
-    <string name="setlists_no_data_hint">Hozz létre egy listát, majd adj hozzá dalokat a dal részletei képernyőről.</string>
+    <string name="setlists_no_data_hint">Hozz létre egy listát, majd válaszd ki, mely dalok kerüljenek rá.</string>
     <string name="setlists_new_setlist">Új lista</string>
     <string name="setlists_new_setlist_title">Lista címe</string>
     <string name="setlists_remove_song">Eltávolítás a listáról</string>
     <string name="setlists_reorder">Átrendezés</string>
     <string name="setlists_actions">Műveletek</string>
+    <string name="setlists_song_assignments">Dalok hozzárendelése</string>
+    <string name="setlists_add_songs">Dalok hozzáadása</string>
     <string name="setlists_edit_setlist">Lista szerkesztése</string>
     <string name="setlists_description">Leírás (nem kötelező)</string>
     <string name="setlists_duplicate">Megkettőzés</string>
@@ -114,7 +116,6 @@
     <string name="setlists_archived">Archivált</string>
     <string name="setlists_export">Lista exportálása</string>
     <string name="setlists_missing_song">A fájl nem található</string>
-    <string name="setlists_reorder_hint">A fogantyúnál fogva átrendezheted, a menüjéből eltávolíthatod a dalokat.</string>
     <string name="setlists_delete_setlist">Lista törlése</string>
     <string name="setlists_delete_setlist_confirmation">Törlöd a(z) „%1$s” listát? A dalok a könyvtárban maradnak.</string>
     <string name="setlists_search">Keresés a listákban</string>

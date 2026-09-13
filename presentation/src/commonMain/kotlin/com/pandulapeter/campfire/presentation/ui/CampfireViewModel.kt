@@ -94,6 +94,8 @@ import kotlinx.coroutines.flow.runningFold
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.sync.Mutex
+import kotlinx.coroutines.sync.withLock
 import kotlinx.coroutines.withContext
 import kotlin.math.ceil
 import kotlin.math.floor
@@ -279,6 +281,9 @@ class CampfireViewModel(
      * setlists happens to be subscribed. [screenData] is already collected eagerly, so this costs nothing extra.
      */
     val setlists = screenData.map { it.data?.setlists.orEmpty() }.asEagerState(emptyList())
+
+    /** What keeps the writes of [setSetlistSongs] from overtaking each other. */
+    private val setlistSongsMutex = Mutex()
 
     /**
      * The file names of every song that is in at least one setlist, which is what decides whether the "add to
@@ -1017,8 +1022,16 @@ class CampfireViewModel(
 
     // Setlists
 
+    /**
+     * A new setlist is followed by the song picker for it, since a setlist is created to have songs put into it and
+     * the setlists screen offers no other way of doing that in one place. The picker only opens where nothing else
+     * has been opened while the file was being written, and only where the library has songs to pick from.
+     */
     fun createSetlist(title: String, description: String) = launchLibraryChange {
-        createSetlist.invoke(title = title, description = description)
+        val setlist = createSetlist.invoke(title = title, description = description)
+        if (allSongs.value.isNotEmpty()) {
+            _visibleDialog.compareAndSet(null, DialogType.SongPicker(setlist))
+        }
     }
 
     /**
@@ -1035,6 +1048,26 @@ class CampfireViewModel(
             if (setlist.entries.none { it.songFileName == songFileName }) {
                 saveSetlist(setlist.copy(entries = listOf(Setlist.Entry(songFileName = songFileName)) + setlist.entries))
             }
+        }
+    }
+
+    /**
+     * Writes the songs a setlist holds as the song picker has them ticked: [songFileNames] is the whole of the setlist
+     * in order rather than one song going in or out. The picker is ticked a row at a time, quickly and all into the
+     * same file, while [setlists] only catches up with a write once it has been round tripped through the repository,
+     * so a toggle worked out from it would build each write on a setlist the previous tick had not reached yet and
+     * lose that tick. The entries that stay are taken from the setlist itself, so their transpositions stay with them.
+     *
+     * The writes are made one at a time, which is what makes them land in the order they were asked for, so the file
+     * ends up holding what the last tick left rather than whichever write happened to finish last.
+     *
+     * @param setlist What to write into while [setlists] has not caught up with a setlist that was created a moment ago.
+     */
+    fun setSetlistSongs(setlist: Setlist, songFileNames: List<String>) = launchLibraryChange {
+        setlistSongsMutex.withLock {
+            val current = setlists.value.firstOrNull { it.fileName == setlist.fileName } ?: setlist
+            val entriesBySongFileName = current.entries.associateBy { it.songFileName }
+            saveSetlist(current.copy(entries = songFileNames.map { entriesBySongFileName[it] ?: Setlist.Entry(songFileName = it) }))
         }
     }
 
@@ -1470,6 +1503,13 @@ class CampfireViewModel(
          *   opened the sheet is showing the song as part of that setlist.
          */
         data class SetlistPicker(val song: Song, val lockedSetlistFileName: String?) : DialogType
+        /**
+         * Every song of the library with a box each, which is how a setlist is filled from its own side rather than
+         * one song at a time from the menu of each. [setlist] is the setlist the sheet was opened on, and only stands
+         * in for the one in [setlists] until the library has caught up with it, which a setlist created a moment ago
+         * may not have.
+         */
+        data class SongPicker(val setlist: Setlist) : DialogType
         data class SongDisplayControls(val songFileName: String, val setlistFileName: String?) : DialogType
         data class DeleteSetlist(val setlist: Setlist) : DialogType
         data class EditSetlist(val setlist: Setlist) : DialogType

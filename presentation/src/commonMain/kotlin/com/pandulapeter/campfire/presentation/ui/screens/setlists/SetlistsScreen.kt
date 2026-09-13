@@ -51,13 +51,14 @@ import com.pandulapeter.campfire.presentation.resources.ic_archive
 import com.pandulapeter.campfire.presentation.resources.ic_setlists_remove
 import com.pandulapeter.campfire.presentation.resources.ic_tune
 import com.pandulapeter.campfire.presentation.resources.setlists
+import com.pandulapeter.campfire.presentation.resources.setlists_add_songs
 import com.pandulapeter.campfire.presentation.resources.setlists_archived
 import com.pandulapeter.campfire.presentation.resources.setlists_new_setlist
 import com.pandulapeter.campfire.presentation.resources.setlists_search
 import com.pandulapeter.campfire.presentation.resources.setlists_sort_and_filter
 import com.pandulapeter.campfire.presentation.resources.setlists_remove_song
-import com.pandulapeter.campfire.presentation.resources.setlists_reorder_hint
 import com.pandulapeter.campfire.presentation.ui.CampfireViewModel
+import com.pandulapeter.campfire.presentation.ui.components.ActionListItem
 import com.pandulapeter.campfire.presentation.ui.components.ActionsMenu
 import com.pandulapeter.campfire.presentation.ui.components.ActionsMenuItem
 import com.pandulapeter.campfire.presentation.ui.components.CampfireTopAppBar
@@ -324,16 +325,18 @@ private fun SetlistList(
                         )
                     }
                 }
+                // An empty setlist is one that is waiting for its songs, so the way to them takes the place the songs
+                // will take, rather than staying behind the header's menu.
                 if (setlistWithSongs.entries.isEmpty() && !isPerformanceModeEnabled) {
                     item(
-                        key = "hint_${setlistWithSongs.setlist.fileName}",
+                        key = "add_songs_${setlistWithSongs.setlist.fileName}",
                         span = { GridItemSpan(maxLineSpan) },
                     ) {
-                        Text(
-                            modifier = listItemAnimation(listState, hasLoadedLibrary).padding(horizontal = 16.dp, vertical = 8.dp),
-                            text = stringResource(Res.string.setlists_reorder_hint),
-                            style = MaterialTheme.typography.bodyMedium,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        ActionListItem(
+                            modifier = listItemAnimation(listState, hasLoadedLibrary),
+                            title = stringResource(Res.string.setlists_add_songs),
+                            icon = painterResource(Res.drawable.ic_add),
+                            onClick = { viewModel.showDialog(CampfireViewModel.DialogType.SongPicker(setlistWithSongs.setlist)) },
                         )
                     }
                 }

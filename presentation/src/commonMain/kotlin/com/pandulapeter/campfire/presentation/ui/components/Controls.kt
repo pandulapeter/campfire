@@ -154,7 +154,7 @@ internal fun ControlsSidePanel(
             Modifier.width(SIDE_PANEL_WIDTH + endPadding).fillMaxHeight().background(MaterialTheme.colorScheme.surfaceContainerLow),
             PaddingValues(
                 end = endPadding,
-                bottom = contentPadding.calculateBottomPadding(),
+                bottom = contentPadding.calculateBottomPadding() + SIDE_PANEL_BOTTOM_PADDING,
             ),
         )
     }
@@ -228,7 +228,6 @@ internal fun SongsControls(
             .fillMaxWidth()
             .verticalScroll(rememberScrollState())
             .padding(contentPadding)
-            .padding(bottom = 16.dp)
     ) {
         SettingsSectionTitle(text = stringResource(Res.string.songs_sorting_mode))
         SegmentedChoice(
@@ -523,6 +522,7 @@ private fun CountedFilterChip(
 }
 
 private val SIDE_PANEL_WIDTH = 320.dp
+private val SIDE_PANEL_BOTTOM_PADDING = 16.dp
 private const val SIDE_PANEL_MIN_COLUMN_COUNT = 3
 private const val MAX_COLLAPSED_TAG_COUNT = 12
 private val MAX_TAG_WIDTH = 160.dp
