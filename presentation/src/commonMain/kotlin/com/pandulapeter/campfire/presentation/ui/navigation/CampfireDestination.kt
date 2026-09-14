@@ -10,7 +10,10 @@
 package com.pandulapeter.campfire.presentation.ui.navigation
 
 import androidx.navigation3.runtime.NavKey
+import kotlinx.serialization.EncodeDefault
+import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.Serializable
+import kotlin.uuid.Uuid
 
 /**
  * The keys of the Navigation 3 back stack. Top level destinations are the tabs of the navigation bar / rail,
@@ -61,15 +64,23 @@ sealed interface CampfireDestination : NavKey {
     /**
      * Full screen pager of the given songs, identified by their file names. When opened from a setlist,
      * [setlistFileName] is set so that transpositions are stored in that setlist rather than in the preferences.
+     *
+     * @param id What the entry is to Navigation 3, generated once per push and kept by [copy]. The file names cannot be
+     *   that: renaming a song from this screen rewrites them in place, and an entry keyed on them would be a new
+     *   screen sliding in over itself with its scroll position gone. Always written into the saved back stack, since
+     *   a default that is left out would be generated anew on the way back in and orphan the entry's saved state.
      */
     @Serializable
     data class SongDetails(
         val songFileNames: List<String>,
         val setlistFileName: String?,
         val initialIndex: Int,
+        @OptIn(ExperimentalSerializationApi::class)
+        @EncodeDefault
+        val id: String = Uuid.random().toString(),
     ) : CampfireDestination {
 
-        override val contentKey get() = "songDetails|$setlistFileName|$initialIndex|${songFileNames.joinToString(separator = ",")}"
+        override val contentKey get() = "songDetails|$id"
     }
 
     /**
