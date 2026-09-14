@@ -11,6 +11,8 @@
 
 Compose Desktop entry point (`CampfireDesktopApplication.kt`, `main(args)`). Starts Koin through `:app:di`'s `startCampfireDependencyGraph` before the window opens (the graph belongs to the process, so there is no `KoinApplication` composable around the content), then hosts `CampfireDesktopApp` in a `Window` whose `onKeyEvent` is wired to `CampfireViewModel.handleKeyEvent` (Escape dismisses the visible modal, pops the back stack, or exits the application on the root screen). The modules are named in `:app:di`, not here.
 
+Closing the window is a back-navigation as far as unsaved text is concerned: `onCloseRequest`, the Escape that would exit, and the macOS quit (the application menu and Cmd+Q, which never reach `onCloseRequest` and are caught with `Desktop.setQuitHandler` instead) all go through `CampfireViewModel.requestExit`, which asks the editor's unsaved changes question first and waits for a save still being written before `exitApplication` ends the process.
+
 The view model is obtained outside `Window` so window resizing doesn't reset it. Window min size is 400x400.
 
 `main` takes `args` because that is how "open with" reaches a desktop application: the system launches the app with the file as an argument, and every argument is read and imported at startup. Files dropped onto the window take the same path (`Modifier.dragAndDropTarget` in `CampfireDesktopApp`).

@@ -559,6 +559,15 @@ class CampfireViewModel(
      */
     private val importQueue = Channel<ImportRequest>(Channel.UNLIMITED)
 
+    /** The last [saveSongContent], which closing the application waits for, see [requestExit]. */
+    private var currentSaveJob: Job? = null
+
+    /**
+     * The exit that asked the `UnsavedChanges` question, run once it is answered with Save or Discard. Any other way
+     * the dialog goes away is staying, so [dismissDialog] forgets it.
+     */
+    private var pendingExit: (() -> Unit)? = null
+
     /** True while the editor's text is being written, which it shows in place of its "Saved" label. */
     private val _isSavingSong = MutableStateFlow(false)
     val isSavingSong: StateFlow<Boolean> = _isSavingSong.asStateFlow()
@@ -683,6 +692,25 @@ class CampfireViewModel(
         }
     }
 
+    /**
+     * Closing the application, which is a way out of the editor like any other: with unsaved text in it the
+     * `UnsavedChanges` question is asked first, and [exit] only runs once it has been answered with something other
+     * than staying. Either way it waits for a save that is still being written, since the process ends with [exit].
+     */
+    fun requestExit(exit: () -> Unit) {
+        if (hasUnsavedEditorChanges.value && backStack.lastOrNull() is CampfireDestination.SongEditor) {
+            pendingExit = exit
+            showDialog(DialogType.UnsavedChanges)
+        } else {
+            exitOnceSaved(exit)
+        }
+    }
+
+    private fun exitOnceSaved(exit: () -> Unit) = viewModelScope.launch {
+        currentSaveJob?.join()
+        exit()
+    }
+
     private fun popBackStack() {
         if (backStack.size > 1) {
             updateBackStack { removeAt(lastIndex) }
@@ -794,12 +822,19 @@ class CampfireViewModel(
 
     /** The "Save" answer of the unsaved changes dialog. The write outlives this screen, see [saveSongContent]. */
     fun saveEditorChangesAndLeave() {
+        // Taken before leaving, which dismisses the dialog and with it the exit the dialog was asked for.
+        val exit = pendingExit
         _editorDraft.value?.let { saveSongContent(fileName = it.fileName, text = it.text) }
         leaveEditor()
+        exit?.let(::exitOnceSaved)
     }
 
     /** The "Discard" answer of the unsaved changes dialog, and the only way typed text is ever thrown away. */
-    fun leaveEditorWithoutSaving() = leaveEditor()
+    fun leaveEditorWithoutSaving() {
+        val exit = pendingExit
+        leaveEditor()
+        exit?.let(::exitOnceSaved)
+    }
 
     /**
      * The confirmed "Revert" action of the editor. Answered by the screen rather than here, because the text field
@@ -836,7 +871,7 @@ class CampfireViewModel(
         } finally {
             _isSavingSong.update { false }
         }
-    }
+    }.also { currentSaveJob = it }
 
     /**
      * The write itself, and [songTexts] brought up to date with it before anything else can read them. The caller holds
@@ -1367,7 +1402,10 @@ class CampfireViewModel(
 
     fun showDialog(dialogType: DialogType) = _visibleDialog.update { dialogType }
 
-    fun dismissDialog() = _visibleDialog.update { null }
+    fun dismissDialog() {
+        pendingExit = null
+        _visibleDialog.update { null }
+    }
 
     // Helpers
 

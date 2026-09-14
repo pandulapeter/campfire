@@ -10,6 +10,7 @@
 package com.pandulapeter.campfire
 
 import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.SideEffect
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -24,7 +25,9 @@ import com.pandulapeter.campfire.presentation.ui.handleKeyEvent
 import com.pandulapeter.campfire.presentation.ui.platform.readAsImportedFiles
 import com.pandulapeter.campfire.resources.Res
 import com.pandulapeter.campfire.resources.app_icon
+import java.awt.Desktop
 import java.awt.Dimension
+import javax.swing.SwingUtilities
 import org.jetbrains.compose.resources.painterResource
 import org.koin.compose.viewmodel.koinViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -39,9 +42,23 @@ fun main(args: Array<String>) {
         val filesToImport = remember { MutableStateFlow(args.toList().readAsImportedFiles()) }
         // The view model is created inside the window (which owns the ViewModelStore), but the key handler needs it here.
         val viewModel = remember { mutableStateOf<CampfireViewModel?>(null) }
+        // Closing the window leaves the editor as surely as Escape does, so it asks about unsaved text the same way,
+        // and it waits for a save that is still being written, since exitApplication ends the process.
+        val requestExit = { viewModel.value?.requestExit(::exitApplication) ?: exitApplication() }
+        // Quitting from the macOS application menu or with Cmd+Q never reaches onCloseRequest: without a handler of
+        // its own the JDK answers it with System.exit. The quit is cancelled and asked for the way closing the window
+        // is, which ends in exitApplication all the same once there is nothing left to lose.
+        DisposableEffect(Unit) {
+            val desktop = if (Desktop.isDesktopSupported()) Desktop.getDesktop().takeIf { it.isSupported(Desktop.Action.APP_QUIT_HANDLER) } else null
+            desktop?.setQuitHandler { _, response ->
+                response.cancelQuit()
+                SwingUtilities.invokeLater { requestExit() }
+            }
+            onDispose { desktop?.setQuitHandler(null) }
+        }
         Window(
             title = "Campfire",
-            onCloseRequest = ::exitApplication,
+            onCloseRequest = requestExit,
             icon = painterResource(Res.drawable.app_icon),
             onKeyEvent = { keyEvent -> viewModel.value?.handleKeyEvent(keyEvent, onExit = ::exitApplication) == true },
         ) {

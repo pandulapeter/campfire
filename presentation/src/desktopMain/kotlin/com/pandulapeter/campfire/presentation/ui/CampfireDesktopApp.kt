@@ -85,7 +85,8 @@ fun CampfireDesktopApp(
 /**
  * To be wired into the window's key event handler. Returns true if the event was consumed.
  *
- * @param onExit Closes the application, called when there is nothing left to navigate back from.
+ * @param onExit Closes the application, called when there is nothing left to navigate back from, and only once a save
+ *   that is still being written has finished, see [CampfireViewModel.requestExit].
  */
 fun CampfireViewModel.handleKeyEvent(keyEvent: KeyEvent, onExit: () -> Unit): Boolean {
     if (keyEvent.type == KeyEventType.KeyDown && keyEvent.key == Key.Escape) {
@@ -102,7 +103,7 @@ fun CampfireViewModel.handleKeyEvent(keyEvent: KeyEvent, onExit: () -> Unit): Bo
         when {
             search?.isOpen?.value == true -> search.close()
             backStack.size > 1 -> navigateBack()
-            else -> onExit()
+            else -> requestExit(onExit)
         }
         return true
     }
