@@ -51,8 +51,10 @@ internal object WebFilePicker : FilePicker {
 }
 
 /**
- * Resolves with the picked files, or with an empty list when the dialog was dismissed. No browser fires an event for
- * a cancelled file dialog, so the window regaining focus without a `change` following it is taken to mean one.
+ * Resolves with the picked files, or with an empty list when the dialog was dismissed. A dismissed dialog is the
+ * input's `cancel` event where the browser fires one. Where it does not, the window regaining focus without a
+ * `change` following it is taken to mean one - after a wait long enough for a large selection, which some browsers
+ * deliver well after the window already has its focus back, to arrive first.
  */
 private fun pickFiles(accept: String): Promise<JsArray<JsAny>?> = js(
     """(function () {
@@ -72,9 +74,10 @@ private fun pickFiles(accept: String): Promise<JsArray<JsAny>?> = js(
                 resolve(files);
             }
             function onFocus() {
-                setTimeout(function () { finish([]); }, 500);
+                setTimeout(function () { finish([]); }, 1500);
             }
             input.addEventListener('change', function () { finish(Array.prototype.slice.call(input.files)); });
+            input.addEventListener('cancel', function () { finish([]); });
             window.addEventListener('focus', onFocus);
             input.click();
         });
