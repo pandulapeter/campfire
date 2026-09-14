@@ -45,6 +45,7 @@ import kotlin.random.Random
 import kotlin.time.Clock
 import kotlin.time.ExperimentalTime
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.withTimeoutOrNull
 import kotlinx.serialization.json.Json
 
 /**
@@ -121,15 +122,27 @@ internal class DropboxSyncProvider(
     }
 
     override suspend fun disconnect() {
-        val credentials = credentialsStore.load()
+        // Dropbox revokes the whole grant through a valid access token, and a stored one is expired after four idle
+        // hours, so it is renewed first if needed. Nothing connected, or no answer in time, leaves nothing to revoke
+        // with; the time limit is what keeps a dead network from keeping the user connected.
+        val accessToken = try {
+            withTimeoutOrNull(REVOKE_TIMEOUT_MILLIS) { accessToken() }
+        } catch (exception: CancellationException) {
+            throw exception
+        } catch (exception: Exception) {
+            null
+        }
         credentialsStore.save(null)
+        if (accessToken.isNullOrEmpty()) return
         // Best effort: the local credentials are already gone, and a token that cannot be revoked simply expires.
-        credentials?.accessToken?.takeIf { it.isNotEmpty() }?.let { accessToken ->
-            try {
+        try {
+            withTimeoutOrNull(REVOKE_TIMEOUT_MILLIS) {
                 httpClient.post(REVOKE_URL) { header("Authorization", "Bearer $accessToken") }
-            } catch (exception: Exception) {
-                println("Could not revoke the Dropbox token: ${exception.message}")
             }
+        } catch (exception: CancellationException) {
+            throw exception
+        } catch (exception: Exception) {
+            println("Could not revoke the Dropbox token: ${exception.message}")
         }
     }
 
@@ -421,6 +434,9 @@ internal class DropboxSyncProvider(
         const val DELETE_URL = "https://api.dropboxapi.com/2/files/delete_v2"
         const val DOWNLOAD_URL = "https://content.dropboxapi.com/2/files/download"
         const val UPLOAD_URL = "https://content.dropboxapi.com/2/files/upload"
+
+        /** How long disconnecting waits for Dropbox, first to renew the token and then to revoke it. */
+        const val REVOKE_TIMEOUT_MILLIS = 10_000L
 
         /** Tokens are renewed slightly early, so that one does not expire between the check and the request. */
         const val EXPIRY_MARGIN_MILLIS = 60_000L
