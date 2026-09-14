@@ -281,6 +281,7 @@ private fun SetlistList(
                 placeholder != null -> item(
                     key = "placeholder",
                     span = { GridItemSpan(maxLineSpan) },
+                    contentType = "placeholder",
                 ) {
                     ListPlaceholder(
                         modifier = listItemAnimation(listState, hasLoadedLibrary).fillMaxWidth(),
@@ -300,6 +301,7 @@ private fun SetlistList(
                     item(
                         key = headerKey,
                         span = { GridItemSpan(maxLineSpan) },
+                        contentType = "setlist_header",
                     ) {
                         SectionHeader(
                             modifier = listItemAnimation(listState, hasLoadedLibrary),
@@ -325,6 +327,7 @@ private fun SetlistList(
                         item(
                             key = "description_${setlistWithSongs.setlist.fileName}",
                             span = { GridItemSpan(maxLineSpan) },
+                            contentType = "setlist_description",
                         ) {
                             Text(
                                 modifier = listItemAnimation(listState, hasLoadedLibrary).padding(horizontal = 16.dp, vertical = 8.dp),
@@ -340,6 +343,7 @@ private fun SetlistList(
                         item(
                             key = "add_songs_${setlistWithSongs.setlist.fileName}",
                             span = { GridItemSpan(maxLineSpan) },
+                            contentType = "setlist_action",
                         ) {
                             ActionListItem(
                                 modifier = listItemAnimation(listState, hasLoadedLibrary),
@@ -352,6 +356,7 @@ private fun SetlistList(
                     items(
                         items = setlistWithSongs.rows(draggedSetlist),
                         key = { row -> SetlistItemKey(setlistFileName = setlistWithSongs.setlist.fileName, songFileName = row.entry.songFileName).string.orEmpty() },
+                        contentType = { "song" },
                     ) { row ->
                         val entry = row.entry
                         val key = SetlistItemKey(setlistFileName = setlistWithSongs.setlist.fileName, songFileName = entry.songFileName)

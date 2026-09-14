@@ -302,6 +302,7 @@ private fun SongList(
                 item(
                     key = "placeholder",
                     span = { GridItemSpan(maxLineSpan) },
+                    contentType = "placeholder",
                 ) {
                     ListPlaceholder(
                         modifier = listItemAnimation(listState, hasLoadedLibrary).fillMaxWidth(),
@@ -325,6 +326,7 @@ private fun SongList(
                     item(
                         key = key,
                         span = { GridItemSpan(maxLineSpan) },
+                        contentType = "header",
                     ) {
                         SectionHeader(
                             modifier = listItemAnimation(listState, hasLoadedLibrary),
@@ -341,6 +343,7 @@ private fun SongList(
                 items(
                     items = group.songs,
                     key = { "song_${it.fileName}" },
+                    contentType = { "song" },
                 ) { song ->
                     val actionsMenuState = rememberOverflowMenuState()
                     SongListItem(
