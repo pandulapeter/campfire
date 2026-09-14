@@ -10,6 +10,7 @@
 package com.pandulapeter.campfire.domain.implementation.useCases
 
 import com.pandulapeter.campfire.domain.api.useCases.NormalizeTextUseCase
+import com.pandulapeter.campfire.data.model.domain.isCombiningMark
 import com.pandulapeter.campfire.data.model.domain.withoutAccent
 import org.koin.core.annotation.Factory
 
@@ -18,7 +19,7 @@ class NormalizeTextUseCaseImpl internal constructor() : NormalizeTextUseCase {
 
     /**
      * Sorting, grouping and searching all run this over every song, so it walks the text once and only allocates a
-     * new string when there is actually an accent to replace - a chain of [String.replace] calls allocated one for
+     * new string when there is actually an accent to replace or a combining mark to drop - a chain of [String.replace] calls allocated one for
      * every accent the app knows about, whether the text contained it or not.
      */
     override fun invoke(text: String): String {
@@ -26,14 +27,17 @@ class NormalizeTextUseCaseImpl internal constructor() : NormalizeTextUseCase {
         var builder: StringBuilder? = null
         for (index in lowercase.indices) {
             val character = lowercase[index]
+            val isCombiningMark = character.isCombiningMark()
             val replacement = character.withoutAccent()
-            if (replacement == character) {
+            if (replacement == character && !isCombiningMark) {
                 builder?.append(character)
             } else {
                 if (builder == null) {
                     builder = StringBuilder(lowercase.length).append(lowercase, 0, index)
                 }
-                builder.append(replacement)
+                if (!isCombiningMark) {
+                    builder.append(replacement)
+                }
             }
         }
         return builder?.toString() ?: lowercase

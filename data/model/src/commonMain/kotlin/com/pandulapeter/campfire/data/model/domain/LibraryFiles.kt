@@ -82,6 +82,8 @@ object LibraryFiles {
             // The one piece of punctuation that binds rather than separates, and so is dropped instead of folded to
             // an underscore: "don't" is one word, in whichever of its spellings a keyboard produced it.
             .filterNot { it in APOSTROPHES }
+            // The accent of a decomposed letter, which would otherwise be folded to a separator in the middle of its word.
+            .filterNot { it.isCombiningMark() }
             // Turned into the word it is read as rather than into a separator, so that the two ways of writing the
             // same title meet here instead of naming two files.
             .replace(AND_SIGN, " and ")

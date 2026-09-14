@@ -38,3 +38,11 @@ fun Char.withoutAccent() = when (this) {
     'ł' -> 'l'
     else -> this
 }
+
+/**
+ * A combining mark of the block that carries every Latin accent. A title can arrive decomposed - an "é" written as "e"
+ * followed by U+0301, which is what some tools and macOS paths produce - and there is no Unicode normalizer in common
+ * Kotlin to compose it back. Dropping the mark once the base letter has been folded brings both spellings to the same
+ * plain letters, so the same title neither files under two names nor fails to find itself.
+ */
+fun Char.isCombiningMark() = this in '\u0300'..'\u036F'

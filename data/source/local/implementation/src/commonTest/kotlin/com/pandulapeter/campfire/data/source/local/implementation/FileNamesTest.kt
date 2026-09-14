@@ -68,6 +68,13 @@ internal class FileNamesTest {
     }
 
     @Test
+    fun aDecomposedAccentFoldsLikeAComposedOne() {
+        assertEquals("edith", LibraryFiles.normalizedName("\u00C9dith"))
+        assertEquals("edith", LibraryFiles.normalizedName("E\u0301dith"))
+        assertEquals("arvizturo-tukorfurogep.cho", songFileName(title = "tu\u0308ko\u0308rfu\u0301ro\u0301ge\u0301p", artist = "A\u0301rvi\u0301ztu\u030Bro\u030B"))
+    }
+
+    @Test
     fun structureAndDigitsSurviveTheFolding() {
         assertEquals("ac_dc-t_n_t.cho", songFileName(title = "T.N.T.", artist = "AC/DC"))
         assertEquals("blink_182-all_the_small_things.cho", songFileName(title = "All the Small Things", artist = "blink-182"))
