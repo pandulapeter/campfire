@@ -22,9 +22,12 @@ import com.pandulapeter.campfire.domain.api.models.ScreenData
 import com.pandulapeter.campfire.domain.api.models.SongFilter
 import com.pandulapeter.campfire.domain.api.useCases.GetScreenDataUseCase
 import com.pandulapeter.campfire.domain.api.useCases.NormalizeTextUseCase
+import kotlin.concurrent.Volatile
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.distinctUntilChanged
+import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.flow.map
 import org.koin.core.annotation.Factory
 
@@ -36,8 +39,20 @@ class GetScreenDataUseCaseImpl internal constructor(
     private val userPreferencesRepository: UserPreferencesRepository,
 ) : GetScreenDataUseCase {
 
+    /**
+     * Written from the transform of [combine], which runs one emission at a time, so a collection never races itself
+     * over it. It is marked volatile because that transform runs on [Dispatchers.Default] rather than on the main
+     * thread, and a second collection of this use case (the demo library waits on one) may read it from another thread.
+     */
+    @Volatile
     private var cache: ScreenData? = null
 
+    /**
+     * Built on [Dispatchers.Default] rather than wherever it is collected, which for the view model is the main thread:
+     * normalizing, filtering, sorting and counting the whole library is one full pass per emission, and the first scan
+     * of a large library publishes a partial list every few dozen files, each of which would be one more pass before
+     * the first frame could respond.
+     */
     override operator fun invoke(songFilter: Flow<SongFilter>) = combine(
         setlistRepository.setlists,
         songRepository.songs,
@@ -93,7 +108,7 @@ class GetScreenDataUseCaseImpl internal constructor(
         } else {
             DataState.Idle(createScreenData() ?: cache ?: throw IllegalStateException("No data available while all data states are idle."))
         }
-    }.distinctUntilChanged()
+    }.flowOn(Dispatchers.Default).distinctUntilChanged()
 
     /**
      * The setlists in the order the screen lists them. The archived ones come last whichever order that is: they are

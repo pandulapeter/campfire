@@ -16,7 +16,8 @@ Implements `:domain:api` on top of `:data:repository:api`. Koin wiring: `Module.
 The ones that carry real logic:
 
 - `GetScreenDataUseCaseImpl` — combines the setlist, song and preference flows, and the `SongFilter` flow the caller
-  passes in, into one `Flow<DataState<ScreenData>>`. Applies the "songs without chords" filter, the tag filter and
+  passes in, into one `Flow<DataState<ScreenData>>`, built on `Dispatchers.Default` since the view model collects it
+  on the main thread. Applies the "songs without chords" filter, the tag filter and
   the sorting (by title or artist, through
   `NormalizeTextUseCase`, so accents are ignored), and keeps a `cache` so that a `Loading` or `Failure` state can still
   carry the last good data, and orders the setlists (newest first or by title, the archived ones after the rest either
