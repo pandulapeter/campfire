@@ -31,6 +31,15 @@ class ChordProSerializerTest {
     }
 
     @Test
+    fun `a tab with a blank line in it comes back as one section`() {
+        val parsed = ChordProParser.parse("{sot: Riff}\ne|--0--|\n\ne|--3--|\n{eot}")
+        val serialized = ChordProSerializer.serialize(parsed)
+
+        assertEquals("{start_of_tab: Riff}\ne|--0--|\n\ne|--3--|\n{end_of_tab}", serialized)
+        assertEquals(parsed, ChordProParser.parse(serialized))
+    }
+
+    @Test
     fun `metadata is written in canonical order and zero transposition is omitted`() {
         val song = ChordProParser.parse("{artist: A}\n{title: T}\n{transpose: 0}\n{meta: tuning DADGAD}")
 

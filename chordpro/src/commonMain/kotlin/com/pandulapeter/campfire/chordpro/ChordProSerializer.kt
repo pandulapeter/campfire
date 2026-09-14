@@ -82,7 +82,7 @@ object ChordProSerializer {
         var openEnvironment: String? = null
         var label = environmentLabel
         lines.forEach { line ->
-            val environment = lineEnvironmentName(line)
+            val environment = lineEnvironmentName(line, openEnvironment)
             if (environment != openEnvironment) {
                 openEnvironment?.let { add("{end_of_$it}") }
                 environment?.let { name ->
@@ -96,10 +96,15 @@ object ChordProSerializer {
         openEnvironment?.let { add("{end_of_$it}") }
     }.joinToString("\n")
 
-    /** The environment a line has to be written inside, or null for the lines that need none. */
-    private fun lineEnvironmentName(line: ChordProLine) = when (line) {
+    /**
+     * The environment a line has to be written inside, or null for the lines that need none. A blank line stays in the
+     * [openEnvironment] it is found in: outside one, a blank line ends the paragraph it is in on the way back in, so
+     * closing a tab around it would come back as two sections where there was one.
+     */
+    private fun lineEnvironmentName(line: ChordProLine, openEnvironment: String?) = when (line) {
         is ChordProLine.Tab -> "tab"
         is ChordProLine.Grid -> "grid"
+        ChordProLine.Blank -> openEnvironment
         else -> null
     }
 
