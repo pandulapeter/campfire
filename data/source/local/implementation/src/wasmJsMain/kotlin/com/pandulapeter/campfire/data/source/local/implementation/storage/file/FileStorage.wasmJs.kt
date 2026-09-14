@@ -157,9 +157,16 @@ private fun opfsRoot(): Promise<JsAny?> = js("navigator.storage.getDirectory()")
 
 private fun getDirectoryHandle(parent: JsAny, name: String): Promise<JsAny?> = js("parent.getDirectoryHandle(name, { create: true })")
 
-/** Resolves to `null` instead of rejecting with a `NotFoundError` when the file is not there, and rejects otherwise. */
-private fun getFileHandle(parent: JsAny, name: String, create: Boolean): Promise<JsAny?> =
-    js("parent.getFileHandle(name, { create: create }).catch(function (e) { if (e && e.name === 'NotFoundError') return null; throw e; })")
+/**
+ * Resolves to `null` instead of rejecting with a `NotFoundError` when the file is not there. Every other rejection is
+ * passed on: a file that is there but cannot be reached is not the same as a missing one.
+ */
+private fun getFileHandle(parent: JsAny, name: String, create: Boolean): Promise<JsAny?> = js(
+    """parent.getFileHandle(name, { create: create }).catch(function (error) {
+        if (error && error.name === 'NotFoundError') return null;
+        throw error;
+    })"""
+)
 
 /** Every file of the directory as name, size and last modification time, separated by control characters. */
 private fun listEntries(directory: JsAny): Promise<JsString?> = js(
@@ -185,14 +192,40 @@ private fun readFileText(handle: JsAny): Promise<JsString?> = js("handle.getFile
 private fun readFileBytes(handle: JsAny): Promise<Int8Array?> =
     js("handle.getFile().then(function (file) { return file.arrayBuffer(); }).then(function (buffer) { return new Int8Array(buffer); })")
 
-private fun writeFileText(handle: JsAny, text: String): Promise<JsAny?> =
-    js("handle.createWritable().then(function (writable) { return writable.write(text).then(function () { return writable.close(); }); })")
+/**
+ * A writable holds a lock on its file until it is closed or aborted, so one whose write fails is aborted before the
+ * failure is passed on: left open, it would make every later write and the deletion of that file fail as well.
+ */
+private fun writeFileText(handle: JsAny, text: String): Promise<JsAny?> = js(
+    """handle.createWritable().then(function (writable) {
+        return writable.write(text).then(
+            function () { return writable.close(); },
+            function (error) { return writable.abort().then(function () { throw error; }, function () { throw error; }); }
+        );
+    })"""
+)
 
-private fun writeFileBytes(handle: JsAny, bytes: Int8Array): Promise<JsAny?> =
-    js("handle.createWritable().then(function (writable) { return writable.write(bytes).then(function () { return writable.close(); }); })")
+/** Aborts a writable whose write fails, for the reason given on [writeFileText]. */
+private fun writeFileBytes(handle: JsAny, bytes: Int8Array): Promise<JsAny?> = js(
+    """handle.createWritable().then(function (writable) {
+        return writable.write(bytes).then(
+            function () { return writable.close(); },
+            function (error) { return writable.abort().then(function () { throw error; }, function () { throw error; }); }
+        );
+    })"""
+)
 
-/** Resolves instead of rejecting when the file is not there, which makes deleting a missing file a no-op. */
-private fun removeEntry(parent: JsAny, name: String): Promise<JsAny?> = js("parent.removeEntry(name).catch(function () { return null; })")
+/**
+ * Resolves instead of rejecting with a `NotFoundError` when the file is not there, which makes deleting a missing file
+ * a no-op. Every other rejection is passed on, since a rename writes the new file before it deletes the old one and
+ * a deletion reported as done when it was refused would leave the song there twice.
+ */
+private fun removeEntry(parent: JsAny, name: String): Promise<JsAny?> = js(
+    """parent.removeEntry(name).catch(function (error) {
+        if (error && error.name === 'NotFoundError') return null;
+        throw error;
+    })"""
+)
 
 private const val FIELD_SEPARATOR_CODE = 0
 private const val ENTRY_SEPARATOR_CODE = 1
