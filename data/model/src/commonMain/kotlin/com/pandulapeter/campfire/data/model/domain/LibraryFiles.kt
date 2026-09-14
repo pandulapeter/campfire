@@ -98,14 +98,22 @@ object LibraryFiles {
                 }
             }.joinToString(separator = "").split(NAME_SEPARATOR).filter { it.isNotEmpty() }
             .map { word -> ABBREVIATIONS[word] ?: word }
-        // Trimmed after the cap rather than before it, since cutting mid-word leaves a trailing separator behind.
-        return words.joinToString(NAME_SEPARATOR).take(MAX_NAME_LENGTH).trim(NAME_SEPARATOR_CHARACTER).ifEmpty { FALLBACK_NAME }
+        // Capped by whole words rather than by characters: a word cut short can become a different word on the next
+        // pass ("feather" cut to "feat" is filed as "ft"), and the name would then not survive being normalized again.
+        // Only a first word that is longer than the cap on its own is cut, and no abbreviation is anywhere near that long.
+        val name = StringBuilder()
+        for (word in words) {
+            if (name.length + (if (name.isEmpty()) 0 else NAME_SEPARATOR.length) + word.length > MAX_NAME_LENGTH) break
+            if (name.isNotEmpty()) name.append(NAME_SEPARATOR)
+            name.append(word)
+        }
+        if (name.isEmpty() && words.isNotEmpty()) name.append(words.first().take(MAX_NAME_LENGTH))
+        return name.toString().ifEmpty { FALLBACK_NAME }
     }
 
     /** What a [normalizedName] is made of, and what a collision suffix is joined to it with. */
     const val NAME_SEPARATOR = "_"
 
-    private const val NAME_SEPARATOR_CHARACTER = '_'
     private const val FALLBACK_NAME = "untitled"
 
     /** Straight, curly and the modifier letter, since all three reach a title as the same key on somebody's keyboard. */

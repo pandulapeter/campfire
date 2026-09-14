@@ -53,6 +53,21 @@ internal class FileNamesTest {
     }
 
     @Test
+    fun aCappedNameSurvivesBeingNormalizedAgain() {
+        // Cut by characters, the first pass would end on "feat", which the second pass files as "ft".
+        val feather = "a".repeat(115) + " feather"
+        val long = "Árvíztűrő tükörfúrógép és a hosszú cím ".repeat(8)
+        val singleWord = "b".repeat(300)
+        listOf(feather, long, singleWord).forEach { base ->
+            val once = LibraryFiles.normalizedName(base)
+            assertTrue(once.length <= LibraryFiles.MAX_NAME_LENGTH, once)
+            assertEquals(once, LibraryFiles.normalizedName(once))
+        }
+        assertEquals("a".repeat(115), LibraryFiles.normalizedName(feather))
+        assertEquals("b".repeat(LibraryFiles.MAX_NAME_LENGTH), LibraryFiles.normalizedName(singleWord))
+    }
+
+    @Test
     fun structureAndDigitsSurviveTheFolding() {
         assertEquals("ac_dc-t_n_t.cho", songFileName(title = "T.N.T.", artist = "AC/DC"))
         assertEquals("blink_182-all_the_small_things.cho", songFileName(title = "All the Small Things", artist = "blink-182"))
@@ -82,8 +97,9 @@ internal class FileNamesTest {
         assertEquals("untitled.setlist.json", setlistFileName("!!!"))
         val base = setlistFileName("Lorem ipsum ".repeat(40)).removeSuffix(SETLIST_EXTENSION)
         assertTrue(base.length <= LibraryFiles.MAX_NAME_LENGTH)
-        // Cut mid-word rather than left ending on the separator a cut word would otherwise leave behind.
+        // Cut between words, so neither half a word nor the separator before the next one is left at the end.
         assertTrue(!base.endsWith(LibraryFiles.NAME_SEPARATOR))
+        assertTrue(base.endsWith("ipsum"))
     }
 
     @Test
