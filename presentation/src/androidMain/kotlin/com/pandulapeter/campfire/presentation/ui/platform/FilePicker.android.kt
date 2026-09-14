@@ -18,8 +18,6 @@ import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.ActivityResultLauncher
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.remember
-import androidx.compose.ui.platform.LocalContext
 import com.pandulapeter.campfire.data.model.domain.ExportedFile
 import com.pandulapeter.campfire.data.model.domain.ImportedFile
 import kotlinx.coroutines.CancellableContinuation
@@ -27,16 +25,19 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.IO
 import kotlinx.coroutines.suspendCancellableCoroutine
 import kotlinx.coroutines.withContext
+import org.koin.compose.koinInject
+import org.koin.core.annotation.Provided
+import org.koin.core.annotation.Single
 import kotlin.coroutines.resume
 
 /**
  * The storage access framework, bridged into suspend functions. The launchers can only be registered from a
- * composition, so the picker is built here and handed to the shared UI through [LocalFilePicker].
+ * composition, so they are attached here, on every composition, to the one [AndroidFilePicker] there is, which is then
+ * handed to the shared UI through [LocalFilePicker].
  */
 @Composable
 internal fun rememberAndroidFilePicker(): FilePicker {
-    val context = LocalContext.current.applicationContext
-    val picker = remember(context) { AndroidFilePicker(context) }
+    val picker = koinInject<AndroidFilePicker>()
     // "* / *" rather than a list of types: .cho has no registered MIME type, and anything narrower would grey the
     // songs out in the system picker. What is not a song is skipped by the import and reported afterwards.
     picker.openLauncher = rememberLauncherForActivityResult(ActivityResultContracts.OpenMultipleDocuments(), picker::onFilesPicked)
@@ -52,7 +53,16 @@ internal fun rememberAndroidFilePicker(): FilePicker {
     return picker
 }
 
-private class AndroidFilePicker(private val context: Context) : FilePicker {
+/**
+ * A singleton rather than something remembered by the composition, because the coroutine waiting for the system
+ * picker is suspended on this object, and the Activity that opened the picker does not have to be there when it
+ * answers: a rotation, or the system reclaiming the Activity in the background, recreates it while the picker is up.
+ * The result is still delivered - the launchers are registered under a saved key - but to the callbacks of whatever
+ * picker the new composition holds, so that has to be the same object the waiting coroutine is suspended on. The
+ * launchers themselves are the old Activity's and dead with it, which is why they are replaced on every composition.
+ */
+@Single
+internal class AndroidFilePicker(@Provided private val context: Context) : FilePicker {
 
     var openLauncher: ActivityResultLauncher<Array<String>>? = null
     var createTextLauncher: ActivityResultLauncher<String>? = null
@@ -62,6 +72,8 @@ private class AndroidFilePicker(private val context: Context) : FilePicker {
     private var saveContinuation: CancellableContinuation<Uri?>? = null
 
     override suspend fun pickFiles(): List<ImportedFile> {
+        // Two system pickers cannot be open at once, so one still waiting is one whose answer is never coming.
+        pickContinuation?.takeIf { it.isActive }?.resume(emptyList())
         val uris = suspendCancellableCoroutine { continuation ->
             pickContinuation = continuation
             continuation.invokeOnCancellation { pickContinuation = null }
@@ -72,6 +84,7 @@ private class AndroidFilePicker(private val context: Context) : FilePicker {
 
     override suspend fun saveFile(file: ExportedFile): Boolean {
         val launcher = if (file.mimeType == ExportedFile.ZIP_MIME_TYPE) createArchiveLauncher else createTextLauncher
+        saveContinuation?.takeIf { it.isActive }?.resume(null)
         val uri = suspendCancellableCoroutine<Uri?> { continuation ->
             saveContinuation = continuation
             continuation.invokeOnCancellation { saveContinuation = null }
