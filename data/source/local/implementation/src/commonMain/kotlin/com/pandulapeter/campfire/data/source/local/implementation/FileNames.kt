@@ -45,20 +45,58 @@ internal fun setlistFileName(title: String) = LibraryFiles.normalizedName(title)
  *   the underscore that name is already built out of: `tukorfurogep-arviz_2`, rather than a space and a pair of
  *   brackets in a name that has neither. [arrivingCollisionSuffix] is for the one caller that writes a file under a
  *   name it did not invent.
+ * @param currentName The name of the file being renamed, if this is a rename. A case-insensitive file system (macOS,
+ *   Windows and iOS by default) says a name that differs from it only in case is taken, and it is taken by this very
+ *   file, which is not a reason to number it. Such a candidate is held against the directory's listing instead, which
+ *   carries the names exactly as they are: on a case-sensitive file system a different file may well be there under it.
  */
 internal suspend fun FileStorage.uniqueName(
     directory: StorageDirectory,
     desired: String,
     collisionSuffix: (index: Int) -> String = ::normalizedCollisionSuffix,
+    currentName: String? = null,
 ): String {
-    if (!exists(directory, desired)) return desired
+    suspend fun isFree(candidate: String) = if (candidate.equals(currentName, ignoreCase = true)) {
+        list(directory).none { it.name == candidate }
+    } else {
+        !exists(directory, candidate)
+    }
+    if (isFree(desired)) return desired
     val extension = desired.knownExtension()
     val base = desired.removeSuffix(extension)
     var index = 2
     while (true) {
         val candidate = base + collisionSuffix(index) + extension
-        if (!exists(directory, candidate)) return candidate
+        if (isFree(candidate)) return candidate
         index++
+    }
+}
+
+/**
+ * Moves a file from [currentName] to [newName] (a name [uniqueName] gave out) by writing it anew with [write], then
+ * removing the old one. Written before the old one is removed, so that a move that fails halfway leaves the file twice
+ * over rather than not at all.
+ *
+ * A name that differs from the current one only in case goes through a temporary name in between: on a
+ * case-insensitive file system writing it is writing the current file, and the deletion that follows would remove the
+ * only copy. That costs three writes, for a move that happens once to a file somebody named by hand.
+ */
+internal suspend fun FileStorage.moveFile(
+    directory: StorageDirectory,
+    currentName: String,
+    newName: String,
+    write: suspend (name: String) -> Unit,
+) {
+    if (newName.equals(currentName, ignoreCase = true)) {
+        val extension = newName.knownExtension()
+        val temporaryName = uniqueName(directory, newName.removeSuffix(extension) + TEMPORARY_MOVE_SUFFIX + extension)
+        write(temporaryName)
+        delete(directory, currentName)
+        write(newName)
+        delete(directory, temporaryName)
+    } else {
+        write(newName)
+        delete(directory, currentName)
     }
 }
 
@@ -99,6 +137,8 @@ internal fun String.knownExtension() = when {
 }
 
 internal fun String.withoutExtension() = removeSuffix(knownExtension())
+
+private const val TEMPORARY_MOVE_SUFFIX = "_renaming"
 
 /** Both shapes [uniqueName] writes: the underscored one of a normalized name, and the bracketed one of every other. */
 private val COLLISION_SUFFIX = Regex("""_\d+| \(\d+\)""")

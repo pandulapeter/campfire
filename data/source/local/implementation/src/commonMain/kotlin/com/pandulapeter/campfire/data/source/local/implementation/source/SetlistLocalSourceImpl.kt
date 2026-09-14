@@ -14,6 +14,7 @@ import com.pandulapeter.campfire.data.source.local.api.SetlistLocalSource
 import com.pandulapeter.campfire.data.source.local.implementation.SETLIST_EXTENSION
 import com.pandulapeter.campfire.data.source.local.implementation.mapper.toDocument
 import com.pandulapeter.campfire.data.source.local.implementation.mapper.toModel
+import com.pandulapeter.campfire.data.source.local.implementation.moveFile
 import com.pandulapeter.campfire.data.source.local.implementation.model.SetlistDocument
 import com.pandulapeter.campfire.data.source.local.implementation.isNamed
 import com.pandulapeter.campfire.data.source.local.implementation.setlistFileName
@@ -78,12 +79,11 @@ internal class SetlistLocalSourceImpl(
             saveSetlist(renamed)
             return renamed
         }
-        val fileName = fileStorage.uniqueName(StorageDirectory.SETLISTS, desired)
-        // Written before the old one is removed, as a song's rename is, and for the same reason.
-        val moved = renamed.copy(fileName = fileName)
-        saveSetlist(moved)
-        fileStorage.delete(StorageDirectory.SETLISTS, setlist.fileName)
-        return moved
+        val fileName = fileStorage.uniqueName(StorageDirectory.SETLISTS, desired, currentName = setlist.fileName)
+        fileStorage.moveFile(StorageDirectory.SETLISTS, currentName = setlist.fileName, newName = fileName) { name ->
+            saveSetlist(renamed.copy(fileName = name))
+        }
+        return renamed.copy(fileName = fileName)
     }
 
     /** The file name is derived from the title rather than kept, so that an exported setlist keeps its identity. */

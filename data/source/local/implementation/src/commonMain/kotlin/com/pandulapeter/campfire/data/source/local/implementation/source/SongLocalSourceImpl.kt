@@ -18,6 +18,7 @@ import com.pandulapeter.campfire.data.source.local.api.SongLocalSource
 import com.pandulapeter.campfire.data.source.local.implementation.mapper.toSong
 import com.pandulapeter.campfire.data.source.local.implementation.isNamed
 import com.pandulapeter.campfire.data.source.local.implementation.knownExtension
+import com.pandulapeter.campfire.data.source.local.implementation.moveFile
 import com.pandulapeter.campfire.data.source.local.implementation.songFileName
 import com.pandulapeter.campfire.data.source.local.implementation.uniqueName
 import com.pandulapeter.campfire.data.source.local.implementation.storage.file.FileStorage
@@ -98,11 +99,10 @@ internal class SongLocalSourceImpl(
         val desired = songFileName(title = song.title, artist = song.artist, extension = extension)
         if (song.fileName.isNamed(desired)) return null
         val text = fileStorage.readText(StorageDirectory.SONGS, song.fileName) ?: return null
-        val fileName = fileStorage.uniqueName(StorageDirectory.SONGS, desired)
-        // Written before the old one is removed, so that a rename that fails halfway leaves the song twice over
-        // rather than not at all.
-        fileStorage.writeText(StorageDirectory.SONGS, fileName, text)
-        fileStorage.delete(StorageDirectory.SONGS, song.fileName)
+        val fileName = fileStorage.uniqueName(StorageDirectory.SONGS, desired, currentName = song.fileName)
+        fileStorage.moveFile(StorageDirectory.SONGS, currentName = song.fileName, newName = fileName) { name ->
+            fileStorage.writeText(StorageDirectory.SONGS, name, text)
+        }
         return loadSong(fileName)
     }
 

@@ -60,7 +60,10 @@ holds the `@Module @ComponentScan object DataLocalSourceModule`, and every local
   invent: the copy sync brings down of a file changed on both sides, whose name is whatever the other device called
   it. `isNamed` answers whether a file already carries the name it would be given, that suffix included, which is
   what keeps "Update file name" from offering itself to a song that has made way for another one. Nothing in the
-  library is ever overwritten implicitly.
+  library is ever overwritten implicitly. A rename goes through `moveFile`, which writes the new file before it
+  removes the old one; a new name that differs from the old only in case is not numbered on a case-insensitive file
+  system, where it is taken by the very file being renamed, and is moved through a temporary name, since writing it
+  there is writing the old file and the deletion after would remove the only copy.
 - **`source/`** — the four local sources. `SongLocalSourceImpl` reads the whole ChordPro family
   (`LibraryFiles.SONG_EXTENSIONS`) but writes only `.cho` — `importFileName` included, so a `.crd` that is imported
   is stored as the `.cho` it is written back as — and gets a song's title, artist, key, `{transpose}` (which
