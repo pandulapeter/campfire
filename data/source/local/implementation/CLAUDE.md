@@ -32,6 +32,16 @@ holds the `@Module @ComponentScan object DataLocalSourceModule`, and every local
     a library of unreadable songs.
   - iOS splits the two: the library goes to the documents directory, where the Files app can reach it, and the
     preferences to application support, where it cannot.
+- **`storage/secret/SecretStore.kt`** is where the sync credentials go, and nothing else: a refresh token is a
+  long-lived credential. `AndroidSecretStore` encrypts it with an AES-GCM key generated inside the Android Keystore
+  (never `security-crypto`, which is deprecated) and writes the IV and ciphertext as `preferences/sync-credentials.bin`;
+  a key that became unusable, or a file it cannot decrypt, is deleted and reads as no credentials, so the user
+  connects again rather than being stuck. `IosSecretStore` is a Keychain generic password, readable after the first
+  unlock because a background sync may need it on a locked device. Desktop and the web get `FileSecretStore`, the
+  plain `preferences/sync-credentials.json` it always was: no desktop keychain is worth a native dependency per
+  operating system, and the browser has none. `SyncStateLocalSourceImpl` moves a plain file left by an older version
+  into the store on the first read and deletes it, which on desktop and the web is a no-op, since the store found
+  that file itself. The index stays a plain file everywhere: it holds hashes and revisions, nothing secret.
 - **`FileNames.kt`** owns everything about what a file is called. Every name the app writes itself is normalized
   (`LibraryFiles.normalizedName`): `tukorfurogep-arviz.cho` for a song, each half of `artist - title` folded on its
   own so the dash between them survives, and `summer_set.setlist.json` for a setlist. `uniqueName` suffixes until the

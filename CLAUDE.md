@@ -55,7 +55,9 @@ The library layout, inside the app-private data directory of each platform:
 library/songs/*.cho                  one song per file; the file name is the song's identity
 library/setlists/*.setlist.json      one setlist per file, exported together with the songs
 preferences/preferences.json         everything in UserPreferences; outside library/, so it is never exported
-preferences/sync-credentials.json    the connected account's tokens, and an unfinished authorization
+preferences/sync-credentials.json    the connected account's tokens, and an unfinished authorization, on desktop and
+                                     the web; the Keystore (an encrypted sync-credentials.bin) and the Keychain on
+                                     Android and iOS
 preferences/sync-index.json          what the last successful sync run saw
 ```
 

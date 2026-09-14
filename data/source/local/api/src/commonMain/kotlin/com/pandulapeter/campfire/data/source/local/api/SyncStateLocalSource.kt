@@ -19,11 +19,12 @@ package com.pandulapeter.campfire.data.source.local.api
 interface SyncStateLocalSource {
 
     /**
-     * The tokens of the connected account. Null when nothing is connected.
+     * The tokens of the connected account. Null when nothing is connected, and also when what was stored can no
+     * longer be read, which only connecting again can answer.
      *
-     * This is app-private storage, which is as private as the platform makes it: on Android and iOS the sandbox,
-     * on the web the origin, on desktop the user's own data directory. A refresh token in it is readable by anything
-     * that can already read the user's files, so a platform secret store (Keychain, Keystore) is the next step.
+     * Android keeps them encrypted with a key held by the Keystore and iOS in the Keychain. Desktop and the web keep
+     * them in a file of app-private storage, which is as private as the platform makes it - the origin on the web,
+     * the user's own data directory on desktop - and so readable by anything that can already read the user's files.
      */
     suspend fun loadSyncCredentials(): String?
 
