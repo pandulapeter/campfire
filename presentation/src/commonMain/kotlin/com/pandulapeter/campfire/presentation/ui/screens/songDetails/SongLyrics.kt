@@ -144,17 +144,14 @@ internal fun SongLyrics(
     val sectionBounds = remember(sections) { List(sections.size) { SectionBounds() } }
     val density = LocalDensity.current
     val coroutineScope = rememberCoroutineScope()
-    val lyricsStyle = LocalTextStyle.current.merge(MaterialTheme.typography.bodyLarge).scaled(fontScale)
+    // The styles the lines are measured with carry no color, which is given where the text is drawn instead: every
+    // line of the song is measured again whenever a key of its measurement changes, and the color scheme changes on
+    // every frame of a theme cross-fade while the size of the text does not.
+    val lyricsStyle = LocalTextStyle.current.merge(MaterialTheme.typography.bodyLarge).scaled(fontScale).copy(color = Color.Unspecified)
     val headerStyle = MaterialTheme.typography.titleSmall.scaled(fontScale)
-    val chordStyle = lyricsStyle.copy(
-        color = MaterialTheme.colorScheme.primary,
-        fontWeight = FontWeight.Bold,
-    )
-    // Annotations ([*text]) sit in the chord row but are not chords, so they borrow the lyrics' colour.
-    val annotationStyle = lyricsStyle.copy(
-        color = MaterialTheme.colorScheme.onSurfaceVariant,
-        fontStyle = FontStyle.Italic,
-    )
+    val chordStyle = lyricsStyle.copy(fontWeight = FontWeight.Bold)
+    // Annotations ([*text]) sit in the chord row but are not chords, so they are drawn in the lyrics' colour.
+    val annotationStyle = lyricsStyle.copy(fontStyle = FontStyle.Italic)
     // The metadata header scrolls with the song, so the columns below it have that much less room to fit into.
     var headerHeight by remember { mutableIntStateOf(0) }
     val headerHeightDp = with(density) { headerHeight.toDp() }
@@ -580,19 +577,19 @@ private fun SongGridLine(
     chordStyle: TextStyle,
 ) = Row(modifier = Modifier.fillMaxWidth()) {
     line.tokens.forEach { token ->
-        val (text, style) = when (token) {
-            is GridToken.Bar -> token.text to lyricsStyle.copy(color = MaterialTheme.colorScheme.outline)
-            is GridToken.Chord -> token.name to chordStyle
-            GridToken.Beat -> BEAT_SYMBOL to lyricsStyle.copy(color = MaterialTheme.colorScheme.onSurfaceVariant)
-            is GridToken.Repeat -> token.text to lyricsStyle.copy(color = MaterialTheme.colorScheme.onSurfaceVariant)
-            is GridToken.Text -> token.text to lyricsStyle
+        val (text, style, color) = when (token) {
+            is GridToken.Bar -> Triple(token.text, lyricsStyle, MaterialTheme.colorScheme.outline)
+            is GridToken.Chord -> Triple(token.name, chordStyle, MaterialTheme.colorScheme.primary)
+            GridToken.Beat -> Triple(BEAT_SYMBOL, lyricsStyle, MaterialTheme.colorScheme.onSurfaceVariant)
+            is GridToken.Repeat -> Triple(token.text, lyricsStyle, MaterialTheme.colorScheme.onSurfaceVariant)
+            is GridToken.Text -> Triple(token.text, lyricsStyle, Color.Unspecified)
         }
         Text(
             modifier = Modifier.padding(end = GRID_TOKEN_GAP),
             text = text,
             style = style,
             softWrap = false,
-            color = style.color,
+            color = color,
         )
     }
 }
@@ -992,6 +989,8 @@ private fun SongLineWithChords(
 ) {
     val textMeasurer = rememberTextMeasurer()
     val density = LocalDensity.current
+    val chordColor = MaterialTheme.colorScheme.primary
+    val annotationColor = MaterialTheme.colorScheme.onSurfaceVariant
     val chordLayouts = remember(line, chordStyle, annotationStyle, textMeasurer) {
         line.chords.map { textMeasurer.measure(AnnotatedString(it.name), if (it.isAnnotation) annotationStyle else chordStyle) }
     }
@@ -1030,6 +1029,7 @@ private fun SongLineWithChords(
                     val x = max(layout.getHorizontalPosition(offset, usePrimaryDirection = true), previousChordEnd).coerceIn(0f, maxX)
                     drawText(
                         textLayoutResult = chordLayout,
+                        color = if (chord.isAnnotation) annotationColor else chordColor,
                         topLeft = Offset(x, layout.getLineTop(lineIndex)),
                     )
                     previousChordEnd = x + chordLayout.size.width + gap
