@@ -108,6 +108,27 @@
             transform-origin: left center;
         }
 
+        #splash-message {
+            max-width: 280px;
+            margin: 0 24px;
+            color: var(--on-background);
+            font-size: 14px;
+            line-height: 20px;
+            text-align: center;
+        }
+
+        #splash-retry {
+            padding: 10px 24px;
+            border: none;
+            border-radius: 20px;
+            background-color: var(--indicator);
+            color: var(--background);
+            font: inherit;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+        }
+
         @media (prefers-reduced-motion: reduce) {
             #splash {
                 transition: none;
@@ -123,6 +144,10 @@
     <div id="splash-track" role="progressbar" aria-label="Campfire" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0">
         <div id="splash-bar"></div>
     </div>
+    <!-- Only shown when the app could not be loaded. English, like the rest of this page: it is shown before
+         the app's own language is known. -->
+    <p id="splash-message" role="alert" hidden></p>
+    <button id="splash-retry" type="button" hidden onclick="location.reload()">Try again</button>
 </div>
 <script type="application/javascript">
     (function () {
@@ -140,6 +165,8 @@
         var splash = document.getElementById('splash');
         var track = document.getElementById('splash-track');
         var bar = document.getElementById('splash-bar');
+        var message = document.getElementById('splash-message');
+        var retry = document.getElementById('splash-retry');
 
         var expected = BUILD ? BUILD.binaryBytes : 0;
         var binaries = BUILD ? BUILD.binaryCount : 0;
@@ -148,6 +175,7 @@
         var pending = 0;
         var startedAt = 0;
         var isReady = false;
+        var isFailed = false;
         var shown = 0;
 
         // Downloading is the part whose length is known; compiling and instantiating the module is
@@ -197,7 +225,7 @@
         }
 
         function schedule() {
-            if (!isDrawScheduled) {
+            if (!isDrawScheduled && !isFailed) {
                 isDrawScheduled = true;
                 requestAnimationFrame(draw);
             }
@@ -208,6 +236,27 @@
          * through. The headers are carried over to the replacement response, so it still says
          * application/wasm and WebAssembly.instantiateStreaming keeps compiling as it downloads.
          */
+        /**
+         * Stops the bar where it is and says so. A download that failed, or a script that threw before
+         * the app was up, would otherwise leave a bar that never moves again and nothing to do about it.
+         */
+        function showFailure() {
+            if (isReady || isFailed) {
+                return;
+            }
+            isFailed = true;
+            message.textContent = 'Campfire could not be loaded. Check the connection and try again.';
+            message.hidden = false;
+            retry.hidden = false;
+        }
+
+        function onError() {
+            showFailure();
+        }
+
+        window.addEventListener('error', onError);
+        window.addEventListener('unhandledrejection', onError);
+
         var nativeFetch = window.fetch;
         window.fetch = function (input, init) {
             var url = typeof input === 'string' ? input : (input && input.url) || '';
@@ -255,6 +304,7 @@
                 });
             }, function (error) {
                 pending--;
+                showFailure();
                 throw error;
             });
         };
@@ -265,7 +315,12 @@
          */
         window.campfireReady = function () {
             window.fetch = nativeFetch;
+            // The app's own errors are the app's business from here on, not the loading screen's. An error
+            // that was taken for a failed start is taken back too, since the app did start after all.
+            window.removeEventListener('error', onError);
+            window.removeEventListener('unhandledrejection', onError);
             isReady = true;
+            isFailed = false;
             schedule();
         };
 
