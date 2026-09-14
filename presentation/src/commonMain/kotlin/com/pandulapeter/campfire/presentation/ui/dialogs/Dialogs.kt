@@ -963,8 +963,11 @@ private fun SongPicker(
     val setlists by viewModel.setlists.collectAsStateWithLifecycle()
     val songs by viewModel.allSongs.collectAsStateWithLifecycle()
     val setlist = setlists.firstOrNull { it.fileName == dialog.setlist.fileName } ?: dialog.setlist
-    val initialSongFileNames = remember(dialog) { dialog.setlist.entries.map { it.songFileName }.distinct() }
-    var selectedSongFileNames by remember(dialog) { mutableStateOf(initialSongFileNames) }
+    // Seeded from the setlist as the library has it and saved, rather than from the snapshot the dialog was opened
+    // with: the dialog outlives a recreated Activity, and a selection seeded again from that snapshot would drop
+    // every song ticked before it from the next write.
+    val initialSongFileNames = rememberSaveable(setlist.fileName) { setlist.entries.map { it.songFileName }.distinct() }
+    var selectedSongFileNames by rememberSaveable(setlist.fileName) { mutableStateOf(initialSongFileNames) }
     var query by rememberSaveable { mutableStateOf("") }
     // Normalized once per library rather than once per keystroke, since the search runs over every song on every
     // character typed.
