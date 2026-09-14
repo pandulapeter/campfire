@@ -40,6 +40,7 @@ import io.ktor.http.HttpStatusCode
 import io.ktor.http.contentType
 import io.ktor.http.isSuccess
 import kotlinx.coroutines.CancellationException
+import kotlin.math.min
 import kotlin.random.Random
 import kotlin.time.Clock
 import kotlin.time.ExperimentalTime
@@ -286,14 +287,16 @@ internal class DropboxSyncProvider(
      * that can never finish its first sync. Writes are limited separately: several of them landing in one folder at
      * once are answered with a 409 whose summary says `too_many_write_operations`, which Dropbox documents as "back off
      * and retry" rather than as a failure of that file. Dropbox says how long to wait in a `retry_after` field of the
-     * body or in `Retry-After`; the jitter is there because several transfers are in flight at once and would
-     * otherwise all come back at the same moment and be limited again together.
+     * body or in `Retry-After`, and that is waited as given. Where it says nothing - typically its own trouble, a 5xx -
+     * the wait doubles from two seconds up to half a minute, so that an outage of a minute or so is sat out rather than
+     * ending the run. The jitter is there because several transfers are in flight at once and would otherwise all
+     * come back at the same moment and be limited again together.
      */
     private suspend fun request(block: suspend () -> HttpResponse): HttpResponse {
         var attempt = 0
         while (true) {
             val response = transport { block() }
-            val retryAfterMillis = response.retryAfterMillis()
+            val retryAfterMillis = response.retryAfterMillis(attempt)
             if (retryAfterMillis == null || attempt >= MAXIMUM_RETRIES) return response
             attempt++
             delay(retryAfterMillis + Random.nextLong(RETRY_JITTER_MILLIS))
@@ -301,11 +304,12 @@ internal class DropboxSyncProvider(
     }
 
     /** Null when the answer is one to act on rather than to wait out. */
-    private suspend fun HttpResponse.retryAfterMillis(): Long? = when {
+    private suspend fun HttpResponse.retryAfterMillis(attempt: Int): Long? = when {
         status == HttpStatusCode.TooManyRequests ||
             status.value >= 500 ||
             (status == HttpStatusCode.Conflict && errorSummary().contains("too_many_write_operations")) ->
-            (retryAfterSecondsInBody() ?: headers["Retry-After"]?.toLongOrNull() ?: DEFAULT_RETRY_SECONDS) * 1000L
+            (retryAfterSecondsInBody() ?: headers["Retry-After"]?.toLongOrNull()
+                ?: min(DEFAULT_RETRY_SECONDS shl attempt, MAXIMUM_RETRY_SECONDS)) * 1000L
 
         else -> null
     }
@@ -406,10 +410,12 @@ internal class DropboxSyncProvider(
         /** Tokens are renewed slightly early, so that one does not expire between the check and the request. */
         const val EXPIRY_MARGIN_MILLIS = 60_000L
 
-        const val MAXIMUM_RETRIES = 5
+        /** Six waits of 2, 4, 8, 16, 32 and 32 seconds: about a minute and a half of patience. */
+        const val MAXIMUM_RETRIES = 6
 
-        /** What to wait when Dropbox asks to slow down without saying for how long. */
+        /** What to wait first when Dropbox asks to slow down without saying for how long, doubled on every attempt. */
         const val DEFAULT_RETRY_SECONDS = 2L
+        const val MAXIMUM_RETRY_SECONDS = 32L
         const val RETRY_JITTER_MILLIS = 500L
 
         val json = Json { ignoreUnknownKeys = true }

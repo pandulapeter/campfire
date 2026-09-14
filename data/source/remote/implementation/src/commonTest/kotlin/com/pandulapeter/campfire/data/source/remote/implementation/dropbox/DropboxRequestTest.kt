@@ -11,6 +11,7 @@ package com.pandulapeter.campfire.data.source.remote.implementation.dropbox
 
 import com.pandulapeter.campfire.data.model.domain.LibraryFileKind
 import com.pandulapeter.campfire.data.source.local.api.SyncStateLocalSource
+import com.pandulapeter.campfire.data.source.remote.api.SyncNetworkException
 import com.pandulapeter.campfire.data.source.remote.api.model.RemoteWriteResult
 import com.pandulapeter.campfire.data.source.remote.implementation.auth.SyncCredentialsStore
 import io.ktor.client.HttpClient
@@ -25,6 +26,7 @@ import kotlinx.coroutines.test.currentTime
 import kotlinx.coroutines.test.runTest
 import kotlin.test.Test
 import kotlin.test.assertEquals
+import kotlin.test.assertFailsWith
 import kotlin.test.assertTrue
 
 /**
@@ -68,6 +70,29 @@ class DropboxRequestTest {
         }
         provider.list()
         assertTrue(currentTime >= 10_000L, "Waited $currentTime ms rather than the 10 s that were asked for.")
+    }
+
+    /** A service having trouble of its own says nothing about when it will be over, so the wait grows instead. */
+    @Test
+    fun `waits longer every time the service is unavailable without saying for how long`() = runTest {
+        var requestCount = 0
+        val provider = provider {
+            requestCount++
+            if (requestCount <= 6) {
+                respond(content = "", status = HttpStatusCode.ServiceUnavailable)
+            } else {
+                respondJson("""{"entries":[],"cursor":"","has_more":false}""")
+            }
+        }
+        provider.list()
+        // 2 + 4 + 8 + 16 + 32 + 32 seconds, and less than a second of jitter on each.
+        assertTrue(currentTime in 94_000L..<97_000L, "Waited $currentTime ms rather than about 94 s.")
+    }
+
+    @Test
+    fun `gives up on a service that stays unavailable`() = runTest {
+        val provider = provider { respond(content = "", status = HttpStatusCode.ServiceUnavailable) }
+        assertFailsWith<SyncNetworkException> { provider.list() }
     }
 
     private fun provider(handler: suspend MockRequestHandleScope.(HttpRequestData) -> HttpResponseData) = DropboxSyncProvider(

@@ -33,9 +33,11 @@ redirect URIs character for character, which is why the desktop port is fixed.
   Deletes carry `parent_rev` for the same reason, and "already gone" counts as success.
 - Every call is retried while Dropbox answers 429, 5xx, or a 409 whose summary says `too_many_write_operations` (its
   answer to several writes landing in one folder at once, which the engine's own concurrency provokes), waiting what
-  the body's `retry_after` or the `Retry-After` header asks for plus a little jitter (several transfers are in flight
-  at once and would otherwise all come back together and be limited again). A first sync of a whole library *will* be
-  rate limited; treating that as a failure would mean a library that can never finish its first sync.
+  the body's `retry_after` or the `Retry-After` header asks for — or, where neither says, a wait that doubles from 2 s
+  to a ceiling of 32 s over six attempts, so that an outage of a minute or so is sat out — plus a little jitter
+  (several transfers are in flight at once and would otherwise all come back together and be limited again). A first
+  sync of a whole library *will* be rate limited; treating that as a failure would mean a library that can never
+  finish its first sync.
 - `dropbox/DropboxModels` — the parts of the API's answers that are read. Everything defaulted, unknown keys
   ignored: a field added on the other side must never turn into a parse failure the user sees as a broken sync.
 - OAuth is **PKCE with no client secret**, which is what lets this work with no server of Campfire's own. Tokens are
