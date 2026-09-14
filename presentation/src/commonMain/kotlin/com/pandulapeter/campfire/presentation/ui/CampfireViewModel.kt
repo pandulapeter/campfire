@@ -1440,7 +1440,16 @@ class CampfireViewModel(
 
     // Dialogs
 
-    fun showDialog(dialogType: DialogType) = _visibleDialog.update { dialogType }
+    fun showDialog(dialogType: DialogType) {
+        // The conflicts question is the only dialog with an answer parked behind it. A dialog put up over it - the
+        // desktop's close button asking about unsaved text - takes the question off the screen, and a question nobody
+        // can answer any more must not keep every later import from starting: its plan goes with it, which leaves
+        // the library exactly as cancelling would have.
+        if (_visibleDialog.value is DialogType.ImportConflicts && dialogType !is DialogType.ImportConflicts) {
+            pendingImportPlan = null
+        }
+        _visibleDialog.update { dialogType }
+    }
 
     fun dismissDialog() {
         pendingExit = null
