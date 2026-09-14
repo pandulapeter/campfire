@@ -103,11 +103,21 @@ internal class ZipReaderTest {
         assertTrue(exception.message.orEmpty().contains("14"), "Unexpected message: ${exception.message}")
     }
 
+    @Test
+    fun rejectsAnEntryWhoseEndOverflowsAnInt() {
+        val archive = deflatedArchive(declaredSize = Int.MAX_VALUE.toLong(), compressedSize = Int.MAX_VALUE.toLong(), method = 0)
+
+        val exception = assertFailsWith<ZipException> { ZipReader.read(archive, maxTotalSize = Long.MAX_VALUE) }
+
+        assertTrue(exception.message.orEmpty().contains("reaches past"), "Unexpected message: ${exception.message}")
+        assertFailsWith<ZipException> { Inflater.inflate(archive, offset = 1, length = Int.MAX_VALUE) }
+    }
+
     /**
-     * An archive of one DEFLATE entry whose ten byte stream is a single stored block of "hello", and whose central
-     * directory claims it inflates to [declaredSize] bytes.
+     * An archive of one entry whose ten byte data is a DEFLATE stream of a single stored block of "hello", and whose
+     * central directory claims it inflates to [declaredSize] bytes, takes up [compressedSize] and uses [method].
      */
-    private fun deflatedArchive(declaredSize: Long): ByteArray {
+    private fun deflatedArchive(declaredSize: Long, compressedSize: Long = 10, method: Int = 8): ByteArray {
         val name = "bomb.cho".encodeToByteArray()
         val stream = byteArrayOf(0x01, 0x05, 0x00, 0xFA.toByte(), 0xFF.toByte()) + "hello".encodeToByteArray()
         val builder = ByteArrayBuilder()
@@ -124,10 +134,10 @@ internal class ZipReaderTest {
         builder.u16(20) // Version made by.
         builder.u16(20) // Version needed to extract.
         builder.u16(0) // Flags.
-        builder.u16(8) // DEFLATE.
+        builder.u16(method)
         repeat(2) { builder.u16(0) } // Modification time and date.
         builder.u32(0) // Checksum, never reached.
-        builder.u32(stream.size.toLong())
+        builder.u32(compressedSize)
         builder.u32(declaredSize)
         builder.u16(name.size)
         repeat(4) { builder.u16(0) } // Extra field and comment lengths, disk number, internal attributes.

@@ -29,8 +29,8 @@ internal object Inflater {
         length: Int = source.size - offset,
         expectedSize: Int = -1,
     ): ByteArray {
-        if (offset < 0 || length < 0 || offset + length > source.size) {
-            throw ZipException("Deflate input range $offset..${offset + length} is outside the ${source.size} byte input.")
+        if (offset < 0 || length < 0 || offset.toLong() + length > source.size) {
+            throw ZipException("Deflate input range $offset..${offset.toLong() + length} is outside the ${source.size} byte input.")
         }
         if (expectedSize > MAX_ENTRY_SIZE) {
             throw ZipException("Entry would inflate past $MAX_ENTRY_SIZE bytes.")

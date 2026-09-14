@@ -95,7 +95,7 @@ internal object ZipReader {
         // The local header's name and extra fields may differ in length from the central directory ones, but the sizes
         // there are zero whenever a data descriptor follows the data, so the central directory stays the source of truth.
         val dataOffset = localHeaderOffset + 30 + archive.u16(localHeaderOffset + 26) + archive.u16(localHeaderOffset + 28)
-        if (dataOffset < 0 || compressedSize < 0 || uncompressedSize < 0 || dataOffset + compressedSize > archive.size) {
+        if (dataOffset < 0 || compressedSize < 0 || uncompressedSize < 0 || dataOffset.toLong() + compressedSize > archive.size) {
             throw ZipException("The data of \"$name\" reaches past the end of the ${archive.size} byte archive.")
         }
         val bytes = when (method) {
