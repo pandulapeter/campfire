@@ -34,12 +34,14 @@ internal class SyncCredentialsStore(
     suspend fun save(document: SyncCredentialsDocument?) = mutex.withLock { write(document) }
 
     /**
-     * Reads, changes and writes the document as one step. The whole update runs under the lock, which is what makes
-     * a token refresh safe to start from several requests at once.
+     * Reads, changes and (where anything changed) writes the document as one step. The whole update runs under the
+     * lock, which is what makes a token refresh safe to start from several requests at once.
      */
     suspend fun <T> update(block: suspend (SyncCredentialsDocument?) -> Pair<SyncCredentialsDocument?, T>): T = mutex.withLock {
-        val (updated, result) = block(read())
-        write(updated)
+        val current = read()
+        val (updated, result) = block(current)
+        // The common case is a token that is still good, and that is not a change worth a file write.
+        if (updated != current) write(updated)
         result
     }
 
