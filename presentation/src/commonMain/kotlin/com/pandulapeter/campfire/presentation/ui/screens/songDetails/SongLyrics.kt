@@ -546,8 +546,9 @@ private fun SongTabBlock(
 
 /**
  * The laid out rows of one run of tablature, per width. A run is measured at every width the column layout tries
- * and drawn at the one that won, so every width it has been asked about is kept: the same few come back on every
- * pass, and a row's text is laid out once rather than once per measurement.
+ * and drawn at the one that won, so the widths it has been asked about most recently are kept: the same few come
+ * back on every pass, and a row's text is laid out once rather than once per measurement. Only the last few
+ * ([MAX_TAB_WIDTHS]), since a window being resized asks about a new width on every frame and none of those comes back.
  */
 private class TabRows(
     private val lines: List<String>,
@@ -563,11 +564,17 @@ private class TabRows(
     private val characterWidth = textMeasurer.measure(AnnotatedString(LINE_HEIGHT_SAMPLE.repeat(CHARACTER_WIDTH_SAMPLE_LENGTH)), style).size.width /
             CHARACTER_WIDTH_SAMPLE_LENGTH.toFloat()
     private val rowsByWidth = mutableMapOf<Int, List<List<TextLayoutResult>>>()
+    private val recentWidths = ArrayDeque<Int>()
 
-    fun at(width: Int): List<List<TextLayoutResult>> = rowsByWidth.getOrPut(width) {
-        val maxColumns = if (width == Constraints.Infinity || characterWidth <= 0f) Int.MAX_VALUE else (width / characterWidth).toInt()
-        ChordProTabWrapper.wrap(lines, maxColumns).map { row ->
-            row.map { line -> textMeasurer.measure(AnnotatedString(line), style, softWrap = false) }
+    fun at(width: Int): List<List<TextLayoutResult>> {
+        recentWidths.remove(width)
+        recentWidths.addLast(width)
+        if (recentWidths.size > MAX_TAB_WIDTHS) rowsByWidth.remove(recentWidths.removeFirst())
+        return rowsByWidth.getOrPut(width) {
+            val maxColumns = if (width == Constraints.Infinity || characterWidth <= 0f) Int.MAX_VALUE else (width / characterWidth).toInt()
+            ChordProTabWrapper.wrap(lines, maxColumns).map { row ->
+                row.map { line -> textMeasurer.measure(AnnotatedString(line), style, softWrap = false) }
+            }
         }
     }
 }
@@ -1140,6 +1147,7 @@ private val ROW_GAP = 40.dp
 private const val HOLE_PENALTY = 1L shl 40 // Larger than any height, so that a hole always costs more than height does.
 private const val LINE_HEIGHT_SAMPLE = "X"
 private const val CHARACTER_WIDTH_SAMPLE_LENGTH = 64
+private const val MAX_TAB_WIDTHS = 8
 private const val PADDING = '\u00A0' // Non-breaking space, so that the padding never gets trimmed or wrapped.
 private const val BEAT_SYMBOL = "\u00B7"
 private const val CHIP_SEPARATOR = "\u00B7"
