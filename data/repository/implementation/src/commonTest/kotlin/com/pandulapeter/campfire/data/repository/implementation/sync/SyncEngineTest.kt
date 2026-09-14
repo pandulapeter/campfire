@@ -122,6 +122,34 @@ class SyncEngineTest {
         assertEquals(0, result.summary.deletedLocally)
     }
 
+    @Test
+    fun `a conflict that is contested while it is resolved leaves one copy rather than two`() = runTest {
+        val original = "Original".encodeToByteArray()
+        val here = "Edited here".encodeToByteArray()
+        val there = "Edited there".encodeToByteArray()
+        val local = FakeLibraryFileLocalSource(files = mapOf(song(1) to here))
+        val provider = FakeSyncProvider(files = mapOf(song(1) to there))
+        // Another device writes the file once while this one is downloading it, so the first upload is refused.
+        var isContested = true
+        provider.onDownload = { key ->
+            if (isContested) {
+                isContested = false
+                provider.files[key] = there to "r9"
+            }
+        }
+
+        SyncEngine(local).synchronize(
+            provider = provider,
+            document = indexOf(song(1) to original),
+            accountId = ACCOUNT_ID,
+            onProgress = {},
+            onIndexChanged = {},
+        )
+
+        assertEquals(setOf("song_1.cho", "song_1 (2).cho"), local.files.keys.map { it.name }.toSet())
+        assertContentEquals(here, local.files[song(1)])
+    }
+
     private companion object {
         const val ACCOUNT_ID = "dropbox:someone@example.com"
 

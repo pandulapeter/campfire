@@ -127,8 +127,8 @@ internal class SyncEngine(
      * to hide the latency, few enough that the service answers with files rather than with rate limiting.
      *
      * The ordering that does matter is kept between the groups: incoming files first, then outgoing ones, then the
-     * deletions. A conflict copy has to be on disk before the file it was made from is overwritten, and a deletion
-     * that ran before a download would undo it.
+     * deletions. A download has to be on disk before anything that reads the library acts on it, and a deletion that
+     * ran before a download would undo it.
      *
      * [onIndexChanged] is called under the same lock the results are merged under, so the snapshots arrive in the
      * order they were taken and the last one handed out is always the most complete.
@@ -281,6 +281,12 @@ internal class SyncEngine(
      * A file that changed on both sides. The local version keeps the name and goes up; the remote one comes down
      * next to it under a free name and goes back up under that name, so that both devices end with both versions
      * and the same two names. Nothing is merged, and nothing is thrown away.
+     *
+     * The local version goes up before the copy is written, because the upload is what can still turn out to be
+     * contested: a second device resolving the same file at the same moment makes it a conflict, and a copy already
+     * on disk by then would be uploaded as a new file on the next pass while the file itself was resolved again into
+     * a third one. Written only once the upload has gone through, the copy lands in the pass in which it really is
+     * the version that lost.
      */
     private suspend fun resolve(
         provider: SyncProvider,
@@ -297,13 +303,12 @@ internal class SyncEngine(
         if (remote.contentEquals(local)) {
             return OperationOutcome(entries = mapOf(key to SyncIndexEntry(localContentHash(local), operation.revision)))
         }
-        val copyName = libraryFileLocalSource.writeLibraryFileToFreeName(key.kind, key.name, remote)
-        val copyKey = SyncKey(kind = key.kind, name = copyName)
-
         val uploaded = provider.upload(key.kind, key.name, local, operation.revision)
         if (uploaded !is RemoteWriteResult.Written) return OperationOutcome(hasUnresolvedConflict = true)
         val entries = mutableMapOf(key to SyncIndexEntry(localContentHash(local), uploaded.revision))
 
+        val copyName = libraryFileLocalSource.writeLibraryFileToFreeName(key.kind, key.name, remote)
+        val copyKey = SyncKey(kind = key.kind, name = copyName)
         val copyUploaded = provider.upload(copyKey.kind, copyKey.name, remote, expectedRevision = null)
         if (copyUploaded is RemoteWriteResult.Written) {
             entries[copyKey] = SyncIndexEntry(localContentHash(remote), copyUploaded.revision)
