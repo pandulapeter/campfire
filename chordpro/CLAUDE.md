@@ -50,7 +50,10 @@ in `:domain:*`. `:data:source:local:implementation` uses it directly for the met
   of the first song that carries it. `addTag` and `removeTag` edit the text rather than the model, for the same
   reason `ChordProTransposer.transposeText` does — the result is written straight back to the user's file, so their
   own formatting has to survive a chip being tapped in the viewer. A new tag lands after the last one the file
-  already has, or at the end of the directives it opens with.
+  already has, or at the end of the directives it opens with. What makes "every other byte" true for all of these
+  text edits (tags, languages, the transposition) is `ChordProSyntax.joinLines`: the line separator is detected per
+  file, CRLF where any line ends that way and LF otherwise, and a trailing line break is put back where the file had
+  one; `ChordProHeader.insert` writes its line break with the same separator. A file mixing its endings comes out with the one separator that picked.
 - `ChordProLanguages` — the languages a song is sung in, which ChordPro has no directive for at all: what Campfire
   writes is `{meta: language en}`, a custom metadata item, and what it reads is that plus `{meta: lang en}` and the
   bare `{language: en}` / `{lang: en}` a hand written file may carry. A value is normalized on the way in

@@ -153,4 +153,11 @@ class ChordProLanguagesTest {
 
         assertEquals(text, ChordProLanguages.setLanguages(text, listOf("und", "")))
     }
+
+    @Test
+    fun `setting the languages keeps the line endings of the file and its trailing line break`() {
+        val text = "{title: T}\r\n\r\nThe first line\r\n"
+
+        assertEquals("{title: T}\r\n{meta: language en}\r\n\r\nThe first line\r\n", ChordProLanguages.setLanguages(text, listOf("en")))
+    }
 }

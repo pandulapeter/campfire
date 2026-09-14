@@ -128,7 +128,7 @@ object ChordProTransposer {
             }
         }
         lines.transposeTab(tabLineIndices, semitones, preferFlats) // An environment the file never closes.
-        return lines.joinToString("\n")
+        return ChordProSyntax.joinLines(lines, text)
     }
 
     /** Whether flats should be preferred when writing the chords of this song after the given transposition. */

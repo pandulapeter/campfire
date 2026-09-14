@@ -244,4 +244,15 @@ class ChordProTransposerTest {
     private fun ChordProSong.annotationNames() = lines()
         .filterIsInstance<ChordProLine.Lyrics>()
         .flatMap { line -> line.chords.filter { it.isAnnotation }.map { it.name } }
+
+    @Test
+    fun `transposing text keeps the trailing line break exactly where the file had one`() {
+        assertEquals("[A#m]la\n", ChordProTransposer.transposeText("[Am]la\n", 1))
+        assertEquals("[A#m]la", ChordProTransposer.transposeText("[Am]la", 1))
+    }
+
+    @Test
+    fun `transposing text keeps the line endings of the file`() {
+        assertEquals("[C#]la\r\n[G#]lo\r\n", ChordProTransposer.transposeText("[C]la\r\n[G]lo\r\n", 1, preferFlats = false))
+    }
 }

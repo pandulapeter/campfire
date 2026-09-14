@@ -105,4 +105,19 @@ class ChordProTagsTest {
 
         assertEquals(text, ChordProTags.removeTag(ChordProTags.addTag(text, "campfire"), "campfire"))
     }
+
+    @Test
+    fun `a new tag is written with the line endings of the file and keeps its trailing line break`() {
+        assertEquals("{title: A}\r\n{tag: x}\r\nla\r\n", ChordProTags.addTag("{title: A}\r\nla\r\n", "x"))
+    }
+
+    @Test
+    fun `removing a tag keeps the line endings of the file`() {
+        assertEquals("{title: A}\r\nla\r\n", ChordProTags.removeTag("{title: A}\r\n{tag: x}\r\nla\r\n", "x"))
+    }
+
+    @Test
+    fun `a file without a trailing line break does not gain one`() {
+        assertEquals("{title: A}\n{tag: x}\nla", ChordProTags.addTag("{title: A}\nla", "x"))
+    }
 }

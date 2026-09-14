@@ -28,7 +28,7 @@ object ChordProTags {
         if (trimmedTag.isEmpty() || ChordProParser.parseMetadata(text).tags.any { it.equals(trimmedTag, ignoreCase = true) }) return text
         val lines = ChordProSyntax.splitLines(text).toMutableList()
         lines.add(ChordProSyntax.metadataInsertionIndex(lines, ChordProSyntax.TAG_NAME), "{${ChordProSyntax.TAG_NAME}: $trimmedTag}")
-        return lines.joinToString("\n")
+        return ChordProSyntax.joinLines(lines, text)
     }
 
     /**
@@ -38,9 +38,8 @@ object ChordProTags {
     fun removeTag(text: String, tag: String): String {
         val trimmedTag = tag.trim()
         if (trimmedTag.isEmpty()) return text
-        return ChordProSyntax.splitLines(text)
-            .filterNot { line -> line.tag()?.equals(trimmedTag, ignoreCase = true) == true }
-            .joinToString("\n")
+        val lines = ChordProSyntax.splitLines(text).filterNot { line -> line.tag()?.equals(trimmedTag, ignoreCase = true) == true }
+        return ChordProSyntax.joinLines(lines, text)
     }
 
     /** The tag of a line that is a tag directive, null for every other line. */

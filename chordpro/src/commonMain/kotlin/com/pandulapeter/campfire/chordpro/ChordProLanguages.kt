@@ -45,7 +45,7 @@ object ChordProLanguages {
             ChordProSyntax.metadataInsertionIndex(kept, ChordProSyntax.LANGUAGE_NAME),
             missing.map { "{meta: ${ChordProSyntax.LANGUAGE_NAME} $it}" },
         )
-        return kept.joinToString("\n")
+        return ChordProSyntax.joinLines(kept, text)
     }
 
     /**

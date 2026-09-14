@@ -84,6 +84,27 @@ internal object ChordProSyntax {
         return if (lines.size > 1 && lines.last().isEmpty()) lines.subList(0, lines.size - 1) else lines
     }
 
+    /**
+     * The line separator [text] is written with: CRLF where any line of it ends that way, LF otherwise. It is one
+     * answer for the whole file, so a file mixing CR-only or LF endings with CRLF ones comes out of an edit written with
+     * CRLF throughout, which is the separator such a file was most likely meant to have.
+     */
+    fun lineSeparatorOf(text: String) = if (text.contains("\r\n")) "\r\n" else "\n"
+
+    /** Whether [text] ends with a line break, which [splitLines] does not report as a line of its own. */
+    fun endsWithLineBreak(text: String) = text.endsWith("\n") || text.endsWith("\r")
+
+    /**
+     * The inverse of [splitLines] for one particular [original]: the separator it is written with, see
+     * [lineSeparatorOf], and the trailing line break put back where the original had one, so that an edit of one line
+     * leaves every other byte of the file as it was.
+     */
+    fun joinLines(lines: List<String>, original: String): String {
+        val separator = lineSeparatorOf(original)
+        val joined = lines.joinToString(separator)
+        return if (endsWithLineBreak(original) && lines.isNotEmpty()) joined + separator else joined
+    }
+
     /** Matches a directive line, or returns null for content. The name comes back lowercase, the value trimmed. */
     fun matchDirective(trimmedLine: String): Directive? {
         val match = directiveRegex.matchEntire(trimmedLine) ?: return null

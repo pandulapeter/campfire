@@ -94,6 +94,26 @@ class ChordProHeaderTest {
     }
 
     @Test
+    fun `a directive is written into a CRLF file with its line endings and at the right offset`() {
+        val text = "{title: T}\r\n{capo: 2}\r\n\r\nThe first line\r\n"
+        val insertion = ChordProHeader.insert(text, name = "artist", prefix = "{artist: ", suffix = "}")
+
+        assertEquals("{title: T}\r\n".length, insertion.offset)
+        assertEquals("{title: T}\r\n{artist: ".length, insertion.caretOffset)
+        assertEquals("{title: T}\r\n{artist: }\r\n{capo: 2}\r\n\r\nThe first line\r\n", text.insert("artist"))
+    }
+
+    @Test
+    fun `a file mixing its line endings gets the directive at the start of a line`() {
+        assertEquals("{title: T}\n{year: }\r\n{capo: 2}\r\nThe first line", "{title: T}\n{capo: 2}\r\nThe first line".insert("year"))
+    }
+
+    @Test
+    fun `a CRLF file that ends with its header takes a CRLF with the directive`() {
+        assertEquals("{title: T}\r\n{artist: A}\r\n{key: }", "{title: T}\r\n{artist: A}".insert("key"))
+    }
+
+    @Test
     fun `every spelling of a directive is reported as declared under one name`() {
         val text = "{t: T}\n{st: S}\n{meta: tag slow}\n{lang: hu}\n{capo: 2}"
 
