@@ -62,6 +62,10 @@ Sync is the one place the web platform forced a design: asking for consent navig
 written to OPFS before the app leaves, and the answer is read out of the query string at the next start (and taken
 out of the address bar as it is read, so a reload cannot replay a spent code). The redirect URI is the page's own
 URL, which has to be registered with the service — a deployment served from a different address needs its own entry.
+It is always written as the folder the page is served from, ending in `/`, with any `index.html` taken off, since the
+service matches it character for character and the same page opened as `…/campfire/index.html` would otherwise ask for
+a URI nobody registered: `https://pandulapeter.github.io/campfire/` for the deployment and `http://localhost:8080/`
+for the development server are the two entries.
 Nothing about which screen the user was on survives that trip, because the navigation state is in memory and never in
 the URL: `restore` reports that this start up came back from a consent page (whatever the service answered) and
 `CampfireViewModel` opens Settings, which is the screen the user pressed the button on.

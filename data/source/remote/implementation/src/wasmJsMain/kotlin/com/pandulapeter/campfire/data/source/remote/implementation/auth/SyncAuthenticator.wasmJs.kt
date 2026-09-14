@@ -25,7 +25,11 @@ import kotlin.js.ExperimentalWasmJsInterop
 @Single
 internal class WebSyncAuthenticator : SyncAuthenticator {
 
-    /** The page itself, without any query or fragment: the exact string registered with the provider. */
+    /**
+     * The page itself, without any query or fragment, and as the folder it is served from: the exact string registered
+     * with the provider, which matches redirect URIs character for character. `…/campfire/index.html` is the same page
+     * as `…/campfire/`, but not the same redirect URI.
+     */
     override suspend fun prepareRedirectUri() = currentPageUrl()
 
     /** The page is ignored: the service redirects back to the app itself, which is the page. */
@@ -50,7 +54,14 @@ internal class WebSyncAuthenticator : SyncAuthenticator {
     }
 }
 
-private fun currentPageUrl(): String = js("window.location.origin + window.location.pathname")
+private fun currentPageUrl(): String {
+    val folder = currentPagePath().removeSuffix("index.html")
+    return currentPageOrigin() + if (folder.endsWith('/')) folder else "$folder/"
+}
+
+private fun currentPageOrigin(): String = js("window.location.origin")
+
+private fun currentPagePath(): String = js("window.location.pathname")
 
 private fun currentPageSearch(): String = js("window.location.search")
 
