@@ -143,6 +143,8 @@ internal fun SongLyrics(
     // Where the sections ended up, published by the layout so that a header can scroll back to its own section.
     val sectionBounds = remember(sections) { List(sections.size) { SectionBounds() } }
     val density = LocalDensity.current
+    // Everything the height of a section depends on apart from the width it is measured at.
+    val sectionMeasurements = remember(sections, fontScale, density) { SectionMeasurements() }
     val coroutineScope = rememberCoroutineScope()
     // The styles the lines are measured with carry no color, which is given where the text is drawn instead: every
     // line of the song is measured again whenever a key of its measurement changes, and the color scheme changes on
@@ -183,6 +185,7 @@ internal fun SongLyrics(
                 sectionCount = sections.size,
                 isHorizontalFlow = isHorizontalFlow,
                 sectionBounds = sectionBounds,
+                sectionMeasurements = sectionMeasurements,
             ) {
                 sections.forEachIndexed { index, section ->
                     val bounds = sectionBounds[index]
@@ -625,6 +628,10 @@ private fun TextStyle.scaled(scale: Float) = copy(
  * The count is decided for the width the layout settles at ([extraWidth]), the columns themselves are laid out in
  * the width that is available right now, so that a layout that is still being resized keeps its sections where they
  * are and only lets them grow into the space as it arrives.
+ *
+ * The layout is measured on every frame of a navigation transition and of a window being resized, so what the search
+ * finds is kept in [sectionMeasurements]: the intrinsic height of every section at every width it was asked about,
+ * and the count decided for the last settled width, which is the same on every frame of a transition.
  */
 @Composable
 private fun SongSectionsLayout(
@@ -639,6 +646,7 @@ private fun SongSectionsLayout(
     sectionCount: Int,
     isHorizontalFlow: Boolean,
     sectionBounds: List<SectionBounds>,
+    sectionMeasurements: SectionMeasurements,
     content: @Composable () -> Unit,
 ) = Layout(
     modifier = modifier,
@@ -661,17 +669,29 @@ private fun SongSectionsLayout(
         balanceIntoColumns(columnCount, sectionGapPx)
     }
 
-    var columnCount = maxColumnCount
-    if (availableHeightPx > 0) {
-        var candidate = 1
-        while (candidate < maxColumnCount) {
-            val heights = measurables.map { it.maxIntrinsicHeight(columnWidthFor(settledWidth, candidate)) }
-            if (heights.arrangeInto(candidate).height <= availableHeightPx) break
-            // Even a perfectly even split needs this many columns, so there is no point in trying the ones in between.
-            val totalHeight = heights.sum() + sectionGapPx * (heights.size - 1).coerceAtLeast(0)
-            candidate = maxOf(candidate + 1, ceil(totalHeight.toDouble() / availableHeightPx).toInt())
+    val columnCountKey = ColumnCountKey(
+        settledWidth = settledWidth,
+        availableHeight = availableHeightPx,
+        maxColumnCount = maxColumnCount,
+        isHorizontalFlow = isHorizontalFlow,
+    )
+    val columnCount = sectionMeasurements.columnCount(columnCountKey) {
+        if (availableHeightPx > 0) {
+            var candidate = 1
+            while (candidate < maxColumnCount) {
+                val candidateWidth = columnWidthFor(settledWidth, candidate)
+                val heights = measurables.mapIndexed { index, measurable ->
+                    sectionMeasurements.height(index = index, width = candidateWidth, measure = measurable::maxIntrinsicHeight)
+                }
+                if (heights.arrangeInto(candidate).height <= availableHeightPx) break
+                // Even a perfectly even split needs this many columns, so there is no point in trying the ones in between.
+                val totalHeight = heights.sum() + sectionGapPx * (heights.size - 1).coerceAtLeast(0)
+                candidate = maxOf(candidate + 1, ceil(totalHeight.toDouble() / availableHeightPx).toInt())
+            }
+            candidate.coerceAtMost(maxColumnCount)
+        } else {
+            maxColumnCount
         }
-        columnCount = candidate.coerceAtMost(maxColumnCount)
     }
 
     val columnWidth = columnWidthFor(width, columnCount)
@@ -692,6 +712,38 @@ private fun SongSectionsLayout(
         dividers.forEach { (placeable, position) -> placeable.place(position) }
     }
 }
+
+/**
+ * What [SongSectionsLayout] has already worked out about one set of sections, remembered for as long as nothing the
+ * sections' heights depend on has changed. Neither of the two is state: they are read and written by the measurement
+ * alone, and a change to them never has anything to redraw.
+ */
+private class SectionMeasurements {
+
+    private val heights = HashMap<Long, Int>()
+    private var lastColumnCountKey: ColumnCountKey? = null
+    private var lastColumnCount = 1
+
+    /** The intrinsic height of the section at [index] when it is [width] wide. */
+    fun height(index: Int, width: Int, measure: (Int) -> Int) = heights.getOrPut((index.toLong() shl 32) or width.toLong()) { measure(width) }
+
+    /** The number of columns decided for [key], which is only searched for again once the key has changed. */
+    fun columnCount(key: ColumnCountKey, search: () -> Int): Int {
+        if (key != lastColumnCountKey) {
+            lastColumnCount = search()
+            lastColumnCountKey = key
+        }
+        return lastColumnCount
+    }
+}
+
+/** Everything the number of columns depends on, apart from the heights of the sections. */
+private data class ColumnCountKey(
+    val settledWidth: Int,
+    val availableHeight: Int,
+    val maxColumnCount: Int,
+    val isHorizontalFlow: Boolean,
+)
 
 /**
  * Where a section ended up inside [SongSectionsLayout]. The layout is the only one that knows this, and the sections
