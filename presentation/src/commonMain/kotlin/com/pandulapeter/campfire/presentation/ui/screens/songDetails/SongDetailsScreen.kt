@@ -165,11 +165,9 @@ internal fun SongDetailsScreen(
     val isHorizontalFlow = userPreferences?.isHorizontalSectionFlowEnabled == true
     val chordSpelling = userPreferences?.chordSpelling ?: UserPreferences.ChordSpelling.Default
     val currentTransposition = currentSong?.let { transpositions[it.fileName, destination.setlistFileName] } ?: 0
-    val currentSongText = currentSong?.let { songTexts[it.fileName] }
-    // Memoized on the text and the amount: the app bar only needs the resulting key, not the whole parsed song.
-    val currentKey = remember(currentSongText, currentTransposition, chordSpelling) {
-        currentSongText?.let { viewModel.renderSong(it, currentTransposition, chordSpelling).metadata.key }
-    }
+    // From the key the library scan read rather than from the text: the page renders the whole song already, and the
+    // app bar only needs one line of it.
+    val currentKey = currentSong?.let { viewModel.renderKey(song = it, transposition = currentTransposition, spelling = chordSpelling) }
 
     val scrollBehavior = TopAppBarDefaults.pinnedScrollBehavior()
     val coroutineScope = rememberCoroutineScope()

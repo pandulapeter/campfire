@@ -35,7 +35,6 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.remember
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
@@ -85,15 +84,10 @@ internal fun SongDisplayControls(
     val isPerformanceModeEnabled by viewModel.isPerformanceModeEnabled.collectAsStateWithLifecycle()
     val transpositions by viewModel.transpositions.collectAsStateWithLifecycle()
     val fontScale by viewModel.fontScale.collectAsStateWithLifecycle()
-    val songTexts by viewModel.songTexts.collectAsStateWithLifecycle()
     val song = allSongs.firstOrNull { it.fileName == dialog.songFileName }
     val songTransposition = song?.let { transpositions[it.fileName, dialog.setlistFileName] } ?: 0
-    val songText = song?.let { songTexts[it.fileName] }
     val chordSpelling = userPreferences?.chordSpelling ?: UserPreferences.ChordSpelling.Default
-    // Memoized: the key comes from the parsed song, which is not worth re-deriving on every recomposition.
-    val transposedKey = remember(songText, songTransposition, chordSpelling) {
-        songText?.let { viewModel.renderSong(it, songTransposition, chordSpelling).metadata.key }
-    }
+    val transposedKey = song?.let { viewModel.renderKey(song = it, transposition = songTransposition, spelling = chordSpelling) }
     Column(
         modifier = Modifier.padding(contentPadding)
     ) {
