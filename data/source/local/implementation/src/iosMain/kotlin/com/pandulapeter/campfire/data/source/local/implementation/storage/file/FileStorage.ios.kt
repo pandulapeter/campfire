@@ -11,6 +11,7 @@
 
 package com.pandulapeter.campfire.data.source.local.implementation.storage.file
 
+import com.pandulapeter.campfire.data.model.domain.decodeLibraryText
 import com.pandulapeter.campfire.data.source.local.api.LibraryStorageException
 import kotlinx.cinterop.BetaInteropApi
 import kotlinx.cinterop.ExperimentalForeignApi
@@ -87,7 +88,7 @@ internal class IosFileStorage : FileStorage {
     }
 
     override suspend fun readText(directory: StorageDirectory, name: String) = withContext(Dispatchers.IO) {
-        readData(directory, name)?.toByteArray()?.decodeToString()?.withoutByteOrderMark()
+        readData(directory, name)?.toByteArray()?.decodeLibraryText()
     }
 
     override suspend fun readBytes(directory: StorageDirectory, name: String) = withContext(Dispatchers.IO) {

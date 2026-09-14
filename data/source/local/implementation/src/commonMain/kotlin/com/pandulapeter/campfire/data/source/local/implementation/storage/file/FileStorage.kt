@@ -9,6 +9,7 @@
  */
 package com.pandulapeter.campfire.data.source.local.implementation.storage.file
 
+import com.pandulapeter.campfire.data.model.domain.decodeLibraryText
 import com.pandulapeter.campfire.data.source.local.api.LibraryStorageException
 
 /** The folders the app keeps its data in. Each maps to one platform directory, created on first use. */
@@ -50,7 +51,10 @@ interface FileStorage {
 
     suspend fun exists(directory: StorageDirectory, name: String): Boolean
 
-    /** Null if the file does not exist; one that exists and cannot be read throws [LibraryStorageException]. */
+    /**
+     * Null if the file does not exist; one that exists and cannot be read throws [LibraryStorageException]. Decoded with
+     * [decodeLibraryText], so a file that is not UTF-8 still reads.
+     */
     suspend fun readText(directory: StorageDirectory, name: String): String?
 
     /** Null if the file does not exist; one that exists and cannot be read throws [LibraryStorageException]. */
@@ -77,9 +81,6 @@ internal val StorageDirectory.pathSegments: List<String>
 internal fun requireValidFileName(name: String) = require(
     name.isNotEmpty() && name != "." && name != ".." && !name.contains('/') && !name.contains('\\')
 ) { "Invalid file name: \"$name\"." }
-
-/** Editors on Windows like to prefix UTF-8 files with a byte order mark, which is not part of the content. */
-internal fun String.withoutByteOrderMark() = removePrefix("\uFEFF")
 
 /** Songs and setlists sit next to each other so that they can be exported as a single archive. */
 private const val LIBRARY_DIRECTORY = "library"

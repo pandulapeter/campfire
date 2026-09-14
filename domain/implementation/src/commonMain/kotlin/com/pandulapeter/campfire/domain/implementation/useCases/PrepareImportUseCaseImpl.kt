@@ -14,6 +14,7 @@ import com.pandulapeter.campfire.data.model.domain.ImportPlan
 import com.pandulapeter.campfire.data.model.domain.ImportedFile
 import com.pandulapeter.campfire.data.model.domain.LibraryFiles
 import com.pandulapeter.campfire.data.model.domain.Setlist
+import com.pandulapeter.campfire.data.model.domain.decodeLibraryText
 import com.pandulapeter.campfire.data.repository.api.ArchiveRepository
 import com.pandulapeter.campfire.data.repository.api.SetlistRepository
 import com.pandulapeter.campfire.data.repository.api.SongContentRepository
@@ -72,7 +73,7 @@ class PrepareImportUseCaseImpl internal constructor(
     private suspend fun planSongs(files: List<ImportedFile>, skippedFileNames: MutableList<String>): List<ImportPlan.SongEntry> {
         val plannedTexts = mutableMapOf<String, String>()
         return files.flatMap { file ->
-            val parts = file.text()?.let { ChordProSplitter.split(it) }.orEmpty()
+            val parts = ChordProSplitter.split(file.bytes.decodeLibraryText())
             if (parts.isEmpty()) {
                 skippedFileNames += file.name
                 return@flatMap emptyList()
@@ -119,7 +120,7 @@ class PrepareImportUseCaseImpl internal constructor(
         val existingSetlists = setlistRepository.loadSetlistsIfNeeded().orEmpty().associateBy { it.fileName }
         val plannedSetlists = mutableMapOf<String, Setlist>()
         return files.mapNotNull { file ->
-            val setlist = file.text()?.let { setlistRepository.parseSetlist(it) }
+            val setlist = setlistRepository.parseSetlist(file.bytes.decodeLibraryText())
             if (setlist == null) {
                 skippedFileNames += file.name
                 return@mapNotNull null
@@ -139,14 +140,6 @@ class PrepareImportUseCaseImpl internal constructor(
 
     private fun Setlist.holdsTheSameAs(other: Setlist) = title == other.title && isArchived == other.isArchived && entries == other.entries
 
-    /** Null when the bytes are not UTF-8 text, which is the one thing every file the app accepts has to be. */
-    private fun ImportedFile.text() = try {
-        bytes.decodeToString(throwOnInvalidSequence = true).removePrefix(BYTE_ORDER_MARK)
-    } catch (exception: Exception) {
-        println("Could not decode \"$name\": ${exception.message}")
-        null
-    }
-
     private companion object {
         /** The ChordPro family plus plain text, without the dots, which is how a file name is asked for its type. */
         val SONG_EXTENSIONS = (LibraryFiles.SONG_EXTENSIONS + LibraryFiles.TEXT_EXTENSION).mapTo(mutableSetOf()) { it.removePrefix(".") }
@@ -154,6 +147,5 @@ class PrepareImportUseCaseImpl internal constructor(
         /** ".setlist.json" ends in this, and a plain ".json" is worth trying to parse as a setlist too. */
         const val SETLIST_EXTENSION = "json"
         val ARCHIVE_EXTENSION = LibraryFiles.ARCHIVE_EXTENSION
-        const val BYTE_ORDER_MARK = "\uFEFF"
     }
 }

@@ -108,6 +108,13 @@ class JvmFileStorageTest {
     }
 
     @Test
+    fun `reads a file that is not UTF-8 as Windows-1252`() = runBlocking {
+        fileStorage.writeBytes(StorageDirectory.SONGS, "a.cho", "{title: Café}".toByteArray(Charsets.ISO_8859_1))
+
+        assertEquals("{title: Café}", fileStorage.readText(StorageDirectory.SONGS, "a.cho"))
+    }
+
+    @Test
     fun `deletes a file and ignores a missing one`() = runBlocking {
         fileStorage.writeText(StorageDirectory.SONGS, "a.cho", "content")
 

@@ -9,6 +9,7 @@
  */
 package com.pandulapeter.campfire.data.source.local.implementation.storage.file
 
+import com.pandulapeter.campfire.data.model.domain.decodeLibraryText
 import com.pandulapeter.campfire.data.source.local.api.LibraryStorageException
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.IO
@@ -54,7 +55,7 @@ internal class JvmFileStorage(private val root: File) : FileStorage {
     }
 
     override suspend fun readText(directory: StorageDirectory, name: String) = withContext(Dispatchers.IO) {
-        file(directory, name).let { if (it.isFile) failingAsStorage(name) { it.readText().withoutByteOrderMark() } else null }
+        file(directory, name).let { if (it.isFile) failingAsStorage(name) { it.readBytes().decodeLibraryText() } else null }
     }
 
     override suspend fun readBytes(directory: StorageDirectory, name: String) = withContext(Dispatchers.IO) {

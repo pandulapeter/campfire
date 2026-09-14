@@ -11,6 +11,7 @@
 
 package com.pandulapeter.campfire.data.source.local.implementation.storage.file
 
+import com.pandulapeter.campfire.data.model.domain.decodeLibraryText
 import com.pandulapeter.campfire.data.source.local.api.LibraryStorageException
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.await
@@ -72,7 +73,7 @@ internal class OpfsFileStorage : FileStorage {
 
     override suspend fun readText(directory: StorageDirectory, name: String) = withContext(Dispatchers.Default) {
         failingAsStorage(name) {
-            fileHandle(directory, name, create = false)?.let { readFileText(it).await()?.toString()?.withoutByteOrderMark() }
+            fileHandle(directory, name, create = false)?.let { readFileBytes(it).await()?.toByteArray()?.decodeLibraryText() }
         }
     }
 
@@ -186,8 +187,6 @@ private fun listEntries(directory: JsAny): Promise<JsString?> = js(
 /** The size and the last modification time of one file, separated by the same control character `listEntries` uses. */
 private fun fileInfo(handle: JsAny): Promise<JsString?> =
     js("handle.getFile().then(function (file) { return file.size + String.fromCharCode(0) + file.lastModified; })")
-
-private fun readFileText(handle: JsAny): Promise<JsString?> = js("handle.getFile().then(function (file) { return file.text(); })")
 
 private fun readFileBytes(handle: JsAny): Promise<Int8Array?> =
     js("handle.getFile().then(function (file) { return file.arrayBuffer(); }).then(function (buffer) { return new Int8Array(buffer); })")
