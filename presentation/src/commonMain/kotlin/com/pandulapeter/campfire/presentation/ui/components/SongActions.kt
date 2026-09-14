@@ -38,87 +38,28 @@ import com.pandulapeter.campfire.presentation.resources.songs_update_file_name
 import com.pandulapeter.campfire.presentation.resources.songs_setlist_assignments
 import com.pandulapeter.campfire.presentation.ui.CampfireViewModel
 import com.pandulapeter.campfire.presentation.ui.platform.LocalFilePicker
-import com.pandulapeter.campfire.presentation.ui.platform.isDesktopPlatform
 import org.jetbrains.compose.resources.painterResource
-
-/**
- * Everything that can be done to one song, handed to [item] one entry at a time so that the same list can be a
- * dropdown menu where there is a pointer to open one with and a bottom sheet where there is not.
- *
- * [item] receives the action rather than performing it, so that each renderer can close itself first: a menu hides
- * before the dialog it opens appears, a sheet animates away first.
- *
- * @param lockedSetlistFileName The one setlist the assignments sheet may not take the song out of, because the
- *   screen that opened it is showing the song as part of that setlist and would have the ground pulled from under
- *   it. Null on the setlists screen, where a row is the song's membership of the setlist and giving it up is the
- *   whole point, and null in the library, where no setlist is in play.
- * @param shouldIncludeSetlistAssignments False where the screen already offers them, which the song details app bar
- *   does.
- */
-@Composable
-internal fun SongActions(
-    viewModel: CampfireViewModel,
-    song: Song,
-    lockedSetlistFileName: String?,
-    shouldIncludeSetlistAssignments: Boolean = true,
-    item: @Composable (title: String, icon: Painter, isEnabled: Boolean, onClick: () -> Unit) -> Unit,
-) {
-    val filePicker = LocalFilePicker.current
-    val songFileNamesInSetlists by viewModel.songFileNamesInSetlists.collectAsStateWithLifecycle()
-    item(stringResource(Res.string.edit), painterResource(Res.drawable.ic_edit), true) {
-        viewModel.openEditor(song.fileName)
-    }
-    // One entry for both directions: the sheet it opens is a list of every setlist with a box each, so putting the
-    // song into one and taking it out of another are the same gesture there, and a menu that offered them as two
-    // separate actions was naming the same sheet twice.
-    if (shouldIncludeSetlistAssignments) {
-        item(
-            stringResource(Res.string.songs_setlist_assignments),
-            painterResource(if (song.fileName in songFileNamesInSetlists) Res.drawable.ic_setlists else Res.drawable.ic_setlists_outline),
-            true,
-        ) {
-            viewModel.showDialog(
-                CampfireViewModel.DialogType.SetlistPicker(song = song, lockedSetlistFileName = lockedSetlistFileName)
-            )
-        }
-    }
-    // Only where it would do something: a file already named after its own metadata, or one with no title to be
-    // named after, has nothing to update and the entry would be an offer that never comes to anything.
-    if (song.canUpdateFileName) {
-        item(stringResource(Res.string.songs_update_file_name), painterResource(Res.drawable.ic_rename), true) {
-            viewModel.updateSongFileName(song)
-        }
-    }
-    item(stringResource(Res.string.export), painterResource(Res.drawable.ic_export), true) {
-        viewModel.exportSong(filePicker, song.fileName)
-    }
-    // Only where sending a file is a different thing from saving one, which on desktop and the web it is not.
-    if (filePicker.canShare) {
-        item(stringResource(Res.string.share), painterResource(Res.drawable.ic_share), true) {
-            viewModel.shareSong(filePicker, song.fileName)
-        }
-    }
-    item(stringResource(Res.string.delete), painterResource(Res.drawable.ic_delete), true) {
-        viewModel.showDialog(CampfireViewModel.DialogType.DeleteSong(song))
-    }
-}
 
 /**
  * The overflow button of a list row and the menu it opens, filled by [content] with one [ActionsMenuItem] per
  * action. [content] is handed the way to close the menu, which every entry has to call before the dialog or screen
  * it opens appears.
  *
- * Separate from [SongActionsMenu] because not every row that wants a menu has a song behind it: a setlist entry
+ * Separate from [SongActionsButton] because not every row that wants a menu has a song behind it: a setlist entry
  * whose file has gone missing still has the one action of being taken out of the setlist.
  *
  * [modifier] goes on the button rather than on the menu, which hangs from wherever the button ends up: the song list
  * is what uses it, to keep the button clear of the fast scroller running down the same edge (`FAST_SCROLLER_CLEARANCE`).
+ *
+ * @param state Whether the menu is open, hoisted by a row that opens the same menu from a long press as well.
  */
 @Composable
 internal fun ActionsMenu(
     modifier: Modifier = Modifier,
+    state: OverflowMenuState = rememberOverflowMenuState(),
     content: @Composable (dismiss: () -> Unit) -> Unit,
 ) = OverflowMenu(
+    state = state,
     button = { open ->
         IconButton(
             modifier = modifier,
@@ -148,75 +89,101 @@ internal fun ActionsMenuItem(
 )
 
 /**
- * The overflow button of a song row and the dropdown menu it opens, which is how [SongActionsButton] lists the
- * actions where there is a pointer to open a menu with.
- */
-@Composable
-private fun SongActionsMenu(
-    modifier: Modifier = Modifier,
-    viewModel: CampfireViewModel,
-    song: Song,
-    lockedSetlistFileName: String?,
-    shouldIncludeSetlistAssignments: Boolean = true,
-) = ActionsMenu(modifier = modifier) { dismiss ->
-    SongActions(
-        viewModel = viewModel,
-        song = song,
-        lockedSetlistFileName = lockedSetlistFileName,
-        shouldIncludeSetlistAssignments = shouldIncludeSetlistAssignments,
-    ) { title, icon, isEnabled, onClick ->
-        ActionsMenuItem(
-            title = title,
-            icon = icon,
-            isEnabled = isEnabled,
-            onClick = {
-                dismiss()
-                onClick()
-            },
-        )
-    }
-}
-
-/**
- * The overflow button of a song row, and whichever way of listing the song's actions the platform calls for: the
- * [SongActionsMenu] dropdown where there is a pointer to open one with, and the bottom sheet of
- * [CampfireViewModel.DialogType.SongActions] where the list is read and chosen from with a thumb.
+ * The overflow button of a song row, or of the song details app bar, and the dropdown menu of everything that can be
+ * done to the song. A dropdown on every platform, touch included, since an overflow button is read as the promise of
+ * a menu hanging from it - which is what every other overflow button in the app opens, the setlist header's and the
+ * editor's among them.
  *
- * The button itself is there on every platform, because it is the only thing on a row that says the actions exist:
- * the long press that opens the same sheet on the songs screen announces itself to nobody, so it is a shortcut for
- * the reader who already knows about it rather than the way in.
+ * The button is there on every platform, because it is the only thing on a row that says the actions exist: the long
+ * press that opens the same menu on the songs screen announces itself to nobody, so it is a shortcut for the reader
+ * who already knows about it rather than the way in.
+ *
+ * @param state Whether the menu is open, hoisted by the songs screen, whose rows also open it from a long press.
+ * @param lockedSetlistFileName The one setlist the assignments sheet may not take the song out of, because the
+ *   screen that opened it is showing the song as part of that setlist and would have the ground pulled from under
+ *   it. Null on the setlists screen, where a row is the song's membership of the setlist and giving it up is the
+ *   whole point, and null in the library, where no setlist is in play.
+ * @param shouldIncludeSetlistAssignments False where the screen already offers them, which the song details app bar
+ *   does.
  */
 @Composable
 internal fun SongActionsButton(
     modifier: Modifier = Modifier,
+    state: OverflowMenuState = rememberOverflowMenuState(),
     viewModel: CampfireViewModel,
     song: Song,
     lockedSetlistFileName: String?,
     shouldIncludeSetlistAssignments: Boolean = true,
-) = if (isDesktopPlatform) {
-    SongActionsMenu(
+) {
+    val filePicker = LocalFilePicker.current
+    val songFileNamesInSetlists by viewModel.songFileNamesInSetlists.collectAsStateWithLifecycle()
+    ActionsMenu(
         modifier = modifier,
-        viewModel = viewModel,
-        song = song,
-        lockedSetlistFileName = lockedSetlistFileName,
-        shouldIncludeSetlistAssignments = shouldIncludeSetlistAssignments,
-    )
-} else {
-    IconButton(
-        modifier = modifier,
-        onClick = {
-            viewModel.showDialog(
-                CampfireViewModel.DialogType.SongActions(
-                    song = song,
-                    lockedSetlistFileName = lockedSetlistFileName,
-                    shouldIncludeSetlistAssignments = shouldIncludeSetlistAssignments,
-                )
+        state = state,
+    ) { dismiss ->
+        // Each entry closes the menu before it acts, so that it is gone by the time the dialog or the picker it
+        // opens is on the screen.
+        ActionsMenuItem(
+            title = stringResource(Res.string.edit),
+            icon = painterResource(Res.drawable.ic_edit),
+            onClick = {
+                dismiss()
+                viewModel.openEditor(song.fileName)
+            },
+        )
+        // One entry for both directions: the sheet it opens is a list of every setlist with a box each, so putting the
+        // song into one and taking it out of another are the same gesture there, and a menu that offered them as two
+        // separate actions was naming the same sheet twice.
+        if (shouldIncludeSetlistAssignments) {
+            ActionsMenuItem(
+                title = stringResource(Res.string.songs_setlist_assignments),
+                icon = painterResource(if (song.fileName in songFileNamesInSetlists) Res.drawable.ic_setlists else Res.drawable.ic_setlists_outline),
+                onClick = {
+                    dismiss()
+                    viewModel.showDialog(
+                        CampfireViewModel.DialogType.SetlistPicker(song = song, lockedSetlistFileName = lockedSetlistFileName)
+                    )
+                },
             )
-        },
-    ) {
-        Icon(
-            painter = painterResource(Res.drawable.ic_more),
-            contentDescription = stringResource(Res.string.songs_actions),
+        }
+        // Only where it would do something: a file already named after its own metadata, or one with no title to be
+        // named after, has nothing to update and the entry would be an offer that never comes to anything.
+        if (song.canUpdateFileName) {
+            ActionsMenuItem(
+                title = stringResource(Res.string.songs_update_file_name),
+                icon = painterResource(Res.drawable.ic_rename),
+                onClick = {
+                    dismiss()
+                    viewModel.updateSongFileName(song)
+                },
+            )
+        }
+        ActionsMenuItem(
+            title = stringResource(Res.string.export),
+            icon = painterResource(Res.drawable.ic_export),
+            onClick = {
+                dismiss()
+                viewModel.exportSong(filePicker, song.fileName)
+            },
+        )
+        // Only where sending a file is a different thing from saving one, which on desktop and the web it is not.
+        if (filePicker.canShare) {
+            ActionsMenuItem(
+                title = stringResource(Res.string.share),
+                icon = painterResource(Res.drawable.ic_share),
+                onClick = {
+                    dismiss()
+                    viewModel.shareSong(filePicker, song.fileName)
+                },
+            )
+        }
+        ActionsMenuItem(
+            title = stringResource(Res.string.delete),
+            icon = painterResource(Res.drawable.ic_delete),
+            onClick = {
+                dismiss()
+                viewModel.showDialog(CampfireViewModel.DialogType.DeleteSong(song))
+            },
         )
     }
 }

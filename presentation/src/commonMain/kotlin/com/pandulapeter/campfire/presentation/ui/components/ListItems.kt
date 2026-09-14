@@ -118,10 +118,10 @@ import org.jetbrains.compose.resources.painterResource
  *   showing chords.
  * @param labelsOnEverySong The tags and languages the row leaves off, because every song in the library carries
  *   them and a label that is on every row tells the reader nothing about this one.
- * @param onLongClick A shortcut to the same actions the row's overflow button opens, on the touch platforms where
- *   holding a row is a natural way to ask what can be done to it.
- * @param actions The trailing content of the row, which is the overflow button and whichever way of listing the
- *   song's actions the platform calls for ([SongActionsButton]).
+ * @param onLongClick A shortcut to the row's overflow menu, on the touch platforms where holding a row is a natural
+ *   way to ask what can be done to it.
+ * @param actions The trailing content of the row, which is the overflow button of the song's actions
+ *   ([SongActionsButton]).
  * @param areActionsAtEdge Whether [actions] end on the edge of the row rather than on the keyline the app bar's
  *   actions keep, which is what a row ending in a [DragHandle] asks for - see [ListItemActions].
  */

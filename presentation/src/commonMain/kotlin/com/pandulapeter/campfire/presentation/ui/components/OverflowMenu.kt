@@ -13,6 +13,7 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
+import androidx.compose.runtime.Stable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -24,17 +25,18 @@ import androidx.compose.runtime.setValue
  * key handler (`CampfireViewModel.handleKeyEvent`) cannot see it - and an Escape pressed with a menu up belongs to
  * the menu rather than to the back stack.
  *
+ * @param state Whether the menu is open, hoisted only where something other than [button] opens it too.
  * @param button The button that opens the menu, handed the way to open it.
  * @param content The entries of the menu, handed the way to close it, which every entry has to call before the
  *   dialog or screen it opens appears.
  */
 @Composable
 internal fun OverflowMenu(
+    state: OverflowMenuState = rememberOverflowMenuState(),
     button: @Composable (open: () -> Unit) -> Unit,
     content: @Composable (dismiss: () -> Unit) -> Unit,
 ) {
-    var isExpanded by remember { mutableStateOf(false) }
-    if (isExpanded) {
+    if (state.isExpanded) {
         // Counted for as long as the menu is up, and given back by whatever takes it away - a choice, a click
         // outside it, or the row it hangs from leaving the list.
         DisposableEffect(Unit) {
@@ -43,15 +45,38 @@ internal fun OverflowMenu(
         }
     }
     Box {
-        button { isExpanded = true }
+        button(state::open)
         DropdownMenu(
-            expanded = isExpanded,
-            onDismissRequest = { isExpanded = false },
+            expanded = state.isExpanded,
+            onDismissRequest = state::dismiss,
         ) {
-            content { isExpanded = false }
+            content(state::dismiss)
         }
     }
 }
+
+/**
+ * Whether an [OverflowMenu] is open. A song row on the songs screen holds its own, because a long press on the row
+ * opens the very menu its overflow button does, hanging from that button, rather than showing the same entries in a
+ * different way.
+ */
+@Stable
+internal class OverflowMenuState {
+
+    var isExpanded by mutableStateOf(false)
+        private set
+
+    fun open() {
+        isExpanded = true
+    }
+
+    fun dismiss() {
+        isExpanded = false
+    }
+}
+
+@Composable
+internal fun rememberOverflowMenuState() = remember { OverflowMenuState() }
 
 /** True while any [OverflowMenu] is open, for the platform shells that have to know that before they act on a key. */
 internal val isAnyOverflowMenuOpen get() = openOverflowMenuCount > 0

@@ -1514,14 +1514,6 @@ class CampfireViewModel(
         data class DeleteSetlist(val setlist: Setlist) : DialogType
         data class EditSetlist(val setlist: Setlist) : DialogType
         data class DuplicateSetlist(val setlist: Setlist) : DialogType
-        /** The actions of one song, shown as a bottom sheet where there is no room for a dropdown menu. */
-        data class SongActions(
-            val song: Song,
-            /** Handed straight to [SetlistPicker] by the sheet, see its own documentation. */
-            val lockedSetlistFileName: String?,
-            /** False where the screen that opened the sheet offers them already. */
-            val shouldIncludeSetlistAssignments: Boolean = true,
-        ) : DialogType
         data class DeleteSong(val song: Song) : DialogType
         /** Opened from the tag header of the song details screen; the suggestions come from [tags]. */
         data class AddSongTag(val song: Song) : DialogType

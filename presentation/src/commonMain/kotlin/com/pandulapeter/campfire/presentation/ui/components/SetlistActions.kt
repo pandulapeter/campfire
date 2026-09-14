@@ -40,9 +40,9 @@ import org.jetbrains.compose.resources.painterResource
 /**
  * Everything that can be done to one setlist, behind the overflow button of its [SectionHeader] pill: there are more
  * of these than a pill has room for, and all but one of them lead somewhere else anyway - a sheet, a dialog, a file
- * picker, or the setlist leaving the list it was tapped in. The song assignments come first, since filling a setlist
- * is what it is for. "Edit" is where a setlist is renamed, and also the one place its description is written, since
- * the two are the whole of what the user gets to say about it.
+ * picker, or the setlist leaving the list it was tapped in. They start the way a song's menu does, with "Edit" and
+ * then the assignments, so that the two menus read alike. "Edit" is where a setlist is renamed, and also the one
+ * place its description is written, since the two are the whole of what the user gets to say about it.
  *
  * The whole button is absent in performance mode, which the header decides: it is every way of changing a setlist in
  * one place, so there is nothing here to keep.
@@ -65,19 +65,19 @@ internal fun SetlistActionsMenu(
         // Each entry closes the menu before it acts, so that it is gone by the time the dialog or the picker it
         // opens is on the screen.
         SetlistActionsMenuItem(
-            title = stringResource(Res.string.setlists_song_assignments),
-            icon = painterResource(Res.drawable.ic_songs),
-            onClick = {
-                dismiss()
-                viewModel.showDialog(CampfireViewModel.DialogType.SongPicker(setlist))
-            },
-        )
-        SetlistActionsMenuItem(
             title = stringResource(Res.string.edit),
             icon = painterResource(Res.drawable.ic_edit),
             onClick = {
                 dismiss()
                 viewModel.showDialog(CampfireViewModel.DialogType.EditSetlist(setlist))
+            },
+        )
+        SetlistActionsMenuItem(
+            title = stringResource(Res.string.setlists_song_assignments),
+            icon = painterResource(Res.drawable.ic_songs),
+            onClick = {
+                dismiss()
+                viewModel.showDialog(CampfireViewModel.DialogType.SongPicker(setlist))
             },
         )
         SetlistActionsMenuItem(

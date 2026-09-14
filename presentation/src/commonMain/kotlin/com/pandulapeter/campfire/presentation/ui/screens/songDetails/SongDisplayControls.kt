@@ -55,7 +55,6 @@ import com.pandulapeter.campfire.presentation.resources.ic_add
 import com.pandulapeter.campfire.presentation.resources.ic_subtract
 import com.pandulapeter.campfire.presentation.resources.ic_text_decrease
 import com.pandulapeter.campfire.presentation.resources.ic_text_increase
-import com.pandulapeter.campfire.presentation.resources.song_details_display_options
 import com.pandulapeter.campfire.presentation.resources.song_details_text_size
 import com.pandulapeter.campfire.presentation.resources.song_details_text_size_decrease
 import com.pandulapeter.campfire.presentation.resources.song_details_text_size_increase
@@ -67,7 +66,6 @@ import com.pandulapeter.campfire.presentation.resources.song_details_transpositi
 import com.pandulapeter.campfire.presentation.resources.song_editor_transpose_text_down
 import com.pandulapeter.campfire.presentation.resources.song_editor_transpose_text_up
 import com.pandulapeter.campfire.presentation.ui.CampfireViewModel
-import com.pandulapeter.campfire.presentation.ui.components.SettingsSectionTitle
 import kotlin.math.roundToInt
 import org.jetbrains.compose.resources.painterResource
 
@@ -99,7 +97,6 @@ internal fun SongDisplayControls(
     Column(
         modifier = Modifier.padding(contentPadding)
     ) {
-        SettingsSectionTitle(text = stringResource(Res.string.song_details_display_options))
         if (song?.hasChords == true && userPreferences?.isLyricsOnlyModeEnabled != true && !isPerformanceModeEnabled) {
             ListItem(
                 colors = ListItemDefaults.colors(containerColor = Color.Transparent),

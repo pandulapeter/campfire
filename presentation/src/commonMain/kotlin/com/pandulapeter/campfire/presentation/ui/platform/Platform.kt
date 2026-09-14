@@ -10,8 +10,8 @@
 package com.pandulapeter.campfire.presentation.ui.platform
 
 /**
- * True on platforms driven by a pointer rather than touch, which is what decides how a song's actions are reached:
- * a menu opened from the row and from the app bar, rather than a long press and a bottom sheet.
+ * True on platforms driven by a pointer rather than touch, where holding a song row opens nothing: the long press
+ * that opens the row's overflow menu is a touch gesture, and the button that opens the same menu is one click away.
  */
 internal expect val isDesktopPlatform: Boolean
 

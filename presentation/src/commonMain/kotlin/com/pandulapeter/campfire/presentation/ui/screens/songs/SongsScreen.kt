@@ -75,6 +75,7 @@ import com.pandulapeter.campfire.presentation.ui.components.besideSidePanel
 import com.pandulapeter.campfire.presentation.ui.components.hasRoomForSidePanel
 import com.pandulapeter.campfire.presentation.ui.components.listItemAnimation
 import com.pandulapeter.campfire.presentation.ui.components.rememberHasLoadedLibrary
+import com.pandulapeter.campfire.presentation.ui.components.rememberOverflowMenuState
 import com.pandulapeter.campfire.presentation.ui.components.rememberRetainedLazyGridState
 import com.pandulapeter.campfire.presentation.ui.components.songListColumnCount
 import com.pandulapeter.campfire.presentation.ui.platform.LocalFilePicker
@@ -286,6 +287,7 @@ private fun SongList(
                     items = group.songs,
                     key = { "song_${it.fileName}" },
                 ) { song ->
+                    val actionsMenuState = rememberOverflowMenuState()
                     SongListItem(
                         modifier = listItemAnimation(listState, hasLoadedLibrary),
                         song = song,
@@ -298,15 +300,16 @@ private fun SongList(
                             keyboardController?.hide()
                             viewModel.openSong(song)
                         },
-                        // A shortcut to what the row's own overflow button opens, where holding a row is a
-                        // natural way to ask for it. In performance mode there is nothing to open either way, so a
-                        // row does nothing but open a song.
+                        // A shortcut to the row's own overflow menu, where holding a row is a natural way to ask for
+                        // it: the same menu, hanging from the same button, since the same entries shown two different
+                        // ways would read as two different things. In performance mode there is nothing to open
+                        // either way, so a row does nothing but open a song.
                         onLongClick = if (isDesktopPlatform || isPerformanceModeEnabled) {
                             null
                         } else {
                             {
                                 keyboardController?.hide()
-                                viewModel.showDialog(CampfireViewModel.DialogType.SongActions(song = song, lockedSetlistFileName = null))
+                                actionsMenuState.open()
                             }
                         },
                         // The overflow button keeps its distance from the end edge here and nowhere else, because
@@ -318,6 +321,7 @@ private fun SongList(
                             {
                                 SongActionsButton(
                                     modifier = Modifier.padding(end = FAST_SCROLLER_CLEARANCE),
+                                    state = actionsMenuState,
                                     viewModel = viewModel,
                                     song = song,
                                     lockedSetlistFileName = null,

@@ -43,7 +43,6 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.OutlinedTextField
-import androidx.compose.material3.SheetState
 import androidx.compose.material3.SheetValue
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
@@ -57,6 +56,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.text.TextRange
@@ -71,6 +71,7 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.pandulapeter.campfire.presentation.resources.Res
 import com.pandulapeter.campfire.presentation.resources.cancel
+import com.pandulapeter.campfire.presentation.resources.close
 import com.pandulapeter.campfire.presentation.resources.create
 import com.pandulapeter.campfire.presentation.resources.delete
 import com.pandulapeter.campfire.presentation.resources.done
@@ -103,10 +104,12 @@ import com.pandulapeter.campfire.presentation.resources.setlists_new_setlist
 import com.pandulapeter.campfire.presentation.resources.setlists_new_setlist_title
 import com.pandulapeter.campfire.presentation.resources.setlists_no_search_results
 import com.pandulapeter.campfire.presentation.resources.setlists_search
+import com.pandulapeter.campfire.presentation.resources.setlists_sort_and_filter
 import com.pandulapeter.campfire.presentation.resources.setlists_song_assignments
 import com.pandulapeter.campfire.presentation.resources.settings_sync_disconnect
 import com.pandulapeter.campfire.presentation.resources.settings_sync_disconnect_confirmation
 import com.pandulapeter.campfire.presentation.resources.songs_setlist_assignments
+import com.pandulapeter.campfire.presentation.resources.song_details_display_options
 import com.pandulapeter.campfire.presentation.resources.song_details_language
 import com.pandulapeter.campfire.presentation.resources.song_details_language_no_search_results
 import com.pandulapeter.campfire.presentation.resources.song_details_language_search
@@ -126,6 +129,7 @@ import com.pandulapeter.campfire.presentation.resources.songs_new_song_title
 import com.pandulapeter.campfire.presentation.resources.songs_clear
 import com.pandulapeter.campfire.presentation.resources.songs_no_search_results
 import com.pandulapeter.campfire.presentation.resources.songs_search
+import com.pandulapeter.campfire.presentation.resources.songs_sort_and_filter
 import com.pandulapeter.campfire.data.model.domain.ImportConflictResolution
 import com.pandulapeter.campfire.data.model.domain.ImportPlan
 import com.pandulapeter.campfire.data.model.domain.Song
@@ -136,7 +140,6 @@ import com.pandulapeter.campfire.presentation.ui.components.CheckboxListItem
 import com.pandulapeter.campfire.presentation.ui.components.PickableLanguage
 import com.pandulapeter.campfire.presentation.ui.components.RadioListItem
 import com.pandulapeter.campfire.presentation.ui.components.SettingsSectionTitle
-import com.pandulapeter.campfire.presentation.ui.components.SongActions
 import com.pandulapeter.campfire.presentation.ui.components.SetlistsControls
 import com.pandulapeter.campfire.presentation.ui.components.SongsControls
 import com.pandulapeter.campfire.presentation.ui.components.TagFlowRow
@@ -206,14 +209,20 @@ internal fun CampfireDialogs(
             },
         )
 
-        CampfireViewModel.DialogType.SongsControls -> CampfireBottomSheet(onDismiss = viewModel::dismissDialog) { contentPadding ->
+        CampfireViewModel.DialogType.SongsControls -> CampfireBottomSheet(
+            title = stringResource(Res.string.songs_sort_and_filter),
+            onDismiss = viewModel::dismissDialog,
+        ) { contentPadding ->
             SongsControls(
                 viewModel = viewModel,
                 contentPadding = contentPadding,
             )
         }
 
-        CampfireViewModel.DialogType.SetlistsControls -> CampfireBottomSheet(onDismiss = viewModel::dismissDialog) { contentPadding ->
+        CampfireViewModel.DialogType.SetlistsControls -> CampfireBottomSheet(
+            title = stringResource(Res.string.setlists_sort_and_filter),
+            onDismiss = viewModel::dismissDialog,
+        ) { contentPadding ->
             SetlistsControls(
                 viewModel = viewModel,
                 contentPadding = contentPadding,
@@ -230,18 +239,16 @@ internal fun CampfireDialogs(
             dialog = dialog,
         )
 
-        is CampfireViewModel.DialogType.SongDisplayControls -> CampfireBottomSheet(onDismiss = viewModel::dismissDialog) { contentPadding ->
+        is CampfireViewModel.DialogType.SongDisplayControls -> CampfireBottomSheet(
+            title = stringResource(Res.string.song_details_display_options),
+            onDismiss = viewModel::dismissDialog,
+        ) { contentPadding ->
             SongDisplayControls(
                 viewModel = viewModel,
                 dialog = dialog,
                 contentPadding = contentPadding,
             )
         }
-
-        is CampfireViewModel.DialogType.SongActions -> SongActionsSheet(
-            viewModel = viewModel,
-            dialog = dialog,
-        )
 
         is CampfireViewModel.DialogType.DeleteSong -> ConfirmationDialog(
             title = stringResource(Res.string.songs_delete_song),
@@ -842,43 +849,6 @@ private fun SongLanguagesDialog(
 }
 
 /**
- * The actions of one song where there is no pointer to open a dropdown menu with, reached by long pressing the row.
- */
-@OptIn(ExperimentalMaterial3Api::class)
-@Composable
-private fun SongActionsSheet(
-    viewModel: CampfireViewModel,
-    dialog: CampfireViewModel.DialogType.SongActions,
-) = CampfireBottomSheet(onDismiss = viewModel::dismissDialog) { sheetState, contentPadding ->
-    val coroutineScope = rememberCoroutineScope()
-    SettingsSectionTitle(text = dialog.song.title)
-    SongActions(
-        viewModel = viewModel,
-        song = dialog.song,
-        lockedSetlistFileName = dialog.lockedSetlistFileName,
-        shouldIncludeSetlistAssignments = dialog.shouldIncludeSetlistAssignments,
-    ) { title, icon, isEnabled, onClick ->
-        ActionListItem(
-            title = title,
-            icon = icon,
-            isEnabled = isEnabled,
-            isEmphasized = false,
-            // The sheet gets out of the way before whatever the action opens lands on top of it. Hiding the sheet
-            // by hand does not count as dismissing it, so the dialog state is cleared here too: left as it was, an
-            // action that opens no dialog of its own (editing, exporting) would leave the invisible sheet's modal
-            // layer over the screen, swallowing the next tap.
-            onClick = {
-                coroutineScope.launch { sheetState.hide() }.invokeOnCompletion {
-                    viewModel.dismissDialog()
-                    onClick()
-                }
-            },
-        )
-    }
-    Spacer(modifier = Modifier.height(contentPadding.calculateBottomPadding()))
-}
-
-/**
  * The setlists one song can be put into, and the way to make a new one. Naming that new setlist happens in a dialog
  * on top of the sheet rather than instead of it: the setlist is only being created so that this song can go into it,
  * so the sheet staying where it is, with a ticked row appearing in it, is what says that it worked.
@@ -911,8 +881,11 @@ private fun SetlistPicker(
     var isNamingNewSetlist by rememberSaveable { mutableStateOf(isCreatingFirstSetlist) }
     val closeNamingDialog = { if (isCreatingFirstSetlist) viewModel.dismissDialog() else isNamingNewSetlist = false }
     if (!isCreatingFirstSetlist) {
-        CampfireBottomSheet(onDismiss = viewModel::dismissDialog) { contentPadding ->
-            SheetHeader(title = dialog.song.title, subtitle = dialog.song.artist)
+        CampfireBottomSheet(
+            title = dialog.song.title,
+            subtitle = dialog.song.artist,
+            onDismiss = viewModel::dismissDialog,
+        ) { contentPadding ->
             SheetSectionTitle(text = stringResource(Res.string.songs_setlist_assignments))
             PickerSearchField(
                 query = query,
@@ -1006,8 +979,11 @@ private fun SongPicker(
         val normalizedQuery = viewModel.normalize(query)
         pickableSongs.filter { normalizedQuery in it.title || normalizedQuery in it.artist }
     }
-    CampfireBottomSheet(onDismiss = viewModel::dismissDialog) { contentPadding ->
-        SheetHeader(title = setlist.title, subtitle = setlist.description)
+    CampfireBottomSheet(
+        title = setlist.title,
+        subtitle = setlist.description,
+        onDismiss = viewModel::dismissDialog,
+    ) { contentPadding ->
         SheetSectionTitle(text = stringResource(Res.string.setlists_song_assignments))
         PickerSearchField(
             query = query,
@@ -1043,37 +1019,6 @@ private class PickableSong(
     val title: String,
     val artist: String,
 )
-
-/**
- * What a picker sheet is about, named at the top of it: a song and its artist over the setlists it can go into, or a
- * setlist and its description over the songs that can go into it. The sheets are otherwise lists and nothing else,
- * and they are opened from rows of other lists as readily as from the thing itself, so without this they would
- * never say which song or which setlist the boxes are about.
- */
-@Composable
-private fun SheetHeader(
-    title: String,
-    subtitle: String,
-) = Column(
-    modifier = Modifier.fillMaxWidth().padding(start = 16.dp, end = 16.dp, top = 24.dp),
-) {
-    Text(
-        text = title,
-        style = MaterialTheme.typography.titleMedium,
-        maxLines = 1,
-        overflow = TextOverflow.Ellipsis,
-    )
-    // Neither an artist nor a description is required, and an empty line would only make the header taller.
-    if (subtitle.isNotBlank()) {
-        Text(
-            text = subtitle,
-            style = MaterialTheme.typography.bodyMedium,
-            color = MaterialTheme.colorScheme.onSurfaceVariant,
-            maxLines = 1,
-            overflow = TextOverflow.Ellipsis,
-        )
-    }
-}
 
 @Composable
 private fun SheetSectionTitle(text: String) = SettingsSectionTitle(
@@ -1147,11 +1092,15 @@ private fun ColumnScope.PickerList(
     var tallestHeight by remember { mutableIntStateOf(0) }
     LazyColumn(
         modifier = Modifier
-            .padding(top = 8.dp)
             .weight(1f, fill = false)
             .heightIn(min = with(density) { tallestHeight.toDp() })
             .onSizeChanged { tallestHeight = maxOf(tallestHeight, it.height) },
-        contentPadding = contentPadding,
+        // The gap under the search field is the list's own content padding rather than a padding around the list, so
+        // that a scrolled row goes under the field itself instead of being cut off a few pixels short of it.
+        contentPadding = PaddingValues(
+            top = PICKER_LIST_TOP_PADDING,
+            bottom = contentPadding.calculateBottomPadding(),
+        ),
     ) {
         if (noResultsText != null) {
             item(key = "no_results") {
@@ -1174,38 +1123,90 @@ private fun ColumnScope.PickerList(
  * rather than scrolling on under it, so that inset is left out of the sheet's own insets and handed to the content
  * instead, as the `contentPadding` scrolling content applies inside its scroll and the rest leaves under its last row.
  * The top inset stays with the sheet, which only pads by it once it has been dragged up against the status bar.
+ *
+ * @param title What the sheet is about, named in its [SheetHeader].
+ * @param subtitle A line under [title], left out when blank.
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 private fun CampfireBottomSheet(
+    title: String,
+    subtitle: String = "",
     onDismiss: () -> Unit,
-    content: @Composable ColumnScope.(sheetState: SheetState, contentPadding: PaddingValues) -> Unit,
+    content: @Composable ColumnScope.(contentPadding: PaddingValues) -> Unit,
 ) {
     // No partially expanded state: these sheets are short, and they open at their full height.
     val sheetState = rememberBottomSheetState(
         initialValue = SheetValue.Hidden,
         enabledValues = setOf(SheetValue.Hidden, SheetValue.Expanded),
     )
+    val coroutineScope = rememberCoroutineScope()
     ModalBottomSheet(
         onDismissRequest = onDismiss,
         sheetState = sheetState,
         dragHandle = null,
         contentWindowInsets = { WindowInsets.safeDrawing.only(WindowInsetsSides.Top) },
     ) {
+        SheetHeader(
+            title = title,
+            subtitle = subtitle,
+            // Hiding the sheet by hand does not count as dismissing it, so the dialog state is cleared once it is
+            // gone: left as it was, the invisible sheet's modal layer would stay over the screen, swallowing the next
+            // tap.
+            onClose = { coroutineScope.launch { sheetState.hide() }.invokeOnCompletion { onDismiss() } },
+        )
         // Read inside the sheet, which is a window of its own on Android and gets the insets of that window.
         val bottomInset = WindowInsets.safeDrawing.only(WindowInsetsSides.Bottom).asPaddingValues().calculateBottomPadding()
-        content(sheetState, PaddingValues(bottom = bottomInset + SHEET_BOTTOM_PADDING))
+        content(PaddingValues(bottom = bottomInset + SHEET_BOTTOM_PADDING))
     }
 }
 
-@OptIn(ExperimentalMaterial3Api::class)
+/**
+ * The top of every sheet: what it is about, and a close button. A sheet whose list grows past the screen covers the
+ * whole of it once it is dragged up, and a sheet that fills the screen has no scrim left to tap and no edge that looks
+ * like it could be dragged back down, so the button is on the short sheets too, where the next one opened may not be
+ * short. A picker sheet names its song and artist, or its setlist and description, here: it is opened from rows of
+ * other lists as readily as from the thing itself, and without this it would never say what the boxes are about.
+ */
 @Composable
-private fun CampfireBottomSheet(
-    onDismiss: () -> Unit,
-    content: @Composable ColumnScope.(contentPadding: PaddingValues) -> Unit,
-) = CampfireBottomSheet(onDismiss) { _, contentPadding -> content(contentPadding) }
+private fun SheetHeader(
+    title: String,
+    subtitle: String,
+    onClose: () -> Unit,
+) = Row(
+    modifier = Modifier.fillMaxWidth().padding(start = 4.dp, end = 16.dp, top = 12.dp),
+    verticalAlignment = Alignment.CenterVertically,
+) {
+    IconButton(onClick = onClose) {
+        Icon(
+            painter = painterResource(Res.drawable.ic_clear),
+            contentDescription = stringResource(Res.string.close),
+        )
+    }
+    Column(
+        modifier = Modifier.weight(1f),
+    ) {
+        Text(
+            text = title,
+            style = MaterialTheme.typography.titleMedium,
+            maxLines = 1,
+            overflow = TextOverflow.Ellipsis,
+        )
+        // Neither an artist nor a description is required, and an empty line would only make the header taller.
+        if (subtitle.isNotBlank()) {
+            Text(
+                text = subtitle,
+                style = MaterialTheme.typography.bodyMedium,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis,
+            )
+        }
+    }
+}
 
 private val SHEET_BOTTOM_PADDING = 16.dp
+private val PICKER_LIST_TOP_PADDING = 8.dp
 private const val MAX_TITLE_LENGTH = 60
 private const val MAX_TAG_LENGTH = 40
 private const val MAX_DESCRIPTION_LENGTH = 300
