@@ -354,8 +354,12 @@ class CampfireViewModel(
         )
     }.asState(LabelsOnEverySong())
 
-    /** The library as the song list shows it: narrowed by [songFilter] and sorted the way the preferences ask for. */
-    private val filteredSongs = screenData.map { it.data?.songs.orEmpty() }
+    /**
+     * The library as the song list shows it: narrowed by [songFilter] and sorted the way the preferences ask for.
+     * Distinct, because [screenData] also emits for every write to a setlist with the song list exactly as it was, and
+     * each of those would otherwise have the whole library normalized and grouped again for nothing.
+     */
+    private val filteredSongs = screenData.map { it.data?.songs.orEmpty() }.distinctUntilChanged()
 
     /**
      * Every tag the library uses, most used first, as both the filter controls and the suggestions of the tag
@@ -387,7 +391,7 @@ class CampfireViewModel(
      */
     private val searchableSongs = filteredSongs.map { songs ->
         songs.map { SearchableSong(song = it, title = normalizeText(it.title), artist = normalizeText(it.artist)) }
-    }
+    }.asState(emptyList())
 
     /**
      * The same for the whole library, looked up by file name, which is what the setlists search reads: a setlist
