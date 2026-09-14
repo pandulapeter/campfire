@@ -48,6 +48,7 @@ import com.pandulapeter.campfire.domain.api.useCases.ExportLibraryUseCase
 import com.pandulapeter.campfire.domain.api.useCases.ExportSetlistUseCase
 import com.pandulapeter.campfire.domain.api.useCases.ExportSongsUseCase
 import com.pandulapeter.campfire.domain.api.useCases.GetScreenDataUseCase
+import com.pandulapeter.campfire.domain.api.useCases.GetSongContentInvalidationsUseCase
 import com.pandulapeter.campfire.domain.api.useCases.GetSongContentUseCase
 import com.pandulapeter.campfire.domain.api.useCases.GetSyncProvidersUseCase
 import com.pandulapeter.campfire.domain.api.useCases.GetSyncStateUseCase
@@ -112,6 +113,7 @@ class CampfireViewModel(
     private val loadScreenData: LoadScreenDataUseCase,
     private val isFirstRun: IsFirstRunUseCase,
     private val getSongContent: GetSongContentUseCase,
+    getSongContentInvalidations: GetSongContentInvalidationsUseCase,
     private val createSong: CreateSongUseCase,
     private val deleteSong: DeleteSongUseCase,
     private val prepareImport: PrepareImportUseCase,
@@ -286,7 +288,10 @@ class CampfireViewModel(
         .map { setlists -> setlists.flatMapTo(mutableSetOf()) { setlist -> setlist.entries.map { it.songFileName } } }
         .asState(emptySet())
 
-    /** The text of the songs opened so far, by file name, read one file at a time as they are opened. */
+    /**
+     * The text of the songs opened so far, by file name, read one file at a time as they are opened. Kept in step with
+     * the files by [GetSongContentInvalidationsUseCase], see the collector in `init`.
+     */
     private val _songTexts = MutableStateFlow(emptyMap<String, String>())
     val songTexts: StateFlow<Map<String, String>> = _songTexts.asStateFlow()
 
@@ -567,6 +572,20 @@ class CampfireViewModel(
                 println("Could not restore the sync connection: ${exception.message}")
             }
         }
+        // A sync run, a rescan or a save replaces files underneath the texts held here, and the details header builds
+        // its writes on them: without this, toggling a tag would write the text that was open over the version sync
+        // had just brought in. The texts are read again rather than only dropped, so a song that is on screen changes
+        // in place instead of flashing a loading indicator, and an editor whose file changed underneath it now has
+        // unsaved changes, which is what asks the user before their draft replaces the new version.
+        viewModelScope.launch {
+            getSongContentInvalidations().collect { fileName ->
+                val affected = _songTexts.value.keys.filter { fileName == null || it == fileName }
+                affected.forEach { name ->
+                    val content = getSongContent(name)
+                    _songTexts.update { if (content == null) it - name else it + (name to content.text) }
+                }
+            }
+        }
         viewModelScope.launch {
             pendingFontScale.filterNotNull().debounce(FONT_SCALE_SAVE_DELAY_MILLIS).collect { fontScale ->
                 userPreferences.value?.let { saveUserPreferences(it.copy(fontScale = fontScale)) }
@@ -696,9 +715,7 @@ class CampfireViewModel(
      * file when it is exported, synced or opened anywhere else.
      */
     fun setSongTag(fileName: String, tag: String, isSelected: Boolean) = launchLibraryChange {
-        val text = songTexts.value[fileName] ?: getSongContent(fileName)?.text ?: return@launchLibraryChange
-        val edited = setChordProTag(text = text, tag = tag, isSelected = isSelected)
-        if (edited != text) saveSongContent(fileName = fileName, text = edited)
+        editSongText(fileName) { text -> setChordProTag(text = text, tag = tag, isSelected = isSelected) }
     }
 
     /**
@@ -707,9 +724,29 @@ class CampfireViewModel(
      * file the user owns is better rewritten once than once per checkbox.
      */
     fun setSongLanguages(fileName: String, codes: List<String>) = launchLibraryChange {
-        val text = songTexts.value[fileName] ?: getSongContent(fileName)?.text ?: return@launchLibraryChange
-        val edited = setChordProLanguages(text = text, codes = codes)
-        if (edited != text) saveSongContent(fileName = fileName, text = edited)
+        editSongText(fileName) { text -> setChordProLanguages(text = text, codes = codes) }
+    }
+
+    /**
+     * Applies [edit] to the text of a song and writes the result, but only over the text the edit was built on: a
+     * file that changed underneath it (a sync run that has not reached [songTexts] yet) is read again and the edit
+     * applied to that instead, so the other change is kept rather than written over. Once is enough; a file that
+     * keeps changing between the read and the write is reported instead of being chased.
+     */
+    private suspend fun editSongText(fileName: String, edit: (String) -> String) {
+        repeat(SONG_EDIT_ATTEMPTS) { attempt ->
+            // The first attempt may use the text on screen; a retry has to go back to the file.
+            val text = songTexts.value[fileName]?.takeIf { attempt == 0 } ?: getSongContent(fileName)?.text ?: return
+            val edited = edit(text)
+            if (edited == text) return
+            val isWritten = withContext(NonCancellable) {
+                saveSongContent.invoke(content = SongContent(fileName = fileName, text = edited), expectedText = text).also { isWritten ->
+                    if (isWritten) _songTexts.update { it + (fileName to edited) }
+                }
+            }
+            if (isWritten) return
+        }
+        _messages.send(Message.OperationFailed)
     }
 
     // The editor
@@ -1566,5 +1603,6 @@ class CampfireViewModel(
         const val FONT_SCALE_STEP = 0.1f
         private const val FONT_SCALE_STEP_TOLERANCE = 0.01f // Floating point slack, so that 1.1000001 still counts as step 11.
         private const val FONT_SCALE_SAVE_DELAY_MILLIS = 500L
+        private const val SONG_EDIT_ATTEMPTS = 2
     }
 }

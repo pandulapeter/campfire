@@ -13,6 +13,8 @@ import com.pandulapeter.campfire.data.model.domain.SongContent
 import com.pandulapeter.campfire.data.repository.api.SongContentRepository
 import com.pandulapeter.campfire.data.source.local.api.SongLocalSource
 import kotlinx.coroutines.CancellationException
+import kotlinx.coroutines.flow.MutableSharedFlow
+import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 import org.koin.core.annotation.Single
@@ -30,6 +32,10 @@ internal class SongContentRepositoryImpl(
      * cache afterwards: the file was written in the meantime, and that text is not the file any more.
      */
     private var generation = 0L
+
+    /** Emitted with [MutableSharedFlow.tryEmit] from inside the lock, so a slow collector can never hold up a write. */
+    private val _invalidations = MutableSharedFlow<String?>(extraBufferCapacity = 64)
+    override val invalidations = _invalidations.asSharedFlow()
 
     /**
      * The file is read outside the lock: the lock only guards the map, so one slow file does not hold up the pages
@@ -59,6 +65,7 @@ internal class SongContentRepositoryImpl(
     override suspend fun invalidate(fileName: String?) = mutex.withLock {
         generation++
         if (fileName == null) cache.clear() else cache.remove(fileName)
+        _invalidations.tryEmit(fileName)
         Unit
     }
 }

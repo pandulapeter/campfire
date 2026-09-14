@@ -24,8 +24,16 @@ interface SongRepository {
     /** Reads the songs directory again, which is what a refresh and an import need. */
     suspend fun rescan()
 
-    /** Writes the file and updates that one entry of the cached list, without rescanning the library. */
-    suspend fun saveSong(content: SongContent)
+    /**
+     * Writes the file and updates that one entry of the cached list, without rescanning the library.
+     *
+     * @param expectedText The text the change was built on, for a change that edits the file rather than replaces it.
+     *   The file is only written while it still holds exactly that text; otherwise nothing is written, the cached text
+     *   of the song is dropped, and false is returned, so that the caller can build the change again on what the file
+     *   holds now. Null writes whatever the file holds, which is what an explicit save from the editor means.
+     * @return False only when [expectedText] did not match.
+     */
+    suspend fun saveSong(content: SongContent, expectedText: String? = null): Boolean
 
     /** Writes [text] under a free file name derived from the title and artist, and returns the song it became. */
     suspend fun createSong(title: String, artist: String, text: String): Song

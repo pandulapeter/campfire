@@ -39,11 +39,18 @@ internal class SongRepositoryImpl(
      * Only the changed file is re-read: parsing the whole library again to pick up one edited title would make every
      * save in the editor cost a full rescan.
      */
-    override suspend fun saveSong(content: SongContent) {
+    override suspend fun saveSong(content: SongContent, expectedText: String?): Boolean {
+        if (expectedText != null && songLocalSource.loadSongContent(content.fileName)?.text != expectedText) {
+            // The cached text is what the refused change was built on, so it goes too: the caller's next read has to
+            // reach the file rather than hand the same stale text back.
+            songContentRepository.invalidate(content.fileName)
+            return false
+        }
         songLocalSource.saveSongContent(content)
         songContentRepository.invalidate(content.fileName)
-        val updated = songLocalSource.loadSong(content.fileName) ?: return
+        val updated = songLocalSource.loadSong(content.fileName) ?: return true
         updateData { current -> current.orEmpty().filterNot { it.fileName == updated.fileName } + updated }
+        return true
     }
 
     override suspend fun createSong(title: String, artist: String, text: String): Song {

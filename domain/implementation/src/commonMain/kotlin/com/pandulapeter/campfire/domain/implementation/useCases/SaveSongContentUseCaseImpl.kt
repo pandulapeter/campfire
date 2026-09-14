@@ -19,5 +19,6 @@ class SaveSongContentUseCaseImpl internal constructor(
     private val songRepository: SongRepository,
 ) : SaveSongContentUseCase {
 
-    override suspend operator fun invoke(content: SongContent) = songRepository.saveSong(content)
+    override suspend operator fun invoke(content: SongContent, expectedText: String?) =
+        songRepository.saveSong(content = content, expectedText = expectedText)
 }

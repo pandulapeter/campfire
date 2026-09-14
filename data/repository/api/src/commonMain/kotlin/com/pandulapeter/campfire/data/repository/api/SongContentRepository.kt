@@ -10,12 +10,23 @@
 package com.pandulapeter.campfire.data.repository.api
 
 import com.pandulapeter.campfire.data.model.domain.SongContent
+import kotlinx.coroutines.flow.Flow
 
 /**
  * The text of the songs that have been opened, kept in memory so that paging back and forth in a setlist does not
  * read the same files over and over. The list of songs does not carry the text, see `SongRepository`.
  */
 interface SongContentRepository {
+
+    /**
+     * Every [invalidate], as the file name it named, or null for every song. Whoever holds a copy of a text outside
+     * this cache drops or re-reads it: the invalidation means the file may have changed underneath that copy, and a
+     * write built on it would put back what somebody else (a sync run, another device) has just replaced.
+     *
+     * A notification rather than a queue: nothing is replayed to a late collector, and a collector that falls far
+     * behind may miss some, so it must not be used to count writes.
+     */
+    val invalidations: Flow<String?>
 
     /**
      * Null if the file does not exist or could not be read.

@@ -47,7 +47,14 @@ long as the storage takes to answer. A cancelled read is not a failed one: it is
   paging through a setlist re-reads nothing. Bulk readers (the library export) pass `shouldCache = false` so that
   walking the whole library does not leave all of it in memory. The editor invalidates one entry after a save. The
   lock only guards the map, never a read: a read that started before an invalidation is told so by a generation
-  counter and does not put the text it read back into the cache.
+  counter and does not put the text it read back into the cache. Every invalidation is also emitted on
+  `invalidations`, which is how the ViewModel's own copies of the open texts learn that a sync run or a rescan has
+  replaced the files under them.
+- `SongRepositoryImpl.saveSong` takes an optional `expectedText`, the text an edit (a tag, a language) was built on:
+  the file is only written while it still holds exactly that, and otherwise the save writes nothing, drops the cached
+  text and returns false, so the caller rebuilds the edit on the file as it is now. The editor's explicit save passes
+  none — the user has been asked, and the draft is the answer. `commonTest` covers the guard with a map-backed local
+  source.
 - `ArchiveRepositoryImpl` is a pass-through to the zip code in the local source implementation; it exists so the domain
   layer can reach it without depending on a local source.
 - `sync/` is where local and remote meet, which is why it is in a repository rather than in either source.
