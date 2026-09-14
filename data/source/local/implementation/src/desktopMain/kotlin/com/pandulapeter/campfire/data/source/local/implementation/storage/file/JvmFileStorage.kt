@@ -15,6 +15,11 @@ import kotlinx.coroutines.IO
 import kotlinx.coroutines.withContext
 import java.io.File
 import java.io.IOException
+import java.nio.channels.FileChannel
+import java.nio.file.AtomicMoveNotSupportedException
+import java.nio.file.Files
+import java.nio.file.StandardCopyOption
+import java.nio.file.StandardOpenOption
 
 /**
  * The [FileStorage] of every JVM based platform, on top of [java.io.File]. The root is chosen by the `actual` factory
@@ -72,20 +77,22 @@ internal class JvmFileStorage(private val root: File) : FileStorage {
     }
 
     private fun writeAtomically(directory: StorageDirectory, name: String, write: (File) -> Unit) {
-        val target = file(directory, name)
-        val temporaryFile = File(target.parentFile, name + TEMPORARY_FILE_SUFFIX)
+        val target = file(directory, name).toPath()
+        // A name of its own per write, so two writes of one file cannot share a temporary file.
+        val temporary = Files.createTempFile(target.parent, "$name.", TEMPORARY_FILE_SUFFIX)
         try {
-            write(temporaryFile)
-            // Windows refuses to rename onto an existing file, so the target has to go first there.
-            if (IS_WINDOWS) {
-                target.delete()
-            }
-            if (!temporaryFile.renameTo(target)) {
-                // Some file systems (network shares, some Android storage) fail the atomic move: fall back to a copy.
-                temporaryFile.copyTo(target, overwrite = true)
+            write(temporary.toFile())
+            // Flushed to the device before the rename, or a power loss right after could keep the name and lose the bytes.
+            FileChannel.open(temporary, StandardOpenOption.WRITE).use { it.force(true) }
+            try {
+                Files.move(temporary, target, StandardCopyOption.ATOMIC_MOVE, StandardCopyOption.REPLACE_EXISTING)
+            } catch (_: AtomicMoveNotSupportedException) {
+                // Some file systems (network shares, some Android storage) cannot do it in one step; the plain move still
+                // never leaves the target truncated, since it copies first and replaces at the end.
+                Files.move(temporary, target, StandardCopyOption.REPLACE_EXISTING)
             }
         } finally {
-            temporaryFile.delete()
+            Files.deleteIfExists(temporary)
         }
     }
 
@@ -108,6 +115,5 @@ internal class JvmFileStorage(private val root: File) : FileStorage {
     private companion object {
 
         const val TEMPORARY_FILE_SUFFIX = ".tmp"
-        val IS_WINDOWS = System.getProperty("os.name").orEmpty().startsWith("Windows", ignoreCase = true)
     }
 }

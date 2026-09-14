@@ -10,6 +10,9 @@
 package com.pandulapeter.campfire.data.source.local.implementation.storage.file
 
 import com.pandulapeter.campfire.data.source.local.api.LibraryStorageException
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.async
+import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.runBlocking
 import java.io.File
 import java.nio.file.Files
@@ -76,6 +79,17 @@ class JvmFileStorageTest {
 
         assertEquals("second", fileStorage.readText(StorageDirectory.SONGS, "a.cho"))
         assertEquals(1, fileStorage.list(StorageDirectory.SONGS).size)
+    }
+
+    @Test
+    fun `lets concurrent writes of one file all finish, keeping one of them whole`() = runBlocking {
+        val texts = List(16) { index -> "{title: Writer $index}\n" + "[Am]line $index\n".repeat(2000) }
+
+        texts.map { text -> async(Dispatchers.Default) { fileStorage.writeText(StorageDirectory.SONGS, "a.cho", text) } }.awaitAll()
+
+        assertTrue(fileStorage.readText(StorageDirectory.SONGS, "a.cho") in texts)
+        assertEquals(listOf("a.cho"), fileStorage.list(StorageDirectory.SONGS).map { it.name })
+        assertEquals(listOf("a.cho"), root.resolve("library/songs").list()?.toList())
     }
 
     @Test

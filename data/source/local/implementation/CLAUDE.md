@@ -24,8 +24,9 @@ holds the `@Module @ComponentScan object DataLocalSourceModule`, and every local
   - The directories are `library/songs`, `library/setlists` and `preferences` — songs and setlists sit next to each
     other so that the library exports as one archive, and the preferences sit outside it so that they do not.
   - Text is UTF-8 both ways, and a byte order mark is stripped while reading, because editors on Windows write one.
-  - Writes are atomic on the three platforms that can be (a temporary file moved over the target on the JVM, `atomically`
-    on iOS), so a crash in the middle of a save cannot truncate a song. OPFS has no such primitive. The OPFS storage
+  - Writes are atomic on the three platforms that can be (a temporary file of its own per write, flushed to the device
+    and moved over the target on the JVM, `atomically` on iOS), so a crash in the middle of a save cannot truncate a
+    song. OPFS has no such primitive. The OPFS storage
     resolves the three directory handles once and keeps them: walking down from the root is three promises, and
     nothing outside the page can remove a directory from the origin private file system.
   - Every `catch (Exception)` around a read rethrows `CancellationException` first: a scan that was cancelled is not
