@@ -136,6 +136,14 @@ internal fun SongDetailsScreen(
         val songsByFileName = allSongs.associateBy { it.fileName }
         destination.songFileNames.mapNotNull { songsByFileName[it] }
     }
+    val isLoading by viewModel.isLoading.collectAsStateWithLifecycle()
+    LaunchedEffect(songs.isEmpty(), isLoading) {
+        // Every song this screen was opened on is gone from the library, and the library has been read: there is
+        // nothing left to show, so the screen goes the way it would have if the song had been deleted from here. Only
+        // while it is still the screen on top, since one that has just been popped goes on being composed for as long
+        // as its exit transition runs, and going back from there would close the screen underneath it too.
+        if (songs.isEmpty() && !isLoading && viewModel.backStack.lastOrNull() == destination) onBack()
+    }
     val pagerState = rememberPagerState(initialPage = destination.initialIndex.coerceIn(0, maxOf(0, songs.lastIndex))) { songs.size }
     // The initial page is only read when the pager is created. If the library had not been read by then, the pager
     // was created with no pages and its first page is page zero: the song that was tapped is scrolled to once the
@@ -297,8 +305,8 @@ internal fun SongDetailsScreen(
             contentPadding
         }
         if (songs.isEmpty()) {
-            // The library has not been read yet, so there is nothing to page through; a pager with no pages would
-            // leave the screen blank under an app bar with no title in it.
+            // The library has not been read yet (or the screen is on its way out, see above), so there is nothing to page
+            // through; a pager with no pages would leave the screen blank under an app bar with no title in it.
             Box(
                 modifier = Modifier.weight(1f).fillMaxWidth().padding(contentPadding),
                 contentAlignment = Alignment.Center,
