@@ -11,13 +11,18 @@
 
 package com.pandulapeter.campfire.data.source.local.implementation.storage.file
 
+import com.pandulapeter.campfire.data.source.local.api.LibraryStorageException
 import kotlinx.cinterop.BetaInteropApi
 import kotlinx.cinterop.ExperimentalForeignApi
+import kotlinx.cinterop.ObjCObjectVar
 import kotlinx.cinterop.addressOf
+import kotlinx.cinterop.alloc
 import kotlinx.cinterop.allocArrayOf
 import kotlinx.cinterop.convert
 import kotlinx.cinterop.memScoped
+import kotlinx.cinterop.ptr
 import kotlinx.cinterop.usePinned
+import kotlinx.cinterop.value
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.IO
 import kotlinx.coroutines.withContext
@@ -26,6 +31,7 @@ import platform.Foundation.NSApplicationSupportDirectory
 import platform.Foundation.NSData
 import platform.Foundation.NSDate
 import platform.Foundation.NSDocumentDirectory
+import platform.Foundation.NSError
 import platform.Foundation.NSFileManager
 import platform.Foundation.NSFileModificationDate
 import platform.Foundation.NSFileSize
@@ -94,7 +100,7 @@ internal class IosFileStorage : FileStorage {
         val path = filePath(directory, name)
         // `atomically` writes to a neighbouring temporary file and swaps it in, so a failure never truncates the file.
         if (!bytes.toNSData().writeToFile(path, atomically = true)) {
-            throw IllegalStateException("Could not write \"$name\".")
+            throw LibraryStorageException("Could not write \"$name\".")
         }
     }
 
@@ -105,8 +111,19 @@ internal class IosFileStorage : FileStorage {
         }
     }
 
-    private fun readData(directory: StorageDirectory, name: String): NSData? = filePath(directory, name)
-        .let { if (fileManager.fileExistsAtPath(it)) NSData.dataWithContentsOfFile(it) else null }
+    /**
+     * `dataWithContentsOfFile` answers nil for a file that is not there and for one it could not read alike, and only
+     * the first of those may come back as null: a file reported as missing is a deletion as far as sync is concerned.
+     */
+    private fun readData(directory: StorageDirectory, name: String): NSData? {
+        val path = filePath(directory, name)
+        if (!fileManager.fileExistsAtPath(path)) return null
+        return memScoped {
+            val error = alloc<ObjCObjectVar<NSError?>>()
+            NSData.dataWithContentsOfFile(path, options = 0u, error = error.ptr)
+                ?: throw LibraryStorageException("Could not read \"$name\": ${error.value?.localizedDescription}")
+        }
+    }
 
     private fun filePath(directory: StorageDirectory, name: String): String {
         requireValidFileName(name)

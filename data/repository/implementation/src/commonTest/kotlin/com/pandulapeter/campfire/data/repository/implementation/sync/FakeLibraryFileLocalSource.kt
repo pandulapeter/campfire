@@ -13,9 +13,13 @@ import com.pandulapeter.campfire.data.model.domain.LibraryFile
 import com.pandulapeter.campfire.data.model.domain.LibraryFileKind
 import com.pandulapeter.campfire.data.source.local.api.LibraryFileLocalSource
 
-/** The library held in memory, for running [SyncEngine] against. */
+/**
+ * The library held in memory, for running [SyncEngine] against. [onRead] runs before a read answers, which is where a
+ * test makes a file that is there impossible to read.
+ */
 internal class FakeLibraryFileLocalSource(
     files: Map<SyncKey, ByteArray> = emptyMap(),
+    var onRead: (SyncKey) -> Unit = {},
 ) : LibraryFileLocalSource {
 
     val files = files.toMutableMap()
@@ -24,7 +28,11 @@ internal class FakeLibraryFileLocalSource(
         LibraryFile(kind = key.kind, name = key.name, size = bytes.size.toLong(), lastModified = 0)
     }
 
-    override suspend fun readLibraryFile(kind: LibraryFileKind, name: String) = files[SyncKey(kind = kind, name = name)]
+    override suspend fun readLibraryFile(kind: LibraryFileKind, name: String): ByteArray? {
+        val key = SyncKey(kind = kind, name = name)
+        onRead(key)
+        return files[key]
+    }
 
     override suspend fun writeLibraryFile(kind: LibraryFileKind, name: String, bytes: ByteArray) {
         files[SyncKey(kind = kind, name = name)] = bytes

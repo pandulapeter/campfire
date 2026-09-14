@@ -24,7 +24,11 @@ interface LibraryFileLocalSource {
     /** Every song and setlist file in the library. Files with an unknown extension are left out. */
     suspend fun loadLibraryFiles(): List<LibraryFile>
 
-    /** Null if the file does not exist. */
+    /**
+     * Null if the file does not exist, and only then: a file that is there but cannot be read throws
+     * [LibraryStorageException]. Sync is why the two must never be confused - a file reported as missing is planned
+     * as a deletion, and that deletion reaches every other device.
+     */
     suspend fun readLibraryFile(kind: LibraryFileKind, name: String): ByteArray?
 
     /** Creates the file or overwrites it. */
@@ -39,3 +43,10 @@ interface LibraryFileLocalSource {
 
     suspend fun deleteLibraryFile(kind: LibraryFileKind, name: String)
 }
+
+/**
+ * A library file that is there but could not be read or written: data protection before the first unlock, a file
+ * being replaced by another app in the middle of a read, a permission that was taken away. Thrown instead of being
+ * passed off as a missing file, which a caller would act on - see [LibraryFileLocalSource.readLibraryFile].
+ */
+class LibraryStorageException(message: String, cause: Throwable? = null) : Exception(message, cause)

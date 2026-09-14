@@ -24,6 +24,7 @@ import com.pandulapeter.campfire.data.repository.api.SyncRepository
 import com.pandulapeter.campfire.data.repository.implementation.sync.SyncEngine
 import com.pandulapeter.campfire.data.repository.implementation.sync.SyncIndexDocument
 import com.pandulapeter.campfire.data.source.local.api.LibraryFileLocalSource
+import com.pandulapeter.campfire.data.source.local.api.LibraryStorageException
 import com.pandulapeter.campfire.data.source.local.api.SyncStateLocalSource
 import com.pandulapeter.campfire.data.source.remote.api.PendingAuthorizationStore
 import com.pandulapeter.campfire.data.source.remote.api.SyncAuthenticator
@@ -439,6 +440,7 @@ internal class SyncRepositoryImpl(
     private fun Throwable.toFailureReason() = when (this) {
         is SyncAuthorizationException -> SyncFailureReason.AUTHORIZATION
         is SyncNetworkException -> SyncFailureReason.NETWORK
+        is LibraryStorageException -> SyncFailureReason.STORAGE
         else -> SyncFailureReason.UNKNOWN
     }
 

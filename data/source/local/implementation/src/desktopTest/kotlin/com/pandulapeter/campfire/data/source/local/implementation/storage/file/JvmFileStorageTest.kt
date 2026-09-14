@@ -9,6 +9,7 @@
  */
 package com.pandulapeter.campfire.data.source.local.implementation.storage.file
 
+import com.pandulapeter.campfire.data.source.local.api.LibraryStorageException
 import kotlinx.coroutines.runBlocking
 import java.io.File
 import java.nio.file.Files
@@ -109,6 +110,19 @@ class JvmFileStorageTest {
         assertNull(fileStorage.readBytes(StorageDirectory.SONGS, "missing.cho"))
         assertFalse(fileStorage.exists(StorageDirectory.SONGS, "missing.cho"))
         assertEquals(emptyList(), fileStorage.list(StorageDirectory.SONGS))
+    }
+
+    @Test
+    fun `reports a file it cannot read as a failure rather than as missing`() = runBlocking {
+        fileStorage.writeText(StorageDirectory.SONGS, "a.cho", "content")
+        val file = root.walk().first { it.name == "a.cho" }
+        file.setReadable(false)
+        // Permissions mean nothing to a superuser, and the case cannot be set up there.
+        if (file.canRead()) return@runBlocking
+
+        assertFailsWith<LibraryStorageException> { fileStorage.readText(StorageDirectory.SONGS, "a.cho") }
+        assertFailsWith<LibraryStorageException> { fileStorage.readBytes(StorageDirectory.SONGS, "a.cho") }
+        file.setReadable(true)
     }
 
     @Test

@@ -9,6 +9,7 @@
  */
 package com.pandulapeter.campfire.data.source.local.implementation.storage.file
 
+import com.pandulapeter.campfire.data.source.local.api.LibraryStorageException
 
 /** The folders the app keeps its data in. Each maps to one platform directory, created on first use. */
 enum class StorageDirectory {
@@ -49,16 +50,16 @@ interface FileStorage {
 
     suspend fun exists(directory: StorageDirectory, name: String): Boolean
 
-    /** Null if the file does not exist. */
+    /** Null if the file does not exist; one that exists and cannot be read throws [LibraryStorageException]. */
     suspend fun readText(directory: StorageDirectory, name: String): String?
 
-    /** Null if the file does not exist. */
+    /** Null if the file does not exist; one that exists and cannot be read throws [LibraryStorageException]. */
     suspend fun readBytes(directory: StorageDirectory, name: String): ByteArray?
 
-    /** Creates the file or overwrites it, encoded as UTF-8. */
+    /** Creates the file or overwrites it, encoded as UTF-8. Throws [LibraryStorageException] if it cannot. */
     suspend fun writeText(directory: StorageDirectory, name: String, text: String)
 
-    /** Creates the file or overwrites it. */
+    /** Creates the file or overwrites it. Throws [LibraryStorageException] if it cannot. */
     suspend fun writeBytes(directory: StorageDirectory, name: String, bytes: ByteArray)
 
     /** Does nothing if the file does not exist. */

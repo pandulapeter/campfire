@@ -30,6 +30,12 @@ holds the `@Module @ComponentScan object DataLocalSourceModule`, and every local
     nothing outside the page can remove a directory from the origin private file system.
   - Every `catch (Exception)` around a read rethrows `CancellationException` first: a scan that was cancelled is not
     a library of unreadable songs.
+  - A read answers null for a file that is **not there** and for nothing else. A file that is there and cannot be
+    read or written throws `LibraryStorageException` (from `:data:source:local:api`) on every platform: iOS asks
+    `dataWithContentsOfFile` for its `NSError` rather than taking its nil as absence, the JVM wraps the `IOException`,
+    and OPFS folds only a `NotFoundError` into null. Sync is why: a file reported as missing is planned as a deletion,
+    and that deletion reaches every other device. The song scan skips such a song with a log line; a sync run stops
+    and reports a storage failure.
   - iOS splits the two: the library goes to the documents directory, where the Files app can reach it, and the
     preferences to application support, where it cannot.
 - **`storage/secret/SecretStore.kt`** is where the sync credentials go, and nothing else: a refresh token is a

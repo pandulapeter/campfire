@@ -9,6 +9,7 @@
  */
 package com.pandulapeter.campfire.data.source.local.implementation.storage.file
 
+import com.pandulapeter.campfire.data.source.local.api.LibraryStorageException
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.IO
 import kotlinx.coroutines.withContext
@@ -48,19 +49,19 @@ internal class JvmFileStorage(private val root: File) : FileStorage {
     }
 
     override suspend fun readText(directory: StorageDirectory, name: String) = withContext(Dispatchers.IO) {
-        file(directory, name).let { if (it.isFile) it.readText().withoutByteOrderMark() else null }
+        file(directory, name).let { if (it.isFile) failingAsStorage(name) { it.readText().withoutByteOrderMark() } else null }
     }
 
     override suspend fun readBytes(directory: StorageDirectory, name: String) = withContext(Dispatchers.IO) {
-        file(directory, name).let { if (it.isFile) it.readBytes() else null }
+        file(directory, name).let { if (it.isFile) failingAsStorage(name) { it.readBytes() } else null }
     }
 
     override suspend fun writeText(directory: StorageDirectory, name: String, text: String) = withContext(Dispatchers.IO) {
-        writeAtomically(directory, name) { it.writeText(text) }
+        failingAsStorage(name) { writeAtomically(directory, name) { it.writeText(text) } }
     }
 
     override suspend fun writeBytes(directory: StorageDirectory, name: String, bytes: ByteArray) = withContext(Dispatchers.IO) {
-        writeAtomically(directory, name) { it.writeBytes(bytes) }
+        failingAsStorage(name) { writeAtomically(directory, name) { it.writeBytes(bytes) } }
     }
 
     override suspend fun delete(directory: StorageDirectory, name: String) = withContext(Dispatchers.IO) {
@@ -86,6 +87,13 @@ internal class JvmFileStorage(private val root: File) : FileStorage {
         } finally {
             temporaryFile.delete()
         }
+    }
+
+    /** A file that is there but will not be read or written is a failure of the storage, not of whoever asked. */
+    private inline fun <T> failingAsStorage(name: String, operation: () -> T): T = try {
+        operation()
+    } catch (exception: IOException) {
+        throw LibraryStorageException("Could not access \"$name\".", exception)
     }
 
     private fun file(directory: StorageDirectory, name: String): File {

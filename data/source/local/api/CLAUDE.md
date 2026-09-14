@@ -29,7 +29,9 @@ platform types.
 - `LibraryFileLocalSource` — the library as *bytes*, which is what sync moves around. Deliberately does not look
   inside the files at all, so a song Campfire cannot parse still travels between devices unchanged.
   `writeLibraryFileToFreeName` is how an incoming copy of a file that changed on both sides lands next to the local
-  one, numbered ` (2)` rather than with the `_2` of a name the app derived itself.
+  one, numbered ` (2)` rather than with the `_2` of a name the app derived itself. `readLibraryFile` answers null only
+  for a file that is not there; one that is there and cannot be read throws `LibraryStorageException`, since sync
+  would carry a missing file out as a deletion on every device.
 - `SyncStateLocalSource` — the two documents sync remembers between runs, kept next to the preferences and so outside
   `library/`: neither is the user's data and an export must not carry them. Both are **opaque strings** here — what
   is in them belongs to the layers that write them (the credentials to the remote source, the index to the

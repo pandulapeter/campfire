@@ -12,6 +12,7 @@ package com.pandulapeter.campfire.data.repository.implementation.sync
 import com.pandulapeter.campfire.data.model.domain.LibraryFileKind
 import com.pandulapeter.campfire.data.model.domain.SyncDeletionPolicy
 import com.pandulapeter.campfire.data.model.domain.SyncProviderId
+import com.pandulapeter.campfire.data.source.local.api.LibraryStorageException
 import com.pandulapeter.campfire.data.source.remote.api.SyncNetworkException
 import com.pandulapeter.campfire.data.source.remote.api.hashing.localContentHash
 import kotlinx.coroutines.test.runTest
@@ -303,6 +304,31 @@ class SyncEngineTest {
 
         assertEquals(2, assertIs<SyncEngine.Result.Completed>(result).summary.deletedLocally)
         assertEquals(8, local.files.size)
+    }
+
+    @Test
+    fun `a file that is there but cannot be read stops the run instead of being deleted remotely`() = runTest {
+        val library = librarySongs(3)
+        val local = FakeLibraryFileLocalSource(
+            files = library,
+            onRead = { key -> if (key == song(2)) throw LibraryStorageException("Locked") },
+        )
+        val provider = FakeSyncProvider(files = library)
+
+        assertFailsWith<LibraryStorageException> {
+            SyncEngine(local).synchronize(
+                provider = provider,
+                document = indexOf(*library.toList().toTypedArray()).let { document ->
+                    document.copy(entries = document.entries.mapValues { (_, entry) -> entry.copy(remoteRevision = "r1") })
+                },
+                accountId = ACCOUNT_ID,
+                onProgress = {},
+                onIndexChanged = {},
+                deletionPolicy = SyncDeletionPolicy.ASK,
+            )
+        }
+
+        assertEquals(library.keys, provider.files.keys)
     }
 
     private companion object {

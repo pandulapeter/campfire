@@ -11,6 +11,7 @@
 
 package com.pandulapeter.campfire.data.source.local.implementation.storage.file
 
+import com.pandulapeter.campfire.data.source.local.api.LibraryStorageException
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.await
 import kotlinx.coroutines.sync.Mutex
@@ -21,6 +22,7 @@ import org.khronos.webgl.toByteArray
 import org.khronos.webgl.toInt8Array
 import org.koin.core.annotation.Single
 import kotlin.js.ExperimentalWasmJsInterop
+import kotlin.js.JsException
 import kotlin.js.Promise
 
 /**
@@ -69,20 +71,24 @@ internal class OpfsFileStorage : FileStorage {
     }
 
     override suspend fun readText(directory: StorageDirectory, name: String) = withContext(Dispatchers.Default) {
-        fileHandle(directory, name, create = false)?.let { readFileText(it).await()?.toString()?.withoutByteOrderMark() }
+        failingAsStorage(name) {
+            fileHandle(directory, name, create = false)?.let { readFileText(it).await()?.toString()?.withoutByteOrderMark() }
+        }
     }
 
     override suspend fun readBytes(directory: StorageDirectory, name: String) = withContext(Dispatchers.Default) {
-        fileHandle(directory, name, create = false)?.let { readFileBytes(it).await()?.toByteArray() }
+        failingAsStorage(name) {
+            fileHandle(directory, name, create = false)?.let { readFileBytes(it).await()?.toByteArray() }
+        }
     }
 
     override suspend fun writeText(directory: StorageDirectory, name: String, text: String) = withContext(Dispatchers.Default) {
-        writeFileText(requireFileHandle(directory, name), text).await()
+        failingAsStorage(name) { writeFileText(requireFileHandle(directory, name), text).await() }
         Unit
     }
 
     override suspend fun writeBytes(directory: StorageDirectory, name: String, bytes: ByteArray) = withContext(Dispatchers.Default) {
-        writeFileBytes(requireFileHandle(directory, name), bytes.toInt8Array()).await()
+        failingAsStorage(name) { writeFileBytes(requireFileHandle(directory, name), bytes.toInt8Array()).await() }
         Unit
     }
 
@@ -90,6 +96,17 @@ internal class OpfsFileStorage : FileStorage {
         requireValidFileName(name)
         removeEntry(directoryHandle(directory), name).await()
         Unit
+    }
+
+    /**
+     * A rejected promise surfaces from `await` as a `JsException`, which says nothing a caller could tell apart from
+     * any other failure. Only a file that is not there is folded into null (see `getFileHandle`); everything else the
+     * browser refuses - a `NotAllowedError`, a file locked by a writable - is a file that exists and cannot be used.
+     */
+    private suspend fun <T> failingAsStorage(name: String, operation: suspend () -> T): T = try {
+        operation()
+    } catch (exception: JsException) {
+        throw LibraryStorageException("Could not access \"$name\".", exception)
     }
 
     private suspend fun requireFileHandle(directory: StorageDirectory, name: String) =
@@ -140,9 +157,9 @@ private fun opfsRoot(): Promise<JsAny?> = js("navigator.storage.getDirectory()")
 
 private fun getDirectoryHandle(parent: JsAny, name: String): Promise<JsAny?> = js("parent.getDirectoryHandle(name, { create: true })")
 
-/** Resolves to `null` instead of rejecting with a `NotFoundError` when the file is not there. */
+/** Resolves to `null` instead of rejecting with a `NotFoundError` when the file is not there, and rejects otherwise. */
 private fun getFileHandle(parent: JsAny, name: String, create: Boolean): Promise<JsAny?> =
-    js("parent.getFileHandle(name, { create: create }).catch(function () { return null; })")
+    js("parent.getFileHandle(name, { create: create }).catch(function (e) { if (e && e.name === 'NotFoundError') return null; throw e; })")
 
 /** Every file of the directory as name, size and last modification time, separated by control characters. */
 private fun listEntries(directory: JsAny): Promise<JsString?> = js(
