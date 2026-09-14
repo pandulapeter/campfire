@@ -15,6 +15,8 @@ import com.pandulapeter.campfire.data.model.domain.ImportResult
 import com.pandulapeter.campfire.data.repository.api.SetlistRepository
 import com.pandulapeter.campfire.data.repository.api.SongRepository
 import com.pandulapeter.campfire.domain.api.useCases.ImportFilesUseCase
+import kotlinx.coroutines.NonCancellable
+import kotlinx.coroutines.withContext
 import org.koin.core.annotation.Factory
 
 @Factory
@@ -34,54 +36,60 @@ class ImportFilesUseCaseImpl internal constructor(
         // here: a file that held several has no single name a setlist could have been pointing at.
         val storedSongFileNames = mutableMapOf<String, String>()
 
-        plan.songs.forEach { entry ->
-            when (entry.action(resolution)) {
-                Action.WRITE, Action.REPLACE -> {
-                    val song = songRepository.importSong(
-                        fileName = entry.fileName,
-                        text = entry.text,
-                        shouldReplace = entry.action(resolution) == Action.REPLACE,
-                    )
-                    importedSongFileNames += song.fileName
-                    entry.sourceFileName?.let { storedSongFileNames[it] = song.fileName }
-                }
-
-                // Already in the library, so the name it arrived under still points at it for the setlists below.
-                Action.DISREGARD -> {
-                    duplicateFileNames += entry.fileName
-                    entry.sourceFileName?.let { storedSongFileNames[it] = entry.fileName }
-                }
-
-                Action.LEAVE_ALONE -> entry.sourceFileName?.let { storedSongFileNames[it] = entry.fileName }
-            }
-        }
-
         val importedSetlistFileNames = mutableListOf<String>()
-        var priority = (setlistRepository.loadSetlistsIfNeeded().orEmpty().maxOfOrNull { it.priority } ?: -1) + 1
-        plan.setlists.forEach { entry ->
-            when (val action = entry.action(resolution)) {
-                Action.WRITE, Action.REPLACE -> importedSetlistFileNames += setlistRepository.importSetlist(
-                    setlist = entry.setlist.copy(
-                        priority = priority++,
-                        entries = entry.setlist.entries.map { setlistEntry ->
-                            setlistEntry.copy(songFileName = storedSongFileNames[setlistEntry.songFileName] ?: setlistEntry.songFileName)
-                        },
-                    ),
-                    shouldReplace = action == Action.REPLACE,
-                ).fileName
+        try {
+            plan.songs.forEach { entry ->
+                when (entry.action(resolution)) {
+                    Action.WRITE, Action.REPLACE -> {
+                        val song = songRepository.importSong(
+                            fileName = entry.fileName,
+                            text = entry.text,
+                            shouldReplace = entry.action(resolution) == Action.REPLACE,
+                        )
+                        importedSongFileNames += song.fileName
+                        entry.sourceFileName?.let { storedSongFileNames[it] = song.fileName }
+                    }
 
-                Action.DISREGARD -> duplicateFileNames += entry.fileName
-                Action.LEAVE_ALONE -> Unit
+                    // Already in the library, so the name it arrived under still points at it for the setlists below.
+                    Action.DISREGARD -> {
+                        duplicateFileNames += entry.fileName
+                        entry.sourceFileName?.let { storedSongFileNames[it] = entry.fileName }
+                    }
+
+                    Action.LEAVE_ALONE -> entry.sourceFileName?.let { storedSongFileNames[it] = entry.fileName }
+                }
             }
-        }
 
-        // One read of the directory at the end rather than one cache update per file, which for a big archive would
-        // cost more than the import itself.
-        if (importedSongFileNames.isNotEmpty()) {
-            songRepository.rescan()
-        }
-        if (importedSetlistFileNames.isNotEmpty()) {
-            setlistRepository.rescan()
+            var priority = (setlistRepository.loadSetlistsIfNeeded().orEmpty().maxOfOrNull { it.priority } ?: -1) + 1
+            plan.setlists.forEach { entry ->
+                when (val action = entry.action(resolution)) {
+                    Action.WRITE, Action.REPLACE -> importedSetlistFileNames += setlistRepository.importSetlist(
+                        setlist = entry.setlist.copy(
+                            priority = priority++,
+                            entries = entry.setlist.entries.map { setlistEntry ->
+                                setlistEntry.copy(songFileName = storedSongFileNames[setlistEntry.songFileName] ?: setlistEntry.songFileName)
+                            },
+                        ),
+                        shouldReplace = action == Action.REPLACE,
+                    ).fileName
+
+                    Action.DISREGARD -> duplicateFileNames += entry.fileName
+                    Action.LEAVE_ALONE -> Unit
+                }
+            }
+        } finally {
+            // One read of the directory at the end rather than one cache update per file, which for a big archive
+            // would cost more than the import itself. It runs even when a write failed or the import was cancelled
+            // halfway, since the files written before that are on disk and would otherwise be missing from the lists
+            // until something else rescanned them.
+            withContext(NonCancellable) {
+                if (importedSongFileNames.isNotEmpty()) {
+                    songRepository.rescan()
+                }
+                if (importedSetlistFileNames.isNotEmpty()) {
+                    setlistRepository.rescan()
+                }
+            }
         }
         return ImportResult(
             importedSongFileNames = importedSongFileNames,
