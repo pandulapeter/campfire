@@ -11,6 +11,7 @@ package com.pandulapeter.campfire.data.source.remote.implementation.dropbox
 
 import com.pandulapeter.campfire.data.model.domain.LibraryFileKind
 import com.pandulapeter.campfire.data.source.local.api.SyncStateLocalSource
+import com.pandulapeter.campfire.data.source.remote.api.SyncAuthorizationException
 import com.pandulapeter.campfire.data.source.remote.api.SyncNetworkException
 import com.pandulapeter.campfire.data.source.remote.api.model.RemoteWriteResult
 import com.pandulapeter.campfire.data.source.remote.implementation.auth.SyncCredentialsStore
@@ -95,6 +96,44 @@ class DropboxRequestTest {
         assertFailsWith<SyncNetworkException> { provider.list() }
     }
 
+    /** A token the device's clock still believes in can be one Dropbox has stopped accepting. */
+    @Test
+    fun `refreshes the token once when dropbox refuses it`() = runTest {
+        val authorizations = mutableListOf<String?>()
+        var tokenRequestCount = 0
+        val provider = provider { request ->
+            if (request.url.toString() == TOKEN_URL) {
+                tokenRequestCount++
+                respondJson("""{"access_token":"renewed","expires_in":14400}""")
+            } else {
+                authorizations += request.headers["Authorization"]
+                if (authorizations.size == 1) {
+                    respondJson("""{"error_summary":"expired_access_token/..."}""", HttpStatusCode.Unauthorized)
+                } else {
+                    respondJson("""{"entries":[],"cursor":"","has_more":false}""")
+                }
+            }
+        }
+        provider.list()
+        assertEquals(expected = 1, actual = tokenRequestCount)
+        assertEquals(expected = listOf<String?>("Bearer access", "Bearer renewed"), actual = authorizations)
+    }
+
+    @Test
+    fun `believes a refusal of a token it has just refreshed`() = runTest {
+        var tokenRequestCount = 0
+        val provider = provider { request ->
+            if (request.url.toString() == TOKEN_URL) {
+                tokenRequestCount++
+                respondJson("""{"access_token":"renewed","expires_in":14400}""")
+            } else {
+                respondJson("""{"error_summary":"invalid_access_token/..."}""", HttpStatusCode.Unauthorized)
+            }
+        }
+        assertFailsWith<SyncAuthorizationException> { provider.list() }
+        assertEquals(expected = 1, actual = tokenRequestCount)
+    }
+
     private fun provider(handler: suspend MockRequestHandleScope.(HttpRequestData) -> HttpResponseData) = DropboxSyncProvider(
         httpClient = HttpClient(MockEngine(handler)),
         credentialsStore = SyncCredentialsStore(ConnectedStorage),
@@ -119,5 +158,6 @@ class DropboxRequestTest {
 
     private companion object {
         const val APP_KEY = "test-app-key"
+        const val TOKEN_URL = "https://api.dropboxapi.com/oauth2/token"
     }
 }

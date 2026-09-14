@@ -291,11 +291,22 @@ internal class DropboxSyncProvider(
      * the wait doubles from two seconds up to half a minute, so that an outage of a minute or so is sat out rather than
      * ending the run. The jitter is there because several transfers are in flight at once and would otherwise all
      * come back at the same moment and be limited again together.
+     *
+     * A 401 is answered once with a refresh before it is believed. Whether the stored token is still good is worked
+     * out from the device's clock, and a clock that was wrong when the token was issued keeps saying "fresh" long after
+     * Dropbox has stopped accepting it - while the refresh token that would fix that is perfectly good. [block] asks
+     * for the access token itself, so running it again is what sends the new one; a second 401 is the real refusal.
      */
     private suspend fun request(block: suspend () -> HttpResponse): HttpResponse {
         var attempt = 0
+        var hasRefreshed = false
         while (true) {
             val response = transport { block() }
+            if (response.status == HttpStatusCode.Unauthorized && !hasRefreshed) {
+                hasRefreshed = true
+                accessToken(forceRefresh = true)
+                continue
+            }
             val retryAfterMillis = response.retryAfterMillis(attempt)
             if (retryAfterMillis == null || attempt >= MAXIMUM_RETRIES) return response
             attempt++
@@ -355,15 +366,19 @@ internal class DropboxSyncProvider(
     }
 
     /**
-     * The stored access token, renewed first if it is about to expire. The whole check and renewal happen inside one
-     * [SyncCredentialsStore.update], so that the several requests of a sync run cannot each start a refresh of their
-     * own and have the last one to finish overwrite the tokens the others are using.
+     * The stored access token, renewed first if it is about to expire, or regardless when [forceRefresh] says that
+     * Dropbox has already refused it. The whole check and renewal happen inside one [SyncCredentialsStore.update], so
+     * that the several requests of a sync run cannot each start a refresh of their own and have the last one to finish
+     * overwrite the tokens the others are using.
      */
-    private suspend fun accessToken(): String = credentialsStore.update { credentials ->
+    private suspend fun accessToken(forceRefresh: Boolean = false): String = credentialsStore.update { credentials ->
         if (credentials == null || credentials.providerId != id.id) {
             throw SyncAuthorizationException("Dropbox is not connected.")
         }
-        if (credentials.accessToken.isNotEmpty() && Clock.System.now().toEpochMilliseconds() < credentials.expiresAt - EXPIRY_MARGIN_MILLIS) {
+        if (!forceRefresh &&
+            credentials.accessToken.isNotEmpty() &&
+            Clock.System.now().toEpochMilliseconds() < credentials.expiresAt - EXPIRY_MARGIN_MILLIS
+        ) {
             return@update credentials to credentials.accessToken
         }
         val token = exchange("grant_type=refresh_token&refresh_token=${credentials.refreshToken.urlEncode()}&client_id=${appKey.urlEncode()}")
