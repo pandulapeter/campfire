@@ -35,6 +35,7 @@ import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableIntStateOf
@@ -90,7 +91,9 @@ internal fun BoxScope.FastScroller(
     val state = remember(gridState) { FastScrollerState(gridState, minThumbHeight) }
     val interactionSource = remember { MutableInteractionSource() }
     val isHovered by interactionSource.collectIsHoveredAsState()
-    val isVisible = state.isScrollable
+    // Both derived, since what they are worked out from changes on every scrolled pixel and what they come to only
+    // once in a while: read directly, they would recompose the scroller for the whole length of every scroll.
+    val isVisible by remember(state) { derivedStateOf { state.isScrollable } }
     val alpha by animateFloatAsState(
         targetValue = if (isVisible) 1f else 0f,
         animationSpec = MaterialTheme.motionScheme.defaultEffectsSpec(),
@@ -111,7 +114,7 @@ internal fun BoxScope.FastScroller(
         fraction = dragProgress,
     )
     val trackColor = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = TRACK_ALPHA * hoverProgress)
-    val label = labelForItem(gridState.firstVisibleItemIndex)
+    val label by remember(gridState, labelForItem) { derivedStateOf { labelForItem(gridState.firstVisibleItemIndex) } }
 
     Box(
         modifier = modifier
