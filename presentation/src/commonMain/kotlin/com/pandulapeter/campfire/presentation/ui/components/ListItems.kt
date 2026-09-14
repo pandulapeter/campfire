@@ -153,12 +153,12 @@ internal fun SongListItem(
 
         !song.hasChords -> SongListItemNote(
             text = stringResource(Res.string.songs_lyrics_only),
-            color = MaterialTheme.colorScheme.onSurfaceVariant,
+            isEmphasized = false,
         )
 
         !key.isNullOrBlank() -> SongListItemNote(
             text = key,
-            color = MaterialTheme.colorScheme.primary,
+            isEmphasized = true,
             description = stringResource(Res.string.songs_key, key),
         )
 
@@ -201,7 +201,9 @@ internal fun SongListItem(
                             }
                             // The note changes under the reader: a transposition renames the key, and lyrics only
                             // mode takes the place away altogether. So it is crossfaded where it stands and the line
-                            // closes up around it, rather than the row being redrawn around the change.
+                            // closes up around it, rather than the row being redrawn around the change. The color is
+                            // resolved inside rather than carried by the state, since the scheme is interpolated on
+                            // every frame of a theme change and each of those frames would start another crossfade.
                             AnimatedContent(
                                 targetState = note,
                                 transitionSpec = { fadeIn() togetherWith fadeOut() },
@@ -226,7 +228,7 @@ internal fun SongListItem(
                                             modifier = Modifier.semantics { contentDescription = currentNote.description },
                                             text = currentNote.text,
                                             style = MaterialTheme.typography.labelMedium,
-                                            color = currentNote.color,
+                                            color = if (currentNote.isEmphasized) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant,
                                         )
                                     }
                                 }
@@ -252,11 +254,12 @@ internal fun SongListItem(
  * Never both, since the viewer names no key for a song there is nothing to play and a row that named one would be
  * contradicting the screen it opens.
  *
+ * @param isEmphasized Whether the note is drawn in the accent color, which is what a key is.
  * @param description What the note is read out as, since a key is two letters that say nothing on their own.
  */
 private data class SongListItemNote(
     val text: String,
-    val color: Color,
+    val isEmphasized: Boolean,
     val description: String = text,
 )
 
