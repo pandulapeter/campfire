@@ -13,6 +13,8 @@ import com.pandulapeter.campfire.data.model.domain.Setlist
 import com.pandulapeter.campfire.data.repository.api.SetlistRepository
 import com.pandulapeter.campfire.data.repository.implementation.base.BaseLocalDataRepository
 import com.pandulapeter.campfire.data.source.local.api.SetlistLocalSource
+import kotlinx.coroutines.sync.Mutex
+import kotlinx.coroutines.sync.withLock
 import org.koin.core.annotation.Single
 
 @Single
@@ -21,6 +23,13 @@ internal class SetlistRepositoryImpl(
 ) : BaseLocalDataRepository<List<Setlist>>(), SetlistRepository {
 
     override val setlists = dataState
+
+    /**
+     * Held from reading a setlist to having its write in the cache, so that the next change reads what this one
+     * wrote. The cache is the one place that is right straight after a write: anything observing [setlists] only
+     * catches up a few hops later, and a file write is plenty of time for a second tap to land in between.
+     */
+    private val writeMutex = Mutex()
 
     override suspend fun loadDataFromLocalSource() = setlistLocalSource.loadSetlists()
 
@@ -39,6 +48,10 @@ internal class SetlistRepositoryImpl(
     override suspend fun saveSetlist(setlist: Setlist) {
         setlistLocalSource.saveSetlist(setlist)
         updateData { current -> current.orEmpty().filterNot { it.fileName == setlist.fileName } + setlist }
+    }
+
+    override suspend fun updateSetlist(fileName: String, transform: (Setlist) -> Setlist) = writeMutex.withLock {
+        loadDataIfNeeded()?.firstOrNull { it.fileName == fileName }?.let(transform)?.also { saveSetlist(it) }
     }
 
     override suspend fun renameSetlist(setlist: Setlist, title: String): Setlist {

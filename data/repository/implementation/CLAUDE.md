@@ -40,6 +40,9 @@ fails, while a `Loading` would tell whoever reads this state for "nothing has be
 long as the storage takes to answer. A cancelled read is not a failed one: it is rethrown and leaves the cached data as it was. A
 `rescan()` — the refresh action, and the last step of every import — is the only thing that walks the directory again.
 
+- `SetlistRepositoryImpl.updateSetlist` holds a lock from reading the setlist out of its own cache to having the
+  write back in that cache, so a second change to the same setlist reads what the first one wrote. The cache is the
+  one place that is current straight after a write; anything observing `setlists` catches up a few hops later.
 - `SongContentRepositoryImpl` is not a `BaseLocalDataRepository`: it is a keyed in-memory cache of song *texts*, so
   paging through a setlist re-reads nothing. Bulk readers (the library export) pass `shouldCache = false` so that
   walking the whole library does not leave all of it in memory. The editor invalidates one entry after a save. The

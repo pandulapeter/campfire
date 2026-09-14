@@ -14,7 +14,10 @@ Repository interfaces only. Consumed by `:domain:implementation`; implemented by
 - `SongRepository` — an observable `songs: Flow<DataState<List<Song>>>` plus `loadSongsIfNeeded()`, `rescan()` (re-read
   the folder, which is what a refresh and the end of an import do), `saveSong`, `createSong`, `importFileName`, `importSong`, `deleteSong`.
 - `SetlistRepository` — the same shape over `*.setlist.json`, plus `parseSetlist` / `loadSetlistDocument` for the export
-  and import paths.
+  and import paths. A setlist that is already in the library is changed through `updateSetlist` (read the latest,
+  transform, write, one change at a time), never by saving a copy the caller read earlier: that copy lags a write
+  behind, and two quick changes built on it would undo each other. `saveSetlist` is for a setlist the caller owns as
+  a whole — one just created, copied or renamed.
 - `SongContentRepository` — the *text* of the songs that have been opened, cached in memory so that paging through a
   setlist does not re-read the same files. Deliberately not a `DataState` flow: it is a lookup, not a screen's state.
 - `UserPreferencesRepository` — one document, read once and written whole. `hasStoredUserPreferences` is the one

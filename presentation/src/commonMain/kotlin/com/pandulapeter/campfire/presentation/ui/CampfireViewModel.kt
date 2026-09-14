@@ -69,6 +69,7 @@ import com.pandulapeter.campfire.domain.api.useCases.SetChordProTagUseCase
 import com.pandulapeter.campfire.domain.api.useCases.SynchronizeLibraryUseCase
 import com.pandulapeter.campfire.domain.api.useCases.TransposeChordProTextUseCase
 import com.pandulapeter.campfire.domain.api.useCases.TransposeChordProUseCase
+import com.pandulapeter.campfire.domain.api.useCases.UpdateSetlistUseCase
 import com.pandulapeter.campfire.presentation.ui.components.ScrollPosition
 import com.pandulapeter.campfire.presentation.ui.components.SearchState
 import com.pandulapeter.campfire.presentation.ui.navigation.CampfireDestination
@@ -96,8 +97,6 @@ import kotlinx.coroutines.flow.runningFold
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.sync.Mutex
-import kotlinx.coroutines.sync.withLock
 import kotlinx.coroutines.withContext
 import kotlin.math.ceil
 import kotlin.math.floor
@@ -123,6 +122,7 @@ class CampfireViewModel(
     private val createSetlist: CreateSetlistUseCase,
     private val saveSetlist: SaveSetlistUseCase,
     private val editSetlist: EditSetlistUseCase,
+    private val updateSetlist: UpdateSetlistUseCase,
     private val renameSongFile: RenameSongFileUseCase,
     private val deleteSetlist: DeleteSetlistUseCase,
     private val saveSongContent: SaveSongContentUseCase,
@@ -275,9 +275,6 @@ class CampfireViewModel(
     val syncProviders: List<SyncProviderId> = getSyncProviders()
 
     val setlists = screenData.map { it.data?.setlists.orEmpty() }.asState(emptyList())
-
-    /** What keeps the writes of [setSetlistSongs] from overtaking each other. */
-    private val setlistSongsMutex = Mutex()
 
     /**
      * The file names of every song that is in at least one setlist, which is what decides whether the "add to
@@ -842,11 +839,9 @@ class CampfireViewModel(
                 )
             }
         } else {
-            setlists.value.firstOrNull { it.fileName == setlistFileName }?.let { setlist ->
-                saveSetlist(
-                    setlist.copy(
-                        entries = setlist.entries.map { if (it.songFileName == songFileName) it.copy(transposition = clamped) else it }
-                    )
+            updateSetlist(setlistFileName) { setlist ->
+                setlist.copy(
+                    entries = setlist.entries.map { if (it.songFileName == songFileName) it.copy(transposition = clamped) else it }
                 )
             }
         }
@@ -1060,9 +1055,11 @@ class CampfireViewModel(
     }
 
     fun addSongToSetlist(songFileName: String, setlistFileName: String) = launchLibraryChange {
-        setlists.value.firstOrNull { it.fileName == setlistFileName }?.let { setlist ->
+        updateSetlist(setlistFileName) { setlist ->
             if (setlist.entries.none { it.songFileName == songFileName }) {
-                saveSetlist(setlist.copy(entries = listOf(Setlist.Entry(songFileName = songFileName)) + setlist.entries))
+                setlist.copy(entries = listOf(Setlist.Entry(songFileName = songFileName)) + setlist.entries)
+            } else {
+                setlist
             }
         }
     }
@@ -1074,17 +1071,17 @@ class CampfireViewModel(
      * so a toggle worked out from it would build each write on a setlist the previous tick had not reached yet and
      * lose that tick. The entries that stay are taken from the setlist itself, so their transpositions stay with them.
      *
-     * The writes are made one at a time, which is what makes them land in the order they were asked for, so the file
-     * ends up holding what the last tick left rather than whichever write happened to finish last.
+     * The writes go through [UpdateSetlistUseCase], which makes them one at a time and in the order they were asked
+     * for, so the file ends up holding what the last tick left rather than whichever write happened to finish last.
      *
-     * @param setlist What to write into while [setlists] has not caught up with a setlist that was created a moment ago.
+     * @param setlist What to write into while the library has not caught up with a setlist that was created a moment ago.
      */
     fun setSetlistSongs(setlist: Setlist, songFileNames: List<String>) = launchLibraryChange {
-        setlistSongsMutex.withLock {
-            val current = setlists.value.firstOrNull { it.fileName == setlist.fileName } ?: setlist
-            val entriesBySongFileName = current.entries.associateBy { it.songFileName }
-            saveSetlist(current.copy(entries = songFileNames.map { entriesBySongFileName[it] ?: Setlist.Entry(songFileName = it) }))
+        fun Setlist.withSongs(): Setlist {
+            val entriesBySongFileName = entries.associateBy { it.songFileName }
+            return copy(entries = songFileNames.map { entriesBySongFileName[it] ?: Setlist.Entry(songFileName = it) })
         }
+        updateSetlist(setlist.fileName) { it.withSongs() } ?: saveSetlist(setlist.withSongs())
     }
 
     /**
@@ -1107,7 +1104,7 @@ class CampfireViewModel(
 
     /** Archiving is the way a setlist that has been played is put away without the songs in it being lost. */
     fun setSetlistArchived(setlist: Setlist, isArchived: Boolean) = launchLibraryChange {
-        saveSetlist(setlist.copy(isArchived = isArchived))
+        updateSetlist(setlist.fileName) { it.copy(isArchived = isArchived) }
     }
 
     fun deleteSetlist(setlistFileName: String) = launchLibraryChange {
@@ -1116,32 +1113,28 @@ class CampfireViewModel(
 
     /** The transposition of the song travels in the entry, so removing it takes the transposition with it. */
     fun removeSongFromSetlist(songFileName: String, setlistFileName: String) = launchLibraryChange {
-        setlists.value.firstOrNull { it.fileName == setlistFileName }?.let { setlist ->
-            saveSetlist(setlist.copy(entries = setlist.entries.filterNot { it.songFileName == songFileName }))
-        }
+        updateSetlist(setlistFileName) { setlist -> setlist.copy(entries = setlist.entries.filterNot { it.songFileName == songFileName }) }
     }
 
     /**
-     * Writes the order a drag ended on, as one write rather than one per row the finger crossed: every move used to
-     * be worked out from [setlists], which only catches up once the previous write has been round tripped through
-     * the repository, so a quick drag had each move recomputed from an order one or more moves out of date.
+     * Writes the order a drag ended on, as one write rather than one per row the finger crossed: a move worked out
+     * from [setlists], which only catches up once the previous write has been round tripped through the repository,
+     * would be recomputed from an order one or more moves out of date.
      *
      * [songFileNames] is what the screen was showing, which is not necessarily the whole setlist. The entries the
      * filters hide cannot be dragged and must not be moved by a drag that could not see them, so the visible songs
      * are dealt back into the slots visible songs already occupied and everything else stays exactly where it is.
      */
     fun reorderSetlist(setlistFileName: String, songFileNames: List<String>) = launchLibraryChange {
-        setlists.value.firstOrNull { it.fileName == setlistFileName }?.let { setlist ->
+        updateSetlist(setlistFileName) { setlist ->
             val reordered = songFileNames.mapNotNull { songFileName ->
                 setlist.entries.firstOrNull { it.songFileName == songFileName }
             }.iterator()
             val movedSongFileNames = songFileNames.toSet()
-            saveSetlist(
-                setlist.copy(
-                    entries = setlist.entries.map { entry ->
-                        if (entry.songFileName in movedSongFileNames && reordered.hasNext()) reordered.next() else entry
-                    },
-                )
+            setlist.copy(
+                entries = setlist.entries.map { entry ->
+                    if (entry.songFileName in movedSongFileNames && reordered.hasNext()) reordered.next() else entry
+                },
             )
         }
     }

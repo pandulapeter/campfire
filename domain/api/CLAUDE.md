@@ -14,7 +14,7 @@ repositories. It exposes `:chordpro` as an `api` dependency, so the UI can rende
 the parser itself.
 
 Conventions: one interface per use case, a single `operator fun invoke(...)`, named `Get*` (observe a flow or read one
-value), `Load*` (trigger a read), `Save*` / `Create*` / `Rename*` / `Delete*` (change something), `Import*` / `Export*` for the file
+value), `Load*` (trigger a read), `Save*` / `Create*` / `Update*` / `Rename*` / `Delete*` (change something), `Import*` / `Export*` for the file
 paths, `Is*` for a question with a yes or no answer (`IsFirstRun`), or a verb for pure transforms (`NormalizeText`,
 `ParseChordPro`, `TransposeChordPro`, `TransposeChordProText`, `ConvertChordProNotation`).
 

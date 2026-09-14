@@ -26,8 +26,19 @@ interface SetlistRepository {
     /** Writes a new, empty setlist under a free file name and returns it. */
     suspend fun createSetlist(title: String, description: String, priority: Int): Setlist
 
-    /** Creates the file or overwrites it, and updates that one entry of the cached list. */
+    /**
+     * Creates the file or overwrites it, and updates that one entry of the cached list. For a setlist the caller owns
+     * as a whole (one it has just created, copied or renamed); a change to one that is already there goes through
+     * [updateSetlist].
+     */
     suspend fun saveSetlist(setlist: Setlist)
+
+    /**
+     * Changes one setlist as a single step: read the latest, transform, write. Every change to a setlist's entries
+     * goes through here, so two of them made in quick succession build on each other instead of on the same
+     * snapshot. Null when there is no such setlist.
+     */
+    suspend fun updateSetlist(fileName: String, transform: (Setlist) -> Setlist): Setlist?
 
     /**
      * See `SetlistLocalSource.renameSetlist`: saves the setlist under a new title and moves its file to match, so
