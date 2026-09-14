@@ -150,6 +150,23 @@ class SyncEngineTest {
         assertContentEquals(here, local.files[song(1)])
     }
 
+    @Test
+    fun `a library larger than one reading batch is read whole`() = runTest {
+        val local = FakeLibraryFileLocalSource(files = (1..200).associate { song(it) to "Song $it".encodeToByteArray() })
+        val provider = FakeSyncProvider()
+
+        val result = SyncEngine(local).synchronize(
+            provider = provider,
+            document = SyncIndexDocument(),
+            accountId = ACCOUNT_ID,
+            onProgress = {},
+            onIndexChanged = {},
+        )
+
+        assertEquals(200, result.summary.uploaded)
+        assertEquals(local.files.keys, provider.files.keys)
+    }
+
     private companion object {
         const val ACCOUNT_ID = "dropbox:someone@example.com"
 

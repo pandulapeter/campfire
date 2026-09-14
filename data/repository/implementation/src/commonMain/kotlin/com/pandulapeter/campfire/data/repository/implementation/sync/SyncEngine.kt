@@ -108,15 +108,19 @@ internal class SyncEngine(
 
     /** Reading and hashing every file is the slow part of the preparation, so the files are read in parallel. */
     private suspend fun readLocalStates(): List<LocalFileState> = coroutineScope {
+        // In batches for the same reason as the song scan in SongLocalSourceImpl: unbounded, a large library is
+        // thousands of open handles and all of its bytes in memory at once.
         libraryFileLocalSource.loadLibraryFiles()
-            .map { file ->
-                async {
-                    val key = SyncKey(kind = file.kind, name = file.name)
-                    libraryFileLocalSource.readLibraryFile(file.kind, file.name)
-                        ?.let { LocalFileState(key = key, hash = localContentHash(it)) }
-                }
+            .chunked(READ_BATCH_SIZE)
+            .flatMap { batch ->
+                batch.map { file ->
+                    async {
+                        val key = SyncKey(kind = file.kind, name = file.name)
+                        libraryFileLocalSource.readLibraryFile(file.kind, file.name)
+                            ?.let { LocalFileState(key = key, hash = localContentHash(it)) }
+                    }
+                }.awaitAll()
             }
-            .awaitAll()
             .filterNotNull()
     }
 
@@ -363,6 +367,9 @@ internal class SyncEngine(
 
     private companion object {
         const val MAXIMUM_PASSES = 2
+
+        /** How many library files are read and hashed at once while the run is preparing. */
+        const val READ_BATCH_SIZE = 64
 
         /**
          * Chosen for the round trip rather than for the CPU: the transfers are small text files and almost all of
