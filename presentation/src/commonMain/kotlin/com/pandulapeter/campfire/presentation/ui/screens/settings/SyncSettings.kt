@@ -47,6 +47,9 @@ import com.pandulapeter.campfire.presentation.resources.settings_sync_conflicts
 import com.pandulapeter.campfire.presentation.resources.settings_sync_connect_dropbox
 import com.pandulapeter.campfire.presentation.resources.settings_sync_connected_as
 import com.pandulapeter.campfire.presentation.resources.settings_sync_connecting
+import com.pandulapeter.campfire.presentation.resources.settings_sync_connection_failed_authorization
+import com.pandulapeter.campfire.presentation.resources.settings_sync_connection_failed_network
+import com.pandulapeter.campfire.presentation.resources.settings_sync_connection_failed_unknown
 import com.pandulapeter.campfire.presentation.resources.settings_sync_date_time
 import com.pandulapeter.campfire.presentation.resources.settings_sync_delete_locally
 import com.pandulapeter.campfire.presentation.resources.settings_sync_deletions_pending
@@ -100,14 +103,31 @@ internal fun LazyListScope.syncSettings(
         SyncMessage(modifier = listItemAnimation(listState), text = stringResource(Res.string.settings_sync_description))
     }
     when (syncState) {
-        SyncState.Disconnected -> item(key = "sync_connect") {
-            ActionListItem(
-                modifier = listItemAnimation(listState),
-                title = stringResource(Res.string.settings_sync_connect_dropbox),
-                icon = painterResource(Res.drawable.ic_cloud),
-                isEnabled = viewModel.syncProviders.contains(SyncProviderId.DROPBOX),
-                onClick = { viewModel.connectSyncProvider(SyncProviderId.DROPBOX, completionPage) },
-            )
+        SyncState.Disconnected, is SyncState.ConnectionFailed -> {
+            if (syncState is SyncState.ConnectionFailed) {
+                item(key = "sync_connection_failed") {
+                    SyncMessage(
+                        modifier = listItemAnimation(listState),
+                        text = stringResource(
+                            when (syncState.reason) {
+                                SyncFailureReason.NETWORK -> Res.string.settings_sync_connection_failed_network
+                                SyncFailureReason.AUTHORIZATION -> Res.string.settings_sync_connection_failed_authorization
+                                SyncFailureReason.STORAGE,
+                                SyncFailureReason.UNKNOWN -> Res.string.settings_sync_connection_failed_unknown
+                            }
+                        ),
+                    )
+                }
+            }
+            item(key = "sync_connect") {
+                ActionListItem(
+                    modifier = listItemAnimation(listState),
+                    title = stringResource(Res.string.settings_sync_connect_dropbox),
+                    icon = painterResource(Res.drawable.ic_cloud),
+                    isEnabled = viewModel.syncProviders.contains(SyncProviderId.DROPBOX),
+                    onClick = { viewModel.connectSyncProvider(SyncProviderId.DROPBOX, completionPage) },
+                )
+            }
         }
 
         is SyncState.Connecting -> {

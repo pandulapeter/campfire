@@ -126,7 +126,7 @@ internal class SyncRepositoryImpl(
         if (account == null) {
             // The credentials are there but the service will not say who they belong to, which only happens once
             // they have been revoked. Nothing is deleted here: the user is told, and disconnecting is their call.
-            _syncState.update { SyncState.Disconnected }
+            _syncState.update { SyncState.ConnectionFailed(connected.id, SyncFailureReason.AUTHORIZATION) }
             return disconnectedResult
         }
         val document = loadIndex()
@@ -165,7 +165,15 @@ internal class SyncRepositoryImpl(
                 is SyncAuthenticator.AuthorizationOutcome.Cancelled -> {
                     println("The authorization was cancelled: ${outcome.message}")
                     pendingAuthorizationStore.clearPendingAuthorization()
-                    _syncState.update { SyncState.Disconnected }
+                    // A message is the authenticator saying something went wrong on the way; without one, the user
+                    // simply closed the page, which needs no explaining.
+                    _syncState.update {
+                        if (outcome.message == null) {
+                            SyncState.Disconnected
+                        } else {
+                            SyncState.ConnectionFailed(providerId, SyncFailureReason.UNKNOWN)
+                        }
+                    }
                     false
                 }
             }
@@ -178,7 +186,7 @@ internal class SyncRepositoryImpl(
         } catch (exception: Exception) {
             println("Could not connect to $providerId: ${exception.message}")
             pendingAuthorizationStore.clearPendingAuthorization()
-            _syncState.update { SyncState.Disconnected }
+            _syncState.update { SyncState.ConnectionFailed(providerId, exception.toFailureReason()) }
             false
         }
     }
@@ -374,10 +382,22 @@ internal class SyncRepositoryImpl(
         val code = parameters["code"]
         val state = parameters["state"]
         return when {
-            provider == null -> fail("The redirect names a provider this build does not have.")
-            code == null -> fail("The service refused the authorization: ${parameters["error"].orEmpty()}")
+            provider == null -> fail(
+                providerId = pending.providerId,
+                reason = SyncFailureReason.UNKNOWN,
+                message = "The redirect names a provider this build does not have.",
+            )
+            code == null -> fail(
+                providerId = pending.providerId,
+                reason = SyncFailureReason.AUTHORIZATION,
+                message = "The service refused the authorization: ${parameters["error"].orEmpty()}",
+            )
             // The value the app generated has to come back untouched, or this redirect was not asked for by it.
-            state != pending.state -> fail("The redirect does not belong to the authorization that was started.")
+            state != pending.state -> fail(
+                providerId = pending.providerId,
+                reason = SyncFailureReason.UNKNOWN,
+                message = "The redirect does not belong to the authorization that was started.",
+            )
             else -> try {
                 val account = provider.completeAuthorization(
                     response = RemoteAuthorizationResponse(code = code, state = state),
@@ -395,14 +415,18 @@ internal class SyncRepositoryImpl(
                 }
                 true
             } catch (exception: Exception) {
-                fail("The authorization could not be completed: ${exception.message}")
+                fail(
+                    providerId = pending.providerId,
+                    reason = exception.toFailureReason(),
+                    message = "The authorization could not be completed: ${exception.message}",
+                )
             }
         }
     }
 
-    private fun fail(message: String): Boolean {
+    private fun fail(providerId: SyncProviderId, reason: SyncFailureReason, message: String): Boolean {
         println(message)
-        _syncState.update { SyncState.Disconnected }
+        _syncState.update { SyncState.ConnectionFailed(providerId, reason) }
         return false
     }
 

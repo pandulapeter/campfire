@@ -33,6 +33,14 @@ sealed interface SyncState {
 
     data object Disconnected : SyncState
 
+    /**
+     * Not connected, because the last attempt to connect went wrong rather than because nobody asked: the consent
+     * was refused, the redirect did not match, the code could not be exchanged or the stored credentials were turned
+     * down at start up. Offers what [Disconnected] offers, plus the reason - without it, all of that looks exactly
+     * like a button that did nothing.
+     */
+    data class ConnectionFailed(val providerId: SyncProviderId, val reason: SyncFailureReason) : SyncState
+
     /** The browser has been opened and the authorization has not come back yet. */
     data class Connecting(val providerId: SyncProviderId) : SyncState
 

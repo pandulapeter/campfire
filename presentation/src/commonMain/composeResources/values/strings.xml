@@ -267,6 +267,9 @@
     <string name="settings_sync_description">Keep the library the same on every device through a cloud folder you own. Campfire has no server: the files go straight between your devices and your own storage.</string>
     <string name="settings_sync_connect_dropbox">Connect Dropbox</string>
     <string name="settings_sync_connecting">Waiting for the browser…</string>
+    <string name="settings_sync_connection_failed_network">Could not reach the service. Check the internet connection and try again.</string>
+    <string name="settings_sync_connection_failed_authorization">Dropbox refused the connection.</string>
+    <string name="settings_sync_connection_failed_unknown">The connection did not go through.</string>
     <string name="settings_sync_connected_as">Connected as %1$s</string>
     <string name="settings_sync_disconnect">Disconnect</string>
     <string name="settings_sync_disconnect_confirmation">Disconnect %1$s? Campfire forgets the account and stops syncing. Nothing is removed from the library or from the cloud folder.</string>

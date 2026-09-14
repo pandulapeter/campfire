@@ -267,6 +267,9 @@
     <string name="settings_sync_description">Tartsd azonosan a könyvtárat minden eszközön egy saját felhőmappán keresztül. A Campfire-nek nincs szervere: a fájlok közvetlenül az eszközeid és a saját tárhelyed között mozognak.</string>
     <string name="settings_sync_connect_dropbox">Dropbox csatlakoztatása</string>
     <string name="settings_sync_connecting">Várakozás a böngészőre…</string>
+    <string name="settings_sync_connection_failed_network">A szolgáltatás nem érhető el. Ellenőrizd az internetkapcsolatot, és próbáld újra.</string>
+    <string name="settings_sync_connection_failed_authorization">A Dropbox elutasította a kapcsolódást.</string>
+    <string name="settings_sync_connection_failed_unknown">A kapcsolódás nem sikerült.</string>
     <string name="settings_sync_connected_as">Csatlakozva: %1$s</string>
     <string name="settings_sync_disconnect">Leválasztás</string>
     <string name="settings_sync_disconnect_confirmation">Leválasztod a következő fiókot: %1$s? A Campfire elfelejti a fiókot, és nem szinkronizál tovább. Sem a könyvtárból, sem a felhőmappából nem törlődik semmi.</string>
