@@ -26,13 +26,13 @@ are not deployed yet.
 
 ### Screenshots
 
+*These are from Campfire 1.x, which had a built-in online song library. Version 4 is a rewrite and looks nothing like
+them any more — new screenshots are on the way.*
+
 <img src="documentation/screenshots/01.png" width="20%" /> <img src="documentation/screenshots/02.png" width="20%" />
 <img src="documentation/screenshots/03.png" width="20%" /> <img src="documentation/screenshots/04.png" width="20%" />
 <img src="documentation/screenshots/05.png" width="20%" /> <img src="documentation/screenshots/06.png" width="20%" />
 <img src="documentation/screenshots/07.png" width="20%" /> <img src="documentation/screenshots/08.png" width="20%" />
-
-*These are from Campfire 1.x, which had a built-in online song library. Version 4 is a rewrite and looks nothing like
-them any more — new screenshots are on the way.*
 
 ### What it does
 
@@ -74,6 +74,8 @@ an empty library.
 
 ### To do
 - Rename setlist date sort, maybe expose a date for Setlists?
+- Flat and Sharp symbols don't always appear on web, depending on the browser
+- Editor close confirmation dialog and Save button enabled / disabled state should check for identity with the original file
 - Implement .cho (and other) file association
 - Songs: sort by year option
 - Implement sticky headers
