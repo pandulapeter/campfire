@@ -88,6 +88,38 @@ class DesktopSyncAuthenticatorTest {
         assertFalse(isPortOpen(), "The port should be released once the redirect has arrived.")
     }
 
+    /**
+     * Browsers connect twice for one navigation and may never write on the second connection. The one that arrives
+     * first must not be taken for the redirect, or the real one waits in the backlog until the idle one gives up.
+     */
+    @Test
+    fun `a connection that sends nothing does not keep the redirect from being read`() = runBlocking {
+        val authenticator = DesktopSyncAuthenticator { }
+        authenticator.prepareRedirectUri()
+        val authorization = async { authenticator.authorize("https://example.com/authorize", COMPLETION_PAGE) }
+        delay(300)
+        val idle = Socket("127.0.0.1", 53682)
+        delay(300)
+        Socket("127.0.0.1", 53682).use { socket ->
+            PrintWriter(socket.getOutputStream(), true).apply {
+                print("GET /?code=abc123&state=deadbeef HTTP/1.1\r\nHost: 127.0.0.1\r\n\r\n")
+                flush()
+            }
+            // The idle connection goes away the way a browser's does, which is what lets the listener move on to
+            // the one that has been waiting with the redirect on it.
+            idle.close()
+            socket.getInputStream().readBytes().decodeToString()
+        }.let { response ->
+            assertTrue(response.contains("A Campfire csatlakozott"), "The redirect was not answered with the completion page.")
+        }
+        val outcome = withTimeout(5_000) { authorization.await() }
+        assertEquals(
+            expected = SyncAuthenticator.AuthorizationOutcome.Received("http://127.0.0.1:53682/?code=abc123&state=deadbeef"),
+            actual = outcome,
+        )
+        assertFalse(isPortOpen(), "The port should be released once the redirect has arrived.")
+    }
+
     private fun isPortOpen() = try {
         Socket("127.0.0.1", 53682).close()
         true

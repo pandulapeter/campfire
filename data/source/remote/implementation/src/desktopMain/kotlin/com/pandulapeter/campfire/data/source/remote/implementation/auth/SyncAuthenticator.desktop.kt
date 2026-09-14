@@ -15,7 +15,10 @@ import java.awt.Desktop
 import java.io.BufferedReader
 import java.io.InputStreamReader
 import java.net.InetAddress
+import java.io.IOException
 import java.net.ServerSocket
+import java.net.Socket
+import java.net.SocketTimeoutException
 import java.net.URI
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Dispatchers
@@ -47,6 +50,10 @@ internal class DesktopSyncAuthenticator(
 
     private var serverSocket: ServerSocket? = null
 
+    /** The connection being read, so that cancelling can close it from under a blocked `readLine` as well. */
+    @Volatile
+    private var connection: Socket? = null
+
     override suspend fun prepareRedirectUri(): String = withContext(Dispatchers.IO) {
         // A socket left over from an abandoned attempt would hold the port this one needs.
         closeSocket()
@@ -76,18 +83,7 @@ internal class DesktopSyncAuthenticator(
         try {
             withContext(Dispatchers.IO) {
                 openInBrowser(authorizationUrl)
-                // "GET /?code=... HTTP/1.1" is all that is needed; the rest of the request is not read.
-                val requestLine = socket.accept().use { connection ->
-                    val line = BufferedReader(InputStreamReader(connection.getInputStream())).readLine().orEmpty()
-                    connection.getOutputStream().apply {
-                        write(completionPage.toResponse().encodeToByteArray())
-                        flush()
-                    }
-                    line
-                }
-                requestLine.split(' ').getOrNull(1)
-                    ?.let { SyncAuthenticator.AuthorizationOutcome.Received("http://$LOOPBACK_ADDRESS:$PORT$it") }
-                    ?: SyncAuthenticator.AuthorizationOutcome.Cancelled("The browser sent something that was not a request.")
+                socket.awaitRedirect(completionPage)
             }
         } catch (exception: CancellationException) {
             throw exception
@@ -102,13 +98,59 @@ internal class DesktopSyncAuthenticator(
     /** The desktop app is running throughout, so the redirect always arrives at [authorize]. */
     override suspend fun consumePendingRedirect(): String? = null
 
+    /**
+     * Browsers open a speculative second connection alongside a navigation and may never write to it, and the page
+     * that did arrive asks for its favicon on another. Each connection is read with a timeout of its own and
+     * answered, and the listener goes back to waiting until the one that carries the redirect comes: taking the
+     * first connection for the redirect would leave the real one unread in the backlog until the browser gave up on
+     * the idle one.
+     */
+    private fun ServerSocket.awaitRedirect(completionPage: AuthorizationCompletionPage): SyncAuthenticator.AuthorizationOutcome {
+        val deadline = System.currentTimeMillis() + TIMEOUT_MILLIS
+        while (true) {
+            val accepted = accept()
+            connection = accepted
+            try {
+                accepted.soTimeout = CONNECTION_TIMEOUT_MILLIS
+                // "GET /?code=... HTTP/1.1" is all that is needed; the rest of the request is not read.
+                val target = BufferedReader(InputStreamReader(accepted.getInputStream())).readLine().orEmpty().split(' ').getOrNull(1)
+                if (target != null && (target.contains("code=") || target.contains("error="))) {
+                    accepted.respond(completionPage.toResponse())
+                    return SyncAuthenticator.AuthorizationOutcome.Received("http://$LOOPBACK_ADDRESS:$PORT$target")
+                }
+                // A request that is not the redirect, or a connection that closed without one. Answering it is a
+                // courtesy that may fail on a peer that has already gone, which is nothing to give up over.
+                try {
+                    accepted.respond(NOT_FOUND_RESPONSE)
+                } catch (exception: IOException) {
+                    println("Could not answer a stray authorization request: ${exception.message}")
+                }
+            } catch (exception: SocketTimeoutException) {
+                // A connection that never spoke: the browser's speculative one.
+            } finally {
+                connection = null
+                accepted.close()
+            }
+            if (System.currentTimeMillis() > deadline) {
+                return SyncAuthenticator.AuthorizationOutcome.Cancelled("Timed out waiting for the browser.")
+            }
+        }
+    }
+
     private fun closeSocket() {
         try {
+            connection?.close()
             serverSocket?.close()
         } catch (exception: Exception) {
             println("Could not close the authorization socket: ${exception.message}")
         }
+        connection = null
         serverSocket = null
+    }
+
+    private fun Socket.respond(response: String) = getOutputStream().apply {
+        write(response.encodeToByteArray())
+        flush()
     }
 
     private companion object {
@@ -118,6 +160,11 @@ internal class DesktopSyncAuthenticator(
         const val PORT = 53682
         const val TIMEOUT_MILLIS = 5 * 60 * 1000
 
+        /** A browser that connected has already sent its request line; one that has not in this long never will. */
+        const val CONNECTION_TIMEOUT_MILLIS = 10 * 1000
+
+        /** The answer to a request that is not the redirect, such as the favicon the completion page is asked for. */
+        const val NOT_FOUND_RESPONSE = "HTTP/1.1 404 Not Found\r\nContent-Length: 0\r\nConnection: close\r\n\r\n"
     }
 }
 

@@ -62,7 +62,10 @@ redirect URIs character for character, which is why the desktop port is fixed.
     address is the redirect URI. The port is fixed because a service only redirects to a URI registered with it
     character for character. `accept` blocks a thread and notices neither a cancelled coroutine nor an interrupt, so
     cancelling closes the socket underneath it from a sibling coroutine; `DesktopSyncAuthenticatorTest` covers that,
-    since getting it wrong holds the port for five minutes and is invisible until somebody cancels.
+    since getting it wrong holds the port for five minutes and is invisible until somebody cancels. Browsers open a
+    speculative second connection next to the navigation and ask for a favicon after it, so the listener reads each
+    connection with a timeout of its own, answers what is not the redirect with a 404, and keeps listening until the
+    redirect arrives.
   - **Web** navigates away and reads the answer out of the query string at the next start, taking it out of the
     address bar as it does so, so a reload cannot replay a spent code. Cancelling on the service's page comes back
     as `error=access_denied`, which is handled like any other refusal.
