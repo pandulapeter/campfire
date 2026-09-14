@@ -31,7 +31,10 @@ import kotlinx.coroutines.sync.withPermit
  *
  * Everything here is written so that a run which is interrupted - the network drops, the app is killed, the user
  * stops it - leaves the library usable and the next run able to pick up: the index is only told about a file once
- * that file has actually moved, so anything half done simply looks unsynced next time rather than done.
+ * that file has actually moved, so anything half done simply looks unsynced next time rather than done. The index is
+ * handed out as it grows rather than only when a pass completes, because a run that is stopped after four hundred
+ * downloads has to keep those four hundred: forgotten, every one of them would come back as a file present on both
+ * sides with nothing to say which is newer, and any the user edited in between would end up as a conflict copy.
  *
  * A failure on one file does not end the run. A song the storage cannot read must not keep the other four hundred
  * from travelling, so only the two failures that make every further call pointless - the credentials being refused
@@ -46,6 +49,7 @@ internal class SyncEngine(
         document: SyncIndexDocument,
         accountId: String,
         onProgress: (SyncProgress) -> Unit,
+        onIndexChanged: suspend (SyncIndexDocument) -> Unit,
     ): Result {
         // An index written for a different account describes a different remote folder, and acting on it would read
         // that folder's absent files as deletions of this one's songs.
@@ -81,6 +85,9 @@ internal class SyncEngine(
                 index = index,
                 contentHashes = files.associate { SyncKey(kind = it.kind, name = it.name) to it.contentHash },
                 onProgress = onProgress,
+                accountId = accountId,
+                lastSyncedAt = document.lastSyncedAt,
+                onIndexChanged = onIndexChanged,
             )
             index = outcome.index
             summary = summary.plus(outcome.summary)
@@ -122,6 +129,9 @@ internal class SyncEngine(
      * The ordering that does matter is kept between the groups: incoming files first, then outgoing ones, then the
      * deletions. A conflict copy has to be on disk before the file it was made from is overwritten, and a deletion
      * that ran before a download would undo it.
+     *
+     * [onIndexChanged] is called under the same lock the results are merged under, so the snapshots arrive in the
+     * order they were taken and the last one handed out is always the most complete.
      */
     private suspend fun apply(
         provider: SyncProvider,
@@ -129,6 +139,9 @@ internal class SyncEngine(
         index: Map<SyncKey, SyncIndexEntry>,
         contentHashes: Map<SyncKey, String?>,
         onProgress: (SyncProgress) -> Unit,
+        accountId: String,
+        lastSyncedAt: Long,
+        onIndexChanged: suspend (SyncIndexDocument) -> Unit,
     ): PassOutcome = coroutineScope {
         val updated = index.toMutableMap()
         var summary = SyncSummary()
@@ -150,6 +163,14 @@ internal class SyncEngine(
                         hasUnresolvedConflicts = hasUnresolvedConflicts || outcome.hasUnresolvedConflict
                         completed++
                         onProgress(SyncProgress(completed = completed, total = plan.size))
+                        onIndexChanged(
+                            SyncIndexDocument.of(
+                                providerId = provider.id.id,
+                                accountId = accountId,
+                                lastSyncedAt = lastSyncedAt,
+                                index = updated,
+                            ).copy(isRunInProgress = true),
+                        )
                     }
                 }
             }.awaitAll()

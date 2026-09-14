@@ -50,8 +50,12 @@ long as the storage takes to answer. A cancelled read is not a failed one: it is
   including the ones that would otherwise only show up as a song someone lost. `SyncEngine` carries the plan out and
   is written so that an interrupted run leaves the library usable: the index (`SyncIndexDocument`, the on-disk shape
   of `sync-index.json`) is only told about a file once that file has actually moved, so anything half done simply
-  looks unsynced next time. A failure on one file does not end
-  a run; only the two failures that make every further call pointless (the credentials refused, the service
+  looks unsynced next time. It is told as the run goes rather than when a pass completes: every finished operation
+  hands `SyncRepositoryImpl` a snapshot, which writes it at most every `INDEX_WRITE_INTERVAL_MS` and once more on the
+  way out of a stopped or failed run (the periodic writer cancelled and joined first, so it cannot land after the
+  final write). An interrupted run therefore keeps what it transferred, and only a completed one moves `lastSyncedAt`.
+  `commonTest` runs the engine against an in-memory `SyncProvider` and `LibraryFileLocalSource` for the behaviour the
+  planner's tests cannot show. A failure on one file does not end a run; only the two failures that make every further call pointless (the credentials refused, the service
   unreachable) do — and a `CancellationException` is caught *first* and rethrown, since a stopped run is not a few
   hundred files that failed. Operations run `CONCURRENT_TRANSFERS` at a time within each ordering group rather than
   one after another: every one of them is a request, and serialising them made a first sync as slow as the round

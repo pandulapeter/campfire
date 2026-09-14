@@ -94,6 +94,9 @@ internal class SyncRepositoryImpl(
     private var liveRescanJob: Job? = null
     private var lastLiveRescanAt = 0L
 
+    private var indexWriteJob: Job? = null
+    private var lastIndexWriteAt = 0L
+
     override suspend fun restore(): SyncRepository.RestoreResult {
         // A consent page the app was sent away to, answered while it was not running - the web's ordinary case, and
         // checked first because it decides what the stored credentials are about to become.
@@ -223,8 +226,12 @@ internal class SyncRepositoryImpl(
             val provider = providers.firstOrNull { it.isConnected() } ?: return@withLock
             val connected = _syncState.value as? SyncState.Connected ?: return@withLock
             _syncState.update { connected.copy(progress = SyncProgress(), lastOutcome = null) }
+            // What the engine has reported so far, which is what an interrupted run writes on its way out: the files
+            // it did transfer stay known, and only the rest look unsynced next time.
+            var latestIndex: SyncIndexDocument? = null
             try {
                 val document = loadIndex()
+                latestIndex = document.copy(isRunInProgress = true)
                 // Written before anything moves, so that a run the app never comes back from is still recognisable
                 // as interrupted next time - iOS suspending the app mid sync looks exactly like being killed.
                 saveIndex(document.copy(isRunInProgress = true))
@@ -236,8 +243,13 @@ internal class SyncRepositoryImpl(
                         updateConnected { it.copy(progress = progress) }
                         scheduleLiveRescan()
                     },
+                    onIndexChanged = {
+                        latestIndex = it
+                        scheduleIndexWrite(it)
+                    },
                 )
                 val syncedAt = Clock.System.now().toEpochMilliseconds()
+                indexWriteJob?.cancelAndJoin()
                 saveIndex(result.index.copy(lastSyncedAt = syncedAt))
                 // Only when something actually moved: most runs find nothing to do, and re-reading the whole
                 // library every time the app is opened would cost more than the sync itself.
@@ -255,14 +267,16 @@ internal class SyncRepositoryImpl(
                 // Stopped rather than broken: nothing is wrong and nothing needs fixing, so this is its own outcome.
                 // Whatever did move before the stop is on disk, so the lists still have to be told about it.
                 withContext(NonCancellable) {
-                    clearRunInProgress()
+                    indexWriteJob?.cancelAndJoin()
+                    latestIndex?.let { saveIndex(it.copy(isRunInProgress = false)) }
                     rescanLibrary()
                 }
                 updateConnected { it.copy(progress = null, lastOutcome = SyncOutcome.Interrupted) }
                 throw exception
             } catch (exception: Exception) {
                 println("The sync run failed: ${exception.message}")
-                clearRunInProgress()
+                indexWriteJob?.cancelAndJoin()
+                latestIndex?.let { saveIndex(it.copy(isRunInProgress = false)) }
                 updateConnected { it.copy(progress = null, lastOutcome = SyncOutcome.Failure(exception.toFailureReason())) }
             } finally {
                 // The one thing that has to be true on every way out, including any added later: no progress means
@@ -289,7 +303,19 @@ internal class SyncRepositoryImpl(
         liveRescanJob = scope.launch { rescanLibrary() }
     }
 
-    private suspend fun clearRunInProgress() = saveIndex(loadIndex().copy(isRunInProgress = false))
+    /**
+     * Keeps `sync-index.json` close behind the run, so that an app that is killed rather than stopped - which gets no
+     * chance to write anything on its way out - still loses no more than the last couple of seconds of transfers.
+     * Throttled the same way as [scheduleLiveRescan], since the index is rewritten whole and a run finishes a file
+     * several times a second. Whatever this skips, the write at the end of the run covers.
+     */
+    private fun scheduleIndexWrite(document: SyncIndexDocument) {
+        if (indexWriteJob?.isActive == true) return
+        val now = Clock.System.now().toEpochMilliseconds()
+        if (now - lastIndexWriteAt < INDEX_WRITE_INTERVAL_MS) return
+        lastIndexWriteAt = now
+        indexWriteJob = scope.launch { saveIndex(document) }
+    }
 
     /**
      * Changes the state only while it is still [SyncState.Connected]. A run reports how it went when it ends, and if
@@ -382,6 +408,9 @@ internal class SyncRepositoryImpl(
     private companion object {
         /** Often enough that the counters visibly move, rarely enough that the reading costs less than the syncing. */
         const val LIVE_RESCAN_INTERVAL_MS = 1000L
+
+        /** How much of a run a killed app can lose at most, traded against rewriting the whole index per file. */
+        const val INDEX_WRITE_INTERVAL_MS = 2000L
 
         val disconnectedResult = SyncRepository.RestoreResult(isConnected = false, didReturnFromAuthorization = false)
         val json = Json {
