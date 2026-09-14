@@ -296,6 +296,14 @@ class CampfireViewModel(
     val songTexts: StateFlow<Map<String, String>> = _songTexts.asStateFlow()
 
     /**
+     * Held by every write to a song file, from the read the write is built on until [songTexts] has the result. The
+     * header's edits are tapped in quick succession on the same file, and two of them working from the same text would
+     * each write back the tag the other took off; two saves from the editor would land in whatever order they finished.
+     * One lock for every file rather than one per file: the writes are rare and short.
+     */
+    private val songWriteMutex = Mutex()
+
+    /**
      * What the open editor currently has in it, reported by the screen as it is typed but never written until the
      * user asks for it. The text itself still lives in the field's own state; this copy exists so that leaving the
      * screen can be stopped ([navigateBack]) and the save finished from the confirmation dialog without the screen
@@ -734,17 +742,14 @@ class CampfireViewModel(
      * keeps changing between the read and the write is reported instead of being chased.
      */
     private suspend fun editSongText(fileName: String, edit: (String) -> String) {
-        repeat(SONG_EDIT_ATTEMPTS) { attempt ->
-            // The first attempt may use the text on screen; a retry has to go back to the file.
-            val text = songTexts.value[fileName]?.takeIf { attempt == 0 } ?: getSongContent(fileName)?.text ?: return
-            val edited = edit(text)
-            if (edited == text) return
-            val isWritten = withContext(NonCancellable) {
-                saveSongContent.invoke(content = SongContent(fileName = fileName, text = edited), expectedText = text).also { isWritten ->
-                    if (isWritten) _songTexts.update { it + (fileName to edited) }
-                }
+        songWriteMutex.withLock {
+            repeat(SONG_EDIT_ATTEMPTS) { attempt ->
+                // Read inside the lock, so that an edit tapped right after another one starts from what that one wrote.
+                // The first attempt may use the text on screen; a retry has to go back to the file.
+                val text = songTexts.value[fileName]?.takeIf { attempt == 0 } ?: getSongContent(fileName)?.text ?: return
+                val edited = edit(text)
+                if (edited == text || withContext(NonCancellable) { writeSongContent(fileName = fileName, text = edited, expectedText = text) }) return
             }
-            if (isWritten) return
         }
         _messages.send(Message.OperationFailed)
     }
@@ -797,8 +802,7 @@ class CampfireViewModel(
         _isSavingSong.update { true }
         try {
             withContext(NonCancellable) {
-                saveSongContent.invoke(SongContent(fileName = fileName, text = text))
-                _songTexts.update { it + (fileName to text) }
+                songWriteMutex.withLock { writeSongContent(fileName = fileName, text = text) }
             }
         } catch (exception: CancellationException) {
             throw exception
@@ -809,6 +813,18 @@ class CampfireViewModel(
             _isSavingSong.update { false }
         }
     }
+
+    /**
+     * The write itself, and [songTexts] brought up to date with it before anything else can read them. The caller holds
+     * [songWriteMutex] and runs this on [NonCancellable]: a write that stopped halfway through would leave the file
+     * written and the text on screen not.
+     *
+     * @param expectedText See [SaveSongContentUseCase]: false, and nothing written, when the file no longer holds it.
+     */
+    private suspend fun writeSongContent(fileName: String, text: String, expectedText: String? = null) =
+        saveSongContent.invoke(content = SongContent(fileName = fileName, text = text), expectedText = expectedText).also { isWritten ->
+            if (isWritten) _songTexts.update { it + (fileName to text) }
+        }
 
     fun loadSongContent(fileName: String) = viewModelScope.launch {
         // Cleared first, so that a retry shows the loading state again instead of staying on the error.
