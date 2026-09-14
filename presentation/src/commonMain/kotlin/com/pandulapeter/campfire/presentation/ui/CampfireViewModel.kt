@@ -181,6 +181,7 @@ class CampfireViewModel(
      */
     internal val songsScrollPosition = ScrollPosition()
     internal val setlistsScrollPosition = ScrollPosition()
+    internal val settingsScrollPosition = ScrollPosition()
 
     /**
      * The search of each of the two list screens, held here for the same reason their scroll positions are, see
