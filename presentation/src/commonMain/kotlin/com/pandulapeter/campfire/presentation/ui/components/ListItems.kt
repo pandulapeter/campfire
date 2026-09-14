@@ -89,6 +89,7 @@ import com.pandulapeter.campfire.presentation.resources.ic_setlists
 import com.pandulapeter.campfire.presentation.resources.retry
 import com.pandulapeter.campfire.presentation.resources.setlists_all_hidden
 import com.pandulapeter.campfire.presentation.resources.setlists_all_hidden_hint
+import com.pandulapeter.campfire.presentation.resources.setlists_create_setlist
 import com.pandulapeter.campfire.presentation.resources.setlists_missing_song
 import com.pandulapeter.campfire.presentation.resources.setlists_reorder
 import com.pandulapeter.campfire.presentation.resources.setlists_no_data
@@ -98,8 +99,8 @@ import com.pandulapeter.campfire.presentation.resources.setlists_no_search_resul
 import com.pandulapeter.campfire.presentation.resources.songs_all_hidden
 import com.pandulapeter.campfire.presentation.resources.songs_all_hidden_hint
 import com.pandulapeter.campfire.presentation.resources.songs_empty_hint
-import com.pandulapeter.campfire.presentation.resources.songs_empty_import
-import com.pandulapeter.campfire.presentation.resources.songs_empty_new_song
+import com.pandulapeter.campfire.presentation.resources.import_files
+import com.pandulapeter.campfire.presentation.resources.songs_create_song
 import com.pandulapeter.campfire.presentation.resources.songs_empty_title
 import com.pandulapeter.campfire.presentation.resources.songs_key
 import com.pandulapeter.campfire.presentation.resources.songs_lyrics_only
@@ -630,7 +631,10 @@ internal fun ActionListItem(
  * All of these share one slot in their list, so they cross fade into each other rather than being swapped in a
  * single frame: the load that ends in an empty library is one continuous thing to look at, not two.
  *
- * @param onNewSong Null where filling the library is not this list's business, which hides both of its offers to.
+ * @param onNewSong Null where filling the library is not this list's business, which hides all of its offers to.
+ * @param onNewSetlist The same for the setlists. It is a parameter of its own rather than one "create" for whichever
+ *   list is empty, because the setlists screen shows the empty library's state as well, and a "Create a song" there
+ *   that opened the setlist dialog would be a lie.
  */
 @OptIn(ExperimentalMaterial3ExpressiveApi::class)
 @Composable
@@ -639,6 +643,7 @@ internal fun ListPlaceholder(
     placeholder: CampfireViewModel.Placeholder,
     onRetry: () -> Unit,
     onNewSong: (() -> Unit)? = null,
+    onNewSetlist: (() -> Unit)? = null,
     onDemoLibrary: (() -> Unit)? = null,
     onImport: (() -> Unit)? = null,
 ) = AnimatedContent(
@@ -670,17 +675,26 @@ internal fun ListPlaceholder(
             hint = stringResource(Res.string.songs_empty_hint),
             actions = onNewSong?.let { newSong ->
                 listOf(
-                    EmptyStateAction(text = stringResource(Res.string.songs_empty_new_song), onClick = newSong),
-                    EmptyStateAction(text = stringResource(Res.string.songs_empty_import), onClick = onImport),
+                    EmptyStateAction(text = stringResource(Res.string.songs_create_song), onClick = newSong),
+                    EmptyStateAction(text = stringResource(Res.string.import_files), onClick = onImport),
                     EmptyStateAction(text = stringResource(Res.string.add_demo_songs), onClick = onDemoLibrary),
                 )
             }.orEmpty(),
         )
 
+        // The same two first offers as an empty library, and the same two as the screen's own "New setlist" menu,
+        // which leaves the bar while this is up. There are no demo setlists to add on their own: the one the app is
+        // shipped with names demo songs, and it arrives with them from the songs screen.
         CampfireViewModel.Placeholder.NO_SETLISTS -> EmptyState(
             icon = painterResource(Res.drawable.ic_setlists),
             title = stringResource(Res.string.setlists_no_data),
             hint = stringResource(Res.string.setlists_no_data_hint),
+            actions = onNewSetlist?.let { newSetlist ->
+                listOf(
+                    EmptyStateAction(text = stringResource(Res.string.setlists_create_setlist), onClick = newSetlist),
+                    EmptyStateAction(text = stringResource(Res.string.import_files), onClick = onImport),
+                )
+            }.orEmpty(),
         )
 
         CampfireViewModel.Placeholder.ALL_SETLISTS_HIDDEN -> EmptyState(
@@ -708,6 +722,26 @@ internal fun ListPlaceholder(
         )
     }
 }
+
+/**
+ * Whether a list screen's "New" menu belongs in its app bar while this placeholder is shown (or none is). The menu
+ * waits for the list to have been read rather than appearing over the loading indicator and going away again a moment
+ * later, and it stays away from the empty state and the error, both of which offer their own buttons for the same
+ * thing.
+ */
+internal val CampfireViewModel.Placeholder?.allowsNewItemMenu
+    get() = when (this) {
+        null,
+        CampfireViewModel.Placeholder.ALL_SONGS_HIDDEN,
+        CampfireViewModel.Placeholder.NO_MATCHING_SONGS,
+        CampfireViewModel.Placeholder.ALL_SETLISTS_HIDDEN,
+        CampfireViewModel.Placeholder.NO_MATCHING_SETLISTS -> true
+
+        CampfireViewModel.Placeholder.LOADING,
+        CampfireViewModel.Placeholder.ERROR,
+        CampfireViewModel.Placeholder.NO_SONGS,
+        CampfireViewModel.Placeholder.NO_SETLISTS -> false
+    }
 
 /**
  * One of the buttons under an [EmptyState]'s text. The first of them is filled and the rest are outlined, so that a

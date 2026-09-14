@@ -53,6 +53,7 @@ import com.pandulapeter.campfire.presentation.resources.ic_tune
 import com.pandulapeter.campfire.presentation.resources.setlists
 import com.pandulapeter.campfire.presentation.resources.setlists_add_songs
 import com.pandulapeter.campfire.presentation.resources.setlists_archived
+import com.pandulapeter.campfire.presentation.resources.setlists_create_setlist
 import com.pandulapeter.campfire.presentation.resources.setlists_new_setlist
 import com.pandulapeter.campfire.presentation.resources.setlists_search
 import com.pandulapeter.campfire.presentation.resources.setlists_sort_and_filter
@@ -67,6 +68,7 @@ import com.pandulapeter.campfire.presentation.ui.components.DismissSheetWhenSide
 import com.pandulapeter.campfire.presentation.ui.components.DragHandle
 import com.pandulapeter.campfire.presentation.ui.components.ListColumns
 import com.pandulapeter.campfire.presentation.ui.components.ListPlaceholder
+import com.pandulapeter.campfire.presentation.ui.components.NewItemMenu
 import com.pandulapeter.campfire.presentation.ui.components.HideKeyboardWhenScrolledDown
 import com.pandulapeter.campfire.presentation.ui.components.KeepTopAppBarInSync
 import com.pandulapeter.campfire.presentation.ui.components.SearchAction
@@ -80,12 +82,14 @@ import com.pandulapeter.campfire.presentation.ui.components.SongListItem
 import com.pandulapeter.campfire.presentation.ui.components.SongActionsButton
 import com.pandulapeter.campfire.presentation.ui.components.TopLevelScreenLayout
 import com.pandulapeter.campfire.presentation.ui.components.animateScrollToKey
+import com.pandulapeter.campfire.presentation.ui.components.allowsNewItemMenu
 import com.pandulapeter.campfire.presentation.ui.components.besideSidePanel
 import com.pandulapeter.campfire.presentation.ui.components.hasRoomForSidePanel
 import com.pandulapeter.campfire.presentation.ui.components.listItemAnimation
 import com.pandulapeter.campfire.presentation.ui.components.rememberHasLoadedLibrary
 import com.pandulapeter.campfire.presentation.ui.components.rememberRetainedLazyGridState
 import com.pandulapeter.campfire.presentation.ui.components.songListColumnCount
+import com.pandulapeter.campfire.presentation.ui.platform.LocalFilePicker
 import com.pandulapeter.campfire.presentation.localization.stringResource
 import kotlinx.coroutines.launch
 import org.jetbrains.compose.resources.painterResource
@@ -104,6 +108,7 @@ internal fun SetlistsScreen(
     val scrollBehavior = TopAppBarDefaults.pinnedScrollBehavior()
     val listState = rememberRetainedLazyGridState(viewModel.setlistsScrollPosition)
     val isPerformanceModeEnabled by viewModel.isPerformanceModeEnabled.collectAsStateWithLifecycle()
+    val setlistsPlaceholder by viewModel.setlistsPlaceholder.collectAsStateWithLifecycle()
     val visibleDialog by viewModel.visibleDialog.collectAsStateWithLifecycle()
     val isSidePanelVisible = hasRoomForSidePanel(settledWidth)
     val columnCount = songListColumnCount(
@@ -136,15 +141,16 @@ internal fun SetlistsScreen(
                         searchState = viewModel.setlistsSearch,
                         placeholder = stringResource(Res.string.setlists_search),
                     )
-                    // Performance mode is switched while the bar is being looked at, so the button makes room
-                    // for itself rather than appearing between two frames, as on the songs screen.
-                    AnimatedVisibility(visible = !isPerformanceModeEnabled) {
-                        IconButton(onClick = { viewModel.showDialog(CampfireViewModel.DialogType.NewSetlist) }) {
-                            Icon(
-                                painter = painterResource(Res.drawable.ic_add),
-                                contentDescription = stringResource(Res.string.setlists_new_setlist),
-                            )
-                        }
+                    // The setlists being read and performance mode being switched both happen while the bar is being
+                    // looked at, so the button makes room for itself rather than appearing between two frames, as on
+                    // the songs screen.
+                    AnimatedVisibility(visible = !isPerformanceModeEnabled && setlistsPlaceholder.allowsNewItemMenu) {
+                        NewItemMenu(
+                            viewModel = viewModel,
+                            contentDescription = stringResource(Res.string.setlists_new_setlist),
+                            createLabel = stringResource(Res.string.setlists_create_setlist),
+                            onCreate = { viewModel.showDialog(CampfireViewModel.DialogType.NewSetlist) },
+                        )
                     }
                     if (!isSidePanelVisible) {
                         IconButton(onClick = { viewModel.showDialog(CampfireViewModel.DialogType.SetlistsControls) }) {
@@ -243,6 +249,7 @@ private fun SetlistList(
             }
         }
     }
+    val filePicker = LocalFilePicker.current
     val layoutDirection = LocalLayoutDirection.current
     val coroutineScope = rememberCoroutineScope()
 
@@ -283,6 +290,12 @@ private fun SetlistList(
                     modifier = listItemAnimation(listState, hasLoadedLibrary).fillMaxWidth(),
                     placeholder = placeholder,
                     onRetry = viewModel::refresh,
+                    onNewSetlist = if (isPerformanceModeEnabled) null else {
+                        { viewModel.showDialog(CampfireViewModel.DialogType.NewSetlist) }
+                    },
+                    onImport = if (isPerformanceModeEnabled) null else {
+                        { viewModel.importFiles(filePicker) }
+                    },
                 )
             }
 

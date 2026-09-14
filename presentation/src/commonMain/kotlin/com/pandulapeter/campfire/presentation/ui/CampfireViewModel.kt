@@ -104,7 +104,7 @@ import org.koin.core.annotation.KoinViewModel
 @OptIn(FlowPreview::class)
 @KoinViewModel
 class CampfireViewModel(
-    getScreenData: GetScreenDataUseCase,
+    private val getScreenData: GetScreenDataUseCase,
     getUserPreferences: GetUserPreferencesUseCase,
     getSyncState: GetSyncStateUseCase,
     getSyncProviders: GetSyncProvidersUseCase,
@@ -220,7 +220,7 @@ class CampfireViewModel(
         !isDemoLibraryPending && (state !is DataState.Loading || state.data?.songs?.isNotEmpty() == true)
     }
         .runningFold(false) { hasHadSomethingToShow, hasSomethingToShow -> hasHadSomethingToShow || hasSomethingToShow }
-        .asEagerState(false)
+        .asState(false)
 
     /**
      * Read straight from its own repository rather than out of [screenData], which only has anything once every
@@ -228,14 +228,9 @@ class CampfireViewModel(
      * library would leave the app in the system's theme and language for as long as that takes. Both states below
      * are derived from this one, so that they can never disagree about whether the read has happened.
      */
-    private val userPreferencesState = getUserPreferences().asEagerState(DataState.Loading(null))
+    private val userPreferencesState = getUserPreferences().asState(DataState.Loading(null))
 
-    /**
-     * Eager for the same reason as [setlists]: `updateUserPreferences` and `setTransposition` build the preferences
-     * they save out of this value, and a null one (which is what a state with no subscriber holds) would silently
-     * drop the change.
-     */
-    val userPreferences = userPreferencesState.map { it.data }.asEagerState(null)
+    val userPreferences = userPreferencesState.map { it.data }.asState(null)
 
     /**
      * False only for as long as the preferences have not been read yet, which is what the app waits for before it
@@ -252,35 +247,24 @@ class CampfireViewModel(
      */
     val arePreferencesLoaded = userPreferencesState
         .runningFold(false) { hasBeenRead, state -> hasBeenRead || state !is DataState.Loading }
-        .asEagerState(false)
+        .asState(false)
 
     /**
      * The one preference enough screens ask about to be worth a state of its own: every list, menu, sheet and app
-     * bar in the app has something it takes away. Eager for the reason [allSongs] is: a state that only starts
-     * collecting once a screen subscribes hands that screen its initial value for one frame first, and here that
-     * frame would be an app that can still be edited.
+     * bar in the app has something it takes away.
      */
-    val isPerformanceModeEnabled = userPreferences.map { it?.isPerformanceModeEnabled == true }.asEagerState(false)
+    val isPerformanceModeEnabled = userPreferences.map { it?.isPerformanceModeEnabled == true }.asState(false)
 
     /**
      * Read straight from its own repository, like the preferences and for the same reason: sync runs on its own
      * schedule, and a settings screen must not wait for a scan of the library to say whether an account is on.
-     *
-     * Eager, because its first value is acted on: the Android shell stops the sync service when it sees no run, and
-     * a state that started out as "disconnected" for the one frame before the real value arrived would stop a run
-     * that was going perfectly well in the background whenever the app was opened onto it.
      */
-    val syncState = getSyncState().asEagerState(SyncState.Disconnected)
+    val syncState = getSyncState().asState(SyncState.Disconnected)
 
     /** Fixed for the life of the build, so it is a value rather than a flow. Empty means sync is not configured. */
     val syncProviders: List<SyncProviderId> = getSyncProviders()
 
-    /**
-     * Eager, unlike most of the states here: the write paths below (adding a song to a setlist, transposing inside
-     * one) read this list to build the setlist they save, so it has to be current even when no screen showing
-     * setlists happens to be subscribed. [screenData] is already collected eagerly, so this costs nothing extra.
-     */
-    val setlists = screenData.map { it.data?.setlists.orEmpty() }.asEagerState(emptyList())
+    val setlists = screenData.map { it.data?.setlists.orEmpty() }.asState(emptyList())
 
     /** What keeps the writes of [setSetlistSongs] from overtaking each other. */
     private val setlistSongsMutex = Mutex()
@@ -310,13 +294,10 @@ class CampfireViewModel(
     private val _editorRevertRequests = MutableSharedFlow<Unit>(extraBufferCapacity = 1)
     val editorRevertRequests = _editorRevertRequests.asSharedFlow()
 
-    /**
-     * True while the editor's text differs from what is on disk. Eager, like [setlists] and for the same reason:
-     * [navigateBack] reads it, and it has to be current whether or not anything happens to be subscribed.
-     */
+    /** True while the editor's text differs from what is on disk, which is what [navigateBack] asks before it leaves. */
     val hasUnsavedEditorChanges = combine(_editorDraft, _songTexts) { draft, songTexts ->
         draft != null && draft.text != songTexts[draft.fileName]
-    }.asEagerState(false)
+    }.asState(false)
 
     /**
      * Where a song's transposition is kept depends on how it was opened, so both places are folded into one lookup:
@@ -329,17 +310,14 @@ class CampfireViewModel(
                 setlist.fileName to setlist.entries.filter { it.transposition != 0 }.associate { it.songFileName to it.transposition }
             },
         )
-    }.asEagerState(Transpositions())
+    }.asState(Transpositions())
 
     /**
      * The whole library, whatever the filters hide, which is what everything that looks a song up by its file name
      * reads: a setlist lists what somebody wrote down rather than what the song list is currently narrowed to, and
      * the details screen it opens has to find every one of those songs.
-     *
-     * Eager, like [setlists]: the song details screen picks the page it opens on from this list, and a list that was
-     * still empty on its first frame would open every setlist on its first song.
      */
-    val allSongs = screenData.map { it.data?.unfilteredSongs.orEmpty() }.asEagerState(emptyList())
+    val allSongs = screenData.map { it.data?.unfilteredSongs.orEmpty() }.asState(emptyList())
 
     /**
      * The labels every song in the library carries, which the song rows leave off: a tag that is on every song tells
@@ -389,29 +367,11 @@ class CampfireViewModel(
         songs.associateBy({ it.fileName }) { SearchableSong(song = it, title = normalizeText(it.title), artist = normalizeText(it.artist)) }
     }.asState(emptyMap())
 
-    /**
-     * Null until the library has actually been read, so that the settings screen never flashes a count of zero.
-     *
-     * Eager, like [setlists] and for a reason of its own: a state that starts collecting when the settings screen
-     * subscribes to it hands that screen its initial value first and the real one a frame later, which inserts the
-     * summary row while the screen is still animating in - the screen arrives in two pieces instead of one.
-     * [screenData] is already collected eagerly, so this costs nothing extra.
-     */
+    /** Null until the library has actually been read, so that the settings screen never flashes a count of zero. */
     val librarySummary = screenData
         .map { state -> state.data?.let { LibrarySummary(songCount = it.unfilteredSongs.size, setlistCount = it.setlists.size) } }
-        .asEagerState(null)
-
-    /**
-     * Whether the demo library is in the library already, which is what takes the offer to load it out of the
-     * settings screen. Null until the library has been read, like [librarySummary] and for the same reason: the
-     * offer must not appear for a moment over a library that turns out to hold it.
-     *
-     * It is answered by what is on disk rather than by anything the app remembers doing, so deleting one of the
-     * demo songs brings the offer back - which is what makes it a way to restore them as well as a way to get them.
-     */
-    val isDemoLibraryPresent = screenData
-        .map { state -> state.data?.let { DemoLibrary.isPresentIn(songs = it.unfilteredSongs, setlists = it.setlists) } }
         .asState(null)
+
     // Distinct on the sorting mode alone, or every other change to the preferences (a transposition, the text size
     // settling after a pinch) would have the whole library grouped again for nothing.
     val songGroups = combine(searchableSongs, songsSearch.activeQuery, userPreferences.map { it?.sortingMode }.distinctUntilChanged()) { songs, query, sortingMode ->
@@ -427,6 +387,29 @@ class CampfireViewModel(
     /** True while an import is running, which the screens that can start one show as a progress bar. */
     private val _isImporting = MutableStateFlow(false)
     val isImporting: StateFlow<Boolean> = _isImporting.asStateFlow()
+
+    /** True from the moment the demo library is asked for until the offer has caught up with the outcome, see [importDemoLibrary]. */
+    private val isAddingDemoLibrary = MutableStateFlow(false)
+
+    /**
+     * The settings screen's offer to add the demo library, null for as long as there is nothing to offer: while the
+     * library holds all of it, and until the library has been read, like [librarySummary] and for the same reason -
+     * the offer must not appear for a moment over a library that turns out to hold it.
+     *
+     * Whether it is there is answered by what is on disk rather than by anything the app remembers doing, so deleting
+     * one of the demo songs brings the offer back - which is what makes it a way to restore them as well as a way to
+     * get them.
+     *
+     * The offer and whether it can be taken are one value on purpose. As two, the import finishing and the library it
+     * wrote reach the screen as separate updates, and the row would be enabled again for as long as the second one
+     * takes, which is exactly while it is fading out of the list.
+     */
+    val demoLibraryOffer = combine(screenData, isAddingDemoLibrary, _isImporting) { state, isAddingDemoLibrary, isImporting ->
+        when (state.data?.let { DemoLibrary.isPresentIn(songs = it.unfilteredSongs, setlists = it.setlists) }) {
+            false -> if (isAddingDemoLibrary || isImporting) DemoLibraryOffer.UNAVAILABLE else DemoLibraryOffer.AVAILABLE
+            true, null -> null
+        }
+    }.asState(null)
 
     /**
      * What the song list has to show instead of songs, null while it has songs. A library that is empty because
@@ -517,15 +500,11 @@ class CampfireViewModel(
     /**
      * The text size multiplier of the song details screen. A pinch gesture changes it on every frame, so the latest
      * value is kept here and only written to the user preferences once the changes have settled.
-     *
-     * Started eagerly instead of with [asState]: the song details screen is the only subscriber, so a flow that only
-     * starts with it would hand the first song [DEFAULT_FONT_SCALE] and the saved scale a frame later, reflowing the
-     * lyrics into a different number of columns right as the screen animates in.
      */
     private val pendingFontScale = MutableStateFlow<Float?>(null)
     val fontScale = combine(userPreferences, pendingFontScale) { userPreferences, pendingFontScale ->
         pendingFontScale ?: userPreferences?.fontScale ?: DEFAULT_FONT_SCALE
-    }.asEagerState(DEFAULT_FONT_SCALE)
+    }.asState(DEFAULT_FONT_SCALE)
 
     /**
      * The import that has been worked out but not carried out, waiting for the user to answer
@@ -880,13 +859,24 @@ class CampfireViewModel(
      * the ones that have been deleted.
      */
     fun importDemoLibrary() = viewModelScope.launch {
-        if (_isImporting.value) return@launch
+        if (_isImporting.value || !isAddingDemoLibrary.compareAndSet(expect = false, update = true)) return@launch
         val files = readDemoLibrary()
         if (files == null) {
             _messages.send(Message.ImportFailed)
         } else {
             import(files)
+            // A conflict leaves its question on screen when import() returns, and the import the answer decides on
+            // only starts after that, so the attempt is over once there is neither.
+            combine(_visibleDialog, _isImporting) { dialog, isImporting -> dialog is DialogType.ImportConflicts || isImporting }.first { !it }
         }
+        // Asked of a fresh read of the library rather than of the offer, which can still be a step behind the import
+        // that just finished. Where the demo is now all there, the offer is waited for until it has left the screen,
+        // so the row fades out disabled instead of coming back for the moments in between.
+        val library = getScreenData().first { it !is DataState.Loading }.data
+        if (library != null && DemoLibrary.isPresentIn(songs = library.unfilteredSongs, setlists = library.setlists)) {
+            demoLibraryOffer.first { it == null }
+        }
+        isAddingDemoLibrary.update { false }
     }
 
     /**
@@ -961,6 +951,9 @@ class CampfireViewModel(
     fun resolveImport(resolution: ImportConflictResolution) {
         val plan = pendingImportPlan ?: return
         pendingImportPlan = null
+        // Claimed before the question goes away rather than once the import has started, so that nothing waiting for
+        // the two of them to be over (see importDemoLibrary) sees a moment with neither.
+        _isImporting.update { true }
         dismissDialog()
         viewModelScope.launch { applyImportPlan(plan, resolution) }
     }
@@ -972,12 +965,13 @@ class CampfireViewModel(
     }
 
     /**
+     * Expects [isImporting] to have been claimed by the caller, which both of them do before anything can observe the gap.
+     *
      * @param shouldAnnounceResult False for the import nobody asked for: the demo library planted on a first run is
      *   the library the user is about to be shown, and a snackbar counting the files of it would be the app
      *   reporting on something that, as far as anyone can tell, simply came with it.
      */
     private suspend fun applyImportPlan(plan: ImportPlan, resolution: ImportConflictResolution, shouldAnnounceResult: Boolean = true) {
-        _isImporting.update { true }
         try {
             val result = importFiles.invoke(plan, resolution)
             if (shouldAnnounceResult) {
@@ -1273,23 +1267,24 @@ class CampfireViewModel(
     }
 
     /**
-     * A state that only runs while a screen is looking at it, and that forgets what it last said as soon as it
-     * stops: [initialValue] is what each of these means by "nothing has been worked out yet", and that is the only
-     * honest answer a state which has not been recomputed since can give.
+     * Every state of this view model is kept up to date from the moment it is created, rather than only while a screen
+     * collects it, and that is the one way states are made here.
      *
-     * Kept, the answer goes stale as soon as the library changes while its screen is away - which is exactly what a
-     * first sync does, since it fills the library from the settings screen. The song list would then be entered on
-     * the answer worked out before the sync ("Your library is empty"), with the settings screen next to it already
-     * counting the songs, and the real list only arriving a frame later.
+     * A state that is started by its first collector hands that collector [initialValue] first and its real value a
+     * moment later, and a screen answers the difference as a change: the song list's rows fade in, the "New" button
+     * expands into the app bar and pushes the search action aside, a settings row is inserted while the screen is still
+     * fading in, the lyrics reflow into a different number of columns. Some of the states are also acted on rather than
+     * drawn - the writes build what they save out of the preferences and the setlists, leaving the editor asks whether
+     * anything is unsaved, the Android shell stops the sync service when it sees no run - and those have to be right
+     * whether or not a screen happens to be looking. Letting a state stop only moves the problem: one that keeps its
+     * last value comes back with an answer the library may have outgrown meanwhile (a first sync fills it from the
+     * settings screen), and one that forgets it comes back to [initialValue].
+     *
+     * What it costs is that the states doing real work - normalizing every title and artist, grouping the song list,
+     * matching the setlists against the library - also do it for changes to the library made while their screen is not
+     * showing, which is work those screens would otherwise do the moment they were opened.
      */
     private fun <T> Flow<T>.asState(initialValue: T) = distinctUntilChanged().stateIn(
-        scope = viewModelScope,
-        started = SharingStarted.WhileSubscribed(stopTimeoutMillis = STOP_TIMEOUT_MILLIS, replayExpirationMillis = 0),
-        initialValue = initialValue,
-    )
-
-    /** Like [asState], but kept up to date from app start, so that the first subscriber never sees [initialValue]. */
-    private fun <T> Flow<T>.asEagerState(initialValue: T) = distinctUntilChanged().stateIn(
         scope = viewModelScope,
         started = SharingStarted.Eagerly,
         initialValue = initialValue,
@@ -1371,6 +1366,14 @@ class CampfireViewModel(
 
         /** A change to the library (a new setlist, a deleted song, a moved entry) that could not be written. */
         data object OperationFailed : Message
+    }
+
+    /** The settings screen's offer to add the demo library, see [demoLibraryOffer]. */
+    enum class DemoLibraryOffer {
+        AVAILABLE,
+
+        /** Shown, but not to be taken while an import is running, this one included. */
+        UNAVAILABLE,
     }
 
     /** What a list without content has in its place. */
@@ -1545,6 +1548,5 @@ class CampfireViewModel(
         const val FONT_SCALE_STEP = 0.1f
         private const val FONT_SCALE_STEP_TOLERANCE = 0.01f // Floating point slack, so that 1.1000001 still counts as step 11.
         private const val FONT_SCALE_SAVE_DELAY_MILLIS = 500L
-        private const val STOP_TIMEOUT_MILLIS = 5_000L
     }
 }

@@ -513,7 +513,10 @@ private fun CountedFilterChip(
             overflow = TextOverflow.Ellipsis,
         )
         Text(
-            modifier = Modifier.padding(start = TAG_GAP),
+            modifier = Modifier.padding(
+                start = TAG_GAP,
+                top = 2.dp,
+            ),
             text = songCount.toString(),
             style = MaterialTheme.typography.labelSmall,
             color = MaterialTheme.colorScheme.onSurfaceVariant,

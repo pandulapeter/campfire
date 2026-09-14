@@ -20,6 +20,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyListScope
 import androidx.compose.foundation.lazy.LazyListState
+import androidx.compose.foundation.selection.selectableGroup
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ListItem
 import androidx.compose.material3.ListItemDefaults
@@ -54,7 +55,6 @@ import com.pandulapeter.campfire.presentation.resources.ic_git_hub
 import com.pandulapeter.campfire.presentation.resources.ic_import
 import com.pandulapeter.campfire.presentation.resources.ic_phone
 import com.pandulapeter.campfire.presentation.resources.ic_privacy_policy
-import com.pandulapeter.campfire.presentation.resources.ic_refresh
 import com.pandulapeter.campfire.presentation.resources.ic_songs
 import com.pandulapeter.campfire.presentation.resources.ic_website
 import com.pandulapeter.campfire.presentation.resources.settings
@@ -110,7 +110,6 @@ import com.pandulapeter.campfire.presentation.resources.settings_user_interface_
 import com.pandulapeter.campfire.presentation.resources.settings_user_interface_theme_system_default
 import com.pandulapeter.campfire.presentation.resources.settings_version
 import com.pandulapeter.campfire.presentation.resources.settings_website
-import com.pandulapeter.campfire.presentation.resources.songs_rescan
 import com.pandulapeter.campfire.presentation.ui.CampfireViewModel
 import com.pandulapeter.campfire.presentation.ui.components.ActionListItem
 import com.pandulapeter.campfire.presentation.ui.components.CampfireTopAppBar
@@ -119,6 +118,7 @@ import com.pandulapeter.campfire.presentation.ui.components.ColorChoiceOption
 import com.pandulapeter.campfire.presentation.ui.components.ImportProgress
 import com.pandulapeter.campfire.presentation.ui.components.KeepTopAppBarInSync
 import com.pandulapeter.campfire.presentation.ui.components.LinkListItem
+import com.pandulapeter.campfire.presentation.ui.components.RadioListItem
 import com.pandulapeter.campfire.presentation.ui.components.SECTION_HEADER_GAP
 import com.pandulapeter.campfire.presentation.ui.components.ScrollPosition
 import com.pandulapeter.campfire.presentation.ui.components.SectionHeader
@@ -171,7 +171,7 @@ internal fun SettingsScreen(
         val syncState by viewModel.syncState.collectAsStateWithLifecycle()
         // Null until the library has been read, so that the row fades in with real counts instead of showing zeroes.
         val librarySummary by viewModel.librarySummary.collectAsStateWithLifecycle()
-        val isDemoLibraryPresent by viewModel.isDemoLibraryPresent.collectAsStateWithLifecycle()
+        val demoLibraryOffer by viewModel.demoLibraryOffer.collectAsStateWithLifecycle()
         // The app asked for this as it started; asking again only reads back the answer, see requestLibraryPersistence.
         val libraryPersistence by produceState<LibraryPersistence?>(null) { value = requestLibraryPersistence() }
         val layoutDirection = LocalLayoutDirection.current
@@ -271,13 +271,13 @@ internal fun SettingsScreen(
             // Only until they are all in the library, which is also what brings it back for the ones a user who
             // wanted none of them has deleted. Null while the library is still being read, so the offer never
             // appears for a moment over a library that turns out to hold them.
-            if (isDemoLibraryPresent == false) {
+            demoLibraryOffer?.let { offer ->
                 item(key = "library_demo") {
                     ActionListItem(
                         modifier = listItemAnimation(listState),
                         title = stringResource(Res.string.add_demo_songs),
                         icon = painterResource(Res.drawable.ic_songs),
-                        isEnabled = !isImporting && !isPerformanceModeEnabled,
+                        isEnabled = offer == CampfireViewModel.DemoLibraryOffer.AVAILABLE && !isPerformanceModeEnabled,
                         isEmphasized = false,
                         onClick = viewModel::importDemoLibrary,
                     )
@@ -291,15 +291,6 @@ internal fun SettingsScreen(
                     isEnabled = !isPerformanceModeEnabled,
                     isEmphasized = false,
                     onClick = { viewModel.exportLibrary(filePicker) },
-                )
-            }
-            item(key = "library_rescan") {
-                ActionListItem(
-                    modifier = listItemAnimation(listState),
-                    title = stringResource(Res.string.songs_rescan),
-                    icon = painterResource(Res.drawable.ic_refresh),
-                    isEmphasized = false,
-                    onClick = viewModel::refresh,
                 )
             }
             sectionHeader(
@@ -412,16 +403,22 @@ internal fun SettingsScreen(
                             onSelected = viewModel::setThemeColor,
                         )
                     }
+                    // A list rather than a segmented control, since it is the one choice here that grows with every
+                    // translation, and a row of segments runs out of width after the third.
                     Subsection(title = stringResource(Res.string.settings_user_interface_language)) {
-                        SegmentedChoice(
-                            options = listOf(
+                        Column(modifier = Modifier.selectableGroup()) {
+                            listOf(
                                 UserPreferences.Language.SYSTEM_DEFAULT to stringResource(Res.string.settings_user_interface_language_system_default),
                                 UserPreferences.Language.ENGLISH to stringResource(Res.string.settings_user_interface_language_english),
                                 UserPreferences.Language.HUNGARIAN to stringResource(Res.string.settings_user_interface_language_hungarian),
-                            ),
-                            selected = userPreferences?.language,
-                            onSelected = viewModel::setLanguage,
-                        )
+                            ).forEach { (language, label) ->
+                                RadioListItem(
+                                    title = label,
+                                    isSelected = userPreferences?.language == language,
+                                    onSelected = { viewModel.setLanguage(language) },
+                                )
+                            }
+                        }
                     }
                 }
             }

@@ -43,9 +43,9 @@ import androidx.compose.ui.unit.Dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.pandulapeter.campfire.data.model.domain.UserPreferences
 import com.pandulapeter.campfire.presentation.resources.Res
-import com.pandulapeter.campfire.presentation.resources.ic_add
 import com.pandulapeter.campfire.presentation.resources.ic_tune
 import com.pandulapeter.campfire.presentation.resources.songs
+import com.pandulapeter.campfire.presentation.resources.songs_create_song
 import com.pandulapeter.campfire.presentation.resources.songs_new_song
 import com.pandulapeter.campfire.presentation.resources.songs_search
 import com.pandulapeter.campfire.presentation.resources.songs_sort_and_filter
@@ -62,6 +62,7 @@ import com.pandulapeter.campfire.presentation.ui.components.HideKeyboardWhenScro
 import com.pandulapeter.campfire.presentation.ui.components.KeepTopAppBarInSync
 import com.pandulapeter.campfire.presentation.ui.components.ListColumns
 import com.pandulapeter.campfire.presentation.ui.components.ListPlaceholder
+import com.pandulapeter.campfire.presentation.ui.components.NewItemMenu
 import com.pandulapeter.campfire.presentation.ui.components.SearchAction
 import com.pandulapeter.campfire.presentation.ui.components.SearchableTopAppBarTitle
 import com.pandulapeter.campfire.presentation.ui.components.SECTION_HEADER_GAP
@@ -71,6 +72,7 @@ import com.pandulapeter.campfire.presentation.ui.components.SongListItem
 import com.pandulapeter.campfire.presentation.ui.components.SongsControls
 import com.pandulapeter.campfire.presentation.ui.components.TopLevelScreenLayout
 import com.pandulapeter.campfire.presentation.ui.components.animateScrollToKey
+import com.pandulapeter.campfire.presentation.ui.components.allowsNewItemMenu
 import com.pandulapeter.campfire.presentation.ui.components.besideSidePanel
 import com.pandulapeter.campfire.presentation.ui.components.hasRoomForSidePanel
 import com.pandulapeter.campfire.presentation.ui.components.listItemAnimation
@@ -136,13 +138,13 @@ internal fun SongsScreen(
                     // The reasons this one comes and goes are the library being read and the mode being switched,
                     // both of which happen while the bar is being looked at, so it makes room for itself rather than
                     // appearing between two frames and pushing the action beside it aside as it lands.
-                    AnimatedVisibility(visible = !isPerformanceModeEnabled && placeholder.allowsCreatingSongs) {
-                        IconButton(onClick = { viewModel.showDialog(CampfireViewModel.DialogType.NewSong) }) {
-                            Icon(
-                                painter = painterResource(Res.drawable.ic_add),
-                                contentDescription = stringResource(Res.string.songs_new_song),
-                            )
-                        }
+                    AnimatedVisibility(visible = !isPerformanceModeEnabled && placeholder.allowsNewItemMenu) {
+                        NewItemMenu(
+                            viewModel = viewModel,
+                            contentDescription = stringResource(Res.string.songs_new_song),
+                            createLabel = stringResource(Res.string.songs_create_song),
+                            onCreate = { viewModel.showDialog(CampfireViewModel.DialogType.NewSong) },
+                        )
                     }
                     if (!isSidePanelVisible) {
                         IconButton(onClick = { viewModel.showDialog(CampfireViewModel.DialogType.SongsControls) }) {
@@ -348,25 +350,6 @@ private val CampfireViewModel.SongGroup.Header.fastScrollerLabel: String
         is CampfireViewModel.SongGroup.Header.Artist -> initial?.toString() ?: SYMBOLS_LABEL
         is CampfireViewModel.SongGroup.Header.Letter -> letter.toString()
         CampfireViewModel.SongGroup.Header.Symbols -> SYMBOLS_LABEL
-    }
-
-/**
- * Whether the toolbar's button for creating a song belongs on screen. It waits for the library to have been read
- * rather than appearing over the loading indicator and going away again a moment later, and it stays away from the
- * empty state and the error, both of which offer their own action for the same thing.
- */
-private val CampfireViewModel.Placeholder?.allowsCreatingSongs
-    get() = when (this) {
-        null,
-        CampfireViewModel.Placeholder.ALL_SONGS_HIDDEN,
-        CampfireViewModel.Placeholder.NO_MATCHING_SONGS -> true
-
-        CampfireViewModel.Placeholder.LOADING,
-        CampfireViewModel.Placeholder.ERROR,
-        CampfireViewModel.Placeholder.NO_SONGS,
-        CampfireViewModel.Placeholder.NO_SETLISTS,
-        CampfireViewModel.Placeholder.ALL_SETLISTS_HIDDEN,
-        CampfireViewModel.Placeholder.NO_MATCHING_SETLISTS -> false
     }
 
 private const val SYMBOLS_LABEL = "#"

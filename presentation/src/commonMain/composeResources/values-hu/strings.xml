@@ -25,6 +25,7 @@
     <string name="add_demo_songs">Bemutató dalok hozzáadása</string>
 
     <!-- Import and export -->
+    <string name="import_files">Fájlok importálása</string>
     <string name="import_result">%1$d dal és %2$d lista importálva · %3$d már megvolt · %4$d kihagyva</string>
     <string name="import_failed">Az importálás nem sikerült</string>
     <string name="export_failed">Az exportálás nem sikerült</string>
@@ -68,12 +69,10 @@
     <string name="songs_sorting_mode_by_title">Cím</string>
     <string name="songs_empty_title">A könyvtárad üres</string>
     <string name="songs_empty_hint">Hozz létre egy dalt, importálj .cho fájlokat és zip archívumokat, vagy add hozzá a bemutató dalokat.</string>
-    <string name="songs_empty_new_song">Dal létrehozása</string>
-    <string name="songs_empty_import">Fájlok importálása</string>
+    <string name="songs_create_song">Dal létrehozása</string>
     <string name="songs_new_song">Új dal</string>
     <string name="songs_new_song_title">Cím</string>
     <string name="songs_new_song_artist">Előadó</string>
-    <string name="songs_rescan">Könyvtár újraolvasása</string>
     <string name="songs_actions">Műveletek</string>
     <string name="songs_setlist_assignments">Listákhoz rendelés</string>
     <string name="songs_update_file_name">Fájlnév frissítése</string>
@@ -99,7 +98,8 @@
     <!-- Setlists screen -->
     <string name="setlists">Listák</string>
     <string name="setlists_no_data">Még nincsenek listák</string>
-    <string name="setlists_no_data_hint">Hozz létre egy listát, majd válaszd ki, mely dalok kerüljenek rá.</string>
+    <string name="setlists_no_data_hint">Hozz létre egy listát, és válaszd ki, mely dalok kerüljenek rá, vagy importálj listákat fájlokból.</string>
+    <string name="setlists_create_setlist">Lista létrehozása</string>
     <string name="setlists_new_setlist">Új lista</string>
     <string name="setlists_new_setlist_title">Lista címe</string>
     <string name="setlists_remove_song">Eltávolítás a listáról</string>

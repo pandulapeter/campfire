@@ -36,9 +36,7 @@ import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material3.ContainedLoadingIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -90,6 +88,7 @@ import com.pandulapeter.campfire.presentation.resources.song_details_previous_so
 import com.pandulapeter.campfire.presentation.resources.song_details_song_position
 import com.pandulapeter.campfire.presentation.ui.CampfireViewModel
 import com.pandulapeter.campfire.presentation.ui.components.CampfireTopAppBar
+import com.pandulapeter.campfire.presentation.ui.components.DelayedLoadingIndicator
 import com.pandulapeter.campfire.presentation.ui.components.EmptyState
 import com.pandulapeter.campfire.presentation.ui.components.EmptyStateAction
 import com.pandulapeter.campfire.presentation.ui.components.KeepTopAppBarInSync
@@ -117,7 +116,7 @@ import org.jetbrains.compose.resources.painterResource
  * once the rail is gone. Only the width needs this: the bar that could change the height instead of the width is
  * only used on windows narrow enough for a single column.
  */
-@OptIn(ExperimentalMaterial3Api::class, ExperimentalMaterial3ExpressiveApi::class)
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 internal fun SongDetailsScreen(
     modifier: Modifier = Modifier,
@@ -329,7 +328,7 @@ internal fun SongDetailsScreen(
                 modifier = Modifier.weight(1f).fillMaxWidth().padding(contentPadding),
                 contentAlignment = Alignment.Center,
             ) {
-                ContainedLoadingIndicator()
+                DelayedLoadingIndicator()
             }
         } else {
             HorizontalPager(
@@ -476,7 +475,6 @@ private fun SongPagerControls(
  * @param scrollState Owned by the pager rather than by the page, so that the arrow keys can reach the scroll of the
  *   song being read, and so that a page keeps where it was left while its text is loaded again.
  */
-@OptIn(ExperimentalMaterial3ExpressiveApi::class)
 @Composable
 private fun SongDetailsPage(
     song: Song,
@@ -514,7 +512,7 @@ private fun SongDetailsPage(
                     actions = listOf(EmptyStateAction(text = stringResource(Res.string.retry), onClick = onRetry)),
                 )
             } else {
-                ContainedLoadingIndicator()
+                DelayedLoadingIndicator()
             }
         }
     } else {
