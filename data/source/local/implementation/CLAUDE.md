@@ -75,8 +75,9 @@ holds the `@Module @ComponentScan object DataLocalSourceModule`, and every local
   the same to the user.
 - **`model/` + `mapper/`** — `SetlistDocument`, `UserPreferencesDocument` and the two-way mapping to the
   `:data:model` types. Every field of a document is defaulted, so a file written by an older version — or edited by
-  hand, which on iOS and desktop the user can do — keeps whatever it does carry instead of failing to parse. No
-  document type ever leaves this module.
+  hand, which on iOS and desktop the user can do — keeps whatever it does carry instead of failing to parse. A setlist
+  file naming a song twice is read as naming it once (the first mention wins) and written back that way, since the
+  screens key their rows by the song's file name. No document type ever leaves this module.
 - **`zip/`** — a dependency-free zip implementation: `ZipReader` (STORED + DEFLATE, ZIP64 and encryption rejected),
   `ZipWriter` (STORED only — song text compresses badly enough not to be worth it), `Inflater` (raw DEFLATE, RFC 1951,
   following `puff.c`) and `Crc32`. It exists because no multiplatform zip library covers wasmJs. Sizes an archive

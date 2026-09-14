@@ -19,8 +19,10 @@ internal fun SetlistDocument.toModel(fileName: String) = Setlist(
     description = description,
     priority = priority,
     isArchived = isArchived,
-    // A document that was edited by hand can name the same song twice or leave a blank entry behind.
-    entries = songs.filter { it.file.isNotBlank() }.map { Setlist.Entry(songFileName = it.file, transposition = it.transposition) },
+    // A document that was edited by hand can leave a blank entry behind or name the same song twice. The second
+    // mention is dropped and the first one wins, its transposition with it: the screens key their rows and the
+    // pager its pages by the song's file name, and a setlist naming a song twice would put the same key up twice.
+    entries = songs.filter { it.file.isNotBlank() }.distinctBy { it.file }.map { Setlist.Entry(songFileName = it.file, transposition = it.transposition) },
 )
 
 internal fun Setlist.toDocument() = SetlistDocument(
@@ -28,5 +30,6 @@ internal fun Setlist.toDocument() = SetlistDocument(
     description = description,
     priority = priority,
     isArchived = isArchived,
-    songs = entries.map { SetlistSongDocument(file = it.songFileName, transposition = it.transposition) },
+    // Written the way it is read, so that a file never carries a duplicate whatever built the setlist in memory.
+    songs = entries.distinctBy { it.songFileName }.map { SetlistSongDocument(file = it.songFileName, transposition = it.transposition) },
 )
