@@ -30,6 +30,7 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.VerticalDivider
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.runtime.State
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
@@ -88,18 +89,22 @@ import com.pandulapeter.campfire.presentation.resources.song_editor_section_vers
  * over an editor that is two lines tall. The buttons take no focus ([Modifier.focusProperties]): a toolbar that
  * takes the caret out of the field closes the keyboard under itself on every tap, and the insertion the tap asked
  * for would land wherever the caret used to be.
+ *
+ * @param text The text of [textFieldState] as one string, which the screen copies once per edit for everything that
+ *   follows it rather than each of them copying it again.
  */
 @Composable
 internal fun EditorToolbar(
     modifier: Modifier = Modifier,
     textFieldState: TextFieldState,
+    text: State<String>,
     contentPadding: PaddingValues,
 ) {
     // What the song already says about itself follows the text rather than being read once, so that a directive
     // typed by hand takes its button out of reach exactly as one inserted from the toolbar does. The derived state
     // is what keeps that off the keystroke path: the set only changes when a directive is added or removed.
-    val declaredMetadata by remember(textFieldState) {
-        derivedStateOf { ChordProHeader.declaredMetadata(textFieldState.text.toString()) }
+    val declaredMetadata by remember(text) {
+        derivedStateOf { ChordProHeader.declaredMetadata(text.value) }
     }
     Column(
         modifier = modifier.padding(bottom = TOOLBAR_PADDING),

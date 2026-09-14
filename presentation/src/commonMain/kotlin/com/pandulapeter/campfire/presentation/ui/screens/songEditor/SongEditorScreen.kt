@@ -45,6 +45,7 @@ import androidx.compose.material3.VerticalDivider
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.State
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -177,7 +178,10 @@ private fun LoadedSongEditor(
             },
         )
     }
-    ReportDraft(viewModel = viewModel, fileName = destination.fileName, textFieldState = textFieldState)
+    // The text as one string, copied once per edit and shared by everything that follows it: the draft, the summary
+    // in the bar, the toolbar and the preview would otherwise each copy and scan the whole song on every keystroke.
+    val text = remember(textFieldState) { derivedStateOf { textFieldState.text.toString() } }
+    ReportDraft(viewModel = viewModel, fileName = destination.fileName, text = text)
 
     val userPreferences by viewModel.userPreferences.collectAsStateWithLifecycle()
     val transpositions by viewModel.transpositions.collectAsStateWithLifecycle()
@@ -188,7 +192,7 @@ private fun LoadedSongEditor(
     // key the rest of the app will show once the file is written - the fallback to the file name included. One
     // summary rather than a parse per field: it also answers whether there is anything left to transpose.
     val summary by remember(textFieldState) {
-        derivedStateOf { ChordProParser.summarize(textFieldState.text.toString()) }
+        derivedStateOf { ChordProParser.summarize(text.value) }
     }
     val hasUnsavedChanges by viewModel.hasUnsavedEditorChanges.collectAsStateWithLifecycle()
     RevertOnRequest(viewModel = viewModel, fileName = destination.fileName, textFieldState = textFieldState)
@@ -305,6 +309,7 @@ private fun LoadedSongEditor(
                 AnimatedVisibility(visible = panes != EditorPanes.PREVIEW) {
                     EditorToolbar(
                         textFieldState = textFieldState,
+                        text = text,
                         contentPadding = contentPadding,
                     )
                 }
@@ -328,7 +333,7 @@ private fun LoadedSongEditor(
             SongPreview(
                 modifier = paneModifier,
                 viewModel = viewModel,
-                textFieldState = textFieldState,
+                text = text,
                 transposition = transpositions[destination.fileName, null],
                 fontScale = fontScale,
                 isHorizontalFlow = userPreferences?.isHorizontalSectionFlowEnabled == true,
@@ -462,16 +467,16 @@ private fun ChordProTextField(
 private fun SongPreview(
     modifier: Modifier = Modifier,
     viewModel: CampfireViewModel,
-    textFieldState: TextFieldState,
+    text: State<String>,
     transposition: Int,
     fontScale: Float,
     isHorizontalFlow: Boolean,
     chordSpelling: UserPreferences.ChordSpelling,
     contentPadding: PaddingValues,
 ) {
-    var previewedText by remember(textFieldState) { mutableStateOf(textFieldState.text.toString()) }
-    LaunchedEffect(textFieldState) {
-        snapshotFlow { textFieldState.text.toString() }
+    var previewedText by remember(text) { mutableStateOf(text.value) }
+    LaunchedEffect(text) {
+        snapshotFlow { text.value }
             .distinctUntilChanged()
             .debounce(PREVIEW_DELAY_MILLIS)
             .collect { previewedText = it }
@@ -534,10 +539,10 @@ private fun EditorMenu(
 private fun ReportDraft(
     viewModel: CampfireViewModel,
     fileName: String,
-    textFieldState: TextFieldState,
+    text: State<String>,
 ) {
-    LaunchedEffect(textFieldState, fileName) {
-        snapshotFlow { textFieldState.text.toString() }.collect { viewModel.onEditorTextChanged(fileName, it) }
+    LaunchedEffect(text, fileName) {
+        snapshotFlow { text.value }.collect { viewModel.onEditorTextChanged(fileName, it) }
     }
     // Whatever became of the text - saved, discarded, or the song deleted - there is no draft once the editor is gone.
     DisposableEffect(fileName) { onDispose { viewModel.onEditorClosed() } }
