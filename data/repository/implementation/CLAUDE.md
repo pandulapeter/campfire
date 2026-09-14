@@ -18,7 +18,10 @@ reimplement state handling. It owns a `MutableStateFlow<DataState<T>>` that star
 read yet is not an error), reads the local source on the first `loadDataIfNeeded()`, and guards that read with a
 `Mutex` so that the parallel loads in `LoadScreenDataUseCase` wait for each other instead of racing. A re-read keeps the
 data already on screen in the `Loading` state, so a refresh never blanks the list, and a failed read becomes
-`Failure(previous data)` rather than an empty list.
+`Failure(previous data)` rather than an empty list. A failure stays one through `updateData`, and the next
+`loadDataIfNeeded()` reads again even though a change since has put data in the cache — otherwise a song created after
+a failed scan would stand in for the whole library. A write that lands through `updateData` while a read is running
+makes that read go again once it has published, since its directory listing may predate the file.
 
 A load that arrives in pieces can publish them with `publishPartialData`, which is what the song scan does with each
 batch of files it has parsed — a library of thousands then fills the list as it is read instead of showing nothing

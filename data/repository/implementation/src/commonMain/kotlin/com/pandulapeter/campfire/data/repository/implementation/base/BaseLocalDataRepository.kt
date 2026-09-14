@@ -10,6 +10,7 @@
 package com.pandulapeter.campfire.data.repository.implementation.base
 
 import com.pandulapeter.campfire.data.model.DataState
+import kotlin.concurrent.Volatile
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -22,6 +23,12 @@ import kotlinx.coroutines.sync.withLock
  *
  * Writing is *not* part of the shape: songs and setlists are one file each, so a change writes that file and updates
  * the cached list, rather than persisting the list. Only the preferences are saved as a whole, through [writeData].
+ *
+ * A change made through [updateData] while a read is running is on disk already, but the read may have listed the
+ * directory before it got there, and publishing that result as it is would drop the change from the list until the
+ * next rescan. Rather than replaying the changes onto the result, a read that saw one land reads again once it has
+ * published: a sync run rescans the library while the user goes on editing it, and a second directory listing is
+ * the one answer that is right whatever the change was.
  */
 internal abstract class BaseLocalDataRepository<T> {
 
@@ -34,14 +41,31 @@ internal abstract class BaseLocalDataRepository<T> {
     private val mutex = Mutex()
     private var isPublishingPartialData = false
 
+    /**
+     * Set by a read that failed and cleared by one that succeeded, rather than read off the state: a write of the
+     * preferences that failed is a [DataState.Failure] too, and reading those again would replace the change being
+     * kept in memory with the older document still on disk.
+     */
+    private var hasReadFailed = false
+
+    /** Compared before and after a read, which is how it notices an [updateData] that arrived while it was running. */
+    @Volatile
+    private var updateCount = 0
+
     /** Reads everything this repository caches, from its own local source. */
     protected abstract suspend fun loadDataFromLocalSource(): T
 
     /**
      * The data, read from the local source the first time it is asked for. Null if that read failed: storage that
      * cannot be read is reported rather than waited on, so that the UI never keeps a loading state forever.
+     *
+     * A read that failed is tried again by the next caller even when changes made since have put some data in the
+     * cache: that data is only what those changes added, and returning it would pass a single new song off as the
+     * whole library for as long as the app runs.
      */
-    protected suspend fun loadDataIfNeeded(): T? = mutex.withLock { _dataState.value.data ?: read() }
+    protected suspend fun loadDataIfNeeded(): T? = mutex.withLock {
+        _dataState.value.data?.takeUnless { hasReadFailed } ?: read()
+    }
 
     /** Reads the local source again even if there already is data, which is what a refresh does. */
     protected suspend fun reloadData(): T? = mutex.withLock { read() }
@@ -51,8 +75,14 @@ internal abstract class BaseLocalDataRepository<T> {
      * transform is applied to the state as it is at that moment, so two changes that land at once (a save in the
      * editor and the rescan a sync run finished with) build on each other instead of the later one overwriting the
      * earlier. [DataState.data] is null while nothing has been read yet.
+     *
+     * A [DataState.Failure] stays one: the change is applied, but the read it is applied to is still the one that
+     * failed, and the UI goes on reporting that.
      */
-    protected fun updateData(transform: (T?) -> T) = _dataState.update { DataState.Idle(transform(it.data)) }
+    protected fun updateData(transform: (T?) -> T) {
+        updateCount++
+        _dataState.update { if (it is DataState.Failure) DataState.Failure(transform(it.data)) else DataState.Idle(transform(it.data)) }
+    }
 
     /**
      * Publishes what a read has put together so far, so that a slow one fills the screen as it goes. It is still a
@@ -89,13 +119,22 @@ internal abstract class BaseLocalDataRepository<T> {
         }
     }
 
-    private suspend fun read(): T? = _dataState.run {
+    private suspend fun read(): T? {
+        val updateCountAtStart = updateCount
+        val data = readOnce() ?: return null
+        return if (updateCount != updateCountAtStart) read() else data
+    }
+
+    private suspend fun readOnce(): T? = _dataState.run {
         // The data that is already on screen stays there while the re-read runs, so a refresh does not blank the list.
         val previousData = value.data
         isPublishingPartialData = previousData == null
         value = DataState.Loading(previousData)
         try {
-            loadDataFromLocalSource().also { value = DataState.Idle(it) }
+            loadDataFromLocalSource().also {
+                value = DataState.Idle(it)
+                hasReadFailed = false
+            }
         } catch (exception: CancellationException) {
             // A read the caller gave up on is not a read that failed: the data on screen stays what it was, and the
             // next caller reads again. Whatever a partial publish put up is dropped rather than kept, or half a
@@ -105,6 +144,7 @@ internal abstract class BaseLocalDataRepository<T> {
         } catch (exception: Exception) {
             println(exception.message)
             value = DataState.Failure(previousData)
+            hasReadFailed = true
             null
         } finally {
             isPublishingPartialData = false
