@@ -72,7 +72,11 @@ holds the `@Module @ComponentScan object DataLocalSourceModule`, and every local
   document type ever leaves this module.
 - **`zip/`** — a dependency-free zip implementation: `ZipReader` (STORED + DEFLATE, ZIP64 and encryption rejected),
   `ZipWriter` (STORED only — song text compresses badly enough not to be worth it), `Inflater` (raw DEFLATE, RFC 1951,
-  following `puff.c`) and `Crc32`. It exists because no multiplatform zip library covers wasmJs.
+  following `puff.c`) and `Crc32`. It exists because no multiplatform zip library covers wasmJs. Sizes an archive
+  declares are trusted only as far as a first guess: an entry may inflate to 64 MiB, the buffer starts at no more than
+  1 MiB whatever the central directory claims, and one import (`ArchiveLocalSourceImpl.unpack`, nested archives
+  included) to 256 MiB, so a corrupted or crafted archive is a `ZipException` rather than an allocation that would
+  take the process with it.
 
 Tested with `commonTest` (zip round trips, reader rejections) and `desktopTest` (the JVM storage, what unpacking an
 archive keeps, and the inflater against archives the JVM produced), run with

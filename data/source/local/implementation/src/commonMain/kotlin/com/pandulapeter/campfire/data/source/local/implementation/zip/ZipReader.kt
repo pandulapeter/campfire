@@ -18,8 +18,12 @@ internal object ZipReader {
     /**
      * Every file entry of [archive], directories skipped. Names are returned as stored (forward slashes, possibly with
      * sub-directories), decoded as UTF-8.
+     *
+     * @param maxTotalSize how many bytes the entries may add up to once inflated. Sizes are checked as the central
+     * directory declares them, before an entry is read, so an archive over the limit is rejected without inflating the
+     * entry that takes it past it.
      */
-    fun read(archive: ByteArray): List<ZipEntry> {
+    fun read(archive: ByteArray, maxTotalSize: Long = MAX_ARCHIVE_SIZE): List<ZipEntry> {
         val endOfCentralDirectory = findEndOfCentralDirectory(archive)
         val totalEntries = archive.u16(endOfCentralDirectory + 10)
         val centralDirectorySize = archive.u32(endOfCentralDirectory + 12)
@@ -31,6 +35,7 @@ internal object ZipReader {
             throw ZipException("The central directory reaches past the end of the ${archive.size} byte archive.")
         }
         val entries = mutableListOf<ZipEntry>()
+        var totalSize = 0L
         var position = centralDirectoryOffset.toInt()
         repeat(totalEntries) {
             if (archive.u32(position) != CENTRAL_DIRECTORY_SIGNATURE) {
@@ -53,6 +58,10 @@ internal object ZipReader {
                 throw ZipException("ZIP64 entry \"$name\" is not supported.")
             }
             if (!name.endsWith("/")) {
+                totalSize += uncompressedSize
+                if (totalSize > maxTotalSize) {
+                    throw ZipException("The archive would inflate past $maxTotalSize bytes.")
+                }
                 entries += ZipEntry(
                     name = name,
                     bytes = readData(
@@ -126,6 +135,9 @@ internal object ZipReader {
         }
         return copyOfRange(offset, offset + length).decodeToString()
     }
+
+    /** The most an import may inflate to in total, nested archives included. */
+    const val MAX_ARCHIVE_SIZE = 256L shl 20
 
     private const val END_OF_CENTRAL_DIRECTORY_SIGNATURE = 0x06054B50L
     private const val CENTRAL_DIRECTORY_SIGNATURE = 0x02014B50L

@@ -76,6 +76,74 @@ internal class ZipReaderTest {
         assertFailsWith<ZipException> { ZipReader.read(archive) }
     }
 
+    @Test
+    fun rejectsAnEntryDeclaringMoreThanItCouldEverInflateTo() {
+        assertFailsWith<ZipException> { ZipReader.read(deflatedArchive(declaredSize = 2L shl 30)) }
+        // Past the archive limit the entry limit still stands, before a buffer of the declared size is allocated.
+        val exception = assertFailsWith<ZipException> {
+            ZipReader.read(deflatedArchive(declaredSize = 1L shl 30), maxTotalSize = Long.MAX_VALUE)
+        }
+        assertTrue(exception.message.orEmpty().contains("${Inflater.MAX_ENTRY_SIZE}"), "Unexpected message: ${exception.message}")
+    }
+
+    @Test
+    fun rejectsADeclaredSizeTheStreamDoesNotProduceWithoutAllocatingIt() {
+        val exception = assertFailsWith<ZipException> { ZipReader.read(deflatedArchive(declaredSize = 48L shl 20)) }
+
+        assertTrue(exception.message.orEmpty().contains("instead of"), "Unexpected message: ${exception.message}")
+    }
+
+    @Test
+    fun rejectsAnArchiveOverTheTotalLimit() {
+        // The two stored entries hold 6 and 9 bytes.
+        assertEquals(2, ZipReader.read(storedArchive(), maxTotalSize = 15).size)
+
+        val exception = assertFailsWith<ZipException> { ZipReader.read(storedArchive(), maxTotalSize = 14) }
+
+        assertTrue(exception.message.orEmpty().contains("14"), "Unexpected message: ${exception.message}")
+    }
+
+    /**
+     * An archive of one DEFLATE entry whose ten byte stream is a single stored block of "hello", and whose central
+     * directory claims it inflates to [declaredSize] bytes.
+     */
+    private fun deflatedArchive(declaredSize: Long): ByteArray {
+        val name = "bomb.cho".encodeToByteArray()
+        val stream = byteArrayOf(0x01, 0x05, 0x00, 0xFA.toByte(), 0xFF.toByte()) + "hello".encodeToByteArray()
+        val builder = ByteArrayBuilder()
+        builder.u32(0x04034B50L)
+        repeat(3) { builder.u16(0) } // Version, flags, method: the central directory is the one that is read.
+        repeat(2) { builder.u16(0) } // Modification time and date.
+        repeat(3) { builder.u32(0) } // Checksum and sizes.
+        builder.u16(name.size)
+        builder.u16(0) // Extra field length.
+        builder.bytes(name)
+        builder.bytes(stream)
+        val centralDirectoryOffset = builder.size
+        builder.u32(0x02014B50L)
+        builder.u16(20) // Version made by.
+        builder.u16(20) // Version needed to extract.
+        builder.u16(0) // Flags.
+        builder.u16(8) // DEFLATE.
+        repeat(2) { builder.u16(0) } // Modification time and date.
+        builder.u32(0) // Checksum, never reached.
+        builder.u32(stream.size.toLong())
+        builder.u32(declaredSize)
+        builder.u16(name.size)
+        repeat(4) { builder.u16(0) } // Extra field and comment lengths, disk number, internal attributes.
+        builder.u32(0) // External attributes.
+        builder.u32(0) // Local header offset.
+        builder.bytes(name)
+        val centralDirectorySize = builder.size - centralDirectoryOffset
+        builder.u32(0x06054B50L)
+        repeat(2) { builder.u16(0) } // Disk numbers.
+        repeat(2) { builder.u16(1) } // Entries on this disk and in total.
+        builder.u32(centralDirectorySize.toLong())
+        builder.u32(centralDirectoryOffset.toLong())
+        builder.u16(0) // Comment length.
+        return builder.build()
+    }
+
     /**
      * A minimal archive produced by the system `zip -0` tool, holding the directory `sub/`, the stored file
      * `sub/nested.txt` ("nested") and the stored file `hello.txt` ("hello zip").

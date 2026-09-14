@@ -20,7 +20,8 @@ internal object Inflater {
      * Decompresses [length] bytes of raw DEFLATE data starting at [offset] of [source].
      *
      * @param expectedSize the known uncompressed size, or a negative number when it is unknown. When it is known the
-     * output buffer is allocated once and the result is verified against it.
+     * output buffer starts at that size, up to [INITIAL_CAPACITY_LIMIT], and the result is verified against it.
+     * @throws ZipException when the data is malformed, or when it declares or produces more than [MAX_ENTRY_SIZE] bytes.
      */
     fun inflate(
         source: ByteArray,
@@ -30,6 +31,9 @@ internal object Inflater {
     ): ByteArray {
         if (offset < 0 || length < 0 || offset + length > source.size) {
             throw ZipException("Deflate input range $offset..${offset + length} is outside the ${source.size} byte input.")
+        }
+        if (expectedSize > MAX_ENTRY_SIZE) {
+            throw ZipException("Entry would inflate past $MAX_ENTRY_SIZE bytes.")
         }
         val state = State(source, offset, length, expectedSize)
         state.inflate()
@@ -51,7 +55,10 @@ internal object Inflater {
         private var position = offset
         private var bitBuffer = 0
         private var bitCount = 0
-        private var out = ByteArray(if (expectedSize > 0) expectedSize else 1024)
+        // The declared size comes from the archive itself, so it is only trusted as far as a first guess: a corrupted or
+        // crafted central directory can claim gigabytes for a stream of a few bytes, and an allocation that large is an
+        // OutOfMemoryError on Android and a trap on the web, neither of which an import can catch.
+        private var out = ByteArray(if (expectedSize > 0) minOf(expectedSize, INITIAL_CAPACITY_LIMIT) else 1024)
         private var outSize = 0
 
         fun output(): ByteArray = if (outSize == out.size) out else out.copyOf(outSize)
@@ -108,12 +115,15 @@ internal object Inflater {
 
         private fun ensureCapacity(additional: Int) {
             val required = outSize + additional
+            if (required > MAX_ENTRY_SIZE) {
+                throw ZipException("Entry would inflate past $MAX_ENTRY_SIZE bytes.")
+            }
             if (required > out.size) {
                 var newSize = if (out.size == 0) 1024 else out.size
                 while (newSize < required) {
                     newSize *= 2
                 }
-                out = out.copyOf(newSize)
+                out = out.copyOf(minOf(newSize, MAX_ENTRY_SIZE))
             }
         }
 
@@ -267,6 +277,15 @@ internal object Inflater {
             }
         }
     }
+
+    /** The largest buffer allocated on the strength of a declared size alone; anything bigger grows into place. */
+    const val INITIAL_CAPACITY_LIMIT = 1 shl 20
+
+    /**
+     * The most a single entry may inflate to. Every song and setlist is a text of a few kilobytes, so this is a generous
+     * ceiling that still keeps a decompression bomb from taking the process with it.
+     */
+    const val MAX_ENTRY_SIZE = 64 shl 20
 
     private const val STORED = 0
     private const val FIXED = 1

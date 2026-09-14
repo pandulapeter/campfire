@@ -26,14 +26,20 @@ import org.koin.core.annotation.Single
 internal class ArchiveLocalSourceImpl : ArchiveLocalSource {
 
     override suspend fun unpack(archive: ByteArray): List<ImportedFile> = withContext(Dispatchers.Default) {
-        unpack(archive = archive, depth = 1)
+        unpack(archive = archive, depth = 1, inflated = InflatedBytes())
     }
 
     override suspend fun pack(files: Map<String, ByteArray>): ByteArray = withContext(Dispatchers.Default) {
         ZipWriter.write(files.map { (name, bytes) -> ZipEntry(name = name, bytes = bytes) })
     }
 
-    private fun unpack(archive: ByteArray, depth: Int): List<ImportedFile> = ZipReader.read(archive)
+    /**
+     * The size limit is shared by the whole import through [inflated] rather than applied per archive: a nested archive
+     * is inflated on top of the bytes its parent already holds in memory, and every level is kept until the end.
+     */
+    private fun unpack(archive: ByteArray, depth: Int, inflated: InflatedBytes): List<ImportedFile> = ZipReader
+        .read(archive = archive, maxTotalSize = ZipReader.MAX_ARCHIVE_SIZE - inflated.count)
+        .also { entries -> inflated.count += entries.sumOf { it.bytes.size.toLong() } }
         // What the archiving tool wrote for itself is not part of what anybody chose to import. macOS packs an
         // AppleDouble "._name.cho" next to every entry and a ".DS_Store" into every directory, and the first of
         // those carries the extension of the file it belongs to: an archive of three hundred songs arrives as six
@@ -49,7 +55,7 @@ internal class ArchiveLocalSourceImpl : ArchiveLocalSource {
                 // A nested archive that cannot be read is skipped rather than failing the whole import: the files
                 // next to it are still perfectly good.
                 try {
-                    unpack(archive = file.bytes, depth = depth + 1)
+                    unpack(archive = file.bytes, depth = depth + 1, inflated = inflated)
                 } catch (exception: Exception) {
                     println("Could not unpack \"${file.name}\": ${exception.message}")
                     emptyList()
@@ -58,6 +64,11 @@ internal class ArchiveLocalSourceImpl : ArchiveLocalSource {
                 listOf(file)
             }
         }
+
+    /** How many bytes the archives of one import have inflated to so far, carried down the recursion. */
+    private class InflatedBytes {
+        var count = 0L
+    }
 
     private companion object {
         const val MAX_DEPTH = 3
