@@ -24,7 +24,10 @@ internal data class SyncCredentialsDocument(
     val providerId: String = "",
     val accessToken: String = "",
     val refreshToken: String = "",
-    /** Milliseconds since the epoch, 0 when the provider did not say and the token is assumed not to expire. */
+    /**
+     * Milliseconds since the epoch. 0 means the expiry is unknown, and the token is renewed before it is used: a
+     * provider that hands out tokens which never expire records a date far in the future instead.
+     */
     val expiresAt: Long = 0,
     val accountId: String = "",
     val displayName: String = "",
