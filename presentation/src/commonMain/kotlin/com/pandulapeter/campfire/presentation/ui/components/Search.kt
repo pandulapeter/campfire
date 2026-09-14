@@ -96,6 +96,7 @@ import androidx.navigationevent.NavigationEventInfo
 import androidx.navigationevent.NavigationEventTransitionState
 import androidx.navigationevent.compose.NavigationBackHandler
 import androidx.navigationevent.compose.rememberNavigationEventState
+import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.filter
 import kotlin.math.roundToInt
@@ -156,15 +157,20 @@ internal fun SearchableTopAppBar(
     val recession = remember(searchState) { SearchRecession() }
     val returnSpec = searchTravelSpec<Float>()
     val isClosedAndSettled = !isOpen && !searchTransition.currentState
-    LaunchedEffect(searchState.backProgress, isOpen, isClosedAndSettled) {
-        when {
-            searchState.backProgress > 0f -> recession.progress.snapTo(searchState.backProgress)
-            // A gesture let go of without closing the search brings the field and the button back. One that did close
-            // it leaves both where the gesture had taken them, so that the exit carries on from there instead of
-            // jumping back into place for the first frame of it, and is only forgotten once that exit is over, so the
-            // next search opens onto a whole field.
-            isOpen -> recession.progress.animateTo(targetValue = 0f, animationSpec = returnSpec)
-            isClosedAndSettled -> recession.progress.snapTo(0f)
+    LaunchedEffect(isOpen, isClosedAndSettled) {
+        // The progress is collected rather than keyed on, since it changes on every frame of the gesture and each of
+        // those would otherwise cancel and relaunch the effect. Latest, so that a gesture starting again while the
+        // field is still coming back takes it from wherever it has got to.
+        snapshotFlow { searchState.backProgress }.collectLatest { backProgress ->
+            when {
+                backProgress > 0f -> recession.progress.snapTo(backProgress)
+                // A gesture let go of without closing the search brings the field and the button back. One that did
+                // close it leaves both where the gesture had taken them, so that the exit carries on from there instead
+                // of jumping back into place for the first frame of it, and is only forgotten once that exit is over,
+                // so the next search opens onto a whole field.
+                isOpen -> recession.progress.animateTo(targetValue = 0f, animationSpec = returnSpec)
+                isClosedAndSettled -> recession.progress.snapTo(0f)
+            }
         }
     }
     val travelSpec = searchTravelSpec(visibilityThreshold = Rect.VisibilityThreshold)
