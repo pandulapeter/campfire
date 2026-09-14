@@ -15,14 +15,19 @@ import androidx.compose.animation.core.spring
 import androidx.compose.foundation.gestures.ScrollableState
 import androidx.compose.foundation.lazy.LazyItemScope
 import androidx.compose.foundation.lazy.grid.LazyGridItemScope
+import androidx.compose.foundation.lazy.grid.LazyGridState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.SideEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
+import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.IntOffset
+import kotlinx.coroutines.flow.filter
 
 /**
  * Whether the lists have the whole library and can start animating their items, which they must not do while they
@@ -43,6 +48,58 @@ internal fun rememberHasLoadedLibrary(isLoading: Boolean): Boolean {
     var hasLoadedLibrary by remember { mutableStateOf(false) }
     LaunchedEffect(isLoading) { if (!isLoading) hasLoadedLibrary = true }
     return hasLoadedLibrary
+}
+
+/**
+ * Scrolls a list back to the top whenever [key] changes - which is where its search, its sorting and its filters
+ * go - and keeps the change of [contents] that follows it animated.
+ *
+ * A lazy grid holds on to the key of its first visible item across a change of its contents, and a list that grows
+ * has that item further down than it was: a filter taken off puts the songs it hid above the row at the top, and the
+ * grid follows that row to its new index. Going back to the top from there is a jump to a different position, which
+ * the grid answers by forgetting where every item was, so nothing slides out of the way and nothing fades in - the
+ * rows are simply there. A list that is narrowed never runs into it, since the rows it keeps only ever move up.
+ *
+ * The position is therefore asked for by index, in the very composition the new contents arrive in, before the grid
+ * measures them. That can be several frames after [key] changed, since the list is worked out outside the
+ * composition, so every change of [contents] is held that way until the list is next scrolled - which is also where
+ * holding it by index stops being right, and the grid goes back to following its first visible row through an edit.
+ * The key last scrolled to the top is saved, so that coming back from another screen keeps the restored position
+ * rather than jumping to the top.
+ *
+ * @param contents What the grid is built from, compared by identity: a new instance is a change of the list.
+ */
+@Composable
+internal fun ScrollToTopWhenChanged(
+    listState: LazyGridState,
+    key: String,
+    contents: Any?,
+) {
+    var lastScrollToTopKey by rememberSaveable { mutableStateOf(key) }
+    val heldTop = remember { HeldTop(contents) }
+    // A side effect rather than a launched one, because it runs before the grid measures what this composition gave
+    // it: a request made a frame later would come after the grid had already followed its first row down.
+    SideEffect {
+        if (key != lastScrollToTopKey) {
+            lastScrollToTopKey = key
+            heldTop.isHolding = true
+            listState.requestScrollToItem(0)
+        } else if (heldTop.isHolding && contents !== heldTop.contents && !listState.isScrollInProgress) {
+            listState.requestScrollToItem(
+                index = listState.firstVisibleItemIndex,
+                scrollOffset = listState.firstVisibleItemScrollOffset,
+            )
+        }
+        heldTop.contents = contents
+    }
+    LaunchedEffect(listState) {
+        snapshotFlow { listState.isScrollInProgress }.filter { it }.collect { heldTop.isHolding = false }
+    }
+}
+
+/** What [ScrollToTopWhenChanged] remembers between compositions, none of which is ever drawn. */
+private class HeldTop(var contents: Any?) {
+    var isHolding = false
 }
 
 /**

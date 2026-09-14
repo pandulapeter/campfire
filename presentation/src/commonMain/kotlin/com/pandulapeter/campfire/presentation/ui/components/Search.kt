@@ -11,7 +11,6 @@ package com.pandulapeter.campfire.presentation.ui.components
 
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.BoundsTransform
-import androidx.compose.animation.EnterExitState
 import androidx.compose.animation.ExperimentalSharedTransitionApi
 import androidx.compose.animation.animateBounds
 import androidx.compose.animation.core.Animatable
@@ -68,24 +67,19 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
-import androidx.compose.ui.geometry.CornerRadius
 import androidx.compose.ui.geometry.Rect
-import androidx.compose.ui.geometry.RoundRect
-import androidx.compose.ui.geometry.Size
-import androidx.compose.ui.graphics.Outline
-import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.input.pointer.PointerIcon
 import androidx.compose.ui.input.pointer.pointerHoverIcon
 import androidx.compose.ui.layout.LookaheadScope
+import androidx.compose.ui.layout.layout
 import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.style.TextOverflow
-import androidx.compose.ui.unit.Density
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.IntSize
@@ -124,6 +118,14 @@ import org.jetbrains.compose.resources.painterResource
  * [LookaheadScope] that is only this bar. Each slot makes room for the button with a placeholder that grows and
  * shrinks on the same spring the button travels on, which is what moves the title and the rest of the actions out
  * of its way instead of snapping them to where they end up.
+ *
+ * The field travels the same way, by [animateBounds] on the same spring, rather than being revealed by an animation of
+ * its own: its start edge follows the button across the bar, and two different animations only ever arrive together
+ * to within their visibility thresholds. A fraction of the field's width stops a hundredth short of the whole, which
+ * on a wide window is several pixels for the edge to jump by on the last frame, while a rectangle settles to within a
+ * pixel exactly as the button's does. So the field is laid out where it ends up — the whole title slot while the search
+ * is open, and no width at all at the button's end edge while it is closed, [CLOSED_FIELD_OFFSET] past the end of the
+ * slot — and the two rectangles travel between those places together.
  *
  * The bounds only animate while the search is opening or closing: the same modifier would otherwise have the button
  * lag behind every other change of the bar's layout, a window being resized on the desktop among them.
@@ -193,6 +195,19 @@ internal fun SearchableTopAppBar(
                 lookaheadScope = this,
                 boundsTransform = boundsTransform,
             )
+        val fieldModifier = Modifier
+            .layout { measurable, constraints ->
+                val isOpenOrOpening = searchTransition.targetState
+                val width = if (isOpenOrOpening) (constraints.maxWidth - recession.startEdgeTravel).coerceAtLeast(0) else 0
+                val placeable = measurable.measure(constraints.copy(minWidth = width, maxWidth = width))
+                layout(width, placeable.height) {
+                    placeable.placeRelative(x = if (isOpenOrOpening) 0 else CLOSED_FIELD_OFFSET.roundToPx(), y = 0)
+                }
+            }
+            .animateBounds(
+                lookaheadScope = this,
+                boundsTransform = boundsTransform,
+            )
         CampfireTopAppBar(
             modifier = modifier,
             scrollBehavior = scrollBehavior,
@@ -213,6 +228,7 @@ internal fun SearchableTopAppBar(
                     searchState = searchState,
                     searchTransition = searchTransition,
                     recession = recession,
+                    fieldModifier = fieldModifier,
                 )
             },
             actions = {
@@ -275,9 +291,12 @@ private fun SearchActionSlot(
  * The distance is fixed rather than a fraction of the name's width, so a long name does not travel further than a
  * short one.
  *
- * The two take turns in one [Box] that is as tall as whichever of them is in it, so it grows and shrinks as they
- * swap — which is why it centers its content. Left to the default the title would be pinned to the top of the box
- * for as long as the taller field shares it, and would drop back into place at the end of every transition.
+ * The field is never taken out of the [Box] the two share, only emptied and laid out with no width at all while the
+ * search is closed, since [animateBounds] only animates a rectangle it has already seen: a field composed as the search
+ * opened would appear at its full size on the first frame. It keeps the box as tall as the field throughout, so the
+ * title is centered in it rather than pinned to the top of a box that grows and shrinks.
+ *
+ * @param fieldModifier Where the field is laid out and how it travels there, see [SearchableTopAppBar].
  */
 @Composable
 private fun SearchableTopAppBarTitle(
@@ -287,8 +306,9 @@ private fun SearchableTopAppBarTitle(
     searchState: SearchState,
     searchTransition: Transition<Boolean>,
     recession: SearchRecession,
+    fieldModifier: Modifier,
 ) = Box(
-    modifier = modifier.fillMaxWidth(),
+    modifier = modifier.fillMaxWidth().onSizeChanged { recession.fieldWidth = it.width },
     contentAlignment = Alignment.CenterStart,
 ) {
     // Slide offsets are placed as they are rather than mirrored, so the start edge is the left one only left to right.
@@ -307,25 +327,18 @@ private fun SearchableTopAppBarTitle(
             overflow = TextOverflow.Ellipsis,
         )
     }
-    val expansionSpec = searchTravelSpec<Float>()
-    searchTransition.AnimatedVisibility(
-        visible = { it },
-        enter = fadeIn(MaterialTheme.motionScheme.defaultEffectsSpec()),
-        exit = fadeOut(MaterialTheme.motionScheme.defaultEffectsSpec()),
-    ) {
-        // An animation of the visibility transition itself rather than a slide: the content is only removed
-        // once it has settled, and the field grows out of its end edge instead of travelling towards it.
-        val expansion by transition.animateFloat(
-            transitionSpec = { expansionSpec },
-        ) { if (it == EnterExitState.Visible) 1f else 0f }
-        SearchField(
-            modifier = Modifier.fillMaxWidth().onSizeChanged { recession.fieldWidth = it.width },
-            searchState = searchState,
-            placeholder = placeholder,
-            expansion = { expansion },
-            recession = { recession.progress.value },
-        )
-    }
+    val fieldFadeSpec = MaterialTheme.motionScheme.defaultEffectsSpec<Float>()
+    val fieldAlpha = searchTransition.animateFloat(
+        transitionSpec = { fieldFadeSpec },
+    ) { if (it) 1f else 0f }
+    SearchField(
+        modifier = Modifier.align(Alignment.CenterEnd).then(fieldModifier),
+        searchState = searchState,
+        placeholder = placeholder,
+        isContentShown = searchTransition.currentState || searchTransition.targetState,
+        alpha = { fieldAlpha.value },
+        recession = recession,
+    )
 }
 
 /**
@@ -457,50 +470,53 @@ private fun SearchAction(
  * It comes and goes by collapsing into its end edge rather than by sliding: that edge is where the search action
  * sets out from as the search opens, so the start edge of the pill follows the button across the bar to the start
  * of it, and follows it back into the end as it closes, where a field that slid in would pass under the very button
- * that is turning into the close mark. The pill is laid out at its full width throughout and only clipped, so the
- * text inside does not reflow as it goes.
- * What the pill holds rides its start edge instead, carried into the end as the field leaves and out of it as it
- * arrives, and is cut off where it meets the end: text that stayed put, or moved any slower than the edge, is read
- * as standing still while the pill is swept away from under it.
+ * that is turning into the close mark. The pill is only ever as wide as it is seen, see [SearchableTopAppBar], while
+ * what it holds is laid out at the full width of the title slot, so the text inside does not reflow as it goes.
+ * That content rides the start edge, carried into the end as the field leaves and out of it as it arrives, and is cut
+ * off where it meets the end: text that stayed put, or moved any slower than the edge, is read as standing still while
+ * the pill is swept away from under it.
  *
  * While a back gesture that would close the search is being dragged, the field fades and collapses the way its exit
  * takes it, as far as the gesture has come.
  *
- * @param expansion How much of the field's width is showing, from nothing at all to the whole of it, read while the
- *   field is drawn so that an animation of it never recomposes the field.
- * @param recession How far a back gesture has taken the field towards closing, see [SearchRecession], read the same way.
+ * @param isContentShown Whether the pill holds the field at all, which it does from the moment the search starts
+ *   opening until it has finished closing. A closed search keeps nothing in it that could take the focus.
+ * @param alpha How opaque the field is, read while it is drawn so that fading it never recomposes it.
+ * @param recession How far a back gesture has taken the field towards closing, read the same way.
  */
 @Composable
 private fun SearchField(
     modifier: Modifier = Modifier,
     searchState: SearchState,
     placeholder: String,
-    expansion: () -> Float,
-    recession: () -> Float,
+    isContentShown: Boolean,
+    alpha: () -> Float,
+    recession: SearchRecession,
+) = Surface(
+    modifier = modifier
+        .height(FIELD_HEIGHT)
+        .graphicsLayer { this.alpha = alpha() * (1f - recession.progress.value * RECEDED_ALPHA_LOSS) },
+    shape = CircleShape,
+    color = MaterialTheme.colorScheme.surfaceContainerHigh,
 ) {
-    val keyboardController = LocalSoftwareKeyboardController.current
-    val focusRequester = remember { FocusRequester() }
-    LaunchedEffect(Unit) {
-        searchState.textFieldState.edit { placeCursorAtEnd() }
-        focusRequester.requestFocus()
-    }
-    // A spring turned around halfway carries its velocity past the whole width, which would push the text back past
-    // its own padding.
-    val widthFraction = { (expansion() * (1f - recession() * RECEDED_WIDTH_LOSS)).coerceIn(0f, 1f) }
-    val endwards = if (LocalLayoutDirection.current == LayoutDirection.Ltr) 1f else -1f
-    Surface(
-        modifier = modifier.graphicsLayer {
-            alpha = 1f - recession() * RECEDED_ALPHA_LOSS
-            shape = EndAnchoredPillShape(widthFraction = widthFraction())
-            clip = true
-        },
-        shape = CircleShape,
-        color = MaterialTheme.colorScheme.surfaceContainerHigh,
-    ) {
+    if (isContentShown) {
+        val keyboardController = LocalSoftwareKeyboardController.current
+        val focusRequester = remember { FocusRequester() }
+        LaunchedEffect(Unit) {
+            searchState.textFieldState.edit { placeCursorAtEnd() }
+            focusRequester.requestFocus()
+        }
         Row(
             modifier = Modifier
-                .graphicsLayer { translationX = endwards * (1f - widthFraction()) * size.width }
-                .height(FIELD_HEIGHT)
+                .layout { measurable, constraints ->
+                    // The pill's own width where that is the larger: a spring turned around halfway carries the pill
+                    // past the whole of the slot, and the text would otherwise stop short of its end.
+                    val width = maxOf(constraints.maxWidth, recession.fieldWidth)
+                    val placeable = measurable.measure(constraints.copy(minWidth = width, maxWidth = width))
+                    layout(constraints.maxWidth, placeable.height) {
+                        placeable.placeRelative(x = 0, y = 0)
+                    }
+                }
                 .padding(start = 16.dp, end = 4.dp),
             verticalAlignment = Alignment.CenterVertically,
         ) {
@@ -575,28 +591,6 @@ private class SearchRecession {
 }
 
 /**
- * A pill as wide as [widthFraction] of the bounds it is drawn in, held against their end edge, which is what the
- * search field is clipped to as it collapses into that edge. Created anew for every frame of the animation, since a
- * layer only asks a shape for its outline again when it is handed a different one.
- */
-private data class EndAnchoredPillShape(
-    private val widthFraction: Float,
-) : Shape {
-
-    override fun createOutline(size: Size, layoutDirection: LayoutDirection, density: Density): Outline {
-        val width = size.width * widthFraction
-        val radius = CornerRadius(minOf(width, size.height) / 2)
-        return Outline.Rounded(
-            if (layoutDirection == LayoutDirection.Ltr) {
-                RoundRect(left = size.width - width, top = 0f, right = size.width, bottom = size.height, cornerRadius = radius)
-            } else {
-                RoundRect(left = 0f, top = 0f, right = width, bottom = size.height, cornerRadius = radius)
-            }
-        )
-    }
-}
-
-/**
  * The spring the search action travels across the bar on, shared by the room either end of the bar makes for it and
  * by the field whose edge follows it, since the three are one movement and have to arrive together. It is critically
  * damped rather than the theme's spatial spring, which overshoots: a button that travels past the start of the bar
@@ -623,6 +617,13 @@ private val TITLE_SLIDE_DISTANCE = 16.dp
  * action's is, a 48dp touch target behind the bar's 4dp padding - so the slot starts 52dp in while the search is open.
  */
 private val TITLE_SLOT_SHIFT = 40.dp
+
+/**
+ * How far past the end of the title slot's content the search action ends while the search is closed: the 4dp
+ * `TopAppBar` pads its title by, and the touch target the action's slot keeps for it. The closed field is laid out
+ * with no width at that edge, so that its start edge sets out from the end of the button rather than from under it.
+ */
+private val CLOSED_FIELD_OFFSET = 52.dp
 
 private val FIELD_HEIGHT = 40.dp
 private val CLEAR_BUTTON_SIZE = 32.dp

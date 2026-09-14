@@ -34,14 +34,10 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.SideEffect
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
-import androidx.compose.runtime.saveable.rememberSaveable
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.platform.LocalLayoutDirection
@@ -69,6 +65,7 @@ import com.pandulapeter.campfire.presentation.ui.components.KeepTopAppBarInSync
 import com.pandulapeter.campfire.presentation.ui.components.ListColumns
 import com.pandulapeter.campfire.presentation.ui.components.ListPlaceholder
 import com.pandulapeter.campfire.presentation.ui.components.NewItemMenu
+import com.pandulapeter.campfire.presentation.ui.components.ScrollToTopWhenChanged
 import com.pandulapeter.campfire.presentation.ui.components.SearchableTopAppBar
 import com.pandulapeter.campfire.presentation.ui.components.SECTION_HEADER_GAP
 import com.pandulapeter.campfire.presentation.ui.components.SectionHeader
@@ -230,8 +227,11 @@ private fun SongList(
     contentPadding: PaddingValues,
 ) {
     val songGroups by viewModel.songGroups.collectAsStateWithLifecycle()
-    // Read straight off the field's own state, which is where the text lives now, see SearchState.
-    val query = viewModel.songsSearch.textFieldState.text.toString()
+    val isSearchOpen by viewModel.songsSearch.isOpen.collectAsStateWithLifecycle()
+    // Read straight off the field's own state, which is where the text lives now, see SearchState. A closed search
+    // narrows nothing whatever its field still holds, so closing one changes what the list holds as much as emptying
+    // the field does.
+    val query = if (isSearchOpen) viewModel.songsSearch.textFieldState.text.toString() else ""
     val userPreferences by viewModel.userPreferences.collectAsStateWithLifecycle()
     val songFilter by viewModel.songFilter.collectAsStateWithLifecycle()
     val transpositions by viewModel.transpositions.collectAsStateWithLifecycle()
@@ -252,19 +252,11 @@ private fun SongList(
         }
     }
 
-    // Scroll back to the top whenever the search query, the sorting or the filters change, before the new items
-    // arrive. The combination that was last scrolled to the top is remembered across recompositions and state
-    // restoration, so that coming back from the song details keeps the restored scroll position instead of jumping
-    // to the top.
-    val scrollToTopKey =
-        "$query|${userPreferences?.sortingMode?.name}|${songFilter.selectedTags.sorted()}|${userPreferences?.tagMatchMode?.name}|${songFilter.selectedLanguages.sorted()}"
-    var lastScrollToTopKey by rememberSaveable { mutableStateOf(scrollToTopKey) }
-    LaunchedEffect(scrollToTopKey) {
-        if (scrollToTopKey != lastScrollToTopKey) {
-            lastScrollToTopKey = scrollToTopKey
-            listState.scrollToItem(0)
-        }
-    }
+    ScrollToTopWhenChanged(
+        listState = listState,
+        key = "$query|${userPreferences?.sortingMode?.name}|${songFilter.selectedTags.sorted()}|${userPreferences?.tagMatchMode?.name}|${songFilter.selectedLanguages.sorted()}",
+        contents = songGroups,
+    )
 
     // A lazy grid holds on to the key of its first visible item across a change of its contents, which is right for
     // an edit and wrong for the library arriving: the read publishes a batch at a time in the order the files are

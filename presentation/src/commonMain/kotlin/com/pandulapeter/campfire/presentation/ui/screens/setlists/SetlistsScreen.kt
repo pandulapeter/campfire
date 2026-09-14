@@ -36,7 +36,6 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
-import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -72,6 +71,7 @@ import com.pandulapeter.campfire.presentation.ui.components.ListPlaceholder
 import com.pandulapeter.campfire.presentation.ui.components.NewItemMenu
 import com.pandulapeter.campfire.presentation.ui.components.HideKeyboardWhenScrolledDown
 import com.pandulapeter.campfire.presentation.ui.components.KeepTopAppBarInSync
+import com.pandulapeter.campfire.presentation.ui.components.ScrollToTopWhenChanged
 import com.pandulapeter.campfire.presentation.ui.components.SearchableTopAppBar
 import com.pandulapeter.campfire.presentation.ui.components.SECTION_HEADER_GAP
 import com.pandulapeter.campfire.presentation.ui.components.SectionHeader
@@ -245,17 +245,13 @@ private fun SetlistList(
     val layoutDirection = LocalLayoutDirection.current
     val coroutineScope = rememberCoroutineScope()
 
-    // Scroll back to the top whenever the search changes what the list holds, before the new setlists arrive. The
-    // query that was last scrolled to the top is remembered across state restoration, so that coming back from a
-    // song keeps the restored position instead of jumping.
-    val query = viewModel.setlistsSearch.textFieldState.text.toString()
-    var lastScrolledToTopQuery by rememberSaveable { mutableStateOf(query) }
-    LaunchedEffect(query) {
-        if (query != lastScrolledToTopQuery) {
-            lastScrolledToTopQuery = query
-            listState.scrollToItem(0)
-        }
-    }
+    val isSearchOpen by viewModel.setlistsSearch.isOpen.collectAsStateWithLifecycle()
+    ScrollToTopWhenChanged(
+        listState = listState,
+        // A closed search narrows nothing whatever its field still holds, as on the songs screen.
+        key = if (isSearchOpen) viewModel.setlistsSearch.textFieldState.text.toString() else "",
+        contents = setlistsWithSongs,
+    )
 
     // The scroller takes the end inset over from the grid, so that it keeps to the edge of the screen beside the list
     // rather than standing in front of it.

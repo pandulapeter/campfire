@@ -74,7 +74,6 @@ an empty library.
 
 ### To do
 - Rename setlist date sort, maybe expose a date for Setlists?
-- Search input field open animation glitch (padding applied at the end instantly)
 - Implement .cho (and other) file association
 - Songs: sort by year option
 - Implement sticky headers
