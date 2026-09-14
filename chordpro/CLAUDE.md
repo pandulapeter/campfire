@@ -82,7 +82,9 @@ in `:domain:*`. `:data:source:local:implementation` uses it directly for the met
   `{title: }` waiting to be typed into is a title. `repeatableMetadata` is the pair a song may say twice — its tags
   and its languages — and everything else is a thing a song can only be one of, which is what lets an editor stop
   offering it.
-- `ChordProSplitter` — splits a file that holds several songs at `{new_song}` / `{ns}`.
+- `ChordProSplitter` — splits a file that holds several songs at `{new_song}` / `{ns}`, trimming the blank lines around
+  each. `comparable` folds a text the same way, line endings included, which is what an import compares a part
+  against the file already on disk with: the same song, tagged in the app or written by hand, is not a conflict.
 - `ChordProTransposer` — moves chords by semitones, on the model (the viewer) or directly on the text keeping every
   byte of formatting (the editor's transpose action). Chooses sharps or flats from the song's key, follows the bass
   note after `/`, understands German `H`, and leaves annotations alone. A caller that knows better passes

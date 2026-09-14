@@ -136,8 +136,9 @@ preferences/sync-index.json          what the last successful sync run saw
 - The file name is a song's (and a setlist's) identity. Nothing is ever overwritten implicitly: a new or imported file
   that collides gets a `_2`, `_3`… suffix (`FileNames.kt`). An **import decides before it writes**: every incoming
   file is held against the name it wants (`PrepareImportUseCase` -> `ImportPlan`), a name taken by something with
-  exactly the same content is disregarded rather than copied, and the ones taken by something *different* are put to
-  the user as one question about the whole batch — keep both, replace, skip, or cancel the import. Replacing is the
+  exactly the same content is disregarded rather than copied (for a song, line endings and blank lines at either end
+  of the file aside, `ChordProSplitter.comparable`), and the ones taken by something *different* are put to the user
+  as one question about the whole batch — keep both, replace, skip, or cancel the import. Replacing is the
   only thing in the app that ever overwrites a library file, and it takes an answer to that dialog.
 - **Every name the app writes is normalized** — lowercase unaccented words joined with underscores
   (`LibraryFiles.normalizedName`), a song's `artist` and `title` folded one at a time so the dash between them

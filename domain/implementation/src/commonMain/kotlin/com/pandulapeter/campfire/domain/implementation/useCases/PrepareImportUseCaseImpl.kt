@@ -90,7 +90,9 @@ class PrepareImportUseCaseImpl internal constructor(
                 val existingText = plannedTexts[fileName] ?: songContentRepository.loadSongContent(fileName, shouldCache = false)?.text
                 val status = when {
                     existingText == null -> ImportPlan.Status.NEW
-                    existingText == text -> ImportPlan.Status.IDENTICAL
+                    // The file on disk may use CRLF or end in blank lines, or in none, where the part the splitter
+                    // handed back does not; it is the same song all the same, and not a name to ask the user about.
+                    ChordProSplitter.comparable(existingText) == ChordProSplitter.comparable(text) -> ImportPlan.Status.IDENTICAL
                     else -> ImportPlan.Status.CONFLICTING
                 }
                 if (status == ImportPlan.Status.NEW) {

@@ -27,4 +27,14 @@ object ChordProSplitter {
         return parts.map { part -> part.dropWhile { it.isBlank() }.dropLastWhile { it.isBlank() }.joinToString("\n") }
             .filter { it.isNotBlank() }
     }
+
+    /**
+     * [text] folded the way [split] folds a song, and the way the text editors of this module keep a file's own line
+     * endings: LF throughout, and no blank lines at either end. Two texts with the same comparable form are the same
+     * song as a file, which is the question an import asks of a part [split] handed it and the file already on disk.
+     */
+    fun comparable(text: String) = ChordProSyntax.splitLines(text)
+        .dropWhile { it.isBlank() }
+        .dropLastWhile { it.isBlank() }
+        .joinToString("\n")
 }

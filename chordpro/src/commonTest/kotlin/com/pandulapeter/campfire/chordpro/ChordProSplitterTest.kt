@@ -11,6 +11,7 @@ package com.pandulapeter.campfire.chordpro
 
 import kotlin.test.Test
 import kotlin.test.assertEquals
+import kotlin.test.assertNotEquals
 
 class ChordProSplitterTest {
 
@@ -36,5 +37,26 @@ class ChordProSplitterTest {
     @Test
     fun `parts without any content are dropped`() {
         assertEquals(listOf("{title: Only One}"), ChordProSplitter.split("{ns}\n\n{title: Only One}\n\n{ns}\n \n{ns}"))
+    }
+
+    @Test
+    fun `a song compares equal whatever its line endings and the blank lines around it`() {
+        val expected = ChordProSplitter.comparable("{title: T}\n\n[Am]a")
+
+        assertEquals(expected, ChordProSplitter.comparable("{title: T}\n\n[Am]a\n"))
+        assertEquals(expected, ChordProSplitter.comparable("\n{title: T}\n\n[Am]a\n\n"))
+        assertEquals(expected, ChordProSplitter.comparable("{title: T}\r\n\r\n[Am]a\r\n"))
+    }
+
+    @Test
+    fun `a part of a collection compares equal to the file it was exported as`() {
+        val part = ChordProSplitter.split("{title: T}\n[Am]a\n\n{ns}\n{title: U}").first()
+
+        assertEquals(ChordProSplitter.comparable("{title: T}\n[Am]a\n\n"), ChordProSplitter.comparable(part))
+    }
+
+    @Test
+    fun `a blank line inside a song still counts`() {
+        assertNotEquals(ChordProSplitter.comparable("{title: T}\n[Am]a"), ChordProSplitter.comparable("{title: T}\n\n[Am]a"))
     }
 }
