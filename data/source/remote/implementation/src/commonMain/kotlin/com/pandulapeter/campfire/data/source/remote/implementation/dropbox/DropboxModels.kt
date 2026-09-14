@@ -70,3 +70,17 @@ internal data class DropboxTokenResponse(
 internal data class DropboxErrorResponse(
     @SerialName("error_summary") val errorSummary: String = "",
 )
+
+/**
+ * The body of an answer that asks for patience: `{"error": {"reason": {...}, "retry_after": 3}}`. Only the number of
+ * seconds is read, since the reason makes no difference to how long to wait.
+ */
+@Serializable
+internal data class DropboxRateLimitResponse(
+    val error: DropboxRateLimitError = DropboxRateLimitError(),
+)
+
+@Serializable
+internal data class DropboxRateLimitError(
+    @SerialName("retry_after") val retryAfter: Long? = null,
+)

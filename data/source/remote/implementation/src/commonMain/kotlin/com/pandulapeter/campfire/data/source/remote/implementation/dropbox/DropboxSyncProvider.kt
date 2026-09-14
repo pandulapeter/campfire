@@ -283,9 +283,11 @@ internal class DropboxSyncProvider(
      *
      * A first sync of a whole library is a few hundred calls in quick succession, so being rate limited is the
      * expected answer rather than an exceptional one - and giving up on the run because of it would mean a library
-     * that can never finish its first sync. Dropbox says how long to wait in `Retry-After`; the jitter is there
-     * because several transfers are in flight at once and would otherwise all come back at the same moment and be
-     * limited again together.
+     * that can never finish its first sync. Writes are limited separately: several of them landing in one folder at
+     * once are answered with a 409 whose summary says `too_many_write_operations`, which Dropbox documents as "back off
+     * and retry" rather than as a failure of that file. Dropbox says how long to wait in a `retry_after` field of the
+     * body or in `Retry-After`; the jitter is there because several transfers are in flight at once and would
+     * otherwise all come back at the same moment and be limited again together.
      */
     private suspend fun request(block: suspend () -> HttpResponse): HttpResponse {
         var attempt = 0
@@ -299,11 +301,19 @@ internal class DropboxSyncProvider(
     }
 
     /** Null when the answer is one to act on rather than to wait out. */
-    private fun HttpResponse.retryAfterMillis(): Long? = when {
-        status == HttpStatusCode.TooManyRequests || status.value >= 500 ->
-            (headers["Retry-After"]?.toLongOrNull() ?: DEFAULT_RETRY_SECONDS) * 1000L
+    private suspend fun HttpResponse.retryAfterMillis(): Long? = when {
+        status == HttpStatusCode.TooManyRequests ||
+            status.value >= 500 ||
+            (status == HttpStatusCode.Conflict && errorSummary().contains("too_many_write_operations")) ->
+            (retryAfterSecondsInBody() ?: headers["Retry-After"]?.toLongOrNull() ?: DEFAULT_RETRY_SECONDS) * 1000L
 
         else -> null
+    }
+
+    private suspend fun HttpResponse.retryAfterSecondsInBody() = try {
+        json.decodeFromString<DropboxRateLimitResponse>(bodyAsText()).error.retryAfter
+    } catch (exception: Exception) {
+        null
     }
 
     /**
