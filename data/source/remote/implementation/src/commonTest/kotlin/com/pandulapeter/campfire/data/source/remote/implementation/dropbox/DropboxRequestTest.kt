@@ -134,6 +134,22 @@ class DropboxRequestTest {
         assertEquals(expected = 1, actual = tokenRequestCount)
     }
 
+    @Test
+    fun `reports why the token endpoint refused a refresh`() = runTest {
+        val provider = provider { request ->
+            if (request.url.toString() == TOKEN_URL) {
+                respondJson("""{"error":"invalid_grant","error_description":"refresh token is invalid or revoked"}""", HttpStatusCode.BadRequest)
+            } else {
+                respondJson("""{"error_summary":"expired_access_token/..."}""", HttpStatusCode.Unauthorized)
+            }
+        }
+        val exception = assertFailsWith<SyncAuthorizationException> { provider.list() }
+        assertEquals(
+            expected = "Dropbox refused the authorization: 400 invalid_grant: refresh token is invalid or revoked",
+            actual = exception.message,
+        )
+    }
+
     private fun provider(handler: suspend MockRequestHandleScope.(HttpRequestData) -> HttpResponseData) = DropboxSyncProvider(
         httpClient = HttpClient(MockEngine(handler)),
         credentialsStore = SyncCredentialsStore(ConnectedStorage),

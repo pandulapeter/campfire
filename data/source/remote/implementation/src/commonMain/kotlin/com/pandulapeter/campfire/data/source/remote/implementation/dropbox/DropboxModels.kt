@@ -62,6 +62,13 @@ internal data class DropboxTokenResponse(
     @SerialName("account_id") val accountId: String = "",
 )
 
+/** What the token endpoint answers a refusal with: standard OAuth, such as `invalid_grant` for a spent code. */
+@Serializable
+internal data class DropboxOAuthErrorResponse(
+    val error: String = "",
+    @SerialName("error_description") val errorDescription: String = "",
+)
+
 /**
  * Dropbox reports what went wrong in a `error_summary` string such as `path/conflict/file/...`. It is matched by
  * prefix rather than parsed: the tail changes between calls, the head is what says which kind of failure it is.

@@ -416,9 +416,23 @@ internal class DropboxSyncProvider(
             if (response.status == HttpStatusCode.TooManyRequests || response.status.value >= 500) {
                 throw SyncNetworkException("Dropbox is busy: ${response.status.value}")
             }
-            throw SyncAuthorizationException("Dropbox refused the authorization: ${response.status.value} ${response.errorSummary()}")
+            throw SyncAuthorizationException("Dropbox refused the authorization: ${response.status.value} ${response.oAuthError()}")
         }
         return json.decodeFromString(response.bodyAsText())
+    }
+
+    /** The token endpoint speaks standard OAuth rather than the API's own `error_summary`. */
+    private suspend fun HttpResponse.oAuthError(): String {
+        val error = try {
+            json.decodeFromString<DropboxOAuthErrorResponse>(bodyAsText())
+        } catch (exception: Exception) {
+            DropboxOAuthErrorResponse()
+        }
+        return if (error.error.isEmpty() && error.errorDescription.isEmpty()) {
+            errorSummary()
+        } else {
+            "${error.error}: ${error.errorDescription}"
+        }
     }
 
     private fun expiryOf(expiresInSeconds: Long) =
