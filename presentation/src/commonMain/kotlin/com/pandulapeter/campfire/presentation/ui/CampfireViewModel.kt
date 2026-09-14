@@ -961,8 +961,10 @@ class CampfireViewModel(
      * be empty as well - and if it is, then they are a new user by every measure that matters here.
      *
      * Nothing is reported, not even a failure: none of this was asked for, and an empty library is what the user
-     * was going to be shown anyway. The preferences are written at the end instead, which is what records that this
-     * has happened - without it, deleting every demo song would be undone by the next launch.
+     * was going to be shown anyway. The preferences are written at the end instead, on every first run whether
+     * anything was planted or not, which is what makes the next launch not a first run: without it, deleting every
+     * demo song would be undone by the next launch, and so would a library the user filled on the first day and
+     * emptied later without ever changing a setting.
      */
     private suspend fun plantDemoLibraryOnFirstRun() {
         try {
@@ -971,11 +973,9 @@ class CampfireViewModel(
                 // library looks empty while it is still being read.
                 val library = screenData.first { it !is DataState.Loading }.data
                 if (library != null && library.unfilteredSongs.isEmpty() && library.setlists.isEmpty()) {
-                    readDemoLibrary()?.let { files ->
-                        import(files, shouldAnnounceResult = false)
-                        saveUserPreferences(userPreferences.filterNotNull().first())
-                    }
+                    readDemoLibrary()?.let { files -> import(files, shouldAnnounceResult = false) }
                 }
+                saveUserPreferences(userPreferences.filterNotNull().first())
             }
         } finally {
             // In a finally rather than at the end: whatever went wrong, the app is no longer waiting for this, and
