@@ -9,6 +9,8 @@
  */
 package com.pandulapeter.campfire.data.repository.api
 
+import com.pandulapeter.campfire.data.model.domain.SyncDeletionPolicy
+import com.pandulapeter.campfire.data.model.domain.SyncOutcome
 import com.pandulapeter.campfire.data.model.domain.SyncProviderId
 import com.pandulapeter.campfire.data.model.domain.SyncState
 import com.pandulapeter.campfire.data.source.remote.api.model.AuthorizationCompletionPage
@@ -68,8 +70,12 @@ interface SyncRepository {
      * Deliberately not suspend and returning nothing: a run outlives whoever asked for it, and what it is doing and
      * how it ended arrive through [syncState]. That is also what lets it carry on while the app is in the
      * background on Android, where the screen that started it may be gone.
+     *
+     * @param deletionPolicy What happens to files found gone from the remote folder. [SyncDeletionPolicy.ASK] stops a
+     *   run that would delete most of the library and reports [SyncOutcome.DeletionsNeedConfirmation]; the other two
+     *   are the answers to that question.
      */
-    fun synchronize()
+    fun synchronize(deletionPolicy: SyncDeletionPolicy = SyncDeletionPolicy.ASK)
 
     /** Stops a run where it is. What has already moved stays moved, and the next run picks up from there. */
     fun cancelSynchronization()

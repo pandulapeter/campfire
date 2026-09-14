@@ -9,6 +9,8 @@
  */
 package com.pandulapeter.campfire.domain.api.useCases
 
+import com.pandulapeter.campfire.data.model.domain.SyncDeletionPolicy
+
 interface SynchronizeLibraryUseCase {
 
     /**
@@ -17,8 +19,11 @@ interface SynchronizeLibraryUseCase {
      * the activity.
      *
      * Does nothing when nothing is connected or when a run is already going.
+     *
+     * @param deletionPolicy See `SyncRepository.synchronize`: asking is the default, and the other two answer the
+     *   question a run that asked has left on screen.
      */
-    operator fun invoke()
+    operator fun invoke(deletionPolicy: SyncDeletionPolicy = SyncDeletionPolicy.ASK)
 }
 
 interface CancelSynchronizationUseCase {

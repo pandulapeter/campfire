@@ -76,6 +76,27 @@ sealed interface SyncOutcome {
      * was transferred stayed transferred, and the next run carries on from there.
      */
     data object Interrupted : SyncOutcome
+
+    /**
+     * The run stopped before anything moved, because it would have deleted [count] of the [total] files the last run
+     * saw - the shape of a remote folder that was emptied, renamed or replaced rather than of songs deleted one by
+     * one. Nothing answers this on its own: the user decides with a [SyncDeletionPolicy], and an ordinary run asks
+     * again for as long as the folder stays that way.
+     */
+    data class DeletionsNeedConfirmation(val count: Int, val total: Int) : SyncOutcome
+}
+
+/** What a run does with the files it finds gone from the remote folder, see [SyncOutcome.DeletionsNeedConfirmation]. */
+enum class SyncDeletionPolicy {
+
+    /** Deletes them, unless there are so many that it stops and asks instead. What every run does unless told otherwise. */
+    ASK,
+
+    /** Deletes them however many there are: the user has seen the number and said yes. */
+    DELETE_LOCALLY,
+
+    /** Keeps them and treats them as new on this device, so they go back up into the folder. */
+    KEEP_AND_UPLOAD,
 }
 
 /**

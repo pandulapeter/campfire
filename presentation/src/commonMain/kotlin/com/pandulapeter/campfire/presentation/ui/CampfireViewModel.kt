@@ -27,6 +27,7 @@ import com.pandulapeter.campfire.data.model.domain.ImportedFile
 import com.pandulapeter.campfire.data.model.domain.Setlist
 import com.pandulapeter.campfire.data.model.domain.SongContent
 import com.pandulapeter.campfire.data.model.domain.Song
+import com.pandulapeter.campfire.data.model.domain.SyncDeletionPolicy
 import com.pandulapeter.campfire.data.model.domain.SyncProviderId
 import com.pandulapeter.campfire.data.source.remote.api.model.AuthorizationCompletionPage
 import com.pandulapeter.campfire.data.model.domain.SyncState
@@ -1261,7 +1262,7 @@ class CampfireViewModel(
      * the user moves around it or leaves it entirely. The repository refuses a second run while one is going, so a
      * second tap costs nothing.
      */
-    fun synchronizeLibrary() = synchronizeLibrary.invoke()
+    fun synchronizeLibrary(deletionPolicy: SyncDeletionPolicy = SyncDeletionPolicy.ASK) = synchronizeLibrary.invoke(deletionPolicy)
 
     fun cancelSynchronization() = cancelSynchronization.invoke()
 

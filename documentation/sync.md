@@ -26,6 +26,11 @@ your own storage. Until you do, nothing on the network is touched at all.
 - A run compares **content**, never modification times: the four platforms disagree about those and the web build has
   none.
 - An edit always wins over a deletion.
+- A run that would delete most of your library — more than half of the files it has synced before, or all of them —
+  stops before anything moves and asks. That is what a cloud folder that was emptied, renamed or replaced looks like,
+  and following it would leave every device with only the songs edited since the last sync. **Delete them here too**
+  goes ahead; **Keep them and upload** puts the files back into the cloud folder instead. Until you answer, every run
+  asks again.
 - A song that changed on two devices at once is never merged. The local one keeps its name and the incoming one lands
   next to it as ` (2)`, a copy for you to look at and delete.
 - Renaming a file reaches sync as a deletion and a new file, since a run is keyed by name and knows nothing of moves.

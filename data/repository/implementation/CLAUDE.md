@@ -55,7 +55,12 @@ long as the storage takes to answer. A cancelled read is not a failed one: it is
   way out of a stopped or failed run (the periodic writer cancelled and joined first, so it cannot land after the
   final write). An interrupted run therefore keeps what it transferred, and only a completed one moves `lastSyncedAt`.
   `commonTest` runs the engine against an in-memory `SyncProvider` and `LibraryFileLocalSource` for the behaviour the
-  planner's tests cannot show. A failure on one file does not end a run; only the two failures that make every further call pointless (the credentials refused, the service
+  planner's tests cannot show. A plan whose local deletions are more than half of the index (at least
+  `MIN_DELETIONS_TO_ASK` of them) or the whole of it is not applied under `SyncDeletionPolicy.ASK`: the engine returns
+  `Result.DeletionsNeedConfirmation` before anything moves, and the repository reports it as the run's outcome without
+  a rescan. `DELETE_LOCALLY` applies such a plan as it is, and `KEEP_AND_UPLOAD` first drops the index entries of
+  every file that is here and not there, which the planner then reads as new local files. The policy is a parameter
+  of the one run it was given to, never state. A failure on one file does not end a run; only the two failures that make every further call pointless (the credentials refused, the service
   unreachable) do — and a `CancellationException` is caught *first* and rethrown, since a stopped run is not a few
   hundred files that failed. Operations run `CONCURRENT_TRANSFERS` at a time within each ordering group rather than
   one after another: every one of them is a request, and serialising them made a first sync as slow as the round

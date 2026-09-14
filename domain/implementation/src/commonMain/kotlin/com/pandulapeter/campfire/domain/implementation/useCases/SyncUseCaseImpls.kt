@@ -9,6 +9,7 @@
  */
 package com.pandulapeter.campfire.domain.implementation.useCases
 
+import com.pandulapeter.campfire.data.model.domain.SyncDeletionPolicy
 import com.pandulapeter.campfire.data.model.domain.SyncProviderId
 import com.pandulapeter.campfire.data.source.remote.api.model.AuthorizationCompletionPage
 import com.pandulapeter.campfire.data.repository.api.SetlistRepository
@@ -84,7 +85,7 @@ class SynchronizeLibraryUseCaseImpl internal constructor(
     private val syncRepository: SyncRepository,
 ) : SynchronizeLibraryUseCase {
 
-    override operator fun invoke() = syncRepository.synchronize()
+    override operator fun invoke(deletionPolicy: SyncDeletionPolicy) = syncRepository.synchronize(deletionPolicy)
 }
 
 @Factory

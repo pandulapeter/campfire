@@ -286,6 +286,12 @@
     <string name="settings_sync_progress">Syncing {completed} of {total}…</string>
     <string name="settings_sync_preparing">Looking for changes…</string>
     <string name="settings_sync_interrupted">The last sync was stopped before it finished. Whatever had already been transferred was kept.</string>
+    <plurals name="settings_sync_deletions_pending">
+        <item quantity="one">The file you had synced is gone from the cloud folder. Delete it here too, or keep it and upload it again?</item>
+        <item quantity="other">%1$d of your %2$d synced files are gone from the cloud folder. Delete them here too, or keep them and upload them again?</item>
+    </plurals>
+    <string name="settings_sync_delete_locally">Delete them here too</string>
+    <string name="settings_sync_keep_and_upload">Keep them and upload</string>
     <string name="settings_sync_notification_channel">Sync</string>
     <string name="settings_sync_notification_title">Syncing the library</string>
     <string name="settings_sync_redirect_page_title">Campfire is connected</string>

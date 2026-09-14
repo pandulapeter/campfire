@@ -10,6 +10,7 @@
 package com.pandulapeter.campfire.data.repository.implementation.sync
 
 import com.pandulapeter.campfire.data.model.domain.LibraryFileKind
+import com.pandulapeter.campfire.data.model.domain.SyncDeletionPolicy
 import com.pandulapeter.campfire.data.model.domain.SyncProviderId
 import com.pandulapeter.campfire.data.source.remote.api.SyncNetworkException
 import com.pandulapeter.campfire.data.source.remote.api.hashing.localContentHash
@@ -18,6 +19,7 @@ import kotlin.test.Test
 import kotlin.test.assertContentEquals
 import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
+import kotlin.test.assertIs
 import kotlin.test.assertTrue
 
 /**
@@ -43,6 +45,7 @@ class SyncEngineTest {
                 accountId = ACCOUNT_ID,
                 onProgress = {},
                 onIndexChanged = { snapshots += it },
+                deletionPolicy = SyncDeletionPolicy.ASK,
             )
         }
 
@@ -68,6 +71,7 @@ class SyncEngineTest {
                 accountId = ACCOUNT_ID,
                 onProgress = {},
                 onIndexChanged = { snapshots += it },
+                deletionPolicy = SyncDeletionPolicy.ASK,
             )
         }
 
@@ -92,6 +96,7 @@ class SyncEngineTest {
             accountId = ACCOUNT_ID,
             onProgress = {},
             onIndexChanged = {},
+            deletionPolicy = SyncDeletionPolicy.ASK,
         )
 
         assertContentEquals(edited, local.files[song(2)])
@@ -115,11 +120,12 @@ class SyncEngineTest {
             accountId = ACCOUNT_ID,
             onProgress = {},
             onIndexChanged = {},
+            deletionPolicy = SyncDeletionPolicy.ASK,
         )
 
         assertContentEquals(edited, local.files[song(2)])
         assertContentEquals(edited, provider.files.getValue(song(2)).first)
-        assertEquals(0, result.summary.deletedLocally)
+        assertEquals(0, assertIs<SyncEngine.Result.Completed>(result).summary.deletedLocally)
     }
 
     @Test
@@ -144,6 +150,7 @@ class SyncEngineTest {
             accountId = ACCOUNT_ID,
             onProgress = {},
             onIndexChanged = {},
+            deletionPolicy = SyncDeletionPolicy.ASK,
         )
 
         assertEquals(setOf("song_1.cho", "song_1 (2).cho"), local.files.keys.map { it.name }.toSet())
@@ -161,9 +168,10 @@ class SyncEngineTest {
             accountId = ACCOUNT_ID,
             onProgress = {},
             onIndexChanged = {},
+            deletionPolicy = SyncDeletionPolicy.ASK,
         )
 
-        assertEquals(200, result.summary.uploaded)
+        assertEquals(200, assertIs<SyncEngine.Result.Completed>(result).summary.uploaded)
         assertEquals(local.files.keys, provider.files.keys)
     }
 
@@ -212,10 +220,89 @@ class SyncEngineTest {
             accountId = ACCOUNT_ID,
             onProgress = {},
             onIndexChanged = {},
+            deletionPolicy = SyncDeletionPolicy.ASK,
         )
 
-        assertEquals(setOf(song("Song").path), result.index.entries.keys)
+        assertEquals(setOf(song("Song").path), assertIs<SyncEngine.Result.Completed>(result).index.entries.keys)
         assertEquals(setOf(song("Song")), local.files.keys)
+    }
+
+    @Test
+    fun `a run that would delete the whole library stops and asks before anything moves`() = runTest {
+        val library = librarySongs(10)
+        val local = FakeLibraryFileLocalSource(files = library)
+
+        val result = SyncEngine(local).synchronize(
+            provider = FakeSyncProvider(),
+            document = indexOf(*library.toList().toTypedArray()),
+            accountId = ACCOUNT_ID,
+            onProgress = {},
+            onIndexChanged = {},
+            deletionPolicy = SyncDeletionPolicy.ASK,
+        )
+
+        assertEquals(SyncEngine.Result.DeletionsNeedConfirmation(count = 10, total = 10), result)
+        assertEquals(library.keys, local.files.keys)
+    }
+
+    @Test
+    fun `keeping the files a run asked about uploads them again`() = runTest {
+        val library = librarySongs(10)
+        val local = FakeLibraryFileLocalSource(files = library)
+        val provider = FakeSyncProvider()
+
+        val result = SyncEngine(local).synchronize(
+            provider = provider,
+            document = indexOf(*library.toList().toTypedArray()),
+            accountId = ACCOUNT_ID,
+            onProgress = {},
+            onIndexChanged = {},
+            deletionPolicy = SyncDeletionPolicy.KEEP_AND_UPLOAD,
+        )
+
+        assertEquals(10, assertIs<SyncEngine.Result.Completed>(result).summary.uploaded)
+        assertEquals(library.keys, local.files.keys)
+        assertEquals(library.keys, provider.files.keys)
+    }
+
+    @Test
+    fun `deleting the files a run asked about deletes them`() = runTest {
+        val library = librarySongs(10)
+        val local = FakeLibraryFileLocalSource(files = library)
+
+        val result = SyncEngine(local).synchronize(
+            provider = FakeSyncProvider(),
+            document = indexOf(*library.toList().toTypedArray()),
+            accountId = ACCOUNT_ID,
+            onProgress = {},
+            onIndexChanged = {},
+            deletionPolicy = SyncDeletionPolicy.DELETE_LOCALLY,
+        )
+
+        assertEquals(10, assertIs<SyncEngine.Result.Completed>(result).summary.deletedLocally)
+        assertTrue(local.files.isEmpty())
+    }
+
+    @Test
+    fun `a run that deletes a few files out of many does not ask`() = runTest {
+        val library = librarySongs(10)
+        val local = FakeLibraryFileLocalSource(files = library)
+        val provider = FakeSyncProvider(files = library.filterKeys { it != song(1) && it != song(2) })
+
+        val result = SyncEngine(local).synchronize(
+            provider = provider,
+            document = indexOf(*library.toList().toTypedArray()).let { document ->
+                // In step with the fake's starting revision, so that only the two missing files make a plan.
+                document.copy(entries = document.entries.mapValues { (_, entry) -> entry.copy(remoteRevision = "r1") })
+            },
+            accountId = ACCOUNT_ID,
+            onProgress = {},
+            onIndexChanged = {},
+            deletionPolicy = SyncDeletionPolicy.ASK,
+        )
+
+        assertEquals(2, assertIs<SyncEngine.Result.Completed>(result).summary.deletedLocally)
+        assertEquals(8, local.files.size)
     }
 
     private companion object {
@@ -224,6 +311,8 @@ class SyncEngineTest {
         fun song(number: Int) = song(name = "song_$number")
 
         fun song(name: String) = SyncKey(kind = LibraryFileKind.SONG, name = "$name.cho")
+
+        fun librarySongs(count: Int) = (1..count).associate { song(it) to "Song $it".encodeToByteArray() }
 
         /** An index that says the last run saw [files] with these contents, at the revision the fake starts from. */
         fun indexOf(vararg files: Pair<SyncKey, ByteArray>) = SyncIndexDocument.of(

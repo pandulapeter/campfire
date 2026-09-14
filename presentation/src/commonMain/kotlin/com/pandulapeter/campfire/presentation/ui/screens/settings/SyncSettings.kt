@@ -27,15 +27,18 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
+import com.pandulapeter.campfire.data.model.domain.SyncDeletionPolicy
 import com.pandulapeter.campfire.data.model.domain.SyncFailureReason
 import com.pandulapeter.campfire.data.model.domain.SyncOutcome
 import com.pandulapeter.campfire.data.model.domain.SyncProgress
 import com.pandulapeter.campfire.data.model.domain.SyncProviderId
 import com.pandulapeter.campfire.data.model.domain.SyncState
+import com.pandulapeter.campfire.presentation.localization.pluralStringResource
 import com.pandulapeter.campfire.presentation.localization.stringResource
 import com.pandulapeter.campfire.presentation.resources.Res
 import com.pandulapeter.campfire.presentation.resources.ic_cloud
 import com.pandulapeter.campfire.presentation.resources.ic_cloud_off
+import com.pandulapeter.campfire.presentation.resources.ic_delete
 import com.pandulapeter.campfire.presentation.resources.ic_clear
 import com.pandulapeter.campfire.presentation.resources.ic_sync
 import com.pandulapeter.campfire.presentation.resources.cancel
@@ -45,6 +48,8 @@ import com.pandulapeter.campfire.presentation.resources.settings_sync_connect_dr
 import com.pandulapeter.campfire.presentation.resources.settings_sync_connected_as
 import com.pandulapeter.campfire.presentation.resources.settings_sync_connecting
 import com.pandulapeter.campfire.presentation.resources.settings_sync_date_time
+import com.pandulapeter.campfire.presentation.resources.settings_sync_delete_locally
+import com.pandulapeter.campfire.presentation.resources.settings_sync_deletions_pending
 import com.pandulapeter.campfire.presentation.resources.settings_sync_description
 import com.pandulapeter.campfire.presentation.resources.settings_sync_disconnect
 import com.pandulapeter.campfire.presentation.resources.settings_sync_failed_authorization
@@ -52,6 +57,7 @@ import com.pandulapeter.campfire.presentation.resources.settings_sync_failed_net
 import com.pandulapeter.campfire.presentation.resources.settings_sync_failed_storage
 import com.pandulapeter.campfire.presentation.resources.settings_sync_failed_unknown
 import com.pandulapeter.campfire.presentation.resources.settings_sync_interrupted
+import com.pandulapeter.campfire.presentation.resources.settings_sync_keep_and_upload
 import com.pandulapeter.campfire.presentation.resources.settings_sync_last_synced
 import com.pandulapeter.campfire.presentation.resources.settings_sync_never
 import com.pandulapeter.campfire.presentation.resources.settings_sync_now
@@ -139,6 +145,24 @@ internal fun LazyListScope.syncSettings(
                     SyncProgressIndicator(modifier = listItemAnimation(listState), progress = progress)
                 }
             }
+            if (syncState.lastOutcome is SyncOutcome.DeletionsNeedConfirmation) {
+                item(key = "sync_delete_locally") {
+                    ActionListItem(
+                        modifier = listItemAnimation(listState),
+                        title = stringResource(Res.string.settings_sync_delete_locally),
+                        icon = painterResource(Res.drawable.ic_delete),
+                        onClick = { viewModel.synchronizeLibrary(SyncDeletionPolicy.DELETE_LOCALLY) },
+                    )
+                }
+                item(key = "sync_keep_and_upload") {
+                    ActionListItem(
+                        modifier = listItemAnimation(listState),
+                        title = stringResource(Res.string.settings_sync_keep_and_upload),
+                        icon = painterResource(Res.drawable.ic_cloud),
+                        onClick = { viewModel.synchronizeLibrary(SyncDeletionPolicy.KEEP_AND_UPLOAD) },
+                    )
+                }
+            }
             item(key = "sync_now") {
                 if (syncState.isSyncing) {
                     ActionListItem(
@@ -154,7 +178,7 @@ internal fun LazyListScope.syncSettings(
                         title = stringResource(Res.string.settings_sync_now),
                         icon = painterResource(Res.drawable.ic_sync),
                         isEmphasized = false,
-                        onClick = viewModel::synchronizeLibrary,
+                        onClick = { viewModel.synchronizeLibrary() },
                     )
                 }
             }
@@ -179,6 +203,12 @@ internal fun LazyListScope.syncSettings(
 private fun SyncState.Connected.statusText(): String = when (val current = progress) {
     null -> when (val outcome = lastOutcome) {
         SyncOutcome.Interrupted -> stringResource(Res.string.settings_sync_interrupted)
+        is SyncOutcome.DeletionsNeedConfirmation -> pluralStringResource(
+            Res.plurals.settings_sync_deletions_pending,
+            outcome.count,
+            outcome.count,
+            outcome.total,
+        )
         is SyncOutcome.Failure -> stringResource(
             when (outcome.reason) {
                 SyncFailureReason.NETWORK -> Res.string.settings_sync_failed_network

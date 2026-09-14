@@ -286,6 +286,12 @@
     <string name="settings_sync_progress">Szinkronizálás: {completed} / {total}…</string>
     <string name="settings_sync_preparing">Változások keresése…</string>
     <string name="settings_sync_interrupted">Az előző szinkronizálás félbeszakadt. Ami addig átkerült, az megmaradt.</string>
+    <plurals name="settings_sync_deletions_pending">
+        <item quantity="one">A szinkronizált fájlod eltűnt a felhőmappából. Itt is töröljük, vagy megtartod és újra feltöltöd?</item>
+        <item quantity="other">A %2$d szinkronizált fájlodból %1$d eltűnt a felhőmappából. Itt is töröljük őket, vagy megtartod és újra feltöltöd őket?</item>
+    </plurals>
+    <string name="settings_sync_delete_locally">Törlés itt is</string>
+    <string name="settings_sync_keep_and_upload">Megtartás és feltöltés</string>
     <string name="settings_sync_notification_channel">Szinkronizálás</string>
     <string name="settings_sync_notification_title">A könyvtár szinkronizálása</string>
     <string name="settings_sync_redirect_page_title">A Campfire csatlakozott</string>

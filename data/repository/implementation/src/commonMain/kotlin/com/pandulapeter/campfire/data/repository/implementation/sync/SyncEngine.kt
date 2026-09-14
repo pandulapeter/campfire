@@ -9,6 +9,7 @@
  */
 package com.pandulapeter.campfire.data.repository.implementation.sync
 
+import com.pandulapeter.campfire.data.model.domain.SyncDeletionPolicy
 import com.pandulapeter.campfire.data.model.domain.SyncProgress
 import com.pandulapeter.campfire.data.model.domain.SyncSummary
 import com.pandulapeter.campfire.data.source.local.api.LibraryFileLocalSource
@@ -70,6 +71,7 @@ internal class SyncEngine(
         accountId: String,
         onProgress: (SyncProgress) -> Unit,
         onIndexChanged: suspend (SyncIndexDocument) -> Unit,
+        deletionPolicy: SyncDeletionPolicy,
     ): Result {
         // An index written for a different account describes a different remote folder, and acting on it would read
         // that folder's absent files as deletions of this one's songs.
@@ -97,9 +99,20 @@ internal class SyncEngine(
                     )
                 },
             )
+            if (deletionPolicy == SyncDeletionPolicy.KEEP_AND_UPLOAD) {
+                // Forgetting that the last run saw these files is what makes them new on this device: a file that is
+                // here, is not there and has no index entry is planned as an upload.
+                val localKeys = local.mapTo(mutableSetOf()) { it.key }
+                val remoteKeys = remote.mapTo(mutableSetOf()) { it.key }
+                index = index.filterKeys { it !in localKeys || it in remoteKeys }
+            }
             val plan = SyncPlanner.plan(local = local, remote = remote, index = index)
             // Which is what most runs find, so nothing below this costs anything on an ordinary launch.
             if (plan.isEmpty()) break
+            val deletions = plan.count { it is SyncOperation.DeleteLocal }
+            if (deletionPolicy == SyncDeletionPolicy.ASK && index.isNotEmpty() && deletions.isTooManyToDeleteOutOf(index.size)) {
+                return Result.DeletionsNeedConfirmation(count = deletions, total = index.size)
+            }
             val outcome = apply(
                 provider = provider,
                 plan = plan,
@@ -116,7 +129,7 @@ internal class SyncEngine(
             pass++
         }
 
-        return Result(
+        return Result.Completed(
             summary = summary,
             index = SyncIndexDocument.of(
                 providerId = provider.id.id,
@@ -367,10 +380,29 @@ internal class SyncEngine(
         conflicts = conflicts + other.conflicts,
     )
 
-    data class Result(
-        val summary: SyncSummary,
-        val index: SyncIndexDocument,
-    )
+    /**
+     * Whether a plan deletes enough of what the last run saw that it is more likely a remote folder that was emptied,
+     * renamed or replaced than songs somebody deleted. Without this, every device would carry out such a folder's
+     * absence faithfully, keeping only what had been edited since the last run - and edit-beats-deletion is exactly
+     * what would make that loss quiet. More than half is the threshold, with [MIN_DELETIONS_TO_ASK] so that tidying
+     * up a small library does not ask every time, except where the plan deletes everything the index knows.
+     */
+    private fun Int.isTooManyToDeleteOutOf(total: Int) =
+        this > 0 && (this == total || (this >= MIN_DELETIONS_TO_ASK && this * 2 > total))
+
+    sealed interface Result {
+
+        data class Completed(
+            val summary: SyncSummary,
+            val index: SyncIndexDocument,
+        ) : Result
+
+        /** Nothing moved: the plan would have deleted [count] of the [total] files the index knows, and asks first. */
+        data class DeletionsNeedConfirmation(
+            val count: Int,
+            val total: Int,
+        ) : Result
+    }
 
     /** What one operation changed, merged into the pass by whoever finishes first. */
     private data class OperationOutcome(
@@ -388,6 +420,9 @@ internal class SyncEngine(
 
     private companion object {
         const val MAXIMUM_PASSES = 2
+
+        /** The fewest local deletions that can stop a run, unless they are the whole library, see [isTooManyToDeleteOutOf]. */
+        const val MIN_DELETIONS_TO_ASK = 5
 
         /** How many library files are read and hashed at once while the run is preparing. */
         const val READ_BATCH_SIZE = 64

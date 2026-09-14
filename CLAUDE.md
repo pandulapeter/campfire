@@ -240,6 +240,12 @@ the only possible one. The per-module `CLAUDE.md` files carry the detail; the sh
 - `SyncPlanner` is a pure function of (local hashes, remote listing, the index of what the last run saw) and is the
   part that is tested. Content decides what changed, never a clock: the platforms disagree about modification times
   and the web has none. An edit always beats a deletion.
+- A plan that would delete **more than half** of the files the index knows (and at least five of them), or every one
+  of them, is not carried out: the run stops before anything moves and Settings asks. That is the shape of a remote
+  folder that was emptied, renamed or replaced, and carried out faithfully it would leave every device with only what
+  had been edited since the last run. **Delete them here too** runs again with the deletions allowed; **Keep them and
+  upload** runs again with those files' index entries dropped, so they are new on this device and go back up. The
+  answer belongs to that one run, and an ordinary run asks again for as long as the folder stays that way.
 - A run belongs to the **app**, not to the screen that started it: `SyncRepository` is a singleton with its own
   scope, so a run carries on while the user moves around or leaves. Android keeps the process alive with a
   foreground service and iOS with a background task, both driven by `SyncNotifier`, which each app shell provides

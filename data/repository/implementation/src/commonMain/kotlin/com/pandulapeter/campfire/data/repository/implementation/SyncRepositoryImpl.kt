@@ -12,6 +12,7 @@
 package com.pandulapeter.campfire.data.repository.implementation
 
 import com.pandulapeter.campfire.data.model.domain.SyncAccount
+import com.pandulapeter.campfire.data.model.domain.SyncDeletionPolicy
 import com.pandulapeter.campfire.data.model.domain.SyncFailureReason
 import com.pandulapeter.campfire.data.model.domain.SyncOutcome
 import com.pandulapeter.campfire.data.model.domain.SyncProgress
@@ -201,10 +202,13 @@ internal class SyncRepositoryImpl(
      * Starts a run and returns; what it is doing and how it ended arrive through [syncState]. Fire and forget
      * because the run outlives whoever asked for it - the screen that started it may be gone long before it
      * finishes, and on Android the activity may be too.
+     *
+     * The policy belongs to this one run rather than to the state: an answer to "delete them here too?" is an answer
+     * about the files that were gone when it was asked, not a setting every later run should inherit.
      */
-    override fun synchronize() {
+    override fun synchronize(deletionPolicy: SyncDeletionPolicy) {
         if (syncJob?.isActive == true) return
-        syncJob = scope.launch { runSynchronization() }
+        syncJob = scope.launch { runSynchronization(deletionPolicy) }
     }
 
     /** Stops a run where it is. What has already moved stays moved, and the next run picks up from there. */
@@ -218,7 +222,7 @@ internal class SyncRepositoryImpl(
      * put on screen has to be inside the try, because the only way off any other path is with the progress still
      * showing and no way left to stop or restart it. Stopping a run during those opening writes did exactly that.
      */
-    private suspend fun runSynchronization() {
+    private suspend fun runSynchronization(deletionPolicy: SyncDeletionPolicy) {
         // No check for the lock being taken: a run asked for while the previous one is still clearing up waits for
         // it rather than being dropped, which is what "stop, then start again" looks like from the settings screen.
         // Two runs at once are prevented by syncJob in synchronize().
@@ -247,21 +251,38 @@ internal class SyncRepositoryImpl(
                         latestIndex = it
                         scheduleIndexWrite(it)
                     },
+                    deletionPolicy = deletionPolicy,
                 )
-                val syncedAt = Clock.System.now().toEpochMilliseconds()
                 indexWriteJob?.cancelAndJoin()
-                saveIndex(result.index.copy(lastSyncedAt = syncedAt))
-                // Only when something actually moved: most runs find nothing to do, and re-reading the whole
-                // library every time the app is opened would cost more than the sync itself.
-                if (result.summary.hasChanges) {
-                    rescanLibrary()
-                }
-                updateConnected {
-                    it.copy(
-                        progress = null,
-                        lastSyncedAt = syncedAt,
-                        lastOutcome = SyncOutcome.Success(result.summary),
-                    )
+                when (result) {
+                    is SyncEngine.Result.DeletionsNeedConfirmation -> {
+                        // The run stopped before anything moved, so there is nothing for the lists to read again and
+                        // the index only has to stop saying that a run is going.
+                        latestIndex?.let { saveIndex(it.copy(isRunInProgress = false)) }
+                        updateConnected {
+                            it.copy(
+                                progress = null,
+                                lastOutcome = SyncOutcome.DeletionsNeedConfirmation(count = result.count, total = result.total),
+                            )
+                        }
+                    }
+
+                    is SyncEngine.Result.Completed -> {
+                        val syncedAt = Clock.System.now().toEpochMilliseconds()
+                        saveIndex(result.index.copy(lastSyncedAt = syncedAt))
+                        // Only when something actually moved: most runs find nothing to do, and re-reading the whole
+                        // library every time the app is opened would cost more than the sync itself.
+                        if (result.summary.hasChanges) {
+                            rescanLibrary()
+                        }
+                        updateConnected {
+                            it.copy(
+                                progress = null,
+                                lastSyncedAt = syncedAt,
+                                lastOutcome = SyncOutcome.Success(result.summary),
+                            )
+                        }
+                    }
                 }
             } catch (exception: CancellationException) {
                 // Stopped rather than broken: nothing is wrong and nothing needs fixing, so this is its own outcome.
