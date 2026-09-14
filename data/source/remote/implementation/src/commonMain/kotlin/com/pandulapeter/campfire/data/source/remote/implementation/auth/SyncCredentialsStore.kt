@@ -50,7 +50,8 @@ internal class SyncCredentialsStore(
             cached = try {
                 syncStateLocalSource.loadSyncCredentials()?.let { json.decodeFromString<SyncCredentialsDocument>(it) }
             } catch (exception: Exception) {
-                println("Could not read the sync credentials: ${exception.message}")
+                // A parse failure's message quotes the input around where it failed, which here can be a piece of a token.
+                println("Could not read the sync credentials: ${exception::class.simpleName}")
                 null
             }
             hasRead = true

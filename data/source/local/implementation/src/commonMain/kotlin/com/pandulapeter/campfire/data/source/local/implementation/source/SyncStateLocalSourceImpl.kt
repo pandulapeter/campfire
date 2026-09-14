@@ -34,7 +34,10 @@ internal class SyncStateLocalSourceImpl(
     } catch (exception: CancellationException) {
         throw exception
     } catch (exception: Exception) {
-        println("Could not read \"$name\": ${exception.message}")
+        // The credentials hold tokens, and a message is free to quote what it failed on, so for them only the kind of
+        // failure goes into the log.
+        val reason = if (name == CREDENTIALS_FILE_NAME) exception::class.simpleName else exception.message
+        println("Could not read \"$name\": $reason")
         null
     }
 
