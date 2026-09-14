@@ -91,7 +91,13 @@ internal object ChordProTabTransposer {
         )
     }
 
-    /** Rewrites a line of the environment that is not tablature, but only if every word on it is a chord. */
+    /**
+     * Rewrites a line of the environment that is not tablature, but only if every word on it is a chord or a marker.
+     *
+     * A bare tuning line (`E A D G B E`) is six valid chord names, and is rewritten like a row of six chords would be:
+     * nothing on the line itself tells the two apart, and a guess would be wrong as often as right. The spelling that
+     * is safe is `Tuning: E A D G B E`, which the word `Tuning:` keeps from being read as chords.
+     */
     private fun rewriteChordLine(line: String, rename: (String) -> String): String {
         val trimmedLine = line.trim()
         if (trimmedLine.isEmpty() || trimmedLine.startsWith(SOURCE_COMMENT) || ChordProSyntax.matchDirective(trimmedLine) != null) return line
@@ -119,7 +125,8 @@ internal object ChordProTabTransposer {
             word == REPEAT ||
             word == DOUBLE_REPEAT ||
             repeatCountRegex.matches(word) ||
-            dashesRegex.matches(word)
+            dashesRegex.matches(word) ||
+            noChordRegex.matches(word)
 
     /**
      * Applies [replacements] (in order, non-overlapping) to [line], keeping everything after each of them in the
@@ -165,4 +172,10 @@ internal object ChordProTabTransposer {
     private val wordRegex = Regex("\\S+")
     private val dashesRegex = Regex("-+")
     private val repeatCountRegex = Regex("\\(?[xX]\\d+\\)?")
+
+    /**
+     * `N.C.`, and the ways it is abbreviated further: the one word a row of chord names carries that names the absence
+     * of a chord, so it stands in the row without making it prose.
+     */
+    private val noChordRegex = Regex("N\\.?C\\.?", RegexOption.IGNORE_CASE)
 }

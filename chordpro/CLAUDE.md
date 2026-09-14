@@ -92,9 +92,9 @@ in `:domain:*`. `:data:source:local:implementation` uses it directly for the met
   not the notes: the tuning stays what it was. A tab environment is transposed as a whole, so that a transposition
   that would take a fret off the fingerboard moves all of it by octaves instead of producing an unplayable number,
   and a tab that fits in no octave (one spanning more than 24 frets) is left alone rather than half moved. Only lines
-  that look like tablature are touched that way; a line above them holding nothing but chord names gets those
-  transposed, and anything else in the environment (`Tuning: D A D G A D`, a note to the player) is left byte for
-  byte. Fret numbers are not all the same width, so the dashes around them are absorbed or padded to keep the columns
+  that look like tablature are touched that way; a line above them holding nothing but chord names (bar lines, repeats
+  and an `N.C.` allowed) gets those transposed, and anything else in the environment (`Tuning: D A D G A D`, a note
+  to the player) is left byte for byte — while a bare `E A D G B E` is six chord names and is transposed as such. Fret numbers are not all the same width, so the dashes around them are absorbed or padded to keep the columns
   lining up; where there is no dash to take (inside a `0h1p0` group) the line grows by a character instead. The same
   column bookkeeping serves `rewriteChordNames`, which only respells those chord names — `Bb` is a character wider
   than the `B` it becomes in German notation, and the staff underneath still has to line up.
