@@ -46,10 +46,14 @@ interface SyncRepository {
      *   is what lets the UI put them back where they pressed the button. True whether the service said yes or no:
      *   an authorization that failed is exactly the case where the user most needs to see the screen that says so,
      *   so this reports that the app came back, not that it came back connected.
+     * @param wasInterrupted Whether the last run never finished - the app was killed, swiped away or suspended while
+     *   it was going. The caller must not start a run on its own then: the run would replace the message saying so
+     *   before anyone could read it, and starting it again is one button away from that message.
      */
     data class RestoreResult(
         val isConnected: Boolean,
         val didReturnFromAuthorization: Boolean,
+        val wasInterrupted: Boolean,
     )
 
     /**

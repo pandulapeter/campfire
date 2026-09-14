@@ -256,7 +256,7 @@ the only possible one. The per-module `CLAUDE.md` files carry the detail; the sh
   first sync of a whole library, not a reason to give up on it.
 - The index carries an "a run was going" marker, written before anything moves and cleared when it finishes, so a
   run the app never came back from — killed, swiped away, suspended by iOS — is reported as interrupted next time
-  rather than silently forgotten.
+  rather than silently forgotten, and that run is left for the user to start rather than started on launch.
 - A file changed on both sides is never merged: the local one keeps the name and the incoming one lands next to it
   as ` (2)` — a name of the other device's making, numbered the way any document is, rather than with the underscore
   a name the app derived itself collides with (`_2`).

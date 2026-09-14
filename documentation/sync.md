@@ -43,7 +43,7 @@ your own storage. Until you do, nothing on the network is touched at all.
 - A run belongs to the app rather than to the screen that started it, so it carries on while you use the rest of the
   app, or leave it. Android keeps the process alive with a foreground service and iOS with a background task.
 - It can be stopped at any time, and a run that is interrupted — killed, swiped away, suspended — leaves the library
-  usable and says so the next time.
+  usable and says so the next time, when the app waits for **Sync now** instead of starting a run on its own.
 - A first sync of a whole library is expected to be rate limited rather than to fail; a run asks for a few files at a
   time and slows down when the service tells it to.
 

@@ -105,6 +105,7 @@ internal class SyncRepositoryImpl(
             return SyncRepository.RestoreResult(
                 isConnected = completePendingAuthorization(redirectUri),
                 didReturnFromAuthorization = true,
+                wasInterrupted = false,
             )
         }
         val connected = providers.firstOrNull { it.isConnected() }
@@ -141,7 +142,11 @@ internal class SyncRepositoryImpl(
         if (document.isRunInProgress) {
             saveIndex(document.copy(isRunInProgress = false))
         }
-        return SyncRepository.RestoreResult(isConnected = true, didReturnFromAuthorization = false)
+        return SyncRepository.RestoreResult(
+            isConnected = true,
+            didReturnFromAuthorization = false,
+            wasInterrupted = document.isRunInProgress,
+        )
     }
 
     override suspend fun connect(providerId: SyncProviderId, completionPage: AuthorizationCompletionPage): Boolean {
@@ -433,7 +438,11 @@ internal class SyncRepositoryImpl(
         /** How much of a run a killed app can lose at most, traded against rewriting the whole index per file. */
         const val INDEX_WRITE_INTERVAL_MS = 2000L
 
-        val disconnectedResult = SyncRepository.RestoreResult(isConnected = false, didReturnFromAuthorization = false)
+        val disconnectedResult = SyncRepository.RestoreResult(
+            isConnected = false,
+            didReturnFromAuthorization = false,
+            wasInterrupted = false,
+        )
         val json = Json {
             ignoreUnknownKeys = true
             prettyPrint = true

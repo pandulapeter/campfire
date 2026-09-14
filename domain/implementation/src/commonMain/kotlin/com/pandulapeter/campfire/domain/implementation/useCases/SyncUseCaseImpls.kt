@@ -73,7 +73,9 @@ class RestoreSyncUseCaseImpl internal constructor(
 
     override suspend operator fun invoke(): Boolean {
         val result = syncRepository.restore()
-        if (result.isConnected) {
+        // A run that was cut short is reported rather than repeated: an automatic run would overwrite the message
+        // before it could be read, and the button that starts one is right under it.
+        if (result.isConnected && !result.wasInterrupted) {
             synchronizeLibrary()
         }
         return result.didReturnFromAuthorization
