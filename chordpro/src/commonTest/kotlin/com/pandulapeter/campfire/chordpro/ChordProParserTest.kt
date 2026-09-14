@@ -200,6 +200,50 @@ class ChordProParserTest {
     }
 
     @Test
+    fun `a legacy heading with no lines under it is kept as the comment it was`() {
+        val blocks = ChordProParser.parse("{sov}\n[Am]la\n{eov}\n{c: Chorus x2}\n{soc}\n[C]lo\n{eoc}").blocks
+
+        assertEquals(3, blocks.size)
+        assertEquals(SectionType.Verse, (blocks[0] as ChordProBlock.Section).type)
+        assertEquals(ChordProBlock.Comment("Chorus x2", CommentStyle.PLAIN), blocks[1])
+        assertEquals(SectionType.Chorus, (blocks[2] as ChordProBlock.Section).type)
+    }
+
+    @Test
+    fun `a legacy heading followed by a blank line is kept as a comment`() {
+        val blocks = ChordProParser.parse("{c: Chorus x2}\n\n[C]lo").blocks
+
+        assertEquals(2, blocks.size)
+        assertEquals(ChordProBlock.Comment("Chorus x2", CommentStyle.PLAIN), blocks[0])
+        assertEquals(SectionType.Paragraph, (blocks[1] as ChordProBlock.Section).type)
+    }
+
+    @Test
+    fun `a legacy heading at the end of the file is kept as a comment`() {
+        val blocks = ChordProParser.parse("[C]la\n\n{c: Outro}").blocks
+
+        assertEquals(ChordProBlock.Comment("Outro", CommentStyle.PLAIN), blocks.last())
+    }
+
+    @Test
+    fun `a break right after a legacy heading keeps the heading`() {
+        val blocks = ChordProParser.parse("{c: Chorus}\n{colb}\n[C]la").blocks
+
+        assertEquals(2, blocks.size)
+        assertEquals(ChordProBlock.Break, blocks[0])
+        assertEquals("Chorus", (blocks[1] as ChordProBlock.Section).label)
+    }
+
+    @Test
+    fun `a break at the end of a legacy heading section does not repeat the heading`() {
+        val blocks = ChordProParser.parse("{c: Chorus}\n[C]la\n{colb}").blocks
+
+        assertEquals(2, blocks.size)
+        assertEquals("Chorus", (blocks[0] as ChordProBlock.Section).label)
+        assertEquals(ChordProBlock.Break, blocks[1])
+    }
+
+    @Test
     fun `tab lines keep their indentation`() {
         val section = ChordProParser.parse("{start_of_tab: Riff}\n  e|---0---|\n{end_of_tab}").blocks.single() as ChordProBlock.Section
 

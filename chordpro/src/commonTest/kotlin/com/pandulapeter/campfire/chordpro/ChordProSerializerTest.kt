@@ -22,6 +22,15 @@ class ChordProSerializerTest {
     }
 
     @Test
+    fun `a legacy heading kept as a comment survives serializing`() {
+        listOf("{sov}\n[Am]la\n{eov}\n{c: Chorus x2}\n{soc}\n[C]lo\n{eoc}", "{c: Chorus x2}\n\n[C]lo").forEach { text ->
+            val parsed = ChordProParser.parse(text)
+
+            assertEquals(parsed, ChordProParser.parse(ChordProSerializer.serialize(parsed)))
+        }
+    }
+
+    @Test
     fun `metadata is written in canonical order and zero transposition is omitted`() {
         val song = ChordProParser.parse("{artist: A}\n{title: T}\n{transpose: 0}\n{meta: tuning DADGAD}")
 

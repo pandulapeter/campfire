@@ -40,7 +40,8 @@ in `:domain:*`. `:data:source:local:implementation` uses it directly for the met
   caller with no interest in the body). Total: it never throws and never rejects a document, because the
   file on disk is the user's and half of it may be under the caret. Unknown directives are ignored; `{define}`, fonts,
   colours, images and page directives are parsed and dropped. It also understands the Campfire 3 dialect, where
-  `{comment: Verse 1}` outside an environment was a section heading.
+  `{comment: Verse 1}` outside an environment was a section heading; one that no line follows before a blank line,
+  another section or the end of the file stays the comment it was, since a section with nothing in it is not drawn.
 - `ChordProSerializer` — writes the model back as canonical ChordPro. The editor works on raw text, so the user's own
   formatting does not have to survive this; `parse(serialize(parse(x))) == parse(x)` does.
 - `ChordProTags` — the tags of a song. ChordPro's own `{tag: Needs study}` directive, one tag per directive and as

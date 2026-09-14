@@ -140,7 +140,7 @@ object ChordProParser {
         if (style == CommentStyle.PLAIN && !section.isExplicit) {
             legacyHeading(text)?.let { type ->
                 section.close()
-                section.open(type, text, isExplicit = false)
+                section.open(type, text, isExplicit = false, headingText = text)
                 return
             }
         }
@@ -200,13 +200,21 @@ object ChordProParser {
         private var lineMode: LineMode? = null
         private val lines = mutableListOf<ChordProLine>()
 
+        /**
+         * The `{comment}` a legacy heading section was opened by, which is what is left of it if no line ever
+         * follows: a comment that happens to start with a section name is still a line of the user's file, and a
+         * section with nothing in it has nowhere to show it.
+         */
+        private var headingText: String? = null
+
         var isExplicit = false
             private set
 
-        fun open(type: SectionType, label: String?, isExplicit: Boolean) {
+        fun open(type: SectionType, label: String?, isExplicit: Boolean, headingText: String? = null) {
             this.type = type
             this.label = label
             this.isExplicit = isExplicit
+            this.headingText = headingText
             lines.clear()
         }
 
@@ -234,14 +242,22 @@ object ChordProParser {
             }
             if (lines.isNotEmpty()) {
                 blocks += ChordProBlock.Section(type = type, label = label, lines = lines.toList())
+            } else {
+                headingText?.let { blocks += ChordProBlock.Comment(it, CommentStyle.PLAIN) }
             }
             this.type = null
             label = null
             isExplicit = false
+            headingText = null
             lines.clear()
         }
 
-        /** Emits a standalone block without losing the section around it: the section is flushed and then reopened. */
+        /**
+         * Emits a standalone block without losing the section around it: the section is flushed and then reopened.
+         * Only a section with lines in it is flushed, so the heading of the one being reopened has already been shown
+         * as its label, and the reopened half does not carry [headingText]: were nothing to follow the block, it
+         * would otherwise come back as a comment repeating that label.
+         */
         fun addBlock(block: ChordProBlock) {
             if (type != null && lines.isNotEmpty()) {
                 val type = this.type!!
