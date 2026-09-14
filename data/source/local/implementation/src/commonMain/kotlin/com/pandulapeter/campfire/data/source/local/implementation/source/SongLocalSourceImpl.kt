@@ -24,11 +24,17 @@ import com.pandulapeter.campfire.data.source.local.implementation.storage.file.F
 import com.pandulapeter.campfire.data.source.local.implementation.storage.file.StorageDirectory
 import com.pandulapeter.campfire.data.source.local.implementation.storage.file.StoredFileInfo
 import kotlinx.coroutines.CancellationException
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
-import kotlinx.coroutines.coroutineScope
+import kotlinx.coroutines.withContext
 import org.koin.core.annotation.Single
 
+/**
+ * Loading runs on [Dispatchers.Default] rather than on the caller's dispatcher: the file storage moves its reads off
+ * the caller's thread, but the parsing that follows each read would otherwise resume wherever the scan was started,
+ * which is the main thread, and a few thousand songs parsed there one after another freeze the window.
+ */
 @Single
 internal class SongLocalSourceImpl(
     private val fileStorage: FileStorage,
@@ -42,7 +48,7 @@ internal class SongLocalSourceImpl(
      *
      * One unreadable file must not empty the whole list, so a failure skips that song instead of propagating.
      */
-    override suspend fun loadSongs(onProgress: (List<Song>) -> Unit): List<Song> = coroutineScope {
+    override suspend fun loadSongs(onProgress: (List<Song>) -> Unit): List<Song> = withContext(Dispatchers.Default) {
         val songs = mutableListOf<Song>()
         val batches = fileStorage.list(StorageDirectory.SONGS).filter { it.name.isSongFileName() }.chunked(BATCH_SIZE)
         batches.forEachIndexed { index, batch ->
@@ -54,7 +60,9 @@ internal class SongLocalSourceImpl(
         songs
     }
 
-    override suspend fun loadSong(fileName: String): Song? = fileStorage.info(StorageDirectory.SONGS, fileName)?.readSong()
+    override suspend fun loadSong(fileName: String): Song? = withContext(Dispatchers.Default) {
+        fileStorage.info(StorageDirectory.SONGS, fileName)?.readSong()
+    }
 
     /**
      * Campfire writes `.cho`, but a folder the user can also open in a file manager will hold whatever they put in

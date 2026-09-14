@@ -21,28 +21,33 @@ import com.pandulapeter.campfire.data.source.local.implementation.uniqueName
 import com.pandulapeter.campfire.data.source.local.implementation.storage.file.FileStorage
 import com.pandulapeter.campfire.data.source.local.implementation.storage.file.StorageDirectory
 import kotlinx.coroutines.CancellationException
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
 import kotlinx.serialization.json.Json
 import org.koin.core.annotation.Single
 
+/** Setlists are decoded on [Dispatchers.Default] for the reason the songs are parsed there (see [SongLocalSourceImpl]). */
 @Single
 internal class SetlistLocalSourceImpl(
     private val fileStorage: FileStorage,
 ) : SetlistLocalSource {
 
-    override suspend fun loadSetlists(): List<Setlist> = fileStorage.list(StorageDirectory.SETLISTS)
-        .filter { it.name.endsWith(SETLIST_EXTENSION, ignoreCase = true) }
-        .mapNotNull { file ->
-            try {
-                fileStorage.readText(StorageDirectory.SETLISTS, file.name)
-                    ?.let { json.decodeFromString<SetlistDocument>(it).toModel(file.name) }
-            } catch (exception: CancellationException) {
-                throw exception
-            } catch (exception: Exception) {
-                // Left on disk rather than deleted: a setlist the user hand-edited into invalid JSON is theirs to fix.
-                println("Could not read the setlist \"${file.name}\": ${exception.message}")
-                null
+    override suspend fun loadSetlists(): List<Setlist> = withContext(Dispatchers.Default) {
+        fileStorage.list(StorageDirectory.SETLISTS)
+            .filter { it.name.endsWith(SETLIST_EXTENSION, ignoreCase = true) }
+            .mapNotNull { file ->
+                try {
+                    fileStorage.readText(StorageDirectory.SETLISTS, file.name)
+                        ?.let { json.decodeFromString<SetlistDocument>(it).toModel(file.name) }
+                } catch (exception: CancellationException) {
+                    throw exception
+                } catch (exception: Exception) {
+                    // Left on disk rather than deleted: a setlist the user hand-edited into invalid JSON is theirs to fix.
+                    println("Could not read the setlist \"${file.name}\": ${exception.message}")
+                    null
+                }
             }
-        }
+    }
 
     override suspend fun createSetlist(title: String, description: String, priority: Int): Setlist {
         val fileName = fileStorage.uniqueName(StorageDirectory.SETLISTS, setlistFileName(title))
