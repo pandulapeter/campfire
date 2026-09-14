@@ -113,6 +113,7 @@ internal fun DismissSheetWhenSidePanelAppears(
  *
  * @param settledWidth The width of the screen once the navigation bars have finished animating.
  * @param contentPadding The insets the screen hands to its list, whose start and end are not part of its width.
+ *   Neither is the [FastScroller] beside it.
  */
 @Composable
 internal fun songListColumnCount(
@@ -124,7 +125,7 @@ internal fun songListColumnCount(
     // The panel covers the end inset while it is visible (see besideSidePanel), so either way the same width goes.
     val sidePanelWidth = if (isSidePanelVisible) SIDE_PANEL_WIDTH else 0.dp
     return columnCountForWidth(
-        settledWidth - contentPadding.calculateStartPadding(layoutDirection) - contentPadding.calculateEndPadding(layoutDirection) - sidePanelWidth
+        settledWidth - contentPadding.calculateStartPadding(layoutDirection) - contentPadding.calculateEndPadding(layoutDirection) - sidePanelWidth - FAST_SCROLLER_WIDTH
     )
 }
 

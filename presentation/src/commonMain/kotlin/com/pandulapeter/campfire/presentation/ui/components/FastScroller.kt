@@ -23,12 +23,13 @@ import androidx.compose.foundation.hoverable
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.interaction.collectIsHoveredAsState
 import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.BoxScope
 import androidx.compose.foundation.layout.fillMaxHeight
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.wrapContentWidth
 import androidx.compose.foundation.lazy.grid.LazyGridState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
@@ -50,15 +51,14 @@ import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.geometry.CornerRadius
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
+import androidx.compose.ui.graphics.CompositingStrategy
 import androidx.compose.ui.graphics.TransformOrigin
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.graphics.lerp
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.input.pointer.positionChange
-import androidx.compose.ui.layout.layout
 import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.ui.platform.LocalDensity
-import androidx.compose.ui.unit.Constraints
 import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.util.lerp
@@ -68,12 +68,16 @@ import kotlin.math.max
 import kotlin.math.roundToInt
 
 /**
- * Draggable scrollbar of a long lazy grid, in the style of the fast scroller of a contacts app: the thumb sits on the
- * end edge with a wide touch target, and while it is dragged a bubble next to it shows the label of the section that
- * is currently at the top of the list. The scroller stays visible for as long as the list is scrollable. A narrower
- * strip runs down the whole edge as the track: pressing it anywhere moves the thumb under the finger, and a track
- * fades in behind the thumb while it is pointed at or dragged to show how far that reaches. Every other touch goes
- * through to the list, and the rows of that list keep their own controls clear of it by [FAST_SCROLLER_CLEARANCE].
+ * Draggable scrollbar of a long lazy grid, in the style of the fast scroller of a contacts app: the thumb runs down
+ * the end edge, and while it is dragged a bubble next to it shows the label of the section that is currently at the
+ * top of the list. The scroller stays visible for as long as the list is scrollable.
+ *
+ * It is a column of its own, [FAST_SCROLLER_WIDTH] wide, laid out next to the grid rather than over it, and the
+ * whole column is its touch target: pressing it anywhere moves the thumb under the finger, and a track fades in
+ * behind the thumb while it is pointed at or dragged to show how far that reaches. Sharing no space with the grid is
+ * what lets every row keep its controls where a row without a scroller would have them, the ones in the inner columns
+ * of a wide grid included, with no touch target of the scroller's reaching over any of them. Only the bubble is drawn
+ * out over the list, and nothing about it can be pressed.
  *
  * @param labelForItem Returns the label of the section the item at the given index belongs to, or null if none. A
  *   list whose sections have no single character to go by (the setlists, named by whatever somebody called them)
@@ -81,14 +85,20 @@ import kotlin.math.roundToInt
  */
 @OptIn(ExperimentalMaterial3ExpressiveApi::class)
 @Composable
-internal fun BoxScope.FastScroller(
+internal fun FastScroller(
     modifier: Modifier = Modifier,
     gridState: LazyGridState,
     labelForItem: (index: Int) -> String? = { null },
 ) {
     val coroutineScope = rememberCoroutineScope()
-    val minThumbHeight = with(LocalDensity.current) { MIN_THUMB_HEIGHT.toPx() }
-    val state = remember(gridState) { FastScrollerState(gridState, minThumbHeight) }
+    val density = LocalDensity.current
+    val state = remember(gridState, density) {
+        FastScrollerState(
+            gridState = gridState,
+            minThumbHeight = with(density) { MIN_THUMB_HEIGHT.toPx() },
+            touchSlack = with(density) { TOUCH_SLACK.toPx() },
+        )
+    }
     val interactionSource = remember { MutableInteractionSource() }
     val isHovered by interactionSource.collectIsHoveredAsState()
     // Both derived, since what they are worked out from changes on every scrolled pixel and what they come to only
@@ -118,19 +128,20 @@ internal fun BoxScope.FastScroller(
 
     Box(
         modifier = modifier
-            .align(Alignment.CenterEnd)
             .fillMaxHeight()
-            .width(TOUCH_TARGET_WIDTH + BUBBLE_SPACING + BUBBLE_SIZE)
+            .width(FAST_SCROLLER_WIDTH)
             .padding(vertical = TRACK_VERTICAL_PADDING)
             .onSizeChanged { state.trackHeight = it.height }
-            .graphicsLayer { this.alpha = alpha }
+            // Alpha applied to every draw call rather than through an offscreen buffer, which would be the size of the
+            // column and cut off the bubble that reaches out of it over the list.
+            .graphicsLayer {
+                this.alpha = alpha
+                compositingStrategy = CompositingStrategy.ModulateAlpha
+            }
     ) {
-        // The thumb and the track are only drawn, so that they never get in the way of the list underneath.
         Box(
             modifier = Modifier
-                .align(Alignment.CenterEnd)
-                .fillMaxHeight()
-                .width(TOUCH_TARGET_WIDTH)
+                .fillMaxSize()
                 .drawBehind {
                     val thumbWidth = THUMB_WIDTH.toPx()
                     drawRoundRect(
@@ -147,12 +158,14 @@ internal fun BoxScope.FastScroller(
                     )
                 }
         )
-        // The bubble pops out of the thumb while it is being dragged and keeps its last label while it disappears.
+        // The bubble pops out of the thumb while it is being dragged and keeps its last label while it disappears. It is
+        // wider than the column, so it is measured without the column's width and hangs out of its start edge.
         AnimatedVisibility(
             visible = state.isDragging && label != null,
             modifier = Modifier
                 .align(Alignment.TopEnd)
-                .offset { IntOffset(x = -TOUCH_TARGET_WIDTH.roundToPx(), y = (state.thumbCenter - BUBBLE_SIZE.toPx() / 2).roundToInt()) },
+                .offset { IntOffset(x = -BUBBLE_END_MARGIN.roundToPx(), y = (state.thumbCenter - BUBBLE_SIZE.toPx() / 2).roundToInt()) }
+                .wrapContentWidth(align = Alignment.End, unbounded = true),
             enter = scaleIn(animationSpec = MaterialTheme.motionScheme.fastSpatialSpec(), transformOrigin = BUBBLE_TRANSFORM_ORIGIN) +
                     fadeIn(animationSpec = MaterialTheme.motionScheme.fastEffectsSpec()),
             exit = scaleOut(animationSpec = MaterialTheme.motionScheme.fastSpatialSpec(), transformOrigin = BUBBLE_TRANSFORM_ORIGIN) +
@@ -174,31 +187,12 @@ internal fun BoxScope.FastScroller(
                 )
             }
         }
-        // Two touch targets, so that touches elsewhere reach the list. The track runs the full height, past the controls
-        // at the end of every row, so it is kept narrow enough to end where they start (with them moved inwards by
-        // `FAST_SCROLLER_CLEARANCE`); the wider target only follows the thumb, where a finger that is not looking has
-        // to be caught, and only ever covers the one or two rows next to it.
         if (isVisible) {
             Box(
                 modifier = Modifier
-                    .align(Alignment.TopEnd)
-                    .fillMaxHeight()
-                    .width(TRACK_TOUCH_TARGET_WIDTH)
+                    .fillMaxSize()
                     .hoverable(interactionSource)
-                    .thumbDragGestures(state = state, coroutineScope = coroutineScope, isTrack = true)
-            )
-            Box(
-                modifier = Modifier
-                    .align(Alignment.TopEnd)
-                    .width(TOUCH_TARGET_WIDTH)
-                    .layout { measurable, constraints ->
-                        val slack = TOUCH_SLACK.roundToPx()
-                        val height = (state.thumbHeight + 2 * slack).roundToInt()
-                        val placeable = measurable.measure(Constraints.fixed(constraints.maxWidth, height))
-                        layout(placeable.width, height) { placeable.placeRelative(0, (state.thumbTop - slack).roundToInt()) }
-                    }
-                    .hoverable(interactionSource)
-                    .thumbDragGestures(state = state, coroutineScope = coroutineScope, isTrack = false)
+                    .thumbDragGestures(state = state, coroutineScope = coroutineScope)
             )
         }
     }
@@ -206,17 +200,16 @@ internal fun BoxScope.FastScroller(
 
 /**
  * Drags the thumb for as long as the pointer that pressed this element stays down, wherever it wanders off to. The
- * track is laid out over the whole height of the scroller, so a press on it is already in the thumb's coordinates.
+ * element is laid out over the whole track, so a press on it is already in the thumb's coordinates.
  */
 private fun Modifier.thumbDragGestures(
     state: FastScrollerState,
     coroutineScope: CoroutineScope,
-    isTrack: Boolean,
-) = pointerInput(state, isTrack) {
+) = pointerInput(state) {
     awaitEachGesture {
         val down = awaitFirstDown()
         down.consume()
-        state.startDrag(pressY = if (isTrack) down.position.y else null)?.let { fraction ->
+        state.startDrag(pressY = down.position.y)?.let { fraction ->
             coroutineScope.launch { state.scrollToFraction(fraction) }
         }
         drag(down.id) { change ->
@@ -232,6 +225,7 @@ private fun Modifier.thumbDragGestures(
 private class FastScrollerState(
     private val gridState: LazyGridState,
     private val minThumbHeight: Float,
+    private val touchSlack: Float,
 ) {
     var trackHeight by mutableIntStateOf(0)
     var isDragging by mutableStateOf(false)
@@ -260,14 +254,16 @@ private class FastScrollerState(
         }
 
     /**
-     * Starts a drag. A press on the track at [pressY] that misses the thumb first centers the thumb under it, which is
-     * what the track is there for; a press on the thumb itself leaves it where it is, so that grabbing the thumb never
-     * scrolls the list by itself. Returns the scroll fraction to follow the jump with, or null if there was none.
+     * Starts a drag. A press at [pressY] that misses the thumb first centers the thumb under it, which is what the
+     * track is there for; a press on the thumb itself leaves it where it is, so that grabbing the thumb never scrolls
+     * the list by itself. The thumb counts as a little taller than it is drawn, since a finger that is not looking
+     * lands just above or below a mark this narrow about as often as on it. Returns the scroll fraction to follow the
+     * jump with, or null if there was none.
      */
-    fun startDrag(pressY: Float?): Float? {
+    fun startDrag(pressY: Float): Float? {
         draggedThumbTop = thumbTop
         isDragging = true
-        return if (pressY == null || pressY in thumbTop..thumbTop + thumbHeight) null else dragBy(pressY - thumbCenter)
+        return if (pressY in thumbTop - touchSlack..thumbTop + thumbHeight + touchSlack) null else dragBy(pressY - thumbCenter)
     }
 
     /** Moves the thumb by [delta] pixels and returns the new scroll fraction. */
@@ -327,23 +323,23 @@ private class ScrollMetrics(
 )
 
 /**
- * What a row of the list this scroller runs down keeps its own controls away from the end edge by. The thumb's touch
- * target is wide enough to be caught by a finger that is not looking, which is most of the way across the overflow
- * button at the end of every row, and the one of the two that can move is the row. A setlist row's drag handle goes
- * in front of its overflow button rather than on the edge after it, since the full-height track would otherwise take
- * every press meant for it, and that way the button lands where it does on the songs screen.
+ * The width of the column a [FastScroller] takes up next to its list, all of which is its touch target. It is the
+ * smallest width a touch target is still reliably hit at rather than the 48dp of a button, because the column is taken
+ * out of the width of the rows for as long as the list is on the screen, scrollable or not - a column that came and
+ * went with the scroller would reflow every row whenever the list grew past the height of the screen or shrank below
+ * it. The thumb is tall enough that the target is never short of the height it lacks in width.
  */
-internal val FAST_SCROLLER_CLEARANCE = 16.dp
+internal val FAST_SCROLLER_WIDTH = 24.dp
 
-private val TOUCH_TARGET_WIDTH = 48.dp
-private val TRACK_TOUCH_TARGET_WIDTH = 24.dp
 private val TRACK_VERTICAL_PADDING = 8.dp
 private val TOUCH_SLACK = 8.dp
 private val THUMB_WIDTH = 6.dp
 private val THUMB_END_PADDING = 4.dp
 private val MIN_THUMB_HEIGHT = 48.dp
 private val BUBBLE_SIZE = 48.dp
-private val BUBBLE_SPACING = 4.dp
+
+/** How far the bubble's end edge stays from the screen's, which is far enough for the finger on the thumb to leave it in sight. */
+private val BUBBLE_END_MARGIN = 48.dp
 private val BUBBLE_ELEVATION = 2.dp
 private val BUBBLE_TRANSFORM_ORIGIN = TransformOrigin(pivotFractionX = 1f, pivotFractionY = 0.5f)
 private const val IDLE_THUMB_ALPHA = 0.5f

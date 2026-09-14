@@ -48,8 +48,7 @@ import org.jetbrains.compose.resources.painterResource
  * Separate from [SongActionsButton] because not every row that wants a menu has a song behind it: a setlist entry
  * whose file has gone missing still has the one action of being taken out of the setlist.
  *
- * [modifier] goes on the button rather than on the menu, which hangs from wherever the button ends up: the song list
- * is what uses it, to keep the button clear of the fast scroller running down the same edge (`FAST_SCROLLER_CLEARANCE`).
+ * [modifier] goes on the button rather than on the menu, which hangs from wherever the button ends up.
  *
  * @param state Whether the menu is open, hoisted by a row that opens the same menu from a long press as well.
  */

@@ -298,8 +298,9 @@ internal fun MissingSongListItem(
  * Whatever a row carries at its end - the overflow button, and on the setlists screen the drag handle after it.
  * `ListItem` insets its trailing slot further from the edge than `TopAppBar` insets its actions, so the last control
  * of a row and the last control of the bar above it sit on two keylines a few dp apart; this closes that gap, and
- * every row of every list is drawn through here so the one keyline holds down the whole screen. A list with a
- * [FastScroller] moves its rows' controls back off that keyline again, by [FAST_SCROLLER_CLEARANCE].
+ * every row of every list is drawn through here so the one keyline holds down the whole screen. Where a
+ * [FastScroller] runs beside the list the rows end where its column starts, so their controls keep that distance
+ * from the scroller instead, and from the end of their own column in every inner column of a wide grid alike.
  *
  * An offset rather than a smaller padding: the inset belongs to Material's own layout, and moving what is drawn
  * leaves the width the row reserved for it exactly as it was.

@@ -11,7 +11,7 @@ package com.pandulapeter.campfire.presentation.ui.screens.setlists
 
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.animateDpAsState
-import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.calculateEndPadding
 import androidx.compose.foundation.layout.calculateStartPadding
@@ -66,7 +66,6 @@ import com.pandulapeter.campfire.presentation.ui.components.ActionsMenuItem
 import com.pandulapeter.campfire.presentation.ui.components.ControlsSidePanel
 import com.pandulapeter.campfire.presentation.ui.components.DismissSheetWhenSidePanelAppears
 import com.pandulapeter.campfire.presentation.ui.components.DragHandle
-import com.pandulapeter.campfire.presentation.ui.components.FAST_SCROLLER_CLEARANCE
 import com.pandulapeter.campfire.presentation.ui.components.FastScroller
 import com.pandulapeter.campfire.presentation.ui.components.ListColumns
 import com.pandulapeter.campfire.presentation.ui.components.ListPlaceholder
@@ -258,17 +257,18 @@ private fun SetlistList(
         }
     }
 
-    Box(
+    // The scroller takes the end inset over from the grid, so that it keeps to the edge of the screen beside the list
+    // rather than standing in front of it.
+    Row(
         modifier = modifier
     ) {
         LazyVerticalGrid(
             columns = ListColumns(columnCount),
-            modifier = Modifier.fillMaxSize(),
+            modifier = Modifier.weight(1f).fillMaxHeight(),
             state = listState,
             contentPadding = PaddingValues(
                 start = contentPadding.calculateStartPadding(layoutDirection),
                 top = SECTION_HEADER_GAP,
-                end = contentPadding.calculateEndPadding(layoutDirection),
                 bottom = contentPadding.calculateBottomPadding(),
             ),
         ) {
@@ -386,7 +386,6 @@ private fun SetlistList(
                                 } else {
                                     {
                                         Row(
-                                            modifier = Modifier.padding(end = FAST_SCROLLER_CLEARANCE),
                                             verticalAlignment = Alignment.CenterVertically,
                                         ) {
                                             // The grip goes in front of the overflow button rather than after it, so that
@@ -434,7 +433,11 @@ private fun SetlistList(
             }
         }
         FastScroller(
-            modifier = Modifier.padding(contentPadding),
+            modifier = Modifier.padding(
+                top = contentPadding.calculateTopPadding(),
+                end = contentPadding.calculateEndPadding(layoutDirection),
+                bottom = contentPadding.calculateBottomPadding(),
+            ),
             gridState = listState,
         )
     }

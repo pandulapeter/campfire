@@ -14,7 +14,7 @@ import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.scaleIn
 import androidx.compose.animation.scaleOut
-import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.calculateEndPadding
@@ -62,7 +62,6 @@ import com.pandulapeter.campfire.presentation.resources.songs_unsorted_label
 import com.pandulapeter.campfire.presentation.ui.CampfireViewModel
 import com.pandulapeter.campfire.presentation.ui.components.ControlsSidePanel
 import com.pandulapeter.campfire.presentation.ui.components.DismissSheetWhenSidePanelAppears
-import com.pandulapeter.campfire.presentation.ui.components.FAST_SCROLLER_CLEARANCE
 import com.pandulapeter.campfire.presentation.ui.components.FastScroller
 import com.pandulapeter.campfire.presentation.ui.components.ImportProgress
 import com.pandulapeter.campfire.presentation.ui.components.HideKeyboardWhenScrolledDown
@@ -284,17 +283,18 @@ private fun SongList(
         }
     }
 
-    Box(
+    // The scroller takes the end inset over from the grid, so that it keeps to the edge of the screen beside the list
+    // rather than standing in front of it.
+    Row(
         modifier = modifier
     ) {
         LazyVerticalGrid(
             columns = ListColumns(columnCount),
-            modifier = Modifier.fillMaxSize(),
+            modifier = Modifier.weight(1f).fillMaxHeight(),
             state = listState,
             contentPadding = PaddingValues(
                 start = contentPadding.calculateStartPadding(layoutDirection),
                 top = SECTION_HEADER_GAP,
-                end = contentPadding.calculateEndPadding(layoutDirection),
                 bottom = contentPadding.calculateBottomPadding(),
             ),
         ) {
@@ -370,15 +370,11 @@ private fun SongList(
                                 actionsMenuState.open()
                             }
                         },
-                        // The overflow button keeps its distance from the end edge here and nowhere else, because
-                        // this is the one list the fast scroller runs down: a thumb dragged without looking is
-                        // caught by a target far wider than the thumb itself, and the button was inside it.
                         actions = if (isPerformanceModeEnabled) {
                             null
                         } else {
                             {
                                 SongActionsButton(
-                                    modifier = Modifier.padding(end = FAST_SCROLLER_CLEARANCE),
                                     state = actionsMenuState,
                                     viewModel = viewModel,
                                     song = song,
@@ -391,7 +387,11 @@ private fun SongList(
             }
         }
         FastScroller(
-            modifier = Modifier.padding(contentPadding),
+            modifier = Modifier.padding(
+                top = contentPadding.calculateTopPadding(),
+                end = contentPadding.calculateEndPadding(layoutDirection),
+                bottom = contentPadding.calculateBottomPadding(),
+            ),
             gridState = listState,
             labelForItem = { sectionLabels.getOrNull(it) },
         )
