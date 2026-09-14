@@ -54,6 +54,7 @@ import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.saveable.listSaver
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
@@ -772,7 +773,11 @@ private fun SongLanguagesDialog(
     val appLanguageCode = currentLanguage.value.code
     val libraryLanguages by viewModel.languages.collectAsStateWithLifecycle()
     var query by rememberSaveable { mutableStateOf("") }
-    var selectedCodes by remember(dialog.song.fileName) { mutableStateOf(dialog.song.languages.toSet()) }
+    // Saved, since the dialog outlives a recreated Activity and Done writes whatever is ticked at that moment.
+    var selectedCodes by rememberSaveable(
+        dialog.song.fileName,
+        stateSaver = listSaver<Set<String>, String>(save = { it.toList() }, restore = { it.toSet() }),
+    ) { mutableStateOf(dialog.song.languages.toSet()) }
     val languages = remember(dialog.song, libraryLanguages, appLanguageCode) {
         val declared = dialog.song.languages
         val alsoOffer = declared + libraryLanguages.map { it.code }.filterNot { it == SongLanguage.UNKNOWN }
