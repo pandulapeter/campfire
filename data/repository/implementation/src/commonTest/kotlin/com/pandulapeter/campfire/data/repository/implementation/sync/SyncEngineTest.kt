@@ -10,9 +10,12 @@
 package com.pandulapeter.campfire.data.repository.implementation.sync
 
 import com.pandulapeter.campfire.data.model.domain.LibraryFileKind
+import com.pandulapeter.campfire.data.model.domain.SyncProviderId
 import com.pandulapeter.campfire.data.source.remote.api.SyncNetworkException
+import com.pandulapeter.campfire.data.source.remote.api.hashing.localContentHash
 import kotlinx.coroutines.test.runTest
 import kotlin.test.Test
+import kotlin.test.assertContentEquals
 import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
 import kotlin.test.assertTrue
@@ -72,9 +75,66 @@ class SyncEngineTest {
         assertTrue(snapshots.all { it.lastSyncedAt == 42L })
     }
 
+    @Test
+    fun `a song edited while it waits to come down is kept next to the incoming version`() = runTest {
+        val original = "Original".encodeToByteArray()
+        val edited = "Edited here".encodeToByteArray()
+        val incoming = "Edited there".encodeToByteArray()
+        val local = FakeLibraryFileLocalSource(files = mapOf(song(1) to original, song(2) to original))
+        val provider = FakeSyncProvider(files = mapOf(song(1) to incoming, song(2) to incoming))
+        // Both songs were in step at the last run and have since moved on remotely, so both are planned as downloads;
+        // the first one's transfer is where the user saves an edit to the second.
+        provider.onDownload = { key -> if (key == song(1)) local.files[song(2)] = edited }
+
+        SyncEngine(local).synchronize(
+            provider = provider,
+            document = indexOf(song(1) to original, song(2) to original),
+            accountId = ACCOUNT_ID,
+            onProgress = {},
+            onIndexChanged = {},
+        )
+
+        assertContentEquals(edited, local.files[song(2)])
+        assertContentEquals(incoming, local.files[SyncKey(kind = LibraryFileKind.SONG, name = "song_2 (2).cho")])
+        assertContentEquals(edited, provider.files.getValue(song(2)).first)
+    }
+
+    @Test
+    fun `a song edited while it waits to be deleted goes back up instead`() = runTest {
+        val original = "Original".encodeToByteArray()
+        val edited = "Edited here".encodeToByteArray()
+        val local = FakeLibraryFileLocalSource(files = mapOf(song(1) to original, song(2) to original))
+        val provider = FakeSyncProvider(files = mapOf(song(1) to "Edited there".encodeToByteArray()))
+        // The second song is gone remotely and unchanged here, which plans a local deletion; it is edited while the
+        // first one comes down, before the deletions get their turn.
+        provider.onDownload = { local.files[song(2)] = edited }
+
+        val result = SyncEngine(local).synchronize(
+            provider = provider,
+            document = indexOf(song(1) to original, song(2) to original),
+            accountId = ACCOUNT_ID,
+            onProgress = {},
+            onIndexChanged = {},
+        )
+
+        assertContentEquals(edited, local.files[song(2)])
+        assertContentEquals(edited, provider.files.getValue(song(2)).first)
+        assertEquals(0, result.summary.deletedLocally)
+    }
+
     private companion object {
         const val ACCOUNT_ID = "dropbox:someone@example.com"
 
         fun song(number: Int) = SyncKey(kind = LibraryFileKind.SONG, name = "song_$number.cho")
+
+        /** An index that says the last run saw [files] with these contents, at the revision the fake starts from. */
+        fun indexOf(vararg files: Pair<SyncKey, ByteArray>) = SyncIndexDocument.of(
+            providerId = SyncProviderId.DROPBOX.id,
+            accountId = ACCOUNT_ID,
+            lastSyncedAt = 1,
+            index = files.associate { (key, bytes) ->
+                key to SyncIndexEntry(localHash = localContentHash(bytes), remoteRevision = "r0")
+            },
+        )
     }
 }

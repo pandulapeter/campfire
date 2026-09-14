@@ -155,7 +155,7 @@ internal class SyncEngine(
         plan.groupBy { it.order }.entries.sortedBy { it.key }.forEach { (_, group) ->
             group.map { operation ->
                 async {
-                    val outcome = permits.withPermit { runOperation(provider, operation, contentHashes) }
+                    val outcome = permits.withPermit { runOperation(provider, operation, index, contentHashes) }
                     results.withLock {
                         updated += outcome.entries
                         updated -= outcome.removals
@@ -181,17 +181,14 @@ internal class SyncEngine(
     private suspend fun runOperation(
         provider: SyncProvider,
         operation: SyncOperation,
+        index: Map<SyncKey, SyncIndexEntry>,
         contentHashes: Map<SyncKey, String?>,
     ): OperationOutcome = try {
         when (operation) {
-            is SyncOperation.Download -> download(provider, operation, contentHashes)
+            is SyncOperation.Download -> download(provider, operation, index, contentHashes)
             is SyncOperation.Upload -> upload(provider, operation)
             is SyncOperation.Resolve -> resolve(provider, operation, contentHashes)
-
-            is SyncOperation.DeleteLocal -> {
-                libraryFileLocalSource.deleteLibraryFile(operation.key.kind, operation.key.name)
-                OperationOutcome(removals = setOf(operation.key), summary = SyncSummary(deletedLocally = 1))
-            }
+            is SyncOperation.DeleteLocal -> deleteLocally(provider, operation, index)
 
             is SyncOperation.DeleteRemote -> {
                 provider.delete(operation.key.kind, operation.key.name, operation.revision)
@@ -214,9 +211,16 @@ internal class SyncEngine(
         OperationOutcome()
     }
 
+    /**
+     * Overwrites the local file, so it is read, decided about and only then written: the plan was made from hashes
+     * taken when the run listed the library, and a long run gives the user plenty of time to save an edit to a song
+     * that is still waiting to come down. Checked here, the window in which such a save can be lost is one file's
+     * worth of transfer rather than the whole run.
+     */
     private suspend fun download(
         provider: SyncProvider,
         operation: SyncOperation.Download,
+        index: Map<SyncKey, SyncIndexEntry>,
         contentHashes: Map<SyncKey, String?>,
     ): OperationOutcome {
         val key = operation.key
@@ -226,12 +230,36 @@ internal class SyncEngine(
         if (local != null && isSameContent(provider, local, contentHashes[key])) {
             return OperationOutcome(entries = mapOf(key to SyncIndexEntry(localContentHash(local), operation.revision)))
         }
+        val indexEntry = index[key]
+        if (local != null && indexEntry != null && localContentHash(local) != indexEntry.localHash) {
+            // Edited since the listing: this is now a file changed on both sides, and it is resolved as one.
+            return resolve(provider, SyncOperation.Resolve(key, operation.revision), contentHashes)
+        }
         val bytes = provider.download(key.kind, key.name)
         libraryFileLocalSource.writeLibraryFile(key.kind, key.name, bytes)
         return OperationOutcome(
             entries = mapOf(key to SyncIndexEntry(localContentHash(bytes), operation.revision)),
             summary = SyncSummary(downloaded = 1),
         )
+    }
+
+    /**
+     * Read, decided about and only then deleted, for the same reason as [download]: the plan saw the file unchanged,
+     * which says nothing about the minutes the run has taken since. An edit made in between beats the deletion, the
+     * same rule [SyncPlanner] applies, and puts the file back on the remote.
+     */
+    private suspend fun deleteLocally(
+        provider: SyncProvider,
+        operation: SyncOperation.DeleteLocal,
+        index: Map<SyncKey, SyncIndexEntry>,
+    ): OperationOutcome {
+        val key = operation.key
+        val local = libraryFileLocalSource.readLibraryFile(key.kind, key.name) ?: return OperationOutcome(removals = setOf(key))
+        if (localContentHash(local) != index[key]?.localHash) {
+            return upload(provider, SyncOperation.Upload(key, expectedRevision = null))
+        }
+        libraryFileLocalSource.deleteLibraryFile(key.kind, key.name)
+        return OperationOutcome(removals = setOf(key), summary = SyncSummary(deletedLocally = 1))
     }
 
     private suspend fun upload(provider: SyncProvider, operation: SyncOperation.Upload): OperationOutcome {
