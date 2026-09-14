@@ -74,6 +74,7 @@ an empty library.
 
 ### To do
 - Rename setlist date sort, maybe expose a date for Setlists?
+- Search input field open animation glitch (padding applied at the end instantly)
 - Implement .cho (and other) file association
 - Songs: sort by year option
 - Implement sticky headers
@@ -81,6 +82,7 @@ an empty library.
 - Fix web Settings screen animation glitches caused by async data. Songs also sometimes has async animation issues
 - Improve the appearance and UI scalability of the Settings screen
 - Update the screenshots in the Readme
+- Integrate Crashlytics
 - Create new screenshots for iOS, Android and desktop
 - Create iOS store listing
 - Create GitHub action for TestFlight releases
