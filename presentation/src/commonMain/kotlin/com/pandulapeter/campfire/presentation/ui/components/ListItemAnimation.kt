@@ -9,6 +9,9 @@
  */
 package com.pandulapeter.campfire.presentation.ui.components
 
+import androidx.compose.animation.core.Spring
+import androidx.compose.animation.core.VisibilityThreshold
+import androidx.compose.animation.core.spring
 import androidx.compose.foundation.gestures.ScrollableState
 import androidx.compose.foundation.lazy.LazyItemScope
 import androidx.compose.foundation.lazy.grid.LazyGridItemScope
@@ -19,6 +22,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.unit.IntOffset
 
 /**
  * Whether the lists have the whole library and can start animating their items, which they must not do while they
@@ -47,7 +51,7 @@ internal fun rememberHasLoadedLibrary(isLoading: Boolean): Boolean {
  * An item sliding into its new slot says that the list the user is looking at has changed: a song was renamed,
  * deleted, filtered out, or a different sorting order moved it. The library arriving is not that kind of change
  * ([isEnabled], which the song and setlist lists answer with [rememberHasLoadedLibrary]), and neither is a scroll —
- * hence [listState], which turns the animations off for as long as the list is moving.
+ * hence [listState], which turns the placement animation off for as long as the list is moving.
  *
  * A lazy list keeps the animation state of the items it has on screen and moves each of them by the distance the
  * list itself was scrolled, so that scrolling is not mistaken for the list rearranging itself. The two numbers come
@@ -57,13 +61,23 @@ internal fun rememberHasLoadedLibrary(isLoading: Boolean): Boolean {
  * looks like is a single row sliding in from off screen while every other row is already still, most visibly the
  * first row of a list that was flung back to the top.
  *
- * Nothing is lost by leaving the animations off while the list moves, since they are there to narrate a change of
- * its *contents* and the contents do not change under a finger. Whatever does change mid-scroll simply takes its
- * place, and the next change with the list at rest animates as it always did.
+ * Nothing is lost by leaving the placement animation off while the list moves, since it is there to narrate a change
+ * of its *contents* and the contents do not change under a finger. Whatever does change mid-scroll simply takes its
+ * place, and the next change with the list at rest animates as it always did. Only the placement is turned off, and
+ * by its spec rather than by taking the modifier away: a modifier taken away at the start of a scroll takes the
+ * animation node with it, cutting short a placement animation that is still running, and puts a new one in at the
+ * end. The fades, which move nothing, are what keep the modifier in place, since one with no spec at all is none.
  */
 @Composable
-internal fun LazyItemScope.listItemAnimation(listState: ScrollableState, isEnabled: Boolean = true) =
-    if (isEnabled && !listState.isScrollInProgress) Modifier.animateItem() else Modifier
+internal fun LazyItemScope.listItemAnimation(listState: ScrollableState, isEnabled: Boolean = true) = if (isEnabled) {
+    Modifier.animateItem(
+        fadeInSpec = ITEM_FADE_SPEC,
+        placementSpec = if (listState.isScrollInProgress) null else ITEM_PLACEMENT_SPEC,
+        fadeOutSpec = ITEM_FADE_SPEC,
+    )
+} else {
+    Modifier
+}
 
 /**
  * The [listItemAnimation] of an item of the song or setlist grid.
@@ -79,4 +93,21 @@ internal fun LazyGridItemScope.listItemAnimation(
     listState: ScrollableState,
     isEnabled: Boolean = true,
     isRearranging: Boolean = false,
-) = if (isEnabled && (isRearranging || !listState.isScrollInProgress)) Modifier.animateItem() else Modifier
+) = if (isEnabled) {
+    Modifier.animateItem(
+        fadeInSpec = ITEM_FADE_SPEC,
+        placementSpec = if (isRearranging || !listState.isScrollInProgress) ITEM_PLACEMENT_SPEC else null,
+        fadeOutSpec = ITEM_FADE_SPEC,
+    )
+} else {
+    Modifier
+}
+
+/** The fade [Modifier.animateItem] uses by default. */
+private val ITEM_FADE_SPEC = spring<Float>(stiffness = Spring.StiffnessMediumLow)
+
+/** The placement animation [Modifier.animateItem] uses by default. */
+private val ITEM_PLACEMENT_SPEC = spring(
+    stiffness = Spring.StiffnessMediumLow,
+    visibilityThreshold = IntOffset.VisibilityThreshold,
+)
