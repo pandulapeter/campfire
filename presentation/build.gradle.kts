@@ -11,6 +11,7 @@ plugins {
     id("campfire-compose-library")
     alias(libs.plugins.hyperether.localization)
     alias(libs.plugins.koin.compiler)
+    alias(libs.plugins.kotlin.serialization)
 }
 
 // The app version is declared in gradle.properties; this makes it visible to the shared UI.
@@ -64,6 +65,8 @@ kotlin {
                 implementation(libs.kotlin.coroutines)
                 // The one place the shared UI needs a calendar: the local date and time of the last sync.
                 implementation(libs.kotlin.datetime)
+                // The back stack, written into the view model's saved state so that it survives the process being killed.
+                implementation(libs.kotlin.serialization.json)
             }
         }
         androidMain.dependencies {

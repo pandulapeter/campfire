@@ -13,7 +13,9 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.setValue
+import androidx.compose.runtime.snapshotFlow
 import androidx.compose.runtime.snapshots.SnapshotStateList
+import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.pandulapeter.campfire.chordpro.model.ChordProMetadata
@@ -100,6 +102,9 @@ import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import kotlinx.serialization.Serializable
+import kotlinx.serialization.SerializationException
+import kotlinx.serialization.json.Json
 import kotlin.math.ceil
 import kotlin.math.floor
 import org.koin.core.annotation.KoinViewModel
@@ -143,14 +148,26 @@ class CampfireViewModel(
     private val transposeChordPro: TransposeChordProUseCase,
     private val transposeChordProText: TransposeChordProTextUseCase,
     private val convertChordProNotation: ConvertChordProNotationUseCase,
+    /**
+     * What survives the system killing the process while the app is in the background, which Android does whenever it
+     * needs the memory: the back stack, the song filter and the two searches. Empty on every real start, and on the
+     * platforms that have no such thing as a process being restored.
+     */
+    private val savedStateHandle: SavedStateHandle,
 ) : ViewModel() {
 
     /**
-     * The tags and languages the song list is narrowed to. Held here and nowhere else, so it lasts exactly as long as
-     * the app does: a filter is a question asked of the library for the moment, and one that came back on the next
-     * launch would read as songs having gone missing. Declared before [screenData], which is built from it.
+     * The tags and languages the song list is narrowed to. Held here and in [savedStateHandle] only, so it lasts
+     * exactly as long as the app does - a process killed in the background and restored is still the same run of the
+     * app as far as the user can tell: a filter is a question asked of the library for the moment, and one that came
+     * back on the next launch would read as songs having gone missing. Declared before [screenData], which is built
+     * from it.
      */
-    private val _songFilter = MutableStateFlow(SongFilter())
+    private val _songFilter = MutableStateFlow(
+        restore<SavedSongFilter>(SONG_FILTER_KEY)
+            ?.let { SongFilter(selectedTags = it.selectedTags.toSet(), selectedLanguages = it.selectedLanguages.toSet()) }
+            ?: SongFilter()
+    )
     val songFilter = _songFilter.asStateFlow()
 
     /**
@@ -166,7 +183,10 @@ class CampfireViewModel(
     )
 
     // Navigation
-    val backStack: SnapshotStateList<CampfireDestination> = mutableStateListOf(CampfireDestination.Songs)
+    /** Written into [savedStateHandle] on every change, see [persistBackStack], and read back from it here. */
+    val backStack: SnapshotStateList<CampfireDestination> = mutableStateListOf<CampfireDestination>().apply {
+        addAll(restore<List<CampfireDestination>>(BACK_STACK_KEY)?.takeIf { it.isNotEmpty() } ?: listOf(CampfireDestination.Songs))
+    }
 
     /**
      * Bumped whenever the back stack changes while a navigation transition is still running. The UI puts it into
@@ -190,8 +210,8 @@ class CampfireViewModel(
      * The search of each of the two list screens, held here for the same reason their scroll positions are, see
      * [SearchState]. They are separate because the two lists are searched for different things.
      */
-    internal val songsSearch = SearchState()
-    internal val setlistsSearch = SearchState()
+    internal val songsSearch = restoreSearch(SONGS_SEARCH_KEY)
+    internal val setlistsSearch = restoreSearch(SETLISTS_SEARCH_KEY)
 
     /**
      * The search a back gesture is about, which is the one belonging to the screen that is on top. Only the two list
@@ -628,6 +648,15 @@ class CampfireViewModel(
             }
         }
         viewModelScope.launch {
+            _songFilter.collect { persist(SONG_FILTER_KEY, SavedSongFilter(selectedTags = it.selectedTags.toList(), selectedLanguages = it.selectedLanguages.toList())) }
+        }
+        listOf(SONGS_SEARCH_KEY to songsSearch, SETLISTS_SEARCH_KEY to setlistsSearch).forEach { (key, search) ->
+            viewModelScope.launch {
+                combine(search.isOpen, snapshotFlow { search.textFieldState.text.toString() }) { isOpen, query -> SavedSearch(isOpen = isOpen, query = query) }
+                    .collect { persist(key, it) }
+            }
+        }
+        viewModelScope.launch {
             pendingFontScale.filterNotNull().debounce(FONT_SCALE_SAVE_DELAY_MILLIS).collect { fontScale ->
                 userPreferences.value?.let { saveUserPreferences(it.copy(fontScale = fontScale)) }
             }
@@ -644,7 +673,15 @@ class CampfireViewModel(
     private fun updateBackStack(update: SnapshotStateList<CampfireDestination>.() -> Unit) {
         if (isNavigationTransitionRunning) navigationGeneration++
         backStack.update()
+        persistBackStack()
     }
+
+    /**
+     * Called after every change to [backStack]. The state Navigation 3 saves for each entry (the editor's text, a
+     * scroll position) is saved with the Activity regardless, but it is only ever handed back to an entry with the
+     * same content key, so a stack that restarted on the Songs screen would leave all of it behind unclaimed.
+     */
+    private fun persistBackStack() = persist(BACK_STACK_KEY, backStack.toList())
 
     fun selectTopLevelDestination(destination: CampfireDestination.TopLevel) {
         if (backStack.lastOrNull() == destination) return
@@ -755,6 +792,7 @@ class CampfireViewModel(
                 }
             }
         }
+        persistBackStack()
     }
 
     fun deleteSong(fileName: String) = launchLibraryChange {
@@ -1409,6 +1447,25 @@ class CampfireViewModel(
 
     // Helpers
 
+    private fun restoreSearch(key: String) = restore<SavedSearch>(key).let { saved ->
+        SearchState(isInitiallyOpen = saved?.isOpen == true, initialQuery = saved?.query.orEmpty())
+    }
+
+    /** JSON rather than the values themselves, because a saved state only takes the handful of types a Bundle does. */
+    private inline fun <reified T> persist(key: String, value: T) {
+        savedStateHandle[key] = Json.encodeToString(value)
+    }
+
+    /** Null for nothing saved, and for something saved by a build whose destinations no longer read the same way. */
+    private inline fun <reified T> restore(key: String): T? = savedStateHandle.get<String>(key)?.let { saved ->
+        try {
+            Json.decodeFromString<T>(saved)
+        } catch (exception: SerializationException) {
+            println("Could not restore \"$key\": ${exception.message}")
+            null
+        }
+    }
+
     /**
      * [viewModelScope.launch] for the intents that write to the library. A write that fails throws out of the
      * repository, and an exception nobody catches in a launched coroutine takes the whole app down on Android: here
@@ -1521,6 +1578,20 @@ class CampfireViewModel(
         val files: List<ImportedFile>,
         val shouldAnnounceResult: Boolean,
         val settled: CompletableDeferred<Unit> = CompletableDeferred(),
+    )
+
+    /** The part of a [SearchState] that is worth restoring, see [savedStateHandle]. */
+    @Serializable
+    private data class SavedSearch(
+        val isOpen: Boolean,
+        val query: String,
+    )
+
+    /** [SongFilter] as it is saved, see [savedStateHandle]; the domain model is not serializable, and has no reason to be. */
+    @Serializable
+    private data class SavedSongFilter(
+        val selectedTags: List<String>,
+        val selectedLanguages: List<String>,
     )
 
     /** Something that has happened and is worth one line of text at the bottom of the screen. */
@@ -1715,5 +1786,9 @@ class CampfireViewModel(
         private const val FONT_SCALE_STEP_TOLERANCE = 0.01f // Floating point slack, so that 1.1000001 still counts as step 11.
         private const val FONT_SCALE_SAVE_DELAY_MILLIS = 500L
         private const val SONG_EDIT_ATTEMPTS = 2
+        private const val BACK_STACK_KEY = "backStack"
+        private const val SONG_FILTER_KEY = "songFilter"
+        private const val SONGS_SEARCH_KEY = "songsSearch"
+        private const val SETLISTS_SEARCH_KEY = "setlistsSearch"
     }
 }

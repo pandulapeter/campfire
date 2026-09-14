@@ -31,10 +31,16 @@ import kotlinx.coroutines.flow.combine
  *
  * Each screen gets its own: the two lists are searched for different things, and a query typed while looking at the
  * songs would silently narrow a setlist list it means something else for.
+ *
+ * @param isInitiallyOpen Together with [initialQuery], the search as it was when the process was killed, which the
+ *   view model reads back from its saved state; a new process starts closed and empty.
  */
-internal class SearchState {
+internal class SearchState(
+    isInitiallyOpen: Boolean = false,
+    initialQuery: String = "",
+) {
 
-    private val _isOpen = MutableStateFlow(false)
+    private val _isOpen = MutableStateFlow(isInitiallyOpen)
     val isOpen: StateFlow<Boolean> = _isOpen.asStateFlow()
 
     /**
@@ -45,7 +51,7 @@ internal class SearchState {
      * It also outlives [close] by design, since the field animates away rather than disappearing and one that
      * emptied itself on the first frame of that animation would be read as the text having been deleted.
      */
-    val textFieldState = TextFieldState()
+    val textFieldState = TextFieldState(initialText = initialQuery)
 
     /**
      * How far a back gesture that would close the search has been dragged, from 0 to 1, and 0 whenever there is no

@@ -10,11 +10,17 @@
 package com.pandulapeter.campfire.presentation.ui.navigation
 
 import androidx.navigation3.runtime.NavKey
+import kotlinx.serialization.Serializable
 
 /**
  * The keys of the Navigation 3 back stack. Top level destinations are the tabs of the navigation bar / rail,
  * [SongDetails] is pushed on top of them.
+ *
+ * Serializable because the whole stack is written into the view model's saved state: a process the system killed in
+ * the background comes back on the screen it was showing, and with it the state Navigation 3 saved for each entry -
+ * the text typed into an editor included, which would otherwise be left in the saved state with no entry to claim it.
  */
+@Serializable
 sealed interface CampfireDestination : NavKey {
 
     /**
@@ -23,6 +29,7 @@ sealed interface CampfireDestination : NavKey {
      */
     val contentKey: String
 
+    @Serializable
     sealed interface TopLevel : CampfireDestination {
 
         companion object {
@@ -36,14 +43,17 @@ sealed interface CampfireDestination : NavKey {
         }
     }
 
+    @Serializable
     data object Songs : TopLevel {
         override val contentKey = "songs"
     }
 
+    @Serializable
     data object Setlists : TopLevel {
         override val contentKey = "setlists"
     }
 
+    @Serializable
     data object Settings : TopLevel {
         override val contentKey = "settings"
     }
@@ -52,6 +62,7 @@ sealed interface CampfireDestination : NavKey {
      * Full screen pager of the given songs, identified by their file names. When opened from a setlist,
      * [setlistFileName] is set so that transpositions are stored in that setlist rather than in the preferences.
      */
+    @Serializable
     data class SongDetails(
         val songFileNames: List<String>,
         val setlistFileName: String?,
@@ -67,6 +78,7 @@ sealed interface CampfireDestination : NavKey {
      * @param shouldStartInsideFirstSection Where the caret goes: a song that has just been created opens inside the
      *   empty verse its template ends with, an existing one at the top of its text.
      */
+    @Serializable
     data class SongEditor(
         val fileName: String,
         val shouldStartInsideFirstSection: Boolean = false,
