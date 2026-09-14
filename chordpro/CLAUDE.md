@@ -24,8 +24,9 @@ in `:domain:*`. `:data:source:local:implementation` uses it directly for the met
   written as a line of chords with tablature under it is one section and not three. Outside every environment they
   open the same implicit paragraph a bare line of lyrics would, carrying their own label, which is the only place
   `{start_of_tab: Riff}` can still say "Riff". Everything downstream follows: the serializer wraps each *run* of tab
-  or grid lines back in its environment, the transposer moves each run of frets as its own fingerboard, and the
-  viewer cuts each run into rows that fit its width (`ChordProTabWrapper`) with the lyrics around it.
+  or grid lines back in its environment, the transposer moves each run of frets as its own fingerboard (a blank line
+  inside one does not end it, on the model as in the text), and the viewer cuts each run into rows that fit its width
+  (`ChordProTabWrapper`) with the lyrics around it.
 - `ChordProSyntax` — the shared low-level rules (the directive and chord regexes, `chordNameRegex` for "is this whole
   word a chord and not a word that starts with a letter", long/short directive names, the `start_of_` / `end_of_`
   prefixes, `label="…"` attributes, what counts as a tag or a language directive, `metadataKind` for the one name a

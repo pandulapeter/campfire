@@ -223,6 +223,20 @@ class ChordProTransposerTest {
     }
 
     @Test
+    fun `a tab with a blank line in it is one fingerboard in the model as in the text`() {
+        val text = "{sov}\n{sot}\ne|--0--|\n\ne|--20--|\n{eot}\n{eov}"
+
+        assertEquals(
+            ChordProTransposer.transpose(ChordProParser.parse(text), -2, preferFlats = false),
+            ChordProParser.parse(ChordProTransposer.transposeText(text, -2, preferFlats = false)),
+        )
+        assertEquals(
+            listOf("e|--0--|", "e|--20--|"),
+            ChordProTransposer.transpose(ChordProParser.parse(text), -2, preferFlats = false).tabLines(),
+        )
+    }
+
+    @Test
     fun `transposing the model moves the frets of a tab section`() {
         val song = ChordProTransposer.transpose(ChordProParser.parse("{key: Am}\n\n{sot}\n  Am\ne|--0--3--|\n{eot}"), 2)
 

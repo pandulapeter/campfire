@@ -63,7 +63,13 @@ object ChordProTransposer {
         },
     )
 
-    /** Splits the lines into runs of tablature and everything else, and rewrites each the way it has to be. */
+    /**
+     * Splits the lines into runs of tablature and everything else, and rewrites each the way it has to be.
+     *
+     * A blank line does not end a run: a tab environment keeps its blank lines, and the text path moves an environment
+     * as one fingerboard however many systems it is written in, so the model has to make the same octave decision for
+     * the same lines. Only the tab lines are handed to [rewriteTabLines]; the blanks go back where they were.
+     */
     private fun rewriteLines(
         lines: List<ChordProLine>,
         rewriteTabLines: (List<String>) -> List<String>,
@@ -71,18 +77,21 @@ object ChordProTransposer {
     ): List<ChordProLine> {
         if (lines.none { it is ChordProLine.Tab }) return lines.map { line -> rewriteLine(line, rename) }
         val rewritten = mutableListOf<ChordProLine>()
-        var run = mutableListOf<ChordProLine.Tab>()
+        var run = mutableListOf<ChordProLine>()
         fun flushRun() {
             if (run.isEmpty()) return
-            rewritten += rewriteTabLines(run.map { it.text }).map { ChordProLine.Tab(it) }
+            val tabLines = rewriteTabLines(run.filterIsInstance<ChordProLine.Tab>().map { it.text }).iterator()
+            rewritten += run.map { line -> if (line is ChordProLine.Tab) ChordProLine.Tab(tabLines.next()) else line }
             run = mutableListOf()
         }
         lines.forEach { line ->
-            if (line is ChordProLine.Tab) {
-                run += line
-            } else {
-                flushRun()
-                rewritten += rewriteLine(line, rename)
+            when {
+                line is ChordProLine.Tab -> run += line
+                line == ChordProLine.Blank && run.isNotEmpty() -> run += line
+                else -> {
+                    flushRun()
+                    rewritten += rewriteLine(line, rename)
+                }
             }
         }
         flushRun()
