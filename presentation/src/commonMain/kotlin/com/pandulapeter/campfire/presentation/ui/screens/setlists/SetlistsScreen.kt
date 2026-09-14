@@ -63,7 +63,6 @@ import com.pandulapeter.campfire.presentation.ui.CampfireViewModel
 import com.pandulapeter.campfire.presentation.ui.components.ActionListItem
 import com.pandulapeter.campfire.presentation.ui.components.ActionsMenu
 import com.pandulapeter.campfire.presentation.ui.components.ActionsMenuItem
-import com.pandulapeter.campfire.presentation.ui.components.CampfireTopAppBar
 import com.pandulapeter.campfire.presentation.ui.components.ControlsSidePanel
 import com.pandulapeter.campfire.presentation.ui.components.DismissSheetWhenSidePanelAppears
 import com.pandulapeter.campfire.presentation.ui.components.DragHandle
@@ -74,8 +73,7 @@ import com.pandulapeter.campfire.presentation.ui.components.ListPlaceholder
 import com.pandulapeter.campfire.presentation.ui.components.NewItemMenu
 import com.pandulapeter.campfire.presentation.ui.components.HideKeyboardWhenScrolledDown
 import com.pandulapeter.campfire.presentation.ui.components.KeepTopAppBarInSync
-import com.pandulapeter.campfire.presentation.ui.components.SearchAction
-import com.pandulapeter.campfire.presentation.ui.components.SearchableTopAppBarTitle
+import com.pandulapeter.campfire.presentation.ui.components.SearchableTopAppBar
 import com.pandulapeter.campfire.presentation.ui.components.SECTION_HEADER_GAP
 import com.pandulapeter.campfire.presentation.ui.components.SectionHeader
 import com.pandulapeter.campfire.presentation.ui.components.SetlistActionsMenu
@@ -130,20 +128,12 @@ internal fun SetlistsScreen(
         modifier = modifier,
         railWidth = railWidth,
         appBar = {
-            CampfireTopAppBar(
+            SearchableTopAppBar(
                 scrollBehavior = scrollBehavior,
-                title = {
-                    SearchableTopAppBarTitle(
-                        title = stringResource(Res.string.setlists),
-                        placeholder = stringResource(Res.string.setlists_search),
-                        searchState = viewModel.setlistsSearch,
-                    )
-                },
+                title = stringResource(Res.string.setlists),
+                placeholder = stringResource(Res.string.setlists_search),
+                searchState = viewModel.setlistsSearch,
                 actions = {
-                    SearchAction(
-                        searchState = viewModel.setlistsSearch,
-                        placeholder = stringResource(Res.string.setlists_search),
-                    )
                     // The setlists being read and performance mode being switched both happen while the bar is being
                     // looked at, so the button makes room for itself rather than appearing between two frames, as on
                     // the songs screen.

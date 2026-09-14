@@ -87,7 +87,7 @@ an empty library.
 - Create new screenshots for iOS, Android and desktop
 - Create iOS store listing
 - Create GitHub action for TestFlight releases
-- Create App Store and Windows Store Store listings + GitHub actions
+- Create App Store and Windows Store listings + GitHub actions
 - Add links to each build type referencing the other build types + the current store
 
 ### License

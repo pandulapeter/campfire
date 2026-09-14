@@ -53,7 +53,7 @@ internal class SearchState {
      * of it will do instead of the search simply vanishing at the end of a drag that looked like it did nothing.
      *
      * Compose state rather than a flow because it changes on every frame of a drag and is only ever read while
-     * drawing. The one back handler of the search is the only thing that writes it, see `SearchableTopAppBarTitle`.
+     * drawing. The one back handler of the search is the only thing that writes it, see `SearchableTopAppBar`.
      */
     var backProgress by mutableFloatStateOf(0f)
 

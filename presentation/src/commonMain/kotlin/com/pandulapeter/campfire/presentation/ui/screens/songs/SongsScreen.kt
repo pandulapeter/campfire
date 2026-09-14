@@ -60,7 +60,6 @@ import com.pandulapeter.campfire.presentation.resources.songs_sort_and_filter_ac
 import com.pandulapeter.campfire.presentation.resources.songs_unknown_artist
 import com.pandulapeter.campfire.presentation.resources.songs_unsorted_label
 import com.pandulapeter.campfire.presentation.ui.CampfireViewModel
-import com.pandulapeter.campfire.presentation.ui.components.CampfireTopAppBar
 import com.pandulapeter.campfire.presentation.ui.components.ControlsSidePanel
 import com.pandulapeter.campfire.presentation.ui.components.DismissSheetWhenSidePanelAppears
 import com.pandulapeter.campfire.presentation.ui.components.FAST_SCROLLER_CLEARANCE
@@ -71,8 +70,7 @@ import com.pandulapeter.campfire.presentation.ui.components.KeepTopAppBarInSync
 import com.pandulapeter.campfire.presentation.ui.components.ListColumns
 import com.pandulapeter.campfire.presentation.ui.components.ListPlaceholder
 import com.pandulapeter.campfire.presentation.ui.components.NewItemMenu
-import com.pandulapeter.campfire.presentation.ui.components.SearchAction
-import com.pandulapeter.campfire.presentation.ui.components.SearchableTopAppBarTitle
+import com.pandulapeter.campfire.presentation.ui.components.SearchableTopAppBar
 import com.pandulapeter.campfire.presentation.ui.components.SECTION_HEADER_GAP
 import com.pandulapeter.campfire.presentation.ui.components.SectionHeader
 import com.pandulapeter.campfire.presentation.ui.components.SongActionsButton
@@ -130,20 +128,12 @@ internal fun SongsScreen(
         modifier = modifier,
         railWidth = railWidth,
         appBar = {
-            CampfireTopAppBar(
+            SearchableTopAppBar(
                 scrollBehavior = scrollBehavior,
-                title = {
-                    SearchableTopAppBarTitle(
-                        title = stringResource(Res.string.songs),
-                        placeholder = stringResource(Res.string.songs_search),
-                        searchState = viewModel.songsSearch,
-                    )
-                },
+                title = stringResource(Res.string.songs),
+                placeholder = stringResource(Res.string.songs_search),
+                searchState = viewModel.songsSearch,
                 actions = {
-                    SearchAction(
-                        searchState = viewModel.songsSearch,
-                        placeholder = stringResource(Res.string.songs_search),
-                    )
                     // The reasons this one comes and goes are the library being read and the mode being switched,
                     // both of which happen while the bar is being looked at, so it makes room for itself rather than
                     // appearing between two frames and pushing the action beside it aside as it lands.

@@ -10,20 +10,33 @@
 package com.pandulapeter.campfire.presentation.ui.components
 
 import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.BoundsTransform
 import androidx.compose.animation.EnterExitState
+import androidx.compose.animation.ExperimentalSharedTransitionApi
+import androidx.compose.animation.animateBounds
 import androidx.compose.animation.core.Animatable
+import androidx.compose.animation.core.Spring
+import androidx.compose.animation.core.Transition
+import androidx.compose.animation.core.VisibilityThreshold
 import androidx.compose.animation.core.animateFloat
+import androidx.compose.animation.core.snap
+import androidx.compose.animation.core.spring
+import androidx.compose.animation.core.updateTransition
+import androidx.compose.animation.expandHorizontally
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.scaleIn
 import androidx.compose.animation.scaleOut
+import androidx.compose.animation.shrinkHorizontally
 import androidx.compose.animation.slideInHorizontally
 import androidx.compose.animation.slideOutHorizontally
 import androidx.compose.foundation.gestures.ScrollableState
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.RowScope
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.CircleShape
@@ -35,21 +48,28 @@ import androidx.compose.foundation.text.input.clearText
 import androidx.compose.foundation.text.input.placeCursorAtEnd
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.IconButtonDefaults
 import androidx.compose.material3.LocalMinimumInteractiveComponentSize
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
+import androidx.compose.material3.TopAppBarScrollBehavior
+import androidx.compose.material3.minimumInteractiveComponentSize
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.movableContentOf
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.geometry.CornerRadius
+import androidx.compose.ui.geometry.Rect
 import androidx.compose.ui.geometry.RoundRect
 import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Outline
@@ -58,12 +78,17 @@ import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.input.pointer.PointerIcon
 import androidx.compose.ui.input.pointer.pointerHoverIcon
+import androidx.compose.ui.layout.LookaheadScope
+import androidx.compose.ui.layout.onSizeChanged
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.Density
 import androidx.compose.ui.unit.Dp
+import androidx.compose.ui.unit.IntOffset
+import androidx.compose.ui.unit.IntSize
 import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -73,6 +98,7 @@ import androidx.navigationevent.compose.NavigationBackHandler
 import androidx.navigationevent.compose.rememberNavigationEventState
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.filter
+import kotlin.math.roundToInt
 import com.pandulapeter.campfire.presentation.localization.stringResource
 import com.pandulapeter.campfire.presentation.resources.Res
 import com.pandulapeter.campfire.presentation.resources.close
@@ -81,67 +107,218 @@ import com.pandulapeter.campfire.presentation.resources.songs_clear
 import org.jetbrains.compose.resources.painterResource
 
 /**
- * The title slot of a list screen's app bar: the screen's name, which the search field takes the place of while the
- * search is open. The two cross fade past each other rather than being swapped, since both the search opening and
- * the search closing are things the user asked for and has to be able to see happen.
+ * The app bar of a list screen that can be searched: the screen's name with the search action at the head of the
+ * [actions] while the search is closed, and the same action at the very start of the bar with the field after it
+ * while it is open.
  *
  * The search is an action and a state rather than a field that is always there because the bar of both list screens
  * is otherwise full: the field took the whole title slot, leaving the screen unnamed and the sort, filter and
  * "new" actions crowded against it.
  *
- * The two take turns in one [Box] that is as tall as whichever of them is in it, so it grows and shrinks as they
- * swap — which is why it centers its content. Left to the default the title would be pinned to the top of the box
- * for as long as the taller field shares it, and would drop back into place at the end of every transition.
+ * The action moves to the start as the search opens because that is where an open search is left from: it stands
+ * where the back button of any other screen does, and the field it opened reads on from it. It is the one button
+ * travelling across the bar rather than two buttons swapping places, since its mark is in the middle of turning
+ * into the cross as it goes. So it is [movableContentOf] handed from the actions slot to the navigation icon slot
+ * and back, which keeps the mark's animation where it was, and [animateBounds] carries it between the two, inside a
+ * [LookaheadScope] that is only this bar. Each slot makes room for the button with a placeholder that grows and
+ * shrinks on the same spring the button travels on, which is what moves the title and the rest of the actions out
+ * of its way instead of snapping them to where they end up.
+ *
+ * The bounds only animate while the search is opening or closing: the same modifier would otherwise have the button
+ * lag behind every other change of the bar's layout, a window being resized on the desktop among them.
+ *
+ * A back gesture dragged while the search is open previews the close with both halves of it: the field collapses
+ * towards its end edge as far as the gesture has come (see [SearchRecession]), and the button is offset by exactly as
+ * much as the field's start edge has moved, so the two travel back towards the end together. The offset is part of
+ * the button's layout rather than a translation drawn over it, so that [animateBounds] sees where the gesture left the
+ * button and a gesture that closes the search carries it on to the end from there instead of from the start of the bar.
  *
  * @param title The screen's own name, shown whenever the search is closed.
  * @param placeholder What the field says while it is empty, which also names the search action, see [SearchAction].
+ * @param actions The screen's own actions, which follow the search action while the search is closed.
  */
+@OptIn(ExperimentalSharedTransitionApi::class)
 @Composable
-internal fun SearchableTopAppBarTitle(
+internal fun SearchableTopAppBar(
     modifier: Modifier = Modifier,
+    scrollBehavior: TopAppBarScrollBehavior,
     title: String,
     placeholder: String,
     searchState: SearchState,
+    actions: @Composable RowScope.() -> Unit,
 ) {
     val isOpen by searchState.isOpen.collectAsStateWithLifecycle()
     SearchBackHandler(
         searchState = searchState,
         isOpen = isOpen,
     )
-    Box(
-        modifier = modifier.fillMaxWidth(),
-        contentAlignment = Alignment.CenterStart,
-    ) {
-        AnimatedVisibility(
-            visible = !isOpen,
-            enter = fadeIn(MaterialTheme.motionScheme.defaultEffectsSpec()) + slideInHorizontally { -it / TITLE_SLIDE_FRACTION },
-            exit = fadeOut(MaterialTheme.motionScheme.defaultEffectsSpec()) + slideOutHorizontally { -it / TITLE_SLIDE_FRACTION },
-        ) {
-            Text(
-                text = title,
-                maxLines = 1,
-                overflow = TextOverflow.Ellipsis,
-            )
+    val searchTransition = updateTransition(targetState = isOpen)
+    val recession = remember(searchState) { SearchRecession() }
+    val returnSpec = searchTravelSpec<Float>()
+    val isClosedAndSettled = !isOpen && !searchTransition.currentState
+    LaunchedEffect(searchState.backProgress, isOpen, isClosedAndSettled) {
+        when {
+            searchState.backProgress > 0f -> recession.progress.snapTo(searchState.backProgress)
+            // A gesture let go of without closing the search brings the field and the button back. One that did close
+            // it leaves both where the gesture had taken them, so that the exit carries on from there instead of
+            // jumping back into place for the first frame of it, and is only forgotten once that exit is over, so the
+            // next search opens onto a whole field.
+            isOpen -> recession.progress.animateTo(targetValue = 0f, animationSpec = returnSpec)
+            isClosedAndSettled -> recession.progress.snapTo(0f)
         }
-        val expansionSpec = MaterialTheme.motionScheme.defaultSpatialSpec<Float>()
-        AnimatedVisibility(
-            visible = isOpen,
-            enter = fadeIn(MaterialTheme.motionScheme.defaultEffectsSpec()),
-            exit = fadeOut(MaterialTheme.motionScheme.defaultEffectsSpec()),
-        ) {
-            // An animation of the visibility transition itself rather than a slide: the content is only removed
-            // once it has settled, and the field grows out of its end edge instead of travelling towards it.
-            val expansion by transition.animateFloat(
-                transitionSpec = { expansionSpec },
-            ) { if (it == EnterExitState.Visible) 1f else 0f }
-            SearchField(
-                modifier = Modifier.fillMaxWidth(),
+    }
+    val travelSpec = searchTravelSpec(visibilityThreshold = Rect.VisibilityThreshold)
+    val boundsTransform = remember(searchTransition, travelSpec) {
+        BoundsTransform { _, _ -> if (searchTransition.currentState != searchTransition.targetState) travelSpec else snap() }
+    }
+    val searchAction = remember(searchState) {
+        movableContentOf { actionModifier: Modifier, actionPlaceholder: String ->
+            SearchAction(
+                modifier = actionModifier,
                 searchState = searchState,
-                isOpen = isOpen,
-                placeholder = placeholder,
-                expansion = { expansion },
+                placeholder = actionPlaceholder,
             )
         }
+    }
+    LookaheadScope {
+        val actionModifier = Modifier
+            .offset { IntOffset(x = if (searchTransition.targetState) recession.startEdgeTravel else 0, y = 0) }
+            .animateBounds(
+                lookaheadScope = this,
+                boundsTransform = boundsTransform,
+            )
+        CampfireTopAppBar(
+            modifier = modifier,
+            scrollBehavior = scrollBehavior,
+            navigationIcon = {
+                SearchActionSlot(
+                    searchTransition = searchTransition,
+                    isHoldingAction = { it },
+                ) {
+                    if (isOpen) {
+                        searchAction(actionModifier, placeholder)
+                    }
+                }
+            },
+            title = {
+                SearchableTopAppBarTitle(
+                    title = title,
+                    placeholder = placeholder,
+                    searchState = searchState,
+                    searchTransition = searchTransition,
+                    recession = recession,
+                )
+            },
+            actions = {
+                SearchActionSlot(
+                    searchTransition = searchTransition,
+                    isHoldingAction = { !it },
+                ) {
+                    if (!isOpen) {
+                        searchAction(actionModifier, placeholder)
+                    }
+                }
+                actions()
+            },
+        )
+    }
+}
+
+/**
+ * The room one end of the bar keeps for the search action while the action is there, and gives up gradually as it
+ * leaves. It stays as large as a touch target for as long as it is shown, whether or not the button is still in it,
+ * since the button is moved out on the first frame of the transition and a slot sized by its content would collapse
+ * there and then. It is not clipped, because the button travelling out of it and into it is drawn outside of it for
+ * all but the end of the way.
+ *
+ * @param isHoldingAction Whether this is the slot the action is in, given whether the search is open.
+ */
+@Composable
+private fun SearchActionSlot(
+    searchTransition: Transition<Boolean>,
+    isHoldingAction: (Boolean) -> Boolean,
+    content: @Composable () -> Unit,
+) {
+    val sizeSpec = searchTravelSpec(visibilityThreshold = IntSize.VisibilityThreshold)
+    searchTransition.AnimatedVisibility(
+        visible = isHoldingAction,
+        enter = expandHorizontally(animationSpec = sizeSpec, clip = false),
+        exit = shrinkHorizontally(animationSpec = sizeSpec, clip = false),
+    ) {
+        Box(
+            modifier = Modifier.minimumInteractiveComponentSize(),
+            contentAlignment = Alignment.Center,
+        ) {
+            content()
+        }
+    }
+}
+
+/**
+ * The title slot of a list screen's app bar: the screen's name, which the search field takes the place of while the
+ * search is open. The two pass each other rather than being swapped, since both the search opening and the search
+ * closing are things the user asked for and has to be able to see happen.
+ *
+ * The name is faded rather than moved out of the way: it drifts only a short, fixed distance towards the start edge
+ * as it goes and back from there as it comes, while the fade is what actually takes it away. That distance is how far
+ * it moves *on screen*, and the slot it is in moves the other way by more than that while it does, since the room
+ * opening at the start for the search action pushes the whole title slot towards the end. A slide of just the
+ * distance was read as the name drifting towards the end, so the slide also takes back the slot's own movement
+ * ([TITLE_SLOT_SHIFT]); both run on the same spring, which is what lets the one cancel the other frame by frame. Both run on the spring the search action travels on, so the name is still readable while the rest of
+ * the bar starts moving instead of blinking out on the quick effects spring before anything else has visibly begun.
+ * The distance is fixed rather than a fraction of the name's width, so a long name does not travel further than a
+ * short one.
+ *
+ * The two take turns in one [Box] that is as tall as whichever of them is in it, so it grows and shrinks as they
+ * swap — which is why it centers its content. Left to the default the title would be pinned to the top of the box
+ * for as long as the taller field shares it, and would drop back into place at the end of every transition.
+ */
+@Composable
+private fun SearchableTopAppBarTitle(
+    modifier: Modifier = Modifier,
+    title: String,
+    placeholder: String,
+    searchState: SearchState,
+    searchTransition: Transition<Boolean>,
+    recession: SearchRecession,
+) = Box(
+    modifier = modifier.fillMaxWidth(),
+    contentAlignment = Alignment.CenterStart,
+) {
+    // Slide offsets are placed as they are rather than mirrored, so the start edge is the left one only left to right.
+    val towardsStartEdge = with(LocalDensity.current) { (TITLE_SLIDE_DISTANCE + TITLE_SLOT_SHIFT).roundToPx() } *
+        if (LocalLayoutDirection.current == LayoutDirection.Ltr) -1 else 1
+    val titleSlideSpec = searchTravelSpec(visibilityThreshold = IntOffset.VisibilityThreshold)
+    val titleFadeSpec = searchTravelSpec<Float>()
+    searchTransition.AnimatedVisibility(
+        visible = { !it },
+        enter = fadeIn(titleFadeSpec) + slideInHorizontally(animationSpec = titleSlideSpec, initialOffsetX = { towardsStartEdge }),
+        exit = fadeOut(titleFadeSpec) + slideOutHorizontally(animationSpec = titleSlideSpec, targetOffsetX = { towardsStartEdge }),
+    ) {
+        Text(
+            text = title,
+            maxLines = 1,
+            overflow = TextOverflow.Ellipsis,
+        )
+    }
+    val expansionSpec = searchTravelSpec<Float>()
+    searchTransition.AnimatedVisibility(
+        visible = { it },
+        enter = fadeIn(MaterialTheme.motionScheme.defaultEffectsSpec()),
+        exit = fadeOut(MaterialTheme.motionScheme.defaultEffectsSpec()),
+    ) {
+        // An animation of the visibility transition itself rather than a slide: the content is only removed
+        // once it has settled, and the field grows out of its end edge instead of travelling towards it.
+        val expansion by transition.animateFloat(
+            transitionSpec = { expansionSpec },
+        ) { if (it == EnterExitState.Visible) 1f else 0f }
+        SearchField(
+            modifier = Modifier.fillMaxWidth().onSizeChanged { recession.fieldWidth = it.width },
+            searchState = searchState,
+            placeholder = placeholder,
+            expansion = { expansion },
+            recession = { recession.progress.value },
+        )
     }
 }
 
@@ -152,7 +329,8 @@ internal fun SearchableTopAppBarTitle(
  * once it is over: the whole drag of a predictive back gesture went by with nothing on screen answering it, and the
  * search then vanished on release. This one is told how far the gesture has come on every frame, which it hands to
  * [SearchState.backProgress] for the field and the search action to preview the close with — the cross turning back
- * into the magnifier and the field receding the way it is about to leave — so the drag says what letting go will do.
+ * into the magnifier and moving towards the end of the bar with the field, which recedes the way it is about to
+ * leave — so the drag says what letting go will do.
  *
  * The desktop never reaches it: its window key handler sees Escape before Compose turns the key into a back event,
  * and closes the search there.
@@ -217,17 +395,23 @@ internal fun HideKeyboardWhenScrolledDown(
  * (see [SearchToCloseIcon]). It is the same button throughout: a close button appearing somewhere else while the
  * search icon stayed put would leave the bar with two answers to the same question.
  *
+ * Its mark keeps the color of the actions wherever it is: the bar draws its navigation icon in a stronger color than
+ * its actions, and the mark would otherwise change color on the frame it is handed from one slot to the other.
+ *
  * @param placeholder What the field it opens says while it is empty, which is also what the button announces itself
  *   as - "Search in songs" is what pressing it does, and the screens have a search of their own to name.
  */
 @Composable
-internal fun SearchAction(
+private fun SearchAction(
+    modifier: Modifier = Modifier,
     searchState: SearchState,
     placeholder: String,
 ) {
     val isOpen by searchState.isOpen.collectAsStateWithLifecycle()
     val keyboardController = LocalSoftwareKeyboardController.current
     IconButton(
+        modifier = modifier,
+        colors = IconButtonDefaults.iconButtonColors(contentColor = MaterialTheme.colorScheme.onSurfaceVariant),
         onClick = {
             if (isOpen) {
                 keyboardController?.hide()
@@ -255,8 +439,8 @@ internal fun SearchAction(
  * brings the clear button down to the compact size the header pills use.
  *
  * The pill is what the field never needed while it *was* the title: the bar's own close button now sits a few
- * pixels past its end, and without it the button that empties the field and the button that leaves the search are
- * two bare crosses side by side with nothing to say which belongs to what. It is also what tells an empty field
+ * pixels in front of it, and without it the button that empties the field and the button that leaves the search are
+ * two bare crosses on one line with nothing to say which belongs to what. It is also what tells an empty field
  * from a title, now that the two take turns in the same place.
  *
  * The field takes the focus as it opens, since it is there because the user asked for it and asking again with a
@@ -264,9 +448,11 @@ internal fun SearchAction(
  * up with it. The caret goes to the end of what is already written, which is what a search that was left open and
  * then come back to has in it.
  *
- * It comes and goes by collapsing into its end edge rather than by sliding: the search action sits right past that
- * edge, and a field that travelled towards it would pass over the very button that is turning into the close mark.
- * The pill is laid out at its full width throughout and only clipped, so the text inside does not reflow as it goes.
+ * It comes and goes by collapsing into its end edge rather than by sliding: that edge is where the search action
+ * sets out from as the search opens, so the start edge of the pill follows the button across the bar to the start
+ * of it, and follows it back into the end as it closes, where a field that slid in would pass under the very button
+ * that is turning into the close mark. The pill is laid out at its full width throughout and only clipped, so the
+ * text inside does not reflow as it goes.
  * What the pill holds rides its start edge instead, carried into the end as the field leaves and out of it as it
  * arrives, and is cut off where it meets the end: text that stayed put, or moved any slower than the edge, is read
  * as standing still while the pill is swept away from under it.
@@ -276,14 +462,15 @@ internal fun SearchAction(
  *
  * @param expansion How much of the field's width is showing, from nothing at all to the whole of it, read while the
  *   field is drawn so that an animation of it never recomposes the field.
+ * @param recession How far a back gesture has taken the field towards closing, see [SearchRecession], read the same way.
  */
 @Composable
 private fun SearchField(
     modifier: Modifier = Modifier,
     searchState: SearchState,
-    isOpen: Boolean,
     placeholder: String,
     expansion: () -> Float,
+    recession: () -> Float,
 ) {
     val keyboardController = LocalSoftwareKeyboardController.current
     val focusRequester = remember { FocusRequester() }
@@ -291,23 +478,13 @@ private fun SearchField(
         searchState.textFieldState.edit { placeCursorAtEnd() }
         focusRequester.requestFocus()
     }
-    val recession = remember { Animatable(0f) }
-    val returnSpec = MaterialTheme.motionScheme.fastSpatialSpec<Float>()
-    LaunchedEffect(searchState.backProgress, isOpen) {
-        when {
-            searchState.backProgress > 0f -> recession.snapTo(searchState.backProgress)
-            // A gesture let go of without closing the search brings the field back. One that did close it leaves
-            // the field where the gesture had taken it, so that the exit carries on from there instead of the field
-            // jumping back into place for the first frame of it.
-            isOpen -> recession.animateTo(targetValue = 0f, animationSpec = returnSpec)
-        }
-    }
-    // A spatial spring overshoots past the whole width, which would push the text back past its own padding.
-    val widthFraction = { (expansion() * (1f - recession.value * RECEDED_WIDTH_LOSS)).coerceIn(0f, 1f) }
+    // A spring turned around halfway carries its velocity past the whole width, which would push the text back past
+    // its own padding.
+    val widthFraction = { (expansion() * (1f - recession() * RECEDED_WIDTH_LOSS)).coerceIn(0f, 1f) }
     val endwards = if (LocalLayoutDirection.current == LayoutDirection.Ltr) 1f else -1f
     Surface(
         modifier = modifier.graphicsLayer {
-            alpha = 1f - recession.value * RECEDED_ALPHA_LOSS
+            alpha = 1f - recession() * RECEDED_ALPHA_LOSS
             shape = EndAnchoredPillShape(widthFraction = widthFraction())
             clip = true
         },
@@ -374,6 +551,24 @@ private fun SearchField(
 }
 
 /**
+ * How far a back gesture that would close the search has taken the field towards closing: the gesture's own progress
+ * while it is dragged, animated back to nothing when it is let go of without closing the search. It is held by the app
+ * bar rather than by the field because the search action follows it too, and the two only move as one if they read
+ * the same value on the same frame.
+ */
+private class SearchRecession {
+
+    val progress = Animatable(0f)
+
+    /** The field's full width, which is what the part it loses is a fraction of. */
+    var fieldWidth by mutableIntStateOf(0)
+
+    /** How far the field's start edge has moved towards its end, which is how far the search action is moved with it. */
+    val startEdgeTravel: Int
+        get() = (progress.value * RECEDED_WIDTH_LOSS * fieldWidth).roundToInt()
+}
+
+/**
  * A pill as wide as [widthFraction] of the bounds it is drawn in, held against their end edge, which is what the
  * search field is clipped to as it collapses into that edge. Created anew for every frame of the animation, since a
  * layer only asks a shape for its outline again when it is handed a different one.
@@ -395,14 +590,33 @@ private data class EndAnchoredPillShape(
     }
 }
 
-/** How far into its own width the screen's name travels as it comes and goes. */
-private const val TITLE_SLIDE_FRACTION = 6
+/**
+ * The spring the search action travels across the bar on, shared by the room either end of the bar makes for it and
+ * by the field whose edge follows it, since the three are one movement and have to arrive together. It is critically
+ * damped rather than the theme's spatial spring, which overshoots: a button that travels past the start of the bar
+ * and settles back reads as having bounced off the edge of the window.
+ */
+private fun <T> searchTravelSpec(visibilityThreshold: T? = null) = spring(
+    dampingRatio = Spring.DampingRatioNoBouncy,
+    stiffness = Spring.StiffnessMediumLow,
+    visibilityThreshold = visibilityThreshold,
+)
 
 /** How much of the field's opacity a back gesture dragged all the way takes away before it is let go of. */
 private const val RECEDED_ALPHA_LOSS = 0.5f
 
 /** How much of the field's width a back gesture dragged all the way collapses before it is let go of. */
 private const val RECEDED_WIDTH_LOSS = 0.25f
+
+/** How far the screen's name is seen to drift towards the start edge as it fades out, and back from as it fades in. */
+private val TITLE_SLIDE_DISTANCE = 16.dp
+
+/**
+ * How far the title slot moves towards the end while the search opens, and back while it closes. `TopAppBar` starts
+ * its title 12dp in while there is no navigation icon, and after the icon's slot once that is wider - which the search
+ * action's is, a 48dp touch target behind the bar's 4dp padding - so the slot starts 52dp in while the search is open.
+ */
+private val TITLE_SLOT_SHIFT = 40.dp
 
 private val FIELD_HEIGHT = 40.dp
 private val CLEAR_BUTTON_SIZE = 32.dp
