@@ -21,7 +21,7 @@ data class ScreenData(
      * in this list and has to find one that is merely out of sight.
      */
     val setlists: List<Setlist>,
-    /** The library, filtered and sorted the way the user preferences ask for. */
+    /** The library, narrowed by the [SongFilter] and the preferences and sorted the way the preferences ask for. */
     val songs: List<Song>,
     /**
      * Every tag the library uses, the most used one first, as the filter controls offer them. Counted before the tag

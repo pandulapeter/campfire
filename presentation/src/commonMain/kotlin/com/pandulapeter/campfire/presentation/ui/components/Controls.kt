@@ -41,7 +41,6 @@ import androidx.compose.material3.LocalMinimumInteractiveComponentSize
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
-import androidx.compose.material3.VerticalDivider
 import androidx.compose.material3.minimumInteractiveComponentSize
 import androidx.compose.material3.ripple
 import androidx.compose.runtime.Composable
@@ -134,8 +133,8 @@ internal fun songListColumnCount(
  * on screens that are wide enough for it, see [hasRoomForSidePanel]. The bar spans it the way it spans the navigation
  * rail at the other end, so that the window reads as one bar over everything the screen holds.
  *
- * @param content The controls themselves, handed the modifier that gives the panel its size and its background, and
- *   the insets the panel is responsible for.
+ * @param content The controls themselves, handed the modifier that gives the panel its size and the insets the panel
+ *   is responsible for.
  */
 @Composable
 internal fun ControlsSidePanel(
@@ -148,16 +147,15 @@ internal fun ControlsSidePanel(
     exit = shrinkHorizontally() + fadeOut(),
 ) {
     val endPadding = contentPadding.calculateEndPadding(LocalLayoutDirection.current)
-    Row {
-        VerticalDivider()
-        content(
-            Modifier.width(SIDE_PANEL_WIDTH + endPadding).fillMaxHeight().background(MaterialTheme.colorScheme.surfaceContainerLow),
-            PaddingValues(
-                end = endPadding,
-                bottom = contentPadding.calculateBottomPadding() + SIDE_PANEL_BOTTOM_PADDING,
-            ),
-        )
-    }
+    // No background and no divider of its own: the panel is part of the screen the bar spans, and a tinted column
+    // with an edge reads as a pane of its own under a bar that has not lifted yet, while the list is at its top.
+    content(
+        Modifier.width(SIDE_PANEL_WIDTH + endPadding).fillMaxHeight(),
+        PaddingValues(
+            end = endPadding,
+            bottom = contentPadding.calculateBottomPadding() + SIDE_PANEL_BOTTOM_PADDING,
+        ),
+    )
 }
 
 /**
@@ -221,6 +219,7 @@ internal fun SongsControls(
     contentPadding: PaddingValues = PaddingValues(),
 ) {
     val userPreferences by viewModel.userPreferences.collectAsStateWithLifecycle()
+    val songFilter by viewModel.songFilter.collectAsStateWithLifecycle()
     val tags by viewModel.tags.collectAsStateWithLifecycle()
     val languages by viewModel.languages.collectAsStateWithLifecycle()
     Column(
@@ -253,7 +252,7 @@ internal fun SongsControls(
         ) {
             TagFilters(
                 tags = tags,
-                selectedTags = userPreferences?.selectedTags.orEmpty(),
+                selectedTags = songFilter.selectedTags,
                 matchMode = userPreferences?.tagMatchMode ?: UserPreferences.TagMatchMode.ANY,
                 onTagClicked = viewModel::toggleTagFilter,
                 onClear = viewModel::clearTagFilter,
@@ -269,7 +268,7 @@ internal fun SongsControls(
         ) {
             LanguageFilters(
                 languages = languages,
-                selectedLanguages = userPreferences?.selectedLanguages.orEmpty(),
+                selectedLanguages = songFilter.selectedLanguages,
                 onLanguageClicked = viewModel::toggleLanguageFilter,
                 onClear = viewModel::clearLanguageFilter,
             )
@@ -302,7 +301,7 @@ private fun TagFilters(
     }
     // A tag the library no longer has stays selected, and clearing deliberately leaves it alone
     // (CampfireViewModel.clearTagFilter), so what the action is offered for is a selection among the chips rather than
-    // whatever the preferences still hold - a button that cleared nothing visible would be answering a question the
+    // whatever the filter still holds - a button that cleared nothing visible would be answering a question the
     // screen never asked.
     val hasClearableSelection = remember(tags, selected) { tags.any { it.name.lowercase() in selected } }
     FilterSectionTitle(
@@ -372,7 +371,7 @@ private fun LanguageFilters(
     onLanguageClicked: (String) -> Unit,
     onClear: () -> Unit,
 ) = Column(modifier = modifier) {
-    // The chips rather than the preferences, for the same reason [TagFilters] counts them that way.
+    // The chips rather than the filter, for the same reason [TagFilters] counts them that way.
     val hasClearableSelection = remember(languages, selectedLanguages) { languages.any { it.code in selectedLanguages } }
     FilterSectionTitle(
         title = stringResource(Res.string.songs_languages),

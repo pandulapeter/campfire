@@ -11,9 +11,14 @@ package com.pandulapeter.campfire.domain.api.useCases
 
 import com.pandulapeter.campfire.data.model.DataState
 import com.pandulapeter.campfire.domain.api.models.ScreenData
+import com.pandulapeter.campfire.domain.api.models.SongFilter
 import kotlinx.coroutines.flow.Flow
 
 interface GetScreenDataUseCase {
 
-    operator fun invoke(): Flow<DataState<ScreenData>>
+    /**
+     * The library as the list screens show it. The [songFilter] is taken as a flow from the caller rather than read
+     * from a repository, since nothing below the presentation layer holds it: it lives only as long as the UI does.
+     */
+    operator fun invoke(songFilter: Flow<SongFilter>): Flow<DataState<ScreenData>>
 }

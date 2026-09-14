@@ -35,14 +35,8 @@ internal object DemoLibrary {
      * setlists last: it points at the songs above it by name.
      */
     private val songFileNames = listOf(
+        "traditional_american-home_on_the_range_my_western_home.cho",
         "traditional_american-house_of_the_rising_sun.cho",
-        "traditional_american-red_river_valley.cho",
-        "traditional_american-wayfaring_stranger.cho",
-        "traditional_english-scarborough_fair.cho",
-        "traditional_hymn-amazing_grace.cho",
-        "traditional_spiritual-down_by_the_riverside.cho",
-        "traditional_spiritual-swing_low_sweet_chariot.cho",
-        "traditional_spiritual-when_the_saints_go_marching_in.cho",
     )
 
     private const val SETLIST_FILE_NAME = "getting_started.setlist.json"

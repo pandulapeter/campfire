@@ -1,0 +1,50 @@
+# Lines starting with a hash are notes for whoever edits the file: the song itself never shows them.
+{title: Home on the Range}
+{subtitle: My Western Home}
+{artist: Traditional American}
+{composer: Daniel E. Kelley}
+{lyricist: Brewster M. Higley}
+{year: 1872}
+{key: G}
+{capo: 2}
+{tempo: 100}
+{time: 3/4}
+{duration: 3:20}
+{tag: Demo}
+{tag: Easy}
+{tag: Singalong}
+{meta: language en}
+
+{comment_italic: Written as a poem in Kansas and set to music soon after, it was sung around cattle drive campfires long before anyone knew who wrote it.}
+
+{start_of_verse: Verse 1}
+Oh, [G]give me a [G7]home where the [C]buffalo [Cm]roam
+Where the [G/B]deer and the [Em]antelope [A7]play [D7]
+Where [G]seldom is [G7]heard a dis[C]couraging [Cm]word
+And the [G]skies are not [D7]cloudy all [G]day
+{end_of_verse}
+
+{start_of_chorus}
+[*Everybody] [D7]Home, [G]home on the [C]range
+Where the [G/B]deer and the [Em]antelope [A7]play [D7]
+Where [G]seldom is [G7]heard a dis[C]couraging [Cm]word
+And the [G]skies are not [D7]cloudy all [G]day
+{end_of_chorus}
+
+{start_of_verse: Verse 2}
+How [G]often at [G7]night when the [C]heavens are [Cm]bright
+With the [G/B]light from the [Em]glittering [A7]stars [D7]
+Have I [G]stood here a[G7]mazed and [C]asked as I [Cm]gazed
+If their [G]glory ex[D7]ceeds that of [G]ours
+{end_of_verse}
+
+{chorus}
+
+{start_of_verse: Verse 3}
+Where the [G]air is so [G7]pure and the [C]zephyrs so [Cm]free
+And the [G/B]breezes so [Em]balmy and [A7]light [D7]
+That I [G]would not ex[G7]change my [C]home on the [Cm]range
+For [G]all of the [D7]cities so [G]bright
+{end_of_verse}
+
+{chorus: Last chorus, slowing down}

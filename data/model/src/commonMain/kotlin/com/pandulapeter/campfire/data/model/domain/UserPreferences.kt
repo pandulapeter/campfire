@@ -35,19 +35,11 @@ data class UserPreferences(
     /** Song file name to semitones, for songs opened from the library rather than from a setlist. */
     val transpositions: Map<String, Int>,
     /**
-     * The tags the song lists are narrowed to, empty when every song is shown. A tag no song carries any more is
-     * kept rather than pruned, exactly like a transposition of a song that was deleted: the filter ignores it, and
-     * it starts working again the moment a song is tagged that way.
+     * How the tags selected in the song filter combine. The selection itself is not a preference and is never
+     * stored — it lives in the presentation layer for as long as the app runs — but which of the two readings the
+     * user prefers is a standing choice, like the sorting mode.
      */
-    val selectedTags: Set<String>,
     val tagMatchMode: TagMatchMode,
-    /**
-     * The languages the song lists are narrowed to, empty when every song is shown, including
-     * [SongLanguage.UNKNOWN] for the songs that declare none. Kept rather than pruned like [selectedTags] is, and
-     * matched the same way [TagMatchMode.ANY] matches tags: a song is in one language or another, never in all of
-     * the selected ones at once, so there is nothing to ask the user here.
-     */
-    val selectedLanguages: Set<String>,
 ) {
 
     /** What several selected tags mean together: a song that carries any one of them, or one that carries all. */

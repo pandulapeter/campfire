@@ -12,8 +12,8 @@ package com.pandulapeter.campfire.chordpro
 import com.pandulapeter.campfire.chordpro.model.GridToken
 
 /**
- * The low level syntax rules shared by [ChordProParser], [ChordProSerializer], [ChordProTransposer] and
- * [ChordProNotation].
+ * The low level syntax rules shared by [ChordProParser], [ChordProSerializer], [ChordProTransposer],
+ * [ChordProNotation] and [ChordProTabWrapper].
  */
 internal object ChordProSyntax {
 
@@ -44,6 +44,8 @@ internal object ChordProSyntax {
     private const val LANGUAGE_SHORT_NAME = "lang"
     private const val META = "meta"
     private const val SOURCE_COMMENT = "#"
+    private const val STAFF_DASH = '-'
+    private const val MINIMUM_STAFF_DASH_COUNT = 3
 
     /**
      * The two ISO codes that mean "there is no language here" — undetermined and no linguistic content. They say
@@ -246,6 +248,32 @@ internal object ChordProSyntax {
     }
 
     fun isBar(word: String) = word == "|" || word == "||" || word == "|:" || word == ":|" || word == "|."
+
+    /**
+     * A tablature line: enough dashes to be a staff, and made mostly of the characters a staff is made of. The letters
+     * of a technique (`h`, `p`, `x`, …) and the string name in front of the line are the minority that is allowed. It
+     * is what tells the staff of a `{start_of_tab}` environment from the chord names above it and the notes around
+     * it, for the transposer (which moves frets on the one and chord names on the other) and for the viewer (which
+     * cuts a staff at its columns and never a line of prose).
+     */
+    fun isStaffLine(line: String): Boolean {
+        var dashCount = 0
+        var staffCharacterCount = 0
+        var otherCharacterCount = 0
+        line.forEach { character ->
+            when {
+                character == STAFF_DASH -> {
+                    dashCount++
+                    staffCharacterCount++
+                }
+
+                character == '|' || character.isDigit() -> staffCharacterCount++
+                character.isWhitespace() -> Unit
+                else -> otherCharacterCount++
+            }
+        }
+        return dashCount >= MINIMUM_STAFF_DASH_COUNT && staffCharacterCount >= otherCharacterCount
+    }
 
     data class Directive(val name: String, val value: String?)
 }

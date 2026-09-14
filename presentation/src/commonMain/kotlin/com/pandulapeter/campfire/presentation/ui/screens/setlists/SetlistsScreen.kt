@@ -11,6 +11,7 @@ package com.pandulapeter.campfire.presentation.ui.screens.setlists
 
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.animateDpAsState
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.calculateEndPadding
 import androidx.compose.foundation.layout.calculateStartPadding
@@ -66,6 +67,8 @@ import com.pandulapeter.campfire.presentation.ui.components.CampfireTopAppBar
 import com.pandulapeter.campfire.presentation.ui.components.ControlsSidePanel
 import com.pandulapeter.campfire.presentation.ui.components.DismissSheetWhenSidePanelAppears
 import com.pandulapeter.campfire.presentation.ui.components.DragHandle
+import com.pandulapeter.campfire.presentation.ui.components.FAST_SCROLLER_CLEARANCE
+import com.pandulapeter.campfire.presentation.ui.components.FastScroller
 import com.pandulapeter.campfire.presentation.ui.components.ListColumns
 import com.pandulapeter.campfire.presentation.ui.components.ListPlaceholder
 import com.pandulapeter.campfire.presentation.ui.components.NewItemMenu
@@ -265,172 +268,180 @@ private fun SetlistList(
         }
     }
 
-    LazyVerticalGrid(
-        columns = ListColumns(columnCount),
-        modifier = modifier,
-        state = listState,
-        contentPadding = PaddingValues(
-            start = contentPadding.calculateStartPadding(layoutDirection),
-            top = SECTION_HEADER_GAP,
-            end = contentPadding.calculateEndPadding(layoutDirection),
-            bottom = contentPadding.calculateBottomPadding(),
-        ),
+    Box(
+        modifier = modifier
     ) {
-        // The setlists come first: they are what this screen is about. The library only speaks up once there are
-        // setlists to fill, since without it the rows of every setlist would be missing rather than the setlists
-        // themselves. Both go through the same slot, so that "still loading" turning out to be "you have no
-        // setlists" cross fades instead of being swapped in a single frame.
-        val placeholder = setlistsPlaceholder ?: libraryPlaceholder
-        when {
-            placeholder != null -> item(
-                key = "placeholder",
-                span = { GridItemSpan(maxLineSpan) },
-            ) {
-                ListPlaceholder(
-                    modifier = listItemAnimation(listState, hasLoadedLibrary).fillMaxWidth(),
-                    placeholder = placeholder,
-                    onRetry = viewModel::refresh,
-                    onNewSetlist = if (isPerformanceModeEnabled) null else {
-                        { viewModel.showDialog(CampfireViewModel.DialogType.NewSetlist) }
-                    },
-                    onImport = if (isPerformanceModeEnabled) null else {
-                        { viewModel.importFiles(filePicker) }
-                    },
-                )
-            }
-
-            else -> setlistsWithSongs.forEach { setlistWithSongs ->
-                val headerKey = "setlist_${setlistWithSongs.setlist.fileName}"
-                item(
-                    key = headerKey,
+        LazyVerticalGrid(
+            columns = ListColumns(columnCount),
+            modifier = Modifier.fillMaxSize(),
+            state = listState,
+            contentPadding = PaddingValues(
+                start = contentPadding.calculateStartPadding(layoutDirection),
+                top = SECTION_HEADER_GAP,
+                end = contentPadding.calculateEndPadding(layoutDirection),
+                bottom = contentPadding.calculateBottomPadding(),
+            ),
+        ) {
+            // The setlists come first: they are what this screen is about. The library only speaks up once there are
+            // setlists to fill, since without it the rows of every setlist would be missing rather than the setlists
+            // themselves. Both go through the same slot, so that "still loading" turning out to be "you have no
+            // setlists" cross fades instead of being swapped in a single frame.
+            val placeholder = setlistsPlaceholder ?: libraryPlaceholder
+            when {
+                placeholder != null -> item(
+                    key = "placeholder",
                     span = { GridItemSpan(maxLineSpan) },
                 ) {
-                    SectionHeader(
-                        modifier = listItemAnimation(listState, hasLoadedLibrary),
-                        text = setlistWithSongs.setlist.title,
-                        // A setlist is only ever on this screen archived because the filter was asked to show them,
-                        // so the mark is what tells it from the ones still in use.
-                        icon = if (setlistWithSongs.setlist.isArchived) painterResource(Res.drawable.ic_archive) else null,
-                        iconContentDescription = stringResource(Res.string.setlists_archived),
-                        onClick = { coroutineScope.launch { listState.animateScrollToKey(headerKey) } },
-                        action = if (isPerformanceModeEnabled) null else {
-                            {
-                                SetlistActionsMenu(
-                                    viewModel = viewModel,
-                                    setlist = setlistWithSongs.setlist,
-                                )
-                            }
+                    ListPlaceholder(
+                        modifier = listItemAnimation(listState, hasLoadedLibrary).fillMaxWidth(),
+                        placeholder = placeholder,
+                        onRetry = viewModel::refresh,
+                        onNewSetlist = if (isPerformanceModeEnabled) null else {
+                            { viewModel.showDialog(CampfireViewModel.DialogType.NewSetlist) }
+                        },
+                        onImport = if (isPerformanceModeEnabled) null else {
+                            { viewModel.importFiles(filePicker) }
                         },
                     )
                 }
-                // Under the header rather than inside the pill: the pill is the setlist's name and a sentence would
-                // not fit in it, and this is the first thing to read about a setlist once it has been found.
-                if (setlistWithSongs.setlist.description.isNotBlank()) {
+
+                else -> setlistsWithSongs.forEach { setlistWithSongs ->
+                    val headerKey = "setlist_${setlistWithSongs.setlist.fileName}"
                     item(
-                        key = "description_${setlistWithSongs.setlist.fileName}",
+                        key = headerKey,
                         span = { GridItemSpan(maxLineSpan) },
                     ) {
-                        Text(
-                            modifier = listItemAnimation(listState, hasLoadedLibrary).padding(horizontal = 16.dp, vertical = 8.dp),
-                            text = setlistWithSongs.setlist.description,
-                            style = MaterialTheme.typography.bodyMedium,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant,
-                        )
-                    }
-                }
-                // An empty setlist is one that is waiting for its songs, so the way to them takes the place the songs
-                // will take, rather than staying behind the header's menu.
-                if (setlistWithSongs.entries.isEmpty() && !isPerformanceModeEnabled) {
-                    item(
-                        key = "add_songs_${setlistWithSongs.setlist.fileName}",
-                        span = { GridItemSpan(maxLineSpan) },
-                    ) {
-                        ActionListItem(
+                        SectionHeader(
                             modifier = listItemAnimation(listState, hasLoadedLibrary),
-                            title = stringResource(Res.string.setlists_add_songs),
-                            icon = painterResource(Res.drawable.ic_add),
-                            onClick = { viewModel.showDialog(CampfireViewModel.DialogType.SongPicker(setlistWithSongs.setlist)) },
+                            text = setlistWithSongs.setlist.title,
+                            // A setlist is only ever on this screen archived because the filter was asked to show them,
+                            // so the mark is what tells it from the ones still in use.
+                            icon = if (setlistWithSongs.setlist.isArchived) painterResource(Res.drawable.ic_archive) else null,
+                            iconContentDescription = stringResource(Res.string.setlists_archived),
+                            onClick = { coroutineScope.launch { listState.animateScrollToKey(headerKey) } },
+                            action = if (isPerformanceModeEnabled) null else {
+                                {
+                                    SetlistActionsMenu(
+                                        viewModel = viewModel,
+                                        setlist = setlistWithSongs.setlist,
+                                    )
+                                }
+                            },
                         )
                     }
-                }
-                items(
-                    items = setlistWithSongs.rows(draggedSetlist),
-                    key = { row -> SetlistItemKey(setlistFileName = setlistWithSongs.setlist.fileName, songFileName = row.entry.songFileName).string.orEmpty() },
-                ) { row ->
-                    val entry = row.entry
-                    val key = SetlistItemKey(setlistFileName = setlistWithSongs.setlist.fileName, songFileName = entry.songFileName)
-                    // The placement animation goes to ReorderableItem rather than onto the item itself, because it
-                    // is what decides which rows may have one: the row under the finger is placed by the drag's own
-                    // translation, and a placement animation on top of that animates it back towards the slot it is
-                    // being dragged out of, which is the jumping. Every other row still slides into place.
-                    ReorderableItem(
-                        state = reorderableState,
-                        key = key.string.orEmpty(),
-                        animateItemModifier = listItemAnimation(
-                            listState = listState,
-                            isEnabled = hasLoadedLibrary,
-                            isRearranging = draggedSetlist != null,
-                        ),
-                    ) { isBeingDragged ->
-                        val elevation by animateDpAsState(if (isBeingDragged) 8.dp else 0.dp)
-                        Surface(
-                            shadowElevation = elevation
+                    // Under the header rather than inside the pill: the pill is the setlist's name and a sentence would
+                    // not fit in it, and this is the first thing to read about a setlist once it has been found.
+                    if (setlistWithSongs.setlist.description.isNotBlank()) {
+                        item(
+                            key = "description_${setlistWithSongs.setlist.fileName}",
+                            span = { GridItemSpan(maxLineSpan) },
                         ) {
-                            // The long press that reorders a row is the gesture the drag handle is there to
-                            // advertise, which leaves a touch platform no long press for the actions a song
-                            // list usually hides behind one - so the overflow button is shown on every
-                            // platform here rather than on the pointer driven ones alone.
-                            val actions: (@Composable () -> Unit)? = if (isPerformanceModeEnabled) {
-                                null
-                            } else {
-                                {
-                                    Row(
-                                        verticalAlignment = Alignment.CenterVertically,
-                                    ) {
-                                        SetlistEntryActions(
-                                            viewModel = viewModel,
-                                            entry = entry,
-                                            setlistFileName = setlistWithSongs.setlist.fileName,
-                                        )
-                                        // The grip goes last, on the edge the finger travels down while the rows are
-                                        // being put in order.
-                                        DragHandle(modifier = Modifier.draggableHandle(onDragStopped = onDragStopped))
+                            Text(
+                                modifier = listItemAnimation(listState, hasLoadedLibrary).padding(horizontal = 16.dp, vertical = 8.dp),
+                                text = setlistWithSongs.setlist.description,
+                                style = MaterialTheme.typography.bodyMedium,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            )
+                        }
+                    }
+                    // An empty setlist is one that is waiting for its songs, so the way to them takes the place the songs
+                    // will take, rather than staying behind the header's menu.
+                    if (setlistWithSongs.entries.isEmpty() && !isPerformanceModeEnabled) {
+                        item(
+                            key = "add_songs_${setlistWithSongs.setlist.fileName}",
+                            span = { GridItemSpan(maxLineSpan) },
+                        ) {
+                            ActionListItem(
+                                modifier = listItemAnimation(listState, hasLoadedLibrary),
+                                title = stringResource(Res.string.setlists_add_songs),
+                                icon = painterResource(Res.drawable.ic_add),
+                                onClick = { viewModel.showDialog(CampfireViewModel.DialogType.SongPicker(setlistWithSongs.setlist)) },
+                            )
+                        }
+                    }
+                    items(
+                        items = setlistWithSongs.rows(draggedSetlist),
+                        key = { row -> SetlistItemKey(setlistFileName = setlistWithSongs.setlist.fileName, songFileName = row.entry.songFileName).string.orEmpty() },
+                    ) { row ->
+                        val entry = row.entry
+                        val key = SetlistItemKey(setlistFileName = setlistWithSongs.setlist.fileName, songFileName = entry.songFileName)
+                        // The placement animation goes to ReorderableItem rather than onto the item itself, because it
+                        // is what decides which rows may have one: the row under the finger is placed by the drag's own
+                        // translation, and a placement animation on top of that animates it back towards the slot it is
+                        // being dragged out of, which is the jumping. Every other row still slides into place.
+                        ReorderableItem(
+                            state = reorderableState,
+                            key = key.string.orEmpty(),
+                            animateItemModifier = listItemAnimation(
+                                listState = listState,
+                                isEnabled = hasLoadedLibrary,
+                                isRearranging = draggedSetlist != null,
+                            ),
+                        ) { isBeingDragged ->
+                            val elevation by animateDpAsState(if (isBeingDragged) 8.dp else 0.dp)
+                            Surface(
+                                shadowElevation = elevation
+                            ) {
+                                // The long press that reorders a row is the gesture the drag handle is there to
+                                // advertise, which leaves a touch platform no long press for the actions a song
+                                // list usually hides behind one - so the overflow button is shown on every
+                                // platform here rather than on the pointer driven ones alone.
+                                val actions: (@Composable () -> Unit)? = if (isPerformanceModeEnabled) {
+                                    null
+                                } else {
+                                    {
+                                        Row(
+                                            modifier = Modifier.padding(end = FAST_SCROLLER_CLEARANCE),
+                                            verticalAlignment = Alignment.CenterVertically,
+                                        ) {
+                                            // The grip goes in front of the overflow button rather than after it, so that
+                                            // the button lands exactly where the songs screen has its own.
+                                            DragHandle(modifier = Modifier.draggableHandle(onDragStopped = onDragStopped))
+                                            SetlistEntryActions(
+                                                viewModel = viewModel,
+                                                entry = entry,
+                                                setlistFileName = setlistWithSongs.setlist.fileName,
+                                            )
+                                        }
                                     }
                                 }
-                            }
-                            when (entry) {
-                                is CampfireViewModel.SetlistWithSongs.Entry.Present -> SongListItem(
-                                    modifier = Modifier.longPressDraggableHandle(enabled = !isPerformanceModeEnabled, onDragStopped = onDragStopped),
-                                    song = entry.song,
-                                    index = row.index,
-                                    // The setlist's own transposition of this song, which is why the same song
-                                    // can be listed in one key here and in another one two setlists down.
-                                    key = viewModel.renderKey(
+                                when (entry) {
+                                    is CampfireViewModel.SetlistWithSongs.Entry.Present -> SongListItem(
+                                        modifier = Modifier.longPressDraggableHandle(enabled = !isPerformanceModeEnabled, onDragStopped = onDragStopped),
                                         song = entry.song,
-                                        transposition = transpositions[entry.song.fileName, setlistWithSongs.setlist.fileName],
-                                        spelling = chordSpelling,
-                                    ),
-                                    shouldShowChords = shouldShowChords,
-                                    labelsOnEverySong = labelsOnEverySong,
-                                    isBeingDragged = isBeingDragged,
-                                    onClick = { viewModel.openSongInSetlist(setlistWithSongs, entry.song) },
-                                    actions = actions,
-                                    areActionsAtEdge = true,
-                                )
+                                        index = row.index,
+                                        // The setlist's own transposition of this song, which is why the same song
+                                        // can be listed in one key here and in another one two setlists down.
+                                        key = viewModel.renderKey(
+                                            song = entry.song,
+                                            transposition = transpositions[entry.song.fileName, setlistWithSongs.setlist.fileName],
+                                            spelling = chordSpelling,
+                                        ),
+                                        shouldShowChords = shouldShowChords,
+                                        labelsOnEverySong = labelsOnEverySong,
+                                        isBeingDragged = isBeingDragged,
+                                        onClick = { viewModel.openSongInSetlist(setlistWithSongs, entry.song) },
+                                        actions = actions,
+                                    )
 
-                                // Nothing to open, but it still takes its place in the order and can be removed.
-                                is CampfireViewModel.SetlistWithSongs.Entry.Missing -> MissingSongListItem(
-                                    modifier = Modifier.longPressDraggableHandle(enabled = !isPerformanceModeEnabled, onDragStopped = onDragStopped),
-                                    index = row.index,
-                                    songFileName = entry.songFileName,
-                                    actions = actions,
-                                )
+                                    // Nothing to open, but it still takes its place in the order and can be removed.
+                                    is CampfireViewModel.SetlistWithSongs.Entry.Missing -> MissingSongListItem(
+                                        modifier = Modifier.longPressDraggableHandle(enabled = !isPerformanceModeEnabled, onDragStopped = onDragStopped),
+                                        index = row.index,
+                                        songFileName = entry.songFileName,
+                                        actions = actions,
+                                    )
+                                }
                             }
                         }
                     }
                 }
             }
         }
+        FastScroller(
+            modifier = Modifier.padding(contentPadding),
+            gridState = listState,
+        )
     }
 }
 

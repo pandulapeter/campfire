@@ -25,11 +25,12 @@ in `:domain:*`. `:data:source:local:implementation` uses it directly for the met
   open the same implicit paragraph a bare line of lyrics would, carrying their own label, which is the only place
   `{start_of_tab: Riff}` can still say "Riff". Everything downstream follows: the serializer wraps each *run* of tab
   or grid lines back in its environment, the transposer moves each run of frets as its own fingerboard, and the
-  viewer draws each run as one sideways scrolling block with the lyrics around it.
+  viewer cuts each run into rows that fit its width (`ChordProTabWrapper`) with the lyrics around it.
 - `ChordProSyntax` — the shared low-level rules (the directive and chord regexes, `chordNameRegex` for "is this whole
   word a chord and not a word that starts with a letter", long/short directive names, the `start_of_` / `end_of_`
   prefixes, `label="…"` attributes, what counts as a tag or a language directive, `metadataKind` for the one name a
-  directive is known by whichever of its spellings a file uses, and where a new one goes in a file the user wrote).
+  directive is known by whichever of its spellings a file uses, `isStaffLine` for "is this line of a tab environment
+  the staff or something written above it", and where a new one goes in a file the user wrote).
   `metadataInsertionIndex` is that last rule: after the last directive of the same kind, and otherwise into the
   header in `metadataOrder`, the order the app lists metadata in — which leaves a header arranged some other way
   exactly as it is, since it only ever decides where a line is *added*. Every other object here goes through it, so
@@ -93,6 +94,16 @@ in `:domain:*`. `:data:source:local:implementation` uses it directly for the met
   lining up; where there is no dash to take (inside a `0h1p0` group) the line grows by a character instead. The same
   column bookkeeping serves `rewriteChordNames`, which only respells those chord names — `Bb` is a character wider
   than the `B` it becomes in German notation, and the staff underneath still has to line up.
+- `ChordProTabWrapper` — cuts one run of tablature into rows that fit a width, for the viewer, which is the one
+  place a tab can be too wide for: a tab is a grid of columns, so it can never be wrapped line by line, and every line
+  of the run is cut at the same columns instead — after the last bar line that fits, so that a row ends where the
+  music does; where one bar is wider than the row, on the last column in its second half that every string has a
+  dash on and no chord name spans; and only where there is no such column at the edge. Every row after the first
+  repeats the string names in front of the staff (`e|`, `B|`, padded to one width where an `Eb|` sits above a ` G|`),
+  and a line above the staff is left out of the rows it has nothing to say in, so the chord names travel with the
+  notes they are written over. A run with no staff line in it at all is not tablature but preformatted text, which
+  `isTablature` says, and it is returned whole for the viewer to scroll instead. Nothing in it is a measurement: it
+  is asked for a number of characters, and the viewer works that out from its font.
 - `ChordProNotation` — German notation, and the one thing in here that is about how a song is *read* rather than what
   it *is*: the note written `B` becomes `H`, the one written `Bb` becomes `B`, and nothing else moves — not the other
   letters, not the `#` and `b` signs, not the quality. (The classical German names spell every accidental out as

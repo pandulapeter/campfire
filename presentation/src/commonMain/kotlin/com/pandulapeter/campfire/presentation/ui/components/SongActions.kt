@@ -103,8 +103,6 @@ internal fun ActionsMenuItem(
  *   screen that opened it is showing the song as part of that setlist and would have the ground pulled from under
  *   it. Null on the setlists screen, where a row is the song's membership of the setlist and giving it up is the
  *   whole point, and null in the library, where no setlist is in play.
- * @param shouldIncludeSetlistAssignments False where the screen already offers them, which the song details app bar
- *   does.
  */
 @Composable
 internal fun SongActionsButton(
@@ -113,7 +111,6 @@ internal fun SongActionsButton(
     viewModel: CampfireViewModel,
     song: Song,
     lockedSetlistFileName: String?,
-    shouldIncludeSetlistAssignments: Boolean = true,
 ) {
     val filePicker = LocalFilePicker.current
     val songFileNamesInSetlists by viewModel.songFileNamesInSetlists.collectAsStateWithLifecycle()
@@ -134,18 +131,16 @@ internal fun SongActionsButton(
         // One entry for both directions: the sheet it opens is a list of every setlist with a box each, so putting the
         // song into one and taking it out of another are the same gesture there, and a menu that offered them as two
         // separate actions was naming the same sheet twice.
-        if (shouldIncludeSetlistAssignments) {
-            ActionsMenuItem(
-                title = stringResource(Res.string.songs_setlist_assignments),
-                icon = painterResource(if (song.fileName in songFileNamesInSetlists) Res.drawable.ic_setlists else Res.drawable.ic_setlists_outline),
-                onClick = {
-                    dismiss()
-                    viewModel.showDialog(
-                        CampfireViewModel.DialogType.SetlistPicker(song = song, lockedSetlistFileName = lockedSetlistFileName)
-                    )
-                },
-            )
-        }
+        ActionsMenuItem(
+            title = stringResource(Res.string.songs_setlist_assignments),
+            icon = painterResource(if (song.fileName in songFileNamesInSetlists) Res.drawable.ic_setlists else Res.drawable.ic_setlists_outline),
+            onClick = {
+                dismiss()
+                viewModel.showDialog(
+                    CampfireViewModel.DialogType.SetlistPicker(song = song, lockedSetlistFileName = lockedSetlistFileName)
+                )
+            },
+        )
         // Only where it would do something: a file already named after its own metadata, or one with no title to be
         // named after, has nothing to update and the entry would be an offer that never comes to anything.
         if (song.canUpdateFileName) {

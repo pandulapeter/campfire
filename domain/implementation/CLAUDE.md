@@ -15,8 +15,9 @@ Implements `:domain:api` on top of `:data:repository:api`. Koin wiring: `Module.
 
 The ones that carry real logic:
 
-- `GetScreenDataUseCaseImpl` — combines the setlist, song and preference flows into one `Flow<DataState<ScreenData>>`.
-  Applies the "songs without chords" filter, the tag filter and the sorting (by title or artist, through
+- `GetScreenDataUseCaseImpl` — combines the setlist, song and preference flows, and the `SongFilter` flow the caller
+  passes in, into one `Flow<DataState<ScreenData>>`. Applies the "songs without chords" filter, the tag filter and
+  the sorting (by title or artist, through
   `NormalizeTextUseCase`, so accents are ignored), and keeps a `cache` so that a `Loading` or `Failure` state can still
   carry the last good data, and orders the setlists (newest first or by title, the archived ones after the rest either
   way) without ever narrowing them: the song filters are about the song list, and the setlists screen decides for
@@ -26,7 +27,7 @@ The ones that carry real logic:
   *other* one leaves, so the numbers on a chip say what picking it would actually do. Neither can empty the other:
   what still counts as a tag and what still counts as a language are both decided from the chord-filtered library
   before either filter runs, a selected value no song carries any more is ignored rather than emptying the list
-  (which is what lets the preference keep it, see `UserPreferences.selectedTags`), and one the *other* group has
+  (which is what lets the filter keep it, see `SongFilter.selectedTags`), and one the *other* group has
   narrowed down to nothing stays on the list with a count of zero, since a filter that is on has to be visible to be
   turned off. Several selected languages always mean "any of them" — a song is sung in one language or another, never
   in all of them at once, which is why there is no counterpart to `TagMatchMode` here.

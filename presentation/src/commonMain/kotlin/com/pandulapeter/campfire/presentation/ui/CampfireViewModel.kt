@@ -33,6 +33,7 @@ import com.pandulapeter.campfire.data.model.domain.SyncState
 import com.pandulapeter.campfire.data.model.domain.Tag
 import com.pandulapeter.campfire.data.model.domain.UserPreferences
 import com.pandulapeter.campfire.domain.api.models.ScreenData
+import com.pandulapeter.campfire.domain.api.models.SongFilter
 import com.pandulapeter.campfire.domain.api.useCases.CancelSynchronizationUseCase
 import com.pandulapeter.campfire.domain.api.useCases.ConnectSyncProviderUseCase
 import com.pandulapeter.campfire.domain.api.useCases.ConvertChordProNotationUseCase
@@ -141,11 +142,19 @@ class CampfireViewModel(
 ) : ViewModel() {
 
     /**
+     * The tags and languages the song list is narrowed to. Held here and nowhere else, so it lasts exactly as long as
+     * the app does: a filter is a question asked of the library for the moment, and one that came back on the next
+     * launch would read as songs having gone missing. Declared before [screenData], which is built from it.
+     */
+    private val _songFilter = MutableStateFlow(SongFilter())
+    val songFilter = _songFilter.asStateFlow()
+
+    /**
      * The single subscription to the domain layer: every state below maps over this instead of over
      * [GetScreenDataUseCase] directly, which would re-run the whole repository combine once per state. Started
      * eagerly so that the data is loaded into memory as the app starts, rather than when a screen first asks for it.
      */
-    private val screenData: StateFlow<DataState<ScreenData>> = getScreenData().stateIn(
+    private val screenData: StateFlow<DataState<ScreenData>> = getScreenData(_songFilter).stateIn(
         scope = viewModelScope,
         started = SharingStarted.Eagerly,
         // Loading, not Failure: nothing has been asked for yet, which is not something to show an error for.
@@ -333,7 +342,7 @@ class CampfireViewModel(
         )
     }.asState(LabelsOnEverySong())
 
-    /** The library as the song list shows it: filtered and sorted the way the preferences ask for. */
+    /** The library as the song list shows it: narrowed by [songFilter] and sorted the way the preferences ask for. */
     private val filteredSongs = screenData.map { it.data?.songs.orEmpty() }
 
     /**
@@ -347,6 +356,18 @@ class CampfireViewModel(
      * controls offer them. Empty, or a single entry, is a library with nothing to filter by.
      */
     val languages = screenData.map { it.data?.languages.orEmpty() }.asState(emptyList())
+
+    /**
+     * Whether the song list is narrowed by anything the filter controls show as selected, which is what the badge on
+     * their app bar action says while they are out of sight. It asks the chips rather than [songFilter]: a selected
+     * tag the library no longer has is kept but narrows nothing, and the language group is only offered at all once
+     * there are two languages to choose between, so a badge counting either would point at a filter that cannot be
+     * found in the controls it opens.
+     */
+    val isSongFilterActive = combine(songFilter, tags, languages) { filter, tags, languages ->
+        val selectedTags = filter.selectedTags.mapTo(mutableSetOf()) { it.lowercase() }
+        tags.any { it.name.lowercase() in selectedTags } || (languages.size > 1 && languages.any { it.code in filter.selectedLanguages })
+    }.asState(false)
 
     /**
      * Every song with its title and artist normalized for searching and grouping, done once per library rather than
@@ -872,7 +893,7 @@ class CampfireViewModel(
         // Asked of a fresh read of the library rather than of the offer, which can still be a step behind the import
         // that just finished. Where the demo is now all there, the offer is waited for until it has left the screen,
         // so the row fades out disabled instead of coming back for the moments in between.
-        val library = getScreenData().first { it !is DataState.Loading }.data
+        val library = getScreenData(_songFilter).first { it !is DataState.Loading }.data
         if (library != null && DemoLibrary.isPresentIn(songs = library.unfilteredSongs, setlists = library.setlists)) {
             demoLibraryOffer.first { it == null }
         }
@@ -1154,15 +1175,15 @@ class CampfireViewModel(
     fun setSetlistSortingMode(value: UserPreferences.SetlistSortingMode) = updateUserPreferences { copy(setlistSortingMode = value) }
 
     /** A selected tag is matched the way the filter itself matches it, without regard to case. */
-    fun toggleTagFilter(tag: String) = updateUserPreferences {
-        val without = selectedTags.filterNotTo(mutableSetOf()) { it.equals(tag, ignoreCase = true) }
-        copy(selectedTags = if (without.size == selectedTags.size) selectedTags + tag else without)
+    fun toggleTagFilter(tag: String) = _songFilter.update { filter ->
+        val without = filter.selectedTags.filterNotTo(mutableSetOf()) { it.equals(tag, ignoreCase = true) }
+        filter.copy(selectedTags = if (without.size == filter.selectedTags.size) filter.selectedTags + tag else without)
     }
 
     /** Only the tags the library still has are cleared: a selection this screen never showed is not a tap's to lose. */
-    fun clearTagFilter() = updateUserPreferences {
+    fun clearTagFilter() = _songFilter.update { filter ->
         val libraryTags = tags.value.mapTo(mutableSetOf()) { it.name.lowercase() }
-        copy(selectedTags = selectedTags.filterNotTo(mutableSetOf()) { it.lowercase() in libraryTags })
+        filter.copy(selectedTags = filter.selectedTags.filterNotTo(mutableSetOf()) { it.lowercase() in libraryTags })
     }
 
     fun setTagMatchMode(value: UserPreferences.TagMatchMode) = updateUserPreferences { copy(tagMatchMode = value) }
@@ -1182,14 +1203,16 @@ class CampfireViewModel(
     fun languageCode(value: String) = normalizeLanguageCode(value)
 
     /** The codes are normalized by the parser, so a selected language is the string the filter chip carries. */
-    fun toggleLanguageFilter(code: String) = updateUserPreferences {
-        copy(selectedLanguages = if (code in selectedLanguages) selectedLanguages - code else selectedLanguages + code)
+    fun toggleLanguageFilter(code: String) = _songFilter.update { filter ->
+        filter.copy(
+            selectedLanguages = if (code in filter.selectedLanguages) filter.selectedLanguages - code else filter.selectedLanguages + code,
+        )
     }
 
     /** Only the languages the library still has are cleared, for the same reason [clearTagFilter] is careful. */
-    fun clearLanguageFilter() = updateUserPreferences {
+    fun clearLanguageFilter() = _songFilter.update { filter ->
         val libraryLanguages = languages.value.mapTo(mutableSetOf()) { it.code }
-        copy(selectedLanguages = selectedLanguages.filterNotTo(mutableSetOf()) { it in libraryLanguages })
+        filter.copy(selectedLanguages = filter.selectedLanguages.filterNotTo(mutableSetOf()) { it in libraryLanguages })
     }
 
     fun setUiMode(value: UserPreferences.UiMode) = updateUserPreferences { copy(uiMode = value) }

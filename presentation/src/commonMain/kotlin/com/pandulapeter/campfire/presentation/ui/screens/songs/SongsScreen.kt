@@ -10,6 +10,10 @@
 package com.pandulapeter.campfire.presentation.ui.screens.songs
 
 import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.scaleIn
+import androidx.compose.animation.scaleOut
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
@@ -22,6 +26,8 @@ import androidx.compose.foundation.lazy.grid.GridItemSpan
 import androidx.compose.foundation.lazy.grid.LazyGridState
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
+import androidx.compose.material3.Badge
+import androidx.compose.material3.BadgedBox
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -29,6 +35,7 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.SideEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -49,6 +56,7 @@ import com.pandulapeter.campfire.presentation.resources.songs_create_song
 import com.pandulapeter.campfire.presentation.resources.songs_new_song
 import com.pandulapeter.campfire.presentation.resources.songs_search
 import com.pandulapeter.campfire.presentation.resources.songs_sort_and_filter
+import com.pandulapeter.campfire.presentation.resources.songs_sort_and_filter_active
 import com.pandulapeter.campfire.presentation.resources.songs_unknown_artist
 import com.pandulapeter.campfire.presentation.resources.songs_unsorted_label
 import com.pandulapeter.campfire.presentation.ui.CampfireViewModel
@@ -100,6 +108,7 @@ internal fun SongsScreen(
     val isImporting by viewModel.isImporting.collectAsStateWithLifecycle()
     val isPerformanceModeEnabled by viewModel.isPerformanceModeEnabled.collectAsStateWithLifecycle()
     val visibleDialog by viewModel.visibleDialog.collectAsStateWithLifecycle()
+    val isSongFilterActive by viewModel.isSongFilterActive.collectAsStateWithLifecycle()
     val scrollBehavior = TopAppBarDefaults.pinnedScrollBehavior()
     val listState = rememberRetainedLazyGridState(viewModel.songsScrollPosition)
     val isSidePanelVisible = hasRoomForSidePanel(settledWidth)
@@ -147,12 +156,10 @@ internal fun SongsScreen(
                         )
                     }
                     if (!isSidePanelVisible) {
-                        IconButton(onClick = { viewModel.showDialog(CampfireViewModel.DialogType.SongsControls) }) {
-                            Icon(
-                                painter = painterResource(Res.drawable.ic_tune),
-                                contentDescription = stringResource(Res.string.songs_sort_and_filter),
-                            )
-                        }
+                        SongsControlsAction(
+                            isSongFilterActive = isSongFilterActive,
+                            onClick = { viewModel.showDialog(CampfireViewModel.DialogType.SongsControls) },
+                        )
                     }
                 },
             )
@@ -185,6 +192,44 @@ internal fun SongsScreen(
     }
 }
 
+/**
+ * The action that opens the sorting and the filters where there is no room for them beside the list. It carries a
+ * badge while a filter is on, since that is the one thing in the sheet that hides songs for the moment rather than
+ * as a standing preference, and a list that is shorter than the library with nothing on screen saying why reads as
+ * songs having gone missing. The side panel needs no such mark, since the selected chips are in it.
+ */
+@Composable
+private fun SongsControlsAction(
+    modifier: Modifier = Modifier,
+    isSongFilterActive: Boolean,
+    onClick: () -> Unit,
+) = IconButton(
+    modifier = modifier,
+    onClick = onClick,
+) {
+    BadgedBox(
+        badge = {
+            AnimatedVisibility(
+                visible = isSongFilterActive,
+                enter = fadeIn() + scaleIn(),
+                exit = fadeOut() + scaleOut(),
+            ) {
+                Badge()
+            }
+        },
+    ) {
+        Icon(
+            painter = painterResource(Res.drawable.ic_tune),
+            // The badge is drawn and nothing else, so a screen reader would otherwise never hear that the list is narrowed.
+            contentDescription = if (isSongFilterActive) {
+                stringResource(Res.string.songs_sort_and_filter_active)
+            } else {
+                stringResource(Res.string.songs_sort_and_filter)
+            },
+        )
+    }
+}
+
 @Composable
 private fun SongList(
     modifier: Modifier = Modifier,
@@ -199,6 +244,7 @@ private fun SongList(
     // Read straight off the field's own state, which is where the text lives now, see SearchState.
     val query = viewModel.songsSearch.textFieldState.text.toString()
     val userPreferences by viewModel.userPreferences.collectAsStateWithLifecycle()
+    val songFilter by viewModel.songFilter.collectAsStateWithLifecycle()
     val transpositions by viewModel.transpositions.collectAsStateWithLifecycle()
     val labelsOnEverySong by viewModel.labelsOnEverySong.collectAsStateWithLifecycle()
     val isPerformanceModeEnabled by viewModel.isPerformanceModeEnabled.collectAsStateWithLifecycle()
@@ -217,17 +263,34 @@ private fun SongList(
         }
     }
 
-    // Scroll back to the top whenever the search query, the sorting or the tag filter changes, before the new items
+    // Scroll back to the top whenever the search query, the sorting or the filters change, before the new items
     // arrive. The combination that was last scrolled to the top is remembered across recompositions and state
     // restoration, so that coming back from the song details keeps the restored scroll position instead of jumping
     // to the top.
     val scrollToTopKey =
-        "$query|${userPreferences?.sortingMode?.name}|${userPreferences?.selectedTags?.sorted()}|${userPreferences?.tagMatchMode?.name}|${userPreferences?.selectedLanguages?.sorted()}"
+        "$query|${userPreferences?.sortingMode?.name}|${songFilter.selectedTags.sorted()}|${userPreferences?.tagMatchMode?.name}|${songFilter.selectedLanguages.sorted()}"
     var lastScrollToTopKey by rememberSaveable { mutableStateOf(scrollToTopKey) }
     LaunchedEffect(scrollToTopKey) {
         if (scrollToTopKey != lastScrollToTopKey) {
             lastScrollToTopKey = scrollToTopKey
             listState.scrollToItem(0)
+        }
+    }
+
+    // A lazy grid holds on to the key of its first visible item across a change of its contents, which is right for
+    // an edit and wrong for the library arriving: the read publishes a batch at a time in the order the files are
+    // listed rather than the order they are sorted in, so a later batch lands songs above the ones already showing and
+    // the grid follows its first row down, opening the app on a list that is already scrolled. Until the last batch
+    // is in, the position is held by index instead - unless the user is scrolling it themselves, which a request
+    // would cancel.
+    if (!hasLoadedLibrary) {
+        SideEffect {
+            if (!listState.isScrollInProgress) {
+                listState.requestScrollToItem(
+                    index = listState.firstVisibleItemIndex,
+                    scrollOffset = listState.firstVisibleItemScrollOffset,
+                )
+            }
         }
     }
 

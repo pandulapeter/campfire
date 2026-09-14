@@ -1,8 +1,9 @@
 {title: House of the Rising Sun}
 {artist: Traditional American}
 {key: Am}
-{time: 6/8}
 {tempo: 76}
+{time: 6/8}
+{tag: Demo}
 {tag: Fingerpicking}
 {meta: language en}
 
@@ -35,6 +36,15 @@ My [Am]father [C]was a [D]gamblin' [F]man
 Down [Am]in New [E7]Or[Am]leans
 {end_of_verse}
 
+{start_of_solo: Organ solo}
+{start_of_grid}
+|: Am . . | C  . . | D  . . | F  . . |
+| Am . . | C  . . | E7 . . | %      |
+| Am . . | C  . . | D  . . | F  . . |
+| Am . . | E7 . . | Am . . | %      :| x2
+{end_of_grid}
+{end_of_solo}
+
 {start_of_verse: Verse 3}
 Well I've [Am]got one [C]foot on the [D]plat[F]form
 The [Am]other [C]foot on the [E7]train
@@ -42,9 +52,4 @@ I'm [Am]goin' [C]back to [D]New Or[F]leans
 To [Am]wear that [E7]ball and [Am]chain
 {end_of_verse}
 
-{start_of_verse: Verse 4}
-There [Am]is a [C]house in [D]New Or[F]leans
-They [Am]call the [C]Rising [E7]Sun
-And it's [Am]been the [C]ruin of [D]many a poor [F]boy
-And [Am]God, I [E7]know I'm [Am]one
-{end_of_verse}
+{comment: Finish with the first verse again, and let the last chord ring out.}

@@ -19,8 +19,10 @@ import com.pandulapeter.campfire.data.repository.api.SetlistRepository
 import com.pandulapeter.campfire.data.repository.api.SongRepository
 import com.pandulapeter.campfire.data.repository.api.UserPreferencesRepository
 import com.pandulapeter.campfire.domain.api.models.ScreenData
+import com.pandulapeter.campfire.domain.api.models.SongFilter
 import com.pandulapeter.campfire.domain.api.useCases.GetScreenDataUseCase
 import com.pandulapeter.campfire.domain.api.useCases.NormalizeTextUseCase
+import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.map
@@ -29,22 +31,22 @@ import org.koin.core.annotation.Factory
 @Factory
 class GetScreenDataUseCaseImpl internal constructor(
     private val normalizeText: NormalizeTextUseCase,
-    setlistRepository: SetlistRepository,
-    songRepository: SongRepository,
-    userPreferencesRepository: UserPreferencesRepository,
+    private val setlistRepository: SetlistRepository,
+    private val songRepository: SongRepository,
+    private val userPreferencesRepository: UserPreferencesRepository,
 ) : GetScreenDataUseCase {
 
-    override operator fun invoke() = screenDataFlow
-
     private var cache: ScreenData? = null
-    private val screenDataFlow = combine(
+
+    override operator fun invoke(songFilter: Flow<SongFilter>) = combine(
         setlistRepository.setlists,
         songRepository.songs,
-        // Only the two preferences the list is built from: a preference that changes on every step of a transposition
-        // (or on every frame of a pinch, once the debounce lets it through) must not have the whole library filtered
-        // and sorted again for it.
+        // Only the preferences the list is built from: a preference that changes on every step of a transposition (or
+        // on every frame of a pinch, once the debounce lets it through) must not have the whole library filtered and
+        // sorted again for it.
         userPreferencesRepository.userPreferences.map { state -> state.mapData { it.toListPreferences() } }.distinctUntilChanged(),
-    ) { setlistsDataState, songsDataState, listPreferencesDataState ->
+        songFilter.distinctUntilChanged(),
+    ) { setlistsDataState, songsDataState, listPreferencesDataState, filter ->
 
         fun createScreenData() = setlistsDataState.data?.let { unsortedSetlists ->
             songsDataState.data?.let { songs ->
@@ -56,22 +58,22 @@ class GetScreenDataUseCaseImpl internal constructor(
                     // from here, or narrowing by one would quietly switch the other one off.
                     val availableTags = filterableSongs.toTags()
                     val availableLanguages = filterableSongs.toLanguages()
-                    val songsByTag = filterableSongs.filterTags(listPreferences, availableTags)
-                    val songsByLanguage = filterableSongs.filterLanguages(listPreferences, availableLanguages)
+                    val songsByTag = filterableSongs.filterTags(filter, listPreferences.tagMatchMode, availableTags)
+                    val songsByLanguage = filterableSongs.filterLanguages(filter, availableLanguages)
                     ScreenData(
                         setlists = setlists,
                         songs = songsByTag
-                            .filterLanguages(listPreferences, availableLanguages)
+                            .filterLanguages(filter, availableLanguages)
                             .sortSongs(listPreferences),
                         tags = songsByLanguage.toTags().withMissingSelected(
                             available = availableTags,
-                            selected = listPreferences.selectedTags.mapTo(mutableSetOf()) { it.lowercase() },
+                            selected = filter.selectedTags.mapTo(mutableSetOf()) { it.lowercase() },
                             key = { it.name.lowercase() },
                             toEmpty = { it.copy(songCount = 0) },
                         ),
                         languages = songsByTag.toLanguages().withMissingSelected(
                             available = availableLanguages,
-                            selected = listPreferences.selectedLanguages,
+                            selected = filter.selectedLanguages,
                             key = { it.code },
                             toEmpty = { it.copy(songCount = 0) },
                         ),
@@ -110,15 +112,15 @@ class GetScreenDataUseCaseImpl internal constructor(
     /**
      * Tags are matched without regard to case, here and everywhere else, so both sides are folded to lower case
      * before they meet. A selected tag no song carries any more is dropped instead of emptying the list: it is kept
-     * in the preferences on purpose, see [UserPreferences.selectedTags].
+     * in the filter on purpose, see [SongFilter.selectedTags].
      */
-    private fun List<Song>.filterTags(listPreferences: ListPreferences, tags: List<Tag>): List<Song> {
+    private fun List<Song>.filterTags(songFilter: SongFilter, matchMode: UserPreferences.TagMatchMode, tags: List<Tag>): List<Song> {
         val available = tags.mapTo(mutableSetOf()) { it.name.lowercase() }
-        val selected = listPreferences.selectedTags.map { it.lowercase() }.filter { it in available }
+        val selected = songFilter.selectedTags.map { it.lowercase() }.filter { it in available }
         if (selected.isEmpty()) return this
         return filter { song ->
             val songTags = song.tags.mapTo(mutableSetOf()) { it.lowercase() }
-            when (listPreferences.tagMatchMode) {
+            when (matchMode) {
                 UserPreferences.TagMatchMode.ANY -> selected.any { it in songTags }
                 UserPreferences.TagMatchMode.ALL -> selected.all { it in songTags }
             }
@@ -130,9 +132,9 @@ class GetScreenDataUseCaseImpl internal constructor(
      * selected languages mean a song sung in any one of them; [SongLanguage.UNKNOWN] selects the songs that declare
      * none, which no song can name itself, see [SongLanguage.Companion.UNKNOWN].
      */
-    private fun List<Song>.filterLanguages(listPreferences: ListPreferences, languages: List<SongLanguage>): List<Song> {
+    private fun List<Song>.filterLanguages(songFilter: SongFilter, languages: List<SongLanguage>): List<Song> {
         val available = languages.mapTo(mutableSetOf()) { it.code }
-        val selected = listPreferences.selectedLanguages.filter { it in available }
+        val selected = songFilter.selectedLanguages.filter { it in available }
         if (selected.isEmpty()) return this
         return filter { song ->
             if (song.languages.isEmpty()) SongLanguage.UNKNOWN in selected else selected.any { it in song.languages }
@@ -209,18 +211,14 @@ class GetScreenDataUseCaseImpl internal constructor(
         val shouldShowSongsWithoutChords: Boolean,
         val sortingMode: UserPreferences.SortingMode,
         val setlistSortingMode: UserPreferences.SetlistSortingMode,
-        val selectedTags: Set<String>,
         val tagMatchMode: UserPreferences.TagMatchMode,
-        val selectedLanguages: Set<String>,
     )
 
     private fun UserPreferences.toListPreferences() = ListPreferences(
         shouldShowSongsWithoutChords = shouldShowSongsWithoutChords,
         sortingMode = sortingMode,
         setlistSortingMode = setlistSortingMode,
-        selectedTags = selectedTags,
         tagMatchMode = tagMatchMode,
-        selectedLanguages = selectedLanguages,
     )
 
     private fun <T, R> DataState<T>.mapData(transform: (T) -> R): DataState<R> = when (this) {

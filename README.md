@@ -74,19 +74,13 @@ an empty library.
 
 ### To do
 - Fast scroller on Setlists?
-- Fewer demo songs
-- Tab section horizontal scroll?
 - Rename setlist date sort
 - Implement .cho (and other) file association
-- Filter badge
 - Setlist.priority should be replaced with timestamp?
-- Back / Esc should clear the filters before closing the app
 - Songs: sort by year
-- Android: back should clear the search before closing the app
 - Android: predictive back on the detail screen only starts working after the first scroll
 - Implement sticky headers
 - New option: sort by year
-- Detail screen opening: why the loading?
 - Fix web Settings screen animation glitches caused by async data. Songs also sometimes has async animation issues
 - Improve the appearance and UI scalability of the Settings screen
 - Update the screenshots in the Readme

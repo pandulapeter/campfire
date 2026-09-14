@@ -61,6 +61,7 @@
     <string name="songs_search">Keresés a dalokban</string>
     <string name="songs_clear">Törlés</string>
     <string name="songs_sort_and_filter">Rendezés és szűrés</string>
+    <string name="songs_sort_and_filter_active">Rendezés és szűrés, szűrők bekapcsolva</string>
     <string name="songs_unsorted_label">0 - 9</string>
     <string name="songs_unknown_artist">Ismeretlen előadó</string>
     <string name="songs_show_without_chords">Akkord nélküli dalok mutatása</string>

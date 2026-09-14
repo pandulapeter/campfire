@@ -46,6 +46,7 @@ import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.TextLayoutResult
+import androidx.compose.ui.text.TextMeasurer
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.drawText
@@ -56,6 +57,7 @@ import androidx.compose.ui.text.rememberTextMeasurer
 import androidx.compose.ui.text.style.LineHeightStyle
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.isSpecified
+import com.pandulapeter.campfire.chordpro.ChordProTabWrapper
 import com.pandulapeter.campfire.chordpro.model.ChordProBlock
 import com.pandulapeter.campfire.chordpro.model.ChordProLine
 import com.pandulapeter.campfire.chordpro.model.ChordProSong
@@ -89,6 +91,7 @@ import kotlinx.coroutines.launch
 import org.jetbrains.compose.resources.painterResource
 import kotlin.math.ceil
 import kotlin.math.max
+import kotlin.math.roundToInt
 
 /**
  * Renders the raw song data with the chords displayed above the lyrics, aligned to the syllable they belong to.
@@ -417,19 +420,31 @@ private fun SongSectionContent(
         }
     }
     // Tablature is a run of lines inside a section rather than a section of its own, so the lines are grouped:
-    // each run is one sideways scrolling block (its columns only line up while they are measured together), and
-    // everything else is laid out line by line around it.
+    // each run is one block (its columns only line up while they are measured together), and everything else is
+    // laid out line by line around it.
     section.lines.groupConsecutiveTabs().forEach { group ->
         if (group.first() is ChordProLine.Tab) {
-            // Tablature only makes sense with its columns intact, so it never wraps and scrolls sideways instead.
-            Column(modifier = Modifier.fillMaxWidth().horizontalScroll(rememberScrollState())) {
-                group.forEach { line ->
-                    Text(
-                        text = (line as? ChordProLine.Tab)?.text.orEmpty(),
-                        style = lyricsStyle.copy(fontFamily = FontFamily.Monospace),
-                        softWrap = false,
-                        color = MaterialTheme.colorScheme.onSurface,
-                    )
+            val lines = group.map { (it as? ChordProLine.Tab)?.text.orEmpty() }
+            val style = lyricsStyle.copy(fontFamily = FontFamily.Monospace)
+            if (ChordProTabWrapper.isTablature(lines)) {
+                SongTabBlock(
+                    modifier = Modifier.fillMaxWidth(),
+                    lines = lines,
+                    style = style,
+                )
+            } else {
+                // A `{start_of_tab}` with no staff in it is preformatted text, chord names over lyrics most often.
+                // Its columns only line up while no line is cut, and there is no column a cut would be harmless on
+                // the way there is on a staff, so it scrolls sideways instead.
+                Column(modifier = Modifier.fillMaxWidth().horizontalScroll(rememberScrollState())) {
+                    lines.forEach { line ->
+                        Text(
+                            text = line,
+                            style = style,
+                            softWrap = false,
+                            color = MaterialTheme.colorScheme.onSurface,
+                        )
+                    }
                 }
             }
             return@forEach
@@ -486,6 +501,75 @@ private fun List<ChordProLine>.groupConsecutiveTabs(): List<List<ChordProLine>> 
     }
     if (group.isNotEmpty()) groups += group
     return groups
+}
+
+/**
+ * One run of tablature, cut into as many rows as it takes to fit the width, the way a tab book breaks a staff into
+ * systems (see [ChordProTabWrapper]). The rows are a blank line apart, so that the last string of one is never read
+ * as the first string of the next.
+ *
+ * The text is drawn rather than composed, because where the cuts fall depends on the width the block is measured
+ * at, and the section this block is in is measured at several widths before one wins (see [SongSectionsLayout]):
+ * a layout with no children answers every intrinsic measurement by running its measure block, so the height it
+ * reports for a candidate width already counts the rows the tab would wrap into at that width.
+ */
+@Composable
+private fun SongTabBlock(
+    modifier: Modifier = Modifier,
+    lines: List<String>,
+    style: TextStyle,
+) {
+    val textMeasurer = rememberTextMeasurer()
+    val color = MaterialTheme.colorScheme.onSurface
+    val rows = remember(lines, style, textMeasurer) { TabRows(lines, style, textMeasurer) }
+    Layout(
+        modifier = modifier.drawBehind {
+            var y = 0f
+            rows.at(size.width.roundToInt()).forEach { row ->
+                row.forEach { line ->
+                    drawText(textLayoutResult = line, color = color, topLeft = Offset(0f, y))
+                    y += line.size.height
+                }
+                y += rows.rowGap
+            }
+        },
+    ) { _, constraints ->
+        val width = constraints.maxWidth
+        val rowsAtWidth = rows.at(width)
+        val height = rowsAtWidth.sumOf { row -> row.sumOf { it.size.height } } + rows.rowGap * (rowsAtWidth.size - 1).coerceAtLeast(0)
+        layout(
+            width = if (width == Constraints.Infinity) rowsAtWidth.maxOf { row -> row.maxOf { it.size.width } } else width,
+            height = height.coerceIn(constraints.minHeight, constraints.maxHeight),
+        ) {}
+    }
+}
+
+/**
+ * The laid out rows of one run of tablature, per width. A run is measured at every width the column layout tries
+ * and drawn at the one that won, so every width it has been asked about is kept: the same few come back on every
+ * pass, and a row's text is laid out once rather than once per measurement.
+ */
+private class TabRows(
+    private val lines: List<String>,
+    private val style: TextStyle,
+    private val textMeasurer: TextMeasurer,
+) {
+
+    /** The height of a blank line in the tab's own font: the gap between two rows. */
+    val rowGap = textMeasurer.measure(AnnotatedString(LINE_HEIGHT_SAMPLE), style).size.height
+
+    // A monospace font, so the width of one character is the width of many divided by their count, measured with
+    // enough of them for the rounding of the total not to matter.
+    private val characterWidth = textMeasurer.measure(AnnotatedString(LINE_HEIGHT_SAMPLE.repeat(CHARACTER_WIDTH_SAMPLE_LENGTH)), style).size.width /
+            CHARACTER_WIDTH_SAMPLE_LENGTH.toFloat()
+    private val rowsByWidth = mutableMapOf<Int, List<List<TextLayoutResult>>>()
+
+    fun at(width: Int): List<List<TextLayoutResult>> = rowsByWidth.getOrPut(width) {
+        val maxColumns = if (width == Constraints.Infinity || characterWidth <= 0f) Int.MAX_VALUE else (width / characterWidth).toInt()
+        ChordProTabWrapper.wrap(lines, maxColumns).map { row ->
+            row.map { line -> textMeasurer.measure(AnnotatedString(line), style, softWrap = false) }
+        }
+    }
 }
 
 /** One `{start_of_grid}` line: bars, chords, beats and repeats laid out in a row, as a chord chart. */
@@ -1003,6 +1087,7 @@ private val SECTION_GAP = 20.dp
 private val ROW_GAP = 40.dp
 private const val HOLE_PENALTY = 1L shl 40 // Larger than any height, so that a hole always costs more than height does.
 private const val LINE_HEIGHT_SAMPLE = "X"
+private const val CHARACTER_WIDTH_SAMPLE_LENGTH = 64
 private const val PADDING = '\u00A0' // Non-breaking space, so that the padding never gets trimmed or wrapped.
 private const val BEAT_SYMBOL = "\u00B7"
 private const val CHIP_SEPARATOR = "\u00B7"

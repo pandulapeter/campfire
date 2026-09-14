@@ -74,11 +74,8 @@ import com.pandulapeter.campfire.presentation.resources.ic_error
 import com.pandulapeter.campfire.presentation.resources.ic_songs
 import com.pandulapeter.campfire.presentation.resources.ic_next
 import com.pandulapeter.campfire.presentation.resources.ic_previous
-import com.pandulapeter.campfire.presentation.resources.ic_setlists
-import com.pandulapeter.campfire.presentation.resources.ic_setlists_outline
 import com.pandulapeter.campfire.presentation.resources.ic_tune
 import com.pandulapeter.campfire.presentation.resources.retry
-import com.pandulapeter.campfire.presentation.resources.songs_setlist_assignments
 import com.pandulapeter.campfire.presentation.resources.song_details_display_options
 import com.pandulapeter.campfire.presentation.resources.song_details_next_song
 import com.pandulapeter.campfire.presentation.resources.song_details_empty
@@ -129,7 +126,6 @@ internal fun SongDetailsScreen(
 ) {
     val allSongs by viewModel.allSongs.collectAsStateWithLifecycle()
     val setlists by viewModel.setlists.collectAsStateWithLifecycle()
-    val songFileNamesInSetlists by viewModel.songFileNamesInSetlists.collectAsStateWithLifecycle()
     val songTexts by viewModel.songTexts.collectAsStateWithLifecycle()
     val failedSongFileNames by viewModel.failedSongFileNames.collectAsStateWithLifecycle()
     val transpositions by viewModel.transpositions.collectAsStateWithLifecycle()
@@ -265,25 +261,6 @@ internal fun SongDetailsScreen(
                         onFontScaleReset = { viewModel.setFontScale(CampfireViewModel.DEFAULT_FONT_SCALE) },
                     )
                 }
-                if (!isPerformanceModeEnabled) {
-                    IconButton(
-                        onClick = {
-                            currentSong?.let {
-                                viewModel.showDialog(CampfireViewModel.DialogType.SetlistPicker(song = it, lockedSetlistFileName = destination.setlistFileName))
-                            }
-                        }
-                    ) {
-                        AnimatedContent(
-                            targetState = currentSong?.fileName in songFileNamesInSetlists,
-                            transitionSpec = { fadeIn() togetherWith fadeOut() },
-                        ) { isInSetlist ->
-                            Icon(
-                                painter = painterResource(if (isInSetlist) Res.drawable.ic_setlists else Res.drawable.ic_setlists_outline),
-                                contentDescription = stringResource(Res.string.songs_setlist_assignments),
-                            )
-                        }
-                    }
-                }
                 if (!windowSize.usesInlineSongControls) {
                     IconButton(
                         onClick = {
@@ -298,13 +275,11 @@ internal fun SongDetailsScreen(
                         )
                     }
                 }
-                // The same actions as the song list's menu, minus the one the bar next to it already offers.
                 currentSong?.takeIf { !isPerformanceModeEnabled }?.let { song ->
                     SongActionsButton(
                         viewModel = viewModel,
                         song = song,
                         lockedSetlistFileName = destination.setlistFileName,
-                        shouldIncludeSetlistAssignments = false,
                     )
                 }
             },

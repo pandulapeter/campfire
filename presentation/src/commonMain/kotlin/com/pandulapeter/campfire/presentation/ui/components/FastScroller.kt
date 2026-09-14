@@ -72,16 +72,18 @@ import kotlin.math.roundToInt
  * is currently at the top of the list. The scroller stays visible for as long as the list is scrollable. A narrower
  * strip runs down the whole edge as the track: pressing it anywhere moves the thumb under the finger, and a track
  * fades in behind the thumb while it is pointed at or dragged to show how far that reaches. Every other touch goes
- * through to the list.
+ * through to the list, and the rows of that list keep their own controls clear of it by [FAST_SCROLLER_CLEARANCE].
  *
- * @param labelForItem Returns the label of the section the item at the given index belongs to, or null if none.
+ * @param labelForItem Returns the label of the section the item at the given index belongs to, or null if none. A
+ *   list whose sections have no single character to go by (the setlists, named by whatever somebody called them)
+ *   leaves it out, and the thumb is then dragged with no bubble at all.
  */
 @OptIn(ExperimentalMaterial3ExpressiveApi::class)
 @Composable
 internal fun BoxScope.FastScroller(
     modifier: Modifier = Modifier,
     gridState: LazyGridState,
-    labelForItem: (index: Int) -> String?,
+    labelForItem: (index: Int) -> String? = { null },
 ) {
     val coroutineScope = rememberCoroutineScope()
     val minThumbHeight = with(LocalDensity.current) { MIN_THUMB_HEIGHT.toPx() }
@@ -169,10 +171,10 @@ internal fun BoxScope.FastScroller(
                 )
             }
         }
-        // Two touch targets, so that touches elsewhere reach the list. The track runs the full height, past the overflow
-        // button of every row, so it is kept narrow enough to end where that button starts (with the button moved
-        // inwards by `FAST_SCROLLER_CLEARANCE`); the wider target only follows the thumb, where a finger that is not
-        // looking has to be caught, and only ever covers the one or two rows next to it.
+        // Two touch targets, so that touches elsewhere reach the list. The track runs the full height, past the controls
+        // at the end of every row, so it is kept narrow enough to end where they start (with them moved inwards by
+        // `FAST_SCROLLER_CLEARANCE`); the wider target only follows the thumb, where a finger that is not looking has
+        // to be caught, and only ever covers the one or two rows next to it.
         if (isVisible) {
             Box(
                 modifier = Modifier
@@ -324,7 +326,9 @@ private class ScrollMetrics(
 /**
  * What a row of the list this scroller runs down keeps its own controls away from the end edge by. The thumb's touch
  * target is wide enough to be caught by a finger that is not looking, which is most of the way across the overflow
- * button sitting at the end of every row, and the one of the two that can move is the button.
+ * button at the end of every row, and the one of the two that can move is the row. A setlist row's drag handle goes
+ * in front of its overflow button rather than on the edge after it, since the full-height track would otherwise take
+ * every press meant for it, and that way the button lands where it does on the songs screen.
  */
 internal val FAST_SCROLLER_CLEARANCE = 16.dp
 

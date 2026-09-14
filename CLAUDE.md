@@ -38,8 +38,8 @@ app:android / app:desktop / app:ios / app:web   entry points, platform chrome, "
       data:source:remote:api -> :implementation   the sync contracts and the Dropbox provider; the only module in
                                                   the project that makes a network call (see Sync below)
         data:model                           domain models, shared by everything
-  chordpro                                   dependency-free ChordPro model, parser, serializer, transposer, tag
-                                             editor and highlighter. Depends on nothing; used by
+  chordpro                                   dependency-free ChordPro model, parser, serializer, transposer, tab
+                                             wrapper, tag editor and highlighter. Depends on nothing; used by
                                              :data:source:local:implementation (metadata for the song list),
                                              :domain:api and :presentation
 ```
@@ -121,10 +121,12 @@ preferences/sync-index.json          what the last successful sync run saw
   carries a list of codes and nothing else, and asks the platform what each is called in the language the app is set
   to (`java.util.Locale`, `NSLocale`, `Intl.DisplayNames` behind `:presentation`'s `languageDisplayName`), falling
   back to the code in capitals where it cannot say.
-- **The app is shipped with a handful of songs and one setlist**, in
+- **The app is shipped with two songs and one setlist**, in
   `presentation/src/commonMain/composeResources/files/demo`: public domain campfire standards, bundled as the plain
   ChordPro and setlist files they are and reaching the library through the ordinary import, so they collide, are
-  numbered and are disregarded when the same file is already there like anything else. They are planted once, on a
+  numbered and are disregarded when the same file is already there like anything else. The songs are few on purpose
+  and chosen so that between them they use the directives the song details screen draws, and every one carries a
+  `Demo` tag, so that they can be filtered out of a library that has grown past them. They are planted once, on a
   run that finds no preferences document *and* an empty library — which is what a fresh installation looks like from
   the inside, and is why a library somebody has been using is never touched — and Settings offers to add them for as
   long as the library is missing any of them, so a deleted one comes back by being asked for rather than on its own.

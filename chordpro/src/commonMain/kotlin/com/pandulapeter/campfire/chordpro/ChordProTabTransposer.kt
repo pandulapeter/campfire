@@ -28,7 +28,7 @@ internal object ChordProTabTransposer {
      * than [MAX_FRET] frets), the environment is left alone rather than half transposed.
      */
     fun transpose(lines: List<String>, semitones: Int, preferFlats: Boolean): List<String> {
-        val isStaffLine = lines.map(::isStaffLine)
+        val isStaffLine = lines.map(ChordProSyntax::isStaffLine)
         val frets = lines.filterIndexed { index, _ -> isStaffLine[index] }.flatMap(::fretNumbers)
         val shift = semitones + (octaveOffset(frets, semitones) ?: return lines)
         return lines.mapIndexed { index, line ->
@@ -46,30 +46,7 @@ internal object ChordProTabTransposer {
      * viewer prefers reaches a tab, where transposing would mean the frets instead.
      */
     fun rewriteChordNames(lines: List<String>, rename: (String) -> String) =
-        lines.map { line -> if (isStaffLine(line)) line else rewriteChordLine(line, rename) }
-
-    /**
-     * A tablature line: enough dashes to be a staff, and made mostly of the characters a staff is made of. The letters
-     * of a technique (`h`, `p`, `x`, …) and the string name in front of the line are the minority that is allowed.
-     */
-    private fun isStaffLine(line: String): Boolean {
-        var dashCount = 0
-        var staffCharacterCount = 0
-        var otherCharacterCount = 0
-        line.forEach { character ->
-            when {
-                character == DASH -> {
-                    dashCount++
-                    staffCharacterCount++
-                }
-
-                character == '|' || character.isDigit() -> staffCharacterCount++
-                character.isWhitespace() -> Unit
-                else -> otherCharacterCount++
-            }
-        }
-        return dashCount >= MINIMUM_DASH_COUNT && staffCharacterCount >= otherCharacterCount
-    }
+        lines.map { line -> if (ChordProSyntax.isStaffLine(line)) line else rewriteChordLine(line, rename) }
 
     /** The positions of the fret numbers of a staff line: every run of digits that is not the count of an `x4`. */
     private fun fretRanges(line: String): List<IntRange> {
@@ -179,7 +156,6 @@ internal object ChordProTabTransposer {
 
     private const val MAX_FRET = 24
     private const val SEMITONES_IN_OCTAVE = 12
-    private const val MINIMUM_DASH_COUNT = 3
     private const val DASH = '-'
     private const val REPEAT_COUNT_MARKER = 'x' // The `x` of an `x4` after a bar, whose number is not a fret.
     private const val SOURCE_COMMENT = "#"

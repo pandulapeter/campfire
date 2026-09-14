@@ -25,8 +25,9 @@ sealed interface ChordProLine {
     }
 
     /**
-     * One line inside {start_of_tab}: monospaced, never reflowed; transposed on the frets, not on the notes. A run
-     * of them can sit anywhere inside a section, with lyrics before and after it.
+     * One line inside {start_of_tab}: monospaced, cut at its columns rather than reflowed by its words when it is
+     * too wide (see [com.pandulapeter.campfire.chordpro.ChordProTabWrapper]); transposed on the frets, not on the
+     * notes. A run of them can sit anywhere inside a section, with lyrics before and after it.
      */
     data class Tab(val text: String) : ChordProLine
 

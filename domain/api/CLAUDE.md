@@ -34,6 +34,11 @@ paths, `Is*` for a question with a yes or no answer (`IsFirstRun`), or a verb fo
   when the user asks (`Song.canUpdateFileName` is what offers it), and everything that named the old one — every
   setlist entry holding the song, its saved transposition — moves with it, which is the same walk
   `DeleteSongUseCase` makes to drop those references.
+- `SongFilter` is the tags and languages the song list is narrowed to, and the one input of `GetScreenDataUseCase`
+  that comes from above rather than from a repository: the presentation layer holds it and passes it in as a flow.
+  It is deliberately not a preference and never written anywhere — a filter is a question asked of the library for
+  the moment, and one that came back on the next launch would read as songs having gone missing. How several selected
+  tags combine (`UserPreferences.TagMatchMode`) is a standing choice, and stays a preference.
 - `GetUserPreferencesUseCase` is separate from `ScreenData` on purpose: the theme and the language must reach the UI
   before the library has been scanned, and folding them into the aggregate would make the whole app wait for the songs.
 - `TransposeChordProUseCase` transposes the parsed model (what the viewer shows), `TransposeChordProTextUseCase` the raw
