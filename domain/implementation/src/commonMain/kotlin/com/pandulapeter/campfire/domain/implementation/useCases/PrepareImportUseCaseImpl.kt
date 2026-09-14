@@ -111,10 +111,11 @@ class PrepareImportUseCaseImpl internal constructor(
 
     /**
      * A setlist is compared by what is in it rather than by its stored document, which carries a priority this
-     * import assigns itself and would therefore never match. Whether it is archived does count, since that is the
-     * user's own answer about the setlist and travels with the file the way its title does. The entries are held against the names they arrived
-     * with: a song that had to be renamed is followed when the plan is applied, and a setlist pointing at one is a
-     * different setlist anyway.
+     * import assigns itself and would therefore never match. Its description and whether it is archived do count,
+     * since both are the user's own words about the setlist and travel with the file the way its title does: a setlist
+     * exported after only its description changed is a different setlist, not one that is already there. The entries
+     * are held against the names they arrived with: a song that had to be renamed is followed when the plan is
+     * applied, and a setlist pointing at one is a different setlist anyway.
      */
     private suspend fun planSetlists(files: List<ImportedFile>, skippedFileNames: MutableList<String>): List<ImportPlan.SetlistEntry> {
         val existingSetlists = setlistRepository.loadSetlistsIfNeeded().orEmpty().associateBy { it.fileName }
@@ -138,7 +139,8 @@ class PrepareImportUseCaseImpl internal constructor(
         }
     }
 
-    private fun Setlist.holdsTheSameAs(other: Setlist) = title == other.title && isArchived == other.isArchived && entries == other.entries
+    private fun Setlist.holdsTheSameAs(other: Setlist) =
+        title == other.title && description == other.description && isArchived == other.isArchived && entries == other.entries
 
     private companion object {
         /** The ChordPro family plus plain text, without the dots, which is how a file name is asked for its type. */
