@@ -22,8 +22,8 @@ direction.
   the build manifest below). The headers are carried over to the replacement response, so it still says
   `application/wasm` and `WebAssembly.instantiateStreaming` keeps compiling as it downloads. The download owns the
   first 92% and the rest is a decay that only ends when Kotlin calls `window.campfireReady()`; `campfire.js` itself
-  is loaded by a `<script>` tag, which can report nothing, but it is 3% of a cold start. A `.wasm` download that
-  fails, or an error or unhandled rejection before `campfireReady()`, stops the bar and shows a message with a
+  is loaded by a `<script>` tag, which can report no progress, but it is 3% of a cold start. A `.wasm` or
+  `campfire.js` download that fails, or an error or unhandled rejection before `campfireReady()`, stops the bar and shows a message with a
   "Try again" button that reloads the page; those listeners are removed once the app is ready.
   Compose empties the element it is given, so it gets `#app` and the loading screen is a sibling that outlives the
   handover. `DismissLoadingScreen` in `CampfireWebApplication.kt` waits two frames before reporting ready —

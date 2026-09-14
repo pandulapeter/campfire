@@ -256,6 +256,9 @@
 
         window.addEventListener('error', onError);
         window.addEventListener('unhandledrejection', onError);
+        // A script that fails to download reports it to its own tag only, never to the window, so the tag below
+        // is wired to this by hand.
+        window.campfireLoadFailed = showFailure;
 
         var nativeFetch = window.fetch;
         window.fetch = function (input, init) {
@@ -327,6 +330,6 @@
         schedule();
     })();
 </script>
-<script type="application/javascript" src="campfire.js"></script>
+<script type="application/javascript" src="campfire.js" onerror="window.campfireLoadFailed()"></script>
 </body>
 </html>
