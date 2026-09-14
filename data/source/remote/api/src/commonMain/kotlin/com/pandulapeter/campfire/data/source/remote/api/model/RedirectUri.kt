@@ -15,19 +15,24 @@ package com.pandulapeter.campfire.data.source.remote.api.model
  *
  * Written out rather than taken from a URL library because the four platforms have four different ones, and this
  * is the only URL Campfire ever has to pick apart. Percent escapes are decoded, since an `error_description` is
- * prose and arrives encoded.
+ * prose and arrives encoded. A `+` is a space only in `error` and `error_description`: OAuth percent-encodes its
+ * redirect parameters, but Dropbox form-encodes those two, and a `+` inside a `code` or a `state` is a character of
+ * the value that the exchange would fail without.
  */
 fun redirectParameters(uri: String): Map<String, String> = uri.substringAfter('?', "")
     .substringBefore('#')
     .split('&')
     .mapNotNull { parameter ->
         val name = parameter.substringBefore('=', "")
-        if (name.isEmpty()) null else name to parameter.substringAfter('=', "").urlDecode()
+        val value = parameter.substringAfter('=', "")
+        if (name.isEmpty()) null else name to value.urlDecode(isPlusSpace = name in FORM_ENCODED_PARAMETERS)
     }
     .toMap()
 
-private fun String.urlDecode(): String {
-    if (!contains('%') && !contains('+')) return this
+private val FORM_ENCODED_PARAMETERS = setOf("error", "error_description")
+
+private fun String.urlDecode(isPlusSpace: Boolean): String {
+    if (!contains('%') && !(isPlusSpace && contains('+'))) return this
     val bytes = ArrayList<Byte>(length)
     var index = 0
     while (index < length) {
@@ -44,7 +49,7 @@ private fun String.urlDecode(): String {
                     }
 
             // A form encoded query writes a space this way, and Dropbox's error descriptions are form encoded.
-            character == '+' -> {
+            isPlusSpace && character == '+' -> {
                 bytes.add(' '.code.toByte())
                 index++
             }

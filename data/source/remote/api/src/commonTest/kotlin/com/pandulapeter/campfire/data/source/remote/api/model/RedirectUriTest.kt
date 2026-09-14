@@ -58,8 +58,16 @@ class RedirectUriTest {
     @Test
     fun `survives a percent sign that is not an escape`() = assertEquals(
         expected = "100% sure",
-        actual = redirectParameters("campfire:,//oauth?note=100%+sure")["note"]
+        actual = redirectParameters("campfire:,//oauth?error_description=100%+sure")["error_description"]
     )
+
+    /** Only the human-readable parameters are form encoded; in anything else a plus sign is part of the value. */
+    @Test
+    fun `reads a plus sign as a space only where the service form encodes`() {
+        val parameters = redirectParameters("campfire://oauth?code=a+b&error_description=x+y")
+        assertEquals(expected = "a+b", actual = parameters["code"])
+        assertEquals(expected = "x y", actual = parameters["error_description"])
+    }
 
     @Test
     fun `has nothing when there is no query at all`() =
