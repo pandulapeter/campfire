@@ -76,6 +76,7 @@ import com.pandulapeter.campfire.presentation.ui.components.SearchState
 import com.pandulapeter.campfire.presentation.ui.navigation.CampfireDestination
 import com.pandulapeter.campfire.presentation.ui.platform.FilePicker
 import kotlinx.coroutines.CancellationException
+import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.FlowPreview
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.NonCancellable
@@ -550,6 +551,14 @@ class CampfireViewModel(
      */
     private var pendingImportPlan: ImportPlan? = null
 
+    /**
+     * Every batch of files waiting to be imported, taken one at a time by the consumer launched in `init`. Files are
+     * handed over whenever the system or the user feels like it - a second archive dropped while the first is still
+     * being written, a file opened with the app while the conflicts question is up - and an import can only run while
+     * no other one is, so what arrives in the meantime waits here rather than being dropped.
+     */
+    private val importQueue = Channel<ImportRequest>(Channel.UNLIMITED)
+
     /** True while the editor's text is being written, which it shows in place of its "Saved" label. */
     private val _isSavingSong = MutableStateFlow(false)
     val isSavingSong: StateFlow<Boolean> = _isSavingSong.asStateFlow()
@@ -595,6 +604,17 @@ class CampfireViewModel(
                 affected.forEach { name ->
                     val content = getSongContent(name)
                     _songTexts.update { if (content == null) it - name else it + (name to content.text) }
+                }
+            }
+        }
+        viewModelScope.launch {
+            for (request in importQueue) {
+                try {
+                    import(request.files, shouldAnnounceResult = request.shouldAnnounceResult)
+                    // The next batch waits for this one's conflicts question too: it would have nowhere to be asked.
+                    awaitImportSettled()
+                } finally {
+                    request.settled.complete(Unit)
                 }
             }
         }
@@ -922,11 +942,36 @@ class CampfireViewModel(
             _messages.send(Message.ImportFailed)
             return@launch
         }
-        import(files)
+        enqueueImport(files)
     }
 
     /** Files the system handed over: opened with Campfire, shared to it, or dropped onto it. */
-    fun importFiles(files: List<ImportedFile>) = viewModelScope.launch { import(files) }
+    fun importFiles(files: List<ImportedFile>) {
+        enqueueImport(files)
+    }
+
+    /**
+     * Puts a batch at the end of [importQueue] and returns what completes once it is over, its conflicts question
+     * answered and the import that answer decided on written. An empty batch is not queued at all.
+     */
+    private fun enqueueImport(files: List<ImportedFile>, shouldAnnounceResult: Boolean = true): CompletableDeferred<Unit> {
+        val request = ImportRequest(files = files, shouldAnnounceResult = shouldAnnounceResult)
+        if (files.isEmpty()) {
+            request.settled.complete(Unit)
+        } else {
+            importQueue.trySend(request)
+        }
+        return request.settled
+    }
+
+    /**
+     * Suspends until no import is running and none is waiting for an answer. A conflict leaves its question on screen
+     * when [import] returns, and the import the answer decides on only starts after that, so an import is over once
+     * there is neither.
+     */
+    private suspend fun awaitImportSettled() {
+        combine(_visibleDialog, _isImporting) { dialog, isImporting -> dialog is DialogType.ImportConflicts || isImporting }.first { !it }
+    }
 
     /**
      * The songs the app is shipped with, put into the library the way any other batch of files is. The settings
@@ -939,10 +984,7 @@ class CampfireViewModel(
         if (files == null) {
             _messages.send(Message.ImportFailed)
         } else {
-            import(files)
-            // A conflict leaves its question on screen when import() returns, and the import the answer decides on
-            // only starts after that, so the attempt is over once there is neither.
-            combine(_visibleDialog, _isImporting) { dialog, isImporting -> dialog is DialogType.ImportConflicts || isImporting }.first { !it }
+            enqueueImport(files).await()
         }
         // Asked of a fresh read of the library rather than of the offer, which can still be a step behind the import
         // that just finished. Where the demo is now all there, the offer is waited for until it has left the screen,
@@ -973,7 +1015,9 @@ class CampfireViewModel(
                 // library looks empty while it is still being read.
                 val library = screenData.first { it !is DataState.Loading }.data
                 if (library != null && library.unfilteredSongs.isEmpty() && library.setlists.isEmpty()) {
-                    readDemoLibrary()?.let { files -> import(files, shouldAnnounceResult = false) }
+                    // Through the queue like any other batch, so that a file opened with the app as it starts for
+                    // the first time is imported after the demo rather than racing it.
+                    readDemoLibrary()?.let { files -> enqueueImport(files, shouldAnnounceResult = false).await() }
                 }
                 saveUserPreferences(userPreferences.filterNotNull().first())
             }
@@ -1000,6 +1044,8 @@ class CampfireViewModel(
      * plan is kept here rather than in the dialog: the answer can arrive long after the screen that started this.
      */
     private suspend fun import(files: List<ImportedFile>, shouldAnnounceResult: Boolean = true) {
+        // Only ever called by the consumer of importQueue, which waits for each import to settle before the next, so
+        // this holds by construction; it is kept so that a second caller could not start an import over a running one.
         if (files.isEmpty() || _isImporting.value || pendingImportPlan != null) return
         _isImporting.update { true }
         val plan = try {
@@ -1431,6 +1477,13 @@ class CampfireViewModel(
 
     /** The upper case first character of an already normalized (lower case, accent-free) text if it is a letter. */
     private fun String.initialLetter() = firstOrNull()?.takeIf { it.isLetter() }?.uppercaseChar()
+
+    /** One batch in [importQueue]. */
+    private class ImportRequest(
+        val files: List<ImportedFile>,
+        val shouldAnnounceResult: Boolean,
+        val settled: CompletableDeferred<Unit> = CompletableDeferred(),
+    )
 
     /** Something that has happened and is worth one line of text at the bottom of the screen. */
     sealed interface Message {
