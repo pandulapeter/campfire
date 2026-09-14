@@ -27,6 +27,26 @@ import kotlinx.coroutines.sync.withLock
 import kotlinx.coroutines.sync.withPermit
 
 /**
+ * Gives a remote file the local spelling of its name where the two differ only by case.
+ *
+ * Dropbox paths are case-insensitive, so `Song.cho` here and `song.cho` there are one file to the service and two
+ * keys to [SyncPlanner]: the new-file upload of the local one would be refused as a conflict on every pass, and the
+ * file would never move. This is a property of one service surfacing in the engine on purpose - it keeps
+ * [SyncProvider]'s contract down to a flat folder of names - and it costs a service with exact names nothing, since it
+ * only ever renames a remote key that has no exact local match. Every later request uses the local spelling, which
+ * the service resolves to the same file.
+ */
+internal fun foldRemoteNamesOntoLocal(local: List<LocalFileState>, remote: List<RemoteFileState>): List<RemoteFileState> {
+    val localKeys = local.mapTo(mutableSetOf()) { it.key }
+    val localKeysByFolded = local.associate { it.key.folded() to it.key }
+    return remote.map { file ->
+        if (file.key in localKeys) file else localKeysByFolded[file.key.folded()]?.let { file.copy(key = it) } ?: file
+    }
+}
+
+private fun SyncKey.folded() = copy(name = name.lowercase())
+
+/**
  * Carries out what [SyncPlanner] worked out.
  *
  * Everything here is written so that a run which is interrupted - the network drops, the app is killed, the user
@@ -66,8 +86,9 @@ internal class SyncEngine(
             // here has no total and the indicator spins rather than sitting at zero.
             onProgress(SyncProgress())
             val files = provider.list().files
-            val plan = SyncPlanner.plan(
-                local = readLocalStates(),
+            val local = readLocalStates()
+            val remote = foldRemoteNamesOntoLocal(
+                local = local,
                 remote = files.map {
                     RemoteFileState(
                         key = SyncKey(kind = it.kind, name = it.name),
@@ -75,15 +96,15 @@ internal class SyncEngine(
                         contentHash = it.contentHash,
                     )
                 },
-                index = index,
             )
+            val plan = SyncPlanner.plan(local = local, remote = remote, index = index)
             // Which is what most runs find, so nothing below this costs anything on an ordinary launch.
             if (plan.isEmpty()) break
             val outcome = apply(
                 provider = provider,
                 plan = plan,
                 index = index,
-                contentHashes = files.associate { SyncKey(kind = it.kind, name = it.name) to it.contentHash },
+                contentHashes = remote.associate { it.key to it.contentHash },
                 onProgress = onProgress,
                 accountId = accountId,
                 lastSyncedAt = document.lastSyncedAt,

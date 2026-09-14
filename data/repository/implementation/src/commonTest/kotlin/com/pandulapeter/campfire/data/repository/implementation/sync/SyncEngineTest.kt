@@ -167,10 +167,63 @@ class SyncEngineTest {
         assertEquals(local.files.keys, provider.files.keys)
     }
 
+    @Test
+    fun `a remote name that differs from a local one only by case takes the local spelling`() = assertEquals(
+        expected = listOf(RemoteFileState(song("Song"), revision = "r1", contentHash = null)),
+        actual = foldRemoteNamesOntoLocal(
+            local = listOf(LocalFileState(song("Song"), hash = "a")),
+            remote = listOf(RemoteFileState(song("song"), revision = "r1", contentHash = null)),
+        ),
+    )
+
+    @Test
+    fun `a remote name with an exact local match is left as it is`() = assertEquals(
+        expected = listOf(
+            RemoteFileState(song("Song"), revision = "r1", contentHash = null),
+            RemoteFileState(song("song"), revision = "r2", contentHash = null),
+        ),
+        actual = foldRemoteNamesOntoLocal(
+            local = listOf(LocalFileState(song("Song"), hash = "a"), LocalFileState(song("song"), hash = "b")),
+            remote = listOf(
+                RemoteFileState(song("Song"), revision = "r1", contentHash = null),
+                RemoteFileState(song("song"), revision = "r2", contentHash = null),
+            ),
+        ),
+    )
+
+    @Test
+    fun `names are only folded within the same kind`() = assertEquals(
+        expected = listOf(RemoteFileState(SyncKey(LibraryFileKind.SETLIST, "song.cho"), revision = "r1", contentHash = null)),
+        actual = foldRemoteNamesOntoLocal(
+            local = listOf(LocalFileState(song("Song"), hash = "a")),
+            remote = listOf(RemoteFileState(SyncKey(LibraryFileKind.SETLIST, "song.cho"), revision = "r1", contentHash = null)),
+        ),
+    )
+
+    @Test
+    fun `a file whose remote name differs only by case is not uploaded as a new one`() = runTest {
+        val bytes = "Song".encodeToByteArray()
+        val local = FakeLibraryFileLocalSource(files = mapOf(song("Song") to bytes))
+        val provider = FakeSyncProvider(files = mapOf(song("song") to bytes))
+
+        val result = SyncEngine(local).synchronize(
+            provider = provider,
+            document = SyncIndexDocument(),
+            accountId = ACCOUNT_ID,
+            onProgress = {},
+            onIndexChanged = {},
+        )
+
+        assertEquals(setOf(song("Song").path), result.index.entries.keys)
+        assertEquals(setOf(song("Song")), local.files.keys)
+    }
+
     private companion object {
         const val ACCOUNT_ID = "dropbox:someone@example.com"
 
-        fun song(number: Int) = SyncKey(kind = LibraryFileKind.SONG, name = "song_$number.cho")
+        fun song(number: Int) = song(name = "song_$number")
+
+        fun song(name: String) = SyncKey(kind = LibraryFileKind.SONG, name = "$name.cho")
 
         /** An index that says the last run saw [files] with these contents, at the revision the fake starts from. */
         fun indexOf(vararg files: Pair<SyncKey, ByteArray>) = SyncIndexDocument.of(
