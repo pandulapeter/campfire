@@ -30,7 +30,7 @@ import com.pandulapeter.campfire.data.source.remote.api.PendingAuthorizationStor
 import com.pandulapeter.campfire.data.source.remote.api.SyncAuthenticator
 import com.pandulapeter.campfire.data.source.remote.api.SyncAuthorizationException
 import com.pandulapeter.campfire.data.source.remote.api.SyncNetworkException
-import com.pandulapeter.campfire.data.source.remote.api.SyncProvider
+import com.pandulapeter.campfire.data.source.remote.api.SyncProviders
 import com.pandulapeter.campfire.data.source.remote.api.model.AuthorizationCompletionPage
 import com.pandulapeter.campfire.data.source.remote.api.model.RemoteAuthorizationResponse
 import com.pandulapeter.campfire.data.source.remote.api.model.redirectParameters
@@ -57,12 +57,12 @@ import org.koin.core.annotation.Single
  * The state machine around [SyncEngine], and the only thing above the data layer that knows a service is involved
  * at all: the screens see a [SyncState], and which provider produced it is a detail of this file.
  *
- * @param providers Every provider the build has. One is connected at a time - two would mean two remote folders
+ * @param syncProviders Every provider the build has. One is connected at a time - two would mean two remote folders
  *   with a claim on the same file names, and no answer to which of them a rename in one of them means.
  */
 @Single
 internal class SyncRepositoryImpl(
-    private val providers: List<SyncProvider>,
+    syncProviders: SyncProviders,
     private val authenticator: SyncAuthenticator,
     private val pendingAuthorizationStore: PendingAuthorizationStore,
     private val syncStateLocalSource: SyncStateLocalSource,
@@ -77,6 +77,7 @@ internal class SyncRepositoryImpl(
     libraryFileLocalSource: LibraryFileLocalSource,
 ) : SyncRepository {
 
+    private val providers = syncProviders.all
     private val engine = SyncEngine(libraryFileLocalSource)
     private val _syncState = MutableStateFlow<SyncState>(SyncState.Disconnected)
     override val syncState = _syncState.asStateFlow()

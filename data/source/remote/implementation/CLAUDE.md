@@ -15,7 +15,8 @@ list of providers — while the stores and the four platform authenticators (`An
 `@Single` in its own source set) declare themselves. The only module in the project that makes a network call, and
 the only one that sees Ktor.
 
-Providers are registered as a `List<SyncProvider>`, and **a provider the build has no credentials for is left out of
+Providers are registered as one `SyncProviders` holding the list (never as a bare `List<SyncProvider>`, which the Koin
+compiler plugin injects as `getAll<SyncProvider>()` and so as an empty list), and **a provider the build has no credentials for is left out of
 that list entirely** rather than offered and then failing — the settings screen shows what is in it, so a build
 without a key says so instead of inviting the user to press a button that cannot work. The key goes in
 `local.properties` as `campfire.dropbox.appKey` (see the Build section of the root `CLAUDE.md`).

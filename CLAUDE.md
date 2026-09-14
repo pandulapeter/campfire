@@ -92,7 +92,10 @@ preferences/sync-index.json          what the last successful sync run saw
   the one `@KoinApplication`, and `startCampfireDependencyGraph()` is what the four entry points start Koin with;
   the plugin checks the whole graph there at compile time, so a definition asking for something nobody declares
   fails the build. A dependency only a platform shell provides — the Android `Context` — is marked `@Provided`,
-  which tells that check not to look for it. `:chordpro` has none of this: it is a set of stateless objects, reached
+  which tells that check not to look for it. **Never inject a `List<T>`**: the plugin resolves a list parameter as
+  `getAll<T>()`, every definition bound to `T`, and not as a definition whose type is the list, so it compiles, passes
+  that check and arrives empty. A list that is itself a definition is wrapped in a type of its own (`SyncProviders`).
+  `:chordpro` has none of this: it is a set of stateless objects, reached
   through use cases.
 - Implementation classes are `internal` and named `<Interface>Impl`. Use cases are `operator fun invoke`.
 - Repositories extend `BaseLocalDataRepository`, which holds the cached `DataState` and the read-once logic.
