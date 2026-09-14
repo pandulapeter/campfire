@@ -21,6 +21,10 @@ interface RenameSongFileUseCase {
      * name is the identity of a song: it is what a setlist points at, what sync addresses and, on the platforms
      * where the library is a folder the user can open, something they may have chosen themselves.
      *
+     * The move is not undone when a reference cannot be followed: every setlist and the transposition are still
+     * attempted, and the call then throws, naming how many were left behind. The setlists among them go on pointing
+     * at the old name, which shows the song as missing there until the entry is fixed by hand.
+     *
      * @return The new file name, or null if nothing moved - the file could not be read, or it was already named
      *   that way. The caller is what still holds the old name: the screens showing the song, and the caches keyed
      *   by it.
