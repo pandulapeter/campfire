@@ -239,15 +239,21 @@ object ChordProTransposer {
     }
 
     /** Applies [rename] to every `[chord]` of a raw line, leaving the annotations, the empty brackets and the text. */
-    internal fun rewriteLyricsLineChords(rawLine: String, rename: (String) -> String) =
-        ChordProSyntax.chordRegex.replace(rawLine) { match ->
-            val content = match.groupValues[1].trim()
-            if (content.isEmpty() || content.startsWith(ANNOTATION_MARKER)) {
-                match.value
-            } else {
-                "[${rename(content)}]"
+    internal fun rewriteLyricsLineChords(rawLine: String, rename: (String) -> String): String {
+        val brackets = ChordProSyntax.brackets(rawLine)
+        if (brackets.isEmpty()) return rawLine
+        return buildString(rawLine.length) {
+            var consumedUntil = 0
+            brackets.forEach { bracket ->
+                val content = bracket.content.trim()
+                val isChord = content.isNotEmpty() && !content.startsWith(ANNOTATION_MARKER)
+                append(rawLine, consumedUntil, if (isChord) bracket.range.first else bracket.range.last + 1)
+                if (isChord) append(BRACKET_OPEN).append(rename(content)).append(BRACKET_CLOSE)
+                consumedUntil = bracket.range.last + 1
             }
+            append(rawLine, consumedUntil, rawLine.length)
         }
+    }
 
     private fun transposeGridLine(rawLine: String, trimmedLine: String, rename: (String) -> String): String {
         val matches = tokenRegex.findAll(trimmedLine).toList()
@@ -294,6 +300,8 @@ object ChordProTransposer {
     private const val DOUBLE_REPEAT = "%%"
     private const val TAB = "tab"
     private const val GRID = "grid"
+    private const val BRACKET_OPEN = '['
+    private const val BRACKET_CLOSE = ']'
     private val tokenRegex = Regex("\\S+")
     private val sharpNames = listOf("C", "C#", "D", "D#", "E", "F", "F#", "G", "G#", "A", "A#", "B")
     private val flatNames = listOf("C", "Db", "D", "Eb", "E", "F", "Gb", "G", "Ab", "A", "Bb", "B")

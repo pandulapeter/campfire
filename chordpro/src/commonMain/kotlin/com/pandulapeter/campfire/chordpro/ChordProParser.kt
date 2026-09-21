@@ -197,9 +197,9 @@ object ChordProParser {
         val text = StringBuilder()
         val chords = mutableListOf<ChordProLine.Lyrics.Chord>()
         var consumedUntil = 0
-        ChordProSyntax.chordRegex.findAll(rawLine).forEach { match ->
-            text.append(rawLine, consumedUntil, match.range.first)
-            val content = match.groupValues[1].trim()
+        ChordProSyntax.brackets(rawLine).forEach { bracket ->
+            text.append(rawLine, consumedUntil, bracket.range.first)
+            val content = bracket.content.trim()
             if (content.isNotEmpty()) {
                 val isAnnotation = content.startsWith(ANNOTATION_MARKER)
                 chords += ChordProLine.Lyrics.Chord(
@@ -208,7 +208,7 @@ object ChordProParser {
                     isAnnotation = isAnnotation,
                 )
             }
-            consumedUntil = match.range.last + 1
+            consumedUntil = bracket.range.last + 1
         }
         text.append(rawLine, consumedUntil, rawLine.length)
         return ChordProLine.Lyrics(text = text.toString(), chords = chords)

@@ -106,7 +106,7 @@ internal object ChordProTabTransposer {
     private fun rewriteChordLine(line: String, rename: (String) -> String): String {
         val trimmedLine = line.trim()
         if (trimmedLine.isEmpty() || trimmedLine.startsWith(SOURCE_COMMENT) || ChordProSyntax.matchDirective(trimmedLine) != null) return line
-        if (ChordProSyntax.chordRegex.containsMatchIn(line)) return ChordProTransposer.rewriteLyricsLineChords(line, rename)
+        if (ChordProSyntax.hasBrackets(line)) return ChordProTransposer.rewriteLyricsLineChords(line, rename)
         val replacements = chordWords(line)?.map { word ->
             val renamedName = rename(word.name)
             word.range to if (word.isParenthesized) "($renamedName)" else renamedName

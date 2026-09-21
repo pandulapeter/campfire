@@ -17,8 +17,6 @@ import com.pandulapeter.campfire.chordpro.model.GridToken
  */
 internal object ChordProSyntax {
 
-    val directiveRegex = Regex("^\\{\\s*([\\w-]+)\\s*(?::\\s*(.*?))?\\s*\\}$")
-    val chordRegex = Regex("\\[(.*?)]")
 
     /**
      * A whole word that is a chord name: a note (German `H` included), an optional accidental, a quality, extensions
@@ -46,6 +44,11 @@ internal object ChordProSyntax {
     private const val SOURCE_COMMENT = "#"
     private const val STAFF_DASH = '-'
     private const val MINIMUM_STAFF_DASH_COUNT = 3
+    private const val DIRECTIVE_OPEN = '{'
+    private const val DIRECTIVE_CLOSE = '}'
+    private const val DIRECTIVE_VALUE_SEPARATOR = ':'
+    private const val BRACKET_OPEN = '['
+    private const val BRACKET_CLOSE = ']'
 
     /**
      * The two ISO codes that mean "there is no language here" — undetermined and no linguistic content. They say
@@ -105,13 +108,47 @@ internal object ChordProSyntax {
         return if (endsWithLineBreak(original) && lines.isNotEmpty()) joined + separator else joined
     }
 
-    /** Matches a directive line, or returns null for content. The name comes back lowercase, the value trimmed. */
+    /** Matches a directive in one linear walk, which keeps malformed input cheap while the user types. */
     fun matchDirective(trimmedLine: String): Directive? {
-        val match = directiveRegex.matchEntire(trimmedLine) ?: return null
-        val name = match.groupValues[1].lowercase()
-        val value = if (match.groupValues.size > 2) match.groups[2]?.value else null
-        return Directive(name = name, value = value)
+        val closeIndex = trimmedLine.length - 1
+        if (closeIndex < 1 || trimmedLine[0] != DIRECTIVE_OPEN || trimmedLine[closeIndex] != DIRECTIVE_CLOSE) return null
+        var index = 1
+        while (index < closeIndex && trimmedLine[index].isWhitespace()) index++
+        val nameStartIndex = index
+        while (index < closeIndex && trimmedLine[index].isDirectiveNameCharacter) index++
+        if (index == nameStartIndex) return null
+        val name = trimmedLine.substring(nameStartIndex, index).lowercase()
+        while (index < closeIndex && trimmedLine[index].isWhitespace()) index++
+        return when {
+            index == closeIndex -> Directive(name, null)
+            trimmedLine[index] == DIRECTIVE_VALUE_SEPARATOR -> Directive(name, trimmedLine.substring(index + 1, closeIndex).trim())
+            else -> null
+        }
     }
+
+    /** Every closed bracket pair from left to right; an unclosed opening bracket ends the walk. */
+    fun brackets(line: String): List<Bracket> {
+        val brackets = mutableListOf<Bracket>()
+        var index = 0
+        while (true) {
+            val openIndex = line.indexOf(BRACKET_OPEN, index)
+            if (openIndex < 0) break
+            val closeIndex = line.indexOf(BRACKET_CLOSE, openIndex + 1)
+            if (closeIndex < 0) break
+            brackets += Bracket(openIndex..closeIndex, line.substring(openIndex + 1, closeIndex))
+            index = closeIndex + 1
+        }
+        return brackets
+    }
+
+    /** Whether [line] contains at least one closed bracket pair. */
+    fun hasBrackets(line: String): Boolean {
+        val openIndex = line.indexOf(BRACKET_OPEN)
+        return openIndex >= 0 && line.indexOf(BRACKET_CLOSE, openIndex + 1) >= 0
+    }
+
+    /** The characters an ASCII directive name may contain. */
+    private val Char.isDirectiveNameCharacter get() = this in 'a'..'z' || this in 'A'..'Z' || this in '0'..'9' || this == '_' || this == '-'
 
     /**
      * The tag a directive carries, or null if it is not a tag directive. ChordPro documents `{tag: Needs study}` and
@@ -303,4 +340,7 @@ internal object ChordProSyntax {
     }
 
     data class Directive(val name: String, val value: String?)
+
+    /** One closed bracket pair and its untrimmed content. */
+    data class Bracket(val range: IntRange, val content: String)
 }

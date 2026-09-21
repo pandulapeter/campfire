@@ -62,11 +62,11 @@ object ChordProHighlighter {
                     tokens += directive.tokens(line = line, lineStart = lineStart)
                 }
 
-                !isInsideTab -> ChordProSyntax.chordRegex.findAll(line).forEach { match ->
+                !isInsideTab -> ChordProSyntax.brackets(line).forEach { bracket ->
                     tokens += Token(
-                        type = if (match.groupValues[1].startsWith(ANNOTATION_PREFIX)) TokenType.ANNOTATION else TokenType.CHORD,
-                        start = lineStart + match.range.first,
-                        end = lineStart + match.range.last + 1,
+                        type = if (bracket.content.startsWith(ANNOTATION_PREFIX)) TokenType.ANNOTATION else TokenType.CHORD,
+                        start = lineStart + bracket.range.first,
+                        end = lineStart + bracket.range.last + 1,
                     )
                 }
             }
