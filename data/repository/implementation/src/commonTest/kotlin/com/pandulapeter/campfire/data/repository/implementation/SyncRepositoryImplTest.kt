@@ -1,0 +1,110 @@
+/*
+ * This file is part of Campfire.
+ * Copyright (c) Pandula Péter 2017-2026.
+ * https://github.com/pandulapeter/campfire
+ *
+ * This Source Code Form is subject to the terms of the Mozilla Public License, v. 2.0.
+ * If a copy of the MPL was not distributed with this file, You can obtain one at
+ * https://mozilla.org/MPL/2.0/.
+ */
+package com.pandulapeter.campfire.data.repository.implementation
+
+import com.pandulapeter.campfire.data.model.domain.LibraryFileKind
+import com.pandulapeter.campfire.data.model.domain.SyncAccount
+import com.pandulapeter.campfire.data.model.domain.SyncDeletionPolicy
+import com.pandulapeter.campfire.data.model.domain.SyncFailureReason
+import com.pandulapeter.campfire.data.model.domain.SyncOutcome
+import com.pandulapeter.campfire.data.model.domain.SyncProviderId
+import com.pandulapeter.campfire.data.model.domain.SyncState
+import com.pandulapeter.campfire.data.repository.implementation.sync.FakeLibraryFileLocalSource
+import com.pandulapeter.campfire.data.repository.implementation.sync.FakePendingAuthorizationStore
+import com.pandulapeter.campfire.data.repository.implementation.sync.FakeSyncAuthenticator
+import com.pandulapeter.campfire.data.repository.implementation.sync.FakeSyncProvider
+import com.pandulapeter.campfire.data.repository.implementation.sync.FakeSyncStateLocalSource
+import com.pandulapeter.campfire.data.repository.implementation.sync.RecordingSetlistRepository
+import com.pandulapeter.campfire.data.repository.implementation.sync.RecordingSongRepository
+import com.pandulapeter.campfire.data.repository.implementation.sync.SyncKey
+import com.pandulapeter.campfire.data.source.local.api.LibraryStorageException
+import com.pandulapeter.campfire.data.source.remote.api.SyncProviders
+import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.test.runTest
+import kotlin.test.Test
+import kotlin.test.assertEquals
+import kotlin.test.assertFalse
+import kotlin.test.assertIs
+import kotlin.test.assertNull
+import kotlin.test.assertTrue
+
+/**
+ * The repository around the engine: what a run reports and what it leaves in the index when something other than the
+ * files goes wrong, which the engine's own tests cannot show since the engine never writes the index itself.
+ */
+class SyncRepositoryImplTest {
+
+    @Test
+    fun `a run whose index cannot be written ends as a storage failure`() = runTest {
+        val stateLocalSource = FakeSyncStateLocalSource(onSaveIndex = { throw LibraryStorageException("Full") })
+        val repository = repository(provider = FakeSyncProvider(account = ACCOUNT), stateLocalSource = stateLocalSource)
+
+        repository.restore()
+        repository.synchronize(SyncDeletionPolicy.ASK)
+        val state = repository.awaitOutcome()
+
+        assertEquals(SyncOutcome.Failure(SyncFailureReason.STORAGE), state.lastOutcome)
+        assertNull(state.progress)
+    }
+
+    @Test
+    fun `a periodic index write that fails does not end the run`() = runTest {
+        val stateLocalSource = FakeSyncStateLocalSource(
+            onSaveIndex = { document ->
+                if (document != null && "\"isRunInProgress\": true" in document && SONG.name in document) {
+                    throw LibraryStorageException("Full")
+                }
+            },
+        )
+        val repository = repository(
+            provider = FakeSyncProvider(files = mapOf(SONG to "Song".encodeToByteArray()), account = ACCOUNT),
+            stateLocalSource = stateLocalSource,
+        )
+
+        repository.restore()
+        repository.synchronize(SyncDeletionPolicy.ASK)
+        val state = repository.awaitOutcome()
+
+        val outcome = assertIs<SyncOutcome.Success>(state.lastOutcome)
+        assertEquals(1, outcome.summary.downloaded)
+        val index = stateLocalSource.index.orEmpty()
+        assertTrue(SONG.name in index)
+        assertFalse("\"isRunInProgress\": true" in index)
+    }
+
+    private fun repository(
+        provider: FakeSyncProvider,
+        stateLocalSource: FakeSyncStateLocalSource = FakeSyncStateLocalSource(),
+        libraryFileLocalSource: FakeLibraryFileLocalSource = FakeLibraryFileLocalSource(),
+        songRepository: RecordingSongRepository = RecordingSongRepository(),
+        setlistRepository: RecordingSetlistRepository = RecordingSetlistRepository(),
+    ) = SyncRepositoryImpl(
+        syncProviders = SyncProviders(listOf(provider)),
+        authenticator = FakeSyncAuthenticator(),
+        pendingAuthorizationStore = FakePendingAuthorizationStore(),
+        syncStateLocalSource = stateLocalSource,
+        songRepository = songRepository,
+        setlistRepository = setlistRepository,
+        libraryFileLocalSource = libraryFileLocalSource,
+    )
+
+    /**
+     * The run is on the repository's own dispatcher rather than the test's, so it is waited for through the state it
+     * reports; a run that never reports is failed by `runTest`'s own timeout.
+     */
+    private suspend fun SyncRepositoryImpl.awaitOutcome() = syncState.first {
+        it is SyncState.Connected && !it.isSyncing && it.lastOutcome != null
+    } as SyncState.Connected
+
+    private companion object {
+        val ACCOUNT = SyncAccount(providerId = SyncProviderId.DROPBOX, displayName = "Someone", email = "someone@example.com")
+        val SONG = SyncKey(kind = LibraryFileKind.SONG, name = "song_1.cho")
+    }
+}

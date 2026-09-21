@@ -38,6 +38,7 @@ import kotlinx.coroutines.cancelAndJoin
 import kotlin.time.Clock
 import kotlin.time.ExperimentalTime
 import kotlinx.coroutines.CancellationException
+import kotlinx.coroutines.CoroutineExceptionHandler
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
@@ -87,8 +88,16 @@ internal class SyncRepositoryImpl(
      * A run belongs to the app, not to whatever screen started it. This repository is a singleton, so a sync
      * carries on while the user moves around the app, and on Android it survives the activity being destroyed -
      * which is what lets a foreground service keep it going after the app has been left.
+     *
+     * Nothing launched here has anybody to throw to, and an exception that leaves a job with no handler ends the
+     * process on Android and iOS. Every job is written not to throw; the handler is there for the one that one day
+     * does, because sync is something the app does on the side and must never be what closes it.
      */
-    private val scope = CoroutineScope(SupervisorJob() + Dispatchers.Default)
+    private val scope = CoroutineScope(
+        SupervisorJob() + Dispatchers.Default + CoroutineExceptionHandler { _, throwable ->
+            println("A sync job ended in an exception nothing caught: $throwable")
+        },
+    )
     private var syncJob: Job? = null
 
     /** One run at a time: two of them over the same files would each undo half of what the other did. */
@@ -142,7 +151,7 @@ internal class SyncRepositoryImpl(
             )
         }
         if (document.isRunInProgress) {
-            saveIndex(document.copy(isRunInProgress = false))
+            saveIndexQuietly(document.copy(isRunInProgress = false))
         }
         return SyncRepository.RestoreResult(
             isConnected = true,
@@ -273,7 +282,7 @@ internal class SyncRepositoryImpl(
                     is SyncEngine.Result.DeletionsNeedConfirmation -> {
                         // The run stopped before anything moved, so there is nothing for the lists to read again and
                         // the index only has to stop saying that a run is going.
-                        latestIndex?.let { saveIndex(it.copy(isRunInProgress = false)) }
+                        latestIndex?.let { saveIndexQuietly(it.copy(isRunInProgress = false)) }
                         updateConnected {
                             it.copy(
                                 progress = null,
@@ -304,7 +313,7 @@ internal class SyncRepositoryImpl(
                 // Whatever did move before the stop is on disk, so the lists still have to be told about it.
                 withContext(NonCancellable) {
                     indexWriteJob?.cancelAndJoin()
-                    latestIndex?.let { saveIndex(it.copy(isRunInProgress = false)) }
+                    latestIndex?.let { saveIndexQuietly(it.copy(isRunInProgress = false)) }
                     rescanLibrary()
                 }
                 updateConnected { it.copy(progress = null, lastOutcome = SyncOutcome.Interrupted) }
@@ -312,7 +321,7 @@ internal class SyncRepositoryImpl(
             } catch (exception: Exception) {
                 println("The sync run failed: ${exception.message}")
                 indexWriteJob?.cancelAndJoin()
-                latestIndex?.let { saveIndex(it.copy(isRunInProgress = false)) }
+                latestIndex?.let { saveIndexQuietly(it.copy(isRunInProgress = false)) }
                 updateConnected { it.copy(progress = null, lastOutcome = SyncOutcome.Failure(exception.toFailureReason())) }
             } finally {
                 // The one thing that has to be true on every way out, including any added later: no progress means
@@ -350,7 +359,7 @@ internal class SyncRepositoryImpl(
         val now = Clock.System.now().toEpochMilliseconds()
         if (now - lastIndexWriteAt < INDEX_WRITE_INTERVAL_MS) return
         lastIndexWriteAt = now
-        indexWriteJob = scope.launch { saveIndex(document) }
+        indexWriteJob = scope.launch { saveIndexQuietly(document) }
     }
 
     /**
@@ -457,6 +466,20 @@ internal class SyncRepositoryImpl(
     }
 
     private suspend fun saveIndex(document: SyncIndexDocument) = syncStateLocalSource.saveSyncIndex(json.encodeToString(document))
+
+    /**
+     * For the writes nobody is waiting on the result of - the periodic one and the ones made on the way out of a run.
+     * The index only ever saves work: whatever it fails to record looks unsynced to the next run, which is a slower
+     * run and not a wrong one, so a failure here is not worth more than a line in the log. A run whose storage is
+     * really gone still says so, through the opening write and the one that completes it.
+     */
+    private suspend fun saveIndexQuietly(document: SyncIndexDocument) = try {
+        saveIndex(document)
+    } catch (exception: CancellationException) {
+        throw exception
+    } catch (exception: Exception) {
+        println("Could not write the sync index: ${exception.message}")
+    }
 
     private companion object {
         /** Often enough that the counters visibly move, rarely enough that the reading costs less than the syncing. */

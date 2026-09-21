@@ -26,12 +26,14 @@ import com.pandulapeter.campfire.data.source.remote.api.model.RemoteWriteResult
  *
  * [onDownload] runs before a download answers, which is where a test makes the service fail part way through a run
  * or changes the local library under an operation that is already under way. [sizes] lets a listing report a large
- * file without the test allocating it.
+ * file without the test allocating it. [account] is who the service says is connected, which is what a
+ * repository test restores the connection from.
  */
 internal class FakeSyncProvider(
     files: Map<SyncKey, ByteArray> = emptyMap(),
     private val sizes: Map<SyncKey, Long> = emptyMap(),
     var onDownload: (SyncKey) -> Unit = {},
+    private val account: SyncAccount? = null,
 ) : SyncProvider {
 
     val files = files.mapValues { (_, bytes) -> bytes to "r1" }.toMutableMap()
@@ -51,7 +53,7 @@ internal class FakeSyncProvider(
 
     override suspend fun disconnect() = Unit
 
-    override suspend fun loadAccount() = null
+    override suspend fun loadAccount() = account
 
     override suspend fun list() = RemoteListing(
         files = files.map { (key, file) ->

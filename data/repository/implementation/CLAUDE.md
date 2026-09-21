@@ -69,12 +69,16 @@ long as the storage takes to answer. A cancelled read is not a failed one: it is
   looks unsynced next time. It is told as the run goes rather than when a pass completes: every finished operation
   hands `SyncRepositoryImpl` a snapshot, which writes it at most every `INDEX_WRITE_INTERVAL_MS` and once more on the
   way out of a stopped or failed run (the periodic writer cancelled and joined first, so it cannot land after the
-  final write). An interrupted run therefore keeps what it transferred, and only a completed one moves `lastSyncedAt`.
+  final write). Those writes and the periodic one never throw (`saveIndexQuietly`): only the write that opens a
+  run and the one that completes it do, which is how a device that cannot write ends a run as
+  `SyncFailureReason.STORAGE`. The repository's scope carries a `CoroutineExceptionHandler` that logs, since nothing
+  launched there has anyone to throw to. An interrupted run therefore keeps what it transferred, and only a completed one moves `lastSyncedAt`.
   A run the app never came back from is found by the index's `isRunInProgress` marker at `restore`, reported as
   interrupted next time, and that run is left for the user to start: `RestoreResult.wasInterrupted` keeps
   `RestoreSyncUseCase` from starting one on launch, which would replace the message before it could be read.
   `commonTest` runs the engine against an in-memory `SyncProvider` and `LibraryFileLocalSource` for the behaviour the
-  planner's tests cannot show. A plan whose local deletions are more than half of the index (at least
+  planner's tests cannot show, and `SyncRepositoryImplTest` runs the repository against the same fakes plus the ones
+  in `FakeSyncCollaborators.kt`. A plan whose local deletions are more than half of the index (at least
   `MIN_DELETIONS_TO_ASK` of them) or the whole of it is not applied under `SyncDeletionPolicy.ASK`: the engine returns
   `Result.DeletionsNeedConfirmation` before anything moves, and the repository reports it as the run's outcome without
   a rescan. `DELETE_LOCALLY` applies such a plan as it is, and `KEEP_AND_UPLOAD` first drops the index entries of
