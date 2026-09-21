@@ -635,9 +635,11 @@ class CampfireViewModel(
         // first sync. Its own coroutine, so that a slow network never holds up the library appearing on screen.
         viewModelScope.launch {
             // On the web the consent page replaces the app, so this start up is the second half of a tap on
-            // Settings: whether it ended up connected or not, that is the screen the answer is on.
+            // Settings: whether it ended up connected or not, that is the screen the answer is on. The page load forgot
+            // which tab the tap was made on, so the one holding the sync section is opened rather than the first.
             try {
                 if (restoreSync()) {
+                    settingsTab = SettingsTab.LIBRARY
                     selectTopLevelDestination(CampfireDestination.Settings)
                 }
             } catch (exception: CancellationException) {
