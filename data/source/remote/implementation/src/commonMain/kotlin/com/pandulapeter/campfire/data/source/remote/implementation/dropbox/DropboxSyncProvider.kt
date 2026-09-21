@@ -122,7 +122,7 @@ internal class DropboxSyncProvider(
         )
         // Written a second time with the name on it, so that a failure to read the account still leaves a usable
         // connection rather than tokens nobody can put a face to.
-        return loadAccount() ?: SyncAccount(providerId = id, displayName = token.accountId, email = null)
+        return loadAccount() ?: SyncAccount(providerId = id, id = token.accountId, displayName = token.accountId, email = null)
     }
 
     override suspend fun disconnect() {
@@ -163,6 +163,7 @@ internal class DropboxSyncProvider(
             }
             SyncAccount(
                 providerId = id,
+                id = account.accountId,
                 displayName = account.name.displayName.ifEmpty { account.email },
                 email = account.email.takeIf { it.isNotEmpty() },
             )
@@ -190,7 +191,12 @@ internal class DropboxSyncProvider(
      */
     private fun storedAccountOf(credentials: SyncCredentialsDocument): SyncAccount? {
         val name = credentials.displayName.ifEmpty { credentials.email }.ifEmpty { credentials.accountId }.ifEmpty { return null }
-        return SyncAccount(providerId = id, displayName = name, email = credentials.email.takeIf(String::isNotEmpty))
+        return SyncAccount(
+            providerId = id,
+            id = credentials.accountId,
+            displayName = name,
+            email = credentials.email.takeIf(String::isNotEmpty),
+        )
     }
 
     // Files

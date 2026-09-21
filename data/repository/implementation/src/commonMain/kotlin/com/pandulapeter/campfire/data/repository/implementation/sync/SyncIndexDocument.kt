@@ -9,6 +9,7 @@
  */
 package com.pandulapeter.campfire.data.repository.implementation.sync
 
+import com.pandulapeter.campfire.data.model.domain.SyncAccount
 import kotlinx.serialization.Serializable
 
 /**
@@ -17,6 +18,8 @@ import kotlinx.serialization.Serializable
  *
  * [accountId] is part of it because an index describes one remote folder. Connecting a different account leaves it
  * meaningless, and acting on it would read that account's absent files as deletions of this one's songs.
+ *
+ * An index filed under the key an earlier version used is taken over rather than ignored, see [adoptedBy].
  */
 @Serializable
 internal data class SyncIndexDocument(
@@ -42,6 +45,22 @@ internal data class SyncIndexDocument(
     fun toIndex(): Map<SyncKey, SyncIndexEntry> = entries.mapNotNull { (path, entry) ->
         SyncKey.fromPath(path)?.let { it to SyncIndexEntry(localHash = entry.localHash, remoteRevision = entry.remoteRevision) }
     }.toMap()
+
+    /**
+     * This document as [account]'s, if it is: an index written when the key was still the account's e-mail address
+     * is filed under the new key instead of being ignored, which would cost the user every deletion made since the
+     * run that wrote it. What says it is the same account is the address itself - the services keep those unique,
+     * the index is removed on disconnect, and so the only index that can be found under this account's address is
+     * the one the previous version wrote for it, and would have accepted on exactly the same evidence.
+     *
+     * The new key is on disk with the next write, after which this has nothing left to do. An index that belongs to
+     * another account comes back unchanged, for the engine to disregard as before.
+     */
+    fun adoptedBy(account: SyncAccount) = if (accountId.isNotEmpty() && accountId == account.legacyIndexKey()) {
+        copy(accountId = account.indexKey())
+    } else {
+        this
+    }
 
     companion object {
 

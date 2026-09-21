@@ -11,7 +11,6 @@
 
 package com.pandulapeter.campfire.data.repository.implementation
 
-import com.pandulapeter.campfire.data.model.domain.SyncAccount
 import com.pandulapeter.campfire.data.model.domain.SyncDeletionPolicy
 import com.pandulapeter.campfire.data.model.domain.SyncFailureReason
 import com.pandulapeter.campfire.data.model.domain.SyncOutcome
@@ -23,6 +22,7 @@ import com.pandulapeter.campfire.data.repository.api.SongRepository
 import com.pandulapeter.campfire.data.repository.api.SyncRepository
 import com.pandulapeter.campfire.data.repository.implementation.sync.SyncEngine
 import com.pandulapeter.campfire.data.repository.implementation.sync.SyncIndexDocument
+import com.pandulapeter.campfire.data.repository.implementation.sync.indexKey
 import com.pandulapeter.campfire.data.source.local.api.LibraryFileLocalSource
 import com.pandulapeter.campfire.data.source.local.api.LibraryStorageException
 import com.pandulapeter.campfire.data.source.local.api.SyncStateLocalSource
@@ -310,7 +310,9 @@ internal class SyncRepositoryImpl(
             var latestIndex: (() -> SyncIndexDocument)? = null
             var hasFinishedOperations = false
             try {
-                val document = loadIndex()
+                // Taken over before the marker is written, so that an index filed under the key an earlier version used
+                // is under the current one from the first write of this run, however the run ends.
+                val document = loadIndex().adoptedBy(connected.account)
                 latestIndex = { document.copy(isRunInProgress = true) }
                 // Written before anything moves, so that a run the app never comes back from is still recognisable
                 // as interrupted next time - iOS suspending the app mid sync looks exactly like being killed.
@@ -318,7 +320,7 @@ internal class SyncRepositoryImpl(
                 val result = engine.synchronize(
                     provider = provider,
                     document = document,
-                    accountId = accountIdOf(connected.account),
+                    accountId = connected.account.indexKey(),
                     onProgress = { progress ->
                         updateConnected { it.copy(progress = progress) }
                         scheduleLiveRescan()
@@ -534,8 +536,8 @@ internal class SyncRepositoryImpl(
                 )
                 // The account decides which remote folder the index describes, so one written for a different
                 // account is worthless rather than merely stale.
-                val document = loadIndex()
-                if (document.accountId != accountIdOf(account)) {
+                val document = loadIndex().adoptedBy(account)
+                if (document.accountId != account.indexKey()) {
                     saveIndex(SyncIndexDocument())
                 }
                 _syncState.update {
@@ -561,12 +563,6 @@ internal class SyncRepositoryImpl(
         _syncState.update { SyncState.ConnectionFailed(providerId, reason) }
         return false
     }
-
-    /**
-     * Who the account is, as far as the index is concerned. The display name is what every provider can offer, and
-     * comparing it only has to answer "is this the same account as last time".
-     */
-    private fun accountIdOf(account: SyncAccount) = "${account.providerId.id}:${account.email ?: account.displayName}"
 
     private fun Throwable.toFailureReason() = when (this) {
         is SyncAuthorizationException -> SyncFailureReason.AUTHORIZATION

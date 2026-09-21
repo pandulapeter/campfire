@@ -18,9 +18,16 @@ enum class SyncProviderId(val id: String) {
     }
 }
 
-/** Who the connected provider says the user is, shown so that it is obvious which account the library goes to. */
+/**
+ * Who the connected provider says the user is, shown so that it is obvious which account the library goes to.
+ *
+ * @param id What the service itself calls the account: opaque, never shown, and the one thing about an account
+ *   that does not change when its owner renames it or moves it to another e-mail address - which is why the sync
+ *   index is filed under it. Empty where it was never learnt.
+ */
 data class SyncAccount(
     val providerId: SyncProviderId,
+    val id: String,
     val displayName: String,
     val email: String?,
 )

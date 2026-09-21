@@ -240,7 +240,12 @@ class SyncRepositoryImplTest {
     } as SyncState.Connected
 
     private companion object {
-        val ACCOUNT = SyncAccount(providerId = SyncProviderId.DROPBOX, displayName = "Someone", email = "someone@example.com")
+        val ACCOUNT = SyncAccount(
+            providerId = SyncProviderId.DROPBOX,
+            id = "dbid:1",
+            displayName = "Someone",
+            email = "someone@example.com",
+        )
 
         fun song(number: Int) = SyncKey(kind = LibraryFileKind.SONG, name = "song_$number.cho")
     }

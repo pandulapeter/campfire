@@ -164,7 +164,7 @@ class DropboxRequestTest {
             storage = ConnectedStorage(names = ""","displayName":"Jane","email":"jane@example.com""""),
         ) { error("No request was expected.") }
         assertEquals(
-            expected = SyncAccount(SyncProviderId.DROPBOX, displayName = "Jane", email = "jane@example.com"),
+            expected = SyncAccount(SyncProviderId.DROPBOX, id = "", displayName = "Jane", email = "jane@example.com"),
             actual = provider.storedAccount(),
         )
     }
@@ -175,7 +175,7 @@ class DropboxRequestTest {
             error("No request was expected.")
         }
         assertEquals(
-            expected = SyncAccount(SyncProviderId.DROPBOX, displayName = "dbid:1", email = null),
+            expected = SyncAccount(SyncProviderId.DROPBOX, id = "dbid:1", displayName = "dbid:1", email = null),
             actual = provider.storedAccount(),
         )
     }

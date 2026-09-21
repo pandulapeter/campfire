@@ -68,6 +68,9 @@ long as the storage takes to answer. A cancelled read is not a failed one: it is
   file is still there, so the version that loses is never held only in memory. The engine is written so that an
   interrupted run leaves the library usable: the index (`SyncIndexDocument`, the on-disk shape of `sync-index.json`)
   is only told about a file once that file has actually moved, so anything half done simply looks unsynced next time.
+  It is filed under the account's id as the service gives it (`SyncAccount.indexKey`), never under a name or an
+  address the user can change; an index an earlier version filed under the e-mail address is adopted on the next run
+  (`adoptedBy`) rather than ignored, since a run without an index brings back every file deleted since.
   It is told as the run goes rather than when a pass completes: every finished operation
   hands `SyncRepositoryImpl` a way to take a snapshot, which it does at most every `INDEX_WRITE_INTERVAL` —
   building one costs as much as the index is long — and once more on the way out of a stopped or failed run (the

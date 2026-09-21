@@ -10,6 +10,7 @@
 package com.pandulapeter.campfire.data.repository.implementation.sync
 
 import com.pandulapeter.campfire.data.model.domain.LibraryFileKind
+import com.pandulapeter.campfire.data.model.domain.SyncAccount
 import com.pandulapeter.campfire.data.model.domain.SyncDeletionPolicy
 import com.pandulapeter.campfire.data.model.domain.SyncProviderId
 import com.pandulapeter.campfire.data.source.local.api.LibraryStorageException
@@ -410,6 +411,25 @@ class SyncEngineTest {
 
         assertTrue(assertIs<SyncEngine.Result.Completed>(result).summary.failed.isEmpty())
         assertEquals(setOf(song("Song"), song("song")), provider.files.keys)
+    }
+
+    @Test
+    fun `a deletion made elsewhere reaches a device whose index was filed under the e-mail address`() = runTest {
+        val local = FakeLibraryFileLocalSource(files = mapOf(song(1) to ORIGINAL))
+        val provider = FakeSyncProvider()
+        val account = SyncAccount(SyncProviderId.DROPBOX, id = "dbid:1", displayName = "Someone", email = "someone@example.com")
+
+        SyncEngine(local).synchronize(
+            provider = provider,
+            document = indexOf(song(1) to ORIGINAL).adoptedBy(account),
+            accountId = account.indexKey(),
+            onProgress = {},
+            onIndexChanged = {},
+            deletionPolicy = SyncDeletionPolicy.DELETE_LOCALLY,
+        )
+
+        assertTrue(local.files.isEmpty())
+        assertTrue(provider.files.isEmpty())
     }
 
     @Test
