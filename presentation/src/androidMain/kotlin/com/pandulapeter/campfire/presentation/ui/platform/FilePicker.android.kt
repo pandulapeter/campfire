@@ -12,6 +12,7 @@ package com.pandulapeter.campfire.presentation.ui.platform
 import android.content.Context
 import android.content.Intent
 import android.net.Uri
+import android.provider.DocumentsContract
 import android.provider.OpenableColumns
 import androidx.core.content.FileProvider
 import androidx.activity.compose.rememberLauncherForActivityResult
@@ -21,13 +22,21 @@ import androidx.compose.runtime.Composable
 import com.pandulapeter.campfire.data.model.domain.ExportedFile
 import com.pandulapeter.campfire.data.model.domain.ImportedFile
 import kotlinx.coroutines.CancellableContinuation
+import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.IO
+import kotlinx.coroutines.NonCancellable
+import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.channels.Channel
+import kotlinx.coroutines.flow.receiveAsFlow
+import kotlinx.coroutines.launch
 import kotlinx.coroutines.suspendCancellableCoroutine
 import kotlinx.coroutines.withContext
 import org.koin.compose.koinInject
 import org.koin.core.annotation.Provided
 import org.koin.core.annotation.Single
+import java.io.IOException
+import java.io.OutputStream
 import kotlin.coroutines.resume
 
 /**
@@ -36,7 +45,7 @@ import kotlin.coroutines.resume
  * handed to the shared UI through [LocalFilePicker].
  */
 @Composable
-internal fun rememberAndroidFilePicker(): FilePicker {
+internal fun rememberAndroidFilePicker(): AndroidFilePicker {
     val picker = koinInject<AndroidFilePicker>()
     // "* / *" rather than a list of types: .cho has no registered MIME type, and anything narrower would grey the
     // songs out in the system picker. What is not a song is skipped by the import and reported afterwards.
@@ -60,6 +69,11 @@ internal fun rememberAndroidFilePicker(): FilePicker {
  * The result is still delivered - the launchers are registered under a saved key - but to the callbacks of whatever
  * picker the new composition holds, so that has to be the same object the waiting coroutine is suspended on. The
  * launchers themselves are the old Activity's and dead with it, which is why they are replaced on every composition.
+ *
+ * A process that dies under the system picker takes this object with it, and the result then arrives at one that
+ * nobody is suspended on. That is what an orphaned result is, and neither kind is dropped: picked files are read
+ * and offered through [orphanedFiles], and the location of an export is filled from the copy [saveFile] left in
+ * the cache directory before it opened the picker, the outcome going to [orphanedExportResults].
  */
 @Single
 internal class AndroidFilePicker(@Provided private val context: Context) : FilePicker {
@@ -70,6 +84,22 @@ internal class AndroidFilePicker(@Provided private val context: Context) : FileP
 
     private var pickContinuation: CancellableContinuation<List<Uri>>? = null
     private var saveContinuation: CancellableContinuation<Uri?>? = null
+
+    /**
+     * For the results nobody is waiting for. Its own scope rather than the composition's: the read and the write
+     * must not end with an Activity that happens to be recreated while they run.
+     */
+    private val scope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
+    private val _orphanedFiles = Channel<List<ImportedFile>>(Channel.BUFFERED)
+    private val _orphanedExportResults = Channel<Boolean>(Channel.BUFFERED)
+
+    /** Files picked for a process that did not live to read them, to be imported like any the system hands over. */
+    val orphanedFiles = _orphanedFiles.receiveAsFlow()
+
+    /** Whether an export whose process died under the "save as" screen was written after all. */
+    val orphanedExportResults = _orphanedExportResults.receiveAsFlow()
+
+    private val pendingExport get() = java.io.File(java.io.File(context.cacheDir, PENDING_EXPORT_DIRECTORY), PENDING_EXPORT_NAME)
 
     override suspend fun pickFiles(): List<ImportedFile> {
         // Two system pickers cannot be open at once, so one still waiting is one whose answer is never coming.
@@ -85,17 +115,20 @@ internal class AndroidFilePicker(@Provided private val context: Context) : FileP
     override suspend fun saveFile(file: ExportedFile): Boolean {
         val launcher = if (file.mimeType == ExportedFile.ZIP_MIME_TYPE) createArchiveLauncher else createTextLauncher
         saveContinuation?.takeIf { it.isActive }?.resume(null)
+        withContext(Dispatchers.IO) { keepPendingExport(file) }
         val uri = suspendCancellableCoroutine<Uri?> { continuation ->
             saveContinuation = continuation
             continuation.invokeOnCancellation { saveContinuation = null }
             launcher?.launch(file.name) ?: continuation.resume(null)
-        } ?: return false
-        return withContext(Dispatchers.IO) {
-            try {
-                context.contentResolver.openOutputStream(uri)?.use { it.write(file.bytes) } != null
-            } catch (exception: Exception) {
-                println("Could not write \"${file.name}\": ${exception.message}")
-                false
+        }
+        // The document exists from the moment the dialog is confirmed, so from here on the write is owed: a scope
+        // cancelled at this point would leave it empty.
+        return withContext(NonCancellable + Dispatchers.IO) {
+            clearPendingExport()
+            when {
+                uri == null -> false
+                write(uri) { it.write(file.bytes) } -> true
+                else -> throw IOException("Could not write \"${file.name}\".")
             }
         }
     }
@@ -108,15 +141,10 @@ internal class AndroidFilePicker(@Provided private val context: Context) : FileP
      */
     override suspend fun shareFile(file: ExportedFile): Boolean {
         val uri = withContext(Dispatchers.IO) {
-            try {
-                val directory = java.io.File(context.cacheDir, SHARED_DIRECTORY).apply { mkdirs() }
-                val target = java.io.File(directory, file.name).apply { writeBytes(file.bytes) }
-                FileProvider.getUriForFile(context, "${context.packageName}.files", target)
-            } catch (exception: Exception) {
-                println("Could not prepare \"${file.name}\" for sharing: ${exception.message}")
-                null
-            }
-        } ?: return false
+            val directory = java.io.File(context.cacheDir, SHARED_DIRECTORY).apply { mkdirs() }
+            val target = java.io.File(directory, file.name).apply { writeBytes(file.bytes) }
+            FileProvider.getUriForFile(context, "${context.packageName}.files", target)
+        }
         val intent = Intent(Intent.ACTION_SEND).apply {
             type = file.mimeType
             putExtra(Intent.EXTRA_STREAM, uri)
@@ -127,18 +155,70 @@ internal class AndroidFilePicker(@Provided private val context: Context) : FileP
     }
 
     fun onFilesPicked(uris: List<Uri>) {
-        pickContinuation?.takeIf { it.isActive }?.resume(uris)
+        val continuation = pickContinuation?.takeIf { it.isActive }
         pickContinuation = null
+        when {
+            continuation != null -> continuation.resume(uris)
+            uris.isNotEmpty() -> scope.launch { _orphanedFiles.send(uris.mapNotNull { it.toImportedFile(context) }) }
+        }
     }
 
     fun onSaveLocationPicked(uri: Uri?) {
-        saveContinuation?.takeIf { it.isActive }?.resume(uri)
+        val continuation = saveContinuation?.takeIf { it.isActive }
         saveContinuation = null
+        when {
+            continuation != null -> continuation.resume(uri)
+            uri == null -> scope.launch { clearPendingExport() }
+            else -> scope.launch {
+                // A copy that is no longer there fails the write like anything else, which removes the document.
+                val isWritten = write(uri) { output -> pendingExport.inputStream().use { it.copyTo(output) } }
+                clearPendingExport()
+                _orphanedExportResults.send(isWritten)
+            }
+        }
+    }
+
+    /**
+     * Fills the document the system picker created, and removes it again where that fails: it is created empty the
+     * moment the dialog is confirmed, and an empty "campfire_library.zip" in Downloads reads as a backup.
+     */
+    private fun write(uri: Uri, content: (OutputStream) -> Unit): Boolean {
+        val isWritten = try {
+            context.contentResolver.openOutputStream(uri)?.use(content) != null
+        } catch (exception: Exception) {
+            println("Could not write \"$uri\": ${exception.message}")
+            false
+        }
+        if (!isWritten) {
+            try {
+                DocumentsContract.deleteDocument(context.contentResolver, uri)
+            } catch (exception: Exception) {
+                // Not every provider lets a document be deleted. The message is all that is left to do then.
+                println("Could not remove \"$uri\": ${exception.message}")
+            }
+        }
+        return isWritten
+    }
+
+    /** A failure here costs only the safety net, never the export it is for. */
+    private fun keepPendingExport(file: ExportedFile) {
+        try {
+            clearPendingExport()
+            pendingExport.apply { parentFile?.mkdirs() }.writeBytes(file.bytes)
+        } catch (exception: Exception) {
+            println("Could not keep a copy of \"${file.name}\": ${exception.message}")
+        }
+    }
+
+    private fun clearPendingExport() {
+        pendingExport.parentFile?.deleteRecursively()
     }
 
     private companion object {
         const val ANY_MIME_TYPE = "*/*"
         const val SHARED_DIRECTORY = "shared"
+        const val PENDING_EXPORT_DIRECTORY = "pending_export"
+        const val PENDING_EXPORT_NAME = "export"
     }
 }
 

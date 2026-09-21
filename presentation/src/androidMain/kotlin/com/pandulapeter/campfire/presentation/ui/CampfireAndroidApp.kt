@@ -18,6 +18,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.pandulapeter.campfire.data.model.domain.ImportedFile
 import com.pandulapeter.campfire.data.model.domain.SyncState
@@ -29,6 +30,7 @@ import com.pandulapeter.campfire.presentation.ui.platform.rememberAndroidFilePic
 import com.pandulapeter.campfire.presentation.ui.theme.isDarkTheme
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.emptyFlow
+import kotlinx.coroutines.flow.merge
 import org.koin.compose.viewmodel.koinViewModel
 
 /**
@@ -36,7 +38,8 @@ import org.koin.compose.viewmodel.koinViewModel
  * the system theme) and lets the URL opener follow it too.
  *
  * @param urlOpener Opens the given URL, styled for the given theme.
- * @param filesToImport Files from an "open with" or a share, read by the activity that received the intent.
+ * @param filesToImport Files from an "open with" or a share, read by the activity that received the intent; the files
+ *   of a pick that outlived its process join them here.
  * @param syncNotifier Starts and stops the foreground service a running sync needs, which lives in the application
  *   module because that is where the manifest is.
  * @param onAppReady Released when the app itself is on screen, which is what the activity holds the system splash
@@ -63,14 +66,19 @@ fun CampfireAndroidApp(
             navigationBarStyle = if (isDarkTheme) SystemBarStyle.dark(Color.TRANSPARENT) else SystemBarStyle.light(Color.TRANSPARENT, Color.TRANSPARENT),
         )
     }
+    val filePicker = rememberAndroidFilePicker()
+    LaunchedEffect(filePicker, viewModel) {
+        filePicker.orphanedExportResults.collect { isWritten -> if (!isWritten) viewModel.onExportFailed() }
+    }
+    val allFilesToImport = remember(filesToImport, filePicker) { merge(filesToImport, filePicker.orphanedFiles) }
     CompositionLocalProvider(
-        LocalFilePicker provides rememberAndroidFilePicker(),
+        LocalFilePicker provides filePicker,
         LocalSyncNotifier provides syncNotifier,
     ) {
         CampfireApp(
             viewModel = viewModel,
             urlOpener = { urlOpener(it, isDarkTheme) },
-            filesToImport = filesToImport,
+            filesToImport = allFilesToImport,
             onAppReady = onAppReady,
         )
     }

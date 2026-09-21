@@ -1294,6 +1294,11 @@ class CampfireViewModel(
         save(filePicker) { exportLibrary.invoke() }
     }
 
+    /** For the Android shell, whose picker can finish an export long after the coroutine that asked for it is gone. */
+    fun onExportFailed() {
+        _messages.trySend(Message.ExportFailed)
+    }
+
     /** Nothing to export and a picker that threw are the same thing to the user: the file did not come out. */
     private suspend fun save(filePicker: FilePicker, isShare: Boolean = false, export: suspend () -> ExportedFile?) = try {
         export()?.let { if (isShare) filePicker.shareFile(it) else filePicker.saveFile(it) } ?: _messages.send(Message.ExportFailed)

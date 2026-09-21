@@ -25,7 +25,11 @@ interface FilePicker {
     /** Opens the system picker for one or more files. An empty list when the user picked nothing. */
     suspend fun pickFiles(): List<ImportedFile>
 
-    /** Offers the file to be saved: a "save as" dialog, a share sheet or a download. False when nothing was saved. */
+    /**
+     * Offers the file to be saved: a "save as" dialog, a share sheet or a download. False when the user dismissed it
+     * and nothing was saved. A file that was meant to be saved and could not be written is an exception, not a
+     * false: that is the one the caller tells the user about.
+     */
     suspend fun saveFile(file: ExportedFile): Boolean
 
     /**
