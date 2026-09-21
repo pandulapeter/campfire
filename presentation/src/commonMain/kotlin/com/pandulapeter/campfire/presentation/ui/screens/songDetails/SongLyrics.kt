@@ -146,7 +146,7 @@ internal fun SongLyrics(
     val sectionBounds = remember(sections) { List(sections.size) { SectionBounds() } }
     val density = LocalDensity.current
     // Everything the height of a section depends on apart from the width it is measured at.
-    val sectionMeasurements = remember(sections, fontScale, density) { SectionMeasurements() }
+    val sectionMeasurements = remember(sections, fontScale, density) { SectionMeasurements(sectionCount = sections.size) }
     val coroutineScope = rememberCoroutineScope()
     // The styles the lines are measured with carry no color, which is given where the text is drawn instead: every
     // line of the song is measured again whenever a key of its measurement changes, and the color scheme changes on
@@ -842,20 +842,29 @@ private fun SongSectionsLayout(
 /**
  * What [SongSectionsLayout] has already worked out about one set of sections, remembered for as long as nothing the
  * sections' heights depend on has changed. Neither of the two is state: they are read and written by the measurement
- * alone, and a change to them never has anything to redraw.
+ * alone, and a change to them never has anything to redraw. The heights are kept per width and only for the widths of
+ * the last few searches.
  */
-private class SectionMeasurements {
+private class SectionMeasurements(private val sectionCount: Int) {
 
-    private val heights = HashMap<Long, Int>()
+    private val heightsByWidth = HashMap<Int, IntArray>()
     private var lastGridKey: SectionGridKey? = null
     private var lastGrid = SectionGrid(rows = IntArray(0), columns = IntArray(0), columnCounts = IntArray(0))
 
     /** The intrinsic height of the section at [index] when it is [width] wide. */
-    fun height(index: Int, width: Int, measure: (Int) -> Int) = heights.getOrPut((index.toLong() shl 32) or width.toLong()) { measure(width) }
+    fun height(index: Int, width: Int, measure: (Int) -> Int): Int {
+        val heights = heightsByWidth.getOrPut(width) { IntArray(sectionCount) { UNMEASURED_HEIGHT } }
+        if (heights[index] == UNMEASURED_HEIGHT) heights[index] = measure(width)
+        return heights[index]
+    }
 
     /** The grid decided for [key], which is only searched for again once the key has changed. */
     fun grid(key: SectionGridKey, search: () -> SectionGrid): SectionGrid {
         if (key != lastGridKey) {
+            // A window being resized searches at a new width on every frame and none of those comes back, so
+            // the widths are only kept until there are more of them than a few searches ask about. They are let
+            // go of between two searches and never during one, which asks about the same few over and over.
+            if (heightsByWidth.size > MAX_SECTION_WIDTHS) heightsByWidth.clear()
             lastGrid = search()
             lastGridKey = key
         }
@@ -1012,7 +1021,9 @@ private fun List<Int>.balanceIntoColumns(columnCount: Int, sectionGap: Int): Sec
  * number of columns is feasible if a first-fit stacking of its sections at that width fills exactly that many cells;
  * first-fit is optimal for keeping consecutive sections in as few cells as possible. Adding a taller section to a row
  * raises its cap, so a row that does not fit can become feasible again with more sections in it, which is why every
- * length is tried. A single section always fits in a row of its own, so there is always a way to pack the song.
+ * length is tried. Every length that still can be feasible, that is: the stacking is carried from one length to the next
+ * rather than redone, and a column count is given up for a row once its sections add up to more than that many cells
+ * could ever hold. A single section always fits in a row of its own, so there is always a way to pack the song.
  */
 private fun flowIntoRows(
     sectionCount: Int,
@@ -1023,11 +1034,18 @@ private fun flowIntoRows(
     maxStackHeight: Int,
 ): SectionGrid {
     if (sectionCount == 0) return SectionGrid(rows = IntArray(0), columns = IntArray(0), columnCounts = IntArray(0))
-    // heights[k - 1][i] is the height of section i in a row of k columns.
+    // heights[k - 1][i] is the height of section i in a row of k columns, heightSums[k - 1][i] the total height of
+    // the sections before i at that width, and tallestFrom[k - 1][i] the height of the tallest section from i onwards.
     val heights = Array(maxColumnCount) { column -> IntArray(sectionCount) { heightAt(it, column + 1) } }
+    val heightSums = Array(maxColumnCount) { column ->
+        LongArray(sectionCount + 1).also { sums -> for (index in 0 until sectionCount) sums[index + 1] = sums[index] + heights[column][index] }
+    }
+    val tallestFrom = Array(maxColumnCount) { column ->
+        IntArray(sectionCount + 1).also { tallest -> for (index in sectionCount - 1 downTo 0) tallest[index] = max(tallest[index + 1], heights[column][index]) }
+    }
     // Calls onCell with the cell of every section in [start, end) when the sections are stacked first-fit into cells
     // as tall as the tallest section of the row, but never taller than the screen, and returns the number of cells.
-    fun stack(start: Int, end: Int, columnCount: Int, tallest: Int, onCell: (index: Int, cell: Int) -> Unit = { _, _ -> }): Int {
+    fun stack(start: Int, end: Int, columnCount: Int, tallest: Int, onCell: (index: Int, cell: Int) -> Unit): Int {
         val sectionHeights = heights[columnCount - 1]
         val cap = minOf(tallest, maxStackHeight)
         var cell = 0
@@ -1049,15 +1067,57 @@ private fun flowIntoRows(
     val costs = LongArray(sectionCount + 1)
     val rowEnds = IntArray(sectionCount + 1)
     val rowColumnCounts = IntArray(sectionCount + 1)
+    // The first-fit stacking of the candidate row, per column count, carried from one end of the row to the next:
+    // stacking every candidate from its start again is what makes a song of many short sections cubic, and the
+    // search runs on every frame of a window being resized.
     val tallest = IntArray(maxColumnCount)
+    val caps = IntArray(maxColumnCount)
+    val cells = IntArray(maxColumnCount)
+    val cellHeights = IntArray(maxColumnCount)
+    val isExhausted = BooleanArray(maxColumnCount)
     for (start in sectionCount - 1 downTo 0) {
         var best = Long.MAX_VALUE
         tallest.fill(0)
-        for (end in start + 1..sectionCount) {
+        isExhausted.fill(false)
+        var exhaustedCount = 0
+        var end = start + 1
+        while (end <= sectionCount && exhaustedCount < maxColumnCount) {
             for (columnCount in 1..maxColumnCount) {
-                tallest[columnCount - 1] = max(tallest[columnCount - 1], heights[columnCount - 1][end - 1])
-                if (stack(start, end, columnCount, tallest[columnCount - 1]) != columnCount) continue
-                val cost = tallest[columnCount - 1] + if (end < sectionCount) rowGap + costs[end] else 0L
+                val column = columnCount - 1
+                if (isExhausted[column]) continue
+                val sectionHeights = heights[column]
+                // No cell of a feasible row is taller than the row's tallest section, so the sections of a row of
+                // this many columns add up to no more than that many times the tallest one still to come. The sum
+                // only grows with the row, so past this point no longer row of this many columns has to be tried.
+                if (heightSums[column][end] - heightSums[column][start] > columnCount.toLong() * tallestFrom[column][start]) {
+                    isExhausted[column] = true
+                    exhaustedCount++
+                    continue
+                }
+                val added = end - 1
+                tallest[column] = max(tallest[column], sectionHeights[added])
+                val cap = minOf(tallest[column], maxStackHeight)
+                // A taller section raises the cap, and what was stacked under the lower one may fit into fewer
+                // cells under the new one, so the row is stacked again from its start. Otherwise the stacking so
+                // far stands, and only the section that was added is placed.
+                val from = if (added == start || cap != caps[column]) {
+                    caps[column] = cap
+                    cells[column] = 0
+                    cellHeights[column] = sectionHeights[start]
+                    start + 1
+                } else {
+                    added
+                }
+                for (index in from until end) {
+                    if (cellHeights[column] + sectionGap + sectionHeights[index] <= cap) {
+                        cellHeights[column] += sectionGap + sectionHeights[index]
+                    } else {
+                        cells[column]++
+                        cellHeights[column] = sectionHeights[index]
+                    }
+                }
+                if (cells[column] + 1 != columnCount) continue
+                val cost = tallest[column] + if (end < sectionCount) rowGap + costs[end] else 0L
                 // Ties go to the longer row, so that the slack ends up at the bottom of the song rather than in its
                 // middle, and then to the fewer, wider columns, which wrap less.
                 if (cost < best || (cost == best && end > rowEnds[start])) {
@@ -1066,6 +1126,7 @@ private fun flowIntoRows(
                     rowColumnCounts[start] = columnCount
                 }
             }
+            end++
         }
         costs[start] = best
     }
@@ -1318,6 +1379,8 @@ private val ROW_GAP = 40.dp
 private const val LINE_HEIGHT_SAMPLE = "X"
 private const val CHARACTER_WIDTH_SAMPLE_LENGTH = 64
 private const val MAX_TAB_WIDTHS = 8
+private const val MAX_SECTION_WIDTHS = 32
+private const val UNMEASURED_HEIGHT = -1
 private const val MAX_MEASURED_TEXTS = 4096
 private const val MAX_ANIMATED_SECTION_HEIGHT = 1 shl 17
 private const val MAX_ANIMATED_WIDE_SECTION_HEIGHT = 1 shl 15
