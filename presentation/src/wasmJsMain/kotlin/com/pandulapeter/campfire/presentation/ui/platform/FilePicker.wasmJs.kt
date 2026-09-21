@@ -14,8 +14,10 @@ package com.pandulapeter.campfire.presentation.ui.platform
 import com.pandulapeter.campfire.data.model.domain.ExportedFile
 import com.pandulapeter.campfire.data.model.domain.ImportedFile
 import com.pandulapeter.campfire.data.model.domain.LibraryFiles
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.await
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.flow
 import org.khronos.webgl.Int8Array
 import org.khronos.webgl.toByteArray
@@ -86,8 +88,16 @@ private fun pickFiles(accept: String): Promise<JsArray<JsAny>?> = js(
 
 private fun fileName(file: JsAny): JsString = js("file.name")
 
-private fun fileBytes(file: JsAny): Promise<Int8Array?> =
-    js("file.arrayBuffer().then(function (buffer) { return new Int8Array(buffer); })")
+/**
+ * Resolves with null instead of rejecting for a file the browser cannot read: a dropped directory where the
+ * browser hands one over as a `File`, or a file that was moved or deleted after it was chosen.
+ */
+private fun fileBytes(file: JsAny): Promise<Int8Array?> = js(
+    """file.arrayBuffer().then(
+        function (buffer) { return new Int8Array(buffer); },
+        function () { return null; }
+    )"""
+)
 
 private fun downloadFile(name: String, mimeType: String, bytes: Int8Array): Unit = js(
     """(function () {
@@ -114,17 +124,51 @@ internal fun droppedFiles(): Flow<List<ImportedFile>> = flow {
     while (true) {
         emit(nextDrop().await<JsArray<JsAny>?>()?.toImportedFiles().orEmpty())
     }
+}.catch { exception ->
+    // The collector is a LaunchedEffect at the root of the app, and what leaves one of those takes the
+    // composition with it. Losing drag and drop is the smaller loss.
+    println("Could not read the dropped files: ${exception.message}")
 }
 
-private suspend fun JsArray<JsAny>.toImportedFiles() = (0 until length).mapNotNull { index ->
-    get(index)?.let { file ->
-        ImportedFile(
-            name = fileName(file).toString(),
-            bytes = fileBytes(file).await<Int8Array?>()?.toByteArray() ?: ByteArray(0),
-        )
+private suspend fun JsArray<JsAny>.toImportedFiles() = (0 until length).mapNotNull { index -> get(index)?.toImportedFile() }
+
+/**
+ * One unreadable file must not lose the ones that came with it, and a drop has no caller to catch for it: whatever
+ * is thrown here ends [droppedFiles] for the rest of the session. A file that cannot be read arrives empty
+ * instead of being left out, because an empty file is one the import reports as skipped - so the user is told,
+ * where leaving it out would say nothing at all.
+ *
+ * `Throwable` rather than `Exception`: what a `js(...)` block throws arrives as a `JsException`, which is not an
+ * `Exception`, and what a rejected promise arrives as is the coroutines library's business.
+ */
+private suspend fun JsAny.toImportedFile(): ImportedFile? {
+    val name = try {
+        fileName(this).toString()
+    } catch (_: Throwable) {
+        return null
     }
+    val bytes = try {
+        fileBytes(this).await<Int8Array?>()?.toByteArray()
+    } catch (exception: CancellationException) {
+        throw exception
+    } catch (exception: Throwable) {
+        println("Could not read \"$name\": ${exception.message}")
+        null
+    }
+    return ImportedFile(name = name, bytes = bytes ?: ByteArray(0))
 }
 
+/**
+ * A dropped folder is opened one level deep: its own files are taken, in name order, and the folders inside it
+ * are not. That is what "my folder of songs" is, and it keeps a home directory dropped by accident from being read
+ * into memory. Names starting with a dot are left out of a folder, as they are out of an archive - nobody chose
+ * those, and the `._` companions macOS writes next to every file on a foreign volume carry a song's extension.
+ *
+ * `webkitGetAsEntry` and `getAsFile` are only answered while the `drop` handler is running, so every item is asked
+ * before the handler returns and the reading happens afterwards. Nothing here rejects: an entry that cannot be
+ * read resolves to nothing, and a browser without `webkitGetAsEntry` hands a folder over as a `File` that
+ * [fileBytes] then reports as unreadable.
+ */
 private fun listenForDrops(): Unit = js(
     """(function () {
         if (window.__campfireDropsReady) return;
@@ -132,10 +176,64 @@ private fun listenForDrops(): Unit = js(
         window.__campfireDrops = [];
         window.__campfireDropResolve = null;
         function stop(event) { event.preventDefault(); event.stopPropagation(); }
+        function fileOf(entry) {
+            return new Promise(function (resolve) {
+                entry.file(resolve, function () { resolve(null); });
+            });
+        }
+        function childrenOf(directory) {
+            return new Promise(function (resolve) {
+                var reader = directory.createReader();
+                var children = [];
+                function read() {
+                    reader.readEntries(function (batch) {
+                        if (batch.length === 0) { resolve(children); return; }
+                        children = children.concat(Array.prototype.slice.call(batch));
+                        read();
+                    }, function () { resolve(children); });
+                }
+                read();
+            });
+        }
+        function filesIn(directory) {
+            return childrenOf(directory).then(function (children) {
+                return Promise.all(children
+                    .filter(function (child) { return child.isFile && child.name.charAt(0) !== '.'; })
+                    .sort(function (first, second) { return first.name < second.name ? -1 : first.name > second.name ? 1 : 0; })
+                    .map(fileOf));
+            });
+        }
+        function collect(dataTransfer) {
+            var pending = [];
+            var items = dataTransfer.items;
+            if (items && items.length > 0) {
+                for (var i = 0; i < items.length; i++) {
+                    if (items[i].kind !== 'file') continue;
+                    var entry = items[i].webkitGetAsEntry ? items[i].webkitGetAsEntry() : null;
+                    if (entry && entry.isDirectory) {
+                        pending.push(filesIn(entry));
+                    } else {
+                        var file = items[i].getAsFile();
+                        if (file) pending.push(Promise.resolve([file]));
+                    }
+                }
+            } else if (dataTransfer.files && dataTransfer.files.length > 0) {
+                pending.push(Promise.resolve(Array.prototype.slice.call(dataTransfer.files)));
+            }
+            if (pending.length === 0) return null;
+            return Promise.all(pending).then(function (groups) {
+                var files = [];
+                groups.forEach(function (group) {
+                    group.forEach(function (file) { if (file) files.push(file); });
+                });
+                return files;
+            }, function () { return []; });
+        }
         window.addEventListener('dragover', stop);
         window.addEventListener('drop', function (event) {
             stop(event);
-            var files = Array.prototype.slice.call(event.dataTransfer.files);
+            var files = event.dataTransfer ? collect(event.dataTransfer) : null;
+            if (!files) return;
             if (window.__campfireDropResolve) {
                 var resolve = window.__campfireDropResolve;
                 window.__campfireDropResolve = null;

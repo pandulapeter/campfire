@@ -86,4 +86,5 @@ the URL: `restore` reports that this start up came back from a consent page (wha
 `CampfireViewModel` opens Settings, which is the screen the user pressed the button on.
 
 The web build has no file associations and no "open with": browsers cannot register those without a service worker.
-Files reach it through the picker (a hidden `<input type="file">`) or by being dropped on the page.
+Files reach it through the picker (a hidden `<input type="file">`) or by being dropped on the page — files or a folder,
+which is opened one level deep.

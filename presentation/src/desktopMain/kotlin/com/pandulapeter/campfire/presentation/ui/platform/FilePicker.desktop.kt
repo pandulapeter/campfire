@@ -74,15 +74,22 @@ internal object DesktopFilePicker : FilePicker {
 
 /**
  * Reads whatever of the given paths can be read, which is how a file reaches the app without a dialog: as a command
- * line argument from an "open with", or as a drop onto the window. Anything unreadable is left out, and anything the
- * import does not recognise is reported by it as skipped.
+ * line argument from an "open with", or as a drop onto the window. A folder stands for the files directly inside
+ * it - not for the folders in there, and not for the hidden files nobody chose. Anything unreadable is left out,
+ * and anything the import does not recognise is reported by it as skipped.
  */
-fun List<String>.readAsImportedFiles() = mapNotNull { path ->
+fun List<String>.readAsImportedFiles() = flatMap { path ->
     val file = File(path)
+    if (file.isDirectory) {
+        file.listFiles { child -> child.isFile && !child.name.startsWith(".") }.orEmpty().sortedBy { it.name }
+    } else {
+        listOf(file)
+    }
+}.mapNotNull { file ->
     try {
         if (file.isFile) ImportedFile(name = file.name, bytes = file.readBytes()) else null
     } catch (exception: Exception) {
-        println("Could not read \"$path\": ${exception.message}")
+        println("Could not read \"${file.path}\": ${exception.message}")
         null
     }
 }
