@@ -633,7 +633,8 @@ private fun TextStyle.scaled(scale: Float) = copy(
  *
  * The candidate column counts are evaluated with the sections' intrinsic heights (they are only measured once, with
  * the width that won), starting from a single column and jumping straight to the smallest count that could possibly
- * fit whenever the current one does not.
+ * fit whenever the current one does not, and a window with room for a single column asks for none of them, since one
+ * column is the same grid whatever the heights are.
  *
  * The [SectionGrid] is decided for the width the layout settles at ([extraWidth]), the columns themselves are laid
  * out in the width that is available right now, so that a layout that is still being resized keeps its sections
@@ -687,8 +688,13 @@ private fun SongSectionsLayout(
             measure = measurables[index]::maxIntrinsicHeight,
         )
 
-        fun gridFor(columnCount: Int) = if (isHorizontalFlow && columnCount > 1) {
-            flowIntoRows(
+        fun gridFor(columnCount: Int) = when {
+            // A single column is every section stacked in its order, however tall each of them is, so it is the one
+            // grid that is known without an intrinsic measurement. Asking for the heights anyway lays every line of
+            // the song out once for a number nobody reads and then once more to be drawn, and on a window too narrow
+            // for a second column - which is every phone - this is the only grid there is.
+            columnCount == 1 -> singleColumnGrid(measurables.size)
+            isHorizontalFlow -> flowIntoRows(
                 sectionCount = measurables.size,
                 maxColumnCount = columnCount,
                 heightAt = ::heightAt,
@@ -696,8 +702,7 @@ private fun SongSectionsLayout(
                 rowGap = rowGapPx,
                 maxStackHeight = if (availableHeightPx > 0) availableHeightPx else Int.MAX_VALUE,
             )
-        } else {
-            List(measurables.size) { heightAt(it, columnCount) }.balanceIntoColumns(columnCount, sectionGapPx)
+            else -> List(measurables.size) { heightAt(it, columnCount) }.balanceIntoColumns(columnCount, sectionGapPx)
         }
 
         fun SectionGrid.height() = arrange(
@@ -839,6 +844,13 @@ private fun SectionGrid.arrange(heights: IntArray, sectionGap: Int, rowGap: Int)
     }
     return SongArrangement(tops = tops, height = rowTop + rowHeight, dividerTops = dividerTops)
 }
+
+/** The grid of a layout one column wide: every section in the one cell of the one row, in their order. */
+private fun singleColumnGrid(sectionCount: Int) = SectionGrid(
+    rows = IntArray(sectionCount),
+    columns = IntArray(sectionCount),
+    columnCounts = if (sectionCount == 0) IntArray(0) else intArrayOf(1),
+)
 
 /**
  * Distributes the sections (given by their heights, in order) into [columnCount] columns, filled top to bottom, so
