@@ -28,6 +28,7 @@ import com.pandulapeter.campfire.data.source.local.api.LibraryStorageException
 import com.pandulapeter.campfire.data.source.remote.api.SyncNetworkException
 import com.pandulapeter.campfire.data.source.remote.api.SyncProviders
 import com.pandulapeter.campfire.data.source.remote.api.SyncRemoteStorageFullException
+import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.test.runTest
 import kotlin.test.Test
@@ -134,6 +135,62 @@ class SyncRepositoryImplTest {
         val state = repository.awaitOutcome()
 
         assertEquals(SyncOutcome.Failure(SyncFailureReason.REMOTE_STORAGE_FULL), state.lastOutcome)
+    }
+
+    @Test
+    fun `restoring again while a run is going leaves the run alone`() = runTest {
+        val gate = CompletableDeferred<Unit>()
+        val stateLocalSource = FakeSyncStateLocalSource()
+        val repository = repository(
+            provider = FakeSyncProvider(
+                files = mapOf(song(1) to "One".encodeToByteArray()),
+                onDownload = { gate.await() },
+                account = ACCOUNT,
+            ),
+            stateLocalSource = stateLocalSource,
+        )
+
+        repository.restore()
+        repository.synchronize(SyncDeletionPolicy.ASK)
+        repository.syncState.first { (it as? SyncState.Connected)?.progress?.total == 1 }
+        val result = repository.restore()
+
+        assertTrue(result.isConnected)
+        assertFalse(result.wasInterrupted)
+        val state = assertIs<SyncState.Connected>(repository.syncState.value)
+        assertTrue(state.isSyncing)
+        assertNull(state.lastOutcome)
+        assertTrue("\"isRunInProgress\": true" in stateLocalSource.index.orEmpty())
+        gate.complete(Unit)
+        assertIs<SyncOutcome.Success>(repository.awaitOutcome().lastOutcome)
+    }
+
+    @Test
+    fun `restoring again after an interrupted run still reports it`() = runTest {
+        val repository = repository(
+            provider = FakeSyncProvider(account = ACCOUNT),
+            stateLocalSource = FakeSyncStateLocalSource(index = """{"isRunInProgress":true}"""),
+        )
+
+        assertTrue(repository.restore().wasInterrupted)
+        assertTrue(repository.restore().wasInterrupted)
+        assertEquals(SyncOutcome.Interrupted, (repository.syncState.value as SyncState.Connected).lastOutcome)
+    }
+
+    @Test
+    fun `restoring again with nothing going starts from the state`() = runTest {
+        val repository = repository(
+            provider = FakeSyncProvider(files = mapOf(song(1) to "One".encodeToByteArray()), account = ACCOUNT),
+        )
+
+        repository.restore()
+        repository.synchronize(SyncDeletionPolicy.ASK)
+        repository.awaitOutcome()
+        val result = repository.restore()
+
+        assertTrue(result.isConnected)
+        assertFalse(result.wasInterrupted)
+        assertIs<SyncOutcome.Success>((repository.syncState.value as SyncState.Connected).lastOutcome)
     }
 
     private fun repository(

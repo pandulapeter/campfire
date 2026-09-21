@@ -33,6 +33,10 @@ interface SyncRepository {
     /**
      * Reads the stored credentials and finishes an authorization that was started before the app was last closed,
      * which is the ordinary case on the web: consent happens on another page, and the app starts again afterwards.
+     *
+     * May be called more than once in a process - on Android every new activity's ViewModel does. Only a call that
+     * finds no connection in [syncState] reads anything; a later one answers from the state and never touches a run
+     * that is going.
      */
     suspend fun restore(): RestoreResult
 

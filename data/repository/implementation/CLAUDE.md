@@ -78,6 +78,9 @@ long as the storage takes to answer. A cancelled read is not a failed one: it is
   A run the app never came back from is found by the index's `isRunInProgress` marker at `restore`, reported as
   interrupted next time, and that run is left for the user to start: `RestoreResult.wasInterrupted` keeps
   `RestoreSyncUseCase` from starting one on launch, which would replace the message before it could be read.
+  `restore` is asked once per ViewModel — on Android once per activity — so a call that finds the state already
+  `Connected` answers from it and reads nothing: read again from the disk, a run that is going would look like one
+  that was interrupted, and its marker would be cleared under it.
   `commonTest` runs the engine against an in-memory `SyncProvider` and `LibraryFileLocalSource` for the behaviour the
   planner's tests cannot show, and `SyncRepositoryImplTest` runs the repository against the same fakes plus the ones
   in `FakeSyncCollaborators.kt`. A plan whose local deletions are more than half of the index (at least

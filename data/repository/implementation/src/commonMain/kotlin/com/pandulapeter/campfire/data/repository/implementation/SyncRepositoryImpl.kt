@@ -104,13 +104,21 @@ internal class SyncRepositoryImpl(
     /** One run at a time: two of them over the same files would each undo half of what the other did. */
     private val mutex = Mutex()
 
+    /**
+     * Start up is asked for once per ViewModel, which on Android is once per activity rather than once per process,
+     * and the second one may arrive while the first is still waiting for the service to say whose account this is.
+     */
+    private val restoreMutex = Mutex()
+
     private var liveRescanJob: Job? = null
     private var lastLiveRescanAt = 0L
 
     private var indexWriteJob: Job? = null
     private var lastIndexWriteAt = 0L
 
-    override suspend fun restore(): SyncRepository.RestoreResult {
+    override suspend fun restore() = restoreMutex.withLock { restoreConnection() }
+
+    private suspend fun restoreConnection(): SyncRepository.RestoreResult {
         // A consent page the app was sent away to, answered while it was not running - the web's ordinary case, and
         // checked first because it decides what the stored credentials are about to become.
         authenticator.consumePendingRedirect()?.let { redirectUri ->
@@ -118,6 +126,16 @@ internal class SyncRepositoryImpl(
                 isConnected = completePendingAuthorization(redirectUri),
                 didReturnFromAuthorization = true,
                 wasInterrupted = false,
+            )
+        }
+        // Already answered in this process. The connection, a run that may be going and whatever the last one ended in
+        // all live in the state, and reading them again from the disk would replace them with what the index said when
+        // that run started - "a run is going", which read at start up means "a run was interrupted".
+        (_syncState.value as? SyncState.Connected)?.let { connected ->
+            return SyncRepository.RestoreResult(
+                isConnected = true,
+                didReturnFromAuthorization = false,
+                wasInterrupted = !connected.isSyncing && connected.lastOutcome == SyncOutcome.Interrupted,
             )
         }
         val connected = providers.firstOrNull { it.isConnected() }

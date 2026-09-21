@@ -32,7 +32,7 @@ import com.pandulapeter.campfire.data.source.remote.api.model.RemoteWriteResult
 internal class FakeSyncProvider(
     files: Map<SyncKey, ByteArray> = emptyMap(),
     private val sizes: Map<SyncKey, Long> = emptyMap(),
-    var onDownload: (SyncKey) -> Unit = {},
+    var onDownload: suspend (SyncKey) -> Unit = {},
     var onUpload: (SyncKey) -> Unit = {},
     private val account: SyncAccount? = null,
 ) : SyncProvider {
