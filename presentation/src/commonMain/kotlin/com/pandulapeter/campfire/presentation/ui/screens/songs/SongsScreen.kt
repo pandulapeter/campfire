@@ -45,6 +45,7 @@ import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.unit.Dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.pandulapeter.campfire.data.model.domain.UserPreferences
+import com.pandulapeter.campfire.domain.api.models.SongSection
 import com.pandulapeter.campfire.presentation.resources.Res
 import com.pandulapeter.campfire.presentation.resources.ic_tune
 import com.pandulapeter.campfire.presentation.resources.songs
@@ -314,16 +315,16 @@ private fun SongList(
             songGroups.forEach { group ->
                 group.header?.let { header ->
                     stickyHeader(
-                        key = "header_$header",
+                        key = "header_${header.key}",
                         contentType = "header",
                     ) { headerIndex ->
                         SectionHeader(
                             modifier = listItemAnimation(listState, hasLoadedLibrary),
                             text = when (header) {
                                 // A song can be created without an artist, and an empty pill would look broken.
-                                is CampfireViewModel.SongGroup.Header.Artist -> header.name.ifBlank { stringResource(Res.string.songs_unknown_artist) }
-                                is CampfireViewModel.SongGroup.Header.Letter -> header.letter.toString()
-                                CampfireViewModel.SongGroup.Header.Symbols -> stringResource(Res.string.songs_unsorted_label)
+                                is SongSection.Header.Artist -> header.name.ifBlank { stringResource(Res.string.songs_unknown_artist) }
+                                is SongSection.Header.Letter -> header.letter.toString()
+                                SongSection.Header.Symbols -> stringResource(Res.string.songs_unsorted_label)
                             },
                             onClick = { coroutineScope.launch { listState.animateScrollToItem(headerIndex) } },
                         )
@@ -390,11 +391,11 @@ private fun SongList(
 /**
  * The single character shown in the bubble of the fast scroller while this section is at the top of the list.
  */
-private val CampfireViewModel.SongGroup.Header.fastScrollerLabel: String
+private val SongSection.Header.fastScrollerLabel: String
     get() = when (this) {
-        is CampfireViewModel.SongGroup.Header.Artist -> initial?.toString() ?: SYMBOLS_LABEL
-        is CampfireViewModel.SongGroup.Header.Letter -> letter.toString()
-        CampfireViewModel.SongGroup.Header.Symbols -> SYMBOLS_LABEL
+        is SongSection.Header.Artist -> initial?.toString() ?: SYMBOLS_LABEL
+        is SongSection.Header.Letter -> letter.toString()
+        SongSection.Header.Symbols -> SYMBOLS_LABEL
     }
 
 private const val SYMBOLS_LABEL = "#"

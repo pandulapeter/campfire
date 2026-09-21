@@ -24,6 +24,12 @@ data class ScreenData(
     /** The library, narrowed by the [SongFilter] and the preferences and sorted the way the preferences ask for. */
     val songs: List<Song>,
     /**
+     * The same songs in the same order, cut into the sections that order is listed under. It travels with [songs]
+     * rather than being worked out from it by the caller, since a caller would have to know which order the list it
+     * holds was sorted in, and the preference it would ask has usually moved on before the list has.
+     */
+    val songSections: List<SongSection>,
+    /**
      * Every tag the library uses, the most used one first, as the filter controls offer them. Counted before the tag
      * filter is applied and after every other one, so that selecting a tag does not empty the list of tags one could
      * select next. A tag that is selected stays on the list even where the language filter has counted it down to

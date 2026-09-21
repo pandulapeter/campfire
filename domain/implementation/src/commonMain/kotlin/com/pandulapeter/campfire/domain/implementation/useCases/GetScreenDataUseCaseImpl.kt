@@ -20,6 +20,7 @@ import com.pandulapeter.campfire.data.repository.api.SongRepository
 import com.pandulapeter.campfire.data.repository.api.UserPreferencesRepository
 import com.pandulapeter.campfire.domain.api.models.ScreenData
 import com.pandulapeter.campfire.domain.api.models.SongFilter
+import com.pandulapeter.campfire.domain.api.models.SongSection
 import com.pandulapeter.campfire.domain.api.useCases.GetScreenDataUseCase
 import com.pandulapeter.campfire.domain.api.useCases.NormalizeTextUseCase
 import kotlin.concurrent.Volatile
@@ -75,11 +76,13 @@ class GetScreenDataUseCaseImpl internal constructor(
                     val availableLanguages = filterableSongs.toLanguages()
                     val songsByTag = filterableSongs.filterTags(filter, listPreferences.tagMatchMode, availableTags)
                     val songsByLanguage = filterableSongs.filterLanguages(filter, availableLanguages)
+                    val songSections = songsByTag
+                        .filterLanguages(filter, availableLanguages)
+                        .sortIntoSections(listPreferences)
                     ScreenData(
                         setlists = setlists,
-                        songs = songsByTag
-                            .filterLanguages(filter, availableLanguages)
-                            .sortSongs(listPreferences),
+                        songs = songSections.flatMap { it.songs },
+                        songSections = songSections,
                         tags = songsByLanguage.toTags().withMissingSelected(
                             available = availableTags,
                             selected = filter.selectedTags.mapTo(mutableSetOf()) { it.lowercase() },
@@ -202,24 +205,61 @@ class GetScreenDataUseCaseImpl internal constructor(
     }
 
     /**
-     * The selector of a comparator runs on every comparison, so sorting this way used to normalize each title and
-     * artist a logarithmic number of times over. The keys are computed once per song here instead.
+     * The songs in the order the preferences ask for, cut into the sections that order is listed under.
+     *
+     * Both come from [SortableSong.sectionKey]: it is what the songs are ordered by before anything else and the only
+     * thing they are filed by, so a section is one run of the list, and collecting the runs in a map keyed by it means
+     * that no header can come up twice whatever a title starts with. The keys are computed once per song, since the
+     * selector of a comparator runs on every comparison.
      */
-    private fun List<Song>.sortSongs(listPreferences: ListPreferences): List<Song> {
-        val comparator = when (listPreferences.sortingMode) {
-            UserPreferences.SortingMode.BY_ARTIST -> compareBy<SortableSong>({ it.artist }, { it.title })
-            UserPreferences.SortingMode.BY_TITLE -> compareBy<SortableSong>({ it.title }, { it.artist })
+    private fun List<Song>.sortIntoSections(listPreferences: ListPreferences): List<SongSection> {
+        val sections = linkedMapOf<String, MutableList<SortableSong>>()
+        map { SortableSong(song = it, sortingMode = listPreferences.sortingMode, artist = normalizeText(it.artist), title = normalizeText(it.title)) }
+            .sortedWith(SortableSong.ORDER)
+            .forEach { sections.getOrPut(it.sectionKey) { mutableListOf() } += it }
+        return sections.map { (key, songs) ->
+            val first = songs.first()
+            SongSection(
+                header = when (listPreferences.sortingMode) {
+                    UserPreferences.SortingMode.BY_ARTIST -> SongSection.Header.Artist(name = first.song.artist, initial = first.initial, key = key)
+                    UserPreferences.SortingMode.BY_TITLE -> first.initial?.let { SongSection.Header.Letter(it) } ?: SongSection.Header.Symbols
+                },
+                songs = songs.map { it.song },
+            )
         }
-        return map { SortableSong(song = it, artist = normalizeText(it.artist), title = normalizeText(it.title)) }
-            .sortedWith(comparator)
-            .map { it.song }
     }
 
+    /** @param artist Normalized, like [title]. */
     private class SortableSong(
         val song: Song,
-        val artist: String,
-        val title: String,
-    )
+        sortingMode: UserPreferences.SortingMode,
+        artist: String,
+        title: String,
+    ) {
+        /** The text the list is sorted by, and the one that orders the songs the first one ties. */
+        val primaryText = if (sortingMode == UserPreferences.SortingMode.BY_ARTIST) artist else title
+        val secondaryText = if (sortingMode == UserPreferences.SortingMode.BY_ARTIST) title else artist
+
+        /** The upper case first character of [primaryText] where that is a letter, of any script. */
+        val initial = primaryText.firstOrNull()?.takeIf { it.isLetter() }?.uppercaseChar()
+
+        /**
+         * By artist a section is an artist; by title it is an initial, the empty key standing for every title that
+         * has none. The upper case initial rather than the first character: two lower case letters can share an
+         * upper case one (`ı` and `i`), and they share a header then.
+         */
+        val sectionKey = if (sortingMode == UserPreferences.SortingMode.BY_ARTIST) artist else initial?.toString().orEmpty()
+
+        companion object {
+
+            /**
+             * Whatever starts with something other than a letter comes first, in either order. Left to the order of
+             * the strings those texts land on both sides of the alphabet - a digit sorts before `a`, while `¿`, `…`,
+             * a curly quote and every emoji sort after `z` - which is two runs under one header.
+             */
+            val ORDER = compareBy<SortableSong>({ it.initial != null }, { it.sectionKey }, { it.primaryText }, { it.secondaryText })
+        }
+    }
 
     /** The part of the preferences the song list depends on. */
     private data class ListPreferences(

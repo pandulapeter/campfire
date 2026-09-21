@@ -37,6 +37,7 @@ import com.pandulapeter.campfire.data.model.domain.Tag
 import com.pandulapeter.campfire.data.model.domain.UserPreferences
 import com.pandulapeter.campfire.domain.api.models.ScreenData
 import com.pandulapeter.campfire.domain.api.models.SongFilter
+import com.pandulapeter.campfire.domain.api.models.SongSection
 import com.pandulapeter.campfire.domain.api.useCases.CancelSyncConnectionUseCase
 import com.pandulapeter.campfire.domain.api.useCases.CancelSynchronizationUseCase
 import com.pandulapeter.campfire.domain.api.useCases.ConnectSyncProviderUseCase
@@ -406,9 +407,12 @@ class CampfireViewModel(
     /**
      * The library as the song list shows it: narrowed by [songFilter] and sorted the way the preferences ask for.
      * Distinct, because [screenData] also emits for every write to a setlist with the song list exactly as it was, and
-     * each of those would otherwise have the whole library normalized and grouped again for nothing.
+     * each of those would otherwise have the whole library normalized again for nothing.
      */
     private val filteredSongs = screenData.map { it.data?.songs.orEmpty() }.distinctUntilChanged()
+
+    /** [filteredSongs] as the domain layer cut it into sections, distinct for the same reason. */
+    private val songSections = screenData.map { it.data?.songSections.orEmpty() }.distinctUntilChanged()
 
     /**
      * Every tag the library uses, most used first, as both the filter controls and the suggestions of the tag
@@ -435,7 +439,7 @@ class CampfireViewModel(
     }.asState(false)
 
     /**
-     * Every song with its title and artist normalized for searching and grouping, done once per library rather than
+     * Every song with its title and artist normalized for searching, done once per library rather than
      * once per keystroke: the search runs over the whole list on every character typed.
      */
     private val searchableSongs = filteredSongs.map { songs ->
@@ -458,11 +462,11 @@ class CampfireViewModel(
         .map { state -> state.data?.let { LibrarySummary(songCount = it.unfilteredSongs.size, setlistCount = it.setlists.size) } }
         .asState(null)
 
-    // Distinct on the sorting mode alone, or every other change to the preferences (a transposition, the text size
-    // settling after a pinch) would have the whole library grouped again for nothing.
-    val songGroups = combine(searchableSongs, songsSearch.activeQuery, userPreferences.map { it?.sortingMode }.distinctUntilChanged()) { songs, query, sortingMode ->
+    // The sections arrive cut, from the same pass that sorted them. Cutting them here would take the sorting mode
+    // from the preferences, which change before the list sorted by them arrives.
+    val songGroups = combine(songSections, searchableSongs, songsSearch.activeQuery) { sections, songs, query ->
         if (query.isBlank()) {
-            songs.groupIntoSections(sortingMode ?: UserPreferences.SortingMode.BY_ARTIST)
+            sections.map { SongGroup(header = it.header, songs = it.songs) }
         } else {
             // No groups at all when nothing matches, rather than one empty group: a search with no results has to
             // look empty to whoever decides between the list and a placeholder, not like a list with one section.
@@ -1595,36 +1599,6 @@ class CampfireViewModel(
                 songs[entry.songFileName]?.let { it.title.contains(normalizedQuery) || it.artist.contains(normalizedQuery) } == true
             }
 
-    /**
-     * The songs arrive sorted, so a song joins the previous group whenever it has the same key. Comparing the keys
-     * rather than the headers keeps this to one comparison per song.
-     */
-    private fun List<SearchableSong>.groupIntoSections(sortingMode: UserPreferences.SortingMode): List<SongGroup> {
-        val groups = mutableListOf<Pair<SongGroup.Header, MutableList<Song>>>()
-        var lastKey: String? = null
-        forEach { song ->
-            val key = when (sortingMode) {
-                UserPreferences.SortingMode.BY_ARTIST -> song.artist
-                UserPreferences.SortingMode.BY_TITLE -> song.title.initialLetter()?.toString().orEmpty()
-            }
-            val lastGroup = groups.lastOrNull()
-            if (lastGroup != null && key == lastKey) {
-                lastGroup.second += song.song
-            } else {
-                val header = when (sortingMode) {
-                    UserPreferences.SortingMode.BY_ARTIST -> SongGroup.Header.Artist(name = song.song.artist, initial = song.artist.initialLetter())
-                    UserPreferences.SortingMode.BY_TITLE -> key.firstOrNull()?.let { SongGroup.Header.Letter(it) } ?: SongGroup.Header.Symbols
-                }
-                groups += header to mutableListOf(song.song)
-                lastKey = key
-            }
-        }
-        return groups.map { (header, songs) -> SongGroup(header, songs) }
-    }
-
-    /** The upper case first character of an already normalized (lower case, accent-free) text if it is a letter. */
-    private fun String.initialLetter() = firstOrNull()?.takeIf { it.isLetter() }?.uppercaseChar()
-
     /** One batch in [importQueue]. */
     private class ImportRequest(
         val files: List<ImportedFile>,
@@ -1727,17 +1701,11 @@ class CampfireViewModel(
         val languages: Set<String> = emptySet(),
     )
 
+    /** @param header Null for the results of a search, which are ranked rather than filed under anything. */
     data class SongGroup(
-        val header: Header?,
+        val header: SongSection.Header?,
         val songs: List<Song>,
-    ) {
-        sealed interface Header {
-            /** @param initial The first letter of the artist's name, null if the name starts with a symbol. */
-            data class Artist(val name: String, val initial: Char?) : Header
-            data class Letter(val letter: Char) : Header
-            data object Symbols : Header
-        }
-    }
+    )
 
     /**
      * The transposition of every song the UI can currently show, from both places one can be stored. Looked up by

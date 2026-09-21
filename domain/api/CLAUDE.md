@@ -20,7 +20,9 @@ paths, `Is*` for a question with a yes or no answer (`IsFirstRun`), or a verb fo
 
 - `ScreenData` bundles what the song and setlist screens need in one object: the setlists (every one of them, archived
   included, in the order `UserPreferences.SetlistSortingMode` asks for), the songs filtered and sorted the way the
-  preferences ask for, `tags` (every label the library uses with how many songs carry it, most used first),
+  preferences ask for and the same list cut into its sections (`songSections`, `SongSection`: an artist or an initial
+  per header, the texts that start with no letter first) — cut where it is sorted, so that a header cannot come up
+  twice, `tags` (every label the library uses with how many songs carry it, most used first),
   `languages` (the same for the languages its songs declare, with the ones that declare none last) and
   `unfilteredSongs` — the whole library, hidden songs included, which is what a setlist and the song details screen
   are read from: a setlist shows what somebody wrote down rather than a view of the library, so the song filters

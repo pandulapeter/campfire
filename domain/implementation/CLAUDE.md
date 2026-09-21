@@ -18,8 +18,9 @@ The ones that carry real logic:
 - `GetScreenDataUseCaseImpl` — combines the setlist, song and preference flows, and the `SongFilter` flow the caller
   passes in, into one `Flow<DataState<ScreenData>>`, built on `Dispatchers.Default` since the view model collects it
   on the main thread. Applies the "songs without chords" filter, the tag filter and
-  the sorting (by title or artist, through
-  `NormalizeTextUseCase`, so accents are ignored), and keeps a `cache` so that a `Loading` or `Failure` state can still
+  the sorting and the sections it is listed under (by title or artist, through
+  `NormalizeTextUseCase`, so accents are ignored; one key decides both, and whatever starts with no letter comes
+  first), and keeps a `cache` so that a `Loading` or `Failure` state can still
   carry the last good data, and orders the setlists (newest first or by title, the archived ones after the rest either
   way) without ever narrowing them: the song filters are about the song list, and the setlists screen decides for
   itself whether it is showing the archived ones. The whole library travels alongside the filtered list — see
