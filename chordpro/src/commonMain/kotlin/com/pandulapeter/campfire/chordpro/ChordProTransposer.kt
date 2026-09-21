@@ -168,42 +168,40 @@ object ChordProTransposer {
         return ChordProSyntax.joinLines(lines, text)
     }
 
-    /** Whether flats should be preferred when writing the chords of this song after the given transposition. */
+    /** Whether flats should be preferred for the key this song arrives in after the transposition. */
     fun prefersFlats(song: ChordProSong, semitones: Int): Boolean {
-        val key = song.metadata.key?.trim().orEmpty()
-        val keyIndex = noteIndices[key.getOrNull(0)]
-        if (keyIndex != null) {
-            val accidental = accidentals[key.getOrNull(1)]
-            val suffix = key.substring(if (accidental == null) 1 else 2)
-            val rootName = flatNames[(keyIndex + (accidental ?: 0) + semitones).mod(NOTE_COUNT)]
-            val isMinor = suffix.startsWith("m") && !suffix.startsWith("maj", ignoreCase = true)
-            return if (isMinor) flatMinorKeys.contains(rootName + "m") else flatMajorKeys.contains(rootName)
-        }
+        val names = writtenChordNames(song).toList()
+        val key = song.metadata.key?.let(::keyOf)
+            ?: names.firstNotNullOfOrNull { name -> name.takeIf(ChordProChordNames::isChordName)?.let(::keyOf) }
+        return key?.transposedBy(semitones)?.prefersFlats ?: isWrittenInFlats(names)
+    }
+
+    private fun keyOf(name: String): Key? {
+        val root = ChordProChordNames.notes(name.trim()).first()
+        val noteIndex = noteIndices[root.getOrNull(0)] ?: return null
+        val accidental = accidentals[root.getOrNull(1)]
+        val suffix = root.substring(if (accidental == null) 1 else 2).trimStart()
+        return Key((noteIndex + (accidental ?: 0)).mod(NOTE_COUNT), suffix.startsWith("m") && !suffix.startsWith("maj", ignoreCase = true))
+    }
+
+    private class Key(val tonic: Int, val isMinor: Boolean) {
+        val prefersFlats get() = if (isMinor) flatNames[tonic] + "m" in flatMinorKeys else flatNames[tonic] in flatMajorKeys
+        fun transposedBy(semitones: Int) = Key((tonic + semitones).mod(NOTE_COUNT), isMinor)
+    }
+
+    private fun isWrittenInFlats(names: List<String>): Boolean {
         var flats = 0
         var sharps = 0
-        chordNames(song).forEach { name ->
-            name.split(BASS_NOTE_SEPARATOR).forEach { part ->
-                if (noteIndices.containsKey(part.getOrNull(0))) {
-                    when (accidentals[part.getOrNull(1)]) {
-                        1 -> sharps++
-                        -1 -> flats++
-                    }
+        names.flatMap(ChordProChordNames::notes).forEach { note ->
+            if (noteIndices.containsKey(note.getOrNull(0))) {
+                when (accidentals[note.getOrNull(1)]) {
+                    1 -> sharps++
+                    -1 -> flats++
                 }
             }
         }
         return flats > sharps
     }
-
-    private fun chordNames(song: ChordProSong) = song.blocks.asSequence()
-        .filterIsInstance<ChordProBlock.Section>()
-        .flatMap { it.lines }
-        .flatMap { line ->
-            when (line) {
-                is ChordProLine.Lyrics -> line.chords.asSequence().filter { !it.isAnnotation }.map { it.name }
-                is ChordProLine.Grid -> line.tokens.asSequence().filterIsInstance<GridToken.Chord>().map { it.name }
-                else -> emptySequence()
-            }
-        }
 
     /** Transposes the collected lines of one tab environment in place and starts collecting the next one. */
     private fun MutableList<String>.transposeTab(indices: MutableList<Int>, semitones: Int, rename: (String) -> String) {
@@ -290,7 +288,6 @@ object ChordProTransposer {
     }
 
     private const val NOTE_COUNT = 12
-    private const val BASS_NOTE_SEPARATOR = "/"
     private const val SOURCE_COMMENT = "#"
     private const val ANNOTATION_MARKER = "*"
     private const val KEY = "key"
@@ -304,8 +301,8 @@ object ChordProTransposer {
     private val tokenRegex = Regex("\\S+")
     private val sharpNames = listOf("C", "C#", "D", "D#", "E", "F", "F#", "G", "G#", "A", "A#", "B")
     private val flatNames = listOf("C", "Db", "D", "Eb", "E", "F", "Gb", "G", "Ab", "A", "Bb", "B")
-    private val flatMajorKeys = setOf("F", "Bb", "Eb", "Ab", "Db", "Gb", "Cb")
-    private val flatMinorKeys = setOf("Dm", "Gm", "Cm", "Fm", "Bbm", "Ebm", "Abm")
+    private val flatMajorKeys = setOf("C", "F", "Bb", "Eb", "Ab", "Db")
+    private val flatMinorKeys = setOf("Dm", "Gm", "Cm", "Fm", "Bbm", "Ebm")
     private val noteIndices = mapOf(
         'C' to 0,
         'D' to 2,

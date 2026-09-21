@@ -68,8 +68,9 @@ class ChordProTransposerTest {
     }
 
     @Test
-    fun `without a key the accidentals of the chords decide`() {
-        assertTrue(ChordProTransposer.prefersFlats(ChordProParser.parse("[Bb]a [Eb]b [C]c"), 1))
+    fun `without a key the first chord stands in for it`() {
+        assertTrue(ChordProTransposer.prefersFlats(ChordProParser.parse("[G]a [C]b [D]c"), 1))
+        assertFalse(ChordProTransposer.prefersFlats(ChordProParser.parse("[Eb]a [Bb]b [Cm]c"), 1))
         assertFalse(ChordProTransposer.prefersFlats(ChordProParser.parse("[F#]a [C#]b [C]c"), 1))
     }
 
@@ -301,8 +302,8 @@ class ChordProTransposerTest {
 
     @Test
     fun `transposing text keeps the trailing line break exactly where the file had one`() {
-        assertEquals("[A#m]la\n", ChordProTransposer.transposeText("[Am]la\n", 1))
-        assertEquals("[A#m]la", ChordProTransposer.transposeText("[Am]la", 1))
+        assertEquals("[Bbm]la\n", ChordProTransposer.transposeText("[Am]la\n", 1))
+        assertEquals("[Bbm]la", ChordProTransposer.transposeText("[Am]la", 1))
     }
 
     @Test
