@@ -32,7 +32,8 @@ The long version of what Campfire does. The [README](../README.md) has the short
 ### Writing and editing
 
 - A built-in editor with ChordPro syntax highlighting and a live preview of the finished song.
-- Nothing is written until you save it, and leaving with unsaved changes asks first. Ctrl/Cmd + S saves.
+- Nothing is written until you save it, and leaving with unsaved changes asks first — closing or reloading the browser
+  tab included. Ctrl/Cmd + S saves.
 - Metadata is edited through the song's header rather than by hand, and tags and languages are put on or taken off
   there too.
 

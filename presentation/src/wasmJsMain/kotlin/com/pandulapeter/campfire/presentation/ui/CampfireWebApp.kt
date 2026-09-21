@@ -14,6 +14,7 @@ package com.pandulapeter.campfire.presentation.ui
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.DisposableEffect
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.remember
 import com.pandulapeter.campfire.presentation.ui.platform.LocalFilePicker
 import com.pandulapeter.campfire.presentation.ui.platform.WebFilePicker
@@ -23,7 +24,8 @@ import kotlin.js.ExperimentalWasmJsInterop
 import org.koin.compose.viewmodel.koinViewModel
 
 /**
- * Web shell of the shared UI. Links open in a new browser tab, and files dropped on the page are imported.
+ * Web shell of the shared UI. Links open in a new browser tab, files dropped on the page are imported, and the
+ * browser asks before the page is left with unsaved text in the editor.
  */
 @Composable
 fun CampfireWebApp(
@@ -35,11 +37,57 @@ fun CampfireWebApp(
         startForwardingEscapeKey()
         onDispose { stopForwardingEscapeKey() }
     }
+    // Collected in an effect rather than read as lifecycle-aware state: a tab that is closed from the tab strip
+    // while another one is in front is a hidden page, and that is no moment to have stopped listening.
+    LaunchedEffect(viewModel) {
+        viewModel.hasUnsavedEditorChanges.collect { hasUnsavedChanges ->
+            if (hasUnsavedChanges) startWarningBeforeUnload() else stopWarningBeforeUnload()
+        }
+    }
+    DisposableEffect(Unit) {
+        onDispose { stopWarningBeforeUnload() }
+    }
     CampfireApp(
         viewModel = viewModel,
         urlOpener = { url -> window.open(url, "_blank") },
         filesToImport = remember { droppedFiles() },
         onAppReady = ::dismissLoadingScreen,
+    )
+}
+
+/**
+ * Makes the browser ask before the page is left - reloaded, closed, navigated away from, or gone back from,
+ * which leaves the page too, since the app puts nothing into the browser's history. The editor only writes when
+ * it is told to, so at that moment the page holds the only copy of what was typed.
+ *
+ * The listener exists only while there is unsaved text ([stopWarningBeforeUnload] otherwise): a page with a
+ * `beforeunload` listener is one the browser cannot keep in its back/forward cache, and one that always asks is
+ * one the browser stops listening to. What the prompt says is the browser's own business - the text a page
+ * supplies has not been shown by any of them for years - so there is nothing here to translate. The browser
+ * also only asks once the user has interacted with the page, which typing has taken care of.
+ */
+private fun startWarningBeforeUnload() {
+    js(
+        """(function () {
+            if (window.campfireUnloadWarning) return;
+            window.campfireUnloadWarning = function (event) {
+                event.preventDefault();
+                // What asks the question in the browsers that predate preventDefault doing so.
+                event.returnValue = true;
+            };
+            window.addEventListener('beforeunload', window.campfireUnloadWarning);
+        })()"""
+    )
+}
+
+/** Undoes [startWarningBeforeUnload]. */
+private fun stopWarningBeforeUnload() {
+    js(
+        """(function () {
+            if (!window.campfireUnloadWarning) return;
+            window.removeEventListener('beforeunload', window.campfireUnloadWarning);
+            window.campfireUnloadWarning = null;
+        })()"""
     )
 }
 
