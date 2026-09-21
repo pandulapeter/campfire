@@ -96,6 +96,12 @@ class DropboxRequestTest {
         assertFailsWith<SyncNetworkException> { provider.list() }
     }
 
+    @Test
+    fun `an upload whose receipt cannot be read is one that may have landed`() = runTest {
+        val provider = provider { respond(content = "<html>", status = HttpStatusCode.OK) }
+        assertFailsWith<SyncNetworkException> { provider.upload(LibraryFileKind.SONG, "song.cho", ByteArray(1), null) }
+    }
+
     /** A token the device's clock still believes in can be one Dropbox has stopped accepting. */
     @Test
     fun `refreshes the token once when dropbox refuses it`() = runTest {

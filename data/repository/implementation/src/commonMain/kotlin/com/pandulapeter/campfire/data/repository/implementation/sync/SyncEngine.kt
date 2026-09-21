@@ -328,11 +328,14 @@ internal class SyncEngine(
      * next to it under a free name and goes back up under that name, so that both devices end with both versions
      * and the same two names. Nothing is merged, and nothing is thrown away.
      *
-     * The local version goes up before the copy is written, because the upload is what can still turn out to be
-     * contested: a second device resolving the same file at the same moment makes it a conflict, and a copy already
-     * on disk by then would be uploaded as a new file on the next pass while the file itself was resolved again into
-     * a third one. Written only once the upload has gone through, the copy lands in the pass in which it really is
-     * the version that lost.
+     * The incoming version is on disk before the local one goes up, because going up is what destroys it on the
+     * remote: held only in memory across that request, a copy that then cannot be written - a full disk, a process
+     * that is killed - would be a version that exists nowhere. The upload can still turn out to be contested, a second
+     * device resolving the same file in the same moment, and a copy left on disk then would go up as a new file on the
+     * next pass while the file itself was resolved again into another one. So the copy is taken back whenever the
+     * service has said that the remote version is still there: a refusal, or a conflict that is not the echo of this
+     * device's own write. Where nothing says either way - the network dropped, the run was stopped - it stays, and the
+     * worst that follows is a second identical copy.
      */
     private suspend fun resolve(
         provider: SyncProvider,
@@ -349,12 +352,32 @@ internal class SyncEngine(
         if (remote.contentEquals(local)) {
             return OperationOutcome(entries = mapOf(key to SyncIndexEntry(localContentHash(local), operation.revision)))
         }
-        val uploaded = provider.upload(key.kind, key.name, local, operation.revision)
-        if (uploaded !is RemoteWriteResult.Written) return OperationOutcome(hasUnresolvedConflict = true)
-        val entries = mutableMapOf(key to SyncIndexEntry(localContentHash(local), uploaded.revision))
-
         val copyName = libraryFileLocalSource.writeLibraryFileToFreeName(key.kind, key.name, remote)
         val copyKey = SyncKey(kind = key.kind, name = copyName)
+        val uploaded = try {
+            provider.upload(key.kind, key.name, local, operation.revision)
+        } catch (exception: CancellationException) {
+            // Nothing says whether the write landed, so the copy stays: see the KDoc.
+            throw exception
+        } catch (exception: SyncNetworkException) {
+            throw exception
+        } catch (exception: Exception) {
+            // The service answered, and the answer was no. The remote version is where it was, and a copy kept now would
+            // be joined by another one every time this file is resolved again.
+            discardCopy(copyKey, remote)
+            throw exception
+        }
+        if (uploaded !is RemoteWriteResult.Written) {
+            // Contested - unless what is there now is what was just sent, which is how a write looks that landed and was
+            // then retried. In that case the remote version is gone from the service, and the copy is all there is of it.
+            val isOwnWrite = provider.download(key.kind, key.name).contentEquals(local)
+            if (!isOwnWrite) discardCopy(copyKey, remote)
+            return OperationOutcome(
+                summary = if (isOwnWrite) SyncSummary(conflicts = listOf(copyName)) else SyncSummary(),
+                hasUnresolvedConflict = true,
+            )
+        }
+        val entries = mutableMapOf(key to SyncIndexEntry(localContentHash(local), uploaded.revision))
         val copyUploaded = provider.upload(copyKey.kind, copyKey.name, remote, expectedRevision = null)
         if (copyUploaded is RemoteWriteResult.Written) {
             entries[copyKey] = SyncIndexEntry(localContentHash(remote), copyUploaded.revision)
@@ -365,6 +388,23 @@ internal class SyncEngine(
             entries = entries,
             summary = SyncSummary(uploaded = 1, downloaded = 1, conflicts = listOf(copyName)),
         )
+    }
+
+    /**
+     * Takes back a copy whose file turned out not to have been overwritten remotely. Read before it is deleted, like
+     * everything else this class removes: only the bytes that were written a moment ago are taken back.
+     */
+    private suspend fun discardCopy(copyKey: SyncKey, written: ByteArray) {
+        try {
+            if (libraryFileLocalSource.readLibraryFile(copyKey.kind, copyKey.name)?.contentEquals(written) == true) {
+                libraryFileLocalSource.deleteLibraryFile(copyKey.kind, copyKey.name)
+            }
+        } catch (exception: CancellationException) {
+            throw exception
+        } catch (exception: Exception) {
+            // A copy too many is the harmless way for this to go wrong.
+            println("Could not remove the unused copy \"${copyKey.path}\": ${exception.message}")
+        }
     }
 
     private fun isSameContent(provider: SyncProvider, local: ByteArray, remoteContentHash: String?) =

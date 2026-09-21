@@ -207,6 +207,98 @@ class SyncEngineTest {
     }
 
     @Test
+    fun `a conflict whose copy cannot be written leaves the remote version alone`() = runTest {
+        val local = FakeLibraryFileLocalSource(
+            files = mapOf(song(1) to HERE),
+            onWrite = { key -> if (key != song(1)) throw LibraryStorageException("Full") },
+        )
+        val provider = FakeSyncProvider(files = mapOf(song(1) to THERE))
+
+        val result = SyncEngine(local).synchronize(
+            provider = provider,
+            document = indexOf(song(1) to ORIGINAL),
+            accountId = ACCOUNT_ID,
+            onProgress = {},
+            onIndexChanged = {},
+            deletionPolicy = SyncDeletionPolicy.ASK,
+        )
+
+        assertContentEquals(THERE, provider.files.getValue(song(1)).first)
+        assertEquals(setOf(song(1)), local.files.keys)
+        assertTrue(assertIs<SyncEngine.Result.Completed>(result).summary.conflicts.isEmpty())
+    }
+
+    @Test
+    fun `an upload that landed before it was reported as contested keeps the copy`() = runTest {
+        val copy = SyncKey(kind = LibraryFileKind.SONG, name = "song_1 (2).cho")
+        val local = FakeLibraryFileLocalSource(files = mapOf(song(1) to HERE))
+        val provider = FakeSyncProvider(files = mapOf(song(1) to THERE))
+        // The write lands and its answer is lost, so the retry carries a revision that is no longer current.
+        var isFirstUpload = true
+        provider.onUpload = { key ->
+            if (key == song(1) && isFirstUpload) {
+                isFirstUpload = false
+                provider.files[key] = HERE to "r7"
+            }
+        }
+
+        val result = SyncEngine(local).synchronize(
+            provider = provider,
+            document = indexOf(song(1) to ORIGINAL),
+            accountId = ACCOUNT_ID,
+            onProgress = {},
+            onIndexChanged = {},
+            deletionPolicy = SyncDeletionPolicy.ASK,
+        )
+
+        assertContentEquals(HERE, local.files[song(1)])
+        assertContentEquals(HERE, provider.files.getValue(song(1)).first)
+        assertContentEquals(THERE, local.files[copy])
+        assertContentEquals(THERE, provider.files.getValue(copy).first)
+        assertEquals(listOf(copy.name), assertIs<SyncEngine.Result.Completed>(result).summary.conflicts)
+    }
+
+    @Test
+    fun `an upload the service refuses takes the copy back`() = runTest {
+        val local = FakeLibraryFileLocalSource(files = mapOf(song(1) to HERE))
+        val provider = FakeSyncProvider(files = mapOf(song(1) to THERE))
+        provider.onUpload = { key -> if (key == song(1)) throw IllegalStateException("Refused") }
+
+        val result = SyncEngine(local).synchronize(
+            provider = provider,
+            document = indexOf(song(1) to ORIGINAL),
+            accountId = ACCOUNT_ID,
+            onProgress = {},
+            onIndexChanged = {},
+            deletionPolicy = SyncDeletionPolicy.ASK,
+        )
+
+        assertIs<SyncEngine.Result.Completed>(result)
+        assertEquals(setOf(song(1)), local.files.keys)
+        assertContentEquals(THERE, provider.files.getValue(song(1)).first)
+    }
+
+    @Test
+    fun `an upload cut off by the network keeps the copy`() = runTest {
+        val local = FakeLibraryFileLocalSource(files = mapOf(song(1) to HERE))
+        val provider = FakeSyncProvider(files = mapOf(song(1) to THERE))
+        provider.onUpload = { throw SyncNetworkException("Offline") }
+
+        assertFailsWith<SyncNetworkException> {
+            SyncEngine(local).synchronize(
+                provider = provider,
+                document = indexOf(song(1) to ORIGINAL),
+                accountId = ACCOUNT_ID,
+                onProgress = {},
+                onIndexChanged = {},
+                deletionPolicy = SyncDeletionPolicy.ASK,
+            )
+        }
+
+        assertContentEquals(THERE, local.files[SyncKey(kind = LibraryFileKind.SONG, name = "song_1 (2).cho")])
+    }
+
+    @Test
     fun `a library larger than one reading batch is read whole`() = runTest {
         val local = FakeLibraryFileLocalSource(files = (1..200).associate { song(it) to "Song $it".encodeToByteArray() })
         val provider = FakeSyncProvider()
@@ -530,6 +622,9 @@ class SyncEngineTest {
 
     private companion object {
         const val ACCOUNT_ID = "dropbox:someone@example.com"
+        val ORIGINAL = "Original".encodeToByteArray()
+        val HERE = "Edited here".encodeToByteArray()
+        val THERE = "Edited there".encodeToByteArray()
 
         fun song(number: Int) = song(name = "song_$number")
 

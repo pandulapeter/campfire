@@ -15,11 +15,13 @@ import com.pandulapeter.campfire.data.source.local.api.LibraryFileLocalSource
 
 /**
  * The library held in memory, for running [SyncEngine] against. [onRead] runs before a read answers, which is where a
- * test makes a file that is there impossible to read.
+ * test makes a file that is there impossible to read, and [onWrite] before a write is stored, with the name it chose,
+ * which is where a test makes the disk full.
  */
 internal class FakeLibraryFileLocalSource(
     files: Map<SyncKey, ByteArray> = emptyMap(),
     var onRead: (SyncKey) -> Unit = {},
+    var onWrite: (SyncKey) -> Unit = {},
 ) : LibraryFileLocalSource {
 
     val files = files.toMutableMap()
@@ -35,7 +37,9 @@ internal class FakeLibraryFileLocalSource(
     }
 
     override suspend fun writeLibraryFile(kind: LibraryFileKind, name: String, bytes: ByteArray) {
-        files[SyncKey(kind = kind, name = name)] = bytes
+        val key = SyncKey(kind = kind, name = name)
+        onWrite(key)
+        files[key] = bytes
     }
 
     override suspend fun writeLibraryFileToFreeName(kind: LibraryFileKind, desiredName: String, bytes: ByteArray): String {
@@ -44,7 +48,9 @@ internal class FakeLibraryFileLocalSource(
         val name = generateSequence(2) { it + 1 }
             .map { "$base ($it).$extension" }
             .first { SyncKey(kind = kind, name = it) !in files }
-        files[SyncKey(kind = kind, name = name)] = bytes
+        val key = SyncKey(kind = kind, name = name)
+        onWrite(key)
+        files[key] = bytes
         return name
     }
 

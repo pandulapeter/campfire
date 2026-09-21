@@ -88,6 +88,9 @@ interface SyncProvider {
      * Creates or replaces a remote file. [expectedRevision] is the revision the caller last saw: the write must not
      * go through if the remote file has moved on since, and must report [RemoteWriteResult.Conflict] instead. Null
      * means the caller believes there is no such file yet, and a file that does exist is likewise a conflict.
+     *
+     * Throws [SyncNetworkException] whenever it cannot tell whether the write went through. Any other exception means
+     * it did not: the engine takes back work it did in preparation for the write on the strength of that.
      */
     suspend fun upload(
         kind: LibraryFileKind,

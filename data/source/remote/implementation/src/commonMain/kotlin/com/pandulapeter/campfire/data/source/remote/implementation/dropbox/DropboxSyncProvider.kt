@@ -46,6 +46,7 @@ import kotlin.time.Clock
 import kotlin.time.ExperimentalTime
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.withTimeoutOrNull
+import kotlinx.serialization.SerializationException
 import kotlinx.serialization.json.Json
 
 /**
@@ -236,7 +237,13 @@ internal class DropboxSyncProvider(
             if (summary.startsWith("path/conflict")) return RemoteWriteResult.Conflict
         }
         response.ensureSuccessful()
-        return RemoteWriteResult.Written(json.decodeFromString<DropboxFileMetadata>(response.bodyAsText()).rev)
+        val metadata = try {
+            json.decodeFromString<DropboxFileMetadata>(response.bodyAsText())
+        } catch (exception: SerializationException) {
+            // The write went through and only its receipt is unreadable, which the contract files under "cannot tell".
+            throw SyncNetworkException("Dropbox's answer to an upload could not be read.", exception)
+        }
+        return RemoteWriteResult.Written(metadata.rev)
     }
 
     override suspend fun delete(kind: LibraryFileKind, name: String, expectedRevision: String?) {
