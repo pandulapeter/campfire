@@ -246,6 +246,7 @@
     <string name="song_editor_discard">Discard</string>
     <string name="song_editor_save_failed">Could not save the song</string>
     <string name="song_editor_draft_lost">The unsaved changes could not be restored</string>
+    <string name="song_editor_file_gone">This song\'s file is no longer in the library. Save to put it back.</string>
 
     <!-- Song details screen -->
     <string name="song_details_previous_song">Previous song</string>

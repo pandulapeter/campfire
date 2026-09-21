@@ -90,12 +90,16 @@ import com.pandulapeter.campfire.presentation.resources.Res
 import com.pandulapeter.campfire.presentation.resources.close
 import com.pandulapeter.campfire.presentation.resources.edit
 import com.pandulapeter.campfire.presentation.resources.ic_clear
+import com.pandulapeter.campfire.presentation.resources.ic_error
 import com.pandulapeter.campfire.presentation.resources.ic_expand
 import com.pandulapeter.campfire.presentation.resources.ic_redo
 import com.pandulapeter.campfire.presentation.resources.ic_refresh
 import com.pandulapeter.campfire.presentation.resources.ic_save
 import com.pandulapeter.campfire.presentation.resources.ic_undo
+import com.pandulapeter.campfire.presentation.resources.retry
 import com.pandulapeter.campfire.presentation.resources.save
+import com.pandulapeter.campfire.presentation.resources.song_details_no_data
+import com.pandulapeter.campfire.presentation.resources.song_details_no_data_hint
 import com.pandulapeter.campfire.presentation.resources.song_editor_preview
 import com.pandulapeter.campfire.presentation.resources.song_editor_redo
 import com.pandulapeter.campfire.presentation.resources.song_editor_revert
@@ -109,6 +113,8 @@ import com.pandulapeter.campfire.presentation.ui.components.ActionsMenu
 import com.pandulapeter.campfire.presentation.ui.components.ActionsMenuItem
 import com.pandulapeter.campfire.presentation.ui.components.CampfireTopAppBar
 import com.pandulapeter.campfire.presentation.ui.components.DelayedLoadingIndicator
+import com.pandulapeter.campfire.presentation.ui.components.EmptyState
+import com.pandulapeter.campfire.presentation.ui.components.EmptyStateAction
 import com.pandulapeter.campfire.presentation.ui.components.SegmentedChoice
 import com.pandulapeter.campfire.presentation.ui.components.WindowSize
 import com.pandulapeter.campfire.presentation.ui.navigation.CampfireDestination
@@ -118,6 +124,8 @@ import com.pandulapeter.campfire.presentation.ui.theme.LocalMonospaceFontFamily
 import kotlinx.coroutines.FlowPreview
 import kotlinx.coroutines.flow.debounce
 import kotlinx.coroutines.flow.distinctUntilChanged
+import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.flow.mapNotNull
 import org.jetbrains.compose.resources.painterResource
 
 /**
@@ -140,20 +148,34 @@ internal fun SongEditorScreen(
     onBack: () -> Unit,
 ) {
     val songTexts by viewModel.songTexts.collectAsStateWithLifecycle()
-    LaunchedEffect(destination.fileName) { viewModel.loadSongContent(destination.fileName) }
+    val failedSongFileNames by viewModel.failedSongFileNames.collectAsStateWithLifecycle()
+    // The text the field starts from, taken once. What the file holds afterwards is only ever compared with what has
+    // been typed: an editor that followed songTexts would be taken apart, the field and the draft with it, by a
+    // sync run deleting the file or a rescan failing to read it - the two moments the draft is the only copy left.
+    var initialText by remember(destination.fileName) { mutableStateOf(viewModel.songTexts.value[destination.fileName]) }
+    LaunchedEffect(destination.fileName) {
+        viewModel.loadSongContent(destination.fileName)
+        initialText = initialText ?: viewModel.songTexts.mapNotNull { it[destination.fileName] }.first()
+    }
     AnimatedContent(
         modifier = modifier.fillMaxSize(),
-        targetState = songTexts[destination.fileName],
+        targetState = initialText,
         transitionSpec = { fadeIn() togetherWith fadeOut() },
         contentKey = { it != null },
-    ) { initialText ->
-        if (initialText == null) {
-            LoadingPane(contentPadding = contentPadding)
+    ) { text ->
+        if (text == null) {
+            SongNotLoadedPane(
+                contentPadding = contentPadding,
+                hasFailed = destination.fileName in failedSongFileNames,
+                onRetry = { viewModel.loadSongContent(destination.fileName) },
+                onClose = onBack,
+            )
         } else {
             LoadedSongEditor(
                 viewModel = viewModel,
                 destination = destination,
-                initialText = initialText,
+                initialText = text,
+                hasSavedText = songTexts[destination.fileName] != null,
                 windowSize = windowSize,
                 contentPadding = contentPadding,
                 onBack = onBack,
@@ -162,12 +184,33 @@ internal fun SongEditorScreen(
     }
 }
 
+/**
+ * What the editor shows until it has a text to open with. A read that failed says so and offers the way out as
+ * well as the retry, because this state has no app bar to leave by.
+ */
 @Composable
-private fun LoadingPane(contentPadding: PaddingValues) = Box(
+private fun SongNotLoadedPane(
+    contentPadding: PaddingValues,
+    hasFailed: Boolean,
+    onRetry: () -> Unit,
+    onClose: () -> Unit,
+) = Box(
     modifier = Modifier.fillMaxSize().padding(contentPadding),
     contentAlignment = Alignment.Center,
 ) {
-    DelayedLoadingIndicator()
+    if (hasFailed) {
+        EmptyState(
+            icon = painterResource(Res.drawable.ic_error),
+            title = stringResource(Res.string.song_details_no_data),
+            hint = stringResource(Res.string.song_details_no_data_hint),
+            actions = listOf(
+                EmptyStateAction(text = stringResource(Res.string.retry), onClick = onRetry),
+                EmptyStateAction(text = stringResource(Res.string.close), onClick = onClose),
+            ),
+        )
+    } else {
+        DelayedLoadingIndicator()
+    }
 }
 
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalFoundationApi::class)
@@ -176,6 +219,7 @@ private fun LoadedSongEditor(
     viewModel: CampfireViewModel,
     destination: CampfireDestination.SongEditor,
     initialText: String,
+    hasSavedText: Boolean,
     windowSize: WindowSize,
     contentPadding: PaddingValues,
     onBack: () -> Unit,
@@ -310,7 +354,7 @@ private fun LoadedSongEditor(
                     )
                 }
                 EditorMenu(
-                    canRevert = hasUnsavedChanges && !isSaving,
+                    canRevert = hasUnsavedChanges && hasSavedText && !isSaving,
                     onRevert = { viewModel.showDialog(CampfireViewModel.DialogType.RevertChanges) },
                 )
             },

@@ -675,13 +675,20 @@ class CampfireViewModel(
         // its writes on them: without this, toggling a tag would write the text that was open over the version sync
         // had just brought in. The texts are read again rather than only dropped, so a song that is on screen changes
         // in place instead of flashing a loading indicator, and an editor whose file changed underneath it now has
-        // unsaved changes, which is what asks the user before their draft replaces the new version.
+        // unsaved changes, which is what asks the user before their draft replaces the new version — an editor whose
+        // file is gone included, where the draft is all there is.
         viewModelScope.launch {
             getSongContentInvalidations().collect { fileName ->
                 val affected = _songTexts.value.keys.filter { fileName == null || it == fileName }
                 affected.forEach { name ->
                     val content = getSongContent(name)
                     _songTexts.update { if (content == null) it - name else it + (name to content.text) }
+                    // The editor keeps what it has, and with no text to compare it to that now counts as unsaved. It
+                    // is said out loud because saving is what puts the file back, which the user would otherwise have
+                    // no reason to do.
+                    if (content == null && _editorDraft.value?.fileName == name) {
+                        _messages.send(Message.EditedSongFileGone)
+                    }
                 }
             }
         }
@@ -1683,6 +1690,9 @@ class CampfireViewModel(
         data object ImportFailed : Message
         data object ExportFailed : Message
         data object SaveFailed : Message
+
+        /** The file of the song in the editor is no longer there; the editor's text is, and saving writes it back. */
+        data object EditedSongFileGone : Message
 
         /** A long document's unsaved text did not survive the process being killed in the background. */
         data object EditorDraftLost : Message

@@ -246,6 +246,7 @@
     <string name="song_editor_discard">Elvetés</string>
     <string name="song_editor_save_failed">A dalt nem sikerült menteni</string>
     <string name="song_editor_draft_lost">A nem mentett módosításokat nem sikerült visszaállítani</string>
+    <string name="song_editor_file_gone">A dal fájlja már nincs a könyvtáradban. Mentéssel visszakerül.</string>
 
     <!-- Song details screen -->
     <string name="song_details_previous_song">Előző dal</string>
