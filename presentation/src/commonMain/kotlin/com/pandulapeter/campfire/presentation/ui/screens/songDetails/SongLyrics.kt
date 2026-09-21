@@ -37,6 +37,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.layout.Layout
 import androidx.compose.ui.layout.layout
+import androidx.compose.ui.layout.layoutId
 import androidx.compose.ui.layout.LookaheadScope
 import androidx.compose.ui.unit.Constraints
 import androidx.compose.ui.unit.Dp
@@ -101,7 +102,8 @@ import kotlin.math.roundToInt
  * The song is split into sections (verse, chorus, ...) which are flowed into columns by [SongSectionsLayout], either
  * top to bottom or, when [isHorizontalFlow] is set, in rows across the columns. Choruses are drawn on a raised card
  * of their own so that they stand out from the surrounding sections. A section is never split between columns, and
- * sections animate to their new place when the column count changes (e.g. when a window is resized).
+ * sections animate to their new place when the column count changes (e.g. when a window is resized) - except one that
+ * is too tall for `animateBounds` to measure, which simply appears there.
  *
  * @param availableHeight The height the song can occupy without scrolling; the column count is picked so that it
  * fits into this if it can.
@@ -200,7 +202,12 @@ internal fun SongLyrics(
             ) {
                 sections.forEachIndexed { index, section ->
                     val bounds = sectionBounds[index]
-                    val sectionModifier = if (extraWidth > 0.dp) Modifier else Modifier.animateBounds(this@LookaheadScope)
+                    // A section the layout found too tall is measured in full only once this is off it: see maxAnimatedSectionHeight.
+                    val sectionModifier = if (extraWidth > 0.dp || bounds.isTooTallToAnimate) {
+                        Modifier
+                    } else {
+                        Modifier.animateBounds(this@LookaheadScope).layoutId(AnimatedSectionLayoutId)
+                    }
                     when (section) {
                         is RenderSection.Comment -> SongComment(
                             modifier = sectionModifier.padding(horizontal = CARD_PADDING),
@@ -795,7 +802,15 @@ private fun SongSectionsLayout(
     val columnWidths = IntArray(grid.columnCounts.size) { columnWidthFor(width, grid.columnCounts[it]) }
     val placeables = measurables.mapIndexed { index, measurable ->
         val columnWidth = columnWidths[grid.rows[index]]
-        measurable.measure(Constraints(minWidth = columnWidth, maxWidth = columnWidth, maxHeight = constraints.maxHeight))
+        val heightLimit = maxAnimatedSectionHeight(columnWidth)
+        // Only a section that is being animated is held to the limit. One that reaches it is cut short for the one
+        // frame it takes the composition to take the animation off it, which happens far below the screen.
+        val maxHeight = if (measurable.layoutId === AnimatedSectionLayoutId) minOf(constraints.maxHeight, heightLimit) else constraints.maxHeight
+        val placeable = measurable.measure(Constraints(minWidth = columnWidth, maxWidth = columnWidth, maxHeight = maxHeight))
+        // The approach pass of an animated section reports the size the animation is at, which says nothing about
+        // the size it is going to: only the lookahead pass measures that.
+        if (isLookingAhead) sectionBounds[index].isTooTallToAnimate = placeable.height >= heightLimit
+        placeable
     }
     val arrangement = grid.arrange(heights = IntArray(placeables.size) { placeables[it].height }, sectionGap = sectionGapPx, rowGap = rowGapPx)
     val centeredRowStarts = IntArray(columnWidths.size) { row ->
@@ -859,11 +874,31 @@ private data class SectionGridKey(
 /**
  * Where a section ended up inside [SongSectionsLayout]. The layout is the only one that knows this, and the sections
  * need it to scroll back to their own start when their header is clicked, so it is handed back to them through this.
+ * It is also the only one that knows how tall a section is, which decides whether the section can be animated at
+ * all (see [maxAnimatedSectionHeight]).
  */
 private class SectionBounds {
 
     var top by mutableIntStateOf(0)
+    var isTooTallToAnimate by mutableStateOf(false)
 }
+
+/**
+ * The layout id of a section that carries `animateBounds`. It is part of the same modifier chain, so what
+ * [SongSectionsLayout] reads can never disagree with what is actually attached, not even for the one frame
+ * between a measurement and the composition that answers it.
+ */
+private object AnimatedSectionLayoutId
+
+/**
+ * The tallest a section of [columnWidth] is measured while it carries `animateBounds`, which measures its content
+ * with `Constraints.fixed` of the section's own size on every pass. A `Constraints` has 31 bits for a width and a
+ * height together: 18 of them are left for the height next to a width of less than [WIDE_SECTION_WIDTH], and 16
+ * next to a wider one. Both limits are half of what would fit, since a spring that is turned around on its way
+ * can carry the animated size past both of its ends.
+ */
+private fun maxAnimatedSectionHeight(columnWidth: Int) =
+    if (columnWidth < WIDE_SECTION_WIDTH) MAX_ANIMATED_SECTION_HEIGHT else MAX_ANIMATED_WIDE_SECTION_HEIGHT
 
 /**
  * Which cell every section goes into: the row it is in, its column within that row, and the number of columns of
@@ -1284,6 +1319,9 @@ private const val LINE_HEIGHT_SAMPLE = "X"
 private const val CHARACTER_WIDTH_SAMPLE_LENGTH = 64
 private const val MAX_TAB_WIDTHS = 8
 private const val MAX_MEASURED_TEXTS = 4096
+private const val MAX_ANIMATED_SECTION_HEIGHT = 1 shl 17
+private const val MAX_ANIMATED_WIDE_SECTION_HEIGHT = 1 shl 15
+private const val WIDE_SECTION_WIDTH = (1 shl 13) - 1
 private const val PADDING = '\u00A0' // Non-breaking space, so that the padding never gets trimmed or wrapped.
 private const val BEAT_SYMBOL = "\u00B7"
 private const val CHIP_SEPARATOR = "\u00B7"
