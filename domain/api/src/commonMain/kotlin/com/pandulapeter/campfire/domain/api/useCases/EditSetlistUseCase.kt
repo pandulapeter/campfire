@@ -14,10 +14,15 @@ import com.pandulapeter.campfire.data.model.domain.Setlist
 interface EditSetlistUseCase {
 
     /**
-     * Writes what the user can say about a setlist: its title, and the description that may be blank. Only the title
-     * reaches the file name, which is why this is a move as well as a write - nothing in the library points at a
-     * setlist by file name, so the move costs nothing to follow, but the returned setlist may have a `fileName` the
-     * caller has not seen before, and sync will carry it across as a deletion and a new file.
+     * Writes what the user can say about a setlist: its title, and the description that may be blank. The setlist is
+     * named rather than handed over, because whoever asks has usually been holding it for as long as a dialog was
+     * open, and everything else it carries - the entries, their transpositions, whether it is archived - is taken
+     * from the library as it is at the moment of the write.
+     *
+     * Only the title reaches the file name, which is why this is a move as well as a write - nothing in the library
+     * points at a setlist by file name, so the move costs nothing to follow, but the returned setlist may have a
+     * `fileName` the caller has not seen before, and sync will carry it across as a deletion and a new file. Null
+     * when the setlist is no longer there, and nothing has been written then.
      */
-    suspend operator fun invoke(setlist: Setlist, title: String, description: String): Setlist
+    suspend operator fun invoke(fileName: String, title: String, description: String): Setlist?
 }

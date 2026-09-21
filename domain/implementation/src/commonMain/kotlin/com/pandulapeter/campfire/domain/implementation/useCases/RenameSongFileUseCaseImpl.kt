@@ -40,13 +40,13 @@ class RenameSongFileUseCaseImpl internal constructor(
             .filter { setlist -> setlist.entries.any { it.songFileName == song.fileName } }
             .forEach { setlist ->
                 attempt(failures) {
-                    setlistRepository.saveSetlist(
-                        setlist.copy(
-                            entries = setlist.entries.map { entry ->
+                    setlistRepository.updateSetlist(setlist.fileName) { latest ->
+                        latest.copy(
+                            entries = latest.entries.map { entry ->
                                 if (entry.songFileName == song.fileName) entry.copy(songFileName = renamed) else entry
                             },
                         )
-                    )
+                    }
                 }
             }
         attempt(failures) {

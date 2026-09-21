@@ -31,7 +31,9 @@ class DeleteSongUseCaseImpl internal constructor(
         setlistRepository.loadSetlistsIfNeeded().orEmpty()
             .filter { setlist -> setlist.entries.any { it.songFileName == fileName } }
             .forEach { setlist ->
-                setlistRepository.saveSetlist(setlist.copy(entries = setlist.entries.filterNot { it.songFileName == fileName }))
+                setlistRepository.updateSetlist(setlist.fileName) { latest ->
+                    latest.copy(entries = latest.entries.filterNot { it.songFileName == fileName })
+                }
             }
         userPreferencesRepository.loadUserPreferencesIfNeeded()
             ?.takeIf { fileName in it.transpositions }

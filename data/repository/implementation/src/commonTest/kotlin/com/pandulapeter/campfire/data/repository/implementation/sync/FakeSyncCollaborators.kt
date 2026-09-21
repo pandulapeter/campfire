@@ -154,7 +154,8 @@ internal class RecordingSetlistRepository : SetlistRepository {
     override suspend fun updateSetlist(fileName: String, transform: (Setlist) -> Setlist): Setlist? =
         throw UnsupportedOperationException()
 
-    override suspend fun renameSetlist(setlist: Setlist, title: String): Setlist = throw UnsupportedOperationException()
+    override suspend fun renameSetlist(fileName: String, title: String, description: String): Setlist? =
+        throw UnsupportedOperationException()
 
     override suspend fun parseSetlist(document: String): Setlist? = throw UnsupportedOperationException()
 

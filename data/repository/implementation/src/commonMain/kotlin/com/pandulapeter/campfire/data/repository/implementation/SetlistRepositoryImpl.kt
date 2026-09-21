@@ -27,7 +27,10 @@ internal class SetlistRepositoryImpl(
     /**
      * Held from reading a setlist to having its write in the cache, so that the next change reads what this one
      * wrote. The cache is the one place that is right straight after a write: anything observing [setlists] only
-     * catches up a few hops later, and a file write is plenty of time for a second tap to land in between.
+     * catches up a few hops later, and a file write is plenty of time for a second tap to land in between. Every
+     * write to a setlist file takes it, the ones that read nothing included, since a save, a move or a deletion
+     * crossing a change that is halfway through is how a setlist ends up holding the older of the two, twice in the
+     * library, or back after it was deleted.
      */
     private val writeMutex = Mutex()
 
@@ -45,21 +48,20 @@ internal class SetlistRepositoryImpl(
         return setlist
     }
 
-    override suspend fun saveSetlist(setlist: Setlist) {
-        setlistLocalSource.saveSetlist(setlist)
-        updateData { current -> current.orEmpty().filterNot { it.fileName == setlist.fileName } + setlist }
-    }
+    override suspend fun saveSetlist(setlist: Setlist) = writeMutex.withLock { write(setlist) }
 
     override suspend fun updateSetlist(fileName: String, transform: (Setlist) -> Setlist) = writeMutex.withLock {
-        loadDataIfNeeded()?.firstOrNull { it.fileName == fileName }?.let(transform)?.also { saveSetlist(it) }
+        latest(fileName)?.let(transform)?.also { write(it) }
     }
 
-    override suspend fun renameSetlist(setlist: Setlist, title: String): Setlist {
-        val renamed = setlistLocalSource.renameSetlist(setlist, title)
-        updateData { current ->
-            current.orEmpty().filterNot { it.fileName == setlist.fileName || it.fileName == renamed.fileName } + renamed
+    override suspend fun renameSetlist(fileName: String, title: String, description: String) = writeMutex.withLock {
+        latest(fileName)?.let { setlist ->
+            setlistLocalSource.renameSetlist(setlist = setlist.copy(description = description), title = title).also { renamed ->
+                updateData { current ->
+                    current.orEmpty().filterNot { it.fileName == fileName || it.fileName == renamed.fileName } + renamed
+                }
+            }
         }
-        return renamed
     }
 
     override suspend fun parseSetlist(document: String) = setlistLocalSource.parseSetlist(document)
@@ -68,8 +70,17 @@ internal class SetlistRepositoryImpl(
 
     override suspend fun loadSetlistDocument(fileName: String) = setlistLocalSource.loadSetlistDocument(fileName)
 
-    override suspend fun deleteSetlist(fileName: String) {
+    override suspend fun deleteSetlist(fileName: String) = writeMutex.withLock {
         setlistLocalSource.deleteSetlist(fileName)
         updateData { current -> current.orEmpty().filterNot { it.fileName == fileName } }
+    }
+
+    /** The setlist as the cache has it. Only meaningful under [writeMutex], where no write can be halfway to it. */
+    private suspend fun latest(fileName: String) = loadDataIfNeeded()?.firstOrNull { it.fileName == fileName }
+
+    /** Callers hold [writeMutex]. */
+    private suspend fun write(setlist: Setlist) {
+        setlistLocalSource.saveSetlist(setlist)
+        updateData { current -> current.orEmpty().filterNot { it.fileName == setlist.fileName } + setlist }
     }
 }

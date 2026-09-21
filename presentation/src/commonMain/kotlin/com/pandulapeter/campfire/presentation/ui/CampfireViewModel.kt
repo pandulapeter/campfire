@@ -1298,10 +1298,11 @@ class CampfireViewModel(
     /**
      * The title and the description are written together, since they are the whole of what the user gets to say
      * about a setlist. Only the title reaches the file name, so the setlist that comes back may be under a name
-     * this one has never seen.
+     * this one has never seen. The setlist is named rather than passed: the dialog has held its copy since it was
+     * opened, and the rest of the setlist may have moved on since. One that is gone by now is not brought back.
      */
-    fun editSetlist(setlist: Setlist, title: String, description: String) = launchLibraryChange {
-        editSetlist.invoke(setlist = setlist, title = title, description = description)
+    fun editSetlist(setlistFileName: String, title: String, description: String) = launchLibraryChange {
+        editSetlist.invoke(fileName = setlistFileName, title = title, description = description) ?: _messages.send(Message.OperationFailed)
     }
 
     /**

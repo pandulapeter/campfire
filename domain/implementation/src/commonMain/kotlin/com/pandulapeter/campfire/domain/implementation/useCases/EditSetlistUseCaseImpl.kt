@@ -19,7 +19,6 @@ class EditSetlistUseCaseImpl internal constructor(
     private val setlistRepository: SetlistRepository,
 ) : EditSetlistUseCase {
 
-    // The description travels inside the setlist that is handed over, since the rename is only ever about the title.
-    override suspend operator fun invoke(setlist: Setlist, title: String, description: String): Setlist =
-        setlistRepository.renameSetlist(setlist = setlist.copy(description = description.trim()), title = title.trim())
+    override suspend operator fun invoke(fileName: String, title: String, description: String): Setlist? =
+        setlistRepository.renameSetlist(fileName = fileName, title = title.trim(), description = description.trim())
 }

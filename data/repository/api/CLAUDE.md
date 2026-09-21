@@ -16,8 +16,9 @@ Repository interfaces only. Consumed by `:domain:implementation`; implemented by
 - `SetlistRepository` — the same shape over `*.setlist.json`, plus `parseSetlist` / `loadSetlistDocument` for the export
   and import paths. A setlist that is already in the library is changed through `updateSetlist` (read the latest,
   transform, write, one change at a time), never by saving a copy the caller read earlier: that copy lags a write
-  behind, and two quick changes built on it would undo each other. `saveSetlist` is for a setlist the caller owns as
-  a whole — one just created, copied or renamed.
+  behind, and two quick changes built on it would undo each other. `renameSetlist` is the same thing for the title and
+  the description, the one change that may move the file: it takes the setlist's name and reads the rest of it itself.
+  `saveSetlist` is for a setlist the caller owns as a whole — one just created or copied.
 - `SongContentRepository` — the *text* of the songs that have been opened, cached in memory so that paging through a
   setlist does not re-read the same files. Deliberately not a `DataState` flow: it is a lookup, not a screen's state.
 - `UserPreferencesRepository` — one document, read once and written whole. `hasStoredUserPreferences` is the one

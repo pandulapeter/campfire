@@ -32,7 +32,8 @@ paths, `Is*` for a question with a yes or no answer (`IsFirstRun`), or a verb fo
 - `EditSetlistUseCase` / `RenameSongFileUseCase` are the two that move a file rather than write one. A setlist's
   file follows its title on its own, since nothing in the library points at a setlist by name — which is why editing
   one is a single use case: the title it is filed under and the description it carries are written together, and only
-  the first of them decides where the file goes; a song's moves only
+  the first of them decides where the file goes — and it is told which setlist by file name rather than handed one,
+  so that the entries it writes back are the library's and not the ones a dialog was opened with; a song's moves only
   when the user asks (`Song.canUpdateFileName` is what offers it), and everything that named the old one — every
   setlist entry holding the song, its saved transposition — moves with it, which is the same walk
   `DeleteSongUseCase` makes to drop those references.

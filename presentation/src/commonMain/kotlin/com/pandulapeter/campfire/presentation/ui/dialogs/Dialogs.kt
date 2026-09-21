@@ -183,7 +183,7 @@ internal fun CampfireDialogs(
             confirmLabel = stringResource(Res.string.save),
             onDismiss = viewModel::dismissDialog,
             onConfirm = { setlistTitle, description ->
-                viewModel.editSetlist(setlist = dialog.setlist, title = setlistTitle, description = description)
+                viewModel.editSetlist(setlistFileName = dialog.setlist.fileName, title = setlistTitle, description = description)
                 viewModel.dismissDialog()
             },
         )

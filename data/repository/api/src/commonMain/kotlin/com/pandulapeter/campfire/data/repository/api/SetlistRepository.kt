@@ -28,8 +28,8 @@ interface SetlistRepository {
 
     /**
      * Creates the file or overwrites it, and updates that one entry of the cached list. For a setlist the caller owns
-     * as a whole (one it has just created, copied or renamed); a change to one that is already there goes through
-     * [updateSetlist].
+     * as a whole, which is one it has just created or copied; a change to one that is already there goes through
+     * [updateSetlist] or [renameSetlist]. It waits its turn among those like any other write.
      */
     suspend fun saveSetlist(setlist: Setlist)
 
@@ -41,10 +41,13 @@ interface SetlistRepository {
     suspend fun updateSetlist(fileName: String, transform: (Setlist) -> Setlist): Setlist?
 
     /**
-     * See `SetlistLocalSource.renameSetlist`: saves the setlist under a new title and moves its file to match, so
-     * the setlist that comes back may have a different `fileName` than the one that went in.
+     * [updateSetlist] for the one change that may move the file: the latest version of the setlist gets [title] and
+     * [description] and nothing else of it changes, and its file moves to the name the title gives it (see
+     * `SetlistLocalSource.renameSetlist`), so the setlist that comes back may have a different `fileName` than the
+     * one that was asked for. Null when there is no such setlist, in which case nothing is written: a setlist that
+     * was deleted while its title was being typed stays deleted.
      */
-    suspend fun renameSetlist(setlist: Setlist, title: String): Setlist
+    suspend fun renameSetlist(fileName: String, title: String, description: String): Setlist?
 
     /** See `SetlistLocalSource.parseSetlist`. */
     suspend fun parseSetlist(document: String): Setlist?
@@ -58,5 +61,6 @@ interface SetlistRepository {
     /** The stored document of one setlist, for exporting it unchanged. Null if it is missing. */
     suspend fun loadSetlistDocument(fileName: String): String?
 
+    /** Waits for a change to the setlist that is being written, which would otherwise put the file back. */
     suspend fun deleteSetlist(fileName: String)
 }
