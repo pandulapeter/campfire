@@ -17,18 +17,27 @@ import com.pandulapeter.campfire.data.source.remote.api.SyncRemoteStorageFullExc
 import com.pandulapeter.campfire.data.source.remote.api.model.RemoteWriteResult
 import com.pandulapeter.campfire.data.source.remote.implementation.auth.SyncCredentialsStore
 import io.ktor.client.HttpClient
+import io.ktor.client.HttpClientConfig
 import io.ktor.client.engine.mock.MockEngine
 import io.ktor.client.engine.mock.MockRequestHandleScope
 import io.ktor.client.engine.mock.respond
+import io.ktor.client.plugins.HttpRequestTimeoutException
+import io.ktor.client.plugins.HttpTimeout
 import io.ktor.client.request.HttpRequestData
 import io.ktor.client.request.HttpResponseData
 import io.ktor.http.HttpStatusCode
 import io.ktor.http.headersOf
+import kotlinx.coroutines.CancellationException
+import kotlinx.coroutines.CompletableDeferred
+import kotlinx.coroutines.awaitCancellation
+import kotlinx.coroutines.cancelAndJoin
+import kotlinx.coroutines.launch
 import kotlinx.coroutines.test.currentTime
 import kotlinx.coroutines.test.runTest
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
+import kotlin.test.assertIs
 import kotlin.test.assertTrue
 
 /**
@@ -115,6 +124,37 @@ class DropboxRequestTest {
         assertFailsWith<DropboxApiException> { provider.upload(LibraryFileKind.SONG, "song.cho", ByteArray(1), null) }
     }
 
+    /** A stopped run resumes every request in flight with a cancellation, and the engine has to be told that it is one. */
+    @Test
+    fun `a request that is cancelled stays a cancellation`() = runTest {
+        val hasStarted = CompletableDeferred<Unit>()
+        val provider = provider {
+            hasStarted.complete(Unit)
+            awaitCancellation()
+        }
+        var failure: Throwable? = null
+        val job = launch { failure = runCatching { provider.list() }.exceptionOrNull() }
+        hasStarted.await()
+        job.cancelAndJoin()
+        assertIs<CancellationException>(failure)
+    }
+
+    /** What the client does with its own request timeout: it cancels the call, and reports the reason instead. */
+    @Test
+    fun `a request that times out is the service not being reached`() = runTest {
+        val provider = provider(
+            configure = { install(HttpTimeout) { requestTimeoutMillis = 50 } },
+        ) { awaitCancellation() }
+        val exception = assertFailsWith<SyncNetworkException> { provider.list() }
+        assertIs<HttpRequestTimeoutException>(exception.cause)
+    }
+
+    @Test
+    fun `a cancellation nobody asked for is the service not being reached`() = runTest {
+        val provider = provider { throw CancellationException("The engine gave up.") }
+        assertFailsWith<SyncNetworkException> { provider.list() }
+    }
+
     /** A token the device's clock still believes in can be one Dropbox has stopped accepting. */
     @Test
     fun `refreshes the token once when dropbox refuses it`() = runTest {
@@ -169,8 +209,11 @@ class DropboxRequestTest {
         )
     }
 
-    private fun provider(handler: suspend MockRequestHandleScope.(HttpRequestData) -> HttpResponseData) = DropboxSyncProvider(
-        httpClient = HttpClient(MockEngine(handler)),
+    private fun provider(
+        configure: HttpClientConfig<*>.() -> Unit = {},
+        handler: suspend MockRequestHandleScope.(HttpRequestData) -> HttpResponseData,
+    ) = DropboxSyncProvider(
+        httpClient = HttpClient(MockEngine(handler), configure),
         credentialsStore = SyncCredentialsStore(ConnectedStorage),
         appKey = APP_KEY,
     )

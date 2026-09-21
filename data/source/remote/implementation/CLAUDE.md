@@ -80,5 +80,6 @@ redirect URIs character for character, which is why the desktop port is fixed.
 
 Tested in `commonTest`, run on the desktop target: the hashing, the encoders, and the authorization URL — get a
 parameter wrong there and the user meets an error page on the service's own site with nothing in the app to say why —
-and, against a Ktor `MockEngine` in virtual time, how requests answer being told to slow down.
+and, against a Ktor `MockEngine` in virtual time, how requests answer being told to slow down, and being cancelled or
+timing out.
 `desktopTest` adds the one platform piece worth testing, the loopback server's cancellation.

@@ -499,6 +499,10 @@ internal class SyncRepositoryImpl(
                     SyncState.Connected(account = account, progress = null, lastSyncedAt = null, lastOutcome = null)
                 }
                 true
+            } catch (exception: CancellationException) {
+                // Giving up during the token exchange is not the exchange failing: connect() answers it by going back
+                // to Disconnected, which it can only do if this arrives there as a cancellation.
+                throw exception
             } catch (exception: Exception) {
                 fail(
                     providerId = pending.providerId,

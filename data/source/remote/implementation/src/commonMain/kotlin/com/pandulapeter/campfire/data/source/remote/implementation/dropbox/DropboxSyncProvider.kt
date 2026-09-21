@@ -45,7 +45,9 @@ import kotlin.math.min
 import kotlin.random.Random
 import kotlin.time.Clock
 import kotlin.time.ExperimentalTime
+import kotlinx.coroutines.currentCoroutineContext
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.ensureActive
 import kotlinx.coroutines.withTimeoutOrNull
 import kotlinx.serialization.SerializationException
 import kotlinx.serialization.json.Json
@@ -349,6 +351,8 @@ internal class DropboxSyncProvider(
 
     private suspend fun HttpResponse.retryAfterSecondsInBody() = try {
         json.decodeFromString<DropboxRateLimitResponse>(bodyAsText()).error.retryAfter
+    } catch (exception: CancellationException) {
+        throw exception
     } catch (exception: Exception) {
         null
     }
@@ -357,9 +361,19 @@ internal class DropboxSyncProvider(
      * Anything the transport throws - no route to the host, a dropped connection, a timeout - is one thing to the
      * user: the service could not be reached, and trying again later is worth doing. Only the call itself is
      * wrapped, so that a body Campfire cannot make sense of stays the programming error it is.
+     *
+     * A cancellation is the one exception that says nothing about the network. Stopping a run or giving up on a
+     * consent page resumes every suspended request with one, and it has to leave here as what it is: the engine and
+     * the repository both answer a stopped run differently from a failed one, and can only do so if they are told.
      */
     private suspend fun <T> transport(block: suspend () -> T): T = try {
         block()
+    } catch (exception: CancellationException) {
+        // Thrown on again only while this coroutine really is cancelled. A cancellation that reaches a coroutine
+        // nobody cancelled belongs to something underneath - a client that was closed, a timeout surfacing as one -
+        // and passed on it would end a transfer of the engine's without a word, as though the user had stopped it.
+        currentCoroutineContext().ensureActive()
+        throw SyncNetworkException(exception.message ?: "Dropbox could not be reached.", exception)
     } catch (exception: SyncAuthorizationException) {
         throw exception
     } catch (exception: SyncNetworkException) {
@@ -386,6 +400,8 @@ internal class DropboxSyncProvider(
 
     private suspend fun HttpResponse.errorSummary() = try {
         json.decodeFromString<DropboxErrorResponse>(bodyAsText()).errorSummary
+    } catch (exception: CancellationException) {
+        throw exception
     } catch (exception: Exception) {
         ""
     }
@@ -437,6 +453,8 @@ internal class DropboxSyncProvider(
     private suspend fun HttpResponse.oAuthError(): String {
         val error = try {
             json.decodeFromString<DropboxOAuthErrorResponse>(bodyAsText())
+        } catch (exception: CancellationException) {
+            throw exception
         } catch (exception: Exception) {
             DropboxOAuthErrorResponse()
         }
