@@ -22,7 +22,8 @@ The ones that carry real logic:
   `NormalizeTextUseCase`, so accents are ignored; one key decides both, and whatever starts with no letter comes
   first), and keeps a `cache` so that a `Loading` or `Failure` state can still
   carry the last good data, and orders the setlists (newest first or by title, the archived ones after the rest either
-  way) without ever narrowing them: the song filters are about the song list, and the setlists screen decides for
+  way) — every order it produces ends in the file name, because the repositories' lists are in no particular order (a
+  written item moves to the end) and a tie would otherwise be decided by it — without ever narrowing them: the song filters are about the song list, and the setlists screen decides for
   itself whether it is showing the archived ones. The whole library travels alongside the filtered list — see
   `ScreenData.unfilteredSongs`. There are two filter groups over the same library, the tags and the languages
   (`SongLanguage`, with `UNKNOWN` standing for the songs that declare none), and each is counted over the songs the

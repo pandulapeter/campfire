@@ -33,7 +33,8 @@ published, or half a library would sit there looking like the whole of it and no
 
 Writing is deliberately **not** part of that shape. Songs and setlists are one file each, so a change writes that file
 and updates the one cached entry (`updateData`, which takes a transform of the current list and applies it atomically,
-so a save landing during a rescan cannot overwrite what the rescan found); only the preferences are persisted as a
+so a save landing during a rescan cannot overwrite what the rescan found). The cached lists are in no particular order — a scan leaves them by file
+name, a write moves its item to the end — and ordering them is the domain layer's business. Only the preferences are persisted as a
 whole (`writeData`). What `writeData` publishes is `Idle` from the first moment, never a `Loading` the write then
 resolves: the data being written is already what every reader should show, and it stays that way even when the write
 fails, while a `Loading` would tell whoever reads this state for "nothing has been read yet" exactly that — for as

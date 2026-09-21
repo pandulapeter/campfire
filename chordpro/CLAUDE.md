@@ -53,7 +53,7 @@ in `:domain:*`. `:data:source:local:implementation` uses it directly for the met
   many of them as the song has; `{meta: tag Needs study}`, which the spec documents as the same thing, is read as
   well but never written. The value is taken whole, commas included, because the spec calls a tag arbitrary text.
   Two spellings of the same word are one tag everywhere: matching ignores case, and the library shows the spelling
-  of the first song that carries it. `addTag` and `removeTag` edit the text rather than the model, for the same
+  of the song that comes first by file name. `addTag` and `removeTag` edit the text rather than the model, for the same
   reason `ChordProTransposer.transposeText` does — the result is written straight back to the user's file, so their
   own formatting has to survive a chip being tapped in the viewer. A new tag lands after the last one the file
   already has, or at the end of the directives it opens with. What makes "every other byte" true for all of these

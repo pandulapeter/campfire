@@ -117,12 +117,17 @@ class GetScreenDataUseCaseImpl internal constructor(
      * The setlists in the order the screen lists them. The archived ones come last whichever order that is: they are
      * only on the screen at all because the user asked to see what has been put away, and mixing them in among the
      * setlists still in use would undo the putting away.
+     *
+     * Both orders end in the file name, which never ties. Priorities do - two devices that each made a setlist
+     * while offline gave them the same one, and a hand written file has none - and so do titles, and what decides a
+     * tie otherwise is the order of the repository's list, where a setlist moves to the end every time it is
+     * written: the two would trade places on the screen whenever one of them was touched.
      */
     private fun List<Setlist>.sortSetlists(listPreferences: ListPreferences) = sortedWith(
         when (listPreferences.setlistSortingMode) {
             UserPreferences.SetlistSortingMode.NEWEST_FIRST -> compareBy<Setlist> { it.isArchived }.thenByDescending { it.priority }
             UserPreferences.SetlistSortingMode.BY_TITLE -> compareBy<Setlist> { it.isArchived }.thenBy { normalizeText(it.title) }
-        }
+        }.thenBy { it.fileName }
     )
 
     private fun List<Song>.filterHasChords(listPreferences: ListPreferences) = if (listPreferences.shouldShowSongsWithoutChords) this else filter { it.hasChords }
@@ -191,18 +196,38 @@ class GetScreenDataUseCaseImpl internal constructor(
 
     /**
      * The tags of the library with the number of songs carrying each, most used first. Two spellings of the same word
-     * are one tag, shown the way the first song that carries it spells it.
+     * are one tag, shown the way the song that comes first by file name spells it - by file name rather than by where
+     * the song is in the list, because the repository's list is in no particular order (a song that was just saved is
+     * at its end), and the chip would change its capitals after an edit to a song and back after the next rescan.
      */
     private fun List<Song>.toTags(): List<Tag> {
-        val tagsByName = linkedMapOf<String, Tag>()
+        val tagsByName = linkedMapOf<String, SpelledTag>()
         forEach { song ->
             song.tags.forEach { tag ->
-                val name = tag.lowercase()
-                tagsByName[name] = tagsByName[name]?.let { it.copy(songCount = it.songCount + 1) } ?: Tag(name = tag, songCount = 1)
+                val spelled = tagsByName.getOrPut(tag.lowercase()) { SpelledTag(name = tag, fileName = song.fileName) }
+                spelled.songCount++
+                if (song.fileName < spelled.fileName) {
+                    spelled.name = tag
+                    spelled.fileName = song.fileName
+                }
             }
         }
-        return tagsByName.values.sortedWith(compareByDescending<Tag> { it.songCount }.thenBy { normalizeText(it.name) })
+        return tagsByName.values
+            .map { Tag(name = it.name, songCount = it.songCount) }
+            // Tags fold case but not accents, so two of them can share the text they are sorted by.
+            .sortedWith(compareByDescending<Tag> { it.songCount }.thenBy { normalizeText(it.name) }.thenBy { it.name })
     }
+
+    /**
+     * A tag while it is being counted.
+     *
+     * @param fileName The song [name] is spelled after: the first by file name of the ones counted so far.
+     */
+    private class SpelledTag(
+        var name: String,
+        var fileName: String,
+        var songCount: Int = 0,
+    )
 
     /**
      * The songs in the order the preferences ask for, cut into the sections that order is listed under.
@@ -256,8 +281,12 @@ class GetScreenDataUseCaseImpl internal constructor(
              * Whatever starts with something other than a letter comes first, in either order. Left to the order of
              * the strings those texts land on both sides of the alphabet - a digit sorts before `a`, while `¿`, `…`,
              * a curly quote and every emoji sort after `z` - which is two runs under one header.
+             *
+             * The file name comes last because it is the one thing two songs cannot share: two arrangements of a
+             * song tie on everything before it, and would otherwise be listed in the order of the repository's
+             * list, where a song moves to the end every time it is saved.
              */
-            val ORDER = compareBy<SortableSong>({ it.initial != null }, { it.sectionKey }, { it.primaryText }, { it.secondaryText })
+            val ORDER = compareBy<SortableSong>({ it.initial != null }, { it.sectionKey }, { it.primaryText }, { it.secondaryText }, { it.song.fileName })
         }
     }
 

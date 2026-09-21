@@ -927,7 +927,7 @@ private fun SongPicker(
         val pickableByFileName = pickable.associateBy { it.song.fileName }
         val initial = initialSongFileNames.toSet()
         initialSongFileNames.mapNotNull { pickableByFileName[it] } +
-            pickable.filterNot { it.song.fileName in initial }.sortedWith(compareBy({ it.title }, { it.artist }))
+            pickable.filterNot { it.song.fileName in initial }.sortedWith(compareBy({ it.title }, { it.artist }, { it.song.fileName }))
     }
     val matches = remember(pickableSongs, query) {
         val normalizedQuery = viewModel.normalize(query)
