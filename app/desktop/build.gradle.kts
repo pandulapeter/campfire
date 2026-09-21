@@ -74,6 +74,7 @@ compose.desktop {
                 shortcut = true
                 menuGroup = "AudioVideo;Audio;Music"
                 appCategory = "sound"
+                debMaintainer = "pandulapeter@gmail.com"
             }
         }
     }
