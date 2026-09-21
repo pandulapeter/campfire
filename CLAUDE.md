@@ -329,6 +329,10 @@ three. The gate wraps the whole app inside `CampfireApp`, so it speaks the theme
   be taken rather than allowed through, and leaving is the only thing it can honestly mean there.
 - The blocking screen is drawn **over** the app rather than in place of it, so a required update that turns out not
   to install leaves the library exactly where the user was.
+- Neither the blocking screen (nor the immediate flow started with it) nor the flexible update's Restart is put over
+  an editor with unsaved text: the gate waits until the text has been saved or let go of (`hasUnsavedEditorChanges`).
+  Restart waits for a sync run too; a required update does not — a run it cuts off is reported as interrupted the
+  ordinary way.
 - Nothing of this exists outside a Play-installed build: a debug APK, a sideloaded release or a device with no Play
   answers every check with an error, which is why the flow can only be exercised from an internal testing track.
 - **iOS has no equivalent.** Apple ships no API that tells an app the store has a newer build; the only way to ask

@@ -54,6 +54,14 @@ internal interface AppUpdateController {
     /** Hands the user over to the store, in the way [state] calls for. */
     fun startUpdate()
 
+    /**
+     * Starts a [AppUpdateState.Required] update without having been asked to, which is done once: after that the
+     * blocking screen's own button is what starts it again, so that cancelling the store's flow cannot turn into a
+     * loop of the app reopening it the moment the user is back. Called by [AppUpdateGate] as it puts that screen
+     * up, which is not necessarily when the update was found - see there for what it waits for.
+     */
+    fun startRequiredUpdateOnce()
+
     /** Answers "later": nothing more is said about this update for as long as the app stays open. */
     fun postponeUpdate()
 
@@ -73,6 +81,8 @@ internal object NoAppUpdates : AppUpdateController {
     override val state = AppUpdateState.NotAvailable
 
     override fun startUpdate() = Unit
+
+    override fun startRequiredUpdateOnce() = Unit
 
     override fun postponeUpdate() = Unit
 

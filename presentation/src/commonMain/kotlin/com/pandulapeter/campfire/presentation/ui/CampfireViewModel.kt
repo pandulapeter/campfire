@@ -314,6 +314,9 @@ class CampfireViewModel(
      */
     val syncState = getSyncState().asState(SyncState.Disconnected)
 
+    /** True while a sync run is going. Acted on rather than drawn: a restart the app offers by itself waits for it. */
+    val isSyncing = syncState.map { it is SyncState.Connected && it.isSyncing }.asState(false)
+
     /**
      * Whether the platform has promised to keep the library, null until it has answered. Asked for here, as early as
      * there is anything to ask from, and never insisted on: on the web this is what stops the browser from evicting

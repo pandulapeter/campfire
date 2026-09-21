@@ -23,10 +23,16 @@ import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.backhandler.BackHandler
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.pandulapeter.campfire.presentation.localization.stringResource
 import com.pandulapeter.campfire.presentation.resources.Res
 import com.pandulapeter.campfire.presentation.resources.app_update_available
@@ -52,18 +58,41 @@ import org.jetbrains.compose.resources.painterResource
  * The blocking screen is drawn *over* the app rather than in place of it, so that the app behind it is never torn
  * down and rebuilt: a required update is answered by leaving for the Play Store and coming back, and the library
  * the user was looking at should still be where they left it if the update turns out not to install.
+ *
+ * The controller says what the store has to offer and the gate decides when to act on it. Nothing that ends the
+ * process is put in the user's way while the editor holds text that has not been written: the blocking screen, the
+ * immediate flow it starts and the Restart offer all wait until that text has been saved or let go of, and Restart
+ * waits for a sync run as well, which a required update does not - a run it cuts off is reported as interrupted the
+ * ordinary way.
  */
 @Composable
 internal fun AppUpdateGate(
     modifier: Modifier = Modifier,
+    viewModel: CampfireViewModel,
     content: @Composable () -> Unit,
 ) {
     val controller = rememberAppUpdateController()
     val state = controller.state
+    val hasUnsavedEditorChanges by viewModel.hasUnsavedEditorChanges.collectAsStateWithLifecycle()
+    val isSyncing by viewModel.isSyncing.collectAsStateWithLifecycle()
+    // A required update ends with the process being replaced, and the screen it puts up leaves no way back to
+    // the app, so neither is allowed near an editor holding text that has not been written: both wait until it
+    // has been saved or let go of. Once the screen is up it stays up - the text can only become unsaved behind
+    // it by the file changing underneath an editor nobody typed into - and a rotation must not uncover the app.
+    var isRequiredUpdateInTheWay by rememberSaveable { mutableStateOf(false) }
+    LaunchedEffect(state, hasUnsavedEditorChanges) {
+        if (state == AppUpdateState.Required && !hasUnsavedEditorChanges) isRequiredUpdateInTheWay = true
+    }
+    val isRequiredScreenVisible = isRequiredUpdateInTheWay && state == AppUpdateState.Required
+    // Started without asking as the screen goes up, which the controller only does once: after that the
+    // screen's own button is what starts it again.
+    LaunchedEffect(isRequiredScreenVisible) {
+        if (isRequiredScreenVisible) controller.startRequiredUpdateOnce()
+    }
     Box(modifier = modifier.fillMaxSize()) {
         content()
         AnimatedVisibility(
-            visible = state == AppUpdateState.Required,
+            visible = isRequiredScreenVisible,
             enter = fadeIn(),
             exit = fadeOut(),
         ) {
@@ -82,13 +111,17 @@ internal fun AppUpdateGate(
             onDismiss = controller::postponeUpdate,
         )
 
-        AppUpdateState.ReadyToInstall -> AppUpdateDialog(
-            title = stringResource(Res.string.app_update_downloaded),
-            text = stringResource(Res.string.app_update_downloaded_hint),
-            confirmLabel = stringResource(Res.string.app_update_restart),
-            onConfirm = controller::installUpdate,
-            onDismiss = controller::postponeUpdate,
-        )
+        // Restarting is the app ending itself, so it is not offered over text that would go with it, nor over a
+        // sync run it would cut off. The offer is still there when the text is saved or the run has finished.
+        AppUpdateState.ReadyToInstall -> if (!hasUnsavedEditorChanges && !isSyncing) {
+            AppUpdateDialog(
+                title = stringResource(Res.string.app_update_downloaded),
+                text = stringResource(Res.string.app_update_downloaded_hint),
+                confirmLabel = stringResource(Res.string.app_update_restart),
+                onConfirm = controller::installUpdate,
+                onDismiss = controller::postponeUpdate,
+            )
+        }
 
         // A download in progress is the store's own business to report, and it does so in the notification drawer.
         AppUpdateState.NotAvailable, AppUpdateState.Required, AppUpdateState.Downloading -> Unit

@@ -140,6 +140,10 @@ private class AndroidAppUpdateController(
         }
     }
 
+    override fun startRequiredUpdateOnce() {
+        if (state == AppUpdateState.Required && !hasStartedImmediateFlow) startUpdate()
+    }
+
     override fun postponeUpdate() {
         isPostponed = true
         state = AppUpdateState.NotAvailable
@@ -156,10 +160,6 @@ private class AndroidAppUpdateController(
     private fun onAppUpdateInfoReceived(appUpdateInfo: AppUpdateInfo) {
         availableUpdate = appUpdateInfo
         state = appUpdateInfo.toAppUpdateState()
-        // A required update is started without asking, but only the first time: after that the blocking screen's
-        // own button is what starts it again, so that cancelling the Play flow cannot turn into a loop of the app
-        // reopening it the moment the user is back.
-        if (state == AppUpdateState.Required && !hasStartedImmediateFlow) startUpdate()
     }
 
     private fun onInstallStateChanged(installState: InstallState) {
