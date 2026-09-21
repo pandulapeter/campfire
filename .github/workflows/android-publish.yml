@@ -6,9 +6,28 @@
 # If a copy of the MPL was not distributed with this file, You can obtain one at
 # https://mozilla.org/MPL/2.0/.
 
+# Builds the signed release APK, attaches it to a GitHub release where one is named, and uploads it to the production
+# track of the Play Console. Called by release.yml for every release; dispatched by hand to publish without one, or to
+# repeat the Android half of a release that went wrong.
+
 name: 'Publish Android'
 
 on:
+  # The same inputs twice, since a called workflow declares its own and knows no "choice".
+  workflow_call:
+    inputs:
+      update_priority:
+        type: string
+        default: '0'
+      release_notes:
+        type: string
+        required: false
+      release_notes_hu:
+        type: string
+        required: false
+      release_tag:
+        type: string
+        required: false
   workflow_dispatch:
     inputs:
       update_priority:
@@ -24,10 +43,14 @@ on:
         description: 'Hungarian release notes, use \n for line breaks (leave empty to show the English ones there too)'
         type: string
         required: false
+      release_tag:
+        description: 'Tag of an existing GitHub release to build and attach the APK to (leave empty to build this branch and attach nothing)'
+        type: string
+        required: false
 
+# Write access is what attaching the APK to a release takes.
 permissions:
-  contents: read
-  actions: read
+  contents: write
 
 jobs:
   build:
@@ -37,6 +60,7 @@ jobs:
       - name: Check out repository
         uses: actions/checkout@v5
         with:
+          ref: ${{ inputs.release_tag || github.ref }}
           fetch-depth: 0
       - name: Set up JDK 21
         uses: actions/setup-java@v5
@@ -58,7 +82,6 @@ jobs:
           echo "Releasing version $VERSION_NAME ($VERSION_CODE)"
       - name: Generate release notes
         env:
-          GH_TOKEN: ${{ github.token }}
           RELEASE_NOTES_OVERRIDE: ${{ inputs.release_notes }}
           RELEASE_NOTES_OVERRIDE_HU: ${{ inputs.release_notes_hu }}
         run: |
@@ -66,10 +89,11 @@ jobs:
           if [ -n "$RELEASE_NOTES_OVERRIDE" ]; then
             printf '%b\n' "$RELEASE_NOTES_OVERRIDE" > release_notes.txt
           else
-            WORKFLOW_FILE=$(basename "${GITHUB_WORKFLOW_REF%%@*}")
-            LAST_SHA=$(gh run list --workflow "$WORKFLOW_FILE" --branch "${{ github.ref_name }}" --status success --limit 1 --json headSha --jq '.[0].headSha // empty' || true)
-            if [ -n "$LAST_SHA" ]; then
-              RANGE="$LAST_SHA..HEAD"
+            # Since the release before this one, which is the newest tag that is not on this very commit: that holds
+            # for a run on a release's tag and for one on the branch ahead of it alike.
+            LAST_TAG=$(git describe --tags --abbrev=0 HEAD^ 2>/dev/null || true)
+            if [ -n "$LAST_TAG" ]; then
+              RANGE="$LAST_TAG..HEAD"
             else
               RANGE="-n 20"
             fi
@@ -105,6 +129,16 @@ jobs:
             -Pcampfire.android.keyPassword="${{ secrets.ANDROID_KEY_PASSWORD }}" \
             -Pcampfire.android.keystoreFile=release.keystore \
             -Pcampfire.android.keystorePassword="${{ secrets.ANDROID_KEYSTORE_PASSWORD }}"
+      # Before the upload rather than after it, so that a release Play turns down still has its APK. It is the very
+      # file Play gets, signed with the same key, so an installation can move between the two sources freely.
+      - name: Attach the APK to the GitHub release
+        if: inputs.release_tag != ''
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          ASSET="campfire-${{ steps.version.outputs.name }}-android.apk"
+          cp app/android/build/outputs/apk/release/*.apk "$ASSET"
+          gh release upload "${{ inputs.release_tag }}" "$ASSET" --clobber
       - name: Upload the APK to the Play Console
         uses: r0adkll/upload-google-play@v1.1.5
         with:

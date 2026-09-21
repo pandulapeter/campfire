@@ -17,3 +17,5 @@ internal actual val libraryLocation: LibraryLocation? = LibraryLocation.FilesApp
 
 // App Store guideline 3.1.1: no button or link may lead to a way of paying the developer other than an in-app purchase.
 internal actual val canAskForDonations = false
+
+internal actual val currentDistribution: Distribution? = Distribution.APP_STORE

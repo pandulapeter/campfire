@@ -6,9 +6,13 @@
 # If a copy of the MPL was not distributed with this file, You can obtain one at
 # https://mozilla.org/MPL/2.0/.
 
+# Builds the web distribution and copies it over campfire/ in the website's repository. Called by release.yml for
+# every release; dispatched by hand to publish this branch without one.
+
 name: 'Publish Web'
 
 on:
+  workflow_call:
   workflow_dispatch:
 
 permissions:

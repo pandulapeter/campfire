@@ -31,8 +31,6 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.widthIn
-import androidx.compose.foundation.lazy.LazyListState
-import androidx.compose.foundation.lazy.grid.LazyGridState
 import androidx.compose.foundation.selection.selectable
 import androidx.compose.foundation.selection.toggleable
 import androidx.compose.material3.Button
@@ -394,9 +392,9 @@ internal fun DragHandle(
 }
 
 /**
- * Header of a list section: a raised pill that scrolls with the items of its section, like any other item of the
- * list. Clicking it scrolls the list back to the start of its own section, which is the header itself (see
- * [animateScrollToKey]).
+ * Header of a list section: a raised pill that floats above the items scrolling underneath it, since it is used as a
+ * sticky header. Clicking it scrolls the list back to the first item of its own section, which is the header itself:
+ * the index the list hands to the content of a sticky header is the global index of that item.
  *
  * The pill hangs into the keyline of the items below it, so that its text and their text start at the same x
  * position (see [LIST_ITEM_KEYLINE]).
@@ -462,20 +460,6 @@ internal fun SectionHeader(
             }
         }
     }
-}
-
-/**
- * Scrolls the item with the given [key] to the top of the list. The section headers are ordinary items, so they do
- * not know their own index; they do know their key, and the list knows where the item with that key is as long as it
- * is on the screen, which it is whenever it can be clicked.
- */
-internal suspend fun LazyListState.animateScrollToKey(key: Any) {
-    layoutInfo.visibleItemsInfo.firstOrNull { it.key == key }?.let { animateScrollToItem(it.index) }
-}
-
-/** The [LazyGridState] counterpart of the [LazyListState.animateScrollToKey] above. */
-internal suspend fun LazyGridState.animateScrollToKey(key: Any) {
-    layoutInfo.visibleItemsInfo.firstOrNull { it.key == key }?.let { animateScrollToItem(it.index) }
 }
 
 /**
@@ -568,16 +552,23 @@ internal fun RadioListItem(
     leadingContent = { RadioButton(selected = isSelected, onClick = null) },
 )
 
+/**
+ * @param isEnabled False for a link that leads nowhere yet, which stays in its list, dimmed, with [description]
+ *   saying why: a store the app has not reached.
+ */
 @Composable
 internal fun LinkListItem(
     modifier: Modifier = Modifier,
     title: String,
+    description: String? = null,
     icon: Painter,
+    isEnabled: Boolean = true,
     onClick: () -> Unit,
 ) = ListItem(
-    modifier = modifier.clickable(onClick = onClick),
+    modifier = modifier.clickable(enabled = isEnabled, onClick = onClick).alpha(if (isEnabled) 1f else 0.5f),
     colors = ListItemDefaults.colors(containerColor = Color.Transparent),
     headlineContent = { Text(title) },
+    supportingContent = description?.let { { Text(it) } },
     leadingContent = { Icon(painter = icon, contentDescription = null) },
     trailingContent = {
         Icon(

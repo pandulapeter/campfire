@@ -9,10 +9,10 @@
  */
 package com.pandulapeter.campfire.presentation.ui.components
 
-import androidx.compose.foundation.lazy.LazyListState
+import androidx.compose.foundation.ScrollState
 import androidx.compose.foundation.lazy.grid.LazyGridState
 import androidx.compose.foundation.lazy.grid.rememberLazyGridState
-import androidx.compose.foundation.lazy.rememberLazyListState
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 
@@ -32,13 +32,13 @@ internal class ScrollPosition {
 }
 
 /**
- * A [LazyListState] that starts where [position] was left and writes it back as it leaves the composition, which is
+ * A [LazyGridState] that starts where [position] was left and writes it back as it leaves the composition, which is
  * where the position is read rather than at every scrolled pixel: nothing but the value it has when the screen is
  * gone is ever restored from it.
  */
 @Composable
-internal fun rememberRetainedLazyListState(position: ScrollPosition): LazyListState {
-    val state = rememberLazyListState(
+internal fun rememberRetainedLazyGridState(position: ScrollPosition): LazyGridState {
+    val state = rememberLazyGridState(
         initialFirstVisibleItemIndex = position.index,
         initialFirstVisibleItemScrollOffset = position.offset,
     )
@@ -51,18 +51,15 @@ internal fun rememberRetainedLazyListState(position: ScrollPosition): LazyListSt
     return state
 }
 
-/** The [LazyGridState] counterpart of the [rememberRetainedLazyListState] above. */
+/**
+ * The [ScrollState] counterpart of the [rememberRetainedLazyGridState] above, for a screen that scrolls a layout
+ * rather than a list and so has an offset but no items to count: the settings screen.
+ */
 @Composable
-internal fun rememberRetainedLazyGridState(position: ScrollPosition): LazyGridState {
-    val state = rememberLazyGridState(
-        initialFirstVisibleItemIndex = position.index,
-        initialFirstVisibleItemScrollOffset = position.offset,
-    )
+internal fun rememberRetainedScrollState(position: ScrollPosition): ScrollState {
+    val state = rememberScrollState(initial = position.offset)
     DisposableEffect(state, position) {
-        onDispose {
-            position.index = state.firstVisibleItemIndex
-            position.offset = state.firstVisibleItemScrollOffset
-        }
+        onDispose { position.offset = state.value }
     }
     return state
 }

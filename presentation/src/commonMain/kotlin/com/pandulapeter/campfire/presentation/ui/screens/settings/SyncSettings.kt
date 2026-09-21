@@ -11,12 +11,16 @@
 
 package com.pandulapeter.campfire.presentation.ui.screens.settings
 
+import androidx.compose.animation.AnimatedContent
+import androidx.compose.animation.SizeTransform
 import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.ColumnScope
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.lazy.LazyListScope
-import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.ListItem
 import androidx.compose.material3.ListItemDefaults
@@ -72,7 +76,6 @@ import com.pandulapeter.campfire.presentation.resources.settings_sync_unavailabl
 import com.pandulapeter.campfire.presentation.ui.CampfireViewModel
 import com.pandulapeter.campfire.data.source.remote.api.model.AuthorizationCompletionPage
 import com.pandulapeter.campfire.presentation.ui.components.ActionListItem
-import com.pandulapeter.campfire.presentation.ui.components.listItemAnimation
 import com.pandulapeter.campfire.presentation.ui.platform.withSyncCounts
 import kotlin.time.ExperimentalTime
 import kotlin.time.Instant
@@ -81,138 +84,144 @@ import kotlinx.datetime.toLocalDateTime
 import org.jetbrains.compose.resources.painterResource
 
 /**
- * The sync section of the settings screen: one paragraph saying what it does, then either an invitation to connect
- * or the account that is connected, what the last run did, and the two things one can do about it.
+ * The rows of the sync section of the settings screen: one paragraph saying what it does, then either an invitation to
+ * connect or the account that is connected, what the last run did, and the two things one can do about it.
  *
- * Every row is keyed and animated like the rest of the list, so that connecting and disconnecting move the section
- * rather than swapping it in a single frame.
+ * The three stages cross fade, the section resizing under them, and the rows that come and go within a stage expand and
+ * shrink, so that connecting, disconnecting and a run starting move the section rather than swapping it in a single
+ * frame. The stage is what is animated between and not the state, which changes with every file a run moves.
  */
-internal fun LazyListScope.syncSettings(
+@Composable
+internal fun ColumnScope.SyncSettings(
     viewModel: CampfireViewModel,
     syncState: SyncState,
-    listState: LazyListState,
-    completionPage: AuthorizationCompletionPage,
 ) {
     if (viewModel.syncProviders.isEmpty()) {
-        item(key = "sync_unavailable") {
-            SyncMessage(modifier = listItemAnimation(listState), text = stringResource(Res.string.settings_sync_unavailable))
-        }
+        SettingsMessage(text = stringResource(Res.string.settings_sync_unavailable))
         return
     }
-    item(key = "sync_description") {
-        SyncMessage(modifier = listItemAnimation(listState), text = stringResource(Res.string.settings_sync_description))
-    }
-    when (syncState) {
-        SyncState.Disconnected, is SyncState.ConnectionFailed -> {
-            if (syncState is SyncState.ConnectionFailed) {
-                item(key = "sync_connection_failed") {
-                    SyncMessage(
-                        modifier = listItemAnimation(listState),
-                        text = stringResource(
-                            when (syncState.reason) {
-                                SyncFailureReason.NETWORK -> Res.string.settings_sync_connection_failed_network
-                                SyncFailureReason.AUTHORIZATION -> Res.string.settings_sync_connection_failed_authorization
-                                SyncFailureReason.STORAGE,
-                                SyncFailureReason.UNKNOWN -> Res.string.settings_sync_connection_failed_unknown
-                            }
-                        ),
-                    )
-                }
-            }
-            item(key = "sync_connect") {
-                ActionListItem(
-                    modifier = listItemAnimation(listState),
-                    title = stringResource(Res.string.settings_sync_connect_dropbox),
-                    icon = painterResource(Res.drawable.ic_cloud),
-                    isEnabled = viewModel.syncProviders.contains(SyncProviderId.DROPBOX),
-                    onClick = { viewModel.connectSyncProvider(SyncProviderId.DROPBOX, completionPage) },
-                )
-            }
-        }
-
-        is SyncState.Connecting -> {
-            item(key = "sync_connecting") {
-                ListItem(
-                    modifier = listItemAnimation(listState),
-                    colors = ListItemDefaults.colors(containerColor = Color.Transparent),
-                    headlineContent = { Text(stringResource(Res.string.settings_sync_connecting)) },
-                )
-            }
-            // The way out. Each platform does try to notice that the browser was closed, but a consent page is
-            // somewhere the app cannot see, so this state must never be one the user has to restart the app to leave.
-            item(key = "sync_cancel_connecting") {
-                ActionListItem(
-                    modifier = listItemAnimation(listState),
-                    title = stringResource(Res.string.cancel),
-                    icon = painterResource(Res.drawable.ic_clear),
-                    isEmphasized = false,
-                    onClick = viewModel::cancelSyncConnection,
-                )
-            }
-        }
-
-        is SyncState.Connected -> {
-            item(key = "sync_account") {
-                ListItem(
-                    modifier = listItemAnimation(listState),
-                    colors = ListItemDefaults.colors(containerColor = Color.Transparent),
-                    headlineContent = { Text(stringResource(Res.string.settings_sync_connected_as, syncState.account.displayName)) },
-                    supportingContent = { Text(syncState.statusText()) },
-                )
-            }
-            syncState.progress?.let { progress ->
-                item(key = "sync_progress") {
-                    SyncProgressIndicator(modifier = listItemAnimation(listState), progress = progress)
-                }
-            }
-            if (syncState.lastOutcome is SyncOutcome.DeletionsNeedConfirmation) {
-                item(key = "sync_delete_locally") {
-                    ActionListItem(
-                        modifier = listItemAnimation(listState),
-                        title = stringResource(Res.string.settings_sync_delete_locally),
-                        icon = painterResource(Res.drawable.ic_delete),
-                        onClick = { viewModel.synchronizeLibrary(SyncDeletionPolicy.DELETE_LOCALLY) },
-                    )
-                }
-                item(key = "sync_keep_and_upload") {
-                    ActionListItem(
-                        modifier = listItemAnimation(listState),
-                        title = stringResource(Res.string.settings_sync_keep_and_upload),
-                        icon = painterResource(Res.drawable.ic_cloud),
-                        onClick = { viewModel.synchronizeLibrary(SyncDeletionPolicy.KEEP_AND_UPLOAD) },
-                    )
-                }
-            }
-            item(key = "sync_now") {
-                if (syncState.isSyncing) {
-                    ActionListItem(
-                        modifier = listItemAnimation(listState),
-                        title = stringResource(Res.string.settings_sync_cancel),
-                        icon = painterResource(Res.drawable.ic_clear),
-                        isEmphasized = false,
-                        onClick = viewModel::cancelSynchronization,
-                    )
-                } else {
-                    ActionListItem(
-                        modifier = listItemAnimation(listState),
-                        title = stringResource(Res.string.settings_sync_now),
-                        icon = painterResource(Res.drawable.ic_sync),
-                        isEmphasized = false,
-                        onClick = { viewModel.synchronizeLibrary() },
-                    )
-                }
-            }
-            item(key = "sync_disconnect") {
-                ActionListItem(
-                    modifier = listItemAnimation(listState),
-                    title = stringResource(Res.string.settings_sync_disconnect),
-                    icon = painterResource(Res.drawable.ic_cloud_off),
-                    isEmphasized = false,
-                    onClick = { viewModel.showDialog(CampfireViewModel.DialogType.DisconnectSync(syncState.account.displayName)) },
-                )
+    SettingsMessage(text = stringResource(Res.string.settings_sync_description))
+    AnimatedContent(
+        targetState = syncState,
+        contentKey = { it.stage },
+        transitionSpec = { fadeIn() togetherWith fadeOut() using SizeTransform(clip = false) },
+    ) { state ->
+        Column {
+            when (state) {
+                SyncState.Disconnected, is SyncState.ConnectionFailed -> DisconnectedSyncSettings(viewModel = viewModel, syncState = state)
+                is SyncState.Connecting -> ConnectingSyncSettings(viewModel = viewModel)
+                is SyncState.Connected -> ConnectedSyncSettings(viewModel = viewModel, syncState = state)
             }
         }
     }
+}
+
+/**
+ * What [SyncSettings] animates between. A failed connection is the invitation to connect with the reason above it,
+ * so the two are one stage and the reason is a row that comes and goes within it.
+ */
+private enum class SyncStage { DISCONNECTED, CONNECTING, CONNECTED }
+
+private val SyncState.stage
+    get() = when (this) {
+        SyncState.Disconnected, is SyncState.ConnectionFailed -> SyncStage.DISCONNECTED
+        is SyncState.Connecting -> SyncStage.CONNECTING
+        is SyncState.Connected -> SyncStage.CONNECTED
+    }
+
+@Composable
+private fun ColumnScope.DisconnectedSyncSettings(
+    viewModel: CampfireViewModel,
+    syncState: SyncState,
+) {
+    AnimatedSettingsRow(value = (syncState as? SyncState.ConnectionFailed)?.reason) { reason ->
+        SettingsMessage(
+            text = stringResource(
+                when (reason) {
+                    SyncFailureReason.NETWORK -> Res.string.settings_sync_connection_failed_network
+                    SyncFailureReason.AUTHORIZATION -> Res.string.settings_sync_connection_failed_authorization
+                    SyncFailureReason.STORAGE,
+                    SyncFailureReason.UNKNOWN -> Res.string.settings_sync_connection_failed_unknown
+                }
+            ),
+        )
+    }
+    // Resolved out here rather than in the data layer, which can see neither the translations nor the language the
+    // user picked.
+    val completionPage = AuthorizationCompletionPage(
+        title = stringResource(Res.string.settings_sync_redirect_page_title),
+        message = stringResource(Res.string.settings_sync_redirect_page_message),
+    )
+    ActionListItem(
+        title = stringResource(Res.string.settings_sync_connect_dropbox),
+        icon = painterResource(Res.drawable.ic_cloud),
+        isEnabled = viewModel.syncProviders.contains(SyncProviderId.DROPBOX),
+        onClick = { viewModel.connectSyncProvider(SyncProviderId.DROPBOX, completionPage) },
+    )
+}
+
+@Composable
+private fun ConnectingSyncSettings(viewModel: CampfireViewModel) {
+    ListItem(
+        colors = ListItemDefaults.colors(containerColor = Color.Transparent),
+        headlineContent = { Text(stringResource(Res.string.settings_sync_connecting)) },
+    )
+    // The way out. Each platform does try to notice that the browser was closed, but a consent page is somewhere
+    // the app cannot see, so this state must never be one the user has to restart the app to leave.
+    ActionListItem(
+        title = stringResource(Res.string.cancel),
+        icon = painterResource(Res.drawable.ic_clear),
+        isEmphasized = false,
+        onClick = viewModel::cancelSyncConnection,
+    )
+}
+
+@Composable
+private fun ColumnScope.ConnectedSyncSettings(
+    viewModel: CampfireViewModel,
+    syncState: SyncState.Connected,
+) {
+    ListItem(
+        colors = ListItemDefaults.colors(containerColor = Color.Transparent),
+        headlineContent = { Text(stringResource(Res.string.settings_sync_connected_as, syncState.account.displayName)) },
+        supportingContent = { Text(syncState.statusText()) },
+    )
+    AnimatedSettingsRow(value = syncState.progress) { progress -> SyncProgressIndicator(progress = progress) }
+    AnimatedSettingsRow(isVisible = syncState.lastOutcome is SyncOutcome.DeletionsNeedConfirmation) {
+        Column {
+            ActionListItem(
+                title = stringResource(Res.string.settings_sync_delete_locally),
+                icon = painterResource(Res.drawable.ic_delete),
+                onClick = { viewModel.synchronizeLibrary(SyncDeletionPolicy.DELETE_LOCALLY) },
+            )
+            ActionListItem(
+                title = stringResource(Res.string.settings_sync_keep_and_upload),
+                icon = painterResource(Res.drawable.ic_cloud),
+                onClick = { viewModel.synchronizeLibrary(SyncDeletionPolicy.KEEP_AND_UPLOAD) },
+            )
+        }
+    }
+    if (syncState.isSyncing) {
+        ActionListItem(
+            title = stringResource(Res.string.settings_sync_cancel),
+            icon = painterResource(Res.drawable.ic_clear),
+            isEmphasized = false,
+            onClick = viewModel::cancelSynchronization,
+        )
+    } else {
+        ActionListItem(
+            title = stringResource(Res.string.settings_sync_now),
+            icon = painterResource(Res.drawable.ic_sync),
+            isEmphasized = false,
+            onClick = { viewModel.synchronizeLibrary() },
+        )
+    }
+    ActionListItem(
+        title = stringResource(Res.string.settings_sync_disconnect),
+        icon = painterResource(Res.drawable.ic_cloud_off),
+        isEmphasized = false,
+        onClick = { viewModel.showDialog(CampfireViewModel.DialogType.DisconnectSync(syncState.account.displayName)) },
+    )
 }
 
 /**
@@ -312,16 +321,3 @@ private fun lastSyncedText(lastSyncedAt: Long?): String {
 }
 
 private fun Int.padded() = toString().padStart(length = 2, padChar = '0')
-
-@Composable
-private fun SyncMessage(
-    modifier: Modifier = Modifier,
-    text: String,
-) = Column(modifier = modifier.fillMaxWidth()) {
-    Text(
-        modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp),
-        text = text,
-        style = MaterialTheme.typography.bodyMedium,
-        color = MaterialTheme.colorScheme.onSurfaceVariant,
-    )
-}

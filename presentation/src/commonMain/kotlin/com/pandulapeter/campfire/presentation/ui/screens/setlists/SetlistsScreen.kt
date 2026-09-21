@@ -81,7 +81,6 @@ import com.pandulapeter.campfire.presentation.ui.components.MissingSongListItem
 import com.pandulapeter.campfire.presentation.ui.components.SongListItem
 import com.pandulapeter.campfire.presentation.ui.components.SongActionsButton
 import com.pandulapeter.campfire.presentation.ui.components.TopLevelScreenLayout
-import com.pandulapeter.campfire.presentation.ui.components.animateScrollToKey
 import com.pandulapeter.campfire.presentation.ui.components.allowsNewItemMenu
 import com.pandulapeter.campfire.presentation.ui.components.besideSidePanel
 import com.pandulapeter.campfire.presentation.ui.components.hasRoomForSidePanel
@@ -293,12 +292,10 @@ private fun SetlistList(
                 }
 
                 else -> setlistsWithSongs.forEach { setlistWithSongs ->
-                    val headerKey = "setlist_${setlistWithSongs.setlist.fileName}"
-                    item(
-                        key = headerKey,
-                        span = { GridItemSpan(maxLineSpan) },
+                    stickyHeader(
+                        key = "setlist_${setlistWithSongs.setlist.fileName}",
                         contentType = "setlist_header",
-                    ) {
+                    ) { headerIndex ->
                         SectionHeader(
                             modifier = listItemAnimation(listState, hasLoadedLibrary),
                             text = setlistWithSongs.setlist.title,
@@ -306,7 +303,7 @@ private fun SetlistList(
                             // so the mark is what tells it from the ones still in use.
                             icon = if (setlistWithSongs.setlist.isArchived) painterResource(Res.drawable.ic_archive) else null,
                             iconContentDescription = stringResource(Res.string.setlists_archived),
-                            onClick = { coroutineScope.launch { listState.animateScrollToKey(headerKey) } },
+                            onClick = { coroutineScope.launch { listState.animateScrollToItem(headerIndex) } },
                             action = if (isPerformanceModeEnabled) null else {
                                 {
                                     SetlistActionsMenu(

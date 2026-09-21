@@ -104,7 +104,6 @@ import com.pandulapeter.campfire.presentation.ui.platform.SyncNotification
 import com.pandulapeter.campfire.presentation.ui.platform.areDrawablesLoaded
 import com.pandulapeter.campfire.presentation.ui.platform.isDesktopPlatform
 import com.pandulapeter.campfire.presentation.ui.platform.libraryLocation
-import com.pandulapeter.campfire.presentation.ui.platform.requestLibraryPersistence
 import com.pandulapeter.campfire.presentation.ui.dialogs.CampfireDialogs
 import com.pandulapeter.campfire.presentation.ui.navigation.CampfireDestination
 import com.pandulapeter.campfire.presentation.ui.screens.setlists.SetlistsScreen
@@ -142,9 +141,6 @@ fun CampfireApp(
     onAppReady: () -> Unit = {},
 ) {
     LaunchedEffect(filesToImport) { filesToImport.collect(viewModel::importFiles) }
-    // Asked for as early as there is anything to ask from, and never insisted on: on the web this is what stops the
-    // browser from evicting the library when the device runs short of space, and everywhere else it is a no-op.
-    LaunchedEffect(Unit) { requestLibraryPersistence() }
     SyncNotificationEffect(viewModel)
     // A library the user can reach from outside the app (the desktop folder, the iOS Files app) can also change
     // while the app is away, so it is read again whenever Campfire comes back to the front. One only the app can
@@ -370,6 +366,7 @@ private fun CampfireContent(
                     TopLevelScreenSurface(navigationBarHeight) {
                         SettingsScreen(
                             viewModel = viewModel,
+                            settledWidth = settledListWidth,
                             railWidth = railWidth,
                             contentPadding = shellContentPadding,
                             urlOpener = urlOpener,

@@ -77,6 +77,9 @@ import com.pandulapeter.campfire.presentation.ui.components.ScrollPosition
 import com.pandulapeter.campfire.presentation.ui.components.SearchState
 import com.pandulapeter.campfire.presentation.ui.navigation.CampfireDestination
 import com.pandulapeter.campfire.presentation.ui.platform.FilePicker
+import com.pandulapeter.campfire.presentation.ui.platform.LibraryPersistence
+import com.pandulapeter.campfire.presentation.ui.platform.requestLibraryPersistence
+import com.pandulapeter.campfire.presentation.ui.screens.settings.SettingsTab
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.FlowPreview
@@ -95,6 +98,7 @@ import kotlinx.coroutines.flow.debounce
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.filterNotNull
 import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.flow.runningFold
@@ -201,12 +205,20 @@ class CampfireViewModel(
     private var isNavigationTransitionRunning = false
 
     /**
-     * Where each of the three top level screens is scrolled to, kept here because a tab that is left is taken off
-     * the back stack and loses everything it remembered with it, see [ScrollPosition].
+     * Where each of the three top level screens is scrolled to - the settings screen once per tab, since each of its
+     * tabs scrolls on its own - kept here because a tab that is left is taken off the back stack and loses everything
+     * it remembered with it, see [ScrollPosition].
      */
     internal val songsScrollPosition = ScrollPosition()
     internal val setlistsScrollPosition = ScrollPosition()
-    internal val settingsScrollPosition = ScrollPosition()
+    internal val settingsScrollPositions = SettingsTab.entries.associateWith { ScrollPosition() }
+
+    /**
+     * Which tab of the settings screen was left open, kept here for the reason the scroll positions are: the screen is
+     * taken off the back stack as it is left, and coming back to it should be coming back to where one was. Only read
+     * as the screen is composed, so it is not a state.
+     */
+    internal var settingsTab = SettingsTab.GENERAL
 
     /**
      * The search of each of the two list screens, held here for the same reason their scroll positions are, see
@@ -296,6 +308,17 @@ class CampfireViewModel(
      * schedule, and a settings screen must not wait for a scan of the library to say whether an account is on.
      */
     val syncState = getSyncState().asState(SyncState.Disconnected)
+
+    /**
+     * Whether the platform has promised to keep the library, null until it has answered. Asked for here, as early as
+     * there is anything to ask from, and never insisted on: on the web this is what stops the browser from evicting
+     * the library when the device runs short of space, and everywhere else the answer is a foregone conclusion.
+     *
+     * A state of the view model rather than something the settings screen asks for as it opens, for the reason every
+     * other state here is eager: an answer that arrives a frame after the screen does is a row appearing in the
+     * middle of the transition the screen is entering with.
+     */
+    internal val libraryPersistence = flow<LibraryPersistence?> { emit(requestLibraryPersistence()) }.asState(null)
 
     /** Fixed for the life of the build, so it is a value rather than a flow. Empty means sync is not configured. */
     val syncProviders: List<SyncProviderId> = getSyncProviders()

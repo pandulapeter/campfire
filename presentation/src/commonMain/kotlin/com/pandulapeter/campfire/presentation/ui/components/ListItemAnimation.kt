@@ -13,7 +13,6 @@ import androidx.compose.animation.core.Spring
 import androidx.compose.animation.core.VisibilityThreshold
 import androidx.compose.animation.core.spring
 import androidx.compose.foundation.gestures.ScrollableState
-import androidx.compose.foundation.lazy.LazyItemScope
 import androidx.compose.foundation.lazy.grid.LazyGridItemScope
 import androidx.compose.foundation.lazy.grid.LazyGridState
 import androidx.compose.runtime.Composable
@@ -103,7 +102,7 @@ private class HeldTop(var contents: Any?) {
 }
 
 /**
- * The placement animation of a lazy list's item.
+ * The placement animation of an item of the song or setlist grid.
  *
  * An item sliding into its new slot says that the list the user is looking at has changed: a song was renamed,
  * deleted, filtered out, or a different sorting order moved it. The library arriving is not that kind of change
@@ -124,20 +123,6 @@ private class HeldTop(var contents: Any?) {
  * by its spec rather than by taking the modifier away: a modifier taken away at the start of a scroll takes the
  * animation node with it, cutting short a placement animation that is still running, and puts a new one in at the
  * end. The fades, which move nothing, are what keep the modifier in place, since one with no spec at all is none.
- */
-@Composable
-internal fun LazyItemScope.listItemAnimation(listState: ScrollableState, isEnabled: Boolean = true) = if (isEnabled) {
-    Modifier.animateItem(
-        fadeInSpec = ITEM_FADE_SPEC,
-        placementSpec = if (listState.isScrollInProgress) null else ITEM_PLACEMENT_SPEC,
-        fadeOutSpec = ITEM_FADE_SPEC,
-    )
-} else {
-    Modifier
-}
-
-/**
- * The [listItemAnimation] of an item of the song or setlist grid.
  *
  * @param isRearranging True while a drag is rearranging the list, which is the one case the reasoning above does not
  *   cover: a list being dragged in scrolls itself once the dragged row reaches an edge, and the rows it travels past

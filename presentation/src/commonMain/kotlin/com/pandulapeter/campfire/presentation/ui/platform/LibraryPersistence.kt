@@ -30,8 +30,8 @@ internal enum class LibraryPersistence {
 }
 
 /**
- * Asks the platform to hold on to the library, and reports what it said. Called once as the app starts, and again by
- * the settings screen, which only reads the answer - asking twice must therefore be free of side effects beyond the
- * first, and must not put a second question to the user.
+ * Asks the platform to hold on to the library, and reports what it said. Called once, by the view model as it is
+ * created (`CampfireViewModel.libraryPersistence`): the browsers that decide by asking the user must only be made to
+ * ask once, and the settings screen reads the answer that call left behind rather than asking again.
  */
 internal expect suspend fun requestLibraryPersistence(): LibraryPersistence

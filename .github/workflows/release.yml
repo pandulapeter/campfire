@@ -1,0 +1,120 @@
+# This file is part of Campfire.
+# Copyright (c) Pandula Péter 2017-2026.
+# https://github.com/pandulapeter/campfire
+#
+# This Source Code Form is subject to the terms of the Mozilla Public License, v. 2.0.
+# If a copy of the MPL was not distributed with this file, You can obtain one at
+# https://mozilla.org/MPL/2.0/.
+
+# The whole release, started by publishing a GitHub release: the Android build goes to Play and onto the release, the
+# web build onto the website, and the desktop installers and the iOS build onto the release. Each of the four is a
+# workflow of its own that this one calls, so any of them can also be dispatched by hand, and a job that failed here
+# can be run again from the run's page without repeating the ones that went through.
+#
+# What Play shows as "what's new" is read out of the release's description, from comments the rendered page hides:
+#
+#   <!-- play-store en-US
+#   - Up to 500 characters of plain text
+#   -->
+#   <!-- play-store hu-HU
+#   - The same in Hungarian
+#   -->
+#   <!-- play-store update-priority: 3 -->
+#
+# All three are optional. Without the English one the visible description stands in for it, with its markdown taken
+# out; without the Hungarian one the English text is shown there too; and the priority is 0 unless it says otherwise
+# (see the Updates section of CLAUDE.md for what the number decides).
+
+name: 'Release'
+
+on:
+  release:
+    # Not "published", which a pre-release answers to as well: a pre-release goes to nobody's store.
+    types: [released]
+
+permissions:
+  contents: write
+
+jobs:
+  prepare:
+    name: Check the version and read the release notes
+    runs-on: ubuntu-latest
+    outputs:
+      release_notes: ${{ steps.notes.outputs.release_notes }}
+      release_notes_hu: ${{ steps.notes.outputs.release_notes_hu }}
+      update_priority: ${{ steps.notes.outputs.update_priority }}
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v5
+      # A tag on a commit that still carries the previous version would build, sign and submit that version again
+      # under a new name, and the stores would be the first to notice.
+      - name: Check the tag against the version
+        env:
+          RELEASE_TAG: ${{ github.event.release.tag_name }}
+        run: |
+          VERSION_NAME=$(sed -n 's/^campfire\.versionName=//p' gradle.properties)
+          if [ "${RELEASE_TAG#v}" != "$VERSION_NAME" ]; then
+            echo "The release is tagged $RELEASE_TAG, but gradle.properties at that tag says campfire.versionName=$VERSION_NAME" >&2
+            exit 1
+          fi
+          echo "Releasing version $VERSION_NAME"
+      - name: Read the release notes
+        id: notes
+        env:
+          RELEASE_BODY: ${{ github.event.release.body }}
+        run: |
+          python3 - <<'PYTHON'
+          import os
+          import re
+
+          body = os.environ["RELEASE_BODY"].replace("\r\n", "\n")
+
+          def block(locale):
+              match = re.search(r"<!--\s*play-store\s+" + re.escape(locale) + r"\s*\n(.*?)-->", body, re.S)
+              return match.group(1).strip() if match else ""
+
+          english = block("en-US")
+          if not english:
+              visible = re.sub(r"<!--.*?-->", "", body, flags=re.S)
+              visible = re.sub(r"\[([^\]]+)\]\([^)]+\)", r"\1", visible)
+              english = re.sub(r"\*\*|`", "", visible).strip()
+          priority = re.search(r"<!--\s*play-store\s+update-priority:\s*([0-5])\s*-->", body)
+
+          with open(os.environ["GITHUB_OUTPUT"], "a") as output:
+              for name, value in (("release_notes", english), ("release_notes_hu", block("hu-HU"))):
+                  output.write(f"{name}<<END_OF_RELEASE_NOTES\n{value}\nEND_OF_RELEASE_NOTES\n")
+              output.write(f"update_priority={priority.group(1) if priority else '0'}\n")
+          PYTHON
+
+  android:
+    name: Android
+    needs: prepare
+    uses: ./.github/workflows/android-publish.yml
+    with:
+      update_priority: ${{ needs.prepare.outputs.update_priority }}
+      release_notes: ${{ needs.prepare.outputs.release_notes }}
+      release_notes_hu: ${{ needs.prepare.outputs.release_notes_hu }}
+      release_tag: ${{ github.event.release.tag_name }}
+    secrets: inherit
+
+  web:
+    name: Web
+    needs: prepare
+    uses: ./.github/workflows/web-publish.yml
+    secrets: inherit
+
+  desktop:
+    name: Desktop
+    needs: prepare
+    uses: ./.github/workflows/desktop-publish.yml
+    with:
+      release_tag: ${{ github.event.release.tag_name }}
+    secrets: inherit
+
+  ios:
+    name: iOS
+    needs: prepare
+    uses: ./.github/workflows/ios-publish.yml
+    with:
+      release_tag: ${{ github.event.release.tag_name }}
+    secrets: inherit

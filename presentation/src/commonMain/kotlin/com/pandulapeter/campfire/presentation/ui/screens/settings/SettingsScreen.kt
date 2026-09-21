@@ -9,17 +9,13 @@
  */
 package com.pandulapeter.campfire.presentation.ui.screens.settings
 
-import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.calculateEndPadding
 import androidx.compose.foundation.layout.calculateStartPadding
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.LazyListScope
-import androidx.compose.foundation.lazy.LazyListState
+import androidx.compose.foundation.pager.HorizontalPager
+import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.foundation.selection.selectableGroup
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ListItem
@@ -28,34 +24,37 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
+import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.produceState
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.painter.Painter
-import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.platform.LocalLayoutDirection
-import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.Dp
-import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.pandulapeter.campfire.data.model.domain.SyncOutcome
+import com.pandulapeter.campfire.data.model.domain.SyncState
 import com.pandulapeter.campfire.data.model.domain.UserPreferences
-import com.pandulapeter.campfire.data.source.remote.api.model.AuthorizationCompletionPage
 import com.pandulapeter.campfire.presentation.CAMPFIRE_VERSION_NAME
 import com.pandulapeter.campfire.presentation.localization.stringResource
 import com.pandulapeter.campfire.presentation.resources.Res
 import com.pandulapeter.campfire.presentation.resources.add_demo_songs
+import com.pandulapeter.campfire.presentation.resources.ic_bug
 import com.pandulapeter.campfire.presentation.resources.ic_campfire
 import com.pandulapeter.campfire.presentation.resources.ic_coffee
+import com.pandulapeter.campfire.presentation.resources.ic_desktop
 import com.pandulapeter.campfire.presentation.resources.ic_export
 import com.pandulapeter.campfire.presentation.resources.ic_git_hub
 import com.pandulapeter.campfire.presentation.resources.ic_import
+import com.pandulapeter.campfire.presentation.resources.ic_laptop
 import com.pandulapeter.campfire.presentation.resources.ic_phone
 import com.pandulapeter.campfire.presentation.resources.ic_privacy_policy
 import com.pandulapeter.campfire.presentation.resources.ic_songs
+import com.pandulapeter.campfire.presentation.resources.ic_tablet
+import com.pandulapeter.campfire.presentation.resources.ic_terminal
 import com.pandulapeter.campfire.presentation.resources.ic_website
 import com.pandulapeter.campfire.presentation.resources.settings
 import com.pandulapeter.campfire.presentation.resources.settings_about
@@ -65,8 +64,27 @@ import com.pandulapeter.campfire.presentation.resources.settings_accidentals_fla
 import com.pandulapeter.campfire.presentation.resources.settings_accidentals_original
 import com.pandulapeter.campfire.presentation.resources.settings_accidentals_sharps
 import com.pandulapeter.campfire.presentation.resources.settings_created_by
+import com.pandulapeter.campfire.presentation.resources.settings_distribution_android
+import com.pandulapeter.campfire.presentation.resources.settings_distribution_app_store
+import com.pandulapeter.campfire.presentation.resources.settings_distribution_coming_soon
+import com.pandulapeter.campfire.presentation.resources.settings_distribution_current
+import com.pandulapeter.campfire.presentation.resources.settings_distribution_git_hub_releases
+import com.pandulapeter.campfire.presentation.resources.settings_distribution_ios
+import com.pandulapeter.campfire.presentation.resources.settings_distribution_linux
+import com.pandulapeter.campfire.presentation.resources.settings_distribution_mac
+import com.pandulapeter.campfire.presentation.resources.settings_distribution_mac_app_store
+import com.pandulapeter.campfire.presentation.resources.settings_distribution_microsoft_store
+import com.pandulapeter.campfire.presentation.resources.settings_distribution_play_store
+import com.pandulapeter.campfire.presentation.resources.settings_distribution_web
+import com.pandulapeter.campfire.presentation.resources.settings_distribution_web_address
+import com.pandulapeter.campfire.presentation.resources.settings_distribution_windows
+import com.pandulapeter.campfire.presentation.resources.settings_distributions
+import com.pandulapeter.campfire.presentation.resources.settings_distributions_all
+import com.pandulapeter.campfire.presentation.resources.settings_distributions_all_description
+import com.pandulapeter.campfire.presentation.resources.settings_distributions_description
 import com.pandulapeter.campfire.presentation.resources.settings_export_all
 import com.pandulapeter.campfire.presentation.resources.settings_german_notation
+import com.pandulapeter.campfire.presentation.resources.settings_general
 import com.pandulapeter.campfire.presentation.resources.settings_german_notation_description
 import com.pandulapeter.campfire.presentation.resources.settings_git_hub
 import com.pandulapeter.campfire.presentation.resources.settings_horizontal_section_flow
@@ -84,12 +102,10 @@ import com.pandulapeter.campfire.presentation.resources.settings_lyrics_only_mod
 import com.pandulapeter.campfire.presentation.resources.settings_performance_mode
 import com.pandulapeter.campfire.presentation.resources.settings_performance_mode_description
 import com.pandulapeter.campfire.presentation.resources.settings_privacy_policy
-import com.pandulapeter.campfire.presentation.resources.settings_song_display
+import com.pandulapeter.campfire.presentation.resources.settings_report_issue
+import com.pandulapeter.campfire.presentation.resources.settings_songs
 import com.pandulapeter.campfire.presentation.resources.settings_support
 import com.pandulapeter.campfire.presentation.resources.settings_sync
-import com.pandulapeter.campfire.presentation.resources.settings_sync_redirect_page_message
-import com.pandulapeter.campfire.presentation.resources.settings_sync_redirect_page_title
-import com.pandulapeter.campfire.presentation.resources.settings_user_interface
 import com.pandulapeter.campfire.presentation.resources.settings_user_interface_language
 import com.pandulapeter.campfire.presentation.resources.settings_user_interface_language_english
 import com.pandulapeter.campfire.presentation.resources.settings_user_interface_language_hungarian
@@ -109,380 +125,483 @@ import com.pandulapeter.campfire.presentation.resources.settings_user_interface_
 import com.pandulapeter.campfire.presentation.resources.settings_user_interface_theme_light
 import com.pandulapeter.campfire.presentation.resources.settings_user_interface_theme_system_default
 import com.pandulapeter.campfire.presentation.resources.settings_version
-import com.pandulapeter.campfire.presentation.resources.settings_website
 import com.pandulapeter.campfire.presentation.ui.CampfireViewModel
 import com.pandulapeter.campfire.presentation.ui.components.ActionListItem
 import com.pandulapeter.campfire.presentation.ui.components.CampfireTopAppBar
 import com.pandulapeter.campfire.presentation.ui.components.ColorChoice
 import com.pandulapeter.campfire.presentation.ui.components.ColorChoiceOption
 import com.pandulapeter.campfire.presentation.ui.components.ImportProgress
-import com.pandulapeter.campfire.presentation.ui.components.KeepTopAppBarInSync
 import com.pandulapeter.campfire.presentation.ui.components.LinkListItem
 import com.pandulapeter.campfire.presentation.ui.components.RadioListItem
-import com.pandulapeter.campfire.presentation.ui.components.SECTION_HEADER_GAP
-import com.pandulapeter.campfire.presentation.ui.components.SectionHeader
 import com.pandulapeter.campfire.presentation.ui.components.SegmentedChoice
-import com.pandulapeter.campfire.presentation.ui.components.SettingsSectionTitle
 import com.pandulapeter.campfire.presentation.ui.components.SwitchListItem
 import com.pandulapeter.campfire.presentation.ui.components.TopLevelScreenLayout
-import com.pandulapeter.campfire.presentation.ui.components.animateScrollToKey
-import com.pandulapeter.campfire.presentation.ui.components.listItemAnimation
-import com.pandulapeter.campfire.presentation.ui.components.rememberRetainedLazyListState
+import com.pandulapeter.campfire.presentation.ui.components.rememberRetainedScrollState
+import com.pandulapeter.campfire.presentation.ui.platform.Distribution
 import com.pandulapeter.campfire.presentation.ui.platform.LibraryLocation
 import com.pandulapeter.campfire.presentation.ui.platform.LibraryPersistence
 import com.pandulapeter.campfire.presentation.ui.platform.LocalFilePicker
 import com.pandulapeter.campfire.presentation.ui.platform.canAskForDonations
+import com.pandulapeter.campfire.presentation.ui.platform.currentDistribution
 import com.pandulapeter.campfire.presentation.ui.platform.libraryLocation
-import com.pandulapeter.campfire.presentation.ui.platform.requestLibraryPersistence
+import com.pandulapeter.campfire.presentation.ui.platform.visibleDistributions
 import com.pandulapeter.campfire.presentation.ui.theme.isDarkTheme
 import com.pandulapeter.campfire.presentation.ui.theme.themeColorOptions
-import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
 import org.jetbrains.compose.resources.painterResource
 
+/**
+ * The settings of the app as four tabs, one [SettingsTab] per page of a pager, with the tabs themselves under the app
+ * bar so that they stay in reach however far a page is scrolled. Each tab holds a section or two, laid out side by side
+ * where the window has room for them (see [SettingsPage]).
+ *
+ * The bar and the tabs lie flat on the screen and never tint or lift as a page scrolls under them, the divider under
+ * the tabs being the edge the pages scroll under instead. The bar spans the navigation rail and the tabs only the part
+ * of the screen next to it, so a bar that lifted would lift with its tabs as an L around the corner of the rail.
+ *
+ * Every page is composed as the screen is rather than as it is first swiped to, and everything a section draws is a
+ * state the view model already holds by then, so the first frame of a tab is the tab as it is rather than a guess that
+ * the next frame corrects - and what does change afterwards (a sync run starting, the demo songs arriving) is animated
+ * inside its section by [AnimatedSettingsRow].
+ *
+ * @param settledWidth The width of the screen once the navigation bars have finished animating, which is what the
+ *   number of columns is decided from.
+ */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 internal fun SettingsScreen(
     modifier: Modifier = Modifier,
     viewModel: CampfireViewModel,
+    settledWidth: Dp,
     railWidth: Dp,
     contentPadding: PaddingValues,
     urlOpener: (String) -> Unit,
 ) {
-    val scrollBehavior = TopAppBarDefaults.pinnedScrollBehavior()
-    val listState = rememberRetainedLazyListState(viewModel.settingsScrollPosition)
+    val pagerState = rememberPagerState(initialPage = viewModel.settingsTab.ordinal) { SettingsTab.entries.size }
+    val scrollStates = SettingsTab.entries.map { rememberRetainedScrollState(viewModel.settingsScrollPositions.getValue(it)) }
+    val coroutineScope = rememberCoroutineScope()
     val isImporting by viewModel.isImporting.collectAsStateWithLifecycle()
     val isPerformanceModeEnabled by viewModel.isPerformanceModeEnabled.collectAsStateWithLifecycle()
-    val filePicker = LocalFilePicker.current
-    KeepTopAppBarInSync(scrollBehavior, listState)
+    val userPreferences by viewModel.userPreferences.collectAsStateWithLifecycle()
+    // Read through a derived state, so that a run reporting every file it moves recomposes the sync section alone
+    // rather than the whole screen for the one thing the tabs want to know about it.
+    val syncState = viewModel.syncState.collectAsStateWithLifecycle()
+    val isSyncAnswerPending by remember(syncState) {
+        derivedStateOf { (syncState.value as? SyncState.Connected)?.lastOutcome is SyncOutcome.DeletionsNeedConfirmation }
+    }
+    val layoutDirection = LocalLayoutDirection.current
+    val startPadding = contentPadding.calculateStartPadding(layoutDirection)
+    val endPadding = contentPadding.calculateEndPadding(layoutDirection)
+    DisposableEffect(pagerState) {
+        onDispose { viewModel.settingsTab = SettingsTab.entries[pagerState.currentPage] }
+    }
     TopLevelScreenLayout(
-        modifier = modifier.nestedScroll(scrollBehavior.nestedScrollConnection),
+        modifier = modifier,
         railWidth = railWidth,
         appBar = {
             CampfireTopAppBar(
-                scrollBehavior = scrollBehavior,
+                // Never connected to the pages' scrolling, which is what keeps the bar flat, see above.
+                scrollBehavior = TopAppBarDefaults.pinnedScrollBehavior(),
                 title = { Text(stringResource(Res.string.settings)) },
             )
         },
     ) {
-        ImportProgress(isImporting = isImporting)
-        val userPreferences by viewModel.userPreferences.collectAsStateWithLifecycle()
-        val syncState by viewModel.syncState.collectAsStateWithLifecycle()
-        // Null until the library has been read, so that the row fades in with real counts instead of showing zeroes.
-        val librarySummary by viewModel.librarySummary.collectAsStateWithLifecycle()
-        val demoLibraryOffer by viewModel.demoLibraryOffer.collectAsStateWithLifecycle()
-        // The app asked for this as it started; asking again only reads back the answer, see requestLibraryPersistence.
-        val libraryPersistence by produceState<LibraryPersistence?>(null) { value = requestLibraryPersistence() }
-        val layoutDirection = LocalLayoutDirection.current
-        val coroutineScope = rememberCoroutineScope()
-        // Resolved out here rather than in the data layer, which can see neither the translations nor the language
-        // the user picked, and out of the list because a lazy list's scope is not a composable one.
-        val completionPage = AuthorizationCompletionPage(
-            title = stringResource(Res.string.settings_sync_redirect_page_title),
-            message = stringResource(Res.string.settings_sync_redirect_page_message),
+        // The tab being headed for rather than the one on screen, so that the indicator sets off the moment a tab is
+        // pressed instead of waiting for the pages to pass the halfway point.
+        SettingsTabRow(
+            selectedTab = SettingsTab.entries[pagerState.targetPage],
+            // The library is not synced until a run that stopped to ask whether its deletions are meant has been
+            // answered, and the question is in the sync section, which may be a tab away.
+            badgedTab = SettingsTab.LIBRARY.takeIf { isSyncAnswerPending },
+            label = { it.label() },
+            startPadding = startPadding,
+            endPadding = endPadding,
+            onTabSelected = { coroutineScope.launch { pagerState.animateScrollToPage(it.ordinal) } },
         )
-        LazyColumn(
-            modifier = Modifier.fillMaxSize(),
-            state = listState,
-            contentPadding = PaddingValues(
-                start = contentPadding.calculateStartPadding(layoutDirection),
-                top = SECTION_HEADER_GAP,
-                end = contentPadding.calculateEndPadding(layoutDirection),
-                bottom = contentPadding.calculateBottomPadding() + 16.dp,
-            ),
-        ) {
-            // Above the first section rather than inside one: it is the switch that decides what the rest of this
-            // list, and the rest of the app, is still allowed to do, and filed under a heading it would read as
-            // belonging to that heading alone.
-            item(key = "performance_mode") {
-                SwitchListItem(
-                    modifier = listItemAnimation(listState),
-                    title = stringResource(Res.string.settings_performance_mode),
-                    description = stringResource(Res.string.settings_performance_mode_description),
-                    isChecked = isPerformanceModeEnabled,
-                    onCheckedChange = viewModel::setPerformanceModeEnabled,
-                )
-            }
-            sectionHeader(
-                key = "header_library",
-                listState = listState,
-                coroutineScope = coroutineScope,
-            ) { stringResource(Res.string.settings_library) }
-            librarySummary?.let { summary ->
-                item(key = "library_summary") {
-                    ListItem(
-                        modifier = listItemAnimation(listState),
-                        colors = ListItemDefaults.colors(containerColor = Color.Transparent),
-                        headlineContent = { Text(stringResource(Res.string.settings_library_summary, summary.songCount, summary.setlistCount)) },
-                    )
-                }
-            }
-            libraryLocation?.let { location ->
-                item(key = "library_location") {
-                    ListItem(
-                        modifier = listItemAnimation(listState),
-                        colors = ListItemDefaults.colors(containerColor = Color.Transparent),
-                        headlineContent = { Text(stringResource(Res.string.settings_library_location)) },
-                        supportingContent = {
-                            Text(
-                                when (location) {
-                                    is LibraryLocation.Folder -> location.path
-                                    LibraryLocation.FilesApp -> stringResource(Res.string.settings_library_location_files_app)
-                                }
-                            )
-                        },
-                    )
-                }
-            }
-            // Only where the answer is not a foregone conclusion, which is the web: the other three platforms keep
-            // the library in a file system of their own and have the location row above instead.
-            if (libraryPersistence != null && libraryPersistence != LibraryPersistence.GUARANTEED) {
-                item(key = "library_storage") {
-                    ListItem(
-                        modifier = listItemAnimation(listState),
-                        colors = ListItemDefaults.colors(containerColor = Color.Transparent),
-                        headlineContent = { Text(stringResource(Res.string.settings_library_storage)) },
-                        supportingContent = {
-                            Text(
-                                text = when (libraryPersistence) {
-                                    LibraryPersistence.GRANTED -> stringResource(Res.string.settings_library_storage_granted)
-                                    else -> stringResource(Res.string.settings_library_storage_best_effort)
-                                },
-                                color = if (libraryPersistence == LibraryPersistence.GRANTED) Color.Unspecified else MaterialTheme.colorScheme.error,
-                            )
-                        },
-                    )
-                }
-            }
-            // Disabled rather than hidden by performance mode, like the chord spelling under lyrics only mode below:
-            // this screen is the one place the mode can be switched back off, and a settings list whose rows come and
-            // go with a switch further down it is a list nobody can find their way around.
-            item(key = "library_import") {
-                ActionListItem(
-                    modifier = listItemAnimation(listState),
-                    title = stringResource(Res.string.settings_import),
-                    icon = painterResource(Res.drawable.ic_import),
-                    isEnabled = !isImporting && !isPerformanceModeEnabled,
-                    isEmphasized = false,
-                    onClick = { viewModel.importFiles(filePicker) },
-                )
-            }
-            // Only until they are all in the library, which is also what brings it back for the ones a user who
-            // wanted none of them has deleted. Null while the library is still being read, so the offer never
-            // appears for a moment over a library that turns out to hold them.
-            demoLibraryOffer?.let { offer ->
-                item(key = "library_demo") {
-                    ActionListItem(
-                        modifier = listItemAnimation(listState),
-                        title = stringResource(Res.string.add_demo_songs),
-                        icon = painterResource(Res.drawable.ic_songs),
-                        isEnabled = offer == CampfireViewModel.DemoLibraryOffer.AVAILABLE && !isPerformanceModeEnabled,
-                        isEmphasized = false,
-                        onClick = viewModel::importDemoLibrary,
-                    )
-                }
-            }
-            item(key = "library_export") {
-                ActionListItem(
-                    modifier = listItemAnimation(listState),
-                    title = stringResource(Res.string.settings_export_all),
-                    icon = painterResource(Res.drawable.ic_export),
-                    isEnabled = !isPerformanceModeEnabled,
-                    isEmphasized = false,
-                    onClick = { viewModel.exportLibrary(filePicker) },
-                )
-            }
-            sectionHeader(
-                key = "header_sync",
-                listState = listState,
-                coroutineScope = coroutineScope,
-            ) { stringResource(Res.string.settings_sync) }
-            syncSettings(
-                viewModel = viewModel,
-                syncState = syncState,
-                listState = listState,
-                completionPage = completionPage,
-            )
-            sectionHeader(
-                key = "header_song_display",
-                listState = listState,
-                coroutineScope = coroutineScope,
-            ) { stringResource(Res.string.settings_song_display) }
-            item(key = "lyrics_only_mode") {
-                SwitchListItem(
-                    modifier = listItemAnimation(listState),
-                    title = stringResource(Res.string.settings_lyrics_only_mode),
-                    description = stringResource(Res.string.settings_lyrics_only_mode_description),
-                    isChecked = userPreferences?.isLyricsOnlyModeEnabled == true,
-                    onCheckedChange = viewModel::setLyricsOnlyModeEnabled,
-                )
-            }
-            item(key = "horizontal_section_flow") {
-                SwitchListItem(
-                    modifier = listItemAnimation(listState),
-                    title = stringResource(Res.string.settings_horizontal_section_flow),
-                    description = stringResource(Res.string.settings_horizontal_section_flow_description),
-                    isChecked = userPreferences?.isHorizontalSectionFlowEnabled == true,
-                    onCheckedChange = viewModel::setHorizontalSectionFlowEnabled,
-                )
-            }
-            // Both of these only decide how a chord is written, so lyrics only mode leaves them with nothing to
-            // say. They stay in the list rather than disappearing from it: what they are set to is still what the
-            // chords will look like as soon as they are shown again.
-            val isChordSpellingEnabled = userPreferences?.isLyricsOnlyModeEnabled != true
-            item(key = "german_notation") {
-                SwitchListItem(
-                    modifier = listItemAnimation(listState),
-                    title = stringResource(Res.string.settings_german_notation),
-                    description = stringResource(Res.string.settings_german_notation_description),
-                    isChecked = userPreferences?.chordSpelling?.isGermanNotationEnabled == true,
-                    isEnabled = isChordSpellingEnabled,
-                    onCheckedChange = viewModel::setGermanNotationEnabled,
-                )
-            }
-            item(key = "accidentals") {
-                Subsection(
-                    modifier = listItemAnimation(listState).padding(vertical = SUBSECTION_GAP),
-                    title = stringResource(Res.string.settings_accidentals),
-                    description = stringResource(Res.string.settings_accidentals_description),
-                    isEnabled = isChordSpellingEnabled,
-                ) {
-                    SegmentedChoice(
-                        options = listOf(
-                            UserPreferences.Accidentals.ORIGINAL to stringResource(Res.string.settings_accidentals_original),
-                            UserPreferences.Accidentals.FLATS to stringResource(Res.string.settings_accidentals_flats),
-                            UserPreferences.Accidentals.SHARPS to stringResource(Res.string.settings_accidentals_sharps),
-                        ),
-                        selected = userPreferences?.chordSpelling?.accidentals,
-                        isEnabled = isChordSpellingEnabled,
-                        onSelected = viewModel::setAccidentals,
-                    )
-                }
-            }
-            sectionHeader(
-                key = "header_user_interface",
-                listState = listState,
-                coroutineScope = coroutineScope,
-            ) { stringResource(Res.string.settings_user_interface) }
-            // One item, so that the gaps between the subsections are set once, next to each other, rather than by
-            // each subsection padding itself and every pair of them then adding up to twice the gap.
-            item(key = "user_interface") {
-                Column(
-                    modifier = listItemAnimation(listState).padding(vertical = SUBSECTION_GAP),
-                    verticalArrangement = Arrangement.spacedBy(SUBSECTION_GAP),
-                ) {
-                    Subsection(title = stringResource(Res.string.settings_user_interface_theme)) {
-                        SegmentedChoice(
-                            options = listOf(
-                                UserPreferences.UiMode.SYSTEM_DEFAULT to stringResource(Res.string.settings_user_interface_theme_system_default),
-                                UserPreferences.UiMode.LIGHT to stringResource(Res.string.settings_user_interface_theme_light),
-                                UserPreferences.UiMode.DARK to stringResource(Res.string.settings_user_interface_theme_dark),
-                            ),
-                            selected = userPreferences?.uiMode,
-                            onSelected = viewModel::setUiMode,
+        ImportProgress(isImporting = isImporting)
+        HorizontalPager(
+            modifier = Modifier.weight(1f).fillMaxWidth(),
+            state = pagerState,
+            beyondViewportPageCount = SettingsTab.entries.size - 1,
+            key = { SettingsTab.entries[it] },
+        ) { page ->
+            val pageWidth = settledWidth - startPadding - endPadding
+            when (SettingsTab.entries[page]) {
+                SettingsTab.GENERAL -> SettingsPage(
+                    settledWidth = pageWidth,
+                    scrollState = scrollStates[page],
+                    contentPadding = contentPadding,
+                    section = {
+                        GeneralSection(
+                            viewModel = viewModel,
+                            userPreferences = userPreferences,
+                            isPerformanceModeEnabled = isPerformanceModeEnabled,
                         )
-                    }
-                    Subsection(title = stringResource(Res.string.settings_user_interface_theme_color)) {
-                        // Each disc is painted in the half of its palette that is on screen, so that they all change
-                        // with the light and dark switch above them instead of advertising colors nothing would
-                        // actually be drawn in.
-                        val isDarkTheme = userPreferences?.uiMode.isDarkTheme()
-                        ColorChoice(
-                            options = themeColorOptions().map { (themeColor, colorSchemePair) ->
-                                val colorScheme = if (isDarkTheme) colorSchemePair.dark else colorSchemePair.light
-                                ColorChoiceOption(
-                                    value = themeColor,
-                                    color = colorScheme.primary,
-                                    contentColor = colorScheme.onPrimary,
-                                    label = themeColor.label(),
-                                    icon = themeColor.icon(),
-                                )
-                            },
-                            selected = userPreferences?.themeColor,
-                            onSelected = viewModel::setThemeColor,
+                    },
+                )
+
+                SettingsTab.SONGS -> SettingsPage(
+                    settledWidth = pageWidth,
+                    scrollState = scrollStates[page],
+                    contentPadding = contentPadding,
+                    section = { SongDisplaySection(viewModel = viewModel, userPreferences = userPreferences) },
+                )
+
+                SettingsTab.LIBRARY -> SettingsPage(
+                    settledWidth = pageWidth,
+                    scrollState = scrollStates[page],
+                    contentPadding = contentPadding,
+                    section = { SyncSection(viewModel = viewModel) },
+                    secondSection = {
+                        LibrarySection(
+                            viewModel = viewModel,
+                            isImporting = isImporting,
+                            isPerformanceModeEnabled = isPerformanceModeEnabled,
                         )
-                    }
-                    // A list rather than a segmented control, since it is the one choice here that grows with every
-                    // translation, and a row of segments runs out of width after the third.
-                    Subsection(title = stringResource(Res.string.settings_user_interface_language)) {
-                        Column(modifier = Modifier.selectableGroup()) {
-                            listOf(
-                                UserPreferences.Language.SYSTEM_DEFAULT to stringResource(Res.string.settings_user_interface_language_system_default),
-                                UserPreferences.Language.ENGLISH to stringResource(Res.string.settings_user_interface_language_english),
-                                UserPreferences.Language.HUNGARIAN to stringResource(Res.string.settings_user_interface_language_hungarian),
-                            ).forEach { (language, label) ->
-                                RadioListItem(
-                                    title = label,
-                                    isSelected = userPreferences?.language == language,
-                                    onSelected = { viewModel.setLanguage(language) },
-                                )
-                            }
-                        }
-                    }
-                }
-            }
-            sectionHeader(
-                key = "header_about",
-                listState = listState,
-                coroutineScope = coroutineScope,
-            ) { stringResource(Res.string.settings_about) }
-            item(key = "website") {
-                LinkListItem(
-                    modifier = listItemAnimation(listState),
-                    title = stringResource(Res.string.settings_website),
-                    icon = painterResource(Res.drawable.ic_website),
-                    onClick = { urlOpener("https://pandulapeter.com/") }
+                    },
                 )
-            }
-            item(key = "github") {
-                LinkListItem(
-                    modifier = listItemAnimation(listState),
-                    title = stringResource(Res.string.settings_git_hub),
-                    icon = painterResource(Res.drawable.ic_git_hub),
-                    onClick = { urlOpener("https://github.com/pandulapeter/campfire/") }
+
+                SettingsTab.ABOUT -> SettingsPage(
+                    settledWidth = pageWidth,
+                    scrollState = scrollStates[page],
+                    contentPadding = contentPadding,
+                    section = { DistributionsSection(urlOpener = urlOpener) },
+                    secondSection = { AboutSection(urlOpener = urlOpener) },
                 )
-            }
-            item(key = "privacy_policy") {
-                LinkListItem(
-                    modifier = listItemAnimation(listState),
-                    title = stringResource(Res.string.settings_privacy_policy),
-                    icon = painterResource(Res.drawable.ic_privacy_policy),
-                    onClick = { urlOpener("https://pandulapeter.com/legal/privacy_policy-campfire.html") }
-                )
-            }
-            if (canAskForDonations) {
-                item(key = "donate") {
-                    LinkListItem(
-                        modifier = listItemAnimation(listState),
-                        title = stringResource(Res.string.settings_support),
-                        icon = painterResource(Res.drawable.ic_coffee),
-                        onClick = { urlOpener("https://buymeacoffee.com/pandulapeter") }
-                    )
-                }
-            }
-            item(key = "footer") {
-                Column(
-                    modifier = listItemAnimation(listState).fillMaxWidth().padding(horizontal = 16.dp, vertical = 24.dp),
-                    horizontalAlignment = Alignment.CenterHorizontally,
-                ) {
-                    Text(
-                        text = stringResource(Res.string.settings_created_by),
-                        style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                        textAlign = TextAlign.Center,
-                    )
-                    Text(
-                        modifier = Modifier.padding(top = 4.dp),
-                        text = stringResource(Res.string.settings_version, CAMPFIRE_VERSION_NAME),
-                        style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                        textAlign = TextAlign.Center,
-                    )
-                }
             }
         }
     }
 }
+
+@Composable
+private fun SongDisplaySection(
+    viewModel: CampfireViewModel,
+    userPreferences: UserPreferences?,
+) = SettingsSection {
+    SwitchListItem(
+        title = stringResource(Res.string.settings_lyrics_only_mode),
+        description = stringResource(Res.string.settings_lyrics_only_mode_description),
+        isChecked = userPreferences?.isLyricsOnlyModeEnabled == true,
+        onCheckedChange = viewModel::setLyricsOnlyModeEnabled,
+    )
+    SwitchListItem(
+        title = stringResource(Res.string.settings_horizontal_section_flow),
+        description = stringResource(Res.string.settings_horizontal_section_flow_description),
+        isChecked = userPreferences?.isHorizontalSectionFlowEnabled == true,
+        onCheckedChange = viewModel::setHorizontalSectionFlowEnabled,
+    )
+    // Both of these only decide how a chord is written, so lyrics only mode leaves them with nothing to say. They
+    // stay in the section rather than disappearing from it: what they are set to is still what the chords will look
+    // like as soon as they are shown again.
+    val isChordSpellingEnabled = userPreferences?.isLyricsOnlyModeEnabled != true
+    SwitchListItem(
+        title = stringResource(Res.string.settings_german_notation),
+        description = stringResource(Res.string.settings_german_notation_description),
+        isChecked = userPreferences?.chordSpelling?.isGermanNotationEnabled == true,
+        isEnabled = isChordSpellingEnabled,
+        onCheckedChange = viewModel::setGermanNotationEnabled,
+    )
+    SettingsSubsection(
+        title = stringResource(Res.string.settings_accidentals),
+        description = stringResource(Res.string.settings_accidentals_description),
+        isEnabled = isChordSpellingEnabled,
+    ) {
+        SegmentedChoice(
+            options = listOf(
+                UserPreferences.Accidentals.ORIGINAL to stringResource(Res.string.settings_accidentals_original),
+                UserPreferences.Accidentals.FLATS to stringResource(Res.string.settings_accidentals_flats),
+                UserPreferences.Accidentals.SHARPS to stringResource(Res.string.settings_accidentals_sharps),
+            ),
+            selected = userPreferences?.chordSpelling?.accidentals,
+            isEnabled = isChordSpellingEnabled,
+            onSelected = viewModel::setAccidentals,
+        )
+    }
+}
+
+/**
+ * Performance mode is the first row of the first tab: what it does is take controls out of the interface, which is
+ * what files it next to the theme and the language, and it decides what the rest of the app is still allowed to do,
+ * which is what puts it on top.
+ */
+@Composable
+private fun GeneralSection(
+    viewModel: CampfireViewModel,
+    userPreferences: UserPreferences?,
+    isPerformanceModeEnabled: Boolean,
+) = SettingsSection {
+    SwitchListItem(
+        title = stringResource(Res.string.settings_performance_mode),
+        description = stringResource(Res.string.settings_performance_mode_description),
+        isChecked = isPerformanceModeEnabled,
+        onCheckedChange = viewModel::setPerformanceModeEnabled,
+    )
+    SettingsSubsection(title = stringResource(Res.string.settings_user_interface_theme)) {
+        SegmentedChoice(
+            options = listOf(
+                UserPreferences.UiMode.SYSTEM_DEFAULT to stringResource(Res.string.settings_user_interface_theme_system_default),
+                UserPreferences.UiMode.LIGHT to stringResource(Res.string.settings_user_interface_theme_light),
+                UserPreferences.UiMode.DARK to stringResource(Res.string.settings_user_interface_theme_dark),
+            ),
+            selected = userPreferences?.uiMode,
+            onSelected = viewModel::setUiMode,
+        )
+    }
+    SettingsSubsection(title = stringResource(Res.string.settings_user_interface_theme_color)) {
+        // Each disc is painted in the half of its palette that is on screen, so that they all change with the light
+        // and dark switch above them instead of advertising colors nothing would actually be drawn in.
+        val isDarkTheme = userPreferences?.uiMode.isDarkTheme()
+        ColorChoice(
+            options = themeColorOptions().map { (themeColor, colorSchemePair) ->
+                val colorScheme = if (isDarkTheme) colorSchemePair.dark else colorSchemePair.light
+                ColorChoiceOption(
+                    value = themeColor,
+                    color = colorScheme.primary,
+                    contentColor = colorScheme.onPrimary,
+                    label = themeColor.label(),
+                    icon = themeColor.icon(),
+                )
+            },
+            selected = userPreferences?.themeColor,
+            onSelected = viewModel::setThemeColor,
+        )
+    }
+    // A list rather than a segmented control, since it is the one choice here that grows with every translation,
+    // and a row of segments runs out of width after the third.
+    SettingsSubsection(title = stringResource(Res.string.settings_user_interface_language)) {
+        Column(modifier = Modifier.selectableGroup()) {
+            listOf(
+                UserPreferences.Language.SYSTEM_DEFAULT to stringResource(Res.string.settings_user_interface_language_system_default),
+                UserPreferences.Language.ENGLISH to stringResource(Res.string.settings_user_interface_language_english),
+                UserPreferences.Language.HUNGARIAN to stringResource(Res.string.settings_user_interface_language_hungarian),
+            ).forEach { (language, label) ->
+                RadioListItem(
+                    title = label,
+                    isSelected = userPreferences?.language == language,
+                    onSelected = { viewModel.setLanguage(language) },
+                )
+            }
+        }
+    }
+}
+
+/**
+ * What the library holds and where it is, then what can be done with the whole of it.
+ *
+ * The two actions are disabled rather than hidden by performance mode, like the chord spelling under lyrics only
+ * mode: this screen is the one place the mode can be switched back off, and a settings screen whose rows come and go
+ * with a switch on it is one nobody can find their way around.
+ */
+@Composable
+private fun LibrarySection(
+    viewModel: CampfireViewModel,
+    isImporting: Boolean,
+    isPerformanceModeEnabled: Boolean,
+) = SettingsSection(title = stringResource(Res.string.settings_library)) {
+    // Null until the library has been read, so that the row arrives with real counts instead of showing zeroes.
+    val librarySummary by viewModel.librarySummary.collectAsStateWithLifecycle()
+    val demoLibraryOffer by viewModel.demoLibraryOffer.collectAsStateWithLifecycle()
+    val libraryPersistence by viewModel.libraryPersistence.collectAsStateWithLifecycle()
+    val filePicker = LocalFilePicker.current
+    AnimatedSettingsRow(value = librarySummary) { summary ->
+        ListItem(
+            colors = ListItemDefaults.colors(containerColor = Color.Transparent),
+            headlineContent = { Text(stringResource(Res.string.settings_library_summary, summary.songCount, summary.setlistCount)) },
+        )
+    }
+    libraryLocation?.let { location ->
+        ListItem(
+            colors = ListItemDefaults.colors(containerColor = Color.Transparent),
+            headlineContent = { Text(stringResource(Res.string.settings_library_location)) },
+            supportingContent = {
+                Text(
+                    when (location) {
+                        is LibraryLocation.Folder -> location.path
+                        LibraryLocation.FilesApp -> stringResource(Res.string.settings_library_location_files_app)
+                    }
+                )
+            },
+        )
+    }
+    // Only where the answer is not a foregone conclusion, which is the web: the other three platforms keep the
+    // library in a file system of their own and have the location row above instead.
+    AnimatedSettingsRow(value = libraryPersistence.takeIf { it != LibraryPersistence.GUARANTEED }) { persistence ->
+        ListItem(
+            colors = ListItemDefaults.colors(containerColor = Color.Transparent),
+            headlineContent = { Text(stringResource(Res.string.settings_library_storage)) },
+            supportingContent = {
+                Text(
+                    text = when (persistence) {
+                        LibraryPersistence.GRANTED -> stringResource(Res.string.settings_library_storage_granted)
+                        else -> stringResource(Res.string.settings_library_storage_best_effort)
+                    },
+                    color = if (persistence == LibraryPersistence.GRANTED) Color.Unspecified else MaterialTheme.colorScheme.error,
+                )
+            },
+        )
+    }
+    ActionListItem(
+        title = stringResource(Res.string.settings_import),
+        icon = painterResource(Res.drawable.ic_import),
+        isEnabled = !isImporting && !isPerformanceModeEnabled,
+        isEmphasized = false,
+        onClick = { viewModel.importFiles(filePicker) },
+    )
+    // Only until they are all in the library, which is also what brings it back for the ones a user who wanted none
+    // of them has deleted. Null while the library is still being read, so the offer never appears for a moment over
+    // a library that turns out to hold them.
+    AnimatedSettingsRow(value = demoLibraryOffer) { offer ->
+        ActionListItem(
+            title = stringResource(Res.string.add_demo_songs),
+            icon = painterResource(Res.drawable.ic_songs),
+            isEnabled = offer == CampfireViewModel.DemoLibraryOffer.AVAILABLE && !isPerformanceModeEnabled,
+            isEmphasized = false,
+            onClick = viewModel::importDemoLibrary,
+        )
+    }
+    ActionListItem(
+        title = stringResource(Res.string.settings_export_all),
+        icon = painterResource(Res.drawable.ic_export),
+        isEnabled = !isPerformanceModeEnabled,
+        isEmphasized = false,
+        onClick = { viewModel.exportLibrary(filePicker) },
+    )
+}
+
+/**
+ * Collects the sync state itself, so that a run reporting every file it moves recomposes this section and no other.
+ * It is the first section of the library's tab, since it is the one with something going on in it.
+ */
+@Composable
+private fun SyncSection(
+    viewModel: CampfireViewModel,
+) = SettingsSection(title = stringResource(Res.string.settings_sync)) {
+    val syncState by viewModel.syncState.collectAsStateWithLifecycle()
+    SyncSettings(viewModel = viewModel, syncState = syncState)
+}
+
+/**
+ * Where else Campfire can be had from, so that it can be found for every device its user has. What is listed is
+ * [visibleDistributions]' to decide, since two of the stores have rules about naming the others; a build that is not
+ * out yet stays in the list as a disabled row saying so, where its store allows that.
+ */
+@Composable
+private fun DistributionsSection(
+    urlOpener: (String) -> Unit,
+) = SettingsSection(title = stringResource(Res.string.settings_distributions)) {
+    SettingsMessage(text = stringResource(Res.string.settings_distributions_description))
+    val distributions = visibleDistributions()
+    distributions.forEach { distribution ->
+        val storeName = stringResource(distribution.storeName)
+        LinkListItem(
+            title = stringResource(distribution.platformName),
+            description = when {
+                distribution.url == null -> stringResource(Res.string.settings_distribution_coming_soon, storeName)
+                distribution == currentDistribution -> stringResource(Res.string.settings_distribution_current, storeName)
+                else -> storeName
+            },
+            icon = painterResource(distribution.icon),
+            isEnabled = distribution.url != null,
+            onClick = { distribution.url?.let(urlOpener) },
+        )
+    }
+    // Where a store's rules kept some of the builds off the list, the way to the rest is the project's own page. The
+    // row names no platform, which is the whole of what those rules ask of the app itself.
+    if (distributions.size < Distribution.entries.size) {
+        LinkListItem(
+            title = stringResource(Res.string.settings_distributions_all),
+            description = stringResource(Res.string.settings_distributions_all_description),
+            icon = painterResource(Res.drawable.ic_git_hub),
+            onClick = { urlOpener("$GIT_HUB_URL#readme") },
+        )
+    }
+}
+
+/**
+ * What the app is and where it lives: GitHub is both its home page and where a problem is reported, with the privacy
+ * policy the stores ask for after them. The row that names the author is the link to the author's own site, since
+ * that is what a name with a link on it is expected to lead to.
+ */
+@Composable
+private fun AboutSection(
+    urlOpener: (String) -> Unit,
+) = SettingsSection(title = stringResource(Res.string.settings_about)) {
+    LinkListItem(
+        title = stringResource(Res.string.settings_created_by),
+        description = stringResource(Res.string.settings_version, CAMPFIRE_VERSION_NAME),
+        icon = painterResource(Res.drawable.ic_campfire),
+        onClick = { urlOpener("https://pandulapeter.com/") },
+    )
+    LinkListItem(
+        title = stringResource(Res.string.settings_git_hub),
+        icon = painterResource(Res.drawable.ic_git_hub),
+        onClick = { urlOpener(GIT_HUB_URL) },
+    )
+    LinkListItem(
+        title = stringResource(Res.string.settings_report_issue),
+        icon = painterResource(Res.drawable.ic_bug),
+        onClick = { urlOpener("$GIT_HUB_URL/issues") },
+    )
+    LinkListItem(
+        title = stringResource(Res.string.settings_privacy_policy),
+        icon = painterResource(Res.drawable.ic_privacy_policy),
+        onClick = { urlOpener("https://pandulapeter.com/legal/privacy_policy-campfire.html") },
+    )
+    if (canAskForDonations) {
+        LinkListItem(
+            title = stringResource(Res.string.settings_support),
+            icon = painterResource(Res.drawable.ic_coffee),
+            onClick = { urlOpener("https://buymeacoffee.com/pandulapeter") },
+        )
+    }
+}
+
+/** What a tab of the settings screen is called. */
+@Composable
+private fun SettingsTab.label() = stringResource(
+    when (this) {
+        SettingsTab.GENERAL -> Res.string.settings_general
+        SettingsTab.SONGS -> Res.string.settings_songs
+        SettingsTab.LIBRARY -> Res.string.settings_library
+        SettingsTab.ABOUT -> Res.string.settings_about
+    }
+)
+
+/** What runs a build, which is what somebody looking for the app on another device knows it by. */
+private val Distribution.platformName
+    get() = when (this) {
+        Distribution.PLAY_STORE -> Res.string.settings_distribution_android
+        Distribution.APP_STORE -> Res.string.settings_distribution_ios
+        Distribution.MAC_APP_STORE -> Res.string.settings_distribution_mac
+        Distribution.MICROSOFT_STORE -> Res.string.settings_distribution_windows
+        Distribution.LINUX -> Res.string.settings_distribution_linux
+        Distribution.WEB -> Res.string.settings_distribution_web
+    }
+
+/** Where a build is had from: a store by its name, the web build by its address, the Linux one by where it is attached. */
+private val Distribution.storeName
+    get() = when (this) {
+        Distribution.PLAY_STORE -> Res.string.settings_distribution_play_store
+        Distribution.APP_STORE -> Res.string.settings_distribution_app_store
+        Distribution.MAC_APP_STORE -> Res.string.settings_distribution_mac_app_store
+        Distribution.MICROSOFT_STORE -> Res.string.settings_distribution_microsoft_store
+        Distribution.LINUX -> Res.string.settings_distribution_git_hub_releases
+        Distribution.WEB -> Res.string.settings_distribution_web_address
+    }
+
+/**
+ * The kind of device rather than the mark of whoever makes it: the stores' logos are theirs to license, and App
+ * Review reads another platform's mark the way it reads that platform's name.
+ */
+private val Distribution.icon
+    get() = when (this) {
+        Distribution.PLAY_STORE -> Res.drawable.ic_phone
+        Distribution.APP_STORE -> Res.drawable.ic_tablet
+        Distribution.MAC_APP_STORE -> Res.drawable.ic_laptop
+        Distribution.MICROSOFT_STORE -> Res.drawable.ic_desktop
+        Distribution.LINUX -> Res.drawable.ic_terminal
+        Distribution.WEB -> Res.drawable.ic_website
+    }
 
 /**
  * What a color offered by the theme is called. It is only ever read out by an accessibility service, since the
@@ -515,66 +634,4 @@ private fun UserPreferences.ThemeColor.icon(): Painter? = when (this) {
     else -> null
 }
 
-/**
- * A section header of the settings list. The same pill as the section headers of the song lists, so that the three
- * main screens look and behave the same way: clicking it scrolls back to the start of its own section.
- */
-private fun LazyListScope.sectionHeader(
-    key: String,
-    listState: LazyListState,
-    coroutineScope: CoroutineScope,
-    text: @Composable () -> String,
-) = item(key = key) {
-    SectionHeader(
-        modifier = listItemAnimation(listState),
-        text = text(),
-        onClick = { coroutineScope.launch { listState.animateScrollToKey(key) } },
-    )
-}
-
-/**
- * A named group of controls inside a section: the title and the control it names. The title is close enough to its
- * control ([SUBSECTION_TITLE_GAP]) to read as its label rather than as another group; the gaps to everything around
- * it are [SUBSECTION_GAP], set by the caller.
- *
- * @param description What a [SwitchListItem]'s supporting text says for a switch: there for a group whose title is
- *   not the whole story, left out where the options speak for themselves.
- * @param isEnabled Dims the title and the description the way a disabled row is dimmed; the control inside is left
- *   to disable itself, so that it is dimmed once rather than twice.
- */
-@Composable
-private fun Subsection(
-    modifier: Modifier = Modifier,
-    title: String,
-    description: String? = null,
-    isEnabled: Boolean = true,
-    content: @Composable () -> Unit,
-) = Column(modifier = modifier) {
-    val labelAlpha = if (isEnabled) 1f else 0.5f
-    SettingsSectionTitle(
-        modifier = Modifier.alpha(labelAlpha),
-        text = title,
-        contentPadding = PaddingValues(start = 16.dp, end = 16.dp, bottom = SUBSECTION_TITLE_GAP),
-    )
-    description?.let {
-        Text(
-            modifier = Modifier.alpha(labelAlpha).padding(start = 16.dp, end = 16.dp, bottom = SUBSECTION_DESCRIPTION_GAP),
-            text = it,
-            style = MaterialTheme.typography.bodyMedium,
-            color = MaterialTheme.colorScheme.onSurfaceVariant,
-        )
-    }
-    content()
-}
-
-/**
- * The gap between two [Subsection]s, and between a [Subsection] and the section header pill above or below it, which
- * adds up with the pill's own [SECTION_HEADER_GAP] to about the distance a pill keeps from a [ListItem] row.
- */
-private val SUBSECTION_GAP = 12.dp
-
-/** The gap between a [Subsection]'s title and its control, small enough that the two read as one thing. */
-private val SUBSECTION_TITLE_GAP = 4.dp
-
-/** The gap below a [Subsection]'s description, which stands between the title and the control rather than beside them. */
-private val SUBSECTION_DESCRIPTION_GAP = 8.dp
+private const val GIT_HUB_URL = "https://github.com/pandulapeter/campfire"

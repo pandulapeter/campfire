@@ -25,12 +25,27 @@ internal actual val libraryLocation: LibraryLocation? = LibraryLocation.Folder(F
 // The installers are handed out by the project itself, with no store's rules to follow.
 internal actual val canAskForDonations = true
 
+// One build for three operating systems, each handed out from somewhere else, so the answer is only known once it
+// runs.
+internal actual val currentDistribution: Distribution? = when {
+    isMacOs -> Distribution.MAC_APP_STORE
+    isWindows -> Distribution.MICROSOFT_STORE
+    operatingSystem.contains("linux") -> Distribution.LINUX
+    else -> null
+}
+
+private val operatingSystem get() = System.getProperty("os.name").orEmpty().lowercase()
+
+private val isMacOs get() = operatingSystem.contains("mac") || operatingSystem.contains("darwin")
+
+// "darwin" has a "win" in it as well, so the two are not independent questions.
+private val isWindows get() = !isMacOs && operatingSystem.contains("win")
+
 private fun desktopDataDirectory(): File {
     val userHome = File(System.getProperty("user.home").orEmpty())
-    val operatingSystem = System.getProperty("os.name").orEmpty().lowercase()
     return when {
-        operatingSystem.contains("mac") || operatingSystem.contains("darwin") -> File(userHome, "Library/Application Support/$APPLICATION_NAME")
-        operatingSystem.contains("win") -> System.getenv("APPDATA").orEmpty()
+        isMacOs -> File(userHome, "Library/Application Support/$APPLICATION_NAME")
+        isWindows -> System.getenv("APPDATA").orEmpty()
             .let { if (it.isEmpty()) File(userHome, "AppData/Roaming") else File(it) }
             .let { File(it, APPLICATION_NAME) }
 

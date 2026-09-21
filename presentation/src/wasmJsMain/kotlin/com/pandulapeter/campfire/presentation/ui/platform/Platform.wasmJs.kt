@@ -23,6 +23,8 @@ internal actual val libraryLocation: LibraryLocation? = null
 // The page is served by the project itself, with no store's rules to follow.
 internal actual val canAskForDonations = true
 
+internal actual val currentDistribution: Distribution? = Distribution.WEB
+
 /**
  * True if the browser reports any touchscreen. `maxTouchPoints` covers every current browser, `ontouchstart` is the
  * fallback for older ones.

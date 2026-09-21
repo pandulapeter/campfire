@@ -1,0 +1,82 @@
+# This file is part of Campfire.
+# Copyright (c) Pandula Péter 2017-2026.
+# https://github.com/pandulapeter/campfire
+#
+# This Source Code Form is subject to the terms of the Mozilla Public License, v. 2.0.
+# If a copy of the MPL was not distributed with this file, You can obtain one at
+# https://mozilla.org/MPL/2.0/.
+
+# Builds the iOS app without signing it and attaches it to a GitHub release as an .ipa. No iPhone installs that file
+# as it is: it is what a sideloading tool signs with its user's own Apple ID, and a stopgap until the App Store has the
+# app — at which point this workflow is the one that turns into the TestFlight upload.
+#
+# Called by release.yml for every release; dispatched by hand to attach the build to a release that is already there.
+
+name: 'Publish iOS'
+
+on:
+  workflow_call:
+    inputs:
+      release_tag:
+        type: string
+        required: true
+  workflow_dispatch:
+    inputs:
+      release_tag:
+        description: 'Tag of the existing GitHub release to build and attach the app to'
+        type: string
+        required: true
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    name: Build and Publish
+    # Named rather than "latest", so that the Xcode the project was last saved with is the one that opens it.
+    runs-on: macos-26
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v5
+        with:
+          ref: ${{ inputs.release_tag }}
+      - name: Set up JDK 21
+        uses: actions/setup-java@v5
+        with:
+          distribution: 'zulu'
+          java-version: 21
+          cache: 'gradle'
+      # Gradle is started by a build phase of the Xcode project here, which passes it no properties, so the key goes
+      # where a developer's own machine keeps it.
+      - name: Write local.properties
+        env:
+          DROPBOX_APP_KEY: ${{ secrets.DROPBOX_APP_KEY }}
+        run: echo "campfire.dropbox.appKey=$DROPBOX_APP_KEY" > local.properties
+      - name: Build the app
+        run: |
+          xcodebuild \
+            -project app/ios/iosApp/iosApp.xcodeproj \
+            -target iosApp \
+            -configuration Release \
+            -sdk iphoneos \
+            -arch arm64 \
+            SYMROOT="$RUNNER_TEMP/products" \
+            OBJROOT="$RUNNER_TEMP/intermediates" \
+            CODE_SIGNING_ALLOWED=NO \
+            build
+      - name: Attach the app to the GitHub release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          VERSION_NAME=$(sed -n 's/^campfire\.versionName=//p' gradle.properties)
+          APP="$RUNNER_TEMP/products/Release-iphoneos/Campfire.app"
+          if [ ! -d "$APP" ]; then
+            echo "The app is missing from $RUNNER_TEMP/products/Release-iphoneos" >&2
+            exit 1
+          fi
+          # An .ipa is a zip archive with the app in a folder called Payload, and nothing else is asked of it.
+          ASSET="$PWD/campfire-$VERSION_NAME-ios-unsigned.ipa"
+          mkdir -p "$RUNNER_TEMP/ipa/Payload"
+          cp -R "$APP" "$RUNNER_TEMP/ipa/Payload/"
+          (cd "$RUNNER_TEMP/ipa" && zip --quiet --recurse-paths --symlinks "$ASSET" Payload)
+          gh release upload "${{ inputs.release_tag }}" "$ASSET" --clobber

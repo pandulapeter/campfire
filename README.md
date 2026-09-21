@@ -19,10 +19,28 @@ It works **offline**, there is no account to make, and there is no server of min
 no ads.
 
 [<img src="documentation/images/badge_android.png" alt="Download for Android" height="32px" />](https://play.google.com/store/apps/details?id=com.pandulapeter.campfire)
+[<img src="documentation/images/badge_linux.png" alt="Download for Linux" height="32px" />](https://github.com/pandulapeter/campfire/releases/latest)
 [<img src="documentation/images/badge_web.png" alt="Open in browser" height="32px" />](https://pandulapeter.com/campfire)
 
-The iOS and the macOS / Windows / Linux desktop builds are part of the same codebase and run from source, but they
-are not deployed yet.
+The Linux build is a `.deb` package for amd64 and arm64, attached to every
+[release](https://github.com/pandulapeter/campfire/releases/latest).
+
+**Coming soon** to the App Store, the Mac App Store and the Microsoft Store:
+
+[<img src="documentation/images/badge_ios.png" alt="Campfire for iOS" height="32px" />](https://github.com/pandulapeter/campfire/releases/latest)
+[<img src="documentation/images/badge_macos.png" alt="Campfire for macOS" height="32px" />](https://github.com/pandulapeter/campfire/releases/latest)
+[<img src="documentation/images/badge_windows.png" alt="Campfire for Windows" height="32px" />](https://github.com/pandulapeter/campfire/releases/latest)
+
+Until the stores have them, every release also carries these three builds, marked `unsigned` because that is what
+they are:
+
+- **macOS** (`.dmg`, Apple silicon and Intel): macOS refuses to open an app it cannot trace to a developer. Open it
+  once, then allow it under *System Settings → Privacy & Security → Open Anyway*.
+- **Windows** (`.msi`): SmartScreen warns about an unknown publisher; *More info → Run anyway* gets past it.
+- **iOS** (`.ipa`): cannot be installed as it is. It is the file a sideloading tool such as
+  [AltStore](https://altstore.io) or [Sideloadly](https://sideloadly.io) signs with your own Apple ID.
+
+The Android `.apk` on the same page is the file Google Play gets, under the same signature.
 
 ### Screenshots
 
@@ -78,17 +96,14 @@ an empty library.
 - Editor close confirmation dialog and Save button enabled / disabled state should check for identity with the original file
 - Implement .cho (and other) file association
 - Songs: sort by year option
-- Implement sticky headers
 - New song sorting option: sort by year
-- Fix web Settings screen animation glitches caused by async data. Songs also sometimes has async animation issues
-- Improve the appearance and UI scalability of the Settings screen
+- Fix Songs screen async race animation issues
 - Update the screenshots in the Readme
 - Integrate Crashlytics
 - Create new screenshots for iOS, Android and desktop
 - Create iOS store listing
 - Create GitHub action for TestFlight releases
 - Create App Store and Windows Store listings + GitHub actions
-- Add links to each build type referencing the other build types + the current store
 
 ### License
 

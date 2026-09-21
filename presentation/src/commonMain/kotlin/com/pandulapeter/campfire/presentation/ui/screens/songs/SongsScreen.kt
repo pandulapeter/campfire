@@ -73,7 +73,6 @@ import com.pandulapeter.campfire.presentation.ui.components.SongActionsButton
 import com.pandulapeter.campfire.presentation.ui.components.SongListItem
 import com.pandulapeter.campfire.presentation.ui.components.SongsControls
 import com.pandulapeter.campfire.presentation.ui.components.TopLevelScreenLayout
-import com.pandulapeter.campfire.presentation.ui.components.animateScrollToKey
 import com.pandulapeter.campfire.presentation.ui.components.allowsNewItemMenu
 import com.pandulapeter.campfire.presentation.ui.components.besideSidePanel
 import com.pandulapeter.campfire.presentation.ui.components.hasRoomForSidePanel
@@ -314,12 +313,10 @@ private fun SongList(
             }
             songGroups.forEach { group ->
                 group.header?.let { header ->
-                    val key = "header_$header"
-                    item(
-                        key = key,
-                        span = { GridItemSpan(maxLineSpan) },
+                    stickyHeader(
+                        key = "header_$header",
                         contentType = "header",
-                    ) {
+                    ) { headerIndex ->
                         SectionHeader(
                             modifier = listItemAnimation(listState, hasLoadedLibrary),
                             text = when (header) {
@@ -328,7 +325,7 @@ private fun SongList(
                                 is CampfireViewModel.SongGroup.Header.Letter -> header.letter.toString()
                                 CampfireViewModel.SongGroup.Header.Symbols -> stringResource(Res.string.songs_unsorted_label)
                             },
-                            onClick = { coroutineScope.launch { listState.animateScrollToKey(key) } },
+                            onClick = { coroutineScope.launch { listState.animateScrollToItem(headerIndex) } },
                         )
                     }
                 }

@@ -140,6 +140,14 @@ preferences/sync-index.json          what the last successful sync run saw
   a deleted one comes back by being asked for rather than on its own. Each file is named exactly as the library would
   name the song inside it, which is what lets one list both read the resources and answer whether they are already
   there.
+- **Every build links to the others** from Settings, so the app can be found for each device its user has:
+  `Distribution` (in `:presentation`'s `ui/platform/Platform.kt`) lists Play, the App Store, the Mac App Store, the
+  Microsoft Store, the Linux package on the latest GitHub release and the web build, a null `url` marking one that is not published yet — it is drawn as a disabled
+  "Coming soon" row, and publishing it is filling that URL in. `visibleDistributions` is where the store rules are
+  kept: a build that goes through App Review names only Apple's stores and the web, and shows no placeholders —
+  what it has instead is a row naming no platform that leads to the README, where every build is listed.
+  **GitHub is the project's website and its issue tracker**; the About section links nothing else but the author's own
+  site, the privacy policy and the donation page.
 - The file name is a song's (and a setlist's) identity. Nothing is ever overwritten implicitly: a new or imported file
   that collides gets a `_2`, `_3`… suffix (`FileNames.kt`). An **import decides before it writes**: every incoming
   file is held against the name it wants (`PrepareImportUseCase` -> `ImportPlan`), a name taken by something with
@@ -219,20 +227,42 @@ preferences/sync-index.json          what the last successful sync run saw
   then `xcrun simctl install/launch`.
 - `./gradlew :app:web:wasmJsBrowserDevelopmentRun` — web app on a dev server; `:app:web:wasmJsBrowserDistribution` writes
   the deployable site to `app/web/build/dist/wasmJs/productionExecutable`.
-- Releases go out through two manually dispatched workflows in `.github/workflows`, both of them the local build
-  command plus the secrets a checkout does not have. Every build passes `campfire.dropbox.appKey` from the
-  `DROPBOX_APP_KEY` secret, because a published app built without it would quietly have no sync provider at all.
+- **Publishing a GitHub release is the release.** `release.yml` answers it (a pre-release is left alone) by checking
+  that the tag is the `campfire.versionName` of the commit it is on — a tag on a commit that still carries the last
+  version would submit that version again under a new name — and then calling the four workflows below side by
+  side. Each of them is the local build command plus the secrets a checkout does not have, and each can still be
+  dispatched by hand, to publish without a release or to repeat one half of a release that went wrong. Every build
+  passes `campfire.dropbox.appKey` from the `DROPBOX_APP_KEY` secret, because a published app built without it would
+  quietly have no sync provider at all. A store that gets a pipeline later (the Microsoft Store) is one more workflow of this shape and one more job in
+  `release.yml`. **What a release carries that no store has signed says so in its name** (`-unsigned`), and the app
+  links to none of those: they are for somebody who reads the README and knows what the word means.
   - `web-publish.yml` builds the distribution and copies it over `campfire/` in the `pandulapeter.github.io`
     repository, which it reaches with the deploy key in `WEBSITE_DEPLOY_KEY`. The copy is an `rsync --delete`, so the
     folder holds nothing but the distribution — the privacy policy and the rest of the site live elsewhere there.
+  - `desktop-publish.yml` builds one installer per runner — jpackage only packages for the machine it runs on — and
+    attaches them to the release: `packageDeb` on amd64 and arm64, which is the whole of how the Linux build is
+    handed out (`Distribution.LINUX` links to the latest release's page, and a `.deb` is not something anybody signs
+    on its own), and an unsigned `packageDmg` for both kinds of Mac and `packageMsi` for Windows, a stopgap until the
+    two stores have the app. jpackage signs the macOS app ad hoc, which is what lets it run at all on Apple silicon
+    once Gatekeeper has been overridden. The legs do not cancel each other, and none of them runs ProGuard: a release
+    build breaks in ways only starting it shows (see `app/desktop`), and nothing starts these.
+  - `ios-publish.yml` builds the Release configuration for devices with `CODE_SIGNING_ALLOWED=NO` and zips the app
+    into an `.ipa`, which no iPhone installs as it is — it is what a sideloading tool signs with its user's own Apple
+    ID. The Xcode project starts Gradle itself and passes it no properties, so the sync key is written into
+    `local.properties` there. This is the workflow that becomes the TestFlight upload.
   - `android-publish.yml` writes the keystore out of `ANDROID_KEYSTORE_BASE64`, builds `assembleRelease` signed with
-    the other three `ANDROID_*` secrets, and uploads the APK and its mapping file to the production track with
-    `PLAY_SERVICE_ACCOUNT_JSON`. It is an **APK** and not an app bundle because the Play listing predates the bundle
+    the other three `ANDROID_*` secrets, attaches the APK to the release it was called for — the same file Play
+    gets, under the same signature, so an installation can move between the two — and uploads it and its mapping
+    file to the production track with `PLAY_SERVICE_ACCOUNT_JSON`. The app itself never links to that APK: a Play
+    build pointing at a copy of itself outside Play is what Play's policy is about. It is an **APK** and not an app bundle because the Play listing predates the bundle
     requirement and was never migrated; a `bundleRelease` would be rejected on upload. The "what's new" text comes
-    from the workflow's two inputs, one per listing language: the English one falls back to the commit log since the
-    last successful run, and the Hungarian one to the English text, since nothing can translate a commit log and a
-    listing saying something true in the wrong language beats one saying nothing. Its `update_priority` input is what
-    decides whether the new version says anything about itself inside the old one — see Updates below.
+    from the workflow's two inputs, one per listing language, which `release.yml` fills from comments in the
+    release's description that the rendered page hides (`<!-- play-store en-US … -->`, `hu-HU`, and
+    `<!-- play-store update-priority: 3 -->`; the format is in that file's header). The English one falls back to the
+    visible description with its markdown taken out — or, dispatched by hand with nothing given, to the commit log
+    since the previous tag — and the Hungarian one to the English text, since nothing can translate a commit log and
+    a listing saying something true in the wrong language beats one saying nothing. Its `update_priority` input is
+    what decides whether the new version says anything about itself inside the old one — see Updates below.
 
 ## Sync
 
@@ -277,8 +307,8 @@ three. The gate wraps the whole app inside `CampfireApp`, so it speaks the theme
 - The **Play release's `updatePriority` is the entire policy** and it is chosen per release rather than in the code:
   0–1 is left to Play's own schedule, 2–3 offers a dismissible flexible update that downloads in the background,
   4–5 covers the app with a screen that cannot be dismissed until the update is there. The thresholds live in
-  `AppUpdate.android.kt`, and `android-publish.yml` asks for the number as its `update_priority` input, defaulting
-  to 0 — the number belongs to the release being published, not to the code being published.
+  `AppUpdate.android.kt`, and `android-publish.yml` asks for the number as its `update_priority` input — which a release
+  sets with a `<!-- play-store update-priority: N -->` comment in its description — defaulting to 0 — the number belongs to the release being published, not to the code being published.
 - Back on the blocking screen closes the app. The app it covers is still composed behind it, so the gesture has to
   be taken rather than allowed through, and leaving is the only thing it can honestly mean there.
 - The blocking screen is drawn **over** the app rather than in place of it, so a required update that turns out not
