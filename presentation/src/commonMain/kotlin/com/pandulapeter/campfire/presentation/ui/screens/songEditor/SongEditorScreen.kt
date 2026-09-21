@@ -11,6 +11,7 @@ package com.pandulapeter.campfire.presentation.ui.screens.songEditor
 
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.togetherWith
@@ -20,12 +21,14 @@ import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.calculateEndPadding
 import androidx.compose.foundation.layout.calculateStartPadding
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.text.BasicTextField
@@ -35,11 +38,14 @@ import androidx.compose.foundation.text.input.TextFieldState
 import androidx.compose.foundation.text.input.delete
 import androidx.compose.foundation.text.input.insert
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.LocalContentColor
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.material3.VerticalDivider
 import androidx.compose.runtime.Composable
@@ -56,6 +62,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.rotate
 import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.input.key.Key
 import androidx.compose.ui.input.key.KeyEventType
@@ -67,6 +74,7 @@ import androidx.compose.ui.input.key.type
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalLayoutDirection
+import androidx.compose.ui.platform.LocalWindowInfo
 import androidx.compose.ui.text.TextRange
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.style.TextOverflow
@@ -81,6 +89,7 @@ import com.pandulapeter.campfire.presentation.resources.Res
 import com.pandulapeter.campfire.presentation.resources.close
 import com.pandulapeter.campfire.presentation.resources.edit
 import com.pandulapeter.campfire.presentation.resources.ic_clear
+import com.pandulapeter.campfire.presentation.resources.ic_expand
 import com.pandulapeter.campfire.presentation.resources.ic_redo
 import com.pandulapeter.campfire.presentation.resources.ic_refresh
 import com.pandulapeter.campfire.presentation.resources.ic_save
@@ -90,6 +99,9 @@ import com.pandulapeter.campfire.presentation.resources.song_editor_preview
 import com.pandulapeter.campfire.presentation.resources.song_editor_redo
 import com.pandulapeter.campfire.presentation.resources.song_editor_revert
 import com.pandulapeter.campfire.presentation.resources.song_editor_split
+import com.pandulapeter.campfire.presentation.resources.song_editor_hide_shortcuts
+import com.pandulapeter.campfire.presentation.resources.song_editor_shortcuts
+import com.pandulapeter.campfire.presentation.resources.song_editor_show_shortcuts
 import com.pandulapeter.campfire.presentation.resources.song_editor_undo
 import com.pandulapeter.campfire.presentation.ui.CampfireViewModel
 import com.pandulapeter.campfire.presentation.ui.components.ActionsMenu
@@ -211,6 +223,15 @@ private fun LoadedSongEditor(
     val hasSideBySidePreview = panes == EditorPanes.SPLIT
     val fontScale = userPreferences?.fontScale ?: CampfireViewModel.DEFAULT_FONT_SCALE
     val chordSpelling = userPreferences?.chordSpelling ?: UserPreferences.ChordSpelling.Default
+    // The two rows of insertions are taller than what a phone has left for the text once the keyboard is up, so a
+    // phone opens the editor with them folded away. The shorter side of the window is what decides that rather than
+    // the width class: a phone turned sideways is wide enough to count as a large screen and is the one with the
+    // least height of all.
+    val windowContainerSize = LocalWindowInfo.current.containerSize
+    val density = LocalDensity.current
+    var isToolbarExpanded by rememberSaveable {
+        mutableStateOf(with(density) { minOf(windowContainerSize.width, windowContainerSize.height).toDp() } >= SMALL_SCREEN_SIZE)
+    }
 
     Column(
         modifier = Modifier.fillMaxSize().nestedScroll(scrollBehavior.nestedScrollConnection)
@@ -276,14 +297,13 @@ private fun LoadedSongEditor(
                 )
             },
             bottomContent = {
-                // Transposing and switching pane are the two things here that do not write at the caret, so they
-                // are the two that stay when the insertions leave.
+                // Transposing, switching pane and folding the insertions away are the things here that do not write at
+                // the caret, so they are the ones that stay when the insertions leave.
                 Row(
-                    modifier = Modifier.padding(bottom = 8.dp),
+                    modifier = Modifier.padding(start = 16.dp, end = 4.dp, bottom = 8.dp),
                     verticalAlignment = Alignment.CenterVertically,
                 ) {
                     TextTranspositionControls(
-                        modifier = Modifier.padding(horizontal = 16.dp),
                         key = summary.metadata.key,
                         // A key is enough on its own: it says what the song is in, and moving it is a transposition
                         // even before a chord has been written under it.
@@ -304,9 +324,17 @@ private fun LoadedSongEditor(
                         selected = panes,
                         onSelected = { selectedPanes = it },
                     )
+                    // Disabled rather than hidden over a preview, so that the segments next to it do not change
+                    // width under the finger that has just picked one of them.
+                    EditorToolbarToggle(
+                        isExpanded = isToolbarExpanded,
+                        isLabeled = windowSize != WindowSize.COMPACT,
+                        isEnabled = panes != EditorPanes.PREVIEW,
+                        onToggled = { isToolbarExpanded = !isToolbarExpanded },
+                    )
                 }
                 // Nothing below can act on a preview, so the insertions leave with the field they write into.
-                AnimatedVisibility(visible = panes != EditorPanes.PREVIEW) {
+                AnimatedVisibility(visible = isToolbarExpanded && panes != EditorPanes.PREVIEW) {
                     EditorToolbar(
                         textFieldState = textFieldState,
                         text = text,
@@ -363,6 +391,45 @@ private fun LoadedSongEditor(
                 if (showPreview) preview(Modifier.fillMaxSize()) else editor(Modifier.fillMaxSize())
             }
         }
+    }
+}
+
+@Composable
+private fun EditorToolbarToggle(
+    modifier: Modifier = Modifier,
+    isExpanded: Boolean,
+    isLabeled: Boolean,
+    isEnabled: Boolean,
+    onToggled: () -> Unit,
+) {
+    val rotation by animateFloatAsState(if (isExpanded) 180f else 0f)
+    val icon: @Composable () -> Unit = {
+        Icon(
+            modifier = Modifier.rotate(rotation),
+            painter = painterResource(Res.drawable.ic_expand),
+            contentDescription = stringResource(if (isExpanded) Res.string.song_editor_hide_shortcuts else Res.string.song_editor_show_shortcuts),
+        )
+    }
+    if (isLabeled) {
+        // The label names the rows rather than the action, so that it keeps one width while the chevron turns: a
+        // "Show" becoming a "Hide" would move the segments next to it on every tap.
+        TextButton(
+            modifier = modifier,
+            enabled = isEnabled,
+            onClick = onToggled,
+            colors = ButtonDefaults.textButtonColors(contentColor = LocalContentColor.current),
+        ) {
+            Text(text = stringResource(Res.string.song_editor_shortcuts))
+            Spacer(modifier = Modifier.width(ButtonDefaults.IconSpacing))
+            icon()
+        }
+    } else {
+        IconButton(
+            modifier = modifier,
+            enabled = isEnabled,
+            onClick = onToggled,
+            content = icon,
+        )
     }
 }
 
@@ -584,5 +651,6 @@ private fun String.caretInsideFirstSection(): Int {
 }
 
 private val PANE_CHOICE_MAX_WIDTH = 400.dp
+private val SMALL_SCREEN_SIZE = 600.dp
 private const val SECTION_START = "{start_of_"
 private const val PREVIEW_DELAY_MILLIS = 150L

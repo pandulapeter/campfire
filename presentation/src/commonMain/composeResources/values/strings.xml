@@ -205,6 +205,9 @@
     <string name="song_editor_split">Split</string>
     <string name="song_editor_undo">Undo</string>
     <string name="song_editor_redo">Redo</string>
+    <string name="song_editor_shortcuts">Shortcuts</string>
+    <string name="song_editor_show_shortcuts">Show shortcuts</string>
+    <string name="song_editor_hide_shortcuts">Hide shortcuts</string>
     <string name="song_editor_insert_chord">Chord</string>
     <string name="song_editor_insert_annotation">Annotation</string>
     <string name="song_editor_section_intro">Intro</string>

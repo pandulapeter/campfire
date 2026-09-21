@@ -205,6 +205,9 @@
     <string name="song_editor_split">Osztott</string>
     <string name="song_editor_undo">Visszavonás</string>
     <string name="song_editor_redo">Újra</string>
+    <string name="song_editor_shortcuts">Gyorsgombok</string>
+    <string name="song_editor_show_shortcuts">Gyorsgombok megjelenítése</string>
+    <string name="song_editor_hide_shortcuts">Gyorsgombok elrejtése</string>
     <string name="song_editor_insert_chord">Akkord</string>
     <string name="song_editor_insert_annotation">Annotáció</string>
     <string name="song_editor_section_intro">Intro</string>
