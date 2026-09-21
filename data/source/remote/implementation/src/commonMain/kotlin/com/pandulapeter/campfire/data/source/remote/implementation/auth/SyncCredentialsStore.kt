@@ -10,6 +10,7 @@
 package com.pandulapeter.campfire.data.source.remote.implementation.auth
 
 import com.pandulapeter.campfire.data.source.local.api.SyncStateLocalSource
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 import kotlinx.serialization.json.Json
@@ -49,6 +50,11 @@ internal class SyncCredentialsStore(
         if (!hasRead) {
             cached = try {
                 syncStateLocalSource.loadSyncCredentials()?.let { json.decodeFromString<SyncCredentialsDocument>(it) }
+            } catch (exception: CancellationException) {
+                // Nothing has been found out yet, so nothing may be remembered: this object outlives whoever was
+                // cancelled, and "no credentials" kept from here on is what a later authorization would write its
+                // pending state over.
+                throw exception
             } catch (exception: Exception) {
                 // A parse failure's message quotes the input around where it failed, which here can be a piece of a token.
                 println("Could not read the sync credentials: ${exception::class.simpleName}")
