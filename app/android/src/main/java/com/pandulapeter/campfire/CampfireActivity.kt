@@ -130,7 +130,11 @@ class CampfireActivity : AppCompatActivity() {
         }
     }
 
-    /** The URIs an "open with" or a share carries, whichever of the three shapes the intent uses. */
+    /**
+     * What an "open with" or a share carries, whichever of the three shapes the intent uses. A share is a file or
+     * a piece of text, and the file wins where an intent has both: the text next to a stream is a caption for it
+     * - the file's name, a "sent from" line - and not a second thing to import.
+     */
     private fun importFrom(intent: Intent?) {
         val uris = when (intent?.action) {
             Intent.ACTION_VIEW -> listOfNotNull(intent.data)
@@ -138,8 +142,25 @@ class CampfireActivity : AppCompatActivity() {
             Intent.ACTION_SEND_MULTIPLE -> intent.parcelableArrayListExtra(Intent.EXTRA_STREAM).orEmpty()
             else -> emptyList()
         }
-        if (uris.isEmpty()) return
-        importFiles(uris)
+        when {
+            uris.isNotEmpty() -> importFiles(uris)
+            intent?.action == Intent.ACTION_SEND || intent?.action == Intent.ACTION_SEND_MULTIPLE ->
+                importSharedTexts(texts = intent.sharedTexts(), subject = intent.getStringExtra(Intent.EXTRA_SUBJECT))
+        }
+    }
+
+    /**
+     * `EXTRA_TEXT` is one text for a `SEND` and a list of them for a `SEND_MULTIPLE`, asked for in that order
+     * because the platform logs a warning for an extra asked for as the wrong type. Some senders fill in only the
+     * clip data.
+     */
+    private fun Intent.sharedTexts(): List<String> {
+        val single = { getCharSequenceExtra(Intent.EXTRA_TEXT)?.let { listOf(it) } }
+        val several = { getCharSequenceArrayListExtra(Intent.EXTRA_TEXT) }
+        val texts = if (action == Intent.ACTION_SEND) single() ?: several() else several() ?: single()
+        return (texts ?: clipData?.let { clip -> (0 until clip.itemCount).mapNotNull { clip.getItemAt(it).text } })
+            .orEmpty()
+            .map { it.toString() }
     }
 
     private fun openUrl(url: String, isDarkTheme: Boolean) = try {

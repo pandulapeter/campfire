@@ -102,7 +102,9 @@
 
             <!--
               Sharing a song to Campfire. Narrowed to text, for the same reason: a filter on every type would put
-              Campfire in the share sheet of every photo and video on the device.
+              Campfire in the share sheet of every photo and video on the device. That type is also what a piece of
+              *text* is shared under - a selection, a note - which arrives as EXTRA_TEXT instead of a stream and is
+              imported as a song, see importSharedTexts.
             -->
             <intent-filter android:label="@string/campfire">
                 <action android:name="android.intent.action.SEND" />
