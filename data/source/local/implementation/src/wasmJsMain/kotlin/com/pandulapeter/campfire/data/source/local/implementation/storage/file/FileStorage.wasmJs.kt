@@ -25,6 +25,7 @@ import org.koin.core.annotation.Single
 import kotlin.js.ExperimentalWasmJsInterop
 import kotlin.js.JsException
 import kotlin.js.Promise
+import kotlin.js.toJsString
 
 /**
  * The web [FileStorage], on top of the Origin Private File System: a sandboxed, per-origin file system that is not
@@ -60,7 +61,7 @@ internal class OpfsFileStorage : FileStorage {
     }
 
     override suspend fun info(directory: StorageDirectory, name: String) = withContext(Dispatchers.Default) {
-        fileHandle(directory, name, create = false)?.let { handle ->
+        fileHandle(directory, name)?.let { handle ->
             fileInfo(handle).await()?.toString()?.split(FIELD_SEPARATOR)?.takeIf { it.size == 2 }?.let { fields ->
                 StoredFileInfo(
                     name = name,
@@ -72,28 +73,28 @@ internal class OpfsFileStorage : FileStorage {
     }
 
     override suspend fun exists(directory: StorageDirectory, name: String) = withContext(Dispatchers.Default) {
-        fileHandle(directory, name, create = false) != null
+        fileHandle(directory, name) != null
     }
 
     override suspend fun readText(directory: StorageDirectory, name: String) = withContext(Dispatchers.Default) {
         failingAsStorage(name) {
-            fileHandle(directory, name, create = false)?.let { readFileBytes(it).await()?.toByteArray()?.decodeLibraryText() }
+            fileHandle(directory, name)?.let { readFileBytes(it).await()?.toByteArray()?.decodeLibraryText() }
         }
     }
 
     override suspend fun readBytes(directory: StorageDirectory, name: String) = withContext(Dispatchers.Default) {
         failingAsStorage(name) {
-            fileHandle(directory, name, create = false)?.let { readFileBytes(it).await()?.toByteArray() }
+            fileHandle(directory, name)?.let { readFileBytes(it).await()?.toByteArray() }
         }
     }
 
     override suspend fun writeText(directory: StorageDirectory, name: String, text: String) = withContext(Dispatchers.Default) {
-        failingAsStorage(name) { writeFileText(requireFileHandle(directory, name), text).await() }
+        failingAsStorage(name) { writeFile(directoryHandle(directory), name, text.toJsString()).await() }
         Unit
     }
 
     override suspend fun writeBytes(directory: StorageDirectory, name: String, bytes: ByteArray) = withContext(Dispatchers.Default) {
-        failingAsStorage(name) { writeFileBytes(requireFileHandle(directory, name), bytes.toInt8Array()).await() }
+        failingAsStorage(name) { writeFile(directoryHandle(directory), name, bytes.toInt8Array()).await() }
         Unit
     }
 
@@ -114,12 +115,9 @@ internal class OpfsFileStorage : FileStorage {
         throw LibraryStorageException("Could not access \"$name\".", exception)
     }
 
-    private suspend fun requireFileHandle(directory: StorageDirectory, name: String) =
-        fileHandle(directory, name, create = true) ?: throw IllegalStateException("Could not create \"$name\".")
-
-    private suspend fun fileHandle(directory: StorageDirectory, name: String, create: Boolean): JsAny? {
+    private suspend fun fileHandle(directory: StorageDirectory, name: String): JsAny? {
         requireValidFileName(name)
-        return getFileHandle(directoryHandle(directory), name, create).await()
+        return getFileHandle(directoryHandle(directory), name).await()
     }
 
     /**
@@ -166,8 +164,8 @@ private fun getDirectoryHandle(parent: JsAny, name: String): Promise<JsAny?> = j
  * Resolves to `null` instead of rejecting with a `NotFoundError` when the file is not there. Every other rejection is
  * passed on: a file that is there but cannot be reached is not the same as a missing one.
  */
-private fun getFileHandle(parent: JsAny, name: String, create: Boolean): Promise<JsAny?> = js(
-    """parent.getFileHandle(name, { create: create }).catch(function (error) {
+private fun getFileHandle(parent: JsAny, name: String): Promise<JsAny?> = js(
+    """parent.getFileHandle(name).catch(function (error) {
         if (error && error.name === 'NotFoundError') return null;
         throw error;
     })"""
@@ -207,23 +205,28 @@ private fun readFileBytes(handle: JsAny): Promise<Int8Array?> =
  * A writable holds a lock on its file until it is closed or aborted, so one whose write fails is aborted before the
  * failure is passed on: left open, it would make every later write and the deletion of that file fail as well.
  */
-private fun writeFileText(handle: JsAny, text: String): Promise<JsAny?> = js(
-    """handle.createWritable().then(function (writable) {
-        return writable.write(text).then(
-            function () { return writable.close(); },
-            function (error) { return writable.abort().then(function () { throw error; }, function () { throw error; }); }
-        );
-    })"""
-)
-
-/** Aborts a writable whose write fails, for the reason given on [writeFileText]. */
-private fun writeFileBytes(handle: JsAny, bytes: Int8Array): Promise<JsAny?> = js(
-    """handle.createWritable().then(function (writable) {
-        return writable.write(bytes).then(
-            function () { return writable.close(); },
-            function (error) { return writable.abort().then(function () { throw error; }, function () { throw error; }); }
-        );
-    })"""
+private fun writeFile(parent: JsAny, name: String, data: JsAny): Promise<JsAny?> = js(
+    """(async function () {
+        var existed = true;
+        var handle;
+        try { handle = await parent.getFileHandle(name); }
+        catch (error) { if (!error || error.name !== 'NotFoundError') throw error; existed = false; handle = await parent.getFileHandle(name, { create: true }); }
+        try {
+            if (typeof handle.createWritable === 'function') {
+                var writable = await handle.createWritable();
+                try { await writable.write(data); await writable.close(); }
+                catch (error) { try { await writable.abort(); } catch (ignored) { } throw error; }
+            } else {
+                var worker = new Worker('opfs-writer.js');
+                await new Promise(function (resolve, reject) {
+                    worker.onmessage = function (event) { worker.terminate(); event.data.error ? reject(Object.assign(new Error(event.data.message), { name: event.data.error })) : resolve(); };
+                    worker.onerror = function (event) { worker.terminate(); reject(event.error || new Error(event.message)); };
+                    worker.postMessage({ id: 1, path: [], name: name, data: data });
+                });
+            }
+        } catch (error) { if (!existed) try { await parent.removeEntry(name); } catch (ignored) { } throw error; }
+        return null;
+    })()"""
 )
 
 /**
