@@ -54,10 +54,13 @@ import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.SideEffect
+import androidx.compose.runtime.Stable
+import androidx.compose.runtime.State
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.setValue
 import androidx.compose.runtime.withFrameNanos
 import androidx.compose.ui.Modifier
@@ -67,7 +70,9 @@ import androidx.compose.ui.layout.SubcomposeLayout
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.Density
 import androidx.compose.ui.unit.Dp
+import androidx.compose.ui.unit.LayoutDirection
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation3.runtime.entryProvider
 import androidx.navigation3.scene.Scene
@@ -276,6 +281,50 @@ private fun LaunchScreen(
     }
 }
 
+/**
+ * The window insets a screen hands to its scrolling content: what the system bars and the chrome leave of the
+ * edges, and at the bottom the keyboard wherever it reaches higher than that.
+ *
+ * The keyboard is asked about when the padding is used rather than when it is made. Its inset is animated, so a
+ * composition that reads it runs again on every frame the keyboard is moving for, and the composition these are
+ * made in holds the whole app - the navigation display, every screen on it and the song list with them. What
+ * uses a padding is a layout, and a layout that reads a state that has changed is only laid out again.
+ *
+ * @param coveredHeight How much of the keyboard's height is taken by chrome it slides over rather than pushes
+ *   away, which is the navigation bar's.
+ * @param ime Held as a state because the platforms other than Android hand out a new instance on every
+ *   composition, and two of these have to be equal for as long as nothing but the keyboard has moved, or every
+ *   screen would be recomposed whenever this composition is.
+ */
+@Stable
+private class KeyboardAwarePadding(
+    private val start: Dp,
+    private val end: Dp,
+    private val bottom: Dp,
+    private val coveredHeight: Dp,
+    private val ime: State<WindowInsets>,
+    private val density: Density,
+) : PaddingValues {
+
+    override fun calculateLeftPadding(layoutDirection: LayoutDirection) = if (layoutDirection == LayoutDirection.Ltr) start else end
+
+    override fun calculateTopPadding() = 0.dp
+
+    override fun calculateRightPadding(layoutDirection: LayoutDirection) = if (layoutDirection == LayoutDirection.Ltr) end else start
+
+    override fun calculateBottomPadding() = maxOf(bottom, with(density) { ime.value.getBottom(this).toDp() } - coveredHeight)
+
+    override fun equals(other: Any?) = other is KeyboardAwarePadding &&
+            start == other.start &&
+            end == other.end &&
+            bottom == other.bottom &&
+            coveredHeight == other.coveredHeight &&
+            ime === other.ime &&
+            density == other.density
+
+    override fun hashCode() = listOf(start, end, bottom, coveredHeight, density).hashCode()
+}
+
 @OptIn(ExperimentalLayoutApi::class, ExperimentalMaterial3ExpressiveApi::class)
 @Composable
 private fun CampfireContent(
@@ -314,20 +363,24 @@ private fun CampfireContent(
     // What is left of the window insets once the chrome has covered the edge it sits on. The screens hand these to
     // their lists as content padding, so that items scroll under the system bars instead of stopping short of them.
     val systemBars = WindowInsets.systemBars.asPaddingValues()
-    val imeHeight = with(density) { WindowInsets.ime.getBottom(density).toDp() }
-    val shellContentPadding = PaddingValues(
+    // Never read here, see KeyboardAwarePadding.
+    val ime = rememberUpdatedState(WindowInsets.ime)
+    val shellContentPadding: PaddingValues = KeyboardAwarePadding(
         start = if (windowSize.usesNavigationRail) 0.dp else systemBars.calculateStartPadding(layoutDirection),
         end = systemBars.calculateEndPadding(layoutDirection),
-        bottom = maxOf(
-            if (windowSize.usesNavigationRail) systemBars.calculateBottomPadding() else 0.dp,
-            // The keyboard covers the navigation bar instead of pushing it away, so only what is left of it counts.
-            (imeHeight - navigationBarHeight).coerceAtLeast(0.dp),
-        ),
+        bottom = if (windowSize.usesNavigationRail) systemBars.calculateBottomPadding() else 0.dp,
+        // The keyboard covers the navigation bar instead of pushing it away, so only what is left of it counts.
+        coveredHeight = navigationBarHeight,
+        ime = ime,
+        density = density,
     )
-    val songDetailsContentPadding = PaddingValues(
+    val songDetailsContentPadding: PaddingValues = KeyboardAwarePadding(
         start = systemBars.calculateStartPadding(layoutDirection),
         end = systemBars.calculateEndPadding(layoutDirection),
-        bottom = maxOf(systemBars.calculateBottomPadding(), imeHeight),
+        bottom = systemBars.calculateBottomPadding(),
+        coveredHeight = 0.dp,
+        ime = ime,
+        density = density,
     )
 
     Box(

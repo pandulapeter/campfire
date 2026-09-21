@@ -163,16 +163,8 @@ internal fun ControlsSidePanel(
  * The padding of the content shown next to a [ControlsSidePanel]: while the panel is visible, the end inset belongs
  * to the panel.
  */
-@Composable
-internal fun PaddingValues.besideSidePanel(isSidePanelVisible: Boolean): PaddingValues {
-    if (!isSidePanelVisible) return this
-    val layoutDirection = LocalLayoutDirection.current
-    return PaddingValues(
-        start = calculateStartPadding(layoutDirection),
-        top = calculateTopPadding(),
-        bottom = calculateBottomPadding(),
-    )
-}
+internal fun PaddingValues.besideSidePanel(isSidePanelVisible: Boolean) =
+    if (isSidePanelVisible) only(start = true, top = true, bottom = true) else this
 
 /**
  * Sorting and filter controls of the setlists screen, shown in a side panel on wide enough screens and in a bottom

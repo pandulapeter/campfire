@@ -17,8 +17,6 @@ import androidx.compose.animation.scaleOut
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.calculateEndPadding
-import androidx.compose.foundation.layout.calculateStartPadding
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
@@ -40,7 +38,6 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.input.nestedscroll.nestedScroll
-import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.unit.Dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -78,6 +75,7 @@ import com.pandulapeter.campfire.presentation.ui.components.allowsNewItemMenu
 import com.pandulapeter.campfire.presentation.ui.components.besideSidePanel
 import com.pandulapeter.campfire.presentation.ui.components.hasRoomForSidePanel
 import com.pandulapeter.campfire.presentation.ui.components.listItemAnimation
+import com.pandulapeter.campfire.presentation.ui.components.only
 import com.pandulapeter.campfire.presentation.ui.components.rememberHasLoadedLibrary
 import com.pandulapeter.campfire.presentation.ui.components.rememberOverflowMenuState
 import com.pandulapeter.campfire.presentation.ui.components.rememberRetainedLazyGridState
@@ -242,7 +240,6 @@ private fun SongList(
     val chordSpelling = userPreferences?.chordSpelling ?: UserPreferences.ChordSpelling.Default
     val filePicker = LocalFilePicker.current
     val keyboardController = LocalSoftwareKeyboardController.current
-    val layoutDirection = LocalLayoutDirection.current
     val coroutineScope = rememberCoroutineScope()
     // The section label of every list item (headers included), in the order of the lazy grid, for the fast scroller.
     val sectionLabels = remember(songGroups) {
@@ -284,11 +281,7 @@ private fun SongList(
             columns = ListColumns(columnCount),
             modifier = Modifier.weight(1f).fillMaxHeight(),
             state = listState,
-            contentPadding = PaddingValues(
-                start = contentPadding.calculateStartPadding(layoutDirection),
-                top = SECTION_HEADER_GAP,
-                bottom = contentPadding.calculateBottomPadding(),
-            ),
+            contentPadding = contentPadding.only(start = true, bottom = true, extraTop = SECTION_HEADER_GAP),
         ) {
             placeholder?.let {
                 item(
@@ -377,11 +370,7 @@ private fun SongList(
             }
         }
         FastScroller(
-            modifier = Modifier.padding(
-                top = contentPadding.calculateTopPadding(),
-                end = contentPadding.calculateEndPadding(layoutDirection),
-                bottom = contentPadding.calculateBottomPadding(),
-            ),
+            modifier = Modifier.padding(contentPadding.only(top = true, end = true, bottom = true)),
             gridState = listState,
             labelForItem = { sectionLabels.getOrNull(it) },
         )

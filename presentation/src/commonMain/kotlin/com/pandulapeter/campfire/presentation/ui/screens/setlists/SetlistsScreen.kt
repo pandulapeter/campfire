@@ -13,8 +13,6 @@ import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.animateDpAsState
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.PaddingValues
-import androidx.compose.foundation.layout.calculateEndPadding
-import androidx.compose.foundation.layout.calculateStartPadding
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -40,7 +38,6 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.input.nestedscroll.nestedScroll
-import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -86,6 +83,7 @@ import com.pandulapeter.campfire.presentation.ui.components.besideSidePanel
 import com.pandulapeter.campfire.presentation.ui.components.draggedListItemContainerColor
 import com.pandulapeter.campfire.presentation.ui.components.hasRoomForSidePanel
 import com.pandulapeter.campfire.presentation.ui.components.listItemAnimation
+import com.pandulapeter.campfire.presentation.ui.components.only
 import com.pandulapeter.campfire.presentation.ui.components.rememberHasLoadedLibrary
 import com.pandulapeter.campfire.presentation.ui.components.rememberRetainedLazyGridState
 import com.pandulapeter.campfire.presentation.ui.components.songListColumnCount
@@ -242,7 +240,6 @@ private fun SetlistList(
         }
     }
     val filePicker = LocalFilePicker.current
-    val layoutDirection = LocalLayoutDirection.current
     val coroutineScope = rememberCoroutineScope()
 
     val isSearchOpen by viewModel.setlistsSearch.isOpen.collectAsStateWithLifecycle()
@@ -262,11 +259,7 @@ private fun SetlistList(
             columns = ListColumns(columnCount),
             modifier = Modifier.weight(1f).fillMaxHeight(),
             state = listState,
-            contentPadding = PaddingValues(
-                start = contentPadding.calculateStartPadding(layoutDirection),
-                top = SECTION_HEADER_GAP,
-                bottom = contentPadding.calculateBottomPadding(),
-            ),
+            contentPadding = contentPadding.only(start = true, bottom = true, extraTop = SECTION_HEADER_GAP),
         ) {
             // The setlists come first: they are what this screen is about. The library only speaks up once there are
             // setlists to fill, since without it the rows of every setlist would be missing rather than the setlists
@@ -432,11 +425,7 @@ private fun SetlistList(
             }
         }
         FastScroller(
-            modifier = Modifier.padding(
-                top = contentPadding.calculateTopPadding(),
-                end = contentPadding.calculateEndPadding(layoutDirection),
-                bottom = contentPadding.calculateBottomPadding(),
-            ),
+            modifier = Modifier.padding(contentPadding.only(top = true, end = true, bottom = true)),
             gridState = listState,
         )
     }
