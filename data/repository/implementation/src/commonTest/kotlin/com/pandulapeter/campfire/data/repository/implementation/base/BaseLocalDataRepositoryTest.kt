@@ -13,6 +13,7 @@ import com.pandulapeter.campfire.data.model.DataState
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.cancelAndJoin
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.runCurrent
@@ -73,6 +74,65 @@ class BaseLocalDataRepositoryTest {
         repository.load()
 
         assertEquals(DataState.Failure<List<String>>(null), repository.states.last())
+    }
+
+    @Test
+    fun `a first read that is cancelled leaves nothing behind`() = runTest {
+        val repository = TestRepository(backgroundScope, batches = listOf(listOf("a"), listOf("a", "b")))
+        repository.gate = CompletableDeferred()
+
+        val load = launch { repository.load() }
+        runCurrent()
+        assertEquals(DataState.Loading(listOf("a")), repository.states.last())
+        load.cancelAndJoin()
+
+        assertEquals(DataState.Loading<List<String>>(null), repository.states.last())
+    }
+
+    @Test
+    fun `a cancelled first read is read again by the next caller`() = runTest {
+        val repository = TestRepository(backgroundScope, batches = listOf(listOf("a"), listOf("a", "b")))
+        repository.gate = CompletableDeferred()
+        val load = launch { repository.load() }
+        runCurrent()
+        load.cancelAndJoin()
+
+        repository.gate = null
+
+        assertEquals(listOf("a", "b"), repository.load())
+        assertEquals(DataState.Idle(listOf("a", "b")), repository.states.last())
+    }
+
+    @Test
+    fun `a change that landed during a cancelled first read does not pass for the library`() = runTest {
+        val repository = TestRepository(backgroundScope, batches = listOf(listOf("a"), listOf("a", "b")))
+        repository.gate = CompletableDeferred()
+        val load = launch { repository.load() }
+        runCurrent()
+
+        repository.add("x")
+        assertEquals(DataState.Idle(listOf("a", "x")), repository.states.last())
+        load.cancelAndJoin()
+
+        assertEquals(DataState.Loading<List<String>>(null), repository.states.last())
+        repository.gate = null
+        assertEquals(listOf("a", "b"), repository.load())
+    }
+
+    @Test
+    fun `a re-read that is cancelled keeps the library and what changed meanwhile`() = runTest {
+        val repository = TestRepository(backgroundScope, batches = listOf(listOf("a", "b")))
+        repository.load()
+        repository.gate = CompletableDeferred()
+        repository.batches = listOf(listOf("c"), listOf("c", "d"))
+
+        val reload = launch { repository.reload() }
+        runCurrent()
+        repository.add("x")
+        reload.cancelAndJoin()
+
+        assertEquals(DataState.Idle(listOf("a", "b", "x")), repository.states.last())
+        assertTrue(repository.states.none { it.data == listOf("c") })
     }
 
     @Test
@@ -210,8 +270,14 @@ class BaseLocalDataRepositoryTest {
 
         suspend fun write(data: List<String>, persist: suspend (List<String>) -> Unit) = writeData(data, persist)
 
+        /** Completed by the test to let a load past its partial publishes, so that it can be cancelled or changed under first. */
+        var gate: CompletableDeferred<Unit>? = null
+
+        fun add(item: String) = updateData { it.orEmpty() + item }
+
         override suspend fun loadDataFromLocalSource(): List<String> {
             batches.dropLast(1).forEach { publishPartialData(it) }
+            gate?.await()
             if (shouldFail) throw IllegalStateException("The local source could not be read.")
             return batches.last()
         }

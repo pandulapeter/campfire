@@ -29,6 +29,9 @@ until the last file. Partial data is only ever published while there is nothing 
 previous library is up, and replacing it with a partial one would make the list shrink and fill again under the user.
 A read that fails or is cancelled falls back on the data from *before* it started rather than on whatever it had
 published, or half a library would sit there looking like the whole of it and nothing would ever read the rest.
+For a first read that is cancelled that is `Loading(null)`, the state the repository starts in, and
+`loadDataIfNeeded()` reads again whenever it finds a `Loading` state — under the lock it runs in, one can only be what
+an unfinished read left behind.
 `commonTest` covers those rules, since none of them can be seen once a load has finished.
 
 Writing is deliberately **not** part of that shape. Songs and setlists are one file each, so a change writes that file
@@ -43,9 +46,9 @@ the storage is waited for, since every caller builds its change on the state it 
 lock of their own one at a time, each writing what is published by then rather than what it was called with, so the
 last change is the last thing on disk and a burst of changes ends in one write. A write that succeeded publishes
 nothing more, and one that failed turns the state into a `Failure` only while its data is still the data on show.
-`commonTest` covers this too. A cancelled read is not a failed one: it is rethrown and leaves the cached data as it
-was. A `rescan()` — the refresh action, and the last step of every import — is the only thing that walks the directory
-again.
+`commonTest` covers this too. A cancelled read is not a failed one: it is rethrown and leaves the cache with what it
+held before, plus any change that landed while it ran. A `rescan()` — the refresh action, and the last step of every
+import — is the only thing that walks the directory again.
 
 - `SetlistRepositoryImpl` makes every write to a setlist file — `updateSetlist`, `renameSetlist`, `saveSetlist`,
   `deleteSetlist` — under one lock, held from reading the setlist out of its own cache to having the write back in

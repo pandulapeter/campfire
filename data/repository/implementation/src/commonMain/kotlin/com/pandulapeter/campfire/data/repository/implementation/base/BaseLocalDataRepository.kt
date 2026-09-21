@@ -71,9 +71,13 @@ internal abstract class BaseLocalDataRepository<T> {
      * A read that failed is tried again by the next caller even when changes made since have put some data in the
      * cache: that data is only what those changes added, and returning it would pass a single new song off as the
      * whole library for as long as the app runs.
+     *
+     * A [DataState.Loading] is read again whatever it carries. Every read holds the lock this runs under, so one seen
+     * from here is not a read in progress but the leftover of one that never finished, and the data in it is however
+     * much of the library that read had got through.
      */
     protected suspend fun loadDataIfNeeded(): T? = mutex.withLock {
-        _dataState.value.data?.takeUnless { hasReadFailed } ?: read()
+        _dataState.value.takeUnless { it is DataState.Loading || hasReadFailed }?.data ?: read()
     }
 
     /** Reads the local source again even if there already is data, which is what a refresh does. */
@@ -161,8 +165,11 @@ internal abstract class BaseLocalDataRepository<T> {
         } catch (exception: CancellationException) {
             // A read the caller gave up on is not a read that failed: the data on screen stays what it was, and the
             // next caller reads again. Whatever a partial publish put up is dropped rather than kept, or half a
-            // library would sit there as the finished one and nothing would ever read the rest of it.
-            value = DataState.Idle(previousData ?: throw exception)
+            // library would sit there as the finished one and nothing would ever read the rest of it - so a first read
+            // goes back to having read nothing, which is also what sends the next caller to the local source. A re-read
+            // publishes no partial data, and what the cache holds by now is the previous data plus the changes that
+            // landed while it ran, which are on disk and stay.
+            update { current -> if (previousData == null) DataState.Loading(null) else DataState.Idle(current.data ?: previousData) }
             throw exception
         } catch (exception: Exception) {
             println(exception.message)
