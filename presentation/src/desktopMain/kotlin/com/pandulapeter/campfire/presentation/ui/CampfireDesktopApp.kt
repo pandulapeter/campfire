@@ -75,7 +75,7 @@ fun CampfireDesktopApp(
     ) {
         CampfireApp(
             viewModel = viewModel,
-            urlOpener = ::openUrl,
+            urlOpener = { url -> if (!openUrl(url)) viewModel.onLinkNotOpened(url) },
             filesToImport = filesToImport,
         )
     }
@@ -110,17 +110,44 @@ fun CampfireViewModel.handleKeyEvent(keyEvent: KeyEvent, onExit: () -> Unit): Bo
     return false
 }
 
-private fun openUrl(url: String) {
-    try {
-        val desktop = Desktop.getDesktop()
-        val osName by lazy(LazyThreadSafetyMode.NONE) { System.getProperty("os.name").lowercase() }
-        when {
-            Desktop.isDesktopSupported() && desktop.isSupported(Desktop.Action.BROWSE) -> desktop.browse(URI(url))
-            "mac" in osName -> Runtime.getRuntime().exec(arrayOf("open", url))
-            "nix" in osName || "nux" in osName -> Runtime.getRuntime().exec(arrayOf("xdg-open", url))
-            else -> println("Cannot open url: $url")
-        }
-    } catch (_: NoClassDefFoundError) {
-        println("Cannot open url: $url")
+/**
+ * Opens [url] in the system's browser and answers whether anything took it. `java.awt.Desktop` goes first, and the
+ * operating system's own command is what is left - both where AWT has no desktop to speak of, which is a Linux
+ * session without the GNOME libraries it looks for, and where it has one that fails, as `browse` does on a machine
+ * with no default browser registered.
+ */
+private fun openUrl(url: String) = openWithAwt(url) || openWithSystemCommand(url)
+
+/** `getDesktop` throws where `isDesktopSupported` says no, so it is only asked for after that has said yes. */
+private fun openWithAwt(url: String) = try {
+    val desktop = if (Desktop.isDesktopSupported()) Desktop.getDesktop().takeIf { it.isSupported(Desktop.Action.BROWSE) } else null
+    desktop?.browse(URI(url))
+    desktop != null
+} catch (exception: Exception) {
+    println("Could not open $url through java.awt.Desktop: ${exception.message}")
+    false
+} catch (error: LinkageError) {
+    // The desktop peer loads native libraries the first time it is asked for, and one that does not link is an
+    // Error rather than an Exception. This runs inside a click handler, where either would close the window.
+    println("Could not open $url through java.awt.Desktop: ${error.message}")
+    false
+}
+
+private fun openWithSystemCommand(url: String) = try {
+    val osName = System.getProperty("os.name").orEmpty().lowercase()
+    val command = when {
+        "mac" in osName -> arrayOf("open", url)
+        "win" in osName -> arrayOf("rundll32", "url.dll,FileProtocolHandler", url)
+        else -> arrayOf("xdg-open", url)
     }
+    // Discarded rather than piped: xdg-open may become the browser itself, which then writes its log into a pipe
+    // nobody reads and stops once that is full.
+    ProcessBuilder(*command)
+        .redirectOutput(ProcessBuilder.Redirect.DISCARD)
+        .redirectError(ProcessBuilder.Redirect.DISCARD)
+        .start()
+    true
+} catch (exception: Exception) {
+    println("Could not open $url: ${exception.message}")
+    false
 }

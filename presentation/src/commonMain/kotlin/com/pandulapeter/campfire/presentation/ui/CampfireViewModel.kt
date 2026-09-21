@@ -1299,6 +1299,11 @@ class CampfireViewModel(
         _messages.trySend(Message.ExportFailed)
     }
 
+    /** For the shells, which are what opens a link and so what finds out that nothing did. */
+    fun onLinkNotOpened(url: String) {
+        _messages.trySend(Message.LinkNotOpened(url))
+    }
+
     /** Nothing to export and a picker that threw are the same thing to the user: the file did not come out. */
     private suspend fun save(filePicker: FilePicker, isShare: Boolean = false, export: suspend () -> ExportedFile?) = try {
         export()?.let { if (isShare) filePicker.shareFile(it) else filePicker.saveFile(it) } ?: _messages.send(Message.ExportFailed)
@@ -1717,6 +1722,9 @@ class CampfireViewModel(
 
         /** A change to the library (a new setlist, a deleted song, a moved entry) that could not be written. */
         data object OperationFailed : Message
+
+        /** A link nothing on this machine would open. The address is shown, since reading it is all that is left. */
+        data class LinkNotOpened(val url: String) : Message
     }
 
     /** The settings screen's offer to add the demo library, see [demoLibraryOffer]. */

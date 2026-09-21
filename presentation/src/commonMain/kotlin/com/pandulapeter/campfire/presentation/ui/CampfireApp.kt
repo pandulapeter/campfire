@@ -79,6 +79,7 @@ import androidx.lifecycle.compose.LifecycleEventEffect
 import com.pandulapeter.campfire.data.model.domain.ImportedFile
 import com.pandulapeter.campfire.data.model.domain.SyncState
 import com.pandulapeter.campfire.presentation.resources.Res
+import com.pandulapeter.campfire.presentation.resources.error_link_not_opened
 import com.pandulapeter.campfire.presentation.resources.error_operation_failed
 import com.pandulapeter.campfire.presentation.resources.export_failed
 import com.pandulapeter.campfire.presentation.resources.import_failed
@@ -453,6 +454,7 @@ private fun Messages(
         CampfireViewModel.Message.EditorDraftLost -> stringResource(Res.string.song_editor_draft_lost)
         CampfireViewModel.Message.EditedSongFileGone -> stringResource(Res.string.song_editor_file_gone)
         CampfireViewModel.Message.OperationFailed -> stringResource(Res.string.error_operation_failed)
+        is CampfireViewModel.Message.LinkNotOpened -> stringResource(Res.string.error_link_not_opened, current.url)
         null -> null
     }
     LaunchedEffect(queue.firstOrNull()?.index) {
