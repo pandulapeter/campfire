@@ -22,7 +22,6 @@ import com.pandulapeter.campfire.di.startCampfireDependencyGraph
 import com.pandulapeter.campfire.presentation.ui.CampfireDesktopApp
 import com.pandulapeter.campfire.presentation.ui.CampfireViewModel
 import com.pandulapeter.campfire.presentation.ui.handleKeyEvent
-import com.pandulapeter.campfire.presentation.ui.platform.readAsImportedFiles
 import com.pandulapeter.campfire.resources.Res
 import com.pandulapeter.campfire.resources.app_icon
 import java.awt.Desktop
@@ -30,16 +29,17 @@ import java.awt.Dimension
 import javax.swing.SwingUtilities
 import org.jetbrains.compose.resources.painterResource
 import org.koin.compose.viewmodel.koinViewModel
-import kotlinx.coroutines.flow.MutableStateFlow
 
 /**
- * @param args Paths handed over by the operating system, which is how "open with" reaches a desktop application: it
- *   launches the app with the file as an argument.
+ * @param args Paths handed over by the operating system, which is how "open with" reaches a desktop application on
+ *   Windows and Linux: it launches the app with the file as an argument. macOS sends an event instead, see
+ *   [OpenedFiles].
  */
 fun main(args: Array<String>) {
+    OpenedFiles.listenForSystemRequests()
+    OpenedFiles.open(args.toList())
     startCampfireDependencyGraph()
     application {
-        val filesToImport = remember { MutableStateFlow(args.toList().readAsImportedFiles()) }
         // The view model is created inside the window (which owns the ViewModelStore), but the key handler needs it here.
         val viewModel = remember { mutableStateOf<CampfireViewModel?>(null) }
         // Closing the window leaves the editor as surely as Escape does, so it asks about unsaved text the same way,
@@ -70,7 +70,7 @@ fun main(args: Array<String>) {
                 SideEffect { viewModel.value = currentViewModel }
                 CampfireDesktopApp(
                     viewModel = currentViewModel,
-                    filesToImport = filesToImport,
+                    filesToImport = OpenedFiles.files,
                 )
             }
         }

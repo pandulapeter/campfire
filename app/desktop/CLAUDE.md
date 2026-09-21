@@ -15,7 +15,14 @@ Closing the window is a back-navigation as far as unsaved text is concerned: `on
 
 The view model is obtained outside `Window` so window resizing doesn't reset it. Window min size is 400x400.
 
-`main` takes `args` because that is how "open with" reaches a desktop application: the system launches the app with the file as an argument, and every argument is read and imported at startup. Files dropped onto the window take the same path (`Modifier.dragAndDropTarget` in `CampfireDesktopApp`).
+`main` takes `args` because that is how "open with" reaches a desktop application on Windows and Linux: the system
+launches the app with the file as an argument. macOS sends an `odoc` Apple event instead — to a starting app and to
+a running one alike — which the JDK hands to the handler `OpenedFiles` registers with `Desktop.setOpenFileHandler`
+as the first thing `main` does, on macOS only (asking `Desktop` anything starts AWT, which on Linux would read the
+display scale before Compose sets it) and for the life of the process (the JDK queues the events that precede the
+first handler and drops the ones that find it removed). Both end in `OpenedFiles.open(paths)`, a channel that is
+read off the event thread and imported by `CampfireApp`; anything else that learns of a file to open calls the same
+function. Files dropped onto the window take their own path (`Modifier.dragAndDropTarget` in `CampfireDesktopApp`).
 
 Packaging: `compose.desktop` produces Dmg/Exe/Msi/Deb, versioned from the `campfire.versionName` Gradle property. That format is stricter than the app's — `MAJOR[.MINOR][.PATCH]` and nothing else — so a version with a suffix fails the build at configuration time. `javaHome` is pinned to the toolchain JDK because the Gradle JVM may lack `jpackage`. Icons live in `src/main/resources/appIcon.{icns,ico}` (packaging) and `src/main/composeResources/drawable/app_icon.png` (the window icon, also used for the Linux package). The Linux package asks for a `shortcut`, because jpackage writes a `.desktop` entry — and so shows the icon anywhere — only for a package that asks for one or declares file associations, and the Windows installer asks for a Start menu entry for the same reason, installs per user so that it needs no administrator, and carries a fixed `upgradeUuid`, which is what makes a newer installer replace the installed version and so must never change. `modules(...)` lists what `suggestRuntimeModules` finds beyond Compose Desktop's defaults: the packaged runtime holds nothing else, so a missing module is a `NoClassDefFoundError` only an installed build throws — run that task again after adding a JVM dependency. `chordProFileAssociations()` in `build.gradle.kts` registers the six ChordPro extensions as `text/plain` for macOS and Windows — not for Linux, where an association is keyed by the MIME type and that would make Campfire a handler of every text file; deliberately not zip or `.txt`, and kept in step with `LibraryFiles.SONG_EXTENSIONS`, which a build file cannot see.
 
