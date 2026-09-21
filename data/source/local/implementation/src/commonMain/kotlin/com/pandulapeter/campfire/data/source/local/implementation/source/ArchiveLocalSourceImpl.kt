@@ -12,6 +12,7 @@ package com.pandulapeter.campfire.data.source.local.implementation.source
 
 import com.pandulapeter.campfire.data.model.domain.ImportLimits
 import com.pandulapeter.campfire.data.model.domain.ImportedFile
+import com.pandulapeter.campfire.data.model.domain.LibraryFiles
 import com.pandulapeter.campfire.data.source.local.api.ArchiveLocalSource
 import com.pandulapeter.campfire.data.source.local.implementation.zip.ZipEntry
 import com.pandulapeter.campfire.data.source.local.implementation.zip.DosTimestamp
@@ -62,7 +63,7 @@ internal class ArchiveLocalSourceImpl : ArchiveLocalSource {
             // that took them at their word would offer to import as many unreadable files as there are songs. A file
             // somebody means to import is never a hidden one, so these are never read, and neither is anything an
             // import would not look inside: both cost nothing and cannot fail the archive.
-            limitOf = { name -> name.fileName.takeUnless { it.startsWith(HIDDEN_NAME_PREFIX) }?.let(ImportLimits::maxSizeOf)?.takeIf { it > 0 } },
+            limitOf = { name -> name.fileName.takeUnless(LibraryFiles::isHiddenFileName)?.let(ImportLimits::maxSizeOf)?.takeIf { it > 0 } },
         )
         inflated.count += content.entries.sumOf { it.bytes.size.toLong() }
         val read = content.entries.flatMap { entry ->
@@ -82,7 +83,7 @@ internal class ArchiveLocalSourceImpl : ArchiveLocalSource {
         }
         // Hidden entries stay unreported, see above; everything else that was not read is handed over by name.
         val unread = content.unread
-            .filterNot { it.name.fileName.startsWith(HIDDEN_NAME_PREFIX) }
+            .filterNot { LibraryFiles.isHiddenFileName(it.name.fileName) }
             .map { ImportedFile.unread(name = it.name.fileName, isTooLarge = it.reason == UnreadZipEntry.Reason.TOO_LARGE) }
         return read + unread
     }
@@ -98,8 +99,5 @@ internal class ArchiveLocalSourceImpl : ArchiveLocalSource {
     private companion object {
         const val MAX_DEPTH = 3
         const val ZIP_EXTENSION = ".zip"
-
-        /** What every hidden file starts with, whichever system wrote it: "._name.cho", ".DS_Store", ".gitignore". */
-        const val HIDDEN_NAME_PREFIX = "."
     }
 }

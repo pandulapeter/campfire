@@ -43,6 +43,26 @@ object LibraryFiles {
     val IMPORTABLE_EXTENSIONS = SONG_EXTENSIONS + listOf(TEXT_EXTENSION, ARCHIVE_EXTENSION, ".json")
 
     /**
+     * Whether [name] is a file some tool wrote for itself rather than one somebody put there: macOS leaves an
+     * AppleDouble `._name.cho` next to every file it copies to a volume that cannot hold extended attributes, under
+     * the extension of the file it belongs to, and a `.DS_Store` in every folder it has shown. Every system marks
+     * these the same way, with a leading dot, and no name the app writes starts with one.
+     */
+    fun isHiddenFileName(name: String) = name.startsWith(HIDDEN_NAME_PREFIX)
+
+    /**
+     * Whether a file called [name] in the songs folder is a song. Campfire writes [SONG_EXTENSION], but a folder the
+     * user can also open in a file manager will hold whatever they put in it, and every ChordPro extension names the
+     * same thing. The library scan and the listing sync works from both ask this, which is what keeps them agreeing
+     * about which files exist: one that only sync saw would be uploaded without ever being shown, and one that only
+     * the scan saw would never leave the device.
+     */
+    fun isSongFileName(name: String) = !isHiddenFileName(name) && SONG_EXTENSIONS.any { name.endsWith(it, ignoreCase = true) }
+
+    /** The same question about the setlists folder. */
+    fun isSetlistFileName(name: String) = !isHiddenFileName(name) && name.endsWith(SETLIST_EXTENSION, ignoreCase = true)
+
+    /**
      * What stands between the artist and the title in a song's file name: the one piece of a library name that is
      * structure rather than the user's own text, which is why naming a new song and naming an exported one both have
      * to know about it.
@@ -131,6 +151,8 @@ object LibraryFiles {
         ?.takeIf { it.isNotEmpty() }
 
     private const val FALLBACK_NAME = "untitled"
+
+    private const val HIDDEN_NAME_PREFIX = "."
 
     /** Both shapes a colliding name is numbered in, anchored to the end of the name. */
     private val COLLISION_SUFFIX = Regex("""(_\d+| \(\d+\))$""")

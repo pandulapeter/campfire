@@ -21,7 +21,11 @@ import com.pandulapeter.campfire.data.model.domain.LibraryFileKind
  */
 interface LibraryFileLocalSource {
 
-    /** Every song and setlist file in the library. Files with an unknown extension are left out. */
+    /**
+     * Every song and setlist file in the library, by the rule the library scan uses (`LibraryFiles.isSongFileName`).
+     * Whatever else the user keeps in the folder - files with another extension, the hidden ones a file manager
+     * writes for itself - is left where it is rather than uploaded to their cloud storage.
+     */
     suspend fun loadLibraryFiles(): List<LibraryFile>
 
     /**

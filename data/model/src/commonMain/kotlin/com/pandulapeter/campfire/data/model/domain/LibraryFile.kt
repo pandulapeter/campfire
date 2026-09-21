@@ -18,15 +18,16 @@ enum class LibraryFileKind(val id: String) {
     SETLIST("setlists");
 
     /**
-     * Whether [name] is a file of this kind, going by its extension alone. Both of the folders sync compares are
+     * Whether [name] is a file of this kind, going by its name: the right extension, and not a hidden file, see
+     * [LibraryFiles.isSongFileName]. Both of the folders sync compares are
      * ones the user can open - the library folder on the desktop, the app folder of their cloud storage
      * everywhere - so either may hold whatever else they keep there, and that is left where it is. Every listing
      * of either side has to ask this one question: a file that one side lists and the other leaves out looks to
      * a sync run exactly like a file that was deleted there.
      */
     fun matches(name: String) = when (this) {
-        SONG -> LibraryFiles.SONG_EXTENSIONS.any { name.endsWith(it, ignoreCase = true) }
-        SETLIST -> name.endsWith(LibraryFiles.SETLIST_EXTENSION, ignoreCase = true)
+        SONG -> LibraryFiles.isSongFileName(name)
+        SETLIST -> LibraryFiles.isSetlistFileName(name)
     }
 
     companion object {

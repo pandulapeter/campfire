@@ -51,7 +51,7 @@ internal class SongLocalSourceImpl(
      */
     override suspend fun loadSongs(onProgress: (List<Song>) -> Unit): List<Song> = withContext(Dispatchers.Default) {
         val songs = mutableListOf<Song>()
-        val batches = fileStorage.list(StorageDirectory.SONGS).filter { it.name.isSongFileName() }.chunked(BATCH_SIZE)
+        val batches = fileStorage.list(StorageDirectory.SONGS).filter { LibraryFiles.isSongFileName(it.name) }.chunked(BATCH_SIZE)
         batches.forEachIndexed { index, batch ->
             songs += batch.map { async { it.readSong() } }.awaitAll().filterNotNull()
             // The last batch is what the return value already says, and publishing it would only have everything
@@ -64,12 +64,6 @@ internal class SongLocalSourceImpl(
     override suspend fun loadSong(fileName: String): Song? = withContext(Dispatchers.Default) {
         fileStorage.info(StorageDirectory.SONGS, fileName)?.readSong()
     }
-
-    /**
-     * Campfire writes `.cho`, but a folder the user can also open in a file manager will hold whatever they put in
-     * it, and every ChordPro extension names the same thing.
-     */
-    private fun String.isSongFileName() = LibraryFiles.SONG_EXTENSIONS.any { endsWith(it, ignoreCase = true) }
 
     override suspend fun loadSongContent(fileName: String) = fileStorage.readText(StorageDirectory.SONGS, fileName)
         ?.let { SongContent(fileName = fileName, text = it) }

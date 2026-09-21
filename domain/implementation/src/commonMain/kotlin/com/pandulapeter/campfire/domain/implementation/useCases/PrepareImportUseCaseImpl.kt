@@ -55,6 +55,9 @@ class PrepareImportUseCaseImpl internal constructor(
         fun sort(file: ImportedFile) {
             val extension = file.name.substringAfterLast('.', "").lowercase()
             when {
+                // Picked along with the songs it sits next to by a "select all" on a volume macOS has written to. It
+                // carries the extension of the file it belongs to, and decoded as a song it would be a screen of binary.
+                LibraryFiles.isHiddenFileName(file.name) -> skippedFileNames += file.name
                 extension !in SONG_EXTENSIONS && extension != SETLIST_EXTENSION -> skippedFileNames += file.name
                 file.isTooLarge || file.bytes.size > minOf(ImportLimits.MAX_TEXT_FILE_SIZE, remaining) -> oversizedFileNames += file.name
                 else -> {

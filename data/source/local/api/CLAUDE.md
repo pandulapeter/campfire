@@ -31,7 +31,9 @@ platform types.
   inside, over the size the caller allows, or unreadable — comes back as an `ImportedFile.unread`, so that it is
   reported rather than lost, and one bad entry never fails the archive around it.
 - `LibraryFileLocalSource` — the library as *bytes*, which is what sync moves around. Deliberately does not look
-  inside the files at all, so a song Campfire cannot parse still travels between devices unchanged.
+  inside the files at all, so a song Campfire cannot parse still travels between devices unchanged. Its listing uses
+  the same rule as the library scan (`LibraryFiles.isSongFileName` / `isSetlistFileName`), so sync never moves a
+  file the app does not show.
   `writeLibraryFileToFreeName` is how an incoming copy of a file that changed on both sides lands next to the local
   one, numbered ` (2)` rather than with the `_2` of a name the app derived itself. `readLibraryFile` answers null only
   for a file that is not there; one that is there and cannot be read throws `LibraryStorageException`, since sync

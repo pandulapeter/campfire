@@ -71,7 +71,8 @@ holds the `@Module @ComponentScan object DataLocalSourceModule`, and every local
   system, where it is taken by the very file being renamed, and is moved through a temporary name, since writing it
   there is writing the old file and the deletion after would remove the only copy.
 - **`source/`** — the four local sources. `SongLocalSourceImpl` reads the whole ChordPro family
-  (`LibraryFiles.SONG_EXTENSIONS`) but writes only `.cho` — `importFileName` included, so a `.crd` that is imported
+  (`LibraryFiles.SONG_EXTENSIONS`) — hidden files left out, by `LibraryFiles.isSongFileName`, the rule every listing
+  of the folder shares — but writes only `.cho` — `importFileName` included, so a `.crd` that is imported
   is stored as the `.cho` it is written back as — and gets a song's title, artist, key, `{transpose}` (which
   travels with the key, since the key a list names is the one the song sounds in), tags and "has chords" from a single
   `:chordpro` `summarize` call, so that neither the file nor the text is walked twice. The scan reads a batch of

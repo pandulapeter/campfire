@@ -9,9 +9,9 @@
  */
 package com.pandulapeter.campfire.data.source.local.implementation.source
 
+import com.pandulapeter.campfire.data.model.domain.LibraryFiles
 import com.pandulapeter.campfire.data.model.domain.Setlist
 import com.pandulapeter.campfire.data.source.local.api.SetlistLocalSource
-import com.pandulapeter.campfire.data.source.local.implementation.SETLIST_EXTENSION
 import com.pandulapeter.campfire.data.source.local.implementation.mapper.toDocument
 import com.pandulapeter.campfire.data.source.local.implementation.mapper.toModel
 import com.pandulapeter.campfire.data.source.local.implementation.moveFile
@@ -35,7 +35,7 @@ internal class SetlistLocalSourceImpl(
 
     override suspend fun loadSetlists(): List<Setlist> = withContext(Dispatchers.Default) {
         fileStorage.list(StorageDirectory.SETLISTS)
-            .filter { it.name.endsWith(SETLIST_EXTENSION, ignoreCase = true) }
+            .filter { LibraryFiles.isSetlistFileName(it.name) }
             .mapNotNull { file ->
                 try {
                     fileStorage.readText(StorageDirectory.SETLISTS, file.name)

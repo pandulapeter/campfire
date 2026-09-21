@@ -9,9 +9,11 @@
  */
 package com.pandulapeter.campfire.data.source.local.implementation
 
+import com.pandulapeter.campfire.data.model.domain.LibraryFileKind
 import com.pandulapeter.campfire.data.model.domain.LibraryFiles
 import kotlin.test.Test
 import kotlin.test.assertEquals
+import kotlin.test.assertFalse
 import kotlin.test.assertTrue
 
 internal class FileNamesTest {
@@ -138,5 +140,21 @@ internal class FileNamesTest {
     fun theCapCountsUtf8Bytes() {
         assertEquals("я".repeat(60), LibraryFiles.normalizedName("я".repeat(300)))
         assertEquals("千".repeat(40), LibraryFiles.normalizedName("千".repeat(100)))
+    }
+
+    @Test
+    fun hiddenFilesAreNotLibraryFiles() {
+        assertTrue(LibraryFiles.isSongFileName("a.cho"))
+        assertTrue(LibraryFiles.isSongFileName("A.CHO"))
+        assertTrue(LibraryFiles.isSongFileName("a.crd"))
+        assertFalse(LibraryFiles.isSongFileName("._a.cho"))
+        assertFalse(LibraryFiles.isSongFileName(".cho"))
+        assertFalse(LibraryFiles.isSongFileName(".DS_Store"))
+        assertFalse(LibraryFiles.isSongFileName("a.txt"))
+        assertTrue(LibraryFiles.isSetlistFileName("s.setlist.json"))
+        assertFalse(LibraryFiles.isSetlistFileName("._s.setlist.json"))
+        assertFalse(LibraryFiles.isSetlistFileName("s.json"))
+        assertFalse(LibraryFileKind.SONG.matches("._a.cho"))
+        assertTrue(LibraryFileKind.SETLIST.matches("s.setlist.json"))
     }
 }
