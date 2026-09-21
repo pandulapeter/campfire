@@ -86,6 +86,7 @@ import com.pandulapeter.campfire.presentation.resources.song_details_year
 import com.pandulapeter.campfire.presentation.ui.components.TagFlowRow
 import com.pandulapeter.campfire.presentation.ui.components.TagPill
 import com.pandulapeter.campfire.presentation.ui.components.languageLabel
+import com.pandulapeter.campfire.presentation.ui.components.textResource
 import com.pandulapeter.campfire.presentation.ui.theme.LocalMonospaceFontFamily
 import com.pandulapeter.campfire.presentation.localization.stringResource
 import kotlinx.coroutines.launch
@@ -297,7 +298,7 @@ private fun SongMetadataHeader(
                 TagPill(
                     text = tag,
                     trailingIcon = if (onRemoveTag == null) null else painterResource(Res.drawable.ic_clear),
-                    trailingIconContentDescription = onRemoveTag?.let { stringResource(Res.string.song_details_tag_remove, tag) },
+                    trailingIconContentDescription = onRemoveTag?.let { textResource(Res.string.song_details_tag_remove, tag) },
                     onTrailingIconClick = onRemoveTag?.let { { it(tag) } },
                 )
             }
@@ -315,19 +316,19 @@ private fun SongMetadataHeader(
     MetadataLine(
         values = listOfNotNull(
             metadata.capo?.takeIf { it != 0 }?.let { stringResource(Res.string.song_details_capo, it) },
-            metadata.tempo?.takeIf { it.isNotBlank() }?.let { stringResource(Res.string.song_details_tempo, it) },
-            metadata.time?.takeIf { it.isNotBlank() }?.let { stringResource(Res.string.song_details_time, it) },
+            metadata.tempo?.takeIf { it.isNotBlank() }?.let { textResource(Res.string.song_details_tempo, it) },
+            metadata.time?.takeIf { it.isNotBlank() }?.let { textResource(Res.string.song_details_time, it) },
         ),
         style = MaterialTheme.typography.labelLarge.scaled(fontScale),
         color = MaterialTheme.colorScheme.primary,
     )
     MetadataLine(
         values = listOfNotNull(
-            metadata.composer?.takeIf { it.isNotBlank() }?.let { stringResource(Res.string.song_details_composer, it) },
-            metadata.lyricist?.takeIf { it.isNotBlank() }?.let { stringResource(Res.string.song_details_lyricist, it) },
-            metadata.album?.takeIf { it.isNotBlank() }?.let { stringResource(Res.string.song_details_album, it) },
-            metadata.year?.takeIf { it.isNotBlank() }?.let { stringResource(Res.string.song_details_year, it) },
-            metadata.duration?.takeIf { it.isNotBlank() }?.let { stringResource(Res.string.song_details_duration, it) },
+            metadata.composer?.takeIf { it.isNotBlank() }?.let { textResource(Res.string.song_details_composer, it) },
+            metadata.lyricist?.takeIf { it.isNotBlank() }?.let { textResource(Res.string.song_details_lyricist, it) },
+            metadata.album?.takeIf { it.isNotBlank() }?.let { textResource(Res.string.song_details_album, it) },
+            metadata.year?.takeIf { it.isNotBlank() }?.let { textResource(Res.string.song_details_year, it) },
+            metadata.duration?.takeIf { it.isNotBlank() }?.let { textResource(Res.string.song_details_duration, it) },
         ),
         style = MaterialTheme.typography.bodyMedium.scaled(fontScale),
         color = MaterialTheme.colorScheme.onSurfaceVariant,

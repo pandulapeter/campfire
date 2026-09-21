@@ -147,6 +147,7 @@ import com.pandulapeter.campfire.presentation.ui.components.TagFlowRow
 import com.pandulapeter.campfire.presentation.ui.components.TagPill
 import com.pandulapeter.campfire.presentation.ui.components.languageName
 import com.pandulapeter.campfire.presentation.ui.components.pickableLanguages
+import com.pandulapeter.campfire.presentation.ui.components.textResource
 import com.pandulapeter.campfire.presentation.ui.screens.songDetails.SongDisplayControls
 import kotlinx.coroutines.launch
 import org.jetbrains.compose.resources.painterResource
@@ -192,7 +193,7 @@ internal fun CampfireDialogs(
         // by its file name), so a copy nobody named would sit under the original's title until somebody noticed.
         is CampfireViewModel.DialogType.DuplicateSetlist -> SetlistDetailsDialog(
             title = stringResource(Res.string.setlists_duplicate),
-            initialTitle = stringResource(Res.string.setlists_duplicate_title, dialog.setlist.title),
+            initialTitle = textResource(Res.string.setlists_duplicate_title, dialog.setlist.title),
             initialDescription = dialog.setlist.description,
             confirmLabel = stringResource(Res.string.setlists_duplicate),
             onDismiss = viewModel::dismissDialog,
@@ -253,7 +254,7 @@ internal fun CampfireDialogs(
 
         is CampfireViewModel.DialogType.DeleteSong -> ConfirmationDialog(
             title = stringResource(Res.string.songs_delete_song),
-            text = stringResource(Res.string.songs_delete_song_confirmation, dialog.song.title),
+            text = textResource(Res.string.songs_delete_song_confirmation, dialog.song.title),
             confirmLabel = stringResource(Res.string.delete),
             onDismiss = viewModel::dismissDialog,
             onConfirm = {
@@ -274,7 +275,7 @@ internal fun CampfireDialogs(
 
         is CampfireViewModel.DialogType.DeleteSetlist -> ConfirmationDialog(
             title = stringResource(Res.string.setlists_delete_setlist),
-            text = stringResource(Res.string.setlists_delete_setlist_confirmation, dialog.setlist.title),
+            text = textResource(Res.string.setlists_delete_setlist_confirmation, dialog.setlist.title),
             confirmLabel = stringResource(Res.string.delete),
             onDismiss = viewModel::dismissDialog,
             onConfirm = {
@@ -285,7 +286,7 @@ internal fun CampfireDialogs(
 
         is CampfireViewModel.DialogType.DisconnectSync -> ConfirmationDialog(
             title = stringResource(Res.string.settings_sync_disconnect),
-            text = stringResource(Res.string.settings_sync_disconnect_confirmation, dialog.accountName),
+            text = textResource(Res.string.settings_sync_disconnect_confirmation, dialog.accountName),
             confirmLabel = stringResource(Res.string.settings_sync_disconnect),
             onDismiss = viewModel::dismissDialog,
             onConfirm = {

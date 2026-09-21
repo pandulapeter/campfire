@@ -157,7 +157,7 @@ internal fun SongListItem(
         !key.isNullOrBlank() -> SongListItemNote(
             text = key,
             isEmphasized = true,
-            description = stringResource(Res.string.songs_key, key),
+            description = textResource(Res.string.songs_key, key),
         )
 
         else -> null

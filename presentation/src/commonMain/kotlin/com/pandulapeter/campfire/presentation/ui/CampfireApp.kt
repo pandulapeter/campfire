@@ -101,6 +101,7 @@ import com.pandulapeter.campfire.presentation.resources.settings_sync_progress
 import com.pandulapeter.campfire.presentation.resources.songs
 import com.pandulapeter.campfire.presentation.ui.components.TopLevelScreenLayout
 import com.pandulapeter.campfire.presentation.ui.components.WindowSize
+import com.pandulapeter.campfire.presentation.ui.components.textResource
 import com.pandulapeter.campfire.presentation.ui.platform.LocalSyncNotifier
 import com.pandulapeter.campfire.presentation.ui.platform.withSyncCounts
 import com.pandulapeter.campfire.presentation.ui.platform.SyncNotification
@@ -454,7 +455,7 @@ private fun Messages(
         CampfireViewModel.Message.EditorDraftLost -> stringResource(Res.string.song_editor_draft_lost)
         CampfireViewModel.Message.EditedSongFileGone -> stringResource(Res.string.song_editor_file_gone)
         CampfireViewModel.Message.OperationFailed -> stringResource(Res.string.error_operation_failed)
-        is CampfireViewModel.Message.LinkNotOpened -> stringResource(Res.string.error_link_not_opened, current.url)
+        is CampfireViewModel.Message.LinkNotOpened -> textResource(Res.string.error_link_not_opened, current.url)
         null -> null
     }
     LaunchedEffect(queue.firstOrNull()?.index) {

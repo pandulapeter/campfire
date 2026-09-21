@@ -107,7 +107,10 @@ wrong or undo it".
   commented group in both files, and translate the Hungarian properly. A missing key is a build-time
   hole that shows up as "???".
 - Formatted strings are always called with their arguments (`%1$s`, `%1$d`); never concatenate a literal
-  with a value. Keys are lower_snake_case, grouped by intent, and an existing key is reused rather than
+  with a value. A sentence that takes text somebody else wrote — a title, a tag, a header value, a file
+  or account name — is read with `textResource(Res.string.x, text)` (`:presentation`'s
+  `components/TextResource.kt`) instead: the plugin's formatter scans its own output a second time, and
+  the `% s` in `100% sure` is a format specifier to it. Keys are lower_snake_case, grouped by intent, and an existing key is reused rather than
   duplicated.
 - Exempt: file names, preference keys, serialization identifiers, ChordPro directive names.
 

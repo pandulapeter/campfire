@@ -78,6 +78,7 @@ import com.pandulapeter.campfire.presentation.resources.settings_sync_unavailabl
 import com.pandulapeter.campfire.presentation.ui.CampfireViewModel
 import com.pandulapeter.campfire.data.source.remote.api.model.AuthorizationCompletionPage
 import com.pandulapeter.campfire.presentation.ui.components.ActionListItem
+import com.pandulapeter.campfire.presentation.ui.components.textResource
 import com.pandulapeter.campfire.presentation.ui.platform.withSyncCounts
 import kotlin.time.ExperimentalTime
 import kotlin.time.Instant
@@ -186,7 +187,7 @@ private fun ColumnScope.ConnectedSyncSettings(
 ) {
     ListItem(
         colors = ListItemDefaults.colors(containerColor = Color.Transparent),
-        headlineContent = { Text(stringResource(Res.string.settings_sync_connected_as, syncState.account.displayName)) },
+        headlineContent = { Text(textResource(Res.string.settings_sync_connected_as, syncState.account.displayName)) },
         supportingContent = { Text(syncState.statusText()) },
     )
     AnimatedSettingsRow(value = syncState.progress) { progress -> SyncProgressIndicator(progress = progress) }
@@ -264,7 +265,7 @@ private fun SyncState.Connected.statusText(): String = when (val current = progr
                 )
             },
             outcome.summary.conflicts.takeIf { it.isNotEmpty() }?.let {
-                stringResource(Res.string.settings_sync_conflicts, it.joinToString())
+                textResource(Res.string.settings_sync_conflicts, it.joinToString())
             },
         ).ifEmpty { listOf(lastSyncedText(lastSyncedAt)) }.joinToString(separator = "\n")
 
