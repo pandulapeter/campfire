@@ -27,7 +27,7 @@ internal object ChordProTabTransposer {
      * whole octaves instead, which keeps every interval in it exact, and if not even that fits (a tab spanning more
      * than [MAX_FRET] frets), the environment is left alone rather than half transposed.
      */
-    fun transpose(lines: List<String>, semitones: Int, preferFlats: Boolean): List<String> {
+    fun transpose(lines: List<String>, semitones: Int, rename: (String) -> String): List<String> {
         val isStaffLine = lines.map(ChordProSyntax::isStaffLine)
         val frets = lines.filterIndexed { index, _ -> isStaffLine[index] }.flatMap(::fretNumbers)
         val shift = semitones + (octaveOffset(frets, semitones) ?: return lines)
@@ -35,7 +35,7 @@ internal object ChordProTabTransposer {
             if (isStaffLine[index]) {
                 transposeStaffLine(line, shift)
             } else {
-                rewriteChordLine(line) { name -> ChordProTransposer.transposeChord(name, semitones, preferFlats) }
+                rewriteChordLine(line, rename)
             }
         }
     }
@@ -47,6 +47,11 @@ internal object ChordProTabTransposer {
      */
     fun rewriteChordNames(lines: List<String>, rename: (String) -> String) =
         lines.map { line -> if (ChordProSyntax.isStaffLine(line)) line else rewriteChordLine(line, rename) }
+
+    /** The chord names [rewriteChordNames] would rewrite in [lines], in order. */
+    fun chordNames(lines: List<String>): List<String> = buildList {
+        rewriteChordNames(lines) { name -> name.also(::add) }
+    }
 
     /** The positions of the fret numbers of a staff line: every run of digits that is not the count of an `x4`. */
     private fun fretRanges(line: String): List<IntRange> {
@@ -102,22 +107,29 @@ internal object ChordProTabTransposer {
         val trimmedLine = line.trim()
         if (trimmedLine.isEmpty() || trimmedLine.startsWith(SOURCE_COMMENT) || ChordProSyntax.matchDirective(trimmedLine) != null) return line
         if (ChordProSyntax.chordRegex.containsMatchIn(line)) return ChordProTransposer.rewriteLyricsLineChords(line, rename)
-        val replacements = mutableListOf<Pair<IntRange, String>>()
+        val replacements = chordWords(line)?.map { word ->
+            val renamedName = rename(word.name)
+            word.range to if (word.isParenthesized) "($renamedName)" else renamedName
+        } ?: return line
+        return if (replacements.isEmpty()) line else replaceKeepingColumns(line, replacements, filler = ' ')
+    }
+
+    private class ChordWord(val range: IntRange, val name: String, val isParenthesized: Boolean)
+
+    /** The chord names of a line that holds only chords and markers, or null when the line is prose. */
+    private fun chordWords(line: String): List<ChordWord>? {
+        val chordWords = mutableListOf<ChordWord>()
         wordRegex.findAll(line).forEach { match ->
             val word = match.value
             val isParenthesized = word.length > 2 && word.startsWith('(') && word.endsWith(')')
             val name = if (isParenthesized) word.substring(1, word.length - 1) else word
             when {
-                ChordProSyntax.chordNameRegex.matches(name) -> {
-                    val renamedName = rename(name)
-                    replacements += match.range to if (isParenthesized) "($renamedName)" else renamedName
-                }
-
+                ChordProSyntax.chordNameRegex.matches(name) -> chordWords += ChordWord(match.range, name, isParenthesized)
                 isMarker(word) -> Unit
-                else -> return line // A word that is not a chord: this is prose, not a row of chord names.
+                else -> return null
             }
         }
-        return if (replacements.isEmpty()) line else replaceKeepingColumns(line, replacements, filler = ' ')
+        return chordWords
     }
 
     private fun isMarker(word: String) = ChordProSyntax.isBar(word) ||

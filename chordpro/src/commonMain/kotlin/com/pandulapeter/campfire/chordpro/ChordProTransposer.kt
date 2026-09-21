@@ -36,11 +36,14 @@ object ChordProTransposer {
         return transpose(song, semitones, preferFlats ?: prefersFlats(song, semitones))
     }
 
-    private fun transpose(song: ChordProSong, semitones: Int, preferFlats: Boolean) = rewriteChords(
-        song = song,
-        rewriteTabLines = { lines -> ChordProTabTransposer.transpose(lines, semitones, preferFlats) },
-        rename = { name -> transposeChord(name, semitones, preferFlats) },
-    )
+    private fun transpose(song: ChordProSong, semitones: Int, preferFlats: Boolean): ChordProSong {
+        val rename = { name: String -> transposeChord(name, semitones, preferFlats) }
+        return rewriteChords(
+            song = song,
+            rewriteTabLines = { lines -> ChordProTabTransposer.transpose(lines, semitones, rename) },
+            rename = rename,
+        )
+    }
 
     /**
      * Applies [rename] to every chord of a song — its key, the chords over its lyrics and the chords of its grids,
@@ -62,6 +65,19 @@ object ChordProTransposer {
             if (block is ChordProBlock.Section) block.copy(lines = rewriteLines(block.lines, rewriteTabLines, rename)) else block
         },
     )
+
+    /** Every name [rewriteChords] would hand to its rename, without rewriting anything. */
+    internal fun writtenChordNames(song: ChordProSong): Sequence<String> = sequence {
+        song.metadata.key?.let { yield(it) }
+        song.blocks.asSequence().filterIsInstance<ChordProBlock.Section>().flatMap { it.lines }.forEach { line ->
+            when (line) {
+                is ChordProLine.Lyrics -> yieldAll(line.chords.filter { !it.isAnnotation }.map { it.name })
+                is ChordProLine.Grid -> yieldAll(line.tokens.filterIsInstance<GridToken.Chord>().map { it.name })
+                is ChordProLine.Tab -> yieldAll(ChordProTabTransposer.chordNames(listOf(line.text)))
+                ChordProLine.Blank -> Unit
+            }
+        }
+    }
 
     /**
      * Splits the lines into runs of tablature and everything else, and rewrites each the way it has to be.
@@ -98,17 +114,25 @@ object ChordProTransposer {
         return rewritten
     }
 
-    /**
-     * Transposes raw ChordPro text in place, keeping all formatting. Used by the editor's transpose action.
-     *
-     * @param preferFlats The same as in [transpose].
-     */
+    /** Transposes raw ChordPro text in place, keeping its formatting and original notation. */
     fun transposeText(text: String, semitones: Int, preferFlats: Boolean? = null): String {
         if (semitones == 0 && preferFlats == null) return text
-        return transposeText(text, semitones, preferFlats ?: prefersFlats(ChordProParser.parse(text), semitones))
+        val written = ChordProParser.parseAsWritten(text)
+        val isGermanNotated = ChordProNotation.isGermanNotated(written)
+        val song = if (isGermanNotated) ChordProNotation.fromGerman(written) else written
+        val flats = preferFlats ?: prefersFlats(song, semitones)
+        val transposeName = { name: String -> transposeChord(name, semitones, flats) }
+        if (!isGermanNotated) return rewriteText(text, semitones, transposeName)
+        val staysGermanNotated = writtenChordNames(song).any { name ->
+            ChordProNotation.isGermanName(ChordProNotation.toGerman(transposeName(name)))
+        }
+        return rewriteText(text, semitones) { name ->
+            val transposedName = transposeName(ChordProNotation.fromGerman(name))
+            if (staysGermanNotated) ChordProNotation.toGerman(transposedName) else transposedName
+        }
     }
 
-    private fun transposeText(text: String, semitones: Int, preferFlats: Boolean): String {
+    private fun rewriteText(text: String, semitones: Int, rename: (String) -> String): String {
         val lines = ChordProSyntax.splitLines(text).toMutableList()
         val tabLineIndices = mutableListOf<Int>() // The tab environment being collected: it is transposed as a whole.
         var environment: String? = null
@@ -119,29 +143,29 @@ object ChordProTransposer {
                 trimmedLine.startsWith(SOURCE_COMMENT) -> Unit
                 directive != null -> if (!ChordProSyntax.hasSelectorSuffix(directive.name)) {
                     ChordProSyntax.startOfEnvironment(directive.name)?.let {
-                        lines.transposeTab(tabLineIndices, semitones, preferFlats)
+                        lines.transposeTab(tabLineIndices, semitones, rename)
                         environment = it.lowercase()
                     }
                     ChordProSyntax.endOfEnvironment(directive.name)?.let {
-                        lines.transposeTab(tabLineIndices, semitones, preferFlats)
+                        lines.transposeTab(tabLineIndices, semitones, rename)
                         environment = null
                     }
                     if (directive.name in ChordProSyntax.blockNames) {
                         // The parser cuts the section in two here, and each half of the tab is a run of its own in the model;
                         // moving them as one fingerboard would let the viewer and the editor disagree about the octave.
-                        lines.transposeTab(tabLineIndices, semitones, preferFlats)
+                        lines.transposeTab(tabLineIndices, semitones, rename)
                     }
                     if (directive.name == KEY) {
-                        lines[index] = transposeKeyLine(rawLine, trimmedLine, directive.value, semitones, preferFlats)
+                        lines[index] = transposeKeyLine(rawLine, trimmedLine, directive.value, rename)
                     }
                 }
 
                 environment == TAB -> tabLineIndices += index
-                environment == GRID -> lines[index] = transposeGridLine(rawLine, trimmedLine, semitones, preferFlats)
-                else -> lines[index] = transposeLyricsLine(rawLine, semitones, preferFlats)
+                environment == GRID -> lines[index] = transposeGridLine(rawLine, trimmedLine, rename)
+                else -> lines[index] = rewriteLyricsLineChords(rawLine, rename)
             }
         }
-        lines.transposeTab(tabLineIndices, semitones, preferFlats) // An environment the file never closes.
+        lines.transposeTab(tabLineIndices, semitones, rename) // An environment the file never closes.
         return ChordProSyntax.joinLines(lines, text)
     }
 
@@ -183,9 +207,9 @@ object ChordProTransposer {
         }
 
     /** Transposes the collected lines of one tab environment in place and starts collecting the next one. */
-    private fun MutableList<String>.transposeTab(indices: MutableList<Int>, semitones: Int, preferFlats: Boolean) {
+    private fun MutableList<String>.transposeTab(indices: MutableList<Int>, semitones: Int, rename: (String) -> String) {
         if (indices.isEmpty()) return
-        val transposed = ChordProTabTransposer.transpose(indices.map { this[it] }, semitones, preferFlats)
+        val transposed = ChordProTabTransposer.transpose(indices.map { this[it] }, semitones, rename)
         indices.forEachIndexed { index, lineIndex -> this[lineIndex] = transposed[index] }
         indices.clear()
     }
@@ -214,9 +238,6 @@ object ChordProTransposer {
         return (if (preferFlats) flatNames else sharpNames)[transposedNoteIndex] + part.substring(suffixStartIndex)
     }
 
-    internal fun transposeLyricsLine(rawLine: String, semitones: Int, preferFlats: Boolean) =
-        rewriteLyricsLineChords(rawLine) { name -> transposeChord(name, semitones, preferFlats) }
-
     /** Applies [rename] to every `[chord]` of a raw line, leaving the annotations, the empty brackets and the text. */
     internal fun rewriteLyricsLineChords(rawLine: String, rename: (String) -> String) =
         ChordProSyntax.chordRegex.replace(rawLine) { match ->
@@ -228,7 +249,7 @@ object ChordProTransposer {
             }
         }
 
-    private fun transposeGridLine(rawLine: String, trimmedLine: String, semitones: Int, preferFlats: Boolean): String {
+    private fun transposeGridLine(rawLine: String, trimmedLine: String, rename: (String) -> String): String {
         val matches = tokenRegex.findAll(trimmedLine).toList()
         val lastBarIndex = matches.indexOfLast { ChordProSyntax.isBar(it.value) }
         val body = buildString {
@@ -238,7 +259,7 @@ object ChordProTransposer {
                 val isChord = (lastBarIndex < 0 || index <= lastBarIndex) &&
                         !ChordProSyntax.isBar(word) && word != BEAT && word != REPEAT && word != DOUBLE_REPEAT
                 append(trimmedLine, consumedUntil, match.range.first)
-                append(if (isChord) transposeChord(word, semitones, preferFlats) else word)
+                append(if (isChord) rename(word) else word)
                 consumedUntil = match.range.last + 1
             }
             append(trimmedLine, consumedUntil, trimmedLine.length)
@@ -250,12 +271,11 @@ object ChordProTransposer {
         rawLine: String,
         trimmedLine: String,
         value: String?,
-        semitones: Int,
-        preferFlats: Boolean,
+        rename: (String) -> String,
     ): String {
         val key = value?.trim().orEmpty()
         if (key.isEmpty()) return rawLine
-        return rawLine.replaceTrimmedPart(trimmedLine, "{$KEY: ${transposeChord(key, semitones, preferFlats)}}")
+        return rawLine.replaceTrimmedPart(trimmedLine, "{$KEY: ${rename(key)}}")
     }
 
     /** Swaps the trimmed part of a line for [replacement], keeping the surrounding whitespace. */
@@ -287,7 +307,7 @@ object ChordProTransposer {
         'G' to 7,
         'A' to 9,
         'B' to 11,
-        'H' to 11, // German notation.
+        'H' to 11, // Only a word that is not a chord name still gets here with an H: the parser has read the rest into B.
     )
     private val accidentals = mapOf(
         '#' to 1,

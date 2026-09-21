@@ -25,6 +25,9 @@ class ChordProTabTransposerTest {
     fun `every abbreviation of no chord is a marker`() {
         val lines = listOf("C NC D n.c E N.C", "e|--0--|")
 
-        assertEquals(listOf("D NC E n.c F# N.C", "e|--2--|"), ChordProTabTransposer.transpose(lines, 2, preferFlats = false))
+        assertEquals(
+            listOf("D NC E n.c F# N.C", "e|--2--|"),
+            ChordProTabTransposer.transpose(lines, 2) { name -> ChordProTransposer.transposeChord(name, 2, preferFlats = false) },
+        )
     }
 }

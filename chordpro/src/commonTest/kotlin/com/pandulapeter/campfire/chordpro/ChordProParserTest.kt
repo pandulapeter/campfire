@@ -23,6 +23,16 @@ import kotlin.test.assertTrue
 class ChordProParserTest {
 
     @Test
+    fun `a song written in German notation is parsed into the app's own`() {
+        val song = ChordProParser.parse("{key: H}\n[H7]a [B]b [F/B]c\n{sog}\n| H . | B . |\n{eog}")
+
+        assertEquals("B", song.metadata.key)
+        val lines = (song.blocks.filterIsInstance<ChordProBlock.Section>().flatMap { it.lines })
+        assertEquals(listOf("B7", "Bb", "F/Bb"), (lines[0] as ChordProLine.Lyrics).chords.map { it.name })
+        assertEquals(listOf("B", "Bb"), (lines[1] as ChordProLine.Grid).tokens.filterIsInstance<GridToken.Chord>().map { it.name })
+    }
+
+    @Test
     fun `long metadata directive names are parsed`() {
         val metadata = ChordProParser.parse(
             """

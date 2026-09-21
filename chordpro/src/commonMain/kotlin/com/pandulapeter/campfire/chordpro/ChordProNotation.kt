@@ -24,6 +24,8 @@ import com.pandulapeter.campfire.chordpro.model.ChordProSong
  * It is a spelling and nothing else. The library files, and everything the data layer reads, writes, syncs and
  * exports, stay in the notation [ChordProParser] and [ChordProTransposer] work in; this runs on the way to the
  * screen and nowhere else, so a song can be read as `H` and still be edited and shared as `B`.
+ * The other direction reads a German-notated file into the app's notation before it is drawn; only the editor's
+ * transposition writes a German-notated file back in that notation.
  */
 object ChordProNotation {
 
@@ -39,14 +41,37 @@ object ChordProNotation {
 
     /**
      * Rewrites every chord of a parsed song: its key, the chords over its lyrics, the chords of its grids and the
-     * rows of chord names above its tabs. Run it last, after any transposition — the transposition works in the
-     * notation the file is written in, and this is what that result is then read as.
+     * rows of chord names above its tabs. Run it last, after any transposition — the parser has already brought the
+     * model into the app's own notation, and this is what that result is then read as.
      */
     fun toGerman(song: ChordProSong) = ChordProTransposer.rewriteChords(
         song = song,
         rewriteTabLines = { lines -> ChordProTabTransposer.rewriteChordNames(lines) { name -> toGerman(name) } },
         rename = { name -> toGerman(name) },
     )
+
+    /** Whether [name] is a real chord that uses German notation's `H`, at its root or bass. */
+    internal fun isGermanName(name: String) = ChordProSyntax.chordNameRegex.matches(name) &&
+            name.split(BASS_NOTE_SEPARATOR, limit = 2).any { it.startsWith(GERMAN_B_NATURAL) }
+
+    /** Whether a file's song was written in German notation, which it says by using an `H` chord anywhere. */
+    internal fun isGermanNotated(song: ChordProSong) = ChordProTransposer.writtenChordNames(song).any(::isGermanName)
+
+    /** Reads a German-notated chord into the notation the rest of the app works in. */
+    internal fun fromGerman(name: String): String {
+        if (!ChordProSyntax.chordNameRegex.matches(name)) return name
+        return name.split(BASS_NOTE_SEPARATOR, limit = 2).joinToString(BASS_NOTE_SEPARATOR, transform = ::noteFromGerman)
+    }
+
+    /** The same for a whole song as its file spells it. */
+    internal fun fromGerman(song: ChordProSong) = ChordProTransposer.rewriteChords(
+        song = song,
+        rewriteTabLines = { lines -> ChordProTabTransposer.rewriteChordNames(lines, ::fromGerman) },
+        rename = ::fromGerman,
+    )
+
+    /** [song] in the app's own notation, whichever one its file uses. */
+    internal fun normalized(song: ChordProSong) = if (isGermanNotated(song)) fromGerman(song) else song
 
     private fun noteToGerman(note: String): String {
         // `H` is already the German name of the note, and `Hb` an unusual but unambiguous way of writing the flat one.
@@ -60,5 +85,13 @@ object ChordProNotation {
         }
     }
 
+    private fun noteFromGerman(note: String) = when (note.firstOrNull()) {
+        'H' -> "B" + note.substring(1)
+        'B' -> if (note.getOrNull(1) in accidentalSigns) note else "Bb" + note.substring(1)
+        else -> note
+    }
+
     private const val BASS_NOTE_SEPARATOR = "/"
+    private const val GERMAN_B_NATURAL = "H"
+    private val accidentalSigns = setOf('#', 'b', '♯', '♭')
 }

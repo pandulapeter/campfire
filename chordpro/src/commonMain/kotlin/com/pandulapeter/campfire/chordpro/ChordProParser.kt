@@ -34,7 +34,11 @@ object ChordProParser {
         "outro" to SectionType.Custom("outro"),
     )
 
-    fun parse(text: String): ChordProSong {
+    /** The song in the notation the app works in, whichever one its file is written in. */
+    fun parse(text: String) = ChordProNotation.normalized(parseAsWritten(text))
+
+    /** The song with every chord spelled the way its file spells it. */
+    internal fun parseAsWritten(text: String): ChordProSong {
         val metadata = MetadataBuilder()
         val blocks = mutableListOf<ChordProBlock>()
         val section = SectionBuilder(blocks)
@@ -70,6 +74,7 @@ object ChordProParser {
         val metadata = MetadataBuilder()
         var hasChords = false
         var environment: String? = null
+        var isGermanNotated = false
         ChordProSyntax.splitLines(text).forEach { rawLine ->
             val trimmedLine = rawLine.trim()
             if (trimmedLine.startsWith(SOURCE_COMMENT)) return@forEach
@@ -82,14 +87,26 @@ object ChordProParser {
                 }
                 return@forEach
             }
-            if (!shouldDetectChords || hasChords) return@forEach
-            hasChords = when (environment) {
-                TAB -> false
-                GRID -> ChordProSyntax.parseGridTokens(trimmedLine).any { it is GridToken.Chord }
-                else -> parseLyrics(rawLine).chords.any { !it.isAnnotation }
-            }
+            val isLookingForChords = shouldDetectChords && !hasChords
+            val isLookingForNotation = !isGermanNotated && GERMAN_LETTER in rawLine
+            if (!isLookingForChords && !isLookingForNotation) return@forEach
+            val names = writtenChordNames(rawLine, trimmedLine, environment)
+            if (isLookingForChords && environment != TAB) hasChords = names.isNotEmpty()
+            if (isLookingForNotation) isGermanNotated = names.any(ChordProNotation::isGermanName)
         }
-        return ChordProSummary(metadata = metadata.build(), hasChords = hasChords)
+        val declared = metadata.build()
+        val isGermanKey = declared.key?.let(ChordProNotation::isGermanName) == true
+        return ChordProSummary(
+            metadata = if (isGermanNotated || isGermanKey) declared.copy(key = declared.key?.let(ChordProNotation::fromGerman)) else declared,
+            hasChords = hasChords,
+        )
+    }
+
+    /** The names one line of the body hands to a chord rewrite, by the environment it stands in. */
+    private fun writtenChordNames(rawLine: String, trimmedLine: String, environment: String?) = when (environment) {
+        TAB -> ChordProTabTransposer.chordNames(listOf(rawLine))
+        GRID -> ChordProSyntax.parseGridTokens(trimmedLine).filterIsInstance<GridToken.Chord>().map { it.name }
+        else -> parseLyrics(rawLine).chords.filter { !it.isAnnotation }.map { it.name }
     }
 
     private fun handleDirective(
@@ -402,4 +419,5 @@ object ChordProParser {
     private const val BRIDGE = "bridge"
     private const val TAB = "tab"
     private const val GRID = "grid"
+    private const val GERMAN_LETTER = 'H'
 }

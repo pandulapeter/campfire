@@ -15,8 +15,36 @@ import com.pandulapeter.campfire.chordpro.model.ChordProSong
 import com.pandulapeter.campfire.chordpro.model.GridToken
 import kotlin.test.Test
 import kotlin.test.assertEquals
+import kotlin.test.assertFalse
+import kotlin.test.assertTrue
 
 class ChordProNotationTest {
+
+    @Test
+    fun `a name written in German notation is read into the app's own`() {
+        assertEquals("B", ChordProNotation.fromGerman("H"))
+        assertEquals("Bm7", ChordProNotation.fromGerman("Hm7"))
+        assertEquals("Bb", ChordProNotation.fromGerman("B"))
+        assertEquals("Bb7", ChordProNotation.fromGerman("B7"))
+        assertEquals("F/Bb", ChordProNotation.fromGerman("F/B"))
+        assertEquals("Hello", ChordProNotation.fromGerman("Hello"))
+    }
+
+    @Test
+    fun `a song says it is German notated with an H chord anywhere`() {
+        assertTrue(ChordProNotation.isGermanNotated(ChordProParser.parseAsWritten("[H7]la [B]la")))
+        assertTrue(ChordProNotation.isGermanNotated(ChordProParser.parseAsWritten("{key: B}\n[C/H]la")))
+        assertFalse(ChordProNotation.isGermanNotated(ChordProParser.parseAsWritten("[Hello]la [B]la")))
+    }
+
+    @Test
+    fun `a German-notated song reads in the app's own notation`() {
+        val song = ChordProParser.parse("{key: B}\n\n[B]a [H7]b [Bb]c")
+
+        assertEquals("Bb", song.metadata.key)
+        assertEquals(listOf("Bb", "B7", "Bb"), song.chordNames())
+        assertEquals(listOf("B", "H7", "B"), ChordProNotation.toGerman(song).chordNames())
+    }
 
     @Test
     fun `B becomes H and Bb becomes B`() {
