@@ -41,7 +41,14 @@ private val isMacOs get() = operatingSystem.contains("mac") || operatingSystem.c
 // "darwin" has a "win" in it as well, so the two are not independent questions.
 private val isWindows get() = !isMacOs && operatingSystem.contains("win")
 
-private fun desktopDataDirectory(): File {
+/**
+ * Where the desktop build keeps everything it owns: the library, the preferences, and the two files
+ * `:app:desktop` uses to keep a second process from opening the same library.
+ *
+ * Derived the same way the storage derives it; the two have to agree, so keep this in step with
+ * `FileStorage.desktop.kt` in `:data:source:local:implementation`.
+ */
+fun desktopDataDirectory(): File {
     val userHome = File(System.getProperty("user.home").orEmpty())
     return when {
         isMacOs -> File(userHome, "Library/Application Support/$APPLICATION_NAME")

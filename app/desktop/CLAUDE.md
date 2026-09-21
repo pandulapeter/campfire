@@ -24,12 +24,22 @@ first handler and drops the ones that find it removed). Both end in `OpenedFiles
 read off the event thread and imported by `CampfireApp`; anything else that learns of a file to open calls the same
 function. Files dropped onto the window take their own path (`Modifier.dragAndDropTarget` in `CampfireDesktopApp`).
 
+One process owns a data directory. Before Koin starts, `SingleInstance.kt` takes `instance.lock` with `tryLock()`;
+the holder listens on `127.0.0.1` on a port chosen by the system and writes that port with a random token into the
+owner-only `instance.endpoint`. A later process sends the token and its arguments, receives `OK` and exits; its paths
+join the ones from `args` and the macOS open-file handler, and the existing window comes forward. On Windows that
+requires toggling `isAlwaysOnTop`, since `toFront()` alone can only flash the taskbar for a process that is not in the
+foreground. The check fails open when the lock cannot be asked for or the holder does not answer. It uses `java.base`
+only.
+
 Packaging: `compose.desktop` produces Dmg/Exe/Msi/Deb, versioned from the `campfire.versionName` Gradle property. That format is stricter than the app's — `MAJOR[.MINOR][.PATCH]` and nothing else — so a version with a suffix fails the build at configuration time. `javaHome` is pinned to the toolchain JDK because the Gradle JVM may lack `jpackage`. Icons live in `src/main/resources/appIcon.{icns,ico}` (packaging) and `src/main/composeResources/drawable/app_icon.png` (the window icon, also used for the Linux package). The Linux package asks for a `shortcut`, because jpackage writes a `.desktop` entry — and so shows the icon anywhere — only for a package that asks for one or declares file associations, and the Windows installer asks for a Start menu entry for the same reason, installs per user so that it needs no administrator, and carries a fixed `upgradeUuid`, which is what makes a newer installer replace the installed version and so must never change. `modules(...)` lists what `suggestRuntimeModules` finds beyond Compose Desktop's defaults: the packaged runtime holds nothing else, so a missing module is a `NoClassDefFoundError` only an installed build throws — run that task again after adding a JVM dependency. `chordProFileAssociations()` in `build.gradle.kts` registers the six ChordPro extensions as `text/plain` for macOS and Windows — not for Linux, where an association is keyed by the MIME type and that would make Campfire a handler of every text file; deliberately not zip or `.txt`, and kept in step with `LibraryFiles.SONG_EXTENSIONS`, which a build file cannot see.
 
 `proguard-rules.pro` is added to the release build on top of the rules Compose Desktop ships. It turns off ProGuard's type specialization and generalization optimizations, which rewrite a generic function's erased parameter or return type to the one subclass every call site passes without inserting the `checkcast` the verifier then wants — the release build died on its first frame with a `VerifyError` in `NavDisplay` because of it. Compose's own rules already work around the same bug for `**Kt__*` classes; the rules file has the detail. **A release build has to be started once before it is shipped**: this class of breakage exists only after ProGuard runs, so `run` and `assembleDebug` say nothing about it — `./gradlew :app:desktop:createReleaseDistributable` then `app/desktop/build/compose/binaries/main-release/app/Campfire.app/Contents/MacOS/Campfire` (or `:app:desktop:runRelease`), which prints what the window cannot.
 
 The library lives where the platform keeps application data (`~/Library/Application Support/Campfire` on macOS, `%APPDATA%` on Windows, `~/.local/share` elsewhere), which is a folder the user can open — hence the "Location" row in Settings and the rescan when the window regains focus.
 
-For sync, the desktop briefly becomes a web server: `DesktopSyncAuthenticator` opens a socket on `127.0.0.1:53682` for the length of one authorization, because a service only redirects to a URI registered with it character for character and a port chosen by the operating system could not be registered.
+For sync, a second socket briefly makes the desktop a web server: `DesktopSyncAuthenticator` opens it on
+`127.0.0.1:53682` for the length of one authorization, because a service only redirects to a URI registered with it
+character for character and a port chosen by the operating system could not be registered.
 
 `./gradlew :app:desktop:run` to launch (`--args="/path/to/song.cho"` to test opening a file); `:app:desktop:packageDistributionForCurrentOS` to build an installer (`packageDeb`, `packageDmg` and `packageMsi` for one format, which is what `desktop-publish.yml` runs).

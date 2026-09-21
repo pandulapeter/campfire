@@ -63,6 +63,7 @@ preferences/sync-credentials.json    the connected account's tokens, and an unfi
                                      the web; the Keystore (an encrypted sync-credentials.bin) and the Keychain on
                                      Android and iOS
 preferences/sync-index.json          what the last successful sync run saw
+instance.lock / instance.endpoint    desktop only: what keeps a second process off the library (see app/desktop)
 ```
 
 On Android `library/` and `preferences/preferences.json` are in the system backup and the device-to-device transfer;
@@ -344,6 +345,9 @@ start, which is what the rest of `app/web` is about — see its `CLAUDE.md`.
   Whether it is granted is the browser's business — engagement, a bookmark, an install — so the answer is reported in
   Settings rather than insisted on: a refusal says so there, next to the export that is the way to keep a copy
   elsewhere. Clearing the site's data still removes the library, as it does for anything a page stores.
+- One tab per origin owns the library through a Web Lock taken before the app is downloaded. A second tab gets a
+  localized page that asks it to close or continue in the first, which keeps OPFS from changing behind the running
+  app's cached repositories.
 - The loading screen has a determinate progress bar, fed by a `fetch` wrapper that counts the bytes of the binaries
   against the total the build wrote into the page. It is a page and not an installable app on purpose: there is no
   web app manifest and no service worker, because every platform that should have an installable Campfire has a

@@ -22,7 +22,11 @@ direction.
   the build manifest below). The headers are carried over to the replacement response, so it still says
   `application/wasm` and `WebAssembly.instantiateStreaming` keeps compiling as it downloads. The download owns the
   first 92% and the rest is a decay that only ends when Kotlin calls `window.campfireReady()`; `campfire.js` itself
-  is loaded by a `<script>` tag, which can report no progress, but it is 3% of a cold start. A `.wasm` or
+  is loaded by a script the page adds once it holds the `campfire-library` Web Lock, which can report no progress,
+  but it is 3% of a cold start. The lock is held by a promise that never settles, so one tab owns the library; a
+  second gets a localized "already open" page with a Retry button that asks again in place, preserving an OAuth
+  answer in the address bar. A page restored from the back/forward cache reclaims the lock in `pageshow`, and the
+  page's English or Hungarian texts follow `navigator.language`. A `.wasm` or
   `campfire.js` download that fails, or an error or unhandled rejection before `campfireReady()`, stops the bar and shows a message with a
   "Try again" button that reloads the page; those listeners are removed once the app is ready.
   Compose empties the element it is given, so it gets `#app` and the loading screen is a sibling that outlives the

@@ -11,22 +11,29 @@ package com.pandulapeter.campfire
 
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.DisposableEffect
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.SideEffect
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.ui.awt.ComposeWindow
 import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.window.Window
 import androidx.compose.ui.window.application
+import androidx.compose.ui.window.rememberWindowState
 import com.pandulapeter.campfire.di.startCampfireDependencyGraph
 import com.pandulapeter.campfire.presentation.ui.CampfireDesktopApp
 import com.pandulapeter.campfire.presentation.ui.CampfireViewModel
 import com.pandulapeter.campfire.presentation.ui.handleKeyEvent
+import com.pandulapeter.campfire.presentation.ui.platform.desktopDataDirectory
 import com.pandulapeter.campfire.resources.Res
 import com.pandulapeter.campfire.resources.app_icon
 import java.awt.Desktop
 import java.awt.Dimension
+import java.io.File
 import javax.swing.SwingUtilities
+import kotlin.system.exitProcess
+import kotlinx.coroutines.channels.Channel
 import org.jetbrains.compose.resources.painterResource
 import org.koin.compose.viewmodel.koinViewModel
 
@@ -36,10 +43,23 @@ import org.koin.compose.viewmodel.koinViewModel
  *   [OpenedFiles].
  */
 fun main(args: Array<String>) {
+    val activations = Channel<Unit>(Channel.CONFLATED)
+    val isFirstInstance = claimSingleInstance(
+        dataDirectory = desktopDataDirectory(),
+        paths = args.map { File(it).absolutePath },
+        onActivated = { paths ->
+            OpenedFiles.open(paths)
+            activations.trySend(Unit)
+        },
+    )
+    // Nothing has been started yet, so there is nothing to wind down - and Koin must not be, since its singletons
+    // are what would read the library a second time.
+    if (!isFirstInstance) exitProcess(0)
     OpenedFiles.listenForSystemRequests()
     OpenedFiles.open(args.toList())
     startCampfireDependencyGraph()
     application {
+        val windowState = rememberWindowState()
         // The view model is created inside the window (which owns the ViewModelStore), but the key handler needs it here.
         val viewModel = remember { mutableStateOf<CampfireViewModel?>(null) }
         // Closing the window leaves the editor as surely as Escape does, so it asks about unsaved text the same way,
@@ -57,12 +77,21 @@ fun main(args: Array<String>) {
             onDispose { desktop?.setQuitHandler(null) }
         }
         Window(
+            state = windowState,
             title = "Campfire",
             onCloseRequest = requestExit,
             icon = painterResource(Res.drawable.app_icon),
             onKeyEvent = { keyEvent -> viewModel.value?.handleKeyEvent(keyEvent, onExit = ::exitApplication) == true },
         ) {
             window.minimumSize = Dimension(400, 400)
+            // Another process was asked to open Campfire and handed over to this one, so this is the window the
+            // user is looking for.
+            LaunchedEffect(Unit) {
+                for (activation in activations) {
+                    windowState.isMinimized = false
+                    window.bringForward()
+                }
+            }
             CompositionLocalProvider(
                 LocalLayoutDirection.providesDefault(LayoutDirection.Ltr)
             ) {
@@ -74,5 +103,23 @@ fun main(args: Array<String>) {
                 )
             }
         }
+    }
+}
+
+/**
+ * Raises the window as far as the platform lets an application raise itself. Windows only lets the foreground
+ * process take the focus, and this one is not - the process the user just started is - so `toFront` alone ends in
+ * a flashing task bar button there; being always on top for a moment is what moves the window above the others
+ * regardless. A Wayland compositor may refuse both and show its own "Campfire is ready" notice, which is its call.
+ */
+private fun ComposeWindow.bringForward() {
+    isVisible = true
+    val wasAlwaysOnTop = isAlwaysOnTop
+    isAlwaysOnTop = true
+    toFront()
+    isAlwaysOnTop = wasAlwaysOnTop
+    requestFocus()
+    if (Desktop.isDesktopSupported()) {
+        Desktop.getDesktop().takeIf { it.isSupported(Desktop.Action.APP_REQUEST_FOREGROUND) }?.requestForeground(true)
     }
 }

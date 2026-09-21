@@ -149,10 +149,10 @@
     <div id="splash-track" role="progressbar" aria-label="Campfire" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0">
         <div id="splash-bar"></div>
     </div>
-    <!-- Only shown when the app could not be loaded. English, like the rest of this page: it is shown before
-         the app's own language is known. -->
+    <!-- Only shown when the app could not be started. In the browser's language where that is one the app speaks:
+         the app's own choice is in storage this page does not read, and follows the browser unless it was changed. -->
     <p id="splash-message" role="alert" hidden></p>
-    <button id="splash-retry" type="button" hidden onclick="location.reload()">Try again</button>
+    <button id="splash-retry" type="button" hidden></button>
 </div>
 <script type="application/javascript">
     (function () {
@@ -172,6 +172,23 @@
         var bar = document.getElementById('splash-bar');
         var message = document.getElementById('splash-message');
         var retry = document.getElementById('splash-retry');
+        var TEXTS = {
+            en: {
+                loadFailed: 'Campfire could not be loaded. Check the connection and try again.',
+                alreadyOpen: 'Campfire is already open in another tab. Close that tab first, or carry on there.',
+                retry: 'Try again'
+            },
+            hu: {
+                loadFailed: 'A Campfire betöltése nem sikerült. Ellenőrizd a kapcsolatot, és próbáld újra.',
+                alreadyOpen: 'A Campfire már meg van nyitva egy másik lapon. Előbb zárd be azt a lapot, vagy folytasd ott.',
+                retry: 'Újra'
+            }
+        };
+        var text = /^hu\b/i.test(navigator.language || '') ? TEXTS.hu : TEXTS.en;
+        if (text === TEXTS.hu) {
+            document.documentElement.lang = 'hu';
+        }
+        retry.textContent = text.retry;
 
         var expected = BUILD ? BUILD.binaryBytes : 0;
         var binaries = BUILD ? BUILD.binaryCount : 0;
@@ -250,8 +267,11 @@
                 return;
             }
             isFailed = true;
-            message.textContent = 'Campfire could not be loaded. Check the connection and try again.';
+            message.textContent = text.loadFailed;
             message.hidden = false;
+            retry.onclick = function () {
+                location.reload();
+            };
             retry.hidden = false;
         }
 
@@ -261,10 +281,6 @@
 
         window.addEventListener('error', onError);
         window.addEventListener('unhandledrejection', onError);
-        // A script that fails to download reports it to its own tag only, never to the window, so the tag below
-        // is wired to this by hand.
-        window.campfireLoadFailed = showFailure;
-
         var nativeFetch = window.fetch;
         window.fetch = function (input, init) {
             var url = typeof input === 'string' ? input : (input && input.url) || '';
@@ -332,9 +348,74 @@
             schedule();
         };
 
-        schedule();
+        // One library, one page: the app reads its files once and writes them whole from what it remembers, so a
+        // second tab would take back what the first one saved. The Web Lock is asked for before anything of the
+        // app is downloaded, which is why campfire.js is added from here rather than by a tag of its own - a tab
+        // that is turned away has fetched this page and its icon, and nothing else.
+        var LOCK_NAME = 'campfire-library';
+        var hasStarted = false;
+
+        function startApp() {
+            if (hasStarted) {
+                return;
+            }
+            hasStarted = true;
+            message.hidden = true;
+            retry.hidden = true;
+            track.hidden = false;
+            var script = document.createElement('script');
+            script.src = 'campfire.js';
+            // A script that fails to download reports it to its own tag only, never to the window.
+            script.onerror = showFailure;
+            document.body.appendChild(script);
+            schedule();
+        }
+
+        function showAlreadyOpen() {
+            track.hidden = true;
+            message.textContent = text.alreadyOpen;
+            message.hidden = false;
+            // Asks again in place rather than reloading: a tab that came back from a consent page still has the
+            // answer in its address bar, and the app has to be the one that takes it out.
+            retry.onclick = function () {
+                claimLibrary(startApp, showAlreadyOpen);
+            };
+            retry.hidden = false;
+        }
+
+        /**
+         * A lock is held for as long as the promise its callback returns is pending, and this one never settles:
+         * the library is this page's until the page is closed or navigates away, which is when the browser lets
+         * go of it. A browser without Web Locks, or one that refuses them here, starts the app as it always has.
+         */
+        function claimLibrary(onGranted, onRefused) {
+            if (!navigator.locks || !navigator.locks.request) {
+                onGranted();
+                return;
+            }
+            navigator.locks.request(LOCK_NAME, { ifAvailable: true }, function (lock) {
+                if (!lock) {
+                    onRefused();
+                    return undefined;
+                }
+                onGranted();
+                return new Promise(function () {});
+            }).catch(onGranted);
+        }
+
+        // A page that is put into the back/forward cache loses its locks, and gets none back when it is restored -
+        // pressing Back on the consent page is how that happens. It asks again, and if another tab has taken the
+        // library in the meantime it reloads, which lands on the page above.
+        window.addEventListener('pageshow', function (event) {
+            if (event.persisted && hasStarted) {
+                claimLibrary(function () {}, function () {
+                    location.reload();
+                });
+            }
+        });
+
+        claimLibrary(startApp, showAlreadyOpen);
     })();
 </script>
-<script type="application/javascript" src="campfire.js" onerror="window.campfireLoadFailed()"></script>
 </body>
 </html>

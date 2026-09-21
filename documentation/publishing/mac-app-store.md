@@ -48,8 +48,9 @@ All in `app/desktop/build.gradle.kts`, inside `nativeDistributions { macOS { …
       needs:
   - `com.apple.security.app-sandbox`
   - `com.apple.security.network.client` — sync
-  - `com.apple.security.network.server` — the socket on `127.0.0.1:53682` that receives the OAuth redirect
-    (`DesktopSyncAuthenticator`). Say why in the review notes, since a server entitlement gets asked about.
+  - `com.apple.security.network.server` — the two loopback sockets: the one on `127.0.0.1:53682` that receives the
+    OAuth redirect (`DesktopSyncAuthenticator`) and the single-instance listener on a system-chosen port. Say why
+    both exist in the review notes, since a server entitlement gets asked about.
   - `com.apple.security.files.user-selected.read-write` — the import and export dialogs
   - the JVM's own: `com.apple.security.cs.allow-jit`, `com.apple.security.cs.allow-unsigned-executable-memory`,
     `com.apple.security.cs.disable-library-validation` *(verify against the guide)*
