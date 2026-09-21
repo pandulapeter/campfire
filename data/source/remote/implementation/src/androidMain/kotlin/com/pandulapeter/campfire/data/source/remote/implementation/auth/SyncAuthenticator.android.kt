@@ -79,8 +79,14 @@ internal class AndroidSyncAuthenticator(
         }
     }
 
-    /** Android delivers the redirect to the running app, so there is never one waiting at start up. */
-    override suspend fun consumePendingRedirect(): String? = null
+    /**
+     * The redirect that arrived with nobody waiting for it. The browser the consent page opens in pushes Campfire into
+     * the background, and on a device short of memory the process is gone by the time the service answers: the
+     * redirect then starts a new one, in which [authorize] is not running. The activity has put it into [redirects]
+     * by the time start up asks, and the pending authorization was written down before the browser opened, which is
+     * all that finishing it takes.
+     */
+    override suspend fun consumePendingRedirect(): String? = redirects.tryReceive().getOrNull()
 
     /**
      * The redirect intent brings the activity forward too, so coming back is not by itself proof that the user gave

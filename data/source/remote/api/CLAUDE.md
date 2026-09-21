@@ -27,7 +27,7 @@ and why each of them is load bearing, are spelled out in the KDoc of `SyncProvid
 - `SyncAuthenticator` — the platform half of the OAuth flow. The interface is shaped by the awkward platform rather
   than the easy ones: the web *navigates away* from the running app to ask for consent, so `authorize` returns an
   outcome (which may be `Redirected`) instead of a URL, and `consumePendingRedirect` picks the answer up at the next
-  start. `prepareRedirectUri` is separate because the desktop's redirect URI is a loopback socket that does not
+  start (the web always, Android after process death). `prepareRedirectUri` is separate because the desktop's redirect URI is a loopback socket that does not
   exist until it is opened.
 - `PendingAuthorizationStore` — the authorization that has been started and not finished, for the same reason: the
   PKCE verifier has to outlive a full page reload.

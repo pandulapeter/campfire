@@ -48,6 +48,10 @@ class CampfireActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
         keepStartupScreenUntilAppIsReady()
+        // Ahead of the content on purpose: a redirect that started this process answers an authorization the previous
+        // one was killed in the middle of, and it has to be waiting by the time the first composition creates the view
+        // model, whose start up asks for it exactly once.
+        handle(intent)
         setContent {
             CampfireAndroidApp(
                 urlOpener = ::openUrl,
@@ -56,7 +60,6 @@ class CampfireActivity : AppCompatActivity() {
                 onAppReady = { isAppReady = true },
             )
         }
-        handle(intent)
     }
 
     /**

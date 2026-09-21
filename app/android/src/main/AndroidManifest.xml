@@ -85,7 +85,9 @@
             <!--
               Coming back from the sync service's consent page. The scheme is the one every platform registers,
               see REDIRECT_SCHEME in :data:source:remote:implementation. The activity is singleTask, so this lands
-              in onNewIntent of the running app rather than in a second instance.
+              in onNewIntent of the running app rather than in a second instance - or, when the process was killed
+              while the browser was in front, in the onCreate or onNewIntent of a new one, which is what
+              AndroidSyncAuthenticator.consumePendingRedirect is for.
             -->
             <intent-filter android:label="@string/campfire">
                 <action android:name="android.intent.action.VIEW" />

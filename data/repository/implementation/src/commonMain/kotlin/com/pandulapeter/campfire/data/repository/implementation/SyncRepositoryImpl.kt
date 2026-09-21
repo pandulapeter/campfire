@@ -132,8 +132,12 @@ internal class SyncRepositoryImpl(
 
     private suspend fun restoreConnection(): SyncRepository.RestoreResult {
         // A consent page the app was sent away to, answered while it was not running - the web's ordinary case, and
-        // checked first because it decides what the stored credentials are about to become.
-        authenticator.consumePendingRedirect()?.let { redirectUri ->
+        // Android's once the process was reclaimed behind the browser. Checked first because it decides what the
+        // stored credentials are about to become. A redirect that no authorization is waiting for answers nothing -
+        // Android hands a spent one over again when a finished task is reopened from the recents - and must not keep
+        // the account that is connected from being restored below.
+        val redirectUri = authenticator.consumePendingRedirect()
+        if (redirectUri != null && pendingAuthorizationStore.loadPendingAuthorization() != null) {
             return SyncRepository.RestoreResult(
                 isConnected = completePendingAuthorization(redirectUri),
                 didReturnFromAuthorization = true,

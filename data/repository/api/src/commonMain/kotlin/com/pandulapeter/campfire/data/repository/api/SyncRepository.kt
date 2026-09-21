@@ -46,8 +46,9 @@ interface SyncRepository {
      * @param isConnected Whether the app ended up connected, which is what tells the caller a first run is worth
      *   starting.
      * @param didReturnFromAuthorization Whether this start up was the answer to a consent page the app had been
-     *   sent away to. Only ever true on the web, where the app stops existing while the user is on that page - it
-     *   is what lets the UI put them back where they pressed the button. True whether the service said yes or no:
+     *   sent away to. True on the web, where the app stops existing while the user is on that page, and on Android
+     *   when the process was killed behind the browser - it is what lets the UI put them back where they pressed the
+     *   button. True whether the service said yes or no:
      *   an authorization that failed is exactly the case where the user most needs to see the screen that says so,
      *   so this reports that the app came back, not that it came back connected.
      * @param wasInterrupted Whether the last run never finished - the app was killed, swiped away or suspended while

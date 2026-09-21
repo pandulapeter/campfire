@@ -40,8 +40,10 @@ interface SyncAuthenticator {
     suspend fun authorize(authorizationUrl: String, completionPage: AuthorizationCompletionPage): AuthorizationOutcome
 
     /**
-     * A redirect this platform received while the app was not running, consumed exactly once. Only the web ever
-     * returns anything; every other platform answers null.
+     * A redirect this platform received while the app was not running, consumed exactly once. The web's ordinary case,
+     * and Android's when the process was killed behind the browser and the redirect started a new one; the other two
+     * platforms answer null. May hand out a redirect that nothing is waiting for any more, which the caller has to tell
+     * from one that is.
      */
     suspend fun consumePendingRedirect(): String?
 

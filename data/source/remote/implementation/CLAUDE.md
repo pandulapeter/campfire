@@ -60,7 +60,10 @@ redirect URIs character for character, which is why the desktop port is fixed.
     address bar is visible) and receives `campfire://oauth` as an intent, which the launcher activity forwards
     through the public `onSyncRedirectReceived`. Nothing reports a dismissed browser, so what is watched instead is
     the app itself coming forward again through `ActivityLifecycleCallbacks`; the redirect intent brings the
-    activity forward too, so it is given a short grace period to arrive before the attempt counts as abandoned.
+    activity forward too, so it is given a short grace period to arrive before the attempt counts as abandoned. A
+    process killed while the browser was in front gets the redirect as the intent that starts the next one; it waits
+    in the same channel and `consumePendingRedirect` hands it to `restore`, which finishes the authorization the way
+    the web does.
   - **Desktop** becomes a web server for the length of one authorization — a socket on `127.0.0.1:53682` whose
     address is the redirect URI. The port is fixed because a service only redirects to a URI registered with it
     character for character. `accept` blocks a thread and notices neither a cancelled coroutine nor an interrupt, so
