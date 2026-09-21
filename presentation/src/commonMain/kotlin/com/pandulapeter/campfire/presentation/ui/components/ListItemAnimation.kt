@@ -123,6 +123,10 @@ private class HeldTop(var contents: Any?) {
  * by its spec rather than by taking the modifier away: a modifier taken away at the start of a scroll takes the
  * animation node with it, cutting short a placement animation that is still running, and puts a new one in at the
  * end. The fades, which move nothing, are what keep the modifier in place, since one with no spec at all is none.
+ * The scroll state is read here, while composing, on purpose: the spec is a parameter of the modifier, which the
+ * grid reads when it measures, so there is no later phase to decide it in - every visible row is recomposed once as
+ * a scroll starts and once as it ends, and a spec that snapped instead of being null would still displace the row for
+ * a frame.
  *
  * @param isRearranging True while a drag is rearranging the list, which is the one case the reasoning above does not
  *   cover: a list being dragged in scrolls itself once the dragged row reaches an edge, and the rows it travels past

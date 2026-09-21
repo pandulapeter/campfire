@@ -29,6 +29,8 @@ import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.material3.TopAppBarScrollBehavior
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.derivedStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.snapshotFlow
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
@@ -62,7 +64,9 @@ internal fun CampfireTopAppBar(
     actions: @Composable RowScope.() -> Unit = {},
     bottomContent: @Composable ColumnScope.() -> Unit = {},
 ) {
-    val isOverlapped = scrollBehavior.state.overlappedFraction > 0.01f
+    // Derived, because the fraction is worked out from the list's content offset, which changes on every scrolled
+    // pixel, while the answer only changes as the list leaves its top and as it comes back to it.
+    val isOverlapped by remember(scrollBehavior) { derivedStateOf { scrollBehavior.state.overlappedFraction > 0.01f } }
     val overlapProgress by animateFloatAsState(
         targetValue = if (isOverlapped) 1f else 0f,
         animationSpec = MaterialTheme.motionScheme.defaultEffectsSpec(),

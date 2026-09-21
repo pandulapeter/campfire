@@ -232,7 +232,12 @@ private class FastScrollerState(
         private set
     private var draggedThumbTop by mutableFloatStateOf(0f)
 
-    private val metrics: ScrollMetrics? get() = gridState.scrollMetrics()
+    /**
+     * Worked out once per change of the list's layout rather than once per reader: a single frame of a scroll asks for
+     * it from the thumb's top, from its height and from its range, and from whether there is anything to scroll at all,
+     * and every answer costs the two collections the visible items are filtered through.
+     */
+    private val metrics: ScrollMetrics? by derivedStateOf { gridState.scrollMetrics() }
 
     val isScrollable: Boolean get() = trackHeight > 0 && metrics != null
 
