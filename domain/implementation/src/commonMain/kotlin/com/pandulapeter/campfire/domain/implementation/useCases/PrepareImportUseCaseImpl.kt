@@ -21,6 +21,9 @@ import com.pandulapeter.campfire.data.repository.api.SongRepository
 import com.pandulapeter.campfire.domain.api.useCases.PrepareImportUseCase
 import com.pandulapeter.campfire.domain.implementation.ImportPlanner
 import kotlinx.coroutines.CancellationException
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
+import kotlinx.coroutines.yield
 import org.koin.core.annotation.Factory
 
 @Factory
@@ -31,7 +34,13 @@ class PrepareImportUseCaseImpl internal constructor(
     private val setlistRepository: SetlistRepository,
 ) : PrepareImportUseCase {
 
-    override suspend operator fun invoke(files: List<ImportedFile>): ImportPlan {
+    /**
+     * Planned on [Dispatchers.Default] rather than wherever it was asked for, which for the view model is the main
+     * thread. Decoding, splitting collections, reading every song header and folding comparable texts is computation.
+     */
+    override suspend operator fun invoke(files: List<ImportedFile>): ImportPlan = withContext(Dispatchers.Default) { plan(files) }
+
+    private suspend fun plan(files: List<ImportedFile>): ImportPlan {
         val songFiles = mutableListOf<ImportedFile>()
         val setlistFiles = mutableListOf<ImportedFile>()
         val skippedFileNames = mutableListOf<String>()
@@ -67,12 +76,16 @@ class PrepareImportUseCaseImpl internal constructor(
     /** Every song of the batch under the name its own header gives it, held against the library by [ImportPlanner]. */
     private suspend fun planSongs(files: List<ImportedFile>, skippedFileNames: MutableList<String>): List<ImportPlan.SongEntry> {
         val incoming = files.flatMap { file ->
+            // The web's default dispatcher is a queue on its only thread, so yielding between files and songs keeps
+            // the page painting and lets a preparation nobody awaits any more notice cancellation.
+            yield()
             val parts = ChordProSplitter.split(file.bytes.decodeLibraryText())
             if (parts.isEmpty()) {
                 skippedFileNames += file.name
                 return@flatMap emptyList()
             }
             parts.map { part ->
+                yield()
                 // Every song is named by its own header, whichever file it arrived in. The name a file came under is
                 // only worth anything where the song inside it declares no title: then it is what titles the song,
                 // and a collection's parts do not even have that, since the file they came from named none of them.
@@ -100,6 +113,7 @@ class PrepareImportUseCaseImpl internal constructor(
     /** Every setlist of the batch held against the library by [ImportPlanner]. */
     private suspend fun planSetlists(files: List<ImportedFile>, skippedFileNames: MutableList<String>): List<ImportPlan.SetlistEntry> {
         val incoming = files.mapNotNull { file ->
+            yield()
             val setlist = setlistRepository.parseSetlist(file.bytes.decodeLibraryText())
             if (setlist == null) {
                 skippedFileNames += file.name

@@ -44,6 +44,8 @@ The ones that carry real logic:
   in the batch by entry index, asks one conflict question per library name and leaves numbering to the write that can
   see the directory. Only a decision made before anything is written can be put to the user as one question about a
   whole archive, which is the reason for the split — three hundred questions is not a choice. A song is compared by
+  Preparing runs on `Dispatchers.Default`, because decoding, splitting, header parsing and comparisons would otherwise
+  occupy the view model's main thread, and yields between songs so the web can paint and cancellation can stop it.
   its text and a setlist by its title and entries, never by the stored document, which carries a priority the import
   assigns itself. `ImportPlanner` is covered by `commonTest`. Applying turns each entry plus the
   `ImportConflictResolution` into write / replace / disregard / leave alone, and only `REPLACE` ever overwrites.
