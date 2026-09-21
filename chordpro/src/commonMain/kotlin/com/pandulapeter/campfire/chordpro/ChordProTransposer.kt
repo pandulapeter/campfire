@@ -19,10 +19,9 @@ import com.pandulapeter.campfire.chordpro.model.GridToken
  */
 object ChordProTransposer {
 
-    /** Transposes a single chord name; returns the input unchanged if it is not a chord (e.g. "N.C."). */
-    fun transposeChord(name: String, semitones: Int, preferFlats: Boolean) = name
-        .split(BASS_NOTE_SEPARATOR, limit = 2)
-        .joinToString(BASS_NOTE_SEPARATOR) { transposeNote(it, semitones, preferFlats) }
+    /** Transposes a chord name, keeping an optional chord's parentheses and its bass note. */
+    fun transposeChord(name: String, semitones: Int, preferFlats: Boolean) =
+        ChordProChordNames.rewriteNotes(name) { note -> transposeNote(note, semitones, preferFlats) }
 
     /**
      * Transposes every chord in the model (lyrics chords, grid chords, tabs; never annotations) and the key.

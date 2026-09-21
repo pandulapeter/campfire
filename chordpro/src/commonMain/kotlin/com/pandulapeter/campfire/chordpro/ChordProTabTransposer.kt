@@ -108,23 +108,18 @@ internal object ChordProTabTransposer {
         if (trimmedLine.isEmpty() || trimmedLine.startsWith(SOURCE_COMMENT) || ChordProSyntax.matchDirective(trimmedLine) != null) return line
         if (ChordProSyntax.hasBrackets(line)) return ChordProTransposer.rewriteLyricsLineChords(line, rename)
         val replacements = chordWords(line)?.map { word ->
-            val renamedName = rename(word.name)
-            word.range to if (word.isParenthesized) "($renamedName)" else renamedName
+            word.range to rename(word.value)
         } ?: return line
         return if (replacements.isEmpty()) line else replaceKeepingColumns(line, replacements, filler = ' ')
     }
 
-    private class ChordWord(val range: IntRange, val name: String, val isParenthesized: Boolean)
-
     /** The chord names of a line that holds only chords and markers, or null when the line is prose. */
-    private fun chordWords(line: String): List<ChordWord>? {
-        val chordWords = mutableListOf<ChordWord>()
+    private fun chordWords(line: String): List<MatchResult>? {
+        val chordWords = mutableListOf<MatchResult>()
         wordRegex.findAll(line).forEach { match ->
             val word = match.value
-            val isParenthesized = word.length > 2 && word.startsWith('(') && word.endsWith(')')
-            val name = if (isParenthesized) word.substring(1, word.length - 1) else word
             when {
-                ChordProSyntax.chordNameRegex.matches(name) -> chordWords += ChordWord(match.range, name, isParenthesized)
+                ChordProChordNames.isChordName(word) -> chordWords += match
                 isMarker(word) -> Unit
                 else -> return null
             }

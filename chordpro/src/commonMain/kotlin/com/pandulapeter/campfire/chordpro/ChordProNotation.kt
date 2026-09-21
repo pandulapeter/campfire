@@ -35,8 +35,8 @@ object ChordProNotation {
      * turning prose starting with a `B` into prose starting with an `H`.
      */
     fun toGerman(name: String): String {
-        if (!ChordProSyntax.chordNameRegex.matches(name)) return name
-        return name.split(BASS_NOTE_SEPARATOR, limit = 2).joinToString(BASS_NOTE_SEPARATOR, transform = ::noteToGerman)
+        if (!ChordProChordNames.isChordName(name)) return name
+        return ChordProChordNames.rewriteNotes(name, ::noteToGerman)
     }
 
     /**
@@ -51,16 +51,16 @@ object ChordProNotation {
     )
 
     /** Whether [name] is a real chord that uses German notation's `H`, at its root or bass. */
-    internal fun isGermanName(name: String) = ChordProSyntax.chordNameRegex.matches(name) &&
-            name.split(BASS_NOTE_SEPARATOR, limit = 2).any { it.startsWith(GERMAN_B_NATURAL) }
+    internal fun isGermanName(name: String) = ChordProChordNames.isChordName(name) &&
+            ChordProChordNames.notes(name).any { it.startsWith(GERMAN_B_NATURAL) }
 
     /** Whether a file's song was written in German notation, which it says by using an `H` chord anywhere. */
     internal fun isGermanNotated(song: ChordProSong) = ChordProTransposer.writtenChordNames(song).any(::isGermanName)
 
     /** Reads a German-notated chord into the notation the rest of the app works in. */
     internal fun fromGerman(name: String): String {
-        if (!ChordProSyntax.chordNameRegex.matches(name)) return name
-        return name.split(BASS_NOTE_SEPARATOR, limit = 2).joinToString(BASS_NOTE_SEPARATOR, transform = ::noteFromGerman)
+        if (!ChordProChordNames.isChordName(name)) return name
+        return ChordProChordNames.rewriteNotes(name, ::noteFromGerman)
     }
 
     /** The same for a whole song as its file spells it. */
@@ -91,7 +91,6 @@ object ChordProNotation {
         else -> note
     }
 
-    private const val BASS_NOTE_SEPARATOR = "/"
     private const val GERMAN_B_NATURAL = "H"
     private val accidentalSigns = setOf('#', 'b', '♯', '♭')
 }
