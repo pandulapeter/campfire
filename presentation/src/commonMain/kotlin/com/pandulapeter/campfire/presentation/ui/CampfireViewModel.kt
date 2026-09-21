@@ -1254,8 +1254,8 @@ class CampfireViewModel(
      * moment is that the song should go into it. Both happen in the same library change, so the picker's tick is
      * already there when the new setlist appears in it.
      */
-    fun createSetlistWithSong(title: String, songFileName: String) = launchLibraryChange {
-        saveSetlist(createSetlist.invoke(title = title, description = "").copy(entries = listOf(Setlist.Entry(songFileName = songFileName))))
+    fun createSetlistWithSong(title: String, description: String, songFileName: String) = launchLibraryChange {
+        saveSetlist(createSetlist.invoke(title = title, description = description).copy(entries = listOf(Setlist.Entry(songFileName = songFileName))))
     }
 
     fun addSongToSetlist(songFileName: String, setlistFileName: String) = launchLibraryChange {

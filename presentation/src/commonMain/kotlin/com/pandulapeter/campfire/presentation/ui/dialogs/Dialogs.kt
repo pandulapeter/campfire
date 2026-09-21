@@ -498,64 +498,6 @@ private fun rememberFirstFieldFocusRequester(): FocusRequester {
 }
 
 /**
- * One required line of text and a confirm button that stays disabled until it has something in it, which is what
- * naming a new setlist from the setlist picker takes. Everywhere else a setlist is named, there is a description to
- * fill in beside the title, see [SetlistDetailsDialog].
- */
-@Composable
-private fun TextInputDialog(
-    title: String,
-    label: String,
-    initialValue: String = "",
-    confirmLabel: String,
-    onDismiss: () -> Unit,
-    onConfirm: (value: String) -> Unit,
-) {
-    // A TextFieldValue rather than a String, for the selection: a dialog that opens on text the user is meant to
-    // replace ("Summer set (copy)", the title being renamed) has all of it selected, so the first key typed writes
-    // the new name instead of appending to the old one. Nothing is lost by it either, since a tap or an arrow key
-    // puts the caret where it was aimed.
-    var value by rememberSaveable(stateSaver = TextFieldValue.Saver) {
-        mutableStateOf(TextFieldValue(text = initialValue, selection = TextRange(0, initialValue.length)))
-    }
-    val isValid = value.text.isNotBlank()
-    val focusRequester = rememberFirstFieldFocusRequester()
-    AlertDialog(
-        onDismissRequest = onDismiss,
-        title = { Text(title) },
-        text = {
-            OutlinedTextField(
-                modifier = Modifier.fillMaxWidth().focusRequester(focusRequester),
-                value = value,
-                onValueChange = { newValue ->
-                    val text = newValue.text.replace("\n", "").take(MAX_TITLE_LENGTH)
-                    // Rebuilt only where the text had to be cut, or every keystroke would throw away the selection
-                    // the field is reporting - which is the caret itself, and the run of text a drag is picking out.
-                    value = if (text == newValue.text) {
-                        newValue
-                    } else {
-                        TextFieldValue(text = text, selection = TextRange(newValue.selection.end.coerceAtMost(text.length)))
-                    }
-                },
-                label = { Text(label) },
-                singleLine = true,
-                keyboardOptions = KeyboardOptions(imeAction = ImeAction.Done),
-                keyboardActions = KeyboardActions(onDone = { if (isValid) onConfirm(value.text) }),
-            )
-        },
-        confirmButton = {
-            TextButton(
-                enabled = isValid,
-                onClick = { onConfirm(value.text) },
-            ) { Text(confirmLabel) }
-        },
-        dismissButton = {
-            TextButton(onClick = onDismiss) { Text(stringResource(Res.string.cancel)) }
-        },
-    )
-}
-
-/**
  * Everything the user gets to say about a setlist: its title, and the description that goes under its header on the
  * setlists screen. Creating one, editing one and naming a copy of one are the same dialog with different labels,
  * since all three are answering the same two questions.
@@ -573,9 +515,11 @@ private fun SetlistDetailsDialog(
     onDismiss: () -> Unit,
     onConfirm: (title: String, description: String) -> Unit,
 ) {
-    // A TextFieldValue for the same reason [TextInputDialog] holds one: a dialog that opens on a title the user is
-    // meant to replace starts with all of it selected. The description is opened on for editing rather than for
-    // replacing, so its caret goes to the end of what is already written instead.
+    // A TextFieldValue rather than a String, for the selection: a dialog that opens on a title the user is meant to
+    // replace ("Summer set (copy)", the title being renamed) has all of it selected, so the first key typed writes the
+    // new name instead of appending to the old one. Nothing is lost by it either, since a tap or an arrow key puts the
+    // caret where it was aimed. The description is opened on for editing rather than for replacing, so its caret goes
+    // to the end of what is already written instead.
     var setlistTitle by rememberSaveable(stateSaver = TextFieldValue.Saver) {
         mutableStateOf(TextFieldValue(text = initialTitle, selection = TextRange(0, initialTitle.length)))
     }
@@ -872,9 +816,12 @@ private fun SetlistPicker(
     val setlists by viewModel.setlists.collectAsStateWithLifecycle()
     var query by rememberSaveable { mutableStateOf("") }
     // An archived setlist has been put away, so it is not offered here - unless the song is in it already, which is
-    // the only thing this sheet could still have to say about one.
-    val pickableSetlists = setlists.filter { setlist ->
-        !setlist.isArchived || setlist.entries.any { it.songFileName == dialog.song.fileName }
+    // the only thing this sheet could still have to say about one. Sorted by title whatever the setlists screen is
+    // sorted by, since this sheet is where a setlist is looked up by its name.
+    val pickableSetlists = remember(setlists, dialog.song.fileName) {
+        setlists
+            .filter { setlist -> !setlist.isArchived || setlist.entries.any { it.songFileName == dialog.song.fileName } }
+            .sortedWith(compareBy({ viewModel.normalize(it.title) }, { it.fileName }))
     }
     // Answered by the title or the description, the way the setlists screen's own search answers, but not by the
     // songs inside: the song this sheet is about is the only one that matters here.
@@ -929,16 +876,15 @@ private fun SetlistPicker(
         }
     }
     if (isNamingNewSetlist) {
-        TextInputDialog(
+        SetlistDetailsDialog(
             title = stringResource(Res.string.setlists_new_setlist),
-            label = stringResource(Res.string.setlists_new_setlist_title),
             // A search that found nothing is most likely the name of the setlist that is missing, and it opens
             // selected, so typing something else instead costs nothing.
-            initialValue = query.trim(),
+            initialTitle = query.trim(),
             confirmLabel = stringResource(Res.string.create),
             onDismiss = closeNamingDialog,
-            onConfirm = { title ->
-                viewModel.createSetlistWithSong(title = title, songFileName = dialog.song.fileName)
+            onConfirm = { setlistTitle, description ->
+                viewModel.createSetlistWithSong(title = setlistTitle, description = description, songFileName = dialog.song.fileName)
                 closeNamingDialog()
             },
         )

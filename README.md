@@ -95,19 +95,11 @@ an empty library.
 
 ### To do
 - Rename setlist date sort, maybe expose a date for Setlists?
-- New setlist dialog: description + auto assign song if opened from the setlist assignments bottom sheet
 - Improve performance mode description
-- Editor close confirmation dialog and Save button enabled / disabled state should check for identity with the original file
 - Implement .cho (and other) file association
 - Songs: sort by year option
-- New song sorting option: sort by year
 - Fix Songs screen async race animation issues
 - Update the screenshots in the Readme
-- Integrate Crashlytics
-- Create new screenshots for iOS, Android and desktop
-- Create iOS store listing
-- Create GitHub action for TestFlight releases
-- Create App Store and Windows Store listings + update GitHub actions
 
 ### License
 
