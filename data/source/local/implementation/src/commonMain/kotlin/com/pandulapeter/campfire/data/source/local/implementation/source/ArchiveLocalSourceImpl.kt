@@ -7,15 +7,22 @@
  * If a copy of the MPL was not distributed with this file, You can obtain one at
  * https://mozilla.org/MPL/2.0/.
  */
+@file:OptIn(ExperimentalTime::class)
 package com.pandulapeter.campfire.data.source.local.implementation.source
 
 import com.pandulapeter.campfire.data.model.domain.ImportedFile
 import com.pandulapeter.campfire.data.source.local.api.ArchiveLocalSource
 import com.pandulapeter.campfire.data.source.local.implementation.zip.ZipEntry
+import com.pandulapeter.campfire.data.source.local.implementation.zip.DosTimestamp
 import com.pandulapeter.campfire.data.source.local.implementation.zip.ZipReader
 import com.pandulapeter.campfire.data.source.local.implementation.zip.ZipWriter
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
+import kotlin.time.Clock
+import kotlin.time.ExperimentalTime
+import kotlinx.datetime.TimeZone
+import kotlinx.datetime.number
+import kotlinx.datetime.toLocalDateTime
 import org.koin.core.annotation.Single
 
 /**
@@ -30,7 +37,12 @@ internal class ArchiveLocalSourceImpl : ArchiveLocalSource {
     }
 
     override suspend fun pack(files: Map<String, ByteArray>): ByteArray = withContext(Dispatchers.Default) {
-        ZipWriter.write(files.map { (name, bytes) -> ZipEntry(name = name, bytes = bytes) })
+        ZipWriter.write(
+            entries = files.map { (name, bytes) -> ZipEntry(name = name, bytes = bytes) },
+            modifiedAt = Clock.System.now().toLocalDateTime(TimeZone.currentSystemDefault()).let { dateTime ->
+                DosTimestamp.of(dateTime.year, dateTime.month.number, dateTime.day, dateTime.hour, dateTime.minute, dateTime.second)
+            },
+        )
     }
 
     /**

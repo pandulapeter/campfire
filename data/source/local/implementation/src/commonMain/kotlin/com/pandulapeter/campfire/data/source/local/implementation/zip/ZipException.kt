@@ -11,6 +11,6 @@ package com.pandulapeter.campfire.data.source.local.implementation.zip
 
 /**
  * Thrown when an archive is malformed, truncated, encrypted or uses a feature this minimal implementation does not
- * support (ZIP64, compression methods other than STORED and DEFLATE).
+ * support (ZIP64, compression methods other than STORED and DEFLATE), or when the writer gets entries that need ZIP64.
  */
 internal class ZipException(message: String) : Exception(message)

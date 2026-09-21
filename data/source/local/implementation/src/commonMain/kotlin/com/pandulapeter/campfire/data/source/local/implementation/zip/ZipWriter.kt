@@ -15,10 +15,12 @@ package com.pandulapeter.campfire.data.source.local.implementation.zip
  */
 internal object ZipWriter {
 
-    fun write(entries: List<ZipEntry>): ByteArray {
+    fun write(entries: List<ZipEntry>, modifiedAt: DosTimestamp = DosTimestamp.EARLIEST): ByteArray {
+        if (entries.size >= ZIP64_MARKER) throw ZipException("An archive cannot hold ${entries.size} entries, the most is ${ZIP64_MARKER - 1}.")
+        val names = entries.map { it.name.encodeToByteArray() }
+        names.forEachIndexed { index, name -> if (name.size > MAX_NAME_SIZE) throw ZipException("The name of entry \"${entries[index].name.take(64)}…\" is too long for an archive.") }
         val builder = ByteArrayBuilder(entries.sumOf { it.bytes.size + it.name.length * 2 + 128 })
         val offsets = IntArray(entries.size)
-        val names = entries.map { it.name.encodeToByteArray() }
         val checksums = LongArray(entries.size) { Crc32.of(entries[it].bytes) }
         entries.forEachIndexed { index, entry ->
             offsets[index] = builder.size
@@ -26,8 +28,8 @@ internal object ZipWriter {
             builder.u16(VERSION)
             builder.u16(FLAG_UTF8_NAMES)
             builder.u16(METHOD_STORED)
-            builder.u16(0) // Modification time.
-            builder.u16(0) // Modification date.
+            builder.u16(modifiedAt.time)
+            builder.u16(modifiedAt.date)
             builder.u32(checksums[index])
             builder.u32(entry.bytes.size.toLong())
             builder.u32(entry.bytes.size.toLong())
@@ -43,8 +45,8 @@ internal object ZipWriter {
             builder.u16(VERSION) // Version needed to extract.
             builder.u16(FLAG_UTF8_NAMES)
             builder.u16(METHOD_STORED)
-            builder.u16(0) // Modification time.
-            builder.u16(0) // Modification date.
+            builder.u16(modifiedAt.time)
+            builder.u16(modifiedAt.date)
             builder.u32(checksums[index])
             builder.u32(entry.bytes.size.toLong())
             builder.u32(entry.bytes.size.toLong())
@@ -75,4 +77,6 @@ internal object ZipWriter {
     private const val VERSION = 20
     private const val FLAG_UTF8_NAMES = 0x0800
     private const val METHOD_STORED = 0
+    private const val ZIP64_MARKER = 0xFFFF
+    private const val MAX_NAME_SIZE = 0xFFFF
 }

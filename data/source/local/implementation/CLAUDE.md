@@ -83,7 +83,8 @@ holds the `@Module @ComponentScan object DataLocalSourceModule`, and every local
   file naming a song twice is read as naming it once (the first mention wins) and written back that way, since the
   screens key their rows by the song's file name. No document type ever leaves this module.
 - **`zip/`** — a dependency-free zip implementation: `ZipReader` (STORED + DEFLATE, ZIP64 and encryption rejected),
-  `ZipWriter` (STORED only — song text compresses badly enough not to be worth it), `Inflater` (raw DEFLATE, RFC 1951,
+  `ZipWriter` (STORED only — song text compresses badly enough not to be worth it), with every entry dated by its
+  supplied DOS timestamp and more than 65,534 entries refused rather than written as ZIP64, `Inflater` (raw DEFLATE, RFC 1951,
   following `puff.c`) and `Crc32`. It exists because no multiplatform zip library covers wasmJs. Sizes an archive
   declares are trusted only as far as a first guess: an entry may inflate to 64 MiB, the buffer starts at no more than
   1 MiB whatever the central directory claims, and one import (`ArchiveLocalSourceImpl.unpack`, nested archives
