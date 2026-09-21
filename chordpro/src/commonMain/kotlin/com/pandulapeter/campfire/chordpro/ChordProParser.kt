@@ -96,8 +96,11 @@ object ChordProParser {
         }
         val declared = metadata.build()
         val isGermanKey = declared.key?.let(ChordProNotation::isGermanName) == true
+        val key = declared.key?.let { key ->
+            ChordProNotation.withAsciiAccidentals(if (isGermanNotated || isGermanKey) ChordProNotation.fromGerman(key) else key)
+        }
         return ChordProSummary(
-            metadata = if (isGermanNotated || isGermanKey) declared.copy(key = declared.key?.let(ChordProNotation::fromGerman)) else declared,
+            metadata = declared.copy(key = key),
             hasChords = hasChords,
         )
     }

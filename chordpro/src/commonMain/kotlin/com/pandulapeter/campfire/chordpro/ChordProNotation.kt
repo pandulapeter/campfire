@@ -70,8 +70,21 @@ object ChordProNotation {
         rename = ::fromGerman,
     )
 
-    /** [song] in the app's own notation, whichever one its file uses. */
-    internal fun normalized(song: ChordProSong) = if (isGermanNotated(song)) fromGerman(song) else song
+    /** A chord name with musical accidental signs folded to the ASCII spelling the app writes. */
+    internal fun withAsciiAccidentals(name: String) = name.replace(SHARP_SIGN, '#').replace(FLAT_SIGN, 'b')
+
+    /** [song] in the app's own notation: English note names and ASCII accidentals. */
+    internal fun normalized(song: ChordProSong): ChordProSong {
+        val names = ChordProTransposer.writtenChordNames(song).toList()
+        val german = names.any(::isGermanName)
+        if (!german && names.none { SHARP_SIGN in it || FLAT_SIGN in it }) return song
+        val rename = { name: String -> withAsciiAccidentals(if (german) fromGerman(name) else name) }
+        return ChordProTransposer.rewriteChords(
+            song = song,
+            rewriteTabLines = { lines -> ChordProTabTransposer.rewriteChordNames(lines, rename) },
+            rename = rename,
+        )
+    }
 
     private fun noteToGerman(note: String): String {
         // `H` is already the German name of the note, and `Hb` an unusual but unambiguous way of writing the flat one.
@@ -92,5 +105,7 @@ object ChordProNotation {
     }
 
     private const val GERMAN_B_NATURAL = "H"
+    private const val SHARP_SIGN = '♯'
+    private const val FLAT_SIGN = '♭'
     private val accidentalSigns = setOf('#', 'b', '♯', '♭')
 }

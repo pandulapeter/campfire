@@ -21,6 +21,11 @@ import kotlin.test.assertTrue
 class ChordProNotationTest {
 
     @Test
+    fun `accidental signs are folded wherever they stand in a name`() {
+        assertEquals("Bbm7b5/C#", ChordProNotation.withAsciiAccidentals("B♭m7♭5/C♯"))
+    }
+
+    @Test
     fun `a name written in German notation is read into the app's own`() {
         assertEquals("B", ChordProNotation.fromGerman("H"))
         assertEquals("Bm7", ChordProNotation.fromGerman("Hm7"))
