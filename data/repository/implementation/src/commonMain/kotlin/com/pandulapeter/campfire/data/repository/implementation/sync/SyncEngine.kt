@@ -37,7 +37,8 @@ import kotlinx.coroutines.sync.withPermit
  * file would never move. This is a property of one service surfacing in the engine on purpose - it keeps
  * [SyncProvider]'s contract down to a flat folder of names - and it costs a service with exact names nothing, since it
  * only ever renames a remote key that has no exact local match. Every later request uses the local spelling, which
- * the service resolves to the same file.
+ * the service resolves to the same file. Two *local* names that differ only by case cannot both exist on such a
+ * service; the one it refuses is reported as a file that could not be synced, see `upload`.
  */
 internal fun foldRemoteNamesOntoLocal(local: List<LocalFileState>, remote: List<RemoteFileState>): List<RemoteFileState> {
     val localKeys = local.mapTo(mutableSetOf()) { it.key }
@@ -93,6 +94,12 @@ internal class SyncEngine(
             val listed = provider.list().files
             index = withoutForeignEntries(index = index, listed = listed)
             val local = readLocalStates()
+            // Names a service that ignores case takes for one file. Only ever consulted once such a service has refused
+            // one of them, so a service with exact names never notices.
+            val caseCollisions = local.groupBy { it.key.folded() }.values
+                .filter { it.size > 1 }
+                .flatten()
+                .mapTo(mutableSetOf()) { it.key }
             val remote = foldRemoteNamesOntoLocal(
                 local = local,
                 // The rule the local listing applies, applied here rather than in a provider so that every provider gets
@@ -125,6 +132,7 @@ internal class SyncEngine(
                 plan = plan,
                 index = index,
                 remoteFiles = remote.associateBy { it.key },
+                caseCollisions = caseCollisions,
                 onProgress = onProgress,
                 accountId = accountId,
                 lastSyncedAt = document.lastSyncedAt,
@@ -187,6 +195,7 @@ internal class SyncEngine(
         plan: List<SyncOperation>,
         index: Map<SyncKey, SyncIndexEntry>,
         remoteFiles: Map<SyncKey, RemoteFileState>,
+        caseCollisions: Set<SyncKey>,
         onProgress: (SyncProgress) -> Unit,
         accountId: String,
         lastSyncedAt: Long,
@@ -204,7 +213,7 @@ internal class SyncEngine(
         plan.groupBy { it.order }.entries.sortedBy { it.key }.forEach { (_, group) ->
             group.map { operation ->
                 async {
-                    val outcome = permits.withPermit { runOperation(provider, operation, index, remoteFiles) }
+                    val outcome = permits.withPermit { runOperation(provider, operation, index, remoteFiles, caseCollisions) }
                     results.withLock {
                         updated += outcome.entries
                         updated -= outcome.removals
@@ -232,12 +241,13 @@ internal class SyncEngine(
         operation: SyncOperation,
         index: Map<SyncKey, SyncIndexEntry>,
         remoteFiles: Map<SyncKey, RemoteFileState>,
+        caseCollisions: Set<SyncKey>,
     ): OperationOutcome = try {
         when (operation) {
             is SyncOperation.Download -> download(provider, operation, index, remoteFiles)
-            is SyncOperation.Upload -> upload(provider, operation)
+            is SyncOperation.Upload -> upload(provider, operation, caseCollisions)
             is SyncOperation.Resolve -> resolve(provider, operation, remoteFiles)
-            is SyncOperation.DeleteLocal -> deleteLocally(provider, operation, index)
+            is SyncOperation.DeleteLocal -> deleteLocally(provider, operation, index, caseCollisions)
 
             is SyncOperation.DeleteRemote -> {
                 provider.delete(operation.key.kind, operation.key.name, operation.revision)
@@ -306,17 +316,22 @@ internal class SyncEngine(
         provider: SyncProvider,
         operation: SyncOperation.DeleteLocal,
         index: Map<SyncKey, SyncIndexEntry>,
+        caseCollisions: Set<SyncKey>,
     ): OperationOutcome {
         val key = operation.key
         val local = libraryFileLocalSource.readLibraryFile(key.kind, key.name) ?: return OperationOutcome(removals = setOf(key))
         if (localContentHash(local) != index[key]?.localHash) {
-            return upload(provider, SyncOperation.Upload(key, expectedRevision = null))
+            return upload(provider, SyncOperation.Upload(key, expectedRevision = null), caseCollisions)
         }
         libraryFileLocalSource.deleteLibraryFile(key.kind, key.name)
         return OperationOutcome(removals = setOf(key), summary = SyncSummary(deletedLocally = 1))
     }
 
-    private suspend fun upload(provider: SyncProvider, operation: SyncOperation.Upload): OperationOutcome {
+    private suspend fun upload(
+        provider: SyncProvider,
+        operation: SyncOperation.Upload,
+        caseCollisions: Set<SyncKey>,
+    ): OperationOutcome {
         val key = operation.key
         // Deleted between the listing and now, which the next run will see as a deletion and handle properly.
         val bytes = libraryFileLocalSource.readLibraryFile(key.kind, key.name) ?: return OperationOutcome()
@@ -326,8 +341,16 @@ internal class SyncEngine(
                 summary = SyncSummary(uploaded = 1),
             )
 
-            // The remote file moved under the write, which asks for another pass over a fresh listing.
-            RemoteWriteResult.Conflict -> OperationOutcome(hasUnresolvedConflict = true)
+            RemoteWriteResult.Conflict -> if (operation.expectedRevision == null && key in caseCollisions) {
+                // Refused because the service already holds this name in another spelling, which is the other local file.
+                // Another pass would be refused the same way, so this is a file that could not be synced rather than a
+                // conflict waiting to be resolved.
+                println("Could not sync \"${key.path}\": the service holds the same name in another case.")
+                OperationOutcome(summary = SyncSummary(failed = listOf(key.name)))
+            } else {
+                // The remote file moved under the write, which asks for another pass over a fresh listing.
+                OperationOutcome(hasUnresolvedConflict = true)
+            }
         }
     }
 

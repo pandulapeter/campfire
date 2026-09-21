@@ -126,7 +126,7 @@ internal class SyncRepositoryImpl(
     private var liveRescanPause = LIVE_RESCAN_INTERVAL
 
     private var indexWriteJob: Job? = null
-    private var lastIndexWriteAt = 0L
+    private var lastIndexWrite: TimeMark? = null
 
     override suspend fun restore() = restoreMutex.withLock { restoreConnection() }
 
@@ -248,9 +248,13 @@ internal class SyncRepositoryImpl(
             }
         }
         // The index describes a remote folder this device is no longer looking at. Kept, and it would read that
-        // folder's every file as a deletion the next time something connects.
-        syncStateLocalSource.saveSyncIndex(null)
-        _syncState.update { SyncState.Disconnected }
+        // folder's every file as a deletion the next time something connects. Under the run lock, because a run that
+        // was stopped a moment ago is not in syncJob any more and may still be writing the index on its way out; no new
+        // one can slip in, since the providers above no longer say they are connected.
+        mutex.withLock {
+            syncStateLocalSource.saveSyncIndex(null)
+            _syncState.update { SyncState.Disconnected }
+        }
     }
 
     /**
@@ -310,7 +314,7 @@ internal class SyncRepositoryImpl(
                     },
                     deletionPolicy = deletionPolicy,
                 )
-                indexWriteJob?.cancelAndJoin()
+                indexWriteJob?.join()
                 when (result) {
                     is SyncEngine.Result.DeletionsNeedConfirmation -> {
                         // The run stopped before anything moved, so there is nothing for the lists to read again and
@@ -392,9 +396,8 @@ internal class SyncRepositoryImpl(
      */
     private fun scheduleIndexWrite(snapshot: () -> SyncIndexDocument) {
         if (indexWriteJob?.isActive == true) return
-        val now = Clock.System.now().toEpochMilliseconds()
-        if (now - lastIndexWriteAt < INDEX_WRITE_INTERVAL_MS) return
-        lastIndexWriteAt = now
+        if (lastIndexWrite?.let { it.elapsedNow() < INDEX_WRITE_INTERVAL } == true) return
+        lastIndexWrite = TimeSource.Monotonic.markNow()
         // Taken here and not in the job: the engine's lock is what makes reading its map safe, and it is only held
         // for as long as this call runs.
         val document = snapshot()
@@ -426,8 +429,9 @@ internal class SyncRepositoryImpl(
     }
 
     /**
-     * What a run that did not reach its end still owes: the periodic writer out of the way so it cannot land after the
-     * final write, the index as far as the run got without the marker saying one is going, and - where files may have
+     * What a run that did not reach its end still owes: the periodic writer waited for, so that it cannot land after
+     * the final write - waited for rather than cancelled, because on the web a cancelled write carries on in the
+     * browser - the index as far as the run got without the marker saying one is going, and - where files may have
      * moved - the lists told about them. Without that last step the repositories keep the library from before the
      * run in their caches, and the next change made to a cached setlist or song text writes the old version back over
      * the one the run brought in.
@@ -437,7 +441,7 @@ internal class SyncRepositoryImpl(
      * suspending call here would throw and skip the rest.
      */
     private suspend fun finishRunCutShort(latestIndex: (() -> SyncIndexDocument)?, hasFinishedOperations: Boolean) {
-        indexWriteJob?.cancelAndJoin()
+        indexWriteJob?.join()
         latestIndex?.let { saveIndexQuietly(it().copy(isRunInProgress = false)) }
         // Only when an operation got as far as finishing: a run that fails on its listing - every launch without a
         // network - has moved nothing, and reading a whole library again for it would cost more than the run did.
@@ -554,7 +558,7 @@ internal class SyncRepositoryImpl(
 
     private companion object {
         /** How much of a run a killed app can lose at most, traded against rewriting the whole index per file. */
-        const val INDEX_WRITE_INTERVAL_MS = 2000L
+        val INDEX_WRITE_INTERVAL = 2.seconds
 
         val disconnectedResult = SyncRepository.RestoreResult(
             isConnected = false,

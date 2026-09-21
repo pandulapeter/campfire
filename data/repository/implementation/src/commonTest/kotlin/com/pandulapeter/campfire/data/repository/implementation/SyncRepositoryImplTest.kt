@@ -193,6 +193,28 @@ class SyncRepositoryImplTest {
         assertIs<SyncOutcome.Success>((repository.syncState.value as SyncState.Connected).lastOutcome)
     }
 
+    @Test
+    fun `disconnecting right after stopping a run leaves no index behind`() = runTest {
+        val stateLocalSource = FakeSyncStateLocalSource()
+        val repository = repository(
+            provider = FakeSyncProvider(
+                files = mapOf(song(1) to "One".encodeToByteArray()),
+                onDownload = { CompletableDeferred<Unit>().await() },
+                account = ACCOUNT,
+            ),
+            stateLocalSource = stateLocalSource,
+        )
+
+        repository.restore()
+        repository.synchronize(SyncDeletionPolicy.ASK)
+        repository.syncState.first { (it as? SyncState.Connected)?.progress?.total == 1 }
+        repository.cancelSynchronization()
+        repository.disconnect()
+
+        assertNull(stateLocalSource.index)
+        assertEquals(SyncState.Disconnected, repository.syncState.value)
+    }
+
     private fun repository(
         provider: FakeSyncProvider,
         stateLocalSource: FakeSyncStateLocalSource = FakeSyncStateLocalSource(),

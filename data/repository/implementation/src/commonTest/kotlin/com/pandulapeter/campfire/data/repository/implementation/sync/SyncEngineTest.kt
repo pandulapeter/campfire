@@ -367,6 +367,52 @@ class SyncEngineTest {
     }
 
     @Test
+    fun `a local name another one shadows on a service that ignores case is reported instead of retried`() = runTest {
+        val lower = "Lower".encodeToByteArray()
+        val local = FakeLibraryFileLocalSource(files = mapOf(song("Song") to "Upper".encodeToByteArray(), song("song") to lower))
+        val provider = FakeSyncProvider(files = mapOf(song("song") to lower), ignoresCase = true)
+
+        val result = SyncEngine(local).synchronize(
+            provider = provider,
+            // In step at the revision the fake holds it at, so the only thing left to do is the other spelling.
+            document = SyncIndexDocument(
+                accountId = ACCOUNT_ID,
+                entries = mapOf(
+                    song("song").path to SyncIndexDocument.Entry(localHash = localContentHash(lower), remoteRevision = "r1"),
+                ),
+            ),
+            accountId = ACCOUNT_ID,
+            onProgress = {},
+            onIndexChanged = {},
+            deletionPolicy = SyncDeletionPolicy.ASK,
+        )
+
+        assertEquals(listOf("Song.cho"), assertIs<SyncEngine.Result.Completed>(result).summary.failed)
+        assertEquals(1, provider.listCount)
+        assertEquals(1, provider.files.size)
+    }
+
+    @Test
+    fun `two local names that differ only by case both go up to a service with exact names`() = runTest {
+        val local = FakeLibraryFileLocalSource(
+            files = mapOf(song("Song") to "Upper".encodeToByteArray(), song("song") to "Lower".encodeToByteArray()),
+        )
+        val provider = FakeSyncProvider()
+
+        val result = SyncEngine(local).synchronize(
+            provider = provider,
+            document = SyncIndexDocument(),
+            accountId = ACCOUNT_ID,
+            onProgress = {},
+            onIndexChanged = {},
+            deletionPolicy = SyncDeletionPolicy.ASK,
+        )
+
+        assertTrue(assertIs<SyncEngine.Result.Completed>(result).summary.failed.isEmpty())
+        assertEquals(setOf(song("Song"), song("song")), provider.files.keys)
+    }
+
+    @Test
     fun `a library larger than one reading batch is read whole`() = runTest {
         val local = FakeLibraryFileLocalSource(files = (1..200).associate { song(it) to "Song $it".encodeToByteArray() })
         val provider = FakeSyncProvider()

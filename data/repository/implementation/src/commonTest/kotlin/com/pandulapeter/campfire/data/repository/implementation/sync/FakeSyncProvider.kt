@@ -27,7 +27,8 @@ import com.pandulapeter.campfire.data.source.remote.api.model.RemoteWriteResult
  * [onDownload] and [onUpload] run before a transfer answers, which is where a test makes the service fail part way
  * through a run or changes the local library under an operation that is already under way. [sizes] lets a listing
  * report a large file without the test allocating it. [account] is who the service says is connected, which is what
- * a repository test restores the connection from.
+ * a repository test restores the connection from. [ignoresCase] makes it a service like Dropbox, which takes two names
+ * that differ only by case for one file, and [listCount] is how many passes a run made.
  */
 internal class FakeSyncProvider(
     files: Map<SyncKey, ByteArray> = emptyMap(),
@@ -35,7 +36,10 @@ internal class FakeSyncProvider(
     var onDownload: suspend (SyncKey) -> Unit = {},
     var onUpload: (SyncKey) -> Unit = {},
     private val account: SyncAccount? = null,
+    private val ignoresCase: Boolean = false,
 ) : SyncProvider {
+
+    var listCount = 0
 
     val files = files.mapValues { (_, bytes) -> bytes to "r1" }.toMutableMap()
     private var nextRevision = 2
@@ -57,7 +61,7 @@ internal class FakeSyncProvider(
     override suspend fun loadAccount() = account
 
     override suspend fun list() = RemoteListing(
-        files = files.map { (key, file) ->
+        files = files.also { listCount++ }.map { (key, file) ->
             RemoteFile(
                 kind = key.kind,
                 name = key.name,
@@ -85,6 +89,8 @@ internal class FakeSyncProvider(
         val key = SyncKey(kind = kind, name = name)
         onUpload(key)
         if (files[key]?.second != expectedRevision) return RemoteWriteResult.Conflict
+        val isHeldInAnotherCase = files.keys.any { it.kind == kind && it.name.lowercase() == name.lowercase() }
+        if (expectedRevision == null && ignoresCase && isHeldInAnotherCase) return RemoteWriteResult.Conflict
         val revision = "r${nextRevision++}"
         files[key] = bytes to revision
         return RemoteWriteResult.Written(revision)

@@ -19,6 +19,7 @@ import android.content.Intent
 import android.content.pm.ServiceInfo
 import android.os.Build
 import android.os.IBinder
+import androidx.annotation.RequiresApi
 import androidx.core.app.NotificationCompat
 import androidx.core.app.ServiceCompat
 import com.pandulapeter.campfire.CampfireActivity
@@ -127,6 +128,18 @@ class CampfireSyncService : Service() {
     override fun onDestroy() {
         scope.cancel()
         super.onDestroy()
+    }
+
+    /**
+     * Android allows a data sync service six hours of background time in a day, and takes the app down with a service
+     * that is still in the foreground a few seconds after being told they are up. The run is stopped rather than left
+     * to carry on without the service: stopped, it writes its index and says it was interrupted, while left alone it
+     * ends whenever the system freezes a process it no longer has a reason to keep.
+     */
+    @RequiresApi(Build.VERSION_CODES.VANILLA_ICE_CREAM)
+    override fun onTimeout(startId: Int, fgsType: Int) {
+        KoinPlatform.getKoin().get<CancelSynchronizationUseCase>().invoke()
+        stop()
     }
 
     /**

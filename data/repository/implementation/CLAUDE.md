@@ -65,13 +65,15 @@ long as the storage takes to answer. A cancelled read is not a failed one: it is
   applies, because a file listed on one side only reads as a deletion. A download above `MAXIMUM_REMOTE_FILE_SIZE` is
   a per-file failure rather than filtered out of the listing for the same reason. A conflict's incoming version is
   written next to the local one *before* the local one goes up, and taken back if the service then says the remote
-  file is still there, so the version that loses is never held only in memory. The engine is written so that an interrupted run leaves the library usable: the index (`SyncIndexDocument`, the on-disk shape
-  of `sync-index.json`) is only told about a file once that file has actually moved, so anything half done simply
-  looks unsynced next time. It is told as the run goes rather than when a pass completes: every finished operation
-  hands `SyncRepositoryImpl` a way to take a snapshot, which it does at most every `INDEX_WRITE_INTERVAL_MS` —
-  building one costs as much as the index is long — and once more on the way out of a stopped or failed run (the periodic writer cancelled and joined first, so it cannot land after the
-  final write). Those writes and the periodic one never throw (`saveIndexQuietly`): only the write that opens a
-  run and the one that completes it do, which is how a device that cannot write ends a run as
+  file is still there, so the version that loses is never held only in memory. The engine is written so that an
+  interrupted run leaves the library usable: the index (`SyncIndexDocument`, the on-disk shape of `sync-index.json`)
+  is only told about a file once that file has actually moved, so anything half done simply looks unsynced next time.
+  It is told as the run goes rather than when a pass completes: every finished operation
+  hands `SyncRepositoryImpl` a way to take a snapshot, which it does at most every `INDEX_WRITE_INTERVAL` —
+  building one costs as much as the index is long — and once more on the way out of a stopped or failed run (the
+  periodic writer waited for first, not cancelled: on the web a cancelled write carries on in the browser, so it could
+  land after the final write). Those writes and the periodic one never throw (`saveIndexQuietly`): only the write
+  that opens a run and the one that completes it do, which is how a device that cannot write ends a run as
   `SyncFailureReason.STORAGE`. The repository's scope carries a `CoroutineExceptionHandler` that logs, since nothing
   launched there has anyone to throw to. An interrupted run therefore keeps what it transferred, and only a completed
   one with no failed files moves `lastSyncedAt`.
@@ -101,6 +103,7 @@ long as the storage takes to answer. A cancelled read is not a failed one: it is
   afterwards — after a completed run that changed something, and after a stopped or failed one in which any
   operation had finished (`finishRunCutShort`, always under `NonCancellable`), since files that moved before the run
   ended are on disk whichever way it ended. The use case cannot, now that it returns before the run does. Disconnecting cancels a run that is
-  still going and waits for it, and a run only ever writes its outcome into a state that is still `Connected`: a
+  still going and waits for it, and deletes the index under the run lock, so that a run stopped a moment earlier has
+  finished writing it, and a run only ever writes its outcome into a state that is still `Connected`: a
   run that outlived the account it ran against must not bring that account back on screen. `restore` never throws
   for a service that refuses the stored credentials — the app starts disconnected and says so.
