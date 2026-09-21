@@ -257,8 +257,9 @@ internal class SyncEngine(
     /**
      * Overwrites the local file, so it is read, decided about and only then written: the plan was made from hashes
      * taken when the run listed the library, and a long run gives the user plenty of time to save an edit to a song
-     * that is still waiting to come down. Checked here, the window in which such a save can be lost is one file's
-     * worth of transfer rather than the whole run.
+     * that is still waiting to come down. The same goes for a file that was not there at all when the run listed the
+     * library and is now: nothing planned for this name knew about it, so it is never written over. Checked here, the
+     * window in which such a save can be lost is one file's worth of transfer rather than the whole run.
      */
     private suspend fun download(
         provider: SyncProvider,
@@ -273,9 +274,11 @@ internal class SyncEngine(
         if (local != null && isSameContent(provider, local, remoteFiles[key]?.contentHash)) {
             return OperationOutcome(entries = mapOf(key to SyncIndexEntry(localContentHash(local), operation.revision)))
         }
-        val indexEntry = index[key]
-        if (local != null && indexEntry != null && localContentHash(local) != indexEntry.localHash) {
-            // Edited since the listing: this is now a file changed on both sides, and it is resolved as one.
+        if (local != null && localContentHash(local) != index[key]?.localHash) {
+            // Not the file the last run saw. With an index entry it was edited since the listing; with none it was not
+            // there at all when the run listed the library, so it appeared since - a conflict copy written earlier in
+            // this pass, or a song the user made while the run was going. Either way it has changed on both sides, and
+            // it is resolved as that rather than written over.
             return resolve(provider, SyncOperation.Resolve(key, operation.revision), remoteFiles)
         }
         val bytes = downloadWithinLimit(provider, key, remoteFiles)

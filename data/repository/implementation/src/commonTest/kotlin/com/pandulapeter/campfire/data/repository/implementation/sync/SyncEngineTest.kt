@@ -107,6 +107,53 @@ class SyncEngineTest {
     }
 
     @Test
+    fun `a conflict copy is not written over by a download waiting under its name`() = runTest {
+        val copy = SyncKey(kind = LibraryFileKind.SONG, name = "song_1 (2).cho")
+        val local = FakeLibraryFileLocalSource(files = mapOf(song(1) to "A's second edit".encodeToByteArray()))
+        val provider = FakeSyncProvider(
+            files = mapOf(song(1) to "B's edit".encodeToByteArray(), copy to "A's first edit".encodeToByteArray()),
+        )
+
+        val result = SyncEngine(local).synchronize(
+            provider = provider,
+            document = indexOf(song(1) to "Original".encodeToByteArray()),
+            accountId = ACCOUNT_ID,
+            onProgress = {},
+            onIndexChanged = {},
+            deletionPolicy = SyncDeletionPolicy.ASK,
+        )
+
+        val expected = setOf("A's second edit", "B's edit", "A's first edit")
+        assertEquals("A's second edit", local.files.getValue(song(1)).decodeToString())
+        assertEquals(expected, local.files.values.map { it.decodeToString() }.toSet())
+        assertEquals(expected, provider.files.values.map { it.first.decodeToString() }.toSet())
+        assertEquals("B's edit", local.files.getValue(copy).decodeToString())
+        assertEquals("B's edit", provider.files.getValue(copy).first.decodeToString())
+        assertEquals(2, assertIs<SyncEngine.Result.Completed>(result).summary.conflicts.size)
+    }
+
+    @Test
+    fun `a song created under a name that is waiting to come down is kept`() = runTest {
+        val mine = "Mine".encodeToByteArray()
+        val theirs = "Theirs".encodeToByteArray()
+        val local = FakeLibraryFileLocalSource()
+        val provider = FakeSyncProvider(files = mapOf(song(1) to "One".encodeToByteArray(), song(2) to theirs))
+        provider.onDownload = { key -> if (key == song(1)) local.files[song(2)] = mine }
+
+        SyncEngine(local).synchronize(
+            provider = provider,
+            document = SyncIndexDocument(),
+            accountId = ACCOUNT_ID,
+            onProgress = {},
+            onIndexChanged = {},
+            deletionPolicy = SyncDeletionPolicy.ASK,
+        )
+
+        assertContentEquals(mine, local.files[song(2)])
+        assertContentEquals(theirs, local.files[SyncKey(kind = LibraryFileKind.SONG, name = "song_2 (2).cho")])
+    }
+
+    @Test
     fun `a song edited while it waits to be deleted goes back up instead`() = runTest {
         val original = "Original".encodeToByteArray()
         val edited = "Edited here".encodeToByteArray()
