@@ -27,7 +27,8 @@ holds the `@Module @ComponentScan object DataLocalSourceModule`, and every local
     when the bytes are valid UTF-8, Windows-1252 when they are not (what every other Western text file dropped into the
     library folder turns out to be), and a byte order mark stripped, because editors on Windows write one. A file read
     through the fallback is written back as UTF-8 on its first save, which keeps its accents rather than replacing them.
-  - Writes are atomic on the three platforms that can be (a temporary file of its own per write, flushed to the device
+  - Writes are atomic on the three platforms that can be (a `.campfire-<number>.tmp` temporary file of its own per write,
+    named without the target so a name at the file-system limit still saves, flushed to the device
     and moved over the target on the JVM, `atomically` on iOS), so a crash in the middle of a save cannot truncate a
     song. OPFS has no such primitive. The OPFS storage
     resolves the three directory handles once and keeps them: walking down from the root is three promises, and
@@ -42,6 +43,8 @@ holds the `@Module @ComponentScan object DataLocalSourceModule`, and every local
     and reports a storage failure.
   - iOS splits the two: the library goes to the documents directory, where the Files app can reach it, and the
     preferences to application support, where it cannot.
+  - The JVM storage removes its own temporary files older than an hour on first touching each directory. On Windows it
+    stores device names such as `con.cho` with a leading underscore and reports the ordinary library name back.
 - **`storage/secret/SecretStore.kt`** is where the sync credentials go, and nothing else: a refresh token is a
   long-lived credential. `AndroidSecretStore` encrypts it with an AES-GCM key generated inside the Android Keystore
   (never `security-crypto`, which is deprecated) and writes the IV and ciphertext as `preferences/sync-credentials.bin`;

@@ -101,6 +101,39 @@ class JvmFileStorageTest {
     }
 
     @Test
+    fun `saves a file whose name is nearly as long as the file system allows`() = runBlocking {
+        val name = "a".repeat(240) + ".cho"
+        fileStorage.writeText(StorageDirectory.SONGS, name, "content")
+
+        assertEquals("content", fileStorage.readText(StorageDirectory.SONGS, name))
+    }
+
+    @Test
+    fun `removes the temporary files an earlier run left behind`() = runBlocking {
+        val songs = root.resolve("library/songs").apply { mkdirs() }
+        listOf(".campfire-123.tmp", "a.cho.456.tmp").forEach { File(songs, it).apply { writeText("leftover"); setLastModified(System.currentTimeMillis() - 2 * 60 * 60 * 1000) } }
+        File(songs, "notes.tmp").writeText("user")
+        File(songs, "a.cho").writeText("song")
+
+        assertEquals(listOf("a.cho"), JvmFileStorage(root).list(StorageDirectory.SONGS).map { it.name })
+        assertFalse(File(songs, ".campfire-123.tmp").exists())
+        assertFalse(File(songs, "a.cho.456.tmp").exists())
+        assertTrue(File(songs, "notes.tmp").exists())
+    }
+
+    @Test
+    fun `stores a Windows device name under an escaped one and reports the name it was given`() = runBlocking {
+        val storage = JvmFileStorage(root, escapesDeviceNames = true)
+        storage.writeText(StorageDirectory.SONGS, "con.cho", "content")
+        storage.writeText(StorageDirectory.SONGS, "_con.cho", "other")
+
+        assertEquals(setOf("_con.cho", "__con.cho"), root.resolve("library/songs").list()?.toSet())
+        assertEquals(listOf("_con.cho", "con.cho"), storage.list(StorageDirectory.SONGS).map { it.name })
+        assertEquals("content", storage.readText(StorageDirectory.SONGS, "con.cho"))
+        assertEquals("other", storage.readText(StorageDirectory.SONGS, "_con.cho"))
+    }
+
+    @Test
     fun `strips the byte order mark`() = runBlocking {
         fileStorage.writeBytes(StorageDirectory.SONGS, "a.cho", "\uFEFF{title: A}".encodeToByteArray())
 

@@ -21,6 +21,7 @@ import java.nio.file.AtomicMoveNotSupportedException
 import java.nio.file.Files
 import java.nio.file.StandardCopyOption
 import java.nio.file.StandardOpenOption
+import java.util.concurrent.ConcurrentHashMap
 
 /**
  * The [FileStorage] of every JVM based platform, on top of [java.io.File]. The root is chosen by the `actual` factory
@@ -32,7 +33,12 @@ import java.nio.file.StandardOpenOption
  * The desktop copy of this class is identical - the two platforms cannot share a source set until the `roomMain`
  * hierarchy template is gone.
  */
-internal class JvmFileStorage(private val root: File) : FileStorage {
+internal class JvmFileStorage(
+    private val root: File,
+    private val escapesDeviceNames: Boolean = System.getProperty("os.name").orEmpty().startsWith("windows", ignoreCase = true),
+) : FileStorage {
+
+    private val sweptDirectories = ConcurrentHashMap.newKeySet<StorageDirectory>()
 
     override suspend fun list(directory: StorageDirectory) = withContext(Dispatchers.IO) {
         val directoryFile = directoryFile(directory)
@@ -42,7 +48,7 @@ internal class JvmFileStorage(private val root: File) : FileStorage {
         val files = directoryFile.listFiles()
             ?: if (directoryFile.isDirectory) throw IOException("Could not read \"${directoryFile.absolutePath}\".") else emptyArray()
         files.filter { it.isFile && !it.name.endsWith(TEMPORARY_FILE_SUFFIX) }
-            .map { StoredFileInfo(name = it.name, size = it.length(), lastModified = it.lastModified()) }
+            .map { StoredFileInfo(name = it.name.toLibraryName(), size = it.length(), lastModified = it.lastModified()) }
             .sortedBy { it.name }
     }
 
@@ -52,7 +58,7 @@ internal class JvmFileStorage(private val root: File) : FileStorage {
     }
 
     override suspend fun info(directory: StorageDirectory, name: String) = withContext(Dispatchers.IO) {
-        file(directory, name).let { if (it.isFile) StoredFileInfo(name = it.name, size = it.length(), lastModified = it.lastModified()) else null }
+        file(directory, name).let { if (it.isFile) StoredFileInfo(name = name, size = it.length(), lastModified = it.lastModified()) else null }
     }
 
     override suspend fun exists(directory: StorageDirectory, name: String) = withContext(Dispatchers.IO) {
@@ -85,7 +91,7 @@ internal class JvmFileStorage(private val root: File) : FileStorage {
     private fun writeAtomically(directory: StorageDirectory, name: String, write: (File) -> Unit) {
         val target = file(directory, name).toPath()
         // A name of its own per write, so two writes of one file cannot share a temporary file.
-        val temporary = Files.createTempFile(target.parent, "$name.", TEMPORARY_FILE_SUFFIX)
+        val temporary = Files.createTempFile(target.parent, TEMPORARY_FILE_PREFIX, TEMPORARY_FILE_SUFFIX)
         try {
             write(temporary.toFile())
             // Flushed to the device before the rename, or a power loss right after could keep the name and lose the bytes.
@@ -111,15 +117,36 @@ internal class JvmFileStorage(private val root: File) : FileStorage {
 
     private fun file(directory: StorageDirectory, name: String): File {
         requireValidFileName(name)
-        return File(directoryFile(directory), name)
+        return File(directoryFile(directory), name.toStoredName())
     }
 
     private fun directoryFile(directory: StorageDirectory) = directory.pathSegments
         .fold(root) { parent, segment -> File(parent, segment) }
-        .also { it.mkdirs() }
+        .also {
+            it.mkdirs()
+            if (sweptDirectories.add(directory)) removeLeftovers(it)
+        }
+
+    private fun removeLeftovers(directoryFile: File) {
+        val newestLeftover = System.currentTimeMillis() - LEFTOVER_AGE_MILLIS
+        directoryFile.listFiles { _, name -> LEFTOVER_NAME.matches(name) }
+            ?.filter { it.isFile && it.lastModified() in 1..newestLeftover }
+            ?.forEach { it.delete() }
+    }
+
+    private fun String.toStoredName() = if (escapesDeviceNames && trimStart(DEVICE_NAME_ESCAPE).isDeviceName()) DEVICE_NAME_ESCAPE + this else this
+
+    private fun String.toLibraryName() = if (escapesDeviceNames && startsWith(DEVICE_NAME_ESCAPE) && trimStart(DEVICE_NAME_ESCAPE).isDeviceName()) drop(1) else this
+
+    private fun String.isDeviceName() = DEVICE_NAME.matches(substringBefore('.').trimEnd(' '))
 
     private companion object {
 
+        const val TEMPORARY_FILE_PREFIX = ".campfire-"
         const val TEMPORARY_FILE_SUFFIX = ".tmp"
+        val LEFTOVER_NAME = Regex("""\.campfire-\d+\.tmp|.+\.\d+\.tmp""")
+        const val LEFTOVER_AGE_MILLIS = 60L * 60L * 1000L
+        const val DEVICE_NAME_ESCAPE = '_'
+        val DEVICE_NAME = Regex("""con|prn|aux|nul|(com|lpt)[0-9¹²³]""", RegexOption.IGNORE_CASE)
     }
 }
