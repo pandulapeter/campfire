@@ -524,8 +524,10 @@ private fun ChordProTextField(
     contentPadding: PaddingValues,
 ) {
     val colorScheme = MaterialTheme.colorScheme
-    val outputTransformation = remember(colorScheme) {
+    val tokenCache = remember { ChordProTokenCache() }
+    val outputTransformation = remember(colorScheme, tokenCache) {
         ChordProOutputTransformation.of(
+            tokenCache = tokenCache,
             primaryColor = colorScheme.primary,
             secondaryColor = colorScheme.onSurfaceVariant,
             outlineColor = colorScheme.outline,
