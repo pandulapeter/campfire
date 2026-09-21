@@ -49,5 +49,31 @@ internal class LibraryTextDecodingTest {
         assertEquals("a�����é", bytes(0x61, 0x81, 0x8D, 0x8F, 0x90, 0x9D, 0xE9).decodeLibraryText())
     }
 
+    @Test
+    fun readsUtf16WithAndWithoutByteOrderMarks() {
+        val text = "{title: Tükörfúrógép}\r\n[Am]Őszi szél"
+        listOf(true, false).forEach { bigEndian ->
+            assertEquals(text, utf16(text, bigEndian, hasMark = true).decodeLibraryText())
+            assertEquals(text, utf16(text, bigEndian, hasMark = false).decodeLibraryText())
+        }
+    }
+
+    @Test
+    fun preservesSurrogatePairsAndReplacesMalformedUtf16() {
+        assertEquals("{c: 𝄞 segno}", utf16("{c: 𝄞 segno}", false, true).decodeLibraryText())
+        assertEquals("�A", bytes(0xFF, 0xFE, 0x34, 0xD8, 0x41, 0x00).decodeLibraryText())
+        assertEquals("A�", bytes(0xFF, 0xFE, 0x41, 0x00, 0x00, 0xDC).decodeLibraryText())
+        assertEquals("A�", bytes(0xFF, 0xFE, 0x41, 0x00, 0x42).decodeLibraryText())
+    }
+
+    private fun utf16(text: String, isBigEndian: Boolean, hasMark: Boolean): ByteArray {
+        val units = (if (hasMark) "\uFEFF" else "") + text
+        return ByteArray(units.length * 2) { index ->
+            val unit = units[index / 2].code
+            val isHighByte = (index % 2 == 0) == isBigEndian
+            (if (isHighByte) unit shr 8 else unit and 0xFF).toByte()
+        }
+    }
+
     private fun bytes(vararg values: Int) = ByteArray(values.size) { values[it].toByte() }
 }
