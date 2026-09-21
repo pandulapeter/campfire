@@ -30,6 +30,7 @@ import com.pandulapeter.campfire.data.source.remote.api.PendingAuthorizationStor
 import com.pandulapeter.campfire.data.source.remote.api.SyncAuthenticator
 import com.pandulapeter.campfire.data.source.remote.api.SyncAuthorizationException
 import com.pandulapeter.campfire.data.source.remote.api.SyncNetworkException
+import com.pandulapeter.campfire.data.source.remote.api.SyncProvider
 import com.pandulapeter.campfire.data.source.remote.api.SyncProviders
 import com.pandulapeter.campfire.data.source.remote.api.SyncRemoteStorageFullException
 import com.pandulapeter.campfire.data.source.remote.api.model.AuthorizationCompletionPage
@@ -126,6 +127,7 @@ internal class SyncRepositoryImpl(
     private var liveRescanPause = LIVE_RESCAN_INTERVAL
 
     private var indexWriteJob: Job? = null
+    private var accountRefreshJob: Job? = null
     private var lastIndexWrite: TimeMark? = null
 
     override suspend fun restore() = restoreMutex.withLock { restoreConnection() }
@@ -159,7 +161,11 @@ internal class SyncRepositoryImpl(
             _syncState.update { SyncState.Disconnected }
             return disconnectedResult
         }
-        val account = try {
+        // What this device already knows about the account goes on screen before the service is asked anything: on a
+        // bad network that answer can take over a minute, and until it came the settings screen would offer to connect
+        // an account that is connected. Only a connection nothing was ever stored about has to wait for it.
+        val storedAccount = connected.storedAccount()
+        val account = storedAccount ?: try {
             connected.loadAccount()
         } catch (exception: CancellationException) {
             throw exception
@@ -187,6 +193,9 @@ internal class SyncRepositoryImpl(
         }
         if (document.isRunInProgress) {
             saveIndexQuietly(document.copy(isRunInProgress = false))
+        }
+        if (storedAccount != null) {
+            refreshAccount(connected)
         }
         return SyncRepository.RestoreResult(
             isConnected = true,
@@ -238,6 +247,9 @@ internal class SyncRepositoryImpl(
     }
 
     override suspend fun disconnect() {
+        // An answer still on its way belongs to the account that is about to go, and loadAccount writes the name it
+        // reads into whatever credentials are stored by then - which could be the next account's.
+        accountRefreshJob?.cancel()
         // A run that is still going would carry on against an account that is gone, fail, and report that failure
         // onto an account the user just disconnected.
         syncJob?.cancelAndJoin()
@@ -406,6 +418,33 @@ internal class SyncRepositoryImpl(
         // for as long as this call runs.
         val document = snapshot()
         indexWriteJob = scope.launch { saveIndexQuietly(document) }
+    }
+
+    /**
+     * Asks the service who the account is behind a start up that has already shown what was stored. The answer only
+     * ever changes a state that is still connected to the same provider: a new name replaces the stored one, and a
+     * refusal - the grant was revoked elsewhere - takes the connection down the way a start up that waited would
+     * have. Anything else, a dead network above all, leaves what is on screen alone.
+     */
+    private fun refreshAccount(provider: SyncProvider) {
+        if (accountRefreshJob?.isActive == true) return
+        accountRefreshJob = scope.launch {
+            val account = try {
+                provider.loadAccount()
+            } catch (exception: CancellationException) {
+                throw exception
+            } catch (exception: Exception) {
+                println("Could not refresh the ${provider.id} account: ${exception.message}")
+                return@launch
+            }
+            updateConnected { connected ->
+                when {
+                    connected.account.providerId != provider.id -> connected
+                    account == null -> SyncState.ConnectionFailed(provider.id, SyncFailureReason.AUTHORIZATION)
+                    else -> connected.copy(account = account)
+                }
+            }
+        }
     }
 
     /**

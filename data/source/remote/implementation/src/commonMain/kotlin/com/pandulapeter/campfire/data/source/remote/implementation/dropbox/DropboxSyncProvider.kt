@@ -174,13 +174,23 @@ internal class DropboxSyncProvider(
             null
         } catch (exception: Exception) {
             // Offline, or an answer that could not be read, is not "not connected": the stored name is what the app
-            // knew last time, and it is still true. An account whose name was never read - the first read after the
-            // authorization failed too - is still a working connection, so it goes by its id until a read succeeds,
-            // which is also the name the authorization gave it.
+            // knew last time, and it is still true.
             println("Could not read the Dropbox account: ${exception.message}")
-            val name = credentials.displayName.ifEmpty { credentials.accountId }.ifEmpty { return null }
-            SyncAccount(providerId = id, displayName = name, email = credentials.email.takeIf(String::isNotEmpty))
+            storedAccountOf(credentials)
         }
+    }
+
+    override suspend fun storedAccount() = credentialsStore.load()
+        ?.takeIf { it.providerId == id.id && it.refreshToken.isNotEmpty() }
+        ?.let(::storedAccountOf)
+
+    /**
+     * An account whose name was never read - the first read after the authorization failed too - is still a working
+     * connection, so it goes by its id until a read succeeds, which is also the name the authorization gave it.
+     */
+    private fun storedAccountOf(credentials: SyncCredentialsDocument): SyncAccount? {
+        val name = credentials.displayName.ifEmpty { credentials.email }.ifEmpty { credentials.accountId }.ifEmpty { return null }
+        return SyncAccount(providerId = id, displayName = name, email = credentials.email.takeIf(String::isNotEmpty))
     }
 
     // Files

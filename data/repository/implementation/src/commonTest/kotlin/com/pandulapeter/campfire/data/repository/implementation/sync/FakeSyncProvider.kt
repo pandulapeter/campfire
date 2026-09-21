@@ -60,6 +60,8 @@ internal class FakeSyncProvider(
 
     override suspend fun loadAccount() = account
 
+    override suspend fun storedAccount() = null
+
     override suspend fun list() = RemoteListing(
         files = files.also { listCount++ }.map { (key, file) ->
             RemoteFile(

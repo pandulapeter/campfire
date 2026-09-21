@@ -23,7 +23,8 @@ and why each of them is load bearing, are spelled out in the KDoc of `SyncProvid
   the revision the caller believes the file has and reports `RemoteWriteResult.Conflict` rather than clobbering a
   change made elsewhere. `contentHashOf` hashes local bytes in the *service's own* format, which is what keeps
   Dropbox's block hashing and Drive's MD5 out of the engine. Names must be unique, and a service that allows
-  duplicates has to resolve that inside its own `list`.
+  duplicates has to resolve that inside its own `list`. `storedAccount` answers who is connected without a request,
+  `loadAccount` with one.
 - `SyncAuthenticator` — the platform half of the OAuth flow. The interface is shaped by the awkward platform rather
   than the easy ones: the web *navigates away* from the running app to ask for consent, so `authorize` returns an
   outcome (which may be `Redirected`) instead of a URL, and `consumePendingRedirect` picks the answer up at the next

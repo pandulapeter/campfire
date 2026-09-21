@@ -10,6 +10,8 @@
 package com.pandulapeter.campfire.data.source.remote.implementation.dropbox
 
 import com.pandulapeter.campfire.data.model.domain.LibraryFileKind
+import com.pandulapeter.campfire.data.model.domain.SyncAccount
+import com.pandulapeter.campfire.data.model.domain.SyncProviderId
 import com.pandulapeter.campfire.data.source.local.api.SyncStateLocalSource
 import com.pandulapeter.campfire.data.source.remote.api.SyncAuthorizationException
 import com.pandulapeter.campfire.data.source.remote.api.SyncNetworkException
@@ -38,6 +40,7 @@ import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
 import kotlin.test.assertIs
+import kotlin.test.assertNull
 import kotlin.test.assertTrue
 
 /**
@@ -155,6 +158,34 @@ class DropboxRequestTest {
         assertFailsWith<SyncNetworkException> { provider.list() }
     }
 
+    @Test
+    fun `the stored account is answered without a request`() = runTest {
+        val provider = provider(
+            storage = ConnectedStorage(names = ""","displayName":"Jane","email":"jane@example.com""""),
+        ) { error("No request was expected.") }
+        assertEquals(
+            expected = SyncAccount(SyncProviderId.DROPBOX, displayName = "Jane", email = "jane@example.com"),
+            actual = provider.storedAccount(),
+        )
+    }
+
+    @Test
+    fun `a stored account whose name was never read goes by its id`() = runTest {
+        val provider = provider(storage = ConnectedStorage(names = ""","accountId":"dbid:1"""")) {
+            error("No request was expected.")
+        }
+        assertEquals(
+            expected = SyncAccount(SyncProviderId.DROPBOX, displayName = "dbid:1", email = null),
+            actual = provider.storedAccount(),
+        )
+    }
+
+    @Test
+    fun `a connection nothing was stored about has no stored account`() = runTest {
+        val provider = provider { error("No request was expected.") }
+        assertNull(provider.storedAccount())
+    }
+
     /** A token the device's clock still believes in can be one Dropbox has stopped accepting. */
     @Test
     fun `refreshes the token once when dropbox refuses it`() = runTest {
@@ -211,10 +242,11 @@ class DropboxRequestTest {
 
     private fun provider(
         configure: HttpClientConfig<*>.() -> Unit = {},
+        storage: SyncStateLocalSource = ConnectedStorage(),
         handler: suspend MockRequestHandleScope.(HttpRequestData) -> HttpResponseData,
     ) = DropboxSyncProvider(
         httpClient = HttpClient(MockEngine(handler), configure),
-        credentialsStore = SyncCredentialsStore(ConnectedStorage),
+        credentialsStore = SyncCredentialsStore(storage),
         appKey = APP_KEY,
     )
 
@@ -225,9 +257,9 @@ class DropboxRequestTest {
     )
 
     /** A connection whose access token is good for as long as any test runs, so no request needs a refresh. */
-    private object ConnectedStorage : SyncStateLocalSource {
+    private class ConnectedStorage(private val names: String = "") : SyncStateLocalSource {
         override suspend fun loadSyncCredentials() =
-            """{"providerId":"dropbox","accessToken":"access","refreshToken":"refresh","expiresAt":${Long.MAX_VALUE}}"""
+            """{"providerId":"dropbox","accessToken":"access","refreshToken":"refresh","expiresAt":${Long.MAX_VALUE}$names}"""
 
         override suspend fun saveSyncCredentials(document: String?) = Unit
         override suspend fun loadSyncIndex(): String? = null

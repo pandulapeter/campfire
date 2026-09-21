@@ -107,4 +107,6 @@ long as the storage takes to answer. A cancelled read is not a failed one: it is
   finished writing it, and a run only ever writes its outcome into a state that is still `Connected`: a
   run that outlived the account it ran against must not bring that account back on screen. `restore` never throws
   for a service that refuses the stored credentials — the app starts disconnected and says so — and a redirect that
-  no authorization is waiting for is ignored, the stored account restored as usual.
+  no authorization is waiting for is ignored, the stored account restored as usual. It shows the account from what is
+  stored and asks the service behind that, so a slow network never makes a connected account look disconnected; a
+  refusal that arrives later takes the connection down then.

@@ -62,6 +62,13 @@ interface SyncProvider {
     /** Who is connected, or null if the credentials are gone or no longer accepted. */
     suspend fun loadAccount(): SyncAccount?
 
+    /**
+     * Who is connected as far as this device remembers, answered from what is stored and without a request - so that
+     * a start up on a bad network can show the account at once and leave [loadAccount] to catch up behind it. Null
+     * when nothing is connected, or when nothing was ever stored that the account could go by.
+     */
+    suspend fun storedAccount(): SyncAccount?
+
     // Files
 
     /**
