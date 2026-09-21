@@ -498,6 +498,24 @@ private fun rememberFirstFieldFocusRequester(): FocusRequester {
 }
 
 /**
+ * Lets a dialog's confirmation through the first time and never again. A dialog that confirms does not leave with
+ * the tap but with the next frame, and until then its button and the keyboard's Done key are both still live: on a
+ * frame that comes late a second tap lands on a dialog that has already been answered, and creates the song or
+ * the setlist a second time. The state is written as the event is handled, so the second event of the same frame
+ * already reads it.
+ */
+@Composable
+private fun rememberSingleConfirmation(): (confirm: () -> Unit) -> Unit {
+    var hasConfirmed by remember { mutableStateOf(false) }
+    return { confirm ->
+        if (!hasConfirmed) {
+            hasConfirmed = true
+            confirm()
+        }
+    }
+}
+
+/**
  * Everything the user gets to say about a setlist: its title, and the description that goes under its header on the
  * setlists screen. Creating one, editing one and naming a copy of one are the same dialog with different labels,
  * since all three are answering the same two questions.
@@ -526,6 +544,7 @@ private fun SetlistDetailsDialog(
     var description by rememberSaveable { mutableStateOf(initialDescription) }
     val isValid = setlistTitle.text.isNotBlank()
     val focusRequester = rememberFirstFieldFocusRequester()
+    val confirmOnce = rememberSingleConfirmation()
     AlertDialog(
         onDismissRequest = onDismiss,
         title = { Text(title) },
@@ -565,7 +584,7 @@ private fun SetlistDetailsDialog(
         confirmButton = {
             TextButton(
                 enabled = isValid,
-                onClick = { onConfirm(setlistTitle.text, description) },
+                onClick = { confirmOnce { onConfirm(setlistTitle.text, description) } },
             ) { Text(confirmLabel) }
         },
         dismissButton = {
@@ -587,6 +606,8 @@ private fun NewSongDialog(
     var artist by rememberSaveable { mutableStateOf("") }
     val isValid = title.isNotBlank()
     val focusRequester = rememberFirstFieldFocusRequester()
+    val confirmOnce = rememberSingleConfirmation()
+    val create = { if (isValid) confirmOnce { onCreate(title, artist) } }
     AlertDialog(
         onDismissRequest = onDismiss,
         title = { Text(stringResource(Res.string.songs_new_song)) },
@@ -608,14 +629,14 @@ private fun NewSongDialog(
                     label = { Text(stringResource(Res.string.songs_new_song_artist)) },
                     singleLine = true,
                     keyboardOptions = KeyboardOptions(imeAction = ImeAction.Done),
-                    keyboardActions = KeyboardActions(onDone = { if (isValid) onCreate(title, artist) }),
+                    keyboardActions = KeyboardActions(onDone = { create() }),
                 )
             }
         },
         confirmButton = {
             TextButton(
                 enabled = isValid,
-                onClick = { onCreate(title, artist) },
+                onClick = create,
             ) { Text(stringResource(Res.string.create)) }
         },
         dismissButton = {

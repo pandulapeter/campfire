@@ -13,8 +13,12 @@ import com.pandulapeter.campfire.data.model.domain.Song
 import com.pandulapeter.campfire.data.model.domain.SongContent
 import com.pandulapeter.campfire.data.source.local.api.SongLocalSource
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.async
+import kotlinx.coroutines.awaitAll
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.test.runTest
+import kotlinx.coroutines.yield
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFalse
@@ -75,7 +79,34 @@ class SongRepositoryImplTest {
         assertEquals("the editor's draft", localSource.files[FILE_NAME])
     }
 
-    /** A library held in a map, with only the calls a save makes answered. */
+    @Test
+    fun `two songs created at once get a name each`() = runTest {
+        val localSource = FakeSongLocalSource(emptyMap())
+        val repository = SongRepositoryImpl(localSource, SongContentRepositoryImpl(localSource))
+
+        val created = listOf(
+            async { repository.createSong("song", "", "a") },
+            async { repository.createSong("song", "", "b") },
+        ).awaitAll()
+
+        assertEquals(listOf("song.cho", "song_2.cho"), created.map { it.fileName })
+        assertEquals(mapOf("song.cho" to "a", "song_2.cho" to "b"), localSource.files)
+        assertEquals(listOf("song.cho", "song_2.cho"), repository.songs.first().data?.map { it.fileName }?.sorted())
+    }
+
+    @Test
+    fun `a created song whose name the list already holds is listed once`() = runTest {
+        val localSource = FakeSongLocalSource(mapOf(FILE_NAME to "old"))
+        val repository = SongRepositoryImpl(localSource, SongContentRepositoryImpl(localSource))
+        repository.loadSongsIfNeeded()
+        localSource.files.remove(FILE_NAME)
+
+        repository.createSong("song", "", "new")
+
+        assertEquals(listOf(FILE_NAME), repository.songs.first().data?.map { it.fileName })
+    }
+
+    /** A library held in a map, with only the calls a save and a creation make answered. */
     private class FakeSongLocalSource(files: Map<String, String>) : SongLocalSource {
 
         val files = files.toMutableMap()
@@ -90,7 +121,13 @@ class SongRepositoryImplTest {
             files[content.fileName] = content.text
         }
 
-        override suspend fun createSong(title: String, artist: String, text: String) = throw UnsupportedOperationException()
+        override suspend fun createSong(title: String, artist: String, text: String): Song {
+            val fileName = generateSequence(1) { it + 1 }.map { if (it == 1) "$title.cho" else "${title}_$it.cho" }.first { it !in files }
+            // The storage finds the name free on one trip and writes under it on another, and this is the gap between them.
+            yield()
+            files[fileName] = text
+            return song(fileName)
+        }
 
         override fun importFileName(fallbackTitle: String, text: String) = throw UnsupportedOperationException()
 

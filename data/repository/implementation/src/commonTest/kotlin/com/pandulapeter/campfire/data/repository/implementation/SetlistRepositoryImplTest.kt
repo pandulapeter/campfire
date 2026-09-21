@@ -12,11 +12,14 @@ package com.pandulapeter.campfire.data.repository.implementation
 import com.pandulapeter.campfire.data.model.domain.Setlist
 import com.pandulapeter.campfire.data.source.local.api.SetlistLocalSource
 import kotlinx.coroutines.CompletableDeferred
+import kotlinx.coroutines.async
+import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.runCurrent
 import kotlinx.coroutines.test.runTest
+import kotlinx.coroutines.yield
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertNull
@@ -107,6 +110,51 @@ class SetlistRepositoryImplTest {
         assertEquals(listOf("c.cho"), localSource.files.getValue(FILE_NAME).entries.map { it.songFileName })
     }
 
+    @Test
+    fun `two setlists created at once get a name each`() = runTest {
+        val localSource = FakeSetlistLocalSource(emptyList())
+        val repository = SetlistRepositoryImpl(localSource)
+
+        val created = listOf(
+            async { repository.createSetlist("Gig", "", 1) },
+            async { repository.createSetlist("Gig", "", 1) },
+        ).awaitAll()
+
+        assertEquals(listOf(FILE_NAME, SECOND_FILE_NAME), created.map { it.fileName })
+        assertEquals(setOf(FILE_NAME, SECOND_FILE_NAME), localSource.files.keys)
+        assertEquals(listOf(FILE_NAME, SECOND_FILE_NAME), repository.setlists.first().data?.map { it.fileName }?.sorted())
+    }
+
+    @Test
+    fun `a created setlist whose name the list already holds is listed once`() = runTest {
+        val localSource = FakeSetlistLocalSource(listOf(setlist(FILE_NAME)))
+        val repository = SetlistRepositoryImpl(localSource)
+        repository.loadSetlistsIfNeeded()
+        localSource.files.remove(FILE_NAME)
+
+        repository.createSetlist("Gig", "", 1)
+
+        assertEquals(listOf(FILE_NAME), repository.setlists.first().data?.map { it.fileName })
+    }
+
+    @Test
+    fun `a creation waits for the change being written`() = runTest {
+        val localSource = FakeSetlistLocalSource(listOf(setlist(FILE_NAME, "a.cho")))
+        val repository = SetlistRepositoryImpl(localSource)
+        val gate = CompletableDeferred<Unit>().also { localSource.saveGate = it }
+
+        launch { repository.updateSetlist(FILE_NAME) { it.copy(entries = it.entries + Setlist.Entry("b.cho")) } }
+        runCurrent()
+        launch { repository.createSetlist("Gig", "", 2) }
+        runCurrent()
+
+        assertEquals(setOf(FILE_NAME), localSource.files.keys)
+        gate.complete(Unit)
+        advanceUntilIdle()
+        assertEquals(listOf("a.cho", "b.cho"), localSource.files.getValue(FILE_NAME).entries.map { it.songFileName })
+        assertEquals(setOf(FILE_NAME, SECOND_FILE_NAME), localSource.files.keys)
+    }
+
     /** A setlists directory held in a map, whose writes can be held back until the test lets them through. */
     private class FakeSetlistLocalSource(setlists: List<Setlist>) : SetlistLocalSource {
 
@@ -116,14 +164,20 @@ class SetlistRepositoryImplTest {
 
         override suspend fun loadSetlists() = files.values.toList()
 
-        override suspend fun createSetlist(title: String, description: String, priority: Int) = Setlist(
-            fileName = "${title.lowercase()}.setlist.json",
-            title = title,
-            description = description,
-            priority = priority,
-            isArchived = false,
-            entries = emptyList(),
-        ).also { files[it.fileName] = it }
+        override suspend fun createSetlist(title: String, description: String, priority: Int): Setlist {
+            val name = title.lowercase()
+            val fileName = generateSequence(1) { it + 1 }.map { if (it == 1) "$name.setlist.json" else "${name}_$it.setlist.json" }.first { it !in files }
+            // The storage finds the name free on one trip and writes under it on another, and this is the gap between them.
+            yield()
+            return Setlist(
+                fileName = fileName,
+                title = title,
+                description = description,
+                priority = priority,
+                isArchived = false,
+                entries = emptyList(),
+            ).also { files[it.fileName] = it }
+        }
 
         override suspend fun saveSetlist(setlist: Setlist) {
             saveGate?.await()
@@ -148,6 +202,7 @@ class SetlistRepositoryImplTest {
 
     private companion object {
         const val FILE_NAME = "gig.setlist.json"
+        const val SECOND_FILE_NAME = "gig_2.setlist.json"
         const val RENAMED_FILE_NAME = "summer.setlist.json"
 
         fun setlist(fileName: String, vararg songs: String) = Setlist(

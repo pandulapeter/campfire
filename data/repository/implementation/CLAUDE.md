@@ -45,7 +45,12 @@ long as the storage takes to answer. A cancelled read is not a failed one: it is
   `deleteSetlist` — under one lock, held from reading the setlist out of its own cache to having the write back in
   that cache, so a second change reads what the first one wrote, and a move or a deletion cannot cross a change that
   is halfway through. The cache is the one place that is current straight after a write; anything observing
-  `setlists` catches up a few hops later.
+  `setlists` catches up a few hops later. Creating and importing a setlist take it as well, from the storage finding
+  a name free to the file being there under it.
+- `SongRepositoryImpl` has the same kind of lock for the three writers that pick a free name before they write
+  (`createSong`, `importSong`, `renameSong`): finding the name and writing under it are two trips to the storage, and a
+  second asker in between is given the same name. Every change to either cached list replaces by file name and never
+  appends, since the file name is what the lists key their rows by.
 - `SongContentRepositoryImpl` is not a `BaseLocalDataRepository`: it is a keyed in-memory cache of song *texts*, so
   paging through a setlist re-reads nothing. Bulk readers (the library export) pass `shouldCache = false` so that
   walking the whole library does not leave all of it in memory. The editor invalidates one entry after a save. The

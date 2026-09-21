@@ -30,7 +30,8 @@ internal class SetlistRepositoryImpl(
      * catches up a few hops later, and a file write is plenty of time for a second tap to land in between. Every
      * write to a setlist file takes it, the ones that read nothing included, since a save, a move or a deletion
      * crossing a change that is halfway through is how a setlist ends up holding the older of the two, twice in the
-     * library, or back after it was deleted.
+     * library, or back after it was deleted. It also covers the creations and the imports, from the storage finding a
+     * name free to the file being there under it, so that two of them cannot be given the same one.
      */
     private val writeMutex = Mutex()
 
@@ -42,10 +43,10 @@ internal class SetlistRepositoryImpl(
         reloadData()
     }
 
-    override suspend fun createSetlist(title: String, description: String, priority: Int): Setlist {
-        val setlist = setlistLocalSource.createSetlist(title = title, description = description, priority = priority)
-        updateData { current -> current.orEmpty() + setlist }
-        return setlist
+    override suspend fun createSetlist(title: String, description: String, priority: Int): Setlist = writeMutex.withLock {
+        setlistLocalSource.createSetlist(title = title, description = description, priority = priority).also { created ->
+            updateData { current -> current.orEmpty().filterNot { it.fileName == created.fileName } + created }
+        }
     }
 
     override suspend fun saveSetlist(setlist: Setlist) = writeMutex.withLock { write(setlist) }
@@ -66,7 +67,9 @@ internal class SetlistRepositoryImpl(
 
     override suspend fun parseSetlist(document: String) = setlistLocalSource.parseSetlist(document)
 
-    override suspend fun importSetlist(setlist: Setlist, shouldReplace: Boolean) = setlistLocalSource.importSetlist(setlist, shouldReplace)
+    override suspend fun importSetlist(setlist: Setlist, shouldReplace: Boolean) = writeMutex.withLock {
+        setlistLocalSource.importSetlist(setlist, shouldReplace)
+    }
 
     override suspend fun loadSetlistDocument(fileName: String) = setlistLocalSource.loadSetlistDocument(fileName)
 
