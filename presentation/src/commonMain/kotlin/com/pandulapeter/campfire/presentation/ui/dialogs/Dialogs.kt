@@ -309,6 +309,7 @@ internal fun CampfireDialogs(
         )
 
         CampfireViewModel.DialogType.UnsavedChanges -> UnsavedChangesDialog(
+            isSaving = viewModel.isSavingSong.collectAsStateWithLifecycle().value,
             onCancel = viewModel::dismissDialog,
             onDiscard = viewModel::leaveEditorWithoutSaving,
             onSave = viewModel::saveEditorChangesAndLeave,
@@ -321,10 +322,13 @@ internal fun CampfireDialogs(
 /**
  * Asked when the editor is left with text in it that has not been written yet. Three answers rather than the usual
  * two: the editor only ever writes when it is told to, so throwing what was typed away has to be asked for just as
- * explicitly as keeping it, and staying in the editor has to be possible without picking either.
+ * explicitly as keeping it, and staying in the editor has to be possible without picking either. While the text is
+ * being written only Cancel is left, which still means staying: the write is not something to be pressed twice, and
+ * Discard would be answering a question the write is already answering.
  */
 @Composable
 private fun UnsavedChangesDialog(
+    isSaving: Boolean,
     onCancel: () -> Unit,
     onDiscard: () -> Unit,
     onSave: () -> Unit,
@@ -333,12 +337,16 @@ private fun UnsavedChangesDialog(
     title = { Text(stringResource(Res.string.song_editor_unsaved_changes)) },
     text = { Text(stringResource(Res.string.song_editor_unsaved_changes_confirmation)) },
     confirmButton = {
-        TextButton(onClick = onSave) { Text(stringResource(Res.string.save)) }
+        TextButton(
+            enabled = !isSaving,
+            onClick = onSave,
+        ) { Text(stringResource(Res.string.save)) }
     },
     dismissButton = {
         Row {
             TextButton(onClick = onCancel) { Text(stringResource(Res.string.cancel)) }
             TextButton(
+                enabled = !isSaving,
                 colors = ButtonDefaults.textButtonColors(contentColor = MaterialTheme.colorScheme.error),
                 onClick = onDiscard,
             ) { Text(stringResource(Res.string.song_editor_discard)) }

@@ -611,8 +611,14 @@ class CampfireViewModel(
      */
     private val importQueue = Channel<ImportRequest>(Channel.UNLIMITED)
 
-    /** The last [saveSongContent], which closing the application waits for, see [requestExit]. */
+    /**
+     * The last write of the editor's text, from its Save action or from the `UnsavedChanges` dialog, which closing the
+     * application waits for, see [requestExit].
+     */
     private var currentSaveJob: Job? = null
+
+    /** The save the `UnsavedChanges` dialog is waiting for, so that a second press of its Save does not start another. */
+    private var editorLeaveJob: Job? = null
 
     /**
      * The exit that asked the `UnsavedChanges` question, run once it is answered with Save or Discard. Any other way
@@ -764,23 +770,25 @@ class CampfireViewModel(
     }
 
     /**
-     * Closing the application, which is a way out of the editor like any other: with unsaved text in it the
-     * `UnsavedChanges` question is asked first, and [exit] only runs once it has been answered with something other
-     * than staying. Either way it waits for a save that is still being written, since the process ends with [exit].
+     * Closing the application, which is a way out of the editor like any other. A save that is still being written
+     * is waited for first, since the process ends with [exit] - and since only then is it known whether it worked:
+     * with unsaved text in the editor, which is also what a save that failed leaves behind, the `UnsavedChanges`
+     * question is asked, and [exit] only runs once that has been answered with something other than staying.
      */
     fun requestExit(exit: () -> Unit) {
-        if (hasUnsavedEditorChanges.value && backStack.lastOrNull() is CampfireDestination.SongEditor) {
-            pendingExit = exit
-            showDialog(DialogType.UnsavedChanges)
-        } else {
-            exitOnceSaved(exit)
+        viewModelScope.launch {
+            currentSaveJob?.join()
+            if (hasUnsavedEditorText() && backStack.lastOrNull() is CampfireDestination.SongEditor) {
+                pendingExit = exit
+                showDialog(DialogType.UnsavedChanges)
+            } else {
+                exit()
+            }
         }
     }
 
-    private fun exitOnceSaved(exit: () -> Unit) = viewModelScope.launch {
-        currentSaveJob?.join()
-        exit()
-    }
+    /** [hasUnsavedEditorChanges] as of this moment, for a decision taken right after a write rather than drawn. */
+    private fun hasUnsavedEditorText() = _editorDraft.value?.let { it.text != _songTexts.value[it.fileName] } == true
 
     private fun popBackStack() {
         if (backStack.size > 1) {
@@ -892,20 +900,35 @@ class CampfireViewModel(
     /** Reported by the editor once it is gone, whatever became of the text it had. */
     fun onEditorClosed() = _editorDraft.update { null }
 
-    /** The "Save" answer of the unsaved changes dialog. The write outlives this screen, see [saveSongContent]. */
+    /**
+     * The "Save" answer of the unsaved changes dialog. The editor holds the only copy of the text until the file
+     * does, so leaving - and, where the dialog was asked by [requestExit], ending the process - is what a write that
+     * succeeded earns, not what follows one that was started. The dialog stays up while the file is written. A write
+     * that fails takes the dialog away and leaves the editor as it was, which is what the same failure does behind
+     * the editor's own Save button; a dialog dismissed in the meantime still means staying, with the text saved.
+     */
     fun saveEditorChangesAndLeave() {
-        // Taken before leaving, which dismisses the dialog and with it the exit the dialog was asked for.
-        val exit = pendingExit
-        _editorDraft.value?.let { saveSongContent(fileName = it.fileName, text = it.text) }
-        leaveEditor()
-        exit?.let(::exitOnceSaved)
+        if (editorLeaveJob?.isActive == true) return
+        val draft = _editorDraft.value ?: return leaveEditorWithoutSaving()
+        editorLeaveJob = viewModelScope.launch {
+            val isSaved = writeEditorText(fileName = draft.fileName, text = draft.text)
+            when {
+                !isSaved -> dismissDialog()
+                _visibleDialog.value == DialogType.UnsavedChanges -> {
+                    // Taken before leaving, which dismisses the dialog and with it the exit the dialog was asked for.
+                    val exit = pendingExit
+                    leaveEditor()
+                    exit?.invoke()
+                }
+            }
+        }.also { currentSaveJob = it }
     }
 
     /** The "Discard" answer of the unsaved changes dialog, and the only way typed text is ever thrown away. */
     fun leaveEditorWithoutSaving() {
         val exit = pendingExit
         leaveEditor()
-        exit?.let(::exitOnceSaved)
+        exit?.let(::requestExit)
     }
 
     /**
@@ -925,25 +948,31 @@ class CampfireViewModel(
         popBackStack()
     }
 
-    /**
-     * Writes the edited text and keeps the copy the viewer renders from in step. Runs on [NonCancellable] because
-     * the last save of an editing session can be started as the screen is going away, which cancels its scope.
-     */
+    /** The editor's Save action. Fire and forget: the outcome reaches the user as the editor's own state. */
     fun saveSongContent(fileName: String, text: String) = viewModelScope.launch {
-        _isSavingSong.update { true }
-        try {
-            withContext(NonCancellable) {
-                songWriteMutex.withLock { writeSongContent(fileName = fileName, text = text) }
-            }
-        } catch (exception: CancellationException) {
-            throw exception
-        } catch (exception: Exception) {
-            println("Could not save the song \"$fileName\": ${exception.message}")
-            _messages.send(Message.SaveFailed)
-        } finally {
-            _isSavingSong.update { false }
-        }
+        writeEditorText(fileName = fileName, text = text)
     }.also { currentSaveJob = it }
+
+    /**
+     * Writes the edited text, keeps the copy the viewer renders from in step, and answers whether the file now holds
+     * it. A failure is reported from here as [Message.SaveFailed], so that every way of saving says the same thing.
+     * Runs on [NonCancellable] because the last save of an editing session can be started as the screen is going
+     * away, which cancels its scope.
+     */
+    private suspend fun writeEditorText(fileName: String, text: String) = try {
+        _isSavingSong.update { true }
+        withContext(NonCancellable) {
+            songWriteMutex.withLock { writeSongContent(fileName = fileName, text = text) }
+        }
+    } catch (exception: CancellationException) {
+        throw exception
+    } catch (exception: Exception) {
+        println("Could not save the song \"$fileName\": ${exception.message}")
+        _messages.send(Message.SaveFailed)
+        false
+    } finally {
+        _isSavingSong.update { false }
+    }
 
     /**
      * The write itself, and [songTexts] brought up to date with it before anything else can read them. The caller holds
