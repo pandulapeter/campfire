@@ -25,6 +25,7 @@ import com.pandulapeter.campfire.data.repository.implementation.sync.RecordingSe
 import com.pandulapeter.campfire.data.repository.implementation.sync.RecordingSongRepository
 import com.pandulapeter.campfire.data.repository.implementation.sync.SyncKey
 import com.pandulapeter.campfire.data.source.local.api.LibraryStorageException
+import com.pandulapeter.campfire.data.source.remote.api.SyncNetworkException
 import com.pandulapeter.campfire.data.source.remote.api.SyncProviders
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.test.runTest
@@ -58,13 +59,13 @@ class SyncRepositoryImplTest {
     fun `a periodic index write that fails does not end the run`() = runTest {
         val stateLocalSource = FakeSyncStateLocalSource(
             onSaveIndex = { document ->
-                if (document != null && "\"isRunInProgress\": true" in document && SONG.name in document) {
+                if (document != null && "\"isRunInProgress\": true" in document && song(1).name in document) {
                     throw LibraryStorageException("Full")
                 }
             },
         )
         val repository = repository(
-            provider = FakeSyncProvider(files = mapOf(SONG to "Song".encodeToByteArray()), account = ACCOUNT),
+            provider = FakeSyncProvider(files = mapOf(song(1) to "Song".encodeToByteArray()), account = ACCOUNT),
             stateLocalSource = stateLocalSource,
         )
 
@@ -75,8 +76,30 @@ class SyncRepositoryImplTest {
         val outcome = assertIs<SyncOutcome.Success>(state.lastOutcome)
         assertEquals(1, outcome.summary.downloaded)
         val index = stateLocalSource.index.orEmpty()
-        assertTrue(SONG.name in index)
+        assertTrue(song(1).name in index)
         assertFalse("\"isRunInProgress\": true" in index)
+    }
+
+    @Test
+    fun `a run that fails after moving files reads the library again`() = runTest {
+        val local = FakeLibraryFileLocalSource(files = mapOf(song(2) to "Two".encodeToByteArray()))
+        val snapshots = mutableListOf<Set<SyncKey>>()
+        val repository = repository(
+            provider = FakeSyncProvider(
+                files = mapOf(song(1) to "One".encodeToByteArray()),
+                onUpload = { throw SyncNetworkException("Offline") },
+                account = ACCOUNT,
+            ),
+            libraryFileLocalSource = local,
+            songRepository = RecordingSongRepository(onRescan = { snapshots += local.files.keys.toSet() }),
+        )
+
+        repository.restore()
+        repository.synchronize(SyncDeletionPolicy.ASK)
+        val state = repository.awaitOutcome()
+
+        assertEquals(SyncOutcome.Failure(SyncFailureReason.NETWORK), state.lastOutcome)
+        assertTrue(song(1) in snapshots.last())
     }
 
     private fun repository(
@@ -105,6 +128,7 @@ class SyncRepositoryImplTest {
 
     private companion object {
         val ACCOUNT = SyncAccount(providerId = SyncProviderId.DROPBOX, displayName = "Someone", email = "someone@example.com")
-        val SONG = SyncKey(kind = LibraryFileKind.SONG, name = "song_1.cho")
+
+        fun song(number: Int) = SyncKey(kind = LibraryFileKind.SONG, name = "song_$number.cho")
     }
 }

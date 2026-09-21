@@ -257,6 +257,7 @@ internal class SyncRepositoryImpl(
             // What the engine has reported so far, which is what an interrupted run writes on its way out: the files
             // it did transfer stay known, and only the rest look unsynced next time.
             var latestIndex: SyncIndexDocument? = null
+            var hasFinishedOperations = false
             try {
                 val document = loadIndex()
                 latestIndex = document.copy(isRunInProgress = true)
@@ -273,6 +274,7 @@ internal class SyncRepositoryImpl(
                     },
                     onIndexChanged = {
                         latestIndex = it
+                        hasFinishedOperations = true
                         scheduleIndexWrite(it)
                     },
                     deletionPolicy = deletionPolicy,
@@ -310,18 +312,12 @@ internal class SyncRepositoryImpl(
                 }
             } catch (exception: CancellationException) {
                 // Stopped rather than broken: nothing is wrong and nothing needs fixing, so this is its own outcome.
-                // Whatever did move before the stop is on disk, so the lists still have to be told about it.
-                withContext(NonCancellable) {
-                    indexWriteJob?.cancelAndJoin()
-                    latestIndex?.let { saveIndexQuietly(it.copy(isRunInProgress = false)) }
-                    rescanLibrary()
-                }
+                withContext(NonCancellable) { finishRunCutShort(latestIndex, hasFinishedOperations) }
                 updateConnected { it.copy(progress = null, lastOutcome = SyncOutcome.Interrupted) }
                 throw exception
             } catch (exception: Exception) {
                 println("The sync run failed: ${exception.message}")
-                indexWriteJob?.cancelAndJoin()
-                latestIndex?.let { saveIndexQuietly(it.copy(isRunInProgress = false)) }
+                withContext(NonCancellable) { finishRunCutShort(latestIndex, hasFinishedOperations) }
                 updateConnected { it.copy(progress = null, lastOutcome = SyncOutcome.Failure(exception.toFailureReason())) }
             } finally {
                 // The one thing that has to be true on every way out, including any added later: no progress means
@@ -374,6 +370,27 @@ internal class SyncRepositoryImpl(
     private suspend fun rescanLibrary() {
         songRepository.rescan()
         setlistRepository.rescan()
+    }
+
+    /**
+     * What a run that did not reach its end still owes: the periodic writer out of the way so it cannot land after the
+     * final write, the index as far as the run got without the marker saying one is going, and - where files may have
+     * moved - the lists told about them. Without that last step the repositories keep the library from before the
+     * run in their caches, and the next change made to a cached setlist or song text writes the old version back over
+     * the one the run brought in.
+     *
+     * Always called inside [NonCancellable]: a stopped run is cancelled by definition, and a failed one may be - a
+     * provider's exception can win over the cancellation that caused it - and in a cancelled coroutine the first
+     * suspending call here would throw and skip the rest.
+     */
+    private suspend fun finishRunCutShort(latestIndex: SyncIndexDocument?, hasFinishedOperations: Boolean) {
+        indexWriteJob?.cancelAndJoin()
+        latestIndex?.let { saveIndexQuietly(it.copy(isRunInProgress = false)) }
+        // Only when an operation got as far as finishing: a run that fails on its listing - every launch without a
+        // network - has moved nothing, and reading a whole library again for it would cost more than the run did.
+        if (hasFinishedOperations) {
+            rescanLibrary()
+        }
     }
 
     /**

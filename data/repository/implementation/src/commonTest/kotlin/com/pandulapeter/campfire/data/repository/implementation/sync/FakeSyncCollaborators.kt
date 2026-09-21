@@ -73,8 +73,13 @@ internal class FakePendingAuthorizationStore : PendingAuthorizationStore {
     override suspend fun clearPendingAuthorization() = Unit
 }
 
-/** Stands in for the song list that sync tells to read the library again, and counts how often it was told. */
-internal class RecordingSongRepository : SongRepository {
+/**
+ * Stands in for the song list that sync tells to read the library again, and counts how often it was told. [onRescan]
+ * runs on every rescan, which is where a test sees what the library held at that moment.
+ */
+internal class RecordingSongRepository(
+    private val onRescan: () -> Unit = {},
+) : SongRepository {
 
     var rescanCount = 0
 
@@ -84,6 +89,7 @@ internal class RecordingSongRepository : SongRepository {
 
     override suspend fun rescan() {
         rescanCount++
+        onRescan()
     }
 
     override suspend fun saveSong(content: SongContent, expectedText: String?): Boolean = throw UnsupportedOperationException()

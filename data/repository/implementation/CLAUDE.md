@@ -89,7 +89,9 @@ long as the storage takes to answer. A cancelled read is not a failed one: it is
   one after another: every one of them is a request, and serialising them made a first sync as slow as the round
   trip times added up. `SyncRepositoryImpl` owns an application-lifetime scope, so a run outlives the screen and
   (on Android) the activity that started it, and it is what tells the song and setlist repositories to rescan
-  afterwards — the use case cannot, now that it returns before the run does. Disconnecting cancels a run that is
+  afterwards — after a completed run that changed something, and after a stopped or failed one in which any
+  operation had finished (`finishRunCutShort`, always under `NonCancellable`), since files that moved before the run
+  ended are on disk whichever way it ended. The use case cannot, now that it returns before the run does. Disconnecting cancels a run that is
   still going and waits for it, and a run only ever writes its outcome into a state that is still `Connected`: a
   run that outlived the account it ran against must not bring that account back on screen. `restore` never throws
   for a service that refuses the stored credentials — the app starts disconnected and says so.

@@ -24,15 +24,16 @@ import com.pandulapeter.campfire.data.source.remote.api.model.RemoteWriteResult
  * A remote folder held in memory, for running [SyncEngine] against. Revisions are a counter per write, which is all
  * the engine may assume about them, and the content hash is the local one so that identical bytes compare equal.
  *
- * [onDownload] runs before a download answers, which is where a test makes the service fail part way through a run
- * or changes the local library under an operation that is already under way. [sizes] lets a listing report a large
- * file without the test allocating it. [account] is who the service says is connected, which is what a
- * repository test restores the connection from.
+ * [onDownload] and [onUpload] run before a transfer answers, which is where a test makes the service fail part way
+ * through a run or changes the local library under an operation that is already under way. [sizes] lets a listing
+ * report a large file without the test allocating it. [account] is who the service says is connected, which is what
+ * a repository test restores the connection from.
  */
 internal class FakeSyncProvider(
     files: Map<SyncKey, ByteArray> = emptyMap(),
     private val sizes: Map<SyncKey, Long> = emptyMap(),
     var onDownload: (SyncKey) -> Unit = {},
+    var onUpload: (SyncKey) -> Unit = {},
     private val account: SyncAccount? = null,
 ) : SyncProvider {
 
@@ -82,6 +83,7 @@ internal class FakeSyncProvider(
         expectedRevision: String?,
     ): RemoteWriteResult {
         val key = SyncKey(kind = kind, name = name)
+        onUpload(key)
         if (files[key]?.second != expectedRevision) return RemoteWriteResult.Conflict
         val revision = "r${nextRevision++}"
         files[key] = bytes to revision
