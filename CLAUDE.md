@@ -323,7 +323,9 @@ three. The gate wraps the whole app inside `CampfireApp`, so it speaks the theme
 - The **Play release's `updatePriority` is the entire policy** and it is chosen per release rather than in the code:
   0–1 is left to Play's own schedule, 2–3 offers a dismissible flexible update that downloads in the background,
   4–5 covers the app with a screen that cannot be dismissed until the update is there. The thresholds live in
-  `AppUpdate.android.kt`, and `android-publish.yml` asks for the number as its `update_priority` input — which a release
+  `AppUpdate.android.kt`. The priority also says which kind of flow an update already in progress is, since Play's
+  answer does not — which is what lets an Activity recreated mid-download pick the download up instead of offering
+  it again. `android-publish.yml` asks for the number as its `update_priority` input — which a release
   sets with a `<!-- play-store update-priority: N -->` comment in its description — defaulting to 0 — the number belongs to the release being published, not to the code being published.
 - Back on the blocking screen closes the app. The app it covers is still composed behind it, so the gesture has to
   be taken rather than allowed through, and leaving is the only thing it can honestly mean there.

@@ -51,10 +51,18 @@ import com.google.android.play.core.install.model.UpdateAvailability
 @Composable
 internal actual fun rememberAppUpdateController(): AppUpdateController {
     val activity = LocalActivity.current as? ComponentActivity ?: return NoAppUpdates
-    // Kept outside the controller so that a rotation does not undo a "later": the activity, and with it everything
-    // remembered against it, is recreated, while the answer the user already gave should still stand.
+    // Kept outside the controller so that a rotation does not undo them: the activity, and with it everything
+    // remembered against it, is recreated, while a "later" the user already gave should still stand, and an
+    // immediate flow they already backed out of should not open itself again.
     val isPostponed = rememberSaveable { mutableStateOf(false) }
-    val controller = remember(activity) { AndroidAppUpdateController(activity, isPostponed) }
+    val hasStartedImmediateFlow = rememberSaveable { mutableStateOf(false) }
+    val controller = remember(activity) {
+        AndroidAppUpdateController(
+            activity = activity,
+            isPostponed = isPostponed,
+            hasStartedImmediateFlow = hasStartedImmediateFlow,
+        )
+    }
     val launcher = rememberLauncherForActivityResult(ActivityResultContracts.StartIntentSenderForResult()) { result ->
         controller.onUpdateFlowResult(isSuccessful = result.resultCode == Activity.RESULT_OK)
     }
@@ -71,6 +79,7 @@ internal actual fun rememberAppUpdateController(): AppUpdateController {
 private class AndroidAppUpdateController(
     private val activity: ComponentActivity,
     isPostponed: MutableState<Boolean>,
+    hasStartedImmediateFlow: MutableState<Boolean>,
 ) : AppUpdateController {
 
     private val appUpdateManager = AppUpdateManagerFactory.create(activity.applicationContext)
@@ -79,7 +88,13 @@ private class AndroidAppUpdateController(
     private var availableUpdate: AppUpdateInfo? = null
     private var launcher: ActivityResultLauncher<IntentSenderRequest>? = null
     private var isListenerRegistered = false
-    private var hasStartedImmediateFlow = false
+    private var hasStartedImmediateFlow by hasStartedImmediateFlow
+
+    /**
+     * Play's answer to a check is not tied to the activity that asked: it can arrive after this controller has left
+     * the composition, when the launcher it holds is no longer registered and launching it throws.
+     */
+    private var isReleased = false
 
     override var state by mutableStateOf(AppUpdateState.NotAvailable)
         private set
@@ -90,9 +105,6 @@ private class AndroidAppUpdateController(
     }
 
     fun checkForUpdate() {
-        // A running download reports itself through the install listener. Asking Play again during one would answer
-        // with the state the download started from and take the progress back off the screen.
-        if (state == AppUpdateState.Downloading) return
         appUpdateManager.appUpdateInfo
             .addOnSuccessListener(::onAppUpdateInfoReceived)
             // A failed check is the normal answer for a build Play did not install, and there is nothing the user
@@ -102,14 +114,20 @@ private class AndroidAppUpdateController(
 
     fun onUpdateFlowResult(isSuccessful: Boolean) {
         // Backing out of the Play sheet is the user declining the download, and only the flexible flow can be
-        // declined without the app noticing otherwise - an immediate one is re-offered by the next check.
-        if (!isSuccessful && state == AppUpdateState.Downloading) {
+        // declined - an immediate one is re-offered by the next check, which does not ask whether it was postponed.
+        // The state is not asked whether it is a download: a sheet that was open while the activity was recreated
+        // answers to a controller that has not heard from Play yet.
+        if (!isSuccessful && state != AppUpdateState.Required) {
             unregisterInstallListener()
             postponeUpdate()
         }
     }
 
-    fun release() = unregisterInstallListener()
+    fun release() {
+        isReleased = true
+        launcher = null
+        unregisterInstallListener()
+    }
 
     override fun startUpdate() {
         val appUpdateInfo = availableUpdate ?: return
@@ -118,26 +136,38 @@ private class AndroidAppUpdateController(
         when (state) {
             AppUpdateState.Required -> {
                 hasStartedImmediateFlow = true
-                appUpdateManager.startUpdateFlowForResult(
-                    appUpdateInfo,
-                    launcher,
-                    AppUpdateOptions.newBuilder(AppUpdateType.IMMEDIATE).build(),
-                )
+                // The blocking screen stays whatever happens here, and its button is the way to try again.
+                if (!launchUpdateFlow(appUpdateInfo, launcher, AppUpdateType.IMMEDIATE)) checkForUpdate()
             }
 
             AppUpdateState.Optional -> {
                 registerInstallListener()
                 // Said before Play is asked, so that the hint is gone by the time its sheet is over the app.
                 state = AppUpdateState.Downloading
-                appUpdateManager.startUpdateFlowForResult(
-                    appUpdateInfo,
-                    launcher,
-                    AppUpdateOptions.newBuilder(AppUpdateType.FLEXIBLE).build(),
-                )
+                if (!launchUpdateFlow(appUpdateInfo, launcher, AppUpdateType.FLEXIBLE)) {
+                    unregisterInstallListener()
+                    state = AppUpdateState.NotAvailable
+                    checkForUpdate()
+                }
             }
 
             else -> Unit
         }
+    }
+
+    /**
+     * Whether Play took the flow. An [AppUpdateInfo] starts one flow and no more, and the launcher belongs to a
+     * composition that may be gone, so this can throw as well as refuse; either way the answer in hand is spent,
+     * and the caller asks for a new one.
+     */
+    private fun launchUpdateFlow(
+        appUpdateInfo: AppUpdateInfo,
+        launcher: ActivityResultLauncher<IntentSenderRequest>,
+        @AppUpdateType updateType: Int,
+    ) = try {
+        appUpdateManager.startUpdateFlowForResult(appUpdateInfo, launcher, AppUpdateOptions.newBuilder(updateType).build())
+    } catch (exception: Exception) {
+        false
     }
 
     override fun startRequiredUpdateOnce() {
@@ -158,8 +188,16 @@ private class AndroidAppUpdateController(
     }
 
     private fun onAppUpdateInfoReceived(appUpdateInfo: AppUpdateInfo) {
+        if (isReleased) return
         availableUpdate = appUpdateInfo
-        state = appUpdateInfo.toAppUpdateState()
+        val newState = appUpdateInfo.toAppUpdateState()
+        // Play takes a moment to notice a download it has just been asked for, and the check that runs as its sheet
+        // closes can still be answered with the offer. The offer has been taken, so it is not made again.
+        if (state == AppUpdateState.Downloading && newState == AppUpdateState.Optional) return
+        state = newState
+        // A download this controller did not start - one that was going when the activity was recreated - has
+        // nobody listening for its end yet.
+        if (newState == AppUpdateState.Downloading) registerInstallListener()
     }
 
     private fun onInstallStateChanged(installState: InstallState) {
@@ -189,22 +227,29 @@ private class AndroidAppUpdateController(
      * no room for the download, an update the account is not eligible for), and an offer that goes nowhere is worse
      * than no offer at all.
      */
-    private fun AppUpdateInfo.toAppUpdateState() = when {
-        // An immediate update the user walked out of halfway; Play resumes it, and until it does the app is the old
-        // one, which is exactly what the blocking screen is for.
-        updateAvailability() == UpdateAvailability.DEVELOPER_TRIGGERED_UPDATE_IN_PROGRESS -> AppUpdateState.Required
+    private fun AppUpdateInfo.toAppUpdateState(): AppUpdateState {
+        val isRequired = updatePriority() >= MINIMUM_REQUIRED_PRIORITY
+        val isInProgress = updateAvailability() == UpdateAvailability.DEVELOPER_TRIGGERED_UPDATE_IN_PROGRESS
+        return when {
+            // An immediate update the user walked out of halfway; Play resumes it, and until it does the app is the
+            // old one, which is exactly what the blocking screen is for. Play does not say which kind of flow is in
+            // progress, but the priority does: a required update is never started as anything else.
+            isInProgress && isRequired -> AppUpdateState.Required
 
-        installStatus() == InstallStatus.DOWNLOADED -> if (isPostponed) AppUpdateState.NotAvailable else AppUpdateState.ReadyToInstall
+            installStatus() == InstallStatus.DOWNLOADED -> if (isPostponed) AppUpdateState.NotAvailable else AppUpdateState.ReadyToInstall
 
-        updateAvailability() != UpdateAvailability.UPDATE_AVAILABLE -> AppUpdateState.NotAvailable
+            // A flexible download that is going already, which is what a recreated activity finds.
+            installStatus() == InstallStatus.PENDING || installStatus() == InstallStatus.DOWNLOADING -> AppUpdateState.Downloading
 
-        updatePriority() >= MINIMUM_REQUIRED_PRIORITY ->
-            if (isUpdateTypeAllowed(AppUpdateType.IMMEDIATE)) AppUpdateState.Required else AppUpdateState.NotAvailable
+            updateAvailability() != UpdateAvailability.UPDATE_AVAILABLE -> AppUpdateState.NotAvailable
 
-        updatePriority() >= MINIMUM_OPTIONAL_PRIORITY ->
-            if (!isPostponed && isUpdateTypeAllowed(AppUpdateType.FLEXIBLE)) AppUpdateState.Optional else AppUpdateState.NotAvailable
+            isRequired -> if (isUpdateTypeAllowed(AppUpdateType.IMMEDIATE)) AppUpdateState.Required else AppUpdateState.NotAvailable
 
-        else -> AppUpdateState.NotAvailable
+            updatePriority() >= MINIMUM_OPTIONAL_PRIORITY ->
+                if (!isPostponed && isUpdateTypeAllowed(AppUpdateType.FLEXIBLE)) AppUpdateState.Optional else AppUpdateState.NotAvailable
+
+            else -> AppUpdateState.NotAvailable
+        }
     }
 
     private fun registerInstallListener() {
