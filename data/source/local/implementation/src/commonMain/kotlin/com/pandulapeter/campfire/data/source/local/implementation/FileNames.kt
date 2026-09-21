@@ -56,11 +56,10 @@ internal suspend fun FileStorage.uniqueName(
     collisionSuffix: (index: Int) -> String = ::normalizedCollisionSuffix,
     currentName: String? = null,
 ): String {
-    suspend fun isFree(candidate: String) = if (candidate.equals(currentName, ignoreCase = true)) {
-        list(directory).none { it.name == candidate }
-    } else {
-        !exists(directory, candidate)
-    }
+    fun isOwnName(candidate: String) = candidate.equals(currentName, ignoreCase = true)
+    if (!isOwnName(desired) && !exists(directory, desired)) return desired
+    val takenNames = listNames(directory).toHashSet()
+    suspend fun isFree(candidate: String) = candidate !in takenNames && (isOwnName(candidate) || !exists(directory, candidate))
     if (isFree(desired)) return desired
     val extension = desired.knownExtension()
     val base = desired.removeSuffix(extension)

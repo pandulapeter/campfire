@@ -56,7 +56,8 @@ out anything it has nothing to say about.
 
 A file name is a song's identity — it is what a setlist points at — and Campfire derives it from the song's own
 header rather than from whatever the file was called when it arrived: `{artist}`, `{title}` and `{subtitle}`, folded
-to lowercase unaccented words joined with underscores, as `green_day-good_riddance_time_of_your_life.cho`. The name a
+  to lowercase unaccented words joined with underscores — letters of other alphabets are kept, so `{title: Катюша}` is
+  `катюша.cho` — as `green_day-good_riddance_time_of_your_life.cho`. The name a
 file arrives under counts for nothing, except where the song inside declares no `{title}`, in which case it stands in
 as the title.
 
@@ -69,3 +70,4 @@ Campfire only ever renames a file when you ask it to, or when nothing is lost by
 title, because the title is written inside the document. A song's does not: it is what a setlist points at, and on
 the platforms where the library is a folder you may have chosen it yourself. Where a song's name and its metadata
 have drifted apart, its menu offers **Update file name**, which moves the file and everything that named it.
+Songs named `untitled_N` by an earlier version offer that action once their title can produce its own name.

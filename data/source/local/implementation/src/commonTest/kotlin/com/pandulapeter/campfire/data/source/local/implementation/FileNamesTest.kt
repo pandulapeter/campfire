@@ -60,11 +60,11 @@ internal class FileNamesTest {
         val singleWord = "b".repeat(300)
         listOf(feather, long, singleWord).forEach { base ->
             val once = LibraryFiles.normalizedName(base)
-            assertTrue(once.length <= LibraryFiles.MAX_NAME_LENGTH, once)
+            assertTrue(once.encodeToByteArray().size <= LibraryFiles.MAX_NAME_BYTES, once)
             assertEquals(once, LibraryFiles.normalizedName(once))
         }
         assertEquals("a".repeat(115), LibraryFiles.normalizedName(feather))
-        assertEquals("b".repeat(LibraryFiles.MAX_NAME_LENGTH), LibraryFiles.normalizedName(singleWord))
+        assertEquals("b".repeat(LibraryFiles.MAX_NAME_BYTES), LibraryFiles.normalizedName(singleWord))
     }
 
     @Test
@@ -105,11 +105,10 @@ internal class FileNamesTest {
 
     @Test
     fun setlistNameIsAlwaysOpenableAndCapped() {
-        // A title written in an alphabet the accent table knows nothing about leaves no name behind at all.
-        assertEquals("untitled.setlist.json", setlistFileName("Летний сет"))
+        assertEquals("летний_сет.setlist.json", setlistFileName("Летний сет"))
         assertEquals("untitled.setlist.json", setlistFileName("!!!"))
         val base = setlistFileName("Lorem ipsum ".repeat(40)).removeSuffix(SETLIST_EXTENSION)
-        assertTrue(base.length <= LibraryFiles.MAX_NAME_LENGTH)
+        assertTrue(base.encodeToByteArray().size <= LibraryFiles.MAX_NAME_BYTES)
         // Cut between words, so neither half a word nor the separator before the next one is left at the end.
         assertTrue(!base.endsWith(LibraryFiles.NAME_SEPARATOR))
         assertTrue(base.endsWith("ipsum"))
@@ -121,5 +120,23 @@ internal class FileNamesTest {
         assertEquals("tukorfurogep-arviz_2", "tukorfurogep-arviz" + normalizedCollisionSuffix(2))
         // A file sync brings down under the name another device gave it was never built out of underscores.
         assertEquals("Whatever They Called It (2)", "Whatever They Called It" + arrivingCollisionSuffix(2))
+    }
+
+    @Test
+    fun lettersOfOtherScriptsAreKept() {
+        assertEquals("катюша", LibraryFiles.normalizedName("Катюша"))
+        assertEquals("ελλάδα_μου", LibraryFiles.normalizedName("Ελλάδα μου"))
+        assertEquals("שלום_עולם", LibraryFiles.normalizedName("שלום עולם"))
+        assertEquals("مرحبا_بالعالم", LibraryFiles.normalizedName("مرحبا بالعالم"))
+        assertEquals("千と千尋の神隠し", LibraryFiles.normalizedName("千と千尋の神隠し"))
+        assertEquals("हिन्दी_गीत", LibraryFiles.normalizedName("हिन्दी गीत"))
+        assertEquals("кино_ft_цой", LibraryFiles.normalizedName("Кино feat. Цой"))
+        assertEquals("кино-группа_крови.cho", songFileName(title = "Группа крови", artist = "Кино"))
+    }
+
+    @Test
+    fun theCapCountsUtf8Bytes() {
+        assertEquals("я".repeat(60), LibraryFiles.normalizedName("я".repeat(300)))
+        assertEquals("千".repeat(40), LibraryFiles.normalizedName("千".repeat(100)))
     }
 }

@@ -42,6 +42,9 @@ interface FileStorage {
 
     suspend fun list(directory: StorageDirectory): List<StoredFileInfo>
 
+    /** The unfiltered directory names, without opening each entry. */
+    suspend fun listNames(directory: StorageDirectory): List<String>
+
     /**
      * What [list] would report about one file, or null if it does not exist. Saving a song needs the metadata of that
      * one file, and listing the whole directory for it made every save (and every file of an import) cost as much as

@@ -157,7 +157,8 @@ preferences/sync-index.json          what the last successful sync run saw
   taken by something *different* are put to the user as one question about the whole batch — keep both, replace,
   skip, or cancel the import. Replacing is the
   only thing in the app that ever overwrites a library file, and it takes an answer to that dialog.
-- **Every name the app writes is normalized** — lowercase unaccented words joined with underscores
+- **Every name the app writes is normalized** — lowercase words joined with underscores, Latin letters without their
+  accents and letters of every other script kept as they are (`катюша.cho`), capped at 120 UTF-8 bytes per half
   (`LibraryFiles.normalizedName`), a song's `artist` and `title` folded one at a time so the dash between them
   survives as structure: `tukorfurogep-arviz.cho`, `summer_set_2026.setlist.json`, colliding as `_2`. Three of the
   folding rules are there so that the same song written down by two people arrives at one name: an apostrophe is

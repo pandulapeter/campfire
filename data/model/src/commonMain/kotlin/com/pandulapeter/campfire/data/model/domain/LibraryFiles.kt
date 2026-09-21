@@ -60,7 +60,7 @@ object LibraryFiles {
      * The longest a name may be before its extension. Long enough for any title somebody actually writes, short
      * enough to survive the path limits of every file system the library can end up on.
      */
-    const val MAX_NAME_LENGTH = 120
+    const val MAX_NAME_BYTES = 120
 
     /**
      * [base] reduced to what every file system, shell and cloud service agrees about: lowercase unaccented words
@@ -78,38 +78,42 @@ object LibraryFiles {
      * library should file under two names.
      */
     fun normalizedName(base: String): String {
-        val words = base.lowercase()
-            // The one piece of punctuation that binds rather than separates, and so is dropped instead of folded to
-            // an underscore: "don't" is one word, in whichever of its spellings a keyboard produced it.
-            .filterNot { it in APOSTROPHES }
-            // The accent of a decomposed letter, which would otherwise be folded to a separator in the middle of its word.
-            .filterNot { it.isCombiningMark() }
-            // Turned into the word it is read as rather than into a separator, so that the two ways of writing the
-            // same title meet here instead of naming two files.
-            .replace(AND_SIGN, " and ")
-            // A character no accent table knows (a Cyrillic or CJK title) becomes a separator like punctuation does,
-            // which is the one case where nothing is left of the name and the fallback has to stand in for it.
-            .map { character ->
-                when (val folded = character.withoutAccent()) {
-                    // The three letters that are two letters once they are spelled out, which is the one thing the
-                    // accent table cannot say: everything in it folds to a single character.
-                    'ß' -> "ss"
-                    'æ' -> "ae"
-                    'œ' -> "oe"
-                    else -> if (folded in 'a'..'z' || folded in '0'..'9') folded.toString() else NAME_SEPARATOR
+        val folded = StringBuilder()
+        var isAfterForeignCharacter = false
+        for (character in base.lowercase()) {
+            if (character in APOSTROPHES) continue
+            val isForeignCharacter = when {
+                character.isMark() -> isAfterForeignCharacter
+                character.isLatin() -> false
+                else -> character.isLetterOrDigit()
+            }
+            when {
+                isForeignCharacter -> folded.append(character)
+                character.isCombiningMark() -> Unit
+                character in AND_SIGNS -> folded.append(NAME_SEPARATOR).append("and").append(NAME_SEPARATOR)
+                else -> when (val plain = character.withoutAccent()) {
+                    'ß' -> folded.append("ss")
+                    'æ' -> folded.append("ae")
+                    'œ' -> folded.append("oe")
+                    else -> folded.append(if (plain in 'a'..'z' || plain in '0'..'9') plain else NAME_SEPARATOR)
                 }
-            }.joinToString(separator = "").split(NAME_SEPARATOR).filter { it.isNotEmpty() }
-            .map { word -> ABBREVIATIONS[word] ?: word }
+            }
+            isAfterForeignCharacter = isForeignCharacter
+        }
+        val words = folded.split(NAME_SEPARATOR).filter { it.isNotEmpty() }.map { word -> ABBREVIATIONS[word] ?: word }
         // Capped by whole words rather than by characters: a word cut short can become a different word on the next
         // pass ("feather" cut to "feat" is filed as "ft"), and the name would then not survive being normalized again.
         // Only a first word that is longer than the cap on its own is cut, and no abbreviation is anywhere near that long.
         val name = StringBuilder()
+        var nameBytes = 0
         for (word in words) {
-            if (name.length + (if (name.isEmpty()) 0 else NAME_SEPARATOR.length) + word.length > MAX_NAME_LENGTH) break
+            val addedBytes = (if (name.isEmpty()) 0 else NAME_SEPARATOR.length) + word.encodeToByteArray().size
+            if (nameBytes + addedBytes > MAX_NAME_BYTES) break
             if (name.isNotEmpty()) name.append(NAME_SEPARATOR)
             name.append(word)
+            nameBytes += addedBytes
         }
-        if (name.isEmpty() && words.isNotEmpty()) name.append(words.first().take(MAX_NAME_LENGTH))
+        if (name.isEmpty() && words.isNotEmpty()) name.append(words.first().takeBytes(MAX_NAME_BYTES))
         return name.toString().ifEmpty { FALLBACK_NAME }
     }
 
@@ -135,7 +139,24 @@ object LibraryFiles {
     private const val APOSTROPHES = "'’ʼ"
 
     /** Both signs a title writes "and" with. */
-    private val AND_SIGN = Regex("[&+]")
+    private const val AND_SIGNS = "&+"
+
+    private fun Char.isLatin() = this < '\u0370' || this in '\u1E00'..'\u1EFF' || this in '\u2C60'..'\u2C7F' ||
+        this in '\uA720'..'\uA7FF' || this in '\uAB30'..'\uAB6F'
+
+    private fun Char.isMark() = category == CharCategory.NON_SPACING_MARK || category == CharCategory.COMBINING_SPACING_MARK
+
+    private fun String.takeBytes(limit: Int): String {
+        var bytes = 0
+        return takeWhile { character ->
+            bytes += when {
+                character.code < 0x80 -> 1
+                character.code < 0x800 -> 2
+                else -> 3
+            }
+            bytes <= limit
+        }
+    }
 
     /**
      * Spellings that are one word once the name is filed. Applied per word and after the folding, so what is matched

@@ -46,6 +46,11 @@ internal class JvmFileStorage(private val root: File) : FileStorage {
             .sortedBy { it.name }
     }
 
+    override suspend fun listNames(directory: StorageDirectory) = withContext(Dispatchers.IO) {
+        val directoryFile = directoryFile(directory)
+        directoryFile.list()?.toList() ?: if (directoryFile.isDirectory) throw IOException("Could not read \"${directoryFile.absolutePath}\".") else emptyList()
+    }
+
     override suspend fun info(directory: StorageDirectory, name: String) = withContext(Dispatchers.IO) {
         file(directory, name).let { if (it.isFile) StoredFileInfo(name = it.name, size = it.length(), lastModified = it.lastModified()) else null }
     }

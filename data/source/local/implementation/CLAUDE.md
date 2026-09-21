@@ -14,7 +14,7 @@ holds the `@Module @ComponentScan object DataLocalSourceModule`, and every local
 
 - **`storage/file/FileStorage.kt`** is the only thing that differs per platform: flat file access inside the app's own
   data directory, addressed as `(StorageDirectory, file name)` — no paths, no sub-directories. `info` is what `list`
-  would say about one file, so that saving a song (or writing one file of an import) does not list the directory
+  would say about one file, and `listNames` returns unfiltered names without opening them, so that saving a song (or writing one file of an import) does not list the directory
   — on OPFS a listing opens every file for its size and date, which made an import quadratic. The Koin definition
   is a `@Single` class in each platform source set, found by the module's component scan: `AndroidFileStorage` and
   `DesktopFileStorage`, both delegating to `JvmFileStorage` over `java.io.File` (shared between `androidMain` and

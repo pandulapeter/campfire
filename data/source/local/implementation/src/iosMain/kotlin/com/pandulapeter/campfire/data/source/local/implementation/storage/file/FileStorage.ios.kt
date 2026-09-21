@@ -68,6 +68,12 @@ internal class IosFileStorage : FileStorage {
             .sortedBy { it.name }
     }
 
+    override suspend fun listNames(directory: StorageDirectory) = withContext(Dispatchers.IO) {
+        val directoryPath = directoryPath(directory)
+        fileManager.contentsOfDirectoryAtPath(directoryPath, null)?.filterIsInstance<String>()
+            ?: if (fileManager.fileExistsAtPath(directoryPath)) throw IllegalStateException("Could not read \"$directoryPath\".") else emptyList()
+    }
+
     override suspend fun info(directory: StorageDirectory, name: String) = withContext(Dispatchers.IO) {
         info(path = filePath(directory, name), name = name)
     }

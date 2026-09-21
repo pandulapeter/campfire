@@ -55,6 +55,10 @@ internal class OpfsFileStorage : FileStorage {
             .sortedBy { it.name }
     }
 
+    override suspend fun listNames(directory: StorageDirectory) = withContext(Dispatchers.Default) {
+        listEntryNames(directoryHandle(directory)).await()?.toString().orEmpty().split(ENTRY_SEPARATOR).filter { it.isNotEmpty() }
+    }
+
     override suspend fun info(directory: StorageDirectory, name: String) = withContext(Dispatchers.Default) {
         fileHandle(directory, name, create = false)?.let { handle ->
             fileInfo(handle).await()?.toString()?.split(FIELD_SEPARATOR)?.takeIf { it.size == 2 }?.let { fields ->
@@ -181,6 +185,14 @@ private fun listEntries(directory: JsAny): Promise<JsString?> = js(
             }
         }
         return entries.join(String.fromCharCode(1));
+    })()"""
+)
+
+private fun listEntryNames(directory: JsAny): Promise<JsString?> = js(
+    """(async function () {
+        var names = [];
+        for await (var name of directory.keys()) names.push(name);
+        return names.join(String.fromCharCode(1));
     })()"""
 )
 
