@@ -17,8 +17,10 @@ platform types.
 - `SetlistLocalSource` — the same for `*.setlist.json`, plus parsing an exported document and reading one back
   unchanged for export. `renameSetlist` is a save that moves the file as well, since a setlist's name is derived from
   the title it has just been given.
-- `UserPreferencesLocalSource` — one document; `loadUserPreferences()` never returns null, because a missing or
-  unreadable document means the defaults, which are defined once next to the document itself.
+- `UserPreferencesLocalSource` — one document; `loadUserPreferences()` never returns null, because a missing
+  document means the defaults, which are defined once next to the document itself; a document that is there and
+  cannot be read throws `LibraryStorageException` instead, since defaults handed out in its place would be saved over
+  it, and one that does not decode gives up only the fields that are wrong.
   `hasStoredUserPreferences()` is what that rule leaves nobody able to ask, and it is asked about the *document*
   rather than about what is in it: the preferences are the first thing the app writes about itself, so their absence
   is what an installation that has never been used looks like from the inside.

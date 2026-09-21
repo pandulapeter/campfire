@@ -33,13 +33,19 @@ published, or half a library would sit there looking like the whole of it and no
 
 Writing is deliberately **not** part of that shape. Songs and setlists are one file each, so a change writes that file
 and updates the one cached entry (`updateData`, which takes a transform of the current list and applies it atomically,
-so a save landing during a rescan cannot overwrite what the rescan found). The cached lists are in no particular order — a scan leaves them by file
-name, a write moves its item to the end — and ordering them is the domain layer's business. Only the preferences are persisted as a
-whole (`writeData`). What `writeData` publishes is `Idle` from the first moment, never a `Loading` the write then
-resolves: the data being written is already what every reader should show, and it stays that way even when the write
-fails, while a `Loading` would tell whoever reads this state for "nothing has been read yet" exactly that — for as
-long as the storage takes to answer. A cancelled read is not a failed one: it is rethrown and leaves the cached data as it was. A
-`rescan()` — the refresh action, and the last step of every import — is the only thing that walks the directory again.
+so a save landing during a rescan cannot overwrite what the rescan found). The cached lists are in no particular order
+— a scan leaves them by file name, a write moves its item to the end — and ordering them is the domain layer's
+business. Only the preferences are persisted as a whole (`writeData`). What `writeData` publishes is `Idle` from the
+first moment, never a `Loading` the write then resolves: the data being written is already what every reader should
+show, and it stays that way even when the write fails, while a `Loading` would tell whoever reads this state for
+"nothing has been read yet" exactly that — for as long as the storage takes to answer. The publish also comes before
+the storage is waited for, since every caller builds its change on the state it finds; the writes then go through a
+lock of their own one at a time, each writing what is published by then rather than what it was called with, so the
+last change is the last thing on disk and a burst of changes ends in one write. A write that succeeded publishes
+nothing more, and one that failed turns the state into a `Failure` only while its data is still the data on show.
+`commonTest` covers this too. A cancelled read is not a failed one: it is rethrown and leaves the cached data as it
+was. A `rescan()` — the refresh action, and the last step of every import — is the only thing that walks the directory
+again.
 
 - `SetlistRepositoryImpl` makes every write to a setlist file — `updateSetlist`, `renameSetlist`, `saveSetlist`,
   `deleteSetlist` — under one lock, held from reading the setlist out of its own cache to having the write back in

@@ -42,6 +42,15 @@ internal abstract class BaseLocalDataRepository<T> {
     private var isPublishingPartialData = false
 
     /**
+     * Held while the storage is written to, so that the writes reach it one at a time. A lock of its own rather than
+     * [mutex]: a read is no reason for a change to wait, and a change is published before it takes this one.
+     */
+    private val writeMutex = Mutex()
+
+    /** What the last write that succeeded put into the storage. Only touched while [writeMutex] is held. */
+    private var lastPersistedData: T? = null
+
+    /**
      * Set by a read that failed and cleared by one that succeeded, rather than read off the state: a write of the
      * preferences that failed is a [DataState.Failure] too, and reading those again would replace the change being
      * kept in memory with the older document still on disk.
@@ -103,19 +112,33 @@ internal abstract class BaseLocalDataRepository<T> {
      * resolves: what is being written is already what every reader should be showing, and it stays that way even
      * when the write fails. A [DataState.Loading] here would say "nothing has been read yet" to whoever reads this
      * state for that — and a write is a suspending call, so it would say it for as long as the storage takes.
+     *
+     * It is also published *before* the storage is waited for, because the callers build each change on the state
+     * they find: a change that stayed unpublished while an earlier one was still being written would be missing from
+     * the next one. The storage is then written to one call at a time, and what a call writes is whatever is
+     * published by the time the storage is free rather than what it was called with. That is what keeps the last
+     * change the last thing written whichever thread each call came from, and it lets a burst of changes end in one
+     * write instead of one each. A write that succeeded publishes nothing: there is nothing to say that the first
+     * publish did not, and saying it again would put this call's data back over a change made since.
      */
-    protected suspend fun writeData(data: T, persist: suspend (T) -> Unit) = _dataState.run {
-        value = DataState.Idle(data)
-        value = try {
-            persist(data)
-            DataState.Idle(data)
-        } catch (exception: CancellationException) {
-            throw exception
-        } catch (exception: Exception) {
-            println(exception.message)
-            // The change is kept in memory even though it could not be written: undoing it under the user would be
-            // more surprising than a preference that is lost when the app is restarted.
-            DataState.Failure(data)
+    protected suspend fun writeData(data: T, persist: suspend (T) -> Unit) {
+        _dataState.value = DataState.Idle(data)
+        writeMutex.withLock {
+            val latestData = _dataState.value.data ?: data
+            if (latestData != lastPersistedData) {
+                try {
+                    persist(latestData)
+                    lastPersistedData = latestData
+                } catch (exception: CancellationException) {
+                    throw exception
+                } catch (exception: Exception) {
+                    println(exception.message)
+                    // The change is kept in memory even though it could not be written: undoing it under the user would
+                    // be more surprising than a preference that is lost when the app is restarted. Only if it is still
+                    // the change on show, though - a newer one has a write of its own coming, and its own answer.
+                    _dataState.update { if (it.data == latestData) DataState.Failure(latestData) else it }
+                }
+            }
         }
     }
 

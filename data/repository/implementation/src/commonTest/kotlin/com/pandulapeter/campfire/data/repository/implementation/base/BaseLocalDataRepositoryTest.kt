@@ -10,17 +10,24 @@
 package com.pandulapeter.campfire.data.repository.implementation.base
 
 import com.pandulapeter.campfire.data.model.DataState
+import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.test.advanceUntilIdle
+import kotlinx.coroutines.test.runCurrent
 import kotlinx.coroutines.test.runTest
 import kotlin.test.Test
 import kotlin.test.assertEquals
+import kotlin.test.assertFalse
 import kotlin.test.assertTrue
 
 /**
  * What a partial publish is allowed to do. None of it can be seen once a load has finished, which is exactly why it
  * is worth pinning down: half a library on screen is better than nothing, and worse than the library.
+ *
+ * And the order of the writes of a document saved as a whole: the last change has to be the last thing on disk, and
+ * a write that finishes late must not put its older data back on screen.
  */
 class BaseLocalDataRepositoryTest {
 
@@ -68,6 +75,117 @@ class BaseLocalDataRepositoryTest {
         assertEquals(DataState.Failure<List<String>>(null), repository.states.last())
     }
 
+    @Test
+    fun `writes reach the storage one at a time and in order`() = runTest {
+        val repository = TestRepository(backgroundScope, batches = listOf(emptyList()))
+        val persisted = mutableListOf<List<String>>()
+        val gate = CompletableDeferred<Unit>()
+        var hasSecondWriteStarted = false
+
+        launch { repository.write(A) { persisted += it; gate.await() } }
+        runCurrent()
+        launch { repository.write(B) { hasSecondWriteStarted = true; persisted += it } }
+        runCurrent()
+
+        assertEquals(listOf(A), persisted)
+        assertFalse(hasSecondWriteStarted)
+        gate.complete(Unit)
+        advanceUntilIdle()
+        assertEquals(listOf(A, B), persisted)
+        assertEquals(DataState.Idle(B), repository.states.last())
+    }
+
+    @Test
+    fun `a write that finishes late does not put its data back`() = runTest {
+        val repository = TestRepository(backgroundScope, batches = listOf(emptyList()))
+        val gate = CompletableDeferred<Unit>()
+
+        launch { repository.write(A) { gate.await() } }
+        runCurrent()
+        launch { repository.write(B) {} }
+        runCurrent()
+        gate.complete(Unit)
+        advanceUntilIdle()
+
+        assertEquals(listOf(DataState.Loading(null), DataState.Idle(A), DataState.Idle(B)), repository.states)
+    }
+
+    @Test
+    fun `changes made while the storage is busy end in one write`() = runTest {
+        val repository = TestRepository(backgroundScope, batches = listOf(emptyList()))
+        val persisted = mutableListOf<List<String>>()
+        val gate = CompletableDeferred<Unit>()
+
+        launch { repository.write(A) { persisted += it; gate.await() } }
+        runCurrent()
+        launch { repository.write(B) { persisted += it } }
+        runCurrent()
+        launch { repository.write(C) { persisted += it } }
+        runCurrent()
+        gate.complete(Unit)
+        advanceUntilIdle()
+
+        assertEquals(listOf(A, C), persisted)
+        assertEquals(DataState.Idle(C), repository.states.last())
+    }
+
+    @Test
+    fun `a change is published before the storage is free`() = runTest {
+        val repository = TestRepository(backgroundScope, batches = listOf(emptyList()))
+        val gate = CompletableDeferred<Unit>()
+
+        launch { repository.write(A) { gate.await() } }
+        runCurrent()
+        launch { repository.write(B) {} }
+        runCurrent()
+
+        assertEquals(DataState.Idle(B), repository.states.last())
+        gate.complete(Unit)
+    }
+
+    @Test
+    fun `a write that fails keeps the change and reports it`() = runTest {
+        val repository = TestRepository(backgroundScope, batches = listOf(emptyList()))
+        val persisted = mutableListOf<List<String>>()
+
+        repository.write(A) { throw IllegalStateException("The storage could not be written.") }
+        assertEquals(DataState.Failure(A), repository.states.last())
+
+        repository.write(A) { persisted += it }
+        assertEquals(listOf(A), persisted)
+        assertEquals(DataState.Idle(A), repository.states.last())
+    }
+
+    @Test
+    fun `a write that fails says nothing about a newer change`() = runTest {
+        val repository = TestRepository(backgroundScope, batches = listOf(emptyList()))
+        val persisted = mutableListOf<List<String>>()
+        val gate = CompletableDeferred<Unit>()
+
+        launch { repository.write(A) { gate.await(); throw IllegalStateException("The storage could not be written.") } }
+        runCurrent()
+        launch { repository.write(B) { persisted += it } }
+        runCurrent()
+        gate.complete(Unit)
+        advanceUntilIdle()
+
+        assertTrue(repository.states.none { it is DataState.Failure })
+        assertEquals(listOf(B), persisted)
+        assertEquals(DataState.Idle(B), repository.states.last())
+    }
+
+    @Test
+    fun `the same data is written once it has not been written before`() = runTest {
+        val repository = TestRepository(backgroundScope, batches = listOf(listOf("a", "b")))
+        val persisted = mutableListOf<List<String>>()
+        repository.load()
+
+        repository.write(listOf("a", "b")) { persisted += it }
+        repository.write(listOf("a", "b")) { persisted += it }
+
+        assertEquals(listOf(listOf("a", "b")), persisted)
+    }
+
     /** Publishes every batch but the last as partial data, the way the library scan hands its batches over. */
     private class TestRepository(
         scope: CoroutineScope,
@@ -90,10 +208,18 @@ class BaseLocalDataRepositoryTest {
 
         suspend fun reload() = reloadData()
 
+        suspend fun write(data: List<String>, persist: suspend (List<String>) -> Unit) = writeData(data, persist)
+
         override suspend fun loadDataFromLocalSource(): List<String> {
             batches.dropLast(1).forEach { publishPartialData(it) }
             if (shouldFail) throw IllegalStateException("The local source could not be read.")
             return batches.last()
         }
+    }
+
+    private companion object {
+        val A = listOf("a")
+        val B = listOf("b")
+        val C = listOf("c")
     }
 }

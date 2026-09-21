@@ -115,6 +115,8 @@ internal class SetlistLocalSourceImpl(
         val json = Json {
             ignoreUnknownKeys = true
             prettyPrint = true
+            // A null where a value belongs says nothing, so the field falls back on its default like a missing one does.
+            coerceInputValues = true
         }
     }
 }

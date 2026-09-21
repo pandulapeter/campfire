@@ -79,11 +79,16 @@ holds the `@Module @ComponentScan object DataLocalSourceModule`, and every local
   and each finished batch is handed to the caller, so the song list fills up while the rest is still being read. A file that cannot be read is skipped;
   a *directory* that cannot be listed throws, because "empty library" and "your library is unreachable" must not look
   the same to the user.
-- **`model/` + `mapper/`** — `SetlistDocument`, `UserPreferencesDocument` and the two-way mapping to the
-  `:data:model` types. Every field of a document is defaulted, so a file written by an older version — or edited by
-  hand, which on iOS and desktop the user can do — keeps whatever it does carry instead of failing to parse. A setlist
-  file naming a song twice is read as naming it once (the first mention wins) and written back that way, since the
-  screens key their rows by the song's file name. No document type ever leaves this module.
+- **`model/` + `mapper/`** — `SetlistDocument`, `UserPreferencesDocument` and the two-way mapping to the `:data:model`
+  types. Every field of a document is defaulted, so a file written by an older version — or edited by hand, which on
+  iOS and desktop the user can do — keeps whatever it does carry instead of failing to parse. A `null` is read as a
+  missing field (`coerceInputValues`), in both documents. The preferences go further, since they are the one document
+  the app overwrites as a whole: `UserPreferencesDocumentFormat` reads them field by field when they do not decode as
+  they are — one transposition that is not a number costs that entry, not the map — and the local source copies such a
+  file to `preferences.json.bad` before anything can be saved over it. A setlist that does not decode is skipped and
+  left alone, as before. A setlist file naming a song twice is read as naming it once (the first mention wins) and
+  written back that way, since the screens key their rows by the song's file name. No document type ever leaves this
+  module.
 - **`zip/`** — a dependency-free zip implementation: `ZipReader` (STORED + DEFLATE, ZIP64 and encryption rejected),
   `ZipWriter` (STORED only — song text compresses badly enough not to be worth it), with every entry dated by its
   supplied DOS timestamp and more than 65,534 entries refused rather than written as ZIP64, `Inflater` (raw DEFLATE, RFC 1951,

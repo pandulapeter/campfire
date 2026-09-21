@@ -14,9 +14,12 @@ import com.pandulapeter.campfire.data.model.domain.UserPreferences
 interface UserPreferencesLocalSource {
 
     /**
-     * Never null: a document that has not been written yet, or one that cannot be read, both mean the defaults. They
-     * are defined in one place, next to the document itself, so that a new install and a document written by an
-     * older version can never disagree about them.
+     * Never null: a document that has not been written yet means the defaults, which are defined in one place, next to
+     * the document itself, so that a new install and a document written by an older version can never disagree about
+     * them. A document that is there and does not decode gives up the fields that are wrong and keeps the rest.
+     *
+     * Throws [LibraryStorageException] for a document that is there and could not be read: that is not an answer, and
+     * defaults handed out in its place would be written over the document by the next save.
      */
     suspend fun loadUserPreferences(): UserPreferences
 
