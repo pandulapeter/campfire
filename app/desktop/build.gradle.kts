@@ -57,9 +57,11 @@ compose.desktop {
             windows {
                 iconFile.set(project.file("src/main/resources/appIcon.ico"))
                 chordProFileAssociations()
-                // An installer asked for neither of these installs an application that is nowhere to be found.
+                // jpackage creates no shortcut it is not asked for, and an installer asked for none installs an application
+                // that is nowhere to be found: these are the Start menu entry and the one on the desktop.
                 menu = true
                 menuGroup = "Campfire"
+                shortcut = true
                 // Installs into the user's own profile, so the installer never asks for an administrator.
                 perUserInstall = true
                 // What makes a newer installer replace the installed version rather than land next to it, so it has to

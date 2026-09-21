@@ -101,7 +101,6 @@ an empty library.
 - Implement .cho (and other) file association
 - Songs: sort by year option
 - Fix Songs screen async race animation issues
-- Windows: add shortcut to Start menu
 - Update the screenshots in the Readme
 
 ### License
