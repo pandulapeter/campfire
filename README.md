@@ -83,6 +83,9 @@ any other ChordPro tool can read, so leaving is as easy as arriving.
 - [File format](documentation/file-format.md) — the ChordPro directives Campfire understands, the setlist JSON, and
   how files are named.
 - [Sync](documentation/sync.md) — what it sees, how a run decides, and why it needs no backend.
+- Publishing — what is still to be done before the [iOS App Store](documentation/publishing/ios-app-store.md), the
+  [Mac App Store](documentation/publishing/mac-app-store.md) and the
+  [Microsoft Store](documentation/publishing/microsoft-store.md) have the app.
 - [CLAUDE.md](CLAUDE.md) — the architecture, the module graph and the per-platform build commands.
 
 ### Notes
@@ -103,7 +106,7 @@ an empty library.
 - Create new screenshots for iOS, Android and desktop
 - Create iOS store listing
 - Create GitHub action for TestFlight releases
-- Create App Store and Windows Store listings + GitHub actions
+- Create App Store and Windows Store listings + update GitHub actions
 
 ### License
 
