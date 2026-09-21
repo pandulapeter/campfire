@@ -67,7 +67,9 @@ interface SyncProvider {
      *
      * Every run lists the whole folder rather than asking what changed. For a library of songs that is one request,
      * and it is right even when a previous run was interrupted half way - which a delta would not be. A provider
-     * that wants to offer live updates has somewhere to put a cursor; nothing needs one yet.
+     * that wants to offer live updates has somewhere to put a cursor; nothing needs one yet. Whatever else the user
+     * keeps in the folder may be listed too. The engine leaves out what [LibraryFileKind.matches] does not recognise
+     * and refuses to download what is too large to be a song, so a provider does neither.
      */
     suspend fun list(): RemoteListing
 

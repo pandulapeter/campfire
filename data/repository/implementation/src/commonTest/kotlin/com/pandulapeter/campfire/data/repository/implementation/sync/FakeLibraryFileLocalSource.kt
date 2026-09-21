@@ -24,7 +24,7 @@ internal class FakeLibraryFileLocalSource(
 
     val files = files.toMutableMap()
 
-    override suspend fun loadLibraryFiles() = files.map { (key, bytes) ->
+    override suspend fun loadLibraryFiles() = files.filterKeys { it.kind.matches(it.name) }.map { (key, bytes) ->
         LibraryFile(kind = key.kind, name = key.name, size = bytes.size.toLong(), lastModified = 0)
     }
 

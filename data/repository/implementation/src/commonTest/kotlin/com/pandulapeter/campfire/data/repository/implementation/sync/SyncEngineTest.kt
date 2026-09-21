@@ -22,6 +22,7 @@ import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
 import kotlin.test.assertIs
 import kotlin.test.assertTrue
+import kotlin.test.fail
 
 /**
  * The engine against an in-memory library and remote folder: what a run leaves behind when it does not get to the
@@ -331,12 +332,163 @@ class SyncEngineTest {
         assertEquals(library.keys, provider.files.keys)
     }
 
+    @Test
+    fun `a remote file that is not a library file is left where it is`() = runTest {
+        val libraryFile = song(1)
+        val foreignFile = foreign("wonderwall.pdf")
+        val provider = FakeSyncProvider(
+            files = mapOf(
+                libraryFile to "Song".encodeToByteArray(),
+                foreignFile to "PDF".encodeToByteArray(),
+            ),
+        )
+        val local = FakeLibraryFileLocalSource()
+
+        val result = SyncEngine(local).synchronize(
+            provider = provider,
+            document = SyncIndexDocument(),
+            accountId = ACCOUNT_ID,
+            onProgress = {},
+            onIndexChanged = {},
+            deletionPolicy = SyncDeletionPolicy.ASK,
+        )
+
+        val completed = assertIs<SyncEngine.Result.Completed>(result)
+        assertEquals(setOf(libraryFile), local.files.keys)
+        assertEquals(setOf(libraryFile, foreignFile), provider.files.keys)
+        assertEquals(setOf(libraryFile.path), completed.index.entries.keys)
+        assertEquals(1, completed.summary.downloaded)
+    }
+
+    @Test
+    fun `a foreign file an earlier run indexed is forgotten rather than deleted remotely`() = runTest {
+        val key = foreign("wonderwall.pdf")
+        val bytes = "PDF".encodeToByteArray()
+        val provider = FakeSyncProvider(files = mapOf(key to bytes))
+
+        val result = SyncEngine(FakeLibraryFileLocalSource()).synchronize(
+            provider = provider,
+            document = indexOf(key to bytes).let { document ->
+                document.copy(entries = document.entries.mapValues { (_, entry) -> entry.copy(remoteRevision = "r1") })
+            },
+            accountId = ACCOUNT_ID,
+            onProgress = {},
+            onIndexChanged = {},
+            deletionPolicy = SyncDeletionPolicy.ASK,
+        )
+
+        val completed = assertIs<SyncEngine.Result.Completed>(result)
+        assertEquals(setOf(key), provider.files.keys)
+        assertEquals(0, completed.summary.deletedRemotely)
+        assertTrue(completed.index.entries.isEmpty())
+    }
+
+    @Test
+    fun `the local copy of a foreign file an earlier run downloaded is removed while the remote one is still there`() = runTest {
+        val key = foreign("wonderwall.pdf")
+        val bytes = "PDF".encodeToByteArray()
+        val local = FakeLibraryFileLocalSource(files = mapOf(key to bytes))
+        val provider = FakeSyncProvider(files = mapOf(key to bytes))
+
+        SyncEngine(local).synchronize(
+            provider = provider,
+            document = indexOf(key to bytes).let { document ->
+                document.copy(entries = document.entries.mapValues { (_, entry) -> entry.copy(remoteRevision = "r1") })
+            },
+            accountId = ACCOUNT_ID,
+            onProgress = {},
+            onIndexChanged = {},
+            deletionPolicy = SyncDeletionPolicy.ASK,
+        )
+
+        assertTrue(key !in local.files)
+        assertEquals(setOf(key), provider.files.keys)
+    }
+
+    @Test
+    fun `a changed local copy of a foreign file an earlier run downloaded is kept`() = runTest {
+        val key = foreign("wonderwall.pdf")
+        val indexed = "PDF".encodeToByteArray()
+        val changed = "Changed".encodeToByteArray()
+        val local = FakeLibraryFileLocalSource(files = mapOf(key to changed))
+        val provider = FakeSyncProvider(files = mapOf(key to indexed))
+
+        SyncEngine(local).synchronize(
+            provider = provider,
+            document = indexOf(key to indexed).let { document ->
+                document.copy(entries = document.entries.mapValues { (_, entry) -> entry.copy(remoteRevision = "r1") })
+            },
+            accountId = ACCOUNT_ID,
+            onProgress = {},
+            onIndexChanged = {},
+            deletionPolicy = SyncDeletionPolicy.ASK,
+        )
+
+        assertContentEquals(changed, local.files[key])
+        assertEquals(setOf(key), provider.files.keys)
+    }
+
+    @Test
+    fun `a remote file too large to be a song is not downloaded`() = runTest {
+        val provider = FakeSyncProvider(
+            files = mapOf(
+                song(1) to "One".encodeToByteArray(),
+                song(2) to "Two".encodeToByteArray(),
+            ),
+            sizes = mapOf(song(2) to (9L shl 20)),
+            onDownload = { if (it == song(2)) fail("Downloaded") },
+        )
+        val local = FakeLibraryFileLocalSource()
+
+        val result = SyncEngine(local).synchronize(
+            provider = provider,
+            document = SyncIndexDocument(),
+            accountId = ACCOUNT_ID,
+            onProgress = {},
+            onIndexChanged = {},
+            deletionPolicy = SyncDeletionPolicy.ASK,
+        )
+
+        val completed = assertIs<SyncEngine.Result.Completed>(result)
+        assertEquals(setOf(song(1)), local.files.keys)
+        assertEquals(setOf(song(1).path), completed.index.entries.keys)
+        assertEquals(setOf(song(1), song(2)), provider.files.keys)
+        assertEquals(1, completed.summary.downloaded)
+    }
+
+    @Test
+    fun `a remote file that grew too large does not take the local one with it`() = runTest {
+        val original = "Original".encodeToByteArray()
+        val local = FakeLibraryFileLocalSource(files = mapOf(song(1) to original))
+        val provider = FakeSyncProvider(
+            files = mapOf(song(1) to "Changed remotely".encodeToByteArray()),
+            sizes = mapOf(song(1) to (9L shl 20)),
+        )
+        val document = indexOf(song(1) to original)
+
+        val result = SyncEngine(local).synchronize(
+            provider = provider,
+            document = document,
+            accountId = ACCOUNT_ID,
+            onProgress = {},
+            onIndexChanged = {},
+            deletionPolicy = SyncDeletionPolicy.ASK,
+        )
+
+        val completed = assertIs<SyncEngine.Result.Completed>(result)
+        assertContentEquals(original, local.files[song(1)])
+        assertEquals(0, completed.summary.deletedLocally)
+        assertEquals(document.entries, completed.index.entries)
+    }
+
     private companion object {
         const val ACCOUNT_ID = "dropbox:someone@example.com"
 
         fun song(number: Int) = song(name = "song_$number")
 
         fun song(name: String) = SyncKey(kind = LibraryFileKind.SONG, name = "$name.cho")
+
+        fun foreign(name: String) = SyncKey(kind = LibraryFileKind.SONG, name = name)
 
         fun librarySongs(count: Int) = (1..count).associate { song(it) to "Song $it".encodeToByteArray() }
 

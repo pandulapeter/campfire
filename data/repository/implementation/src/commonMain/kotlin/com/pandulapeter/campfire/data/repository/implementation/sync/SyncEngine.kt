@@ -17,6 +17,7 @@ import com.pandulapeter.campfire.data.source.remote.api.SyncAuthorizationExcepti
 import com.pandulapeter.campfire.data.source.remote.api.SyncNetworkException
 import com.pandulapeter.campfire.data.source.remote.api.SyncProvider
 import com.pandulapeter.campfire.data.source.remote.api.hashing.localContentHash
+import com.pandulapeter.campfire.data.source.remote.api.model.RemoteFile
 import com.pandulapeter.campfire.data.source.remote.api.model.RemoteWriteResult
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.async
@@ -87,15 +88,19 @@ internal class SyncEngine(
             // Listing both sides is the part of a run with nothing to show for it yet, so the progress reported
             // here has no total and the indicator spins rather than sitting at zero.
             onProgress(SyncProgress())
-            val files = provider.list().files
+            val listed = provider.list().files
+            index = withoutForeignEntries(index = index, listed = listed)
             val local = readLocalStates()
             val remote = foldRemoteNamesOntoLocal(
                 local = local,
-                remote = files.map {
+                // The rule the local listing applies, applied here rather than in a provider so that every provider gets
+                // it: a file listed on one side only is a deletion as far as the planner can tell.
+                remote = listed.filter { it.kind.matches(it.name) }.map {
                     RemoteFileState(
                         key = SyncKey(kind = it.kind, name = it.name),
                         revision = it.revision,
                         contentHash = it.contentHash,
+                        size = it.size,
                     )
                 },
             )
@@ -117,7 +122,7 @@ internal class SyncEngine(
                 provider = provider,
                 plan = plan,
                 index = index,
-                contentHashes = remote.associate { it.key to it.contentHash },
+                remoteFiles = remote.associateBy { it.key },
                 onProgress = onProgress,
                 accountId = accountId,
                 lastSyncedAt = document.lastSyncedAt,
@@ -175,7 +180,7 @@ internal class SyncEngine(
         provider: SyncProvider,
         plan: List<SyncOperation>,
         index: Map<SyncKey, SyncIndexEntry>,
-        contentHashes: Map<SyncKey, String?>,
+        remoteFiles: Map<SyncKey, RemoteFileState>,
         onProgress: (SyncProgress) -> Unit,
         accountId: String,
         lastSyncedAt: Long,
@@ -193,7 +198,7 @@ internal class SyncEngine(
         plan.groupBy { it.order }.entries.sortedBy { it.key }.forEach { (_, group) ->
             group.map { operation ->
                 async {
-                    val outcome = permits.withPermit { runOperation(provider, operation, index, contentHashes) }
+                    val outcome = permits.withPermit { runOperation(provider, operation, index, remoteFiles) }
                     results.withLock {
                         updated += outcome.entries
                         updated -= outcome.removals
@@ -220,12 +225,12 @@ internal class SyncEngine(
         provider: SyncProvider,
         operation: SyncOperation,
         index: Map<SyncKey, SyncIndexEntry>,
-        contentHashes: Map<SyncKey, String?>,
+        remoteFiles: Map<SyncKey, RemoteFileState>,
     ): OperationOutcome = try {
         when (operation) {
-            is SyncOperation.Download -> download(provider, operation, index, contentHashes)
+            is SyncOperation.Download -> download(provider, operation, index, remoteFiles)
             is SyncOperation.Upload -> upload(provider, operation)
-            is SyncOperation.Resolve -> resolve(provider, operation, contentHashes)
+            is SyncOperation.Resolve -> resolve(provider, operation, remoteFiles)
             is SyncOperation.DeleteLocal -> deleteLocally(provider, operation, index)
 
             is SyncOperation.DeleteRemote -> {
@@ -259,21 +264,21 @@ internal class SyncEngine(
         provider: SyncProvider,
         operation: SyncOperation.Download,
         index: Map<SyncKey, SyncIndexEntry>,
-        contentHashes: Map<SyncKey, String?>,
+        remoteFiles: Map<SyncKey, RemoteFileState>,
     ): OperationOutcome {
         val key = operation.key
         // The two sides may already hold the same bytes - two devices given the same file, or a library that was
         // copied across by hand before sync was set up. Nothing has to travel for that, only the index.
         val local = libraryFileLocalSource.readLibraryFile(key.kind, key.name)
-        if (local != null && isSameContent(provider, local, contentHashes[key])) {
+        if (local != null && isSameContent(provider, local, remoteFiles[key]?.contentHash)) {
             return OperationOutcome(entries = mapOf(key to SyncIndexEntry(localContentHash(local), operation.revision)))
         }
         val indexEntry = index[key]
         if (local != null && indexEntry != null && localContentHash(local) != indexEntry.localHash) {
             // Edited since the listing: this is now a file changed on both sides, and it is resolved as one.
-            return resolve(provider, SyncOperation.Resolve(key, operation.revision), contentHashes)
+            return resolve(provider, SyncOperation.Resolve(key, operation.revision), remoteFiles)
         }
-        val bytes = provider.download(key.kind, key.name)
+        val bytes = downloadWithinLimit(provider, key, remoteFiles)
         libraryFileLocalSource.writeLibraryFile(key.kind, key.name, bytes)
         return OperationOutcome(
             entries = mapOf(key to SyncIndexEntry(localContentHash(bytes), operation.revision)),
@@ -329,15 +334,15 @@ internal class SyncEngine(
     private suspend fun resolve(
         provider: SyncProvider,
         operation: SyncOperation.Resolve,
-        contentHashes: Map<SyncKey, String?>,
+        remoteFiles: Map<SyncKey, RemoteFileState>,
     ): OperationOutcome {
         val key = operation.key
         val local = libraryFileLocalSource.readLibraryFile(key.kind, key.name) ?: return OperationOutcome()
         // The two sides changed to the same thing, which is not a conflict at all - the same edit made twice.
-        if (isSameContent(provider, local, contentHashes[key])) {
+        if (isSameContent(provider, local, remoteFiles[key]?.contentHash)) {
             return OperationOutcome(entries = mapOf(key to SyncIndexEntry(localContentHash(local), operation.revision)))
         }
-        val remote = provider.download(key.kind, key.name)
+        val remote = downloadWithinLimit(provider, key, remoteFiles)
         if (remote.contentEquals(local)) {
             return OperationOutcome(entries = mapOf(key to SyncIndexEntry(localContentHash(local), operation.revision)))
         }
@@ -361,6 +366,53 @@ internal class SyncEngine(
 
     private fun isSameContent(provider: SyncProvider, local: ByteArray, remoteContentHash: String?) =
         remoteContentHash != null && provider.contentHashOf(local) == remoteContentHash
+
+    /**
+     * A song is a few kilobytes of text, and a download is held in memory whole. Refused here rather than left out
+     * of the listing: a file the planner cannot see on the remote is a file it takes for deleted there, and a
+     * large one that is already in the library would be deleted locally for it. Thrown, it is one file's failure
+     * like any other - logged, the index left alone, tried again by the next run.
+     */
+    private suspend fun downloadWithinLimit(
+        provider: SyncProvider,
+        key: SyncKey,
+        remoteFiles: Map<SyncKey, RemoteFileState>,
+    ): ByteArray {
+        val size = remoteFiles[key]?.size ?: 0
+        if (size > MAXIMUM_REMOTE_FILE_SIZE) throw RemoteFileTooLargeException(size)
+        return provider.download(key.kind, key.name)
+    }
+
+    /**
+     * Drops the index entries of files that are not library files, which only an index from before the remote
+     * listing was filtered can hold: such a file was downloaded into the library folder, where nothing lists it.
+     *
+     * That copy is deleted where it is provably only a copy - still the bytes the index recorded, with the remote
+     * file still there at the revision they came from. Anything else is left alone. In particular a foreign file
+     * with *no* index entry may be the last copy of something, and cannot be told from a file the user put into
+     * the library folder themselves.
+     */
+    private suspend fun withoutForeignEntries(
+        index: Map<SyncKey, SyncIndexEntry>,
+        listed: List<RemoteFile>,
+    ): Map<SyncKey, SyncIndexEntry> {
+        val foreign = index.filterKeys { !it.kind.matches(it.name) }
+        foreign.forEach { (key, entry) ->
+            val isStillRemote = listed.any { it.kind == key.kind && it.name == key.name && it.revision == entry.remoteRevision }
+            try {
+                val local = libraryFileLocalSource.readLibraryFile(key.kind, key.name)
+                if (isStillRemote && local != null && localContentHash(local) == entry.localHash) {
+                    libraryFileLocalSource.deleteLibraryFile(key.kind, key.name)
+                }
+            } catch (exception: CancellationException) {
+                throw exception
+            } catch (exception: Exception) {
+                // Tidying up is not worth a run: the entry is dropped either way, and the file stays where it is.
+                println("Could not remove the local copy of \"${key.path}\": ${exception.message}")
+            }
+        }
+        return index - foreign.keys
+    }
 
     private val SyncOperation.order
         get() = when (this) {
@@ -412,6 +464,9 @@ internal class SyncEngine(
         val hasUnresolvedConflict: Boolean = false,
     )
 
+    private class RemoteFileTooLargeException(size: Long) :
+        Exception("The remote file is $size bytes, which is more than the $MAXIMUM_REMOTE_FILE_SIZE a run downloads.")
+
     private data class PassOutcome(
         val summary: SyncSummary,
         val index: Map<SyncKey, SyncIndexEntry>,
@@ -426,6 +481,13 @@ internal class SyncEngine(
 
         /** How many library files are read and hashed at once while the run is preparing. */
         const val READ_BATCH_SIZE = 64
+
+        /**
+         * The largest remote file a run downloads: what the largest song an import reads comes to, so that a song that
+         * could be brought into one library can reach the others. Generous for ChordPro text, and small enough that
+         * [CONCURRENT_TRANSFERS] of them in memory at once do not trouble a phone.
+         */
+        const val MAXIMUM_REMOTE_FILE_SIZE = 8L shl 20
 
         /**
          * Chosen for the round trip rather than for the CPU: the transfers are small text files and almost all of

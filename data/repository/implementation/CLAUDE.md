@@ -61,6 +61,9 @@ long as the storage takes to answer. A cancelled read is not a failed one: it is
   `SyncPlanner` is a **pure function** of (local hashes, remote listing, the index of what the last run saw) and is
   the one part of sync worth testing — `commonTest` covers every way a file can differ between two devices,
   including the ones that would otherwise only show up as a song someone lost. `SyncEngine` carries the plan out and
+  applies `LibraryFileKind.matches` to both the remote listing and the index it loads, the same rule the local listing
+  applies, because a file listed on one side only reads as a deletion. A download above `MAXIMUM_REMOTE_FILE_SIZE` is
+  a per-file failure rather than filtered out of the listing for the same reason. The engine
   is written so that an interrupted run leaves the library usable: the index (`SyncIndexDocument`, the on-disk shape
   of `sync-index.json`) is only told about a file once that file has actually moved, so anything half done simply
   looks unsynced next time. It is told as the run goes rather than when a pass completes: every finished operation

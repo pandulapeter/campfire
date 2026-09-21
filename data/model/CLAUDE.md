@@ -25,7 +25,8 @@ Tags have no store of their own: they live in the songs' own text as ChordPro di
 Song and setlist identity is the **file name**, extension included — not a generated id. Two songs with the same title are two files with different names, and a rename in the library folder is a different song as far as the app is concerned.
 
 `LibraryFile` / `LibraryFileKind` describe the library as sync sees it — a name in one of the two folders, plus what
-the file system could tell about it. `SyncState` and the types around it (`SyncProviderId`, `SyncAccount`,
+the file system could tell about it. `LibraryFileKind.matches` is the one rule for whether a name is a library file,
+shared by the local listing and the sync engine. `SyncState` and the types around it (`SyncProviderId`, `SyncAccount`,
 `SyncOutcome`, `SyncSummary`, `SyncFailureReason`) are everything the UI needs to know about sync; `SyncState.Connected`
 carries the outcome of the last run rather than a message of its own, so a failure stays on screen until something
 replaces it instead of flashing past in a snackbar.

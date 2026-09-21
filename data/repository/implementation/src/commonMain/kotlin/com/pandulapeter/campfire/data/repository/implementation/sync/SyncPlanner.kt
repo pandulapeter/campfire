@@ -43,6 +43,8 @@ internal data class RemoteFileState(
     val key: SyncKey,
     val revision: String,
     val contentHash: String?,
+    /** In bytes. Never part of any decision about what changed; only what keeps the engine from downloading a video. */
+    val size: Long = 0,
 )
 
 /** What the last successful run left behind for one file: the pair that was in step at that moment. */

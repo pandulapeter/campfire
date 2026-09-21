@@ -18,6 +18,8 @@ your own storage. Until you do, nothing on the network is touched at all.
 - Campfire asks Dropbox for the **app folder** permission, so it only ever sees `Apps/Campfire` and the rest of your
   Dropbox stays invisible to it. Inside that folder the files sit in `songs/` and `setlists/`, exactly as they do in
   an exported zip — plain ChordPro text you can open, edit or back up with anything else.
+- Only song and setlist files are synced. Anything else you keep in those two folders is left exactly where it is,
+  and so is a file too large to be a song (over 8 MB).
 - Only the library is synced. Your settings, your text size and your transpositions stay on the device they were made
   on (a phone's own backup does carry them to its replacement).
 

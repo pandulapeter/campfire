@@ -11,7 +11,6 @@ package com.pandulapeter.campfire.data.source.local.implementation.source
 
 import com.pandulapeter.campfire.data.model.domain.LibraryFile
 import com.pandulapeter.campfire.data.model.domain.LibraryFileKind
-import com.pandulapeter.campfire.data.model.domain.LibraryFiles
 import com.pandulapeter.campfire.data.source.local.api.LibraryFileLocalSource
 import com.pandulapeter.campfire.data.source.local.implementation.storage.file.FileStorage
 import com.pandulapeter.campfire.data.source.local.implementation.storage.file.StorageDirectory
@@ -57,12 +56,4 @@ internal class LibraryFileLocalSourceImpl(
             LibraryFileKind.SETLIST -> StorageDirectory.SETLISTS
         }
 
-    /**
-     * The same rule the parsing sources use: the library folder is a folder the user can open, so whatever else
-     * they put in it is left where it is rather than being uploaded to their cloud storage.
-     */
-    private fun LibraryFileKind.matches(name: String) = when (this) {
-        LibraryFileKind.SONG -> LibraryFiles.SONG_EXTENSIONS.any { name.endsWith(it, ignoreCase = true) }
-        LibraryFileKind.SETLIST -> name.endsWith(LibraryFiles.SETLIST_EXTENSION, ignoreCase = true)
-    }
 }

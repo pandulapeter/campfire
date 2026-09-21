@@ -25,10 +25,12 @@ import com.pandulapeter.campfire.data.source.remote.api.model.RemoteWriteResult
  * the engine may assume about them, and the content hash is the local one so that identical bytes compare equal.
  *
  * [onDownload] runs before a download answers, which is where a test makes the service fail part way through a run
- * or changes the local library under an operation that is already under way.
+ * or changes the local library under an operation that is already under way. [sizes] lets a listing report a large
+ * file without the test allocating it.
  */
 internal class FakeSyncProvider(
     files: Map<SyncKey, ByteArray> = emptyMap(),
+    private val sizes: Map<SyncKey, Long> = emptyMap(),
     var onDownload: (SyncKey) -> Unit = {},
 ) : SyncProvider {
 
@@ -58,7 +60,7 @@ internal class FakeSyncProvider(
                 name = key.name,
                 revision = file.second,
                 contentHash = contentHashOf(file.first),
-                size = file.first.size.toLong(),
+                size = sizes[key] ?: file.first.size.toLong(),
             )
         },
     )
