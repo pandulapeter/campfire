@@ -45,10 +45,11 @@ redirect URIs character for character, which is why the desktop port is fixed.
   ignored: a field added on the other side must never turn into a parse failure the user sees as a broken sync.
 - OAuth is **PKCE with no client secret**, which is what lets this work with no server of Campfire's own. Tokens are
   renewed inside a single `SyncCredentialsStore.update`, so the several requests of one run cannot each start a
-  refresh and have the last one to finish overwrite the tokens the others are using. Dropbox may hand out a new
-  refresh token on renewal, and dropping it would end the connection silently. Whether a token is still good is
-  judged by the device's clock, which can be wrong, so a 401 is answered once with a forced refresh and the request
-  sent again before it is reported as a refusal that needs the account connected again.
+  refresh and have the last one to finish overwrite the tokens the others are using. The store remembers only what it
+  has seen stored: a write that is refused or cancelled drops the cache, and the next caller reads the storage again.
+  Dropbox may hand out a new refresh token on renewal, and dropping it would end the connection silently. Whether a
+  token is still good is judged by the device's clock, which can be wrong, so a 401 is answered once with a forced
+  refresh and the request sent again before it is reported as a refusal that needs the account connected again.
 - `auth/SyncAuthenticator.<platform>.kt` — the four ways back from a consent page. **Noticing that the user backed
   out is as much a part of each of these as the redirect itself**: a consent page lives somewhere the app cannot
   see, so an authorization that only ever waits for a redirect leaves the UI on "waiting for the browser" forever
@@ -84,5 +85,6 @@ redirect URIs character for character, which is why the desktop port is fixed.
 Tested in `commonTest`, run on the desktop target: the hashing, the encoders, and the authorization URL — get a
 parameter wrong there and the user meets an error page on the service's own site with nothing in the app to say why —
 and, against a Ktor `MockEngine` in virtual time, how requests answer being told to slow down, and being cancelled or
-timing out, and the credentials store's cache (a cancelled read is not an answer).
+timing out, and the credentials store's cache (a cancelled read is not an answer, a failed write is not
+remembered).
 `desktopTest` adds the one platform piece worth testing, the loopback server's cancellation.

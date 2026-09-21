@@ -66,9 +66,19 @@ internal class SyncCredentialsStore(
     }
 
     private suspend fun write(document: SyncCredentialsDocument?) {
+        try {
+            syncStateLocalSource.saveSyncCredentials(document?.let { json.encodeToString(it) })
+        } catch (exception: Exception) {
+            // Refused, or cancelled somewhere between starting and being seen to finish: either way what is stored
+            // is no longer known here, and a guess would be acted on - a pending authorization that was never
+            // written being "cleared" by a second write, a disconnect that did not happen being believed for the
+            // rest of the process. The storage is asked again by whoever comes next.
+            cached = null
+            hasRead = false
+            throw exception
+        }
         cached = document
         hasRead = true
-        syncStateLocalSource.saveSyncCredentials(document?.let { json.encodeToString(it) })
     }
 
     private companion object {

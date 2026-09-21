@@ -52,10 +52,12 @@ internal class FakeSyncStateLocalSource(
 
 /**
  * A platform whose consent page answers with [outcome] every time, and that has no redirect waiting at start up.
- * Without an outcome, being asked for consent at all is a mistake of the test.
+ * Without an outcome, being asked for consent at all is a mistake of the test. [onAuthorize] runs before the page
+ * answers, which is where a test keeps the user on it.
  */
 internal class FakeSyncAuthenticator(
     private val outcome: SyncAuthenticator.AuthorizationOutcome? = null,
+    private val onAuthorize: suspend () -> Unit = {},
 ) : SyncAuthenticator {
 
     override suspend fun prepareRedirectUri(): String? = null
@@ -63,17 +65,25 @@ internal class FakeSyncAuthenticator(
     override suspend fun authorize(
         authorizationUrl: String,
         completionPage: AuthorizationCompletionPage,
-    ): SyncAuthenticator.AuthorizationOutcome = outcome ?: throw UnsupportedOperationException()
+    ): SyncAuthenticator.AuthorizationOutcome {
+        onAuthorize()
+        return outcome ?: throw UnsupportedOperationException()
+    }
 
     override suspend fun consumePendingRedirect(): String? = null
 }
 
-/** The authorization that was started and not finished, held in memory. */
+/**
+ * The authorization that was started and not finished, held in memory. [onWrite] runs before every save and clear,
+ * which is where a test makes the storage refuse them.
+ */
 internal class FakePendingAuthorizationStore : PendingAuthorizationStore {
 
     var pending: PendingAuthorization? = null
+    var onWrite: () -> Unit = {}
 
     override suspend fun savePendingAuthorization(providerId: SyncProviderId, request: RemoteAuthorizationRequest) {
+        onWrite()
         pending = PendingAuthorization(
             providerId = providerId,
             state = request.state,
@@ -85,6 +95,7 @@ internal class FakePendingAuthorizationStore : PendingAuthorizationStore {
     override suspend fun loadPendingAuthorization() = pending
 
     override suspend fun clearPendingAuthorization() {
+        onWrite()
         pending = null
     }
 }

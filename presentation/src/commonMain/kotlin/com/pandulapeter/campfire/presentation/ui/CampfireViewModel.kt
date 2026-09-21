@@ -1445,7 +1445,9 @@ class CampfireViewModel(
      */
     fun connectSyncProvider(providerId: SyncProviderId, completionPage: AuthorizationCompletionPage) {
         if (syncConnectionJob?.isActive == true) return
-        syncConnectionJob = viewModelScope.launch { connectSyncProvider.invoke(providerId, completionPage) }
+        // Connecting writes the credentials, and a storage that refuses them is reported by the repository as a
+        // failed connection. This is for the exception that one day is not: it must cost a message, not the app.
+        syncConnectionJob = launchLibraryChange { connectSyncProvider.invoke(providerId, completionPage) }
     }
 
     /**

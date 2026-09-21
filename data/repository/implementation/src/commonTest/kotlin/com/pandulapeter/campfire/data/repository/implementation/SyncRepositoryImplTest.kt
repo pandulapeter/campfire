@@ -32,6 +32,9 @@ import com.pandulapeter.campfire.data.source.remote.api.SyncProviders
 import com.pandulapeter.campfire.data.source.remote.api.SyncRemoteStorageFullException
 import com.pandulapeter.campfire.data.source.remote.api.model.AuthorizationCompletionPage
 import kotlinx.coroutines.CompletableDeferred
+import kotlinx.coroutines.awaitCancellation
+import kotlinx.coroutines.cancelAndJoin
+import kotlinx.coroutines.launch
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.test.runTest
 import kotlin.test.Test
@@ -228,7 +231,7 @@ class SyncRepositoryImplTest {
             pendingAuthorizationStore = store,
         )
 
-        assertFalse(repository.connect(SyncProviderId.DROPBOX, AuthorizationCompletionPage(title = "", message = "")))
+        assertFalse(repository.connect(SyncProviderId.DROPBOX, COMPLETION_PAGE))
         assertEquals(SyncState.Connecting(SyncProviderId.DROPBOX), repository.syncState.first())
         assertNotNull(store.pending)
         repository.cancelConnection()
@@ -249,6 +252,53 @@ class SyncRepositoryImplTest {
 
         assertIs<SyncState.Connected>(repository.syncState.value)
         assertEquals(pending, store.pending)
+    }
+
+    @Test
+    fun `a connection whose storage refuses every write ends as a failure`() = runTest {
+        val store = FakePendingAuthorizationStore().apply { onWrite = { throw LibraryStorageException("Full") } }
+        val repository = repository(provider = FakeSyncProvider(), pendingAuthorizationStore = store)
+
+        assertFalse(repository.connect(SyncProviderId.DROPBOX, COMPLETION_PAGE))
+
+        assertEquals(SyncState.ConnectionFailed(SyncProviderId.DROPBOX, SyncFailureReason.STORAGE), repository.syncState.value)
+    }
+
+    @Test
+    fun `a closed browser is not a failure even when the clean up is`() = runTest {
+        val store = FakePendingAuthorizationStore().apply { onWrite = failingAfterFirstWrite() }
+        val repository = repository(
+            provider = FakeSyncProvider(),
+            authenticator = FakeSyncAuthenticator(outcome = SyncAuthenticator.AuthorizationOutcome.Cancelled()),
+            pendingAuthorizationStore = store,
+        )
+
+        assertFalse(repository.connect(SyncProviderId.DROPBOX, COMPLETION_PAGE))
+
+        assertEquals(SyncState.Disconnected, repository.syncState.value)
+    }
+
+    @Test
+    fun `giving up on a connection whose clean up fails still ends disconnected`() = runTest {
+        val store = FakePendingAuthorizationStore().apply { onWrite = failingAfterFirstWrite() }
+        val repository = repository(
+            provider = FakeSyncProvider(),
+            authenticator = FakeSyncAuthenticator(onAuthorize = { awaitCancellation() }),
+            pendingAuthorizationStore = store,
+        )
+
+        val job = launch { repository.connect(SyncProviderId.DROPBOX, COMPLETION_PAGE) }
+        repository.syncState.first { it is SyncState.Connecting }
+        job.cancelAndJoin()
+
+        assertTrue(job.isCancelled)
+        assertEquals(SyncState.Disconnected, repository.syncState.value)
+    }
+
+    /** A storage that takes the pending authorization and then refuses to let go of it. */
+    private fun failingAfterFirstWrite(): () -> Unit {
+        var writeCount = 0
+        return { if (++writeCount > 1) throw LibraryStorageException("Full") }
     }
 
     private fun repository(
@@ -278,6 +328,7 @@ class SyncRepositoryImplTest {
     } as SyncState.Connected
 
     private companion object {
+        val COMPLETION_PAGE = AuthorizationCompletionPage(title = "", message = "")
         val ACCOUNT = SyncAccount(
             providerId = SyncProviderId.DROPBOX,
             id = "dbid:1",

@@ -219,7 +219,7 @@ internal class SyncRepositoryImpl(
                 SyncAuthenticator.AuthorizationOutcome.Redirected -> false
                 is SyncAuthenticator.AuthorizationOutcome.Cancelled -> {
                     println("The authorization was cancelled: ${outcome.message}")
-                    pendingAuthorizationStore.clearPendingAuthorization()
+                    discardPendingAuthorization()
                     // A message is the authenticator saying something went wrong on the way; without one, the user
                     // simply closed the page, which needs no explaining.
                     _syncState.update {
@@ -235,12 +235,12 @@ internal class SyncRepositoryImpl(
         } catch (exception: CancellationException) {
             // The user gave up, which the UI offers while an authorization is waiting. The clean up still has to
             // happen, so it runs outside the cancellation before the exception carries on unswallowed.
-            withContext(NonCancellable) { pendingAuthorizationStore.clearPendingAuthorization() }
+            withContext(NonCancellable) { discardPendingAuthorization() }
             _syncState.update { SyncState.Disconnected }
             throw exception
         } catch (exception: Exception) {
             println("Could not connect to $providerId: ${exception.message}")
-            pendingAuthorizationStore.clearPendingAuthorization()
+            discardPendingAuthorization()
             _syncState.update { SyncState.ConnectionFailed(providerId, exception.toFailureReason()) }
             false
         }
@@ -248,15 +248,7 @@ internal class SyncRepositoryImpl(
 
     override suspend fun cancelConnection() {
         if (_syncState.value !is SyncState.Connecting) return
-        try {
-            pendingAuthorizationStore.clearPendingAuthorization()
-        } catch (exception: CancellationException) {
-            throw exception
-        } catch (exception: Exception) {
-            // What stays behind is a verifier nothing will ask for again, and the next authorization writes over
-            // it. Not a reason to keep the user on a screen whose only button would then do nothing.
-            println("Could not clear the pending authorization: ${exception::class.simpleName}")
-        }
+        discardPendingAuthorization()
         _syncState.update { if (it is SyncState.Connecting) SyncState.Disconnected else it }
     }
 
@@ -507,6 +499,22 @@ internal class SyncRepositoryImpl(
         if (hasFinishedOperations) {
             rescanLibraryAfterRun()
         }
+    }
+
+    /**
+     * Forgets the authorization that was started, for the ways out that have already decided how they end. Clearing
+     * writes the credentials document, and a storage that refuses that write must not replace the ending with an
+     * exception of its own: [connect] runs in a launched coroutine with nobody to throw to, and the state has to
+     * leave [SyncState.Connecting] whatever the storage says. What stays behind is a verifier nothing asks for
+     * again, and the next authorization writes over it.
+     */
+    private suspend fun discardPendingAuthorization() = try {
+        pendingAuthorizationStore.clearPendingAuthorization()
+    } catch (exception: CancellationException) {
+        throw exception
+    } catch (exception: Exception) {
+        // Only the kind of failure: the message of one that came from the credentials document may quote it.
+        println("Could not clear the pending authorization: ${exception::class.simpleName}")
     }
 
     /**
