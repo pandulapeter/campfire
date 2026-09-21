@@ -64,7 +64,7 @@ paths, `Is*` for a question with a yes or no answer (`IsFirstRun`), or a verb fo
   notation, which is why the two halves of `ChordSpelling` do not travel together everywhere.
 
 Sync adds `GetSyncStateUseCase`, `GetSyncProvidersUseCase`, `ConnectSyncProviderUseCase`,
-`DisconnectSyncProviderUseCase`, `RestoreSyncUseCase`, `SynchronizeLibraryUseCase` and
+`DisconnectSyncProviderUseCase`, `CancelSyncConnectionUseCase`, `RestoreSyncUseCase`, `SynchronizeLibraryUseCase` and
 `CancelSynchronizationUseCase` — the only ones that share a file with each other (two of them), since they are one
 feature and each is a single line over `SyncRepository`. `GetSyncStateUseCase` is separate from
 `GetScreenDataUseCase` for the same reason the preferences are: a settings screen must not wait for a scan of the

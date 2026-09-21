@@ -48,7 +48,12 @@ internal class FakeSyncProvider(
 
     override suspend fun isConnected() = true
 
-    override fun buildAuthorizationRequest(redirectUri: String?) = throw UnsupportedOperationException()
+    override fun buildAuthorizationRequest(redirectUri: String?) = RemoteAuthorizationRequest(
+        authorizationUrl = "https://example.com/authorize",
+        redirectUri = redirectUri,
+        state = "state",
+        verifier = "verifier",
+    )
 
     override suspend fun completeAuthorization(
         response: RemoteAuthorizationResponse,

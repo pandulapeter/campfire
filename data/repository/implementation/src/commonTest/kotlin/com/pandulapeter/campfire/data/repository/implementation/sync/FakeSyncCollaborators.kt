@@ -50,27 +50,43 @@ internal class FakeSyncStateLocalSource(
     }
 }
 
-/** A platform with no consent page to send anybody to: nothing is waiting to be redirected, and nothing can be. */
-internal class FakeSyncAuthenticator : SyncAuthenticator {
+/**
+ * A platform whose consent page answers with [outcome] every time, and that has no redirect waiting at start up.
+ * Without an outcome, being asked for consent at all is a mistake of the test.
+ */
+internal class FakeSyncAuthenticator(
+    private val outcome: SyncAuthenticator.AuthorizationOutcome? = null,
+) : SyncAuthenticator {
 
     override suspend fun prepareRedirectUri(): String? = null
 
     override suspend fun authorize(
         authorizationUrl: String,
         completionPage: AuthorizationCompletionPage,
-    ): SyncAuthenticator.AuthorizationOutcome = throw UnsupportedOperationException()
+    ): SyncAuthenticator.AuthorizationOutcome = outcome ?: throw UnsupportedOperationException()
 
     override suspend fun consumePendingRedirect(): String? = null
 }
 
-/** An authorization store that never has one waiting, for the tests that start already connected. */
+/** The authorization that was started and not finished, held in memory. */
 internal class FakePendingAuthorizationStore : PendingAuthorizationStore {
 
-    override suspend fun savePendingAuthorization(providerId: SyncProviderId, request: RemoteAuthorizationRequest) = Unit
+    var pending: PendingAuthorization? = null
 
-    override suspend fun loadPendingAuthorization(): PendingAuthorization? = null
+    override suspend fun savePendingAuthorization(providerId: SyncProviderId, request: RemoteAuthorizationRequest) {
+        pending = PendingAuthorization(
+            providerId = providerId,
+            state = request.state,
+            verifier = request.verifier,
+            redirectUri = request.redirectUri,
+        )
+    }
 
-    override suspend fun clearPendingAuthorization() = Unit
+    override suspend fun loadPendingAuthorization() = pending
+
+    override suspend fun clearPendingAuthorization() {
+        pending = null
+    }
 }
 
 /**

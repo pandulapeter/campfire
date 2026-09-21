@@ -70,6 +70,19 @@ interface SyncRepository {
      */
     suspend fun connect(providerId: SyncProviderId, completionPage: AuthorizationCompletionPage): Boolean
 
+    /**
+     * Gives up on an authorization that is waiting: forgets what was written down for it and leaves
+     * [SyncState.Connecting]. Does nothing in any other state.
+     *
+     * Cancelling the caller's own [connect] does the same on its way out, and is still how the platform's half of
+     * the wait is ended - the sheet on iOS, the desktop's socket. This is for the [connect] that is no longer there
+     * to be cancelled: on the web it returns as soon as the page starts to navigate away, and a page the browser
+     * then hands back as it was left (Back out of the consent page, a navigation that was stopped) is still
+     * connecting with nothing going on behind it. A caller that does have a [connect] running cancels it and waits
+     * for it first.
+     */
+    suspend fun cancelConnection()
+
     suspend fun disconnect()
 
     /**

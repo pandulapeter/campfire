@@ -246,6 +246,20 @@ internal class SyncRepositoryImpl(
         }
     }
 
+    override suspend fun cancelConnection() {
+        if (_syncState.value !is SyncState.Connecting) return
+        try {
+            pendingAuthorizationStore.clearPendingAuthorization()
+        } catch (exception: CancellationException) {
+            throw exception
+        } catch (exception: Exception) {
+            // What stays behind is a verifier nothing will ask for again, and the next authorization writes over
+            // it. Not a reason to keep the user on a screen whose only button would then do nothing.
+            println("Could not clear the pending authorization: ${exception::class.simpleName}")
+        }
+        _syncState.update { if (it is SyncState.Connecting) SyncState.Disconnected else it }
+    }
+
     override suspend fun disconnect() {
         // An answer still on its way belongs to the account that is about to go, and loadAccount writes the name it
         // reads into whatever credentials are stored by then - which could be the next account's.

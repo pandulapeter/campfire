@@ -76,7 +76,7 @@ The ones that carry real logic:
   its file name (the setlists holding it, the saved transposition), and where a deletion drops those references a
   rename follows them. The file moves first, so nothing is ever pointed at a name that does not exist yet, and once it
   has moved every reference is attempted even after one fails; the failures are thrown together at the end.
-- `SyncUseCaseImpls.kt` — all seven sync use cases in one file, since each is a line over `SyncRepository` and they
+- `SyncUseCaseImpls.kt` — all eight sync use cases in one file, since each is a line over `SyncRepository` and they
   are one feature. The two that are not: connecting runs a first sync straight away (an account connected onto a
   library that then stays empty leaves the user to work out that something else is expected of them), and restoring
   at startup does the same, but only when the stored credentials actually came back connected. Neither waits for the

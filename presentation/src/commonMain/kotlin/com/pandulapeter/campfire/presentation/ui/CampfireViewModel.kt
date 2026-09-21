@@ -37,6 +37,7 @@ import com.pandulapeter.campfire.data.model.domain.Tag
 import com.pandulapeter.campfire.data.model.domain.UserPreferences
 import com.pandulapeter.campfire.domain.api.models.ScreenData
 import com.pandulapeter.campfire.domain.api.models.SongFilter
+import com.pandulapeter.campfire.domain.api.useCases.CancelSyncConnectionUseCase
 import com.pandulapeter.campfire.domain.api.useCases.CancelSynchronizationUseCase
 import com.pandulapeter.campfire.domain.api.useCases.ConnectSyncProviderUseCase
 import com.pandulapeter.campfire.domain.api.useCases.ConvertChordProNotationUseCase
@@ -85,6 +86,7 @@ import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.FlowPreview
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.NonCancellable
+import kotlinx.coroutines.cancelAndJoin
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableSharedFlow
@@ -145,6 +147,7 @@ class CampfireViewModel(
     private val setChordProTag: SetChordProTagUseCase,
     private val connectSyncProvider: ConnectSyncProviderUseCase,
     private val disconnectSyncProvider: DisconnectSyncProviderUseCase,
+    private val cancelSyncConnection: CancelSyncConnectionUseCase,
     private val cancelSynchronization: CancelSynchronizationUseCase,
     private val restoreSync: RestoreSyncUseCase,
     private val synchronizeLibrary: SynchronizeLibraryUseCase,
@@ -1431,7 +1434,8 @@ class CampfireViewModel(
 
     /**
      * Kept so that it can be cancelled: an authorization waits on a browser that may never come back, and the
-     * cancellation is what closes the sheet on iOS and releases the desktop's socket.
+     * cancellation is what closes the sheet on iOS and releases the desktop's socket. While an attempt is being
+     * given up on, this is the job doing that, so that the next attempt waits for it.
      */
     private var syncConnectionJob: Job? = null
 
@@ -1444,10 +1448,20 @@ class CampfireViewModel(
         syncConnectionJob = viewModelScope.launch { connectSyncProvider.invoke(providerId, completionPage) }
     }
 
-    /** Gives up on an authorization that is waiting, which is the way out of a browser the user closed. */
+    /**
+     * Gives up on an authorization that is waiting, which is the way out of a browser the user closed. Cancelling
+     * the job is what ends the platform's half of the wait; the repository is asked as well because on the web the
+     * job is over as soon as the page starts to navigate away, and a page the browser hands back as it was left is
+     * still connecting with nothing to cancel.
+     */
     fun cancelSyncConnection() {
-        syncConnectionJob?.cancel()
-        syncConnectionJob = null
+        val connection = syncConnectionJob
+        syncConnectionJob = viewModelScope.launch {
+            // Joined first, so that the clean up of an attempt that is being given up on cannot land on the next
+            // one: until it is over this job is the active one, and connectSyncProvider() refuses to start another.
+            connection?.cancelAndJoin()
+            cancelSyncConnection.invoke()
+        }
     }
 
     fun disconnectSyncProvider() = launchLibraryChange {

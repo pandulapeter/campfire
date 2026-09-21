@@ -29,6 +29,15 @@ interface DisconnectSyncProviderUseCase {
     suspend operator fun invoke()
 }
 
+interface CancelSyncConnectionUseCase {
+
+    /**
+     * Gives up on an authorization that is waiting, whether or not the [ConnectSyncProviderUseCase] call that
+     * started it is still running - on the web it never is. The caller cancels its own call first.
+     */
+    suspend operator fun invoke()
+}
+
 interface RestoreSyncUseCase {
 
     /**

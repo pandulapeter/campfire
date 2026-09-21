@@ -15,6 +15,7 @@ import com.pandulapeter.campfire.data.source.remote.api.model.AuthorizationCompl
 import com.pandulapeter.campfire.data.repository.api.SetlistRepository
 import com.pandulapeter.campfire.data.repository.api.SongRepository
 import com.pandulapeter.campfire.data.repository.api.SyncRepository
+import com.pandulapeter.campfire.domain.api.useCases.CancelSyncConnectionUseCase
 import com.pandulapeter.campfire.domain.api.useCases.CancelSynchronizationUseCase
 import com.pandulapeter.campfire.domain.api.useCases.ConnectSyncProviderUseCase
 import com.pandulapeter.campfire.domain.api.useCases.DisconnectSyncProviderUseCase
@@ -63,6 +64,14 @@ class DisconnectSyncProviderUseCaseImpl internal constructor(
 ) : DisconnectSyncProviderUseCase {
 
     override suspend operator fun invoke() = syncRepository.disconnect()
+}
+
+@Factory
+class CancelSyncConnectionUseCaseImpl internal constructor(
+    private val syncRepository: SyncRepository,
+) : CancelSyncConnectionUseCase {
+
+    override suspend operator fun invoke() = syncRepository.cancelConnection()
 }
 
 @Factory

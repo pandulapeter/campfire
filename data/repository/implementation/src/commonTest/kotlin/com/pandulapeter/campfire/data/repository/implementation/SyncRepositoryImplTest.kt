@@ -25,9 +25,12 @@ import com.pandulapeter.campfire.data.repository.implementation.sync.RecordingSe
 import com.pandulapeter.campfire.data.repository.implementation.sync.RecordingSongRepository
 import com.pandulapeter.campfire.data.repository.implementation.sync.SyncKey
 import com.pandulapeter.campfire.data.source.local.api.LibraryStorageException
+import com.pandulapeter.campfire.data.source.remote.api.PendingAuthorization
+import com.pandulapeter.campfire.data.source.remote.api.SyncAuthenticator
 import com.pandulapeter.campfire.data.source.remote.api.SyncNetworkException
 import com.pandulapeter.campfire.data.source.remote.api.SyncProviders
 import com.pandulapeter.campfire.data.source.remote.api.SyncRemoteStorageFullException
+import com.pandulapeter.campfire.data.source.remote.api.model.AuthorizationCompletionPage
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.test.runTest
@@ -35,6 +38,7 @@ import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFalse
 import kotlin.test.assertIs
+import kotlin.test.assertNotNull
 import kotlin.test.assertNull
 import kotlin.test.assertTrue
 
@@ -215,16 +219,50 @@ class SyncRepositoryImplTest {
         assertEquals(SyncState.Disconnected, repository.syncState.value)
     }
 
+    @Test
+    fun `a connection that was redirected away can still be cancelled`() = runTest {
+        val store = FakePendingAuthorizationStore()
+        val repository = repository(
+            provider = FakeSyncProvider(),
+            authenticator = FakeSyncAuthenticator(outcome = SyncAuthenticator.AuthorizationOutcome.Redirected),
+            pendingAuthorizationStore = store,
+        )
+
+        assertFalse(repository.connect(SyncProviderId.DROPBOX, AuthorizationCompletionPage(title = "", message = "")))
+        assertEquals(SyncState.Connecting(SyncProviderId.DROPBOX), repository.syncState.first())
+        assertNotNull(store.pending)
+        repository.cancelConnection()
+
+        assertEquals(SyncState.Disconnected, repository.syncState.value)
+        assertNull(store.pending)
+    }
+
+    @Test
+    fun `cancelling a connection leaves every other state alone`() = runTest {
+        val store = FakePendingAuthorizationStore()
+        val repository = repository(provider = FakeSyncProvider(account = ACCOUNT), pendingAuthorizationStore = store)
+        repository.restore()
+        val pending = PendingAuthorization(SyncProviderId.DROPBOX, state = "state", verifier = "verifier", redirectUri = null)
+        store.pending = pending
+
+        repository.cancelConnection()
+
+        assertIs<SyncState.Connected>(repository.syncState.value)
+        assertEquals(pending, store.pending)
+    }
+
     private fun repository(
         provider: FakeSyncProvider,
+        authenticator: FakeSyncAuthenticator = FakeSyncAuthenticator(),
+        pendingAuthorizationStore: FakePendingAuthorizationStore = FakePendingAuthorizationStore(),
         stateLocalSource: FakeSyncStateLocalSource = FakeSyncStateLocalSource(),
         libraryFileLocalSource: FakeLibraryFileLocalSource = FakeLibraryFileLocalSource(),
         songRepository: RecordingSongRepository = RecordingSongRepository(),
         setlistRepository: RecordingSetlistRepository = RecordingSetlistRepository(),
     ) = SyncRepositoryImpl(
         syncProviders = SyncProviders(listOf(provider)),
-        authenticator = FakeSyncAuthenticator(),
-        pendingAuthorizationStore = FakePendingAuthorizationStore(),
+        authenticator = authenticator,
+        pendingAuthorizationStore = pendingAuthorizationStore,
         syncStateLocalSource = stateLocalSource,
         songRepository = songRepository,
         setlistRepository = setlistRepository,
