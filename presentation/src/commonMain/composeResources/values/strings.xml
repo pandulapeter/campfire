@@ -40,6 +40,10 @@
         <item quantity="one">One file is neither a song nor a setlist and cannot be imported.</item>
         <item quantity="other">%1$d files are neither songs nor setlists and cannot be imported.</item>
     </plurals>
+    <plurals name="import_oversized">
+        <item quantity="one">One file is too large and cannot be imported.</item>
+        <item quantity="other">%1$d files are too large and cannot be imported.</item>
+    </plurals>
     <string name="import_conflicts_files">The names that are taken</string>
     <string name="import_conflicts_more">and %1$d more</string>
     <string name="import_conflicts_question">What should happen to those?</string>

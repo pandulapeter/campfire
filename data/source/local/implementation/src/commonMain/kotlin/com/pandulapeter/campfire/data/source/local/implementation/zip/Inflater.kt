@@ -282,10 +282,10 @@ internal object Inflater {
     const val INITIAL_CAPACITY_LIMIT = 1 shl 20
 
     /**
-     * The most a single entry may inflate to. Every song and setlist is a text of a few kilobytes, so this is a generous
-     * ceiling that still keeps a decompression bomb from taking the process with it.
+     * The most a single entry may inflate to, which is the most an import unpacks to (`ImportLimits.MAX_IMPORT_SIZE`):
+     * the largest entry worth reading is an archive inside the archive.
      */
-    const val MAX_ENTRY_SIZE = 64 shl 20
+    const val MAX_ENTRY_SIZE = 24 shl 20
 
     private const val STORED = 0
     private const val FIXED = 1

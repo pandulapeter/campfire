@@ -10,6 +10,7 @@
 package com.pandulapeter.campfire.presentation.ui.platform
 
 import com.pandulapeter.campfire.data.model.domain.ExportedFile
+import com.pandulapeter.campfire.data.model.domain.ImportBudget
 import com.pandulapeter.campfire.data.model.domain.ImportedFile
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.IO
@@ -40,17 +41,7 @@ internal object DesktopFilePicker : FilePicker {
                 this.files.orEmpty().toList()
             }
         }
-        return withContext(Dispatchers.IO) {
-            files.mapNotNull { file ->
-                // One unreadable file must not lose the others that were picked with it.
-                try {
-                    ImportedFile(name = file.name, bytes = file.readBytes())
-                } catch (exception: Exception) {
-                    println("Could not read \"${file.name}\": ${exception.message}")
-                    null
-                }
-            }
-        }
+        return withContext(Dispatchers.IO) { files.map { it.absolutePath }.readAsImportedFiles() }
     }
 
     override suspend fun saveFile(file: ExportedFile): Boolean {
@@ -73,23 +64,27 @@ internal object DesktopFilePicker : FilePicker {
 }
 
 /**
- * Reads whatever of the given paths can be read, which is how a file reaches the app without a dialog: as a command
- * line argument from an "open with", or as a drop onto the window. A folder stands for the files directly inside
- * it - not for the folders in there, and not for the hidden files nobody chose. Anything unreadable is left out,
- * and anything the import does not recognise is reported by it as skipped.
+ * Reads whatever of the given paths can be read, within one [ImportBudget], which is also how a file reaches the app
+ * without a dialog: as a command line argument from an "open with", or as a drop onto the window. A folder stands for
+ * the files directly inside it - not for the folders in there, and not for the hidden files nobody chose. Anything
+ * unreadable is left out, so that one bad file does not lose the ones next to it, and anything the import does not
+ * recognise is reported by it as skipped.
  */
-fun List<String>.readAsImportedFiles() = flatMap { path ->
-    val file = File(path)
-    if (file.isDirectory) {
-        file.listFiles { child -> child.isFile && !child.name.startsWith(".") }.orEmpty().sortedBy { it.name }
-    } else {
-        listOf(file)
-    }
-}.mapNotNull { file ->
-    try {
-        if (file.isFile) ImportedFile(name = file.name, bytes = file.readBytes()) else null
-    } catch (exception: Exception) {
-        println("Could not read \"${file.path}\": ${exception.message}")
-        null
+fun List<String>.readAsImportedFiles(): List<ImportedFile> {
+    val budget = ImportBudget()
+    return flatMap { path ->
+        val file = File(path)
+        if (file.isDirectory) {
+            file.listFiles { child -> child.isFile && !child.name.startsWith(".") }.orEmpty().sortedBy { it.name }
+        } else {
+            listOf(file)
+        }
+    }.mapNotNull { file ->
+        try {
+            if (file.isFile) budget.read(name = file.name, size = file.length()) { file.readBytes() } else null
+        } catch (exception: Exception) {
+            println("Could not read \"${file.path}\": ${exception.message}")
+            null
+        }
     }
 }

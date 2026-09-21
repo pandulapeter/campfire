@@ -12,7 +12,6 @@ package com.pandulapeter.campfire.data.source.local.implementation.zip
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
-import kotlin.test.assertTrue
 
 internal class ZipReaderTest {
 
@@ -20,16 +19,17 @@ internal class ZipReaderTest {
     fun readsAStoredArchive() {
         val read = ZipReader.read(storedArchive())
 
-        assertEquals(listOf("sub/nested.txt", "hello.txt"), read.map { it.name })
-        assertEquals("nested", read[0].bytes.decodeToString())
-        assertEquals("hello zip", read[1].bytes.decodeToString())
+        assertEquals(listOf("sub/nested.txt", "hello.txt"), read.entries.map { it.name })
+        assertEquals("nested", read.entries[0].bytes.decodeToString())
+        assertEquals("hello zip", read.entries[1].bytes.decodeToString())
+        assertEquals(emptyList(), read.unread)
     }
 
     @Test
     fun skipsDirectoryEntries() {
         // The archive holds three central directory records; the "sub/" directory must not become an entry.
         assertEquals(3, storedArchive().u16(EOCD_OFFSET + 10))
-        assertEquals(2, ZipReader.read(storedArchive()).size)
+        assertEquals(2, ZipReader.read(storedArchive()).entries.size)
     }
 
     @Test
@@ -48,68 +48,98 @@ internal class ZipReaderTest {
     }
 
     @Test
-    fun rejectsAnUnsupportedCompressionMethod() {
+    fun leavesOutAnEntryWithAnUnsupportedCompressionMethod() {
         val archive = storedArchive()
         archive[HELLO_CENTRAL_DIRECTORY_OFFSET + 10] = 99
         archive[HELLO_CENTRAL_DIRECTORY_OFFSET + 11] = 0
 
-        val exception = assertFailsWith<ZipException> { ZipReader.read(archive) }
+        val read = ZipReader.read(archive)
 
-        assertTrue(exception.message.orEmpty().contains("99"), "Unexpected message: ${exception.message}")
+        assertEquals(listOf("sub/nested.txt"), read.entries.map { it.name })
+        assertEquals(listOf(UnreadZipEntry("hello.txt", UnreadZipEntry.Reason.UNREADABLE)), read.unread)
     }
 
     @Test
-    fun rejectsAnEntryWithABadChecksum() {
+    fun leavesOutAnEntryWithABadChecksum() {
         val archive = storedArchive()
         archive[HELLO_DATA_OFFSET] = 'H'.code.toByte()
 
-        val exception = assertFailsWith<ZipException> { ZipReader.read(archive) }
+        val read = ZipReader.read(archive)
 
-        assertTrue(exception.message.orEmpty().contains("Checksum"), "Unexpected message: ${exception.message}")
+        assertEquals(listOf("sub/nested.txt"), read.entries.map { it.name })
+        assertEquals(listOf(UnreadZipEntry("hello.txt", UnreadZipEntry.Reason.UNREADABLE)), read.unread)
     }
 
     @Test
-    fun rejectsAnEncryptedEntry() {
+    fun leavesOutAnEncryptedEntry() {
         val archive = storedArchive()
         archive[HELLO_CENTRAL_DIRECTORY_OFFSET + 8] = 1
 
-        assertFailsWith<ZipException> { ZipReader.read(archive) }
+        val read = ZipReader.read(archive)
+
+        assertEquals(listOf("sub/nested.txt"), read.entries.map { it.name })
+        assertEquals(listOf(UnreadZipEntry("hello.txt", UnreadZipEntry.Reason.UNREADABLE)), read.unread)
     }
 
     @Test
-    fun rejectsAnEntryDeclaringMoreThanItCouldEverInflateTo() {
-        assertFailsWith<ZipException> { ZipReader.read(deflatedArchive(declaredSize = 2L shl 30)) }
+    fun leavesOutAnEntryDeclaringMoreThanItCouldEverInflateTo() {
+        assertEquals(
+            listOf(UnreadZipEntry("bomb.cho", UnreadZipEntry.Reason.TOO_LARGE)),
+            ZipReader.read(deflatedArchive(declaredSize = 2L shl 30)).unread,
+        )
         // Past the archive limit the entry limit still stands, before a buffer of the declared size is allocated.
-        val exception = assertFailsWith<ZipException> {
-            ZipReader.read(deflatedArchive(declaredSize = 1L shl 30), maxTotalSize = Long.MAX_VALUE)
-        }
-        assertTrue(exception.message.orEmpty().contains("${Inflater.MAX_ENTRY_SIZE}"), "Unexpected message: ${exception.message}")
+        assertEquals(
+            listOf(UnreadZipEntry("bomb.cho", UnreadZipEntry.Reason.UNREADABLE)),
+            ZipReader.read(deflatedArchive(declaredSize = 1L shl 30), maxTotalSize = Long.MAX_VALUE).unread,
+        )
     }
 
     @Test
-    fun rejectsADeclaredSizeTheStreamDoesNotProduceWithoutAllocatingIt() {
-        val exception = assertFailsWith<ZipException> { ZipReader.read(deflatedArchive(declaredSize = 48L shl 20)) }
+    fun leavesOutADeclaredSizeTheStreamDoesNotProduceWithoutAllocatingIt() {
+        val read = ZipReader.read(deflatedArchive(declaredSize = 16L shl 20))
 
-        assertTrue(exception.message.orEmpty().contains("instead of"), "Unexpected message: ${exception.message}")
+        assertEquals(emptyList(), read.entries)
+        assertEquals(listOf(UnreadZipEntry("bomb.cho", UnreadZipEntry.Reason.UNREADABLE)), read.unread)
     }
 
     @Test
-    fun rejectsAnArchiveOverTheTotalLimit() {
+    fun stopsReadingAtTheTotalLimit() {
         // The two stored entries hold 6 and 9 bytes.
-        assertEquals(2, ZipReader.read(storedArchive(), maxTotalSize = 15).size)
+        assertEquals(2, ZipReader.read(storedArchive(), maxTotalSize = 15).entries.size)
 
-        val exception = assertFailsWith<ZipException> { ZipReader.read(storedArchive(), maxTotalSize = 14) }
+        val read = ZipReader.read(storedArchive(), maxTotalSize = 14)
 
-        assertTrue(exception.message.orEmpty().contains("14"), "Unexpected message: ${exception.message}")
+        assertEquals(listOf("sub/nested.txt"), read.entries.map { it.name })
+        assertEquals(listOf(UnreadZipEntry("hello.txt", UnreadZipEntry.Reason.TOO_LARGE)), read.unread)
     }
 
     @Test
-    fun rejectsAnEntryWhoseEndOverflowsAnInt() {
+    fun doesNotReadWhatTheCallerDoesNotWant() {
+        // The checksum no longer matches, so reading the entry would leave it out as unreadable instead.
+        val archive = storedArchive()
+        archive[HELLO_DATA_OFFSET] = 'H'.code.toByte()
+
+        val read = ZipReader.read(archive, limitOf = { if (it == "hello.txt") null else Long.MAX_VALUE })
+
+        assertEquals(listOf("sub/nested.txt"), read.entries.map { it.name })
+        assertEquals(listOf(UnreadZipEntry("hello.txt", UnreadZipEntry.Reason.NOT_WANTED)), read.unread)
+    }
+
+    @Test
+    fun leavesOutAnEntryOverItsOwnLimit() {
+        val read = ZipReader.read(storedArchive(), limitOf = { 8 })
+
+        assertEquals(listOf("sub/nested.txt"), read.entries.map { it.name })
+        assertEquals(listOf(UnreadZipEntry("hello.txt", UnreadZipEntry.Reason.TOO_LARGE)), read.unread)
+    }
+
+    @Test
+    fun leavesOutAnEntryWhoseEndOverflowsAnInt() {
         val archive = deflatedArchive(declaredSize = Int.MAX_VALUE.toLong(), compressedSize = Int.MAX_VALUE.toLong(), method = 0)
 
-        val exception = assertFailsWith<ZipException> { ZipReader.read(archive, maxTotalSize = Long.MAX_VALUE) }
+        val read = ZipReader.read(archive, maxTotalSize = Long.MAX_VALUE)
 
-        assertTrue(exception.message.orEmpty().contains("reaches past"), "Unexpected message: ${exception.message}")
+        assertEquals(listOf(UnreadZipEntry("bomb.cho", UnreadZipEntry.Reason.UNREADABLE)), read.unread)
         assertFailsWith<ZipException> { Inflater.inflate(archive, offset = 1, length = Int.MAX_VALUE) }
     }
 

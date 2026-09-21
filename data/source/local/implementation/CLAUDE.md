@@ -89,14 +89,17 @@ holds the `@Module @ComponentScan object DataLocalSourceModule`, and every local
   left alone, as before. A setlist file naming a song twice is read as naming it once (the first mention wins) and
   written back that way, since the screens key their rows by the song's file name. No document type ever leaves this
   module.
-- **`zip/`** — a dependency-free zip implementation: `ZipReader` (STORED + DEFLATE, ZIP64 and encryption rejected),
+- **`zip/`** — a dependency-free zip implementation: `ZipReader` (STORED + DEFLATE; a ZIP64 archive rejected, a ZIP64,
+  encrypted or otherwise compressed entry left out),
   `ZipWriter` (STORED only — song text compresses badly enough not to be worth it), with every entry dated by its
   supplied DOS timestamp and more than 65,534 entries refused rather than written as ZIP64, `Inflater` (raw DEFLATE, RFC 1951,
   following `puff.c`) and `Crc32`. It exists because no multiplatform zip library covers wasmJs. Sizes an archive
-  declares are trusted only as far as a first guess: an entry may inflate to 64 MiB, the buffer starts at no more than
-  1 MiB whatever the central directory claims, and one import (`ArchiveLocalSourceImpl.unpack`, nested archives
-  included) to 256 MiB, so a corrupted or crafted archive is a `ZipException` rather than an allocation that would
-  take the process with it.
+  declares are trusted only as far as a first guess: an entry is asked about by name before it is inflated — hidden
+  files and anything an import would not look inside are never read, a song over `ImportLimits.MAX_TEXT_FILE_SIZE` is
+  not either, and the caller says how much the whole import may still unpack to (`ImportLimits.MAX_IMPORT_SIZE`,
+  24 MiB, nested archives included). An entry that cannot be read is left out and reported by name; only an archive
+  that cannot be walked at all is a `ZipException`. The buffer still starts at no more than 1 MiB whatever the central
+  directory claims.
 
 Tested with `commonTest` (zip round trips, reader rejections) and `desktopTest` (the JVM storage, what unpacking an
 archive keeps, and the inflater against archives the JVM produced), run with

@@ -53,7 +53,8 @@ The ones that carry real logic:
   `ImportConflictResolution` into write / replace / disregard / leave alone, and only `REPLACE` ever overwrites.
   Songs are still written before setlists and the names they actually got are remembered, so that a setlist arriving in
   the same archive still points at its songs after a collision renamed one — a disregarded duplicate maps to the copy
-  the library already had.
+  the library already had. Preparing owns the import's size budget: every archive unpacks into what the ones before it
+  left, and a file over its limit goes to `ImportPlan.oversizedFileNames`, which the UI reports on its own line.
 - `ExportLibraryUseCaseImpl` / `ExportSongsUseCaseImpl` / `ExportSetlistUseCaseImpl` — decide what leaves as what: a
   single song is the `.cho` file as it is on disk, everything else is a zip. The user's transposition is never baked in.
   The name the file leaves under goes through `ExportFileNames.kt` (`campfire_library.zip`, `campfire_songs.zip`, the

@@ -26,7 +26,7 @@ internal class ZipRoundTripTest {
             ZipEntry("random.bin", Random(1234).nextBytes(100 * 1024)),
         )
 
-        val read = ZipReader.read(ZipWriter.write(entries))
+        val read = ZipReader.read(ZipWriter.write(entries)).entries
 
         assertEquals(entries.map { it.name }, read.map { it.name })
         entries.forEachIndexed { index, entry ->
@@ -39,12 +39,12 @@ internal class ZipRoundTripTest {
         val archive = ZipWriter.write(emptyList())
 
         assertEquals(22, archive.size)
-        assertTrue(ZipReader.read(archive).isEmpty())
+        assertTrue(ZipReader.read(archive).entries.isEmpty())
     }
 
     @Test
     fun writesAndReadsBackASingleEmptyEntry() {
-        val read = ZipReader.read(ZipWriter.write(listOf(ZipEntry("nothing.cho", ByteArray(0)))))
+        val read = ZipReader.read(ZipWriter.write(listOf(ZipEntry("nothing.cho", ByteArray(0))))).entries
 
         assertEquals(1, read.size)
         assertEquals("nothing.cho", read[0].name)

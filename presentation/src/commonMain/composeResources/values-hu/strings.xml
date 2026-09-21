@@ -40,6 +40,10 @@
         <item quantity="one">Egy fájl se nem dal, se nem lista, ezt nem lehet importálni.</item>
         <item quantity="other">%1$d fájl se nem dal, se nem lista, ezeket nem lehet importálni.</item>
     </plurals>
+    <plurals name="import_oversized">
+        <item quantity="one">Egy fájl túl nagy, ezt nem lehet importálni.</item>
+        <item quantity="other">%1$d fájl túl nagy, ezeket nem lehet importálni.</item>
+    </plurals>
     <string name="import_conflicts_files">A foglalt nevek</string>
     <string name="import_conflicts_more">és még %1$d</string>
     <string name="import_conflicts_question">Mi legyen velük?</string>

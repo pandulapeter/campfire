@@ -13,7 +13,7 @@ import android.content.Context
 import android.net.Uri
 import com.pandulapeter.campfire.data.model.domain.ImportedFile
 import com.pandulapeter.campfire.data.model.domain.LibraryFiles
-import com.pandulapeter.campfire.presentation.ui.platform.toImportedFile
+import com.pandulapeter.campfire.presentation.ui.platform.toImportedFiles
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
@@ -41,7 +41,7 @@ internal val filesToImport = pendingImports.receiveAsFlow()
 internal fun Context.importFiles(uris: List<Uri>) {
     val context = applicationContext
     importScope.launch {
-        val files = uris.mapNotNull { it.toImportedFile(context) }
+        val files = uris.toImportedFiles(context)
         if (files.isNotEmpty()) {
             pendingImports.send(files)
         }

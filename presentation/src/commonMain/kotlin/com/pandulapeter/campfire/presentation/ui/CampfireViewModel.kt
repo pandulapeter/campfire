@@ -1267,6 +1267,9 @@ class CampfireViewModel(
             val result = importFiles.invoke(plan, resolution)
             if (shouldAnnounceResult) {
                 _messages.send(Message.ImportFinished(result))
+                if (result.oversizedFileNames.isNotEmpty()) {
+                    _messages.send(Message.ImportOversized(result.oversizedFileNames.size))
+                }
             }
         } catch (exception: CancellationException) {
             throw exception
@@ -1710,6 +1713,12 @@ class CampfireViewModel(
     /** Something that has happened and is worth one line of text at the bottom of the screen. */
     sealed interface Message {
         data class ImportFinished(val result: ImportResult) : Message
+
+        /**
+         * Files an import left out for their size, a message of its own rather than one more number in
+         * [ImportFinished], which already reads as a row of counts.
+         */
+        data class ImportOversized(val count: Int) : Message
         data object ImportFailed : Message
         data object ExportFailed : Message
         data object SaveFailed : Message

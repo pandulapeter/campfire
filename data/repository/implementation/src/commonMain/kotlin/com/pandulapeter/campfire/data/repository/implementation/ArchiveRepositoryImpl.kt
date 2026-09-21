@@ -18,7 +18,7 @@ internal class ArchiveRepositoryImpl(
     private val archiveLocalSource: ArchiveLocalSource,
 ) : ArchiveRepository {
 
-    override suspend fun unpack(archive: ByteArray) = archiveLocalSource.unpack(archive)
+    override suspend fun unpack(archive: ByteArray, maxSize: Long) = archiveLocalSource.unpack(archive = archive, maxSize = maxSize)
 
     override suspend fun pack(files: Map<String, ByteArray>) = archiveLocalSource.pack(files)
 }

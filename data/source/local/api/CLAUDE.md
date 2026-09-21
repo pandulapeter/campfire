@@ -27,7 +27,9 @@ platform types.
 - `ArchiveLocalSource` — zip pack and unpack, over bytes. Unpacking hands back only files somebody put in the
   archive: the hidden ones an archiving tool writes for itself (macOS packs an AppleDouble `._name.cho` beside
   every entry, under the extension of the file it belongs to) are dropped where they are read, so no caller has
-  to count them, decode them or report them.
+  to count them, decode them or report them. Every other entry that was not read — not something an import looks
+  inside, over the size the caller allows, or unreadable — comes back as an `ImportedFile.unread`, so that it is
+  reported rather than lost, and one bad entry never fails the archive around it.
 - `LibraryFileLocalSource` — the library as *bytes*, which is what sync moves around. Deliberately does not look
   inside the files at all, so a song Campfire cannot parse still travels between devices unchanged.
   `writeLibraryFileToFreeName` is how an incoming copy of a file that changed on both sides lands next to the local

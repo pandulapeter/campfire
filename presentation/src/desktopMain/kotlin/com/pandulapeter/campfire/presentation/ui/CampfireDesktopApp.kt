@@ -15,6 +15,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draganddrop.DragAndDropEvent
@@ -30,8 +31,12 @@ import com.pandulapeter.campfire.presentation.ui.platform.DesktopFilePicker
 import com.pandulapeter.campfire.presentation.ui.platform.LocalFilePicker
 import com.pandulapeter.campfire.presentation.ui.platform.readAsImportedFiles
 import com.pandulapeter.campfire.data.model.domain.ImportedFile
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.IO
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.emptyFlow
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import org.koin.compose.viewmodel.koinViewModel
 import java.awt.Desktop
 import java.awt.datatransfer.DataFlavor
@@ -52,6 +57,7 @@ fun CampfireDesktopApp(
 ) = CompositionLocalProvider(
     LocalFilePicker provides DesktopFilePicker
 ) {
+    val scope = rememberCoroutineScope()
     Box(
         modifier = Modifier
             .fillMaxSize()
@@ -66,7 +72,8 @@ fun CampfireDesktopApp(
                                 .orEmpty()
                                 .filterIsInstance<File>()
                                 .map { it.absolutePath }
-                            viewModel.importFiles(paths.readAsImportedFiles())
+                            // Only the paths are taken here: this is the AWT event thread, and the files are read off it.
+                            scope.launch { viewModel.importFiles(withContext(Dispatchers.IO) { paths.readAsImportedFiles() }) }
                             return true
                         }
                     }

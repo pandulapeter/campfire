@@ -18,7 +18,7 @@ import com.pandulapeter.campfire.data.model.domain.ImportedFile
 interface ArchiveRepository {
 
     /** See `ArchiveLocalSource.unpack`. */
-    suspend fun unpack(archive: ByteArray): List<ImportedFile>
+    suspend fun unpack(archive: ByteArray, maxSize: Long): List<ImportedFile>
 
     /** See `ArchiveLocalSource.pack`. */
     suspend fun pack(files: Map<String, ByteArray>): ByteArray

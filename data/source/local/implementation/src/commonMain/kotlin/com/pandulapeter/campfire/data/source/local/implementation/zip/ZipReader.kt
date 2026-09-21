@@ -9,21 +9,32 @@
  */
 package com.pandulapeter.campfire.data.source.local.implementation.zip
 
+import com.pandulapeter.campfire.data.model.domain.ImportLimits
+
 /**
- * Reads zip archives with STORED and DEFLATE entries, following the PKWARE APPNOTE. ZIP64, encryption and every other
- * compression method are rejected with a [ZipException]; the app only ever deals with small archives of text files.
+ * Reads zip archives with STORED and DEFLATE entries, following the PKWARE APPNOTE. A ZIP64 archive is rejected with a
+ * [ZipException]; a ZIP64, encrypted or otherwise compressed entry is left out and reported; the app only ever deals
+ * with small archives of text files.
  */
 internal object ZipReader {
 
     /**
-     * Every file entry of [archive], directories skipped. Names are returned as stored (forward slashes, possibly with
+     * The file entries of [archive], directories skipped. Names are returned as stored (forward slashes, possibly with
      * sub-directories), decoded as UTF-8.
      *
-     * @param maxTotalSize how many bytes the entries may add up to once inflated. Sizes are checked as the central
-     * directory declares them, before an entry is read, so an archive over the limit is rejected without inflating the
-     * entry that takes it past it.
+     * Only an archive that cannot be walked at all throws. An entry that cannot be read - or that the caller does not
+     * want, or that is too large - costs nothing but its name: the songs next to a recording, a PDF or a damaged
+     * `.DS_Store` are still perfectly good.
+     *
+     * @param maxTotalSize how many bytes the entries read may add up to once inflated. Sizes are checked as the
+     * central directory declares them, before an entry is read; the inflater holds an entry to what it declared.
+     * @param limitOf how large the entry of that name may be, null for one that is not to be read at all.
      */
-    fun read(archive: ByteArray, maxTotalSize: Long = MAX_ARCHIVE_SIZE): List<ZipEntry> {
+    fun read(
+        archive: ByteArray,
+        maxTotalSize: Long = ImportLimits.MAX_IMPORT_SIZE,
+        limitOf: (name: String) -> Long? = { Long.MAX_VALUE },
+    ): ZipContent {
         val endOfCentralDirectory = findEndOfCentralDirectory(archive)
         val totalEntries = archive.u16(endOfCentralDirectory + 10)
         val centralDirectorySize = archive.u32(endOfCentralDirectory + 12)
@@ -35,6 +46,7 @@ internal object ZipReader {
             throw ZipException("The central directory reaches past the end of the ${archive.size} byte archive.")
         }
         val entries = mutableListOf<ZipEntry>()
+        val unread = mutableListOf<UnreadZipEntry>()
         var totalSize = 0L
         var position = centralDirectoryOffset.toInt()
         repeat(totalEntries) {
@@ -51,33 +63,39 @@ internal object ZipReader {
             val commentLength = archive.u16(position + 32)
             val localHeaderOffset = archive.u32(position + 42)
             val name = archive.utf8(position + 46, nameLength)
-            if (flags and 0x0001 != 0) {
-                throw ZipException("Encrypted entry \"$name\" is not supported.")
-            }
-            if (compressedSize == 0xFFFFFFFFL || uncompressedSize == 0xFFFFFFFFL || localHeaderOffset == 0xFFFFFFFFL) {
-                throw ZipException("ZIP64 entry \"$name\" is not supported.")
-            }
             if (!name.endsWith("/")) {
-                totalSize += uncompressedSize
-                if (totalSize > maxTotalSize) {
-                    throw ZipException("The archive would inflate past $maxTotalSize bytes.")
+                val limit = limitOf(name)
+                val isUnsupported = flags and 0x0001 != 0 ||
+                    compressedSize == 0xFFFFFFFFL || uncompressedSize == 0xFFFFFFFFL || localHeaderOffset == 0xFFFFFFFFL
+                when {
+                    limit == null -> unread += UnreadZipEntry(name, UnreadZipEntry.Reason.NOT_WANTED)
+                    isUnsupported -> unread += UnreadZipEntry(name, UnreadZipEntry.Reason.UNREADABLE)
+                    uncompressedSize > limit || totalSize + uncompressedSize > maxTotalSize ->
+                        unread += UnreadZipEntry(name, UnreadZipEntry.Reason.TOO_LARGE)
+
+                    else -> try {
+                        entries += ZipEntry(
+                            name = name,
+                            bytes = readData(
+                                archive = archive,
+                                name = name,
+                                method = method,
+                                crc = crc,
+                                compressedSize = compressedSize.toInt(),
+                                uncompressedSize = uncompressedSize.toInt(),
+                                localHeaderOffset = localHeaderOffset.toInt(),
+                            ),
+                        )
+                        totalSize += uncompressedSize
+                    } catch (exception: ZipException) {
+                        println("Could not read \"$name\": ${exception.message}")
+                        unread += UnreadZipEntry(name, UnreadZipEntry.Reason.UNREADABLE)
+                    }
                 }
-                entries += ZipEntry(
-                    name = name,
-                    bytes = readData(
-                        archive = archive,
-                        name = name,
-                        method = method,
-                        crc = crc,
-                        compressedSize = compressedSize.toInt(),
-                        uncompressedSize = uncompressedSize.toInt(),
-                        localHeaderOffset = localHeaderOffset.toInt(),
-                    ),
-                )
             }
             position += 46 + nameLength + extraLength + commentLength
         }
-        return entries
+        return ZipContent(entries = entries, unread = unread)
     }
 
     private fun readData(
@@ -135,9 +153,6 @@ internal object ZipReader {
         }
         return copyOfRange(offset, offset + length).decodeToString()
     }
-
-    /** The most an import may inflate to in total, nested archives included. */
-    const val MAX_ARCHIVE_SIZE = 256L shl 20
 
     private const val END_OF_CENTRAL_DIRECTORY_SIGNATURE = 0x06054B50L
     private const val CENTRAL_DIRECTORY_SIGNATURE = 0x02014B50L

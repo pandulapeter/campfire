@@ -9,6 +9,7 @@
  */
 package com.pandulapeter.campfire
 
+import com.pandulapeter.campfire.data.model.domain.ImportBudget
 import com.pandulapeter.campfire.data.model.domain.ImportedFile
 import com.pandulapeter.campfire.data.source.remote.implementation.auth.isSyncRedirect
 import kotlinx.cinterop.ExperimentalForeignApi
@@ -56,8 +57,8 @@ private val inboxScope = CoroutineScope(SupervisorJob() + Dispatchers.IO.limited
 fun openUrl(url: NSURL) {
     if (isSyncRedirect(url.absoluteString.orEmpty())) return
     inboxScope.launch {
-        val file = url.readImportedFile()
-        pendingImports.send(listOf(file ?: ImportedFile(name = url.lastPathComponent.orEmpty(), bytes = ByteArray(0))))
+        val file = url.readImportedFile(ImportBudget())
+        pendingImports.send(listOf(file ?: ImportedFile.unread(url.lastPathComponent.orEmpty())))
         if (file != null && url.isInboxCopy()) {
             NSFileManager.defaultManager.removeItemAtURL(url, error = null)
         }

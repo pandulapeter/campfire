@@ -22,6 +22,8 @@ data class ImportPlan(
     val setlists: List<SetlistEntry> = emptyList(),
     /** Files that are neither a song nor a setlist, could not be decoded, or held nothing to import. */
     val skippedFileNames: List<String> = emptyList(),
+    /** Files the import would have looked inside but did not read, because they are larger than [ImportLimits] allows. */
+    val oversizedFileNames: List<String> = emptyList(),
 ) {
 
     /** True while nothing about this import needs answering, which is every import into an untouched name. */
@@ -36,6 +38,7 @@ data class ImportPlan(
             newSetlistCount = setlists.count { it.status == Status.NEW },
             duplicateCount = songs.count { it.status == Status.IDENTICAL } + setlists.count { it.status == Status.IDENTICAL },
             skippedCount = skippedFileNames.size,
+            oversizedCount = oversizedFileNames.size,
             conflictingFileNames = songs.filter { it.status == Status.CONFLICTING }.map { it.fileName } +
                 setlists.filter { it.status == Status.CONFLICTING }.map { it.fileName },
         )
@@ -90,6 +93,7 @@ data class ImportPlan(
         val newSetlistCount: Int,
         val duplicateCount: Int,
         val skippedCount: Int,
+        val oversizedCount: Int,
         val conflictingFileNames: List<String>,
     )
 }

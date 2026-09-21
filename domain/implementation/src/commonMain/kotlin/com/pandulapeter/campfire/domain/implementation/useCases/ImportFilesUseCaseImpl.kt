@@ -95,6 +95,7 @@ class ImportFilesUseCaseImpl internal constructor(
             importedSetlistFileNames = importedSetlistFileNames,
             skippedFileNames = plan.skippedFileNames,
             duplicateFileNames = duplicateFileNames,
+            oversizedFileNames = plan.oversizedFileNames,
         )
     }
 

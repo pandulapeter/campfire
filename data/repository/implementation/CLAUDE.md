@@ -79,8 +79,8 @@ import — is the only thing that walks the directory again.
   the one part of sync worth testing — `commonTest` covers every way a file can differ between two devices,
   including the ones that would otherwise only show up as a song someone lost. `SyncEngine` carries the plan out and
   applies `LibraryFileKind.matches` to both the remote listing and the index it loads, the same rule the local listing
-  applies, because a file listed on one side only reads as a deletion. A download above `MAXIMUM_REMOTE_FILE_SIZE` is
-  a per-file failure rather than filtered out of the listing for the same reason. A conflict's incoming version is
+  applies, because a file listed on one side only reads as a deletion. A download above `MAXIMUM_REMOTE_FILE_SIZE` (the
+  largest file an import reads, `ImportLimits.MAX_TEXT_FILE_SIZE`) is a per-file failure rather than filtered out of the listing for the same reason. A conflict's incoming version is
   written next to the local one *before* the local one goes up, and taken back if the service then says the remote
   file is still there, so the version that loses is never held only in memory. The engine is written so that an
   interrupted run leaves the library usable: the index (`SyncIndexDocument`, the on-disk shape of `sync-index.json`)

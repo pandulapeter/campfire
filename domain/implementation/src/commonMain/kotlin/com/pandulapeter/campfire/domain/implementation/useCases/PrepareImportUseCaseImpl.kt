@@ -10,6 +10,7 @@
 package com.pandulapeter.campfire.domain.implementation.useCases
 
 import com.pandulapeter.campfire.chordpro.ChordProSplitter
+import com.pandulapeter.campfire.data.model.domain.ImportLimits
 import com.pandulapeter.campfire.data.model.domain.ImportPlan
 import com.pandulapeter.campfire.data.model.domain.ImportedFile
 import com.pandulapeter.campfire.data.model.domain.LibraryFiles
@@ -45,24 +46,36 @@ class PrepareImportUseCaseImpl internal constructor(
         val setlistFiles = mutableListOf<ImportedFile>()
         val skippedFileNames = mutableListOf<String>()
 
-        fun sort(file: ImportedFile) = when (file.name.substringAfterLast('.', "").lowercase()) {
-            in SONG_EXTENSIONS -> songFiles.add(file)
-            SETLIST_EXTENSION -> setlistFiles.add(file)
-            else -> skippedFileNames.add(file.name)
+        val oversizedFileNames = mutableListOf<String>()
+        // What the import may still hold once everything is unpacked, shared by every archive and plain file of it.
+        // The checks here are not redundant with the platform readers: they are what holds for a caller that did not
+        // read its files through an ImportBudget.
+        var remaining = ImportLimits.MAX_IMPORT_SIZE
+
+        fun sort(file: ImportedFile) {
+            val extension = file.name.substringAfterLast('.', "").lowercase()
+            when {
+                extension !in SONG_EXTENSIONS && extension != SETLIST_EXTENSION -> skippedFileNames += file.name
+                file.isTooLarge || file.bytes.size > minOf(ImportLimits.MAX_TEXT_FILE_SIZE, remaining) -> oversizedFileNames += file.name
+                else -> {
+                    remaining -= file.bytes.size
+                    if (extension == SETLIST_EXTENSION) setlistFiles += file else songFiles += file
+                }
+            }
         }
 
         files.forEach { file ->
-            if (file.name.endsWith(ARCHIVE_EXTENSION, ignoreCase = true)) {
-                try {
-                    archiveRepository.unpack(file.bytes).forEach(::sort)
+            when {
+                !file.name.endsWith(ARCHIVE_EXTENSION, ignoreCase = true) -> sort(file)
+                file.isTooLarge || file.bytes.size > ImportLimits.MAX_IMPORT_SIZE -> oversizedFileNames += file.name
+                else -> try {
+                    archiveRepository.unpack(archive = file.bytes, maxSize = remaining).forEach(::sort)
                 } catch (exception: CancellationException) {
                     throw exception
                 } catch (exception: Exception) {
                     println("Could not unpack \"${file.name}\": ${exception.message}")
                     skippedFileNames += file.name
                 }
-            } else {
-                sort(file)
             }
         }
 
@@ -70,6 +83,7 @@ class PrepareImportUseCaseImpl internal constructor(
             songs = planSongs(songFiles, skippedFileNames),
             setlists = planSetlists(setlistFiles, skippedFileNames),
             skippedFileNames = skippedFileNames,
+            oversizedFileNames = oversizedFileNames,
         )
     }
 

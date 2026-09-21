@@ -12,6 +12,7 @@
 package com.pandulapeter.campfire.presentation.ui.platform
 
 import com.pandulapeter.campfire.data.model.domain.ExportedFile
+import com.pandulapeter.campfire.data.model.domain.ImportBudget
 import com.pandulapeter.campfire.data.model.domain.ImportedFile
 import com.pandulapeter.campfire.data.model.domain.LibraryFiles
 import kotlinx.coroutines.CancellationException
@@ -88,6 +89,8 @@ private fun pickFiles(accept: String): Promise<JsArray<JsAny>?> = js(
 
 private fun fileName(file: JsAny): JsString = js("file.name")
 
+private fun fileSize(file: JsAny): Double = js("file.size")
+
 /**
  * Resolves with null instead of rejecting for a file the browser cannot read: a dropped directory where the
  * browser hands one over as a `File`, or a file that was moved or deleted after it was chosen.
@@ -130,7 +133,11 @@ internal fun droppedFiles(): Flow<List<ImportedFile>> = flow {
     println("Could not read the dropped files: ${exception.message}")
 }
 
-private suspend fun JsArray<JsAny>.toImportedFiles() = (0 until length).mapNotNull { index -> get(index)?.toImportedFile() }
+/** Read within one [ImportBudget], which is what keeps a file the import would not look inside out of memory. */
+private suspend fun JsArray<JsAny>.toImportedFiles(): List<ImportedFile> {
+    val budget = ImportBudget()
+    return (0 until length).mapNotNull { index -> get(index)?.toImportedFile(budget) }
+}
 
 /**
  * One unreadable file must not lose the ones that came with it, and a drop has no caller to catch for it: whatever
@@ -141,21 +148,22 @@ private suspend fun JsArray<JsAny>.toImportedFiles() = (0 until length).mapNotNu
  * `Throwable` rather than `Exception`: what a `js(...)` block throws arrives as a `JsException`, which is not an
  * `Exception`, and what a rejected promise arrives as is the coroutines library's business.
  */
-private suspend fun JsAny.toImportedFile(): ImportedFile? {
-    val name = try {
-        fileName(this).toString()
+private suspend fun JsAny.toImportedFile(budget: ImportBudget): ImportedFile? {
+    val (name, size) = try {
+        fileName(this).toString() to fileSize(this).toLong()
     } catch (_: Throwable) {
         return null
     }
-    val bytes = try {
-        fileBytes(this).await<Int8Array?>()?.toByteArray()
-    } catch (exception: CancellationException) {
-        throw exception
-    } catch (exception: Throwable) {
-        println("Could not read \"$name\": ${exception.message}")
-        null
+    return budget.read(name = name, size = size) {
+        try {
+            fileBytes(this).await<Int8Array?>()?.toByteArray()
+        } catch (exception: CancellationException) {
+            throw exception
+        } catch (exception: Throwable) {
+            println("Could not read \"$name\": ${exception.message}")
+            null
+        } ?: ByteArray(0)
     }
-    return ImportedFile(name = name, bytes = bytes ?: ByteArray(0))
 }
 
 /**

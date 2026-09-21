@@ -9,12 +9,16 @@
  */
 package com.pandulapeter.campfire.data.source.local.implementation.source
 
+import com.pandulapeter.campfire.data.model.domain.ImportLimits
+import com.pandulapeter.campfire.data.model.domain.ImportedFile
 import com.pandulapeter.campfire.data.source.local.implementation.zip.ZipEntry
 import com.pandulapeter.campfire.data.source.local.implementation.zip.ZipWriter
 import kotlinx.coroutines.runBlocking
 import kotlin.test.Test
 import kotlin.test.assertContentEquals
 import kotlin.test.assertEquals
+import kotlin.test.assertFalse
+import kotlin.test.assertTrue
 
 /** What comes out of an archive, against the archives the desktops actually produce. */
 class ArchiveLocalSourceTest {
@@ -30,7 +34,7 @@ class ArchiveLocalSourceTest {
             ),
         )
 
-        val files = archiveLocalSource.unpack(archive)
+        val files = archiveLocalSource.unpack(archive = archive, maxSize = ImportLimits.MAX_IMPORT_SIZE)
 
         assertEquals(listOf("a.cho", "s.setlist.json"), files.map { it.name })
         assertContentEquals("{title: A}".encodeToByteArray(), files.first().bytes)
@@ -51,7 +55,7 @@ class ArchiveLocalSourceTest {
             ),
         )
 
-        val files = archiveLocalSource.unpack(archive)
+        val files = archiveLocalSource.unpack(archive = archive, maxSize = ImportLimits.MAX_IMPORT_SIZE)
 
         assertEquals(listOf("a.cho", "b.cho"), files.map { it.name })
     }
@@ -66,8 +70,56 @@ class ArchiveLocalSourceTest {
             ),
         )
 
-        val files = archiveLocalSource.unpack(archive)
+        val files = archiveLocalSource.unpack(archive = archive, maxSize = ImportLimits.MAX_IMPORT_SIZE)
 
         assertEquals(listOf("a.cho", "b.cho"), files.map { it.name })
+    }
+
+    @Test
+    fun `reports what it did not read instead of failing`() = runBlocking {
+        val archive = ZipWriter.write(
+            listOf(
+                ZipEntry("a.cho", "{title: A}".encodeToByteArray()),
+                ZipEntry("notes.pdf", byteArrayOf(37, 80, 68, 70)),
+                ZipEntry("b.cho", "{title: B}".encodeToByteArray()),
+            ),
+        )
+
+        val files = archiveLocalSource.unpack(archive = archive, maxSize = ImportLimits.MAX_IMPORT_SIZE)
+
+        assertEquals(listOf("a.cho", "b.cho", "notes.pdf"), files.map { it.name })
+        assertEquals(0, files.last().bytes.size)
+        assertFalse(files.last().isTooLarge)
+    }
+
+    @Test
+    fun `stops at the size it was given`() = runBlocking {
+        val archive = ZipWriter.write(
+            listOf(
+                ZipEntry("a.cho", ByteArray(600) { 'a'.code.toByte() }),
+                ZipEntry("b.cho", ByteArray(600) { 'b'.code.toByte() }),
+            ),
+        )
+
+        val files = archiveLocalSource.unpack(archive = archive, maxSize = 1000)
+
+        assertEquals(listOf("a.cho", "b.cho"), files.map { it.name })
+        assertEquals(600, files[0].bytes.size)
+        assertTrue(files[1].isTooLarge)
+    }
+
+    @Test
+    fun `reports an archive inside it that cannot be read`() = runBlocking {
+        val archive = ZipWriter.write(
+            listOf(
+                ZipEntry("a.cho", "{title: A}".encodeToByteArray()),
+                ZipEntry("more.zip", byteArrayOf(1, 2, 3)),
+            ),
+        )
+
+        val files = archiveLocalSource.unpack(archive = archive, maxSize = ImportLimits.MAX_IMPORT_SIZE)
+
+        assertEquals(listOf("a.cho", "more.zip"), files.map { it.name })
+        assertEquals(ImportedFile.unread("more.zip"), files.last())
     }
 }

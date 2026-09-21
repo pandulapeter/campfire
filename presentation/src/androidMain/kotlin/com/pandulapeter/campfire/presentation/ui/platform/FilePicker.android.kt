@@ -20,6 +20,7 @@ import androidx.activity.result.ActivityResultLauncher
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.runtime.Composable
 import com.pandulapeter.campfire.data.model.domain.ExportedFile
+import com.pandulapeter.campfire.data.model.domain.ImportBudget
 import com.pandulapeter.campfire.data.model.domain.ImportedFile
 import kotlinx.coroutines.CancellableContinuation
 import kotlinx.coroutines.CoroutineScope
@@ -35,7 +36,9 @@ import kotlinx.coroutines.withContext
 import org.koin.compose.koinInject
 import org.koin.core.annotation.Provided
 import org.koin.core.annotation.Single
+import java.io.ByteArrayOutputStream
 import java.io.IOException
+import java.io.InputStream
 import java.io.OutputStream
 import kotlin.coroutines.resume
 
@@ -109,7 +112,7 @@ internal class AndroidFilePicker(@Provided private val context: Context) : FileP
             continuation.invokeOnCancellation { pickContinuation = null }
             openLauncher?.launch(arrayOf(ANY_MIME_TYPE)) ?: continuation.resume(emptyList())
         }
-        return withContext(Dispatchers.IO) { uris.mapNotNull { it.toImportedFile(context) } }
+        return withContext(Dispatchers.IO) { uris.toImportedFiles(context) }
     }
 
     override suspend fun saveFile(file: ExportedFile): Boolean {
@@ -159,7 +162,7 @@ internal class AndroidFilePicker(@Provided private val context: Context) : FileP
         pickContinuation = null
         when {
             continuation != null -> continuation.resume(uris)
-            uris.isNotEmpty() -> scope.launch { _orphanedFiles.send(uris.mapNotNull { it.toImportedFile(context) }) }
+            uris.isNotEmpty() -> scope.launch { _orphanedFiles.send(uris.toImportedFiles(context)) }
         }
     }
 
@@ -223,18 +226,43 @@ internal class AndroidFilePicker(@Provided private val context: Context) : FileP
 }
 
 /**
- * Reads a document the system handed over - picked, opened with Campfire, shared to it or dropped onto it. Null when
- * it cannot be read, so that one bad file does not lose the ones next to it.
+ * Reads the documents the system handed over - picked, opened with Campfire, shared to it or dropped onto it - within
+ * one [ImportBudget]. One that cannot be read is left out, so that one bad file does not lose the ones next to it.
  */
-fun Uri.toImportedFile(context: Context): ImportedFile? = try {
-    context.contentResolver.openInputStream(this)?.use { ImportedFile(name = displayName(context), bytes = it.readBytes()) }
-} catch (exception: Exception) {
-    println("Could not read \"$this\": ${exception.message}")
-    null
+fun List<Uri>.toImportedFiles(context: Context): List<ImportedFile> {
+    val budget = ImportBudget()
+    return mapNotNull { uri ->
+        try {
+            val (name, size) = uri.nameAndSize(context)
+            budget.read(name = name, size = size) { limit ->
+                // The size is the provider's own claim and is missing as often as not, so the read stops by itself.
+                context.contentResolver.openInputStream(uri)?.use { it.readAtMost(limit.toInt() + 1) }
+            }
+        } catch (exception: Exception) {
+            println("Could not read \"$uri\": ${exception.message}")
+            null
+        }
+    }
 }
 
 /** The extension is what the import goes by, and for a content URI only the display name carries it. */
-private fun Uri.displayName(context: Context): String = context.contentResolver
-    .query(this, arrayOf(OpenableColumns.DISPLAY_NAME), null, null, null)
-    ?.use { cursor -> if (cursor.moveToFirst()) cursor.getString(0) else null }
-    ?: lastPathSegment.orEmpty().substringAfterLast('/')
+private fun Uri.nameAndSize(context: Context): Pair<String, Long?> = context.contentResolver
+    .query(this, arrayOf(OpenableColumns.DISPLAY_NAME, OpenableColumns.SIZE), null, null, null)
+    ?.use { cursor ->
+        if (cursor.moveToFirst()) (cursor.getString(0) ?: fallbackName) to (if (cursor.isNull(1)) null else cursor.getLong(1)) else null
+    }
+    ?: (fallbackName to null)
+
+private val Uri.fallbackName get() = lastPathSegment.orEmpty().substringAfterLast('/')
+
+/** To the end of the stream or to [limit] bytes, whichever comes first. `readNBytes` would do, from API 33 on. */
+private fun InputStream.readAtMost(limit: Int): ByteArray {
+    val output = ByteArrayOutputStream()
+    val buffer = ByteArray(DEFAULT_BUFFER_SIZE)
+    while (output.size() < limit) {
+        val count = read(buffer, 0, minOf(buffer.size, limit - output.size()))
+        if (count < 0) break
+        output.write(buffer, 0, count)
+    }
+    return output.toByteArray()
+}

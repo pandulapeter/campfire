@@ -20,9 +20,13 @@ interface ArchiveLocalSource {
      *
      * Hidden files are not among them: an AppleDouble "._name.cho" or a ".DS_Store" is the archiving tool's own
      * bookkeeping rather than anything the user put in, so the caller never learns of them and never has to account
-     * for them. Everything else is returned as it is, unread.
+     * for them.
+     *
+     * [maxSize] is how much the files may add up to, nested archives included; the caller owns it because one import
+     * may unpack several archives. An entry that was not read - not something an import looks inside, too large, or
+     * unreadable - is still returned, as `ImportedFile.unread`, so that it is reported.
      */
-    suspend fun unpack(archive: ByteArray): List<ImportedFile>
+    suspend fun unpack(archive: ByteArray, maxSize: Long): List<ImportedFile>
 
     /** Packs the given entries (name to content, the names may contain directories) into a zip archive. */
     suspend fun pack(files: Map<String, ByteArray>): ByteArray

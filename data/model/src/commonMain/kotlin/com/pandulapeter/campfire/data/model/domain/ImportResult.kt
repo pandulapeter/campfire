@@ -22,4 +22,6 @@ data class ImportResult(
      * skipped ones: nothing went wrong with them, there was simply nothing left to do, see [ImportPlan.Status].
      */
     val duplicateFileNames: List<String> = emptyList(),
+    /** Files the import would have looked inside but did not read, see [ImportPlan.oversizedFileNames]. */
+    val oversizedFileNames: List<String> = emptyList(),
 )

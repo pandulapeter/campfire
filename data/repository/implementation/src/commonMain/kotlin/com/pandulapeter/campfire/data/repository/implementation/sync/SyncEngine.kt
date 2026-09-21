@@ -9,6 +9,7 @@
  */
 package com.pandulapeter.campfire.data.repository.implementation.sync
 
+import com.pandulapeter.campfire.data.model.domain.ImportLimits
 import com.pandulapeter.campfire.data.model.domain.SyncDeletionPolicy
 import com.pandulapeter.campfire.data.model.domain.SyncProgress
 import com.pandulapeter.campfire.data.model.domain.SyncSummary
@@ -562,7 +563,7 @@ internal class SyncEngine(
          * could be brought into one library can reach the others. Generous for ChordPro text, and small enough that
          * [CONCURRENT_TRANSFERS] of them in memory at once do not trouble a phone.
          */
-        const val MAXIMUM_REMOTE_FILE_SIZE = 8L shl 20
+        const val MAXIMUM_REMOTE_FILE_SIZE = ImportLimits.MAX_TEXT_FILE_SIZE
 
         /**
          * Chosen for the round trip rather than for the CPU: the transfers are small text files and almost all of

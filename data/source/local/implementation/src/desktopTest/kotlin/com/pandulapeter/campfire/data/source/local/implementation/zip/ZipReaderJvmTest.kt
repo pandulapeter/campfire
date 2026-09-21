@@ -48,7 +48,7 @@ internal class ZipReaderJvmTest {
         // The JVM streams entry sizes in a trailing data descriptor, so the local headers carry zeroes.
         assertTrue(archive.u16(4 + 2) and 0x0008 != 0, "Expected the JVM to use data descriptors.")
 
-        val read = ZipReader.read(archive)
+        val read = ZipReader.read(archive).entries
 
         assertEquals(contents.keys.toList(), read.map { it.name })
         read.forEach { entry ->
@@ -67,7 +67,7 @@ internal class ZipReaderJvmTest {
             }
         }.toByteArray()
 
-        val read = ZipReader.read(archive)
+        val read = ZipReader.read(archive).entries
 
         assertEquals(1, read.size)
         assertContentEquals(contents.getValue("hello.cho"), read[0].bytes)

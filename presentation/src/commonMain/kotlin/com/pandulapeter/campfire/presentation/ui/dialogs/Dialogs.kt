@@ -94,6 +94,7 @@ import com.pandulapeter.campfire.presentation.resources.import_conflicts_skip
 import com.pandulapeter.campfire.presentation.resources.import_conflicts_skip_description
 import com.pandulapeter.campfire.presentation.resources.import_conflicts_skipped
 import com.pandulapeter.campfire.presentation.resources.import_conflicts_summary
+import com.pandulapeter.campfire.presentation.resources.import_oversized
 import com.pandulapeter.campfire.presentation.resources.save
 import com.pandulapeter.campfire.presentation.resources.setlists_delete_setlist
 import com.pandulapeter.campfire.presentation.resources.setlists_duplicate
@@ -396,6 +397,9 @@ private fun ImportConflictsDialog(
                 }
                 if (summary.skippedCount > 0) {
                     ImportConflictsNote(pluralStringResource(Res.plurals.import_conflicts_skipped, summary.skippedCount, summary.skippedCount))
+                }
+                if (summary.oversizedCount > 0) {
+                    ImportConflictsNote(pluralStringResource(Res.plurals.import_oversized, summary.oversizedCount, summary.oversizedCount))
                 }
                 Spacer(modifier = Modifier.height(16.dp))
                 Text(

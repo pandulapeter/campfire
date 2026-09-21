@@ -10,6 +10,7 @@
 package com.pandulapeter.campfire
 
 import com.pandulapeter.campfire.data.model.domain.ExportedFile
+import com.pandulapeter.campfire.data.model.domain.ImportBudget
 import com.pandulapeter.campfire.data.model.domain.ImportedFile
 import com.pandulapeter.campfire.presentation.ui.platform.FilePicker
 import kotlinx.cinterop.BetaInteropApi
@@ -21,6 +22,10 @@ import kotlinx.coroutines.IO
 import kotlinx.coroutines.suspendCancellableCoroutine
 import kotlinx.coroutines.withContext
 import platform.Foundation.NSData
+import platform.Foundation.NSDataReadingMappedIfSafe
+import platform.Foundation.NSFileManager
+import platform.Foundation.NSFileSize
+import platform.Foundation.NSNumber
 import platform.Foundation.NSTemporaryDirectory
 import platform.Foundation.NSURL
 import platform.Foundation.create
@@ -58,7 +63,10 @@ internal class IosFilePicker(
             controller.allowsMultipleSelection = true
             present(controller) { urls -> continuation.resume(urls) }
         }
-        return withContext(Dispatchers.IO) { urls.mapNotNull { it.readImportedFile() } }
+        return withContext(Dispatchers.IO) {
+            val budget = ImportBudget()
+            urls.mapNotNull { it.readImportedFile(budget) }
+        }
     }
 
     override suspend fun saveFile(file: ExportedFile): Boolean = suspendCancellableCoroutine { continuation ->
@@ -101,19 +109,27 @@ internal class IosFilePicker(
 
 /**
  * Null when the file cannot be read, so that one bad file does not lose the ones next to it. Foundation reports
- * that by handing back nothing rather than by throwing.
+ * that by handing back nothing rather than by throwing. Read within [budget], so a file the import would not look
+ * inside, or one too large for it, is handed over unread.
  *
  * The copies the picker hands over live in the app's own container, but a URL that arrives from another app is
  * security scoped, so the read happens inside the access it grants. Blocking, so not for the main thread.
  */
-internal fun NSURL.readImportedFile(): ImportedFile? {
+@OptIn(ExperimentalForeignApi::class)
+internal fun NSURL.readImportedFile(budget: ImportBudget): ImportedFile? {
     val isAccessible = startAccessingSecurityScopedResource()
     return try {
-        val data = NSData.dataWithContentsOfURL(this)
-        if (data == null) {
-            println("Could not read \"$this\".")
+        val size = path?.let { NSFileManager.defaultManager.attributesOfItemAtPath(it, error = null) }?.get(NSFileSize) as? NSNumber
+        budget.read(name = lastPathComponent.orEmpty(), size = size?.longLongValue) { limit ->
+            // Mapped rather than loaded, so that a file whose attributes said nothing still gives its length away
+            // before any of it is copied into the heap. Longer than the limit, it only has to say so, which the
+            // budget takes one byte past the limit to mean.
+            val data = NSData.dataWithContentsOfURL(this, options = NSDataReadingMappedIfSafe, error = null)
+            if (data == null) {
+                println("Could not read \"$this\".")
+            }
+            data?.let { if (it.length.toLong() > limit) ByteArray(limit.toInt() + 1) else it.toByteArray() }
         }
-        data?.let { ImportedFile(name = lastPathComponent.orEmpty(), bytes = it.toByteArray()) }
     } finally {
         if (isAccessible) {
             stopAccessingSecurityScopedResource()
