@@ -86,6 +86,13 @@ class ChordProNotationTest {
     }
 
     @Test
+    fun `a comment inside a grid does not hide the chords after it from the notation`() {
+        val song = ChordProNotation.toGerman(ChordProParser.parse("{sog}\n| Am . |\n{c: x}\n| B . |\n{eog}"))
+
+        assertEquals(listOf("Am", "H"), song.chordNames())
+    }
+
+    @Test
     fun `a shorter chord name keeps the columns of a tab`() {
         // Bb is a character wider than the B it becomes, so the space it leaves behind is put back after it.
         val song = ChordProNotation.toGerman(ChordProParser.parse("{sot}\n  Bb    Bb\ne|--0--3--|\n{eot}"))

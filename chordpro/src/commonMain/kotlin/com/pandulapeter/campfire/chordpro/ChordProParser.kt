@@ -118,8 +118,14 @@ object ChordProParser {
         }
         when (name) {
             "chorus" -> {
-                section.close()
-                blocks += ChordProBlock.ChorusRecall(ChordProSyntax.label(directive.value))
+                val recall = ChordProBlock.ChorusRecall(ChordProSyntax.label(directive.value))
+                if (section.isInLineMode) {
+                    // The environment still has lines to come, so the recall interrupts it the way a comment does.
+                    section.addBlock(recall)
+                } else {
+                    section.close()
+                    blocks += recall
+                }
             }
 
             "comment", "c" -> handleComment(directive.value.orEmpty().trim(), CommentStyle.PLAIN, blocks, section)
@@ -137,7 +143,9 @@ object ChordProParser {
         blocks: MutableList<ChordProBlock>,
         section: SectionBuilder,
     ) {
-        if (style == CommentStyle.PLAIN && !section.isExplicit) {
+        // Inside a tab or a grid a comment is a note to the player: a Campfire 3 file had its headings between its
+        // sections, and taking this one for a heading would end the environment that is still open around it.
+        if (style == CommentStyle.PLAIN && !section.isExplicit && !section.isInLineMode) {
             legacyHeading(text)?.let { type ->
                 section.close()
                 section.open(type, text, isExplicit = false, headingText = text)
@@ -210,6 +218,9 @@ object ChordProParser {
         var isExplicit = false
             private set
 
+        /** Whether a `{start_of_tab}` or a `{start_of_grid}` is open, which says how lines are read and not what section they are in. */
+        val isInLineMode get() = lineMode != null
+
         fun open(type: SectionType, label: String?, isExplicit: Boolean, headingText: String? = null) {
             this.type = type
             this.label = label
@@ -256,16 +267,22 @@ object ChordProParser {
          * Emits a standalone block without losing the section around it: the section is flushed and then reopened.
          * Only a section with lines in it is flushed, so the heading of the one being reopened has already been shown
          * as its label, and the reopened half does not carry [headingText]: were nothing to follow the block, it
-         * would otherwise come back as a comment repeating that label.
+         * would otherwise come back as a comment repeating that label. A tab or grid environment that is open carries
+         * on in the reopened half.
          */
         fun addBlock(block: ChordProBlock) {
             if (type != null && lines.isNotEmpty()) {
                 val type = this.type!!
                 val label = this.label
                 val isExplicit = this.isExplicit
+                // The block interrupts the section and not the tab or grid environment the file is in the middle of:
+                // that one ends at its own `{end_of_…}`, which is where the text transposition, the summary and the
+                // highlighter end it as well.
+                val lineMode = this.lineMode
                 close()
                 blocks += block
                 open(type, label, isExplicit)
+                this.lineMode = lineMode
             } else {
                 blocks += block
             }

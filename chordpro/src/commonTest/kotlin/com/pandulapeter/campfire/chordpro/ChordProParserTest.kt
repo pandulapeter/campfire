@@ -295,6 +295,57 @@ class ChordProParserTest {
     }
 
     @Test
+    fun `a comment inside a tab environment does not end the tablature`() {
+        val blocks = ChordProParser.parse("{start_of_tab: Riff}\ne|---0---2---|\n{comment: Repeat x2}\ne|---3---5---|\n{end_of_tab}\nla [C]la").blocks
+
+        assertEquals(3, blocks.size)
+        assertEquals(ChordProLine.Tab("e|---0---2---|"), (blocks[0] as ChordProBlock.Section).lines.single())
+        assertEquals(ChordProBlock.Comment("Repeat x2", CommentStyle.PLAIN), blocks[1])
+        val secondSection = blocks[2] as ChordProBlock.Section
+        assertEquals("Riff", secondSection.label)
+        assertEquals(ChordProLine.Tab("e|---3---5---|"), secondSection.lines[0])
+        assertEquals(ChordProParser.parseLyrics("la [C]la"), secondSection.lines[1])
+    }
+
+    @Test
+    fun `a break inside a grid environment does not end the grid`() {
+        listOf("{column_break}", "{new_page}", "{np}", "{colb}", "{ci: x}", "{cb: x}").forEach { directive ->
+            val blocks = ChordProParser.parse("{start_of_grid}\n| Am . . . |\n$directive\n| C . . . |\n{end_of_grid}").blocks
+
+            assertEquals(3, blocks.size)
+            assertEquals(
+                ChordProLine.Grid(listOf(GridToken.Bar("|"), GridToken.Chord("C"), GridToken.Beat, GridToken.Beat, GridToken.Beat, GridToken.Bar("|"))),
+                (blocks[2] as ChordProBlock.Section).lines.single(),
+            )
+        }
+    }
+
+    @Test
+    fun `a legacy heading name inside a tab environment stays a comment`() {
+        val blocks = ChordProParser.parse("{sot}\ne|---0---|\n{c: Solo}\ne|---3---|\n{eot}").blocks
+
+        assertEquals(ChordProBlock.Comment("Solo", CommentStyle.PLAIN), blocks[1])
+        assertEquals(ChordProLine.Tab("e|---3---|"), (blocks[2] as ChordProBlock.Section).lines.single())
+    }
+
+    @Test
+    fun `a legacy heading still opens the section a tab is written in`() {
+        val section = ChordProParser.parse("{c: Solo}\n{sot}\ne|---0---|\n{eot}").blocks.single() as ChordProBlock.Section
+
+        assertEquals(SectionType.Custom("solo"), section.type)
+        assertEquals("Solo", section.label)
+        assertEquals(listOf(ChordProLine.Tab("e|---0---|")), section.lines)
+    }
+
+    @Test
+    fun `a chorus recall inside a tab environment does not end the tablature`() {
+        val blocks = ChordProParser.parse("{sot}\ne|---0---|\n{chorus}\ne|---3---|\n{eot}").blocks
+
+        assertEquals(ChordProBlock.ChorusRecall(null), blocks[1])
+        assertEquals(ChordProLine.Tab("e|---3---|"), (blocks[2] as ChordProBlock.Section).lines.single())
+    }
+
+    @Test
     fun `grid lines are split into tokens`() {
         val section = ChordProParser.parse("{start_of_grid}\n| Am . . . | C . . . |\n{end_of_grid}").blocks.single() as ChordProBlock.Section
 

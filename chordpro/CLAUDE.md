@@ -28,6 +28,9 @@ in `:domain:*`. `:data:source:local:implementation` uses it directly for the met
   cuts each run into rows that fit its width (`ChordProTabWrapper`) with the lyrics around it. A blank line inside an
   environment does not end its run for either of the first two: the serializer writes it inside the environment,
   where the parser keeps it, and the transposer makes one octave decision for it on the model as it does in the text.
+  A `{comment}`, a break or a `{chorus}` inside an environment cuts the section in two the way it does anywhere else,
+  and the environment carries on in the second half; a comment there is never read as a Campfire 3 heading. The two
+  halves of a tab are runs of their own, so the text transposition moves them as two fingerboards as well.
 - `ChordProSyntax` — the shared low-level rules (the directive and chord regexes, `chordNameRegex` for "is this whole
   word a chord and not a word that starts with a letter", long/short directive names, the `start_of_` / `end_of_`
   prefixes, `label="…"` attributes, what counts as a tag or a language directive, `metadataKind` for the one name a

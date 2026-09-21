@@ -226,10 +226,16 @@ internal object ChordProSyntax {
     private val Directive.isMetadata
         get() = startOfEnvironment(name) == null && endOfEnvironment(name) == null && name !in bodyNames
 
-    private val bodyNames = setOf(
+    /**
+     * The directives [ChordProParser] makes a block of their own out of — a comment, a break, a chorus recall —
+     * and which therefore cut whatever section they stand in into two, a run of tablature included.
+     */
+    val blockNames = setOf(
         "chorus", "comment", "c", "comment_italic", "ci", "comment_box", "cb", "new_page", "np", "new_physical_page",
-        "npp", "column_break", "colb", "new_song", "ns",
+        "npp", "column_break", "colb",
     )
+
+    private val bodyNames = blockNames + setOf("new_song", "ns")
 
     /** `label="Verse 1"` wins over the raw value; an empty value becomes null. */
     fun label(value: String?): String? {

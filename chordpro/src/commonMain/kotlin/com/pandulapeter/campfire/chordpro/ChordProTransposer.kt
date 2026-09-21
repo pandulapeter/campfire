@@ -126,6 +126,11 @@ object ChordProTransposer {
                         lines.transposeTab(tabLineIndices, semitones, preferFlats)
                         environment = null
                     }
+                    if (directive.name in ChordProSyntax.blockNames) {
+                        // The parser cuts the section in two here, and each half of the tab is a run of its own in the model;
+                        // moving them as one fingerboard would let the viewer and the editor disagree about the octave.
+                        lines.transposeTab(tabLineIndices, semitones, preferFlats)
+                    }
                     if (directive.name == KEY) {
                         lines[index] = transposeKeyLine(rawLine, trimmedLine, directive.value, semitones, preferFlats)
                     }

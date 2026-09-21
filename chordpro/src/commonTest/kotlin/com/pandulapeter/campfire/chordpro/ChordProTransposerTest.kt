@@ -237,6 +237,32 @@ class ChordProTransposerTest {
     }
 
     @Test
+    fun `a comment inside a tab moves the frets on both sides of it in the model as in the text`() {
+        val text = "{sot}\ne|---0---2---|\n{comment: Repeat x2}\ne|---3---5---|\n{eot}"
+
+        assertEquals("{sot}\ne|---2---4---|\n{comment: Repeat x2}\ne|---5---7---|\n{eot}", ChordProTransposer.transposeText(text, 2))
+        assertEquals(listOf("e|---2---4---|", "e|---5---7---|"), ChordProTransposer.transpose(ChordProParser.parse(text), 2).tabLines())
+    }
+
+    @Test
+    fun `the two halves of a tab cut by a comment are fingerboards of their own in the model as in the text`() {
+        val text = "{sot}\ne|--0--|\n{c: Higher}\ne|--20--|\n{eot}"
+
+        assertEquals(
+            ChordProTransposer.transpose(ChordProParser.parse(text), -2, preferFlats = false),
+            ChordProParser.parse(ChordProTransposer.transposeText(text, -2, preferFlats = false)),
+        )
+        assertEquals("{sot}\ne|--10-|\n{c: Higher}\ne|--18--|\n{eot}", ChordProTransposer.transposeText(text, -2, preferFlats = false))
+    }
+
+    @Test
+    fun `a comment inside a grid leaves the rest of it a grid to transpose`() {
+        val song = ChordProTransposer.transpose(ChordProParser.parse("{sog}\n| Am . |\n{c: x}\n| C . |\n{eog}"), 2)
+
+        assertEquals(listOf("Bm", "D"), song.chordNames())
+    }
+
+    @Test
     fun `transposing the model moves the frets of a tab section`() {
         val song = ChordProTransposer.transpose(ChordProParser.parse("{key: Am}\n\n{sot}\n  Am\ne|--0--3--|\n{eot}"), 2)
 
