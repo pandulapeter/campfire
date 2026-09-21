@@ -16,6 +16,7 @@ import com.pandulapeter.campfire.data.source.local.api.LibraryFileLocalSource
 import com.pandulapeter.campfire.data.source.remote.api.SyncAuthorizationException
 import com.pandulapeter.campfire.data.source.remote.api.SyncNetworkException
 import com.pandulapeter.campfire.data.source.remote.api.SyncProvider
+import com.pandulapeter.campfire.data.source.remote.api.SyncRemoteStorageFullException
 import com.pandulapeter.campfire.data.source.remote.api.hashing.localContentHash
 import com.pandulapeter.campfire.data.source.remote.api.model.RemoteFile
 import com.pandulapeter.campfire.data.source.remote.api.model.RemoteWriteResult
@@ -59,8 +60,9 @@ private fun SyncKey.folded() = copy(name = name.lowercase())
  * sides with nothing to say which is newer, and any the user edited in between would end up as a conflict copy.
  *
  * A failure on one file does not end the run. A song the storage cannot read must not keep the other four hundred
- * from travelling, so only the two failures that make every further call pointless - the credentials being refused
- * and the service being unreachable - stop it.
+ * from travelling, so only the failures that make every further call pointless - the credentials being refused, the
+ * service being unreachable, the remote folder being full - stop it. A file that failed is named in the summary,
+ * because a run that says nothing about it reads as a backup that works.
  */
 internal class SyncEngine(
     private val libraryFileLocalSource: LibraryFileLocalSource,
@@ -248,10 +250,12 @@ internal class SyncEngine(
         throw exception
     } catch (exception: SyncNetworkException) {
         throw exception
+    } catch (exception: SyncRemoteStorageFullException) {
+        throw exception
     } catch (exception: Exception) {
         // The index is left alone, so the next run sees this file as it was and tries again.
         println("Could not sync \"${operation.key.path}\": ${exception.message}")
-        OperationOutcome()
+        OperationOutcome(summary = SyncSummary(failed = listOf(operation.key.name)))
     }
 
     /**
@@ -473,6 +477,7 @@ internal class SyncEngine(
         deletedLocally = deletedLocally + other.deletedLocally,
         deletedRemotely = deletedRemotely + other.deletedRemotely,
         conflicts = conflicts + other.conflicts,
+        failed = (failed + other.failed).distinct(),
     )
 
     /**

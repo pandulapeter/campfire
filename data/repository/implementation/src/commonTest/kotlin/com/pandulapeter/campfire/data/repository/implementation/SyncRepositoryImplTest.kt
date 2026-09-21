@@ -27,6 +27,7 @@ import com.pandulapeter.campfire.data.repository.implementation.sync.SyncKey
 import com.pandulapeter.campfire.data.source.local.api.LibraryStorageException
 import com.pandulapeter.campfire.data.source.remote.api.SyncNetworkException
 import com.pandulapeter.campfire.data.source.remote.api.SyncProviders
+import com.pandulapeter.campfire.data.source.remote.api.SyncRemoteStorageFullException
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.test.runTest
 import kotlin.test.Test
@@ -100,6 +101,39 @@ class SyncRepositoryImplTest {
 
         assertEquals(SyncOutcome.Failure(SyncFailureReason.NETWORK), state.lastOutcome)
         assertTrue(song(1) in snapshots.last())
+    }
+
+    @Test
+    fun `a run in which a file failed keeps the time of the last run that was in step`() = runTest {
+        val stateLocalSource = FakeSyncStateLocalSource(index = """{"lastSyncedAt":42}""")
+        val repository = repository(
+            provider = FakeSyncProvider(files = mapOf(song(1) to "One".encodeToByteArray()), account = ACCOUNT),
+            stateLocalSource = stateLocalSource,
+            libraryFileLocalSource = FakeLibraryFileLocalSource(onWrite = { throw LibraryStorageException("Full") }),
+        )
+
+        repository.restore()
+        repository.synchronize(SyncDeletionPolicy.ASK)
+        val state = repository.awaitOutcome()
+
+        val outcome = assertIs<SyncOutcome.Success>(state.lastOutcome)
+        assertEquals(listOf(song(1).name), outcome.summary.failed)
+        assertEquals(42, state.lastSyncedAt)
+        assertTrue("\"lastSyncedAt\": 42" in stateLocalSource.index.orEmpty())
+    }
+
+    @Test
+    fun `a full remote folder is reported as that`() = runTest {
+        val repository = repository(
+            provider = FakeSyncProvider(onUpload = { throw SyncRemoteStorageFullException("Full") }, account = ACCOUNT),
+            libraryFileLocalSource = FakeLibraryFileLocalSource(files = mapOf(song(1) to "One".encodeToByteArray())),
+        )
+
+        repository.restore()
+        repository.synchronize(SyncDeletionPolicy.ASK)
+        val state = repository.awaitOutcome()
+
+        assertEquals(SyncOutcome.Failure(SyncFailureReason.REMOTE_STORAGE_FULL), state.lastOutcome)
     }
 
     private fun repository(

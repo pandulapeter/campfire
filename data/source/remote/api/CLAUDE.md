@@ -41,5 +41,7 @@ and why each of them is load bearing, are spelled out in the KDoc of `SyncProvid
   browser with a page of its own, which is the only Campfire text rendered outside the app — so its two strings are
   handed down from the UI, which is the only layer that knows the translations and the chosen language. The other
   three platforms ignore it, because their browser closes itself.
-- `SyncAuthorizationException` / `SyncNetworkException` — the two failures the engine treats as reasons to stop a
-  run. Everything else is one file's problem and must not keep the other four hundred from travelling.
+- `SyncAuthorizationException` / `SyncNetworkException` / `SyncRemoteStorageFullException` — the three failures the
+  engine treats as reasons to stop a run; the last one only ever comes from `upload`, since every upload after it
+  would be refused the same way. Everything else is one file's problem and must not keep the other four hundred from
+  travelling.

@@ -29,6 +29,8 @@ import com.pandulapeter.campfire.data.source.remote.api.model.RemoteWriteResult
  * - [delete] may be a move to a trash rather than a destruction, and the engine does not care which.
  * - Nothing here throws for an expired token: refreshing is the provider's own business, and only an authorization
  *   that cannot be repaired surfaces, as [SyncAuthorizationException].
+ * - An account that is out of space says so with [SyncRemoteStorageFullException], from [upload] only. It ends the
+ *   run; any other refusal is one file's problem.
  */
 interface SyncProvider {
 
@@ -108,3 +110,9 @@ class SyncAuthorizationException(message: String, cause: Throwable? = null) : Ex
 
 /** The service could not be reached. Trying again later is a reasonable thing to do. */
 class SyncNetworkException(message: String, cause: Throwable? = null) : Exception(message, cause)
+
+/**
+ * The service has no room left for what is being uploaded. Told apart from the refusal of one file because every
+ * upload after it would be answered the same way, each only after sending its file.
+ */
+class SyncRemoteStorageFullException(message: String, cause: Throwable? = null) : Exception(message, cause)

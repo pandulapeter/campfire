@@ -14,6 +14,7 @@ import com.pandulapeter.campfire.data.model.domain.SyncDeletionPolicy
 import com.pandulapeter.campfire.data.model.domain.SyncProviderId
 import com.pandulapeter.campfire.data.source.local.api.LibraryStorageException
 import com.pandulapeter.campfire.data.source.remote.api.SyncNetworkException
+import com.pandulapeter.campfire.data.source.remote.api.SyncRemoteStorageFullException
 import com.pandulapeter.campfire.data.source.remote.api.hashing.localContentHash
 import kotlinx.coroutines.test.runTest
 import kotlin.test.Test
@@ -296,6 +297,73 @@ class SyncEngineTest {
         }
 
         assertContentEquals(THERE, local.files[SyncKey(kind = LibraryFileKind.SONG, name = "song_1 (2).cho")])
+    }
+
+    @Test
+    fun `a file that cannot be written is named in the summary and the others still move`() = runTest {
+        val local = FakeLibraryFileLocalSource(onWrite = { key -> if (key == song(2)) throw LibraryStorageException("Full") })
+        val provider = FakeSyncProvider(files = librarySongs(3))
+
+        val result = SyncEngine(local).synchronize(
+            provider = provider,
+            document = SyncIndexDocument(),
+            accountId = ACCOUNT_ID,
+            onProgress = {},
+            onIndexChanged = {},
+            deletionPolicy = SyncDeletionPolicy.ASK,
+        )
+
+        val completed = assertIs<SyncEngine.Result.Completed>(result)
+        assertEquals(listOf("song_2.cho"), completed.summary.failed)
+        assertEquals(2, completed.summary.downloaded)
+        assertTrue(song(2).path !in completed.index.entries)
+    }
+
+    @Test
+    fun `a file that fails in both passes is named once`() = runTest {
+        val local = FakeLibraryFileLocalSource(
+            files = mapOf(song(4) to "Four".encodeToByteArray()),
+            onWrite = { key -> if (key == song(2)) throw LibraryStorageException("Full") },
+        )
+        val provider = FakeSyncProvider(files = librarySongs(3))
+        // Another device uploads the same new song while this one is uploading it, which asks for a second pass.
+        var isContested = true
+        provider.onUpload = { key ->
+            if (key == song(4) && isContested) {
+                isContested = false
+                provider.files[key] = "Four".encodeToByteArray() to "r9"
+            }
+        }
+
+        val result = SyncEngine(local).synchronize(
+            provider = provider,
+            document = SyncIndexDocument(),
+            accountId = ACCOUNT_ID,
+            onProgress = {},
+            onIndexChanged = {},
+            deletionPolicy = SyncDeletionPolicy.ASK,
+        )
+
+        assertTrue(!isContested)
+        assertEquals(1, assertIs<SyncEngine.Result.Completed>(result).summary.failed.size)
+    }
+
+    @Test
+    fun `a full remote folder ends the run`() = runTest {
+        val local = FakeLibraryFileLocalSource(files = librarySongs(2))
+        val provider = FakeSyncProvider()
+        provider.onUpload = { throw SyncRemoteStorageFullException("Full") }
+
+        assertFailsWith<SyncRemoteStorageFullException> {
+            SyncEngine(local).synchronize(
+                provider = provider,
+                document = SyncIndexDocument(),
+                accountId = ACCOUNT_ID,
+                onProgress = {},
+                onIndexChanged = {},
+                deletionPolicy = SyncDeletionPolicy.ASK,
+            )
+        }
     }
 
     @Test

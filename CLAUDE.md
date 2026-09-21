@@ -302,7 +302,8 @@ the only possible one. The per-module `CLAUDE.md` files carry the detail; the sh
   chosen *in the app*, not the system's.
 - `SyncEngine` runs the plan a few files at a time rather than one after another (which made a first sync one round
   trip per file), and retries when the service asks it to slow down — being rate limited is the expected answer to a
-  first sync of a whole library, not a reason to give up on it.
+  first sync of a whole library, not a reason to give up on it. A file that fails on its own is named in the
+  run's summary rather than ending it, and such a run does not count as the last successful one.
 - The index carries an "a run was going" marker, written before anything moves and cleared when it finishes, so a
   run the app never came back from — killed, swiped away, suspended by iOS — is reported as interrupted next time
   rather than silently forgotten, and that run is left for the user to start rather than started on launch.

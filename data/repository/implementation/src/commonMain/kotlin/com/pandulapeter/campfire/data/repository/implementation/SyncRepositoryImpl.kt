@@ -31,6 +31,7 @@ import com.pandulapeter.campfire.data.source.remote.api.SyncAuthenticator
 import com.pandulapeter.campfire.data.source.remote.api.SyncAuthorizationException
 import com.pandulapeter.campfire.data.source.remote.api.SyncNetworkException
 import com.pandulapeter.campfire.data.source.remote.api.SyncProviders
+import com.pandulapeter.campfire.data.source.remote.api.SyncRemoteStorageFullException
 import com.pandulapeter.campfire.data.source.remote.api.model.AuthorizationCompletionPage
 import com.pandulapeter.campfire.data.source.remote.api.model.RemoteAuthorizationResponse
 import com.pandulapeter.campfire.data.source.remote.api.model.redirectParameters
@@ -294,7 +295,14 @@ internal class SyncRepositoryImpl(
                     }
 
                     is SyncEngine.Result.Completed -> {
-                        val syncedAt = Clock.System.now().toEpochMilliseconds()
+                        // Only a run that moved everything it set out to move is one the two sides were in step after.
+                        // One with failures keeps the time of the last run that was, which is also what "Last synced
+                        // successfully" goes on saying while the next run is going.
+                        val syncedAt = if (result.summary.failed.isEmpty()) {
+                            Clock.System.now().toEpochMilliseconds()
+                        } else {
+                            result.index.lastSyncedAt
+                        }
                         saveIndex(result.index.copy(lastSyncedAt = syncedAt))
                         // Only when something actually moved: most runs find nothing to do, and re-reading the whole
                         // library every time the app is opened would cost more than the sync itself.
@@ -304,7 +312,7 @@ internal class SyncRepositoryImpl(
                         updateConnected {
                             it.copy(
                                 progress = null,
-                                lastSyncedAt = syncedAt,
+                                lastSyncedAt = syncedAt.takeIf { at -> at > 0 },
                                 lastOutcome = SyncOutcome.Success(result.summary),
                             )
                         }
@@ -467,6 +475,7 @@ internal class SyncRepositoryImpl(
     private fun Throwable.toFailureReason() = when (this) {
         is SyncAuthorizationException -> SyncFailureReason.AUTHORIZATION
         is SyncNetworkException -> SyncFailureReason.NETWORK
+        is SyncRemoteStorageFullException -> SyncFailureReason.REMOTE_STORAGE_FULL
         is LibraryStorageException -> SyncFailureReason.STORAGE
         else -> SyncFailureReason.UNKNOWN
     }

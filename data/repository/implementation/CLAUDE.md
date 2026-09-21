@@ -74,7 +74,7 @@ long as the storage takes to answer. A cancelled read is not a failed one: it is
   run and the one that completes it do, which is how a device that cannot write ends a run as
   `SyncFailureReason.STORAGE`. The repository's scope carries a `CoroutineExceptionHandler` that logs, since nothing
   launched there has anyone to throw to. An interrupted run therefore keeps what it transferred, and only a completed
-  one moves `lastSyncedAt`.
+  one with no failed files moves `lastSyncedAt`.
   A run the app never came back from is found by the index's `isRunInProgress` marker at `restore`, reported as
   interrupted next time, and that run is left for the user to start: `RestoreResult.wasInterrupted` keeps
   `RestoreSyncUseCase` from starting one on launch, which would replace the message before it could be read.
@@ -85,9 +85,11 @@ long as the storage takes to answer. A cancelled read is not a failed one: it is
   `Result.DeletionsNeedConfirmation` before anything moves, and the repository reports it as the run's outcome without
   a rescan. `DELETE_LOCALLY` applies such a plan as it is, and `KEEP_AND_UPLOAD` first drops the index entries of
   every file that is here and not there, which the planner then reads as new local files. The policy is a parameter
-  of the one run it was given to, never state. A failure on one file does not end a run; only the two failures that make every further call pointless (the credentials refused, the service
-  unreachable) do — and a `CancellationException` is caught *first* and rethrown, since a stopped run is not a few
-  hundred files that failed. Operations run `CONCURRENT_TRANSFERS` at a time within each ordering group rather than
+  of the one run it was given to, never state. A failure on one file does not end a run; only the three failures
+  that make every further call pointless (the credentials refused, the service unreachable, the remote folder full)
+  do — and a `CancellationException` is caught *first* and rethrown, since a stopped run is not a few
+  hundred files that failed. A file that failed is named in `SyncSummary.failed`, and a run that has any does not
+  move `lastSyncedAt`. Operations run `CONCURRENT_TRANSFERS` at a time within each ordering group rather than
   one after another: every one of them is a request, and serialising them made a first sync as slow as the round
   trip times added up. `SyncRepositoryImpl` owns an application-lifetime scope, so a run outlives the screen and
   (on Android) the activity that started it, and it is what tells the song and setlist repositories to rescan

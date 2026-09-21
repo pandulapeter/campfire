@@ -17,6 +17,7 @@ import com.pandulapeter.campfire.data.model.domain.SyncProviderId
 import com.pandulapeter.campfire.data.source.remote.api.SyncAuthorizationException
 import com.pandulapeter.campfire.data.source.remote.api.SyncNetworkException
 import com.pandulapeter.campfire.data.source.remote.api.SyncProvider
+import com.pandulapeter.campfire.data.source.remote.api.SyncRemoteStorageFullException
 import com.pandulapeter.campfire.data.source.remote.api.model.RemoteAuthorizationRequest
 import com.pandulapeter.campfire.data.source.remote.api.model.RemoteAuthorizationResponse
 import com.pandulapeter.campfire.data.source.remote.api.model.RemoteFile
@@ -376,6 +377,9 @@ internal class DropboxSyncProvider(
             status == HttpStatusCode.Unauthorized -> SyncAuthorizationException("Dropbox refused the token: $summary")
             // Dropbox says 429 for rate limiting and 5xx for its own trouble; both are worth trying again later.
             status == HttpStatusCode.TooManyRequests || status.value >= 500 -> SyncNetworkException("Dropbox is busy: ${status.value}")
+            // A full account, which Dropbox reports per write: "path/insufficient_space/..".
+            status == HttpStatusCode.Conflict && summary.contains("insufficient_space") ->
+                SyncRemoteStorageFullException("Dropbox is full: $summary")
             else -> DropboxApiException(status.value, summary)
         }
     }

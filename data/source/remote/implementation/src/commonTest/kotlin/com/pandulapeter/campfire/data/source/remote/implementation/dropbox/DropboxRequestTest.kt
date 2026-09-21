@@ -13,6 +13,7 @@ import com.pandulapeter.campfire.data.model.domain.LibraryFileKind
 import com.pandulapeter.campfire.data.source.local.api.SyncStateLocalSource
 import com.pandulapeter.campfire.data.source.remote.api.SyncAuthorizationException
 import com.pandulapeter.campfire.data.source.remote.api.SyncNetworkException
+import com.pandulapeter.campfire.data.source.remote.api.SyncRemoteStorageFullException
 import com.pandulapeter.campfire.data.source.remote.api.model.RemoteWriteResult
 import com.pandulapeter.campfire.data.source.remote.implementation.auth.SyncCredentialsStore
 import io.ktor.client.HttpClient
@@ -100,6 +101,18 @@ class DropboxRequestTest {
     fun `an upload whose receipt cannot be read is one that may have landed`() = runTest {
         val provider = provider { respond(content = "<html>", status = HttpStatusCode.OK) }
         assertFailsWith<SyncNetworkException> { provider.upload(LibraryFileKind.SONG, "song.cho", ByteArray(1), null) }
+    }
+
+    @Test
+    fun `reports a full account as that rather than as one refused file`() = runTest {
+        val provider = provider { respondJson("""{"error_summary":"path/insufficient_space/..","error":{}}""", HttpStatusCode.Conflict) }
+        assertFailsWith<SyncRemoteStorageFullException> { provider.upload(LibraryFileKind.SONG, "song.cho", ByteArray(1), null) }
+    }
+
+    @Test
+    fun `reports a refused name as the refusal of that one file`() = runTest {
+        val provider = provider { respondJson("""{"error_summary":"path/malformed_path/..","error":{}}""", HttpStatusCode.Conflict) }
+        assertFailsWith<DropboxApiException> { provider.upload(LibraryFileKind.SONG, "song.cho", ByteArray(1), null) }
     }
 
     /** A token the device's clock still believes in can be one Dropbox has stopped accepting. */

@@ -74,6 +74,7 @@ data class SyncProgress(
 
 sealed interface SyncOutcome {
 
+    /** The run reached its end. Whether every file made it is in [SyncSummary.failed]. */
     data class Success(val summary: SyncSummary) : SyncOutcome
 
     data class Failure(val reason: SyncFailureReason) : SyncOutcome
@@ -109,7 +110,9 @@ enum class SyncDeletionPolicy {
 
 /**
  * What one sync run did. [conflicts] holds the names the incoming copies landed under, so that the user can be told
- * where to look: a file changed on both sides is never merged, both versions are kept.
+ * where to look: a file changed on both sides is never merged, both versions are kept. [failed] holds the names of
+ * the files that could not be moved: one of those does not end a run, but a run that has any is not one that left
+ * the two sides in step, and must not be reported as if it were.
  */
 data class SyncSummary(
     val downloaded: Int = 0,
@@ -117,6 +120,7 @@ data class SyncSummary(
     val deletedLocally: Int = 0,
     val deletedRemotely: Int = 0,
     val conflicts: List<String> = emptyList(),
+    val failed: List<String> = emptyList(),
 ) {
 
     val hasChanges get() = downloaded > 0 || uploaded > 0 || deletedLocally > 0 || deletedRemotely > 0
@@ -132,5 +136,8 @@ enum class SyncFailureReason {
 
     /** The library could not be read or written. */
     STORAGE,
+
+    /** The cloud folder has no room left, so nothing more can be uploaded until the user frees some. */
+    REMOTE_STORAGE_FULL,
     UNKNOWN,
 }

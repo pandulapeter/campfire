@@ -305,6 +305,11 @@
     <string name="settings_sync_failed_authorization">The connection was refused. Connect the account again.</string>
     <string name="settings_sync_failed_storage">The library could not be read or written.</string>
     <string name="settings_sync_failed_unknown">The sync did not finish.</string>
+    <string name="settings_sync_failed_remote_full">The cloud folder is full, so nothing more can be uploaded. Free up some space there and sync again.</string>
+    <plurals name="settings_sync_files_failed">
+        <item quantity="one">One file could not be synced, and Campfire will try again next time: %2$s</item>
+        <item quantity="other">%1$d files could not be synced, and Campfire will try again next time. Among them: %2$s</item>
+    </plurals>
 
     <string name="settings_sync_cancel">Stop syncing</string>
     <string name="settings_sync_progress">Syncing {completed} of {total}…</string>

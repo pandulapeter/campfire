@@ -59,8 +59,10 @@ import com.pandulapeter.campfire.presentation.resources.settings_sync_delete_loc
 import com.pandulapeter.campfire.presentation.resources.settings_sync_deletions_pending
 import com.pandulapeter.campfire.presentation.resources.settings_sync_description
 import com.pandulapeter.campfire.presentation.resources.settings_sync_disconnect
+import com.pandulapeter.campfire.presentation.resources.settings_sync_files_failed
 import com.pandulapeter.campfire.presentation.resources.settings_sync_failed_authorization
 import com.pandulapeter.campfire.presentation.resources.settings_sync_failed_network
+import com.pandulapeter.campfire.presentation.resources.settings_sync_failed_remote_full
 import com.pandulapeter.campfire.presentation.resources.settings_sync_failed_storage
 import com.pandulapeter.campfire.presentation.resources.settings_sync_failed_unknown
 import com.pandulapeter.campfire.presentation.resources.settings_sync_interrupted
@@ -141,6 +143,7 @@ private fun ColumnScope.DisconnectedSyncSettings(
                     SyncFailureReason.NETWORK -> Res.string.settings_sync_connection_failed_network
                     SyncFailureReason.AUTHORIZATION -> Res.string.settings_sync_connection_failed_authorization
                     SyncFailureReason.STORAGE,
+                    SyncFailureReason.REMOTE_STORAGE_FULL,
                     SyncFailureReason.UNKNOWN -> Res.string.settings_sync_connection_failed_unknown
                 }
             ),
@@ -243,17 +246,27 @@ private fun SyncState.Connected.statusText(): String = when (val current = progr
                 SyncFailureReason.NETWORK -> Res.string.settings_sync_failed_network
                 SyncFailureReason.AUTHORIZATION -> Res.string.settings_sync_failed_authorization
                 SyncFailureReason.STORAGE -> Res.string.settings_sync_failed_storage
+                SyncFailureReason.REMOTE_STORAGE_FULL -> Res.string.settings_sync_failed_remote_full
                 SyncFailureReason.UNKNOWN -> Res.string.settings_sync_failed_unknown
             }
         )
 
         // What a successful run moved is not something the user has to be told: the library is simply the same on
-        // both sides now. The one thing only the app knows is that it did finish, and when.
-        is SyncOutcome.Success -> if (outcome.summary.conflicts.isEmpty()) {
-            lastSyncedText(lastSyncedAt)
-        } else {
-            stringResource(Res.string.settings_sync_conflicts, outcome.summary.conflicts.joinToString())
-        }
+        // both sides now. What it could not move is, and so is a file that now exists twice; with neither, the one
+        // thing only the app knows is that the run did finish, and when.
+        is SyncOutcome.Success -> listOfNotNull(
+            outcome.summary.failed.takeIf { it.isNotEmpty() }?.let { failed ->
+                pluralStringResource(
+                    Res.plurals.settings_sync_files_failed,
+                    failed.size,
+                    failed.size,
+                    failed.take(MAXIMUM_NAMED_FILES).joinToString(),
+                )
+            },
+            outcome.summary.conflicts.takeIf { it.isNotEmpty() }?.let {
+                stringResource(Res.string.settings_sync_conflicts, it.joinToString())
+            },
+        ).ifEmpty { listOf(lastSyncedText(lastSyncedAt)) }.joinToString(separator = "\n")
 
         null -> lastSyncedText(lastSyncedAt)
     }
@@ -321,3 +334,6 @@ private fun lastSyncedText(lastSyncedAt: Long?): String {
 }
 
 private fun Int.padded() = toString().padStart(length = 2, padChar = '0')
+
+/** A full disk fails every file of a run, and the line under the account is not the place for all their names. */
+private const val MAXIMUM_NAMED_FILES = 3

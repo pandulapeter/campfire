@@ -39,6 +39,8 @@ redirect URIs character for character, which is why the desktop port is fixed.
   (several transfers are in flight at once and would otherwise all come back together and be limited again). A first
   sync of a whole library *will* be rate limited; treating that as a failure would mean a library that can never
   finish its first sync.
+- A 409 whose summary says `insufficient_space` is a full account and becomes `SyncRemoteStorageFullException`,
+  which ends the run; any other 409 is the refusal of that one file.
 - `dropbox/DropboxModels` — the parts of the API's answers that are read. Everything defaulted, unknown keys
   ignored: a field added on the other side must never turn into a parse failure the user sees as a broken sync.
 - OAuth is **PKCE with no client secret**, which is what lets this work with no server of Campfire's own. Tokens are
