@@ -68,13 +68,15 @@ long as the storage takes to answer. A cancelled read is not a failed one: it is
   file is still there, so the version that loses is never held only in memory. The engine is written so that an interrupted run leaves the library usable: the index (`SyncIndexDocument`, the on-disk shape
   of `sync-index.json`) is only told about a file once that file has actually moved, so anything half done simply
   looks unsynced next time. It is told as the run goes rather than when a pass completes: every finished operation
-  hands `SyncRepositoryImpl` a snapshot, which writes it at most every `INDEX_WRITE_INTERVAL_MS` and once more on the
-  way out of a stopped or failed run (the periodic writer cancelled and joined first, so it cannot land after the
+  hands `SyncRepositoryImpl` a way to take a snapshot, which it does at most every `INDEX_WRITE_INTERVAL_MS` —
+  building one costs as much as the index is long — and once more on the way out of a stopped or failed run (the periodic writer cancelled and joined first, so it cannot land after the
   final write). Those writes and the periodic one never throw (`saveIndexQuietly`): only the write that opens a
   run and the one that completes it do, which is how a device that cannot write ends a run as
   `SyncFailureReason.STORAGE`. The repository's scope carries a `CoroutineExceptionHandler` that logs, since nothing
   launched there has anyone to throw to. An interrupted run therefore keeps what it transferred, and only a completed
   one with no failed files moves `lastSyncedAt`.
+  The library counts are kept moving during a run by a live rescan that waits five times what the previous one took
+  (`liveRescanPauseAfter`), so that re-reading a large library never becomes most of what a run does.
   A run the app never came back from is found by the index's `isRunInProgress` marker at `restore`, reported as
   interrupted next time, and that run is left for the user to start: `RestoreResult.wasInterrupted` keeps
   `RestoreSyncUseCase` from starting one on launch, which would replace the message before it could be read.

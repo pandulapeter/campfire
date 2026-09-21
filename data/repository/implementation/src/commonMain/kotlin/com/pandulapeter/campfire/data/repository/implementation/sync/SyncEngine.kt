@@ -73,7 +73,7 @@ internal class SyncEngine(
         document: SyncIndexDocument,
         accountId: String,
         onProgress: (SyncProgress) -> Unit,
-        onIndexChanged: suspend (SyncIndexDocument) -> Unit,
+        onIndexChanged: suspend (snapshot: () -> SyncIndexDocument) -> Unit,
         deletionPolicy: SyncDeletionPolicy,
     ): Result {
         // An index written for a different account describes a different remote folder, and acting on it would read
@@ -176,7 +176,11 @@ internal class SyncEngine(
      * ran before a download would undo it.
      *
      * [onIndexChanged] is called under the same lock the results are merged under, so the snapshots arrive in the
-     * order they were taken and the last one handed out is always the most complete.
+     * order they were taken and the last one handed out is always the most complete. What is handed out is a way to
+     * take the snapshot rather than the snapshot, since building one costs as much as the index is long and most of
+     * them are never written. It reads the pass's own map, so it may be called in exactly two places: inside
+     * [onIndexChanged], which runs under the lock, and after [synchronize] has returned or thrown, when nothing writes
+     * to that map any more. Never from a coroutine launched out of [onIndexChanged].
      */
     private suspend fun apply(
         provider: SyncProvider,
@@ -186,7 +190,7 @@ internal class SyncEngine(
         onProgress: (SyncProgress) -> Unit,
         accountId: String,
         lastSyncedAt: Long,
-        onIndexChanged: suspend (SyncIndexDocument) -> Unit,
+        onIndexChanged: suspend (snapshot: () -> SyncIndexDocument) -> Unit,
     ): PassOutcome = coroutineScope {
         val updated = index.toMutableMap()
         var summary = SyncSummary()
@@ -208,14 +212,14 @@ internal class SyncEngine(
                         hasUnresolvedConflicts = hasUnresolvedConflicts || outcome.hasUnresolvedConflict
                         completed++
                         onProgress(SyncProgress(completed = completed, total = plan.size))
-                        onIndexChanged(
+                        onIndexChanged {
                             SyncIndexDocument.of(
                                 providerId = provider.id.id,
                                 accountId = accountId,
                                 lastSyncedAt = lastSyncedAt,
                                 index = updated,
-                            ).copy(isRunInProgress = true),
-                        )
+                            ).copy(isRunInProgress = true)
+                        }
                     }
                 }
             }.awaitAll()

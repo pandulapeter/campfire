@@ -36,8 +36,14 @@ import com.pandulapeter.campfire.data.source.remote.api.model.AuthorizationCompl
 import com.pandulapeter.campfire.data.source.remote.api.model.RemoteAuthorizationResponse
 import com.pandulapeter.campfire.data.source.remote.api.model.redirectParameters
 import kotlinx.coroutines.cancelAndJoin
+import kotlin.concurrent.Volatile
 import kotlin.time.Clock
+import kotlin.time.Duration
+import kotlin.time.Duration.Companion.seconds
 import kotlin.time.ExperimentalTime
+import kotlin.time.TimeMark
+import kotlin.time.TimeSource
+import kotlin.time.measureTime
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineExceptionHandler
 import kotlinx.coroutines.CoroutineScope
@@ -111,7 +117,13 @@ internal class SyncRepositoryImpl(
     private val restoreMutex = Mutex()
 
     private var liveRescanJob: Job? = null
-    private var lastLiveRescanAt = 0L
+
+    /** When the last live rescan ended and how long the next one has to wait for, see [scheduleLiveRescan]. */
+    @Volatile
+    private var lastLiveRescanEnd: TimeMark? = null
+
+    @Volatile
+    private var liveRescanPause = LIVE_RESCAN_INTERVAL
 
     private var indexWriteJob: Job? = null
     private var lastIndexWriteAt = 0L
@@ -275,11 +287,11 @@ internal class SyncRepositoryImpl(
             _syncState.update { connected.copy(progress = SyncProgress(), lastOutcome = null) }
             // What the engine has reported so far, which is what an interrupted run writes on its way out: the files
             // it did transfer stay known, and only the rest look unsynced next time.
-            var latestIndex: SyncIndexDocument? = null
+            var latestIndex: (() -> SyncIndexDocument)? = null
             var hasFinishedOperations = false
             try {
                 val document = loadIndex()
-                latestIndex = document.copy(isRunInProgress = true)
+                latestIndex = { document.copy(isRunInProgress = true) }
                 // Written before anything moves, so that a run the app never comes back from is still recognisable
                 // as interrupted next time - iOS suspending the app mid sync looks exactly like being killed.
                 saveIndex(document.copy(isRunInProgress = true))
@@ -291,10 +303,10 @@ internal class SyncRepositoryImpl(
                         updateConnected { it.copy(progress = progress) }
                         scheduleLiveRescan()
                     },
-                    onIndexChanged = {
-                        latestIndex = it
+                    onIndexChanged = { snapshot ->
+                        latestIndex = snapshot
                         hasFinishedOperations = true
-                        scheduleIndexWrite(it)
+                        scheduleIndexWrite(snapshot)
                     },
                     deletionPolicy = deletionPolicy,
                 )
@@ -303,7 +315,7 @@ internal class SyncRepositoryImpl(
                     is SyncEngine.Result.DeletionsNeedConfirmation -> {
                         // The run stopped before anything moved, so there is nothing for the lists to read again and
                         // the index only has to stop saying that a run is going.
-                        latestIndex?.let { saveIndexQuietly(it.copy(isRunInProgress = false)) }
+                        latestIndex?.let { saveIndexQuietly(it().copy(isRunInProgress = false)) }
                         updateConnected {
                             it.copy(
                                 progress = null,
@@ -325,7 +337,7 @@ internal class SyncRepositoryImpl(
                         // Only when something actually moved: most runs find nothing to do, and re-reading the whole
                         // library every time the app is opened would cost more than the sync itself.
                         if (result.summary.hasChanges) {
-                            rescanLibrary()
+                            rescanLibraryAfterRun()
                         }
                         updateConnected {
                             it.copy(
@@ -358,16 +370,18 @@ internal class SyncRepositoryImpl(
      *
      * Sync writes files behind the two repositories' backs, so nothing reads them again until something says to -
      * and until this, that was only the rescan at the end of a run, which left the counters still until it finished.
-     * Throttled because a rescan is a read of the whole library and there is no per file way into the cache: one per
-     * file would re-read everything a few hundred times over a single run. The exact numbers still come from the
+     * Throttled by what the last one cost, see [liveRescanPauseAfter]: there is no per file way into the cache, so one
+     * per file would re-read everything a few thousand times over a single run. The exact numbers still come from the
      * run's own rescan when it ends; this only keeps them moving on the way there.
      */
     private fun scheduleLiveRescan() {
         if (liveRescanJob?.isActive == true) return
-        val now = Clock.System.now().toEpochMilliseconds()
-        if (now - lastLiveRescanAt < LIVE_RESCAN_INTERVAL_MS) return
-        lastLiveRescanAt = now
-        liveRescanJob = scope.launch { rescanLibrary() }
+        if (lastLiveRescanEnd?.let { it.elapsedNow() < liveRescanPause } == true) return
+        liveRescanJob = scope.launch {
+            val duration = measureTime { rescanLibrary() }
+            liveRescanPause = liveRescanPauseAfter(duration)
+            lastLiveRescanEnd = TimeSource.Monotonic.markNow()
+        }
     }
 
     /**
@@ -376,11 +390,14 @@ internal class SyncRepositoryImpl(
      * Throttled the same way as [scheduleLiveRescan], since the index is rewritten whole and a run finishes a file
      * several times a second. Whatever this skips, the write at the end of the run covers.
      */
-    private fun scheduleIndexWrite(document: SyncIndexDocument) {
+    private fun scheduleIndexWrite(snapshot: () -> SyncIndexDocument) {
         if (indexWriteJob?.isActive == true) return
         val now = Clock.System.now().toEpochMilliseconds()
         if (now - lastIndexWriteAt < INDEX_WRITE_INTERVAL_MS) return
         lastIndexWriteAt = now
+        // Taken here and not in the job: the engine's lock is what makes reading its map safe, and it is only held
+        // for as long as this call runs.
+        val document = snapshot()
         indexWriteJob = scope.launch { saveIndexQuietly(document) }
     }
 
@@ -399,6 +416,16 @@ internal class SyncRepositoryImpl(
     }
 
     /**
+     * The rescan a run ends with. A live one still reading is stopped first: it started before the last files moved,
+     * so this one has to follow it anyway, and would only wait for it. A cancelled read leaves the cached data as it
+     * was (see `BaseLocalDataRepository`).
+     */
+    private suspend fun rescanLibraryAfterRun() {
+        liveRescanJob?.cancelAndJoin()
+        rescanLibrary()
+    }
+
+    /**
      * What a run that did not reach its end still owes: the periodic writer out of the way so it cannot land after the
      * final write, the index as far as the run got without the marker saying one is going, and - where files may have
      * moved - the lists told about them. Without that last step the repositories keep the library from before the
@@ -409,13 +436,13 @@ internal class SyncRepositoryImpl(
      * provider's exception can win over the cancellation that caused it - and in a cancelled coroutine the first
      * suspending call here would throw and skip the rest.
      */
-    private suspend fun finishRunCutShort(latestIndex: SyncIndexDocument?, hasFinishedOperations: Boolean) {
+    private suspend fun finishRunCutShort(latestIndex: (() -> SyncIndexDocument)?, hasFinishedOperations: Boolean) {
         indexWriteJob?.cancelAndJoin()
-        latestIndex?.let { saveIndexQuietly(it.copy(isRunInProgress = false)) }
+        latestIndex?.let { saveIndexQuietly(it().copy(isRunInProgress = false)) }
         // Only when an operation got as far as finishing: a run that fails on its listing - every launch without a
         // network - has moved nothing, and reading a whole library again for it would cost more than the run did.
         if (hasFinishedOperations) {
-            rescanLibrary()
+            rescanLibraryAfterRun()
         }
     }
 
@@ -526,9 +553,6 @@ internal class SyncRepositoryImpl(
     }
 
     private companion object {
-        /** Often enough that the counters visibly move, rarely enough that the reading costs less than the syncing. */
-        const val LIVE_RESCAN_INTERVAL_MS = 1000L
-
         /** How much of a run a killed app can lose at most, traded against rewriting the whole index per file. */
         const val INDEX_WRITE_INTERVAL_MS = 2000L
 
@@ -544,3 +568,17 @@ internal class SyncRepositoryImpl(
         }
     }
 }
+
+/**
+ * How long the counters wait after a live rescan that took [duration]. A rescan reads the whole library, so on a
+ * large one it is the expensive part of keeping them moving: waiting a multiple of what it cost caps the share of a
+ * run that goes into re-reading what it has already written, however large the library gets, while a small library
+ * keeps the interval that makes the numbers visibly move.
+ */
+internal fun liveRescanPauseAfter(duration: Duration) = maxOf(LIVE_RESCAN_INTERVAL, duration * LIVE_RESCAN_PAUSE_FACTOR)
+
+/** Often enough that the counters visibly move, where the reading costs next to nothing. */
+internal val LIVE_RESCAN_INTERVAL = 1.seconds
+
+/** One part reading to five parts not: a live rescan never takes more than about a sixth of a run. */
+private const val LIVE_RESCAN_PAUSE_FACTOR = 5

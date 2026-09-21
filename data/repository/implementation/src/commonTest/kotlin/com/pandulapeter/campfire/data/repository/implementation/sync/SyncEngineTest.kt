@@ -39,7 +39,7 @@ class SyncEngineTest {
             files = remoteFiles,
             onDownload = { if (++downloads == 3) throw SyncNetworkException("Offline") },
         )
-        val snapshots = mutableListOf<SyncIndexDocument>()
+        val snapshots = mutableListOf<() -> SyncIndexDocument>()
 
         assertFailsWith<SyncNetworkException> {
             SyncEngine(FakeLibraryFileLocalSource()).synchronize(
@@ -52,7 +52,7 @@ class SyncEngineTest {
             )
         }
 
-        val last = snapshots.last()
+        val last = snapshots.last()()
         assertTrue(last.isRunInProgress)
         assertEquals(ACCOUNT_ID, last.accountId)
         assertEquals(setOf(song(1).path, song(2).path), last.entries.keys)
@@ -65,7 +65,7 @@ class SyncEngineTest {
             files = mapOf(song(1) to "One".encodeToByteArray(), song(2) to "Two".encodeToByteArray()),
             onDownload = { if (++downloads == 2) throw SyncNetworkException("Offline") },
         )
-        val snapshots = mutableListOf<SyncIndexDocument>()
+        val snapshots = mutableListOf<() -> SyncIndexDocument>()
 
         assertFailsWith<SyncNetworkException> {
             SyncEngine(FakeLibraryFileLocalSource()).synchronize(
@@ -79,7 +79,7 @@ class SyncEngineTest {
         }
 
         assertTrue(snapshots.isNotEmpty())
-        assertTrue(snapshots.all { it.lastSyncedAt == 42L })
+        assertTrue(snapshots.map { it() }.all { it.lastSyncedAt == 42L })
     }
 
     @Test
