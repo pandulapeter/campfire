@@ -12,6 +12,8 @@ import ComposeApp
 
 @main
 struct iOSApp: App {
+    @Environment(\.scenePhase) private var scenePhase
+
     var body: some Scene {
         WindowGroup {
             ContentView()
@@ -19,6 +21,13 @@ struct iOSApp: App {
                 // already running or was launched by the open itself, and the redirect back from the sync
                 // service's consent page. Which is which is decided on the Kotlin side.
                 .onOpenURL { url in IosFileImportKt.openUrl(url: url) }
+        }
+        // A file that arrives from AirDrop or Mail is a copy iOS leaves in Documents/Inbox, which the Files app
+        // shows next to the library. The ones that were read are deleted as they are read; this is for the rest.
+        .onChange(of: scenePhase) { phase in
+            if phase == .background {
+                IosFileImportKt.cleanImportInbox()
+            }
         }
     }
 }

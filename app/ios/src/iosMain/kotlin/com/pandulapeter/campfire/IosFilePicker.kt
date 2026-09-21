@@ -16,7 +16,10 @@ import kotlinx.cinterop.BetaInteropApi
 import kotlinx.cinterop.ExperimentalForeignApi
 import kotlinx.cinterop.addressOf
 import kotlinx.cinterop.usePinned
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.IO
 import kotlinx.coroutines.suspendCancellableCoroutine
+import kotlinx.coroutines.withContext
 import platform.Foundation.NSData
 import platform.Foundation.NSTemporaryDirectory
 import platform.Foundation.NSURL
@@ -47,12 +50,15 @@ internal class IosFilePicker(
     // UIKit keeps only a weak reference to a delegate, so the one that is in flight is held here.
     private var delegate: NSObject? = null
 
-    override suspend fun pickFiles(): List<ImportedFile> = suspendCancellableCoroutine { continuation ->
-        // Everything, not just plain text: ".cho" is not a type iOS knows, so a narrower list would grey the songs
-        // out in the picker. What is not a song is skipped by the import and reported afterwards.
-        val controller = UIDocumentPickerViewController(forOpeningContentTypes = listOf(UTTypeData, UTTypeZIP), asCopy = true)
-        controller.allowsMultipleSelection = true
-        present(controller) { urls -> continuation.resume(urls.mapNotNull { it.readImportedFile() }) }
+    override suspend fun pickFiles(): List<ImportedFile> {
+        val urls = suspendCancellableCoroutine<List<NSURL>> { continuation ->
+            // Everything, not just plain text: ".cho" is not a type iOS knows, so a narrower list would grey the songs
+            // out in the picker. What is not a song is skipped by the import and reported afterwards.
+            val controller = UIDocumentPickerViewController(forOpeningContentTypes = listOf(UTTypeData, UTTypeZIP), asCopy = true)
+            controller.allowsMultipleSelection = true
+            present(controller) { urls -> continuation.resume(urls) }
+        }
+        return withContext(Dispatchers.IO) { urls.mapNotNull { it.readImportedFile() } }
     }
 
     override suspend fun saveFile(file: ExportedFile): Boolean = suspendCancellableCoroutine { continuation ->
@@ -94,18 +100,20 @@ internal class IosFilePicker(
 }
 
 /**
- * Null when the file cannot be read, so that one bad file does not lose the ones next to it.
+ * Null when the file cannot be read, so that one bad file does not lose the ones next to it. Foundation reports
+ * that by handing back nothing rather than by throwing.
  *
  * The copies the picker hands over live in the app's own container, but a URL that arrives from another app is
- * security scoped, so the read happens inside the access it grants.
+ * security scoped, so the read happens inside the access it grants. Blocking, so not for the main thread.
  */
 internal fun NSURL.readImportedFile(): ImportedFile? {
     val isAccessible = startAccessingSecurityScopedResource()
     return try {
-        NSData.dataWithContentsOfURL(this)?.let { ImportedFile(name = lastPathComponent.orEmpty(), bytes = it.toByteArray()) }
-    } catch (exception: Exception) {
-        println("Could not read \"$this\": ${exception.message}")
-        null
+        val data = NSData.dataWithContentsOfURL(this)
+        if (data == null) {
+            println("Could not read \"$this\".")
+        }
+        data?.let { ImportedFile(name = lastPathComponent.orEmpty(), bytes = it.toByteArray()) }
     } finally {
         if (isAccessible) {
             stopAccessingSecurityScopedResource()
