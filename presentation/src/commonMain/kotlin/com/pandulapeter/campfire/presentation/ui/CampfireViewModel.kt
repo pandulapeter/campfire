@@ -611,7 +611,8 @@ class CampfireViewModel(
     /**
      * The import that has been worked out but not carried out, waiting for the user to answer
      * [DialogType.ImportConflicts]. Not part of the dialog itself, which holds only what it draws: this is the work,
-     * and it has to outlive whichever screen the import was started from.
+     * and it has to outlive whichever screen the import was started from. It never outlives that dialog: see
+     * [setVisibleDialog].
      */
     private var pendingImportPlan: ImportPlan? = null
 
@@ -634,7 +635,7 @@ class CampfireViewModel(
 
     /**
      * The exit that asked the `UnsavedChanges` question, run once it is answered with Save or Discard. Any other way
-     * the dialog goes away is staying, so [dismissDialog] forgets it.
+     * the dialog goes away is staying, so [setVisibleDialog] forgets it.
      */
     private var pendingExit: (() -> Unit)? = null
 
@@ -1244,7 +1245,6 @@ class CampfireViewModel(
     /** The answer to [DialogType.ImportConflicts], which is the only thing that ever overwrites a library file. */
     fun resolveImport(resolution: ImportConflictResolution) {
         val plan = pendingImportPlan ?: return
-        pendingImportPlan = null
         // Claimed before the question goes away rather than once the import has started, so that nothing waiting for
         // the two of them to be over (see importDemoLibrary) sees a moment with neither.
         _isImporting.update { true }
@@ -1253,10 +1253,7 @@ class CampfireViewModel(
     }
 
     /** Cancelling leaves the library exactly as it was: the plan is what is thrown away, not a half written import. */
-    fun cancelImport() {
-        pendingImportPlan = null
-        dismissDialog()
-    }
+    fun cancelImport() = dismissDialog()
 
     /**
      * Expects [isImporting] to have been claimed by the caller, which both of them do before anything can observe the gap.
@@ -1318,6 +1315,7 @@ class CampfireViewModel(
     fun createSetlist(title: String, description: String) = launchLibraryChange {
         val setlist = createSetlist.invoke(title = title, description = description)
         if (allSongs.value.isNotEmpty()) {
+            // Not through setVisibleDialog: this only ever replaces no dialog at all, behind which nothing is parked.
             _visibleDialog.compareAndSet(null, DialogType.SongPicker(setlist))
         }
     }
@@ -1552,20 +1550,32 @@ class CampfireViewModel(
 
     // Dialogs
 
-    fun showDialog(dialogType: DialogType) {
-        // The conflicts question is the only dialog with an answer parked behind it. A dialog put up over it - the
-        // desktop's close button asking about unsaved text - takes the question off the screen, and a question nobody
-        // can answer any more must not keep every later import from starting: its plan goes with it, which leaves
-        // the library exactly as cancelling would have.
-        if (_visibleDialog.value is DialogType.ImportConflicts && dialogType !is DialogType.ImportConflicts) {
-            pendingImportPlan = null
-        }
+    /**
+     * The one place [visibleDialog] is given a value, because two dialogs have work parked behind them that nothing
+     * else can answer for: the plan behind [DialogType.ImportConflicts] and the exit behind
+     * [DialogType.UnsavedChanges]. Either goes with its dialog, however that leaves the screen - answered, dismissed,
+     * or replaced, the way the desktop's close button puts the unsaved changes question over anything. A question
+     * nobody can answer any more must not keep every later import from starting, and dropping its plan leaves the
+     * library exactly as cancelling would have.
+     */
+    private fun setVisibleDialog(dialogType: DialogType?) {
+        if (dialogType !is DialogType.ImportConflicts) pendingImportPlan = null
+        if (dialogType != DialogType.UnsavedChanges) pendingExit = null
         _visibleDialog.update { dialogType }
     }
 
-    fun dismissDialog() {
-        pendingExit = null
-        _visibleDialog.update { null }
+    fun showDialog(dialogType: DialogType) = setVisibleDialog(dialogType)
+
+    fun dismissDialog() = setVisibleDialog(null)
+
+    /**
+     * What a bottom sheet dismisses itself with: [dialogType] goes only while it is still the dialog on screen. A
+     * sheet reports its dismissal from the end of its hide animation, and one that is replaced while it is hiding
+     * reports the cancellation of that animation the same way - Material's scrim and back handlers included - by
+     * which time the dialog on screen is the one that replaced it.
+     */
+    fun dismissSheet(dialogType: DialogType) {
+        if (_visibleDialog.value == dialogType) dismissDialog()
     }
 
     // Helpers

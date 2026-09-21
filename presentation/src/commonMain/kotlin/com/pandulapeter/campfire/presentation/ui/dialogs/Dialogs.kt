@@ -212,7 +212,7 @@ internal fun CampfireDialogs(
 
         CampfireViewModel.DialogType.SongsControls -> CampfireBottomSheet(
             title = stringResource(Res.string.songs_sort_and_filter),
-            onDismiss = viewModel::dismissDialog,
+            onDismiss = { viewModel.dismissSheet(CampfireViewModel.DialogType.SongsControls) },
         ) { contentPadding ->
             SongsControls(
                 viewModel = viewModel,
@@ -222,7 +222,7 @@ internal fun CampfireDialogs(
 
         CampfireViewModel.DialogType.SetlistsControls -> CampfireBottomSheet(
             title = stringResource(Res.string.setlists_sort_and_filter),
-            onDismiss = viewModel::dismissDialog,
+            onDismiss = { viewModel.dismissSheet(CampfireViewModel.DialogType.SetlistsControls) },
         ) { contentPadding ->
             SetlistsControls(
                 viewModel = viewModel,
@@ -242,7 +242,7 @@ internal fun CampfireDialogs(
 
         is CampfireViewModel.DialogType.SongDisplayControls -> CampfireBottomSheet(
             title = stringResource(Res.string.song_details_display_options),
-            onDismiss = viewModel::dismissDialog,
+            onDismiss = { viewModel.dismissSheet(dialog) },
         ) { contentPadding ->
             SongDisplayControls(
                 viewModel = viewModel,
@@ -865,7 +865,7 @@ private fun SetlistPicker(
         CampfireBottomSheet(
             title = dialog.song.title,
             subtitle = dialog.song.artist,
-            onDismiss = viewModel::dismissDialog,
+            onDismiss = { viewModel.dismissSheet(dialog) },
         ) { contentPadding ->
             SheetSectionTitle(text = stringResource(Res.string.songs_setlist_assignments))
             PickerSearchField(
@@ -965,7 +965,7 @@ private fun SongPicker(
     CampfireBottomSheet(
         title = setlist.title,
         subtitle = setlist.description,
-        onDismiss = viewModel::dismissDialog,
+        onDismiss = { viewModel.dismissSheet(dialog) },
     ) { contentPadding ->
         SheetSectionTitle(text = stringResource(Res.string.setlists_song_assignments))
         PickerSearchField(
@@ -1109,6 +1109,8 @@ private fun ColumnScope.PickerList(
  *
  * @param title What the sheet is about, named in its [SheetHeader].
  * @param subtitle A line under [title], left out when blank.
+ * @param onDismiss Has to dismiss this sheet's own dialog and nothing else (`CampfireViewModel.dismissSheet`): it is
+ *   called from the end of a hide animation, by which time another dialog may have taken the sheet's place.
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -1135,8 +1137,10 @@ private fun CampfireBottomSheet(
             subtitle = subtitle,
             // Hiding the sheet by hand does not count as dismissing it, so the dialog state is cleared once it is
             // gone: left as it was, the invisible sheet's modal layer would stay over the screen, swallowing the next
-            // tap.
-            onClose = { coroutineScope.launch { sheetState.hide() }.invokeOnCompletion { onDismiss() } },
+            // tap. Only a hide that ran to its end counts: one cut short by a finger taking hold of the sheet leaves the
+            // sheet where Material settles it, and one cut short by another dialog replacing the sheet has nothing left
+            // to dismiss.
+            onClose = { coroutineScope.launch { sheetState.hide() }.invokeOnCompletion { cause -> if (cause == null) onDismiss() } },
         )
         // Read inside the sheet, which is a window of its own on Android and gets the insets of that window.
         val bottomInset = WindowInsets.safeDrawing.only(WindowInsetsSides.Bottom).asPaddingValues().calculateBottomPadding()
