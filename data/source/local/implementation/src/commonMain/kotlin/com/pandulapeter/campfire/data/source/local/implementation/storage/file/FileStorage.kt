@@ -71,6 +71,14 @@ interface FileStorage {
 
     /** Does nothing if the file does not exist. */
     suspend fun delete(directory: StorageDirectory, name: String)
+
+    /**
+     * Keeps a file that describes this installation rather than the user's work out of the system's backup and its
+     * transfer to a new device. Called after every write, since a platform may carry the mark on the file itself and
+     * an atomic write replaces the file. Only iOS acts on it: Android's backup rules are an allow-list in
+     * `:app:android` that names what travels, and the desktop and the web have no backup of the app's own.
+     */
+    suspend fun keepOutOfDeviceBackup(directory: StorageDirectory, name: String) = Unit
 }
 
 /** The path of a [StorageDirectory] relative to the platform's root, as segments each platform joins its own way. */

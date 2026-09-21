@@ -24,7 +24,11 @@ holds the `@Module @ComponentScan object DataLocalSourceModule`, and every local
   - The directories are `library/songs`, `library/setlists` and `preferences` — songs and setlists sit next to each
     other so that the library exports as one archive, and the preferences sit outside it so that they do not.
     Android's backup rules in `:app:android` name `library/` and `preferences/preferences.json` by path, so moving a
-    directory or renaming the preferences file means changing those two XML files as well.
+    directory or renaming the preferences file means changing those two XML files as well. iOS backs up both of its
+    directories whole, so what must stay behind says so itself: `SyncStateLocalSourceImpl` calls
+    `keepOutOfDeviceBackup` after every write of `sync-index.json`, which `IosFileStorage` answers by setting
+    `NSURLIsExcludedFromBackupKey` again — it is an attribute of the file, and the atomic write replaces the file.
+    Everywhere else it does nothing.
   - Text is written as UTF-8 and read through `:data:model`'s `decodeLibraryText`, the same rule the import uses: UTF-8
     when the bytes are valid UTF-8, Windows-1252 when they are not (what every other Western text file dropped into the
     library folder turns out to be), and a byte order mark stripped, because editors on Windows write one. A file read
@@ -52,7 +56,9 @@ holds the `@Module @ComponentScan object DataLocalSourceModule`, and every local
   (never `security-crypto`, which is deprecated) and writes the IV and ciphertext as `preferences/sync-credentials.bin`;
   a key that became unusable, or a file it cannot decrypt, is deleted and reads as no credentials, so the user
   connects again rather than being stuck. `IosSecretStore` is a Keychain generic password, readable after the first
-  unlock because a background sync may need it on a locked device. Desktop and the web get `FileSecretStore`, the
+  unlock because a background sync may need it on a locked device, and bound to the device
+  (`AfterFirstUnlockThisDeviceOnly`) so that it stays out of the backup, as Android's does; an item an older version
+  wrote without that is moved over when it is read. Desktop and the web get `FileSecretStore`, the
   plain `preferences/sync-credentials.json` it always was: no desktop keychain is worth a native dependency per
   operating system, and the browser has none. `SyncStateLocalSourceImpl` moves a plain file left by an older version
   into the store on the first read and deletes it, which on desktop and the web is a no-op, since the store found

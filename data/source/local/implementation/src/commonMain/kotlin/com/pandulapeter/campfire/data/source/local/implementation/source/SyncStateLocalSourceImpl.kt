@@ -37,7 +37,17 @@ internal class SyncStateLocalSourceImpl(
 
     override suspend fun loadSyncIndex() = read(INDEX_FILE_NAME)
 
-    override suspend fun saveSyncIndex(document: String?) = write(INDEX_FILE_NAME, document)
+    /**
+     * The index records what the last run saw from this device. Restored onto another one, where no account is
+     * connected yet, it would be a statement about a folder nobody can check, so it stays out of the device backup
+     * the way the credentials do; without it the first run there compares the two sides by content.
+     */
+    override suspend fun saveSyncIndex(document: String?) {
+        write(INDEX_FILE_NAME, document)
+        if (document != null) {
+            fileStorage.keepOutOfDeviceBackup(StorageDirectory.PREFERENCES, INDEX_FILE_NAME)
+        }
+    }
 
     /**
      * Credentials written as a plain file, before they moved into the platform's secret store, are moved there on the

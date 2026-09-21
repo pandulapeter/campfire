@@ -56,7 +56,9 @@ your own storage. Until you do, nothing on the network is touched at all.
 Authorization is OAuth 2.0 with PKCE and no client secret, which is what makes a backend unnecessary. The page you
 type your password on is Dropbox's own, opened in your browser. On Android the token is encrypted with a key the
 system keystore holds, and on iOS it is kept in the Keychain; on desktop and the web it is a file in the app's own
-data. Disconnecting revokes the token and deletes it from the device; the files stay where they are on both sides.
+data. On a phone neither the token nor the record of the last run is part of the device's backup, so a phone restored
+from one, or a new phone the library was moved to, starts disconnected: you sign in again, and the first run compares
+the two sides by content and duplicates nothing. Disconnecting revokes the token and deletes it from the device; the files stay where they are on both sides.
 
 Dropbox is the first provider rather than the only possible one: the engine sees one flat remote folder addressed by
 kind and name, and treats a service's revisions as opaque strings it never parses.

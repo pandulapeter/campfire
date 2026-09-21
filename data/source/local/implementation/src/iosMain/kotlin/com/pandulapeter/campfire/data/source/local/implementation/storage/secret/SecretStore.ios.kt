@@ -48,6 +48,7 @@ import platform.Security.errSecItemNotFound
 import platform.Security.errSecSuccess
 import platform.Security.kSecAttrAccessible
 import platform.Security.kSecAttrAccessibleAfterFirstUnlock
+import platform.Security.kSecAttrAccessibleAfterFirstUnlockThisDeviceOnly
 import platform.Security.kSecAttrAccount
 import platform.Security.kSecAttrService
 import platform.Security.kSecClass
@@ -62,12 +63,21 @@ import platform.Security.kSecValueData
  *
  * Readable after the first unlock since the device started rather than only while it is unlocked, because a sync run
  * the app started carries on in the background, where the device may well be locked by the time it needs a token.
+ * And bound to this device: an item that is not travels in the encrypted device backup and to a new iPhone, where it
+ * would arrive without the sync index it belongs with. Android keeps the credentials out of its backup too, so a
+ * restored installation starts disconnected on both.
  */
 @Single
 internal class IosSecretStore : SecretStore {
 
     override suspend fun load(key: String): String? = withContext(Dispatchers.IO) {
         memScoped {
+            // Items written before they were bound to the device are moved over as they are read, rather than on the
+            // next write, which a connection that is never refreshed would not get to. Finding none is the usual answer.
+            SecItemUpdate(
+                query(key, kSecAttrAccessible to kSecAttrAccessibleAfterFirstUnlock),
+                dictionary(kSecAttrAccessible to kSecAttrAccessibleAfterFirstUnlockThisDeviceOnly),
+            )
             val result = alloc<CFTypeRefVar>()
             val status = SecItemCopyMatching(
                 query(key, kSecReturnData to kCFBooleanTrue, kSecMatchLimit to kSecMatchLimitOne),
@@ -92,7 +102,7 @@ internal class IosSecretStore : SecretStore {
                 val data = retained(NSString.create(string = value).dataUsingEncoding(NSUTF8StringEncoding))
                 val attributes = arrayOf<Pair<CFStringRef?, CFTypeRef?>>(
                     kSecValueData to data,
-                    kSecAttrAccessible to kSecAttrAccessibleAfterFirstUnlock,
+                    kSecAttrAccessible to kSecAttrAccessibleAfterFirstUnlockThisDeviceOnly,
                 )
                 SecItemUpdate(query(key), dictionary(*attributes)).takeUnless { it == errSecItemNotFound }
                     ?: SecItemAdd(query(key, *attributes), null)

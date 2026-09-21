@@ -39,6 +39,8 @@ import platform.Foundation.NSFileSize
 import platform.Foundation.NSFileType
 import platform.Foundation.NSFileTypeDirectory
 import platform.Foundation.NSNumber
+import platform.Foundation.NSURL
+import platform.Foundation.NSURLIsExcludedFromBackupKey
 import platform.Foundation.NSUserDomainMask
 import platform.Foundation.create
 import platform.Foundation.dataWithContentsOfFile
@@ -115,6 +117,17 @@ internal class IosFileStorage : FileStorage {
         val path = filePath(directory, name)
         if (fileManager.fileExistsAtPath(path) && !fileManager.removeItemAtPath(path, null)) {
             throw IllegalStateException("Could not delete \"$name\".")
+        }
+    }
+
+    /**
+     * The mark is an attribute of the file, which an atomic write replaces, so it is set again after every write. One
+     * that cannot be set costs a stale copy in a backup and nothing else, which is not worth failing the write over.
+     */
+    override suspend fun keepOutOfDeviceBackup(directory: StorageDirectory, name: String) = withContext(Dispatchers.IO) {
+        val path = filePath(directory, name)
+        if (fileManager.fileExistsAtPath(path) && !NSURL.fileURLWithPath(path).setResourceValue(true, NSURLIsExcludedFromBackupKey, null)) {
+            println("Could not keep \"$name\" out of the device backup.")
         }
     }
 
