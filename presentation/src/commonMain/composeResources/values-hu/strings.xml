@@ -245,6 +245,7 @@
     <string name="song_editor_unsaved_changes_confirmation">Szeretnéd menteni, amit írtál, mielőtt kilépsz a szerkesztőből?</string>
     <string name="song_editor_discard">Elvetés</string>
     <string name="song_editor_save_failed">A dalt nem sikerült menteni</string>
+    <string name="song_editor_draft_lost">A nem mentett módosításokat nem sikerült visszaállítani</string>
 
     <!-- Song details screen -->
     <string name="song_details_previous_song">Előző dal</string>

@@ -9,6 +9,7 @@
  */
 package com.pandulapeter.campfire.presentation.ui
 
+import androidx.compose.foundation.text.input.TextFieldState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateListOf
@@ -360,6 +361,14 @@ class CampfireViewModel(
      * that holds the field being there any more. Null whenever no editor is open.
      */
     private val _editorDraft = MutableStateFlow<SongContent?>(null)
+
+    /**
+     * The open editor's field as its screen last saved it, by file name. The screen's saved state only holds the text,
+     * and not even that for a long document (see the editor's saver); this holds the field itself, for the
+     * restorations this object lives through - a rotation, the system changing its theme or language - where the
+     * undo history and a draft of any length can simply be handed back.
+     */
+    private var retainedEditorField: Pair<String, TextFieldState>? = null
 
     /** Asked for by the confirmation dialog and answered by the editor screen, see [revertEditorChanges]. */
     private val _editorRevertRequests = MutableSharedFlow<Unit>(extraBufferCapacity = 1)
@@ -713,6 +722,7 @@ class CampfireViewModel(
     private fun updateBackStack(update: SnapshotStateList<CampfireDestination>.() -> Unit) {
         if (isNavigationTransitionRunning) navigationGeneration++
         backStack.update()
+        if (backStack.none { it is CampfireDestination.SongEditor }) retainedEditorField = null
         persistBackStack()
     }
 
@@ -899,6 +909,23 @@ class CampfireViewModel(
 
     /** Reported by the editor once it is gone, whatever became of the text it had. */
     fun onEditorClosed() = _editorDraft.update { null }
+
+    /**
+     * Called by the editor whenever its state is saved. That includes one last time as the screen leaves for good,
+     * by which time the stack has let go of it - and then there is nothing to keep the field for.
+     */
+    fun retainEditorField(fileName: String, textFieldState: TextFieldState) {
+        if (backStack.any { it is CampfireDestination.SongEditor && it.fileName == fileName }) {
+            retainedEditorField = fileName to textFieldState
+        }
+    }
+
+    fun retainedEditorField(fileName: String) = retainedEditorField?.takeIf { it.first == fileName }?.second
+
+    /** Reported by the editor when it came back from a saved state that could not hold its unsaved text. */
+    fun onEditorDraftLost() {
+        _messages.trySend(Message.EditorDraftLost)
+    }
 
     /**
      * The "Save" answer of the unsaved changes dialog. The editor holds the only copy of the text until the file
@@ -1656,6 +1683,9 @@ class CampfireViewModel(
         data object ImportFailed : Message
         data object ExportFailed : Message
         data object SaveFailed : Message
+
+        /** A long document's unsaved text did not survive the process being killed in the background. */
+        data object EditorDraftLost : Message
 
         /** A change to the library (a new setlist, a deleted song, a moved entry) that could not be written. */
         data object OperationFailed : Message

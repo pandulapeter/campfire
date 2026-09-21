@@ -83,6 +83,7 @@ import com.pandulapeter.campfire.presentation.resources.error_operation_failed
 import com.pandulapeter.campfire.presentation.resources.export_failed
 import com.pandulapeter.campfire.presentation.resources.import_failed
 import com.pandulapeter.campfire.presentation.resources.import_result
+import com.pandulapeter.campfire.presentation.resources.song_editor_draft_lost
 import com.pandulapeter.campfire.presentation.resources.song_editor_save_failed
 import com.pandulapeter.campfire.presentation.resources.ic_campfire
 import com.pandulapeter.campfire.presentation.resources.ic_setlists
@@ -448,6 +449,7 @@ private fun Messages(
         CampfireViewModel.Message.ImportFailed -> stringResource(Res.string.import_failed)
         CampfireViewModel.Message.ExportFailed -> stringResource(Res.string.export_failed)
         CampfireViewModel.Message.SaveFailed -> stringResource(Res.string.song_editor_save_failed)
+        CampfireViewModel.Message.EditorDraftLost -> stringResource(Res.string.song_editor_draft_lost)
         CampfireViewModel.Message.OperationFailed -> stringResource(Res.string.error_operation_failed)
         null -> null
     }

@@ -245,6 +245,7 @@
     <string name="song_editor_unsaved_changes_confirmation">Would you like to save what you have written before leaving the editor?</string>
     <string name="song_editor_discard">Discard</string>
     <string name="song_editor_save_failed">Could not save the song</string>
+    <string name="song_editor_draft_lost">The unsaved changes could not be restored</string>
 
     <!-- Song details screen -->
     <string name="song_details_previous_song">Previous song</string>

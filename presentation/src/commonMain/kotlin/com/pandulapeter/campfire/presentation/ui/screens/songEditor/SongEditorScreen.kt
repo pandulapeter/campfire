@@ -56,7 +56,9 @@ import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.saveable.Saver
+import androidx.compose.runtime.saveable.SaverScope
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.runtime.snapshotFlow
@@ -123,9 +125,9 @@ import org.jetbrains.compose.resources.painterResource
  * ones one at a time.
  *
  * The text lives in a [TextFieldState] here rather than in the view model: it is the field's own state, undo history
- * included, and it is saved across configuration changes and process death with the field's own saver. Nothing is
- * ever written on its own: the file changes when the user saves it, and leaving with something unsaved asks first
- * (see [CampfireViewModel.navigateBack]). What the screen does report as it is typed is the text itself, which is
+ * included, and it lives through a configuration change whole, in the view model's keeping, and through process death
+ * as its text and caret, see [EditorFieldSaver]. Nothing is ever written on its own: the file changes when the user
+ * saves it, and leaving with something unsaved asks first (see [CampfireViewModel.navigateBack]). What the screen does report as it is typed is the text itself, which is
  * what lets that question be answered - and the save be finished - after the screen is gone.
  */
 @Composable
@@ -179,16 +181,32 @@ private fun LoadedSongEditor(
     onBack: () -> Unit,
 ) {
     // Keyed on the file name so that opening another song starts a new field with its own undo history, and saved
-    // so that a rotation or a trip through process death does not lose what has been typed.
-    val textFieldState = rememberSaveable(destination.fileName, saver = TextFieldState.Saver) {
-        TextFieldState(
-            initialText = initialText,
-            initialSelection = if (destination.shouldStartInsideFirstSection) {
-                TextRange(initialText.caretInsideFirstSection())
-            } else {
-                TextRange.Zero
-            },
+    // so that a rotation or a trip through process death does not lose what has been typed, see EditorFieldSaver.
+    val fileText by rememberUpdatedState(initialText)
+    val editorField = rememberSaveable(
+        destination.fileName,
+        saver = remember(viewModel, destination.fileName) {
+            EditorFieldSaver(
+                retain = { viewModel.retainEditorField(destination.fileName, it) },
+                retained = { viewModel.retainedEditorField(destination.fileName) },
+                fileText = { fileText },
+            )
+        },
+    ) {
+        EditorField(
+            TextFieldState(
+                initialText = initialText,
+                initialSelection = if (destination.shouldStartInsideFirstSection) {
+                    TextRange(initialText.caretInsideFirstSection())
+                } else {
+                    TextRange.Zero
+                },
+            )
         )
+    }
+    val textFieldState = editorField.textFieldState
+    LaunchedEffect(editorField) {
+        if (editorField.isDraftLost) viewModel.onEditorDraftLost()
     }
     // The text as one string, copied once per edit and shared by everything that follows it: the draft, the summary
     // in the bar, the toolbar and the preview would otherwise each copy and scan the whole song on every keystroke.
@@ -631,12 +649,78 @@ private fun RevertOnRequest(
     }
 }
 
-/** Replaces everything, for the rewrites that touch the whole document. */
-private fun TextFieldState.replaceAll(text: String) = edit {
-    val caret = selection.start.coerceAtMost(text.length)
-    delete(0, length)
-    insert(0, text)
-    selection = TextRange(caret)
+/**
+ * Replaces everything, for the rewrites that touch the whole document. The undo history records such an edit as
+ * the whole text twice and keeps a hundred of them, which for a long document is more memory than a phone hands
+ * out, so there the history starts over with the rewrite: it can still be undone, what came before it cannot.
+ */
+@OptIn(ExperimentalFoundationApi::class)
+private fun TextFieldState.replaceAll(text: String) {
+    if (this.text.length > LONG_DOCUMENT_LENGTH) undoState.clearHistory()
+    edit {
+        val caret = selection.start.coerceAtMost(text.length)
+        delete(0, length)
+        insert(0, text)
+        selection = TextRange(caret)
+    }
+}
+
+/**
+ * The editor's field, and what became of it on the way back from a saved state.
+ *
+ * @param isDraftLost True where the field held unsaved text too long to be saved and the process that held it
+ * is gone: the field starts from the file then, and the user is told so rather than left to find out.
+ */
+private class EditorField(
+    val textFieldState: TextFieldState,
+    val isDraftLost: Boolean = false,
+)
+
+/**
+ * Saves the field as its text and its selection, and the text only while it is not long.
+ *
+ * What is saved here crosses to the system in one Binder transaction, together with everything else the Activity
+ * saves and out of about a megabyte for the whole process; past that Android kills the app as it goes to the
+ * background. The field's own saver also writes the undo history, in which every rewrite of the whole document (a
+ * transposition, a revert) is the whole text twice, so a dozen taps on a long song add up to that megabyte.
+ *
+ * What this gives up is only ever wanted after a configuration change - a rotation restores through here as well -
+ * and the view model lives through those, so the field itself is handed to it ([retain]) and taken back as it is,
+ * undo history included and however long. A new process gets the text and the caret, or for a long document the
+ * file.
+ */
+private class EditorFieldSaver(
+    private val retain: (TextFieldState) -> Unit,
+    private val retained: () -> TextFieldState?,
+    private val fileText: () -> String,
+) : Saver<EditorField, Any> {
+
+    override fun SaverScope.save(value: EditorField): Any {
+        val textFieldState = value.textFieldState
+        retain(textFieldState)
+        val text = textFieldState.text.toString()
+        return if (text.length <= LONG_DOCUMENT_LENGTH) {
+            listOf(text, textFieldState.selection.start, textFieldState.selection.end)
+        } else {
+            // Whether there was anything to lose, so that an untouched long file does not come back with an apology.
+            listOf(text != fileText())
+        }
+    }
+
+    override fun restore(value: Any): EditorField {
+        retained()?.let { return EditorField(it) }
+        val saved = value as List<*>
+        return if (saved.size == 1) {
+            EditorField(textFieldState = TextFieldState(initialText = fileText()), isDraftLost = saved[0] as Boolean)
+        } else {
+            EditorField(
+                TextFieldState(
+                    initialText = saved[0] as String,
+                    initialSelection = TextRange(start = saved[1] as Int, end = saved[2] as Int),
+                )
+            )
+        }
+    }
 }
 
 /**
@@ -654,3 +738,9 @@ private val PANE_CHOICE_MAX_WIDTH = 400.dp
 private val SMALL_SCREEN_SIZE = 600.dp
 private const val SECTION_START = "{start_of_"
 private const val PREVIEW_DELAY_MILLIS = 150L
+
+/**
+ * What the editor takes for a long document: 100 KB as a saved state writes it, several times the longest song
+ * and a tenth of what the transaction has room for.
+ */
+private const val LONG_DOCUMENT_LENGTH = 50_000
