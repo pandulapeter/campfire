@@ -22,25 +22,13 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.browser.customtabs.CustomTabsIntent
 import androidx.core.content.ContextCompat
 import androidx.core.net.toUri
-import androidx.lifecycle.lifecycleScope
-import com.pandulapeter.campfire.data.model.domain.ImportedFile
 import com.pandulapeter.campfire.data.source.remote.implementation.auth.isSyncRedirect
 import com.pandulapeter.campfire.data.source.remote.implementation.auth.onSyncRedirectReceived
 import com.pandulapeter.campfire.presentation.ui.CampfireAndroidApp
 import com.pandulapeter.campfire.presentation.ui.platform.SyncNotifier
 import com.pandulapeter.campfire.sync.CampfireSyncService
-import com.pandulapeter.campfire.presentation.ui.platform.toImportedFile
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.channels.Channel
-import kotlinx.coroutines.flow.receiveAsFlow
-import kotlinx.coroutines.launch
-import kotlinx.coroutines.withContext
 
 class CampfireActivity : AppCompatActivity() {
-
-    // The activity is singleTask, so a second file opened while Campfire is running arrives at onNewIntent rather
-    // than at a new instance; both ends up here.
-    private val filesToImport = Channel<List<ImportedFile>>(Channel.BUFFERED)
 
     private var isAppReady = false
 
@@ -48,14 +36,22 @@ class CampfireActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
         keepStartupScreenUntilAppIsReady()
+        // An intent is acted on once. A recreated activity is handed the intent of the instance before it - on a
+        // rotation, and when the system brings the app back after killing it - and one reopened from Recents the
+        // intent it was first started with, marked as history. Neither is something the user has just asked for,
+        // and importing the same file again would put the conflicts question up over whatever they did to the
+        // song since. An intent that arrives while no instance exists is not lost to this: the system delivers it
+        // to onNewIntent once there is one.
         // Ahead of the content on purpose: a redirect that started this process answers an authorization the previous
         // one was killed in the middle of, and it has to be waiting by the time the first composition creates the view
         // model, whose start up asks for it exactly once.
-        handle(intent)
+        if (savedInstanceState == null && intent.flags and Intent.FLAG_ACTIVITY_LAUNCHED_FROM_HISTORY == 0) {
+            handle(intent)
+        }
         setContent {
             CampfireAndroidApp(
                 urlOpener = ::openUrl,
-                filesToImport = filesToImport.receiveAsFlow(),
+                filesToImport = filesToImport,
                 syncNotifier = ::onSyncNotificationChanged,
                 onAppReady = { isAppReady = true },
             )
@@ -82,9 +78,12 @@ class CampfireActivity : AppCompatActivity() {
         })
     }
 
+    /**
+     * The activity is singleTask, so a file opened while Campfire is running arrives here rather than at a new
+     * instance - as does one that arrives while the instance is gone, which the system holds until it is back.
+     */
     override fun onNewIntent(intent: Intent) {
         super.onNewIntent(intent)
-        setIntent(intent)
         handle(intent)
     }
 
@@ -140,13 +139,7 @@ class CampfireActivity : AppCompatActivity() {
             else -> emptyList()
         }
         if (uris.isEmpty()) return
-        lifecycleScope.launch {
-            // Reading them is disk work, and the intent arrives on the main thread.
-            val files = withContext(Dispatchers.IO) { uris.mapNotNull { it.toImportedFile(this@CampfireActivity) } }
-            if (files.isNotEmpty()) {
-                filesToImport.send(files)
-            }
-        }
+        importFiles(uris)
     }
 
     private fun openUrl(url: String, isDarkTheme: Boolean) = try {
