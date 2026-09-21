@@ -29,6 +29,10 @@ direction.
   page's English or Hungarian texts follow `navigator.language`. A `.wasm` or
   `campfire.js` download that fails, or an error or unhandled rejection before `campfireReady()`, stops the bar and shows a message with a
   "Try again" button that reloads the page; those listeners are removed once the app is ready.
+  Before anything is downloaded, `isBrowserSupported` validates two tiny modules using Wasm GC and the original
+  exception handling emitted by this Kotlin version; a browser that fails gets its own message without a retry
+  button. The exception-handling probe and the named browser versions have to follow the compiler if it moves to
+  `try_table`, checked in `campfire.wasm` after a Kotlin upgrade.
   Compose empties the element it is given, so it gets `#app` and the loading screen is a sibling that outlives the
   handover. `DismissLoadingScreen` in `CampfireWebApplication.kt` waits two frames before reporting ready —
   `withFrameNanos` resumes while its own frame is still being assembled — so the fade uncovers the app rather than an

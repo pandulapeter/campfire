@@ -175,11 +175,13 @@
         var TEXTS = {
             en: {
                 loadFailed: 'Campfire could not be loaded. Check the connection and try again.',
+                unsupported: 'This browser cannot run Campfire. It needs Chrome or Edge 119, Firefox 120, Safari 18.2 (iOS 18.2), or a later version.',
                 alreadyOpen: 'Campfire is already open in another tab. Close that tab first, or carry on there.',
                 retry: 'Try again'
             },
             hu: {
                 loadFailed: 'A Campfire betöltése nem sikerült. Ellenőrizd a kapcsolatot, és próbáld újra.',
+                unsupported: 'Ez a böngésző nem tudja futtatni a Campfire-t. Chrome vagy Edge 119, Firefox 120, Safari 18.2 (iOS 18.2) vagy ezeknél újabb verzió kell hozzá.',
                 alreadyOpen: 'A Campfire már meg van nyitva egy másik lapon. Előbb zárd be azt a lapot, vagy folytasd ott.',
                 retry: 'Újra'
             }
@@ -273,6 +275,36 @@
                 location.reload();
             };
             retry.hidden = false;
+        }
+
+        /**
+         * Whether the browser can compile what Kotlin/Wasm produces. Each probe is the smallest module that uses the
+         * feature, and validating one compiles and downloads nothing, so this costs well under a millisecond.
+         *
+         * Garbage collected types: "\0asm", version 1, then a type section (id 1, 5 bytes) declaring 1 type - a
+         * struct (0x5f = 95) with 1 field, an i8 (0x78 = 120) that is immutable (0).
+         *
+         * Exception handling, in the original try / catch form the binary uses: a type section with the function
+         * type () -> () (0x60 = 96), a function section with one function of that type, and a code section (id 10)
+         * whose one body is: no locals, try (0x06) with no result (0x40 = 64), catch_all (0x19 = 25), end, end (11).
+         */
+        function isBrowserSupported() {
+            try {
+                return typeof WebAssembly === 'object'
+                    && WebAssembly.validate(new Uint8Array([0, 97, 115, 109, 1, 0, 0, 0, 1, 5, 1, 95, 1, 120, 0]))
+                    && WebAssembly.validate(new Uint8Array([0, 97, 115, 109, 1, 0, 0, 0, 1, 4, 1, 96, 0, 0, 3, 2, 1, 0,
+                        10, 8, 1, 6, 0, 6, 64, 25, 11, 11]));
+            } catch (error) {
+                return false;
+            }
+        }
+
+        /** No retry button: trying again is what cannot help here, and it costs the whole download each time. */
+        function showUnsupported() {
+            isFailed = true;
+            track.hidden = true;
+            message.textContent = text.unsupported;
+            message.hidden = false;
         }
 
         function onError() {
@@ -414,7 +446,13 @@
             }
         });
 
-        claimLibrary(startApp, showAlreadyOpen);
+        // Asked before the library is claimed and before anything of the app is fetched: a browser that cannot run
+        // it would otherwise download sixteen megabytes to find that out, and be told to check its connection.
+        if (isBrowserSupported()) {
+            claimLibrary(startApp, showAlreadyOpen);
+        } else {
+            showUnsupported();
+        }
     })();
 </script>
 </body>

@@ -351,7 +351,7 @@ start, which is what the rest of `app/web` is about — see its `CLAUDE.md`.
 - The loading screen has a determinate progress bar, fed by a `fetch` wrapper that counts the bytes of the binaries
   against the total the build wrote into the page. It is a page and not an installable app on purpose: there is no
   web app manifest and no service worker, because every platform that should have an installable Campfire has a
-  native build.
+  native build. A browser without Wasm GC is told so before the download starts.
 - `finishWebDistribution` (in `app/web/build.gradle.kts`) finalizes `wasmJsBrowserDistribution`: it writes that total
   into `index.html`, and precompresses everything worth compressing.
 - OPFS, the file input and the download link are reached through `js(...)` blocks rather than through typed wrappers:
