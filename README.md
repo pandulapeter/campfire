@@ -98,7 +98,6 @@ an empty library.
 ### To do
 - Rename setlist date sort, maybe expose a date for Setlists?
 - Improve performance mode description
-- Implement .cho (and other) file association
 - Songs: sort by year option
 - Fix Songs screen async race animation issues
 - Update the screenshots in the Readme

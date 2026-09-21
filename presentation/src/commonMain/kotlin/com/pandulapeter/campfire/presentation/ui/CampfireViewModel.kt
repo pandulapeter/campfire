@@ -614,7 +614,7 @@ class CampfireViewModel(
      * and it has to outlive whichever screen the import was started from. It never outlives that dialog: see
      * [setVisibleDialog].
      */
-    private var pendingImportPlan: ImportPlan? = null
+    private var pendingImport: PendingImport? = null
 
     /**
      * Every batch of files waiting to be imported, taken one at a time by the consumer launched in `init`. Files are
@@ -699,7 +699,7 @@ class CampfireViewModel(
         viewModelScope.launch {
             for (request in importQueue) {
                 try {
-                    import(request.files, shouldAnnounceResult = request.shouldAnnounceResult)
+                    import(request)
                     // The next batch waits for this one's conflicts question too: it would have nowhere to be asked.
                     awaitImportSettled()
                 } finally {
@@ -774,6 +774,23 @@ class CampfireViewModel(
     private fun openSongDetails(destination: CampfireDestination.SongDetails) {
         if (backStack.lastOrNull() !is CampfireDestination.SongDetails) {
             updateBackStack { add(destination) }
+        }
+    }
+
+    /**
+     * Where a file opened with the app lands. It is put on top of whatever is on screen, so that Back returns there,
+     * except over a song that is already open, which it takes the place of rather than stacking a second pager on.
+     * An editor is left alone: the song's arrival is announced all the same, and taking the screen away from somebody
+     * in the middle of typing is not something a file opened elsewhere gets to do.
+     */
+    private fun openImportedSong(fileName: String) {
+        if (backStack.any { it is CampfireDestination.SongEditor }) return
+        val songFileNames = listOf(fileName)
+        val current = backStack.lastOrNull()
+        if (current is CampfireDestination.SongDetails && current.setlistFileName == null && current.songFileNames == songFileNames) return
+        updateBackStack {
+            if (current is CampfireDestination.SongDetails) removeAt(lastIndex)
+            add(CampfireDestination.SongDetails(songFileNames = songFileNames, setlistFileName = null, initialIndex = 0))
         }
     }
 
@@ -1119,17 +1136,24 @@ class CampfireViewModel(
         enqueueImport(files)
     }
 
-    /** Files the system handed over: opened with Campfire, shared to it, or dropped onto it. */
+    /**
+     * Files the system handed over: opened with Campfire, shared to it, or dropped onto it. Where that turns out to be
+     * one song, the song is what the user was after rather than the library it went into, so it is opened.
+     */
     fun importFiles(files: List<ImportedFile>) {
-        enqueueImport(files)
+        enqueueImport(files, shouldOpenSong = true)
     }
 
     /**
      * Puts a batch at the end of [importQueue] and returns what completes once it is over, its conflicts question
      * answered and the import that answer decided on written. An empty batch is not queued at all.
      */
-    private fun enqueueImport(files: List<ImportedFile>, shouldAnnounceResult: Boolean = true): CompletableDeferred<Unit> {
-        val request = ImportRequest(files = files, shouldAnnounceResult = shouldAnnounceResult)
+    private fun enqueueImport(
+        files: List<ImportedFile>,
+        shouldAnnounceResult: Boolean = true,
+        shouldOpenSong: Boolean = false,
+    ): CompletableDeferred<Unit> {
+        val request = ImportRequest(files = files, shouldAnnounceResult = shouldAnnounceResult, shouldOpenSong = shouldOpenSong)
         if (files.isEmpty()) {
             request.settled.complete(Unit)
         } else {
@@ -1217,13 +1241,13 @@ class CampfireViewModel(
      * have nothing worth asking about, or until the user has answered the question it does raise - which is why the
      * plan is kept here rather than in the dialog: the answer can arrive long after the screen that started this.
      */
-    private suspend fun import(files: List<ImportedFile>, shouldAnnounceResult: Boolean = true) {
+    private suspend fun import(request: ImportRequest) {
         // Only ever called by the consumer of importQueue, which waits for each import to settle before the next, so
         // this holds by construction; it is kept so that a second caller could not start an import over a running one.
-        if (files.isEmpty() || _isImporting.value || pendingImportPlan != null) return
+        if (request.files.isEmpty() || _isImporting.value || pendingImport != null) return
         _isImporting.update { true }
         val plan = try {
-            prepareImport(files)
+            prepareImport(request.files)
         } catch (exception: CancellationException) {
             throw exception
         } catch (exception: Exception) {
@@ -1235,21 +1259,21 @@ class CampfireViewModel(
         if (plan.hasConflicts) {
             // Nothing is happening while the question is on screen, and a progress bar under it would say otherwise.
             _isImporting.update { false }
-            pendingImportPlan = plan
+            pendingImport = PendingImport(plan = plan, request = request)
             showDialog(DialogType.ImportConflicts(plan.summary))
         } else {
-            applyImportPlan(plan, ImportConflictResolution.KEEP_BOTH, shouldAnnounceResult = shouldAnnounceResult)
+            applyImportPlan(plan = plan, resolution = ImportConflictResolution.KEEP_BOTH, request = request)
         }
     }
 
     /** The answer to [DialogType.ImportConflicts], which is the only thing that ever overwrites a library file. */
     fun resolveImport(resolution: ImportConflictResolution) {
-        val plan = pendingImportPlan ?: return
+        val pending = pendingImport ?: return
         // Claimed before the question goes away rather than once the import has started, so that nothing waiting for
         // the two of them to be over (see importDemoLibrary) sees a moment with neither.
         _isImporting.update { true }
         dismissDialog()
-        viewModelScope.launch { applyImportPlan(plan, resolution) }
+        viewModelScope.launch { applyImportPlan(plan = pending.plan, resolution = resolution, request = pending.request) }
     }
 
     /** Cancelling leaves the library exactly as it was: the plan is what is thrown away, not a half written import. */
@@ -1257,15 +1281,17 @@ class CampfireViewModel(
 
     /**
      * Expects [isImporting] to have been claimed by the caller, which both of them do before anything can observe the gap.
-     *
-     * @param shouldAnnounceResult False for the import nobody asked for: the demo library planted on a first run is
-     *   the library the user is about to be shown, and a snackbar counting the files of it would be the app
-     *   reporting on something that, as far as anyone can tell, simply came with it.
      */
-    private suspend fun applyImportPlan(plan: ImportPlan, resolution: ImportConflictResolution, shouldAnnounceResult: Boolean = true) {
+    private suspend fun applyImportPlan(plan: ImportPlan, resolution: ImportConflictResolution, request: ImportRequest) {
         try {
             val result = importFiles.invoke(plan, resolution)
-            if (shouldAnnounceResult) {
+            if (request.shouldOpenSong && plan.songs.size == 1 && plan.setlists.isEmpty()) {
+                // A song that was already in the library is opened as well: it is still the song that was asked for,
+                // under the name the library has for it. One that the answer to the conflicts left out is in neither
+                // list, and the library's own file under that name is a different song.
+                (result.importedSongFileNames + result.duplicateFileNames).singleOrNull()?.let(::openImportedSong)
+            }
+            if (request.shouldAnnounceResult) {
                 _messages.send(Message.ImportFinished(result))
                 if (result.oversizedFileNames.isNotEmpty()) {
                     _messages.send(Message.ImportOversized(result.oversizedFileNames.size))
@@ -1572,7 +1598,7 @@ class CampfireViewModel(
      * library exactly as cancelling would have.
      */
     private fun setVisibleDialog(dialogType: DialogType?) {
-        if (dialogType !is DialogType.ImportConflicts) pendingImportPlan = null
+        if (dialogType !is DialogType.ImportConflicts) pendingImport = null
         if (dialogType != DialogType.UnsavedChanges) pendingExit = null
         _visibleDialog.update { dialogType }
     }
@@ -1689,11 +1715,25 @@ class CampfireViewModel(
                 songs[entry.songFileName]?.let { it.title.contains(normalizedQuery) || it.artist.contains(normalizedQuery) } == true
             }
 
-    /** One batch in [importQueue]. */
+    /**
+     * One batch in [importQueue].
+     *
+     * @param shouldAnnounceResult False for the import nobody asked for: the demo library planted on a first run is
+     *   the library the user is about to be shown, and a snackbar counting the files of it would be the app
+     *   reporting on something that, as far as anyone can tell, simply came with it.
+     * @param shouldOpenSong True for files the system handed over, see [importFiles].
+     */
     private class ImportRequest(
         val files: List<ImportedFile>,
         val shouldAnnounceResult: Boolean,
+        val shouldOpenSong: Boolean,
         val settled: CompletableDeferred<Unit> = CompletableDeferred(),
+    )
+
+    /** An import waiting for the answer to [DialogType.ImportConflicts], see [pendingImport]. */
+    private class PendingImport(
+        val plan: ImportPlan,
+        val request: ImportRequest,
     )
 
     /** The part of a [SearchState] that is worth restoring, see [savedStateHandle]. */
