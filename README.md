@@ -98,7 +98,6 @@ an empty library.
 - Editor tag rows expand / collapse
 - New setlist dialog: description + auto assign song if opened from the setlist assignments bottom sheet
 - Improve performance mode description
-- Flat and Sharp symbols don't always appear on web, depending on the browser
 - Editor close confirmation dialog and Save button enabled / disabled state should check for identity with the original file
 - Implement .cho (and other) file association
 - Songs: sort by year option
