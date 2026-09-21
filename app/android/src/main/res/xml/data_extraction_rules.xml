@@ -8,15 +8,36 @@
  If a copy of the MPL was not distributed with this file, You can obtain one at
  https://mozilla.org/MPL/2.0/.
 -->
+<!--
+  What leaves the device with a backup or a transfer to a new phone, on Android 12 and later; full_backup_content.xml
+  says the same for the versions before it, and the two have to be changed together.
+
+  Each section is an allow-list - one <include> is enough to make it one - so whatever is not named here stays
+  behind, and that is how the two files that must not travel are kept out. sync-credentials.bin is encrypted with a
+  key that never leaves this device's Keystore, so a copy of it is noise anywhere else. sync-index.json records what
+  the last sync run saw from this device, and a copy that is days old, arriving on a device that has no account
+  connected, is a statement about a folder nobody can check: without it the first run on the new device compares the
+  two sides by content, which costs a listing and duplicates nothing. There are no <exclude> rules for them because
+  lint (FullBackupContent, fatal, so it fails a release build) rejects an exclude that is not inside an included path.
+
+  The paths are relative to Context.getFilesDir(), which is the root AndroidFileStorage hands to JvmFileStorage, and
+  have to follow StorageDirectory.pathSegments and UserPreferencesLocalSourceImpl.FILE_NAME if those ever move.
+-->
 <data-extraction-rules>
     <cloud-backup>
         <include
-            domain="sharedpref"
-            path="." />
+            domain="file"
+            path="library/" />
+        <include
+            domain="file"
+            path="preferences/preferences.json" />
     </cloud-backup>
     <device-transfer>
         <include
-            domain="sharedpref"
-            path="." />
+            domain="file"
+            path="library/" />
+        <include
+            domain="file"
+            path="preferences/preferences.json" />
     </device-transfer>
 </data-extraction-rules>

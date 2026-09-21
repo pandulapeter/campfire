@@ -19,7 +19,7 @@ your own storage. Until you do, nothing on the network is touched at all.
   Dropbox stays invisible to it. Inside that folder the files sit in `songs/` and `setlists/`, exactly as they do in
   an exported zip — plain ChordPro text you can open, edit or back up with anything else.
 - Only the library is synced. Your settings, your text size and your transpositions stay on the device they were made
-  on.
+  on (a phone's own backup does carry them to its replacement).
 
 ### How a run decides
 

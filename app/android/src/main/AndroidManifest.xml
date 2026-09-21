@@ -27,12 +27,18 @@
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE_DATA_SYNC" />
     <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
 
+    <!--
+      The library is the only copy of the user's own work, so it is in the device's backup and in a transfer to a
+      new phone, together with the settings: see the two rules files, one per generation of Android. That copy is
+      made by the system, to wherever the user's device backs up to - the app's own process still makes no request
+      for it. What connects the app to a cloud folder is deliberately not on the list.
+    -->
     <application
         android:name=".CampfireAndroidApplication"
-        android:allowBackup="false"
+        android:allowBackup="true"
         android:dataExtractionRules="@xml/data_extraction_rules"
         android:enableOnBackInvokedCallback="true"
-        android:fullBackupContent="true"
+        android:fullBackupContent="@xml/full_backup_content"
         android:icon="@mipmap/ic_launcher"
         android:label="@string/campfire"
         android:resizeableActivity="true"

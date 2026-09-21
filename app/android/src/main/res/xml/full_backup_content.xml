@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+ This file is part of Campfire.
+ Copyright (c) Pandula Péter 2017-2026.
+ https://github.com/pandulapeter/campfire
+
+ This Source Code Form is subject to the terms of the Mozilla Public License, v. 2.0.
+ If a copy of the MPL was not distributed with this file, You can obtain one at
+ https://mozilla.org/MPL/2.0/.
+-->
+<!--
+  The backup rules of Android 11 and earlier, where one list answers for the cloud backup and for a transfer to a new
+  phone alike. It has to say exactly what data_extraction_rules.xml says, which is also where the reasons are.
+-->
+<full-backup-content>
+    <include
+        domain="file"
+        path="library/" />
+    <include
+        domain="file"
+        path="preferences/preferences.json" />
+</full-backup-content>

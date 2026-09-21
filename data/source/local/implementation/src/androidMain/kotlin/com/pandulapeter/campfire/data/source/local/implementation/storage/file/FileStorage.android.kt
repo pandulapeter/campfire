@@ -13,7 +13,11 @@ import android.content.Context
 import org.koin.core.annotation.Provided
 import org.koin.core.annotation.Single
 
-/** The app-private `files` directory, which is backed up with the app and removed when it is uninstalled. */
+/**
+ * The app-private `files` directory, which is removed when the app is uninstalled. The system's backup and its
+ * transfer to a new device carry `library/` and `preferences/preferences.json` out of it and nothing else, by the
+ * rules in `:app:android`'s `res/xml` - which name those paths literally, so they follow [StorageDirectory] by hand.
+ */
 @Single
 internal class AndroidFileStorage(
     // Provided rather than declared: the context is what the Android app shell hands to Koin as it starts, which no

@@ -15,7 +15,11 @@ Compose UI is shared between all platforms. The app owns a library folder of pla
 editor or by importing files and zip archives. **The only thing that ever reaches the network is sync**, which is off
 until the user connects a cloud folder of their own in Settings, and which still involves no server of Campfire's own
 — see the Sync section below. (The Android build also asks Play whether a newer version of itself exists, but that
-question is answered over IPC by the Play Store app; Campfire's own process makes no request — see Updates below.)
+question is answered over IPC by the Play Store app; Campfire's own process makes no request — see Updates below.
+On Android and iOS the system's own device backup also carries the library and the settings — to the user's Google or
+iCloud backup, or straight to their next phone — but that is the operating system copying the app's files on the
+user's backup settings; Campfire's process makes no request for it, and the sync credentials and the sync index are
+not part of it (`app/android/src/main/res/xml`).)
 
 ## Architecture
 
@@ -60,6 +64,10 @@ preferences/sync-credentials.json    the connected account's tokens, and an unfi
                                      Android and iOS
 preferences/sync-index.json          what the last successful sync run saw
 ```
+
+On Android `library/` and `preferences/preferences.json` are in the system backup and the device-to-device transfer;
+`sync-credentials.bin` and `sync-index.json` are not, so a restored installation starts disconnected and its first
+sync run compares by content.
 
 ## Conventions
 

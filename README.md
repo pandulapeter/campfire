@@ -69,9 +69,11 @@ More detail in [documentation/features.md](documentation/features.md).
 
 ### Your songs are yours
 
-The library is a folder of ordinary text files in Campfire's own storage on your device. Nothing is uploaded, nothing
-is analyzed, and the app collects nothing at all — what it does with your data is written out in the
-[privacy policy](https://pandulapeter.com/legal/privacy_policy-campfire.html) linked from Settings.
+The library is a folder of ordinary text files in Campfire's own storage on your device. Campfire uploads nothing and
+analyzes nothing, and it collects nothing at all — what it does with your data is written out in the
+[privacy policy](https://pandulapeter.com/legal/privacy_policy-campfire.html) linked from Settings. On a phone, the
+library and your settings are part of the device's own backup (Google's or iCloud's, whichever you have switched on),
+so they follow you to a new phone; that copy is made by the system and is yours, and Campfire never sees it.
 
 The one thing that ever touches the network is sync, and only after you have connected a cloud folder **you** own,
 which Campfire reaches directly with no service of mine in between. Everything can be exported at any time as a zip

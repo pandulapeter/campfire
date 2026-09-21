@@ -23,6 +23,8 @@ holds the `@Module @ComponentScan object DataLocalSourceModule`, and every local
   hands to Koin, marked `@Provided` since no shared module declares it. Everything above this line is `commonMain`.
   - The directories are `library/songs`, `library/setlists` and `preferences` — songs and setlists sit next to each
     other so that the library exports as one archive, and the preferences sit outside it so that they do not.
+    Android's backup rules in `:app:android` name `library/` and `preferences/preferences.json` by path, so moving a
+    directory or renaming the preferences file means changing those two XML files as well.
   - Text is written as UTF-8 and read through `:data:model`'s `decodeLibraryText`, the same rule the import uses: UTF-8
     when the bytes are valid UTF-8, Windows-1252 when they are not (what every other Western text file dropped into the
     library folder turns out to be), and a byte order mark stripped, because editors on Windows write one. A file read

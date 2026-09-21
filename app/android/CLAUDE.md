@@ -22,4 +22,9 @@ It also registers the `campfire://oauth` scheme and holds every permission the a
 
 A `FileProvider` (authority `${applicationId}.files`, paths in `res/xml/file_paths.xml`) lets a shared song leave the app's private storage as a content URI.
 
+`data_extraction_rules.xml` (API 31+) and `full_backup_content.xml` (API 28–30) are the system backup rules. They
+must say the same thing: each is an allow-list for `library/` and `preferences/preferences.json`, so the encrypted
+sync credentials and sync index stay behind. There are no `<exclude>`s because lint rejects one outside an included
+path. The 25 MB backup quota is all or nothing; the debug build is a package of its own, with its own backup set.
+
 Build types: `debug` (`.debug` suffix, `internal.keystore`) and `release` (R8 + resource shrinking). The `internal` signing config is literal on purpose — it is the standard Android debug keystore, committed next to the build file, and there is nothing about it worth hiding. The `release` config reads `campfire.android.*` Gradle properties, which `gradle.properties` defaults to that same debug keystore so a fresh clone can build a release variant and get something installable; a real key goes in `local.properties`, which is never committed and overrides them (see the Build section of the root `CLAUDE.md`). Contains the app's `AndroidManifest.xml`, launcher icon, and themes and colors (`values/` + `values-night/`) — the only Android XML resources in the project; everything the Compose UI draws lives in `:presentation`'s `composeResources`.
