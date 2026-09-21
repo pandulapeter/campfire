@@ -154,6 +154,17 @@ internal fun SongLyrics(
     val chordStyle = lyricsStyle.copy(fontWeight = FontWeight.Bold)
     // Annotations ([*text]) sit in the chord row but are not chords, so they are drawn in the lyrics' colour.
     val annotationStyle = lyricsStyle.copy(fontStyle = FontStyle.Italic)
+    // One measurer for the whole page. Everything measured through it is kept by whoever asked for it (see
+    // [SongTextMeasurements] and [TabRows]), so a cache of its own would only hold every layout a second time.
+    val textMeasurer = rememberTextMeasurer(cacheSize = 0)
+    val textMeasurements = remember(textMeasurer, lyricsStyle, chordStyle, annotationStyle) {
+        SongTextMeasurements(
+            textMeasurer = textMeasurer,
+            lyricsStyle = lyricsStyle,
+            chordStyle = chordStyle,
+            annotationStyle = annotationStyle,
+        )
+    }
     // The metadata header scrolls with the song, so the columns below it have that much less room to fit into.
     var headerHeight by remember { mutableIntStateOf(0) }
     val headerHeightDp = with(density) { headerHeight.toDp() }
@@ -211,7 +222,7 @@ internal fun SongLyrics(
                                     headerStyle = headerStyle,
                                     lyricsStyle = lyricsStyle,
                                     chordStyle = chordStyle,
-                                    annotationStyle = annotationStyle,
+                                    textMeasurements = textMeasurements,
                                 )
                             }
                         } else {
@@ -224,7 +235,7 @@ internal fun SongLyrics(
                                 headerStyle = headerStyle,
                                 lyricsStyle = lyricsStyle,
                                 chordStyle = chordStyle,
-                                annotationStyle = annotationStyle,
+                                textMeasurements = textMeasurements,
                                 // Scrolls the section back to the top of the screen.
                                 onHeaderClick = { coroutineScope.launch { scrollState.animateScrollTo(bounds.top) } },
                             )
@@ -383,7 +394,7 @@ private fun SongSectionContent(
     headerStyle: TextStyle,
     lyricsStyle: TextStyle,
     chordStyle: TextStyle,
-    annotationStyle: TextStyle,
+    textMeasurements: SongTextMeasurements,
     onHeaderClick: () -> Unit = {},
 ) = Column(
     modifier = modifier
@@ -431,6 +442,7 @@ private fun SongSectionContent(
                     modifier = Modifier.fillMaxWidth(),
                     lines = lines,
                     style = style,
+                    textMeasurer = textMeasurements.textMeasurer,
                 )
             } else {
                 // A `{start_of_tab}` with no staff in it is preformatted text, chord names over lyrics most often.
@@ -462,8 +474,7 @@ private fun SongSectionContent(
                     SongLineWithChords(
                         line = line,
                         lyricsStyle = lyricsStyle,
-                        chordStyle = chordStyle,
-                        annotationStyle = annotationStyle,
+                        textMeasurements = textMeasurements,
                     )
                 }
 
@@ -518,8 +529,8 @@ private fun SongTabBlock(
     modifier: Modifier = Modifier,
     lines: List<String>,
     style: TextStyle,
+    textMeasurer: TextMeasurer,
 ) {
-    val textMeasurer = rememberTextMeasurer()
     val color = MaterialTheme.colorScheme.onSurface
     val rows = remember(lines, style, textMeasurer) { TabRows(lines, style, textMeasurer) }
     Layout(
@@ -577,6 +588,58 @@ private class TabRows(
             }
         }
     }
+}
+
+/**
+ * What the chorded lines of one page have had measured, shared between them because they keep asking for the
+ * same things: a song has a handful of chord names and hundreds of lines carrying them, a repeated verse or a
+ * recalled chorus is the same fragments again, and the height of a line and the width of the padding are the
+ * same for all of them.
+ *
+ * It lives for as long as the measurer and the three styles do - which is everything a width depends on: the
+ * styles carry the text size, the measurer is rebuilt with the density, the layout direction and the font
+ * resolver - and deliberately not for as long as the song does. A transposition renames the chords and leaves
+ * the lyrics alone, so the fragment widths it measured before are the ones it needs after.
+ *
+ * None of this is state: it is filled in by whoever asks first, and the answers never change.
+ */
+private class SongTextMeasurements(
+    val textMeasurer: TextMeasurer,
+    private val lyricsStyle: TextStyle,
+    private val chordStyle: TextStyle,
+    private val annotationStyle: TextStyle,
+) {
+
+    /** The height of one line of lyrics, which a chorded line is taller than by the height of its chords. */
+    val lyricsLineHeight by lazy(LazyThreadSafetyMode.NONE) {
+        textMeasurer.measure(AnnotatedString(LINE_HEIGHT_SAMPLE), lyricsStyle).size.height
+    }
+
+    /** The width of one [PADDING] character, which the lyrics under a chord wider than they are get filled up with. */
+    val paddingWidth by lazy(LazyThreadSafetyMode.NONE) { measureFragment(PADDING.toString()) }
+
+    private val chordLayouts = HashMap<String, TextLayoutResult>()
+    private val annotationLayouts = HashMap<String, TextLayoutResult>()
+    private val fragmentWidths = HashMap<String, Float>()
+
+    /** The laid out name of [chord], which is drawn as it is: the colour is given where it is drawn. */
+    fun chordLayout(chord: ChordProLine.Lyrics.Chord) = if (chord.isAnnotation) {
+        annotationLayouts.bounded().getOrPut(chord.name) { textMeasurer.measure(AnnotatedString(chord.name), annotationStyle) }
+    } else {
+        chordLayouts.bounded().getOrPut(chord.name) { textMeasurer.measure(AnnotatedString(chord.name), chordStyle) }
+    }
+
+    /** The width of a piece of lyrics. Only the number is kept, since nothing is ever drawn from this layout. */
+    fun fragmentWidth(fragment: String) = fragmentWidths.bounded().getOrPut(fragment) { measureFragment(fragment) }
+
+    private fun measureFragment(fragment: String) = textMeasurer.measure(AnnotatedString(fragment), lyricsStyle).size.width.toFloat()
+
+    /**
+     * The editor's preview is one page for as long as the editor is open and sees every fragment that is ever typed,
+     * so a map that only grew would grow for the whole session. Starting over costs one measurement of whatever is
+     * still on screen, which is what opening the page cost.
+     */
+    private fun <T> HashMap<String, T>.bounded() = also { if (size >= MAX_MEASURED_TEXTS) clear() }
 }
 
 /** One `{start_of_grid}` line: bars, chords, beats and repeats laid out in a row, as a chord chart. */
@@ -1121,29 +1184,23 @@ private fun ChordProLine.isBlank() = when (this) {
 private fun SongLineWithChords(
     line: ChordProLine.Lyrics,
     lyricsStyle: TextStyle,
-    chordStyle: TextStyle,
-    annotationStyle: TextStyle,
+    textMeasurements: SongTextMeasurements,
 ) {
-    val textMeasurer = rememberTextMeasurer()
     val density = LocalDensity.current
     val chordColor = MaterialTheme.colorScheme.primary
     val annotationColor = MaterialTheme.colorScheme.onSurfaceVariant
-    val chordLayouts = remember(line, chordStyle, annotationStyle, textMeasurer) {
-        line.chords.map { textMeasurer.measure(AnnotatedString(it.name), if (it.isAnnotation) annotationStyle else chordStyle) }
-    }
-    val paddedLine = remember(line, lyricsStyle, chordLayouts, textMeasurer, density) {
+    val chordLayouts = remember(line, textMeasurements) { line.chords.map(textMeasurements::chordLayout) }
+    val paddedLine = remember(line, textMeasurements, density) {
         line.padLyricsToFitChords(
             chordWidths = chordLayouts.map { it.size.width.toFloat() },
             gap = with(density) { CHORD_GAP.toPx() },
-            measureWidth = { textMeasurer.measure(AnnotatedString(it), lyricsStyle).size.width.toFloat() },
+            paddingWidth = textMeasurements.paddingWidth,
+            measureWidth = textMeasurements::fragmentWidth,
         )
-    }
-    val lyricsLineHeight = remember(lyricsStyle, textMeasurer) {
-        textMeasurer.measure(AnnotatedString(LINE_HEIGHT_SAMPLE), lyricsStyle).size.height
     }
     val chordLineHeight = chordLayouts.maxOf { it.size.height }
     // Lines without any lyrics (e.g. an intro) only need to be as tall as the chords themselves.
-    val lineHeight = with(density) { (if (line.text.isBlank()) chordLineHeight else chordLineHeight + lyricsLineHeight).toSp() }
+    val lineHeight = with(density) { (if (line.text.isBlank()) chordLineHeight else chordLineHeight + textMeasurements.lyricsLineHeight).toSp() }
     var lyricsLayout by remember { mutableStateOf<TextLayoutResult?>(null) }
     Text(
         modifier = Modifier
@@ -1187,14 +1244,15 @@ private fun SongLineWithChords(
 
 /**
  * Returns a copy of the line where every piece of lyrics that sits under a chord is at least as wide as the chord
- * (plus [gap]), by appending non-breaking spaces to it. Chord positions are updated to point into the padded lyrics.
+ * (plus [gap]), by appending non-breaking spaces, each [paddingWidth] wide, to it. Chord positions are updated to point
+ * into the padded lyrics.
  */
 private fun ChordProLine.Lyrics.padLyricsToFitChords(
     chordWidths: List<Float>,
     gap: Float,
+    paddingWidth: Float,
     measureWidth: (String) -> Float,
 ): ChordProLine.Lyrics {
-    val paddingWidth = measureWidth(PADDING.toString())
     val paddedLyrics = StringBuilder(text.substring(0, chords.first().position))
     val paddedChords = chords.mapIndexed { index, chord ->
         val fragment = text.substring(chord.position, chords.getOrNull(index + 1)?.position ?: text.length)
@@ -1225,6 +1283,7 @@ private val ROW_GAP = 40.dp
 private const val LINE_HEIGHT_SAMPLE = "X"
 private const val CHARACTER_WIDTH_SAMPLE_LENGTH = 64
 private const val MAX_TAB_WIDTHS = 8
+private const val MAX_MEASURED_TEXTS = 4096
 private const val PADDING = '\u00A0' // Non-breaking space, so that the padding never gets trimmed or wrapped.
 private const val BEAT_SYMBOL = "\u00B7"
 private const val CHIP_SEPARATOR = "\u00B7"
