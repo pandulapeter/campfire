@@ -121,9 +121,7 @@ internal fun String.isNamed(desired: String): Boolean {
     if (!extension.equals(desired.knownExtension(), ignoreCase = true)) return false
     val base = removeSuffix(extension)
     val desiredBase = desired.removeSuffix(desired.knownExtension())
-    if (base == desiredBase) return true
-    val suffix = base.removePrefix(desiredBase)
-    return suffix.length < base.length && COLLISION_SUFFIX.matches(suffix)
+    return base == desiredBase || LibraryFiles.withoutCollisionSuffix(base) == desiredBase
 }
 
 /**
@@ -139,6 +137,3 @@ internal fun String.knownExtension() = when {
 internal fun String.withoutExtension() = removeSuffix(knownExtension())
 
 private const val TEMPORARY_MOVE_SUFFIX = "_renaming"
-
-/** Both shapes [uniqueName] writes: the underscored one of a normalized name, and the bracketed one of every other. */
-private val COLLISION_SUFFIX = Regex("""_\d+| \(\d+\)""")

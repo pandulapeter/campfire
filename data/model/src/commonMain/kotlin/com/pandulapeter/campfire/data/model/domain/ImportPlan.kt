@@ -41,7 +41,11 @@ data class ImportPlan(
         )
 
     data class SongEntry(
-        /** The name it wants in the library, already derived the way the storage layer derives one. */
+        /**
+         * The name it wants in the library, already derived the way the storage layer derives one — or, for an
+         * [Status.IDENTICAL] entry, the name of the library file that already is this song, which may be a numbered
+         * sibling of the name it would have wanted.
+         */
         val fileName: String,
         val text: String,
         val status: Status,
@@ -50,6 +54,12 @@ data class ImportPlan(
          * song of a collection, since the file it came from named none of them.
          */
         val sourceFileName: String?,
+        /**
+         * For an [Status.IDENTICAL] entry that repeats an earlier song of the same import rather than a library file:
+         * the place of that song in [ImportPlan.songs]. Where it ends up is only known once it has been written, so
+         * the plan can name the entry but not the file.
+         */
+        val repeatedEntryIndex: Int? = null,
     )
 
     data class SetlistEntry(
@@ -60,17 +70,18 @@ data class ImportPlan(
 
     /** What the library already has under the name the entry wants. */
     enum class Status {
-        /** The name is free, so the file goes in as it is. */
+        /** The name is free, or taken only by an earlier file of the same import, so the storage layer numbers it if needed. */
         NEW,
 
         /**
-         * The name is taken by something that is already exactly this, so the import has nothing to do. Songs are
-         * compared by their text and setlists by their title and entries - never by the stored document, which
+         * The library — under this name or a numbered sibling of it — or an earlier file of the same import already
+         * is exactly this, so the import has nothing to do. Songs are compared by their text and setlists by their
+         * title and entries - never by the stored document, which
          * carries a priority the import assigns itself.
          */
         IDENTICAL,
 
-        /** The name is taken by something else, which only the user can decide about. */
+        /** The name is taken in the library by something else, which only the user can decide about. */
         CONFLICTING,
     }
 

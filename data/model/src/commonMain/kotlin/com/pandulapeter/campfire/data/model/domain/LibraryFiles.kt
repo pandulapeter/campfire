@@ -116,7 +116,20 @@ object LibraryFiles {
     /** What a [normalizedName] is made of, and what a collision suffix is joined to it with. */
     const val NAME_SEPARATOR = "_"
 
+    /**
+     * [name] — a file name without its extension — without the number a collision added to it, or null where it
+     * carries none. Both shapes are recognised: the `_2` of a name the app derived itself, and the ` (2)` sync gives
+     * the copy of a file that changed on both sides. `route_66` reads as a numbered `route`, which is harmless to
+     * everyone who asks: a family is only ever where to look for a file, never proof that one belongs to it.
+     */
+    fun withoutCollisionSuffix(name: String): String? = COLLISION_SUFFIX.find(name)
+        ?.let { name.substring(startIndex = 0, endIndex = it.range.first) }
+        ?.takeIf { it.isNotEmpty() }
+
     private const val FALLBACK_NAME = "untitled"
+
+    /** Both shapes a colliding name is numbered in, anchored to the end of the name. */
+    private val COLLISION_SUFFIX = Regex("""(_\d+| \(\d+\))$""")
 
     /** Straight, curly and the modifier letter, since all three reach a title as the same key on somebody's keyboard. */
     private const val APOSTROPHES = "'’ʼ"

@@ -23,7 +23,7 @@ plan's writer, and — for most of the 01–15 group — checked by hand a third
 - Run the unit tests after every change:
 
   ```
-  ./gradlew :chordpro:desktopTest :data:source:local:implementation:desktopTest :data:source:remote:api:desktopTest :data:source:remote:implementation:desktopTest :data:repository:implementation:desktopTest
+  ./gradlew :chordpro:desktopTest :domain:implementation:desktopTest :data:source:local:implementation:desktopTest :data:source:remote:api:desktopTest :data:source:remote:implementation:desktopTest :data:repository:implementation:desktopTest
   ```
 
   Plan 02 gives `:domain:implementation` its first `commonTest` source set; once it has landed, add

@@ -44,7 +44,7 @@
     <string name="import_conflicts_more">and %1$d more</string>
     <string name="import_conflicts_question">What should happen to those?</string>
     <string name="import_conflicts_keep_both">Keep both</string>
-    <string name="import_conflicts_keep_both_description">Import them next to the files they collide with, named \" (2)\"</string>
+    <string name="import_conflicts_keep_both_description">Import them next to the files they collide with, numbered \"_2\"</string>
     <string name="import_conflicts_replace">Replace</string>
     <string name="import_conflicts_replace_description">Write them over what your library has. The replaced files are gone.</string>
     <string name="import_conflicts_skip">Skip them</string>

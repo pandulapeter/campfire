@@ -44,10 +44,12 @@ The long version of what Campfire does. The [README](../README.md) has the short
   read.
 - **Open with**: a ChordPro file opened from a file manager, an email or a browser download lands straight in
   Campfire.
-- An import **decides before it writes**. Every incoming file is held against the name it wants; one whose name is
-  already taken by a file with exactly the same content is quietly disregarded, and the ones taken by something
-  *different* are put to you as one question about the whole batch — keep both (the newcomer becomes `…_2`),
-  replace, skip, or cancel the import. Replacing is the only thing in the app that ever overwrites a file.
+- An import **decides before it writes**. Every incoming file is held against the name it wants; a song the library
+  already holds under that name or a numbered sibling of it (`x_2.cho`) is quietly disregarded, and two different
+  files of one batch that want the same name are never a question: the second is numbered like any other collision.
+  The names taken by something *different* are put to you as one question about the whole batch — keep both (the
+  newcomer becomes `…_2`), replace, skip, or cancel the import. Replacing is the only thing in the app that ever
+  overwrites a file.
 
 ### Organizing
 

@@ -98,6 +98,12 @@ internal class FileNamesTest {
     }
 
     @Test
+    fun aConflictCopyIsRecognizedAsItsOwn() {
+        assertTrue("x (2).cho".isNamed("x.cho"))
+        assertTrue(!"_2.cho".isNamed(".cho"))
+    }
+
+    @Test
     fun setlistNameIsAlwaysOpenableAndCapped() {
         // A title written in an alphabet the accent table knows nothing about leaves no name behind at all.
         assertEquals("untitled.setlist.json", setlistFileName("Летний сет"))

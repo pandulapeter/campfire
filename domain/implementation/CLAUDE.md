@@ -34,18 +34,18 @@ The ones that carry real logic:
   in all of them at once, which is why there is no counterpart to `TagMatchMode` here.
 - `LoadScreenDataUseCaseImpl` — fans the initial load (or a rescan) out across the repositories in parallel and waits
   for all of them, failures included: one unreadable part of the screen must not keep the rest empty.
-- `PrepareImportUseCaseImpl` / `ImportFilesUseCaseImpl` — the import policy, split the way sync's is: one works out
-  what would happen, the other carries it out. Preparing unpacks archives (recursively, path stripped, the archiving
+- `PrepareImportUseCaseImpl` / `ImportPlanner` / `ImportFilesUseCaseImpl` — the import policy, split the way sync's
+  is: one works out what would happen, the other carries it out. Preparing unpacks archives (recursively, path stripped, the archiving
   tool's own hidden files left where they were), sorts each file into song / setlist / skipped by its extension, splits
   a file holding several songs at `{new_song}` with `:chordpro`, asks `SongRepository.importFileName` what each song's
   own header names it — the name the file arrived under is
-  passed as a fallback *title*, for the songs that declare none, and is otherwise not used at all — and then holds
-  every result against the name it wants: free, taken by exactly this, or taken by something else
-  (`ImportPlan.Status`). Only a decision made before anything is written can be put to the user as one question about a
-  whole archive, which is the reason for the split — three hundred questions is not a choice. A song is compared by its
-  text and a setlist by its title and entries, never by the stored document, which carries a priority the import
-  assigns itself; names claimed earlier in the same batch count as taken too, so an archive holding the same song twice
-  answers for the second copy the way the library answers for the first. Applying turns each entry plus the
+  passed as a fallback *title*, for the songs that declare none, and is otherwise not used at all. `ImportPlanner`
+  compares a song with the whole family of its name (the unnumbered file and its numbered siblings), records a repeat
+  in the batch by entry index, asks one conflict question per library name and leaves numbering to the write that can
+  see the directory. Only a decision made before anything is written can be put to the user as one question about a
+  whole archive, which is the reason for the split — three hundred questions is not a choice. A song is compared by
+  its text and a setlist by its title and entries, never by the stored document, which carries a priority the import
+  assigns itself. `ImportPlanner` is covered by `commonTest`. Applying turns each entry plus the
   `ImportConflictResolution` into write / replace / disregard / leave alone, and only `REPLACE` ever overwrites.
   Songs are still written before setlists and the names they actually got are remembered, so that a setlist arriving in
   the same archive still points at its songs after a collision renamed one — a disregarded duplicate maps to the copy

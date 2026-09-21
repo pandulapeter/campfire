@@ -13,13 +13,13 @@ import com.pandulapeter.campfire.chordpro.ChordProSplitter
 import com.pandulapeter.campfire.data.model.domain.ImportPlan
 import com.pandulapeter.campfire.data.model.domain.ImportedFile
 import com.pandulapeter.campfire.data.model.domain.LibraryFiles
-import com.pandulapeter.campfire.data.model.domain.Setlist
 import com.pandulapeter.campfire.data.model.domain.decodeLibraryText
 import com.pandulapeter.campfire.data.repository.api.ArchiveRepository
 import com.pandulapeter.campfire.data.repository.api.SetlistRepository
 import com.pandulapeter.campfire.data.repository.api.SongContentRepository
 import com.pandulapeter.campfire.data.repository.api.SongRepository
 import com.pandulapeter.campfire.domain.api.useCases.PrepareImportUseCase
+import com.pandulapeter.campfire.domain.implementation.ImportPlanner
 import kotlinx.coroutines.CancellationException
 import org.koin.core.annotation.Factory
 
@@ -64,15 +64,9 @@ class PrepareImportUseCaseImpl internal constructor(
         )
     }
 
-    /**
-     * What the library will hold under each name once the plan is applied, so that an archive carrying the same song
-     * twice answers for the second copy the same way the library answers for the first. A conflicting name is left
-     * out of it: whatever the user decides, the name either keeps the song that is there or is given to the incoming
-     * one, and neither is known here.
-     */
+    /** Every song of the batch under the name its own header gives it, held against the library by [ImportPlanner]. */
     private suspend fun planSongs(files: List<ImportedFile>, skippedFileNames: MutableList<String>): List<ImportPlan.SongEntry> {
-        val plannedTexts = mutableMapOf<String, String>()
-        return files.flatMap { file ->
+        val incoming = files.flatMap { file ->
             val parts = ChordProSplitter.split(file.bytes.decodeLibraryText())
             if (parts.isEmpty()) {
                 skippedFileNames += file.name
@@ -86,61 +80,38 @@ class PrepareImportUseCaseImpl internal constructor(
                 // The splitter trims the blank lines between the songs of a collection; the newline a text file ends
                 // with is not one of those, and without it an exported library does not import back byte for byte.
                 val text = part + "\n"
-                val fileName = songRepository.importFileName(fallbackTitle = fallbackTitle, text = text)
-                // Not cached: an import walks files the library has no other reason to hold on to.
-                val existingText = plannedTexts[fileName] ?: songContentRepository.loadSongContent(fileName, shouldCache = false)?.text
-                val status = when {
-                    existingText == null -> ImportPlan.Status.NEW
-                    // The file on disk may use CRLF or end in blank lines, or in none, where the part the splitter
-                    // handed back does not; it is the same song all the same, and not a name to ask the user about.
-                    ChordProSplitter.comparable(existingText) == ChordProSplitter.comparable(text) -> ImportPlan.Status.IDENTICAL
-                    else -> ImportPlan.Status.CONFLICTING
-                }
-                if (status == ImportPlan.Status.NEW) {
-                    plannedTexts[fileName] = text
-                }
-                ImportPlan.SongEntry(
-                    fileName = fileName,
+                ImportPlanner.IncomingSong(
+                    fileName = songRepository.importFileName(fallbackTitle = fallbackTitle, text = text),
                     text = text,
-                    status = status,
                     sourceFileName = file.name.takeIf { parts.size == 1 },
                 )
             }
         }
+        return ImportPlanner.planSongs(
+            incoming = incoming,
+            // The names come from the scan the app already made, so finding numbered siblings needs no directory
+            // listing — on the web a listing opens every file — and only those siblings are read.
+            libraryFileNames = songRepository.loadSongsIfNeeded().orEmpty().map { it.fileName },
+            // Not cached: an import walks files the library has no other reason to hold on to.
+            readLibraryText = { fileName -> songContentRepository.loadSongContent(fileName, shouldCache = false)?.text },
+        )
     }
 
-    /**
-     * A setlist is compared by what is in it rather than by its stored document, which carries a priority this
-     * import assigns itself and would therefore never match. Its description and whether it is archived do count,
-     * since both are the user's own words about the setlist and travel with the file the way its title does: a setlist
-     * exported after only its description changed is a different setlist, not one that is already there. The entries
-     * are held against the names they arrived with: a song that had to be renamed is followed when the plan is
-     * applied, and a setlist pointing at one is a different setlist anyway.
-     */
+    /** Every setlist of the batch held against the library by [ImportPlanner]. */
     private suspend fun planSetlists(files: List<ImportedFile>, skippedFileNames: MutableList<String>): List<ImportPlan.SetlistEntry> {
-        val existingSetlists = setlistRepository.loadSetlistsIfNeeded().orEmpty().associateBy { it.fileName }
-        val plannedSetlists = mutableMapOf<String, Setlist>()
-        return files.mapNotNull { file ->
+        val incoming = files.mapNotNull { file ->
             val setlist = setlistRepository.parseSetlist(file.bytes.decodeLibraryText())
             if (setlist == null) {
                 skippedFileNames += file.name
                 return@mapNotNull null
             }
-            val existing = plannedSetlists[setlist.fileName] ?: existingSetlists[setlist.fileName]
-            val status = when {
-                existing == null -> ImportPlan.Status.NEW
-                existing.holdsTheSameAs(setlist) -> ImportPlan.Status.IDENTICAL
-                else -> ImportPlan.Status.CONFLICTING
-            }
-            if (status == ImportPlan.Status.NEW) {
-                plannedSetlists[setlist.fileName] = setlist
-            }
-            ImportPlan.SetlistEntry(fileName = setlist.fileName, setlist = setlist, status = status)
+            ImportPlanner.IncomingSetlist(setlist = setlist, sourceFileName = file.name)
         }
+        return ImportPlanner.planSetlists(
+            incoming = incoming,
+            librarySetlists = setlistRepository.loadSetlistsIfNeeded().orEmpty(),
+        )
     }
-
-    private fun Setlist.holdsTheSameAs(other: Setlist) =
-        title == other.title && description == other.description && isArchived == other.isArchived && entries == other.entries
 
     private companion object {
         /** The ChordPro family plus plain text, without the dots, which is how a file name is asked for its type. */

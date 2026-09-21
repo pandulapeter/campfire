@@ -58,7 +58,8 @@ holds the `@Module @ComponentScan object DataLocalSourceModule`, and every local
   name is free, `_2` by default — the same rule written in the alphabet every name it numbers is already in. The
   bracketed ` (2)` is left to `arrivingCollisionSuffix` and the one caller that writes a file under a name it did not
   invent: the copy sync brings down of a file changed on both sides, whose name is whatever the other device called
-  it. `isNamed` answers whether a file already carries the name it would be given, that suffix included, which is
+  it. `isNamed` reads `LibraryFiles.withoutCollisionSuffix` to answer whether a file already carries the name it would
+  be given, that suffix included, which is
   what keeps "Update file name" from offering itself to a song that has made way for another one. Nothing in the
   library is ever overwritten implicitly. A rename goes through `moveFile`, which writes the new file before it
   removes the old one; a new name that differs from the old only in case is not numbered on a case-insensitive file

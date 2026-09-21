@@ -56,7 +56,7 @@ Repeat for each issue number in the lane's list, **in the order given**, in the 
    inside the worktree), leave the plan file in place, and record it for the report. Move on to the next issue.
 4. Add the tests the plan asks for; update the `CLAUDE.md` files and strings (both languages) it names.
 5. Verify:
-   - the unit-test command from `README.md` is green;
+   - the unit-test command from `README.md` is green (including `:domain:implementation:desktopTest` after 02);
    - the desktop target of every module you touched compiles (`./gradlew :<module>:compileKotlinDesktop` — for
      `:presentation` and the apps use `./gradlew :app:desktop:compileKotlin`);
    - if the plan touches `androidMain` or `app/android`: `./gradlew :app:android:compileDebugKotlin`;

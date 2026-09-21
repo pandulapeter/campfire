@@ -44,7 +44,7 @@
     <string name="import_conflicts_more">és még %1$d</string>
     <string name="import_conflicts_question">Mi legyen velük?</string>
     <string name="import_conflicts_keep_both">Maradjon mindkettő</string>
-    <string name="import_conflicts_keep_both_description">Importálás a meglévő fájlok mellé, \" (2)\" névvel</string>
+    <string name="import_conflicts_keep_both_description">Importálás a meglévő fájlok mellé, \"_2\" számozással</string>
     <string name="import_conflicts_replace">Felülírás</string>
     <string name="import_conflicts_replace_description">A könyvtáradban lévő fájlok helyére kerülnek. A felülírt fájlok elvesznek.</string>
     <string name="import_conflicts_skip">Kihagyás</string>

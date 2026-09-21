@@ -38,29 +38,28 @@ class ImportFilesUseCaseImpl internal constructor(
 
         val importedSetlistFileNames = mutableListOf<String>()
         try {
-            plan.songs.forEach { entry ->
-                when (entry.action(resolution)) {
-                    Action.WRITE, Action.REPLACE -> {
-                        val song = songRepository.importSong(
-                            fileName = entry.fileName,
-                            text = entry.text,
-                            shouldReplace = entry.action(resolution) == Action.REPLACE,
-                        )
-                        importedSongFileNames += song.fileName
-                        entry.sourceFileName?.let { storedSongFileNames[it] = song.fileName }
-                    }
+            // Where each song of the plan ended up, by its place in the plan: a repeat of an earlier song of the batch
+            // is wherever that one went, which was not known when the plan was made.
+            val storedNames = arrayOfNulls<String>(plan.songs.size)
+            val replacedSongFileNames = mutableSetOf<String>()
+            plan.songs.forEachIndexed { index, entry ->
+                val storedName = when (val action = entry.action(resolution)) {
+                    Action.WRITE, Action.REPLACE -> songRepository.importSong(
+                        fileName = entry.fileName,
+                        text = entry.text,
+                        shouldReplace = action == Action.REPLACE && replacedSongFileNames.add(entry.fileName),
+                    ).fileName.also { importedSongFileNames += it }
 
-                    // Already in the library, so the name it arrived under still points at it for the setlists below.
-                    Action.DISREGARD -> {
-                        duplicateFileNames += entry.fileName
-                        entry.sourceFileName?.let { storedSongFileNames[it] = entry.fileName }
-                    }
-
-                    Action.LEAVE_ALONE -> entry.sourceFileName?.let { storedSongFileNames[it] = entry.fileName }
+                    // Already in the library, or already written by this import, so the name it arrived under points there.
+                    Action.DISREGARD -> (entry.repeatedEntryIndex?.let(storedNames::getOrNull) ?: entry.fileName).also { duplicateFileNames += it }
+                    Action.LEAVE_ALONE -> entry.fileName
                 }
+                storedNames[index] = storedName
+                entry.sourceFileName?.let { storedSongFileNames[it] = storedName }
             }
 
             var priority = (setlistRepository.loadSetlistsIfNeeded().orEmpty().maxOfOrNull { it.priority } ?: -1) + 1
+            val replacedSetlistFileNames = mutableSetOf<String>()
             plan.setlists.forEach { entry ->
                 when (val action = entry.action(resolution)) {
                     Action.WRITE, Action.REPLACE -> importedSetlistFileNames += setlistRepository.importSetlist(
@@ -70,7 +69,7 @@ class ImportFilesUseCaseImpl internal constructor(
                                 setlistEntry.copy(songFileName = storedSongFileNames[setlistEntry.songFileName] ?: setlistEntry.songFileName)
                             },
                         ),
-                        shouldReplace = action == Action.REPLACE,
+                        shouldReplace = action == Action.REPLACE && replacedSetlistFileNames.add(entry.fileName),
                     ).fileName
 
                     Action.DISREGARD -> duplicateFileNames += entry.fileName
@@ -115,7 +114,8 @@ class ImportFilesUseCaseImpl internal constructor(
         ImportPlan.Status.NEW -> Action.WRITE
         ImportPlan.Status.IDENTICAL -> Action.DISREGARD
         ImportPlan.Status.CONFLICTING -> when (resolution) {
-            // The name is taken, so writing under it is what produces the "_2" the storage layer suffixes.
+            // The name is taken, so writing under it is what produces the "_2" the storage layer suffixes — which is
+            // also how a NEW entry whose name an earlier file of the same import took gets its number.
             ImportConflictResolution.KEEP_BOTH -> Action.WRITE
             ImportConflictResolution.REPLACE -> Action.REPLACE
             ImportConflictResolution.SKIP -> Action.LEAVE_ALONE
