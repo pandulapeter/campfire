@@ -16,6 +16,7 @@ import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
 import androidx.compose.material3.MaterialExpressiveTheme
 import androidx.compose.material3.MotionScheme
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -74,11 +75,13 @@ fun CampfireTheme(
         colorScheme = lerp(start, stop, progress.value),
         motionScheme = MOTION_SCHEME,
     ) {
-        // The scheme asked for is not the one being shown from the composition the preferences arrive in until the
-        // fade that follows has ended, and the effect above starts that fade one frame after that composition - so
-        // the target being reached is read from the schemes rather than from the animation alone, which is not
-        // running yet in that one frame.
-        content(targetColorScheme === stop && !progress.isRunning)
+        CompositionLocalProvider(LocalMonospaceFontFamily provides monospaceFontFamily()) {
+                // The scheme asked for is not the one being shown from the composition the preferences arrive in until
+            // the fade that follows has ended, and the effect above starts that fade one frame after that composition -
+            // so the target being reached is read from the schemes rather than from the animation alone, which is not
+            // running yet in that one frame.
+            content(targetColorScheme === stop && !progress.isRunning)
+        }
     }
 }
 

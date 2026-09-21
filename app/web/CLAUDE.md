@@ -29,6 +29,11 @@ direction.
   handover. `DismissLoadingScreen` in `CampfireWebApplication.kt` waits two frames before reporting ready —
   `withFrameNanos` resumes while its own frame is still being assembled — so the fade uncovers the app rather than an
   empty page. The webpack output is named `campfire.js` (`outputModuleName` + `commonWebpackConfig`).
+- The page also preloads the two monospaced font files `:presentation` bundles for tabs, so they download alongside the
+  binaries rather than after them. The links are `as="fetch"` with `crossorigin`, which is what makes the Compose
+  resource reader's own `fetch()` match them; `as="font"` would be downloaded a second time. They name the files by
+  their path in the distribution (`composeResources/<package of Res>/font/…`), so renaming a font means renaming it
+  there too.
 - `src/wasmJsMain/resources/icon-192.png` — the loading screen's icon and the page's favicon, and the only image the
   web build has. A palette PNG whose alpha channel is untouched: quantising the colours alone leaves the antialiased
   edge and the soft shadow exact and still cuts the file to a fifth, which matters because it is on the critical path.

@@ -18,6 +18,11 @@
     <meta name="description" content="Song lyrics and chords, in a library of plain ChordPro files that stays yours.">
     <title>Campfire</title>
     <link rel="icon" type="image/png" sizes="192x192" href="icon-192.png">
+    <!-- The monospaced font tabs are set in (see MonospaceFontFamily.wasmJs.kt), fetched alongside the binaries
+         rather than after them, so it is in by the time the app asks for it. "fetch" and "crossorigin" are what make
+         the Compose resource reader's own fetch() the request this answers; as="font" would be downloaded twice. -->
+    <link rel="preload" as="fetch" crossorigin href="composeResources/com.pandulapeter.campfire.presentation.resources/font/jetbrains_mono_regular.ttf">
+    <link rel="preload" as="fetch" crossorigin href="composeResources/com.pandulapeter.campfire.presentation.resources/font/jetbrains_mono_bold.ttf">
     <style>
         /* The palette is the one CampfireColorSchemes generates, so the splash screen and the first
            composed frame paint the same background and the handover is invisible. */

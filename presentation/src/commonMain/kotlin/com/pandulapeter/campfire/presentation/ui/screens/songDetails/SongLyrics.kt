@@ -50,7 +50,6 @@ import androidx.compose.ui.text.TextMeasurer
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.drawText
-import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.rememberTextMeasurer
@@ -86,6 +85,7 @@ import com.pandulapeter.campfire.presentation.resources.song_details_year
 import com.pandulapeter.campfire.presentation.ui.components.TagFlowRow
 import com.pandulapeter.campfire.presentation.ui.components.TagPill
 import com.pandulapeter.campfire.presentation.ui.components.languageLabel
+import com.pandulapeter.campfire.presentation.ui.theme.LocalMonospaceFontFamily
 import com.pandulapeter.campfire.presentation.localization.stringResource
 import kotlinx.coroutines.launch
 import org.jetbrains.compose.resources.painterResource
@@ -425,7 +425,7 @@ private fun SongSectionContent(
     section.lines.groupConsecutiveTabs().forEach { group ->
         if (group.first() is ChordProLine.Tab) {
             val lines = group.map { (it as? ChordProLine.Tab)?.text.orEmpty() }
-            val style = lyricsStyle.copy(fontFamily = FontFamily.Monospace)
+            val style = lyricsStyle.copy(fontFamily = LocalMonospaceFontFamily.current)
             if (ChordProTabWrapper.isTablature(lines)) {
                 SongTabBlock(
                     modifier = Modifier.fillMaxWidth(),

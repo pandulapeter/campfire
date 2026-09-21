@@ -121,3 +121,7 @@ alongside it is yours, under whatever license you choose.
 
 The name *Campfire*, the app icon and the other branding assets are **not** covered by the license and remain the
 author's. The MPL grants no trademark rights (section 2.3), so a fork has to ship under a name and an icon of its own.
+
+The web build bundles [JetBrains Mono](https://github.com/JetBrains/JetBrainsMono), copyright The JetBrains Mono
+Project Authors, which is licensed under the [SIL Open Font License 1.1](presentation/src/wasmJsMain/composeResources/files/licenses/jetbrains_mono_ofl.txt)
+rather than the MPL.

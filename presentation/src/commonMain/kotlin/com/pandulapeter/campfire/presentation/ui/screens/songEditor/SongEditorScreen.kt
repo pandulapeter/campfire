@@ -76,7 +76,6 @@ import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.platform.LocalWindowInfo
 import androidx.compose.ui.text.TextRange
-import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -113,6 +112,7 @@ import com.pandulapeter.campfire.presentation.ui.components.WindowSize
 import com.pandulapeter.campfire.presentation.ui.navigation.CampfireDestination
 import com.pandulapeter.campfire.presentation.ui.screens.songDetails.SongLyrics
 import com.pandulapeter.campfire.presentation.ui.screens.songDetails.TextTranspositionControls
+import com.pandulapeter.campfire.presentation.ui.theme.LocalMonospaceFontFamily
 import kotlinx.coroutines.FlowPreview
 import kotlinx.coroutines.flow.debounce
 import kotlinx.coroutines.flow.distinctUntilChanged
@@ -516,7 +516,7 @@ private fun ChordProTextField(
             ),
         state = textFieldState,
         textStyle = bodyLarge.copy(
-            fontFamily = FontFamily.Monospace,
+            fontFamily = LocalMonospaceFontFamily.current,
             color = colorScheme.onSurface,
         ),
         // Autocorrect and automatic capitalization fight with a format whose words are "[Am]" and "{start_of_verse}".
