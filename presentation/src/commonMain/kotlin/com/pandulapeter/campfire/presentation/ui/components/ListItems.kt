@@ -119,10 +119,12 @@ import org.jetbrains.compose.resources.painterResource
  *   them and a label that is on every row tells the reader nothing about this one.
  * @param onLongClick A shortcut to the row's overflow menu, on the touch platforms where holding a row is a natural
  *   way to ask what can be done to it.
+ * @param containerColor What the row is drawn on, which is only ever something else than the surface while the
+ *   row is being dragged ([draggedListItemContainerColor]).
  * @param actions The trailing content of the row, which is the overflow button of the song's actions
  *   ([SongActionsButton]).
  */
-@OptIn(ExperimentalMaterial3ExpressiveApi::class, ExperimentalFoundationApi::class)
+@OptIn(ExperimentalFoundationApi::class)
 @Composable
 internal fun SongListItem(
     modifier: Modifier = Modifier,
@@ -131,18 +133,11 @@ internal fun SongListItem(
     key: String? = null,
     shouldShowChords: Boolean = true,
     labelsOnEverySong: CampfireViewModel.LabelsOnEverySong,
-    isBeingDragged: Boolean = false,
+    containerColor: Color = MaterialTheme.colorScheme.surface,
     onClick: () -> Unit,
     onLongClick: (() -> Unit)? = null,
     actions: (@Composable () -> Unit)? = null,
 ) {
-    // A progress value instead of an animated color, so that the row follows the color scheme immediately while it
-    // is animating between the light and the dark theme (a color animation would chase it and trail behind).
-    val dragProgress by animateFloatAsState(
-        if (isBeingDragged) 1f else 0f,
-        MaterialTheme.motionScheme.defaultEffectsSpec(),
-    )
-    val containerColor = lerp(MaterialTheme.colorScheme.surface, MaterialTheme.colorScheme.surfaceContainerHigh, dragProgress)
     // Worked out before the row is laid out rather than inside it, because it is also one of the things that decide
     // whether the row has a second line at all: a song written in the app carries no artist, no language and no tag,
     // and its key is then the only thing there is to put under the title.
@@ -244,6 +239,25 @@ internal fun SongListItem(
             }
         },
     )
+}
+
+/**
+ * The container color of a row that can be dragged: the surface, tinted for as long as the row is off the list.
+ *
+ * A progress value instead of an animated color, so that the row follows the color scheme immediately while it
+ * is animating between the light and the dark theme (a color animation would chase it and trail behind). It is
+ * asked for by the list whose rows are dragged rather than worked out by every [SongListItem], because the
+ * animation behind it is a coroutine that runs for as long as the row is composed, and the song list has
+ * thousands of rows and no drag.
+ */
+@OptIn(ExperimentalMaterial3ExpressiveApi::class)
+@Composable
+internal fun draggedListItemContainerColor(isBeingDragged: Boolean): Color {
+    val dragProgress by animateFloatAsState(
+        if (isBeingDragged) 1f else 0f,
+        MaterialTheme.motionScheme.defaultEffectsSpec(),
+    )
+    return lerp(MaterialTheme.colorScheme.surface, MaterialTheme.colorScheme.surfaceContainerHigh, dragProgress)
 }
 
 /**

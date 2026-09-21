@@ -112,11 +112,15 @@ internal fun SongActionsButton(
     lockedSetlistFileName: String?,
 ) {
     val filePicker = LocalFilePicker.current
-    val songFileNamesInSetlists by viewModel.songFileNamesInSetlists.collectAsStateWithLifecycle()
     ActionsMenu(
         modifier = modifier,
         state = state,
     ) { dismiss ->
+        // Collected here rather than by the button: this content is only composed while the menu is open, and the
+        // button is in every row of the song list, where a collection of its own is a coroutine and a lifecycle
+        // observer per row for a value none of them draws. The state is kept up to date by the view model whether
+        // or not anybody collects it, so the menu opens on the right star rather than correcting itself a frame in.
+        val songFileNamesInSetlists by viewModel.songFileNamesInSetlists.collectAsStateWithLifecycle()
         // Each entry closes the menu before it acts, so that it is gone by the time the dialog or the picker it
         // opens is on the screen.
         ActionsMenuItem(

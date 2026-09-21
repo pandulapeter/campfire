@@ -83,6 +83,7 @@ import com.pandulapeter.campfire.presentation.ui.components.SongActionsButton
 import com.pandulapeter.campfire.presentation.ui.components.TopLevelScreenLayout
 import com.pandulapeter.campfire.presentation.ui.components.allowsNewItemMenu
 import com.pandulapeter.campfire.presentation.ui.components.besideSidePanel
+import com.pandulapeter.campfire.presentation.ui.components.draggedListItemContainerColor
 import com.pandulapeter.campfire.presentation.ui.components.hasRoomForSidePanel
 import com.pandulapeter.campfire.presentation.ui.components.listItemAnimation
 import com.pandulapeter.campfire.presentation.ui.components.rememberHasLoadedLibrary
@@ -411,7 +412,7 @@ private fun SetlistList(
                                         ),
                                         shouldShowChords = shouldShowChords,
                                         labelsOnEverySong = labelsOnEverySong,
-                                        isBeingDragged = isBeingDragged,
+                                        containerColor = draggedListItemContainerColor(isBeingDragged),
                                         onClick = { viewModel.openSongInSetlist(setlistWithSongs, entry.song) },
                                         actions = actions,
                                     )
