@@ -13,6 +13,7 @@ import androidx.compose.ui.window.ComposeUIViewController
 import com.pandulapeter.campfire.data.model.domain.UserPreferences
 import com.pandulapeter.campfire.di.startCampfireDependencyGraph
 import com.pandulapeter.campfire.domain.api.useCases.CancelSynchronizationUseCase
+import com.pandulapeter.campfire.domain.api.useCases.GetSyncStateUseCase
 import com.pandulapeter.campfire.presentation.ui.CampfireIosApp
 import platform.Foundation.NSURL
 import platform.UIKit.UIApplication
@@ -25,6 +26,17 @@ import org.koin.mp.KoinPlatform
 private val koinApplication by lazy { startCampfireDependencyGraph() }
 
 /**
+ * One per process, like the run it follows: a second one would watch the same state and hold a background task of its
+ * own. Created after Koin, which the state comes from.
+ */
+private val syncNotifier by lazy {
+    IosSyncNotifier(
+        syncState = KoinPlatform.getKoin().get<GetSyncStateUseCase>().invoke(),
+        onBackgroundTimeExpired = { KoinPlatform.getKoin().get<CancelSynchronizationUseCase>().invoke() },
+    )
+}
+
+/**
  * Entry point called from Swift. Returns the view controller hosting the shared Compose UI.
  */
 @Suppress("unused", "FunctionName")
@@ -32,9 +44,6 @@ fun CampfireViewController(): UIViewController {
     koinApplication
     // The picker needs something to present itself from, which is the controller being created here.
     var controller: UIViewController? = null
-    val syncNotifier = IosSyncNotifier(
-        onBackgroundTimeExpired = { KoinPlatform.getKoin().get<CancelSynchronizationUseCase>().invoke() },
-    )
     val filePicker = IosFilePicker { requireNotNull(controller) }
     return ComposeUIViewController {
         CampfireIosApp(

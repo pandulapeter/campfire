@@ -37,8 +37,9 @@ fun interface SyncNotifier {
  * [body] is what to show right now and is enough on its own for a platform that only ever shows what it is handed.
  * [preparingBody] and [progressBodyFormat] are the same sentence taken apart, for a platform whose notification
  * outlives the UI that resolved these strings: on Android the run and its notification carry on after the app is
- * swiped away, and from that point there is no composition left to send a new [body] as the count goes up. Handing
- * the service the pieces lets it keep the text moving on its own, still in the language chosen in the app.
+ * swiped away, and on iOS the composition stops as soon as the app is in the background, so from that point there is
+ * nothing left to send a new [body] as the count goes up. Handing the shell the pieces lets it keep the text moving on
+ * its own, still in the language chosen in the app.
  *
  * @param body What the run is doing right now, which changes as it goes.
  * @param preparingBody What to say before there is anything to count.
