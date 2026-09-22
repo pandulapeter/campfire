@@ -9,6 +9,7 @@
  */
 package com.pandulapeter.campfire.data.repository.implementation.sync
 
+import com.pandulapeter.campfire.data.model.domain.ImportLimits
 import com.pandulapeter.campfire.data.model.domain.LibraryFileKind
 import com.pandulapeter.campfire.data.model.domain.SyncAccount
 import com.pandulapeter.campfire.data.model.domain.SyncDeletionPolicy
@@ -198,6 +199,45 @@ class SyncEngineTest {
 
         assertContentEquals(mine, local.files[song(2)])
         assertContentEquals(theirs, local.files[SyncKey(kind = LibraryFileKind.SONG, name = "song_2 (2).cho")])
+    }
+
+    @Test
+    fun `a local file too large to sync is neither uploaded nor taken for a deletion`() = runTest {
+        val synced = "Synced".encodeToByteArray()
+        val local = FakeLibraryFileLocalSource(files = mapOf(song(1) to tooLarge()))
+        var uploads = 0
+        val provider = FakeSyncProvider(files = mapOf(song(1) to synced), onUpload = { uploads++ })
+
+        val result = SyncEngine(local).synchronize(
+            provider = provider,
+            document = indexOf(song(1) to synced),
+            accountId = ACCOUNT_ID,
+            onProgress = {},
+            onIndexChanged = {},
+            deletionPolicy = SyncDeletionPolicy.ASK,
+        )
+
+        assertEquals(0, uploads)
+        assertContentEquals(synced, provider.files.getValue(song(1)).first)
+        assertEquals(listOf(song(1).name), assertIs<SyncEngine.Result.Completed>(result).summary.failed)
+    }
+
+    @Test
+    fun `a local file too large to sync is not uploaded when it is new`() = runTest {
+        val local = FakeLibraryFileLocalSource(files = mapOf(song(1) to tooLarge()))
+        val provider = FakeSyncProvider()
+
+        val result = SyncEngine(local).synchronize(
+            provider = provider,
+            document = SyncIndexDocument(),
+            accountId = ACCOUNT_ID,
+            onProgress = {},
+            onIndexChanged = {},
+            deletionPolicy = SyncDeletionPolicy.ASK,
+        )
+
+        assertTrue(provider.files.isEmpty())
+        assertEquals(listOf(song(1).name), assertIs<SyncEngine.Result.Completed>(result).summary.failed)
     }
 
     @Test
@@ -810,6 +850,9 @@ class SyncEngineTest {
         fun song(name: String) = SyncKey(kind = LibraryFileKind.SONG, name = "$name.cho")
 
         fun foreign(name: String) = SyncKey(kind = LibraryFileKind.SONG, name = name)
+
+        /** A file one byte over what a run reads, put into the library from outside the app. */
+        fun tooLarge() = ByteArray((ImportLimits.MAX_TEXT_FILE_SIZE + 1).toInt())
 
         fun librarySongs(count: Int) = (1..count).associate { song(it) to "Song $it".encodeToByteArray() }
 

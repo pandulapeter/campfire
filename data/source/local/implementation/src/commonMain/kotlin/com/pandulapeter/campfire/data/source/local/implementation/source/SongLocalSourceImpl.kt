@@ -11,6 +11,7 @@ package com.pandulapeter.campfire.data.source.local.implementation.source
 
 import com.pandulapeter.campfire.chordpro.ChordProParser
 import com.pandulapeter.campfire.chordpro.model.displayTitle
+import com.pandulapeter.campfire.data.model.domain.ImportLimits
 import com.pandulapeter.campfire.data.model.domain.LibraryFiles
 import com.pandulapeter.campfire.data.model.domain.Song
 import com.pandulapeter.campfire.data.model.domain.SongContent
@@ -47,7 +48,8 @@ internal class SongLocalSourceImpl(
      * would otherwise have every one of its files open at once - and it is also what the screen is fed with, so that
      * a long scan fills the list as it goes instead of showing nothing until the last file is parsed.
      *
-     * One unreadable file must not empty the whole list, so a failure skips that song instead of propagating.
+     * One unreadable file, or one far too large to be a song (put there from outside the app, which is the only way one
+     * gets in), must not empty the whole list, so a failure skips that song instead of propagating.
      */
     override suspend fun loadSongs(onProgress: (List<Song>) -> Unit): List<Song> = withContext(Dispatchers.Default) {
         val songs = mutableListOf<Song>()
@@ -105,8 +107,13 @@ internal class SongLocalSourceImpl(
     override suspend fun exists(fileName: String) = fileStorage.exists(StorageDirectory.SONGS, fileName)
 
     private suspend fun StoredFileInfo.readSong(): Song? = try {
-        fileStorage.readText(StorageDirectory.SONGS, name)?.let { text ->
-            toSong(ChordProParser.summarize(text))
+        if (size > ImportLimits.MAX_TEXT_FILE_SIZE) {
+            println("Skipped the song \"$name\": $size bytes is more than a song file can hold.")
+            null
+        } else {
+            fileStorage.readText(StorageDirectory.SONGS, name)?.let { text ->
+                toSong(ChordProParser.summarize(text))
+            }
         }
     } catch (exception: CancellationException) {
         // A library scan that was cancelled is not a library of unreadable songs.

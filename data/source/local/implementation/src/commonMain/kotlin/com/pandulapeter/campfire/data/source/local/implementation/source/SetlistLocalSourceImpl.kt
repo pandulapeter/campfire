@@ -9,8 +9,10 @@
  */
 package com.pandulapeter.campfire.data.source.local.implementation.source
 
+import com.pandulapeter.campfire.data.model.domain.ImportLimits
 import com.pandulapeter.campfire.data.model.domain.LibraryFiles
 import com.pandulapeter.campfire.data.model.domain.Setlist
+import com.pandulapeter.campfire.data.source.local.api.LibraryStorageException
 import com.pandulapeter.campfire.data.source.local.api.SetlistLocalSource
 import com.pandulapeter.campfire.data.source.local.implementation.mapper.toDocument
 import com.pandulapeter.campfire.data.source.local.implementation.mapper.toModel
@@ -38,8 +40,15 @@ internal class SetlistLocalSourceImpl(
             .filter { LibraryFiles.isSetlistFileName(it.name) }
             .mapNotNull { file ->
                 try {
-                    fileStorage.readText(StorageDirectory.SETLISTS, file.name)
-                        ?.let { json.decodeFromString<SetlistDocument>(it).toModel(file.name) }
+                    if (file.size > ImportLimits.MAX_TEXT_FILE_SIZE) {
+                        // Nothing the app writes is that large, so it was put there from outside, and reading it whole
+                        // is what would take the app down.
+                        println("Skipped the setlist \"${file.name}\": ${file.size} bytes is more than a setlist can hold.")
+                        null
+                    } else {
+                        fileStorage.readText(StorageDirectory.SETLISTS, file.name)
+                            ?.let { json.decodeFromString<SetlistDocument>(it).toModel(file.name) }
+                    }
                 } catch (exception: CancellationException) {
                     throw exception
                 } catch (exception: Exception) {
@@ -51,6 +60,8 @@ internal class SetlistLocalSourceImpl(
     }
 
     override suspend fun loadSetlist(fileName: String): Setlist? = withContext(Dispatchers.Default) {
+        val size = fileStorage.info(StorageDirectory.SETLISTS, fileName)?.size ?: return@withContext null
+        if (size > ImportLimits.MAX_TEXT_FILE_SIZE) throw LibraryStorageException("\"$fileName\" is too large to be a setlist.")
         fileStorage.readText(StorageDirectory.SETLISTS, fileName)
             ?.let { json.decodeFromString<SetlistDocument>(it).toModel(fileName) }
     }

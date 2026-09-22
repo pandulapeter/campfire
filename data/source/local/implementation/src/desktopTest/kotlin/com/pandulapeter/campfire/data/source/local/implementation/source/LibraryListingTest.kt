@@ -9,6 +9,7 @@
  */
 package com.pandulapeter.campfire.data.source.local.implementation.source
 
+import com.pandulapeter.campfire.data.model.domain.ImportLimits
 import com.pandulapeter.campfire.data.model.domain.Setlist
 import com.pandulapeter.campfire.data.source.local.implementation.storage.file.JvmFileStorage
 import com.pandulapeter.campfire.data.source.local.implementation.storage.file.StorageDirectory
@@ -56,6 +57,27 @@ class LibraryListingTest {
 
         assertEquals(listOf("a.cho", "summer.setlist.json"), files.map { it.name })
     }
+
+    @Test
+    fun `a song file larger than any song is left out of the scan`() = runBlocking {
+        writeSongs()
+        fileStorage.writeBytes(StorageDirectory.SONGS, "b.cho", tooLarge())
+
+        val songs = SongLocalSourceImpl(fileStorage).loadSongs {}
+
+        assertEquals(listOf("a.cho"), songs.map { it.fileName })
+    }
+
+    @Test
+    fun `a setlist file larger than any setlist is left out of the scan`() = runBlocking {
+        val setlistLocalSource = SetlistLocalSourceImpl(fileStorage)
+        writeSetlists(setlistLocalSource)
+        fileStorage.writeBytes(StorageDirectory.SETLISTS, "winter.setlist.json", tooLarge())
+
+        assertEquals(listOf("summer.setlist.json"), setlistLocalSource.loadSetlists().map { it.fileName })
+    }
+
+    private fun tooLarge() = ByteArray((ImportLimits.MAX_TEXT_FILE_SIZE + 1).toInt()) { 'x'.code.toByte() }
 
     private suspend fun writeSongs() {
         fileStorage.writeText(StorageDirectory.SONGS, "a.cho", "{title: A}\n")

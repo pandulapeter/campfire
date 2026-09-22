@@ -94,7 +94,10 @@ internal class SyncEngine(
             onProgress(SyncProgress())
             val listed = provider.list().files
             index = withoutForeignEntries(index = index, listed = listed)
-            val local = readLocalStates()
+            val localListing = readLocalStates()
+            val local = localListing.states
+            val tooLarge = localListing.tooLarge
+            if (pass == 0) summary = summary.plus(SyncSummary(failed = tooLarge.map { it.name }))
             // Names a service that ignores case takes for one file. Only ever consulted once such a service has refused
             // one of them, so a service with exact names never notices.
             val caseCollisions = local.groupBy { it.key.folded() }.values
@@ -102,7 +105,9 @@ internal class SyncEngine(
                 .flatten()
                 .mapTo(mutableSetOf()) { it.key }
             val remote = foldRemoteNamesOntoLocal(
-                local = local,
+                // The files too large to read are folded onto as well, so that a remote spelling of one of them is
+                // recognized as that file and left out with it rather than planned as a download.
+                local = local + tooLarge.map { LocalFileState(key = it, hash = "") },
                 // The rule the local listing applies, applied here rather than in a provider so that every provider gets
                 // it: a file listed on one side only is a deletion as far as the planner can tell.
                 remote = listed.filter { it.kind.matches(it.name) }.map {
@@ -113,7 +118,12 @@ internal class SyncEngine(
                         size = it.size,
                     )
                 },
-            )
+            ).filterNot { it.key in tooLarge }
+            // A file too large to read is left out on both sides, its index entry included: with the entry kept, the
+            // planner would see a file gone here and unchanged there, and delete the remote copy. Without one, the day
+            // the file is small enough again it is on both sides with nothing to say which is newer, which the planner
+            // settles by content.
+            index = index - tooLarge
             if (deletionPolicy == SyncDeletionPolicy.KEEP_AND_UPLOAD) {
                 // Forgetting that the last run saw these files is what makes them new on this device: a file that is
                 // here, is not there and has no index entry is planned as an upload.
@@ -156,11 +166,17 @@ internal class SyncEngine(
         )
     }
 
-    /** Reading and hashing every file is the slow part of the preparation, so the files are read in parallel. */
-    private suspend fun readLocalStates(): List<LocalFileState> = coroutineScope {
+    /**
+     * Reading and hashing every file is the slow part of the preparation, so the files are read in parallel. A file
+     * over [MAXIMUM_FILE_SIZE] is not read at all: nothing the app writes is that large, so it was put into the folder
+     * from outside, and it is no song any other device would download.
+     */
+    private suspend fun readLocalStates(): LocalListing = coroutineScope {
+        val (tooLarge, files) = libraryFileLocalSource.loadLibraryFiles().partition { it.size > MAXIMUM_FILE_SIZE }
+        tooLarge.forEach { println("Skipped \"${it.name}\": ${it.size} bytes is more than a library file can hold.") }
         // In batches for the same reason as the song scan in SongLocalSourceImpl: unbounded, a large library is
         // thousands of open handles and all of its bytes in memory at once.
-        libraryFileLocalSource.loadLibraryFiles()
+        val states = files
             .chunked(READ_BATCH_SIZE)
             .flatMap { batch ->
                 batch.map { file ->
@@ -172,7 +188,11 @@ internal class SyncEngine(
                 }.awaitAll()
             }
             .filterNotNull()
+        LocalListing(states = states, tooLarge = tooLarge.mapTo(mutableSetOf()) { SyncKey(kind = it.kind, name = it.name) })
     }
+
+    /** What [readLocalStates] found: the files it read, and the ones it left alone for their size. */
+    private class LocalListing(val states: List<LocalFileState>, val tooLarge: Set<SyncKey>)
 
     /**
      * Every operation is at least one request of its own, and they used to be run one after another - which made a
@@ -474,7 +494,7 @@ internal class SyncEngine(
         remoteFiles: Map<SyncKey, RemoteFileState>,
     ): ByteArray {
         val size = remoteFiles[key]?.size ?: 0
-        if (size > MAXIMUM_REMOTE_FILE_SIZE) throw RemoteFileTooLargeException(size)
+        if (size > MAXIMUM_FILE_SIZE) throw RemoteFileTooLargeException(size)
         return provider.download(key.kind, key.name)
     }
 
@@ -561,7 +581,7 @@ internal class SyncEngine(
     )
 
     private class RemoteFileTooLargeException(size: Long) :
-        Exception("The remote file is $size bytes, which is more than the $MAXIMUM_REMOTE_FILE_SIZE a run downloads.")
+        Exception("The remote file is $size bytes, which is more than the $MAXIMUM_FILE_SIZE a run downloads.")
 
     private data class PassOutcome(
         val summary: SyncSummary,
@@ -579,11 +599,11 @@ internal class SyncEngine(
         const val READ_BATCH_SIZE = 64
 
         /**
-         * The largest remote file a run downloads: what the largest song an import reads comes to, so that a song that
-         * could be brought into one library can reach the others. Generous for ChordPro text, and small enough that
-         * [CONCURRENT_TRANSFERS] of them in memory at once do not trouble a phone.
+         * The largest file a run reads or downloads: what an import accepts, since a larger one is not a song and no
+         * other device would take it either. Generous for ChordPro text, and small enough that [CONCURRENT_TRANSFERS]
+         * of them in memory at once do not trouble a phone.
          */
-        const val MAXIMUM_REMOTE_FILE_SIZE = ImportLimits.MAX_TEXT_FILE_SIZE
+        const val MAXIMUM_FILE_SIZE = ImportLimits.MAX_TEXT_FILE_SIZE
 
         /**
          * Chosen for the round trip rather than for the CPU: the transfers are small text files and almost all of
