@@ -108,7 +108,7 @@ object ChordProParser {
     /** The names one line of the body hands to a chord rewrite, by the environment it stands in. */
     private fun writtenChordNames(rawLine: String, trimmedLine: String, environment: String?) = when (environment) {
         TAB -> ChordProTabTransposer.chordNames(listOf(rawLine))
-        GRID -> ChordProSyntax.parseGridTokens(trimmedLine).filterIsInstance<GridToken.Chord>().map { it.name }
+        GRID -> ChordProSyntax.parseGridTokens(trimmedLine).filterIsInstance<GridToken.Chord>().flatMap { ChordProSyntax.cellChords(it.name) }
         else -> parseLyrics(rawLine).chords.filter { !it.isAnnotation }.map { it.name }
     }
 

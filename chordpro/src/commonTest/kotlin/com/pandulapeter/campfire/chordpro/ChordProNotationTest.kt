@@ -40,6 +40,12 @@ class ChordProNotationTest {
         assertTrue(ChordProNotation.isGermanNotated(ChordProParser.parseAsWritten("[H7]la [B]la")))
         assertTrue(ChordProNotation.isGermanNotated(ChordProParser.parseAsWritten("{key: B}\n[C/H]la")))
         assertFalse(ChordProNotation.isGermanNotated(ChordProParser.parseAsWritten("[Hello]la [B]la")))
+        assertTrue(ChordProNotation.isGermanNotated(ChordProParser.parseAsWritten("{sog}\n| C~H |\n{eog}")))
+    }
+
+    @Test
+    fun `every chord of a grid cell is respelled`() {
+        assertEquals(listOf("H~B"), ChordProNotation.toGerman(ChordProParser.parse("{sog}\n| B~Bb |\n{eog}")).chordNames())
     }
 
     @Test

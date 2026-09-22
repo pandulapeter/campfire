@@ -395,6 +395,40 @@ class ChordProParserTest {
     }
 
     @Test
+    fun `the words before the first bar of a grid line are its margin label`() {
+        assertEquals(
+            listOf(GridToken.Text("A"), GridToken.Bar("||"), GridToken.Chord("G7"), GridToken.Beat, GridToken.Bar("|")),
+            ChordProSyntax.parseGridTokens("A    || G7 . |"),
+        )
+        assertEquals(
+            listOf(GridToken.Text("Coda"), GridToken.Bar("|"), GridToken.Chord("D7"), GridToken.Bar("|.")),
+            ChordProSyntax.parseGridTokens("Coda | D7 |."),
+        )
+        assertEquals(listOf(GridToken.Chord("Am"), GridToken.Chord("C")), ChordProSyntax.parseGridTokens("Am C"))
+    }
+
+    @Test
+    fun `repeats voltas and chord positions are not chords`() {
+        assertEquals(
+            listOf(
+                GridToken.Bar("|:"),
+                GridToken.Chord("C7"),
+                GridToken.Text("/"),
+                GridToken.Bar(":|:"),
+                GridToken.Chord("G7"),
+                GridToken.Beat,
+                GridToken.Bar(":|2>"),
+                GridToken.Chord("D"),
+                GridToken.Bar("|"),
+            ),
+            ChordProSyntax.parseGridTokens("|: C7 / :|: G7 . :|2> D |"),
+        )
+        val voltas = ChordProSyntax.parseGridTokens("|1 C :|2 D |")
+        assertEquals(GridToken.Bar("|1"), voltas.first())
+        assertTrue(GridToken.Bar(":|2") in voltas)
+    }
+
+    @Test
     fun `annotations are told apart from chords and empty brackets are dropped`() {
         val section = ChordProParser.parse("[Am]a []b [*hold]c").blocks.single() as ChordProBlock.Section
         val line = section.lines.single() as ChordProLine.Lyrics

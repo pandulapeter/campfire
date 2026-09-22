@@ -22,9 +22,12 @@ internal object ChordProSyntax {
     private val labelAttributeRegex = Regex("(?:^|\\s)label\\s*=\\s*(?:\"([^\"]*)\"|'([^']*)')")
     private val attributeRegex = Regex("\\s*[A-Za-z_][A-Za-z0-9_-]*\\s*=\\s*(?:\"[^\"]*\"|'[^']*')")
     private val whitespaceRegex = Regex("\\s+")
+    private val barLines = setOf("|", "||", "|.", "|:", ":|", ":|:")
+    private val voltaRegex = Regex(":?\\|\\d+>?")
 
     const val START_OF_PREFIX = "start_of_"
     const val END_OF_PREFIX = "end_of_"
+    const val GRID_CELL_CHORD_SEPARATOR = "~"
 
     /** The name of the `{tag}` directive, which is also the `{meta}` key that spells the same thing. */
     const val TAG_NAME = "tag"
@@ -399,22 +402,36 @@ internal object ChordProSyntax {
     fun endOfEnvironment(name: String) = endShortNames[name]
         ?: name.takeIf { it.startsWith(END_OF_PREFIX) && it.length > END_OF_PREFIX.length }?.substring(END_OF_PREFIX.length)
 
-    /** Splits a grid line into tokens: everything after the last bar token becomes free text. */
+    /**
+     * Splits a grid line into tokens. ChordPro puts whatever comes before the first bar line in the left margin and
+     * whatever follows the last one in the right margin, so on a line that has a bar both are text: a margin label
+     * such as `A` or `Coda` names a part of the song, and taking it for a chord would transpose it. A `/` marks where a
+     * chord is played and is not one either.
+     */
     fun parseGridTokens(trimmedLine: String): List<GridToken> {
         val words = trimmedLine.split(whitespaceRegex).filter { it.isNotEmpty() }
+        val firstBarIndex = words.indexOfFirst { isBar(it) }
         val lastBarIndex = words.indexOfLast { isBar(it) }
         return words.mapIndexed { index, word ->
             when {
-                lastBarIndex >= 0 && index > lastBarIndex -> GridToken.Text(word)
+                firstBarIndex >= 0 && (index < firstBarIndex || index > lastBarIndex) -> GridToken.Text(word)
                 isBar(word) -> GridToken.Bar(word)
                 word == "." -> GridToken.Beat
                 word == "%" || word == "%%" -> GridToken.Repeat(word)
+                word == "/" -> GridToken.Text(word)
                 else -> GridToken.Chord(word)
             }
         }
     }
 
-    fun isBar(word: String) = word == "|" || word == "||" || word == "|:" || word == ":|" || word == "|."
+    /** The bar lines of a grid, the repeats and the voltas (`|1`, `:|2`, `:|2>`) included. */
+    fun isBar(word: String) = word in barLines || voltaRegex.matches(word)
+
+    /**
+     * The chords of one grid cell: ChordPro writes several chords into a cell by joining them with a `~`, and each
+     * of them is a chord of its own to transpose or respell.
+     */
+    fun cellChords(cell: String) = cell.split(GRID_CELL_CHORD_SEPARATOR)
 
     /**
      * A tablature line: enough dashes to be a staff, and made mostly of the characters a staff is made of. The letters

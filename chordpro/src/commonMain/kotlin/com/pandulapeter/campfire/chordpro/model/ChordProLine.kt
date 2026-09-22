@@ -40,13 +40,13 @@ sealed interface ChordProLine {
 
 sealed interface GridToken {
 
-    data class Bar(val text: String) : GridToken // "|", "||", "|:", ":|", "|."
+    data class Bar(val text: String) : GridToken // "|", "||", "|.", "|:", ":|", ":|:", voltas such as "|1" and ":|2>"
 
-    data class Chord(val name: String) : GridToken
+    data class Chord(val name: String) : GridToken // "Am", or "C~G" for several chords in one cell
 
     data object Beat : GridToken // "."
 
     data class Repeat(val text: String) : GridToken // "%" (repeat previous cell), "%%"
 
-    data class Text(val text: String) : GridToken // anything else, e.g. a comment after the last bar
+    data class Text(val text: String) : GridToken // a margin label before the first bar, a comment after the last one, or a "/" chord position
 }

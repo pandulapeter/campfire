@@ -157,6 +157,21 @@ class ChordProTransposerTest {
     }
 
     @Test
+    fun `a grid keeps its margin labels and moves every chord of a cell`() {
+        val text = "{start_of_grid}\nA    || G7 . | C~A . |\nCoda | D7 |.\n{end_of_grid}"
+
+        assertEquals(
+            "{start_of_grid}\nA    || A7 . | D~B . |\nCoda | E7 |.\n{end_of_grid}",
+            ChordProTransposer.transposeText(text, 2, preferFlats = false),
+        )
+        val tokens = ChordProTransposer.transpose(ChordProParser.parse(text), 2, preferFlats = false).blocks
+            .filterIsInstance<ChordProBlock.Section>().flatMap { it.lines }
+            .filterIsInstance<ChordProLine.Grid>().flatMap { it.tokens }
+        assertTrue(GridToken.Chord("D~B") in tokens)
+        assertTrue(GridToken.Text("Coda") in tokens)
+    }
+
+    @Test
     fun `a modulation does not decide the spelling of the whole song`() {
         val song = ChordProTransposer.transpose(ChordProParser.parse("{key: F}\n[C]a\n{key: A}\n[E]b"), 1)
 

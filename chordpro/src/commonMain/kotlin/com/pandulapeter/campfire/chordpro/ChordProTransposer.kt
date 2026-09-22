@@ -71,7 +71,7 @@ object ChordProTransposer {
         song.blocks.asSequence().filterIsInstance<ChordProBlock.Section>().flatMap { it.lines }.forEach { line ->
             when (line) {
                 is ChordProLine.Lyrics -> yieldAll(line.chords.filter { !it.isAnnotation }.map { it.name })
-                is ChordProLine.Grid -> yieldAll(line.tokens.filterIsInstance<GridToken.Chord>().map { it.name })
+                is ChordProLine.Grid -> yieldAll(line.tokens.filterIsInstance<GridToken.Chord>().flatMap { ChordProSyntax.cellChords(it.name) })
                 is ChordProLine.Tab -> yieldAll(ChordProTabTransposer.chordNames(listOf(line.text)))
                 ChordProLine.Blank -> Unit
             }
@@ -289,7 +289,11 @@ object ChordProTransposer {
 
         is ChordProLine.Grid -> line.copy(
             tokens = line.tokens.map { token ->
-                if (token is GridToken.Chord) GridToken.Chord(rename(token.name)) else token
+                if (token is GridToken.Chord) {
+                    GridToken.Chord(ChordProSyntax.cellChords(token.name).joinToString(ChordProSyntax.GRID_CELL_CHORD_SEPARATOR, transform = rename))
+                } else {
+                    token
+                }
             }
         )
 
@@ -331,15 +335,18 @@ object ChordProTransposer {
 
     private fun transposeGridLine(rawLine: String, trimmedLine: String, rename: (String) -> String): String {
         val matches = tokenRegex.findAll(trimmedLine).toList()
-        val lastBarIndex = matches.indexOfLast { ChordProSyntax.isBar(it.value) }
+        val tokens = ChordProSyntax.parseGridTokens(trimmedLine)
         val body = buildString {
             var consumedUntil = 0
             matches.forEachIndexed { index, match ->
-                val word = match.value
-                val isChord = (lastBarIndex < 0 || index <= lastBarIndex) &&
-                        !ChordProSyntax.isBar(word) && word != BEAT && word != REPEAT && word != DOUBLE_REPEAT
                 append(trimmedLine, consumedUntil, match.range.first)
-                append(if (isChord) rename(word) else word)
+                append(
+                    if (tokens[index] is GridToken.Chord) {
+                        ChordProSyntax.cellChords(match.value).joinToString(ChordProSyntax.GRID_CELL_CHORD_SEPARATOR, transform = rename)
+                    } else {
+                        match.value
+                    }
+                )
                 consumedUntil = match.range.last + 1
             }
             append(trimmedLine, consumedUntil, trimmedLine.length)
@@ -367,9 +374,6 @@ object ChordProTransposer {
     private const val SOURCE_COMMENT = "#"
     private const val ANNOTATION_MARKER = "*"
     private const val KEY = "key"
-    private const val BEAT = "."
-    private const val REPEAT = "%"
-    private const val DOUBLE_REPEAT = "%%"
     private const val TAB = "tab"
     private const val GRID = "grid"
     private const val BRACKET_OPEN = '['

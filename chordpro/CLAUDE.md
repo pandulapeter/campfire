@@ -30,7 +30,9 @@ in `:domain:*`. `:data:source:local:implementation` uses it directly for the met
   where the parser keeps it, and the transposer makes one octave decision for it on the model as it does in the text.
   A `{comment}`, a break or a `{chorus}` inside an environment cuts the section in two the way it does anywhere else,
   and the environment carries on in the second half; a comment there is never read as a Campfire 3 heading. The two
-  halves of a tab are runs of their own, so the text transposition moves them as two fingerboards as well.
+  halves of a tab are runs of their own, so the text transposition moves them as two fingerboards as well. A grid line
+  keeps what comes before its first bar and after its last one as text, the margins ChordPro puts labels and comments
+  in, and a cell may hold several chords joined with `~`, each transposed on its own.
 - `ChordProSyntax` — the shared low-level rules (the directive and chord regexes, `chordNameRegex` for "is this whole
   word a chord and not a word that starts with a letter", long/short directive names, a value separated from a
   known directive name by a colon or by whitespace alone (the spec allows both, and a line in braces whose name the app
