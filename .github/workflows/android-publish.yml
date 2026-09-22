@@ -86,10 +86,18 @@ jobs:
       - name: Generate release notes
         env:
           RELEASE_NOTES_OVERRIDE: ${{ inputs.release_notes }}
+          # release.yml passes the release's description as it is, and a backslash in prose is a character: %b would
+          # rewrite \t and \n and, on \c, stop writing the text altogether - a Play listing quietly cut in half. Only
+          # the dispatch form has no way to type a real line break, so only there are escapes expanded.
+          EXPAND_ESCAPES: ${{ github.event_name == 'workflow_dispatch' }}
         run: |
           mkdir -p whatsnew
           if [ -n "$RELEASE_NOTES_OVERRIDE" ]; then
-            printf '%b\n' "$RELEASE_NOTES_OVERRIDE" > release_notes.txt
+            if [ "$EXPAND_ESCAPES" = 'true' ]; then
+              printf '%b\n' "$RELEASE_NOTES_OVERRIDE" > release_notes.txt
+            else
+              printf '%s\n' "$RELEASE_NOTES_OVERRIDE" > release_notes.txt
+            fi
           else
             # Since the release before this one, which is the newest tag that is not on this very commit: that holds
             # for a run on a release's tag and for one on the branch ahead of it alike.
