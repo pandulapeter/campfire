@@ -10,21 +10,24 @@
 # Campfire
 *Your songbook, on every screen you own.*
 
+<img src="documentation/screenshots/01.png" width="30%" /> <img src="documentation/screenshots/02.png" width="30%" />
+<img src="documentation/screenshots/03.png" width="30%" /> <img src="documentation/screenshots/04.png" width="30%" />
+<img src="documentation/screenshots/05.png" width="30%" /> <img src="documentation/screenshots/06.png" width="30%" />
+
 Campfire keeps your lyrics and chords in plain [ChordPro](https://www.chordpro.org) files and shows them the way you
 want to read them while playing: chords above the syllables they belong to, as few and as wide columns as the screen
 allows, and the text as large as you need it. Write songs in the built-in editor, transpose them into your key, put
 them into setlists, and read them on your phone, your tablet, your laptop or in a browser. It comes with no songs of
 its own — it is a home for yours.
 
-It works **offline**, there is no account to make, and there is no server of mine anywhere. It is free, and there are
-no ads.
+It works **offline**, there is no account to make, and there is no server of mine anywhere: songs are synced across your
+devices using your Dropbox account. Campfire is completely free, open-source, and there are no ads.
+
+### Download
 
 [<img src="documentation/images/badge_android.png" alt="Download for Android" height="32px" />](https://play.google.com/store/apps/details?id=com.pandulapeter.campfire)
 [<img src="documentation/images/badge_linux.png" alt="Download for Linux" height="32px" />](https://github.com/pandulapeter/campfire/releases/latest)
 [<img src="documentation/images/badge_web.png" alt="Open in browser" height="32px" />](https://pandulapeter.com/campfire)
-
-The Linux build is a `.deb` package for amd64 and arm64, attached to every
-[release](https://github.com/pandulapeter/campfire/releases/latest).
 
 **Coming soon** to the App Store, the Mac App Store and the Microsoft Store:
 
@@ -40,18 +43,6 @@ they are:
 - **Windows** (`.msi`): SmartScreen warns about an unknown publisher; *More info → Run anyway* gets past it.
 - **iOS** (`.ipa`): cannot be installed as it is. It is the file a sideloading tool such as
   [AltStore](https://altstore.io) or [Sideloadly](https://sideloadly.io) signs with your own Apple ID.
-
-The Android `.apk` on the same page is the file Google Play gets, under the same signature.
-
-### Screenshots
-
-*These are from Campfire 1.x, which had a built-in online song library. Version 4 is a rewrite and looks nothing like
-them any more — new screenshots are on the way.*
-
-<img src="documentation/screenshots/01.png" width="20%" /> <img src="documentation/screenshots/02.png" width="20%" />
-<img src="documentation/screenshots/03.png" width="20%" /> <img src="documentation/screenshots/04.png" width="20%" />
-<img src="documentation/screenshots/05.png" width="20%" /> <img src="documentation/screenshots/06.png" width="20%" />
-<img src="documentation/screenshots/07.png" width="20%" /> <img src="documentation/screenshots/08.png" width="20%" />
 
 ### What it does
 
@@ -104,7 +95,6 @@ an empty library.
 - Improve performance mode description
 - Rename setlist date sort, maybe expose a date for Setlists
 - Fix Songs screen async race animation issues
-- Update the screenshots in the Readme
 - Improve code coverage
 - Review architecture / code quality
 
