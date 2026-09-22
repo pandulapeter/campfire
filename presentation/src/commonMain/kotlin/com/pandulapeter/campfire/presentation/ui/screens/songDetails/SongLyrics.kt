@@ -15,6 +15,7 @@ import androidx.compose.foundation.ScrollState
 import androidx.compose.foundation.border
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.offset
@@ -652,29 +653,56 @@ private class SongTextMeasurements(
     private fun <T> HashMap<String, T>.bounded() = also { if (size >= MAX_MEASURED_TEXTS) clear() }
 }
 
-/** One `{start_of_grid}` line: bars, chords, beats and repeats laid out in a row, as a chord chart. */
+/**
+ * One `{start_of_grid}` line: bars, chords, beats and repeats laid out as a chord chart. A line wider than its column
+ * breaks between bars rather than being cut off, the way a staff of tablature is broken into systems, so every chord
+ * of it stays on the page at any text size.
+ */
 @Composable
 private fun SongGridLine(
     line: ChordProLine.Grid,
     lyricsStyle: TextStyle,
     chordStyle: TextStyle,
-) = Row(modifier = Modifier.fillMaxWidth()) {
-    line.tokens.forEach { token ->
-        val (text, style, color) = when (token) {
-            is GridToken.Bar -> Triple(token.text, lyricsStyle, MaterialTheme.colorScheme.outline)
-            is GridToken.Chord -> Triple(token.name, chordStyle, MaterialTheme.colorScheme.primary)
-            GridToken.Beat -> Triple(BEAT_SYMBOL, lyricsStyle, MaterialTheme.colorScheme.onSurfaceVariant)
-            is GridToken.Repeat -> Triple(token.text, lyricsStyle, MaterialTheme.colorScheme.onSurfaceVariant)
-            is GridToken.Text -> Triple(token.text, lyricsStyle, Color.Unspecified)
+) = FlowRow(modifier = Modifier.fillMaxWidth()) {
+    line.tokens.bars().forEach { bar ->
+        Row {
+            bar.forEach { token ->
+                val (text, style, color) = when (token) {
+                    is GridToken.Bar -> Triple(token.text, lyricsStyle, MaterialTheme.colorScheme.outline)
+                    is GridToken.Chord -> Triple(token.name, chordStyle, MaterialTheme.colorScheme.primary)
+                    GridToken.Beat -> Triple(BEAT_SYMBOL, lyricsStyle, MaterialTheme.colorScheme.onSurfaceVariant)
+                    is GridToken.Repeat -> Triple(token.text, lyricsStyle, MaterialTheme.colorScheme.onSurfaceVariant)
+                    is GridToken.Text -> Triple(token.text, lyricsStyle, Color.Unspecified)
+                }
+                Text(
+                    modifier = Modifier.padding(end = GRID_TOKEN_GAP),
+                    text = text,
+                    style = style,
+                    softWrap = false,
+                    color = color,
+                )
+            }
         }
-        Text(
-            modifier = Modifier.padding(end = GRID_TOKEN_GAP),
-            text = text,
-            style = style,
-            softWrap = false,
-            color = color,
-        )
     }
+}
+
+/**
+ * The tokens of a grid line cut into bars, each ending on the bar line that closes it, so that a wrapped line never
+ * starts with a stray bar line. The line that opens the first bar stays with it, and whatever follows the last bar
+ * line (a repeat count, a comment) is a piece of its own.
+ */
+private fun List<GridToken>.bars(): List<List<GridToken>> {
+    val bars = mutableListOf<List<GridToken>>()
+    var bar = mutableListOf<GridToken>()
+    forEach { token ->
+        bar += token
+        if (token is GridToken.Bar && bar.size > 1) {
+            bars += bar
+            bar = mutableListOf()
+        }
+    }
+    if (bar.isNotEmpty()) bars += bar
+    return bars
 }
 
 private fun TextStyle.scaled(scale: Float) = copy(
