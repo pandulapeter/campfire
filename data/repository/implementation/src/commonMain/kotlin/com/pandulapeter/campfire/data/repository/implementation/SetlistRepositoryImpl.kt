@@ -13,6 +13,7 @@ import com.pandulapeter.campfire.data.model.domain.Setlist
 import com.pandulapeter.campfire.data.repository.api.SetlistRepository
 import com.pandulapeter.campfire.data.repository.implementation.base.BaseLocalDataRepository
 import com.pandulapeter.campfire.data.source.local.api.SetlistLocalSource
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.NonCancellable
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
@@ -82,14 +83,32 @@ internal class SetlistRepositoryImpl(
 
     override suspend fun deleteSetlist(fileName: String) = writing {
         setlistLocalSource.deleteSetlist(fileName)
-        updateData { current -> current.orEmpty().filterNot { it.fileName == fileName } }
+        forget(fileName)
     }
 
     /** Runs [block] under [writeMutex], taken cancellably and held until the block has finished whatever happens. */
     private suspend fun <T> writing(block: suspend () -> T): T = writeMutex.withLock { withContext(NonCancellable) { block() } }
 
-    /** The setlist as the cache has it. Only meaningful under [writeMutex], where no write can be halfway to it. */
-    private suspend fun latest(fileName: String) = loadDataIfNeeded()?.firstOrNull { it.fileName == fileName }
+    /**
+     * The setlist as its file holds it. Sync writes setlist files without going through this repository, and the cache
+     * only catches up at the next rescan: a change built on the cache in between would put the version from before the
+     * run back, and the next run would upload it over the edit it had just brought in. A file that cannot be decoded
+     * (edited by hand into invalid JSON) falls back on the cache, which is what every change was built on before.
+     * Callers hold [writeMutex], so no write of this repository can be halfway to the file.
+     */
+    private suspend fun latest(fileName: String): Setlist? {
+        val cached = loadDataIfNeeded()?.firstOrNull { it.fileName == fileName }
+        return try {
+            setlistLocalSource.loadSetlist(fileName).also { if (it == null && cached != null) forget(fileName) }
+        } catch (exception: CancellationException) {
+            throw exception
+        } catch (exception: Exception) {
+            println("Could not read the setlist \"$fileName\": ${exception.message}")
+            cached
+        }
+    }
+
+    private fun forget(fileName: String) = updateData { current -> current.orEmpty().filterNot { it.fileName == fileName } }
 
     /** Callers hold [writeMutex]. */
     private suspend fun write(setlist: Setlist) {

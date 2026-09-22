@@ -51,9 +51,12 @@ held before, plus any change that landed while it ran. A `rescan()` — the refr
 import — is the only thing that walks the directory again.
 
 - `SetlistRepositoryImpl` makes every write to a setlist file — `updateSetlist`, `renameSetlist`, `saveSetlist`,
-  `deleteSetlist` — under one lock, held from reading the setlist out of its own cache to having the write back in
-  that cache, so a second change reads what the first one wrote, and a move or a deletion cannot cross a change that
-  is halfway through. The cache is the one place that is current straight after a write; anything observing
+  `deleteSetlist` — under one lock, held from reading the setlist out of its **file** to having the write back in the
+  cache, so a second change reads what the first one wrote, and a move or a deletion cannot cross a change that is
+  halfway through. The file and not the cache, because sync writes setlist files behind this repository's back and the
+  cache only catches up at the next rescan: a change built on it in between would put the version from before the run
+  back, and the next run would upload that over the other device's edit. A file that is gone drops the setlist from
+  the cache and changes nothing; one that cannot be decoded is changed as the cache has it. The cache is the one place that is current straight after a write; anything observing
   `setlists` catches up a few hops later. Creating and importing a setlist take it as well, from the storage finding
   a name free to the file being there under it. The write and the cache update under that lock run as one
   `NonCancellable` step, so a change whose screen goes away while it is being written is still in the cache the next

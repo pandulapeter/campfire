@@ -187,6 +187,57 @@ class SetlistRepositoryImplTest {
         assertEquals(listOf("a.cho", "b.cho"), localSource.files.getValue(FILE_NAME).entries.map { it.songFileName })
     }
 
+    @Test
+    fun `a change is built on the file rather than on the list read before it`() = runTest {
+        val localSource = FakeSetlistLocalSource(listOf(setlist(FILE_NAME, "a.cho", "b.cho")))
+        val repository = SetlistRepositoryImpl(localSource)
+        repository.loadSetlistsIfNeeded()
+        localSource.files[FILE_NAME] = setlist(FILE_NAME, "b.cho", "a.cho", "c.cho")
+
+        repository.updateSetlist(FILE_NAME) { it.copy(isArchived = true) }
+
+        val written = localSource.files.getValue(FILE_NAME)
+        assertEquals(listOf("b.cho", "a.cho", "c.cho"), written.entries.map { it.songFileName })
+        assertTrue(written.isArchived)
+        assertEquals(listOf(written), repository.setlists.first().data)
+    }
+
+    @Test
+    fun `a rename is built on the file as well`() = runTest {
+        val localSource = FakeSetlistLocalSource(listOf(setlist(FILE_NAME, "a.cho", "b.cho")))
+        val repository = SetlistRepositoryImpl(localSource)
+        repository.loadSetlistsIfNeeded()
+        localSource.files[FILE_NAME] = setlist(FILE_NAME, "b.cho", "a.cho", "c.cho")
+
+        repository.renameSetlist(FILE_NAME, "Summer", "")
+
+        assertEquals(listOf("b.cho", "a.cho", "c.cho"), localSource.files.getValue(RENAMED_FILE_NAME).entries.map { it.songFileName })
+    }
+
+    @Test
+    fun `a change to a setlist whose file is gone writes nothing and drops it from the list`() = runTest {
+        val localSource = FakeSetlistLocalSource(listOf(setlist(FILE_NAME, "a.cho")))
+        val repository = SetlistRepositoryImpl(localSource)
+        repository.loadSetlistsIfNeeded()
+        localSource.files.remove(FILE_NAME)
+
+        assertNull(repository.updateSetlist(FILE_NAME) { it.copy(isArchived = true) })
+        assertTrue(localSource.files.isEmpty())
+        assertTrue(repository.setlists.first().data.orEmpty().isEmpty())
+    }
+
+    @Test
+    fun `a setlist whose file cannot be decoded is changed as the list has it`() = runTest {
+        val localSource = FakeSetlistLocalSource(listOf(setlist(FILE_NAME, "a.cho")))
+        val repository = SetlistRepositoryImpl(localSource)
+        repository.loadSetlistsIfNeeded()
+        localSource.isUnreadable = true
+
+        repository.updateSetlist(FILE_NAME) { it.copy(entries = it.entries + Setlist.Entry("b.cho")) }
+
+        assertEquals(listOf("a.cho", "b.cho"), localSource.files.getValue(FILE_NAME).entries.map { it.songFileName })
+    }
+
     /** A setlists directory held in a map, whose writes can be held back until the test lets them through. */
     private class FakeSetlistLocalSource(setlists: List<Setlist>) : SetlistLocalSource {
 
@@ -197,7 +248,15 @@ class SetlistRepositoryImplTest {
         /** Awaited once the file holds the new version: the write has reached the disk, the caller has not heard yet. */
         var afterSaveGate: CompletableDeferred<Unit>? = null
 
+        /** Set to make [loadSetlist] fail the way a file edited by hand into invalid JSON does. */
+        var isUnreadable = false
+
         override suspend fun loadSetlists() = files.values.toList()
+
+        override suspend fun loadSetlist(fileName: String): Setlist? {
+            if (isUnreadable) throw IllegalStateException("Not a setlist.")
+            return files[fileName]
+        }
 
         override suspend fun createSetlist(title: String, description: String, priority: Int): Setlist {
             val name = title.lowercase()

@@ -15,8 +15,8 @@ platform types.
 - `SongLocalSource` — the `.cho` files: scan the folder into `Song` metadata, read and write one song's text, create or
   import one under a free file name, rename one to the name its own metadata gives it, delete.
 - `SetlistLocalSource` — the same for `*.setlist.json`, plus parsing an exported document and reading one back
-  unchanged for export. `renameSetlist` is a save that moves the file as well, since a setlist's name is derived from
-  the title it has just been given.
+  unchanged for export, and `loadSetlist`, one setlist read from its file for a change to build on. `renameSetlist` is
+  a save that moves the file as well, since a setlist's name is derived from the title it has just been given.
 - `UserPreferencesLocalSource` — one document; `loadUserPreferences()` never returns null, because a missing
   document means the defaults, which are defined once next to the document itself; a document that is there and
   cannot be read throws `LibraryStorageException` instead, since defaults handed out in its place would be saved over

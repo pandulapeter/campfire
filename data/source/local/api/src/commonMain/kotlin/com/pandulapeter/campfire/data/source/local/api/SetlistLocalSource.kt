@@ -17,6 +17,13 @@ interface SetlistLocalSource {
     suspend fun loadSetlists(): List<Setlist>
 
     /**
+     * The setlist stored under [fileName], read from the file rather than from anything cached, so that a change built
+     * on it builds on what is really there - which a sync run may have replaced a moment ago. Null if there is no such
+     * file; throws if it is there and cannot be read or decoded.
+     */
+    suspend fun loadSetlist(fileName: String): Setlist?
+
+    /**
      * Writes an empty setlist under a file name derived from the title, suffixed until it is free, and returns it.
      * File naming is the storage layer's business, so callers only supply what goes inside.
      */

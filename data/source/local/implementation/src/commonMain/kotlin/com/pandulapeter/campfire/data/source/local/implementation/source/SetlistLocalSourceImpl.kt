@@ -50,6 +50,11 @@ internal class SetlistLocalSourceImpl(
             }
     }
 
+    override suspend fun loadSetlist(fileName: String): Setlist? = withContext(Dispatchers.Default) {
+        fileStorage.readText(StorageDirectory.SETLISTS, fileName)
+            ?.let { json.decodeFromString<SetlistDocument>(it).toModel(fileName) }
+    }
+
     override suspend fun createSetlist(title: String, description: String, priority: Int): Setlist {
         val fileName = fileStorage.uniqueName(StorageDirectory.SETLISTS, setlistFileName(title))
         val setlist = Setlist(

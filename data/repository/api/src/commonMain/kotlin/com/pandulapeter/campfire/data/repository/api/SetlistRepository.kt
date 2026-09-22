@@ -34,9 +34,9 @@ interface SetlistRepository {
     suspend fun saveSetlist(setlist: Setlist)
 
     /**
-     * Changes one setlist as a single step: read the latest, transform, write. Every change to a setlist's entries
-     * goes through here, so two of them made in quick succession build on each other instead of on the same
-     * snapshot. Null when there is no such setlist.
+     * Changes one setlist as a single step: read the latest from its file, transform, write. Every change to a
+     * setlist's entries goes through here, so two of them made in quick succession build on each other instead of on
+     * the same snapshot. Null when there is no such setlist.
      */
     suspend fun updateSetlist(fileName: String, transform: (Setlist) -> Setlist): Setlist?
 
