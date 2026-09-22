@@ -21,6 +21,8 @@ import org.koin.core.annotation.Single
 import platform.AuthenticationServices.ASPresentationAnchor
 import platform.AuthenticationServices.ASWebAuthenticationPresentationContextProvidingProtocol
 import platform.AuthenticationServices.ASWebAuthenticationSession
+import platform.AuthenticationServices.ASWebAuthenticationSessionErrorCodeCanceledLogin
+import platform.AuthenticationServices.ASWebAuthenticationSessionErrorDomain
 import platform.Foundation.NSURL
 import platform.UIKit.UIApplication
 import platform.UIKit.UIWindow
@@ -48,9 +50,9 @@ internal class IosSyncAuthenticator : SyncAuthenticator {
 
     /**
      * The session has to be created and started on the main thread, and the completion handler comes back on it.
-     * Cancelling the coroutine (the "Cancel" row in Settings) dismisses the sheet through `invokeOnCancellation`.
+     * Cancelling the coroutine (the "Cancel" row in Settings) dismisses the sheet through `invokeOnCancellation`. The
+     * page is ignored: the browser closes itself, so nothing of Campfire's is ever rendered in it.
      */
-    /** The page is ignored: the browser closes itself, so nothing of Campfire's is ever rendered in it. */
     override suspend fun authorize(authorizationUrl: String, completionPage: AuthorizationCompletionPage): SyncAuthenticator.AuthorizationOutcome =
         withContext(Dispatchers.Main) {
             suspendCancellableCoroutine { continuation ->
@@ -69,10 +71,14 @@ internal class IosSyncAuthenticator : SyncAuthenticator {
                         hasFinished = true
                         val redirect = callbackUrl?.absoluteString
                         continuation.resume(
-                            if (redirect == null) {
-                                SyncAuthenticator.AuthorizationOutcome.Cancelled(error?.localizedDescription)
-                            } else {
-                                SyncAuthenticator.AuthorizationOutcome.Received(redirect)
+                            when {
+                                redirect != null -> SyncAuthenticator.AuthorizationOutcome.Received(redirect)
+                                // The user tapped Cancel on the alert or on the sheet, which needs no explaining, see Cancelled.
+                                error != null && error.domain == ASWebAuthenticationSessionErrorDomain &&
+                                    error.code == ASWebAuthenticationSessionErrorCodeCanceledLogin -> SyncAuthenticator.AuthorizationOutcome.Cancelled()
+                                else -> SyncAuthenticator.AuthorizationOutcome.Cancelled(
+                                    error?.localizedDescription ?: "The consent page closed without an answer.",
+                                )
                             }
                         )
                     }

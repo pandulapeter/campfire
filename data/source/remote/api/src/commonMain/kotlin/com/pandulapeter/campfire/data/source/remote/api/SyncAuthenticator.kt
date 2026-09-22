@@ -55,7 +55,11 @@ interface SyncAuthenticator {
         /** The app navigated away. Whatever happens next happens after a restart, see [consumePendingRedirect]. */
         data object Redirected : AuthorizationOutcome
 
-        /** The user closed the browser, or the service said no. */
+        /**
+         * The authorization ended without a redirect. [message] is null when the user backed out - closed the browser,
+         * dismissed the sheet - which the app answers by going back to where it was, and says what went wrong otherwise,
+         * which the app reports as a failed connection. An implementation that cannot tell the two apart says why.
+         */
         data class Cancelled(val message: String? = null) : AuthorizationOutcome
     }
 }

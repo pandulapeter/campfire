@@ -64,7 +64,11 @@ internal class AndroidSyncAuthenticator(
             try {
                 select {
                     redirect.onAwait { SyncAuthenticator.AuthorizationOutcome.Received(it) }
-                    abandoned.onAwait { SyncAuthenticator.AuthorizationOutcome.Cancelled("The browser was closed before the service answered.") }
+                    abandoned.onAwait {
+                        println("The browser was closed before the service answered.")
+                        // The user backing out, which is not a failure to explain, see Cancelled.
+                        SyncAuthenticator.AuthorizationOutcome.Cancelled()
+                    }
                 }
             } finally {
                 redirect.cancel()
@@ -73,7 +77,7 @@ internal class AndroidSyncAuthenticator(
         } catch (exception: CancellationException) {
             throw exception
         } catch (exception: Exception) {
-            SyncAuthenticator.AuthorizationOutcome.Cancelled(exception.message)
+            SyncAuthenticator.AuthorizationOutcome.Cancelled(exception.toString())
         } finally {
             callbacks?.let { application?.unregisterActivityLifecycleCallbacks(it) }
         }

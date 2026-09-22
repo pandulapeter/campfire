@@ -443,6 +443,20 @@ class SyncRepositoryImplTest {
     }
 
     @Test
+    fun `an authorization that ends with a reason reports the connection as failed`() = runTest {
+        val repository = repository(
+            provider = FakeSyncProvider(),
+            authenticator = FakeSyncAuthenticator(
+                outcome = SyncAuthenticator.AuthorizationOutcome.Cancelled("Timed out waiting for the browser."),
+            ),
+        )
+
+        assertFalse(repository.connect(SyncProviderId.DROPBOX, COMPLETION_PAGE))
+
+        assertEquals(SyncState.ConnectionFailed(SyncProviderId.DROPBOX, SyncFailureReason.UNKNOWN), repository.syncState.value)
+    }
+
+    @Test
     fun `a closed browser is not a failure even when the clean up is`() = runTest {
         val store = FakePendingAuthorizationStore().apply { onWrite = failingAfterFirstWrite() }
         val repository = repository(

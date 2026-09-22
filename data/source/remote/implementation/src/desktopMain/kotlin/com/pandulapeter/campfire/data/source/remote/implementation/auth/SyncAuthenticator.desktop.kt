@@ -88,7 +88,7 @@ internal class DesktopSyncAuthenticator(
         } catch (exception: CancellationException) {
             throw exception
         } catch (exception: Exception) {
-            SyncAuthenticator.AuthorizationOutcome.Cancelled(exception.message)
+            SyncAuthenticator.AuthorizationOutcome.Cancelled(exception.toString())
         } finally {
             // The ordinary path closes the socket through the same `finally` as the cancelled one.
             socketCloser.cancel()

@@ -56,13 +56,16 @@ redirect URIs character for character, which is why the desktop port is fixed.
   see, so an authorization that only ever waits for a redirect leaves the UI on "waiting for the browser" forever
   with no way back.
   - **iOS** uses `ASWebAuthenticationSession`, which is the only iOS API that reports a dismissal: its completion
-    handler is given a null URL and an error. It also keeps the sheet inside the app and shares Safari's cookies.
+    handler is given a null URL and an error. A cancel is `ASWebAuthenticationSessionErrorCodeCanceledLogin` and
+    becomes `Cancelled` with no message, which Settings takes as the user backing out; any other error keeps its
+    description and is reported as a failed connection. It also keeps the sheet inside the app and shares Safari's cookies.
     The redirect never reaches `onOpenURL`, so nothing forwards it.
   - **Android** opens the user's own browser (never a WebView: a page asking for a password has to be somewhere the
     address bar is visible) and receives `campfire://oauth` as an intent, which the launcher activity forwards
     through the public `onSyncRedirectReceived`. Nothing reports a dismissed browser, so what is watched instead is
     the app itself coming forward again through `ActivityLifecycleCallbacks`; the redirect intent brings the
-    activity forward too, so it is given a short grace period to arrive before the attempt counts as abandoned. A
+    activity forward too, so it is given a short grace period to arrive before the attempt counts as abandoned. An
+    abandoned attempt is `Cancelled` with no message, the user backing out rather than a failure. A
     process killed while the browser was in front gets the redirect as the intent that starts the next one; it waits
     in the same channel and `consumePendingRedirect` hands it to `restore`, which finishes the authorization the way
     the web does.
