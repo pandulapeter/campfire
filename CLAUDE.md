@@ -263,7 +263,9 @@ item bound to the device and `FileStorage.keepOutOfDeviceBackup` on the index.
   side. Each of them is the local build command plus the secrets a checkout does not have, and each can still be
   dispatched by hand, to publish without a release or to repeat one half of a release that went wrong. Every build
   passes `campfire.dropbox.appKey` from the `DROPBOX_APP_KEY` secret, because a published app built without it would
-  quietly have no sync provider at all. A store that gets a pipeline later (the Microsoft Store) is one more workflow of this shape and one more job in
+  quietly have no sync provider at all — so each workflow, and `release.yml` before it calls any of them, refuses to
+  start when that secret is empty. The check is in the workflows rather than in Gradle: an empty key is the
+  checked-in default and has to keep building a fresh clone. A store that gets a pipeline later (the Microsoft Store) is one more workflow of this shape and one more job in
   `release.yml`. **What a release carries that no store has signed says so in its name** (`-unsigned`), and the app
   links to none of those: they are for somebody who reads the README and knows what the word means.
   - `web-publish.yml` builds the distribution and copies it over `campfire/` in the `pandulapeter.github.io`

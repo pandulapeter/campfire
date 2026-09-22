@@ -47,11 +47,18 @@ jobs:
           java-version: 21
           cache: 'gradle'
       # Gradle is started by a build phase of the Xcode project here, which passes it no properties, so the key goes
-      # where a developer's own machine keeps it.
+      # where a developer's own machine keeps it. A published build with an empty key has no sync provider at all, and
+      # nothing downstream would notice: the empty string is the checked-in default, because a fresh clone has to
+      # build without a secret.
       - name: Write local.properties
         env:
           DROPBOX_APP_KEY: ${{ secrets.DROPBOX_APP_KEY }}
-        run: echo "campfire.dropbox.appKey=$DROPBOX_APP_KEY" > local.properties
+        run: |
+          if [ -z "$DROPBOX_APP_KEY" ]; then
+            echo "::error::DROPBOX_APP_KEY is empty or not visible to this workflow. The published app would have no sync provider at all." >&2
+            exit 1
+          fi
+          printf 'campfire.dropbox.appKey=%s\n' "$DROPBOX_APP_KEY" > local.properties
       - name: Build the app
         run: |
           xcodebuild \

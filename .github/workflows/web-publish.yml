@@ -36,6 +36,16 @@ jobs:
           distribution: 'zulu'
           java-version: 21
           cache: 'gradle'
+      # A published build with an empty key has no sync provider at all, and nothing downstream would notice: the
+      # empty string is the checked-in default, because a fresh clone has to build without a secret.
+      - name: Check the sync credentials
+        env:
+          DROPBOX_APP_KEY: ${{ secrets.DROPBOX_APP_KEY }}
+        run: |
+          if [ -z "$DROPBOX_APP_KEY" ]; then
+            echo "::error::DROPBOX_APP_KEY is empty or not visible to this workflow. The published app would have no sync provider at all." >&2
+            exit 1
+          fi
       - name: Read version information
         id: version
         run: |
