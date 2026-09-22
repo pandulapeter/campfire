@@ -51,17 +51,22 @@ jobs:
       fail-fast: false
       matrix:
         include:
-          # Pinned rather than "latest", since a .deb depends on the versions of the system libraries it was built
-          # against, and a runner that moves to a newer Ubuntu on its own would raise that bar for everyone who
-          # installs it.
+          # Pinned to the oldest Ubuntu still worth supporting rather than to the newest one available: a .deb asks
+          # for the system libraries it was built against, so the runner decides the lowest distribution the package
+          # can be installed on. 24.04 completed the 64-bit time_t transition and renamed those libraries, so a
+          # package built there asks for libgtk-3-0t64 and friends and is uninstallable on 22.04, Mint 21 and Debian
+          # 12 alike. Moving this forward drops every distribution below the new runner's, so it is a decision rather
+          # than an upgrade - and GitHub retires a runner image eventually, which is when it has to be made. Building
+          # inside a `container: ubuntu:22.04` (or a Debian 12 image) is the alternative that survives the retirement,
+          # since it pins the build environment independently of the runner image.
           - name: Linux (amd64)
-            runner: ubuntu-24.04
+            runner: ubuntu-22.04
             distribution: linux
             task: packageReleaseDeb
             format: deb
             asset: linux-amd64.deb
           - name: Linux (arm64)
-            runner: ubuntu-24.04-arm
+            runner: ubuntu-22.04-arm
             distribution: linux
             task: packageReleaseDeb
             format: deb
