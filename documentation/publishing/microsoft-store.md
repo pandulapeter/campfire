@@ -11,16 +11,16 @@
 
 What is left between the desktop build as it is today and a listing on the Microsoft Store that every GitHub release
 updates by itself. `desktop-publish.yml` already attaches an unsigned `.msi` to every release. None of the steps below
-has been done yet, **and nothing about the Windows build has ever been run** — not the installer, not the app on
-Windows — so step 1 comes before everything else. The steps marked *(verify)* rest on rules that change.
+has been done yet. The installer builds in CI, but **it has never been installed and used on Windows**, so step 1
+comes before everything else. The steps marked *(verify)* rest on rules that change.
 
 Delete this file once the last box is ticked: by then `CLAUDE.md` describes how it works.
 
 ## 1. See it run on Windows
 
-- [ ] Dispatch *Publish Desktop* by hand for the latest release tag and check that the Windows leg goes through. It is
-      the first time `gradlew` runs under Git Bash, WiX is downloaded, and a vendor name with an accent goes through
-      the MSI tooling.
+- [x] Dispatch *Publish Desktop* by hand for the latest release tag and check that the Windows leg goes through.
+      Done: `gradlew` runs under Git Bash, WiX is downloaded, and the accented vendor name goes through the MSI
+      tooling; the 4.2.2 release carries the `.msi` it built.
 - [ ] Install that `.msi` on a Windows machine or VM and go through the app: the Start menu entry, the library under
       `%APPDATA%\Campfire`, the file dialogs, opening a `.cho` file from Explorer, and connecting Dropbox (the redirect
       to `127.0.0.1:53682` may raise a firewall question the first time).
