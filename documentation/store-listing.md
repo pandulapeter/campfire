@@ -9,7 +9,7 @@
 -->
 # Store listing
 
-The English text every store shows, kept here so that Google Play, the App Store, the Mac App Store and the Microsoft
+The text every store shows — every listing is in English only — kept here so that Google Play, the App Store, the Mac App Store and the Microsoft
 Store all say the same thing. Change it here first, then paste it into each store's console.
 
 The copy names no platform and no other store (App Store guideline 2.3.10), stays away from features only some

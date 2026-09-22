@@ -80,8 +80,8 @@ A sandboxed build can only be tested signed: run `packagePkg`, install the resul
 
 ## 4. The store listing (by hand, once)
 
-- [ ] Screenshots at one of the accepted sizes (1280×800, 1440×900, 2560×1600 or 2880×1800) *(verify)*, English and
-      Hungarian.
+- [ ] Screenshots at one of the accepted sizes (1280×800, 1440×900, 2560×1600 or 2880×1800) *(verify)*, in
+      English.
 - [ ] Description, keywords, support and marketing URL, privacy policy URL, App Privacy (**Data Not Collected**), age
       rating, category *Music*, price *Free* — the same answers as for iOS.
 - [ ] Notes for the reviewer: no account; sync is optional and needs the reviewer's own Dropbox; why the app listens

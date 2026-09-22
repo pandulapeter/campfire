@@ -44,9 +44,9 @@ Delete this file once the last box is ticked: by then `CLAUDE.md` describes how 
 
 ## 3. The store listing (by hand, once)
 
-- [ ] Screenshots: the 6.9" iPhone and the 13" iPad sizes are the required ones *(verify)*. English and Hungarian.
-- [ ] Description, keywords, support URL (the GitHub issues page) and marketing URL (the repository), in both
-      languages. The English name, subtitle, promotional text and description are in
+- [ ] Screenshots: the 6.9" iPhone and the 13" iPad sizes are the required ones *(verify)*, in English.
+- [ ] Description, keywords, support URL (the GitHub issues page) and marketing URL (the repository), in
+      English. The name, subtitle, promotional text and description are in
       [store-listing.md](../store-listing.md).
 - [ ] Privacy policy URL: `https://pandulapeter.com/legal/privacy_policy-campfire.html`.
 - [ ] App Privacy questionnaire: **Data Not Collected**. Sync goes from the device to the user's own Dropbox, which is

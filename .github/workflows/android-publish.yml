@@ -22,9 +22,6 @@ on:
       release_notes:
         type: string
         required: false
-      release_notes_hu:
-        type: string
-        required: false
       release_tag:
         type: string
         required: false
@@ -37,10 +34,6 @@ on:
         default: '0'
       release_notes:
         description: 'Release notes override, use \n for line breaks (leave empty to generate them from the commit log)'
-        type: string
-        required: false
-      release_notes_hu:
-        description: 'Hungarian release notes, use \n for line breaks (leave empty to show the English ones there too)'
         type: string
         required: false
       release_tag:
@@ -83,7 +76,6 @@ jobs:
       - name: Generate release notes
         env:
           RELEASE_NOTES_OVERRIDE: ${{ inputs.release_notes }}
-          RELEASE_NOTES_OVERRIDE_HU: ${{ inputs.release_notes_hu }}
         run: |
           mkdir -p whatsnew
           if [ -n "$RELEASE_NOTES_OVERRIDE" ]; then
@@ -102,12 +94,10 @@ jobs:
           if [ ! -s release_notes.txt ]; then
             printf -- '- Version %s\n' "${{ steps.version.outputs.name }}" > release_notes.txt
           fi
-          # The Play Store counts every locale against the same 500 character limit, and rejects the whole release
-          # when one of them is over it, so each one is cut at a line boundary rather than mid-sentence. Characters,
-          # not bytes: awk on the runner is mawk, whose length() counts bytes, and cut a Hungarian text with a few
-          # dozen accented letters bullets short of what the release-notes skill had fitted to the limit.
-          trim() {
-            python3 - "$1" "$2" <<'PYTHON'
+          # The Play Store rejects the whole release when the notes are over its 500 character limit, so they are cut
+          # at a line boundary rather than mid-sentence. Characters, not bytes: awk on the runner is mawk, whose
+          # length() counts bytes, and would cut a text with accented letters short of what fits.
+          python3 - release_notes.txt whatsnew/whatsnew-en-US <<'PYTHON'
           import sys
 
           LIMIT = 500
@@ -128,21 +118,8 @@ jobs:
           with open(sys.argv[2], "w", encoding="utf-8") as output:
               output.write("\n".join(kept) + "\n")
           PYTHON
-          }
-          trim release_notes.txt whatsnew/whatsnew-en-US
-          # The Hungarian text is written by hand or not at all - nothing can translate the commit log. Falling back
-          # to the English notes leaves the Hungarian listing saying something true, which an empty entry would not.
-          if [ -n "$RELEASE_NOTES_OVERRIDE_HU" ]; then
-            printf '%b\n' "$RELEASE_NOTES_OVERRIDE_HU" > release_notes_hu.txt
-          else
-            echo "No Hungarian release notes were given, falling back to the English ones."
-            cp release_notes.txt release_notes_hu.txt
-          fi
-          trim release_notes_hu.txt whatsnew/whatsnew-hu-HU
-          for LOCALE in whatsnew/*; do
-            echo "Generated release notes ($(basename "$LOCALE")):"
-            cat "$LOCALE"
-          done
+          echo "Generated release notes:"
+          cat whatsnew/whatsnew-en-US
       - name: Decode release keystore
         run: echo "${{ secrets.ANDROID_KEYSTORE_BASE64 }}" | base64 --decode > app/android/release.keystore
       - name: Build release APK

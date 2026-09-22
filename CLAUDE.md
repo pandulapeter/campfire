@@ -278,12 +278,11 @@ item bound to the device and `FileStorage.keepOutOfDeviceBackup` on the index.
     file to the production track with `PLAY_SERVICE_ACCOUNT_JSON`. The app itself never links to that APK: a Play
     build pointing at a copy of itself outside Play is what Play's policy is about. It is an **APK** and not an app bundle because the Play listing predates the bundle
     requirement and was never migrated; a `bundleRelease` would be rejected on upload. The "what's new" text comes
-    from the workflow's two inputs, one per listing language, which `release.yml` fills from comments in the
-    release's description that the rendered page hides (`<!-- play-store en-US … -->`, `hu-HU`, and
-    `<!-- play-store update-priority: 3 -->`; the format is in that file's header). The English one falls back to the
-    visible description with its markdown taken out — or, dispatched by hand with nothing given, to the commit log
-    since the previous tag — and the Hungarian one to the English text, since nothing can translate a commit log and
-    a listing saying something true in the wrong language beats one saying nothing. Its `update_priority` input is
+    from the workflow's `release_notes` input, which `release.yml` fills from comments in the release's description
+    that the rendered page hides (`<!-- play-store en-US … -->` and `<!-- play-store update-priority: 3 -->`; the
+    format is in that file's header). It falls back to the visible description with its markdown taken out — or,
+    dispatched by hand with nothing given, to the commit log since the previous tag. Every store listing is in
+    English only, however many languages the app itself speaks. Its `update_priority` input is
     what decides whether the new version says anything about itself inside the old one — see Updates below.
 
 ## Sync

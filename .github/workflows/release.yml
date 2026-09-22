@@ -16,14 +16,10 @@
 #   <!-- play-store en-US
 #   - Up to 500 characters of plain text
 #   -->
-#   <!-- play-store hu-HU
-#   - The same in Hungarian
-#   -->
 #   <!-- play-store update-priority: 3 -->
 #
-# All three are optional. Without the English one the visible description stands in for it, with its markdown taken
-# out; without the Hungarian one the English text is shown there too; and the priority is 0 unless it says otherwise
-# (see the Updates section of CLAUDE.md for what the number decides).
+# Both are optional. Without the notes the visible description stands in for them, with its markdown taken out, and the
+# priority is 0 unless it says otherwise (see the Updates section of CLAUDE.md for what the number decides).
 
 name: 'Release'
 
@@ -41,7 +37,6 @@ jobs:
     runs-on: ubuntu-latest
     outputs:
       release_notes: ${{ steps.notes.outputs.release_notes }}
-      release_notes_hu: ${{ steps.notes.outputs.release_notes_hu }}
       update_priority: ${{ steps.notes.outputs.update_priority }}
     steps:
       - name: Check out repository
@@ -69,11 +64,8 @@ jobs:
 
           body = os.environ["RELEASE_BODY"].replace("\r\n", "\n")
 
-          def block(locale):
-              match = re.search(r"<!--\s*play-store\s+" + re.escape(locale) + r"\s*\n(.*?)-->", body, re.S)
-              return match.group(1).strip() if match else ""
-
-          english = block("en-US")
+          match = re.search(r"<!--\s*play-store\s+en-US\s*\n(.*?)-->", body, re.S)
+          english = match.group(1).strip() if match else ""
           if not english:
               visible = re.sub(r"<!--.*?-->", "", body, flags=re.S)
               visible = re.sub(r"\[([^\]]+)\]\([^)]+\)", r"\1", visible)
@@ -81,8 +73,7 @@ jobs:
           priority = re.search(r"<!--\s*play-store\s+update-priority:\s*([0-5])\s*-->", body)
 
           with open(os.environ["GITHUB_OUTPUT"], "a") as output:
-              for name, value in (("release_notes", english), ("release_notes_hu", block("hu-HU"))):
-                  output.write(f"{name}<<END_OF_RELEASE_NOTES\n{value}\nEND_OF_RELEASE_NOTES\n")
+              output.write(f"release_notes<<END_OF_RELEASE_NOTES\n{english}\nEND_OF_RELEASE_NOTES\n")
               output.write(f"update_priority={priority.group(1) if priority else '0'}\n")
           PYTHON
 
@@ -93,7 +84,6 @@ jobs:
     with:
       update_priority: ${{ needs.prepare.outputs.update_priority }}
       release_notes: ${{ needs.prepare.outputs.release_notes }}
-      release_notes_hu: ${{ needs.prepare.outputs.release_notes_hu }}
       release_tag: ${{ github.event.release.tag_name }}
     secrets: inherit
 

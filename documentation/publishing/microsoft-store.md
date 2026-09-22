@@ -69,8 +69,8 @@ external payment *(verify the current wording of 10.8)*.
 
 ## 5. The store listing (by hand, once)
 
-- [ ] Screenshots (1366×768 or larger), description, search terms and the 1:1 store logo, in English and Hungarian.
-      The English short and full description are in [store-listing.md](../store-listing.md).
+- [ ] Screenshots (1366×768 or larger), description, search terms and the 1:1 store logo, in English.
+      The short and full description are in [store-listing.md](../store-listing.md).
 - [ ] Privacy policy URL (`https://pandulapeter.com/legal/privacy_policy-campfire.html`), support contact (the GitHub
       issues page), category *Music*, price *Free*, markets.
 - [ ] The age rating questionnaire (IARC, the same one Play uses).
