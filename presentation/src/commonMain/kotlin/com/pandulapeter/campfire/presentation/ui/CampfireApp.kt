@@ -202,7 +202,17 @@ fun CampfireApp(
             // The colors have to have stopped moving as well, or the app would be uncovered halfway through the
             // cross fade that corrects the theme the window opened on, which is the one thing the launch screen is
             // there to take instead of it.
-            var isAppReady by remember { mutableStateOf(false) }
+            //
+            // Read once: the composition that took the launch screen away is not always the one drawing the app
+            // (Android recreates its activity on every configuration change), and one that starts after it has
+            // nothing to cover.
+            val hasShownAppBefore = remember { viewModel.hasShownApp }
+            var isAppReady by remember { mutableStateOf(hasShownAppBefore) }
+            if (hasShownAppBefore) {
+                // The shell still holds a startup screen of its own until it is told, the Android activity's pre-draw
+                // gate.
+                LaunchedEffect(Unit) { onAppReady() }
+            }
             if (!isAppReady) {
                 val opacity = remember { Animatable(1f) }
                 // On the desktop the mark grows as it goes, over the slower of the two effect springs so that the
@@ -232,6 +242,7 @@ fun CampfireApp(
                         repeat(2) { withFrameNanos { } }
                         opacity.animateTo(0f, fadeSpec)
                         isAppReady = true
+                        viewModel.hasShownApp = true
                         // Only now, so that the shells holding a startup screen of their own hand over to the app
                         // itself rather than to the last frames of a mark fading off it.
                         onAppReady()

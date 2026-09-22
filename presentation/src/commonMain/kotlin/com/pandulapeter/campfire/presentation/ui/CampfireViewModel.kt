@@ -276,6 +276,16 @@ class CampfireViewModel(
         .asState(false)
 
     /**
+     * Whether the launch screen has already been taken away once. A plain flag rather than a state, since it is only
+     * read as the root composition starts: Android recreates its activity, and with it the whole composition, on every
+     * rotation, and a composition that started from nothing would put the launch screen back over an app the user is
+     * already using. Worse, it would hold the new activity's first frame back until that screen had faded, which is
+     * a frozen window and a few hundred milliseconds of lost taps on every configuration change. A process that is
+     * started again gets a new view model, which is the start the launch screen is for.
+     */
+    internal var hasShownApp = false
+
+    /**
      * Read straight from its own repository rather than out of [screenData], which only has anything once every
      * source has been read: the theme and the language come from here, and waiting for a scan of the whole song
      * library would leave the app in the system's theme and language for as long as that takes. Both states below
