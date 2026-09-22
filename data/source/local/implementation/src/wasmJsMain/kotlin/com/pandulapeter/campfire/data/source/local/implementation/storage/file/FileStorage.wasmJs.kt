@@ -180,14 +180,24 @@ private fun getFileHandle(parent: JsAny, name: String): Promise<JsAny?> = js(
     })"""
 )
 
-/** Every file of the directory as name, size and last modification time, separated by control characters. */
+/**
+ * Every file of the directory as name, size and last modification time, separated by control characters.
+ *
+ * An entry that is gone by the time it is asked for its file is left out rather than failing the listing: a sync run
+ * deletes files while the live rescan is listing the same directory, and on one thread the two interleave at every
+ * `await`. A `NotFoundError` there says the file is not in the directory any more, which is what leaving it out of
+ * the listing says too. Every other rejection still fails the listing, since a file that is there and cannot be
+ * reached must never be reported as absent - sync plans a deletion for a file it cannot see.
+ */
 private fun listEntries(directory: JsAny): Promise<JsString?> = js(
     """(async function () {
         var field = String.fromCharCode(0);
         var entries = [];
         for await (var entry of directory.entries()) {
             if (entry[1].kind === 'file') {
-                var file = await entry[1].getFile();
+                var file;
+                try { file = await entry[1].getFile(); }
+                catch (error) { if (error && error.name === 'NotFoundError') continue; throw error; }
                 entries.push(entry[0] + field + file.size + field + file.lastModified);
             }
         }
@@ -203,9 +213,18 @@ private fun listEntryNames(directory: JsAny): Promise<JsString?> = js(
     })()"""
 )
 
-/** The size and the last modification time of one file, separated by the same control character `listEntries` uses. */
-private fun fileInfo(handle: JsAny): Promise<JsString?> =
-    js("handle.getFile().then(function (file) { return file.size + String.fromCharCode(0) + file.lastModified; })")
+/**
+ * The size and the last modification time of one file, separated by the same control character `listEntries` uses.
+ * Resolves to `null` for a file deleted between the handle and the question, which `info`'s contract calls missing.
+ */
+private fun fileInfo(handle: JsAny): Promise<JsString?> = js(
+    """handle.getFile().then(function (file) {
+        return file.size + String.fromCharCode(0) + file.lastModified;
+    }).catch(function (error) {
+        if (error && error.name === 'NotFoundError') return null;
+        throw error;
+    })"""
+)
 
 private fun readFileBytes(handle: JsAny): Promise<Int8Array?> =
     js("handle.getFile().then(function (file) { return file.arrayBuffer(); }).then(function (buffer) { return new Int8Array(buffer); })")

@@ -49,7 +49,9 @@ holds the `@Module @ComponentScan object DataLocalSourceModule`, and every local
     `dataWithContentsOfFile` for its `NSError` rather than taking its nil as absence, the JVM wraps the `IOException`,
     and OPFS folds only a `NotFoundError` into null. Sync is why: a file reported as missing is planned as a deletion,
     and that deletion reaches every other device. The song scan skips such a song with a log line; a sync run stops
-    and reports a storage failure.
+    and reports a storage failure. On OPFS an entry that disappears between the directory listing and the question
+    about its size is left out of the listing rather than failing it, since a sync run deletes files while the live
+    rescan is listing the same directory: that is a file no longer in the directory, not a read folded into null.
   - iOS splits the two: the library goes to the documents directory, where the Files app can reach it, and the
     preferences to application support, where it cannot.
   - The JVM storage removes its own temporary files older than an hour on first touching each directory. On Windows
