@@ -300,13 +300,14 @@ private fun TagFilters(
         if (isExpanded) tags else tags.filterIndexed { index, tag -> index < MAX_COLLAPSED_TAG_COUNT || tag.name.lowercase() in selected }
     }
     // A tag the library no longer has stays selected, and clearing deliberately leaves it alone
-    // (CampfireViewModel.clearTagFilter), so what the action is offered for is a selection among the chips rather than
-    // whatever the filter still holds - a button that cleared nothing visible would be answering a question the
-    // screen never asked.
-    val hasClearableSelection = remember(tags, selected) { tags.any { it.name.lowercase() in selected } }
+    // (CampfireViewModel.clearTagFilter), so what the clear action and the match mode are offered for is a selection
+    // among the chips rather than whatever the filter still holds - a button that cleared nothing visible, or an
+    // "any / every" asked about one chip and a tag nobody can see, would be answering a question the screen never
+    // asked.
+    val selectedChipCount = remember(tags, selected) { tags.count { it.name.lowercase() in selected } }
     FilterSectionTitle(
         title = stringResource(Res.string.songs_tags),
-        isClearVisible = hasClearableSelection,
+        isClearVisible = selectedChipCount > 0,
         clearText = stringResource(Res.string.songs_tags_clear),
         onClearClicked = onClear,
     )
@@ -339,7 +340,7 @@ private fun TagFilters(
         }
     }
     MatchModeChoice(
-        isVisible = selected.size > 1,
+        isVisible = selectedChipCount > 1,
         title = stringResource(Res.string.songs_tags_match_mode),
         anyText = stringResource(Res.string.songs_tags_match_mode_any),
         allText = stringResource(Res.string.songs_tags_match_mode_all),
