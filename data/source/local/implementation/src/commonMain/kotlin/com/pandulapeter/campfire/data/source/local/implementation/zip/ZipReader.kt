@@ -27,7 +27,8 @@ internal object ZipReader {
      * `.DS_Store` are still perfectly good.
      *
      * @param maxTotalSize how many bytes the entries read may add up to once inflated. Sizes are checked as the
-     * central directory declares them, before an entry is read; the inflater holds an entry to what it declared.
+     * central directory declares them and charged before an entry is read, so a damaged entry costs what it declared;
+     * the inflater holds an entry to what it declared.
      * @param limitOf how large the entry of that name may be, null for one that is not to be read at all.
      */
     fun read(
@@ -47,7 +48,8 @@ internal object ZipReader {
         }
         val entries = mutableListOf<ZipEntry>()
         val unread = mutableListOf<UnreadZipEntry>()
-        var totalSize = 0L
+        var chargedSize = 0L
+        var compressedBytesRead = 0L
         var position = centralDirectoryOffset.toInt()
         repeat(totalEntries) {
             if (archive.u32(position) != CENTRAL_DIRECTORY_SIGNATURE) {
@@ -70,10 +72,20 @@ internal object ZipReader {
                 when {
                     limit == null -> unread += UnreadZipEntry(name, UnreadZipEntry.Reason.NOT_WANTED)
                     isUnsupported -> unread += UnreadZipEntry(name, UnreadZipEntry.Reason.UNREADABLE)
-                    uncompressedSize > limit || totalSize + uncompressedSize > maxTotalSize ->
+                    uncompressedSize > limit || chargedSize + uncompressedSize > maxTotalSize ->
                         unread += UnreadZipEntry(name, UnreadZipEntry.Reason.TOO_LARGE)
 
+                    // The entries of an archive never share their data, so together they cannot take up more of it than
+                    // there is. A central directory whose entries do is pointing several of them at the same bytes,
+                    // which only a zip bomb does.
+                    compressedBytesRead + compressedSize > archive.size ->
+                        unread += UnreadZipEntry(name, UnreadZipEntry.Reason.UNREADABLE)
+
                     else -> try {
+                        // Charged before it is read: a damaged entry has cost what it declared all the same, and without
+                        // this one damaged entry could be read as many times as the central directory names it.
+                        chargedSize += uncompressedSize
+                        compressedBytesRead += compressedSize
                         entries += ZipEntry(
                             name = name,
                             bytes = readData(
@@ -86,7 +98,6 @@ internal object ZipReader {
                                 localHeaderOffset = localHeaderOffset.toInt(),
                             ),
                         )
-                        totalSize += uncompressedSize
                     } catch (exception: ZipException) {
                         println("Could not read \"$name\": ${exception.message}")
                         unread += UnreadZipEntry(name, UnreadZipEntry.Reason.UNREADABLE)
@@ -95,7 +106,7 @@ internal object ZipReader {
             }
             position += 46 + nameLength + extraLength + commentLength
         }
-        return ZipContent(entries = entries, unread = unread)
+        return ZipContent(entries = entries, unread = unread, chargedSize = chargedSize)
     }
 
     private fun readData(

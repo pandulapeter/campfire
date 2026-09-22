@@ -65,7 +65,7 @@ internal class ArchiveLocalSourceImpl : ArchiveLocalSource {
             // import would not look inside: both cost nothing and cannot fail the archive.
             limitOf = { name -> name.fileName.takeUnless(LibraryFiles::isHiddenFileName)?.let(ImportLimits::maxSizeOf)?.takeIf { it > 0 } },
         )
-        inflated.count += content.entries.sumOf { it.bytes.size.toLong() }
+        inflated.count += content.chargedSize
         val read = content.entries.flatMap { entry ->
             val file = ImportedFile(name = entry.name.fileName, bytes = entry.bytes)
             if (depth < MAX_DEPTH && file.name.endsWith(ZIP_EXTENSION, ignoreCase = true)) {

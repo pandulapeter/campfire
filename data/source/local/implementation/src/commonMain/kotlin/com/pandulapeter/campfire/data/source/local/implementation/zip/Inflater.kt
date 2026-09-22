@@ -20,8 +20,9 @@ internal object Inflater {
      * Decompresses [length] bytes of raw DEFLATE data starting at [offset] of [source].
      *
      * @param expectedSize the known uncompressed size, or a negative number when it is unknown. When it is known the
-     * output buffer starts at that size, up to [INITIAL_CAPACITY_LIMIT], and the result is verified against it.
-     * @throws ZipException when the data is malformed, or when it declares or produces more than [MAX_ENTRY_SIZE] bytes.
+     * output buffer starts at that size, up to [INITIAL_CAPACITY_LIMIT], and the stream is held to it.
+     * @throws ZipException when the data is malformed, when it declares more than [MAX_ENTRY_SIZE] bytes, or when it
+     * produces more than it declared (more than [MAX_ENTRY_SIZE] where it declared nothing) or fewer.
      */
     fun inflate(
         source: ByteArray,
@@ -60,6 +61,9 @@ internal object Inflater {
         // OutOfMemoryError on Android and a trap on the web, neither of which an import can catch.
         private var out = ByteArray(if (expectedSize > 0) minOf(expectedSize, INITIAL_CAPACITY_LIMIT) else 1024)
         private var outSize = 0
+        // An entry is held to the size it declared as it inflates rather than once it has ended: an archive can name the
+        // same stream from any number of entries, and each of them would otherwise be inflated to MAX_ENTRY_SIZE first.
+        private val outputLimit = if (expectedSize >= 0) expectedSize else MAX_ENTRY_SIZE
 
         fun output(): ByteArray = if (outSize == out.size) out else out.copyOf(outSize)
 
@@ -115,15 +119,15 @@ internal object Inflater {
 
         private fun ensureCapacity(additional: Int) {
             val required = outSize + additional
-            if (required > MAX_ENTRY_SIZE) {
-                throw ZipException("Entry would inflate past $MAX_ENTRY_SIZE bytes.")
+            if (required > outputLimit) {
+                throw ZipException("Deflate stream produces more than the $outputLimit bytes it declared.")
             }
             if (required > out.size) {
                 var newSize = if (out.size == 0) 1024 else out.size
                 while (newSize < required) {
                     newSize *= 2
                 }
-                out = out.copyOf(minOf(newSize, MAX_ENTRY_SIZE))
+                out = out.copyOf(minOf(newSize, outputLimit))
             }
         }
 

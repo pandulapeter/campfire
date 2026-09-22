@@ -107,7 +107,10 @@ holds the `@Module @ComponentScan object DataLocalSourceModule`, and every local
   declares are trusted only as far as a first guess: an entry is asked about by name before it is inflated — hidden
   files and anything an import would not look inside are never read, a song over `ImportLimits.MAX_TEXT_FILE_SIZE` is
   not either, and the caller says how much the whole import may still unpack to (`ImportLimits.MAX_IMPORT_SIZE`,
-  24 MiB, nested archives included). An entry that cannot be read is left out and reported by name; only an archive
+  24 MiB, nested archives included) — charged before an entry is read, so a damaged entry costs what it declared, and
+  an inflating entry is stopped at the size it declared rather than at the 24 MiB any entry may reach; the entries'
+  compressed sizes may not add up to more than the archive holds, which is what a central directory pointing many
+  entries at the same bytes (a zip bomb) runs into. An entry that cannot be read is left out and reported by name; only an archive
   that cannot be walked at all is a `ZipException`. The buffer still starts at no more than 1 MiB whatever the central
   directory claims.
 

@@ -13,6 +13,8 @@ package com.pandulapeter.campfire.data.source.local.implementation.zip
 internal class ZipContent(
     val entries: List<ZipEntry>,
     val unread: List<UnreadZipEntry>,
+    /** What the archive's reads cost the budget of [ZipReader.read], damaged entries included. */
+    val chargedSize: Long,
 )
 
 internal data class UnreadZipEntry(

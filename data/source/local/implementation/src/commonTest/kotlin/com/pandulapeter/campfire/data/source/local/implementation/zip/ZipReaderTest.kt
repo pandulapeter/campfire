@@ -12,6 +12,7 @@ package com.pandulapeter.campfire.data.source.local.implementation.zip
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
+import kotlin.test.assertTrue
 
 internal class ZipReaderTest {
 
@@ -143,13 +144,122 @@ internal class ZipReaderTest {
         assertFailsWith<ZipException> { Inflater.inflate(archive, offset = 1, length = Int.MAX_VALUE) }
     }
 
+    @Test
+    fun stopsAnEntryThatInflatesPastWhatItDeclaredAtThatSize() {
+        val exception = assertFailsWith<ZipException> { Inflater.inflate(helloStream(), expectedSize = 3) }
+
+        assertTrue(exception.message.orEmpty().contains("3 bytes"), exception.message)
+    }
+
+    @Test
+    fun readsEntriesSharingTheirDataOnce() {
+        val content = ByteArray(1000) { 'a'.code.toByte() }
+        val stream = byteArrayOf(0x01, 0xE8.toByte(), 0x03, 0x17, 0xFC.toByte()) + content
+
+        val read = ZipReader.read(overlappingArchive(stream, count = 3, declaredSize = 1000, crc = Crc32.of(content)))
+
+        assertEquals(1, read.entries.size)
+        assertEquals(List(2) { UnreadZipEntry("bomb.cho", UnreadZipEntry.Reason.UNREADABLE) }, read.unread)
+    }
+
+    @Test
+    fun chargesADamagedEntryWhatItDeclared() {
+        val stream = helloStream()
+        val archive = archive(
+            streams = listOf(stream, stream),
+            records = listOf(
+                CentralRecord(stream = 0, declaredSize = 5, crc = 0),
+                CentralRecord(stream = 1, declaredSize = 5, crc = Crc32.of("hello".encodeToByteArray())),
+            ),
+        )
+
+        val read = ZipReader.read(archive, maxTotalSize = 9)
+
+        assertEquals(emptyList(), read.entries)
+        assertEquals(
+            listOf(
+                UnreadZipEntry("bomb.cho", UnreadZipEntry.Reason.UNREADABLE),
+                UnreadZipEntry("bomb.cho", UnreadZipEntry.Reason.TOO_LARGE),
+            ),
+            read.unread,
+        )
+    }
+
+    @Test
+    fun costsAtMostTheArchiveForManyRecordsLyingAboutOneStream() {
+        // Sixteen stored blocks of 65,535 bytes: a stream that inflates to a mebibyte, named by every record.
+        val block = ByteArray(65535) { 'a'.code.toByte() }
+        val stream = (0 until 16).fold(ByteArray(0)) { stream, index ->
+            stream + byteArrayOf(if (index == 15) 0x01 else 0x00, 0xFF.toByte(), 0xFF.toByte(), 0x00, 0x00) + block
+        }
+
+        val read = ZipReader.read(overlappingArchive(stream, count = 200, declaredSize = 10, crc = 0), maxTotalSize = Long.MAX_VALUE)
+
+        assertEquals(emptyList(), read.entries)
+        assertEquals(List(200) { UnreadZipEntry("bomb.cho", UnreadZipEntry.Reason.UNREADABLE) }, read.unread)
+    }
+
+    /** One local header holding [stream], and [count] central directory records that all point at it. */
+    private fun overlappingArchive(stream: ByteArray, count: Int, declaredSize: Long, crc: Long, method: Int = 8) = archive(
+        streams = listOf(stream),
+        records = List(count) { CentralRecord(stream = 0, declaredSize = declaredSize, crc = crc, method = method) },
+    )
+
+    private class CentralRecord(val stream: Int, val declaredSize: Long, val crc: Long, val method: Int = 8)
+
+    /** One local header named "bomb.cho" per stream in [streams], and the central directory [records] pointing at them. */
+    private fun archive(streams: List<ByteArray>, records: List<CentralRecord>): ByteArray {
+        val name = "bomb.cho".encodeToByteArray()
+        val builder = ByteArrayBuilder()
+        val offsets = streams.map { stream ->
+            val offset = builder.size
+            builder.u32(0x04034B50L)
+            repeat(3) { builder.u16(0) } // Version, flags, method: the central directory is the one that is read.
+            repeat(2) { builder.u16(0) } // Modification time and date.
+            repeat(3) { builder.u32(0) } // Checksum and sizes.
+            builder.u16(name.size)
+            builder.u16(0) // Extra field length.
+            builder.bytes(name)
+            builder.bytes(stream)
+            offset
+        }
+        val centralDirectoryOffset = builder.size
+        records.forEach { record ->
+            builder.u32(0x02014B50L)
+            builder.u16(20) // Version made by.
+            builder.u16(20) // Version needed to extract.
+            builder.u16(0) // Flags.
+            builder.u16(record.method)
+            repeat(2) { builder.u16(0) } // Modification time and date.
+            builder.u32(record.crc)
+            builder.u32(streams[record.stream].size.toLong())
+            builder.u32(record.declaredSize)
+            builder.u16(name.size)
+            repeat(4) { builder.u16(0) } // Extra field and comment lengths, disk number, internal attributes.
+            builder.u32(0) // External attributes.
+            builder.u32(offsets[record.stream].toLong())
+            builder.bytes(name)
+        }
+        val centralDirectorySize = builder.size - centralDirectoryOffset
+        builder.u32(0x06054B50L)
+        repeat(2) { builder.u16(0) } // Disk numbers.
+        repeat(2) { builder.u16(records.size) } // Entries on this disk and in total.
+        builder.u32(centralDirectorySize.toLong())
+        builder.u32(centralDirectoryOffset.toLong())
+        builder.u16(0) // Comment length.
+        return builder.build()
+    }
+
+    /** A DEFLATE stream of a single stored block of "hello", ten bytes long. */
+    private fun helloStream() = byteArrayOf(0x01, 0x05, 0x00, 0xFA.toByte(), 0xFF.toByte()) + "hello".encodeToByteArray()
+
     /**
      * An archive of one entry whose ten byte data is a DEFLATE stream of a single stored block of "hello", and whose
      * central directory claims it inflates to [declaredSize] bytes, takes up [compressedSize] and uses [method].
      */
     private fun deflatedArchive(declaredSize: Long, compressedSize: Long = 10, method: Int = 8): ByteArray {
         val name = "bomb.cho".encodeToByteArray()
-        val stream = byteArrayOf(0x01, 0x05, 0x00, 0xFA.toByte(), 0xFF.toByte()) + "hello".encodeToByteArray()
+        val stream = helloStream()
         val builder = ByteArrayBuilder()
         builder.u32(0x04034B50L)
         repeat(3) { builder.u16(0) } // Version, flags, method: the central directory is the one that is read.

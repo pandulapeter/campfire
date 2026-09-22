@@ -109,6 +109,20 @@ class ArchiveLocalSourceTest {
     }
 
     @Test
+    fun `counts the damaged entries of a nested archive against the whole import`() = runBlocking {
+        val damagedSize = 100
+        val damaged = ZipWriter.write(listOf(ZipEntry("x.cho", ByteArray(damagedSize) { 'x'.code.toByte() })))
+        // The first byte of the stored content, after the 30 byte local header and the name: the checksum now fails.
+        damaged[30 + "x.cho".length] = 'y'.code.toByte()
+        val good = ZipWriter.write(listOf(ZipEntry("song.cho", ByteArray(20) { 's'.code.toByte() })))
+        val archive = ZipWriter.write(listOf(ZipEntry("a.zip", damaged), ZipEntry("b.zip", good)))
+
+        val files = archiveLocalSource.unpack(archive = archive, maxSize = damaged.size + good.size + damagedSize + 10L)
+
+        assertTrue(files.single { it.name == "song.cho" }.isTooLarge)
+    }
+
+    @Test
     fun `reports an archive inside it that cannot be read`() = runBlocking {
         val archive = ZipWriter.write(
             listOf(
