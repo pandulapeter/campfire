@@ -993,7 +993,7 @@ private fun SongPicker(
                     isChecked = fileName in selectedSongFileNames,
                     onCheckedChange = { isChecked ->
                         selectedSongFileNames = if (isChecked) selectedSongFileNames + fileName else selectedSongFileNames - fileName
-                        viewModel.setSetlistSongs(setlist = setlist, songFileNames = selectedSongFileNames)
+                        viewModel.setSetlistSongs(setlistFileName = setlist.fileName, songFileNames = selectedSongFileNames)
                     },
                 )
             }

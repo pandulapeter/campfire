@@ -1443,14 +1443,15 @@ class CampfireViewModel(
      * The writes go through [UpdateSetlistUseCase], which makes them one at a time and in the order they were asked
      * for, so the file ends up holding what the last tick left rather than whichever write happened to finish last.
      *
-     * @param setlist What to write into while the library has not caught up with a setlist that was created a moment ago.
+     * A setlist that is gone by now - deleted by a sync run while the sheet was open, or unreadable - is not brought
+     * back from the sheet's copy: that copy is the setlist as it was when the sheet opened, and nothing else in the app
+     * recreates a setlist by changing it.
      */
-    fun setSetlistSongs(setlist: Setlist, songFileNames: List<String>) = launchLibraryChange {
-        fun Setlist.withSongs(): Setlist {
-            val entriesBySongFileName = entries.associateBy { it.songFileName }
-            return copy(entries = songFileNames.map { entriesBySongFileName[it] ?: Setlist.Entry(songFileName = it) })
-        }
-        updateSetlist(setlist.fileName) { it.withSongs() } ?: saveSetlist(setlist.withSongs())
+    fun setSetlistSongs(setlistFileName: String, songFileNames: List<String>) = launchLibraryChange {
+        updateSetlist(setlistFileName) { setlist ->
+            val entriesBySongFileName = setlist.entries.associateBy { it.songFileName }
+            setlist.copy(entries = songFileNames.map { entriesBySongFileName[it] ?: Setlist.Entry(songFileName = it) })
+        } ?: _messages.send(Message.OperationFailed)
     }
 
     /**
