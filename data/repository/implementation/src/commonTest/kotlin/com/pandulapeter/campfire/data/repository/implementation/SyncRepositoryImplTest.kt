@@ -120,6 +120,55 @@ class SyncRepositoryImplTest {
         assertTrue(song(1) in snapshots.last())
     }
 
+    @Test
+    fun `a run stopped by the question on its second pass reads the library again`() = runTest {
+        val json = Json {
+            prettyPrint = true
+            encodeDefaults = true
+        }
+        val local = FakeLibraryFileLocalSource(
+            files = (1..10).associate { song(it) to "Song $it".encodeToByteArray() } + (song(11) to "New".encodeToByteArray()),
+        )
+        val stateLocalSource = FakeSyncStateLocalSource(
+            index = json.encodeToString(
+                SyncIndexDocument.of(
+                    providerId = SyncProviderId.DROPBOX.id,
+                    accountId = ACCOUNT.indexKey(),
+                    lastSyncedAt = 1,
+                    index = (1..10).associate {
+                        song(it) to SyncIndexEntry(localHash = localContentHash("Song $it".encodeToByteArray()), remoteRevision = "r1")
+                    },
+                ),
+            ),
+        )
+        val provider = FakeSyncProvider(
+            files = (1..10).associate { song(it) to "Song $it".encodeToByteArray() } + (song(12) to "Incoming".encodeToByteArray()),
+            account = ACCOUNT,
+        )
+        // The upload meets a file that appeared in the meantime, which makes the engine list again, and by then another
+        // device has emptied most of the folder.
+        provider.onUpload = { key ->
+            if (key == song(11)) {
+                (1..10).forEach { provider.files -= song(it) }
+                provider.files[song(11)] = "Other".encodeToByteArray() to "r9"
+            }
+        }
+        val snapshots = mutableListOf<Set<SyncKey>>()
+        val repository = repository(
+            provider = provider,
+            stateLocalSource = stateLocalSource,
+            libraryFileLocalSource = local,
+            songRepository = RecordingSongRepository(onRescan = { snapshots += local.files.keys.toSet() }),
+        )
+
+        repository.restore()
+        repository.synchronize(SyncDeletionPolicy.ASK)
+        val state = repository.awaitOutcome()
+
+        assertIs<SyncOutcome.DeletionsNeedConfirmation>(state.lastOutcome)
+        assertTrue(song(12) in snapshots.last())
+    }
+
     /** What the browser engine of the HTTP client throws for a request that failed, were it to get past the provider. */
     @Test
     fun `a run that ends in something other than an exception still reports and clears its marker`() = runTest {

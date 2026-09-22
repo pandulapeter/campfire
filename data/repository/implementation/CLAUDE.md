@@ -126,8 +126,9 @@ import — is the only thing that walks the directory again.
   planner's tests cannot show, and `SyncRepositoryImplTest` runs the repository against the same fakes plus the ones
   in `FakeSyncCollaborators.kt`. A plan whose local deletions are more than half of the index (at least
   `MIN_DELETIONS_TO_ASK` of them) or the whole of it is not applied under `SyncDeletionPolicy.ASK`: the engine returns
-  `Result.DeletionsNeedConfirmation` before anything moves, and the repository reports it as the run's outcome without
-  a rescan. `DELETE_LOCALLY` applies such a plan as it is, and `KEEP_AND_UPLOAD` first drops the index entries of
+  `Result.DeletionsNeedConfirmation` before those deletions move, and the repository reports it as the run's outcome,
+  rescanning only when an earlier pass of the same run had already moved files. `DELETE_LOCALLY` applies such a plan
+  as it is, and `KEEP_AND_UPLOAD` first drops the index entries of
   every file that is here and not there, which the planner then reads as new local files. The policy is a parameter
   of the one run it was given to, never state. A failure on one file does not end a run; only the three failures
   that make every further call pointless (the credentials refused, the service unreachable, the remote folder full)

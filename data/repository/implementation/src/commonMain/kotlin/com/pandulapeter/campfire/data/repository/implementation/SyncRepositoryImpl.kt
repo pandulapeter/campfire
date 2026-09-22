@@ -356,9 +356,13 @@ internal class SyncRepositoryImpl(
                 indexWriteJob?.join()
                 when (result) {
                     is SyncEngine.Result.DeletionsNeedConfirmation -> {
-                        // The run stopped before anything moved, so there is nothing for the lists to read again and
-                        // the index only has to stop saying that a run is going.
+                        // Asked before the deletions moved, but not necessarily before anything did: a second pass
+                        // can find the folder emptied after the first one had already brought files in, and those
+                        // are on disk whether or not the question is answered.
                         latestIndex?.let { saveIndexQuietly(it().copy(isRunInProgress = false)) }
+                        if (hasFinishedOperations) {
+                            rescanLibraryAfterRun()
+                        }
                         updateConnected {
                             it.copy(
                                 progress = null,
