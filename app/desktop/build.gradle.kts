@@ -46,10 +46,15 @@ compose.desktop {
             description = "Your songbook, on every screen you own"
             vendor = "Pandula Péter"
             copyright = "Copyright (c) Pandula Péter 2017-2026"
-            // What jdeps finds on top of the modules Compose Desktop includes by itself; the packaged runtime holds the
-            // listed modules and nothing else, so one that is missing is a NoClassDefFoundError only an installed build
-            // can throw. `./gradlew :app:desktop:suggestRuntimeModules` prints the list.
-            modules("java.instrument", "java.management", "jdk.unsupported")
+            // What jdeps finds on top of the modules Compose Desktop includes by itself, plus the two it cannot:
+            // `jdk.localedata` is found through ServiceLoader at run time, so no class file names it, and without it
+            // Locale.getDisplayLanguage answers in English whatever language it is asked in - the language filter
+            // chips and the language picker would read "German" in a Hungarian app. `jdk.accessibility` is loaded by
+            // the JDK itself and is what the Java Access Bridge lives in, without which Narrator and NVDA get nothing
+            // from the Windows build. The packaged runtime holds the listed modules and nothing else, so one that is
+            // missing is a NoClassDefFoundError - or, for these two, a silent wrong answer - that only an installed
+            // build can show. `./gradlew :app:desktop:suggestRuntimeModules` prints what jdeps can see.
+            modules("java.instrument", "java.management", "jdk.accessibility", "jdk.localedata", "jdk.unsupported")
             macOS {
                 iconFile.set(project.file("src/main/resources/appIcon.icns"))
                 // Not fileAssociation(): the plugin writes its own document type with the "****" OS type, which claims
