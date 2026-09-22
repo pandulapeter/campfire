@@ -244,8 +244,10 @@ internal fun SongLyrics(
                                 lyricsStyle = lyricsStyle,
                                 chordStyle = chordStyle,
                                 textMeasurements = textMeasurements,
-                                // Scrolls the section back to the top of the screen.
-                                onHeaderClick = { coroutineScope.launch { scrollState.animateScrollTo(bounds.top) } },
+                                // Scrolls the section back to the top of the screen. The sections start under the
+                                // song's header, so its height is part of where they are; the top padding the caller
+                                // puts above everything is left showing, as it is at the start of the song.
+                                onHeaderClick = { coroutineScope.launch { scrollState.animateScrollTo(headerHeight + bounds.top) } },
                             )
                         }
                     }
