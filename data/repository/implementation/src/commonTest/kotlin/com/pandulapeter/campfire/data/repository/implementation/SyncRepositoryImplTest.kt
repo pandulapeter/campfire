@@ -118,11 +118,11 @@ class SyncRepositoryImplTest {
     @Test
     fun `a run that ends in something other than an exception still reports and clears its marker`() = runTest {
         val stateLocalSource = FakeSyncStateLocalSource()
-        var downloads = 0
         val repository = repository(
             provider = FakeSyncProvider(
                 files = (1..3).associate { song(it) to "Song $it".encodeToByteArray() },
-                onDownload = { if (++downloads == 2) throw Error("Fail to fetch") },
+                // Keyed by the file rather than counted, since the engine runs several downloads at once.
+                onDownload = { if (it == song(2)) throw Error("Fail to fetch") },
                 account = ACCOUNT,
             ),
             stateLocalSource = stateLocalSource,
