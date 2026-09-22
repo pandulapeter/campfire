@@ -85,6 +85,34 @@ internal object ChordProSyntax {
      */
     fun lineSeparatorOf(text: String) = if (text.contains("\r\n")) "\r\n" else "\n"
 
+    /**
+     * The character offset every line of [splitLines] starts at in [text]. It is counted on the text itself rather
+     * than from the lengths of the lines, because a file may mix its line endings, and a break is one or two
+     * characters depending on which of them ended the line above.
+     */
+    internal fun lineStartOffsets(text: String): IntArray {
+        val starts = mutableListOf(0)
+        var offset = 0
+        while (offset < text.length) {
+            when (text[offset]) {
+                '\r' -> {
+                    offset += if (text.getOrNull(offset + 1) == '\n') 2 else 1
+                    starts += offset
+                }
+
+                '\n' -> {
+                    offset++
+                    starts += offset
+                }
+
+                else -> offset++
+            }
+        }
+        // The start past a final line break is not a line, see splitLines.
+        if (starts.size > 1 && endsWithLineBreak(text)) starts.removeAt(starts.lastIndex)
+        return starts.toIntArray()
+    }
+
     /** Whether [text] ends with a line break, which [splitLines] does not report as a line of its own. */
     fun endsWithLineBreak(text: String) = text.endsWith("\n") || text.endsWith("\r")
 

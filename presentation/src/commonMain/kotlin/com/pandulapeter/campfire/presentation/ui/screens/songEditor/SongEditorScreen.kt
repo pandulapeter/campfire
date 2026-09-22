@@ -82,6 +82,7 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.pandulapeter.campfire.chordpro.ChordProParser
+import com.pandulapeter.campfire.chordpro.ChordProTransposer
 import com.pandulapeter.campfire.chordpro.model.displayTitle
 import com.pandulapeter.campfire.data.model.domain.LibraryFiles
 import com.pandulapeter.campfire.data.model.domain.UserPreferences
@@ -371,7 +372,7 @@ private fun LoadedSongEditor(
                         // even before a chord has been written under it.
                         isEnabled = summary.hasChords || !summary.metadata.key.isNullOrBlank(),
                         onTransposed = { semitones ->
-                            textFieldState.replaceAll(viewModel.transposeText(textFieldState.text.toString(), semitones, chordSpelling.accidentals))
+                            textFieldState.replaceWithTransposition(viewModel.transposeText(textFieldState.text.toString(), semitones, chordSpelling.accidentals))
                         },
                     )
                     SegmentedChoice(
@@ -708,6 +709,24 @@ private fun TextFieldState.replaceAll(text: String) {
         delete(0, length)
         insert(0, text)
         selection = TextRange(caret)
+    }
+}
+
+/**
+ * Replaces the document with its transposition, keeping the caret and the selection next to the text they were next
+ * to (see [ChordProTransposer.transposedOffset]) rather than at the same character count. The history is treated the
+ * way [replaceAll] treats it.
+ */
+@OptIn(ExperimentalFoundationApi::class)
+private fun TextFieldState.replaceWithTransposition(transposed: String) {
+    val before = text.toString()
+    if (before == transposed) return
+    if (before.length > LONG_DOCUMENT_LENGTH) undoState.clearHistory()
+    edit {
+        val start = ChordProTransposer.transposedOffset(before, transposed, selection.start)
+        val end = ChordProTransposer.transposedOffset(before, transposed, selection.end)
+        replace(0, length, transposed)
+        selection = TextRange(start, end)
     }
 }
 

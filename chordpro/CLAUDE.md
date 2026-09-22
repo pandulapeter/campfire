@@ -95,6 +95,8 @@ in `:domain:*`. `:data:source:local:implementation` uses it directly for the met
   worth running for no semitones at all, so only `semitones == 0` *and* no forced spelling short-circuits. Its walk
   over the model is `rewriteChords`, which takes the rename as a function so that `ChordProNotation` can reuse it;
   the two differ only in what a tab is, a fingerboard to one and a page of chord names to the other.
+  `transposedOffset` maps a caret through a text transposition (same line, same place between the brackets), which
+  is what keeps the editor's caret next to the text it was at.
 - `ChordProTabTransposer` — the same move inside a `{start_of_tab}` environment, where it means the fret numbers and
   not the notes: the tuning stays what it was. A tab environment is transposed as a whole, so that a transposition
   that would take a fret off the fingerboard moves all of it by octaves instead of producing an unplayable number,

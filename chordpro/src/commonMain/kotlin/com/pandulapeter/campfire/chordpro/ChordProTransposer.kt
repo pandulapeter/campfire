@@ -131,6 +131,75 @@ object ChordProTransposer {
         }
     }
 
+    /**
+     * Where [offset] of [before] is in [after], for an [after] that [transposeText] made of [before]: an editor that
+     * transposes the document under the caret keeps the caret next to the text it was next to, rather than at the
+     * same character count, which every chord name that grew or shrank above it would have moved.
+     *
+     * A transposition keeps every line and changes nothing but chord names (and the frets of a tab), so the offset
+     * keeps its line, and inside the line it keeps its place between the brackets; a line with no brackets to go by
+     * (a `{key}`, a grid or a tab line) keeps the text in front of its first change and behind its last one.
+     */
+    fun transposedOffset(before: String, after: String, offset: Int): Int {
+        val clamped = offset.coerceIn(0, before.length)
+        if (before == after) return clamped
+        val beforeStarts = ChordProSyntax.lineStartOffsets(before)
+        val afterStarts = ChordProSyntax.lineStartOffsets(after)
+        if (beforeStarts.size != afterStarts.size) return clamped.coerceAtMost(after.length)
+        val line = lastLineStartingAtOrBefore(beforeStarts, clamped)
+        val column = clamped - beforeStarts[line]
+        val beforeLine = ChordProSyntax.splitLines(before)[line]
+        val afterLine = ChordProSyntax.splitLines(after)[line]
+        val afterLineStart = afterStarts[line]
+        if (column > beforeLine.length) {
+            // On the line break, or past the final one. The break is measured on the new text, since joinLines may
+            // have given a file that mixed its endings a different separator.
+            val limit = if (line + 1 < afterStarts.size) afterStarts[line + 1] - 1 else after.length
+            return (afterLineStart + afterLine.length + (column - beforeLine.length)).coerceAtMost(limit)
+        }
+        return afterLineStart + transposedColumn(beforeLine, afterLine, column).coerceIn(0, afterLine.length)
+    }
+
+    private fun lastLineStartingAtOrBefore(starts: IntArray, offset: Int): Int {
+        var low = 0
+        var high = starts.lastIndex
+        while (low < high) {
+            val middle = (low + high + 1) / 2
+            if (starts[middle] <= offset) low = middle else high = middle - 1
+        }
+        return low
+    }
+
+    private fun transposedColumn(before: String, after: String, column: Int): Int {
+        if (before == after) return column
+        val beforeBrackets = ChordProSyntax.brackets(before)
+        val afterBrackets = ChordProSyntax.brackets(after)
+        if (beforeBrackets.size == afterBrackets.size && beforeBrackets.isNotEmpty()) {
+            var shift = 0
+            beforeBrackets.forEachIndexed { index, bracket ->
+                val oldRange = bracket.range
+                val newRange = afterBrackets[index].range
+                when {
+                    column <= oldRange.first -> return column + shift
+                    // Right before the "]" is after the whole chord name, which is where it stays.
+                    column == oldRange.last -> return newRange.last
+                    column < oldRange.last -> return (newRange.first + (column - oldRange.first)).coerceAtMost(newRange.last)
+                    else -> shift = newRange.last - oldRange.last
+                }
+            }
+            return column + shift
+        }
+        val prefix = before.commonPrefixWith(after).length
+        val suffix = minOf(before.commonSuffixWith(after).length, minOf(before.length, after.length) - prefix)
+        // The two ends meet only where the line merely grew at the caret (a key of C becoming C#), and a caret there
+        // stays after what grew, the way it stays after the whole of a chord name that did.
+        return when {
+            column >= before.length - suffix -> after.length - (before.length - column)
+            column <= prefix -> column
+            else -> (after.length - suffix).coerceAtLeast(prefix)
+        }
+    }
+
     private fun rewriteText(text: String, semitones: Int, rename: (String) -> String): String {
         val lines = ChordProSyntax.splitLines(text).toMutableList()
         val tabLineIndices = mutableListOf<Int>() // The tab environment being collected: it is transposed as a whole.

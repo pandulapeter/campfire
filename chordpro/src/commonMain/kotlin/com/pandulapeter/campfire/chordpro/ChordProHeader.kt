@@ -60,39 +60,13 @@ object ChordProHeader {
         // instead of leaving one behind, and a file that ended without one still does. A file that ends with a line
         // break has the start of one more line there, which is an ordinary place to insert at.
         val isAppended = index >= lines.size && !ChordProSyntax.endsWithLineBreak(text)
-        val offset = if (isAppended) text.length else lineStartOffset(text, index)
+        val offset = if (isAppended) text.length else ChordProSyntax.lineStartOffsets(text).getOrElse(index) { text.length }
         val opening = if (isAppended) "$separator$prefix" else prefix
         return Insertion(
             offset = offset,
             text = if (isAppended) "$opening$suffix" else "$opening$suffix$separator",
             caretOffset = offset + opening.length,
         )
-    }
-
-    /**
-     * The character offset line [index] of [ChordProSyntax.splitLines] starts at in [text]. It is counted on the text
-     * itself rather than from the lengths of the lines, because a file may mix its line endings, and a break is one or
-     * two characters depending on which of them ended the line above.
-     */
-    private fun lineStartOffset(text: String, index: Int): Int {
-        var line = 0
-        var offset = 0
-        while (line < index && offset < text.length) {
-            when (text[offset]) {
-                '\r' -> {
-                    line++
-                    offset += if (text.getOrNull(offset + 1) == '\n') 2 else 1
-                }
-
-                '\n' -> {
-                    line++
-                    offset++
-                }
-
-                else -> offset++
-            }
-        }
-        return offset
     }
 
     /**

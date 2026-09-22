@@ -310,4 +310,92 @@ class ChordProTransposerTest {
     fun `transposing text keeps the line endings of the file`() {
         assertEquals("[C#]la\r\n[G#]lo\r\n", ChordProTransposer.transposeText("[C]la\r\n[G]lo\r\n", 1, preferFlats = false))
     }
+
+    @Test
+    fun `a caret after a lyric keeps its lyric when every chord above it grows`() {
+        val before = "[C]Amazing [F]grace, how [C]sweet the sound\nThat [C]saved a [G]wretch like [C]me\n[C]I once was [F]lost, but [C]now am found"
+        val (after, mapped) = transposed(before, 1, before.length)
+
+        assertEquals("found", after.substring(mapped - 5, mapped))
+    }
+
+    @Test
+    fun `a caret between two chords keeps its place in the lyrics`() {
+        val before = "[C]Hello [G]world"
+        listOf(1, -1).forEach { semitones ->
+            val (after, mapped) = transposed(before, semitones, before.indexOf("lo"))
+
+            assertEquals("Hel", after.substring(mapped - 3, mapped), "$semitones")
+            assertTrue(after.substring(mapped).startsWith("lo ["), "$semitones")
+        }
+    }
+
+    @Test
+    fun `a caret after a chord name stays after the whole transposed name`() {
+        val (after, mapped) = transposed("[C]x", 1, 2)
+
+        assertEquals("[C#", after.substring(0, mapped))
+    }
+
+    @Test
+    fun `a caret inside a chord name stays inside the brackets`() {
+        val (after, mapped) = transposed("[F#m7]x", 1, 2)
+
+        assertTrue(mapped > after.indexOf('[') && mapped <= after.indexOf(']'))
+    }
+
+    @Test
+    fun `the start and the end of the text map to the start and the end`() {
+        val before = "[C]la [G]lo"
+
+        assertEquals(0, transposed(before, 1, 0).second)
+        val (after, mapped) = transposed(before, 1, before.length)
+        assertEquals(after.length, mapped)
+    }
+
+    @Test
+    fun `a caret after a key that grows stays after the new key`() {
+        val (after, mapped) = transposed("{key: C}\n[C]a", 1, 7)
+
+        assertEquals(after.indexOf('}'), mapped)
+    }
+
+    @Test
+    fun `a caret after a tab fret that grew keeps its distance from the line end`() {
+        val before = "{start_of_tab}\ne|--9--|--0--|\n{end_of_tab}"
+        val lineEnd = before.lastIndexOf('\n')
+        val (after, mapped) = transposed(before, 2, lineEnd - 2)
+
+        assertEquals(2, after.lastIndexOf('\n') - mapped)
+    }
+
+    @Test
+    fun `a caret at the end of a CRLF line stays at the end of that line`() {
+        val before = "[C]la\r\n[G]lo\r\n[C]end"
+        val (after, mapped) = transposed(before, 1, before.indexOf("\r\n", before.indexOf("lo")))
+
+        assertEquals(after.indexOf("\r\n", after.indexOf("lo")), mapped)
+    }
+
+    @Test
+    fun `a caret at the start of a line keeps it where joinLines unified the line endings`() {
+        val before = "[C]a\n[G]b\r\n[C]c"
+        val (after, mapped) = transposed(before, 1, before.lastIndexOf('['))
+
+        assertEquals("[C#]a\r\n[G#]b\r\n[C#]c", after)
+        assertEquals(after.lastIndexOf('['), mapped)
+    }
+
+    @Test
+    fun `an unchanged text maps every offset to itself and an offset out of range is clamped`() {
+        assertEquals(3, ChordProTransposer.transposedOffset("[C]la", "[C]la", 3))
+        assertEquals(0, ChordProTransposer.transposedOffset("[C]la", "[C#]la", -4))
+        assertEquals("[C#]la".length, ChordProTransposer.transposedOffset("[C]la", "[C#]la", 100))
+    }
+
+    /** The transposition of [before] and where [offset] maps to in it, always against the transposer's own output. */
+    private fun transposed(before: String, semitones: Int, offset: Int): Pair<String, Int> {
+        val after = ChordProTransposer.transposeText(before, semitones, preferFlats = false)
+        return after to ChordProTransposer.transposedOffset(before, after, offset)
+    }
 }
