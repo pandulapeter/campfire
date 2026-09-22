@@ -37,6 +37,16 @@ direction.
   handover. `DismissLoadingScreen` in `CampfireWebApplication.kt` waits two frames before reporting ready —
   `withFrameNanos` resumes while its own frame is still being assembled — so the fade uncovers the app rather than an
   empty page. The webpack output is named `campfire.js` (`outputModuleName` + `commonWebpackConfig`).
+- **The page is only ever loaded as the folder it lives in.** Every screen of the app has an address of its own
+  (`…/campfire/song/…`, see `BrowserRoutes` in `:presentation`), which is not a file: GitHub Pages answers it with the
+  site's `404.html`, which sends it on to `…/campfire/?/song/…` — the whole path for `campfire`, where the other apps on
+  the site get theirs squashed into one segment — and `webpack.config.d/routes.js` has the development server redirect
+  the same way, for navigations whose first segment is one of the app's. The first script of `index.html` then writes
+  that folder into a `<base>` before anything is fetched, and puts the address from the query string back into the
+  address bar. The `<base>` is load bearing: once the app has put a deeper address up, every relative URL — the icon,
+  the preloaded fonts, `campfire.js`, the binaries, the resources Compose fetches later and the storage worker the first
+  write starts — would otherwise be resolved against it. A host that serves `index.html` at the deep address itself (a
+  single page app fallback) breaks exactly that, since the page can no longer tell where its folder ends.
 - The page also preloads the two monospaced font files `:presentation` bundles for tabs, so they download alongside the
   binaries rather than after them. The links are `as="fetch"` with `crossorigin`, which is what makes the Compose
   resource reader's own `fetch()` match them; `as="font"` would be downloaded a second time. They name the files by
@@ -80,13 +90,16 @@ Sync is the one place the web platform forced a design: asking for consent navig
 written to OPFS before the app leaves, and the answer is read out of the query string at the next start (and taken
 out of the address bar as it is read, so a reload cannot replay a spent code). The redirect URI is the page's own
 URL, which has to be registered with the service — a deployment served from a different address needs its own entry.
-It is always written as the folder the page is served from, ending in `/`, with any `index.html` taken off, since the
-service matches it character for character and the same page opened as `…/campfire/index.html` would otherwise ask for
-a URI nobody registered: `https://pandulapeter.github.io/campfire/` for the deployment and `http://localhost:8080/`
-for the development server are the two entries.
-Nothing about which screen the user was on survives that trip, because the navigation state is in memory and never in
-the URL: `restore` reports that this start up came back from a consent page (whatever the service answered) and
-`CampfireViewModel` opens Settings, which is the screen the user pressed the button on.
+It is always written as the folder the page is served from — the `<base>`, not the address bar, which names the screen
+the button was pressed on — ending in `/`, with any `index.html` taken off, since the service matches it character for
+character and the same page opened as `…/campfire/index.html` would otherwise ask for a URI nobody registered:
+`https://pandulapeter.github.io/campfire/` for the deployment and `http://localhost:8080/` for the development server
+are the two entries.
+The answer therefore always lands on the songs' address, with the code in the query string: `restore` reports that
+this start up came back from a consent page (whatever the service answered) and `CampfireViewModel` opens the Library
+tab of Settings, which is the screen the user pressed the button on and which gets its own history entry on top. The
+query string is left alone by the app's history handling until the authenticator has read it, and taken out with the
+history entry's state kept. Going Back from the consent page instead reloads the page at the address it was left from.
 
 The web build has no file associations and no "open with": browsers cannot register those without a service worker.
 Files reach it through the picker (a hidden `<input type="file">`) or by being dropped on the page — files or a folder,

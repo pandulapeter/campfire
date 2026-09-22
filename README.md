@@ -97,12 +97,15 @@ an empty library.
 
 ### To do
 - ProGuard for desktop builds
-- Add support for external control devices
+- Add support for external control devices with a focus-by-section feature
 - Songs: sort by year option
 - Improve performance mode description
 - Rename setlist date sort, maybe expose a date for Setlists
 - Fix Songs screen async race animation issues
 - Update the screenshots in the Readme
+- Display library size on disk
+- Improve code coverage
+- Review architecture / code quality
 
 ### License
 

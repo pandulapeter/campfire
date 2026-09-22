@@ -16,6 +16,8 @@ import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.remember
+import com.pandulapeter.campfire.presentation.ui.navigation.BrowserHistoryEffect
+import com.pandulapeter.campfire.presentation.ui.navigation.navigateToBrowserAddress
 import com.pandulapeter.campfire.presentation.ui.platform.LocalFilePicker
 import com.pandulapeter.campfire.presentation.ui.platform.WebFilePicker
 import com.pandulapeter.campfire.presentation.ui.platform.droppedFiles
@@ -27,7 +29,8 @@ import org.koin.compose.viewmodel.koinViewModel
  * Web shell of the shared UI. Links open in a new browser tab, files dropped on the page are imported, and the
  * browser asks before the page is left with unsaved text in the editor. Escape reaches Compose from a focused text
  * field too ([startForwardingEscapeKey]), and Ctrl / Cmd + S is kept from the browser's own "Save page as"
- * ([startSuppressingBrowserSave]).
+ * ([startSuppressingBrowserSave]). Every screen has an address of its own, and the browser's history follows the
+ * app's back stack ([BrowserHistoryEffect]).
  */
 @Composable
 fun CampfireWebApp(
@@ -45,6 +48,10 @@ fun CampfireWebApp(
     }
     // Collected in an effect rather than read as lifecycle-aware state: a tab that is closed from the tab strip
     // while another one is in front is a hidden page, and that is no moment to have stopped listening.
+    // In the composition rather than in an effect, which is what navigateOnLaunch asks of its caller: the launch
+    // screen has to know it is waiting for the address before the library it waits for can have been read.
+    remember(viewModel) { viewModel.navigateToBrowserAddress() }
+    BrowserHistoryEffect(viewModel)
     LaunchedEffect(viewModel) {
         viewModel.hasUnsavedEditorChanges.collect { hasUnsavedChanges ->
             if (hasUnsavedChanges) startWarningBeforeUnload() else stopWarningBeforeUnload()
@@ -62,9 +69,10 @@ fun CampfireWebApp(
 }
 
 /**
- * Makes the browser ask before the page is left - reloaded, closed, navigated away from, or gone back from,
- * which leaves the page too, since the app puts nothing into the browser's history. The editor only writes when
- * it is told to, so at that moment the page holds the only copy of what was typed.
+ * Makes the browser ask before the page is left - reloaded, closed, or navigated away from. The browser's Back does
+ * not leave it while there is an editor to leave, since the editor has a history entry of its own and going back from
+ * it asks the app's own question instead (see BrowserHistoryEffect). The editor only writes when it is told to, so
+ * at that moment the page holds the only copy of what was typed.
  *
  * The listener exists only while there is unsaved text ([stopWarningBeforeUnload] otherwise): a page with a
  * `beforeunload` listener is one the browser cannot keep in its back/forward cache, and one that always asks is

@@ -363,6 +363,16 @@ start, which is what the rest of `app/web` is about — see its `CLAUDE.md`.
 - One tab per origin owns the library through a Web Lock taken before the app is downloaded. A second tab gets a
   localized page that asks it to close or continue in the first, which keeps OPFS from changing behind the running
   app's cached repositories.
+- **Every screen has an address, and the browser's history is the app's back stack**: `/` is the songs, then
+  `search`, `setlists`, `setlists/search`, `settings/{general,songs,library,about}`, `song/{song}`, `song/{song}/edit`
+  and `setlist/{setlist}/{song}`, one history entry per step a back gesture would take (`:presentation`'s
+  `ui/navigation/BrowserHistory.kt`). The app decides and the history follows — pushed, replaced or gone back through
+  to match — and the browser's Back is sent into the navigation event dispatcher like Escape, so it closes a dialog
+  or asks about unsaved text before it leaves a screen. An address that is opened is resolved once the library has
+  been read, behind the launch screen; one naming nothing the library holds opens the songs. GitHub Pages serves a
+  deep address as its site-wide 404 page, which hands it to `index.html` in the query string (`404.html` in the
+  `pandulapeter.github.io` repository keeps the whole path for `campfire` only), and `index.html` writes a `<base>`
+  for the folder it lives in, which every relative URL of the page and the app depends on.
 - The loading screen has a determinate progress bar, fed by a `fetch` wrapper that counts the bytes of the binaries
   against the total the build wrote into the page. It is a page and not an installable app on purpose: there is no
   web app manifest and no service worker, because every platform that should have an installable Campfire has a

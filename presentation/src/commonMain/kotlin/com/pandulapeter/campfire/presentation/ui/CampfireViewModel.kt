@@ -13,6 +13,8 @@ import androidx.compose.foundation.text.input.TextFieldState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateListOf
+import androidx.compose.runtime.mutableStateMapOf
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.compose.runtime.snapshotFlow
 import androidx.compose.runtime.snapshots.SnapshotStateList
@@ -80,6 +82,7 @@ import com.pandulapeter.campfire.domain.api.useCases.UpdateSetlistUseCase
 import com.pandulapeter.campfire.presentation.ui.components.ScrollPosition
 import com.pandulapeter.campfire.presentation.ui.components.SearchState
 import com.pandulapeter.campfire.presentation.ui.navigation.CampfireDestination
+import com.pandulapeter.campfire.presentation.ui.navigation.NavigationState
 import com.pandulapeter.campfire.presentation.ui.platform.FilePicker
 import com.pandulapeter.campfire.presentation.ui.platform.LibraryPersistence
 import com.pandulapeter.campfire.presentation.ui.platform.requestLibraryPersistence
@@ -220,11 +223,18 @@ class CampfireViewModel(
     internal val settingsScrollPositions = SettingsTab.entries.associateWith { ScrollPosition() }
 
     /**
-     * Which tab of the settings screen was left open, kept here for the reason the scroll positions are: the screen is
-     * taken off the back stack as it is left, and coming back to it should be coming back to where one was. Only read
-     * as the screen is composed, so it is not a state.
+     * Which tab of the settings screen is open, kept here for the reason the scroll positions are: the screen is taken
+     * off the back stack as it is left, and coming back to it should be coming back to where one was. The screen only
+     * reads it as it is composed, but it is a state because the web build's address names the tab, and follows it.
      */
-    internal var settingsTab = SettingsTab.GENERAL
+    internal var settingsTab by mutableStateOf(SettingsTab.GENERAL)
+
+    /**
+     * The song each song details screen on the back stack has settled on, by [CampfireDestination.SongDetails.id]: the
+     * pager is the screen's own, and its page is the one thing about where the user is that the destination does not
+     * say. Reported by the screen, see [onSongDetailsPageSettled], and read by [navigationState].
+     */
+    private val songDetailsCurrentSongs = mutableStateMapOf<String, String>()
 
     /**
      * The search of each of the two list screens, held here for the same reason their scroll positions are, see
@@ -261,17 +271,27 @@ class CampfireViewModel(
     private val isDemoLibraryPending = MutableStateFlow(true)
 
     /**
+     * True while a place the app was asked to open on is waiting for the library to be read, see [navigateOnLaunch].
+     * The launch screen waits for it too ([hasLibraryToShow]), so that the app is uncovered on the screen it was
+     * asked for rather than on the song list, a moment before that screen slides in over it.
+     */
+    private val _isLaunchNavigationPending = MutableStateFlow(false)
+    internal val isLaunchNavigationPending: StateFlow<Boolean> = _isLaunchNavigationPending.asStateFlow()
+    private var hasNavigatedOnLaunch = false
+
+    /**
      * False for as long as the song list would have nothing on it but a loading indicator, which is what the launch
      * screen stays up in place of. Either the read has put songs together - the first batch of one that publishes as
      * it goes counts, so a slow read still fills the list in front of the user rather than behind the launch screen -
      * or it has finished with none, which is an answer to show as much as a library is. On the one run where a
-     * library that has finished empty is about to be filled anyway ([isDemoLibraryPending]), neither is true yet.
+     * library that has finished empty is about to be filled anyway ([isDemoLibraryPending]), neither is true yet, and
+     * neither is it while the screen the app was asked to open on is still being looked for ([isLaunchNavigationPending]).
      *
      * Latched like [arePreferencesLoaded]: a rescan reads the library again and says so, and none of that is a reason
      * to put the launch screen back up over an app the user is already using.
      */
-    val hasLibraryToShow = combine(screenData, isDemoLibraryPending) { state, isDemoLibraryPending ->
-        !isDemoLibraryPending && (state !is DataState.Loading || state.data?.songs?.isNotEmpty() == true)
+    val hasLibraryToShow = combine(screenData, isDemoLibraryPending, _isLaunchNavigationPending) { state, isDemoLibraryPending, isLaunchNavigationPending ->
+        !isDemoLibraryPending && !isLaunchNavigationPending && (state !is DataState.Loading || state.data?.songs?.isNotEmpty() == true)
     }
         .runningFold(false) { hasHadSomethingToShow, hasSomethingToShow -> hasHadSomethingToShow || hasSomethingToShow }
         .asState(false)
@@ -751,6 +771,7 @@ class CampfireViewModel(
         if (isNavigationTransitionRunning) navigationGeneration++
         backStack.update()
         if (backStack.none { it is CampfireDestination.SongEditor }) retainedEditorField = null
+        songDetailsCurrentSongs.keys.retainAll(backStack.mapNotNullTo(mutableSetOf()) { (it as? CampfireDestination.SongDetails)?.id })
         persistBackStack()
     }
 
@@ -772,6 +793,84 @@ class CampfireViewModel(
             .map { Json.encodeToString<List<CampfireDestination>>(stack.subList(0, it)) }
             .firstOrNull { it.length <= MAX_SAVED_BACK_STACK_LENGTH }
             ?: Json.encodeToString<List<CampfireDestination>>(listOf(CampfireDestination.Songs))
+    }
+
+    /** Reported by the song details screen whenever its pager comes to rest, see [songDetailsCurrentSongs]. */
+    internal fun onSongDetailsPageSettled(destination: CampfireDestination.SongDetails, songFileName: String) {
+        if (backStack.any { it is CampfireDestination.SongDetails && it.id == destination.id }) {
+            songDetailsCurrentSongs[destination.id] = songFileName
+        }
+    }
+
+    /** The file name of the song the given details screen is showing, which is where it was opened until it is paged. */
+    internal fun currentSongFileName(destination: CampfireDestination.SongDetails) =
+        songDetailsCurrentSongs[destination.id] ?: destination.songFileNames.getOrNull(destination.initialIndex) ?: destination.songFileNames.firstOrNull()
+
+    /**
+     * Where the user is right now, see [NavigationState]. Its snapshot states can be observed with snapshotFlow, and the
+     * two searches, which are flows, have to be combined in by whoever observes it.
+     */
+    internal val navigationState: NavigationState
+        get() = NavigationState(
+            backStack = backStack.map { destination ->
+                if (destination is CampfireDestination.SongDetails) {
+                    destination.copy(initialIndex = destination.songFileNames.indexOf(currentSongFileName(destination)).takeIf { it >= 0 } ?: destination.initialIndex)
+                } else {
+                    destination
+                }
+            },
+            isSongsSearchOpen = songsSearch.isOpen.value,
+            isSetlistsSearchOpen = setlistsSearch.isOpen.value,
+            settingsTab = settingsTab,
+        )
+
+    /**
+     * Takes the user to [state] in one step, which is how the web build follows an address it was opened on or the
+     * browser's Forward button. Refused, returning false, while the editor holds unsaved text: nothing but the
+     * editor's own ways out may take that text off the screen, and those ask first.
+     */
+    internal fun restoreNavigationState(state: NavigationState): Boolean {
+        if (state.backStack.isEmpty() || hasUnsavedEditorText()) return false
+        settingsTab = state.settingsTab
+        listOf(songsSearch to state.isSongsSearchOpen, setlistsSearch to state.isSetlistsSearchOpen).forEach { (search, isOpen) ->
+            if (isOpen != search.isOpen.value) if (isOpen) search.open() else search.close()
+        }
+        if (backStack.toList() != state.backStack) {
+            updateBackStack {
+                clear()
+                addAll(state.backStack)
+            }
+        }
+        return true
+    }
+
+    /**
+     * Opens the app on the place [resolve] picks from the library, once the library has been read - the web build's
+     * address, which can name a song or a setlist that only the library can say is still there. The launch screen is
+     * held until then, see [isLaunchNavigationPending]. Only the first call counts, since only one start up can be
+     * answered, and the answer is only taken while the app is still where every start opens: coming back from a
+     * consent page opens Settings on its own, and that is the screen the user is waiting for.
+     *
+     * Called by the shell while it is first composed, which is before the read it waits for can possibly have ended:
+     * that read resumes on the main thread, and the composition is holding it.
+     */
+    internal fun navigateOnLaunch(resolve: (songs: List<Song>, setlists: List<Setlist>) -> NavigationState?) {
+        if (hasNavigatedOnLaunch) return
+        hasNavigatedOnLaunch = true
+        _isLaunchNavigationPending.value = true
+        viewModelScope.launch {
+            try {
+                val state = combine(screenData, isDemoLibraryPending) { state, isDemoLibraryPending -> state.takeUnless { isDemoLibraryPending } }
+                    .first { it != null && it !is DataState.Loading }
+                    ?.data
+                val destination = resolve(state?.unfilteredSongs.orEmpty(), state?.setlists.orEmpty())
+                if (destination != null && backStack.toList() == listOf(CampfireDestination.Songs)) {
+                    restoreNavigationState(destination)
+                }
+            } finally {
+                _isLaunchNavigationPending.value = false
+            }
+        }
     }
 
     fun selectTopLevelDestination(destination: CampfireDestination.TopLevel) {
@@ -902,6 +1001,7 @@ class CampfireViewModel(
                 }
             }
         }
+        songDetailsCurrentSongs.entries.filter { it.value == song.fileName }.forEach { songDetailsCurrentSongs[it.key] = fileName }
         persistBackStack()
     }
 

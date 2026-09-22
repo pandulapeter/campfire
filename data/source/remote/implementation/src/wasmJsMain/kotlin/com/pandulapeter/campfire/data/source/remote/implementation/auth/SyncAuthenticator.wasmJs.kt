@@ -54,14 +54,19 @@ internal class WebSyncAuthenticator : SyncAuthenticator {
     }
 }
 
+/**
+ * The folder the page is served from rather than the page's own address, which names the screen the app is on
+ * (`…/campfire/settings/library`): the page's base, which `index.html` writes as the folder it was loaded from before
+ * the app changes the address for the first time.
+ */
 private fun currentPageUrl(): String {
-    val folder = currentPagePath().removeSuffix("index.html")
+    val folder = currentPageFolder().removeSuffix("index.html")
     return currentPageOrigin() + if (folder.endsWith('/')) folder else "$folder/"
 }
 
 private fun currentPageOrigin(): String = js("window.location.origin")
 
-private fun currentPagePath(): String = js("window.location.pathname")
+private fun currentPageFolder(): String = js("new URL(document.baseURI).pathname")
 
 private fun currentPageSearch(): String = js("window.location.search")
 
@@ -69,6 +74,7 @@ private fun navigateTo(url: String) {
     js("window.location.assign(url)")
 }
 
+/** Keeps the history entry's state, which is the depth the app's own history handling stamped the entry with. */
 private fun clearQueryString() {
-    js("window.history.replaceState(null, '', window.location.origin + window.location.pathname)")
+    js("window.history.replaceState(window.history.state, '', window.location.origin + window.location.pathname)")
 }

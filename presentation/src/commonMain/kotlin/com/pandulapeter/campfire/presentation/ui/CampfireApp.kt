@@ -410,9 +410,12 @@ private fun CampfireContent(
             modifier = Modifier.fillMaxSize(),
             backStack = backStack,
             onBack = viewModel::navigateBack,
-            // The same spec decides the direction for both parameters, see navigationTransition.
-            transitionSpec = { navigationTransition(motionScheme) },
-            popTransitionSpec = { navigationTransition(motionScheme) },
+            // The same spec decides the direction for both parameters, see navigationTransition. Nothing is animated
+            // while the launch screen still covers the app: a place the app was asked to open on (the web build's
+            // address, Settings after a consent page) is put on the stack behind it, and a screen still sliding in as
+            // the launch screen fades would be the app arriving twice.
+            transitionSpec = { if (viewModel.hasShownApp) navigationTransition(motionScheme) else ContentTransform(EnterTransition.None, ExitTransition.None) },
+            popTransitionSpec = { if (viewModel.hasShownApp) navigationTransition(motionScheme) else ContentTransform(EnterTransition.None, ExitTransition.None) },
             predictivePopTransitionSpec = { swipeEdge -> predictivePopTransition(swipeEdge) },
             // Stable string content keys, so that the transitions can recognize the top level destinations.
             entryProvider = entryProvider {

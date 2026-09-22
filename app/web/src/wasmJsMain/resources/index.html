@@ -11,6 +11,35 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
+    <!-- Every screen of the app has an address of its own (…/campfire/song/…), and this page is only ever loaded as
+         the folder it lives in: a deeper address is not a file, so the host's 404 page sends it here with the path in
+         the query string (…/campfire/?/song/…, see 404.html in the site's repository), and the development server
+         redirects the same way. This runs before anything on the page is fetched, and does two things with it:
+
+         - It writes that folder into a <base>, which is what every relative address on the page and in the app is
+           resolved against from then on - the icon and the fonts below, campfire.js, the binaries, the resources
+           Compose fetches as it needs them and the storage worker the first write starts - so they keep working
+           once the app has put a deeper address into the address bar.
+         - It puts the address the query string carries back into the address bar, where the app reads it as the
+           screen to open on. The history entry's state is kept, although a page loaded again starts at the bottom
+           of its own history either way.
+
+         A query string that does not start with a slash is not touched: that is an authorization answer, which the
+         app takes out itself once it has read it. -->
+    <script type="application/javascript">
+        (function (l) {
+            var folder = l.pathname.replace(/[^\/]*$/, '');
+            var base = document.createElement('base');
+            base.href = folder;
+            document.head.appendChild(base);
+            if (l.search[1] === '/') {
+                var decoded = l.search.slice(2).split('&').map(function (s) {
+                    return s.replace(/~and~/g, '&');
+                }).join('?');
+                window.history.replaceState(window.history.state, '', folder + decoded + l.hash);
+            }
+        }(window.location));
+    </script>
     <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
     <!-- The two schemes of the app, so the browser chrome matches the splash screen and then the app itself. -->
     <meta name="theme-color" content="#FFF8F5" media="(prefers-color-scheme: light)">

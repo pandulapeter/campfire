@@ -54,6 +54,7 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
+import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.input.nestedscroll.nestedScroll
@@ -155,6 +156,18 @@ internal fun SongDetailsScreen(
         if (!isInitialPageSettled && songs.isNotEmpty()) {
             isInitialPageSettled = true
             pagerState.scrollToPage(destination.initialIndex.coerceIn(0, songs.lastIndex))
+        }
+    }
+    // Where the pager has come to rest is where the user is, which the web build's address names. Not before the
+    // initial page has been scrolled to, or the first page of a pager created before the library was read would be
+    // reported on its way to the song that was tapped.
+    val latestSongs by rememberUpdatedState(songs)
+    val latestDestination by rememberUpdatedState(destination)
+    LaunchedEffect(pagerState, isInitialPageSettled) {
+        if (isInitialPageSettled) {
+            snapshotFlow { latestSongs.getOrNull(pagerState.settledPage)?.fileName }.collect { fileName ->
+                if (fileName != null) viewModel.onSongDetailsPageSettled(latestDestination, fileName)
+            }
         }
     }
     val currentSong = songs.getOrNull(pagerState.currentPage)
