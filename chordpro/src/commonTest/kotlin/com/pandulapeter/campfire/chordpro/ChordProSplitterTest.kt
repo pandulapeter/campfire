@@ -56,6 +56,32 @@ class ChordProSplitterTest {
     }
 
     @Test
+    fun `a byte order mark between two songs is not part of the second one`() {
+        val parts = ChordProSplitter.split("{title: A}\nla\n{new_song}\n\uFEFF{title: B}\nlo\n")
+
+        assertEquals(listOf("{title: A}\nla", "{title: B}\nlo"), parts)
+        assertEquals("B", ChordProParser.parseMetadata(parts[1]).title)
+    }
+
+    @Test
+    fun `a byte order mark at the start of a single song is dropped`() {
+        assertEquals(listOf("{title: A}\nla"), ChordProSplitter.split("\uFEFF{title: A}\nla"))
+    }
+
+    @Test
+    fun `a line holding nothing but a byte order mark is blank`() {
+        assertEquals(listOf("{title: A}\nla", "{title: B}\nlo"), ChordProSplitter.split("{title: A}\nla\n{new_song}\n\uFEFF\n{title: B}\nlo"))
+    }
+
+    @Test
+    fun `a song compares equal whether or not it carries a byte order mark`() {
+        val expected = ChordProSplitter.comparable("{title: A}\nla")
+
+        assertEquals(expected, ChordProSplitter.comparable("\uFEFF{title: A}\nla"))
+        assertEquals(expected, ChordProSplitter.comparable("{title: A}\n\uFEFFla"))
+    }
+
+    @Test
     fun `a blank line inside a song still counts`() {
         assertNotEquals(ChordProSplitter.comparable("{title: T}\n[Am]a"), ChordProSplitter.comparable("{title: T}\n\n[Am]a"))
     }
