@@ -149,6 +149,14 @@ class ChordProTransposerTest {
     }
 
     @Test
+    fun `the key keeps the spelling of its directive and a chord the spaces in its brackets`() {
+        assertEquals("{KEY:A}\n[ A ]la [Bm ]la", ChordProTransposer.transposeText("{KEY:G}\n[ G ]la [Am ]la", 2))
+        assertEquals("  { key : A }  ", ChordProTransposer.transposeText("  { key : G }  ", 2))
+        assertEquals("{key: }", ChordProTransposer.transposeText("{key: }", 2))
+        assertEquals(6, ChordProTransposer.transposedOffset("{KEY:G}", "{KEY:A}", 6))
+    }
+
+    @Test
     fun `transposing text leaves comments and annotations alone and updates the key`() {
         val text = """
             # a note with [Am] inside

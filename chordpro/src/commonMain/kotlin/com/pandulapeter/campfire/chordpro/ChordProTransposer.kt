@@ -224,7 +224,7 @@ object ChordProTransposer {
                         lines.transposeTab(tabLineIndices, semitones, rename)
                     }
                     if (directive.name == KEY) {
-                        lines[index] = transposeKeyLine(rawLine, trimmedLine, directive.value, rename)
+                        directive.value?.takeIf { it.isNotEmpty() }?.let { key -> lines[index] = transposeKeyLine(rawLine, key, rename) }
                     }
                 }
 
@@ -314,7 +314,15 @@ object ChordProTransposer {
                 val content = bracket.content.trim()
                 val isChord = content.isNotEmpty() && !content.startsWith(ANNOTATION_MARKER)
                 append(rawLine, consumedUntil, if (isChord) bracket.range.first else bracket.range.last + 1)
-                if (isChord) append(BRACKET_OPEN).append(rename(content)).append(BRACKET_CLOSE)
+                if (isChord) {
+                    // The spaces a file puts inside its brackets are its own formatting, and the transposition keeps it.
+                    val leading = bracket.content.length - bracket.content.trimStart().length
+                    append(BRACKET_OPEN)
+                        .append(bracket.content, 0, leading)
+                        .append(rename(content))
+                        .append(bracket.content, bracket.content.trimEnd().length, bracket.content.length)
+                        .append(BRACKET_CLOSE)
+                }
                 consumedUntil = bracket.range.last + 1
             }
             append(rawLine, consumedUntil, rawLine.length)
@@ -339,15 +347,14 @@ object ChordProTransposer {
         return rawLine.replaceTrimmedPart(trimmedLine, body)
     }
 
-    private fun transposeKeyLine(
-        rawLine: String,
-        trimmedLine: String,
-        value: String?,
-        rename: (String) -> String,
-    ): String {
-        val key = value?.trim().orEmpty()
-        if (key.isEmpty()) return rawLine
-        return rawLine.replaceTrimmedPart(trimmedLine, "{$KEY: ${rename(key)}}")
+    /**
+     * Renames the value of a key directive in place. Only the value's own characters are replaced, so the directive
+     * keeps the spelling and the spacing the file gives it; the value is the last thing before the closing brace, give
+     * or take whitespace, however the directive is written.
+     */
+    private fun transposeKeyLine(rawLine: String, key: String, rename: (String) -> String): String {
+        val valueEnd = rawLine.substring(0, rawLine.trimEnd().lastIndex).trimEnd().length
+        return rawLine.substring(0, valueEnd - key.length) + rename(key) + rawLine.substring(valueEnd)
     }
 
     /** Swaps the trimmed part of a line for [replacement], keeping the surrounding whitespace. */
