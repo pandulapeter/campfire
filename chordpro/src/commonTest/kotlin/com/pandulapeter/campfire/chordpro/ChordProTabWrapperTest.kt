@@ -204,4 +204,79 @@ class ChordProTabWrapperTest {
         assertTrue(rows.all { row -> row.all { it.length <= 10 } })
         assertTrue(rows.size > 2)
     }
+
+    @Test
+    fun `systems stacked without a blank line are wrapped one after the other`() {
+        val lines = listOf("e|---0---|---3---|", "B|---1---|---0---|", "e|---5---|---7---|", "B|---5---|---8---|")
+        assertEquals(
+            listOf(
+                listOf("e|---0---|", "B|---1---|"),
+                listOf("e|---3---|", "B|---0---|"),
+                listOf("e|---5---|", "B|---5---|"),
+                listOf("e|---7---|", "B|---8---|"),
+            ),
+            ChordProTabWrapper.wrap(lines, maxColumns = 12),
+        )
+    }
+
+    @Test
+    fun `chord names above a system travel with that system`() {
+        assertEquals(
+            listOf(
+                listOf("   C", "e|---0---|", "B|---1---|"),
+                listOf("   G", "e|---3---|", "B|---0---|"),
+                listOf("   Am", "e|---0---|", "B|---1---|"),
+                listOf("   F", "e|---1---|", "B|---1---|"),
+            ),
+            ChordProTabWrapper.wrap(twoSystems, maxColumns = 12),
+        )
+    }
+
+    @Test
+    fun `a run of several systems that fits is still one row`() {
+        assertEquals(listOf(twoSystems), ChordProTabWrapper.wrap(twoSystems, maxColumns = 40))
+    }
+
+    @Test
+    fun `a string name that recurs inside a system does not start a new one`() {
+        listOf("EBGDAE", "DAGDAD").forEach { names ->
+            val system = names.map { "$it|---0---|---3---|" }
+
+            val rows = ChordProTabWrapper.wrap(system, maxColumns = 12)
+            assertEquals(2, rows.size, names)
+            assertTrue(rows.all { it.size == 6 }, names)
+            assertEquals(4, ChordProTabWrapper.wrap(system + system, maxColumns = 12).size, names)
+        }
+    }
+
+    @Test
+    fun `staff lines without string names are one system until a non-staff line separates them`() {
+        val rows = ChordProTabWrapper.wrap(List(3) { "--0--2--3--5--7--8--10--12--" }, maxColumns = 19)
+        assertEquals(2, rows.size)
+        assertTrue(rows.all { it.size == 3 })
+    }
+
+    @Test
+    fun `a run that would wrap into more lines than can be drawn is returned whole`() {
+        val unnamed = List(12_500) { "---" } + "-".repeat(50_000)
+        assertEquals(listOf(unnamed), ChordProTabWrapper.wrap(unnamed, maxColumns = 40))
+
+        val named = List(283) { "${'A' + it % 26}${'a' + it / 26}|---" } + ("e|" + "-".repeat(1414))
+        assertEquals(listOf(named), ChordProTabWrapper.wrap(named, maxColumns = 40))
+    }
+
+    @Test
+    fun `every copy of a repeated string name starts a system`() {
+        val lines = List(16_000) { "e|---" } + ("e|" + "-".repeat(100_000))
+        assertTrue(ChordProTabWrapper.wrap(lines, maxColumns = 40).sumOf { it.size } < 20_000)
+    }
+
+    private val twoSystems = listOf(
+        "   C       G",
+        "e|---0---|---3---|",
+        "B|---1---|---0---|",
+        "   Am      F",
+        "e|---0---|---1---|",
+        "B|---1---|---1---|",
+    )
 }

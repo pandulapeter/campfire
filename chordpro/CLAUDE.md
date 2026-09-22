@@ -109,12 +109,17 @@ in `:domain:*`. `:data:source:local:implementation` uses it directly for the met
   place a tab can be too wide for: a tab is a grid of columns, so it can never be wrapped line by line, and every line
   of the run is cut at the same columns instead — after the last bar line that fits, so that a row ends where the
   music does; where one bar is wider than the row, on the last column in its second half that every string has a
-  dash on and no chord name spans; and only where there is no such column at the edge. Every row after the first
+  dash on and no chord name spans; and only where there is no such column at the edge. A run is whatever lines of a
+  tab environment no blank line separates, and it may stack several systems, so it is cut system by system: a new one
+  starts at the lines above a staff that follows another, or where the string names start over, all of them in order
+  (a name that recurs inside one system, `E|` for both E strings or DADGAD's three `D|`, does not); every system is
+  cut at columns of its own and its rows come before the next one's. Every row after the first
   repeats the string names in front of the staff (`e|`, `B|`, padded to one width where an `Eb|` sits above a ` G|`),
   and a line above the staff is left out of the rows it has nothing to say in, so the chord names travel with the
   notes they are written over. A run with no staff line in it at all is not tablature but preformatted text, which
   `isTablature` says, and it is returned whole for the viewer to scroll instead. Nothing in it is a measurement: it
-  is asked for a number of characters, and the viewer works that out from its font.
+  is asked for a number of characters, and the viewer works that out from its font. A run that would wrap into more
+  row lines than half its characters, which only a crafted file does, is returned whole.
 - `ChordProNotation` — German notation, and the one thing in here that is about how a song is *read* rather than what
   it *is*: the note written `B` becomes `H`, the one written `Bb` becomes `B`, and nothing else moves — not the other
   letters, not the `#` and `b` signs, not the quality. (The classical German names spell every accidental out as
