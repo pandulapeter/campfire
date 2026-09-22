@@ -163,7 +163,8 @@ in `:domain:*`. `:data:source:local:implementation` uses it directly for the met
   annotation, comment). It lives here rather than in the UI so that what counts as a chord is decided in exactly one
   place; only what those look like on screen is the caller's business. It reads the file's lines through
   `ChordProSyntax` rather than walking them itself, so it agrees with the parser about where a line ends whichever of
-  the three endings the file uses.
+  the three endings the file uses, and reads a bracket trimmed the way the parser does, so a `[ *softly]` is an
+  annotation and an empty `[]` is not a chord.
 
 Everything here is pure, so everything here is tested: `commonTest`, run with `./gradlew :chordpro:desktopTest`. A
 change to the dialect belongs in a test first.

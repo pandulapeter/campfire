@@ -27,7 +27,7 @@ object ChordProHighlighter {
         DIRECTIVE_VALUE,
         CHORD,
 
-        /** `[*text]`, which the viewer shows in the lyrics rather than as a chord. */
+        /** `[*text]`, spaces inside the brackets allowed, which the viewer shows in the lyrics rather than as a chord. */
         ANNOTATION,
 
         /** A whole `#` line, which never reaches the rendered song. */
@@ -68,11 +68,17 @@ object ChordProHighlighter {
                 }
 
                 !isVerbatim -> ChordProSyntax.brackets(line).forEach { bracket ->
-                    tokens += Token(
-                        type = if (bracket.content.startsWith(ANNOTATION_PREFIX)) TokenType.ANNOTATION else TokenType.CHORD,
-                        start = lineStart + bracket.range.first,
-                        end = lineStart + bracket.range.last + 1,
-                    )
+                    // Trimmed, and empty brackets left out, because that is how the parser and the transposition read
+                    // a bracket: a `[ *softly]` is the annotation the viewer will draw in the lyrics, and a `[]` is
+                    // not a chord to anything downstream. What counts as a chord is decided in one place or in none.
+                    val content = bracket.content.trim()
+                    if (content.isNotEmpty()) {
+                        tokens += Token(
+                            type = if (content.startsWith(ANNOTATION_PREFIX)) TokenType.ANNOTATION else TokenType.CHORD,
+                            start = lineStart + bracket.range.first,
+                            end = lineStart + bracket.range.last + 1,
+                        )
+                    }
                 }
             }
         }

@@ -10,6 +10,8 @@
 package com.pandulapeter.campfire.chordpro
 
 import com.pandulapeter.campfire.chordpro.ChordProHighlighter.TokenType
+import com.pandulapeter.campfire.chordpro.model.ChordProBlock
+import com.pandulapeter.campfire.chordpro.model.ChordProLine
 import kotlin.test.Test
 import kotlin.test.assertEquals
 
@@ -77,6 +79,37 @@ class ChordProHighlighterTest {
             listOf(TokenType.CHORD to "[Am]", TokenType.ANNOTATION to "[*softly]", TokenType.CHORD to "[G/B]"),
             spans("[Am]word [*softly] more [G/B]end"),
         )
+    }
+
+    @Test
+    fun `an annotation is an annotation whatever the spaces inside its brackets`() {
+        assertEquals(
+            listOf(TokenType.CHORD to "[Am]", TokenType.ANNOTATION to "[ *softly]", TokenType.ANNOTATION to "[*a ]"),
+            spans("[Am]word [ *softly] more [*a ] end"),
+        )
+    }
+
+    @Test
+    fun `an empty bracket is not a chord`() {
+        assertEquals(listOf(TokenType.CHORD to "[Am]"), spans("[] [ ] [Am]"))
+    }
+
+    @Test
+    fun `a chord with spaces inside its brackets is still a chord`() {
+        assertEquals(listOf(TokenType.CHORD to "[ Am ]"), spans("[ Am ]word"))
+    }
+
+    @Test
+    fun `the highlighter and the parser agree about every bracket of a line`() {
+        listOf("[Am]a [ *x]b [] c [ G/B ]d", "[*a ] [  *N.C.] la", "[ ] [C]", "no brackets").forEach { line ->
+            val highlighted = ChordProHighlighter.tokenize(line).map { it.type == TokenType.ANNOTATION }
+            val parsed = ChordProParser.parse(line).blocks
+                .filterIsInstance<ChordProBlock.Section>().flatMap { it.lines }
+                .filterIsInstance<ChordProLine.Lyrics>().flatMap { it.chords }
+                .map { it.isAnnotation }
+
+            assertEquals(parsed, highlighted, line)
+        }
     }
 
     @Test
