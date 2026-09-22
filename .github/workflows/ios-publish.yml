@@ -58,7 +58,7 @@ jobs:
             echo "::error::DROPBOX_APP_KEY is empty or not visible to this workflow. The published app would have no sync provider at all." >&2
             exit 1
           fi
-          printf 'campfire.dropbox.appKey=%s\n' "$DROPBOX_APP_KEY" > local.properties
+          printf 'campfire.dropbox.appKey=%s\n' "${DROPBOX_APP_KEY//\\/\\\\}" > local.properties
       - name: Build the app
         run: |
           xcodebuild \

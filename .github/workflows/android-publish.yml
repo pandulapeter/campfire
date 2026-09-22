@@ -131,15 +131,29 @@ jobs:
           echo "Generated release notes:"
           cat whatsnew/whatsnew-en-US
       - name: Decode release keystore
-        run: echo "${{ secrets.ANDROID_KEYSTORE_BASE64 }}" | base64 --decode > app/android/release.keystore
+        env:
+          ANDROID_KEYSTORE_BASE64: ${{ secrets.ANDROID_KEYSTORE_BASE64 }}
+        run: printf '%s' "$ANDROID_KEYSTORE_BASE64" | base64 --decode > app/android/release.keystore
+      # Through local.properties rather than -P: a value on the command line is in the runner's process list for the
+      # whole build, and a secret interpolated into the script is re-read by the shell, so a password holding a $, a
+      # backtick or a quote would sign the APK with something other than what is in the secret store. Backslashes are
+      # doubled because java.util.Properties treats one as an escape inside a value.
       - name: Build release APK
+        env:
+          DROPBOX_APP_KEY: ${{ secrets.DROPBOX_APP_KEY }}
+          ANDROID_KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
+          ANDROID_KEY_PASSWORD: ${{ secrets.ANDROID_KEY_PASSWORD }}
+          ANDROID_KEYSTORE_PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
         run: |
-          ./gradlew :app:android:assembleRelease \
-            -Pcampfire.dropbox.appKey="${{ secrets.DROPBOX_APP_KEY }}" \
-            -Pcampfire.android.keyAlias="${{ secrets.ANDROID_KEY_ALIAS }}" \
-            -Pcampfire.android.keyPassword="${{ secrets.ANDROID_KEY_PASSWORD }}" \
-            -Pcampfire.android.keystoreFile=release.keystore \
-            -Pcampfire.android.keystorePassword="${{ secrets.ANDROID_KEYSTORE_PASSWORD }}"
+          escape() { printf '%s' "${1//\\/\\\\}"; }
+          {
+            printf 'campfire.dropbox.appKey=%s\n' "$(escape "$DROPBOX_APP_KEY")"
+            printf 'campfire.android.keyAlias=%s\n' "$(escape "$ANDROID_KEY_ALIAS")"
+            printf 'campfire.android.keyPassword=%s\n' "$(escape "$ANDROID_KEY_PASSWORD")"
+            printf 'campfire.android.keystoreFile=release.keystore\n'
+            printf 'campfire.android.keystorePassword=%s\n' "$(escape "$ANDROID_KEYSTORE_PASSWORD")"
+          } > local.properties
+          ./gradlew :app:android:assembleRelease
       # Before the upload rather than after it, so that a release Play turns down still has its APK. It is the very
       # file Play gets, signed with the same key, so an installation can move between the two sources freely.
       - name: Attach the APK to the GitHub release

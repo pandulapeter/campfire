@@ -245,8 +245,12 @@ item bound to the device and `FileStorage.keepOutOfDeviceBackup` on the index.
   campfire.dropbox.appKey=...
   ```
 
-  CI has no `local.properties`, so it passes the same names with `-Pcampfire.android.keyAlias=…` or writes the file
-  from its own secret store; the latter keeps the values out of the process list.
+  CI has no `local.properties`, so every workflow writes one from its own secret store, with each value reaching the
+  script through `env:` rather than being interpolated into it: a `-P` puts the value in the runner's process list,
+  and a secret substituted into a `run:` block is re-read by the shell, so a password holding a `$`, a backtick or a
+  quote would sign with something other than what is stored. Backslashes are doubled on the way in, since
+  `java.util.Properties` reads one as an escape. What stays on the command line is the things that are not secret —
+  `campfire.desktop.distribution`, which is worth having in the log.
 - The `campfire-library` convention plugin sets each module's `archivesName` from its Gradle path, because a klib
   carries the name of the artifact it is built into and half the modules here are called `api` or `implementation`.
 - `./gradlew :app:android:assembleDebug` — Android APK

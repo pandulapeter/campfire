@@ -130,10 +130,12 @@ jobs:
       # The daemon is stopped afterwards because the Gradle cache is saved when the job ends, and on Windows the lock
       # files a running daemon holds cannot be read into the archive, which fails the save.
       - name: Build the installer
+        env:
+          DROPBOX_APP_KEY: ${{ secrets.DROPBOX_APP_KEY }}
         run: |
+          printf 'campfire.dropbox.appKey=%s\n' "${DROPBOX_APP_KEY//\\/\\\\}" > local.properties
           ./gradlew :app:desktop:createReleaseDistributable :app:desktop:${{ matrix.task }} \
-            -Pcampfire.desktop.distribution=${{ matrix.distribution }} \
-            -Pcampfire.dropbox.appKey="${{ secrets.DROPBOX_APP_KEY }}"
+            -Pcampfire.desktop.distribution=${{ matrix.distribution }}
           ./gradlew --stop
       # ProGuard breaks an application in ways that only starting it shows - a VerifyError on the first frame is how
       # the last one looked - so the app image is started once before anybody downloads the installer. The demo
