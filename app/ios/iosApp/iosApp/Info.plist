@@ -15,6 +15,15 @@
 	<true/>
 	<key>CFBundleDevelopmentRegion</key>
 	<string>$(DEVELOPMENT_LANGUAGE)</string>
+	<!-- The languages the app speaks. Its strings are Compose resources, which iOS cannot see, so without this the
+	     bundle is English only: the system UI drawn for the app (the sign-in alert, the document picker, the share
+	     sheet, the notification prompt) stays English on a Hungarian iPhone, and Settings offers no language for
+	     it. Keep in step with the values-* folders of :presentation's composeResources. -->
+	<key>CFBundleLocalizations</key>
+	<array>
+		<string>en</string>
+		<string>hu</string>
+	</array>
 	<key>CFBundleExecutable</key>
 	<string>$(EXECUTABLE_NAME)</string>
 	<key>CFBundleIdentifier</key>
