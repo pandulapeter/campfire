@@ -80,13 +80,25 @@ fun main(args: Array<String>) {
         // and it waits for a save that is still being written, since exitApplication ends the process.
         val requestExit = { viewModel.value?.requestExit(exit) ?: exit() }
         // Quitting from the macOS application menu or with Cmd+Q never reaches onCloseRequest: without a handler of
-        // its own the JDK answers it with System.exit. The quit is cancelled and asked for the way closing the window
-        // is, which ends in exitApplication all the same once there is nothing left to lose.
+        // its own the JDK answers it with System.exit. The request is kept and answered once the editor's unsaved
+        // text has been dealt with - performQuit lets the logout, restart or shut down that asked carry on, and
+        // cancelQuit is said only where the user actually chose to stay. Cancelling it up front would be
+        // NSTerminateCancel, which aborts the whole sequence and has macOS report that Campfire interrupted it, with
+        // nothing unsaved anywhere.
         DisposableEffect(Unit) {
             val desktop = if (Desktop.isDesktopSupported()) Desktop.getDesktop().takeIf { it.isSupported(Desktop.Action.APP_QUIT_HANDLER) } else null
             desktop?.setQuitHandler { _, response ->
-                response.cancelQuit()
-                SwingUtilities.invokeLater { requestExit() }
+                // The handler returns before anything is decided: what follows waits for a save, and may put a
+                // dialog on screen.
+                SwingUtilities.invokeLater {
+                    // The process ends with the system's reply rather than with exitApplication, so the listener
+                    // for other instances is closed here the way `exit` closes it.
+                    val performQuit = {
+                        stopListeningForOtherInstances()
+                        response.performQuit()
+                    }
+                    viewModel.value?.requestExit(onExit = performQuit, onCancelled = response::cancelQuit) ?: performQuit()
+                }
             }
             onDispose { desktop?.setQuitHandler(null) }
         }

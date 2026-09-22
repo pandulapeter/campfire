@@ -703,9 +703,22 @@ class CampfireViewModel(
 
     /**
      * The exit that asked the `UnsavedChanges` question, run once it is answered with Save or Discard. Any other way
-     * the dialog goes away is staying, so [setVisibleDialog] forgets it.
+     * the dialog goes away is staying, and that is reported too: on macOS the exit may be the system's own quit
+     * request, which has to be answered either way (see the desktop app module).
      */
-    private var pendingExit: (() -> Unit)? = null
+    private var pendingExit: PendingExit? = null
+
+    /** An exit that is waiting for an answer, and what to tell the caller if the answer is staying. */
+    private class PendingExit(
+        val exit: () -> Unit,
+        val onCancelled: () -> Unit,
+    )
+
+    /**
+     * Taken rather than read, so that exactly one of an exit's two callbacks can ever run: the branch that is about to
+     * run the exit holds it before [leaveEditor] dismisses the dialog, which would otherwise report it as cancelled.
+     */
+    private fun takePendingExit() = pendingExit.also { pendingExit = null }
 
     /** True while the editor's text is being written, which it shows in place of its "Saved" label. */
     private val _isSavingSong = MutableStateFlow(false)
@@ -1006,18 +1019,25 @@ class CampfireViewModel(
 
     /**
      * Closing the application, which is a way out of the editor like any other. A save that is still being written
-     * is waited for first, since the process ends with [exit] - and since only then is it known whether it worked:
+     * is waited for first, since the process ends with [onExit] - and since only then is it known whether it worked:
      * with unsaved text in the editor, which is also what a save that failed leaves behind, the `UnsavedChanges`
-     * question is asked, and [exit] only runs once that has been answered with something other than staying.
+     * question is asked, and [onExit] only runs once that has been answered with something other than staying.
+     *
+     * @param onCancelled Called instead of [onExit] when the user answers the `UnsavedChanges` question by staying -
+     *   dismissing it, or a save that failed. The macOS quit handler needs it: a quit request that is not answered
+     *   one way or the other leaves the system waiting.
      */
-    fun requestExit(exit: () -> Unit) {
+    fun requestExit(onExit: () -> Unit, onCancelled: () -> Unit = {}) {
         viewModelScope.launch {
             currentSaveJob?.join()
+            // A second request - Cmd+Q pressed again while the question is up - answers the first one, which is
+            // still waiting for something.
+            takePendingExit()?.onCancelled?.invoke()
             if (hasUnsavedEditorText() && backStack.lastOrNull() is CampfireDestination.SongEditor) {
-                pendingExit = exit
+                pendingExit = PendingExit(exit = onExit, onCancelled = onCancelled)
                 showDialog(DialogType.UnsavedChanges)
             } else {
-                exit()
+                onExit()
             }
         }
     }
@@ -1182,10 +1202,11 @@ class CampfireViewModel(
             when {
                 !isSaved -> dismissDialog()
                 _visibleDialog.value == DialogType.UnsavedChanges -> {
-                    // Taken before leaving, which dismisses the dialog and with it the exit the dialog was asked for.
-                    val exit = pendingExit
+                    // Taken before leaving, which dismisses the dialog and would otherwise report this exit as
+                    // cancelled.
+                    val exit = takePendingExit()
                     leaveEditor()
-                    exit?.invoke()
+                    exit?.exit?.invoke()
                 }
             }
         }.also { currentSaveJob = it }
@@ -1193,9 +1214,9 @@ class CampfireViewModel(
 
     /** The "Discard" answer of the unsaved changes dialog, and the only way typed text is ever thrown away. */
     fun leaveEditorWithoutSaving() {
-        val exit = pendingExit
+        val exit = takePendingExit()
         leaveEditor()
-        exit?.let(::requestExit)
+        exit?.let { requestExit(onExit = it.exit, onCancelled = it.onCancelled) }
     }
 
     /**
@@ -1889,7 +1910,9 @@ class CampfireViewModel(
      */
     private fun setVisibleDialog(dialogType: DialogType?) {
         if (dialogType !is DialogType.ImportConflicts) pendingImport = null
-        if (dialogType != DialogType.UnsavedChanges) pendingExit = null
+        // An exit the question was asked for and that is not being run is an exit that was cancelled: its caller
+        // may be waiting to hear so (the macOS quit request is).
+        if (dialogType != DialogType.UnsavedChanges) takePendingExit()?.onCancelled?.invoke()
         _visibleDialog.update { dialogType }
     }
 
