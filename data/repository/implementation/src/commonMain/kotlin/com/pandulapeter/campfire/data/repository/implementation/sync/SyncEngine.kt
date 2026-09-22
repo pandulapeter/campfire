@@ -123,6 +123,7 @@ internal class SyncEngine(
         // happens again the run stops rather than chasing a device that is writing continuously, and the next sync
         // settles it.
         var pass = 0
+        var unresolved = emptySet<SyncKey>()
         while (pass < MAXIMUM_PASSES) {
             // Listing both sides is the part of a run with nothing to show for it yet, so the progress reported
             // here has no total and the indicator spins rather than sitting at zero.
@@ -189,7 +190,10 @@ internal class SyncEngine(
             }
             val plan = SyncPlanner.plan(local = local, remote = remote, index = index)
             // Which is what most runs find, so nothing below this costs anything on an ordinary launch.
-            if (plan.isEmpty()) break
+            if (plan.isEmpty()) {
+                unresolved = emptySet()
+                break
+            }
             // This device is asked about first: it is the side the user is looking at, and the one they can still fix.
             // An answer waives only the guard it was given for, so a run that would empty both sides asks twice, once
             // per run - two questions about one folder are better than one answer that empties both of them.
@@ -231,9 +235,14 @@ internal class SyncEngine(
             )
             index = outcome.index
             summary = summary.plus(outcome.summary)
-            if (!outcome.hasUnresolvedConflicts) break
+            unresolved = outcome.unresolved
+            if (unresolved.isEmpty()) break
             pass++
         }
+        // Still contested when the passes ran out, so the two sides differ and nothing this run did settled it. Named
+        // the way a file that failed is, since a run that says nothing about it would count as the last successful one
+        // and read as a library that is in step.
+        summary = summary.plus(SyncSummary(failed = unresolved.map { it.name }))
 
         return Result.Completed(
             summary = summary,
@@ -304,7 +313,7 @@ internal class SyncEngine(
     ): PassOutcome = coroutineScope {
         val updated = index.toMutableMap()
         var summary = SyncSummary()
-        var hasUnresolvedConflicts = false
+        val unresolved = mutableSetOf<SyncKey>()
         var completed = 0
         // Whichever request finishes first writes to all four of those, so the merging is done in one place.
         val results = Mutex()
@@ -319,7 +328,7 @@ internal class SyncEngine(
                         updated += outcome.entries
                         updated -= outcome.removals
                         summary = summary.plus(outcome.summary)
-                        hasUnresolvedConflicts = hasUnresolvedConflicts || outcome.hasUnresolvedConflict
+                        if (outcome.isUnresolved) unresolved += operation.key
                         completed++
                         onProgress(SyncProgress(completed = completed, total = plan.size))
                         onIndexChanged {
@@ -334,7 +343,7 @@ internal class SyncEngine(
                 }
             }.awaitAll()
         }
-        PassOutcome(summary = summary, index = updated, hasUnresolvedConflicts = hasUnresolvedConflicts)
+        PassOutcome(summary = summary, index = updated, unresolved = unresolved)
     }
 
     private suspend fun runOperation(
@@ -459,7 +468,7 @@ internal class SyncEngine(
                 OperationOutcome(summary = SyncSummary(failed = listOf(key.name)))
             } else {
                 // The remote file moved under the write, which asks for another pass over a fresh listing.
-                OperationOutcome(hasUnresolvedConflict = true)
+                OperationOutcome(isUnresolved = true)
             }
         }
     }
@@ -526,7 +535,7 @@ internal class SyncEngine(
             if (!isOwnWrite) discardCopy(copyKey, remote)
             return OperationOutcome(
                 summary = if (isOwnWrite) SyncSummary(conflicts = listOf(copyName)) else SyncSummary(),
-                hasUnresolvedConflict = true,
+                isUnresolved = true,
             )
         }
         val entries = mutableMapOf(key to SyncIndexEntry(localContentHash(localBytes), uploaded.revision))
@@ -662,7 +671,7 @@ internal class SyncEngine(
         val entries: Map<SyncKey, SyncIndexEntry> = emptyMap(),
         val removals: Set<SyncKey> = emptySet(),
         val summary: SyncSummary = SyncSummary(),
-        val hasUnresolvedConflict: Boolean = false,
+        val isUnresolved: Boolean = false,
     )
 
     private class RemoteFileTooLargeException(size: Long) :
@@ -671,7 +680,7 @@ internal class SyncEngine(
     private data class PassOutcome(
         val summary: SyncSummary,
         val index: Map<SyncKey, SyncIndexEntry>,
-        val hasUnresolvedConflicts: Boolean,
+        val unresolved: Set<SyncKey>,
     )
 
     private companion object {

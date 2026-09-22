@@ -143,7 +143,8 @@ import — is the only thing that walks the directory again.
   that make every further call pointless (the credentials refused, the service unreachable, the remote folder full)
   do — and a `CancellationException` is caught *first* and rethrown, since a stopped run is not a few
   hundred files that failed. A file that failed is named in `SyncSummary.failed`, and a run that has any does not
-  move `lastSyncedAt`. Operations run `CONCURRENT_TRANSFERS` at a time within each ordering group rather than
+  move `lastSyncedAt`. So is a file the service still reported as contested in the last of the `MAXIMUM_PASSES`
+  passes (another device writing it under every upload): the two sides still differ, and the run did not settle it. Operations run `CONCURRENT_TRANSFERS` at a time within each ordering group rather than
   one after another: every one of them is a request, and serialising them made a first sync as slow as the round
   trip times added up. `SyncRepositoryImpl` owns an application-lifetime scope, so a run outlives the screen and
   (on Android) the activity that started it, and it is what tells the song and setlist repositories to rescan

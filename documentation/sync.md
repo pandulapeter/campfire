@@ -55,8 +55,9 @@ your own storage. Until you do, nothing on the network is touched at all.
   usable and says so the next time, when the app waits for **Sync now** instead of starting a run on its own.
 - A first sync of a whole library is expected to be rate limited rather than to fail; a run asks for a few files at a
   time and slows down when the service tells it to.
-- A file that cannot be moved does not hold up the others: Settings names it, and the next run tries again. A cloud
-  folder that is full does stop the run, and Settings says so.
+- A file that cannot be moved does not hold up the others: Settings names it, and the next run tries again. The same
+  goes for a file another device keeps changing while the run is trying to send it up. A cloud folder that is full
+  does stop the run, and Settings says so.
 
 ### Signing in
 

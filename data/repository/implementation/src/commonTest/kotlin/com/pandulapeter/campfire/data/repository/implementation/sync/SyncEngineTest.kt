@@ -437,6 +437,30 @@ class SyncEngineTest {
     }
 
     @Test
+    fun `a file still contested after the last pass is named in the summary`() = runTest {
+        val local = FakeLibraryFileLocalSource(files = mapOf(song(1) to HERE))
+        val provider = FakeSyncProvider(files = mapOf(song(1) to ORIGINAL))
+        // A second device that writes the file again every time this one is about to, in every pass the run makes.
+        var contestedUploads = 0
+        provider.onUpload = { key ->
+            if (key == song(1)) provider.files[key] = provider.files.getValue(key).first to "r${100 + ++contestedUploads}"
+        }
+
+        val result = SyncEngine(local).synchronize(
+            provider = provider,
+            document = syncedIndexOf(mapOf(song(1) to ORIGINAL)),
+            accountId = ACCOUNT_ID,
+            onProgress = {},
+            onIndexChanged = {},
+            deletionPolicy = SyncDeletionPolicy.ASK,
+        )
+
+        assertEquals(2, contestedUploads)
+        assertEquals(listOf(song(1).name), assertIs<SyncEngine.Result.Completed>(result).summary.failed)
+        assertContentEquals(HERE, local.files[song(1)])
+    }
+
+    @Test
     fun `a full remote folder ends the run`() = runTest {
         val local = FakeLibraryFileLocalSource(files = librarySongs(2))
         val provider = FakeSyncProvider()
