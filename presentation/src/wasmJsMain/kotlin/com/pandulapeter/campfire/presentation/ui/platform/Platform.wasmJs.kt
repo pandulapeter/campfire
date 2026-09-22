@@ -23,7 +23,11 @@ internal actual val isDesktopPlatform = !hasTouchScreen()
 // The Origin Private File System is not reachable from outside the page.
 internal actual val libraryLocation: LibraryLocation? = null
 
-internal actual val currentDistribution: Distribution? = Distribution.WEB
+// The page is served by the project itself, on no store and with no store's rules to follow.
+internal actual val currentDistribution: Distribution? = null
+
+// The page runs on every operating system and knows none of them well enough to pick a store to rate the app on.
+internal actual val storeForRating: Distribution? = null
 
 internal actual fun PointerEvent.verticalWheelNotches(): Float {
     val deltaY = changes.fold(0f) { total, change -> total + change.scrollDelta.y }

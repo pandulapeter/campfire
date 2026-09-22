@@ -25,12 +25,22 @@ internal expect val isDesktopPlatform: Boolean
 internal expect val libraryLocation: LibraryLocation?
 
 /**
- * Which of the places Campfire is handed out from this build is for, or null where it is for none of them - the
- * desktop installers the GitHub release carries, which answer to no store. The settings screen lists the others next to
- * it, so that the app can be found for every device its user has; see [visibleDistributions] for what each store lets
- * a build say about the rest.
+ * Which store this build was published on, or null where it came from none of them: the Linux package, the unsigned
+ * desktop installers the GitHub release carries, and the web build. It decides nothing the user sees directly - what
+ * it answers is [canAskForDonations], since a build that goes through App Review may not ask for money at all.
  */
 internal expect val currentDistribution: Distribution?
+
+/**
+ * The store whose listing the settings screen's rating row opens, decided by the platform the app is **running on**
+ * rather than by where the build came from: somebody who downloaded the .dmg is still a Mac user, and the Mac App
+ * Store listing is still where a review of Campfire on a Mac goes. Null where the platform has no store to rate the
+ * app on - Linux has none, and the web build runs on all of them, so any one choice would be a guess.
+ *
+ * A build that goes through App Review only ever runs on an Apple platform, so this never names another company's
+ * store to one (guideline 2.3.10) without a rule of its own having to say so.
+ */
+internal expect val storeForRating: Distribution?
 
 /**
  * Whether the settings screen may offer a link that asks for money, which is decided by the store the build is
@@ -60,40 +70,20 @@ internal sealed interface LibraryLocation {
 }
 
 /**
- * Everywhere Campfire can be had from, in the order the settings screen lists them.
+ * The app stores Campfire is published on.
  *
- * @property url The listing, or null for as long as there is none. Such an entry is a placeholder: it is drawn
- *   disabled, saying that the build is on its way, and gets its address here on the day it is published.
- * @property isApple Whether the store is one of Apple's, which is what [visibleDistributions] decides by.
+ * @property listingUrl The page a rating is left on, or null for as long as the app is not on that store: it is
+ *   filled in on the day the listing goes live, which is the whole of what publishing costs the app. It is an https
+ *   address rather than a store's own scheme (`market://`, `ms-windows-store://`) so that it also opens in a
+ *   browser, on a desktop where the store app may not be installed at all.
+ * @property isApple Whether the store is one of Apple's, which is what decides [canAskForDonations].
  */
 internal enum class Distribution(
-    val url: String?,
+    val listingUrl: String?,
     val isApple: Boolean = false,
 ) {
-    PLAY_STORE(url = "https://play.google.com/store/apps/details?id=com.pandulapeter.campfire"),
-    APP_STORE(url = null, isApple = true),
-    MAC_APP_STORE(url = null, isApple = true),
-    MICROSOFT_STORE(url = null),
-
-    /** No store at all: the package the release workflow attaches to every GitHub release. */
-    LINUX(url = "https://github.com/pandulapeter/campfire/releases/latest"),
-    WEB(url = "https://pandulapeter.com/campfire"),
-}
-
-/**
- * The entries of [Distribution] a build for [current] may show, its own included, since that is the listing to rate
- * the app on or to send to somebody else.
- *
- * A build that goes through App Review is the exception twice over. Guideline 2.3.10 has an app name no other
- * platform's store, so an Apple build leaves out Google's and Microsoft's; the web build stays, being a page rather
- * than a platform with a store of its own. Guideline 2.1 wants no placeholder content either, so there a listing
- * that does not exist yet is left out rather than announced. Neither Play nor the Microsoft Store has a rule against
- * naming the others, and the web and Linux builds answer to no store at all.
- *
- * Where this leaves something out, the settings screen adds a row that names no platform and leads to the project's
- * own page, which lists every build: an app may link to its home page, and what that page says is not the app's
- * metadata.
- */
-internal fun visibleDistributions(current: Distribution? = currentDistribution) = Distribution.entries.filter { distribution ->
-    current?.isApple != true || distribution == Distribution.WEB || (distribution.isApple && distribution.url != null)
+    PLAY_STORE(listingUrl = "https://play.google.com/store/apps/details?id=com.pandulapeter.campfire"),
+    APP_STORE(listingUrl = null, isApple = true),
+    MAC_APP_STORE(listingUrl = null, isApple = true),
+    MICROSOFT_STORE(listingUrl = null),
 }

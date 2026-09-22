@@ -18,4 +18,6 @@ internal actual val libraryLocation: LibraryLocation? = null
 
 internal actual val currentDistribution: Distribution? = Distribution.PLAY_STORE
 
+internal actual val storeForRating: Distribution? = Distribution.PLAY_STORE
+
 internal actual fun PointerEvent.verticalWheelNotches() = changes.fold(0f) { total, change -> total + change.scrollDelta.y }

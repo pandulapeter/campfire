@@ -48,17 +48,13 @@ import com.pandulapeter.campfire.presentation.resources.add_demo_songs
 import com.pandulapeter.campfire.presentation.resources.ic_bug
 import com.pandulapeter.campfire.presentation.resources.ic_campfire
 import com.pandulapeter.campfire.presentation.resources.ic_coffee
-import com.pandulapeter.campfire.presentation.resources.ic_desktop
 import com.pandulapeter.campfire.presentation.resources.ic_export
 import com.pandulapeter.campfire.presentation.resources.ic_git_hub
 import com.pandulapeter.campfire.presentation.resources.ic_import
-import com.pandulapeter.campfire.presentation.resources.ic_laptop
 import com.pandulapeter.campfire.presentation.resources.ic_phone
 import com.pandulapeter.campfire.presentation.resources.ic_privacy_policy
+import com.pandulapeter.campfire.presentation.resources.ic_star
 import com.pandulapeter.campfire.presentation.resources.ic_songs
-import com.pandulapeter.campfire.presentation.resources.ic_tablet
-import com.pandulapeter.campfire.presentation.resources.ic_terminal
-import com.pandulapeter.campfire.presentation.resources.ic_website
 import com.pandulapeter.campfire.presentation.resources.settings
 import com.pandulapeter.campfire.presentation.resources.settings_about
 import com.pandulapeter.campfire.presentation.resources.settings_accidentals
@@ -67,24 +63,12 @@ import com.pandulapeter.campfire.presentation.resources.settings_accidentals_fla
 import com.pandulapeter.campfire.presentation.resources.settings_accidentals_original
 import com.pandulapeter.campfire.presentation.resources.settings_accidentals_sharps
 import com.pandulapeter.campfire.presentation.resources.settings_created_by
-import com.pandulapeter.campfire.presentation.resources.settings_distribution_android
 import com.pandulapeter.campfire.presentation.resources.settings_distribution_app_store
-import com.pandulapeter.campfire.presentation.resources.settings_distribution_coming_soon
-import com.pandulapeter.campfire.presentation.resources.settings_distribution_current
-import com.pandulapeter.campfire.presentation.resources.settings_distribution_git_hub_releases
-import com.pandulapeter.campfire.presentation.resources.settings_distribution_ios
-import com.pandulapeter.campfire.presentation.resources.settings_distribution_linux
-import com.pandulapeter.campfire.presentation.resources.settings_distribution_mac
 import com.pandulapeter.campfire.presentation.resources.settings_distribution_mac_app_store
 import com.pandulapeter.campfire.presentation.resources.settings_distribution_microsoft_store
 import com.pandulapeter.campfire.presentation.resources.settings_distribution_play_store
-import com.pandulapeter.campfire.presentation.resources.settings_distribution_web
-import com.pandulapeter.campfire.presentation.resources.settings_distribution_web_address
-import com.pandulapeter.campfire.presentation.resources.settings_distribution_windows
-import com.pandulapeter.campfire.presentation.resources.settings_distributions
 import com.pandulapeter.campfire.presentation.resources.settings_distributions_all
 import com.pandulapeter.campfire.presentation.resources.settings_distributions_all_description
-import com.pandulapeter.campfire.presentation.resources.settings_distributions_description
 import com.pandulapeter.campfire.presentation.resources.settings_export_all
 import com.pandulapeter.campfire.presentation.resources.settings_german_notation
 import com.pandulapeter.campfire.presentation.resources.settings_general
@@ -111,6 +95,8 @@ import com.pandulapeter.campfire.presentation.resources.settings_lyrics_only_mod
 import com.pandulapeter.campfire.presentation.resources.settings_performance_mode
 import com.pandulapeter.campfire.presentation.resources.settings_performance_mode_description
 import com.pandulapeter.campfire.presentation.resources.settings_privacy_policy
+import com.pandulapeter.campfire.presentation.resources.settings_rate
+import com.pandulapeter.campfire.presentation.resources.settings_rate_description
 import com.pandulapeter.campfire.presentation.resources.settings_report_issue
 import com.pandulapeter.campfire.presentation.resources.settings_songs
 import com.pandulapeter.campfire.presentation.resources.settings_support
@@ -152,9 +138,8 @@ import com.pandulapeter.campfire.presentation.ui.platform.LibraryLocation
 import com.pandulapeter.campfire.presentation.ui.platform.LibraryPersistence
 import com.pandulapeter.campfire.presentation.ui.platform.LocalFilePicker
 import com.pandulapeter.campfire.presentation.ui.platform.canAskForDonations
-import com.pandulapeter.campfire.presentation.ui.platform.currentDistribution
 import com.pandulapeter.campfire.presentation.ui.platform.libraryLocation
-import com.pandulapeter.campfire.presentation.ui.platform.visibleDistributions
+import com.pandulapeter.campfire.presentation.ui.platform.storeForRating
 import com.pandulapeter.campfire.presentation.ui.theme.isDarkTheme
 import com.pandulapeter.campfire.presentation.ui.theme.themeColorOptions
 import kotlinx.coroutines.launch
@@ -277,8 +262,7 @@ internal fun SettingsScreen(
                     settledWidth = pageWidth,
                     scrollState = scrollStates[page],
                     contentPadding = contentPadding,
-                    section = { DistributionsSection(urlOpener = urlOpener) },
-                    secondSection = { AboutSection(urlOpener = urlOpener) },
+                    section = { AboutSection(urlOpener = urlOpener) },
                 )
             }
         }
@@ -539,58 +523,20 @@ private fun SyncSection(
 }
 
 /**
- * Where else Campfire can be had from, so that it can be found for every device its user has. What is listed is
- * [visibleDistributions]' to decide, since two of the stores have rules about naming the others; a build that is not
- * out yet stays in the list as a disabled row saying so, where its store allows that.
- */
-@Composable
-private fun DistributionsSection(
-    urlOpener: (String) -> Unit,
-) = SettingsSection(title = stringResource(Res.string.settings_distributions)) {
-    SettingsMessage(text = stringResource(Res.string.settings_distributions_description))
-    val distributions = visibleDistributions()
-    distributions.forEach { distribution ->
-        val storeName = stringResource(distribution.storeName)
-        LinkListItem(
-            title = stringResource(distribution.platformName),
-            description = when {
-                distribution.url == null -> stringResource(Res.string.settings_distribution_coming_soon, storeName)
-                distribution == currentDistribution -> stringResource(Res.string.settings_distribution_current, storeName)
-                else -> storeName
-            },
-            icon = painterResource(distribution.icon),
-            isEnabled = distribution.url != null,
-            // Every other build's own row leads to its listing, which is where it is rated or found for somebody
-            // else; the web build's listing is the page it is running in, so opening it would only load the app again.
-            onClick = if (distribution == Distribution.WEB && distribution == currentDistribution) {
-                null
-            } else {
-                { distribution.url?.let(urlOpener) }
-            },
-        )
-    }
-    // Where a store's rules kept some of the builds off the list, the way to the rest is the project's own page. The
-    // row names no platform, which is the whole of what those rules ask of the app itself. It opens at the README's "Get
-    // Campfire" section, whose anchor GitHub derives from the heading, so renaming that heading means changing it here.
-    if (distributions.size < Distribution.entries.size) {
-        LinkListItem(
-            title = stringResource(Res.string.settings_distributions_all),
-            description = stringResource(Res.string.settings_distributions_all_description),
-            icon = painterResource(Res.drawable.ic_git_hub),
-            onClick = { urlOpener("$GIT_HUB_URL#get-campfire") },
-        )
-    }
-}
-
-/**
- * What the app is and where it lives: GitHub is both its home page and where a problem is reported, with the privacy
- * policy the stores ask for after them. The row that names the author is the link to the author's own site, since
- * that is what a name with a link on it is expected to lead to.
+ * What the app is and where it lives: GitHub is both its home page and where a problem is reported, and it is also
+ * where every build of Campfire is listed, which is the whole of what the app says about the other platforms - a
+ * page can be kept up to date without a release, and it is the one place App Review has nothing to say about. The row
+ * that names the author is the link to the author's own site, since that is what a name with a link on it is expected
+ * to lead to.
+ *
+ * The rating row leads to the store of the platform the app is running on, and only once that listing exists. It
+ * says "rate", never "get it from the store": a store page has an install button on it, and somebody who has the
+ * direct download would end up with a second copy of the app, sandboxed, with a library of its own.
  */
 @Composable
 private fun AboutSection(
     urlOpener: (String) -> Unit,
-) = SettingsSection(title = stringResource(Res.string.settings_about)) {
+) = SettingsSection {
     LinkListItem(
         title = stringResource(Res.string.settings_created_by),
         description = stringResource(Res.string.settings_version, CAMPFIRE_VERSION_NAME),
@@ -607,6 +553,24 @@ private fun AboutSection(
         icon = painterResource(Res.drawable.ic_bug),
         onClick = { urlOpener("$GIT_HUB_URL/issues") },
     )
+    // The README's "Get Campfire" section, whose anchor GitHub derives from the heading, so renaming that heading
+    // means changing it here.
+    LinkListItem(
+        title = stringResource(Res.string.settings_distributions_all),
+        description = stringResource(Res.string.settings_distributions_all_description),
+        icon = painterResource(Res.drawable.ic_phone),
+        onClick = { urlOpener("$GIT_HUB_URL#get-campfire") },
+    )
+    storeForRating?.let { store ->
+        store.listingUrl?.let { listingUrl ->
+            LinkListItem(
+                title = stringResource(Res.string.settings_rate),
+                description = stringResource(Res.string.settings_rate_description, stringResource(store.storeName)),
+                icon = painterResource(Res.drawable.ic_star),
+                onClick = { urlOpener(listingUrl) },
+            )
+        }
+    }
     LinkListItem(
         title = stringResource(Res.string.settings_privacy_policy),
         icon = painterResource(Res.drawable.ic_privacy_policy),
@@ -632,40 +596,13 @@ private fun SettingsTab.label() = stringResource(
     }
 )
 
-/** What runs a build, which is what somebody looking for the app on another device knows it by. */
-private val Distribution.platformName
-    get() = when (this) {
-        Distribution.PLAY_STORE -> Res.string.settings_distribution_android
-        Distribution.APP_STORE -> Res.string.settings_distribution_ios
-        Distribution.MAC_APP_STORE -> Res.string.settings_distribution_mac
-        Distribution.MICROSOFT_STORE -> Res.string.settings_distribution_windows
-        Distribution.LINUX -> Res.string.settings_distribution_linux
-        Distribution.WEB -> Res.string.settings_distribution_web
-    }
-
-/** Where a build is had from: a store by its name, the web build by its address, the Linux one by where it is attached. */
+/** The name a rating is left under, which is the one thing the app still has to call a store. */
 private val Distribution.storeName
     get() = when (this) {
         Distribution.PLAY_STORE -> Res.string.settings_distribution_play_store
         Distribution.APP_STORE -> Res.string.settings_distribution_app_store
         Distribution.MAC_APP_STORE -> Res.string.settings_distribution_mac_app_store
         Distribution.MICROSOFT_STORE -> Res.string.settings_distribution_microsoft_store
-        Distribution.LINUX -> Res.string.settings_distribution_git_hub_releases
-        Distribution.WEB -> Res.string.settings_distribution_web_address
-    }
-
-/**
- * The kind of device rather than the mark of whoever makes it: the stores' logos are theirs to license, and App
- * Review reads another platform's mark the way it reads that platform's name.
- */
-private val Distribution.icon
-    get() = when (this) {
-        Distribution.PLAY_STORE -> Res.drawable.ic_phone
-        Distribution.APP_STORE -> Res.drawable.ic_tablet
-        Distribution.MAC_APP_STORE -> Res.drawable.ic_laptop
-        Distribution.MICROSOFT_STORE -> Res.drawable.ic_desktop
-        Distribution.LINUX -> Res.drawable.ic_terminal
-        Distribution.WEB -> Res.drawable.ic_website
     }
 
 /**

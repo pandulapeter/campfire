@@ -65,7 +65,8 @@ Delete this file once the last box is ticked: by then `CLAUDE.md` describes how 
 - [ ] Submit that build for review by hand. An API only accepts builds for an app whose first version exists.
 
 Already taken care of in the code: no donation link on iOS (guideline 3.1.1, `canAskForDonations`), no other platform
-or store named in Settings (2.3.10) and no "Coming soon" rows (2.1), both in `visibleDistributions`.
+or store named in Settings (2.3.10) and no "Coming soon" rows (2.1): the About section lists no builds at all, only a
+link to the README, and its rating row names the App Store alone (`storeForRating`).
 
 ## 5. Automating it
 

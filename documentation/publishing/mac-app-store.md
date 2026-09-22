@@ -88,8 +88,9 @@ A sandboxed build can only be tested signed: run `packagePkg`, install the resul
       on a local port for a few seconds during authorization.
 - [ ] Upload the first `.pkg` by hand with Apple's *Transporter* app and submit it for review by hand.
 
-Already taken care of in the code: a build running on macOS names only Apple's stores and the web in Settings and
-shows no "Coming soon" rows (`visibleDistributions`).
+Already taken care of in the code: Settings lists no builds at all, only a link to the README, and a build running
+on macOS names only the Mac App Store, in its rating row (`storeForRating`). A build made with
+`-Pcampfire.desktop.distribution=mac-app-store` has no donation link (guideline 3.1.1, `canAskForDonations`).
 
 ## 5. Automating it
 

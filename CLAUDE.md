@@ -158,15 +158,19 @@ item bound to the device and `FileStorage.keepOutOfDeviceBackup` on the index.
   a deleted one comes back by being asked for rather than on its own. Each file is named exactly as the library would
   name the song inside it, which is what lets one list both read the resources and answer whether they are already
   there.
-- **Every build links to the others** from Settings, so the app can be found for each device its user has:
-  `Distribution` (in `:presentation`'s `ui/platform/Platform.kt`) lists Play, the App Store, the Mac App Store, the
-  Microsoft Store, the Linux package on the latest GitHub release and the web build, a null `url` marking one that is not published yet — it is drawn as a disabled
-  "Coming soon" row, and publishing it is filling that URL in. `visibleDistributions` is where the store rules are
-  kept: a build that goes through App Review names only Apple's stores and the web, and shows no placeholders —
-  what it has instead is a row naming no platform that leads to the README's "Get Campfire" section, where every build
-  is listed.
-  **GitHub is the project's website and its issue tracker**; the About section links nothing else but the author's own
-  site, the privacy policy and the donation page.
+- **The app says nothing about the other builds but where to find them.** Settings → About is one section on every
+  platform, and the row that names no platform — "Every version of Campfire" — leads to the README's "Get Campfire"
+  section, which is a page that can be kept up to date without a release and the one place a store has nothing to
+  say about. `Distribution` (in `:presentation`'s `ui/platform/Platform.kt`) is now just the four app stores and
+  their listing URLs, a null `listingUrl` marking one the app is not on yet; publishing is filling it in.
+  `currentDistribution` says which store the build was published on, and is what decides whether it may ask for
+  money at all (`canAskForDonations`: never on Apple's stores, guideline 3.1.1). `storeForRating` is a different
+  question — the store of the platform the app is **running** on, so the direct `.dmg` and the Mac App Store build
+  both send a review to the Mac App Store — and it is what the one "Rate Campfire" row opens, absent on Linux, on
+  the web, and wherever that listing does not exist yet. The row says *rate* and never *install*: a store page
+  carries an install button, and a second copy of the app would come with a library of its own. **GitHub is the
+  project's website and its issue tracker**; the About section links nothing else but the author's own site, the
+  privacy policy and the donation page.
 - The file name is a song's (and a setlist's) identity. Nothing is ever overwritten implicitly: a new or imported file
   that collides gets a `_2`, `_3`… suffix (`FileNames.kt`). An **import decides before it writes**: every incoming
   file is held against the name it wants (`PrepareImportUseCase` -> `ImportPlan`), a song the library already holds
@@ -267,8 +271,8 @@ item bound to the device and `FileStorage.keepOutOfDeviceBackup` on the index.
     folder holds nothing but the distribution — the privacy policy and the rest of the site live elsewhere there.
   - `desktop-publish.yml` builds one installer per runner — jpackage only packages for the machine it runs on — and
     attaches them to the release: `packageReleaseDeb` on amd64 and arm64, which is the whole of how the Linux build
-    is handed out (`Distribution.LINUX` links to the latest release's page, and a `.deb` is not something anybody
-    signs on its own), and an unsigned `packageReleaseDmg` for both kinds of Mac and `packageReleaseMsi` for Windows,
+    is handed out (the README's "Get Campfire" section links to the latest release's page, and a `.deb` is not
+    something anybody signs on its own), and an unsigned `packageReleaseDmg` for both kinds of Mac and `packageReleaseMsi` for Windows,
     a stopgap until the two stores have the app. Each leg passes `campfire.desktop.distribution` (`linux` or
     `download`), which is how a build that goes through App Review is told not to offer the donation link. jpackage signs the macOS app ad hoc, which is what lets it run at all
     on Apple silicon once Gatekeeper has been overridden. The legs do not cancel each other. Every one of them runs

@@ -32,9 +32,16 @@ internal actual val libraryLocation: LibraryLocation? = LibraryLocation.Folder(F
 internal actual val currentDistribution: Distribution? = when (CAMPFIRE_DESKTOP_DISTRIBUTION) {
     "mac-app-store" -> Distribution.MAC_APP_STORE
     "microsoft-store" -> Distribution.MICROSOFT_STORE
-    "linux" -> Distribution.LINUX
-    // "download": the .dmg and .msi the GitHub release carries, and every build nobody configured. No store's rules
-    // apply to it, which is exactly what a null says.
+    // "linux" and "download" (the .dmg and .msi the GitHub release carries, and every build nobody configured) answer
+    // to no store's rules, which is what a null says.
+    else -> null
+}
+
+// The store of the machine, not of the build: the Mac App Store listing is where a review of Campfire on a Mac
+// goes whether the app arrived from that store or as the .dmg the GitHub release carries. Linux has no store.
+internal actual val storeForRating: Distribution? = when {
+    isMacOs -> Distribution.MAC_APP_STORE
+    isWindows -> Distribution.MICROSOFT_STORE
     else -> null
 }
 
