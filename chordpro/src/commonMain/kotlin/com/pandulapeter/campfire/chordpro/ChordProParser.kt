@@ -359,7 +359,8 @@ object ChordProParser {
                 "lyricist" -> lyricist = value
                 "album" -> album = value
                 "year" -> year = value
-                "key" -> key = value
+                // A later key is a modulation from where it stands; the song is in the key it starts in.
+                "key" -> if (key.isNullOrEmpty()) key = value
                 "capo" -> value.toIntOrNull()?.let { capo = it }
                 "tempo" -> tempo = value
                 "time" -> time = value

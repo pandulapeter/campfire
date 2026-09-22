@@ -557,4 +557,13 @@ class ChordProParserTest {
         assertEquals(metadata, ChordProParser.parseMetadata(text))
         assertEquals("B", ChordProParser.summarize("{meta: key H}\n[H]a").metadata.key)
     }
+
+    @Test
+    fun `a song is in the key it starts in`() {
+        val text = "{key: F}\n[C]a\n{key: A}\n[E]b"
+
+        assertEquals("F", ChordProParser.parse(text).metadata.key)
+        assertEquals("F", ChordProParser.summarize(text).metadata.key)
+        assertEquals("G", ChordProParser.parse("{key: }\n{key: G}").metadata.key)
+    }
 }

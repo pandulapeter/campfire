@@ -157,6 +157,18 @@ class ChordProTransposerTest {
     }
 
     @Test
+    fun `a modulation does not decide the spelling of the whole song`() {
+        val song = ChordProTransposer.transpose(ChordProParser.parse("{key: F}\n[C]a\n{key: A}\n[E]b"), 1)
+
+        assertEquals("F#", song.metadata.key)
+        assertEquals(
+            listOf("C#", "F"),
+            song.blocks.filterIsInstance<ChordProBlock.Section>().flatMap { it.lines }
+                .filterIsInstance<ChordProLine.Lyrics>().flatMap { line -> line.chords.map { it.name } },
+        )
+    }
+
+    @Test
     fun `a key written as meta is transposed with the chords`() {
         assertEquals("{meta: key A}\n[A]a", ChordProTransposer.transposeText("{meta: key G}\n[G]a", 2))
         assertTrue(ChordProTransposer.prefersFlats(ChordProParser.parse("{meta: key F}\n[C]a"), 0))
