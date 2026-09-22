@@ -47,6 +47,9 @@ direction.
   edge and the soft shadow exact and still cuts the file to a fifth, which matters because it is on the critical path.
   **There is deliberately no web app manifest and no service worker.** The web build is a page, not an installable
   app — every platform that should have an installable Campfire gets a native build instead.
+- `src/wasmJsMain/resources/opfs-writer.js` — the dedicated worker `OpfsFileStorage` writes through where there is no
+  `createWritable()`; a request is `{ id, path: [directory segments], name, data: bytes }`. Not preloaded and not part
+  of the loading screen's byte count: it is only fetched by the first write that needs it.
 
 The library lives in the **Origin Private File System**, so it is per-origin and per-browser: a user's songs do not
 follow them to another browser, and clearing site data deletes them. OPFS needs a secure context, which means `https`

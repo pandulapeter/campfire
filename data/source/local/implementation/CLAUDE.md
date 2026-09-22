@@ -36,7 +36,10 @@ holds the `@Module @ComponentScan object DataLocalSourceModule`, and every local
   - Writes are atomic on the three platforms that can be (a `.campfire-<number>.tmp` temporary file of its own per write,
     named without the target so a name at the file-system limit still saves, flushed to the device
     and moved over the target on the JVM, `atomically` on iOS), so a crash in the middle of a save cannot truncate a
-    song. OPFS has no such primitive. The OPFS storage
+    song. OPFS has no such primitive. Where the browser has no `createWritable()` (Safari before 26, every browser on
+    iOS 18), a write is handed to `app/web`'s `opfs-writer.js`, a dedicated worker, since `createSyncAccessHandle()`
+    exists nowhere else: it is given the directory by its path segments and the content as bytes, text encoded as
+    UTF-8 on the way. The OPFS storage
     resolves the three directory handles once and keeps them: walking down from the root is three promises, and
     nothing outside the page can remove a directory from the origin private file system.
   - Every `catch (Exception)` around a read rethrows `CancellationException` first: a scan that was cancelled is not

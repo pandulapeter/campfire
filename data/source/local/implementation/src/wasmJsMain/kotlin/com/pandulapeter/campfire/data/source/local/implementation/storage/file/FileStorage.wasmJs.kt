@@ -89,12 +89,12 @@ internal class OpfsFileStorage : FileStorage {
     }
 
     override suspend fun writeText(directory: StorageDirectory, name: String, text: String) = withContext(Dispatchers.Default) {
-        failingAsStorage(name) { writeFile(directoryHandle(directory), name, text.toJsString()).await() }
+        failingAsStorage(name) { writeFile(directoryHandle(directory), directory.pathSegments.joinToString("/"), name, text.toJsString()).await() }
         Unit
     }
 
     override suspend fun writeBytes(directory: StorageDirectory, name: String, bytes: ByteArray) = withContext(Dispatchers.Default) {
-        failingAsStorage(name) { writeFile(directoryHandle(directory), name, bytes.toInt8Array()).await() }
+        failingAsStorage(name) { writeFile(directoryHandle(directory), directory.pathSegments.joinToString("/"), name, bytes.toInt8Array()).await() }
         Unit
     }
 
@@ -204,8 +204,11 @@ private fun readFileBytes(handle: JsAny): Promise<Int8Array?> =
 /**
  * A writable holds a lock on its file until it is closed or aborted, so one whose write fails is aborted before the
  * failure is passed on: left open, it would make every later write and the deletion of that file fail as well.
+ *
+ * Where there is no `createWritable()` (Safari before 26), the write is handed to `opfs-writer.js`, a dedicated worker,
+ * since `createSyncAccessHandle()` exists nowhere else; it is given the directory by its path and the content as bytes.
  */
-private fun writeFile(parent: JsAny, name: String, data: JsAny): Promise<JsAny?> = js(
+private fun writeFile(parent: JsAny, path: String, name: String, data: JsAny): Promise<JsAny?> = js(
     """(async function () {
         var existed = true;
         var handle;
@@ -221,7 +224,8 @@ private fun writeFile(parent: JsAny, name: String, data: JsAny): Promise<JsAny?>
                 await new Promise(function (resolve, reject) {
                     worker.onmessage = function (event) { worker.terminate(); event.data.error ? reject(Object.assign(new Error(event.data.message), { name: event.data.error })) : resolve(); };
                     worker.onerror = function (event) { worker.terminate(); reject(event.error || new Error(event.message)); };
-                    worker.postMessage({ id: 1, path: [], name: name, data: data });
+                    var bytes = typeof data === 'string' ? new TextEncoder().encode(data) : data;
+                    worker.postMessage({ id: 1, path: path.split('/'), name: name, data: bytes });
                 });
             }
         } catch (error) { if (!existed) try { await parent.removeEntry(name); } catch (ignored) { } throw error; }

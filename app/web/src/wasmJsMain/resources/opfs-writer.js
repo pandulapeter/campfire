@@ -13,6 +13,7 @@ var queue = Promise.resolve();
 self.onmessage = function (event) {
     var request = event.data;
     queue = queue.then(async function () {
+        if (!Array.isArray(request.path) || request.path.length === 0) throw new TypeError('No directory given.');
         var directory = await navigator.storage.getDirectory();
         for (var i = 0; i < request.path.length; i++) directory = await directory.getDirectoryHandle(request.path[i], { create: true });
         var existed = true;
