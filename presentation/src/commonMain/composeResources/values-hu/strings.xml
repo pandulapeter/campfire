@@ -233,7 +233,7 @@
     <string name="song_editor_section_verse">Versszak</string>
     <string name="song_editor_section_pre_chorus">Pre-refrén</string>
     <string name="song_editor_section_chorus">Refrén</string>
-    <string name="song_editor_section_bridge">Bridge</string>
+    <string name="song_editor_section_bridge">Átkötés</string>
     <string name="song_editor_section_solo">Szóló</string>
     <string name="song_editor_section_outro">Outro</string>
     <string name="song_editor_section_tab">Tab</string>
@@ -281,7 +281,7 @@
     <string name="song_details_text_size_decrease">Szöveg kicsinyítése</string>
     <string name="song_details_text_size_reset">Szövegméret visszaállítása</string>
     <string name="song_details_section_chorus">Refrén</string>
-    <string name="song_details_section_bridge">Átvezetés</string>
+    <string name="song_details_section_bridge">Átkötés</string>
     <string name="song_details_section_tab">Tab</string>
     <string name="song_details_section_grid">Rács</string>
     <string name="song_details_tag_add">Címke hozzáadása</string>
@@ -341,7 +341,7 @@
     <string name="settings_sync_interrupted">Az előző szinkronizálás félbeszakadt. Ami addig átkerült, az megmaradt.</string>
     <plurals name="settings_sync_deletions_pending">
         <item quantity="one">A szinkronizált fájlod eltűnt a felhőmappából. Itt is töröljük, vagy megtartod és újra feltöltöd?</item>
-        <item quantity="other">A %2$d szinkronizált fájlodból %1$d eltűnt a felhőmappából. Itt is töröljük őket, vagy megtartod és újra feltöltöd őket?</item>
+        <item quantity="other">%2$d szinkronizált fájlodból %1$d eltűnt a felhőmappából. Itt is töröljük őket, vagy megtartod és újra feltöltöd őket?</item>
     </plurals>
     <string name="settings_sync_delete_locally">Törlés itt is</string>
     <string name="settings_sync_keep_and_upload">Megtartás és feltöltés</string>
