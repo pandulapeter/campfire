@@ -75,12 +75,49 @@
                 <data android:scheme="content" />
                 <data android:host="*" />
                 <data android:mimeType="*/*" />
+                <!-- Android 12 and later: an exact suffix, whatever the rest of the path holds. The matcher is
+                     case-sensitive, so the capitalized spellings a FAT card or a Windows machine produces are listed
+                     too. pathAdvancedPattern is no help here: it never backtracks, so ".*\\.cho" in it matches nothing. -->
+                <data android:pathSuffix=".cho" />
+                <data android:pathSuffix=".chopro" />
+                <data android:pathSuffix=".chordpro" />
+                <data android:pathSuffix=".crd" />
+                <data android:pathSuffix=".chord" />
+                <data android:pathSuffix=".pro" />
+                <data android:pathSuffix=".CHO" />
+                <data android:pathSuffix=".CHOPRO" />
+                <data android:pathSuffix=".CHORDPRO" />
+                <data android:pathSuffix=".CRD" />
+                <data android:pathSuffix=".CHORD" />
+                <data android:pathSuffix=".PRO" />
+                <!-- Android 9 to 11 have only pathPattern, whose ".*" stops at the first occurrence of the character
+                     after it and never backtracks, so a pattern matches a path with exactly as many dots as it has.
+                     One pattern per count, up to four dots in the whole path; a path with more is imported from
+                     inside the app instead. -->
                 <data android:pathPattern=".*\\.cho" />
+                <data android:pathPattern=".*\\..*\\.cho" />
+                <data android:pathPattern=".*\\..*\\..*\\.cho" />
+                <data android:pathPattern=".*\\..*\\..*\\..*\\.cho" />
                 <data android:pathPattern=".*\\.chopro" />
+                <data android:pathPattern=".*\\..*\\.chopro" />
+                <data android:pathPattern=".*\\..*\\..*\\.chopro" />
+                <data android:pathPattern=".*\\..*\\..*\\..*\\.chopro" />
                 <data android:pathPattern=".*\\.chordpro" />
+                <data android:pathPattern=".*\\..*\\.chordpro" />
+                <data android:pathPattern=".*\\..*\\..*\\.chordpro" />
+                <data android:pathPattern=".*\\..*\\..*\\..*\\.chordpro" />
                 <data android:pathPattern=".*\\.crd" />
+                <data android:pathPattern=".*\\..*\\.crd" />
+                <data android:pathPattern=".*\\..*\\..*\\.crd" />
+                <data android:pathPattern=".*\\..*\\..*\\..*\\.crd" />
                 <data android:pathPattern=".*\\.chord" />
+                <data android:pathPattern=".*\\..*\\.chord" />
+                <data android:pathPattern=".*\\..*\\..*\\.chord" />
+                <data android:pathPattern=".*\\..*\\..*\\..*\\.chord" />
                 <data android:pathPattern=".*\\.pro" />
+                <data android:pathPattern=".*\\..*\\.pro" />
+                <data android:pathPattern=".*\\..*\\..*\\.pro" />
+                <data android:pathPattern=".*\\..*\\..*\\..*\\.pro" />
             </intent-filter>
 
             <!--
