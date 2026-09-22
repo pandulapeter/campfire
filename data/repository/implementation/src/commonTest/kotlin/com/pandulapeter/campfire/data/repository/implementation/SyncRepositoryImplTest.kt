@@ -23,7 +23,10 @@ import com.pandulapeter.campfire.data.repository.implementation.sync.FakeSyncPro
 import com.pandulapeter.campfire.data.repository.implementation.sync.FakeSyncStateLocalSource
 import com.pandulapeter.campfire.data.repository.implementation.sync.RecordingSetlistRepository
 import com.pandulapeter.campfire.data.repository.implementation.sync.RecordingSongRepository
+import com.pandulapeter.campfire.data.repository.implementation.sync.SyncIndexDocument
+import com.pandulapeter.campfire.data.repository.implementation.sync.SyncIndexEntry
 import com.pandulapeter.campfire.data.repository.implementation.sync.SyncKey
+import com.pandulapeter.campfire.data.repository.implementation.sync.indexKey
 import com.pandulapeter.campfire.data.source.local.api.LibraryStorageException
 import com.pandulapeter.campfire.data.source.remote.api.PendingAuthorization
 import com.pandulapeter.campfire.data.source.remote.api.SyncAuthorizationException
@@ -31,6 +34,7 @@ import com.pandulapeter.campfire.data.source.remote.api.SyncAuthenticator
 import com.pandulapeter.campfire.data.source.remote.api.SyncNetworkException
 import com.pandulapeter.campfire.data.source.remote.api.SyncProviders
 import com.pandulapeter.campfire.data.source.remote.api.SyncRemoteStorageFullException
+import com.pandulapeter.campfire.data.source.remote.api.hashing.localContentHash
 import com.pandulapeter.campfire.data.source.remote.api.model.AuthorizationCompletionPage
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.awaitCancellation
@@ -41,6 +45,7 @@ import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.runCurrent
 import kotlinx.coroutines.test.runTest
+import kotlinx.serialization.json.Json
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFalse
@@ -260,6 +265,52 @@ class SyncRepositoryImplTest {
         assertEquals(SyncFailureReason.AUTHORIZATION, assertIs<SyncState.ConnectionFailed>(state).reason)
         assertNotNull(stateLocalSource.index)
         assertFalse("\"isRunInProgress\": true" in stateLocalSource.index.orEmpty())
+    }
+
+    @Test
+    fun `a run whose index cannot be read stops before anything moves`() = runTest {
+        val json = Json {
+            prettyPrint = true
+            encodeDefaults = true
+        }
+        // The library is empty and the index knows the song, so the index is what says it was deleted here.
+        val index = json.encodeToString(
+            SyncIndexDocument.of(
+                providerId = SyncProviderId.DROPBOX.id,
+                accountId = ACCOUNT.indexKey(),
+                lastSyncedAt = 1,
+                index = mapOf(
+                    song(1) to SyncIndexEntry(localHash = localContentHash("One".encodeToByteArray()), remoteRevision = "r1"),
+                ),
+            ),
+        )
+        val stateLocalSource = FakeSyncStateLocalSource(index = index)
+        val local = FakeLibraryFileLocalSource()
+        val provider = FakeSyncProvider(files = mapOf(song(1) to "One".encodeToByteArray()), account = ACCOUNT)
+        val repository = repository(provider = provider, stateLocalSource = stateLocalSource, libraryFileLocalSource = local)
+
+        repository.restore()
+        stateLocalSource.onLoadIndex = { throw LibraryStorageException("Locked") }
+        repository.synchronize(SyncDeletionPolicy.ASK)
+        val state = repository.awaitOutcome()
+
+        assertEquals(SyncOutcome.Failure(SyncFailureReason.STORAGE), state.lastOutcome)
+        assertEquals(index, stateLocalSource.index)
+        assertTrue(local.files.isEmpty())
+        assertTrue(song(1) in provider.files)
+    }
+
+    @Test
+    fun `restoring with an unreadable index still shows the account`() = runTest {
+        val repository = repository(
+            provider = FakeSyncProvider(account = ACCOUNT),
+            stateLocalSource = FakeSyncStateLocalSource(onLoadIndex = { throw LibraryStorageException("Locked") }),
+        )
+
+        val result = repository.restore()
+
+        assertTrue(result.isConnected)
+        assertIs<SyncState.Connected>(repository.syncState.value)
     }
 
     @Test

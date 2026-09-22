@@ -181,7 +181,7 @@ internal class SyncRepositoryImpl(
             _syncState.update { SyncState.ConnectionFailed(connected.id, SyncFailureReason.AUTHORIZATION) }
             return disconnectedResult
         }
-        val document = loadIndex()
+        val document = loadIndexOrNull() ?: SyncIndexDocument()
         _syncState.update {
             SyncState.Connected(
                 account = account,
@@ -589,9 +589,10 @@ internal class SyncRepositoryImpl(
                     redirectUri = pending.redirectUri,
                 )
                 // The account decides which remote folder the index describes, so one written for a different
-                // account is worthless rather than merely stale.
-                val document = loadIndex().adoptedBy(account)
-                if (document.accountId != account.indexKey()) {
+                // account is worthless rather than merely stale. One that cannot be read is left for the run to find:
+                // replaced here, it could be the good index of this very account.
+                val document = loadIndexOrNull()?.adoptedBy(account)
+                if (document != null && document.accountId != account.indexKey()) {
                     saveIndex(SyncIndexDocument())
                 }
                 _syncState.update {
@@ -628,13 +629,31 @@ internal class SyncRepositoryImpl(
 
     // Documents
 
-    private suspend fun loadIndex() = try {
-        syncStateLocalSource.loadSyncIndex()?.let { json.decodeFromString<SyncIndexDocument>(it) } ?: SyncIndexDocument()
+    /**
+     * Throws when the file is there and cannot be read: an index taken for none is a run that undoes every deletion
+     * since the last one, and then writes the empty index over the good one. One that reads but does not decode is
+     * worth nothing to anybody and starts from nothing, as a device that never synced does.
+     */
+    private suspend fun loadIndex(): SyncIndexDocument {
+        val text = syncStateLocalSource.loadSyncIndex() ?: return SyncIndexDocument()
+        return try {
+            json.decodeFromString<SyncIndexDocument>(text)
+        } catch (exception: CancellationException) {
+            throw exception
+        } catch (exception: Exception) {
+            println("Could not decode the sync index: ${exception.message}")
+            SyncIndexDocument()
+        }
+    }
+
+    /** For the callers that only show what the index says or check whose it is, and must not throw because of it. */
+    private suspend fun loadIndexOrNull() = try {
+        loadIndex()
     } catch (exception: CancellationException) {
         throw exception
     } catch (exception: Exception) {
         println("Could not read the sync index: ${exception.message}")
-        SyncIndexDocument()
+        null
     }
 
     private suspend fun saveIndex(document: SyncIndexDocument) = syncStateLocalSource.saveSyncIndex(json.encodeToString(document))

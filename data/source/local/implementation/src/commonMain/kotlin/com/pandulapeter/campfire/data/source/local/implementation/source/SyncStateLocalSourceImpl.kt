@@ -22,7 +22,7 @@ internal class SyncStateLocalSourceImpl(
     private val secretStore: SecretStore,
 ) : SyncStateLocalSource {
 
-    /** Unreadable credentials are treated like the index below: as none, which the user answers by connecting again. */
+    /** Unreadable credentials are treated as none, which the user answers by connecting again. */
     override suspend fun loadSyncCredentials() = try {
         secretStore.load(CREDENTIALS_FILE_NAME) ?: migratePlainFileIfPresent()
     } catch (exception: CancellationException) {
@@ -35,7 +35,7 @@ internal class SyncStateLocalSourceImpl(
 
     override suspend fun saveSyncCredentials(document: String?) = secretStore.save(CREDENTIALS_FILE_NAME, document)
 
-    override suspend fun loadSyncIndex() = read(INDEX_FILE_NAME)
+    override suspend fun loadSyncIndex() = fileStorage.readText(StorageDirectory.PREFERENCES, INDEX_FILE_NAME)
 
     /**
      * The index records what the last run saw from this device. Restored onto another one, where no account is
@@ -62,16 +62,15 @@ internal class SyncStateLocalSourceImpl(
         return document
     }
 
-    /** A document that cannot be read is treated as one that is not there: sync then starts from nothing. */
+    /** Credentials that cannot be read are treated as none, which the user answers by connecting again. */
     private suspend fun read(name: String) = try {
         fileStorage.readText(StorageDirectory.PREFERENCES, name)
     } catch (exception: CancellationException) {
         throw exception
     } catch (exception: Exception) {
-        // The credentials hold tokens, and a message is free to quote what it failed on, so for them only the kind of
-        // failure goes into the log.
-        val reason = if (name == CREDENTIALS_FILE_NAME) exception::class.simpleName else exception.message
-        println("Could not read \"$name\": $reason")
+        // The credentials hold tokens, and a message is free to quote what it failed on, so only the kind of failure
+        // goes into the log.
+        println("Could not read \"$name\": ${exception::class.simpleName}")
         null
     }
 

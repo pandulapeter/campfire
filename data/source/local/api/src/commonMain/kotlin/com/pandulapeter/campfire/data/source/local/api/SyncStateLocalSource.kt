@@ -30,7 +30,11 @@ interface SyncStateLocalSource {
 
     suspend fun saveSyncCredentials(document: String?)
 
-    /** What the last successful run saw, which is how the next one tells a change from a deletion. */
+    /**
+     * What the last successful run saw, which is how the next one tells a change from a deletion. Null only when there is
+     * none; one that is there and cannot be read throws [LibraryStorageException], since a run that took it for none
+     * would bring back every file deleted since and upload again every file deleted elsewhere.
+     */
     suspend fun loadSyncIndex(): String?
 
     suspend fun saveSyncIndex(document: String?)

@@ -29,12 +29,13 @@ import kotlinx.coroutines.flow.emptyFlow
 
 /**
  * The two documents sync keeps between runs, held in memory. [onSaveIndex] runs before a write of the index is
- * stored, which is where a test makes that write fail by throwing from it. A cancelled caller's write is refused the
+ * stored, and [onLoadIndex] before a read of it answers, which is where a test makes either fail by throwing from it. A cancelled caller's write is refused the
  * way the real storage's is, whose writes are a `withContext` and so answer a cancellation on the way in.
  */
 internal class FakeSyncStateLocalSource(
     var index: String? = null,
     var onSaveIndex: (String?) -> Unit = {},
+    var onLoadIndex: () -> Unit = {},
 ) : SyncStateLocalSource {
 
     var credentials: String? = null
@@ -45,7 +46,10 @@ internal class FakeSyncStateLocalSource(
         credentials = document
     }
 
-    override suspend fun loadSyncIndex() = index
+    override suspend fun loadSyncIndex(): String? {
+        onLoadIndex()
+        return index
+    }
 
     override suspend fun saveSyncIndex(document: String?) {
         currentCoroutineContext().ensureActive()

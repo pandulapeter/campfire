@@ -41,7 +41,10 @@ platform types.
 - `SyncStateLocalSource` — the two documents sync remembers between runs, kept next to the preferences and so outside
   `library/`: neither is the user's data and an export must not carry them. Both are **opaque strings** here — what
   is in them belongs to the layers that write them (the credentials to the remote source, the index to the
-  repository), and the storage layer has no business knowing either shape.
+  repository), and the storage layer has no business knowing either shape. `loadSyncIndex` answers null only for an
+  index that is not there; one that is there and cannot be read throws `LibraryStorageException`, since a run that
+  took it for none would undo every deletion since the last one. Unreadable credentials are still treated as none,
+  which connecting again answers.
 
 **File naming is the storage layer's business.** Callers hand over a title, an artist and some text; the source decides
 what the file is called, normalizes it to what every file system, shell and service agrees about and suffixes it until

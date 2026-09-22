@@ -108,7 +108,9 @@ import — is the only thing that walks the directory again.
   periodic writer waited for first, not cancelled: on the web a cancelled write carries on in the browser, so it could
   land after the final write). Those writes and the periodic one never throw (`saveIndexQuietly`): only the write
   that opens a run and the one that completes it do, which is how a device that cannot write ends a run as
-  `SyncFailureReason.STORAGE`. The repository's scope carries a `CoroutineExceptionHandler` that logs, since nothing
+  `SyncFailureReason.STORAGE`. Reading it is the same: an index that is there and cannot be read ends the run as
+  `STORAGE` before anything is written, and start up and a new connection leave such a file alone. Only one that reads
+  and does not decode is taken for none. The repository's scope carries a `CoroutineExceptionHandler` that logs, since nothing
   launched there has anyone to throw to, and a run that ends in a throwable that is not an `Exception` (a synchronous
   `js(...)` failure on the web, a real `Error`) is finished and reported like a failed one rather than left to it. An interrupted run therefore keeps what it transferred, and only a completed
   one with no failed files moves `lastSyncedAt`.
