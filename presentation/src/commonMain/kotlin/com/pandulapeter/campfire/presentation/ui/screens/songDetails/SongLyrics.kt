@@ -46,6 +46,9 @@ import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.semantics.isTraversalGroup
+import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.semantics.traversalIndex
 import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.TextLayoutResult
 import androidx.compose.ui.text.TextMeasurer
@@ -190,6 +193,7 @@ internal fun SongLyrics(
         )
         LookaheadScope {
             SongSectionsLayout(
+                modifier = Modifier.semantics { isTraversalGroup = true },
                 minColumnWidth = MIN_COLUMN_WIDTH * fontScale,
                 maxColumnWidth = MAX_COLUMN_WIDTH * fontScale,
                 columnGap = COLUMN_GAP,
@@ -205,10 +209,16 @@ internal fun SongLyrics(
                 sections.forEachIndexed { index, section ->
                     val bounds = sectionBounds[index]
                     // A section the layout found too tall is measured in full only once this is off it: see maxAnimatedSectionHeight.
+                    // Each section is read as a whole and in the order the song declares, whatever column it was put in:
+                    // the reading order is otherwise worked out from the geometry, line by line across the page, which
+                    // with two columns reads the first line of each, then the second line of each.
                     val sectionModifier = if (extraWidth > 0.dp || bounds.isTooTallToAnimate) {
                         Modifier
                     } else {
                         Modifier.animateBounds(this@LookaheadScope).layoutId(AnimatedSectionLayoutId)
+                    }.semantics {
+                        isTraversalGroup = true
+                        traversalIndex = index.toFloat()
                     }
                     when (section) {
                         is RenderSection.Comment -> SongComment(
