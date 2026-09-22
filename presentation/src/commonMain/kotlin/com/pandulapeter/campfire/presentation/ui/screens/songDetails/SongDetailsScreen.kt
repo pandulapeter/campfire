@@ -33,6 +33,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.pager.HorizontalPager
+import androidx.compose.foundation.pager.PagerState
 import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
@@ -92,6 +93,7 @@ import com.pandulapeter.campfire.presentation.ui.components.KeepTopAppBarInSync
 import com.pandulapeter.campfire.presentation.ui.components.SongActionsButton
 import com.pandulapeter.campfire.presentation.ui.components.WindowSize
 import com.pandulapeter.campfire.presentation.ui.navigation.CampfireDestination
+import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
 import org.jetbrains.compose.resources.painterResource
 
@@ -171,6 +173,7 @@ internal fun SongDetailsScreen(
 
     val scrollBehavior = TopAppBarDefaults.pinnedScrollBehavior()
     val coroutineScope = rememberCoroutineScope()
+    val pageStepper = remember(pagerState, coroutineScope) { PageStepper(pagerState, coroutineScope) }
     // The arrow keys scroll the song the reader is looking at, and the pages each scroll on their own, so the one
     // that is current hands its state up here for them to drive.
     var currentPageScrollState by remember { mutableStateOf<ScrollState?>(null) }
@@ -198,13 +201,15 @@ internal fun SongDetailsScreen(
             .songKeyboardShortcuts(
                 onScrollUp = { currentPageScrollState?.let { coroutineScope.launch { it.scrollByKeyStep(-1f) } } },
                 onScrollDown = { currentPageScrollState?.let { coroutineScope.launch { it.scrollByKeyStep(1f) } } },
-                onPreviousSong = if (canPage && pagerState.currentPage > 0) {
-                    { coroutineScope.launch { pagerState.animateScrollToPage(pagerState.currentPage - 1) } }
+                // The target page only decides whether the key does anything; the step itself is decided at the time of
+                // the press.
+                onPreviousSong = if (canPage && pagerState.targetPage > 0) {
+                    { pageStepper.step(-1) }
                 } else {
                     null
                 },
-                onNextSong = if (canPage && pagerState.currentPage < songs.lastIndex) {
-                    { coroutineScope.launch { pagerState.animateScrollToPage(pagerState.currentPage + 1) } }
+                onNextSong = if (canPage && pagerState.targetPage < songs.lastIndex) {
+                    { pageStepper.step(1) }
                 } else {
                     null
                 },
@@ -359,9 +364,10 @@ internal fun SongDetailsScreen(
             SongPagerControls(
                 setlistTitle = setlistTitle,
                 currentPage = pagerState.currentPage,
+                targetPage = pagerState.targetPage,
                 pageCount = songs.size,
                 contentPadding = contentPadding,
-                onPageSelected = { page -> coroutineScope.launch { pagerState.animateScrollToPage(page) } },
+                onStep = pageStepper::step,
             )
         }
     }
@@ -370,14 +376,18 @@ internal fun SongDetailsScreen(
 /**
  * The bar under the lyrics that steps through the songs of a setlist without swiping. Between the two buttons it
  * names the setlist being played and how far along it the current song is.
+ *
+ * @param currentPage The song on screen, which is what the label names.
+ * @param targetPage The song the pager is on its way to, which is what decides whether there is anywhere left to step.
  */
 @Composable
 private fun SongPagerControls(
     setlistTitle: String?,
     currentPage: Int,
+    targetPage: Int,
     pageCount: Int,
     contentPadding: PaddingValues,
-    onPageSelected: (Int) -> Unit,
+    onStep: (Int) -> Unit,
 ) = Surface(
     color = MaterialTheme.colorScheme.surfaceContainer
 ) {
@@ -394,8 +404,8 @@ private fun SongPagerControls(
         verticalAlignment = Alignment.CenterVertically,
     ) {
         IconButton(
-            enabled = currentPage > 0,
-            onClick = { onPageSelected(currentPage - 1) },
+            enabled = targetPage > 0,
+            onClick = { onStep(-1) },
         ) {
             Icon(
                 painter = painterResource(Res.drawable.ic_previous),
@@ -438,8 +448,8 @@ private fun SongPagerControls(
             }
         }
         IconButton(
-            enabled = currentPage < pageCount - 1,
-            onClick = { onPageSelected(currentPage + 1) },
+            enabled = targetPage < pageCount - 1,
+            onClick = { onStep(1) },
         ) {
             Icon(
                 painter = painterResource(Res.drawable.ic_next),
@@ -557,6 +567,41 @@ private suspend fun ScrollState.scrollByKeyStep(direction: Float) = animateScrol
     value = viewportSize * KEY_SCROLL_STEP_FRACTION * direction,
     animationSpec = tween(durationMillis = KEY_SCROLL_STEP_DURATION, easing = LinearEasing),
 )
+
+/**
+ * Previous and Next as steps from the page the last of them asked for, rather than from the page on screen:
+ * `PagerState.currentPage` only moves once an animation is past halfway, and even `PagerState.targetPage` only once the
+ * launched animation has started, so presses that come quicker than that would each ask for the same page. A request
+ * is forgotten when its animation ends, however it ends (a swipe cancels it), and whatever the pager then settles on
+ * is where the next press starts from.
+ *
+ * Only touched from the main thread - key and click handlers, and the coroutine on the composition's dispatcher - so a
+ * plain field is enough. The request is an object rather than the page number, so that two requests for the same page
+ * are still told apart.
+ */
+private class PageStepper(
+    private val pagerState: PagerState,
+    private val coroutineScope: CoroutineScope,
+) {
+    private var request: Request? = null
+
+    private class Request(val page: Int)
+
+    fun step(delta: Int) {
+        val from = request?.page ?: pagerState.targetPage
+        val page = (from + delta).coerceIn(0, pagerState.pageCount - 1)
+        if (page == from) return
+        val request = Request(page).also { request = it }
+        coroutineScope.launch {
+            try {
+                pagerState.animateScrollToPage(page)
+            } finally {
+                // Only the latest request is cleared: an earlier one ends when the next press cancels it.
+                if (this@PageStepper.request === request) this@PageStepper.request = null
+            }
+        }
+    }
+}
 
 private const val LABEL_SEPARATOR = "·"
 private val PAGER_CONTROLS_HEIGHT = 48.dp
