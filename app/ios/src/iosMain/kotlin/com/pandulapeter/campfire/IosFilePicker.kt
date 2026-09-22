@@ -89,12 +89,23 @@ internal class IosFilePicker(
         if (!file.bytes.toNSData().writeToURL(url, atomically = true)) {
             continuation.resume(false)
         } else {
-            val controller = UIActivityViewController(activityItems = listOf(url), applicationActivities = null)
-            // An iPad presents this as a popover, which needs something to point at; the whole view will do.
             val host = viewController()
-            controller.popoverPresentationController?.sourceView = host.view
-            host.presentViewController(controller, animated = true, completion = null)
-            continuation.resume(true)
+            // UIKit refuses a second presentation with nothing but a log line, so a share asked for while another
+            // sheet is up - or is still sliding away, which is where a picker's own callback leaves it - would
+            // otherwise be reported as a share that happened.
+            if (host.presentedViewController != null) {
+                continuation.resume(false)
+            } else {
+                val controller = UIActivityViewController(activityItems = listOf(url), applicationActivities = null)
+                // An iPad presents this as a popover, which needs something to point at; the whole view will do.
+                controller.popoverPresentationController?.sourceView = host.view
+                host.presentViewController(controller, animated = true, completion = null)
+                // Resumed as the sheet is shown rather than from its completionWithItemsHandler: nothing acts on
+                // whether a share was completed, and a handler UIKit never calls - it promises nothing for a
+                // controller torn down underneath it - would leave the caller suspended, holding the one file
+                // transfer and so every later export, share and import. Android's chooser is fire and forget too.
+                continuation.resume(true)
+            }
         }
     }
 
