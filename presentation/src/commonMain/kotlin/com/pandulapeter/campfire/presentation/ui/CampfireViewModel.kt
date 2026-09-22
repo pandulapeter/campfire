@@ -1547,7 +1547,15 @@ class CampfireViewModel(
     }
 
     fun exportLibrary(filePicker: FilePicker) = launchFileTransfer {
-        save(filePicker) { exportLibrary.invoke() }
+        var skippedFileNames = emptyList<String>()
+        save(
+            filePicker = filePicker,
+            // After the save rather than instead of it: the archive is a real copy of everything that could be read,
+            // and what it is missing is the one thing the user could not otherwise find out.
+            onSaved = { if (skippedFileNames.isNotEmpty()) sendMessage(Message.ExportSkippedFiles(skippedFileNames)) },
+        ) {
+            exportLibrary.invoke()?.also { skippedFileNames = it.skippedFileNames }?.file
+        }
     }
 
     /** For the Android shell, whose picker can finish an export long after the coroutine that asked for it is gone. */
@@ -1564,15 +1572,25 @@ class CampfireViewModel(
      * Nothing to export and a picker that threw are the same thing to the user: the file did not come out.
      *
      * An archive over what an import takes is saved all the same, since it is still a complete copy that unzips by
-     * hand, but the user is told so the day it is made rather than the day it is needed.
+     * hand, but the user is told so the day it is made rather than the day it is needed. [onSaved] runs once the file
+     * has been saved, and not for one the user dismissed the dialog of.
      */
-    private suspend fun save(filePicker: FilePicker, isShare: Boolean = false, export: suspend () -> ExportedFile?) = try {
+    private suspend fun save(
+        filePicker: FilePicker,
+        isShare: Boolean = false,
+        onSaved: () -> Unit = {},
+        export: suspend () -> ExportedFile?,
+    ) = try {
         val file = export()
         when {
             file == null -> sendMessage(Message.ExportFailed)
             isShare -> filePicker.shareFile(file)
-            filePicker.saveFile(file) && file.mimeType == ExportedFile.ZIP_MIME_TYPE && file.bytes.size > ImportLimits.MAX_IMPORT_SIZE ->
-                sendMessage(Message.ExportTooLargeToImport)
+            filePicker.saveFile(file) -> {
+                if (file.mimeType == ExportedFile.ZIP_MIME_TYPE && file.bytes.size > ImportLimits.MAX_IMPORT_SIZE) {
+                    sendMessage(Message.ExportTooLargeToImport)
+                }
+                onSaved()
+            }
         }
         Unit
     } catch (exception: CancellationException) {
@@ -2008,6 +2026,9 @@ class CampfireViewModel(
 
         /** An archive that was saved, but that the import would refuse for its size. */
         data object ExportTooLargeToImport : Message
+
+        /** An archive that was saved without the files it names: they could not be read, so they are not in it. */
+        data class ExportSkippedFiles(val fileNames: List<String>) : Message
         data object SaveFailed : Message
 
         /** The file of the song in the editor is no longer there; the editor's text is, and saving writes it back. */

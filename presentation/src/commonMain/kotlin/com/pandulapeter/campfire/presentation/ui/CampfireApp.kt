@@ -95,6 +95,7 @@ import com.pandulapeter.campfire.presentation.resources.Res
 import com.pandulapeter.campfire.presentation.resources.error_link_not_opened
 import com.pandulapeter.campfire.presentation.resources.error_operation_failed
 import com.pandulapeter.campfire.presentation.resources.export_failed
+import com.pandulapeter.campfire.presentation.resources.export_skipped_files
 import com.pandulapeter.campfire.presentation.resources.export_too_large_to_import
 import com.pandulapeter.campfire.presentation.resources.import_failed
 import com.pandulapeter.campfire.presentation.resources.import_oversized
@@ -117,6 +118,7 @@ import com.pandulapeter.campfire.presentation.resources.songs
 import com.pandulapeter.campfire.presentation.resources.songs_update_file_name_partly
 import com.pandulapeter.campfire.presentation.ui.components.TopLevelScreenLayout
 import com.pandulapeter.campfire.presentation.ui.components.WindowSize
+import com.pandulapeter.campfire.presentation.ui.components.pluralTextResource
 import com.pandulapeter.campfire.presentation.ui.components.textResource
 import com.pandulapeter.campfire.presentation.ui.platform.LocalSyncNotifier
 import com.pandulapeter.campfire.presentation.ui.platform.withSyncCounts
@@ -542,6 +544,12 @@ private fun Messages(
         CampfireViewModel.Message.ImportFailed -> stringResource(Res.string.import_failed)
         CampfireViewModel.Message.ExportFailed -> stringResource(Res.string.export_failed)
         CampfireViewModel.Message.ExportTooLargeToImport -> stringResource(Res.string.export_too_large_to_import)
+        is CampfireViewModel.Message.ExportSkippedFiles -> pluralTextResource(
+            Res.plurals.export_skipped_files,
+            current.fileNames.size,
+            current.fileNames.size.toString(),
+            current.fileNames.take(MAXIMUM_NAMED_FILES).joinToString(),
+        )
         CampfireViewModel.Message.SaveFailed -> stringResource(Res.string.song_editor_save_failed)
         CampfireViewModel.Message.EditorDraftLost -> stringResource(Res.string.song_editor_draft_lost)
         CampfireViewModel.Message.EditedSongFileGone -> stringResource(Res.string.song_editor_file_gone)
@@ -885,6 +893,9 @@ private const val NAVIGATION_GENERATION_METADATA_KEY = "navigationGeneration"
 private const val TAB_FADE_OUT_DURATION = 90
 private const val TAB_FADE_IN_DURATION = 210
 private const val PREDICTIVE_BACK_DURATION = 350
+
+/** How many of the files an export left out its message names, the rest being counted rather than listed. */
+private const val MAXIMUM_NAMED_FILES = 3
 
 /**
  * Tells the platform shell what a running sync should look like while the app is not in front of the user, and that

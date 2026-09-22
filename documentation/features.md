@@ -95,4 +95,5 @@ so they follow you to a new phone; that copy is made by the system and is yours,
 
 The one thing that ever touches the network is sync, and only after you have connected a cloud folder **you** own,
 which Campfire reaches directly with no service of mine in between. Everything can be exported at any time as a zip
-any other ChordPro tool can read, so leaving is as easy as arriving.
+any other ChordPro tool can read, so leaving is as easy as arriving — and an export that could not read part of the
+library says which files it left out, rather than handing over an incomplete copy as if it were whole.

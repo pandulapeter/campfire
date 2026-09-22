@@ -13,6 +13,19 @@ import com.pandulapeter.campfire.data.model.domain.ExportedFile
 
 interface ExportLibraryUseCase {
 
-    /** A zip of every song and setlist, null when the library is empty. */
-    suspend operator fun invoke(): ExportedFile?
+    /**
+     * A zip of every song and setlist. Null when the library is empty **or could not be read**: an archive missing a
+     * library it was supposed to contain is worse than no archive, since the user files it away as a backup.
+     */
+    suspend operator fun invoke(): Result?
+
+    /**
+     * [file] plus the names of the files the export could not read, which are left out of it: a song the library scan
+     * skipped, one whose text could not be read, a setlist whose document could not be. On the web an export is the
+     * only copy of the library there is, so a name missing from the archive is told to the user rather than logged.
+     */
+    data class Result(
+        val file: ExportedFile,
+        val skippedFileNames: List<String>,
+    )
 }

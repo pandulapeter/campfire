@@ -21,6 +21,9 @@ interface SongRepository {
     /** The songs in the library, or null if the directory could not be read. */
     suspend fun loadSongsIfNeeded(): List<Song>?
 
+    /** See `SongLocalSource.loadSongFileNames`: every song file in the folder, read or not. Never cached. */
+    suspend fun loadSongFileNames(): List<String>
+
     /** Reads the songs directory again, which is what a refresh and an import need. */
     suspend fun rescan()
 
