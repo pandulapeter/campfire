@@ -751,8 +751,21 @@ class CampfireViewModel(
      * Called after every change to [backStack]. The state Navigation 3 saves for each entry (the editor's text, a
      * scroll position) is saved with the Activity regardless, but it is only ever handed back to an entry with the
      * same content key, so a stack that restarted on the Songs screen would leave all of it behind unclaimed.
+     *
+     * A stack whose JSON would not fit [MAX_SAVED_BACK_STACK_LENGTH] is saved only up to the screen that makes it too
+     * long - in practice a song opened from a setlist of thousands, which names every one of them. A restored process
+     * then comes back one screen short, which beats one that crashes as it is sent to the background: the saved state
+     * crosses to the system in a single transaction of at most a megabyte.
      */
-    private fun persistBackStack() = persist(BACK_STACK_KEY, backStack.toList())
+    private fun persistBackStack() {
+        val stack = backStack.toList()
+        // The stack is a few screens deep at most, so encoding it once per screen is nothing, and the first one fits
+        // in every case but the pathological one.
+        savedStateHandle[BACK_STACK_KEY] = (stack.size downTo 1).asSequence()
+            .map { Json.encodeToString<List<CampfireDestination>>(stack.subList(0, it)) }
+            .firstOrNull { it.length <= MAX_SAVED_BACK_STACK_LENGTH }
+            ?: Json.encodeToString<List<CampfireDestination>>(listOf(CampfireDestination.Songs))
+    }
 
     fun selectTopLevelDestination(destination: CampfireDestination.TopLevel) {
         if (backStack.lastOrNull() == destination) return
@@ -1981,6 +1994,7 @@ class CampfireViewModel(
         private const val FONT_SCALE_SAVE_DELAY_MILLIS = 500L
         private const val SONG_EDIT_ATTEMPTS = 2
         private const val BACK_STACK_KEY = "backStack"
+        private const val MAX_SAVED_BACK_STACK_LENGTH = 100_000 // Characters of JSON, about 200 KB as the UTF-16 a Bundle writes.
         private const val SONG_FILTER_KEY = "songFilter"
         private const val SONGS_SEARCH_KEY = "songsSearch"
         private const val SETLISTS_SEARCH_KEY = "setlistsSearch"
