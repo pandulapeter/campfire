@@ -94,14 +94,17 @@ jobs:
       - name: Install packaging tools
         if: runner.os == 'Linux'
         run: sudo apt-get update && sudo apt-get install --yes fakeroot xvfb
+      # The app image is asked for by name: the Compose plugin builds the macOS installer out of it, but on Linux and
+      # Windows it hands jpackage the jars and the runtime directly, and the installer is the only thing left on disk.
+      # Both tasks are made of the same ProGuard output, so the image is what the installer holds either way.
       - name: Build the installer
         run: |
-          ./gradlew :app:desktop:${{ matrix.task }} \
+          ./gradlew :app:desktop:createReleaseDistributable :app:desktop:${{ matrix.task }} \
             -Pcampfire.dropbox.appKey="${{ secrets.DROPBOX_APP_KEY }}"
       # ProGuard breaks an application in ways that only starting it shows - a VerifyError on the first frame is how
-      # the last one looked - so the app image the installer was made of is started once before anybody downloads
-      # it. The demo library appearing in an empty data directory proves that Koin started, the window composed and
-      # the library was written; the process still being there a while later proves the first frames did not kill it.
+      # the last one looked - so the app image is started once before anybody downloads the installer. The demo
+      # library appearing in an empty data directory proves that Koin started, the window composed and the library
+      # was written; the process still being there a while later proves the first frames did not kill it.
       - name: Start the release build once
         run: |
           BINARIES="app/desktop/build/compose/binaries/main-release/app"

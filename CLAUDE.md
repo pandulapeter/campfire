@@ -270,9 +270,11 @@ item bound to the device and `FileStorage.keepOutOfDeviceBackup` on the index.
     signs on its own), and an unsigned `packageReleaseDmg` for both kinds of Mac and `packageReleaseMsi` for Windows,
     a stopgap until the two stores have the app. jpackage signs the macOS app ad hoc, which is what lets it run at all
     on Apple silicon once Gatekeeper has been overridden. The legs do not cancel each other. Every one of them runs
-    ProGuard, which breaks an app in ways only starting it shows (see `app/desktop`), so each leg starts the app
-    image it packaged — under Xvfb on Linux, with an empty data directory — and attaches nothing unless the demo
-    library appears, the process is still there after that, and its log names no exception.
+    ProGuard, which breaks an app in ways only starting it shows (see `app/desktop`), so each leg also builds the
+    app image (`createReleaseDistributable`, which only the macOS installer is made of; on Linux and Windows the
+    plugin packages the jars directly and leaves no image behind on its own) and starts it — under Xvfb on Linux,
+    with an empty data directory — and attaches nothing unless the demo library appears, the process is still there
+    after that, and its log names no exception.
   - `ios-publish.yml` builds the Release configuration for devices with `CODE_SIGNING_ALLOWED=NO` and zips the app
     into an `.ipa`, which no iPhone installs as it is — it is what a sideloading tool signs with its user's own Apple
     ID. The Xcode project starts Gradle itself and passes it no properties, so the sync key is written into
