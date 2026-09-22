@@ -58,7 +58,8 @@ internal fun CampfireViewModel.navigateToBrowserAddress() {
  *
  * **Forward is a return to where the user was.** The state of the app is recorded with each entry as it is left, and
  * a `popstate` to a deeper entry puts it back, validated against the library since then ([BrowserRoutes.validate]);
- * an entry the app knows nothing about is opened from its address instead, and one that cannot be is left again.
+ * an entry the app knows nothing about is opened from its address instead, as long as that address stands for a place
+ * exactly as deep as the entry, and one that cannot be is left again.
  *
  * Only the entries this page wrote are ever traversed. The page starts as the bottom entry of its own however deep in
  * the tab's history it was loaded, because the entries under it belong to documents that are gone - a reload leaves
@@ -179,7 +180,14 @@ private class BrowserHistory(
         val songs = viewModel.allSongs.value
         val setlists = viewModel.setlists.value
         val state = entry?.state?.let { BrowserRoutes.validate(state = it, songs = songs, setlists = setlists) }
-            ?: (path ?: entry?.path)?.let { BrowserRoutes.resolve(path = it, songs = songs, setlists = setlists, current = viewModel.navigationState) }
+            ?: (path ?: entry?.path)
+                ?.let { BrowserRoutes.resolve(path = it, songs = songs, setlists = setlists, current = viewModel.navigationState) }
+                // An address stands for a whole stack built up from the songs, which is only this entry when it is as deep as
+                // the entry is. One that is not - the editor of a song whose setlist page underneath was paged on, which
+                // forgot what the entry above it was when it was rewritten - would take away the screens under it and leave
+                // the browser an entry ahead of the app, for every further Forward to do the same again. It is refused, and
+                // the browser is taken back to where the app stayed.
+                ?.takeIf { BrowserRoutes.entryCount(it) == to + 1 }
         // Refused or not, the browser is on that entry now: if the app stays where it was, synchronizing takes the
         // browser back to it.
         while (entries.size <= to) entries += Entry(path = null)

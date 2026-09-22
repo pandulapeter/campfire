@@ -32,9 +32,10 @@ The platform shells all live in the `ui` package next to `CampfireApp`, one per 
   one its Back button skips, so re-pushing the editor after its question was asked had the next Back jump off the page.
   A Back over several entries (the long press menu) is taken one step at a time, two frames apart so the next reaches
   whatever is on top by then. Forward restores the `NavigationState` recorded when the entry was last on top, cut short
-  at whatever the library no longer holds, or opens the entry's address. The page starts as depth zero however deep in
-  the tab's history it was loaded: the entries under it belong to a document that is gone, and stepping into one
-  reloads the app. The address the page was opened on is handed to `CampfireViewModel.navigateOnLaunch` while the web
+  at whatever the library no longer holds, or opens the entry's address — but only an address exactly as deep as the
+  entry, since it stands for a whole stack built up from the songs; one that is not (an editor whose setlist page
+  underneath was paged on) is left again. The page starts as depth zero however deep in the tab's history it was
+  loaded: the entries under it belong to a document that is gone, and stepping into one reloads the app. The address the page was opened on is handed to `CampfireViewModel.navigateOnLaunch` while the web
   shell is first composed, so the launch screen waits for it; opening a deep address puts the songs under it as an
   entry of its own, which Chrome's Back skips until the user has touched the page — the same rule, and the price every
   single page app pays for a deep link.

@@ -65,6 +65,14 @@ internal object BrowserRoutes {
     }
 
     /**
+     * How many history entries [state] makes, which is the size [paths] has once the app is there: one per screen of
+     * the back stack, and one more for each list screen whose search is open.
+     */
+    fun entryCount(state: NavigationState) = state.backStack.size + state.backStack.count { destination ->
+        destination == CampfireDestination.Songs && state.isSongsSearchOpen || destination == CampfireDestination.Setlists && state.isSetlistsSearchOpen
+    }
+
+    /**
      * The place [path] names in the given library, or null for a path that is not one of the addresses above, or one
      * naming a song or a setlist the library does not hold. Only the things a path names are looked up: whatever it
      * leaves open - the tab of the settings screen, for a bare `settings` - is taken from [current].
