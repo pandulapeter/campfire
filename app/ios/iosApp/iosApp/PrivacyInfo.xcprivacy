@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+ This file is part of Campfire.
+ Copyright (c) Pandula Péter 2017-2026.
+ https://github.com/pandulapeter/campfire
+
+ This Source Code Form is subject to the terms of the Mozilla Public License, v. 2.0.
+ If a copy of the MPL was not distributed with this file, You can obtain one at
+ https://mozilla.org/MPL/2.0/.
+-->
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<!-- Nothing is tracked and nothing is collected: the only thing that leaves the device is sync, to a folder
+	     of the user's own, and no server of Campfire's is involved in it. -->
+	<key>NSPrivacyTracking</key>
+	<false/>
+	<key>NSPrivacyTrackingDomains</key>
+	<array/>
+	<key>NSPrivacyCollectedDataTypes</key>
+	<array/>
+	<!--
+	     What the linked binary references from Apple's list of required-reason APIs, and nothing else: the Kotlin
+	     code reads NSFileModificationDate for the files of the library, and skia and ICU call stat and fstat on
+	     their own files in the bundle (C617.1); the import reads the size of files the user picked or opened in place
+	     (3B52.1). The framework is static, so what Compose, skiko and the Kotlin runtime call is the app's to declare.
+	     Check it again after a Kotlin, Compose or skiko update, see app/ios/CLAUDE.md.
+	-->
+	<key>NSPrivacyAccessedAPITypes</key>
+	<array>
+		<dict>
+			<key>NSPrivacyAccessedAPIType</key>
+			<string>NSPrivacyAccessedAPICategoryFileTimestamp</string>
+			<key>NSPrivacyAccessedAPITypeReasons</key>
+			<array>
+				<string>C617.1</string>
+				<string>3B52.1</string>
+			</array>
+		</dict>
+	</array>
+</dict>
+</plist>
