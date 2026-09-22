@@ -461,14 +461,23 @@ internal fun SectionHeader(
                     }
                 }
                 Text(
-                    modifier = Modifier.padding(
-                        end = if (action == null) SECTION_HEADER_PADDING else 4.dp,
-                        top = 6.dp,
-                        bottom = 6.dp,
-                    ),
+                    modifier = Modifier
+                        // Measured after the action rather than before it, so that a title of any length leaves the
+                        // action its room: a weightless title would take the whole pill and lay the menu out with no
+                        // width at all, and for a setlist that menu is the only way to rename it.
+                        .weight(1f, fill = false)
+                        .padding(
+                            end = if (action == null) SECTION_HEADER_PADDING else 4.dp,
+                            top = 6.dp,
+                            bottom = 6.dp,
+                        ),
                     text = text,
                     style = MaterialTheme.typography.titleSmall,
                     color = MaterialTheme.colorScheme.primary,
+                    // A sticky header stays over the rows while its section scrolls under it, and a name of any length
+                    // from an imported file must not be able to cover them.
+                    maxLines = SECTION_HEADER_MAX_LINES,
+                    overflow = TextOverflow.Ellipsis,
                 )
                 action?.invoke()
             }
@@ -889,6 +898,12 @@ private val DRAG_HANDLE_HEIGHT = 48.dp
  * The padding between the edge of a [SectionHeader] pill and its text.
  */
 private val SECTION_HEADER_PADDING = 12.dp
+
+/**
+ * The most lines the text of a [SectionHeader] pill runs to before it is cut short: enough for a long setlist title to
+ * be read, few enough that a pinned pill never grows over the rows of its section.
+ */
+private const val SECTION_HEADER_MAX_LINES = 2
 
 /**
  * The gap a [SectionHeader] pill keeps from whatever is above and below it. Lists add the same gap above their first
