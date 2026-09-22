@@ -376,7 +376,8 @@ private fun GeneralSection(
         )
     }
     // A list rather than a segmented control, since it is the one choice here that grows with every translation,
-    // and a row of segments runs out of width after the third.
+    // and a row of segments runs out of width after the third. Each language is named in itself rather than in the
+    // language the app is in, so that somebody who ended up in one they cannot read can still find their own.
     SettingsSubsection(title = stringResource(Res.string.settings_user_interface_language)) {
         Column(modifier = Modifier.selectableGroup()) {
             listOf(
