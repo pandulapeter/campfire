@@ -16,8 +16,8 @@ package com.pandulapeter.campfire.data.model.domain
  * by the storage layer and the import, so that a file reads the same whether it was dropped into the library folder
  * or imported.
  *
- * A byte order mark is stripped, because editors on Windows like to prefix UTF-8 files with one and it is not part of
- * the content.
+ * Byte order marks at the start are stripped - a file that went through two tools that each added one has two -
+ * because editors on Windows like to prefix UTF-8 files with one and it is not part of the content.
  */
 fun ByteArray.decodeLibraryText(): String {
     val byteOrder = utf16ByteOrder()
@@ -29,7 +29,7 @@ fun ByteArray.decodeLibraryText(): String {
         }
     } else {
         decodeUtf16(byteOrder)
-    }.removePrefix(BYTE_ORDER_MARK)
+    }.trimStart(BYTE_ORDER_MARK)
 }
 
 /**
@@ -91,7 +91,7 @@ private fun ByteArray.decodeUtf16(byteOrder: Utf16ByteOrder): String {
     }
 }
 
-private const val BYTE_ORDER_MARK = "\uFEFF"
+private const val BYTE_ORDER_MARK = '\uFEFF'
 private const val REPLACEMENT_CHARACTER = '\uFFFD'
 private const val ZERO_BYTE: Byte = 0
 private const val UTF_16_SAMPLE_SIZE = 256

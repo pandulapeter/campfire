@@ -30,6 +30,16 @@ internal class LibraryTextDecodingTest {
     }
 
     @Test
+    fun stripsEveryByteOrderMarkAtTheStart() {
+        assertEquals("{title: É}", "\uFEFF\uFEFF{title: É}".encodeToByteArray().decodeLibraryText())
+    }
+
+    @Test
+    fun keepsAByteOrderMarkInsideTheText() {
+        assertEquals("{title: A}\n\uFEFFx", "{title: A}\n\uFEFFx".encodeToByteArray().decodeLibraryText())
+    }
+
+    @Test
     fun readsLatin1LettersOfAFileThatIsNotUtf8() {
         // "Café à la crème" in Windows-1252: every accented letter is a single byte that starts no valid UTF-8 sequence.
         val bytes = bytes(0x43, 0x61, 0x66, 0xE9, 0x20, 0xE0, 0x20, 0x6C, 0x61, 0x20, 0x63, 0x72, 0xE8, 0x6D, 0x65)
