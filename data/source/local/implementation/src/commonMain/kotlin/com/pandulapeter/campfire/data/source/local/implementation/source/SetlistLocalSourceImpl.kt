@@ -79,13 +79,20 @@ internal class SetlistLocalSourceImpl(
         return saveSetlist(setlist)
     }
 
-    /** Returns [setlist] carrying the size of what was written, since that is what the cache keeps from now on. */
+    /**
+     * Returns [setlist] as the file now holds it: carrying the size of what was written, and naming each song once.
+     * A model built in memory can name one twice - a song renamed onto the name of an entry whose file this device
+     * does not have, see `RenameSongFileUseCaseImpl` - while the document never can (`toDocument`), and the caller
+     * caches what comes back from here. The first mention wins, its transposition with it, which is the rule a file
+     * edited by hand is read by (`toModel`).
+     */
     override suspend fun saveSetlist(setlist: Setlist): Setlist {
-        val text = SetlistDocumentFormat.encode(setlist.toDocument())
-        fileStorage.writeText(directory = StorageDirectory.SETLISTS, name = setlist.fileName, text = text)
+        val deduplicated = setlist.copy(entries = setlist.entries.distinctBy { it.songFileName })
+        val text = SetlistDocumentFormat.encode(deduplicated.toDocument())
+        fileStorage.writeText(directory = StorageDirectory.SETLISTS, name = deduplicated.fileName, text = text)
         // Every platform writes the text as UTF-8 with nothing before it, so this is the file's size without asking
         // the storage for it again.
-        return setlist.copy(size = text.encodeToByteArray().size.toLong())
+        return deduplicated.copy(size = text.encodeToByteArray().size.toLong())
     }
 
     override suspend fun renameSetlist(setlist: Setlist, title: String): Setlist {

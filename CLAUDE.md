@@ -212,8 +212,9 @@ uninstall and nothing else does.
   import is not one of those cases, since nothing has pointed at the incoming name yet. Where
   a song's name and its metadata have drifted apart, `Song.canUpdateFileName` puts an **Update file name** entry in
   its menu, and taking it moves the file and everything that named it — every setlist entry, the saved transposition,
-  the open screens (`RenameSongFileUseCase`). Files that were named before any of this keep their names until one of
-  those two things happens to them.
+  the open screens (`RenameSongFileUseCase`), a setlist that already named the file under its new name keeping the one
+  entry it had. Files that were named before any of this keep their names until one of those two things happens to
+  them.
 - A rename reaches **sync** as a deletion and a new file, since `SyncPlanner` is keyed by name and knows no moves. The
   "an edit beats a deletion" rule then applies: a device that edited the file under its old name since the last run
   puts that file back, leaving both.

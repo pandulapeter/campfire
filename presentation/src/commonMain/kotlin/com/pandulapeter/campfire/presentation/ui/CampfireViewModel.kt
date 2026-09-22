@@ -1080,10 +1080,14 @@ class CampfireViewModel(
         backStack.forEachIndexed { index, destination ->
             when {
                 destination is CampfireDestination.SongDetails && song.fileName in destination.songFileNames -> {
+                    // A destination opened on a setlist that named both files - the old name and the one the song is
+                    // moving to, whose file this device did not have - would otherwise name the same song twice, and
+                    // the pager keys its pages by that name.
+                    val songFileNames = destination.songFileNames.map { if (it == song.fileName) fileName else it }.distinct()
                     backStack[index] = destination.copy(
-                        songFileNames = destination.songFileNames.map { if (it == song.fileName) fileName else it },
+                        songFileNames = songFileNames,
                         // The page the reader is on, so that a rename leaves them looking at the song they renamed.
-                        initialIndex = destination.songFileNames.indexOf(song.fileName),
+                        initialIndex = songFileNames.indexOf(fileName),
                     )
                 }
 

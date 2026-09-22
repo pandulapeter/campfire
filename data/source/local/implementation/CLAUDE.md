@@ -114,8 +114,9 @@ holds the `@Module @ComponentScan object DataLocalSourceModule`, and every local
   the app overwrites as a whole: `UserPreferencesDocumentFormat` reads them field by field when they do not decode as
   they are — one transposition that is not a number costs that entry, not the map — and the local source copies such a
   file to `preferences.json.bad` before anything can be saved over it. A setlist that does not decode is skipped and
-  left alone, as before. A setlist file naming a song twice is read as naming it once (the first mention wins) and
-  written back that way, since the screens key their rows by the song's file name. `SetlistDocumentFormat` reads and
+  left alone, as before. A setlist naming a song twice is read as naming it once (the first mention wins), written
+  back that way, and handed back that way from a save, since the screens key their rows by the song's file name and the
+  caller caches the model the save returns rather than reading the file again. `SetlistDocumentFormat` reads and
   writes the setlist files, keeping the members the document does not know in `unknownFields` and writing them back
   after the known ones. No document type ever leaves this module.
 - **`zip/`** — a dependency-free zip implementation: `ZipReader` (STORED + DEFLATE; a ZIP64 archive rejected, a ZIP64,
