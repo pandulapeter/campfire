@@ -146,7 +146,8 @@ internal object BrowserRoutes {
     /**
      * [state] with its back stack cut short at the first screen that names a song or a setlist the library no longer
      * holds, which is what a history entry the browser returns to may do: the library changes while the entry waits.
-     * A details screen stays as long as any of its songs does, since it pages through the ones that are there.
+     * A song read from a setlist pages through what the setlist holds now, as it does when the setlist's row is tapped
+     * or its address is opened ([resolve]), and it is cut short too once the song it was on is gone from the setlist.
      */
     fun validate(
         state: NavigationState,
@@ -154,18 +155,23 @@ internal object BrowserRoutes {
         setlists: List<Setlist>,
     ): NavigationState {
         val songFileNames = songs.mapTo(mutableSetOf()) { it.fileName }
-        val setlistFileNames = setlists.mapTo(mutableSetOf()) { it.fileName }
-        return state.copy(
-            backStack = state.backStack.takeWhile { destination ->
-                when (destination) {
-                    is CampfireDestination.SongDetails -> destination.songFileNames.any { it in songFileNames } &&
-                            (destination.setlistFileName == null || destination.setlistFileName in setlistFileNames)
-
-                    is CampfireDestination.SongEditor -> destination.fileName in songFileNames
-                    else -> true
+        val setlistsByFileName = setlists.associateBy { it.fileName }
+        val backStack = mutableListOf<CampfireDestination>()
+        for (destination in state.backStack) {
+            backStack += when (destination) {
+                is CampfireDestination.SongDetails -> if (destination.setlistFileName == null) {
+                    destination.takeIf { it.songFileNames.any { fileName -> fileName in songFileNames } }
+                } else {
+                    val pages = setlistsByFileName[destination.setlistFileName]?.entries?.map { it.songFileName }?.filter { it in songFileNames }.orEmpty()
+                    val index = destination.songFileNames.getOrNull(destination.initialIndex)?.let(pages::indexOf) ?: -1
+                    if (index < 0) null else destination.copy(songFileNames = pages, initialIndex = index)
                 }
-            },
-        )
+
+                is CampfireDestination.SongEditor -> destination.takeIf { it.fileName in songFileNames }
+                else -> destination
+            } ?: break
+        }
+        return state.copy(backStack = backStack)
     }
 
     private fun songPathSegment(fileName: String) = encodePathSegment(fileName.removeSuffix(LibraryFiles.SONG_EXTENSION))
