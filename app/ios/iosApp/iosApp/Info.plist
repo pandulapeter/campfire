@@ -40,6 +40,11 @@
 	<string>0</string>
 	<key>CFBundleVersion</key>
 	<string>0</string>
+	<!-- The primary category App Store Connect pre-fills the listing from, and what the Mac App Store files the app
+	     under. It has to be in this file rather than as an INFOPLIST_KEY_* build setting, because those are inputs to
+	     the Info.plist Xcode generates and this target ships a checked-in one. -->
+	<key>LSApplicationCategoryType</key>
+	<string>public.app-category.music</string>
 	<key>LSRequiresIPhoneOS</key>
 	<true/>
 	<!-- The library lives in the documents directory; these two put it in the Files app, where the songs can be
