@@ -640,8 +640,7 @@ internal fun ActionListItem(
  *
  * @param onNewSong Null where filling the library is not this list's business, which hides all of its offers to.
  * @param onNewSetlist The same for the setlists. It is a parameter of its own rather than one "create" for whichever
- *   list is empty, because the setlists screen shows the empty library's state as well, and a "Create a song" there
- *   that opened the setlist dialog would be a lie.
+ *   list is empty, because each list creates a different thing.
  */
 @OptIn(ExperimentalMaterial3ExpressiveApi::class)
 @Composable

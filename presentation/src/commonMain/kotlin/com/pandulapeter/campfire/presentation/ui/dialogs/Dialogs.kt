@@ -129,6 +129,7 @@ import com.pandulapeter.campfire.presentation.resources.songs_new_song
 import com.pandulapeter.campfire.presentation.resources.songs_new_song_artist
 import com.pandulapeter.campfire.presentation.resources.songs_new_song_title
 import com.pandulapeter.campfire.presentation.resources.songs_clear
+import com.pandulapeter.campfire.presentation.resources.songs_empty_title
 import com.pandulapeter.campfire.presentation.resources.songs_no_search_results
 import com.pandulapeter.campfire.presentation.resources.songs_search
 import com.pandulapeter.campfire.presentation.resources.songs_sort_and_filter
@@ -980,7 +981,12 @@ private fun SongPicker(
         )
         PickerList(
             contentPadding = contentPadding,
-            noResultsText = if (matches.isEmpty() && query.isNotBlank()) stringResource(Res.string.songs_no_search_results) else null,
+            noResultsText = when {
+                // Reached from an empty setlist's "Add songs" in an empty library, which the setlists screen lists as well.
+                songs.isEmpty() -> stringResource(Res.string.songs_empty_title)
+                matches.isEmpty() && query.isNotBlank() -> stringResource(Res.string.songs_no_search_results)
+                else -> null
+            },
         ) {
             items(
                 items = matches,

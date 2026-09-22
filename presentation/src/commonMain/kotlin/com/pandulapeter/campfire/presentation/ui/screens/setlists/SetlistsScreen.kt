@@ -197,7 +197,6 @@ private fun SetlistList(
     // Lyrics only mode takes the chords out of the viewer, and the key is the shortest way of writing them down.
     val shouldShowChords = userPreferences?.isLyricsOnlyModeEnabled != true
     val chordSpelling = userPreferences?.chordSpelling ?: UserPreferences.ChordSpelling.Default
-    val libraryPlaceholder = viewModel.libraryPlaceholder.collectAsStateWithLifecycle().value
     // The order the rows are drawn in while a drag is in flight, before any of it has been written down. The
     // reorderable state has to see every move answered in the frame it reports it, and the library is several frames
     // away: a move that had to go to disk and come back through the repository left the row under the finger
@@ -261,11 +260,11 @@ private fun SetlistList(
             state = listState,
             contentPadding = contentPadding.only(start = true, bottom = true, extraTop = SECTION_HEADER_GAP),
         ) {
-            // The setlists come first: they are what this screen is about. The library only speaks up once there are
-            // setlists to fill, since without it the rows of every setlist would be missing rather than the setlists
-            // themselves. Both go through the same slot, so that "still loading" turning out to be "you have no
-            // setlists" cross fades instead of being swapped in a single frame.
-            val placeholder = setlistsPlaceholder ?: libraryPlaceholder
+            // The setlists are what this screen is about, and they are listed whenever there are any - an empty library
+            // included, where they are simply empty and each offers to be filled. The library's own empty state belongs
+            // to the songs screen. Every state goes through the same slot, so that "still loading" turning out to be
+            // "you have no setlists" cross fades instead of being swapped in a single frame.
+            val placeholder = setlistsPlaceholder
             when {
                 placeholder != null -> item(
                     key = "placeholder",

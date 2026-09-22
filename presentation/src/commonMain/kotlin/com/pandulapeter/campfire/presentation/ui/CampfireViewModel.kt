@@ -541,11 +541,6 @@ class CampfireViewModel(
         }
     }.asState(Placeholder.LOADING)
 
-    /** The same for the screens that show the library without the search query, such as the setlists. */
-    val libraryPlaceholder = combine(screenData, _isImporting) { screenData, isImporting ->
-        if (screenData.data?.unfilteredSongs.isNullOrEmpty()) screenData.emptyPlaceholder(Placeholder.NO_SONGS, isImporting) else null
-    }.asState(Placeholder.LOADING)
-
     private val shouldShowArchivedSetlists = userPreferences.map { it?.shouldShowArchivedSetlists == true }.distinctUntilChanged()
 
     /**
