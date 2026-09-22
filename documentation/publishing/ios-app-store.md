@@ -93,5 +93,4 @@ unsigned `.ipa` as well, or stop.
 - [ ] Fill in `Distribution.APP_STORE`'s `url` in `presentation/…/ui/platform/Platform.kt`
       (`https://apps.apple.com/app/id<the app's id>`). That is all it takes for every build to link to it.
 - [ ] Point the iOS badge in `README.md` at the listing and move it up among the published ones.
-- [ ] Update the release-flow section of the root `CLAUDE.md`, and remove the "Create iOS store listing" and
-      TestFlight entries from the README's to-do list.
+- [ ] Update the release-flow section of the root `CLAUDE.md`.
