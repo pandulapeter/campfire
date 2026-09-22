@@ -120,7 +120,7 @@ internal fun ColumnScope.SyncSettings(
 }
 
 /**
- * What [SyncSettings] animates between. A failed connection is the invitation to connect with the reason above it,
+ * What [SyncSettings] animates between. A failed connection is the invitation to connect with the reason under it,
  * so the two are one stage and the reason is a row that comes and goes within it.
  */
 private enum class SyncStage { DISCONNECTED, CONNECTING, CONNECTED }
@@ -137,6 +137,21 @@ private fun ColumnScope.DisconnectedSyncSettings(
     viewModel: CampfireViewModel,
     syncState: SyncState,
 ) {
+    // Resolved out here rather than in the data layer, which can see neither the translations nor the language the
+    // user picked.
+    val completionPage = AuthorizationCompletionPage(
+        title = stringResource(Res.string.settings_sync_redirect_page_title),
+        message = stringResource(Res.string.settings_sync_redirect_page_message),
+    )
+    ActionListItem(
+        title = stringResource(Res.string.settings_sync_connect_dropbox),
+        icon = painterResource(Res.drawable.ic_cloud),
+        isEnabled = viewModel.syncProviders.contains(SyncProviderId.DROPBOX),
+        onClick = { viewModel.connectSyncProvider(SyncProviderId.DROPBOX, completionPage) },
+    )
+    // Under the Connect row rather than above it, so that Connect is the first row of its stage with or without a
+    // reason: the first row of the connecting stage is text that takes no taps, where it would otherwise be the Cancel
+    // that the second click of a double click lands on.
     AnimatedSettingsRow(value = (syncState as? SyncState.ConnectionFailed)?.reason) { reason ->
         SettingsMessage(
             text = stringResource(
@@ -150,18 +165,6 @@ private fun ColumnScope.DisconnectedSyncSettings(
             ),
         )
     }
-    // Resolved out here rather than in the data layer, which can see neither the translations nor the language the
-    // user picked.
-    val completionPage = AuthorizationCompletionPage(
-        title = stringResource(Res.string.settings_sync_redirect_page_title),
-        message = stringResource(Res.string.settings_sync_redirect_page_message),
-    )
-    ActionListItem(
-        title = stringResource(Res.string.settings_sync_connect_dropbox),
-        icon = painterResource(Res.drawable.ic_cloud),
-        isEnabled = viewModel.syncProviders.contains(SyncProviderId.DROPBOX),
-        onClick = { viewModel.connectSyncProvider(SyncProviderId.DROPBOX, completionPage) },
-    )
 }
 
 @Composable
@@ -190,7 +193,6 @@ private fun ColumnScope.ConnectedSyncSettings(
         headlineContent = { Text(textResource(Res.string.settings_sync_connected_as, syncState.account.displayName)) },
         supportingContent = { Text(syncState.statusText()) },
     )
-    AnimatedSettingsRow(value = syncState.progress) { progress -> SyncProgressIndicator(progress = progress) }
     AnimatedSettingsRow(isVisible = syncState.lastOutcome is SyncOutcome.DeletionsNeedConfirmation) {
         Column {
             ActionListItem(
@@ -205,20 +207,27 @@ private fun ColumnScope.ConnectedSyncSettings(
             )
         }
     }
-    if (syncState.isSyncing) {
-        ActionListItem(
-            title = stringResource(Res.string.settings_sync_cancel),
-            icon = painterResource(Res.drawable.ic_clear),
-            isEmphasized = false,
-            onClick = viewModel::cancelSynchronization,
-        )
-    } else {
-        ActionListItem(
-            title = stringResource(Res.string.settings_sync_now),
-            icon = painterResource(Res.drawable.ic_sync),
-            isEmphasized = false,
-            onClick = { viewModel.synchronizeLibrary() },
-        )
+    // Never swapped for "Stop syncing" in its own place: the second tap of a double tap lands on whatever the first
+    // one put under the finger, and a run would be stopped the moment it started, or started again the moment it
+    // stopped. The rows that come and go with a run are the questions above it, which collapse, and the progress row
+    // under it, which expands away from it.
+    ActionListItem(
+        title = stringResource(Res.string.settings_sync_now),
+        icon = painterResource(Res.drawable.ic_sync),
+        isEnabled = !syncState.isSyncing,
+        isEmphasized = false,
+        onClick = { viewModel.synchronizeLibrary() },
+    )
+    AnimatedSettingsRow(value = syncState.progress) { progress ->
+        Column {
+            SyncProgressIndicator(progress = progress)
+            ActionListItem(
+                title = stringResource(Res.string.settings_sync_cancel),
+                icon = painterResource(Res.drawable.ic_clear),
+                isEmphasized = false,
+                onClick = viewModel::cancelSynchronization,
+            )
+        }
     }
     ActionListItem(
         title = stringResource(Res.string.settings_sync_disconnect),
