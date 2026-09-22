@@ -1301,8 +1301,15 @@ class CampfireViewModel(
         if (plan.hasConflicts) {
             // Nothing is happening while the question is on screen, and a progress bar under it would say otherwise.
             _isImporting.update { false }
+            // Asked once nothing else is: the user may be in the middle of another dialog, and whatever they had typed
+            // into it would go with it. The plan waits with the queue, which is waiting for this question anyway. The
+            // question goes up past setVisibleDialog, which is right since it only ever replaces no dialog, and the
+            // pending import is only set once it is up, since any dialog shown meanwhile would have cleared it.
+            val question = DialogType.ImportConflicts(plan.summary)
+            while (!_visibleDialog.compareAndSet(expect = null, update = question)) {
+                _visibleDialog.first { it == null }
+            }
             pendingImport = PendingImport(plan = plan, request = request)
-            showDialog(DialogType.ImportConflicts(plan.summary))
         } else {
             applyImportPlan(plan = plan, resolution = ImportConflictResolution.KEEP_BOTH, request = request)
         }
