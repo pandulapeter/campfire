@@ -214,6 +214,7 @@
     <string name="settings_created_by">Készítette Pandula Péter</string>
 
     <!-- Song editor screen -->
+    <string name="song_editor_edit">Szöveg</string>
     <string name="song_editor_preview">Előnézet</string>
     <string name="song_editor_split">Osztott</string>
     <string name="song_editor_undo">Visszavonás</string>

@@ -91,7 +91,6 @@ import com.pandulapeter.campfire.data.model.domain.UserPreferences
 import com.pandulapeter.campfire.presentation.localization.stringResource
 import com.pandulapeter.campfire.presentation.resources.Res
 import com.pandulapeter.campfire.presentation.resources.close
-import com.pandulapeter.campfire.presentation.resources.edit
 import com.pandulapeter.campfire.presentation.resources.ic_clear
 import com.pandulapeter.campfire.presentation.resources.ic_error
 import com.pandulapeter.campfire.presentation.resources.ic_expand
@@ -103,6 +102,7 @@ import com.pandulapeter.campfire.presentation.resources.retry
 import com.pandulapeter.campfire.presentation.resources.save
 import com.pandulapeter.campfire.presentation.resources.song_details_no_data
 import com.pandulapeter.campfire.presentation.resources.song_details_no_data_hint
+import com.pandulapeter.campfire.presentation.resources.song_editor_edit
 import com.pandulapeter.campfire.presentation.resources.song_editor_preview
 import com.pandulapeter.campfire.presentation.resources.song_editor_redo
 import com.pandulapeter.campfire.presentation.resources.song_editor_revert
@@ -399,11 +399,12 @@ private fun LoadedSongEditor(
                         // tab bar, and the stepper next to it would be lost at the end of a metre of segments.
                         modifier = Modifier.weight(1f, fill = false).widthIn(max = PANE_CHOICE_MAX_WIDTH),
                         options = listOfNotNull(
-                            EditorPanes.EDIT to stringResource(Res.string.edit),
+                            EditorPanes.EDIT to stringResource(Res.string.song_editor_edit),
                             EditorPanes.PREVIEW to stringResource(Res.string.song_editor_preview),
                             if (hasRoomForSplitPanes) EditorPanes.SPLIT to stringResource(Res.string.song_editor_split) else null,
                         ),
                         selected = panes,
+                        isInline = true,
                         onSelected = { selectedPanes = it },
                     )
                     // Disabled rather than hidden over a preview, so that the segments next to it do not change

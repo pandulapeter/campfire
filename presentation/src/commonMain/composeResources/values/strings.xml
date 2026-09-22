@@ -214,6 +214,7 @@
     <string name="settings_created_by">Created by Péter Pandula</string>
 
     <!-- Song editor screen -->
+    <string name="song_editor_edit">Edit</string>
     <string name="song_editor_preview">Preview</string>
     <string name="song_editor_split">Split</string>
     <string name="song_editor_undo">Undo</string>
