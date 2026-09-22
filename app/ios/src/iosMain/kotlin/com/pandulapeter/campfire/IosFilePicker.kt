@@ -72,39 +72,39 @@ internal class IosFilePicker(
         }
     }
 
-    override suspend fun saveFile(file: ExportedFile): Boolean = suspendCancellableCoroutine { continuation ->
+    override suspend fun saveFile(file: ExportedFile): Boolean {
         // The picker exports a file that already exists, so the bytes go to a temporary one first.
-        val url = NSURL.fileURLWithPath(NSTemporaryDirectory() + file.name)
-        if (!file.bytes.toNSData().writeToURL(url, atomically = true)) {
-            continuation.resume(false)
-        } else {
-            present(UIDocumentPickerViewController(forExportingURLs = listOf(url))) { urls -> continuation.resume(urls.isNotEmpty()) }
+        val url = file.writeToTemporaryFile() ?: return false
+        return withContext(Dispatchers.Main) {
+            suspendCancellableCoroutine { continuation ->
+                present(UIDocumentPickerViewController(forExportingURLs = listOf(url))) { urls -> continuation.resume(urls.isNotEmpty()) }
+            }
         }
     }
 
     override val canShare = true
 
-    override suspend fun shareFile(file: ExportedFile): Boolean = suspendCancellableCoroutine { continuation ->
-        val url = NSURL.fileURLWithPath(NSTemporaryDirectory() + file.name)
-        if (!file.bytes.toNSData().writeToURL(url, atomically = true)) {
-            continuation.resume(false)
-        } else {
-            val host = viewController()
-            // UIKit refuses a second presentation with nothing but a log line, so a share asked for while another
-            // sheet is up - or is still sliding away, which is where a picker's own callback leaves it - would
-            // otherwise be reported as a share that happened.
-            if (host.presentedViewController != null) {
-                continuation.resume(false)
-            } else {
-                val controller = UIActivityViewController(activityItems = listOf(url), applicationActivities = null)
-                // An iPad presents this as a popover, which needs something to point at; the whole view will do.
-                controller.popoverPresentationController?.sourceView = host.view
-                host.presentViewController(controller, animated = true, completion = null)
-                // Resumed as the sheet is shown rather than from its completionWithItemsHandler: nothing acts on
-                // whether a share was completed, and a handler UIKit never calls - it promises nothing for a
-                // controller torn down underneath it - would leave the caller suspended, holding the one file
-                // transfer and so every later export, share and import. Android's chooser is fire and forget too.
-                continuation.resume(true)
+    override suspend fun shareFile(file: ExportedFile): Boolean {
+        val url = file.writeToTemporaryFile() ?: return false
+        return withContext(Dispatchers.Main) {
+            suspendCancellableCoroutine { continuation ->
+                val host = viewController()
+                // UIKit refuses a second presentation with nothing but a log line, so a share asked for while another
+                // sheet is up - or is still sliding away, which is where a picker's own callback leaves it - would
+                // otherwise be reported as a share that happened.
+                if (host.presentedViewController != null) {
+                    continuation.resume(false)
+                } else {
+                    val controller = UIActivityViewController(activityItems = listOf(url), applicationActivities = null)
+                    // An iPad presents this as a popover, which needs something to point at; the whole view will do.
+                    controller.popoverPresentationController?.sourceView = host.view
+                    host.presentViewController(controller, animated = true, completion = null)
+                    // Resumed as the sheet is shown rather than from its completionWithItemsHandler: nothing acts on
+                    // whether a share was completed, and a handler UIKit never calls - it promises nothing for a
+                    // controller torn down underneath it - would leave the caller suspended, holding the one file
+                    // transfer and so every later export, share and import. Android's chooser is fire and forget too.
+                    continuation.resume(true)
+                }
             }
         }
     }
@@ -161,6 +161,18 @@ internal fun NSURL.readImportedFile(budget: ImportBudget): ImportedFile? {
             stopAccessingSecurityScopedResource()
         }
     }
+}
+
+/**
+ * The bytes on disk, which is what both the picker and the share sheet take: neither takes bytes. Null where the
+ * write failed, which the caller reports as an export that did not come out.
+ *
+ * On [Dispatchers.IO] because a whole-library archive is megabytes and both callers are called on the main
+ * dispatcher, where copying and writing it would freeze the app until it was done.
+ */
+private suspend fun ExportedFile.writeToTemporaryFile(): NSURL? = withContext(Dispatchers.IO) {
+    val url = NSURL.fileURLWithPath(NSTemporaryDirectory() + name)
+    if (bytes.toNSData().writeToURL(url, atomically = true)) url else null
 }
 
 /**
