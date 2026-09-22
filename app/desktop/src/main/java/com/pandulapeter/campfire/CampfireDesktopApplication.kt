@@ -66,9 +66,16 @@ fun main(args: Array<String>) {
         val windowState = rememberWindowState()
         // The view model is created inside the window (which owns the ViewModelStore), but the key handler needs it here.
         val viewModel = remember { mutableStateOf<CampfireViewModel?>(null) }
+        // From the moment the app decides to go, another process's files are not accepted any more: this one would only
+        // acknowledge them and exit. The lock stays until the process is gone, so a newcomer waits for it
+        // (claimSingleInstance).
+        val exit = {
+            stopListeningForOtherInstances()
+            exitApplication()
+        }
         // Closing the window leaves the editor as surely as Escape does, so it asks about unsaved text the same way,
         // and it waits for a save that is still being written, since exitApplication ends the process.
-        val requestExit = { viewModel.value?.requestExit(::exitApplication) ?: exitApplication() }
+        val requestExit = { viewModel.value?.requestExit(exit) ?: exit() }
         // Quitting from the macOS application menu or with Cmd+Q never reaches onCloseRequest: without a handler of
         // its own the JDK answers it with System.exit. The quit is cancelled and asked for the way closing the window
         // is, which ends in exitApplication all the same once there is nothing left to lose.
@@ -86,7 +93,7 @@ fun main(args: Array<String>) {
             onCloseRequest = requestExit,
             icon = painterResource(Res.drawable.app_icon),
             onPreviewKeyEvent = ::handlePreviewKeyEvent,
-            onKeyEvent = { keyEvent -> viewModel.value?.handleKeyEvent(keyEvent, onExit = ::exitApplication) == true },
+            onKeyEvent = { keyEvent -> viewModel.value?.handleKeyEvent(keyEvent, onExit = exit) == true },
         ) {
             window.minimumSize = Dimension(400, 400)
             DisposableEffect(window) {

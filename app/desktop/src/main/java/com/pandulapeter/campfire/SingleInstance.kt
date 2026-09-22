@@ -42,6 +42,13 @@ import kotlin.concurrent.thread
  * @param paths Absolute paths: the two processes do not share a working directory.
  * @param onActivated Called on a background thread each time another process handed over, with the paths it was
  *   started with - none when it was started with none, which still means "come forward".
+ * The lock is asked for again before every hand-over attempt, and the attempts are more than one, for two reasons.
+ * The running instance may be one that started a moment ago - five files opened together are five processes, and the
+ * four that lost the lock can be here before the winner has written its port, which is why the endpoint file is read
+ * again each time too. And the holder may be a process that is closing: it has stopped listening but still holds the
+ * lock, and once it is gone this process is the one that opens the library, with the lock and a listener of its own,
+ * rather than one that starts next to whatever comes after it.
+ *
  * @return False if the running instance took over and this process should exit. True means carry on starting,
  *   which is also the answer when the lock cannot be asked for at all (a read-only or a network home directory) or
  *   when the running instance does not answer: an app that starts twice is the lesser evil next to one that does
@@ -52,21 +59,44 @@ internal fun claimSingleInstance(
     paths: List<String>,
     onActivated: (paths: List<String>) -> Unit,
 ): Boolean {
-    val lock = try {
-        dataDirectory.mkdirs()
-        val channel = FileChannel.open(File(dataDirectory, LOCK_FILE_NAME).toPath(), StandardOpenOption.CREATE, StandardOpenOption.WRITE)
-        channel.tryLock() ?: run {
-            channel.close()
-            null
+    repeat(HAND_OVER_ATTEMPTS) {
+        val lock = try {
+            dataDirectory.mkdirs()
+            val channel = FileChannel.open(File(dataDirectory, LOCK_FILE_NAME).toPath(), StandardOpenOption.CREATE, StandardOpenOption.WRITE)
+            channel.tryLock() ?: run {
+                channel.close()
+                null
+            }
+        } catch (exception: Exception) {
+            println("Could not ask for the single instance lock: ${exception.message}")
+            return true
         }
-    } catch (exception: Exception) {
-        println("Could not ask for the single instance lock: ${exception.message}")
-        return true
+        if (lock != null) {
+            heldLock = lock
+            startListening(dataDirectory, onActivated)
+            return true
+        }
+        if (sendPaths(dataDirectory, paths)) return false
+        Thread.sleep(HAND_OVER_RETRY_MILLIS)
     }
-    if (lock == null) return !handOver(dataDirectory, paths)
-    heldLock = lock
-    startListening(dataDirectory, onActivated)
+    println("The running instance did not answer, starting next to it.")
     return true
+}
+
+/**
+ * Stops accepting other processes' files while keeping the lock, for an instance that has decided to exit: it would
+ * only acknowledge them and go, and the file would be opened by nobody. The lock stays until the process is gone, so
+ * that a newcomer waits for it (see [claimSingleInstance]) rather than reading the library while this process may
+ * still be writing it; releasing it by hand is left to the operating system for that reason.
+ */
+internal fun stopListeningForOtherInstances() {
+    try {
+        listeningSocket?.close()
+    } catch (exception: IOException) {
+        println("Could not stop listening for other instances: ${exception.message}")
+    }
+    listeningSocket = null
+    listeningEndpointFile?.delete()
 }
 
 /**
@@ -75,6 +105,10 @@ internal fun claimSingleInstance(
  */
 private var heldLock: FileLock? = null
 
+private var listeningSocket: ServerSocket? = null
+
+private var listeningEndpointFile: File? = null
+
 private fun startListening(dataDirectory: File, onActivated: (paths: List<String>) -> Unit) {
     val endpointFile = File(dataDirectory, ENDPOINT_FILE_NAME)
     try {
@@ -82,8 +116,10 @@ private fun startListening(dataDirectory: File, onActivated: (paths: List<String
         // port that is closed, or somebody else's by now.
         endpointFile.delete()
         val serverSocket = ServerSocket(0, BACKLOG, InetAddress.getByName(LOOPBACK_ADDRESS))
+        listeningSocket = serverSocket
         val token = ByteArray(TOKEN_BYTES).also(SecureRandom()::nextBytes).joinToString("") { "%02x".format(it) }
         endpointFile.writeForOwnerOnly("${serverSocket.localPort}\n$token\n")
+        listeningEndpointFile = endpointFile
         Runtime.getRuntime().addShutdownHook(Thread { endpointFile.delete() })
         // A daemon, so that it is never the thread that keeps a closed application alive.
         thread(isDaemon = true, name = "campfire-single-instance") { serverSocket.serve(token, onActivated) }
@@ -129,31 +165,23 @@ private fun ServerSocket.serve(token: String, onActivated: (paths: List<String>)
     }
 }
 
-/**
- * Tried more than once because the running instance may be one that started a moment ago - five files opened
- * together are five processes, and the four that lost the lock can be here before the winner has written its
- * port. The file is read again each time for the same reason.
- */
-private fun handOver(dataDirectory: File, paths: List<String>): Boolean {
+/** Answers whether the running instance acknowledged [paths]; one attempt, see [claimSingleInstance] for the retries. */
+private fun sendPaths(dataDirectory: File, paths: List<String>): Boolean {
     // Encoded so that a path with a line break in it is still one line of the request.
     val encodedPaths = paths.joinToString("\n") { URLEncoder.encode(it, Charsets.UTF_8) }
-    repeat(HAND_OVER_ATTEMPTS) {
-        try {
-            val (port, token) = File(dataDirectory, ENDPOINT_FILE_NAME).readLines()
-            Socket().use { socket ->
-                socket.connect(InetSocketAddress(InetAddress.getByName(LOOPBACK_ADDRESS), port.toInt()), CONNECTION_TIMEOUT_MILLIS)
-                socket.soTimeout = CONNECTION_TIMEOUT_MILLIS
-                socket.getOutputStream().write("$PROTOCOL_HEADER $token\n$encodedPaths".toByteArray())
-                socket.shutdownOutput()
-                if (socket.getInputStream().bufferedReader().readLine() == ACKNOWLEDGEMENT) return true
-            }
-        } catch (exception: Exception) {
-            // No file yet, half a file, a closed port, or something on that port that is not Campfire.
+    return try {
+        val (port, token) = File(dataDirectory, ENDPOINT_FILE_NAME).readLines()
+        Socket().use { socket ->
+            socket.connect(InetSocketAddress(InetAddress.getByName(LOOPBACK_ADDRESS), port.toInt()), CONNECTION_TIMEOUT_MILLIS)
+            socket.soTimeout = CONNECTION_TIMEOUT_MILLIS
+            socket.getOutputStream().write("$PROTOCOL_HEADER $token\n$encodedPaths".toByteArray())
+            socket.shutdownOutput()
+            socket.getInputStream().bufferedReader().readLine() == ACKNOWLEDGEMENT
         }
-        Thread.sleep(HAND_OVER_RETRY_MILLIS)
+    } catch (exception: Exception) {
+        // No file yet, half a file, a closed port, or something on that port that is not Campfire.
+        false
     }
-    println("The running instance did not answer, starting next to it.")
-    return false
 }
 
 private const val LOCK_FILE_NAME = "instance.lock"

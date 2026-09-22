@@ -29,8 +29,11 @@ the holder listens on `127.0.0.1` on a port chosen by the system and writes that
 owner-only `instance.endpoint`. A later process sends the token and its arguments, receives `OK` and exits; its paths
 join the ones from `args` and the macOS open-file handler, and the existing window comes forward. On Windows that
 requires toggling `isAlwaysOnTop`, since `toFront()` alone can only flash the taskbar for a process that is not in the
-foreground. The check fails open when the lock cannot be asked for or the holder does not answer. It uses `java.base`
-only.
+foreground. The check fails open when the lock cannot be asked for or the holder does not answer. The lock is asked for again
+before every hand-over attempt, so a process started while the previous one is still closing takes it over once it is
+free rather than starting without it; and an instance that has decided to exit stops listening
+(`stopListeningForOtherInstances`, called before `exitApplication`) while keeping the lock until it is gone, so it never
+acknowledges files it will not open. It uses `java.base` only.
 
 Packaging: `compose.desktop` produces Dmg/Exe/Msi/Deb, versioned from the `campfire.versionName` Gradle property. That format is stricter than the app's — `MAJOR[.MINOR][.PATCH]` and nothing else — so a version with a suffix fails the build at configuration time. `javaHome` is pinned to the toolchain JDK because the Gradle JVM may lack `jpackage`. Icons live in `src/main/resources/appIcon.{icns,ico}` (packaging) and `src/main/composeResources/drawable/app_icon.png` (the window icon, also used for the Linux package). The Linux package asks for a `shortcut`, because jpackage writes a `.desktop` entry — and so shows the icon anywhere — only for a package that asks for one or declares file associations, and the Windows installer asks for a Start menu entry and a desktop shortcut for the same reason, installs per user so that it needs no administrator, and carries a fixed `upgradeUuid`, which is what makes a newer installer replace the installed version and so must never change. `modules(...)` lists what `suggestRuntimeModules` finds beyond Compose Desktop's defaults: the packaged runtime holds nothing else, so a missing module is a `NoClassDefFoundError` only an installed build throws — run that task again after adding a JVM dependency. `chordProFileAssociations()` in `build.gradle.kts` registers the six ChordPro extensions as `text/plain` for macOS and Windows — not for Linux, where an association is keyed by the MIME type and that would make Campfire a handler of every text file; deliberately not zip or `.txt`, and kept in step with `LibraryFiles.SONG_EXTENSIONS`, which a build file cannot see.
 
