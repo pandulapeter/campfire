@@ -19,6 +19,7 @@ import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.ActivityResultLauncher
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
 import com.pandulapeter.campfire.data.model.domain.ExportedFile
 import com.pandulapeter.campfire.data.model.domain.ImportBudget
 import com.pandulapeter.campfire.data.model.domain.ImportedFile
@@ -29,6 +30,9 @@ import kotlinx.coroutines.IO
 import kotlinx.coroutines.NonCancellable
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.channels.Channel
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.filterNotNull
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.suspendCancellableCoroutine
@@ -44,24 +48,36 @@ import kotlin.coroutines.resume
 
 /**
  * The storage access framework, bridged into suspend functions. The launchers can only be registered from a
- * composition, so they are attached here, on every composition, to the one [AndroidFilePicker] there is, which is then
- * handed to the shared UI through [LocalFilePicker].
+ * composition, so they are attached here, for as long as the composition holds them, to the one [AndroidFilePicker]
+ * there is, which is then handed to the shared UI through [LocalFilePicker].
  */
 @Composable
 internal fun rememberAndroidFilePicker(): AndroidFilePicker {
     val picker = koinInject<AndroidFilePicker>()
     // "* / *" rather than a list of types: .cho has no registered MIME type, and anything narrower would grey the
     // songs out in the system picker. What is not a song is skipped by the import and reported afterwards.
-    picker.openLauncher = rememberLauncherForActivityResult(ActivityResultContracts.OpenMultipleDocuments(), picker::onFilesPicked)
+    val open = rememberLauncherForActivityResult(ActivityResultContracts.OpenMultipleDocuments(), picker::onFilesPicked)
     // The contract bakes the type in, so there is one launcher per type the app can hand out.
-    picker.createTextLauncher = rememberLauncherForActivityResult(
+    val createText = rememberLauncherForActivityResult(
         ActivityResultContracts.CreateDocument(ExportedFile.TEXT_MIME_TYPE),
         picker::onSaveLocationPicked,
     )
-    picker.createArchiveLauncher = rememberLauncherForActivityResult(
+    val createArchive = rememberLauncherForActivityResult(
         ActivityResultContracts.CreateDocument(ExportedFile.ZIP_MIME_TYPE),
         picker::onSaveLocationPicked,
     )
+    // Declared after the launchers, so that it is disposed before they unregister: a launcher is never left in the
+    // singleton once it can no longer launch, and a finished Activity is not kept reachable through it.
+    DisposableEffect(picker, open, createText, createArchive) {
+        val launchers = AndroidFilePicker.Launchers(
+            open = open,
+            createText = createText,
+            createArchive = createArchive,
+        )
+        picker.launchers.value = launchers
+        // Only its own: the next Activity's composition may already have put its launchers here.
+        onDispose { picker.launchers.compareAndSet(launchers, null) }
+    }
     return picker
 }
 
@@ -71,7 +87,8 @@ internal fun rememberAndroidFilePicker(): AndroidFilePicker {
  * answers: a rotation, or the system reclaiming the Activity in the background, recreates it while the picker is up.
  * The result is still delivered - the launchers are registered under a saved key - but to the callbacks of whatever
  * picker the new composition holds, so that has to be the same object the waiting coroutine is suspended on. The
- * launchers themselves are the old Activity's and dead with it, which is why they are replaced on every composition.
+ * launchers themselves are the old Activity's and dead with it, which is why they are attached only for as long as a
+ * composition holds them, and taken at the moment of launching rather than when a pick or an export began.
  *
  * A process that dies under the system picker takes this object with it, and the result then arrives at one that
  * nobody is suspended on. That is what an orphaned result is, and neither kind is dropped: picked files are read
@@ -81,9 +98,14 @@ internal fun rememberAndroidFilePicker(): AndroidFilePicker {
 @Single
 internal class AndroidFilePicker(@Provided private val context: Context) : FilePicker {
 
-    var openLauncher: ActivityResultLauncher<Array<String>>? = null
-    var createTextLauncher: ActivityResultLauncher<String>? = null
-    var createArchiveLauncher: ActivityResultLauncher<String>? = null
+    /** The launchers of the composition that is on screen; null between one Activity and the next. */
+    class Launchers(
+        val open: ActivityResultLauncher<Array<String>>,
+        val createText: ActivityResultLauncher<String>,
+        val createArchive: ActivityResultLauncher<String>,
+    )
+
+    val launchers = MutableStateFlow<Launchers?>(null)
 
     private var pickContinuation: CancellableContinuation<List<Uri>>? = null
     private var saveContinuation: CancellableContinuation<Uri?>? = null
@@ -107,22 +129,26 @@ internal class AndroidFilePicker(@Provided private val context: Context) : FileP
     override suspend fun pickFiles(): List<ImportedFile> {
         // Two system pickers cannot be open at once, so one still waiting is one whose answer is never coming.
         pickContinuation?.takeIf { it.isActive }?.resume(emptyList())
+        // Between two Activities there is no launcher until the next one has composed, so it is waited for.
+        val launcher = launchers.filterNotNull().first().open
         val uris = suspendCancellableCoroutine { continuation ->
             pickContinuation = continuation
             continuation.invokeOnCancellation { pickContinuation = null }
-            openLauncher?.launch(arrayOf(ANY_MIME_TYPE)) ?: continuation.resume(emptyList())
+            launcher.launch(arrayOf(ANY_MIME_TYPE))
         }
         return withContext(Dispatchers.IO) { uris.toImportedFiles(context) }
     }
 
     override suspend fun saveFile(file: ExportedFile): Boolean {
-        val launcher = if (file.mimeType == ExportedFile.ZIP_MIME_TYPE) createArchiveLauncher else createTextLauncher
-        saveContinuation?.takeIf { it.isActive }?.resume(null)
         withContext(Dispatchers.IO) { keepPendingExport(file) }
+        // Taken now rather than when the call began: an Activity recreated in between has unregistered the old ones,
+        // and between two Activities there are none until the next one has composed.
+        val launcher = launchers.filterNotNull().first().let { if (file.mimeType == ExportedFile.ZIP_MIME_TYPE) it.createArchive else it.createText }
+        saveContinuation?.takeIf { it.isActive }?.resume(null)
         val uri = suspendCancellableCoroutine<Uri?> { continuation ->
             saveContinuation = continuation
             continuation.invokeOnCancellation { saveContinuation = null }
-            launcher?.launch(file.name) ?: continuation.resume(null)
+            launcher.launch(file.name)
         }
         // The document exists from the moment the dialog is confirmed, so from here on the write is owed: a scope
         // cancelled at this point would leave it empty.
