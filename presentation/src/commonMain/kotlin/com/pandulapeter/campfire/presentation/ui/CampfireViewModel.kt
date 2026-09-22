@@ -24,6 +24,7 @@ import com.pandulapeter.campfire.chordpro.model.ChordProSong
 import com.pandulapeter.campfire.data.model.DataState
 import com.pandulapeter.campfire.data.model.domain.ExportedFile
 import com.pandulapeter.campfire.data.model.domain.ImportConflictResolution
+import com.pandulapeter.campfire.data.model.domain.ImportLimits
 import com.pandulapeter.campfire.data.model.domain.ImportPlan
 import com.pandulapeter.campfire.data.model.domain.ImportResult
 import com.pandulapeter.campfire.data.model.domain.ImportedFile
@@ -1388,9 +1389,20 @@ class CampfireViewModel(
         _messages.trySend(Message.LinkNotOpened(url))
     }
 
-    /** Nothing to export and a picker that threw are the same thing to the user: the file did not come out. */
+    /**
+     * Nothing to export and a picker that threw are the same thing to the user: the file did not come out.
+     *
+     * An archive over what an import takes is saved all the same, since it is still a complete copy that unzips by
+     * hand, but the user is told so the day it is made rather than the day it is needed.
+     */
     private suspend fun save(filePicker: FilePicker, isShare: Boolean = false, export: suspend () -> ExportedFile?) = try {
-        export()?.let { if (isShare) filePicker.shareFile(it) else filePicker.saveFile(it) } ?: _messages.send(Message.ExportFailed)
+        val file = export()
+        when {
+            file == null -> _messages.send(Message.ExportFailed)
+            isShare -> filePicker.shareFile(file)
+            filePicker.saveFile(file) && file.mimeType == ExportedFile.ZIP_MIME_TYPE && file.bytes.size > ImportLimits.MAX_IMPORT_SIZE ->
+                _messages.send(Message.ExportTooLargeToImport)
+        }
         Unit
     } catch (exception: CancellationException) {
         throw exception
@@ -1817,6 +1829,9 @@ class CampfireViewModel(
         data class ImportOversized(val count: Int) : Message
         data object ImportFailed : Message
         data object ExportFailed : Message
+
+        /** An archive that was saved, but that the import would refuse for its size. */
+        data object ExportTooLargeToImport : Message
         data object SaveFailed : Message
 
         /** The file of the song in the editor is no longer there; the editor's text is, and saving writes it back. */

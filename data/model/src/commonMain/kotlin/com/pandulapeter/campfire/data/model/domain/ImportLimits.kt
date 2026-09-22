@@ -25,7 +25,9 @@ object ImportLimits {
 
     /**
      * One archive as it was picked, everything one selection reads, and everything one import unpacks to: more than
-     * twice a library of three thousand songs.
+     * twice a library of three thousand songs of 4 KB. A library exports to an archive of its own size plus about 180
+     * bytes a file, so one of about six thousand such songs exports to an archive this refuses, and the export says so.
+     * That message names the limit as 24 MB in both languages, so the strings change with it.
      */
     const val MAX_IMPORT_SIZE = 24L shl 20
 

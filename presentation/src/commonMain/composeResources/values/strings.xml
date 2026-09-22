@@ -29,6 +29,7 @@
     <string name="import_result">Imported %1$d songs and %2$d setlists · %3$d already there · %4$d skipped</string>
     <string name="import_failed">Import failed</string>
     <string name="export_failed">Export failed</string>
+    <string name="export_too_large_to_import">This archive is larger than the 24 MB Campfire can import at once. It is a complete copy of your library; to bring it back, unzip it and import the songs a few thousand at a time.</string>
     <string name="import_conflicts">Some names are taken</string>
     <plurals name="import_conflicts_summary">
         <item quantity="one">One of the files you are importing has the name of a different file already in your library.</item>

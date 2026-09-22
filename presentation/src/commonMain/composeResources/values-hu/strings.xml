@@ -29,6 +29,7 @@
     <string name="import_result">%1$d dal és %2$d lista importálva · %3$d már megvolt · %4$d kihagyva</string>
     <string name="import_failed">Az importálás nem sikerült</string>
     <string name="export_failed">Az exportálás nem sikerült</string>
+    <string name="export_too_large_to_import">Ez az archívum nagyobb annál a 24 MB-nál, amennyit a Campfire egyszerre importálni tud. A könyvtárad teljes másolata; a visszatöltéshez csomagold ki, és importáld a dalokat néhány ezres adagokban.</string>
     <string name="import_conflicts">Néhány név foglalt</string>
     <plurals name="import_conflicts_summary">
         <item quantity="one">Az importálandó fájlok közül egy olyan nevet visel, amelyen már egy másik fájl van a könyvtáradban.</item>
