@@ -33,12 +33,14 @@ Campfire understands the core of the format:
   languages it is in (`{meta: language en}` is how they are written back), and `meta` for anything else.
 - **Environments**: `start_of_verse` / `sov`, `start_of_chorus` / `soc`, `start_of_bridge` / `sob`,
   `start_of_tab` / `sot`, `start_of_grid` / `sog` and any other `start_of_<name>`, each with the matching `end_of_…`,
-  an optional label (`{sov: Verse 1}` or `{sov: label="Verse 1"}`), and `{chorus}` to repeat the last chorus.
+  an optional label (`{sov: Verse 1}`, `{sov Verse 1}` or `{sov: label="Verse 1"}`), and `{chorus}` to repeat the last chorus.
 - **Content**: `[Chord]` markers anchored to the syllable that follows them, `[*annotations]`, tab lines kept exactly
   as written, grid rows, `#` source comments, and `comment` / `comment_italic` / `comment_box` for shown ones.
 - **Page directives** (`new_page`, `column_break`, …) are treated as layout hints; chord diagrams (`define`), fonts,
   colours and images are parsed and ignored.
 - `{new_song}` / `{ns}` splits one imported file into several songs.
+
+A value may follow the directive name after a colon or, as the spec allows, after whitespace alone (`{title Wonderwall}`).
 
 ### Setlists
 

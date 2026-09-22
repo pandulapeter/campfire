@@ -52,14 +52,19 @@ object ChordProHighlighter {
             val lineEnd = if (lineBreak == -1) text.length else lineBreak
             val line = text.substring(lineStart, lineEnd)
             val trimmed = line.trim()
-            val directive = ChordProSyntax.matchDirective(trimmed.removeSuffix("\r"))
+            val trimmedDirectiveLine = trimmed.removeSuffix("\r")
+            val directive = ChordProSyntax.matchDirective(trimmedDirectiveLine)
             when {
                 trimmed.startsWith(SOURCE_COMMENT) -> tokens += Token(TokenType.COMMENT, lineStart, lineEnd)
 
                 directive != null -> {
                     ChordProSyntax.startOfEnvironment(directive.name)?.let { isInsideTab = it == TAB_ENVIRONMENT }
                     ChordProSyntax.endOfEnvironment(directive.name)?.let { if (it == TAB_ENVIRONMENT) isInsideTab = false }
-                    tokens += directive.tokens(line = line, lineStart = lineStart)
+                    tokens += directive.tokens(
+                        line = line,
+                        lineStart = lineStart,
+                        valueStart = ChordProSyntax.directiveValueStart(trimmedDirectiveLine),
+                    )
                 }
 
                 !isInsideTab -> ChordProSyntax.brackets(line).forEach { bracket ->
@@ -77,20 +82,20 @@ object ChordProHighlighter {
     }
 
     /**
-     * The name half runs from the opening brace to the colon (or to the closing brace when the directive has no
-     * value), and the value half is whatever is left before the closing brace. The two braces are a pair and are
+     * The name half runs from the opening brace to the colon, or to the whitespace after the name where the directive
+     * has no colon (or to the closing brace when it has no value), and the value half is whatever is left before the closing brace. The two braces are a pair and are
      * coloured as one: a directive only matches when both of them are there, so the closing one is as much a sign of
      * what the line is as the opening one, and leaving it plain made a directive look unfinished after its value.
      */
-    private fun ChordProSyntax.Directive.tokens(line: String, lineStart: Int): List<Token> {
+    private fun ChordProSyntax.Directive.tokens(line: String, lineStart: Int, valueStart: Int?): List<Token> {
         val open = line.indexOf('{')
         val close = line.lastIndexOf('}')
         if (open == -1 || close <= open) return emptyList()
-        val colon = line.indexOf(':', startIndex = open)
-        val hasValue = colon in (open + 1) until close && !value.isNullOrEmpty()
+        val hasValue = valueStart != null && !value.isNullOrEmpty()
         // Without a value the whole thing is one token, closing brace included; with one the value splits the name
-        // in two and the closing brace becomes a token of its own.
-        val nameEnd = if (hasValue) colon + 1 else close + 1
+        // in two and the closing brace becomes a token of its own. The trimmed line the value start was counted on
+        // begins at the opening brace.
+        val nameEnd = if (hasValue) open + valueStart else close + 1
         val name = Token(TokenType.DIRECTIVE_NAME, lineStart + open, lineStart + nameEnd)
         return if (hasValue) {
             listOf(

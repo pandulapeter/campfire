@@ -32,8 +32,10 @@ in `:domain:*`. `:data:source:local:implementation` uses it directly for the met
   and the environment carries on in the second half; a comment there is never read as a Campfire 3 heading. The two
   halves of a tab are runs of their own, so the text transposition moves them as two fingerboards as well.
 - `ChordProSyntax` — the shared low-level rules (the directive and chord regexes, `chordNameRegex` for "is this whole
-  word a chord and not a word that starts with a letter", long/short directive names, the `start_of_` / `end_of_`
-  prefixes, `label="…"` attributes, what counts as a tag or a language directive, `metadataKind` for the one name a
+  word a chord and not a word that starts with a letter", long/short directive names, a value separated from a
+  known directive name by a colon or by whitespace alone (the spec allows both, and a line in braces whose name the app
+  does not know stays the lyrics it has always been shown as), the `start_of_` / `end_of_` prefixes, `label`
+  attributes in either quotes, and no label at all for a value made of other attributes, what counts as a tag or a language directive, `metadataKind` for the one name a
   directive is known by whichever of its spellings a file uses, `isStaffLine` for "is this line of a tab environment
   the staff or something written above it", and where a new one goes in a file the user wrote).
   `metadataInsertionIndex` is that last rule: after the last directive of the same kind, and otherwise into the

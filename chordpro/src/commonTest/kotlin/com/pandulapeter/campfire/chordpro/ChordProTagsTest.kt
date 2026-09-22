@@ -97,6 +97,7 @@ class ChordProTagsTest {
         val text = "{meta: tag slow}\n{tag: campfire}\nThe first line"
 
         assertEquals("{tag: campfire}\nThe first line", ChordProTags.removeTag(text, "slow"))
+        assertEquals("[C]a", ChordProTags.removeTag("{tag Needs study}\n[C]a", "needs study"))
     }
 
     @Test

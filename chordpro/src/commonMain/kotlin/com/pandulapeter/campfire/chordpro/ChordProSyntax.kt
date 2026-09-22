@@ -19,7 +19,8 @@ internal object ChordProSyntax {
 
 
 
-    private val labelAttributeRegex = Regex("label\\s*=\\s*\"([^\"]*)\"")
+    private val labelAttributeRegex = Regex("(?:^|\\s)label\\s*=\\s*(?:\"([^\"]*)\"|'([^']*)')")
+    private val attributeRegex = Regex("\\s*[A-Za-z_][A-Za-z0-9_-]*\\s*=\\s*(?:\"[^\"]*\"|'[^']*')")
     private val whitespaceRegex = Regex("\\s+")
 
     const val START_OF_PREFIX = "start_of_"
@@ -40,6 +41,7 @@ internal object ChordProSyntax {
     private const val DIRECTIVE_VALUE_SEPARATOR = ':'
     private const val BRACKET_OPEN = '['
     private const val BRACKET_CLOSE = ']'
+    private const val CUSTOM_PREFIX = "x_"
 
     /**
      * The two ISO codes that mean "there is no language here" — undetermined and no linguistic content. They say
@@ -63,12 +65,18 @@ internal object ChordProSyntax {
         "eog" to "grid",
     )
 
-    /** Every directive name the parser reacts to, used to detect (and drop) selector suffixes such as `title-guitar`. */
+    /**
+     * Every directive name ChordPro defines, used to detect (and drop) selector suffixes such as `title-guitar` and to
+     * accept a value separated from the name by whitespace alone.
+     */
     private val knownNames = setOf(
         "title", "t", "subtitle", "st", "artist", "composer", "lyricist", "album", "year", "key", "capo", "tempo",
         "time", "duration", "transpose", "tag", "language", "lang", "meta", "chorus", "comment", "c", "comment_italic", "ci", "comment_box", "cb",
         "new_page", "np", "new_physical_page", "npp", "column_break", "colb", "new_song", "ns", "define", "chord",
-        "image", "columns", "col", "highlight", "pagetype", "titles",
+        "image", "columns", "col", "highlight", "pagetype", "titles", "sorttitle", "arranger", "copyright", "grid", "g",
+        "no_grid", "ng", "diagrams", "textfont", "tf", "textsize", "ts", "textcolour", "chordfont", "cf", "chordsize", "cs",
+        "chordcolour", "tabfont", "tabsize", "tabcolour", "gridfont", "gridsize", "gridcolour", "titlefont", "titlesize",
+        "titlecolour",
     )
 
     /** Splits into lines accepting both `\r\n` and `\n`; a trailing newline does not create an extra line. */
@@ -129,6 +137,27 @@ internal object ChordProSyntax {
 
     /** Matches a directive in one linear walk, which keeps malformed input cheap while the user types. */
     fun matchDirective(trimmedLine: String): Directive? {
+        val (name, valueStart) = walkDirective(trimmedLine) ?: return null
+        return Directive(name, if (valueStart < 0) null else trimmedLine.substring(valueStart, trimmedLine.length - 1).trim())
+    }
+
+    /**
+     * Where the value of the directive on [trimmedLine] starts: right after its colon, or at the first character after
+     * the whitespace that separates it from a name written without one. Null for a line that is not a directive and
+     * for one with no value. It is what splits a directive into its name and its value for the highlighter, which
+     * cannot look for the colon, since a directive need not have one and a value may.
+     */
+    fun directiveValueStart(trimmedLine: String) = walkDirective(trimmedLine)?.second?.takeIf { it >= 0 }
+
+    /**
+     * The lowercase name of the directive on [trimmedLine] and the index its value starts at, -1 where it has none.
+     *
+     * ChordPro separates a value from the name with a colon "and/or whitespace", and the spec's own examples use the
+     * second (`{start_of_verse Verse 1}`). Whitespace alone is only taken for a name the app knows, though: a line in
+     * braces such as `{Verse 2}` has always been shown as the lyrics it is, and an unknown directive is dropped, so
+     * reading it as one would take the user's text off the screen.
+     */
+    private fun walkDirective(trimmedLine: String): Pair<String, Int>? {
         val closeIndex = trimmedLine.length - 1
         if (closeIndex < 1 || trimmedLine[0] != DIRECTIVE_OPEN || trimmedLine[closeIndex] != DIRECTIVE_CLOSE) return null
         var index = 1
@@ -136,14 +165,20 @@ internal object ChordProSyntax {
         val nameStartIndex = index
         while (index < closeIndex && trimmedLine[index].isDirectiveNameCharacter) index++
         if (index == nameStartIndex) return null
-        val name = trimmedLine.substring(nameStartIndex, index).lowercase()
+        val nameEndIndex = index
+        val name = trimmedLine.substring(nameStartIndex, nameEndIndex).lowercase()
         while (index < closeIndex && trimmedLine[index].isWhitespace()) index++
         return when {
-            index == closeIndex -> Directive(name, null)
-            trimmedLine[index] == DIRECTIVE_VALUE_SEPARATOR -> Directive(name, trimmedLine.substring(index + 1, closeIndex).trim())
+            index == closeIndex -> name to -1
+            trimmedLine[index] == DIRECTIVE_VALUE_SEPARATOR -> name to index + 1
+            index > nameEndIndex && isKnownName(name) -> name to index
             else -> null
         }
     }
+
+    /** Whether [name] is a directive ChordPro defines, a custom `x_` one or one of those with a selector suffix. */
+    private fun isKnownName(name: String) = name in knownNames || startOfEnvironment(name) != null ||
+            endOfEnvironment(name) != null || name.startsWith(CUSTOM_PREFIX) || hasSelectorSuffix(name)
 
     /** Every closed bracket pair from left to right; an unclosed opening bracket ends the walk. */
     fun brackets(line: String): List<Bracket> {
@@ -300,11 +335,30 @@ internal object ChordProSyntax {
 
     private val bodyNames = blockNames + setOf("new_song", "ns")
 
-    /** `label="Verse 1"` wins over the raw value; an empty value becomes null. */
+    /**
+     * The label an environment directive gives its section: the whole value (`{sov: Verse 1}`), or its `label`
+     * attribute where the value is written as attributes (`{sov label="Verse 1"}`, in either quotes). A value made of
+     * attributes that has no label (`{start_of_grid shape="1+4x2+4"}`) gives none, rather than showing the attributes
+     * as a heading. An empty label is null.
+     */
     fun label(value: String?): String? {
-        if (value == null) return null
-        labelAttributeRegex.find(value)?.let { return it.groupValues[1].takeIf { label -> label.isNotEmpty() } }
-        return value.trim().takeIf { it.isNotEmpty() }
+        val trimmedValue = value?.trim()?.takeIf { it.isNotEmpty() } ?: return null
+        if (!isAttributes(trimmedValue)) return trimmedValue
+        val match = labelAttributeRegex.find(trimmedValue) ?: return null
+        return match.groupValues[1].ifEmpty { match.groupValues[2] }.takeIf { it.isNotEmpty() }
+    }
+
+    /**
+     * Whether [trimmedValue] is nothing but `name="value"` attributes. It is matched one attribute at a time rather than
+     * with a single repeated group, which the JVM's regex engine matches recursively and overflows the stack on for a
+     * long enough line.
+     */
+    private fun isAttributes(trimmedValue: String): Boolean {
+        var index = 0
+        while (index < trimmedValue.length) {
+            index = (attributeRegex.matchAt(trimmedValue, index) ?: return false).range.last + 1
+        }
+        return true
     }
 
     /** True for names such as `title-guitar`: a known directive with a selector suffix, which is out of scope. */

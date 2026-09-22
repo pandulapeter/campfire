@@ -41,6 +41,18 @@ class ChordProHighlighterTest {
     }
 
     @Test
+    fun `a directive with no colon is split after its name`() {
+        assertEquals(
+            listOf(TokenType.DIRECTIVE_NAME to "{title ", TokenType.DIRECTIVE_VALUE to "Song", TokenType.DIRECTIVE_NAME to "}"),
+            spans("{title Song}"),
+        )
+        assertEquals(
+            listOf(TokenType.DIRECTIVE_NAME to "{title:", TokenType.DIRECTIVE_VALUE to " a: b", TokenType.DIRECTIVE_NAME to "}"),
+            spans("{title: a: b}"),
+        )
+    }
+
+    @Test
     fun `directive without a value is all name`() {
         assertEquals(listOf(TokenType.DIRECTIVE_NAME to "{start_of_chorus}"), spans("{start_of_chorus}"))
     }

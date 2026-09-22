@@ -29,9 +29,37 @@ class ChordProSyntaxTest {
 
     @Test
     fun `a line that only looks like a directive is content`() {
-        listOf("", "{", "}", "{}", "{:}", "{title", "title}", "{title x}", "{ti tle: x}", "{title}}", "{cím: x}").forEach {
+        listOf("", "{", "}", "{}", "{:}", "{title", "title}", "{ti tle: x}", "{title}}", "{cím: x}", "{Verse 2}", "{verse 2}", "{Refrén 2x}").forEach {
             assertNull(ChordProSyntax.matchDirective(it))
         }
+    }
+
+    @Test
+    fun `a value may be separated from a known name by whitespace alone`() {
+        assertEquals(ChordProSyntax.Directive("title", "Wonderwall"), ChordProSyntax.matchDirective("{title Wonderwall}"))
+        assertEquals(ChordProSyntax.Directive("start_of_verse", "Verse 1"), ChordProSyntax.matchDirective("{start_of_verse Verse 1}"))
+        assertEquals(ChordProSyntax.Directive("meta", "language en"), ChordProSyntax.matchDirective("{meta language en}"))
+        assertEquals(ChordProSyntax.Directive("x_note", "hi"), ChordProSyntax.matchDirective("{x_note hi}"))
+        assertEquals(ChordProSyntax.Directive("title", "a: b"), ChordProSyntax.matchDirective("{title a: b}"))
+    }
+
+    @Test
+    fun `the value start is after the colon or after the whitespace`() {
+        assertEquals(7, ChordProSyntax.directiveValueStart("{title: X}"))
+        assertEquals(7, ChordProSyntax.directiveValueStart("{title X}"))
+        assertNull(ChordProSyntax.directiveValueStart("{soc}"))
+        assertNull(ChordProSyntax.directiveValueStart("{Verse 2}"))
+    }
+
+    @Test
+    fun `a label is the value or its label attribute in either quotes`() {
+        assertEquals("Verse 1", ChordProSyntax.label("Verse 1"))
+        assertEquals("Verse 1", ChordProSyntax.label("label=\"Verse 1\""))
+        assertEquals("Verse 1", ChordProSyntax.label("label='Verse 1'"))
+        assertEquals("Solo", ChordProSyntax.label("shape=\"1+4x2+4\" label=\"Solo\""))
+        assertNull(ChordProSyntax.label("shape=\"1+4x2+4\""))
+        assertNull(ChordProSyntax.label("  "))
+        assertNull(ChordProSyntax.label("label=\"\""))
     }
 
     @Test
@@ -44,6 +72,8 @@ class ChordProSyntaxTest {
     @Test
     fun `crafted lines cost no more than their length`() {
         assertNull(assertLinear { ChordProSyntax.matchDirective("{c:" + " ".repeat(4_000) + "x") })
+        assertNull(assertLinear { ChordProSyntax.matchDirective("{title" + " ".repeat(4_000) + "x") })
+        assertLinear { ChordProSyntax.label("a=\"b\" ".repeat(20_000) + "c") }
         assertTrue(assertLinear { ChordProSyntax.brackets("[".repeat(100_000)) }.isEmpty())
         assertFalse(ChordProSyntax.hasBrackets("[".repeat(100_000)))
     }

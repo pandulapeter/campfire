@@ -519,4 +519,27 @@ class ChordProParserTest {
         assertEquals(ChordProParser.parse(text).metadata, ChordProParser.parseMetadata(text))
         assertEquals("Overridden Title", ChordProParser.parseMetadata(text).title)
     }
+
+    @Test
+    fun `directives written with whitespace instead of a colon are read`() {
+        val song = ChordProParser.parse(
+            "{title Wonderwall}\n{artist Oasis}\n{tag Needs study}\n{meta language en}\n\n{start_of_verse Verse 1}\n[Am]a\n{end_of_verse}\n\n" +
+                    "{start_of_grid shape=\"1+4x2+4\"}\n| C . |\n{end_of_grid}",
+        )
+
+        assertEquals("Wonderwall", song.metadata.title)
+        assertEquals("Oasis", song.metadata.artist)
+        assertEquals(listOf("Needs study"), song.metadata.tags)
+        assertEquals(listOf("en"), song.metadata.languages)
+        assertEquals(ChordProBlock.Section(SectionType.Verse, "Verse 1", listOf(ChordProParser.parseLyrics("[Am]a"))), song.blocks[0])
+        val grid = song.blocks[1] as ChordProBlock.Section
+        assertEquals(SectionType.Paragraph, grid.type)
+        assertNull(grid.label)
+        assertTrue(grid.lines.single() is ChordProLine.Grid)
+        assertEquals(ChordProParser.parse("{sov: Verse 1}\n[Am]a\n{eov}"), ChordProParser.parse("{sov label='Verse 1'}\n[Am]a\n{eov}"))
+        assertEquals(
+            listOf<ChordProBlock>(ChordProBlock.Section(SectionType.Paragraph, null, listOf(ChordProLine.Lyrics("{Verse 2}", emptyList())))),
+            ChordProParser.parse("{Verse 2}").blocks,
+        )
+    }
 }
