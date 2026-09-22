@@ -32,6 +32,7 @@ import androidx.compose.ui.input.key.type
 import com.pandulapeter.campfire.presentation.ui.components.isAnyOverflowMenuOpen
 import com.pandulapeter.campfire.presentation.ui.platform.DesktopFilePicker
 import com.pandulapeter.campfire.presentation.ui.platform.LocalFilePicker
+import com.pandulapeter.campfire.presentation.ui.platform.openUrl
 import com.pandulapeter.campfire.presentation.ui.platform.readAsImportedFiles
 import com.pandulapeter.campfire.data.model.domain.ImportedFile
 import kotlinx.coroutines.Dispatchers
@@ -41,10 +42,8 @@ import kotlinx.coroutines.flow.emptyFlow
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import org.koin.compose.viewmodel.koinViewModel
-import java.awt.Desktop
 import java.awt.datatransfer.DataFlavor
 import java.io.File
-import java.net.URI
 
 /**
  * Desktop shell of the shared UI. Desktop has no back gesture, so the Escape key (see [handleKeyEvent]) dismisses
@@ -162,45 +161,3 @@ fun resetEscapeKey() {
 
 /** One window, only ever touched on the AWT event thread, so a top-level flag is all the state [handlePreviewKeyEvent] needs. */
 private var isEscapeHeld = false
-
-/**
- * Opens [url] in the system's browser and answers whether anything took it. `java.awt.Desktop` goes first, and the
- * operating system's own command is what is left - both where AWT has no desktop to speak of, which is a Linux
- * session without the GNOME libraries it looks for, and where it has one that fails, as `browse` does on a machine
- * with no default browser registered.
- */
-private fun openUrl(url: String) = openWithAwt(url) || openWithSystemCommand(url)
-
-/** `getDesktop` throws where `isDesktopSupported` says no, so it is only asked for after that has said yes. */
-private fun openWithAwt(url: String) = try {
-    val desktop = if (Desktop.isDesktopSupported()) Desktop.getDesktop().takeIf { it.isSupported(Desktop.Action.BROWSE) } else null
-    desktop?.browse(URI(url))
-    desktop != null
-} catch (exception: Exception) {
-    println("Could not open $url through java.awt.Desktop: ${exception.message}")
-    false
-} catch (error: LinkageError) {
-    // The desktop peer loads native libraries the first time it is asked for, and one that does not link is an
-    // Error rather than an Exception. This runs inside a click handler, where either would close the window.
-    println("Could not open $url through java.awt.Desktop: ${error.message}")
-    false
-}
-
-private fun openWithSystemCommand(url: String) = try {
-    val osName = System.getProperty("os.name").orEmpty().lowercase()
-    val command = when {
-        "mac" in osName -> arrayOf("open", url)
-        "win" in osName -> arrayOf("rundll32", "url.dll,FileProtocolHandler", url)
-        else -> arrayOf("xdg-open", url)
-    }
-    // Discarded rather than piped: xdg-open may become the browser itself, which then writes its log into a pipe
-    // nobody reads and stops once that is full.
-    ProcessBuilder(*command)
-        .redirectOutput(ProcessBuilder.Redirect.DISCARD)
-        .redirectError(ProcessBuilder.Redirect.DISCARD)
-        .start()
-    true
-} catch (exception: Exception) {
-    println("Could not open $url: ${exception.message}")
-    false
-}

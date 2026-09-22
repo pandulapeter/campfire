@@ -43,6 +43,7 @@ The library lives where the platform keeps application data (`~/Library/Applicat
 
 For sync, a second socket briefly makes the desktop a web server: `DesktopSyncAuthenticator` opens it on
 `127.0.0.1:53682` for the length of one authorization, because a service only redirects to a URI registered with it
-character for character and a port chosen by the operating system could not be registered.
+character for character and a port chosen by the operating system could not be registered. The consent page is
+opened by the same URL opener as the links in Settings, `:presentation`'s `DesktopSystemBrowser`.
 
 `./gradlew :app:desktop:run` to launch (`--args="/path/to/song.cho"` to test opening a file); `:app:desktop:packageDistributionForCurrentOS` to build an installer (`packageDeb`, `packageDmg` and `packageMsi` for one format); the `packageRelease…` variants of the same tasks are the ones that run ProGuard, and they are what `desktop-publish.yml` runs, writing to `build/compose/binaries/main-release`.

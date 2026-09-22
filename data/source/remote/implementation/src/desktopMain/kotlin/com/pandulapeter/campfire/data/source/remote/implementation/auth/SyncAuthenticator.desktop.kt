@@ -10,8 +10,8 @@
 package com.pandulapeter.campfire.data.source.remote.implementation.auth
 
 import com.pandulapeter.campfire.data.source.remote.api.SyncAuthenticator
+import com.pandulapeter.campfire.data.source.remote.api.SystemBrowser
 import com.pandulapeter.campfire.data.source.remote.api.model.AuthorizationCompletionPage
-import java.awt.Desktop
 import java.io.BufferedReader
 import java.io.InputStreamReader
 import java.net.InetAddress
@@ -19,7 +19,6 @@ import java.io.IOException
 import java.net.ServerSocket
 import java.net.Socket
 import java.net.SocketTimeoutException
-import java.net.URI
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.IO
@@ -42,10 +41,11 @@ import org.koin.core.annotation.Single
 @Single
 internal class DesktopSyncAuthenticator(
     /**
-     * Injected so that the socket half of this can be tested without a browser window opening on whoever runs the
-     * tests. Cancelling a blocked `accept` is subtle enough to be worth a test of its own.
+     * The shell's own browser opener, which knows the three ways a Linux session can refuse to open one. Injected
+     * rather than called directly because the socket half of this is tested without a browser window opening on
+     * whoever runs the tests: cancelling a blocked `accept` is subtle enough to be worth a test of its own.
      */
-    private val openInBrowser: (String) -> Unit = ::openInSystemBrowser,
+    private val systemBrowser: SystemBrowser,
 ) : SyncAuthenticator {
 
     private var serverSocket: ServerSocket? = null
@@ -82,7 +82,11 @@ internal class DesktopSyncAuthenticator(
         }
         try {
             withContext(Dispatchers.IO) {
-                openInBrowser(authorizationUrl)
+                // Nothing will arrive at the socket if no browser was opened, and waiting out the five minute
+                // timeout for that is telling the user nothing while they watch a spinner.
+                if (!systemBrowser.open(authorizationUrl)) {
+                    return@withContext SyncAuthenticator.AuthorizationOutcome.Cancelled("No browser could be opened.")
+                }
                 socket.awaitRedirect(completionPage)
             }
         } catch (exception: CancellationException) {
@@ -165,21 +169,6 @@ internal class DesktopSyncAuthenticator(
 
         /** The answer to a request that is not the redirect, such as the favicon the completion page is asked for. */
         const val NOT_FOUND_RESPONSE = "HTTP/1.1 404 Not Found\r\nContent-Length: 0\r\nConnection: close\r\n\r\n"
-    }
-}
-
-/** Every desktop Campfire runs on can open a browser; the JDK just cannot always see how. */
-private fun openInSystemBrowser(url: String) {
-    if (Desktop.isDesktopSupported() && Desktop.getDesktop().isSupported(Desktop.Action.BROWSE)) {
-        Desktop.getDesktop().browse(URI(url))
-    } else {
-        val operatingSystem = System.getProperty("os.name").orEmpty().lowercase()
-        val command = when {
-            operatingSystem.contains("mac") -> arrayOf("open", url)
-            operatingSystem.contains("win") -> arrayOf("rundll32", "url.dll,FileProtocolHandler", url)
-            else -> arrayOf("xdg-open", url)
-        }
-        ProcessBuilder(*command).start()
     }
 }
 

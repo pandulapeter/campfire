@@ -71,7 +71,10 @@ redirect URIs character for character, which is why the desktop port is fixed.
     the web does.
   - **Desktop** becomes a web server for the length of one authorization — a socket on `127.0.0.1:53682` whose
     address is the redirect URI. The port is fixed because a service only redirects to a URI registered with it
-    character for character. `accept` blocks a thread and notices neither a cancelled coroutine nor an interrupt, so
+    character for character. The browser itself is opened through `SystemBrowser`, which the desktop shell's own URL
+    opener implements, so that the consent page and the links in Settings take exactly the same path — AWT first,
+    the operating system's command after it, `LinkageError` caught and the child process's output discarded — and an
+    authorization whose browser never opened ends at once instead of waiting out the five minute timeout. `accept` blocks a thread and notices neither a cancelled coroutine nor an interrupt, so
     cancelling closes the socket underneath it from a sibling coroutine; `DesktopSyncAuthenticatorTest` covers that,
     since getting it wrong holds the port for five minutes and is invisible until somebody cancels. Browsers open a
     speculative second connection next to the navigation and ask for a favicon after it, so the listener reads each
