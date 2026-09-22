@@ -10,6 +10,7 @@
 package com.pandulapeter.campfire.domain.api.useCases
 
 import com.pandulapeter.campfire.data.model.domain.Song
+import com.pandulapeter.campfire.domain.api.models.SongFileRename
 
 interface RenameSongFileUseCase {
 
@@ -22,12 +23,13 @@ interface RenameSongFileUseCase {
      * where the library is a folder the user can open, something they may have chosen themselves.
      *
      * The move is not undone when a reference cannot be followed: every setlist and the transposition are still
-     * attempted, and the call then throws, naming how many were left behind. The setlists among them go on pointing
-     * at the old name, which shows the song as missing there until the entry is fixed by hand.
+     * attempted, and the result says whether all of them were. The setlists among those that were not go on pointing
+     * at the old name, which shows the song as missing there until the entry is fixed by hand. Nothing is thrown once
+     * the file has moved, since the caller has to catch up with the new name whatever else went wrong.
      *
-     * @return The new file name, or null if nothing moved - the file could not be read, or it was already named
-     *   that way. The caller is what still holds the old name: the screens showing the song, and the caches keyed
-     *   by it.
+     * @return The new file name and whether everything followed it, or null if nothing moved - the file could not be
+     *   read, or it was already named that way. The caller is what still holds the old name: the screens showing the
+     *   song, and the caches keyed by it.
      */
-    suspend operator fun invoke(song: Song): String?
+    suspend operator fun invoke(song: Song): SongFileRename?
 }

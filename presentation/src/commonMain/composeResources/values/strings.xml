@@ -83,6 +83,7 @@
     <string name="songs_actions">Song actions</string>
     <string name="songs_setlist_assignments">Setlist assignments</string>
     <string name="songs_update_file_name">Update file name</string>
+    <string name="songs_update_file_name_partly">The file was renamed, but a setlist or the saved transposition still points at the old name</string>
     <string name="songs_delete_song">Delete song</string>
     <string name="songs_delete_song_confirmation">Delete \"%1$s\"? The file is removed from the library and from every setlist.</string>
     <string name="songs_all_hidden">Every song is hidden</string>

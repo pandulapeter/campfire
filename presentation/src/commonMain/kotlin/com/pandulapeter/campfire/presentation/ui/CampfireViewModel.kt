@@ -1000,10 +1000,13 @@ class CampfireViewModel(
      * Renames the song's file to the one its own metadata gives it, offered by the song's menu wherever the two have
      * drifted apart (`Song.canUpdateFileName`). The use case follows the references that are on disk - the setlists
      * holding the song, its saved transposition - and what is left here is the two places the old name lives in
-     * memory: the text read from the file, and the screens that were opened on it.
+     * memory: the text read from the file, and the screens that were opened on it. Where a setlist or the
+     * transposition could not follow, the rename still stands and the screens still follow it; that is said
+     * afterwards (`Message.SongFileRenamedPartly`).
      */
     fun updateSongFileName(song: Song) = launchLibraryChange {
-        val fileName = renameSongFile(song) ?: return@launchLibraryChange
+        val rename = renameSongFile(song) ?: return@launchLibraryChange
+        val fileName = rename.fileName
         _songTexts.update { texts -> texts[song.fileName]?.let { texts - song.fileName + (fileName to it) } ?: texts }
         // The details screen is named after the songs it pages through, so the entry showing this one is rewritten
         // rather than popped: the action can be taken from that screen, and a song that has just been renamed is
@@ -1025,6 +1028,8 @@ class CampfireViewModel(
         }
         songDetailsCurrentSongs.entries.filter { it.value == song.fileName }.forEach { songDetailsCurrentSongs[it.key] = fileName }
         persistBackStack()
+        // Said after the screens have followed the file, which has moved whatever else could not be rewritten.
+        if (!rename.haveReferencesFollowed) sendMessage(Message.SongFileRenamedPartly)
     }
 
     fun deleteSong(fileName: String) = launchLibraryChange {
@@ -1990,6 +1995,9 @@ class CampfireViewModel(
 
         /** A change to the library (a new setlist, a deleted song, a moved entry) that could not be written. */
         data object OperationFailed : Message
+
+        /** The song's file was renamed, but a setlist or its saved transposition still names the old file. */
+        data object SongFileRenamedPartly : Message
 
         /** A link nothing on this machine would open. The address is shown, since reading it is all that is left. */
         data class LinkNotOpened(val url: String) : Message

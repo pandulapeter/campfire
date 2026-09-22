@@ -83,6 +83,7 @@
     <string name="songs_actions">Műveletek</string>
     <string name="songs_setlist_assignments">Listákhoz rendelés</string>
     <string name="songs_update_file_name">Fájlnév frissítése</string>
+    <string name="songs_update_file_name_partly">A fájl új nevet kapott, de egy lista vagy a mentett transzponálás még a régi névre hivatkozik</string>
     <string name="songs_delete_song">Dal törlése</string>
     <string name="songs_delete_song_confirmation">Törlöd a(z) „%1$s” dalt? A fájl törlődik a könyvtárból és minden listából.</string>
     <string name="songs_all_hidden">Minden dal rejtve van</string>

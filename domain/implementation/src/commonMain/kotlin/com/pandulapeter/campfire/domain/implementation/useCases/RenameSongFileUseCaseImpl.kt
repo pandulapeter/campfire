@@ -13,6 +13,7 @@ import com.pandulapeter.campfire.data.model.domain.Song
 import com.pandulapeter.campfire.data.repository.api.SetlistRepository
 import com.pandulapeter.campfire.data.repository.api.SongRepository
 import com.pandulapeter.campfire.data.repository.api.UserPreferencesRepository
+import com.pandulapeter.campfire.domain.api.models.SongFileRename
 import com.pandulapeter.campfire.domain.api.useCases.RenameSongFileUseCase
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.NonCancellable
@@ -32,18 +33,19 @@ class RenameSongFileUseCaseImpl internal constructor(
      * at a name that does not exist yet - and if the move fails there is nothing to undo.
      *
      * Once the file has moved there is no going back, so every reference is attempted even when an earlier one could
-     * not be written, and the failures are reported together at the end: one setlist that cannot be saved would
-     * otherwise leave every setlist after it, and the transposition, pointing at a name that is gone. For the same
-     * reason the walk is not cancellable once the file has moved: a screen going away half way through would leave the
-     * rest of the references on the old name just the same.
+     * not be written, and whether any failed is reported together at the end, in the result rather than as an
+     * exception: the move has happened, and the caller has to follow it either way. One setlist that cannot be saved
+     * would otherwise leave every setlist after it, and the transposition, pointing at a name that is gone. For the
+     * same reason the walk is not cancellable once the file has moved: a screen going away half way through would
+     * leave the rest of the references on the old name just the same.
      */
-    override suspend operator fun invoke(song: Song): String? {
+    override suspend operator fun invoke(song: Song): SongFileRename? {
         val renamed = songRepository.renameSong(song)?.fileName ?: return null
-        withContext(NonCancellable) { updateReferences(song = song, renamed = renamed) }
-        return renamed
+        val haveReferencesFollowed = withContext(NonCancellable) { updateReferences(song = song, renamed = renamed) }
+        return SongFileRename(fileName = renamed, haveReferencesFollowed = haveReferencesFollowed)
     }
 
-    private suspend fun updateReferences(song: Song, renamed: String) {
+    private suspend fun updateReferences(song: Song, renamed: String): Boolean {
         val failures = mutableListOf<Exception>()
         setlistRepository.loadSetlistsIfNeeded().orEmpty()
             .filter { setlist -> setlist.entries.any { it.songFileName == song.fileName } }
@@ -68,9 +70,8 @@ class RenameSongFileUseCaseImpl internal constructor(
                     )
                 }
         }
-        if (failures.isNotEmpty()) {
-            throw IllegalStateException("The song was renamed, but ${failures.size} reference(s) to it could not be updated.", failures.first())
-        }
+        failures.forEach { println("A reference to the renamed song could not be updated: ${it.message}") }
+        return failures.isEmpty()
     }
 
     private suspend fun attempt(failures: MutableList<Exception>, block: suspend () -> Unit) {
