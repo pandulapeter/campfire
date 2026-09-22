@@ -1609,7 +1609,7 @@ class CampfireViewModel(
     fun addSongToSetlist(songFileName: String, setlistFileName: String) = launchLibraryChange {
         updateSetlist(setlistFileName) { setlist ->
             if (setlist.entries.none { it.songFileName == songFileName }) {
-                setlist.copy(entries = listOf(Setlist.Entry(songFileName = songFileName)) + setlist.entries)
+                setlist.copy(entries = setlist.entries + Setlist.Entry(songFileName = songFileName))
             } else {
                 setlist
             }

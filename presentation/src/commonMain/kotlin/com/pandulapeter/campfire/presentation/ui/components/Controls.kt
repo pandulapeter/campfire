@@ -10,6 +10,7 @@
 package com.pandulapeter.campfire.presentation.ui.components
 
 import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.Crossfade
 import androidx.compose.animation.expandHorizontally
 import androidx.compose.animation.expandVertically
 import androidx.compose.animation.fadeIn
@@ -54,6 +55,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.painter.Painter
 import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.text.style.TextOverflow
@@ -493,14 +495,19 @@ private fun FilterSectionTitle(
  * the click, which is what puts the state layer on the chip's own bounds, and the clip above it is what rounds it -
  * the state layer is drawn as a plain rectangle and is bound by nothing else, which is what used to let it spill past
  * the rounded corners on the web.
+ *
+ * @param leadingIcon What the chip is, for a group that is not told apart by a section title of its own: the song
+ *   picker lists the languages and the tags in one row. The check takes its place while the chip is selected, the
+ *   way Material swaps a filter chip's leading icon, so the chip keeps its width either way.
  */
 @Composable
-private fun CountedFilterChip(
+internal fun CountedFilterChip(
     modifier: Modifier = Modifier,
     label: String,
     songCount: Int,
     isSelected: Boolean,
     onClick: () -> Unit,
+    leadingIcon: Painter? = null,
 ) {
     val isEnabled = songCount > 0 || isSelected
     val colors = FilterChipDefaults.filterChipColors()
@@ -529,19 +536,34 @@ private fun CountedFilterChip(
             .padding(horizontal = CHIP_PADDING),
         verticalAlignment = Alignment.CenterVertically,
     ) {
-        // The check grows into the chip the way the Material one does, so that turning a filter on is a movement
-        // rather than a chip that changes width between two frames.
-        AnimatedVisibility(
-            visible = isSelected,
-            enter = expandHorizontally() + fadeIn(),
-            exit = shrinkHorizontally() + fadeOut(),
-        ) {
-            Icon(
-                modifier = Modifier.padding(end = CHIP_ICON_GAP).size(FilterChipDefaults.IconSize),
-                painter = painterResource(Res.drawable.ic_check),
-                contentDescription = null,
-                tint = if (isSelected) colors.selectedLeadingIconColor else colors.leadingIconColor,
-            )
+        if (leadingIcon == null) {
+            // The check grows into the chip the way the Material one does, so that turning a filter on is a movement
+            // rather than a chip that changes width between two frames.
+            AnimatedVisibility(
+                visible = isSelected,
+                enter = expandHorizontally() + fadeIn(),
+                exit = shrinkHorizontally() + fadeOut(),
+            ) {
+                Icon(
+                    modifier = Modifier.padding(end = CHIP_ICON_GAP).size(FilterChipDefaults.IconSize),
+                    painter = painterResource(Res.drawable.ic_check),
+                    contentDescription = null,
+                    tint = if (isSelected) colors.selectedLeadingIconColor else colors.leadingIconColor,
+                )
+            }
+        } else {
+            Crossfade(targetState = isSelected) { isChecked ->
+                Icon(
+                    modifier = Modifier.padding(end = CHIP_ICON_GAP).size(FilterChipDefaults.IconSize),
+                    painter = if (isChecked) painterResource(Res.drawable.ic_check) else leadingIcon,
+                    contentDescription = null,
+                    tint = when {
+                        !isEnabled -> colors.disabledLeadingIconColor
+                        isChecked -> colors.selectedLeadingIconColor
+                        else -> colors.leadingIconColor
+                    },
+                )
+            }
         }
         Text(
             modifier = Modifier.widthIn(max = MAX_TAG_WIDTH),
