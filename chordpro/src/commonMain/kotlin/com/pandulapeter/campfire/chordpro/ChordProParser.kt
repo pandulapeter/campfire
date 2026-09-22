@@ -344,7 +344,9 @@ object ChordProParser {
         private var duration: String? = null
         private var transpose = 0
         private val tags = mutableListOf<String>()
+        private val tagKeys = mutableSetOf<String>()
         private val languages = mutableListOf<String>()
+        private val languageSet = mutableSetOf<String>()
         private val custom = mutableMapOf<String, MutableList<String>>()
 
         fun consume(directive: ChordProSyntax.Directive) {
@@ -385,12 +387,12 @@ object ChordProParser {
 
         /** A tag the song already carries in another spelling is not a second tag, see [ChordProMetadata.tags]. */
         private fun addTag(value: String) {
-            if (tags.none { it.equals(value, ignoreCase = true) }) tags += value
+            if (tagKeys.add(ChordProSyntax.caseInsensitiveKey(value))) tags += value
         }
 
         /** The codes are normalized before they get here, so a repeated language is a repeated string. */
         private fun addLanguage(value: String) {
-            if (value !in languages) languages += value
+            if (languageSet.add(value)) languages += value
         }
 
         fun build() = ChordProMetadata(

@@ -157,6 +157,13 @@ internal object ChordProSyntax {
     }?.takeIf { it.isNotEmpty() }
 
     /**
+     * Equal for exactly the strings `equals(ignoreCase = true)` calls equal, char by char, so that it can key a hash set.
+     * Not `lowercase()`, which turns a dotted capital I into two characters that no longer match the plain i the
+     * comparison takes it for.
+     */
+    fun caseInsensitiveKey(value: String) = CharArray(value.length) { value[it].uppercaseChar().lowercaseChar() }.concatToString()
+
+    /**
      * The language a directive declares, or null if it is not one. ChordPro defines no directive for it, so what the
      * app writes is `{meta: language en}`; `{meta: lang en}` and the bare `{language: en}` / `{lang: en}` that a hand
      * written file may carry are read as the same thing. What comes back is normalized, see [languageCode].

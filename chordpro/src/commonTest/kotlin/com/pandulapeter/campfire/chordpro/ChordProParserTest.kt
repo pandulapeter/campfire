@@ -468,6 +468,35 @@ class ChordProParserTest {
     }
 
     @Test
+    fun `tags that differ only in case are one tag, the first spelling winning`() {
+        assertEquals(listOf("Demo"), ChordProParser.parseMetadata("{tag: Demo}\n{tag: DEMO}\n{tag: demo}").tags)
+    }
+
+    @Test
+    fun `a dotted capital I and a plain i are the same tag, as equals ignoring case says`() {
+        assertEquals(listOf("İstanbul"), ChordProParser.parseMetadata("{tag: İstanbul}\n{tag: istanbul}").tags)
+    }
+
+    @Test
+    fun `the order of tags and languages is the order of the file`() {
+        val metadata = ChordProParser.parseMetadata(
+            "{tag: b}\n{meta: language hu}\n{tag: c}\n{lang: en}\n{tag: a}\n{meta: language de}\n{tag: B}\n{lang: hu}",
+        )
+
+        assertEquals(listOf("b", "c", "a"), metadata.tags)
+        assertEquals(listOf("hu", "en", "de"), metadata.languages)
+    }
+
+    @Test
+    fun `a song with a hundred thousand distinct tags or languages is parsed in linear time`() {
+        val tags = (0 until 100_000).joinToString("\n") { "{tag: t$it}" }
+        val languages = (0 until 100_000).joinToString("\n") { "{lang: q$it}" }
+
+        assertEquals(100_000, ChordProParser.summarize(tags).metadata.tags.size)
+        assertEquals(100_000, ChordProParser.summarize(languages).metadata.languages.size)
+    }
+
+    @Test
     fun `parseMetadata matches the metadata of a full parse`() {
         val text = """
             # a comment
