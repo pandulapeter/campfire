@@ -46,6 +46,7 @@ import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.isTraversalGroup
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.semantics.traversalIndex
@@ -555,16 +556,19 @@ private fun SongTabBlock(
     val color = MaterialTheme.colorScheme.onSurface
     val rows = remember(lines, style, textMeasurer) { TabRows(lines, style, textMeasurer) }
     Layout(
-        modifier = modifier.drawBehind {
-            var y = 0f
-            rows.at(size.width.roundToInt()).forEach { row ->
-                row.forEach { line ->
-                    drawText(textLayoutResult = line, color = color, topLeft = Offset(0f, y))
-                    y += line.size.height
+        // Drawn rather than composed (see above), so the lines are handed to a screen reader here, as they stand in the file.
+        modifier = modifier
+            .semantics { contentDescription = lines.joinToString(separator = "\n") }
+            .drawBehind {
+                var y = 0f
+                rows.at(size.width.roundToInt()).forEach { row ->
+                    row.forEach { line ->
+                        drawText(textLayoutResult = line, color = color, topLeft = Offset(0f, y))
+                        y += line.size.height
+                    }
+                    y += rows.rowGap
                 }
-                y += rows.rowGap
-            }
-        },
+            },
     ) { _, constraints ->
         val width = constraints.maxWidth
         val rowsAtWidth = rows.at(width)
@@ -1339,9 +1343,13 @@ private fun SongLineWithChords(
     // Lines without any lyrics (e.g. an intro) only need to be as tall as the chords themselves.
     val lineHeight = with(density) { (if (line.text.isBlank()) chordLineHeight else chordLineHeight + textMeasurements.lyricsLineHeight).toSp() }
     var lyricsLayout by remember { mutableStateOf<TextLayoutResult?>(null) }
+    // The chords are drawn rather than composed, so a screen reader would read the padded lyrics alone. It is given
+    // the line the way ChordPro writes it instead, each chord in brackets where it falls.
+    val description = remember(line) { line.withChordsInline() }
     Text(
         modifier = Modifier
             .fillMaxWidth()
+            .semantics { contentDescription = description }
             .drawBehind {
                 val layout = lyricsLayout ?: return@drawBehind
                 val textLength = layout.layoutInput.text.length
@@ -1377,6 +1385,18 @@ private fun SongLineWithChords(
         color = MaterialTheme.colorScheme.onSurface,
         onTextLayout = { lyricsLayout = it },
     )
+}
+
+/** The line with each chord written into it in brackets, where it sits: "[Am]There is a [C]house". */
+private fun ChordProLine.Lyrics.withChordsInline() = buildString {
+    var start = 0
+    chords.sortedBy { it.position }.forEach { chord ->
+        val position = chord.position.coerceIn(start, text.length)
+        append(text, start, position)
+        append('[').append(chord.name).append(']')
+        start = position
+    }
+    append(text, start, text.length)
 }
 
 /**
