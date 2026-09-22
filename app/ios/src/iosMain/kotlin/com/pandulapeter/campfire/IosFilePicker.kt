@@ -15,8 +15,13 @@ import com.pandulapeter.campfire.data.model.domain.ImportedFile
 import com.pandulapeter.campfire.presentation.ui.platform.FilePicker
 import kotlinx.cinterop.BetaInteropApi
 import kotlinx.cinterop.ExperimentalForeignApi
+import kotlinx.cinterop.ObjCObjectVar
 import kotlinx.cinterop.addressOf
+import kotlinx.cinterop.alloc
+import kotlinx.cinterop.memScoped
+import kotlinx.cinterop.ptr
 import kotlinx.cinterop.usePinned
+import kotlinx.cinterop.value
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.IO
 import kotlinx.coroutines.NonCancellable
@@ -24,6 +29,8 @@ import kotlinx.coroutines.suspendCancellableCoroutine
 import kotlinx.coroutines.withContext
 import platform.Foundation.NSData
 import platform.Foundation.NSDataReadingMappedIfSafe
+import platform.Foundation.NSError
+import platform.Foundation.NSFileCoordinator
 import platform.Foundation.NSFileManager
 import platform.Foundation.NSFileSize
 import platform.Foundation.NSNumber
@@ -160,23 +167,48 @@ internal class IosFilePicker(
  * inside, or one too large for it, is handed over unread.
  *
  * The copies the picker hands over live in the app's own container, but a URL that arrives from another app is
- * security scoped, so the read happens inside the access it grants. Blocking, so not for the main thread.
+ * security scoped, so the read happens inside the access it grants.
+ *
+ * Read through an `NSFileCoordinator`, because `LSSupportsOpeningDocumentsInPlace` means a file opened with
+ * Campfire is the user's own where it lies - an iCloud Drive song that may not be on this device at all, or one
+ * another app is in the middle of writing. The coordinated read is what downloads the first and waits for the
+ * second; an uncoordinated one simply answers nothing, and the user is told their song was skipped. Blocking for
+ * as long as that takes, so not for the main thread - doubly so, since a coordinated read asked for on the main
+ * thread can deadlock against a file presenter that answers on it.
  */
-@OptIn(ExperimentalForeignApi::class)
+@OptIn(BetaInteropApi::class, ExperimentalForeignApi::class)
 internal fun NSURL.readImportedFile(budget: ImportBudget): ImportedFile? {
     val isAccessible = startAccessingSecurityScopedResource()
     return try {
-        val size = path?.let { NSFileManager.defaultManager.attributesOfItemAtPath(it, error = null) }?.get(NSFileSize) as? NSNumber
-        budget.read(name = lastPathComponent.orEmpty(), size = size?.longLongValue) { limit ->
-            // Mapped rather than loaded, so that a file whose attributes said nothing still gives its length away
-            // before any of it is copied into the heap. Longer than the limit, it only has to say so, which the
-            // budget takes one byte past the limit to mean.
-            val data = NSData.dataWithContentsOfURL(this, options = NSDataReadingMappedIfSafe, error = null)
-            if (data == null) {
-                println("Could not read \"$this\".")
+        var file: ImportedFile? = null
+        memScoped {
+            val error = alloc<ObjCObjectVar<NSError?>>()
+            NSFileCoordinator(filePresenter = null).coordinateReadingItemAtURL(
+                url = this@readImportedFile,
+                options = 0uL,
+                error = error.ptr,
+            ) { coordinated ->
+                // The coordinator may hand over a different URL - a snapshot it made of a file that is being
+                // written - and everything has to be read from that one, and before this block returns, since it
+                // is only the app's for as long as the block runs.
+                val url = coordinated ?: this@readImportedFile
+                val size = url.path?.let { NSFileManager.defaultManager.attributesOfItemAtPath(it, error = null) }?.get(NSFileSize) as? NSNumber
+                file = budget.read(name = lastPathComponent.orEmpty(), size = size?.longLongValue) { limit ->
+                    // Mapped rather than loaded, so that a file whose attributes said nothing still gives its
+                    // length away before any of it is copied into the heap. Longer than the limit, it only has to
+                    // say so, which the budget takes one byte past the limit to mean.
+                    val data = NSData.dataWithContentsOfURL(url, options = NSDataReadingMappedIfSafe, error = null)
+                    if (data == null) {
+                        println("Could not read \"$url\".")
+                    }
+                    data?.let { if (it.length.toLong() > limit) ByteArray(limit.toInt() + 1) else it.toByteArray() }
+                }
             }
-            data?.let { if (it.length.toLong() > limit) ByteArray(limit.toInt() + 1) else it.toByteArray() }
+            // A coordination that was refused - a file that could not be downloaded, a writer that never finished -
+            // says why, which is worth the log line: the import itself can only report the file as skipped.
+            error.value?.let { println("Could not read \"${this@readImportedFile}\": ${it.localizedDescription}") }
         }
+        file
     } finally {
         if (isAccessible) {
             stopAccessingSecurityScopedResource()
