@@ -31,6 +31,13 @@ class ChordProSerializerTest {
     }
 
     @Test
+    fun `an abc block survives serializing`() {
+        val parsed = ChordProParser.parse("{start_of_abc}\nX:1\n[CEG]2 [A2B] |\n{end_of_abc}")
+
+        assertEquals(parsed, ChordProParser.parse(ChordProSerializer.serialize(parsed)))
+    }
+
+    @Test
     fun `a tab with a blank line in it comes back as one section`() {
         val parsed = ChordProParser.parse("{sot: Riff}\ne|--0--|\n\ne|--3--|\n{eot}")
         val serialized = ChordProSerializer.serialize(parsed)

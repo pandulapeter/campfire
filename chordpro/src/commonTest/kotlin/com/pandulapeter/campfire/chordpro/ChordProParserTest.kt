@@ -600,4 +600,15 @@ class ChordProParserTest {
         assertEquals("F", ChordProParser.summarize(text).metadata.key)
         assertEquals("G", ChordProParser.parse("{key: }\n{key: G}").metadata.key)
     }
+
+    @Test
+    fun `the lines of an abc block are kept verbatim with no chords`() {
+        val section = ChordProParser.parse("{start_of_abc}\nX:1\n[CEG]2 [A2B] |\n{end_of_abc}").blocks.single() as ChordProBlock.Section
+
+        assertEquals(SectionType.Custom("abc"), section.type)
+        assertEquals(listOf(ChordProLine.Lyrics("X:1", emptyList()), ChordProLine.Lyrics("[CEG]2 [A2B] |", emptyList())), section.lines)
+        assertFalse(ChordProParser.summarize("{start_of_ly}\n[c e g]\n{end_of_ly}").hasChords)
+        val textBlock = ChordProParser.parse("{start_of_textblock}\nfirst\n{comment: Chorus}\nsecond\n{end_of_textblock}").blocks
+        assertEquals(ChordProBlock.Comment("Chorus", CommentStyle.PLAIN), textBlock[1])
+    }
 }

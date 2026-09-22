@@ -157,6 +157,14 @@ class ChordProTransposerTest {
     }
 
     @Test
+    fun `an abc block is left alone by the transposition`() {
+        val text = "{start_of_abc}\n[CEG]2\n{end_of_abc}\n[C]la"
+
+        assertEquals("{start_of_abc}\n[CEG]2\n{end_of_abc}\n[D]la", ChordProTransposer.transposeText(text, 2))
+        assertEquals(ChordProParser.parse("{start_of_abc}\n[CEG]2\n{end_of_abc}\n[D]la"), ChordProTransposer.transpose(ChordProParser.parse(text), 2))
+    }
+
+    @Test
     fun `a grid keeps its margin labels and moves every chord of a cell`() {
         val text = "{start_of_grid}\nA    || G7 . | C~A . |\nCoda | D7 |.\n{end_of_grid}"
 

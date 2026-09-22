@@ -53,6 +53,14 @@ class ChordProHighlighterTest {
     }
 
     @Test
+    fun `the brackets of an abc block are not chords`() {
+        assertEquals(
+            listOf(TokenType.CHORD to "[C]"),
+            spans("{start_of_abc}\n[CEG]\n{end_of_abc}\n[C]").filter { it.first == TokenType.CHORD },
+        )
+    }
+
+    @Test
     fun `directive without a value is all name`() {
         assertEquals(listOf(TokenType.DIRECTIVE_NAME to "{start_of_chorus}"), spans("{start_of_chorus}"))
     }

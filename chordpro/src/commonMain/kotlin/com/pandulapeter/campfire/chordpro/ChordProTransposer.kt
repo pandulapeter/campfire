@@ -230,6 +230,7 @@ object ChordProTransposer {
 
                 environment == TAB -> tabLineIndices += index
                 environment == GRID -> lines[index] = transposeGridLine(rawLine, trimmedLine, rename)
+                environment in ChordProSyntax.delegateEnvironments -> Unit
                 else -> lines[index] = rewriteLyricsLineChords(rawLine, rename)
             }
         }

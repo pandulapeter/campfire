@@ -43,9 +43,9 @@ object ChordProHighlighter {
 
     fun tokenize(text: String): List<Token> {
         val tokens = mutableListOf<Token>()
-        // Chords are not chords inside a tab: the brackets there are part of the tablature, and the viewer leaves
-        // them alone too.
-        var isInsideTab = false
+        // Chords are not chords inside a tab or an environment handed to another program: the brackets there are part
+        // of the tablature or of the notation, and the viewer leaves them alone too.
+        var isVerbatim = false
         var lineStart = 0
         while (lineStart <= text.length) {
             val lineBreak = text.indexOf('\n', lineStart)
@@ -58,8 +58,8 @@ object ChordProHighlighter {
                 trimmed.startsWith(SOURCE_COMMENT) -> tokens += Token(TokenType.COMMENT, lineStart, lineEnd)
 
                 directive != null -> {
-                    ChordProSyntax.startOfEnvironment(directive.name)?.let { isInsideTab = it == TAB_ENVIRONMENT }
-                    ChordProSyntax.endOfEnvironment(directive.name)?.let { if (it == TAB_ENVIRONMENT) isInsideTab = false }
+                    ChordProSyntax.startOfEnvironment(directive.name)?.let { isVerbatim = it == TAB_ENVIRONMENT || it in ChordProSyntax.delegateEnvironments }
+                    ChordProSyntax.endOfEnvironment(directive.name)?.let { if (it == TAB_ENVIRONMENT || it in ChordProSyntax.delegateEnvironments) isVerbatim = false }
                     tokens += directive.tokens(
                         line = line,
                         lineStart = lineStart,
@@ -67,7 +67,7 @@ object ChordProHighlighter {
                     )
                 }
 
-                !isInsideTab -> ChordProSyntax.brackets(line).forEach { bracket ->
+                !isVerbatim -> ChordProSyntax.brackets(line).forEach { bracket ->
                     tokens += Token(
                         type = if (bracket.content.startsWith(ANNOTATION_PREFIX)) TokenType.ANNOTATION else TokenType.CHORD,
                         start = lineStart + bracket.range.first,

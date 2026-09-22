@@ -362,6 +362,14 @@ internal object ChordProSyntax {
     private val bodyNames = blockNames + setOf("new_song", "ns")
 
     /**
+     * The environments ChordPro hands to another program — ABC and LilyPond notation, SVG, a block of preformatted
+     * text. Their lines are that program's input rather than lyrics: `[CEG]` is an ABC chord of three notes, and moving
+     * it as a ChordPro chord would corrupt music nobody asked to change. They are kept line for line and nothing in
+     * them is a chord.
+     */
+    val delegateEnvironments = setOf("abc", "ly", "svg", "textblock")
+
+    /**
      * The label an environment directive gives its section: the whole value (`{sov: Verse 1}`), or its `label`
      * attribute where the value is written as attributes (`{sov label="Verse 1"}`, in either quotes). A value made of
      * attributes that has no label (`{start_of_grid shape="1+4x2+4"}`) gives none, rather than showing the attributes

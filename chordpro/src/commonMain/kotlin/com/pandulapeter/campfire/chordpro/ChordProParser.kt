@@ -109,6 +109,7 @@ object ChordProParser {
     private fun writtenChordNames(rawLine: String, trimmedLine: String, environment: String?) = when (environment) {
         TAB -> ChordProTabTransposer.chordNames(listOf(rawLine))
         GRID -> ChordProSyntax.parseGridTokens(trimmedLine).filterIsInstance<GridToken.Chord>().flatMap { ChordProSyntax.cellChords(it.name) }
+        in ChordProSyntax.delegateEnvironments -> emptyList()
         else -> parseLyrics(rawLine).chords.filter { !it.isAnnotation }.map { it.name }
     }
 
@@ -130,6 +131,7 @@ object ChordProParser {
             }
             section.close()
             section.open(sectionType(environment), ChordProSyntax.label(directive.value), isExplicit = true)
+            if (environment.lowercase() in ChordProSyntax.delegateEnvironments) section.openLineMode(LineMode.VERBATIM, label = null)
             return
         }
         ChordProSyntax.endOfEnvironment(name)?.let { environment ->
@@ -194,7 +196,7 @@ object ChordProParser {
         else -> null
     }
 
-    private enum class LineMode { TAB, GRID }
+    private enum class LineMode { TAB, GRID, VERBATIM }
 
     internal fun parseLyrics(rawLine: String): ChordProLine.Lyrics {
         val text = StringBuilder()
@@ -238,7 +240,10 @@ object ChordProParser {
         var isExplicit = false
             private set
 
-        /** Whether a `{start_of_tab}` or a `{start_of_grid}` is open, which says how lines are read and not what section they are in. */
+        /**
+         * Whether a `{start_of_tab}`, a `{start_of_grid}` or one of the verbatim environments is open, which says how
+         * lines are read and not what section they are in.
+         */
         val isInLineMode get() = lineMode != null
 
         fun open(type: SectionType, label: String?, isExplicit: Boolean, headingText: String? = null) {
@@ -323,6 +328,7 @@ object ChordProParser {
             lines += when (lineMode) {
                 LineMode.TAB -> ChordProLine.Tab(rawLine)
                 LineMode.GRID -> ChordProLine.Grid(ChordProSyntax.parseGridTokens(trimmedLine))
+                LineMode.VERBATIM -> ChordProLine.Lyrics(text = rawLine, chords = emptyList())
                 null -> parseLyrics(rawLine)
             }
         }
