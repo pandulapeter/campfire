@@ -93,8 +93,10 @@ URL, which has to be registered with the service — a deployment served from a 
 It is always written as the folder the page is served from — the `<base>`, not the address bar, which names the screen
 the button was pressed on — ending in `/`, with any `index.html` taken off, since the service matches it character for
 character and the same page opened as `…/campfire/index.html` would otherwise ask for a URI nobody registered:
-`https://pandulapeter.github.io/campfire/` for the deployment and `http://localhost:8080/` for the development server
-are the two entries.
+`https://pandulapeter.com/campfire/` for the deployment and `http://localhost:8080/` for the development server are
+the two entries. The deployment's is the custom domain rather than `pandulapeter.github.io/campfire/`, which
+redirects to it: the page is always running on the custom domain when it asks, and the service compares the URI as a
+string before any redirect could come into it.
 The answer therefore always lands on the songs' address, with the code in the query string: `restore` reports that
 this start up came back from a consent page (whatever the service answered) and `CampfireViewModel` opens the Library
 tab of Settings, which is the screen the user pressed the button on and which gets its own history entry on top. The
