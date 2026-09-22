@@ -379,7 +379,8 @@ start, which is what the rest of `app/web` is about — see its `CLAUDE.md`.
   web app manifest and no service worker, because every platform that should have an installable Campfire has a
   native build. A browser without Wasm GC is told so before the download starts.
 - `finishWebDistribution` (in `app/web/build.gradle.kts`) finalizes `wasmJsBrowserDistribution`: it writes that total
-  into `index.html`, and precompresses everything worth compressing.
+  into `index.html`, and precompresses the files when `campfire.web.precompress` is on — which it is not, since GitHub
+  Pages ignores the copies (see `app/web`).
 - OPFS, the file input and the download link are reached through `js(...)` blocks rather than through typed wrappers:
   one crossing of the Kotlin/Wasm boundary per operation is far cheaper than one per element, and several of these APIs
   have no binding. A Kotlin lambda cannot be passed into a `js(...)` block, so callbacks (file drops) come back as

@@ -68,14 +68,15 @@ val shouldPrecompress = project.property("campfire.web.precompress").toString().
 
 /**
  * Tells index.html what its progress bar is about to download - it can only measure the binaries
- * against a total it knows before the first byte arrives - and then writes a precompressed copy of
- * everything worth compressing next to it, for hosts that serve those.
+ * against a total it knows before the first byte arrives - and then, with `campfire.web.precompress`
+ * on, writes a precompressed copy of everything worth compressing next to it, for hosts that serve
+ * those.
  *
  * The page is written from its source rather than edited in place, so running this over the same
  * distribution twice produces the same distribution.
  */
 val finishWebDistribution = tasks.register("finishWebDistribution") {
-    description = "Fills in the build manifest of the web distribution and precompresses it."
+    description = "Fills in the build manifest of the web distribution and precompresses it if asked to."
     val root = distributionDirectory
     val templates = resourceDirectory
     val precompress = shouldPrecompress
