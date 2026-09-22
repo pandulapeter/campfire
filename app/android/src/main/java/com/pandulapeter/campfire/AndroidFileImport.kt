@@ -34,7 +34,8 @@ private val importScope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
 internal val filesToImport = pendingImports.receiveAsFlow()
 
 /**
- * Reads [uris] off the main thread and queues what could be read. The application context is enough to read
+ * Reads [uris] off the main thread and queues them, one that could not be read as an empty file that the import
+ * reports as skipped. The application context is enough to read
  * them with, since the permission an intent grants is held by the app for as long as the activity record lives,
  * not by the activity instance that received it.
  */

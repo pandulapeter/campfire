@@ -227,13 +227,20 @@ internal class AndroidFilePicker(@Provided private val context: Context) : FileP
 
 /**
  * Reads the documents the system handed over - picked, opened with Campfire, shared to it or dropped onto it - within
- * one [ImportBudget]. One that cannot be read is left out, so that one bad file does not lose the ones next to it.
+ * one [ImportBudget]. One that cannot be read is handed over empty, which the import reports as skipped: the user asked
+ * for it, and leaving it out would answer them with nothing at all - while one bad file still does not lose the ones
+ * next to it.
  */
 fun List<Uri>.toImportedFiles(context: Context): List<ImportedFile> {
     val budget = ImportBudget()
-    return mapNotNull { uri ->
+    return map { uri ->
+        // The query that knows the display name can be what fails, so it is asked on its own.
+        val (name, size) = try {
+            uri.nameAndSize(context)
+        } catch (exception: Exception) {
+            uri.fallbackName to null
+        }
         try {
-            val (name, size) = uri.nameAndSize(context)
             budget.read(name = name, size = size) { limit ->
                 // The size is the provider's own claim and is missing as often as not, so the read stops by itself.
                 context.contentResolver.openInputStream(uri)?.use { it.readAtMost(limit.toInt() + 1) }
@@ -241,7 +248,7 @@ fun List<Uri>.toImportedFiles(context: Context): List<ImportedFile> {
         } catch (exception: Exception) {
             println("Could not read \"$uri\": ${exception.message}")
             null
-        }
+        } ?: ImportedFile.unread(name)
     }
 }
 
