@@ -68,10 +68,17 @@ fun CampfireDesktopApp(
                 target = remember {
                     object : DragAndDropTarget {
                         override fun onDrop(event: DragAndDropEvent): Boolean {
-                            val paths = (event.awtTransferable.getTransferData(DataFlavor.javaFileListFlavor) as? List<*>)
-                                .orEmpty()
-                                .filterIsInstance<File>()
-                                .map { it.absolutePath }
+                            // The transferable is the drag source's, and converting it can fail however it was offered
+                            // (the JDK throws for a malformed uri-list on X11, or a source that is gone); an exception out
+                            // of here would also skip the end of the session, and the window would refuse every drag after
+                            // this one.
+                            val files = try {
+                                event.awtTransferable.getTransferData(DataFlavor.javaFileListFlavor) as? List<*>
+                            } catch (exception: Exception) {
+                                println("Could not read the dropped files: ${exception.message}")
+                                return false
+                            }
+                            val paths = files.orEmpty().filterIsInstance<File>().map { it.absolutePath }
                             // Only the paths are taken here: this is the AWT event thread, and the files are read off it.
                             scope.launch { viewModel.importFiles(withContext(Dispatchers.IO) { paths.readAsImportedFiles() }) }
                             return true
