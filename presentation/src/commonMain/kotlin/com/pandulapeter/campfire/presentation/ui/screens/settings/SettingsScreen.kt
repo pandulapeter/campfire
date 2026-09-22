@@ -560,7 +560,13 @@ private fun DistributionsSection(
             },
             icon = painterResource(distribution.icon),
             isEnabled = distribution.url != null,
-            onClick = { distribution.url?.let(urlOpener) },
+            // Every other build's own row leads to its listing, which is where it is rated or found for somebody
+            // else; the web build's listing is the page it is running in, so opening it would only load the app again.
+            onClick = if (distribution == Distribution.WEB && distribution == currentDistribution) {
+                null
+            } else {
+                { distribution.url?.let(urlOpener) }
+            },
         )
     }
     // Where a store's rules kept some of the builds off the list, the way to the rest is the project's own page. The

@@ -591,6 +591,9 @@ internal fun RadioListItem(
 /**
  * @param isEnabled False for a link that leads nowhere yet, which stays in its list, dimmed, with [description]
  *   saying why: a store the app has not reached.
+ * @param onClick Null for a row of a list of links that is not one itself - the web build's own entry, whose address
+ *   is the page it is already on - which is drawn at full strength, but with nothing to tap and no mark saying
+ *   that it opens something.
  */
 @Composable
 internal fun LinkListItem(
@@ -599,19 +602,22 @@ internal fun LinkListItem(
     description: String? = null,
     icon: Painter,
     isEnabled: Boolean = true,
-    onClick: () -> Unit,
+    onClick: (() -> Unit)?,
 ) = ListItem(
-    modifier = modifier.clickable(enabled = isEnabled, onClick = onClick).alpha(if (isEnabled) 1f else 0.5f),
+    modifier = (if (onClick == null) modifier else modifier.clickable(enabled = isEnabled, onClick = onClick))
+        .alpha(if (isEnabled) 1f else 0.5f),
     colors = ListItemDefaults.colors(containerColor = Color.Transparent),
     headlineContent = { Text(title) },
     supportingContent = description?.let { { Text(it) } },
     leadingContent = { Icon(painter = icon, contentDescription = null) },
-    trailingContent = {
-        Icon(
-            painter = painterResource(Res.drawable.ic_open_in_new),
-            contentDescription = null,
-            tint = MaterialTheme.colorScheme.onSurfaceVariant,
-        )
+    trailingContent = onClick?.let {
+        {
+            Icon(
+                painter = painterResource(Res.drawable.ic_open_in_new),
+                contentDescription = null,
+                tint = MaterialTheme.colorScheme.onSurfaceVariant,
+            )
+        }
     },
 )
 
