@@ -11,6 +11,7 @@ package com.pandulapeter.campfire.domain.implementation
 
 import com.pandulapeter.campfire.data.model.domain.ImportPlan
 import com.pandulapeter.campfire.data.model.domain.Setlist
+import com.pandulapeter.campfire.domain.implementation.ImportPlanner.withSongFileNames
 import kotlinx.coroutines.test.runTest
 import kotlin.test.Test
 import kotlin.test.assertEquals
@@ -70,6 +71,7 @@ internal class ImportPlannerTest {
                 ImportPlanner.IncomingSetlist(first, "summer_set.setlist.json"),
             ),
             librarySetlists = emptyList(),
+            songFileNames = emptyMap(),
         )
 
         assertEquals(listOf(ImportPlan.Status.NEW, ImportPlan.Status.NEW), planned.map { it.status })
@@ -84,6 +86,7 @@ internal class ImportPlannerTest {
         val planned = ImportPlanner.planSetlists(
             incoming = listOf(ImportPlanner.IncomingSetlist(incoming, "summer_set.setlist.json")),
             librarySetlists = listOf(library),
+            songFileNames = emptyMap(),
         )
 
         assertEquals(listOf(ImportPlan.Status.CONFLICTING), planned.map { it.status })
@@ -112,10 +115,100 @@ internal class ImportPlannerTest {
         val planned = ImportPlanner.planSetlists(
             incoming = listOf(ImportPlanner.IncomingSetlist(library.copy(fileName = "summer_set.setlist.json"), "old_name.setlist.json")),
             librarySetlists = listOf(library),
+            songFileNames = emptyMap(),
         )
 
         assertEquals(listOf("old_name.setlist.json"), planned.map { it.fileName })
         assertEquals(listOf(ImportPlan.Status.IDENTICAL), planned.map { it.status })
+    }
+
+    @Test
+    fun aSetlistFollowingAnEditedSongKeptNextToTheLibrarysIsANewSetlist() = runTest {
+        val (songs, setlists) = planEditedSongWithItsSetlist()
+        assertEquals(listOf(ImportPlan.Status.CONFLICTING), songs.map { it.status })
+        // Before anything is written, the plan expects the song in place, which is what replacing and skipping do.
+        assertEquals(listOf(ImportPlan.Status.IDENTICAL), setlists.map { it.status })
+
+        // Kept both, the song is written as song_2.cho, and the setlist pointing at it is not the library's any more.
+        val replanned = ImportPlanner.replanSetlists(
+            planned = setlists,
+            librarySetlists = listOf(SONG_SETLIST),
+            songFileNames = mapOf("song.cho" to "song_2.cho"),
+        )
+
+        assertEquals(listOf(ImportPlan.Status.CONFLICTING), replanned.map { it.status })
+        val written = replanned.single().setlist.withSongFileNames(mapOf("song.cho" to "song_2.cho"))
+        assertEquals(listOf("song_2.cho"), written.entries.map { it.songFileName })
+    }
+
+    @Test
+    fun aSetlistFollowingAnEditedSongThatReplacedOrLeftTheLibrarysIsTheSame() = runTest {
+        val (_, setlists) = planEditedSongWithItsSetlist()
+
+        // Replacing writes the song over song.cho and skipping leaves song.cho alone: either way it is where it was.
+        val replanned = ImportPlanner.replanSetlists(
+            planned = setlists,
+            librarySetlists = listOf(SONG_SETLIST),
+            songFileNames = mapOf("song.cho" to "song.cho"),
+        )
+
+        assertEquals(listOf(ImportPlan.Status.IDENTICAL), replanned.map { it.status })
+        assertEquals(listOf(SONG_SETLIST.fileName), replanned.map { it.fileName })
+    }
+
+    @Test
+    fun aSetlistIsComparedPointingWhereItsSongsLand() = runTest {
+        // The song arrives under a name its header does not give it, and the library already holds it as song_2.cho.
+        val songs = ImportPlanner.planSongs(
+            incoming = listOf(ImportPlanner.IncomingSong(fileName = "song.cho", text = B, sourceFileName = "Song.cho")),
+            libraryFileNames = listOf("song.cho", "song_2.cho"),
+            readLibraryText = { mapOf("song.cho" to A, "song_2.cho" to B)[it] },
+        )
+        val library = SONG_SETLIST.copy(entries = listOf(Setlist.Entry(songFileName = "song_2.cho")))
+        val setlists = ImportPlanner.planSetlists(
+            incoming = listOf(ImportPlanner.IncomingSetlist(SONG_SETLIST.withSongFileNames(mapOf("song.cho" to "Song.cho")), SONG_SETLIST.fileName)),
+            librarySetlists = listOf(library),
+            songFileNames = ImportPlanner.plannedSongFileNames(songs),
+        )
+
+        assertEquals(listOf(ImportPlan.Status.IDENTICAL), songs.map { it.status })
+        assertEquals(mapOf("Song.cho" to "song_2.cho"), ImportPlanner.plannedSongFileNames(songs))
+        assertEquals(listOf(ImportPlan.Status.IDENTICAL), setlists.map { it.status })
+    }
+
+    @Test
+    fun aSetlistWithItsNewSongIsNewAndPointsAtIt() = runTest {
+        val songs = ImportPlanner.planSongs(
+            incoming = listOf(ImportPlanner.IncomingSong(fileName = "song.cho", text = A, sourceFileName = "Song.cho")),
+            libraryFileNames = emptyList(),
+            readLibraryText = { null },
+        )
+        val songFileNames = ImportPlanner.plannedSongFileNames(songs)
+        val setlists = ImportPlanner.planSetlists(
+            incoming = listOf(ImportPlanner.IncomingSetlist(SONG_SETLIST.withSongFileNames(mapOf("song.cho" to "Song.cho")), SONG_SETLIST.fileName)),
+            librarySetlists = emptyList(),
+            songFileNames = songFileNames,
+        )
+
+        assertEquals(listOf(ImportPlan.Status.NEW), songs.map { it.status })
+        assertEquals(listOf(ImportPlan.Status.NEW), setlists.map { it.status })
+        assertFalse(ImportPlan(songs = songs, setlists = setlists).hasConflicts)
+        assertEquals(listOf("song.cho"), setlists.single().setlist.withSongFileNames(songFileNames).entries.map { it.songFileName })
+    }
+
+    /** The library holds song.cho and a setlist naming it; the import brings an edited song.cho and the same setlist. */
+    private suspend fun planEditedSongWithItsSetlist(): Pair<List<ImportPlan.SongEntry>, List<ImportPlan.SetlistEntry>> {
+        val songs = ImportPlanner.planSongs(
+            incoming = listOf(ImportPlanner.IncomingSong(fileName = "song.cho", text = B, sourceFileName = "song.cho")),
+            libraryFileNames = listOf("song.cho"),
+            readLibraryText = { mapOf("song.cho" to A)[it] },
+        )
+        val setlists = ImportPlanner.planSetlists(
+            incoming = listOf(ImportPlanner.IncomingSetlist(SONG_SETLIST, SONG_SETLIST.fileName)),
+            librarySetlists = listOf(SONG_SETLIST),
+            songFileNames = ImportPlanner.plannedSongFileNames(songs),
+        )
+        return songs to setlists
     }
 
     private suspend fun plan(library: Map<String, String>, vararg incoming: ImportPlanner.IncomingSong) =
@@ -135,6 +228,15 @@ internal class ImportPlannerTest {
     )
 
     private companion object {
+        val SONG_SETLIST = Setlist(
+            fileName = "set.setlist.json",
+            title = "Set",
+            description = "",
+            priority = 0,
+            isArchived = false,
+            entries = listOf(Setlist.Entry(songFileName = "song.cho")),
+            size = 0L,
+        )
         const val A = "{title: A}\nA\n"
         const val B = "{title: B}\nB\n"
         const val C = "{title: C}\nC\n"

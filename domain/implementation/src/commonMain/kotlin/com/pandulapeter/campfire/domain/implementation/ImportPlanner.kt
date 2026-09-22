@@ -82,31 +82,82 @@ internal object ImportPlanner {
         }
     }
 
-    /** Plans setlists by their collision family, without treating another file in the batch as a library conflict. */
-    fun planSetlists(incoming: List<IncomingSetlist>, librarySetlists: List<Setlist>): List<ImportPlan.SetlistEntry> {
+    /**
+     * Plans setlists by their collision family, without treating another file in the batch as a library conflict.
+     *
+     * A setlist is compared as it would be written, with every entry pointing where [songFileNames] (the name each song
+     * file arrived under, mapped to the library file it ends up as) says its song went: a setlist that names an
+     * incoming song is only the library's setlist when that song lands where the library's one points. Before anything
+     * is written that is where the plan expects the songs to go ([plannedSongFileNames]), which is the answer for
+     * everything but a conflicting song kept next to the library's one — the numbered name it gets is only known once
+     * it has been written, which is why [replanSetlists] asks again then.
+     */
+    fun planSetlists(
+        incoming: List<IncomingSetlist>,
+        librarySetlists: List<Setlist>,
+        songFileNames: Map<String, String>,
+    ) = planInOrder(
+        incoming = incoming.inArrivingOrder(SETLIST_EXTENSIONS, { it.setlist.fileName }, { it.sourceFileName }),
+        librarySetlists = librarySetlists,
+        songFileNames = songFileNames,
+    )
+
+    /**
+     * Plans the setlists of [planned] again once the songs have been written and [songFileNames] holds the names they
+     * actually got, keeping the order of the plan so that each result lines up with the entry it was planned from.
+     */
+    fun replanSetlists(
+        planned: List<ImportPlan.SetlistEntry>,
+        librarySetlists: List<Setlist>,
+        songFileNames: Map<String, String>,
+    ) = planInOrder(
+        incoming = planned.map { IncomingSetlist(setlist = it.setlist, sourceFileName = it.sourceFileName) },
+        librarySetlists = librarySetlists,
+        songFileNames = songFileNames,
+    )
+
+    /** Where the plan expects each song file to land: its own name, the library file it already is, or its repeat's. */
+    fun plannedSongFileNames(songs: List<ImportPlan.SongEntry>): Map<String, String> {
+        val fileNames = arrayOfNulls<String>(songs.size)
+        val songFileNames = mutableMapOf<String, String>()
+        songs.forEachIndexed { index, entry ->
+            val fileName = entry.repeatedEntryIndex?.let(fileNames::getOrNull) ?: entry.fileName
+            fileNames[index] = fileName
+            entry.sourceFileName?.let { songFileNames[it] = fileName }
+        }
+        return songFileNames
+    }
+
+    /** The setlist as it is written, every entry following its song to the name [songFileNames] gives it. */
+    fun Setlist.withSongFileNames(songFileNames: Map<String, String>) =
+        copy(entries = entries.map { entry -> entry.copy(songFileName = songFileNames[entry.songFileName] ?: entry.songFileName) })
+
+    private fun planInOrder(
+        incoming: List<IncomingSetlist>,
+        librarySetlists: List<Setlist>,
+        songFileNames: Map<String, String>,
+    ): List<ImportPlan.SetlistEntry> {
         val libraryFamilies = librarySetlists.map { it.fileName }.groupedByFamily(SETLIST_EXTENSIONS)
         val librarySetlistsByFileName = librarySetlists.associateBy { it.fileName }
         val plannedSetlists = mutableMapOf<String, MutableList<Setlist>>()
         val conflictingFileNames = mutableSetOf<String>()
-        return incoming.inArrivingOrder(SETLIST_EXTENSIONS, { it.setlist.fileName }, { it.sourceFileName }).map { (setlist, sourceFileName) ->
+        return incoming.map { (setlist, sourceFileName) ->
+            val written = setlist.withSongFileNames(songFileNames)
             val members = setlist.fileName.familyKeys(SETLIST_EXTENSIONS).firstOrNull()?.let(libraryFamilies::get).orEmpty()
                 .mapNotNull(librarySetlistsByFileName::get)
-            val identical = members.firstOrNull { it.holdsTheSameAs(setlist) }
+            val identical = members.firstOrNull { it.holdsTheSameAs(written) }
                 // See planSongs: a setlist file named before today's rule, arriving under that name.
-                ?: librarySetlistsByFileName[sourceFileName]?.takeIf { it.holdsTheSameAs(setlist) }
+                ?: librarySetlistsByFileName[sourceFileName]?.takeIf { it.holdsTheSameAs(written) }
             val planned = plannedSetlists.getOrPut(setlist.fileName) { mutableListOf() }
+            fun entry(fileName: String, status: ImportPlan.Status) =
+                ImportPlan.SetlistEntry(fileName = fileName, setlist = setlist, status = status, sourceFileName = sourceFileName)
             when {
-                identical != null -> ImportPlan.SetlistEntry(fileName = identical.fileName, setlist = setlist, status = ImportPlan.Status.IDENTICAL)
-                planned.any { it.holdsTheSameAs(setlist) } ->
-                    ImportPlan.SetlistEntry(fileName = setlist.fileName, setlist = setlist, status = ImportPlan.Status.IDENTICAL)
+                identical != null -> entry(fileName = identical.fileName, status = ImportPlan.Status.IDENTICAL)
+                planned.any { it.holdsTheSameAs(written) } -> entry(fileName = setlist.fileName, status = ImportPlan.Status.IDENTICAL)
                 else -> {
-                    planned += setlist
+                    planned += written
                     val isConflicting = setlist.fileName in librarySetlistsByFileName && conflictingFileNames.add(setlist.fileName)
-                    ImportPlan.SetlistEntry(
-                        fileName = setlist.fileName,
-                        setlist = setlist,
-                        status = if (isConflicting) ImportPlan.Status.CONFLICTING else ImportPlan.Status.NEW,
-                    )
+                    entry(fileName = setlist.fileName, status = if (isConflicting) ImportPlan.Status.CONFLICTING else ImportPlan.Status.NEW)
                 }
             }
         }

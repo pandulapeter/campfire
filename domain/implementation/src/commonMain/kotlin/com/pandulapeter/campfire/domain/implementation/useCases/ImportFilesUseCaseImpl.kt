@@ -15,6 +15,8 @@ import com.pandulapeter.campfire.data.model.domain.ImportResult
 import com.pandulapeter.campfire.data.repository.api.SetlistRepository
 import com.pandulapeter.campfire.data.repository.api.SongRepository
 import com.pandulapeter.campfire.domain.api.useCases.ImportFilesUseCase
+import com.pandulapeter.campfire.domain.implementation.ImportPlanner
+import com.pandulapeter.campfire.domain.implementation.ImportPlanner.withSongFileNames
 import kotlinx.coroutines.NonCancellable
 import kotlinx.coroutines.withContext
 import org.koin.core.annotation.Factory
@@ -58,17 +60,26 @@ class ImportFilesUseCaseImpl internal constructor(
                 entry.sourceFileName?.let { storedSongFileNames[it] = storedName }
             }
 
-            var priority = (setlistRepository.loadSetlistsIfNeeded().orEmpty().maxOfOrNull { it.priority } ?: -1) + 1
+            val librarySetlists = setlistRepository.loadSetlistsIfNeeded().orEmpty()
+            var priority = (librarySetlists.maxOfOrNull { it.priority } ?: -1) + 1
             val replacedSetlistFileNames = mutableSetOf<String>()
-            plan.setlists.forEach { entry ->
-                when (val action = entry.action(resolution)) {
+            // Planned again on the names the songs actually got: a song kept next to the one it collided with is
+            // numbered, and a setlist pointing at it is then no longer the library's setlist it was the same as.
+            val setlists = ImportPlanner.replanSetlists(
+                planned = plan.setlists,
+                librarySetlists = librarySetlists,
+                songFileNames = storedSongFileNames,
+            )
+            plan.setlists.zip(setlists).forEach { (planned, entry) ->
+                // A setlist the question was not about goes in numbered rather than being replaced or left out by it.
+                val action = if (entry.status == ImportPlan.Status.CONFLICTING && planned.status != ImportPlan.Status.CONFLICTING) {
+                    Action.WRITE
+                } else {
+                    entry.action(resolution)
+                }
+                when (action) {
                     Action.WRITE, Action.REPLACE -> importedSetlistFileNames += setlistRepository.importSetlist(
-                        setlist = entry.setlist.copy(
-                            priority = priority++,
-                            entries = entry.setlist.entries.map { setlistEntry ->
-                                setlistEntry.copy(songFileName = storedSongFileNames[setlistEntry.songFileName] ?: setlistEntry.songFileName)
-                            },
-                        ),
+                        setlist = entry.setlist.withSongFileNames(storedSongFileNames).copy(priority = priority++),
                         shouldReplace = action == Action.REPLACE && replacedSetlistFileNames.add(entry.fileName),
                     ).fileName
 

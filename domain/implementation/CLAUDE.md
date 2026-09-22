@@ -54,11 +54,17 @@ The ones that carry real logic:
   Preparing runs on `Dispatchers.Default`, because decoding, splitting, header parsing and comparisons would otherwise
   occupy the view model's main thread, and yields between songs so the web can paint and cancellation can stop it.
   its text and a setlist by its title and entries, never by the stored document, which carries a priority the import
-  assigns itself. `ImportPlanner` is covered by `commonTest`. Applying turns each entry plus the
+  assigns itself — and the entries as they will be written, each pointing where its song lands, so a setlist that
+  names an incoming song is only the library's one when the song ends up where the library's points. `ImportPlanner` is
+  covered by `commonTest`. Applying turns each entry plus the
   `ImportConflictResolution` into write / replace / disregard / leave alone, and only `REPLACE` ever overwrites.
   Songs are still written before setlists and the names they actually got are remembered, so that a setlist arriving in
   the same archive still points at its songs after a collision renamed one — a disregarded duplicate maps to the copy
-  the library already had. Preparing owns the import's size budget: every archive unpacks into what the ones before it
+  the library already had. The setlists are planned again on those names (`ImportPlanner.replanSetlists`), since the
+  plan could only expect each song in place: an edited song kept next to the library's is `x_2.cho`, and the unchanged
+  setlist naming it is then a different setlist under a taken name, which goes in numbered and points at `x_2.cho`
+  rather than being disregarded as the library's copy. A setlist that becomes a conflict only there was not part of
+  the question, so it is written numbered whatever the answer was. Preparing owns the import's size budget: every archive unpacks into what the ones before it
   left, and a file over its limit goes to `ImportPlan.oversizedFileNames`, which the UI reports on its own line.
 - `ExportLibraryUseCaseImpl` / `ExportSongsUseCaseImpl` / `ExportSetlistUseCaseImpl` — decide what leaves as what: a
   single song is the `.cho` file as it is on disk, everything else is a zip. The user's transposition is never baked in.

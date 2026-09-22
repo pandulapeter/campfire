@@ -82,9 +82,10 @@ class PrepareImportUseCaseImpl internal constructor(
             }
         }
 
+        val songs = planSongs(songFiles, skippedFileNames)
         return ImportPlan(
-            songs = planSongs(songFiles, skippedFileNames),
-            setlists = planSetlists(setlistFiles, skippedFileNames),
+            songs = songs,
+            setlists = planSetlists(setlistFiles, skippedFileNames, ImportPlanner.plannedSongFileNames(songs)),
             skippedFileNames = skippedFileNames,
             oversizedFileNames = oversizedFileNames,
         )
@@ -128,7 +129,11 @@ class PrepareImportUseCaseImpl internal constructor(
     }
 
     /** Every setlist of the batch held against the library by [ImportPlanner]. */
-    private suspend fun planSetlists(files: List<ImportedFile>, skippedFileNames: MutableList<String>): List<ImportPlan.SetlistEntry> {
+    private suspend fun planSetlists(
+        files: List<ImportedFile>,
+        skippedFileNames: MutableList<String>,
+        songFileNames: Map<String, String>,
+    ): List<ImportPlan.SetlistEntry> {
         val incoming = files.mapNotNull { file ->
             yield()
             val setlist = setlistRepository.parseSetlist(file.bytes.decodeLibraryText())
@@ -141,6 +146,7 @@ class PrepareImportUseCaseImpl internal constructor(
         return ImportPlanner.planSetlists(
             incoming = incoming,
             librarySetlists = setlistRepository.loadSetlistsIfNeeded().orEmpty(),
+            songFileNames = songFileNames,
         )
     }
 

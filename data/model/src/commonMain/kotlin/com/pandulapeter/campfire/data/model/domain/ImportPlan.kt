@@ -67,8 +67,14 @@ data class ImportPlan(
 
     data class SetlistEntry(
         val fileName: String,
+        /**
+         * The setlist as it arrived, its entries naming the song files of the import. Where those songs end up is
+         * only known once they have been written, and the status is decided on the setlist pointing there.
+         */
         val setlist: Setlist,
         val status: Status,
+        /** The name of the file it arrived in, which the setlist is planned again under once the songs are written. */
+        val sourceFileName: String,
     )
 
     /** What the library already has under the name the entry wants. */
@@ -79,7 +85,7 @@ data class ImportPlan(
         /**
          * The library — under this name or a numbered sibling of it — or an earlier file of the same import already
          * is exactly this, so the import has nothing to do. Songs are compared by their text and setlists by their
-         * title and entries - never by the stored document, which
+         * title and entries, pointing at the songs where the import puts them - never by the stored document, which
          * carries a priority the import assigns itself.
          */
         IDENTICAL,
