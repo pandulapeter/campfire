@@ -24,7 +24,7 @@ object ChordProTags {
      * the directives it opens with. A blank tag, or one the song already carries, returns the text unchanged.
      */
     fun addTag(text: String, tag: String): String {
-        val trimmedTag = tag.trim()
+        val trimmedTag = tag.asTag()
         if (trimmedTag.isEmpty() || ChordProParser.parseMetadata(text).tags.any { it.equals(trimmedTag, ignoreCase = true) }) return text
         val lines = ChordProSyntax.splitLines(text).toMutableList()
         lines.add(ChordProSyntax.metadataInsertionIndex(lines, ChordProSyntax.TAG_NAME), "{${ChordProSyntax.TAG_NAME}: $trimmedTag}")
@@ -36,7 +36,7 @@ object ChordProTags {
      * one tag, so there is never anything left of the line to keep.
      */
     fun removeTag(text: String, tag: String): String {
-        val trimmedTag = tag.trim()
+        val trimmedTag = tag.asTag()
         if (trimmedTag.isEmpty()) return text
         val lines = ChordProSyntax.splitLines(text).filterNot { line -> line.tag()?.equals(trimmedTag, ignoreCase = true) == true }
         return ChordProSyntax.joinLines(lines, text)
@@ -44,4 +44,9 @@ object ChordProTags {
 
     /** The tag of a line that is a tag directive, null for every other line. */
     private fun String.tag() = ChordProSyntax.matchDirective(trim())?.let { ChordProSyntax.tag(it) }
+
+    /** A tag is one line of the file, so the line breaks a pasted value may carry are the spaces between its words. */
+    private fun String.asTag() = replace(lineBreakRegex, " ").trim()
+
+    private val lineBreakRegex = Regex("[\\r\\n]+")
 }

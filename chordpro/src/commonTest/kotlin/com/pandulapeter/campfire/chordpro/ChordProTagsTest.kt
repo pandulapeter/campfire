@@ -120,4 +120,30 @@ class ChordProTagsTest {
     fun `a file without a trailing line break does not gain one`() {
         assertEquals("{title: A}\n{tag: x}\nla", ChordProTags.addTag("{title: A}\nla", "x"))
     }
+
+    @Test
+    fun `a line break inside a tag becomes a space`() {
+        listOf("Christmas\rCarols", "Christmas\r\nCarols", "Christmas\nCarols").forEach { tag ->
+            val text = ChordProTags.addTag("{title: X}\n", tag)
+            val song = ChordProParser.parse(text)
+
+            assertEquals("{title: X}\n{tag: Christmas Carols}\n", text)
+            assertEquals(listOf("Christmas Carols"), song.metadata.tags)
+            assertEquals(emptyList(), song.blocks)
+        }
+    }
+
+    @Test
+    fun `a tag cannot write a second directive`() {
+        val song = ChordProParser.parse(ChordProTags.addTag("{title: X}\n", "x}\r{title: Hijacked}"))
+
+        assertEquals("X", song.metadata.title)
+    }
+
+    @Test
+    fun `a tag added with a line break is removed with the same value`() {
+        val text = "{title: T}\n\nThe first line\n"
+
+        assertEquals(text, ChordProTags.removeTag(ChordProTags.addTag(text, "a\rb"), "a\rb"))
+    }
 }

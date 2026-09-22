@@ -631,7 +631,7 @@ private fun NewSongDialog(
                 OutlinedTextField(
                     modifier = Modifier.fillMaxWidth().focusRequester(focusRequester),
                     value = title,
-                    onValueChange = { title = it.replace("\n", "").take(MAX_TITLE_LENGTH) },
+                    onValueChange = { title = it.asSingleLine().take(MAX_TITLE_LENGTH) },
                     label = { Text(stringResource(Res.string.songs_new_song_title)) },
                     singleLine = true,
                     keyboardOptions = KeyboardOptions(imeAction = ImeAction.Next),
@@ -640,7 +640,7 @@ private fun NewSongDialog(
                 OutlinedTextField(
                     modifier = Modifier.fillMaxWidth(),
                     value = artist,
-                    onValueChange = { artist = it.replace("\n", "").take(MAX_TITLE_LENGTH) },
+                    onValueChange = { artist = it.asSingleLine().take(MAX_TITLE_LENGTH) },
                     label = { Text(stringResource(Res.string.songs_new_song_artist)) },
                     singleLine = true,
                     keyboardOptions = KeyboardOptions(imeAction = ImeAction.Done),
@@ -690,7 +690,7 @@ private fun AddSongTagDialog(
                 OutlinedTextField(
                     modifier = Modifier.fillMaxWidth().focusRequester(focusRequester),
                     value = value,
-                    onValueChange = { value = it.replace("\n", "").take(MAX_TAG_LENGTH) },
+                    onValueChange = { value = it.asSingleLine().take(MAX_TAG_LENGTH) },
                     label = { Text(stringResource(Res.string.song_details_tag_name)) },
                     singleLine = true,
                     keyboardOptions = KeyboardOptions(imeAction = ImeAction.Done),
@@ -1212,3 +1212,8 @@ private const val MAX_DESCRIPTION_LENGTH = 300
 private const val DESCRIPTION_LINES = 3
 private val MAX_SUGGESTIONS_HEIGHT = 160.dp
 private val MAX_LANGUAGES_HEIGHT = 320.dp
+
+/** A field whose value becomes one line of a song file: a pasted line break is the space between two words. */
+private fun String.asSingleLine() = replace(lineBreakRegex, " ")
+
+private val lineBreakRegex = Regex("[\\r\\n]+")

@@ -51,7 +51,7 @@ in `:domain:*`. `:data:source:local:implementation` uses it directly for the met
   formatting does not have to survive this; `parse(serialize(parse(x))) == parse(x)` does.
 - `ChordProTags` — the tags of a song. ChordPro's own `{tag: Needs study}` directive, one tag per directive and as
   many of them as the song has; `{meta: tag Needs study}`, which the spec documents as the same thing, is read as
-  well but never written. The value is taken whole, commas included, because the spec calls a tag arbitrary text.
+  well but never written. The value is taken whole, commas included, because the spec calls a tag arbitrary text — arbitrary text on one line: a line break in a value handed to `addTag` or `removeTag` is read as a space, since it would otherwise end the directive and leave the rest of it in the song as lyrics.
   Two spellings of the same word are one tag everywhere: matching ignores case, and the library shows the spelling
   of the song that comes first by file name. `addTag` and `removeTag` edit the text rather than the model, for the same
   reason `ChordProTransposer.transposeText` does — the result is written straight back to the user's file, so their
