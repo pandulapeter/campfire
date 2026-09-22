@@ -167,7 +167,8 @@ item bound to the device and `FileStorage.keepOutOfDeviceBackup` on the index.
 - The file name is a song's (and a setlist's) identity. Nothing is ever overwritten implicitly: a new or imported file
   that collides gets a `_2`, `_3`… suffix (`FileNames.kt`). An **import decides before it writes**: every incoming
   file is held against the name it wants (`PrepareImportUseCase` -> `ImportPlan`), a song the library already holds
-  under that name or a numbered sibling of it (`x_2.cho`) is disregarded rather than copied (for a song, line endings
+  under that name or a numbered sibling of it (`x_2.cho`) — or under the very name it arrived with, which is what an
+  export of a file named by an older rule carries — is disregarded rather than copied (for a song, line endings
   and blank lines at either end of the file aside, `ChordProSplitter.comparable`), and two different files of one
   batch that want the same name are never a question: the second is numbered like any other collision. The names
   taken by something *different* are put to the user as one question about the whole batch — keep both, replace,

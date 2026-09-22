@@ -157,4 +157,21 @@ internal class FileNamesTest {
         assertFalse(LibraryFileKind.SONG.matches("._a.cho"))
         assertTrue(LibraryFileKind.SETLIST.matches("s.setlist.json"))
     }
+
+    @Test
+    fun everyLatinLetterFoldsToItsBaseLetter() {
+        assertEquals("gesi_za_woda", LibraryFiles.normalizedName("Gęsi za wodą"))
+        // The same title decomposed, which is how macOS and some tools store it, arrives at the same name.
+        assertEquals("gesi_za_woda", LibraryFiles.normalizedName("Ge\u0328si za woda\u0328"))
+        assertEquals("isik", LibraryFiles.normalizedName("Işık"))
+        assertEquals("istanbul", LibraryFiles.normalizedName("İstanbul"))
+        // The cedilla spelling of the Romanian letters is at least as common as the comma below.
+        assertEquals("sarki", LibraryFiles.normalizedName("Şarkı"))
+        assertEquals("tara", LibraryFiles.normalizedName("Ţara"))
+        assertEquals("viet_nam", LibraryFiles.normalizedName("Việt Nam"))
+        assertEquals("dorde", LibraryFiles.normalizedName("Đorđe"))
+        assertEquals("thu", LibraryFiles.normalizedName("Þú"))
+        assertEquals("ijsselmeer", LibraryFiles.normalizedName("Ĳsselmeer"))
+        listOf("gesi_za_woda", "isik", "viet_nam", "thu").forEach { assertEquals(it, LibraryFiles.normalizedName(it)) }
+    }
 }

@@ -46,6 +46,7 @@ internal object ImportPlanner {
         readLibraryText: suspend (fileName: String) -> String?,
     ): List<ImportPlan.SongEntry> {
         val libraryFamilies = libraryFileNames.groupedByFamily(LibraryFiles.SONG_EXTENSIONS)
+        val libraryFileNameSet = libraryFileNames.toHashSet()
         val families = mutableMapOf<String, SongFamily>()
         return incoming.inArrivingOrder(LibraryFiles.SONG_EXTENSIONS, { it.fileName }, { it.sourceFileName }).mapIndexed { index, song ->
             val family = families.getOrPut(song.fileName) {
@@ -55,10 +56,16 @@ internal object ImportPlanner {
                     readLibraryText = readLibraryText,
                 )
             }
+            // The library file the song arrived under, where that is not its own name. An export hands its songs out under
+            // their library names while the import names each one by its header, and a library file named before the rule it
+            // would be named by today (a letter the table did not know yet, or a file nobody ever renamed) is still the same
+            // song when it holds the same text.
+            val arrivedAs = song.sourceFileName?.takeIf { it != song.fileName && it in libraryFileNameSet }
             // Most songs of most imports are the only one of their name, and folding the text of every one of them
             // for a comparison nothing asks for would copy the whole batch once more.
-            val comparable = if (family.hasNothingToCompareWith) null else ChordProSplitter.comparable(song.text)
+            val comparable = if (family.hasNothingToCompareWith && arrivedAs == null) null else ChordProSplitter.comparable(song.text)
             val libraryFileName = comparable?.let(family::libraryFileNameOf)
+                ?: arrivedAs?.takeIf { readLibraryText(it)?.let(ChordProSplitter::comparable) == comparable }
             val repeatedEntryIndex = comparable?.let(family::plannedEntryIndexOf)
             when {
                 libraryFileName != null -> song.toEntry(fileName = libraryFileName, status = ImportPlan.Status.IDENTICAL)
@@ -81,10 +88,12 @@ internal object ImportPlanner {
         val librarySetlistsByFileName = librarySetlists.associateBy { it.fileName }
         val plannedSetlists = mutableMapOf<String, MutableList<Setlist>>()
         val conflictingFileNames = mutableSetOf<String>()
-        return incoming.inArrivingOrder(SETLIST_EXTENSIONS, { it.setlist.fileName }, { it.sourceFileName }).map { (setlist, _) ->
+        return incoming.inArrivingOrder(SETLIST_EXTENSIONS, { it.setlist.fileName }, { it.sourceFileName }).map { (setlist, sourceFileName) ->
             val members = setlist.fileName.familyKeys(SETLIST_EXTENSIONS).firstOrNull()?.let(libraryFamilies::get).orEmpty()
                 .mapNotNull(librarySetlistsByFileName::get)
             val identical = members.firstOrNull { it.holdsTheSameAs(setlist) }
+                // See planSongs: a setlist file named before today's rule, arriving under that name.
+                ?: librarySetlistsByFileName[sourceFileName]?.takeIf { it.holdsTheSameAs(setlist) }
             val planned = plannedSetlists.getOrPut(setlist.fileName) { mutableListOf() }
             when {
                 identical != null -> ImportPlan.SetlistEntry(fileName = identical.fileName, setlist = setlist, status = ImportPlan.Status.IDENTICAL)

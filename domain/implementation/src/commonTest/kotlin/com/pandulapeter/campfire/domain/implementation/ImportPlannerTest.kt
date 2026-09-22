@@ -89,6 +89,35 @@ internal class ImportPlannerTest {
         assertEquals(listOf(ImportPlan.Status.CONFLICTING), planned.map { it.status })
     }
 
+    @Test
+    fun aSongIsRecognizedUnderTheLibraryNameItArrivedWith() = runTest {
+        // Exported under a name the library gave it before the naming rule changed, and named by its header now.
+        val plan = plan(library = mapOf("old_name.cho" to A), song(text = A, sourceFileName = "old_name.cho"))
+
+        assertEquals(listOf("old_name.cho"), plan.map { it.fileName })
+        assertEquals(listOf(ImportPlan.Status.IDENTICAL), plan.map { it.status })
+    }
+
+    @Test
+    fun aDifferentSongUnderTheNameItArrivedWithIsNew() = runTest {
+        val plan = plan(library = mapOf("old_name.cho" to B), song(text = A, sourceFileName = "old_name.cho"))
+
+        assertEquals(listOf("x.cho"), plan.map { it.fileName })
+        assertEquals(listOf(ImportPlan.Status.NEW), plan.map { it.status })
+    }
+
+    @Test
+    fun aSetlistIsRecognizedUnderTheLibraryNameItArrivedWith() {
+        val library = setlist(fileName = "old_name.setlist.json", title = "Summer set")
+        val planned = ImportPlanner.planSetlists(
+            incoming = listOf(ImportPlanner.IncomingSetlist(library.copy(fileName = "summer_set.setlist.json"), "old_name.setlist.json")),
+            librarySetlists = listOf(library),
+        )
+
+        assertEquals(listOf("old_name.setlist.json"), planned.map { it.fileName })
+        assertEquals(listOf(ImportPlan.Status.IDENTICAL), planned.map { it.status })
+    }
+
     private suspend fun plan(library: Map<String, String>, vararg incoming: ImportPlanner.IncomingSong) =
         ImportPlanner.planSongs(incoming.toList(), library.keys) { library[it] }
 

@@ -42,7 +42,9 @@ The ones that carry real logic:
   tool's own hidden files left where they were, and one that was picked directly counted as skipped), sorts each file into song / setlist / skipped by its extension, splits
   a file holding several songs at `{new_song}` with `:chordpro`, asks `SongRepository.importFileName` what each song's
   own header names it — the name the file arrived under is
-  passed as a fallback *title*, for the songs that declare none, and is otherwise not used at all. `ImportPlanner`
+  passed as a fallback *title*, for the songs that declare none, and is otherwise only used to recognise a library
+  file of exactly that name holding the same text — an export hands songs out under their library names, and one
+  named before today's rule is still the same song. `ImportPlanner`
   compares a song with the whole family of its name (the unnumbered file and its numbered siblings), records a repeat
   in the batch by entry index, asks one conflict question per library name and leaves numbering to the write that can
   see the directory. Only a decision made before anything is written can be put to the user as one question about a

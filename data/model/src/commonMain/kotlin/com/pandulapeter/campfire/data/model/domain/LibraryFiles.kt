@@ -113,8 +113,13 @@ object LibraryFiles {
                 character in AND_SIGNS -> folded.append(NAME_SEPARATOR).append("and").append(NAME_SEPARATOR)
                 else -> when (val plain = character.withoutAccent()) {
                     'ß' -> folded.append("ss")
-                    'æ' -> folded.append("ae")
+                    'æ', 'ǣ', 'ǽ' -> folded.append("ae")
                     'œ' -> folded.append("oe")
+                    'þ' -> folded.append("th")
+                    'ĳ' -> folded.append("ij")
+                    'ǆ', 'ǳ' -> folded.append("dz")
+                    'ǉ' -> folded.append("lj")
+                    'ǌ' -> folded.append("nj")
                     else -> folded.append(if (plain in 'a'..'z' || plain in '0'..'9') plain else NAME_SEPARATOR)
                 }
             }

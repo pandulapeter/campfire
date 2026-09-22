@@ -14,30 +14,52 @@ package com.pandulapeter.campfire.data.model.domain
  * normalization behind sorting and searching (`:domain:implementation`) and by [LibraryFiles.normalizedName], which
  * both need a song title to come out as the plain letters someone would have typed looking for it.
  *
- * A `when` over the characters rather than a map, so that the lookup doesn't box a Char per character of a song, and
- * the Hungarian and Romanian letters the app was written around come before the rest of the Latin accents a song
- * title is likely to carry — so that "Édith" sorts next to "Edith" whichever language the artist sings in.
+ * The table is every lowercase letter of Latin-1, Latin Extended-A and -B and Latin Extended Additional that is a
+ * plain letter with marks on it, plus the letters drawn with a stroke or a bar, which Unicode does not decompose but
+ * which a keyboard without them spells with the bare letter all the same (`ł`, `đ`, the Turkish dotless `ı`). A
+ * letter left out of it is not kept either: `normalizedName` turns it into a separator, which files a Polish or a
+ * Vietnamese title under a name with holes in it, and under a different name from the same title written decomposed.
+ *
+ * Only lowercase letters are listed, since both callers lowercase first. A string per letter rather than a map, so
+ * that nothing boxes a Char, and everything below the first accented letter returns at once, which is almost every
+ * character of almost every song.
  *
  * Anything outside this table is left alone: Kotlin's common standard library has no Unicode normalizer, so this is
- * the whole of what the app knows about accents.
+ * the whole of what the app knows about accents. The letters that fold to two ("ß", "æ", "þ"…) are the file name's
+ * business, see [LibraryFiles.normalizedName].
  */
-fun Char.withoutAccent() = when (this) {
-    'á', 'à', 'â', 'ä', 'ã', 'å', 'ă', 'ā' -> 'a'
-    'é', 'è', 'ê', 'ë', 'ě', 'ē' -> 'e'
-    'í', 'ì', 'î', 'ï', 'ī' -> 'i'
-    'ó', 'ò', 'ô', 'ö', 'ő', 'õ', 'ø', 'ō' -> 'o'
-    'ú', 'ù', 'û', 'ü', 'ű', 'ů', 'ū' -> 'u'
-    'ý', 'ÿ' -> 'y'
-    'ç', 'č', 'ć' -> 'c'
-    'ñ', 'ň' -> 'n'
-    'ș', 'š', 'ś' -> 's'
-    'ț', 'ť' -> 't'
-    'ž', 'ź', 'ż' -> 'z'
-    'ď' -> 'd'
-    'ř' -> 'r'
-    'ł' -> 'l'
+fun Char.withoutAccent() = when {
+    this < FIRST_ACCENTED_LETTER -> this
+    this in "àáâãäåāăąǎǟǡǻȁȃȧḁạảấầẩẫậắằẳẵặẚ" -> 'a'
+    this in "ƀḃḅḇ" -> 'b'
+    this in "çćĉċčḉ" -> 'c'
+    this in "ďđðḋḍḏḑḓ" -> 'd'
+    this in "èéêëēĕėęěȅȇȩḕḗḙḛḝẹẻẽếềểễệ" -> 'e'
+    this in "ḟ" -> 'f'
+    this in "ĝğġģǥǧǵḡ" -> 'g'
+    this in "ĥħȟḣḥḧḩḫẖ" -> 'h'
+    this in "ìíîïĩīĭįıǐȉȋḭḯỉị" -> 'i'
+    this in "ĵǰȷ" -> 'j'
+    this in "ķǩḱḳḵ" -> 'k'
+    this in "ĺļľŀłḷḹḻḽ" -> 'l'
+    this in "ḿṁṃ" -> 'm'
+    this in "ñńņňǹṅṇṉṋ" -> 'n'
+    this in "òóôõöøōŏőơǒǫǭǿȍȏȫȭȯȱṍṏṑṓọỏốồổỗộớờởỡợ" -> 'o'
+    this in "ṕṗ" -> 'p'
+    this in "ŕŗřȑȓṙṛṝṟ" -> 'r'
+    this in "śŝşšșſṡṣṥṧṩẛ" -> 's'
+    this in "ţťțŧṫṭṯṱẗ" -> 't'
+    this in "ùúûüũūŭůűųưǔǖǘǚǜȕȗṳṵṷṹṻụủứừửữự" -> 'u'
+    this in "ṽṿ" -> 'v'
+    this in "ŵẁẃẅẇẉẘ" -> 'w'
+    this in "ẋẍ" -> 'x'
+    this in "ýÿŷȳẏẙỳỵỷỹ" -> 'y'
+    this in "źżžƶẑẓẕ" -> 'z'
     else -> this
 }
+
+/** À, the first accented letter of Latin-1: nothing below it has an accent to lose. */
+private const val FIRST_ACCENTED_LETTER = '\u00C0'
 
 /**
  * A combining mark of the block that carries every Latin accent. A title can arrive decomposed - an "é" written as "e"
