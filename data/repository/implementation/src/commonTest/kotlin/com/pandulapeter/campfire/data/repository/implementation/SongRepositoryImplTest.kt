@@ -12,11 +12,14 @@ package com.pandulapeter.campfire.data.repository.implementation
 import com.pandulapeter.campfire.data.model.domain.Song
 import com.pandulapeter.campfire.data.model.domain.SongContent
 import com.pandulapeter.campfire.data.source.local.api.SongLocalSource
+import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.test.advanceUntilIdle
+import kotlinx.coroutines.test.runCurrent
 import kotlinx.coroutines.test.runTest
 import kotlinx.coroutines.yield
 import kotlin.test.Test
@@ -106,10 +109,47 @@ class SongRepositoryImplTest {
         assertEquals(listOf(FILE_NAME), repository.songs.first().data?.map { it.fileName })
     }
 
-    /** A library held in a map, with only the calls a save and a creation make answered. */
+    @Test
+    fun `a deletion whose caller is cancelled after the file went is gone from the list too`() = runTest {
+        val localSource = FakeSongLocalSource(mapOf(FILE_NAME to "text"))
+        val repository = SongRepositoryImpl(localSource, SongContentRepositoryImpl(localSource))
+        repository.loadSongsIfNeeded()
+        val gate = CompletableDeferred<Unit>().also { localSource.afterWriteGate = it }
+
+        val job = launch { repository.deleteSong(FILE_NAME) }
+        runCurrent()
+        job.cancel()
+        gate.complete(Unit)
+        advanceUntilIdle()
+
+        assertTrue(FILE_NAME !in localSource.files)
+        assertEquals(emptyList(), repository.loadSongsIfNeeded()?.map { it.fileName })
+    }
+
+    @Test
+    fun `a guarded save cancelled after it wrote updates the list`() = runTest {
+        val localSource = FakeSongLocalSource(mapOf(FILE_NAME to "opened"))
+        val repository = SongRepositoryImpl(localSource, SongContentRepositoryImpl(localSource))
+        repository.loadSongsIfNeeded()
+        val gate = CompletableDeferred<Unit>().also { localSource.afterWriteGate = it }
+
+        val job = launch { repository.saveSong(SongContent(FILE_NAME, "retitled"), expectedText = "opened") }
+        runCurrent()
+        job.cancel()
+        gate.complete(Unit)
+        advanceUntilIdle()
+
+        assertEquals("retitled", localSource.files[FILE_NAME])
+        assertEquals(listOf("retitled"), repository.loadSongsIfNeeded()?.map { it.title })
+    }
+
+    /** A library held in a map, with only the calls a save, a creation and a deletion make answered. */
     private class FakeSongLocalSource(files: Map<String, String>) : SongLocalSource {
 
         val files = files.toMutableMap()
+
+        /** Awaited once a save or a deletion has reached the map: the file changed, the caller has not heard yet. */
+        var afterWriteGate: CompletableDeferred<Unit>? = null
 
         override suspend fun loadSongs(onProgress: (List<Song>) -> Unit) = files.keys.map(::song)
 
@@ -119,6 +159,7 @@ class SongRepositoryImplTest {
 
         override suspend fun saveSongContent(content: SongContent) {
             files[content.fileName] = content.text
+            afterWriteGate?.await()
         }
 
         override suspend fun createSong(title: String, artist: String, text: String): Song {
@@ -135,13 +176,17 @@ class SongRepositoryImplTest {
 
         override suspend fun renameSong(song: Song) = throw UnsupportedOperationException()
 
-        override suspend fun deleteSong(fileName: String) = throw UnsupportedOperationException()
+        override suspend fun deleteSong(fileName: String) {
+            files.remove(fileName)
+            afterWriteGate?.await()
+        }
 
         override suspend fun exists(fileName: String) = fileName in files
 
         private fun song(fileName: String) = Song(
             fileName = fileName,
-            title = fileName,
+            // Titled with what the file holds, so that a list entry shows whether it was read before or after a save.
+            title = files[fileName] ?: fileName,
             artist = "",
             key = null,
             transpose = 0,

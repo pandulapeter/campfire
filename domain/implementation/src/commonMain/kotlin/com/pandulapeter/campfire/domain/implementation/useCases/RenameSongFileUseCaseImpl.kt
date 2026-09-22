@@ -15,6 +15,8 @@ import com.pandulapeter.campfire.data.repository.api.SongRepository
 import com.pandulapeter.campfire.data.repository.api.UserPreferencesRepository
 import com.pandulapeter.campfire.domain.api.useCases.RenameSongFileUseCase
 import kotlinx.coroutines.CancellationException
+import kotlinx.coroutines.NonCancellable
+import kotlinx.coroutines.withContext
 import org.koin.core.annotation.Factory
 
 @Factory
@@ -31,10 +33,17 @@ class RenameSongFileUseCaseImpl internal constructor(
      *
      * Once the file has moved there is no going back, so every reference is attempted even when an earlier one could
      * not be written, and the failures are reported together at the end: one setlist that cannot be saved would
-     * otherwise leave every setlist after it, and the transposition, pointing at a name that is gone.
+     * otherwise leave every setlist after it, and the transposition, pointing at a name that is gone. For the same
+     * reason the walk is not cancellable once the file has moved: a screen going away half way through would leave the
+     * rest of the references on the old name just the same.
      */
     override suspend operator fun invoke(song: Song): String? {
         val renamed = songRepository.renameSong(song)?.fileName ?: return null
+        withContext(NonCancellable) { updateReferences(song = song, renamed = renamed) }
+        return renamed
+    }
+
+    private suspend fun updateReferences(song: Song, renamed: String) {
         val failures = mutableListOf<Exception>()
         setlistRepository.loadSetlistsIfNeeded().orEmpty()
             .filter { setlist -> setlist.entries.any { it.songFileName == song.fileName } }
@@ -62,7 +71,6 @@ class RenameSongFileUseCaseImpl internal constructor(
         if (failures.isNotEmpty()) {
             throw IllegalStateException("The song was renamed, but ${failures.size} reference(s) to it could not be updated.", failures.first())
         }
-        return renamed
     }
 
     private suspend fun attempt(failures: MutableList<Exception>, block: suspend () -> Unit) {

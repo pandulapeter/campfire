@@ -13,8 +13,10 @@ import com.pandulapeter.campfire.data.model.domain.Setlist
 import com.pandulapeter.campfire.data.repository.api.SetlistRepository
 import com.pandulapeter.campfire.data.repository.implementation.base.BaseLocalDataRepository
 import com.pandulapeter.campfire.data.source.local.api.SetlistLocalSource
+import kotlinx.coroutines.NonCancellable
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
+import kotlinx.coroutines.withContext
 import org.koin.core.annotation.Single
 
 @Single
@@ -32,6 +34,11 @@ internal class SetlistRepositoryImpl(
      * crossing a change that is halfway through is how a setlist ends up holding the older of the two, twice in the
      * library, or back after it was deleted. It also covers the creations and the imports, from the storage finding a
      * name free to the file being there under it, so that two of them cannot be given the same one.
+     *
+     * The lock is waited for cancellably, so a change that has not started yet goes away with its screen, but what
+     * runs under it is one [NonCancellable] step ([writing]): the file and the cache change together or not at all.
+     * The repository outlives every screen, and a write that reached the disk with its caller cancelled on the way
+     * back would leave the cache on the old version, which the next change then builds on and writes over the file.
      */
     private val writeMutex = Mutex()
 
@@ -43,19 +50,19 @@ internal class SetlistRepositoryImpl(
         reloadData()
     }
 
-    override suspend fun createSetlist(title: String, description: String, priority: Int): Setlist = writeMutex.withLock {
+    override suspend fun createSetlist(title: String, description: String, priority: Int): Setlist = writing {
         setlistLocalSource.createSetlist(title = title, description = description, priority = priority).also { created ->
             updateData { current -> current.orEmpty().filterNot { it.fileName == created.fileName } + created }
         }
     }
 
-    override suspend fun saveSetlist(setlist: Setlist) = writeMutex.withLock { write(setlist) }
+    override suspend fun saveSetlist(setlist: Setlist) = writing { write(setlist) }
 
-    override suspend fun updateSetlist(fileName: String, transform: (Setlist) -> Setlist) = writeMutex.withLock {
+    override suspend fun updateSetlist(fileName: String, transform: (Setlist) -> Setlist) = writing {
         latest(fileName)?.let(transform)?.also { write(it) }
     }
 
-    override suspend fun renameSetlist(fileName: String, title: String, description: String) = writeMutex.withLock {
+    override suspend fun renameSetlist(fileName: String, title: String, description: String) = writing {
         latest(fileName)?.let { setlist ->
             setlistLocalSource.renameSetlist(setlist = setlist.copy(description = description), title = title).also { renamed ->
                 updateData { current ->
@@ -67,16 +74,19 @@ internal class SetlistRepositoryImpl(
 
     override suspend fun parseSetlist(document: String) = setlistLocalSource.parseSetlist(document)
 
-    override suspend fun importSetlist(setlist: Setlist, shouldReplace: Boolean) = writeMutex.withLock {
+    override suspend fun importSetlist(setlist: Setlist, shouldReplace: Boolean) = writing {
         setlistLocalSource.importSetlist(setlist, shouldReplace)
     }
 
     override suspend fun loadSetlistDocument(fileName: String) = setlistLocalSource.loadSetlistDocument(fileName)
 
-    override suspend fun deleteSetlist(fileName: String) = writeMutex.withLock {
+    override suspend fun deleteSetlist(fileName: String) = writing {
         setlistLocalSource.deleteSetlist(fileName)
         updateData { current -> current.orEmpty().filterNot { it.fileName == fileName } }
     }
+
+    /** Runs [block] under [writeMutex], taken cancellably and held until the block has finished whatever happens. */
+    private suspend fun <T> writing(block: suspend () -> T): T = writeMutex.withLock { withContext(NonCancellable) { block() } }
 
     /** The setlist as the cache has it. Only meaningful under [writeMutex], where no write can be halfway to it. */
     private suspend fun latest(fileName: String) = loadDataIfNeeded()?.firstOrNull { it.fileName == fileName }

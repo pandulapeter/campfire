@@ -155,12 +155,47 @@ class SetlistRepositoryImplTest {
         assertEquals(setOf(FILE_NAME, SECOND_FILE_NAME), localSource.files.keys)
     }
 
+    @Test
+    fun `a change whose caller is cancelled after the file was written still reaches the cache`() = runTest {
+        val localSource = FakeSetlistLocalSource(listOf(setlist(FILE_NAME, "a.cho")))
+        val repository = SetlistRepositoryImpl(localSource)
+        val gate = CompletableDeferred<Unit>().also { localSource.afterSaveGate = it }
+
+        val job = launch { repository.updateSetlist(FILE_NAME) { it.copy(entries = it.entries + Setlist.Entry("b.cho")) } }
+        runCurrent()
+        job.cancel()
+        gate.complete(Unit)
+        advanceUntilIdle()
+
+        assertEquals(listOf("a.cho", "b.cho"), repository.loadSetlistsIfNeeded()?.single()?.entries?.map { it.songFileName })
+    }
+
+    @Test
+    fun `a change cancelled before it took the lock writes nothing`() = runTest {
+        val localSource = FakeSetlistLocalSource(listOf(setlist(FILE_NAME, "a.cho")))
+        val repository = SetlistRepositoryImpl(localSource)
+        val gate = CompletableDeferred<Unit>().also { localSource.saveGate = it }
+
+        launch { repository.updateSetlist(FILE_NAME) { it.copy(entries = it.entries + Setlist.Entry("b.cho")) } }
+        runCurrent()
+        val second = launch { repository.updateSetlist(FILE_NAME) { it.copy(entries = it.entries + Setlist.Entry("c.cho")) } }
+        runCurrent()
+        second.cancel()
+        gate.complete(Unit)
+        advanceUntilIdle()
+
+        assertEquals(listOf("a.cho", "b.cho"), localSource.files.getValue(FILE_NAME).entries.map { it.songFileName })
+    }
+
     /** A setlists directory held in a map, whose writes can be held back until the test lets them through. */
     private class FakeSetlistLocalSource(setlists: List<Setlist>) : SetlistLocalSource {
 
         val files = setlists.associateBy { it.fileName }.toMutableMap()
 
         var saveGate: CompletableDeferred<Unit>? = null
+
+        /** Awaited once the file holds the new version: the write has reached the disk, the caller has not heard yet. */
+        var afterSaveGate: CompletableDeferred<Unit>? = null
 
         override suspend fun loadSetlists() = files.values.toList()
 
@@ -182,6 +217,7 @@ class SetlistRepositoryImplTest {
         override suspend fun saveSetlist(setlist: Setlist) {
             saveGate?.await()
             files[setlist.fileName] = setlist
+            afterSaveGate?.await()
         }
 
         override suspend fun renameSetlist(setlist: Setlist, title: String): Setlist {

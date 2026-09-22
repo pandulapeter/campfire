@@ -78,9 +78,10 @@ The ones that carry real logic:
 - `RenameSongFileUseCaseImpl` — the mirror image of `DeleteSongUseCaseImpl`: the same two places refer to a song by
   its file name (the setlists holding it, the saved transposition), and where a deletion drops those references a
   rename follows them. The file moves first, so nothing is ever pointed at a name that does not exist yet, and once it
-  has moved every reference is attempted even after one fails; the failures are thrown together at the end. Both walks
-  change each setlist through `updateSetlist`, so they build on the latest version of it and wait for a change that is
-  being written.
+  has moved every reference is attempted even after one fails; the failures are thrown together at the end, and the
+  walk is not cancellable once the file has moved (nor is the deletion's once the file is gone). Both walks change each
+  setlist through `updateSetlist`, so they build on the latest version of it and wait for a change that is being
+  written.
 - `SyncUseCaseImpls.kt` — all eight sync use cases in one file, since each is a line over `SyncRepository` and they
   are one feature. The two that are not: connecting runs a first sync straight away (an account connected onto a
   library that then stays empty leaves the user to work out that something else is expected of them), and restoring

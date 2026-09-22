@@ -13,6 +13,8 @@ import com.pandulapeter.campfire.data.repository.api.SetlistRepository
 import com.pandulapeter.campfire.data.repository.api.SongRepository
 import com.pandulapeter.campfire.data.repository.api.UserPreferencesRepository
 import com.pandulapeter.campfire.domain.api.useCases.DeleteSongUseCase
+import kotlinx.coroutines.NonCancellable
+import kotlinx.coroutines.withContext
 import org.koin.core.annotation.Factory
 
 @Factory
@@ -24,10 +26,15 @@ class DeleteSongUseCaseImpl internal constructor(
 
     /**
      * A deleted song must not stay behind as a dangling entry: every setlist that held it and its saved transposition
-     * are cleaned up too, so that nothing refers to a file that is no longer there.
+     * are cleaned up too, so that nothing refers to a file that is no longer there. Once the file is gone that walk is
+     * not cancellable, so a screen going away half way through cannot leave the rest of it undone.
      */
     override suspend operator fun invoke(fileName: String) {
         songRepository.deleteSong(fileName)
+        withContext(NonCancellable) { removeReferences(fileName) }
+    }
+
+    private suspend fun removeReferences(fileName: String) {
         setlistRepository.loadSetlistsIfNeeded().orEmpty()
             .filter { setlist -> setlist.entries.any { it.songFileName == fileName } }
             .forEach { setlist ->

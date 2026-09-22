@@ -55,10 +55,14 @@ import — is the only thing that walks the directory again.
   that cache, so a second change reads what the first one wrote, and a move or a deletion cannot cross a change that
   is halfway through. The cache is the one place that is current straight after a write; anything observing
   `setlists` catches up a few hops later. Creating and importing a setlist take it as well, from the storage finding
-  a name free to the file being there under it.
+  a name free to the file being there under it. The write and the cache update under that lock run as one
+  `NonCancellable` step, so a change whose screen goes away while it is being written is still in the cache the next
+  change reads; the lock itself is waited for cancellably.
 - `SongRepositoryImpl` has the same kind of lock for the three writers that pick a free name before they write
   (`createSong`, `importSong`, `renameSong`): finding the name and writing under it are two trips to the storage, and a
-  second asker in between is given the same name. Every change to either cached list replaces by file name and never
+  second asker in between is given the same name. Its writes (`createSong`, `renameSong`, `deleteSong`, and `saveSong`
+  once its guard has passed) change the file and the cached list as one `NonCancellable` step as well, the lock itself
+  still being waited for cancellably. Every change to either cached list replaces by file name and never
   appends, since the file name is what the lists key their rows by.
 - `SongContentRepositoryImpl` is not a `BaseLocalDataRepository`: it is a keyed in-memory cache of song *texts*, so
   paging through a setlist re-reads nothing. Bulk readers (the library export) pass `shouldCache = false` so that

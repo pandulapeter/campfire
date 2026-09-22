@@ -15,8 +15,10 @@ import com.pandulapeter.campfire.data.repository.api.SongContentRepository
 import com.pandulapeter.campfire.data.repository.api.SongRepository
 import com.pandulapeter.campfire.data.repository.implementation.base.BaseLocalDataRepository
 import com.pandulapeter.campfire.data.source.local.api.SongLocalSource
+import kotlinx.coroutines.NonCancellable
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
+import kotlinx.coroutines.withContext
 import org.koin.core.annotation.Single
 
 @Single
@@ -47,6 +49,11 @@ internal class SongRepositoryImpl(
     /**
      * Only the changed file is re-read: parsing the whole library again to pick up one edited title would make every
      * save in the editor cost a full rescan.
+     *
+     * Every change here writes the file and updates the list as one [NonCancellable] step, entered once the change has
+     * begun (its lock taken, its guard passed): the repository outlives the screen that asked, and a write that
+     * reached the disk with its caller cancelled on the way back would leave the list, and the next change built on
+     * it, on the old version.
      */
     override suspend fun saveSong(content: SongContent, expectedText: String?): Boolean {
         if (expectedText != null && songLocalSource.loadSongContent(content.fileName)?.text != expectedText) {
@@ -55,14 +62,17 @@ internal class SongRepositoryImpl(
             songContentRepository.invalidate(content.fileName)
             return false
         }
-        songLocalSource.saveSongContent(content)
-        songContentRepository.invalidate(content.fileName)
-        val updated = songLocalSource.loadSong(content.fileName) ?: return true
-        updateData { current -> current.orEmpty().filterNot { it.fileName == updated.fileName } + updated }
+        withContext(NonCancellable) {
+            songLocalSource.saveSongContent(content)
+            songContentRepository.invalidate(content.fileName)
+            songLocalSource.loadSong(content.fileName)?.let { updated ->
+                updateData { current -> current.orEmpty().filterNot { it.fileName == updated.fileName } + updated }
+            }
+        }
         return true
     }
 
-    override suspend fun createSong(title: String, artist: String, text: String): Song = nameMutex.withLock {
+    override suspend fun createSong(title: String, artist: String, text: String): Song = naming {
         songLocalSource.createSong(title = title, artist = artist, text = text).also { song ->
             // Replaced rather than appended, like every other change to the list: the file name is what the lists key
             // their rows by, so a name that is in the cache already - a file deleted behind the app's back whose name
@@ -77,8 +87,8 @@ internal class SongRepositoryImpl(
         songLocalSource.importSong(fileName = fileName, text = text, shouldReplace = shouldReplace)
     }
 
-    override suspend fun renameSong(song: Song): Song? = nameMutex.withLock {
-        val renamed = songLocalSource.renameSong(song) ?: return@withLock null
+    override suspend fun renameSong(song: Song): Song? = naming {
+        val renamed = songLocalSource.renameSong(song) ?: return@naming null
         songContentRepository.invalidate(song.fileName)
         updateData { current ->
             current.orEmpty().filterNot { it.fileName == song.fileName || it.fileName == renamed.fileName } + renamed
@@ -86,9 +96,12 @@ internal class SongRepositoryImpl(
         renamed
     }
 
-    override suspend fun deleteSong(fileName: String) {
+    override suspend fun deleteSong(fileName: String) = withContext(NonCancellable) {
         songLocalSource.deleteSong(fileName)
         songContentRepository.invalidate(fileName)
         updateData { current -> current.orEmpty().filterNot { it.fileName == fileName } }
     }
+
+    /** Runs [block] under [nameMutex], taken cancellably and held until the block has finished whatever happens. */
+    private suspend fun <T> naming(block: suspend () -> T): T = nameMutex.withLock { withContext(NonCancellable) { block() } }
 }
