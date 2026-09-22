@@ -11,15 +11,16 @@
 # workflow of its own that this one calls, so any of them can also be dispatched by hand, and a job that failed here
 # can be run again from the run's page without repeating the ones that went through.
 #
-# What Play shows as "what's new" is read out of the release's description, from comments the rendered page hides:
+# The "what's new" text for the stores is read out of the release's description, from comments the rendered page hides:
 #
-#   <!-- play-store en-US
+#   <!-- whats-new en-US
 #   - Up to 500 characters of plain text
 #   -->
-#   <!-- play-store update-priority: 3 -->
+#   <!-- play-store update-priority: 0 -->
 #
-# Both are optional. Without the notes the visible description stands in for them, with its markdown taken out, and the
-# priority is 0 unless it says otherwise (see the Updates section of CLAUDE.md for what the number decides).
+# The notes are written for every store that shows them, and Play is the one this reads them for so far; the priority
+# is Play's alone (see the Updates section of CLAUDE.md for what the number decides). Both are optional. Without the
+# notes the visible description stands in for them, with its markdown taken out, and without the priority it is 0.
 
 name: 'Release'
 
@@ -64,7 +65,7 @@ jobs:
 
           body = os.environ["RELEASE_BODY"].replace("\r\n", "\n")
 
-          match = re.search(r"<!--\s*play-store\s+en-US\s*\n(.*?)-->", body, re.S)
+          match = re.search(r"<!--\s*whats-new\s+en-US\s*\n(.*?)-->", body, re.S)
           english = match.group(1).strip() if match else ""
           if not english:
               visible = re.sub(r"<!--.*?-->", "", body, flags=re.S)

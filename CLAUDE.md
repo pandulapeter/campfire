@@ -286,7 +286,7 @@ item bound to the device and `FileStorage.keepOutOfDeviceBackup` on the index.
     build pointing at a copy of itself outside Play is what Play's policy is about. It is an **APK** and not an app bundle because the Play listing predates the bundle
     requirement and was never migrated; a `bundleRelease` would be rejected on upload. The "what's new" text comes
     from the workflow's `release_notes` input, which `release.yml` fills from comments in the release's description
-    that the rendered page hides (`<!-- play-store en-US … -->` and `<!-- play-store update-priority: 3 -->`; the
+    that the rendered page hides (`<!-- whats-new en-US … -->`, written for every store, and `<!-- play-store update-priority: 0 -->`; the
     format is in that file's header). It falls back to the visible description with its markdown taken out — or,
     dispatched by hand with nothing given, to the commit log since the previous tag. Every store listing is in
     English only, however many languages the app itself speaks. Its `update_priority` input is
