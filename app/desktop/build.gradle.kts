@@ -7,6 +7,8 @@
  * If a copy of the MPL was not distributed with this file, You can obtain one at
  * https://mozilla.org/MPL/2.0/.
  */
+import java.security.MessageDigest
+import javax.inject.Inject
 import org.jetbrains.compose.desktop.application.dsl.TargetFormat
 
 plugins {
@@ -32,6 +34,12 @@ version = versionName
 compose.desktop {
     application {
         mainClass = "com.pandulapeter.campfire.CampfireDesktopApplicationKt"
+        // The X11 toolkit's app class name is what a Linux desktop matches a window to its launcher by, and it is a
+        // private field of a package java.desktop does not export. Only on a Linux host, since jpackage packages for
+        // the machine it runs on and an --add-opens naming a package the runtime does not have warns on every start.
+        if (isLinuxHost) {
+            jvmArgs("--add-opens=java.desktop/sun.awt.X11=ALL-UNNAMED")
+        }
         buildTypes.release.proguard {
             configurationFiles.from(project.file("proguard-rules.pro"))
         }
@@ -91,6 +99,29 @@ compose.desktop {
     }
 }
 
+/**
+ * Adds StartupWMClass to the desktop entry jpackage writes, which is the key that ties the running window to the
+ * installed launcher: without it GNOME and KDE show the window under its WM_CLASS and a pin creates a second,
+ * iconless entry. jpackage would take a .desktop template through --resource-dir, but the Compose plugin fixes that
+ * directory, clears it inside its own task action and passes the flag after any freeArgs, so there is no way to hand
+ * it one - the key goes into the finished package instead. The value is what `setLinuxWindowClassName` in
+ * `:app:desktop`'s entry point sets the toolkit's app class name to; the two have to agree.
+ */
+val addStartupWmClassToDeb = tasks.register<AddStartupWmClassToDeb>("addStartupWmClassToDeb") {
+    onlyIf { isLinuxHost }
+    val packages = fileTree(layout.buildDirectory.dir("compose/binaries")) { include("main/deb/*.deb", "main-release/deb/*.deb") }
+    this.packages.from(packages)
+    windowClassName = "Campfire"
+    workingDirectory = layout.buildDirectory.dir("tmp/addStartupWmClassToDeb")
+    // The package is rewritten in place, so it is both what the task reads and what it leaves behind: an unchanged
+    // package is not unpacked and built again on every run.
+    inputs.files(packages)
+    outputs.files(packages)
+}
+tasks.matching { it.name == "packageDeb" || it.name == "packageReleaseDeb" }.configureEach {
+    finalizedBy(addStartupWmClassToDeb)
+}
+
 compose.resources {
     publicResClass = false
     packageOfResClass = "com.pandulapeter.campfire.resources"
@@ -99,6 +130,60 @@ compose.resources {
 
 kotlin {
     jvmToolchain(libs.versions.jvmTarget.get().toInt())
+}
+
+/** Whether this build runs on Linux, which is the only host jpackage builds the .deb on. */
+val isLinuxHost get() = System.getProperty("os.name").orEmpty().lowercase().contains("linux")
+
+/**
+ * Unpacks each .deb, adds the StartupWMClass key to its one desktop entry and builds it again. It fails rather than
+ * doing nothing when there is no entry to add the key to, since a package without it is wrong in a way only an
+ * installation shows. `fakeroot` keeps the repacked files owned by root, as they were; the entry's line in the
+ * package's md5sums is brought up to date with it, so that a check of the installed files does not report it.
+ */
+abstract class AddStartupWmClassToDeb : DefaultTask() {
+
+    @get:Inject
+    abstract val execOperations: ExecOperations
+
+    @get:Internal
+    abstract val packages: ConfigurableFileCollection
+
+    @get:Input
+    abstract val windowClassName: Property<String>
+
+    @get:Internal
+    abstract val workingDirectory: DirectoryProperty
+
+    @TaskAction
+    fun addStartupWmClass() {
+        val debs = packages.files.filter { it.isFile }
+        if (debs.isEmpty()) throw GradleException("There is no .deb to add StartupWMClass to.")
+        debs.forEach { deb ->
+            val extracted = workingDirectory.get().asFile.resolve(deb.nameWithoutExtension)
+            extracted.deleteRecursively()
+            execOperations.exec { commandLine("dpkg-deb", "--raw-extract", deb.absolutePath, extracted.absolutePath) }
+            val entries = extracted.walkTopDown()
+                .filter { it.isFile && it.extension == "desktop" && !it.relativeTo(extracted).startsWith("DEBIAN") }
+                .toList()
+            val entry = entries.singleOrNull()
+                ?: throw GradleException("Expected one desktop entry in ${deb.name}, found ${entries.size}.")
+            val lines = entry.readLines().filterNot { it.startsWith("StartupWMClass=") }
+            entry.writeText((lines + "StartupWMClass=${windowClassName.get()}").joinToString(separator = "\n", postfix = "\n"))
+            val md5sums = extracted.resolve("DEBIAN/md5sums")
+            if (md5sums.isFile) {
+                val entryPath = entry.relativeTo(extracted).invariantSeparatorsPath
+                val entryHash = MessageDigest.getInstance("MD5").digest(entry.readBytes()).joinToString("") { "%02x".format(it) }
+                md5sums.writeText(
+                    md5sums.readLines().joinToString(separator = "\n", postfix = "\n") { line ->
+                        if (line.substringAfter("  ") == entryPath) "$entryHash  $entryPath" else line
+                    }
+                )
+            }
+            execOperations.exec { commandLine("fakeroot", "dpkg-deb", "--build", extracted.absolutePath, deb.absolutePath) }
+            extracted.deleteRecursively()
+        }
+    }
 }
 
 /**

@@ -32,6 +32,7 @@ import com.pandulapeter.campfire.resources.Res
 import com.pandulapeter.campfire.resources.app_icon
 import java.awt.Desktop
 import java.awt.Dimension
+import java.awt.Toolkit
 import java.awt.event.WindowEvent
 import java.awt.event.WindowFocusListener
 import java.io.File
@@ -47,6 +48,8 @@ import org.koin.compose.viewmodel.koinViewModel
  *   [OpenedFiles].
  */
 fun main(args: Array<String>) {
+    // Before anything touches AWT, since the toolkit reads the name when its first window is created.
+    setLinuxWindowClassName()
     val activations = Channel<Unit>(Channel.CONFLATED)
     val isFirstInstance = claimSingleInstance(
         dataDirectory = desktopDataDirectory(),
@@ -141,5 +144,25 @@ private fun ComposeWindow.bringForward() {
     requestFocus()
     if (Desktop.isDesktopSupported()) {
         Desktop.getDesktop().takeIf { it.isSupported(Desktop.Action.APP_REQUEST_FOREGROUND) }?.requestForeground(true)
+    }
+}
+
+/**
+ * What GNOME and KDE match a window against to find the launcher it came from. AWT derives it from the class at the
+ * bottom of the stack with the dots turned into dashes, so the window would announce itself as
+ * "com-pandulapeter-campfire-CampfireDesktopApplicationKt": the string alt-tab shows, and the name a pinned shortcut
+ * is created under, beside the one the package installed. There is no API for it - the field belongs to the X11
+ * toolkit, which is why the packaged Linux launcher opens that package (see build.gradle.kts) - and no other
+ * platform has the field at all, so a failure here is a cosmetic loss and never a reason not to start. The value has
+ * to stay what `addStartupWmClassToDeb` writes into the installed desktop entry.
+ */
+private fun setLinuxWindowClassName() {
+    if (!System.getProperty("os.name").orEmpty().lowercase().contains("linux")) return
+    runCatching {
+        val toolkit = Toolkit.getDefaultToolkit()
+        toolkit.javaClass.getDeclaredField("awtAppClassName").apply {
+            isAccessible = true
+            set(toolkit, "Campfire")
+        }
     }
 }
