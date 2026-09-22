@@ -271,6 +271,15 @@ class CampfireViewModel(
     private val isDemoLibraryPending = MutableStateFlow(true)
 
     /**
+     * Completed once the first run has planted the demo library or found no reason to, which the consumer of
+     * [importQueue] waits for before it takes its first batch: a file opened with the app as it starts for the first
+     * time is queued long before that decision, and it belongs in a library that already has the demo in it rather
+     * than the other way round - where the file has a demo song's name, the question about it is then asked of the
+     * file the user opened, and not of songs they never asked for.
+     */
+    private val demoLibraryDecision = CompletableDeferred<Unit>()
+
+    /**
      * True while a place the app was asked to open on is waiting for the library to be read, see [navigateOnLaunch].
      * The launch screen waits for it too ([hasLibraryToShow]), so that the app is uncovered on the screen it was
      * asked for rather than on the song list, a moment before that screen slides in over it.
@@ -746,6 +755,7 @@ class CampfireViewModel(
             }
         }
         viewModelScope.launch {
+            demoLibraryDecision.await()
             for (request in importQueue) {
                 try {
                     import(request)
@@ -1380,18 +1390,26 @@ class CampfireViewModel(
         try {
             if (isFirstRun()) {
                 // Waited for rather than raced: what is being asked is whether the library is empty, and every
-                // library looks empty while it is still being read.
+                // library looks empty while it is still being read. Nothing else writes to it meanwhile, since the
+                // import queue waits for this.
                 val library = screenData.first { it !is DataState.Loading }.data
                 if (library != null && library.unfilteredSongs.isEmpty() && library.setlists.isEmpty()) {
-                    // Through the queue like any other batch, so that a file opened with the app as it starts for
-                    // the first time is imported after the demo rather than racing it.
-                    readDemoLibrary()?.let { files -> enqueueImport(files, shouldAnnounceResult = false).await() }
+                    // Imported here rather than through importQueue, where a file opened with the app is already
+                    // waiting; see demoLibraryDecision. An empty library has no names for it to collide with, so
+                    // this never asks anything.
+                    readDemoLibrary()?.let { files ->
+                        import(ImportRequest(files = files, shouldAnnounceResult = false, shouldOpenSong = false))
+                        awaitImportSettled()
+                    }
                 }
+                // Before the preferences are written rather than after: the queue has no reason to wait for those.
+                demoLibraryDecision.complete(Unit)
                 saveUserPreferences(userPreferences.filterNotNull().first())
             }
         } finally {
             // In a finally rather than at the end: whatever went wrong, the app is no longer waiting for this, and
-            // the launch screen is over the whole of it.
+            // the launch screen is over the whole of it - and neither is the queue of imports.
+            demoLibraryDecision.complete(Unit)
             isDemoLibraryPending.update { false }
         }
     }
@@ -1417,8 +1435,9 @@ class CampfireViewModel(
      * plan is kept here rather than in the dialog: the answer can arrive long after the screen that started this.
      */
     private suspend fun import(request: ImportRequest) {
-        // Only ever called by the consumer of importQueue, which waits for each import to settle before the next, so
-        // this holds by construction; it is kept so that a second caller could not start an import over a running one.
+        // Only ever called by the consumer of importQueue, which waits for each import to settle before the next, and
+        // by the first run's demo library before that consumer takes anything, so this holds by construction; it is
+        // kept so that a second caller could not start an import over a running one.
         if (request.files.isEmpty() || _isImporting.value || pendingImport != null) return
         _isImporting.update { true }
         val plan = try {
