@@ -1466,7 +1466,10 @@ class CampfireViewModel(
      */
     private suspend fun applyImportPlan(plan: ImportPlan, resolution: ImportConflictResolution, request: ImportRequest) {
         try {
-            val result = importFiles.invoke(plan, resolution)
+            // Not cancellable once it has started writing: the view model going away with the Android activity is no
+            // reason to leave an archive half imported - its setlists come after all of its songs - and the
+            // repositories the files go into outlive it, so whatever screen comes back finds the whole import.
+            val result = withContext(NonCancellable) { importFiles.invoke(plan, resolution) }
             if (request.shouldOpenSong && plan.songs.size == 1 && plan.setlists.isEmpty()) {
                 // A song that was already in the library is opened as well: it is still the song that was asked for,
                 // under the name the library has for it. One that the answer to the conflicts left out is in neither
