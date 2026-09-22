@@ -223,7 +223,8 @@ item bound to the device and `FileStorage.keepOutOfDeviceBackup` on the index.
 
 - Dependency versions in `gradle/libs.versions.toml` (including `android-compileSdk` / `android-minSdk`). The iOS
   version and build number are `campfire.versionName` and `campfire.ios.buildNumber`, written into the built
-  `Info.plist` by a build phase of the Xcode project, which sets no version of its own.
+  `Info.plist` by a build phase of the Xcode project, which sets no version of its own, reading `gradle.properties`
+  and then `local.properties` the way Gradle does.
 - **Everything configurable is a `campfire.*` Gradle property**, declared with a default in `gradle.properties` and
   read with `project.property("campfire.x")`: the app version, the Android version code and the iOS build number, the
   Android release signing values, the Dropbox app key, which of its four distributions a desktop build is, and
@@ -292,7 +293,8 @@ item bound to the device and `FileStorage.keepOutOfDeviceBackup` on the index.
   - `ios-publish.yml` builds the Release configuration for devices with `CODE_SIGNING_ALLOWED=NO` and zips the app
     into an `.ipa`, which no iPhone installs as it is — it is what a sideloading tool signs with its user's own Apple
     ID. The Xcode project starts Gradle itself and passes it no properties, so the sync key is written into
-    `local.properties` there. This is the workflow that becomes the TestFlight upload.
+    `local.properties` there — which the version build phase reads too, after `gradle.properties` and with the last
+    value winning, so a build number can be raised for a re-upload without a commit. This is the workflow that becomes the TestFlight upload.
   - `android-publish.yml` writes the keystore out of `ANDROID_KEYSTORE_BASE64`, builds `assembleRelease` signed with
     the other three `ANDROID_*` secrets, attaches the APK to the release it was called for — the same file Play
     gets, under the same signature, so an installation can move between the two — and uploads it and its mapping
