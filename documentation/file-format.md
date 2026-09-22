@@ -37,7 +37,8 @@ Campfire understands the core of the format:
   an optional label (`{sov: Verse 1}`, `{sov Verse 1}` or `{sov: label="Verse 1"}`), and `{chorus}` to repeat the last
   chorus.
 - **Content**: `[Chord]` markers anchored to the syllable that follows them, `[*annotations]`, tab lines kept exactly
-  as written, grid rows, `#` source comments, and `comment` / `comment_italic` / `comment_box` for shown ones.
+  as written, grid rows, `#` source comments, and `comment` / `highlight` / `comment_italic` / `comment_box` for shown
+  ones.
 - **Page directives** (`new_page`, `column_break`, …) are treated as layout hints; chord diagrams (`define`), fonts,
   colours and images are parsed and ignored.
 - `{new_song}` / `{ns}` splits one imported file into several songs.

@@ -153,6 +153,8 @@ object ChordProParser {
             "comment", "c" -> handleComment(directive.value.orEmpty().trim(), CommentStyle.PLAIN, blocks, section)
             "comment_italic", "ci" -> handleComment(directive.value.orEmpty().trim(), CommentStyle.ITALIC, blocks, section)
             "comment_box", "cb" -> handleComment(directive.value.orEmpty().trim(), CommentStyle.BOX, blocks, section)
+            // Never a Campfire 3 heading: that dialect wrote its headings as `{comment}` only.
+            "highlight" -> section.addBlock(ChordProBlock.Comment(directive.value.orEmpty().trim(), CommentStyle.PLAIN))
             "new_page", "np", "new_physical_page", "npp", "column_break", "colb" -> section.addBlock(ChordProBlock.Break)
             "new_song", "ns" -> Unit // Splitting is ChordProSplitter's job.
             else -> metadata.consume(directive)

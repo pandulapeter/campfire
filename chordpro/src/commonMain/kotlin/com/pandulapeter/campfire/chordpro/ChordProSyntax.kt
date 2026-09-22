@@ -365,8 +365,8 @@ internal object ChordProSyntax {
      * and which therefore cut whatever section they stand in into two, a run of tablature included.
      */
     val blockNames = setOf(
-        "chorus", "comment", "c", "comment_italic", "ci", "comment_box", "cb", "new_page", "np", "new_physical_page",
-        "npp", "column_break", "colb",
+        "chorus", "comment", "c", "comment_italic", "ci", "comment_box", "cb", "highlight", "new_page", "np",
+        "new_physical_page", "npp", "column_break", "colb",
     )
 
     private val bodyNames = blockNames + setOf("new_song", "ns")

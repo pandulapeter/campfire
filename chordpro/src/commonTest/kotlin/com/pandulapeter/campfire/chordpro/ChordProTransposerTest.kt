@@ -320,6 +320,17 @@ class ChordProTransposerTest {
     }
 
     @Test
+    fun `the two halves of a tab cut by a highlight are fingerboards of their own in the model as in the text`() {
+        val text = "{sot}\ne|--0--|\n{highlight: Higher}\ne|--20--|\n{eot}"
+
+        assertEquals(
+            ChordProTransposer.transpose(ChordProParser.parse(text), -2, preferFlats = false),
+            ChordProParser.parse(ChordProTransposer.transposeText(text, -2, preferFlats = false)),
+        )
+        assertEquals("{sot}\ne|--10-|\n{highlight: Higher}\ne|--18--|\n{eot}", ChordProTransposer.transposeText(text, -2, preferFlats = false))
+    }
+
+    @Test
     fun `a comment inside a grid leaves the rest of it a grid to transpose`() {
         val song = ChordProTransposer.transpose(ChordProParser.parse("{sog}\n| Am . |\n{c: x}\n| C . |\n{eog}"), 2)
 

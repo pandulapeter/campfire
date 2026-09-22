@@ -633,4 +633,17 @@ class ChordProParserTest {
         assertNull(ChordProSyntax.matchDirective("{tit!le: X}"))
         assertNull(ChordProSyntax.matchDirective("{title!: X}"))
     }
+
+    @Test
+    fun `a highlight is shown as a comment and never taken for a heading`() {
+        val blocks = ChordProParser.parse("{highlight: Chorus}\n[C]la").blocks
+
+        assertEquals(ChordProBlock.Comment("Chorus", CommentStyle.PLAIN), blocks.first())
+        assertEquals(SectionType.Paragraph, (blocks[1] as ChordProBlock.Section).type)
+        val tab = ChordProParser.parse("{sot}\ne|-3-|\n{highlight: x}\ne|-5-|\n{eot}").blocks
+        assertEquals(3, tab.size)
+        assertEquals(ChordProLine.Tab("e|-3-|"), (tab[0] as ChordProBlock.Section).lines.single())
+        assertEquals(ChordProBlock.Comment("x", CommentStyle.PLAIN), tab[1])
+        assertEquals(ChordProLine.Tab("e|-5-|"), (tab[2] as ChordProBlock.Section).lines.single())
+    }
 }
