@@ -22,12 +22,15 @@ import com.pandulapeter.campfire.data.source.remote.api.PendingAuthorizationStor
 import com.pandulapeter.campfire.data.source.remote.api.SyncAuthenticator
 import com.pandulapeter.campfire.data.source.remote.api.model.AuthorizationCompletionPage
 import com.pandulapeter.campfire.data.source.remote.api.model.RemoteAuthorizationRequest
+import kotlinx.coroutines.currentCoroutineContext
+import kotlinx.coroutines.ensureActive
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.emptyFlow
 
 /**
  * The two documents sync keeps between runs, held in memory. [onSaveIndex] runs before a write of the index is
- * stored, which is where a test makes that write fail by throwing from it.
+ * stored, which is where a test makes that write fail by throwing from it. A cancelled caller's write is refused the
+ * way the real storage's is, whose writes are a `withContext` and so answer a cancellation on the way in.
  */
 internal class FakeSyncStateLocalSource(
     var index: String? = null,
@@ -45,6 +48,7 @@ internal class FakeSyncStateLocalSource(
     override suspend fun loadSyncIndex() = index
 
     override suspend fun saveSyncIndex(document: String?) {
+        currentCoroutineContext().ensureActive()
         onSaveIndex(document)
         index = document
     }

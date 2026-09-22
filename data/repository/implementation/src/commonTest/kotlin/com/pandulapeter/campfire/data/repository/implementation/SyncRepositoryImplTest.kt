@@ -34,8 +34,11 @@ import com.pandulapeter.campfire.data.source.remote.api.model.AuthorizationCompl
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.awaitCancellation
 import kotlinx.coroutines.cancelAndJoin
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.test.advanceUntilIdle
+import kotlinx.coroutines.test.runCurrent
 import kotlinx.coroutines.test.runTest
 import kotlin.test.Test
 import kotlin.test.assertEquals
@@ -205,6 +208,36 @@ class SyncRepositoryImplTest {
         assertTrue(repository.restore().wasInterrupted)
         assertTrue(repository.restore().wasInterrupted)
         assertEquals(SyncOutcome.Interrupted, (repository.syncState.value as SyncState.Connected).lastOutcome)
+    }
+
+    @Test
+    fun `a disconnect that is cancelled after the credentials went still ends disconnected`() = runTest {
+        val stateLocalSource = FakeSyncStateLocalSource(index = "{}")
+        val provider = FakeSyncProvider(account = ACCOUNT).apply { onDisconnect = { delay(1_000) } }
+        val repository = repository(provider = provider, stateLocalSource = stateLocalSource)
+        repository.restore()
+
+        val job = launch { repository.disconnect() }
+        runCurrent()
+        assertFalse(provider.connected)
+        job.cancel()
+        advanceUntilIdle()
+
+        assertEquals(SyncState.Disconnected, repository.syncState.first { it == SyncState.Disconnected })
+        assertNull(stateLocalSource.index)
+    }
+
+    @Test
+    fun `a run asked for after the credentials went reports the connection as failed`() = runTest {
+        val provider = FakeSyncProvider(account = ACCOUNT)
+        val repository = repository(provider = provider)
+        repository.restore()
+
+        provider.connected = false
+        repository.synchronize(SyncDeletionPolicy.ASK)
+        val state = repository.syncState.first { it is SyncState.ConnectionFailed }
+
+        assertEquals(SyncFailureReason.AUTHORIZATION, assertIs<SyncState.ConnectionFailed>(state).reason)
     }
 
     @Test

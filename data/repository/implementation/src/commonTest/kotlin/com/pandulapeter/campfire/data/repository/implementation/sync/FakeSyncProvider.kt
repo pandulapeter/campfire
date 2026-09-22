@@ -29,7 +29,8 @@ import com.pandulapeter.campfire.data.source.remote.api.model.RemoteWriteResult
  * report a large file without the test allocating it. [account] is who the service says is connected, which is what
  * a repository test restores the connection from. [ignoresCase] makes it a service like Dropbox, which takes two names
  * that differ only by case for one file, [listCount] is how many passes a run made and [downloadCounts] how many times
- * each file was fetched.
+ * each file was fetched. [connected] says whether credentials are stored, and [onDisconnect] runs once a disconnect
+ * has cleared them.
  */
 internal class FakeSyncProvider(
     files: Map<SyncKey, ByteArray> = emptyMap(),
@@ -42,6 +43,10 @@ internal class FakeSyncProvider(
 
     var listCount = 0
 
+    var connected = true
+
+    var onDisconnect: suspend () -> Unit = {}
+
     val downloadCounts = mutableMapOf<SyncKey, Int>()
 
     val files = files.mapValues { (_, bytes) -> bytes to "r1" }.toMutableMap()
@@ -49,7 +54,7 @@ internal class FakeSyncProvider(
 
     override val id = SyncProviderId.DROPBOX
 
-    override suspend fun isConnected() = true
+    override suspend fun isConnected() = connected
 
     override fun buildAuthorizationRequest(redirectUri: String?) = RemoteAuthorizationRequest(
         authorizationUrl = "https://example.com/authorize",
@@ -64,7 +69,10 @@ internal class FakeSyncProvider(
         redirectUri: String?,
     ): SyncAccount = throw UnsupportedOperationException()
 
-    override suspend fun disconnect() = Unit
+    override suspend fun disconnect() {
+        connected = false
+        onDisconnect()
+    }
 
     override suspend fun loadAccount() = account
 

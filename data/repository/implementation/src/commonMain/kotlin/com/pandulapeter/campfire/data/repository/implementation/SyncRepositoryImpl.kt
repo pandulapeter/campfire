@@ -252,6 +252,12 @@ internal class SyncRepositoryImpl(
         _syncState.update { if (it is SyncState.Connecting) SyncState.Disconnected else it }
     }
 
+    /**
+     * Carried to its end once it has started taking the connection apart: the credentials go first, and a disconnect
+     * stopped after that would leave an account on screen that nothing can sync. What comes before - waiting for a
+     * run to stop - can still be cancelled with the caller. The part that cannot is bounded by the provider's own time
+     * limits on renewing and revoking the token.
+     */
     override suspend fun disconnect() {
         // An answer still on its way belongs to the account that is about to go, and loadAccount writes the name it
         // reads into whatever credentials are stored by then - which could be the next account's.
@@ -260,22 +266,26 @@ internal class SyncRepositoryImpl(
         // onto an account the user just disconnected.
         syncJob?.cancelAndJoin()
         syncJob = null
-        providers.forEach { provider ->
-            if (provider.isConnected()) {
-                try {
-                    provider.disconnect()
-                } catch (exception: Exception) {
-                    println("Could not disconnect from ${provider.id}: ${exception.message}")
+        withContext(NonCancellable) {
+            providers.forEach { provider ->
+                if (provider.isConnected()) {
+                    try {
+                        provider.disconnect()
+                    } catch (exception: CancellationException) {
+                        throw exception
+                    } catch (exception: Exception) {
+                        println("Could not disconnect from ${provider.id}: ${exception.message}")
+                    }
                 }
             }
-        }
-        // The index describes a remote folder this device is no longer looking at. Kept, and it would read that
-        // folder's every file as a deletion the next time something connects. Under the run lock, because a run that
-        // was stopped a moment ago is not in syncJob any more and may still be writing the index on its way out; no new
-        // one can slip in, since the providers above no longer say they are connected.
-        mutex.withLock {
-            syncStateLocalSource.saveSyncIndex(null)
-            _syncState.update { SyncState.Disconnected }
+            // The index describes a remote folder this device is no longer looking at. Kept, and it would read that
+            // folder's every file as a deletion the next time something connects. Under the run lock, because a run
+            // that was stopped a moment ago is not in syncJob any more and may still be writing the index on its way
+            // out; no new one can slip in, since the providers above no longer say they are connected.
+            mutex.withLock {
+                syncStateLocalSource.saveSyncIndex(null)
+                _syncState.update { SyncState.Disconnected }
+            }
         }
     }
 
@@ -308,7 +318,12 @@ internal class SyncRepositoryImpl(
         // it rather than being dropped, which is what "stop, then start again" looks like from the settings screen.
         // Two runs at once are prevented by syncJob in synchronize().
         mutex.withLock {
-            val provider = providers.firstOrNull { it.isConnected() } ?: return@withLock
+            val provider = providers.firstOrNull { it.isConnected() } ?: run {
+                // The credentials are gone while the screen still shows the account - a disconnect that did not get to
+                // the end, a storage that lost them. Saying so is the only way the user gets a button that works.
+                updateConnected { SyncState.ConnectionFailed(it.account.providerId, SyncFailureReason.AUTHORIZATION) }
+                return@withLock
+            }
             val connected = _syncState.value as? SyncState.Connected ?: return@withLock
             _syncState.update { connected.copy(progress = SyncProgress(), lastOutcome = null) }
             // What the engine has reported so far, which is what an interrupted run writes on its way out: the files
