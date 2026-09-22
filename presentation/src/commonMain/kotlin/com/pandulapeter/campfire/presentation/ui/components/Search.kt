@@ -338,6 +338,7 @@ private fun SearchableTopAppBarTitle(
         searchState = searchState,
         placeholder = placeholder,
         isContentShown = searchTransition.currentState || searchTransition.targetState,
+        isOpening = searchTransition.targetState,
         alpha = { fieldAlpha.value },
         recession = recession,
     )
@@ -483,6 +484,8 @@ private fun SearchAction(
  *
  * @param isContentShown Whether the pill holds the field at all, which it does from the moment the search starts
  *   opening until it has finished closing. A closed search keeps nothing in it that could take the focus.
+ * @param isOpening Whether the search is open or on its way there, which is when the field takes the focus and the
+ *   keyboard.
  * @param alpha How opaque the field is, read while it is drawn so that fading it never recomposes it.
  * @param recession How far a back gesture has taken the field towards closing, read the same way.
  */
@@ -492,6 +495,7 @@ private fun SearchField(
     searchState: SearchState,
     placeholder: String,
     isContentShown: Boolean,
+    isOpening: Boolean,
     alpha: () -> Float,
     recession: SearchRecession,
 ) = Surface(
@@ -504,9 +508,15 @@ private fun SearchField(
     if (isContentShown) {
         val keyboardController = LocalSoftwareKeyboardController.current
         val focusRequester = remember { FocusRequester() }
-        LaunchedEffect(Unit) {
-            searchState.textFieldState.edit { placeCursorAtEnd() }
-            focusRequester.requestFocus()
+        // Keyed on the search being opened rather than on the content arriving: a search opened again while it was
+        // still closing never left the composition, and kept the focus while the keyboard had been put away - so the
+        // keyboard is asked for as well, since focusing a field that has the focus shows nothing.
+        LaunchedEffect(isOpening) {
+            if (isOpening) {
+                searchState.textFieldState.edit { placeCursorAtEnd() }
+                focusRequester.requestFocus()
+                keyboardController?.show()
+            }
         }
         Row(
             modifier = Modifier
