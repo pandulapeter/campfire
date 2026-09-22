@@ -40,6 +40,8 @@ import com.pandulapeter.campfire.data.model.domain.SyncOutcome
 import com.pandulapeter.campfire.data.model.domain.SyncState
 import com.pandulapeter.campfire.data.model.domain.UserPreferences
 import com.pandulapeter.campfire.presentation.CAMPFIRE_VERSION_NAME
+import com.pandulapeter.campfire.presentation.localization.AppLocale
+import com.pandulapeter.campfire.presentation.localization.LocalizedStrings
 import com.pandulapeter.campfire.presentation.localization.stringResource
 import com.pandulapeter.campfire.presentation.resources.Res
 import com.pandulapeter.campfire.presentation.resources.add_demo_songs
@@ -117,6 +119,7 @@ import com.pandulapeter.campfire.presentation.resources.settings_user_interface_
 import com.pandulapeter.campfire.presentation.resources.settings_user_interface_language_english
 import com.pandulapeter.campfire.presentation.resources.settings_user_interface_language_hungarian
 import com.pandulapeter.campfire.presentation.resources.settings_user_interface_language_system_default
+import com.pandulapeter.campfire.presentation.resources.settings_user_interface_language_with_own_name
 import com.pandulapeter.campfire.presentation.resources.settings_user_interface_theme
 import com.pandulapeter.campfire.presentation.resources.settings_user_interface_theme_color
 import com.pandulapeter.campfire.presentation.resources.settings_user_interface_theme_color_blue
@@ -376,18 +379,30 @@ private fun GeneralSection(
         )
     }
     // A list rather than a segmented control, since it is the one choice here that grows with every translation,
-    // and a row of segments runs out of width after the third. Each language is named in itself rather than in the
-    // language the app is in, so that somebody who ended up in one they cannot read can still find their own.
+    // and a row of segments runs out of width after the third. Every language the app is not set to also carries its
+    // name in itself, read out of its own string table, so that somebody who ended up in one they cannot read can
+    // still find theirs; the one it is set to is already named in itself, and saying so twice reads as a mistake.
     SettingsSubsection(title = stringResource(Res.string.settings_user_interface_language)) {
         Column(modifier = Modifier.selectableGroup()) {
             listOf(
-                UserPreferences.Language.SYSTEM_DEFAULT to stringResource(Res.string.settings_user_interface_language_system_default),
-                UserPreferences.Language.ENGLISH to stringResource(Res.string.settings_user_interface_language_english),
-                UserPreferences.Language.HUNGARIAN to stringResource(Res.string.settings_user_interface_language_hungarian),
-            ).forEach { (language, label) ->
+                UserPreferences.Language.SYSTEM_DEFAULT to Res.string.settings_user_interface_language_system_default,
+                UserPreferences.Language.ENGLISH to Res.string.settings_user_interface_language_english,
+                UserPreferences.Language.HUNGARIAN to Res.string.settings_user_interface_language_hungarian,
+            ).forEach { (language, name) ->
+                val isSelected = userPreferences?.language == language
+                val localName = stringResource(name)
+                val ownName = if (language == UserPreferences.Language.SYSTEM_DEFAULT) {
+                    localName
+                } else {
+                    LocalizedStrings.get(name, locale = AppLocale.findByCode(language.id))
+                }
                 RadioListItem(
-                    title = label,
-                    isSelected = userPreferences?.language == language,
+                    title = if (isSelected || ownName == localName) {
+                        localName
+                    } else {
+                        stringResource(Res.string.settings_user_interface_language_with_own_name, localName, ownName)
+                    },
+                    isSelected = isSelected,
                     onSelected = { viewModel.setLanguage(language) },
                 )
             }

@@ -262,12 +262,14 @@ item bound to the device and `FileStorage.keepOutOfDeviceBackup` on the index.
     repository, which it reaches with the deploy key in `WEBSITE_DEPLOY_KEY`. The copy is an `rsync --delete`, so the
     folder holds nothing but the distribution — the privacy policy and the rest of the site live elsewhere there.
   - `desktop-publish.yml` builds one installer per runner — jpackage only packages for the machine it runs on — and
-    attaches them to the release: `packageDeb` on amd64 and arm64, which is the whole of how the Linux build is
-    handed out (`Distribution.LINUX` links to the latest release's page, and a `.deb` is not something anybody signs
-    on its own), and an unsigned `packageDmg` for both kinds of Mac and `packageMsi` for Windows, a stopgap until the
-    two stores have the app. jpackage signs the macOS app ad hoc, which is what lets it run at all on Apple silicon
-    once Gatekeeper has been overridden. The legs do not cancel each other, and none of them runs ProGuard: a release
-    build breaks in ways only starting it shows (see `app/desktop`), and nothing starts these.
+    attaches them to the release: `packageReleaseDeb` on amd64 and arm64, which is the whole of how the Linux build
+    is handed out (`Distribution.LINUX` links to the latest release's page, and a `.deb` is not something anybody
+    signs on its own), and an unsigned `packageReleaseDmg` for both kinds of Mac and `packageReleaseMsi` for Windows,
+    a stopgap until the two stores have the app. jpackage signs the macOS app ad hoc, which is what lets it run at all
+    on Apple silicon once Gatekeeper has been overridden. The legs do not cancel each other. Every one of them runs
+    ProGuard, which breaks an app in ways only starting it shows (see `app/desktop`), so each leg starts the app
+    image it packaged — under Xvfb on Linux, with an empty data directory — and attaches nothing unless the demo
+    library appears, the process is still there after that, and its log names no exception.
   - `ios-publish.yml` builds the Release configuration for devices with `CODE_SIGNING_ALLOWED=NO` and zips the app
     into an `.ipa`, which no iPhone installs as it is — it is what a sideloading tool signs with its user's own Apple
     ID. The Xcode project starts Gradle itself and passes it no properties, so the sync key is written into

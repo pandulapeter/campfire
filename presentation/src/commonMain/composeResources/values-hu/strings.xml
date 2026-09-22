@@ -190,8 +190,8 @@
     <string name="settings_user_interface_theme_color_pink">Rózsaszín</string>
     <string name="settings_user_interface_language">Nyelv</string>
     <string name="settings_user_interface_language_system_default">Rendszer</string>
-    <!-- Each language is named in itself, so that it can be found by whoever reads it whatever the app is set to. -->
-    <string name="settings_user_interface_language_english">English</string>
+    <string name="settings_user_interface_language_with_own_name">%1$s (%2$s)</string>
+    <string name="settings_user_interface_language_english">Angol</string>
     <string name="settings_user_interface_language_hungarian">Magyar</string>
     <string name="settings_distributions">Campfire a többi eszközödön</string>
     <string name="settings_distributions_description">Ugyanaz az alkalmazás, szinkronizálással pedig ugyanaz a könyvtár, bárhol is játszol.</string>

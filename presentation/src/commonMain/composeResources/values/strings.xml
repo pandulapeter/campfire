@@ -190,9 +190,9 @@
     <string name="settings_user_interface_theme_color_pink">Pink</string>
     <string name="settings_user_interface_language">Language</string>
     <string name="settings_user_interface_language_system_default">System</string>
-    <!-- Each language is named in itself, so that it can be found by whoever reads it whatever the app is set to. -->
+    <string name="settings_user_interface_language_with_own_name">%1$s (%2$s)</string>
     <string name="settings_user_interface_language_english">English</string>
-    <string name="settings_user_interface_language_hungarian">Magyar</string>
+    <string name="settings_user_interface_language_hungarian">Hungarian</string>
     <string name="settings_distributions">Campfire on your other devices</string>
     <string name="settings_distributions_description">The same app and, with sync, the same library wherever you play.</string>
     <string name="settings_distributions_all">Every version of Campfire</string>

@@ -47,27 +47,27 @@ jobs:
         include:
           - name: Linux (amd64)
             runner: ubuntu-latest
-            task: packageDeb
+            task: packageReleaseDeb
             format: deb
             asset: linux-amd64.deb
           - name: Linux (arm64)
             runner: ubuntu-24.04-arm
-            task: packageDeb
+            task: packageReleaseDeb
             format: deb
             asset: linux-arm64.deb
           - name: macOS (Apple silicon)
             runner: macos-latest
-            task: packageDmg
+            task: packageReleaseDmg
             format: dmg
             asset: macos-arm64-unsigned.dmg
           - name: macOS (Intel)
             runner: macos-15-intel
-            task: packageDmg
+            task: packageReleaseDmg
             format: dmg
             asset: macos-x64-unsigned.dmg
           - name: Windows
             runner: windows-latest
-            task: packageMsi
+            task: packageReleaseMsi
             format: msi
             asset: windows-x64-unsigned.msi
     defaults:
@@ -89,20 +89,91 @@ jobs:
           distribution: 'zulu'
           java-version: 21
           cache: 'gradle'
-      # jpackage builds the .deb with dpkg-deb under fakeroot, and the runner image only promises the former.
+      # jpackage builds the .deb with dpkg-deb under fakeroot, and the runner image only promises the former. Xvfb is
+      # the display the release build is started on before it is attached.
       - name: Install packaging tools
         if: runner.os == 'Linux'
-        run: sudo apt-get update && sudo apt-get install --yes fakeroot
+        run: sudo apt-get update && sudo apt-get install --yes fakeroot xvfb
       - name: Build the installer
         run: |
           ./gradlew :app:desktop:${{ matrix.task }} \
             -Pcampfire.dropbox.appKey="${{ secrets.DROPBOX_APP_KEY }}"
+      # ProGuard breaks an application in ways that only starting it shows - a VerifyError on the first frame is how
+      # the last one looked - so the app image the installer was made of is started once before anybody downloads
+      # it. The demo library appearing in an empty data directory proves that Koin started, the window composed and
+      # the library was written; the process still being there a while later proves the first frames did not kill it.
+      - name: Start the release build once
+        run: |
+          BINARIES="app/desktop/build/compose/binaries/main-release/app"
+          HOME_DIRECTORY="$RUNNER_TEMP/campfire-home"
+          LOG="$RUNNER_TEMP/campfire.log"
+          mkdir -p "$HOME_DIRECTORY"
+          export JAVA_TOOL_OPTIONS="-Duser.home=$HOME_DIRECTORY"
+          LAUNCHER=()
+          case "$RUNNER_OS" in
+            macOS)
+              APP="$BINARIES/Campfire.app/Contents/MacOS/Campfire"
+              DATA="$HOME_DIRECTORY/Library/Application Support/Campfire"
+              ;;
+            Linux)
+              APP="$BINARIES/Campfire/bin/Campfire"
+              DATA="$HOME_DIRECTORY/.local/share/campfire"
+              unset XDG_DATA_HOME
+              LAUNCHER=(xvfb-run --auto-servernum)
+              ;;
+            Windows)
+              APP="$BINARIES/Campfire/Campfire.exe"
+              DATA="$HOME_DIRECTORY/AppData/Roaming/Campfire"
+              export JAVA_TOOL_OPTIONS="-Duser.home=$(cygpath -w "$HOME_DIRECTORY")"
+              export APPDATA="$(cygpath -w "$HOME_DIRECTORY/AppData/Roaming")"
+              ;;
+          esac
+          "${LAUNCHER[@]}" "$APP" > "$LOG" 2>&1 &
+          PID=$!
+          # The Windows launcher is not a process Git Bash can signal, and it writes nothing to the log - so there an
+          # exception that leaves the process running (Compose Desktop survives one thrown in a LaunchedEffect) goes
+          # unseen. The other legs run the same ProGuard output and read the log.
+          is_running() {
+            if [ "$RUNNER_OS" = Windows ]; then
+              tasklist //FI "IMAGENAME eq Campfire.exe" | grep -q Campfire.exe
+            else
+              kill -0 "$PID" 2> /dev/null
+            fi
+          }
+          stop() {
+            if [ "$RUNNER_OS" = Windows ]; then
+              taskkill //F //IM Campfire.exe > /dev/null 2>&1 || true
+            else
+              pkill -f "$APP" || true
+              kill "$PID" 2> /dev/null || true
+            fi
+          }
+          fail() {
+            echo "::error::$1"
+            cat "$LOG"
+            stop
+            exit 1
+          }
+          for _ in $(seq 120); do
+            is_running || fail "The release build exited on its own before the library was written."
+            if [ -f "$DATA/preferences/preferences.json" ] && ls "$DATA/library/songs/"*.cho > /dev/null 2>&1; then
+              break
+            fi
+            sleep 1
+          done
+          ls "$DATA/library/songs/"*.cho > /dev/null 2>&1 || fail "The release build did not write the demo library in two minutes."
+          sleep 15
+          is_running || fail "The release build exited on its own after it had written the library."
+          grep -q "Exception" "$LOG" && fail "The release build logged an exception."
+          stop
+          cat "$LOG"
+          echo "The release build started and wrote: $(ls "$DATA/library/songs")"
       - name: Attach the installer to the GitHub release
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
           VERSION_NAME=$(sed -n 's/^campfire\.versionName=//p' gradle.properties)
-          DIRECTORY="app/desktop/build/compose/binaries/main/${{ matrix.format }}"
+          DIRECTORY="app/desktop/build/compose/binaries/main-release/${{ matrix.format }}"
           INSTALLER=$(find "$DIRECTORY" -name '*.${{ matrix.format }}' | head -n 1)
           if [ -z "$INSTALLER" ]; then
             echo "The installer is missing from $DIRECTORY" >&2

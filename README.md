@@ -98,7 +98,6 @@ Version 4.0 is a rewrite: the online song library is gone and there is **no migr
 an empty library.
 
 ### To do
-- ProGuard for desktop builds
 - Add support for external control devices with a focus-by-section feature
 - Songs: sort by year option
 - Improve performance mode description
