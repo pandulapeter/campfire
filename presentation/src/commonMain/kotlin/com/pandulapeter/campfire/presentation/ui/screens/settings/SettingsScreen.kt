@@ -94,6 +94,12 @@ import com.pandulapeter.campfire.presentation.resources.settings_import
 import com.pandulapeter.campfire.presentation.resources.settings_library
 import com.pandulapeter.campfire.presentation.resources.settings_library_location
 import com.pandulapeter.campfire.presentation.resources.settings_library_location_files_app
+import com.pandulapeter.campfire.presentation.resources.settings_library_size
+import com.pandulapeter.campfire.presentation.resources.settings_library_size_bytes
+import com.pandulapeter.campfire.presentation.resources.settings_library_size_decimal_separator
+import com.pandulapeter.campfire.presentation.resources.settings_library_size_gigabytes
+import com.pandulapeter.campfire.presentation.resources.settings_library_size_kilobytes
+import com.pandulapeter.campfire.presentation.resources.settings_library_size_megabytes
 import com.pandulapeter.campfire.presentation.resources.settings_library_storage
 import com.pandulapeter.campfire.presentation.resources.settings_library_storage_best_effort
 import com.pandulapeter.campfire.presentation.resources.settings_library_storage_granted
@@ -407,9 +413,13 @@ private fun LibrarySection(
     val libraryPersistence by viewModel.libraryPersistence.collectAsStateWithLifecycle()
     val filePicker = LocalFilePicker.current
     AnimatedSettingsRow(value = librarySummary) { summary ->
+        val size = summary.size
         ListItem(
             colors = ListItemDefaults.colors(containerColor = Color.Transparent),
             headlineContent = { Text(stringResource(Res.string.settings_library_summary, summary.songCount, summary.setlistCount)) },
+            supportingContent = if (size == null) null else {
+                { Text(stringResource(Res.string.settings_library_size, formattedSize(size))) }
+            },
         )
     }
     libraryLocation?.let { location ->
@@ -470,6 +480,38 @@ private fun LibrarySection(
         onClick = { viewModel.exportLibrary(filePicker) },
     )
 }
+
+/**
+ * [bytes] in the largest unit that keeps the number at least one, in decimal units as the file browsers of Android and
+ * Apple count them. One decimal below ten and none above, which is as precise as a number that changes with every
+ * saved song is worth being. The separator comes from the strings rather than from the platform, so that it follows
+ * the language chosen in the app like the words around it.
+ */
+@Composable
+private fun formattedSize(bytes: Long): String {
+    // The unit is settled on the rounded number, so that 999 960 bytes read as 1.0 MB rather than as 1000 KB.
+    val unit = (1..SIZE_UNITS.lastIndex).firstOrNull { unit -> (bytes + SIZE_STEP.pow(unit) / 2) / SIZE_STEP.pow(unit + 1) == 0L }
+        ?: SIZE_UNITS.lastIndex
+    val divisor = SIZE_STEP.pow(unit)
+    val tenths = (bytes * 10 + divisor / 2) / divisor
+    val number = when {
+        bytes < SIZE_STEP -> bytes.toString()
+        tenths < 100 -> "${tenths / 10}${stringResource(Res.string.settings_library_size_decimal_separator)}${tenths % 10}"
+        else -> ((bytes + divisor / 2) / divisor).toString()
+    }
+    return stringResource(if (bytes < SIZE_STEP) SIZE_UNITS.first() else SIZE_UNITS[unit], number)
+}
+
+private fun Long.pow(exponent: Int) = (1..exponent).fold(1L) { result, _ -> result * this }
+
+private const val SIZE_STEP = 1000L
+
+private val SIZE_UNITS = listOf(
+    Res.string.settings_library_size_bytes,
+    Res.string.settings_library_size_kilobytes,
+    Res.string.settings_library_size_megabytes,
+    Res.string.settings_library_size_gigabytes,
+)
 
 /**
  * Collects the sync state itself, so that a run reporting every file it moves recomposes this section and no other.

@@ -103,7 +103,6 @@ an empty library.
 - Rename setlist date sort, maybe expose a date for Setlists
 - Fix Songs screen async race animation issues
 - Update the screenshots in the Readme
-- Display library size on disk
 - Improve code coverage
 - Review architecture / code quality
 

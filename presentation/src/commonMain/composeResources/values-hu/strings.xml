@@ -140,6 +140,12 @@
     <string name="settings">Beállítások</string>
     <string name="settings_library">Könyvtár</string>
     <string name="settings_library_summary">Dalok: %1$d · Listák: %2$d</string>
+    <string name="settings_library_size">%1$s a tárhelyen</string>
+    <string name="settings_library_size_bytes">%1$s B</string>
+    <string name="settings_library_size_kilobytes">%1$s kB</string>
+    <string name="settings_library_size_megabytes">%1$s MB</string>
+    <string name="settings_library_size_gigabytes">%1$s GB</string>
+    <string name="settings_library_size_decimal_separator">,</string>
     <string name="settings_library_location">Hely</string>
     <string name="settings_library_location_files_app">A Fájlok alkalmazásban a Campfire mappa alatt található</string>
     <string name="settings_library_storage">Tárhely</string>

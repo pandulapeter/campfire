@@ -55,6 +55,7 @@ import com.pandulapeter.campfire.domain.api.useCases.EditSetlistUseCase
 import com.pandulapeter.campfire.domain.api.useCases.ExportLibraryUseCase
 import com.pandulapeter.campfire.domain.api.useCases.ExportSetlistUseCase
 import com.pandulapeter.campfire.domain.api.useCases.ExportSongsUseCase
+import com.pandulapeter.campfire.domain.api.useCases.GetLibrarySizeUseCase
 import com.pandulapeter.campfire.domain.api.useCases.GetScreenDataUseCase
 import com.pandulapeter.campfire.domain.api.useCases.GetSongContentInvalidationsUseCase
 import com.pandulapeter.campfire.domain.api.useCases.GetSongContentUseCase
@@ -132,6 +133,7 @@ class CampfireViewModel(
     getSyncProviders: GetSyncProvidersUseCase,
     private val loadScreenData: LoadScreenDataUseCase,
     private val isFirstRun: IsFirstRunUseCase,
+    private val getLibrarySize: GetLibrarySizeUseCase,
     private val getSongContent: GetSongContentUseCase,
     getSongContentInvalidations: GetSongContentInvalidationsUseCase,
     private val createSong: CreateSongUseCase,
@@ -500,9 +502,22 @@ class CampfireViewModel(
         songs.associateBy({ it.fileName }) { SearchableSong(song = it, title = normalizeText(it.title), artist = normalizeText(it.artist)) }
     }.asState(emptyMap())
 
-    /** Null until the library has actually been read, so that the settings screen never flashes a count of zero. */
+    /**
+     * Null until the library has actually been read, so that the settings screen never flashes a count of zero.
+     *
+     * The size is listed from disk once per change to the library, and only then: the songs and setlists compared
+     * here are the whole of what a write changes (a saved song carries a new modification time even where its
+     * metadata stayed the same), while the screen data also changes with every filter tap. It arrives in the same
+     * value as the counts, so the row appears once with both rather than growing a second line a moment later.
+     */
     val librarySummary = screenData
-        .map { state -> state.data?.let { LibrarySummary(songCount = it.unfilteredSongs.size, setlistCount = it.setlists.size) } }
+        .map { state -> state.data?.let { it.unfilteredSongs to it.setlists } }
+        .distinctUntilChanged()
+        .map { library ->
+            library?.let { (songs, setlists) ->
+                LibrarySummary(songCount = songs.size, setlistCount = setlists.size, size = loadLibrarySize())
+            }
+        }
         .asState(null)
 
     // The sections arrive cut, from the same pass that sorted them. Cutting them here would take the sorting mode
@@ -1982,6 +1997,16 @@ class CampfireViewModel(
      * failed, and only [whenEmpty] once a load has finished - until then it is still loading, and saying anything
      * else would have the screen answer a question it cannot answer yet.
      */
+    private suspend fun loadLibrarySize() = try {
+        getLibrarySize()
+    } catch (exception: CancellationException) {
+        throw exception
+    } catch (exception: Exception) {
+        // A number on the settings screen is not worth an error message: the row simply goes without it.
+        println("Could not measure the library: ${exception.message}")
+        null
+    }
+
     /**
      * @param isImporting An empty library with an import running is a library being filled rather than an empty
      *   one, and is worth the same answer as a scan that has not finished. It is what keeps the first launch of the
@@ -1994,10 +2019,15 @@ class CampfireViewModel(
         else -> whenEmpty
     }
 
-    /** The counts the settings screen shows for the library, only once there is a library to count. */
+    /**
+     * The counts the settings screen shows for the library, only once there is a library to count.
+     *
+     * @param size The bytes the files take up on disk, null where the folder could not be listed.
+     */
     data class LibrarySummary(
         val songCount: Int,
         val setlistCount: Int,
+        val size: Long?,
     )
 
     private class MatchingSong(
