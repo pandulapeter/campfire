@@ -22,8 +22,19 @@ self.onmessage = function (event) {
         catch (error) { if (!error || error.name !== 'NotFoundError') throw error; existed = false; file = await directory.getFileHandle(request.name, { create: true }); }
         try {
             var access = await file.createSyncAccessHandle();
-            try { access.write(request.data, { at: 0 }); access.truncate(request.data.byteLength); access.flush(); }
-            finally { access.close(); }
+            try {
+                // write() may write fewer bytes than it was given and says so only in what it returns, so it is called
+                // again from where it stopped. One that makes no progress fails the save: truncating to the full length
+                // after it would keep the old file's tail behind the new beginning and report that as saved.
+                var total = request.data.byteLength;
+                for (var written = 0; written < total;) {
+                    var count = access.write(request.data.subarray(written), { at: written });
+                    if (!(count > 0)) throw new Error('Only ' + written + ' of ' + total + ' bytes could be written.');
+                    written += count;
+                }
+                access.truncate(total);
+                access.flush();
+            } finally { access.close(); }
         } catch (error) {
             if (!existed) try { await directory.removeEntry(request.name); } catch (ignored) { }
             throw error;
