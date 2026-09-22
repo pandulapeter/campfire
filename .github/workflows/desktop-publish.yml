@@ -90,10 +90,11 @@ jobs:
           java-version: 21
           cache: 'gradle'
       # jpackage builds the .deb with dpkg-deb under fakeroot, and the runner image only promises the former. Xvfb is
-      # the display the release build is started on before it is attached.
+      # the display the release build is started on before it is attached, and the GL libraries are what Skiko's
+      # native library is linked against - every desktop has them, but the arm64 runner image does not.
       - name: Install packaging tools
         if: runner.os == 'Linux'
-        run: sudo apt-get update && sudo apt-get install --yes fakeroot xvfb
+        run: sudo apt-get update && sudo apt-get install --yes fakeroot xvfb libegl1 libgl1
       # The app image is asked for by name: the Compose plugin builds the macOS installer out of it, but on Linux and
       # Windows it hands jpackage the jars and the runtime directly, and the installer is the only thing left on disk.
       # Both tasks are made of the same ProGuard output, so the image is what the installer holds either way.
@@ -123,6 +124,9 @@ jobs:
               DATA="$HOME_DIRECTORY/.local/share/campfire"
               unset XDG_DATA_HOME
               LAUNCHER=(xvfb-run --auto-servernum)
+              # Xvfb has no OpenGL. Skiko would fall back to software rendering on its own, but it logs the failed
+              # attempt as a RenderException first, which the check below would take for a crash.
+              export SKIKO_RENDER_API=SOFTWARE_FAST
               ;;
             Windows)
               APP="$BINARIES/Campfire/Campfire.exe"
