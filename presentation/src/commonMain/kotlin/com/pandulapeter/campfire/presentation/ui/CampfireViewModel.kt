@@ -1129,11 +1129,30 @@ class CampfireViewModel(
     // Import and export
 
     /**
+     * The pick, export or share that is running, from the tap until its picker has answered. A second one is ignored
+     * rather than queued: a double tap on a row is one request, the platforms cannot show two pickers at once (Android
+     * stacks them and routes the second answer to nobody, UIKit refuses to present over its own, the desktop nests two
+     * modal dialogs), and an export builds its whole archive before its picker shows, which is seconds in which the
+     * row looks as if it had not been tapped.
+     */
+    private var fileTransferJob: Job? = null
+
+    /**
+     * Only as safe as the pickers are: every one of them has to answer on every way its screen can go away, since a
+     * transfer that never ended would keep the app from importing or exporting anything again. Nothing that suspends
+     * may come between the tap and the picker either, because the web's file input needs the tap's user activation.
+     */
+    private fun launchFileTransfer(block: suspend () -> Unit) {
+        if (fileTransferJob?.isActive == true) return
+        fileTransferJob = viewModelScope.launch { block() }
+    }
+
+    /**
      * The picker is handed in by the composable that has it, but the work runs here: picking a file takes as long as
      * the user takes, and the bottom sheet or menu the action was started from is gone well before that.
      */
-    fun importFiles(filePicker: FilePicker) = viewModelScope.launch {
-        if (_isImporting.value) return@launch
+    fun importFiles(filePicker: FilePicker) = launchFileTransfer {
+        if (_isImporting.value) return@launchFileTransfer
         val files = try {
             filePicker.pickFiles()
         } catch (exception: CancellationException) {
@@ -1141,7 +1160,7 @@ class CampfireViewModel(
         } catch (exception: Exception) {
             println("Could not pick the files to import: ${exception.message}")
             _messages.send(Message.ImportFailed)
-            return@launch
+            return@launchFileTransfer
         }
         enqueueImport(files)
     }
@@ -1317,19 +1336,19 @@ class CampfireViewModel(
         }
     }
 
-    fun exportSong(filePicker: FilePicker, songFileName: String) = viewModelScope.launch {
+    fun exportSong(filePicker: FilePicker, songFileName: String) = launchFileTransfer {
         save(filePicker) { exportSongs(listOf(songFileName)) }
     }
 
-    fun shareSong(filePicker: FilePicker, songFileName: String) = viewModelScope.launch {
+    fun shareSong(filePicker: FilePicker, songFileName: String) = launchFileTransfer {
         save(filePicker, isShare = true) { exportSongs(listOf(songFileName)) }
     }
 
-    fun exportSetlist(filePicker: FilePicker, setlistFileName: String) = viewModelScope.launch {
+    fun exportSetlist(filePicker: FilePicker, setlistFileName: String) = launchFileTransfer {
         save(filePicker) { exportSetlist.invoke(setlistFileName) }
     }
 
-    fun exportLibrary(filePicker: FilePicker) = viewModelScope.launch {
+    fun exportLibrary(filePicker: FilePicker) = launchFileTransfer {
         save(filePicker) { exportLibrary.invoke() }
     }
 

@@ -32,7 +32,10 @@ import platform.Foundation.create
 import platform.Foundation.dataWithContentsOfURL
 import platform.Foundation.writeToURL
 import platform.UIKit.UIActivityViewController
+import platform.UIKit.UIAdaptivePresentationControllerDelegateProtocol
+import platform.UIKit.UIPresentationController
 import platform.UIKit.popoverPresentationController
+import platform.UIKit.presentationController
 import platform.UIKit.UIDocumentPickerDelegateProtocol
 import platform.UIKit.UIDocumentPickerViewController
 import platform.UIKit.UIViewController
@@ -96,13 +99,25 @@ internal class IosFilePicker(
     }
 
     private fun present(controller: UIDocumentPickerViewController, onFinished: (List<NSURL>) -> Unit) {
+        val host = viewController()
+        // UIKit refuses a second presentation with nothing but a log line, and the answer it would have given never
+        // comes: the caller is told nothing was picked instead of waiting for good.
+        if (host.presentedViewController != null) {
+            onFinished(emptyList())
+            return
+        }
+        // Nothing is on screen, so a delegate still held is one whose picker went away without telling it: its caller
+        // is answered now rather than never.
+        (delegate as? DocumentPickerDelegate)?.finish(emptyList())
         val pickerDelegate = DocumentPickerDelegate { urls ->
             delegate = null
             onFinished(urls)
         }
         delegate = pickerDelegate
         controller.delegate = pickerDelegate
-        viewController().presentViewController(controller, animated = true, completion = null)
+        // A sheet swiped away tells neither of the picker's own callbacks, only its presentation controller.
+        controller.presentationController?.delegate = pickerDelegate
+        host.presentViewController(controller, animated = true, completion = null)
     }
 
 }
@@ -137,14 +152,28 @@ internal fun NSURL.readImportedFile(budget: ImportBudget): ImportedFile? {
     }
 }
 
+/**
+ * Answers its picker's caller at most once, however many of the ways a picker can go away report it: a late callback
+ * of a picker whose caller was already answered must not resume that caller's continuation a second time.
+ */
 private class DocumentPickerDelegate(
     private val onFinished: (List<NSURL>) -> Unit,
-) : NSObject(), UIDocumentPickerDelegateProtocol {
+) : NSObject(), UIDocumentPickerDelegateProtocol, UIAdaptivePresentationControllerDelegateProtocol {
+
+    private var isFinished = false
+
+    fun finish(urls: List<NSURL>) {
+        if (isFinished) return
+        isFinished = true
+        onFinished(urls)
+    }
 
     override fun documentPicker(controller: UIDocumentPickerViewController, didPickDocumentsAtURLs: List<*>) =
-        onFinished(didPickDocumentsAtURLs.filterIsInstance<NSURL>())
+        finish(didPickDocumentsAtURLs.filterIsInstance<NSURL>())
 
-    override fun documentPickerWasCancelled(controller: UIDocumentPickerViewController) = onFinished(emptyList())
+    override fun documentPickerWasCancelled(controller: UIDocumentPickerViewController) = finish(emptyList())
+
+    override fun presentationControllerDidDismiss(presentationController: UIPresentationController) = finish(emptyList())
 }
 
 @OptIn(ExperimentalForeignApi::class)

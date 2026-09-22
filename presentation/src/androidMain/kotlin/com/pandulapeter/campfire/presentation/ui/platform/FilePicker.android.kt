@@ -127,7 +127,8 @@ internal class AndroidFilePicker(@Provided private val context: Context) : FileP
     private val pendingExport get() = java.io.File(java.io.File(context.cacheDir, PENDING_EXPORT_DIRECTORY), PENDING_EXPORT_NAME)
 
     override suspend fun pickFiles(): List<ImportedFile> {
-        // Two system pickers cannot be open at once, so one still waiting is one whose answer is never coming.
+        // The view model runs one pick at a time, so a continuation still waiting here is one whose answer is never
+        // coming; it is let go as a last resort rather than left hanging.
         pickContinuation?.takeIf { it.isActive }?.resume(emptyList())
         // Between two Activities there is no launcher until the next one has composed, so it is waited for.
         val launcher = launchers.filterNotNull().first().open
