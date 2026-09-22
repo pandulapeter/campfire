@@ -12,6 +12,8 @@ package com.pandulapeter.campfire.data.source.local.implementation.mapper
 import com.pandulapeter.campfire.data.model.domain.Setlist
 import com.pandulapeter.campfire.data.source.local.implementation.model.SetlistDocument
 import com.pandulapeter.campfire.data.source.local.implementation.model.SetlistSongDocument
+import kotlinx.serialization.json.Json
+import kotlinx.serialization.json.JsonObject
 
 internal fun SetlistDocument.toModel(fileName: String) = Setlist(
     fileName = fileName,
@@ -22,7 +24,10 @@ internal fun SetlistDocument.toModel(fileName: String) = Setlist(
     // A document that was edited by hand can leave a blank entry behind or name the same song twice. The second
     // mention is dropped and the first one wins, its transposition with it: the screens key their rows and the
     // pager its pages by the song's file name, and a setlist naming a song twice would put the same key up twice.
-    entries = songs.filter { it.file.isNotBlank() }.distinctBy { it.file }.map { Setlist.Entry(songFileName = it.file, transposition = it.transposition) },
+    entries = songs.filter { it.file.isNotBlank() }.distinctBy { it.file }.map {
+        Setlist.Entry(songFileName = it.file, transposition = it.transposition, unknownFields = it.unknownFields.toFieldsText())
+    },
+    unknownFields = unknownFields.toFieldsText(),
 )
 
 internal fun Setlist.toDocument() = SetlistDocument(
@@ -31,5 +36,17 @@ internal fun Setlist.toDocument() = SetlistDocument(
     priority = priority,
     isArchived = isArchived,
     // Written the way it is read, so that a file never carries a duplicate whatever built the setlist in memory.
-    songs = entries.distinctBy { it.songFileName }.map { SetlistSongDocument(file = it.songFileName, transposition = it.transposition) },
+    songs = entries.distinctBy { it.songFileName }.map {
+        SetlistSongDocument(file = it.songFileName, transposition = it.transposition, unknownFields = it.unknownFields.toFields())
+    },
+    unknownFields = unknownFields.toFields(),
 )
+
+private fun JsonObject.toFieldsText() = if (isEmpty()) "" else toString()
+
+/** The model's text is only ever one this mapper wrote, but it is a public field, and a save is no place to fail. */
+private fun String.toFields() = if (isEmpty()) JsonObject(emptyMap()) else try {
+    Json.parseToJsonElement(this) as? JsonObject ?: JsonObject(emptyMap())
+} catch (_: IllegalArgumentException) {
+    JsonObject(emptyMap())
+}

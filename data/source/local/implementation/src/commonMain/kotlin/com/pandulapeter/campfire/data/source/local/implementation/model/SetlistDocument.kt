@@ -10,9 +10,11 @@
 package com.pandulapeter.campfire.data.source.local.implementation.model
 
 import kotlinx.serialization.Serializable
+import kotlinx.serialization.Transient
+import kotlinx.serialization.json.JsonObject
 
 /**
- * The on-disk shape of a `*.setlist.json` file. Every field is defaulted so that a hand-edited or older document
+ * The on-disk shape of a `*.setlist.json` file, as far as this version knows it. Every field is defaulted so that a hand-edited or older document
  * still loads, and the songs carry their transposition so that it survives an export.
  */
 @Serializable
@@ -22,10 +24,14 @@ internal data class SetlistDocument(
     val priority: Int = 0,
     val isArchived: Boolean = false,
     val songs: List<SetlistSongDocument> = emptyList(),
+    /** What the file held besides the fields above, filled and written by [SetlistDocumentFormat] rather than the serializer. */
+    @Transient val unknownFields: JsonObject = JsonObject(emptyMap()),
 )
 
 @Serializable
 internal data class SetlistSongDocument(
     val file: String = "",
     val transposition: Int = 0,
+    /** The same as [SetlistDocument.unknownFields], for one entry. */
+    @Transient val unknownFields: JsonObject = JsonObject(emptyMap()),
 )

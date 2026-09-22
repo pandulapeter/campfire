@@ -76,6 +76,19 @@ internal class ImportPlannerTest {
         assertFalse(ImportPlan(setlists = planned).hasConflicts)
     }
 
+    @Test
+    fun aSetlistThatDiffersOnlyByAFieldThisVersionDoesNotKnowIsNotTheSame() {
+        val library = setlist(fileName = "summer_set.setlist.json", title = "Summer set")
+        val incoming = library.copy(unknownFields = """{"venue":"x"}""")
+
+        val planned = ImportPlanner.planSetlists(
+            incoming = listOf(ImportPlanner.IncomingSetlist(incoming, "summer_set.setlist.json")),
+            librarySetlists = listOf(library),
+        )
+
+        assertEquals(listOf(ImportPlan.Status.CONFLICTING), planned.map { it.status })
+    }
+
     private suspend fun plan(library: Map<String, String>, vararg incoming: ImportPlanner.IncomingSong) =
         ImportPlanner.planSongs(incoming.toList(), library.keys) { library[it] }
 

@@ -12,6 +12,8 @@ package com.pandulapeter.campfire.data.source.local.implementation.mapper
 import com.pandulapeter.campfire.data.model.domain.Setlist
 import com.pandulapeter.campfire.data.source.local.implementation.model.SetlistDocument
 import com.pandulapeter.campfire.data.source.local.implementation.model.SetlistSongDocument
+import kotlinx.serialization.json.JsonObject
+import kotlinx.serialization.json.JsonPrimitive
 import kotlin.test.Test
 import kotlin.test.assertEquals
 
@@ -26,14 +28,17 @@ internal class SetlistMappersTest {
         val document = SetlistDocument(
             title = "Summer",
             songs = listOf(
-                SetlistSongDocument(file = "a.cho", transposition = 2),
+                SetlistSongDocument(file = "a.cho", transposition = 2, unknownFields = JsonObject(mapOf("note" to JsonPrimitive("x")))),
                 SetlistSongDocument(file = ""),
                 SetlistSongDocument(file = "b.cho"),
                 SetlistSongDocument(file = "a.cho", transposition = -1),
             ),
         )
         assertEquals(
-            expected = listOf(Setlist.Entry(songFileName = "a.cho", transposition = 2), Setlist.Entry(songFileName = "b.cho")),
+            expected = listOf(
+                Setlist.Entry(songFileName = "a.cho", transposition = 2, unknownFields = """{"note":"x"}"""),
+                Setlist.Entry(songFileName = "b.cho"),
+            ),
             actual = document.toModel("summer.setlist.json").entries,
         )
     }

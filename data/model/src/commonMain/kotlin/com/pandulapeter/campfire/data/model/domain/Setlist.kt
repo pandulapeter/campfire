@@ -32,10 +32,19 @@ data class Setlist(
      */
     val isArchived: Boolean,
     val entries: List<Entry>,
+    /**
+     * The members of the file this version of the app does not know, as the text of a JSON object, or empty where
+     * there are none. A later version may add a field to setlists while this one is still installed on another of
+     * the user's devices: kept here, that field survives this version's next save of the setlist instead of being
+     * dropped from the file and synced away from every device. Opaque to everything but the storage layer.
+     */
+    val unknownFields: String = "",
 ) {
 
     data class Entry(
         val songFileName: String,
         val transposition: Int = 0,
+        /** The same as [Setlist.unknownFields], for one entry. */
+        val unknownFields: String = "",
     )
 }

@@ -17,7 +17,7 @@ import com.pandulapeter.campfire.data.source.local.api.SetlistLocalSource
 import com.pandulapeter.campfire.data.source.local.implementation.mapper.toDocument
 import com.pandulapeter.campfire.data.source.local.implementation.mapper.toModel
 import com.pandulapeter.campfire.data.source.local.implementation.moveFile
-import com.pandulapeter.campfire.data.source.local.implementation.model.SetlistDocument
+import com.pandulapeter.campfire.data.source.local.implementation.model.SetlistDocumentFormat
 import com.pandulapeter.campfire.data.source.local.implementation.isNamed
 import com.pandulapeter.campfire.data.source.local.implementation.setlistFileName
 import com.pandulapeter.campfire.data.source.local.implementation.uniqueName
@@ -26,7 +26,6 @@ import com.pandulapeter.campfire.data.source.local.implementation.storage.file.S
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
-import kotlinx.serialization.json.Json
 import org.koin.core.annotation.Single
 
 /** Setlists are decoded on [Dispatchers.Default] for the reason the songs are parsed there (see [SongLocalSourceImpl]). */
@@ -47,7 +46,7 @@ internal class SetlistLocalSourceImpl(
                         null
                     } else {
                         fileStorage.readText(StorageDirectory.SETLISTS, file.name)
-                            ?.let { json.decodeFromString<SetlistDocument>(it).toModel(file.name) }
+                            ?.let { SetlistDocumentFormat.decode(it).toModel(file.name) }
                     }
                 } catch (exception: CancellationException) {
                     throw exception
@@ -63,7 +62,7 @@ internal class SetlistLocalSourceImpl(
         val size = fileStorage.info(StorageDirectory.SETLISTS, fileName)?.size ?: return@withContext null
         if (size > ImportLimits.MAX_TEXT_FILE_SIZE) throw LibraryStorageException("\"$fileName\" is too large to be a setlist.")
         fileStorage.readText(StorageDirectory.SETLISTS, fileName)
-            ?.let { json.decodeFromString<SetlistDocument>(it).toModel(fileName) }
+            ?.let { SetlistDocumentFormat.decode(it).toModel(fileName) }
     }
 
     override suspend fun createSetlist(title: String, description: String, priority: Int): Setlist {
@@ -83,7 +82,7 @@ internal class SetlistLocalSourceImpl(
     override suspend fun saveSetlist(setlist: Setlist) = fileStorage.writeText(
         directory = StorageDirectory.SETLISTS,
         name = setlist.fileName,
-        text = json.encodeToString(setlist.toDocument()),
+        text = SetlistDocumentFormat.encode(setlist.toDocument()),
     )
 
     override suspend fun renameSetlist(setlist: Setlist, title: String): Setlist {
@@ -104,7 +103,7 @@ internal class SetlistLocalSourceImpl(
 
     /** The file name is derived from the title rather than kept, so that an exported setlist keeps its identity. */
     override suspend fun parseSetlist(document: String): Setlist? = try {
-        json.decodeFromString<SetlistDocument>(document)
+        SetlistDocumentFormat.decode(document)
             .takeIf { it.title.isNotBlank() }
             ?.let { it.toModel(setlistFileName(it.title)) }
     } catch (exception: Exception) {
@@ -125,14 +124,4 @@ internal class SetlistLocalSourceImpl(
     override suspend fun loadSetlistDocument(fileName: String) = fileStorage.readText(StorageDirectory.SETLISTS, fileName)
 
     override suspend fun deleteSetlist(fileName: String) = fileStorage.delete(StorageDirectory.SETLISTS, fileName)
-
-    private companion object {
-        // Pretty printed because these files are meant to survive an export and be readable (and editable) outside the app.
-        val json = Json {
-            ignoreUnknownKeys = true
-            prettyPrint = true
-            // A null where a value belongs says nothing, so the field falls back on its default like a missing one does.
-            coerceInputValues = true
-        }
-    }
 }

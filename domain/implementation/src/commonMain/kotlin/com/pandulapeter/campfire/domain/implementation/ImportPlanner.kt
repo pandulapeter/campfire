@@ -105,7 +105,8 @@ internal object ImportPlanner {
 
     /** A setlist's priority belongs to the import, but every other user-facing field decides whether it is the same. */
     private fun Setlist.holdsTheSameAs(other: Setlist) =
-        title == other.title && description == other.description && isArchived == other.isArchived && entries == other.entries
+        title == other.title && description == other.description && isArchived == other.isArchived && entries == other.entries &&
+            unknownFields == other.unknownFields
 
     private fun IncomingSong.toEntry(
         status: ImportPlan.Status,

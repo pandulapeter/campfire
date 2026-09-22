@@ -56,7 +56,9 @@ Setlists are small JSON files (`<name>.setlist.json`) stored next to the songs, 
 
 A setlist can also carry a `"description"`, the sentence shown under its title, and an archived one carries
 `"isArchived": true`. A song is named by its file name exactly as it is in `songs/`. Every field is defaulted, so a
-hand-written file can leave out anything it has nothing to say about.
+hand-written file can leave out anything it has nothing to say about. Members Campfire does not know are kept: they
+are written back when the app changes the setlist, so a field added by hand or by a later version survives an older
+one.
 
 ### File names
 
