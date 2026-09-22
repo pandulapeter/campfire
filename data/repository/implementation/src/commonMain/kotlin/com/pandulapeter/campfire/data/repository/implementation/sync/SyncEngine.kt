@@ -49,6 +49,35 @@ internal fun foldRemoteNamesOntoLocal(local: List<LocalFileState>, remote: List<
     }
 }
 
+/**
+ * Files an index entry under the spelling the listings now have for its file, where the two differ only by case.
+ *
+ * [foldRemoteNamesOntoLocal] matches the two listings with each other, but the planner looks the index up by exact
+ * name as well. A song moved to another spelling of the same name ("Update file name" on `Hallelujah.cho`) keeps the
+ * old spelling on a service that ignores case, and its entry under whichever spelling the last run saw. Left like that,
+ * the planner reads one file as two: an entry whose file is gone from both sides, which it forgets, and a file
+ * nobody has seen, which it downloads. A deletion made here then brings the song back, and an edit made elsewhere is
+ * taken for a conflict. An entry only moves when its own name is in neither listing and exactly one listed name
+ * folds to it and has no entry of its own, so an index that already matches is returned as it is.
+ */
+internal fun foldIndexNamesOntoListings(
+    index: Map<SyncKey, SyncIndexEntry>,
+    listed: Set<SyncKey>,
+): Map<SyncKey, SyncIndexEntry> {
+    val unclaimedByFolded = listed.filter { it !in index }.groupBy { it.folded() }
+    val moves = index.keys
+        .filter { it !in listed }
+        .groupBy { it.folded() }
+        .mapNotNull { (folded, orphans) ->
+            val candidates = unclaimedByFolded[folded]
+            if (orphans.size == 1 && candidates?.size == 1) orphans.single() to candidates.single() else null
+        }
+    if (moves.isEmpty()) return index
+    return index.toMutableMap().apply {
+        moves.forEach { (from, to) -> remove(from)?.let { put(to, it) } }
+    }
+}
+
 private fun SyncKey.folded() = copy(name = name.lowercase())
 
 /**
@@ -119,6 +148,12 @@ internal class SyncEngine(
                     )
                 },
             ).filterNot { it.key in tooLarge }
+            // After the listings have been matched with each other, so that an entry follows the spelling the plan
+            // uses for its file.
+            index = foldIndexNamesOntoListings(
+                index = index,
+                listed = (local.map { it.key } + tooLarge + remote.map { it.key }).toSet(),
+            )
             // A file too large to read is left out on both sides, its index entry included: with the entry kept, the
             // planner would see a file gone here and unchanged there, and delete the remote copy. Without one, the day
             // the file is small enough again it is on both sides with nothing to say which is newer, which the planner

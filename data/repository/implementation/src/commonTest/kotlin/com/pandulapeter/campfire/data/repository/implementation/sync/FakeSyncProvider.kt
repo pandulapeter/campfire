@@ -94,10 +94,17 @@ internal class FakeSyncProvider(
         val key = SyncKey(kind = kind, name = name)
         downloadCounts[key] = (downloadCounts[key] ?: 0) + 1
         onDownload(key)
-        return files.getValue(key).first
+        return files.getValue(stored(key)).first
     }
 
     override fun contentHashOf(bytes: ByteArray) = localContentHash(bytes)
+
+    /** Where a request lands: on a service that ignores case, the stored spelling of the name, as Dropbox keeps it. */
+    private fun stored(key: SyncKey) = if (ignoresCase) {
+        files.keys.firstOrNull { it.kind == key.kind && it.name.equals(key.name, ignoreCase = true) } ?: key
+    } else {
+        key
+    }
 
     override suspend fun upload(
         kind: LibraryFileKind,
@@ -107,15 +114,16 @@ internal class FakeSyncProvider(
     ): RemoteWriteResult {
         val key = SyncKey(kind = kind, name = name)
         onUpload(key)
-        if (files[key]?.second != expectedRevision) return RemoteWriteResult.Conflict
+        val target = stored(key)
+        if (files[target]?.second != expectedRevision) return RemoteWriteResult.Conflict
         val isHeldInAnotherCase = files.keys.any { it.kind == kind && it.name.lowercase() == name.lowercase() }
         if (expectedRevision == null && ignoresCase && isHeldInAnotherCase) return RemoteWriteResult.Conflict
         val revision = "r${nextRevision++}"
-        files[key] = bytes to revision
+        files[target] = bytes to revision
         return RemoteWriteResult.Written(revision)
     }
 
     override suspend fun delete(kind: LibraryFileKind, name: String, expectedRevision: String?) {
-        files -= SyncKey(kind = kind, name = name)
+        files -= stored(SyncKey(kind = kind, name = name))
     }
 }

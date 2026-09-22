@@ -88,7 +88,11 @@ import — is the only thing that walks the directory again.
   the one part of sync worth testing — `commonTest` covers every way a file can differ between two devices,
   including the ones that would otherwise only show up as a song someone lost. `SyncEngine` carries the plan out and
   applies `LibraryFileKind.matches` to both the remote listing and the index it loads, the same rule the local listing
-  applies, because a file listed on one side only reads as a deletion. A download above `MAXIMUM_FILE_SIZE` (the largest
+  applies, because a file listed on one side only reads as a deletion. Names are matched by case where a service
+  ignores it: a remote name that differs from a local one only by case takes the local spelling
+  (`foldRemoteNamesOntoLocal`), and an index entry whose name neither listing has moves to the one listed spelling
+  that folds to it (`foldIndexNamesOntoListings`). Without the second, a song moved to another spelling of its own
+  name was downloaded again after it was deleted. A download above `MAXIMUM_FILE_SIZE` (the largest
   file an import reads, `ImportLimits.MAX_TEXT_FILE_SIZE`) is a per-file failure rather than filtered out of the
   listing for the same reason. A local file larger than a run downloads is not read or uploaded either: it is left out
   of the plan on both sides — its index entry too, so that it is not taken for a deletion — and named among the run's

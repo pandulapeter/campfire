@@ -22,6 +22,7 @@ import kotlinx.coroutines.test.runTest
 import kotlin.test.Test
 import kotlin.test.assertContentEquals
 import kotlin.test.assertEquals
+import kotlin.test.assertFalse
 import kotlin.test.assertFailsWith
 import kotlin.test.assertIs
 import kotlin.test.assertTrue
@@ -479,6 +480,80 @@ class SyncEngineTest {
     }
 
     @Test
+    fun `a song renamed by case keeps its index entry under the new spelling`() = runTest {
+        val local = FakeLibraryFileLocalSource(files = mapOf(song("hallelujah") to ORIGINAL))
+        val provider = FakeSyncProvider(files = mapOf(song("Hallelujah") to ORIGINAL), ignoresCase = true)
+
+        val result = SyncEngine(local).synchronize(
+            provider = provider,
+            document = renamedIndexOf(song("Hallelujah") to ORIGINAL, revision = "r1"),
+            accountId = ACCOUNT_ID,
+            onProgress = {},
+            onIndexChanged = {},
+            deletionPolicy = SyncDeletionPolicy.ASK,
+        )
+
+        val completed = assertIs<SyncEngine.Result.Completed>(result)
+        assertEquals(setOf(song("hallelujah").path), completed.index.entries.keys)
+        assertFalse(completed.summary.hasChanges)
+        assertTrue(song("Hallelujah") in provider.files)
+    }
+
+    @Test
+    fun `deleting a song renamed by case deletes it remotely`() = runTest {
+        val local = FakeLibraryFileLocalSource()
+        val provider = FakeSyncProvider(files = mapOf(song("Hallelujah") to ORIGINAL), ignoresCase = true)
+
+        SyncEngine(local).synchronize(
+            provider = provider,
+            document = renamedIndexOf(song("hallelujah") to ORIGINAL, revision = "r1"),
+            accountId = ACCOUNT_ID,
+            onProgress = {},
+            onIndexChanged = {},
+            deletionPolicy = SyncDeletionPolicy.ASK,
+        )
+
+        assertTrue(provider.files.isEmpty())
+        assertTrue(local.files.isEmpty())
+    }
+
+    @Test
+    fun `an edit made elsewhere to a song renamed by case is downloaded rather than taken for a conflict`() = runTest {
+        val local = FakeLibraryFileLocalSource(files = mapOf(song("hallelujah") to ORIGINAL))
+        val provider = FakeSyncProvider(files = mapOf(song("Hallelujah") to THERE), ignoresCase = true)
+
+        val result = SyncEngine(local).synchronize(
+            provider = provider,
+            document = renamedIndexOf(song("Hallelujah") to ORIGINAL, revision = "r0"),
+            accountId = ACCOUNT_ID,
+            onProgress = {},
+            onIndexChanged = {},
+            deletionPolicy = SyncDeletionPolicy.ASK,
+        )
+
+        assertEquals(setOf(song("hallelujah")), local.files.keys)
+        assertContentEquals(THERE, local.files.getValue(song("hallelujah")))
+        assertTrue(assertIs<SyncEngine.Result.Completed>(result).summary.conflicts.isEmpty())
+    }
+
+    @Test
+    fun `an index entry two listed names fold to is left where it is`() {
+        val index = mapOf(song("SONG") to SyncIndexEntry(localHash = "a", remoteRevision = "r1"))
+
+        assertEquals(index, foldIndexNamesOntoListings(index = index, listed = setOf(song("Song"), song("song"))))
+    }
+
+    @Test
+    fun `two index entries that fold to one listed name are left where they are`() {
+        val index = mapOf(
+            song("SONG") to SyncIndexEntry(localHash = "a", remoteRevision = "r1"),
+            song("Song") to SyncIndexEntry(localHash = "b", remoteRevision = "r2"),
+        )
+
+        assertEquals(index, foldIndexNamesOntoListings(index = index, listed = setOf(song("song"))))
+    }
+
+    @Test
     fun `two local names that differ only by case both go up to a service with exact names`() = runTest {
         val local = FakeLibraryFileLocalSource(
             files = mapOf(song("Song") to "Upper".encodeToByteArray(), song("song") to "Lower".encodeToByteArray()),
@@ -857,6 +932,14 @@ class SyncEngineTest {
         fun librarySongs(count: Int) = (1..count).associate { song(it) to "Song $it".encodeToByteArray() }
 
         /** An index that says the last run saw [files] with these contents, at the revision the fake starts from. */
+        /** One file in step with the fake's revision rather than [indexOf]'s, for the tests that rename it. */
+        fun renamedIndexOf(file: Pair<SyncKey, ByteArray>, revision: String) = SyncIndexDocument.of(
+            providerId = SyncProviderId.DROPBOX.id,
+            accountId = ACCOUNT_ID,
+            lastSyncedAt = 1,
+            index = mapOf(file.first to SyncIndexEntry(localHash = localContentHash(file.second), remoteRevision = revision)),
+        )
+
         fun indexOf(vararg files: Pair<SyncKey, ByteArray>) = SyncIndexDocument.of(
             providerId = SyncProviderId.DROPBOX.id,
             accountId = ACCOUNT_ID,
