@@ -120,7 +120,9 @@ internal fun TagPill(
                 )
             }
             Text(
-                modifier = Modifier.padding(vertical = TAG_TEXT_PADDING),
+                // Weighted so that the icons are measured first: a tag as long as the row is ellipsized rather than
+                // pushing its own remove button out of the pill.
+                modifier = Modifier.weight(1f, fill = false).padding(vertical = TAG_TEXT_PADDING),
                 text = text,
                 style = MaterialTheme.typography.labelMedium,
                 maxLines = 1,
