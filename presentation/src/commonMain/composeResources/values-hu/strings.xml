@@ -36,7 +36,10 @@
         <item quantity="other">Az importálandó fájlok közül %1$d olyan nevet visel, amelyen már egy másik fájl van a könyvtáradban.</item>
     </plurals>
     <string name="import_conflicts_new">%1$d dal és %2$d lista új, ezek mindenképpen importálódnak.</string>
-    <string name="import_conflicts_duplicates">%1$d fájl változatlanul megvan már a könyvtáradban, ezeket nem bántjuk.</string>
+    <plurals name="import_conflicts_duplicates">
+        <item quantity="one">Egy fájl változatlanul megvan már a könyvtáradban, ezt nem bántjuk.</item>
+        <item quantity="other">%1$d fájl változatlanul megvan már a könyvtáradban, ezeket nem bántjuk.</item>
+    </plurals>
     <plurals name="import_conflicts_skipped">
         <item quantity="one">Egy fájl se nem dal, se nem lista, ezt nem lehet importálni.</item>
         <item quantity="other">%1$d fájl se nem dal, se nem lista, ezeket nem lehet importálni.</item>

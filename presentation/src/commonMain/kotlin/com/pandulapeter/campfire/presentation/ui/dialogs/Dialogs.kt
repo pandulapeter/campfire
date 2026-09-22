@@ -395,7 +395,7 @@ private fun ImportConflictsDialog(
                     ImportConflictsNote(stringResource(Res.string.import_conflicts_new, summary.newSongCount, summary.newSetlistCount))
                 }
                 if (summary.duplicateCount > 0) {
-                    ImportConflictsNote(stringResource(Res.string.import_conflicts_duplicates, summary.duplicateCount))
+                    ImportConflictsNote(pluralStringResource(Res.plurals.import_conflicts_duplicates, summary.duplicateCount, summary.duplicateCount))
                 }
                 if (summary.skippedCount > 0) {
                     ImportConflictsNote(pluralStringResource(Res.plurals.import_conflicts_skipped, summary.skippedCount, summary.skippedCount))
