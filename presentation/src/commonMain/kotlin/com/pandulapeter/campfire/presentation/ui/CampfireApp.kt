@@ -400,6 +400,17 @@ private fun CampfireContent(
         ime = ime,
         density = density,
     )
+    // The snackbar sits above the chrome, and above the keyboard wherever that reaches higher: the app is laid out
+    // under the keyboard rather than resized by it, and a message sent while somebody is typing - a save that failed
+    // in the editor - would otherwise time out behind it unseen.
+    val messagesPadding: PaddingValues = KeyboardAwarePadding(
+        start = 0.dp,
+        end = 0.dp,
+        bottom = navigationBarHeight + systemBars.calculateBottomPadding(),
+        coveredHeight = 0.dp,
+        ime = ime,
+        density = density,
+    )
     // What the screens' own lifecycles are compared with, see ScreenSurface.
     val hostLifecycle = LocalLifecycleOwner.current.lifecycle
 
@@ -488,7 +499,7 @@ private fun CampfireContent(
         Messages(
             modifier = Modifier
                 .align(Alignment.BottomCenter)
-                .padding(bottom = navigationBarHeight + systemBars.calculateBottomPadding()),
+                .padding(messagesPadding),
             viewModel = viewModel,
         )
     }
