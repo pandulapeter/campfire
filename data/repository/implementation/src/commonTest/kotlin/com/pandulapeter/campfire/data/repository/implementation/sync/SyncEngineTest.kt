@@ -743,6 +743,46 @@ class SyncEngineTest {
     }
 
     @Test
+    fun `a file whose remote name differs only by Unicode form is not uploaded as a new one`() = runTest {
+        val local = FakeLibraryFileLocalSource(files = mapOf(song(COMPOSED) to ORIGINAL))
+        val provider = FakeSyncProvider(files = mapOf(song(DECOMPOSED) to ORIGINAL))
+
+        val result = SyncEngine(local).synchronize(
+            provider = provider,
+            document = SyncIndexDocument(),
+            accountId = ACCOUNT_ID,
+            onProgress = {},
+            onIndexChanged = {},
+            deletionPolicy = SyncDeletionPolicy.ASK,
+        )
+
+        assertEquals(setOf(song(COMPOSED).path), assertIs<SyncEngine.Result.Completed>(result).index.entries.keys)
+        assertEquals(setOf(song(COMPOSED)), local.files.keys)
+        assertEquals(1, provider.files.size)
+    }
+
+    @Test
+    fun `an index entry follows a name across a change of Unicode form`() = runTest {
+        val local = FakeLibraryFileLocalSource(files = mapOf(song(COMPOSED) to ORIGINAL))
+        val provider = FakeSyncProvider(files = mapOf(song(COMPOSED) to ORIGINAL))
+
+        val result = SyncEngine(local).synchronize(
+            provider = provider,
+            document = renamedIndexOf(song(DECOMPOSED) to ORIGINAL, revision = "r1"),
+            accountId = ACCOUNT_ID,
+            onProgress = {},
+            onIndexChanged = {},
+            deletionPolicy = SyncDeletionPolicy.ASK,
+        )
+
+        val completed = assertIs<SyncEngine.Result.Completed>(result)
+        assertFalse(completed.summary.hasChanges)
+        assertEquals(setOf(song(COMPOSED).path), completed.index.entries.keys)
+        assertEquals(setOf(song(COMPOSED)), local.files.keys)
+        assertEquals(setOf(song(COMPOSED)), provider.files.keys)
+    }
+
+    @Test
     fun `a run that would delete the whole library stops and asks before anything moves`() = runTest {
         val library = librarySongs(10)
         val local = FakeLibraryFileLocalSource(files = library)
@@ -1131,6 +1171,11 @@ class SyncEngineTest {
 
     private companion object {
         const val ACCOUNT_ID = "dropbox:someone@example.com"
+
+        /** One name in the two Unicode forms the platforms hand out, composed as Android writes it and decomposed as macOS does. */
+        const val COMPOSED = "\u043C\u0430\u0439"
+        const val DECOMPOSED = "\u043C\u0430\u0438\u0306"
+
         val ORIGINAL = "Original".encodeToByteArray()
         val HERE = "Edited here".encodeToByteArray()
         val THERE = "Edited there".encodeToByteArray()

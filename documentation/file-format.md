@@ -70,8 +70,9 @@ except where the song inside declares no `{title}`, in which case it stands in a
 
 The folding rules exist so that the same song written down by two people arrives at the same name: an apostrophe is
 dropped rather than turned into a separator (`dont_cry`), `&` and `+` are spelled out (`rock_and_roll`), and a credit
-is filed under `ft` however it was abbreviated. The rule is idempotent, since a name that left the app is normalized
-again on its way back in. A name that is already taken by something else gets a `_2`, `_3`… suffix.
+is filed under `ft` however it was abbreviated. Letters are written in their composed Unicode form (NFC) whichever
+form the name arrived in, so a title typed on a Mac and the same title typed anywhere else are one name. The rule is
+idempotent, since a name that left the app is normalized again on its way back in. A name that is already taken by something else gets a `_2`, `_3`… suffix.
 
 Campfire only ever renames a file when you ask it to, or when nothing is lost by it. A setlist's file follows its
 title, because the title is written inside the document. A song's does not: it is what a setlist points at, and on

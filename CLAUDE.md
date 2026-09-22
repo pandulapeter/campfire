@@ -187,8 +187,12 @@ item bound to the device and `FileStorage.keepOutOfDeviceBackup` on the index.
   survives as structure: `tukorfurogep-arviz.cho`, `summer_set_2026.setlist.json`, colliding as `_2`. Three of the
   folding rules are there so that the same song written down by two people arrives at one name: an apostrophe is
   dropped rather than folded to a separator (`dont_cry`), `&` and `+` are spelled out (`rock_and_roll`), and a credit
-  is filed under `ft` however it was abbreviated. The rule is idempotent, which it has to be, since a name that left
-  the app is normalized again on its way back in.
+  is filed under `ft` however it was abbreviated. Before any of that the name is brought to Unicode NFC
+  (`normalizedToNfc`, an expect/actual in `:data:model`), since macOS and iOS hand out names decomposed and every other
+  platform composed, and a non-Latin letter keeps its marks — so the two forms would be two songs; sync's name matching
+  composes too. The rule is idempotent, which it has to be, since a name that left the app is normalized again on its
+  way back in. Nothing is migrated: a file whose name is decomposed keeps it until **Update file name** (or, for a
+  setlist, a new title) moves it.
 - **A song is named by its own header, wherever it came from**: `{artist}`, `{title}` and `{subtitle}`, the subtitle
   joining the title half (`green_day-good_riddance_time_of_your_life.cho`) because it is part of the title everywhere
   else in the app. That holds for a song written in the editor, one that arrives through an import

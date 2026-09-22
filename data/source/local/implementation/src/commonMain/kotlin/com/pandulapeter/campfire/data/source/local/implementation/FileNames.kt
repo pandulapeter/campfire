@@ -10,6 +10,7 @@
 package com.pandulapeter.campfire.data.source.local.implementation
 
 import com.pandulapeter.campfire.data.model.domain.LibraryFiles
+import com.pandulapeter.campfire.data.model.domain.normalizedToNfc
 import com.pandulapeter.campfire.data.source.local.implementation.storage.file.FileStorage
 import com.pandulapeter.campfire.data.source.local.implementation.storage.file.StorageDirectory
 
@@ -116,11 +117,16 @@ internal fun arrivingCollisionSuffix(index: Int) = " ($index)"
  * Whether this file is already named [desired], the number a collision may have added included: a file that had to
  * make way for another one is named as well as it can be, and an offer to rename it again would be one that never
  * goes away however often it is taken.
+ *
+ * The file's own name is composed before it is compared, since [desired] always is: a file named on a Mac arrives
+ * decomposed and would otherwise never be named as it should be, offering a rename that, once taken, offers itself
+ * again. Composing it does not rename anything - an existing file keeps the form it was written in until the user
+ * asks for its name to be updated.
  */
 internal fun String.isNamed(desired: String): Boolean {
     val extension = knownExtension()
     if (!extension.equals(desired.knownExtension(), ignoreCase = true)) return false
-    val base = removeSuffix(extension)
+    val base = removeSuffix(extension).normalizedToNfc()
     val desiredBase = desired.removeSuffix(desired.knownExtension())
     return base == desiredBase || LibraryFiles.withoutCollisionSuffix(base) == desiredBase
 }

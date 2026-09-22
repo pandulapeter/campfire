@@ -87,7 +87,8 @@ import — is the only thing that walks the directory again.
   including the ones that would otherwise only show up as a song someone lost. `SyncEngine` carries the plan out and
   applies `LibraryFileKind.matches` to both the remote listing and the index it loads, the same rule the local listing
   applies, because a file listed on one side only reads as a deletion. Names are matched by case where a service
-  ignores it: a remote name that differs from a local one only by case takes the local spelling
+  ignores it, and by Unicode form, which the file systems disagree about: a remote name that differs from a local one
+  only by case or by form takes the local spelling
   (`foldRemoteNamesOntoLocal`), and an index entry whose name neither listing has moves to the one listed spelling
   that folds to it (`foldIndexNamesOntoListings`). Without the second, a song moved to another spelling of its own
   name was downloaded again after it was deleted. A download above `MAXIMUM_FILE_SIZE` (the largest

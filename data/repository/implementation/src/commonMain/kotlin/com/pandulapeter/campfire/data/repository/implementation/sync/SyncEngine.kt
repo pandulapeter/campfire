@@ -14,6 +14,7 @@ import com.pandulapeter.campfire.data.model.domain.SyncDeletionDirection
 import com.pandulapeter.campfire.data.model.domain.SyncDeletionPolicy
 import com.pandulapeter.campfire.data.model.domain.SyncProgress
 import com.pandulapeter.campfire.data.model.domain.SyncSummary
+import com.pandulapeter.campfire.data.model.domain.normalizedToNfc
 import com.pandulapeter.campfire.data.source.local.api.LibraryFileLocalSource
 import com.pandulapeter.campfire.data.source.remote.api.SyncAuthorizationException
 import com.pandulapeter.campfire.data.source.remote.api.SyncNetworkException
@@ -79,7 +80,11 @@ internal fun foldIndexNamesOntoListings(
     }
 }
 
-private fun SyncKey.folded() = copy(name = name.lowercase())
+/**
+ * Two spellings a service takes for one file: case, which Dropbox ignores, and Unicode form, which the file systems
+ * disagree about - a name an iPhone hands out decomposed is the same file as the composed one the service holds.
+ */
+private fun SyncKey.folded() = copy(name = name.normalizedToNfc().lowercase())
 
 /**
  * Carries out what [SyncPlanner] worked out.

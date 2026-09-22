@@ -60,7 +60,7 @@ internal class FileNamesTest {
         val feather = "a".repeat(115) + " feather"
         val long = "Árvíztűrő tükörfúrógép és a hosszú cím ".repeat(8)
         val singleWord = "b".repeat(300)
-        listOf(feather, long, singleWord).forEach { base ->
+        listOf(feather, long, singleWord, *DECOMPOSED_NAMES.map { it.first }.toTypedArray()).forEach { base ->
             val once = LibraryFiles.normalizedName(base)
             assertTrue(once.encodeToByteArray().size <= LibraryFiles.MAX_NAME_BYTES, once)
             assertEquals(once, LibraryFiles.normalizedName(once))
@@ -74,6 +74,27 @@ internal class FileNamesTest {
         assertEquals("edith", LibraryFiles.normalizedName("\u00C9dith"))
         assertEquals("edith", LibraryFiles.normalizedName("E\u0301dith"))
         assertEquals("arvizturo-tukorfurogep.cho", songFileName(title = "tu\u0308ko\u0308rfu\u0301ro\u0301ge\u0301p", artist = "A\u0301rvi\u0301ztu\u030Bro\u030B"))
+    }
+
+    @Test
+    fun aDecomposedNameInAnyScriptFoldsLikeItsComposedTwin() {
+        DECOMPOSED_NAMES.forEach { (decomposed, composed) ->
+            assertEquals(LibraryFiles.normalizedName(composed), LibraryFiles.normalizedName(decomposed), decomposed)
+        }
+        assertEquals("\u043C\u0430\u0439", LibraryFiles.normalizedName("\u041C\u0430\u0438\u0306"))
+        assertEquals("\u03B5\u03BB\u03BB\u03AC\u03B4\u03B1_\u03BC\u03BF\u03C5", LibraryFiles.normalizedName("\u0395\u03BB\u03BB\u03B1\u0301\u03B4\u03B1 \u03BC\u03BF\u03C5"))
+        assertEquals("viet", LibraryFiles.normalizedName("Vie\u0323\u0302t"))
+    }
+
+    @Test
+    fun aNameWithNoComposedFormIsLeftAlone() {
+        assertEquals("\u0939\u093F\u0928\u094D\u0926\u0940", LibraryFiles.normalizedName("\u0939\u093F\u0928\u094D\u0926\u0940"))
+    }
+
+    @Test
+    fun aDecomposedNameIsCappedWhereItsComposedTwinIs() {
+        assertEquals("\u0439".repeat(60), LibraryFiles.normalizedName("\u0438\u0306".repeat(100)))
+        assertEquals(LibraryFiles.normalizedName("\u0439".repeat(100)), LibraryFiles.normalizedName("\u0438\u0306".repeat(100)))
     }
 
     @Test
@@ -173,5 +194,16 @@ internal class FileNamesTest {
         assertEquals("thu", LibraryFiles.normalizedName("Þú"))
         assertEquals("ijsselmeer", LibraryFiles.normalizedName("Ĳsselmeer"))
         listOf("gesi_za_woda", "isik", "viet_nam", "thu").forEach { assertEquals(it, LibraryFiles.normalizedName(it)) }
+    }
+
+    private companion object {
+
+        /** One name per script in both of its forms, written as escapes so that the source file's own encoding decides nothing. */
+        val DECOMPOSED_NAMES = listOf(
+            "\u041C\u0430\u0438\u0306" to "\u041C\u0430\u0439",
+            "\u0395\u03BB\u03BB\u03B1\u0301\u03B4\u03B1" to "\u0395\u03BB\u03BB\u03AC\u03B4\u03B1",
+            "\u05E9\u05C1\u05B8\u05DC\u05D5\u05B9\u05DD" to "\u05E9\u05B8\u05C1\u05DC\u05D5\u05B9\u05DD",
+            "Vie\u0323\u0302t Nam" to "Vi\u1EC7t Nam",
+        )
     }
 }

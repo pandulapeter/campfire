@@ -100,7 +100,11 @@ object LibraryFiles {
     fun normalizedName(base: String): String {
         val folded = StringBuilder()
         var isAfterForeignCharacter = false
-        for (character in base.lowercase()) {
+        // Composed first, and before the case is folded, which does not commute with it for every script: the same
+        // name is decomposed on macOS and iOS and composed everywhere else, and the fold below keeps a mark that follows
+        // a non-Latin letter, so the two forms would be two names. Composing is also what keeps the rule idempotent
+        // across platforms - a name this produced on a Mac is handed back to it by the file system in the other form.
+        for (character in base.normalizedToNfc().lowercase()) {
             if (character in APOSTROPHES) continue
             val isForeignCharacter = when {
                 character.isMark() -> isAfterForeignCharacter
