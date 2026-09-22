@@ -103,8 +103,32 @@ jobs:
             printf -- '- Version %s\n' "${{ steps.version.outputs.name }}" > release_notes.txt
           fi
           # The Play Store counts every locale against the same 500 character limit, and rejects the whole release
-          # when one of them is over it, so each one is cut at a line boundary rather than mid-sentence.
-          trim() { awk '{ total += length($0) + 1; if (total > 500) exit; print }' "$1" > "$2"; }
+          # when one of them is over it, so each one is cut at a line boundary rather than mid-sentence. Characters,
+          # not bytes: awk on the runner is mawk, whose length() counts bytes, and cut a Hungarian text with a few
+          # dozen accented letters bullets short of what the release-notes skill had fitted to the limit.
+          trim() {
+            python3 - "$1" "$2" <<'PYTHON'
+          import sys
+
+          LIMIT = 500
+          lines = open(sys.argv[1], encoding="utf-8").read().splitlines()
+          kept, total = [], 0
+          for line in lines:
+              total += len(line) + 1
+              if total > LIMIT:
+                  break
+              kept.append(line)
+          if not kept and lines:
+              # A first line over the limit on its own, which a paragraph of the visible description can be, is cut at
+              # the last word that fits rather than leaving the listing with nothing to say.
+              first = lines[0][:LIMIT - 1]
+              kept = [first.rsplit(" ", 1)[0] if " " in first else first]
+          if len(kept) < len(lines):
+              print(f"::warning::{sys.argv[2]} was cut to {LIMIT} characters.")
+          with open(sys.argv[2], "w", encoding="utf-8") as output:
+              output.write("\n".join(kept) + "\n")
+          PYTHON
+          }
           trim release_notes.txt whatsnew/whatsnew-en-US
           # The Hungarian text is written by hand or not at all - nothing can translate the commit log. Falling back
           # to the English notes leaves the Hungarian listing saying something true, which an empty entry would not.
