@@ -26,6 +26,7 @@ import com.pandulapeter.campfire.data.repository.implementation.sync.RecordingSo
 import com.pandulapeter.campfire.data.repository.implementation.sync.SyncKey
 import com.pandulapeter.campfire.data.source.local.api.LibraryStorageException
 import com.pandulapeter.campfire.data.source.remote.api.PendingAuthorization
+import com.pandulapeter.campfire.data.source.remote.api.SyncAuthorizationException
 import com.pandulapeter.campfire.data.source.remote.api.SyncAuthenticator
 import com.pandulapeter.campfire.data.source.remote.api.SyncNetworkException
 import com.pandulapeter.campfire.data.source.remote.api.SyncProviders
@@ -238,6 +239,27 @@ class SyncRepositoryImplTest {
         val state = repository.syncState.first { it is SyncState.ConnectionFailed }
 
         assertEquals(SyncFailureReason.AUTHORIZATION, assertIs<SyncState.ConnectionFailed>(state).reason)
+    }
+
+    @Test
+    fun `a run the service refuses reports the connection as failed and keeps the index`() = runTest {
+        val stateLocalSource = FakeSyncStateLocalSource()
+        val repository = repository(
+            provider = FakeSyncProvider(
+                files = mapOf(song(1) to "One".encodeToByteArray()),
+                onDownload = { throw SyncAuthorizationException("Refused") },
+                account = ACCOUNT,
+            ),
+            stateLocalSource = stateLocalSource,
+        )
+
+        repository.restore()
+        repository.synchronize(SyncDeletionPolicy.ASK)
+        val state = repository.syncState.first { it is SyncState.ConnectionFailed }
+
+        assertEquals(SyncFailureReason.AUTHORIZATION, assertIs<SyncState.ConnectionFailed>(state).reason)
+        assertNotNull(stateLocalSource.index)
+        assertFalse("\"isRunInProgress\": true" in stateLocalSource.index.orEmpty())
     }
 
     @Test

@@ -399,7 +399,17 @@ internal class SyncRepositoryImpl(
             } catch (exception: Exception) {
                 println("The sync run failed: ${exception.message}")
                 withContext(NonCancellable) { finishRunCutShort(latestIndex, hasFinishedOperations) }
-                updateConnected { it.copy(progress = null, lastOutcome = SyncOutcome.Failure(exception.toFailureReason())) }
+                updateConnected {
+                    if (exception is SyncAuthorizationException) {
+                        // Refused after a renewal was tried, so only a new authorization can answer it, and that
+                        // is what ConnectionFailed offers. Kept Connected, the one way on would be Disconnect, which
+                        // deletes the index and brings back everything deleted since the last run once the same
+                        // account is connected again. Connecting keeps it (completePendingAuthorization).
+                        SyncState.ConnectionFailed(it.account.providerId, SyncFailureReason.AUTHORIZATION)
+                    } else {
+                        it.copy(progress = null, lastOutcome = SyncOutcome.Failure(exception.toFailureReason()))
+                    }
+                }
             } catch (throwable: Throwable) {
                 // Not an Exception: what a synchronous js(...) call throws on the web (a JsException), or a real Error.
                 // The run still owes everything a failed one owes, or the marker stays on disk and the lists keep the

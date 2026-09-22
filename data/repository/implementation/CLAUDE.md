@@ -141,7 +141,10 @@ import — is the only thing that walks the directory again.
   Disconnecting cancels a run that is still going and waits for it; once it has begun to take the connection apart it
   is carried to the end whoever cancels its caller, and a run that finds the state `Connected` but no provider
   connected turns it into `ConnectionFailed` rather than doing nothing, so an account whose credentials are gone never
-  stays on screen with a button that cannot work. It deletes the index under the run lock, so that a run stopped a
+  stays on screen with a button that cannot work. A run the service refuses (`SyncAuthorizationException`, which the
+  provider only throws once a renewal has been refused) ends the same way, rather than as a failed outcome under the
+  account: its only way on would be Disconnect, which deletes the index, while Connect keeps the index for the same
+  account. It deletes the index under the run lock, so that a run stopped a
   moment earlier has finished writing it, and a run only ever writes its outcome into a state that is still
   `Connected`: a run that outlived the account it ran against must not bring that account back on screen.
   `cancelConnection` is the way out of `Connecting` that does not need the `connect()` that got there to be running
