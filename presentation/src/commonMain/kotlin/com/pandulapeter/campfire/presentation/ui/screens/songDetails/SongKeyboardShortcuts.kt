@@ -18,6 +18,9 @@ import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.input.key.Key
 import androidx.compose.ui.input.key.KeyEventType
+import androidx.compose.ui.input.key.isAltPressed
+import androidx.compose.ui.input.key.isCtrlPressed
+import androidx.compose.ui.input.key.isMetaPressed
 import androidx.compose.ui.input.key.key
 import androidx.compose.ui.input.key.onPreviewKeyEvent
 import androidx.compose.ui.input.key.type
@@ -32,7 +35,9 @@ import androidx.compose.ui.input.key.type
  * the event wherever inside the screen the focus has since moved to - an app bar button that was clicked, the
  * scrolling content itself - and so that the scrolling container underneath never gets to interpret an arrow of
  * its own. Consuming all four takes two dimensional focus traversal away from this screen, which is the trade: the
- * keys are worth more to a reader here than they are to Tab, which still traverses everything.
+ * keys are worth more to a reader here than they are to Tab, which still traverses everything. Only the four on their
+ * own: an arrow with Alt, Meta or Ctrl is somebody else's shortcut - the browser's Back among them - and is left
+ * unconsumed.
  *
  * @param onPreviousSong Null when the current song is the first one, or when there is only the one to read; the
  *   event is then left alone rather than swallowed.
@@ -53,6 +58,12 @@ internal fun Modifier.songKeyboardShortcuts(
         .onPreviewKeyEvent { keyEvent ->
             // Key repeats arrive as further KeyDown events, which is what makes a held arrow scroll continuously.
             if (keyEvent.type != KeyEventType.KeyDown) return@onPreviewKeyEvent false
+            // An arrow pressed with Alt, Meta or Ctrl belongs to whoever sent it rather than to the reader: Alt + Left
+            // is the browser's Back, which on the web is this app's own back stack, and Cmd + Left and Cmd + Right are
+            // Back and Forward on a Mac. A page turner pedal sends the arrows on their own, so nothing is lost by
+            // leaving those presses alone. Shift is not among them: it modifies a selection, and there is nothing on
+            // this screen to select.
+            if (keyEvent.isAltPressed || keyEvent.isMetaPressed || keyEvent.isCtrlPressed) return@onPreviewKeyEvent false
             val action = when (keyEvent.key) {
                 Key.DirectionUp -> onScrollUp
                 Key.DirectionDown -> onScrollDown
