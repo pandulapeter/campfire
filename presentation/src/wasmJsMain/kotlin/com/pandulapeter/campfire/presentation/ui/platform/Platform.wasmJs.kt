@@ -23,9 +23,6 @@ internal actual val isDesktopPlatform = !hasTouchScreen()
 // The Origin Private File System is not reachable from outside the page.
 internal actual val libraryLocation: LibraryLocation? = null
 
-// The page is served by the project itself, with no store's rules to follow.
-internal actual val canAskForDonations = true
-
 internal actual val currentDistribution: Distribution? = Distribution.WEB
 
 internal actual fun PointerEvent.verticalWheelNotches(): Float {

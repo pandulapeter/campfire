@@ -10,6 +10,7 @@
 package com.pandulapeter.campfire.presentation.ui.platform
 
 import androidx.compose.ui.input.pointer.PointerEvent
+import com.pandulapeter.campfire.presentation.CAMPFIRE_DESKTOP_DISTRIBUTION
 import java.io.File
 
 internal actual val isDesktopPlatform = true
@@ -23,15 +24,17 @@ internal actual val isDesktopPlatform = true
  */
 internal actual val libraryLocation: LibraryLocation? = LibraryLocation.Folder(File(desktopDataDirectory(), LIBRARY_DIRECTORY).absolutePath)
 
-// The installers are handed out by the project itself, with no store's rules to follow.
-internal actual val canAskForDonations = true
-
-// One build for three operating systems, each handed out from somewhere else, so the answer is only known once it
-// runs.
-internal actual val currentDistribution: Distribution? = when {
-    isMacOs -> Distribution.MAC_APP_STORE
-    isWindows -> Distribution.MICROSOFT_STORE
-    operatingSystem.contains("linux") -> Distribution.LINUX
+/**
+ * What the build was told it is (`campfire.desktop.distribution`), rather than what the machine it is running on
+ * would suggest: the same operating system is served from a store and from the project's own download page alike,
+ * and the two answer to different rules.
+ */
+internal actual val currentDistribution: Distribution? = when (CAMPFIRE_DESKTOP_DISTRIBUTION) {
+    "mac-app-store" -> Distribution.MAC_APP_STORE
+    "microsoft-store" -> Distribution.MICROSOFT_STORE
+    "linux" -> Distribution.LINUX
+    // "download": the .dmg and .msi the GitHub release carries, and every build nobody configured. No store's rules
+    // apply to it, which is exactly what a null says.
     else -> null
 }
 

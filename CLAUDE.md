@@ -222,7 +222,8 @@ item bound to the device and `FileStorage.keepOutOfDeviceBackup` on the index.
   `Info.plist` by a build phase of the Xcode project, which sets no version of its own.
 - **Everything configurable is a `campfire.*` Gradle property**, declared with a default in `gradle.properties` and
   read with `project.property("campfire.x")`: the app version, the Android version code and the iOS build number, the
-  Android release signing values, the Dropbox app key, and whether the web distribution is precompressed. `property`
+  Android release signing values, the Dropbox app key, which of its four distributions a desktop build is, and
+  whether the web distribution is precompressed. `property`
   rather than `findProperty`, so a typo fails the build instead of writing the string "null" into an APK. Inside a `tasks.registering { }` block it has to be `project.property(...)`, or the
   lookup goes to the task.
 - **`local.properties` overrides any of them, and is never committed.** `settings.gradle.kts` loads it and writes each
@@ -268,7 +269,8 @@ item bound to the device and `FileStorage.keepOutOfDeviceBackup` on the index.
     attaches them to the release: `packageReleaseDeb` on amd64 and arm64, which is the whole of how the Linux build
     is handed out (`Distribution.LINUX` links to the latest release's page, and a `.deb` is not something anybody
     signs on its own), and an unsigned `packageReleaseDmg` for both kinds of Mac and `packageReleaseMsi` for Windows,
-    a stopgap until the two stores have the app. jpackage signs the macOS app ad hoc, which is what lets it run at all
+    a stopgap until the two stores have the app. Each leg passes `campfire.desktop.distribution` (`linux` or
+    `download`), which is how a build that goes through App Review is told not to offer the donation link. jpackage signs the macOS app ad hoc, which is what lets it run at all
     on Apple silicon once Gatekeeper has been overridden. The legs do not cancel each other. Every one of them runs
     ProGuard, which breaks an app in ways only starting it shows (see `app/desktop`), so each leg also builds the
     app image (`createReleaseDistributable`, which only the macOS installer is made of; on Linux and Windows the

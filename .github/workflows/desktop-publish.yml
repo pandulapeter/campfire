@@ -15,6 +15,12 @@
 # that has to be overridden in System Settings on the former and a SmartScreen warning on the latter, which is why the
 # app links to neither.
 #
+# Every leg tells the build which distribution it is (campfire.desktop.distribution), since the operating system it
+# is packaged on cannot tell a store build from the direct download: these are "download" and "linux". The Mac App
+# Store and the Microsoft Store builds, once they have workflows of their own, pass "mac-app-store" and
+# "microsoft-store", and the former is how a build that goes through App Review is told not to link to the donation
+# page.
+#
 # Called by release.yml for every release; dispatched by hand to attach the installers to a release that is already
 # there.
 
@@ -50,26 +56,31 @@ jobs:
           # installs it.
           - name: Linux (amd64)
             runner: ubuntu-24.04
+            distribution: linux
             task: packageReleaseDeb
             format: deb
             asset: linux-amd64.deb
           - name: Linux (arm64)
             runner: ubuntu-24.04-arm
+            distribution: linux
             task: packageReleaseDeb
             format: deb
             asset: linux-arm64.deb
           - name: macOS (Apple silicon)
             runner: macos-latest
+            distribution: download
             task: packageReleaseDmg
             format: dmg
             asset: macos-arm64-unsigned.dmg
           - name: macOS (Intel)
             runner: macos-15-intel
+            distribution: download
             task: packageReleaseDmg
             format: dmg
             asset: macos-x64-unsigned.dmg
           - name: Windows
             runner: windows-latest
+            distribution: download
             task: packageReleaseMsi
             format: msi
             asset: windows-x64-unsigned.msi
@@ -106,6 +117,7 @@ jobs:
       - name: Build the installer
         run: |
           ./gradlew :app:desktop:createReleaseDistributable :app:desktop:${{ matrix.task }} \
+            -Pcampfire.desktop.distribution=${{ matrix.distribution }} \
             -Pcampfire.dropbox.appKey="${{ secrets.DROPBOX_APP_KEY }}"
           ./gradlew --stop
       # ProGuard breaks an application in ways that only starting it shows - a VerifyError on the first frame is how

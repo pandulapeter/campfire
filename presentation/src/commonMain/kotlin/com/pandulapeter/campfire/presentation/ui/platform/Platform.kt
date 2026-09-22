@@ -25,22 +25,23 @@ internal expect val isDesktopPlatform: Boolean
 internal expect val libraryLocation: LibraryLocation?
 
 /**
- * Whether the settings screen may offer a link that asks for money, which depends on where the build comes from.
- *
- * The App Store forbids pointing at any way of paying the developer other than an in-app purchase (guideline 3.1.1),
- * and a tip is such a payment, so the iOS build has no such link. Play's billing is only required for purchases of
- * digital content, which a donation that buys nothing is not, and the desktop installers and the web build answer to
- * no store at all.
- */
-internal expect val canAskForDonations: Boolean
-
-/**
- * Which of the places Campfire is handed out from this build is for, or null where it is for none of them - a
- * desktop build on something that is neither Windows, macOS nor Linux. The settings screen lists the others next to
+ * Which of the places Campfire is handed out from this build is for, or null where it is for none of them - the
+ * desktop installers the GitHub release carries, which answer to no store. The settings screen lists the others next to
  * it, so that the app can be found for every device its user has; see [visibleDistributions] for what each store lets
  * a build say about the rest.
  */
 internal expect val currentDistribution: Distribution?
+
+/**
+ * Whether the settings screen may offer a link that asks for money, which is decided by the store the build is
+ * published on.
+ *
+ * The App Store and the Mac App Store forbid pointing at any way of paying the developer other than an in-app
+ * purchase (guideline 3.1.1), and a tip is such a payment. Play's billing is only required for purchases of digital
+ * content, which a donation that buys nothing is not; the Microsoft Store has no such rule; and the direct
+ * installers, the Linux package and the web build answer to no store at all.
+ */
+internal val canAskForDonations get() = currentDistribution?.isApple != true
 
 /**
  * How far a scroll wheel event turned the wheel vertically, in notches (positive towards the user), which is the unit a
