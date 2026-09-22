@@ -18,11 +18,11 @@ The view model is obtained outside `Window` so window resizing doesn't reset it.
 `main` takes `args` because that is how "open with" reaches a desktop application on Windows and Linux: the system
 launches the app with the file as an argument. macOS sends an `odoc` Apple event instead — to a starting app and to
 a running one alike — which the JDK hands to the handler `OpenedFiles` registers with `Desktop.setOpenFileHandler`
-as the first thing `main` does, on macOS only (asking `Desktop` anything starts AWT, which on Linux would read the
-display scale before Compose sets it) and for the life of the process (the JDK queues the events that precede the
-first handler and drops the ones that find it removed). Both end in `OpenedFiles.open(paths)`, a channel that is
-read off the event thread and imported by `CampfireApp`; anything else that learns of a file to open calls the same
-function. Files dropped onto the window take their own path (`Modifier.dragAndDropTarget` in `CampfireDesktopApp`).
+right after the single-instance check and before Koin starts, on macOS only (asking `Desktop` anything starts AWT,
+which on Linux would read the display scale before Compose sets it) and for the life of the process (the JDK queues
+the events that precede the first handler and drops the ones that find it removed). Both end in
+`OpenedFiles.open(paths)`, a channel that is read off the event thread and imported by `CampfireApp`; anything else
+that learns of a file to open calls the same function. Files dropped onto the window take their own path (`Modifier.dragAndDropTarget` in `CampfireDesktopApp`).
 
 One process owns a data directory. Before Koin starts, `SingleInstance.kt` takes `instance.lock` with `tryLock()`;
 the holder listens on `127.0.0.1` on a port chosen by the system and writes that port with a random token into the
