@@ -65,7 +65,8 @@ import platform.Security.kSecValueData
  * the app started carries on in the background, where the device may well be locked by the time it needs a token.
  * And bound to this device: an item that is not travels in the encrypted device backup and to a new iPhone, where it
  * would arrive without the sync index it belongs with. Android keeps the credentials out of its backup too, so a
- * restored installation starts disconnected on both.
+ * restored installation starts disconnected on both. Neither binding deletes the item with the app, though: it outlives
+ * an uninstall, and what keeps a reinstalled app disconnected is its first launch forgetting whatever it finds here.
  */
 @Single
 internal class IosSecretStore : SecretStore {

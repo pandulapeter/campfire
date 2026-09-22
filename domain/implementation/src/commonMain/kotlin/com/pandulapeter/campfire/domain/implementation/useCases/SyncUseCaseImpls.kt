@@ -19,6 +19,7 @@ import com.pandulapeter.campfire.domain.api.useCases.CancelSyncConnectionUseCase
 import com.pandulapeter.campfire.domain.api.useCases.CancelSynchronizationUseCase
 import com.pandulapeter.campfire.domain.api.useCases.ConnectSyncProviderUseCase
 import com.pandulapeter.campfire.domain.api.useCases.DisconnectSyncProviderUseCase
+import com.pandulapeter.campfire.domain.api.useCases.ForgetSyncConnectionUseCase
 import com.pandulapeter.campfire.domain.api.useCases.GetSyncProvidersUseCase
 import com.pandulapeter.campfire.domain.api.useCases.GetSyncStateUseCase
 import com.pandulapeter.campfire.domain.api.useCases.RestoreSyncUseCase
@@ -64,6 +65,14 @@ class DisconnectSyncProviderUseCaseImpl internal constructor(
 ) : DisconnectSyncProviderUseCase {
 
     override suspend operator fun invoke() = syncRepository.disconnect()
+}
+
+@Factory
+class ForgetSyncConnectionUseCaseImpl internal constructor(
+    private val syncRepository: SyncRepository,
+) : ForgetSyncConnectionUseCase {
+
+    override suspend operator fun invoke() = syncRepository.forgetStoredConnection()
 }
 
 @Factory

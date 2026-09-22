@@ -86,6 +86,15 @@ interface SyncRepository {
     suspend fun disconnect()
 
     /**
+     * Forgets the credentials, the unfinished authorization and the index this device has stored, and makes no
+     * request while doing it. For a fresh installation that finds a previous one's credentials still in the
+     * platform's store - the iOS Keychain outlives an uninstall - where connecting is not something the user of
+     * this installation has done. [disconnect] is the other one: that is the user disconnecting, and it tells the
+     * service so.
+     */
+    suspend fun forgetStoredConnection()
+
+    /**
      * Starts a run, if nothing is connected there is nothing to start, and if one is already going this does
      * nothing - so pressing the button twice cannot start two runs over the same files.
      *

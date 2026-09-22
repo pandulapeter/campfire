@@ -29,6 +29,16 @@ interface DisconnectSyncProviderUseCase {
     suspend operator fun invoke()
 }
 
+interface ForgetSyncConnectionUseCase {
+
+    /**
+     * Drops whatever this device has stored about a sync account, without telling the service anything: for an
+     * installation that has just been made, credentials left behind by the previous one belong to nobody.
+     * Different from [DisconnectSyncProviderUseCase], which is the user disconnecting and does revoke the token.
+     */
+    suspend operator fun invoke()
+}
+
 interface CancelSyncConnectionUseCase {
 
     /**

@@ -59,6 +59,13 @@ interface SyncProvider {
     /** Forgets the stored credentials, and tells the service to drop them too where that is possible. */
     suspend fun disconnect()
 
+    /**
+     * Forgets the stored credentials and tells the service nothing. [disconnect] is the user's disconnect, which
+     * also revokes the token; this is an installation dropping what a previous one left in a store that outlived
+     * it, where there is nobody to revoke on behalf of and no permission to make a request.
+     */
+    suspend fun forgetStoredCredentials()
+
     /** Who is connected, or null if the credentials are gone or no longer accepted. */
     suspend fun loadAccount(): SyncAccount?
 

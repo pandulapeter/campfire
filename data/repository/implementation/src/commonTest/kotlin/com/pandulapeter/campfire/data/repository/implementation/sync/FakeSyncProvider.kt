@@ -30,7 +30,7 @@ import com.pandulapeter.campfire.data.source.remote.api.model.RemoteWriteResult
  * a repository test restores the connection from. [ignoresCase] makes it a service like Dropbox, which takes two names
  * that differ only by case for one file, [listCount] is how many passes a run made and [downloadCounts] how many times
  * each file was fetched. [connected] says whether credentials are stored, and [onDisconnect] runs once a disconnect
- * has cleared them.
+ * has cleared them; [hasForgottenCredentials] says whether they were dropped without one, which does not run it.
  */
 internal class FakeSyncProvider(
     files: Map<SyncKey, ByteArray> = emptyMap(),
@@ -46,6 +46,8 @@ internal class FakeSyncProvider(
     var connected = true
 
     var onDisconnect: suspend () -> Unit = {}
+
+    var hasForgottenCredentials = false
 
     val downloadCounts = mutableMapOf<SyncKey, Int>()
 
@@ -72,6 +74,11 @@ internal class FakeSyncProvider(
     override suspend fun disconnect() {
         connected = false
         onDisconnect()
+    }
+
+    override suspend fun forgetStoredCredentials() {
+        connected = false
+        hasForgottenCredentials = true
     }
 
     override suspend fun loadAccount() = account

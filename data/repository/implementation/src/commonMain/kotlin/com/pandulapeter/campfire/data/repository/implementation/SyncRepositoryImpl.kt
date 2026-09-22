@@ -289,6 +289,32 @@ internal class SyncRepositoryImpl(
         }
     }
 
+    override suspend fun forgetStoredConnection() = restoreMutex.withLock {
+        withContext(NonCancellable) {
+            providers.forEach { provider ->
+                try {
+                    provider.forgetStoredCredentials()
+                } catch (exception: CancellationException) {
+                    throw exception
+                } catch (exception: Exception) {
+                    println("Could not forget the ${provider.id} credentials: ${exception.message}")
+                }
+            }
+            // A build with no provider at all still has to lose an authorization written down by one that had one.
+            discardPendingAuthorization()
+            // There cannot be an index on a fresh installation, and one that is somehow there describes a folder
+            // this installation has never looked at.
+            try {
+                syncStateLocalSource.saveSyncIndex(null)
+            } catch (exception: CancellationException) {
+                throw exception
+            } catch (exception: Exception) {
+                println("Could not clear the sync index: ${exception.message}")
+            }
+            _syncState.update { SyncState.Disconnected }
+        }
+    }
+
     /**
      * Starts a run and returns; what it is doing and how it ended arrive through [syncState]. Fire and forget
      * because the run outlives whoever asked for it - the screen that started it may be gone long before it

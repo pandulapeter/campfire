@@ -65,7 +65,8 @@ type your password on is Dropbox's own, opened in your browser. On Android the t
 system keystore holds, and on iOS it is kept in the Keychain; on desktop and the web it is a file in the app's own
 data. On a phone neither the token nor the record of the last run is part of the device's backup, so a phone restored
 from one, or a new phone the library was moved to, starts disconnected: you sign in again, and the first run compares
-the two sides by content and duplicates nothing. Disconnecting revokes the token and deletes it from the device; the files stay where they are on both sides.
+the two sides by content and duplicates nothing. Reinstalling the app disconnects it too, even where the system kept
+the token; connecting again is a tap in Settings. Disconnecting revokes the token and deletes it from the device; the files stay where they are on both sides.
 
 Dropbox is the first provider rather than the only possible one: the engine sees one flat remote folder addressed by
 kind and name, and treats a service's revisions as opaque strings it never parses.

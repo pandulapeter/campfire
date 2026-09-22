@@ -67,9 +67,11 @@ paths, `Is*` for a question with a yes or no answer (`IsFirstRun`), or a verb fo
   notation, which is why the two halves of `ChordSpelling` do not travel together everywhere.
 
 Sync adds `GetSyncStateUseCase`, `GetSyncProvidersUseCase`, `ConnectSyncProviderUseCase`,
-`DisconnectSyncProviderUseCase`, `CancelSyncConnectionUseCase`, `RestoreSyncUseCase`, `SynchronizeLibraryUseCase` and
-`CancelSynchronizationUseCase` — the only ones that share a file with each other (two of them), since they are one
-feature and each is a single line over `SyncRepository`. `GetSyncStateUseCase` is separate from
+`DisconnectSyncProviderUseCase`, `ForgetSyncConnectionUseCase`, `CancelSyncConnectionUseCase`, `RestoreSyncUseCase`,
+`SynchronizeLibraryUseCase` and `CancelSynchronizationUseCase` — the only ones that share a file with each other (two
+of them), since they are one feature and each is a single line over `SyncRepository`. `ForgetSyncConnectionUseCase`
+differs from the disconnect in telling the service nothing: it is what a first launch runs before restoring, so a
+reinstalled app does not pick up credentials the iOS Keychain kept across the uninstall. `GetSyncStateUseCase` is separate from
 `GetScreenDataUseCase` for the same reason the preferences are: a settings screen must not wait for a scan of the
 whole library to say whether an account is connected. `ConnectSyncProviderUseCase` takes an
 `AuthorizationCompletionPage` along with the provider, because the page the desktop's browser lands on after consent

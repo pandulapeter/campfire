@@ -125,6 +125,8 @@ internal class DropboxSyncProvider(
         return loadAccount() ?: SyncAccount(providerId = id, id = token.accountId, displayName = token.accountId, email = null)
     }
 
+    override suspend fun forgetStoredCredentials() = credentialsStore.save(null)
+
     override suspend fun disconnect() {
         // Dropbox revokes the whole grant through a valid access token, and a stored one is expired after four idle
         // hours, so it is renewed first if needed. Nothing connected, or no answer in time, leaves nothing to revoke

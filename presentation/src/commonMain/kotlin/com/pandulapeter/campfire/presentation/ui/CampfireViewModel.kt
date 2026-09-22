@@ -51,6 +51,7 @@ import com.pandulapeter.campfire.domain.api.useCases.CreateSongUseCase
 import com.pandulapeter.campfire.domain.api.useCases.DeleteSetlistUseCase
 import com.pandulapeter.campfire.domain.api.useCases.DeleteSongUseCase
 import com.pandulapeter.campfire.domain.api.useCases.DisconnectSyncProviderUseCase
+import com.pandulapeter.campfire.domain.api.useCases.ForgetSyncConnectionUseCase
 import com.pandulapeter.campfire.domain.api.useCases.EditSetlistUseCase
 import com.pandulapeter.campfire.domain.api.useCases.ExportLibraryUseCase
 import com.pandulapeter.campfire.domain.api.useCases.ExportSetlistUseCase
@@ -94,6 +95,7 @@ import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.FlowPreview
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.NonCancellable
+import kotlinx.coroutines.async
 import kotlinx.coroutines.cancelAndJoin
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.Flow
@@ -156,6 +158,7 @@ class CampfireViewModel(
     private val connectSyncProvider: ConnectSyncProviderUseCase,
     private val disconnectSyncProvider: DisconnectSyncProviderUseCase,
     private val cancelSyncConnection: CancelSyncConnectionUseCase,
+    private val forgetSyncConnection: ForgetSyncConnectionUseCase,
     private val cancelSynchronization: CancelSynchronizationUseCase,
     private val restoreSync: RestoreSyncUseCase,
     private val synchronizeLibrary: SynchronizeLibraryUseCase,
@@ -730,6 +733,25 @@ class CampfireViewModel(
     private val _visibleDialog = MutableStateFlow<DialogType?>(null)
     val visibleDialog: StateFlow<DialogType?> = _visibleDialog.asStateFlow()
 
+    /**
+     * Whether this is the first launch of this installation, asked once and shared. It stops being true the moment
+     * the preferences are written, which is the last thing the demo library planting does, so a second caller
+     * asking the question again would be answered by whichever coroutine got there first. Two of them need it: the
+     * demo library, and the sync connection a reinstalled app must not inherit (see [forgetSyncConnection]).
+     *
+     * An answer that could not be read is false: neither caller may act on a guess.
+     */
+    private val isFirstLaunch = viewModelScope.async {
+        try {
+            isFirstRun()
+        } catch (exception: CancellationException) {
+            throw exception
+        } catch (exception: Exception) {
+            println("Could not tell whether this is a first run: ${exception.message}")
+            false
+        }
+    }
+
     init {
         viewModelScope.launch { loadScreenData(false) }
         viewModelScope.launch { plantDemoLibraryOnFirstRun() }
@@ -740,6 +762,12 @@ class CampfireViewModel(
             // Settings: whether it ended up connected or not, that is the screen the answer is on. The page load forgot
             // which tab the tap was made on, so the one holding the sync section is opened rather than the first.
             try {
+                // A reinstall is the one case where credentials outlive the library: iOS leaves the Keychain item
+                // behind while everything else goes, so a fresh installation would find itself connected to an
+                // account nobody connected here, and its first run would upload the demo library into the user's
+                // folder. In this coroutine rather than beside it, because it is the one thing that must happen
+                // before restore() reads those credentials.
+                if (isFirstLaunch.await()) forgetSyncConnection()
                 if (restoreSync()) {
                     settingsTab = SettingsTab.LIBRARY
                     selectTopLevelDestination(CampfireDestination.Settings)
@@ -1411,7 +1439,7 @@ class CampfireViewModel(
      */
     private suspend fun plantDemoLibraryOnFirstRun() {
         try {
-            if (isFirstRun()) {
+            if (isFirstLaunch.await()) {
                 // Waited for rather than raced: what is being asked is whether the library is empty, and every
                 // library looks empty while it is still being read. Nothing else writes to it meanwhile, since the
                 // import queue waits for this.

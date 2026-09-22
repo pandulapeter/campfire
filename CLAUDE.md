@@ -71,7 +71,9 @@ instance.lock / instance.endpoint    desktop only: what keeps a second process o
 On Android and iOS `library/` and `preferences/preferences.json` are in the system backup and the transfer to a new
 device; the sync credentials and `sync-index.json` are not, so a restored installation starts disconnected and its
 first sync run compares by content. Android does it with an allow-list of paths in `:app:android`, iOS with a Keychain
-item bound to the device and `FileStorage.keepOutOfDeviceBackup` on the index.
+item bound to the device and `FileStorage.keepOutOfDeviceBackup` on the index. A reinstall starts disconnected too: a
+launch that finds no preferences document forgets any credentials it finds, since the iOS Keychain outlives an
+uninstall and nothing else does.
 
 ## Conventions
 
@@ -337,6 +339,10 @@ the only possible one. The per-module `CLAUDE.md` files carry the detail; the sh
   with those files' index entries dropped, so they are new on the side that still has them and are copied back. An
   answer waives the guard of its own direction only, this device being asked about first. The answer belongs to that
   one run, and an ordinary run asks again for as long as the folder stays that way.
+- A fresh installation never inherits a connection: a launch that finds no preferences document forgets whatever
+  credentials a previous installation left in a store that outlived it (the iOS Keychain), locally and without a
+  request, before anything restores them (`ForgetSyncConnectionUseCase`), so no run starts on an account nobody
+  connected here.
 - A run belongs to the **app**, not to the screen that started it: `SyncRepository` is a singleton with its own
   scope, so a run carries on while the user moves around or leaves. Android keeps the process alive with a
   foreground service and iOS with a background task, both driven by `SyncNotifier`, which each app shell provides

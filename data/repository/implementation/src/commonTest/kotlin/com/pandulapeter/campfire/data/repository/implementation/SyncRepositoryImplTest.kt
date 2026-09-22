@@ -17,6 +17,7 @@ import com.pandulapeter.campfire.data.model.domain.SyncFailureReason
 import com.pandulapeter.campfire.data.model.domain.SyncOutcome
 import com.pandulapeter.campfire.data.model.domain.SyncProviderId
 import com.pandulapeter.campfire.data.model.domain.SyncState
+import com.pandulapeter.campfire.data.repository.api.SyncRepository
 import com.pandulapeter.campfire.data.repository.implementation.sync.FakeLibraryFileLocalSource
 import com.pandulapeter.campfire.data.repository.implementation.sync.FakePendingAuthorizationStore
 import com.pandulapeter.campfire.data.repository.implementation.sync.FakeSyncAuthenticator
@@ -54,6 +55,7 @@ import kotlin.test.assertIs
 import kotlin.test.assertNotNull
 import kotlin.test.assertNull
 import kotlin.test.assertTrue
+import kotlin.test.fail
 
 /**
  * The repository around the engine: what a run reports and what it leaves in the index when something other than the
@@ -434,6 +436,58 @@ class SyncRepositoryImplTest {
 
         assertNull(stateLocalSource.index)
         assertEquals(SyncState.Disconnected, repository.syncState.value)
+    }
+
+    @Test
+    fun `forgetting the connection leaves nothing to restore`() = runTest {
+        val stateLocalSource = FakeSyncStateLocalSource(index = "{}")
+        val provider = FakeSyncProvider(account = ACCOUNT)
+        val repository = repository(provider = provider, stateLocalSource = stateLocalSource)
+
+        repository.forgetStoredConnection()
+        val result = repository.restore()
+
+        assertEquals(
+            SyncRepository.RestoreResult(isConnected = false, didReturnFromAuthorization = false, wasInterrupted = false),
+            result,
+        )
+        assertEquals(SyncState.Disconnected, repository.syncState.value)
+        assertNull(stateLocalSource.index)
+    }
+
+    @Test
+    fun `forgetting the connection tells the service nothing`() = runTest {
+        val provider = FakeSyncProvider(account = ACCOUNT).apply { onDisconnect = { fail("The service was told.") } }
+        val repository = repository(provider = provider)
+
+        repository.forgetStoredConnection()
+
+        assertTrue(provider.hasForgottenCredentials)
+        assertFalse(provider.connected)
+    }
+
+    @Test
+    fun `forgetting the connection drops an unfinished authorization`() = runTest {
+        val store = FakePendingAuthorizationStore().apply {
+            pending = PendingAuthorization(SyncProviderId.DROPBOX, state = "state", verifier = "verifier", redirectUri = null)
+        }
+        val repository = repository(provider = FakeSyncProvider(), pendingAuthorizationStore = store)
+
+        repository.forgetStoredConnection()
+
+        assertNull(store.loadPendingAuthorization())
+    }
+
+    @Test
+    fun `an ordinary launch does not forget anything`() = runTest {
+        val provider = FakeSyncProvider(account = ACCOUNT)
+        val repository = repository(provider = provider)
+
+        val result = repository.restore()
+
+        assertTrue(result.isConnected)
+        assertFalse(provider.hasForgottenCredentials)
+        assertEquals(ACCOUNT, (repository.syncState.value as SyncState.Connected).account)
     }
 
     @Test

@@ -75,7 +75,8 @@ holds the `@Module @ComponentScan object DataLocalSourceModule`, and every local
   and the key and file are kept: that launch starts disconnected and the next one reads the same file again. `IosSecretStore` is a Keychain generic password, readable after the first
   unlock because a background sync may need it on a locked device, and bound to the device
   (`AfterFirstUnlockThisDeviceOnly`) so that it stays out of the backup, as Android's does; an item an older version
-  wrote without that is moved over when it is read. Desktop and the web get `FileSecretStore`, the
+  wrote without that is moved over when it is read. The item survives an uninstall, which is why a first launch
+  forgets it (`SyncRepository.forgetStoredConnection`). Desktop and the web get `FileSecretStore`, the
   plain `preferences/sync-credentials.json` it always was: no desktop keychain is worth a native dependency per
   operating system, and the browser has none. `SyncStateLocalSourceImpl` moves a plain file left by an older version
   into the store on the first read and deletes it, which on desktop and the web is a no-op, since the store found
