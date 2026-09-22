@@ -23,8 +23,9 @@ Delete this file once the last box is ticked: by then `CLAUDE.md` describes how 
 - [ ] Register the App ID `com.pandulapeter.campfire` under *Certificates, Identifiers & Profiles*, with no
       capabilities: the app uses the Keychain, a background task and a custom URL scheme, none of which needs one.
 - [ ] Create the app record in App Store Connect. **The name "Campfire" is almost certainly taken** — App Store names
-      are unique — so decide on the listing name first (for example "Campfire: Songbook"). The name under the icon
-      (`APP_NAME` in the same xcconfig) can stay "Campfire".
+      are unique — so the listing uses "Campfire - Songbook & Chords", the name in
+      [store-listing.md](../store-listing.md). If that one is taken too, decide on another before going on. The name
+      under the icon (`APP_NAME` in the same xcconfig) can stay "Campfire".
 - [ ] If the Mac App Store build is coming too, it can live in the **same app record** under the same bundle ID, as a
       second platform. See [mac-app-store.md](mac-app-store.md).
 
@@ -45,7 +46,8 @@ Delete this file once the last box is ticked: by then `CLAUDE.md` describes how 
 
 - [ ] Screenshots: the 6.9" iPhone and the 13" iPad sizes are the required ones *(verify)*. English and Hungarian.
 - [ ] Description, keywords, support URL (the GitHub issues page) and marketing URL (the repository), in both
-      languages. The Play listing is the source text.
+      languages. The English name, subtitle, promotional text and description are in
+      [store-listing.md](../store-listing.md).
 - [ ] Privacy policy URL: `https://pandulapeter.com/legal/privacy_policy-campfire.html`.
 - [ ] App Privacy questionnaire: **Data Not Collected**. Sync goes from the device to the user's own Dropbox, which is
       not collection by the developer.

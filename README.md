@@ -13,7 +13,8 @@
 Campfire keeps your lyrics and chords in plain [ChordPro](https://www.chordpro.org) files and shows them the way you
 want to read them while playing: chords above the syllables they belong to, as few and as wide columns as the screen
 allows, and the text as large as you need it. Write songs in the built-in editor, transpose them into your key, put
-them into setlists, and read them on your phone, your tablet, your laptop or in a browser.
+them into setlists, and read them on your phone, your tablet, your laptop or in a browser. It comes with no songs of
+its own — it is a home for yours.
 
 It works **offline**, there is no account to make, and there is no server of mine anywhere. It is free, and there are
 no ads.
@@ -85,6 +86,7 @@ any other ChordPro tool can read, so leaving is as easy as arriving.
 - [File format](documentation/file-format.md) — the ChordPro directives Campfire understands, the setlist JSON, and
   how files are named.
 - [Sync](documentation/sync.md) — what it sees, how a run decides, and why it needs no backend.
+- [Store listing](documentation/store-listing.md) — the name and descriptions every store shows, in one place.
 - Publishing — what is still to be done before the [iOS App Store](documentation/publishing/ios-app-store.md), the
   [Mac App Store](documentation/publishing/mac-app-store.md) and the
   [Microsoft Store](documentation/publishing/microsoft-store.md) have the app.

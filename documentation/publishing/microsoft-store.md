@@ -29,8 +29,8 @@ Delete this file once the last box is ticked: by then `CLAUDE.md` describes how 
 
 - [ ] Open a Partner Center developer account as an individual. *(verify the fee: it has been a small one-time payment,
       and free for individuals in many countries since 2025.)*
-- [ ] Reserve the product name. "Campfire" may be taken; a reserved name can differ from the name under the icon, as
-      on the App Store.
+- [ ] Reserve the product name: "Campfire - Songbook & Chords", as in [store-listing.md](../store-listing.md). A
+      reserved name can differ from the name under the icon, as on the App Store.
 - [ ] Note the three values on the *Product identity* page: `Package/Identity/Name`, `Package/Identity/Publisher` and
       the publisher display name. The package manifest has to repeat them to the letter.
 
@@ -70,6 +70,7 @@ external payment *(verify the current wording of 10.8)*.
 ## 5. The store listing (by hand, once)
 
 - [ ] Screenshots (1366×768 or larger), description, search terms and the 1:1 store logo, in English and Hungarian.
+      The English short and full description are in [store-listing.md](../store-listing.md).
 - [ ] Privacy policy URL (`https://pandulapeter.com/legal/privacy_policy-campfire.html`), support contact (the GitHub
       issues page), category *Music*, price *Free*, markets.
 - [ ] The age rating questionnaire (IARC, the same one Play uses).
