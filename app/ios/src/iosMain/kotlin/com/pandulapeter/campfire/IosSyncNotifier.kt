@@ -19,6 +19,8 @@ import platform.UserNotifications.UNMutableNotificationContent
 import platform.UserNotifications.UNNotificationInterruptionLevel
 import platform.UserNotifications.UNNotificationRequest
 import platform.UserNotifications.UNUserNotificationCenter
+import kotlin.time.Duration.Companion.seconds
+import kotlin.time.TimeSource
 
 /**
  * Keeps a sync run going while the app is not in front of the user, and shows what it is doing.
@@ -39,6 +41,7 @@ class IosSyncNotifier(
 
     private var backgroundTask: UIBackgroundTaskIdentifier = UIBackgroundTaskInvalid
     private var hasRequestedAuthorization = false
+    private var lastPostMark: TimeSource.Monotonic.ValueTimeMark? = null
 
     /**
      * Takes down whatever the last launch left behind.
@@ -56,11 +59,19 @@ class IosSyncNotifier(
 
     override fun onSyncNotificationChanged(notification: SyncNotification?) {
         if (notification == null) {
+            lastPostMark = null
             removeNotification()
             endBackgroundTask()
         } else {
             beginBackgroundTask()
-            showNotification(notification)
+            // A run reports every file it finishes, several a second, and the passive notification is only ever read
+            // from Notification Center: posted when a run starts and then at most once per interval, it still shows a
+            // recent count without a request per file.
+            val mark = lastPostMark
+            if (mark == null || mark.elapsedNow() >= NOTIFICATION_UPDATE_INTERVAL) {
+                lastPostMark = TimeSource.Monotonic.markNow()
+                showNotification(notification)
+            }
         }
     }
 
@@ -130,5 +141,7 @@ class IosSyncNotifier(
     private companion object {
         /** Fixed, so that each update replaces the previous notification instead of stacking another one up. */
         const val NOTIFICATION_ID = "sync"
+
+        val NOTIFICATION_UPDATE_INTERVAL = 1.seconds
     }
 }

@@ -101,14 +101,31 @@ class CampfireActivity : AppCompatActivity() {
     }
 
     /**
+     * The words the service was last started with. The counts need no forwarding - the service renders them from the
+     * sync state itself - so a run's progress starts it again only when it is not running (it stops itself when it
+     * sees a run end, which the activity may not have been watching) or when the words changed (a language switch).
+     */
+    private var lastSyncServiceWords: List<String>? = null
+
+    /**
      * Starts and stops the service that keeps a sync run alive once the user has left the app. Building the
      * notification is the service's job; what arrives here is only whether there is one and what it should say.
      */
     private fun onSyncNotificationChanged(notification: com.pandulapeter.campfire.presentation.ui.platform.SyncNotification?) {
         try {
             if (notification == null) {
+                lastSyncServiceWords = null
                 startService(CampfireSyncService.dismissIntent(this))
             } else {
+                val words = listOf(
+                    notification.channelName,
+                    notification.title,
+                    notification.preparingBody,
+                    notification.progressBodyFormat,
+                    notification.stopLabel,
+                )
+                if (CampfireSyncService.isRunning && words == lastSyncServiceWords) return
+                lastSyncServiceWords = words
                 ContextCompat.startForegroundService(
                     this,
                     CampfireSyncService.intent(

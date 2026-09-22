@@ -30,8 +30,10 @@ import com.pandulapeter.campfire.domain.api.useCases.GetSyncStateUseCase
 import com.pandulapeter.campfire.presentation.ui.platform.withSyncCounts
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.cancel
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import org.koin.mp.KoinPlatform
 
@@ -57,6 +59,7 @@ class CampfireSyncService : Service() {
     private var words: Words? = null
     private var completed = 0
     private var total = 0
+    private var notificationUpdateJob: Job? = null
 
     /** The translated words of one run, kept for as long as it lasts. See the note on the class. */
     private data class Words(
@@ -79,14 +82,15 @@ class CampfireSyncService : Service() {
         scope.launch {
             KoinPlatform.getKoin().get<GetSyncStateUseCase>().invoke().collect { state ->
                 latestSyncState = state
+                val wasPreparing = total == 0
                 (state as? SyncState.Connected)?.progress?.let { progress ->
                     completed = progress.completed
                     total = progress.total
                 }
-                // The counts come from here as well as from the activity, and the two never disagree: while the
-                // activity is alive both say the same thing, and once it is gone this is the only one still talking.
+                // The counts are this service's own business: the activity hands them over only when it starts the
+                // service, and once it is gone this is the only thing still talking.
                 if (!stopIfNothingIsRunning()) {
-                    updateNotification()
+                    scheduleNotificationUpdate(isCountingStarted = wasPreparing && total != 0)
                 }
             }
         }
@@ -116,6 +120,7 @@ class CampfireSyncService : Service() {
                     if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) ServiceInfo.FOREGROUND_SERVICE_TYPE_DATA_SYNC else 0,
                 )
                 isInForeground = true
+                isRunning = true
                 // The run may have ended between the intent being sent and its arrival here.
                 stopIfNothingIsRunning()
             }
@@ -126,6 +131,7 @@ class CampfireSyncService : Service() {
     }
 
     override fun onDestroy() {
+        isRunning = false
         scope.cancel()
         super.onDestroy()
     }
@@ -155,6 +161,26 @@ class CampfireSyncService : Service() {
     }
 
     /**
+     * Posts the latest counts at most once per [NOTIFICATION_UPDATE_INTERVAL_MILLIS], from one delayed job that reads
+     * them when it fires, since files finish several times a second and Android sheds whatever goes over five
+     * notification updates a second per package - an arbitrary one of them, not the stale ones. A rate is what the
+     * limit is, so a rate is what this is. The step from preparing to counting is posted at once, as it changes the
+     * notification's shape rather than one of its numbers.
+     */
+    private fun scheduleNotificationUpdate(isCountingStarted: Boolean) {
+        if (isCountingStarted) {
+            notificationUpdateJob?.cancel()
+            notificationUpdateJob = null
+            updateNotification()
+        } else if (notificationUpdateJob?.isActive != true) {
+            notificationUpdateJob = scope.launch {
+                delay(NOTIFICATION_UPDATE_INTERVAL_MILLIS)
+                updateNotification()
+            }
+        }
+    }
+
+    /**
      * Re-posting under the same id is how a foreground service's notification is updated. Only once it is in the
      * foreground: before that there is nothing to update, and posting anyway would put up a second, ordinary
      * notification that no `stopForeground` would ever take down again.
@@ -167,6 +193,9 @@ class CampfireSyncService : Service() {
 
     private fun stop() {
         isInForeground = false
+        isRunning = false
+        notificationUpdateJob?.cancel()
+        notificationUpdateJob = null
         ServiceCompat.stopForeground(this, ServiceCompat.STOP_FOREGROUND_REMOVE)
         stopSelf()
     }
@@ -229,6 +258,15 @@ class CampfireSyncService : Service() {
     }
 
     companion object {
+        /**
+         * Whether a started service is in the foreground, for the activity to tell whether a run's progress needs a
+         * start at all. Process-wide, like the service.
+         */
+        @Volatile
+        var isRunning = false
+            private set
+
+        private const val NOTIFICATION_UPDATE_INTERVAL_MILLIS = 500L
         private const val CHANNEL_ID = "sync"
         private const val NOTIFICATION_ID = 1
         private const val ACTION_STOP = "com.pandulapeter.campfire.action.STOP_SYNC"
