@@ -13,6 +13,7 @@ package com.pandulapeter.campfire.data.source.local.implementation.storage.file
 
 import com.pandulapeter.campfire.data.model.domain.decodeLibraryText
 import com.pandulapeter.campfire.data.source.local.api.LibraryStorageException
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.await
 import kotlinx.coroutines.sync.Mutex
@@ -23,7 +24,6 @@ import org.khronos.webgl.toByteArray
 import org.khronos.webgl.toInt8Array
 import org.koin.core.annotation.Single
 import kotlin.js.ExperimentalWasmJsInterop
-import kotlin.js.JsException
 import kotlin.js.Promise
 import kotlin.js.toJsString
 
@@ -105,13 +105,22 @@ internal class OpfsFileStorage : FileStorage {
     }
 
     /**
-     * A rejected promise surfaces from `await` as a `JsException`, which says nothing a caller could tell apart from
-     * any other failure. Only a file that is not there is folded into null (see `getFileHandle`); everything else the
-     * browser refuses - a `NotAllowedError`, a file locked by a writable - is a file that exists and cannot be used.
+     * A rejected promise surfaces from `await` as a plain `Exception` whose message names the JavaScript error (the
+     * coroutines library can only unwrap a Kotlin one), and a synchronous `js(...)` call throws a `JsException`, which
+     * is not an `Exception` at all; neither says anything a caller could tell apart from any other failure. Only a file
+     * that is not there is folded into null (see `getFileHandle`); everything else the browser refuses - a
+     * `NotAllowedError`, a `QuotaExceededError`, a file locked by a writable - is a file that exists and cannot be used.
      */
     private suspend fun <T> failingAsStorage(name: String, operation: suspend () -> T): T = try {
         operation()
-    } catch (exception: JsException) {
+    } catch (exception: CancellationException) {
+        throw exception
+    } catch (exception: IllegalArgumentException) {
+        // requireValidFileName: a name the caller should never have asked for, which the contract reports as it is.
+        throw exception
+    } catch (exception: LibraryStorageException) {
+        throw exception
+    } catch (exception: Throwable) {
         throw LibraryStorageException("Could not access \"$name\".", exception)
     }
 
