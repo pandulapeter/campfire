@@ -411,6 +411,19 @@ class CampfireViewModel(
     val songTexts: StateFlow<Map<String, String>> = _songTexts.asStateFlow()
 
     /**
+     * The songs whose files are being renamed right now, under the names they had when it started.
+     *
+     * A rename moves the file - and with it the song in the library - before the screens that were opened on the old
+     * name have been rewritten, since every setlist naming the song and its saved transposition are written in
+     * between (see [updateSongFileName]). For those few writes the details screen's destination names a song the
+     * library no longer holds, and a screen that resolved that as "gone" closed itself, or dropped a page and left a
+     * setlist on the next song. Resolved through rather than waited out: the song is here from before the file moves
+     * until after the back stack names it by its new name, so there is no window to miss and no delay to tune.
+     */
+    private val _songsBeingRenamed = MutableStateFlow(emptyMap<String, Song>())
+    val songsBeingRenamed: StateFlow<Map<String, Song>> = _songsBeingRenamed.asStateFlow()
+
+    /**
      * Held by every write to a song file, from the read the write is built on until [songTexts] has the result. The
      * header's edits are tapped in quick succession on the same file, and two of them working from the same text would
      * each write back the tag the other took off; two saves from the editor would land in whatever order they finished.
@@ -1071,35 +1084,43 @@ class CampfireViewModel(
      * afterwards (`Message.SongFileRenamedPartly`).
      */
     fun updateSongFileName(song: Song) = launchLibraryChange {
-        val rename = renameSongFile(song) ?: return@launchLibraryChange
-        val fileName = rename.fileName
-        _songTexts.update { texts -> texts[song.fileName]?.let { texts - song.fileName + (fileName to it) } ?: texts }
-        // The details screen is named after the songs it pages through, so the entry showing this one is rewritten
-        // rather than popped: the action can be taken from that screen, and a song that has just been renamed is
-        // still the song being read.
-        backStack.forEachIndexed { index, destination ->
-            when {
-                destination is CampfireDestination.SongDetails && song.fileName in destination.songFileNames -> {
-                    // A destination opened on a setlist that named both files - the old name and the one the song is
-                    // moving to, whose file this device did not have - would otherwise name the same song twice, and
-                    // the pager keys its pages by that name.
-                    val songFileNames = destination.songFileNames.map { if (it == song.fileName) fileName else it }.distinct()
-                    backStack[index] = destination.copy(
-                        songFileNames = songFileNames,
-                        // The page the reader is on, so that a rename leaves them looking at the song they renamed.
-                        initialIndex = songFileNames.indexOf(fileName),
-                    )
-                }
+        // Before the file moves, so that the moment the library drops the old name is already covered.
+        _songsBeingRenamed.update { it + (song.fileName to song) }
+        try {
+            val rename = renameSongFile(song) ?: return@launchLibraryChange
+            val fileName = rename.fileName
+            _songTexts.update { texts -> texts[song.fileName]?.let { texts - song.fileName + (fileName to it) } ?: texts }
+            // The details screen is named after the songs it pages through, so the entry showing this one is rewritten
+            // rather than popped: the action can be taken from that screen, and a song that has just been renamed is
+            // still the song being read.
+            backStack.forEachIndexed { index, destination ->
+                when {
+                    destination is CampfireDestination.SongDetails && song.fileName in destination.songFileNames -> {
+                        // A destination opened on a setlist that named both files - the old name and the one the song is
+                        // moving to, whose file this device did not have - would otherwise name the same song twice, and
+                        // the pager keys its pages by that name.
+                        val songFileNames = destination.songFileNames.map { if (it == song.fileName) fileName else it }.distinct()
+                        backStack[index] = destination.copy(
+                            songFileNames = songFileNames,
+                            // The page the reader is on, so that a rename leaves them looking at the song they renamed.
+                            initialIndex = songFileNames.indexOf(fileName),
+                        )
+                    }
 
-                destination is CampfireDestination.SongEditor && destination.fileName == song.fileName -> {
-                    backStack[index] = destination.copy(fileName = fileName)
+                    destination is CampfireDestination.SongEditor && destination.fileName == song.fileName -> {
+                        backStack[index] = destination.copy(fileName = fileName)
+                    }
                 }
             }
+            songDetailsCurrentSongs.entries.filter { it.value == song.fileName }.forEach { songDetailsCurrentSongs[it.key] = fileName }
+            persistBackStack()
+            // Said after the screens have followed the file, which has moved whatever else could not be rewritten.
+            if (!rename.haveReferencesFollowed) sendMessage(Message.SongFileRenamedPartly)
+        } finally {
+            // Cleared once the screens name the new file - and on the paths that never got that far: a rename that
+            // found nothing to do, one that threw, and a view model going away mid-rename.
+            _songsBeingRenamed.update { it - song.fileName }
         }
-        songDetailsCurrentSongs.entries.filter { it.value == song.fileName }.forEach { songDetailsCurrentSongs[it.key] = fileName }
-        persistBackStack()
-        // Said after the screens have followed the file, which has moved whatever else could not be rewritten.
-        if (!rename.haveReferencesFollowed) sendMessage(Message.SongFileRenamedPartly)
     }
 
     fun deleteSong(fileName: String) = launchLibraryChange {

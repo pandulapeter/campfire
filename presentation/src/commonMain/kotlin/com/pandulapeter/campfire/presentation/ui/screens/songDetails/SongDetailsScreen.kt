@@ -135,9 +135,14 @@ internal fun SongDetailsScreen(
     val userPreferences by viewModel.userPreferences.collectAsStateWithLifecycle()
     val isPerformanceModeEnabled by viewModel.isPerformanceModeEnabled.collectAsStateWithLifecycle()
     val fontScale by viewModel.fontScale.collectAsStateWithLifecycle()
-    val songs = remember(destination, allSongs) {
+    val songsBeingRenamed by viewModel.songsBeingRenamed.collectAsStateWithLifecycle()
+    val songs = remember(destination, allSongs, songsBeingRenamed) {
         val songsByFileName = allSongs.associateBy { it.fileName }
-        destination.songFileNames.mapNotNull { songsByFileName[it] }
+        // A song whose file is being renamed is still this screen's song. The library drops the old name as the file
+        // moves and the back stack is rewritten a few writes later, and in between the destination names a song the
+        // library does not hold: resolving it to the song as it was keeps the pages - and their count - exactly
+        // where they are, instead of this screen closing itself or a setlist settling on the next song.
+        destination.songFileNames.mapNotNull { songsByFileName[it] ?: songsBeingRenamed[it] }
     }
     val isLoading by viewModel.isLoading.collectAsStateWithLifecycle()
     LaunchedEffect(songs.isEmpty(), isLoading) {
