@@ -19,6 +19,7 @@ import kotlinx.cinterop.addressOf
 import kotlinx.cinterop.usePinned
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.IO
+import kotlinx.coroutines.NonCancellable
 import kotlinx.coroutines.suspendCancellableCoroutine
 import kotlinx.coroutines.withContext
 import platform.Foundation.NSData
@@ -68,17 +69,31 @@ internal class IosFilePicker(
         }
         return withContext(Dispatchers.IO) {
             val budget = ImportBudget()
-            urls.mapNotNull { it.readImportedFile(budget) }
+            urls.mapNotNull { url ->
+                url.readImportedFile(budget).also {
+                    // The picker was asked for copies, so this file is the app's own and nobody else's. Deleted
+                    // whether it could be read or not: nothing will come back for it. A file opened in place is
+                    // never one of these - that path is IosFileImport's, and it makes the same distinction.
+                    if (url.isTemporaryCopy()) url.deleteTemporaryFile()
+                }
+            }
         }
     }
 
     override suspend fun saveFile(file: ExportedFile): Boolean {
         // The picker exports a file that already exists, so the bytes go to a temporary one first.
         val url = file.writeToTemporaryFile() ?: return false
-        return withContext(Dispatchers.Main) {
-            suspendCancellableCoroutine { continuation ->
-                present(UIDocumentPickerViewController(forExportingURLs = listOf(url))) { urls -> continuation.resume(urls.isNotEmpty()) }
+        return try {
+            withContext(Dispatchers.Main) {
+                suspendCancellableCoroutine { continuation ->
+                    present(UIDocumentPickerViewController(forExportingURLs = listOf(url))) { urls -> continuation.resume(urls.isNotEmpty()) }
+                }
             }
+        } finally {
+            // After the picker has answered, never before: an export that the user confirmed is the picker moving
+            // this very file to where they chose. What is left here is the cancelled case - and, where the move
+            // happened, a file that is already gone, which removing is a no-op.
+            withContext(NonCancellable + Dispatchers.IO) { url.deleteTemporaryFile() }
         }
     }
 
@@ -93,11 +108,17 @@ internal class IosFilePicker(
                 // sheet is up - or is still sliding away, which is where a picker's own callback leaves it - would
                 // otherwise be reported as a share that happened.
                 if (host.presentedViewController != null) {
+                    url.deleteTemporaryFile()
                     continuation.resume(false)
                 } else {
                     val controller = UIActivityViewController(activityItems = listOf(url), applicationActivities = null)
                     // An iPad presents this as a popover, which needs something to point at; the whole view will do.
                     controller.popoverPresentationController?.sourceView = host.view
+                    // The sheet hands out copies and never takes the file away, so this is the only moment it is
+                    // certainly finished with: an activity that is still reading it has not returned yet. A handler
+                    // that never runs costs one file that iOS purges on its own, which is why the caller is still
+                    // answered from the presentation rather than from here.
+                    controller.completionWithItemsHandler = { _, _, _, _ -> url.deleteTemporaryFile() }
                     host.presentViewController(controller, animated = true, completion = null)
                     // Resumed as the sheet is shown rather than from its completionWithItemsHandler: nothing acts on
                     // whether a share was completed, and a handler UIKit never calls - it promises nothing for a
@@ -173,6 +194,24 @@ internal fun NSURL.readImportedFile(budget: ImportBudget): ImportedFile? {
 private suspend fun ExportedFile.writeToTemporaryFile(): NSURL? = withContext(Dispatchers.IO) {
     val url = NSURL.fileURLWithPath(NSTemporaryDirectory() + name)
     if (bytes.toNSData().writeToURL(url, atomically = true)) url else null
+}
+
+/** Best effort: a file that is already gone, or that the picker moved out, is the outcome this wanted anyway. */
+@OptIn(ExperimentalForeignApi::class)
+private fun NSURL.deleteTemporaryFile() {
+    NSFileManager.defaultManager.removeItemAtURL(this, error = null)
+}
+
+/**
+ * Whether this is a copy iOS made for the app in the temporary directory - what the picker hands over when it is
+ * asked for copies - rather than the user's own file somewhere else. `NSTemporaryDirectory` is reached through a
+ * symbolic link (`/var` for `/private/var`), so both sides are resolved before they are compared, the way
+ * `isInboxCopy` does it in `IosFileImport.kt`.
+ */
+private fun NSURL.isTemporaryCopy(): Boolean {
+    val temporaryPath = NSURL.fileURLWithPath(NSTemporaryDirectory()).URLByResolvingSymlinksInPath?.path ?: return false
+    val path = URLByResolvingSymlinksInPath?.path ?: return false
+    return path.startsWith("$temporaryPath/")
 }
 
 /**
