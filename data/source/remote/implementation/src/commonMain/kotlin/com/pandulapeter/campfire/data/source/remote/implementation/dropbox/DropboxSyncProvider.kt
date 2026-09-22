@@ -215,9 +215,9 @@ internal class DropboxSyncProvider(
     }
 
     override suspend fun download(kind: LibraryFileKind, name: String): ByteArray {
-        val response = request {
+        val response = request { accessToken ->
             httpClient.post(DOWNLOAD_URL) {
-                header("Authorization", "Bearer ${accessToken()}")
+                header("Authorization", "Bearer $accessToken")
                 header("Dropbox-API-Arg", """{"path":${remotePath(kind, name).toAsciiJsonString()}}""")
             }
         }
@@ -240,9 +240,9 @@ internal class DropboxSyncProvider(
         } else {
             """{".tag":"update","update":${expectedRevision.toAsciiJsonString()}}"""
         }
-        val response = request {
+        val response = request { accessToken ->
             httpClient.post(UPLOAD_URL) {
-                header("Authorization", "Bearer ${accessToken()}")
+                header("Authorization", "Bearer $accessToken")
                 header(
                     "Dropbox-API-Arg",
                     """{"path":${remotePath(kind, name).toAsciiJsonString()},"mode":$mode,"autorename":false,"mute":true}""",
@@ -306,9 +306,9 @@ internal class DropboxSyncProvider(
 
     /** A Dropbox "RPC" call: JSON in, JSON out, everything above the transport reported in the body. */
     private suspend fun rpc(url: String, body: String?): String {
-        val response = request {
+        val response = request { accessToken ->
             httpClient.post(url) {
-                header("Authorization", "Bearer ${accessToken()}")
+                header("Authorization", "Bearer $accessToken")
                 if (body != null) {
                     contentType(ContentType.Application.Json)
                     setBody(body)
@@ -334,17 +334,23 @@ internal class DropboxSyncProvider(
      *
      * A 401 is answered once with a refresh before it is believed. Whether the stored token is still good is worked
      * out from the device's clock, and a clock that was wrong when the token was issued keeps saying "fresh" long after
-     * Dropbox has stopped accepting it - while the refresh token that would fix that is perfectly good. [block] asks
-     * for the access token itself, so running it again is what sends the new one; a second 401 is the real refusal.
+     * Dropbox has stopped accepting it - while the refresh token that would fix that is perfectly good. [block] is
+     * handed the token it sends, so that the one refused is known and only that one is renewed: the transfers of a run
+     * refused together share one renewal. A second 401 is the real refusal.
      */
-    private suspend fun request(block: suspend () -> HttpResponse): HttpResponse {
+    private suspend fun request(block: suspend (accessToken: String) -> HttpResponse): HttpResponse {
         var attempt = 0
-        var hasRefreshed = false
+        var refusedToken: String? = null
         while (true) {
-            val response = transport { block() }
-            if (response.status == HttpStatusCode.Unauthorized && !hasRefreshed) {
-                hasRefreshed = true
-                accessToken(forceRefresh = true)
+            var token = ""
+            // The token is asked for inside transport, like the call: a renewal whose answer cannot be decoded must
+            // stay a network failure of the run rather than become one of this file.
+            val response = transport {
+                token = accessToken(refused = refusedToken)
+                block(token)
+            }
+            if (response.status == HttpStatusCode.Unauthorized && refusedToken == null) {
+                refusedToken = token
                 continue
             }
             val retryAfterMillis = response.retryAfterMillis(attempt)
@@ -425,16 +431,17 @@ internal class DropboxSyncProvider(
     }
 
     /**
-     * The stored access token, renewed first if it is about to expire, or regardless when [forceRefresh] says that
-     * Dropbox has already refused it. The whole check and renewal happen inside one [SyncCredentialsStore.update], so
-     * that the several requests of a sync run cannot each start a refresh of their own and have the last one to finish
-     * overwrite the tokens the others are using.
+     * The stored access token, renewed first if it is about to expire, or regardless when it is the one [refused]
+     * says Dropbox has already turned down. The whole check and renewal happen inside one [SyncCredentialsStore.update],
+     * so that the several requests of a sync run cannot each start a refresh of their own and have the last one to
+     * finish overwrite the tokens the others are using. A token that was refused is renewed only while it is still the
+     * stored one: six transfers refused at once make one renewal, and the other five use its result.
      */
-    private suspend fun accessToken(forceRefresh: Boolean = false): String = credentialsStore.update { credentials ->
+    private suspend fun accessToken(refused: String? = null): String = credentialsStore.update { credentials ->
         if (credentials == null || credentials.providerId != id.id) {
             throw SyncAuthorizationException("Dropbox is not connected.")
         }
-        if (!forceRefresh &&
+        if (credentials.accessToken != refused &&
             credentials.accessToken.isNotEmpty() &&
             Clock.System.now().toEpochMilliseconds() < credentials.expiresAt - EXPIRY_MARGIN_MILLIS
         ) {

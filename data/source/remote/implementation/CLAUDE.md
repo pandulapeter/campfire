@@ -49,7 +49,8 @@ redirect URIs character for character, which is why the desktop port is fixed.
   has seen stored: a write that is refused or cancelled drops the cache, and the next caller reads the storage again.
   Dropbox may hand out a new refresh token on renewal, and dropping it would end the connection silently. Whether a
   token is still good is judged by the device's clock, which can be wrong, so a 401 is answered once with a forced
-  refresh and the request sent again before it is reported as a refusal that needs the account connected again.
+  refresh and the request sent again — a refresh only of the token that was refused, so that the transfers refused
+  together share one renewal — before it is reported as a refusal that needs the account connected again.
 - `auth/SyncAuthenticator.<platform>.kt` — the four ways back from a consent page. **Noticing that the user backed
   out is as much a part of each of these as the redirect itself**: a consent page lives somewhere the app cannot
   see, so an authorization that only ever waits for a redirect leaves the UI on "waiting for the browser" forever

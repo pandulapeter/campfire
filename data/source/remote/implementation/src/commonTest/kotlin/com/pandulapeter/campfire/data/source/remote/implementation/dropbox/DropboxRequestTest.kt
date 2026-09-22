@@ -33,6 +33,7 @@ import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.awaitCancellation
 import kotlinx.coroutines.cancelAndJoin
+import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.test.currentTime
 import kotlinx.coroutines.test.runTest
@@ -236,6 +237,26 @@ class DropboxRequestTest {
         provider.list()
         assertEquals(expected = 1, actual = tokenRequestCount)
         assertEquals(expected = listOf<String?>("Bearer access", "Bearer renewed"), actual = authorizations)
+    }
+
+    @Test
+    fun `several requests refused at once renew the token once`() = runTest {
+        var tokenRequestCount = 0
+        val provider = provider { request ->
+            when {
+                request.url.toString() == TOKEN_URL -> {
+                    tokenRequestCount++
+                    respondJson("""{"access_token":"renewed","expires_in":14400}""")
+                }
+
+                request.headers["Authorization"] == "Bearer renewed" -> respond(content = "song", status = HttpStatusCode.OK)
+                else -> respondJson("""{"error_summary":"expired_access_token/..."}""", HttpStatusCode.Unauthorized)
+            }
+        }
+        coroutineScope {
+            repeat(6) { launch { assertEquals("song", provider.download(LibraryFileKind.SONG, "song_$it.cho").decodeToString()) } }
+        }
+        assertEquals(expected = 1, actual = tokenRequestCount)
     }
 
     @Test
