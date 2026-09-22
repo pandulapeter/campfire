@@ -14,12 +14,12 @@ Campfire keeps your lyrics and chords in plain [ChordPro](https://www.chordpro.o
 want to read them while playing: chords above the syllables they belong to, as few and as wide columns as the screen
 allows, and the text as large as you need it.
 
-<img src="documentation/screenshots/01.png" width="30%" /> <img src="documentation/screenshots/02.png" width="30%" /> <img src="documentation/screenshots/03.png" width="30%" />
+<img src="documentation/screenshots/01.png" width="32%" /> <img src="documentation/screenshots/02.png" width="32%" /> <img src="documentation/screenshots/03.png" width="32%" />
 
 Write songs in the built-in editor, transpose them into your key, put
 them into setlists, and read them on your phone, your tablet, your laptop or in a browser.
 
-<img src="documentation/screenshots/04.png" width="30%" /> <img src="documentation/screenshots/05.png" width="30%" /> <img src="documentation/screenshots/06.png" width="30%" />
+<img src="documentation/screenshots/04.png" width="32%" /> <img src="documentation/screenshots/05.png" width="32%" /> <img src="documentation/screenshots/06.png" width="32%" />
 
 Campfire works offline, there is no account to make, and there is no server of mine anywhere: songs are synced across your
 devices using your Dropbox account. The app is completely free, open-source, and there are no ads.
@@ -27,15 +27,15 @@ devices using your Dropbox account. The app is completely free, open-source, and
 <!-- Settings links to this heading's anchor (#get-campfire); renaming it means changing SettingsScreen.kt too. -->
 ### Get Campfire
 
-[<img src="documentation/images/badge_android.png" alt="Download for Android" height="32px" />](https://play.google.com/store/apps/details?id=com.pandulapeter.campfire)
-[<img src="documentation/images/badge_linux.png" alt="Download for Linux" height="32px" />](https://github.com/pandulapeter/campfire/releases/latest)
-[<img src="documentation/images/badge_web.png" alt="Open in browser" height="32px" />](https://pandulapeter.com/campfire)
+<a href="https://play.google.com/store/apps/details?id=com.pandulapeter.campfire"><img src="documentation/images/badge_android.png" alt="Campfire for Android" height="32px" /></a>
+<a href="https://github.com/pandulapeter/campfire/releases/latest"><img src="documentation/images/badge_linux.png" alt="Campfire for Linux" height="32px" /></a>
+<a href="https://pandulapeter.com/campfire"><img src="documentation/images/badge_web.png" alt="Campfire in the browser" height="32px" /></a>
 
 **Coming soon** to the App Store, the Mac App Store and the Microsoft Store:
 
-[<img src="documentation/images/badge_ios.png" alt="Campfire for iOS" height="32px" />](https://github.com/pandulapeter/campfire/releases/latest)
-[<img src="documentation/images/badge_macos.png" alt="Campfire for macOS" height="32px" />](https://github.com/pandulapeter/campfire/releases/latest)
-[<img src="documentation/images/badge_windows.png" alt="Campfire for Windows" height="32px" />](https://github.com/pandulapeter/campfire/releases/latest)
+<a href="https://github.com/pandulapeter/campfire/releases/latest"><img src="documentation/images/badge_ios.png" alt="Campfire for iOS" height="32px" /></a>
+<a href="https://github.com/pandulapeter/campfire/releases/latest"><img src="documentation/images/badge_macos.png" alt="Campfire for macOS" height="32px" /></a>
+<a href="https://github.com/pandulapeter/campfire/releases/latest"><img src="documentation/images/badge_windows.png" alt="Campfire for Windows" height="32px" /></a>
 
 Until the stores have them, every release also carries these three builds, marked `unsigned` because that is what
 they are:
@@ -53,6 +53,8 @@ they are:
 - [Sync](documentation/sync.md) - what it sees, how a run decides, and why it needs no backend.
 
 ### To do
+- Predictive back from Setlists / Settings should crossfade
+- Fast scroller is invisible when opening the screen for the first time, then after the first hover it becomes always visible
 - Add support for external control devices with a focus-by-section feature
 - Songs: sort by year option
 - Add ability to add links
