@@ -163,7 +163,8 @@ item bound to the device and `FileStorage.keepOutOfDeviceBackup` on the index.
   Microsoft Store, the Linux package on the latest GitHub release and the web build, a null `url` marking one that is not published yet — it is drawn as a disabled
   "Coming soon" row, and publishing it is filling that URL in. `visibleDistributions` is where the store rules are
   kept: a build that goes through App Review names only Apple's stores and the web, and shows no placeholders —
-  what it has instead is a row naming no platform that leads to the README, where every build is listed.
+  what it has instead is a row naming no platform that leads to the README's "Get Campfire" section, where every build
+  is listed.
   **GitHub is the project's website and its issue tracker**; the About section links nothing else but the author's own
   site, the privacy policy and the donation page.
 - The file name is a song's (and a setlist's) identity. Nothing is ever overwritten implicitly: a new or imported file

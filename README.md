@@ -10,20 +10,22 @@
 # Campfire
 *Your songbook, on every screen you own.*
 
-<img src="documentation/screenshots/01.png" width="30%" /> <img src="documentation/screenshots/02.png" width="30%" />
-<img src="documentation/screenshots/03.png" width="30%" /> <img src="documentation/screenshots/04.png" width="30%" />
-<img src="documentation/screenshots/05.png" width="30%" /> <img src="documentation/screenshots/06.png" width="30%" />
-
 Campfire keeps your lyrics and chords in plain [ChordPro](https://www.chordpro.org) files and shows them the way you
 want to read them while playing: chords above the syllables they belong to, as few and as wide columns as the screen
-allows, and the text as large as you need it. Write songs in the built-in editor, transpose them into your key, put
-them into setlists, and read them on your phone, your tablet, your laptop or in a browser. It comes with no songs of
-its own — it is a home for yours.
+allows, and the text as large as you need it.
 
-It works **offline**, there is no account to make, and there is no server of mine anywhere: songs are synced across your
-devices using your Dropbox account. Campfire is completely free, open-source, and there are no ads.
+<img src="documentation/screenshots/01.png" width="30%" /> <img src="documentation/screenshots/02.png" width="30%" /> <img src="documentation/screenshots/03.png" width="30%" />
 
-### Download
+Write songs in the built-in editor, transpose them into your key, put
+them into setlists, and read them on your phone, your tablet, your laptop or in a browser.
+
+<img src="documentation/screenshots/04.png" width="30%" /> <img src="documentation/screenshots/05.png" width="30%" /> <img src="documentation/screenshots/06.png" width="30%" />
+
+Campfire works offline, there is no account to make, and there is no server of mine anywhere: songs are synced across your
+devices using your Dropbox account. The app is completely free, open-source, and there are no ads.
+
+<!-- Settings links to this heading's anchor (#get-campfire); renaming it means changing SettingsScreen.kt too. -->
+### Get Campfire
 
 [<img src="documentation/images/badge_android.png" alt="Download for Android" height="32px" />](https://play.google.com/store/apps/details?id=com.pandulapeter.campfire)
 [<img src="documentation/images/badge_linux.png" alt="Download for Linux" height="32px" />](https://github.com/pandulapeter/campfire/releases/latest)
@@ -44,49 +46,11 @@ they are:
 - **iOS** (`.ipa`): cannot be installed as it is. It is the file a sideloading tool such as
   [AltStore](https://altstore.io) or [Sideloadly](https://sideloadly.io) signs with your own Apple ID.
 
-### What it does
-
-- **Read** with adjustable text size, a lyrics-only mode, and a performance mode that puts everything which could
-  change your library out of the way while you are playing.
-- **Transpose** by ear or by key, in sharps, flats or German notation.
-- **Write and edit** in a ChordPro editor with syntax highlighting and a live preview.
-- **Organize** into setlists, each song with its own transposition, and filter the library by tag or by language.
-- **Import and export** single songs, setlists or the whole library as zip archives of plain text — and open a
-  ChordPro file straight from a file manager, an email or a browser download.
-- **Sync** between your devices through your own Dropbox, if you want to. Off until you turn it on.
-- **Fits your setup**: light and dark in eight colour schemes, English and Hungarian, and arrow key control, which is
-  what a page turner pedal sends.
-
-More detail in [documentation/features.md](documentation/features.md).
-
-### Your songs are yours
-
-The library is a folder of ordinary text files in Campfire's own storage on your device. Campfire uploads nothing and
-analyzes nothing, and it collects nothing at all — what it does with your data is written out in the
-[privacy policy](https://pandulapeter.com/legal/privacy_policy-campfire.html) linked from Settings. On a phone, the
-library and your settings are part of the device's own backup (Google's or iCloud's, whichever you have switched on),
-so they follow you to a new phone; that copy is made by the system and is yours, and Campfire never sees it.
-
-The one thing that ever touches the network is sync, and only after you have connected a cloud folder **you** own,
-which Campfire reaches directly with no service of mine in between. Everything can be exported at any time as a zip
-any other ChordPro tool can read, so leaving is as easy as arriving.
-
 ### Documentation
 
-- [Features](documentation/features.md) — everything the app does, at length.
-- [File format](documentation/file-format.md) — the ChordPro directives Campfire understands, the setlist JSON, and
-  how files are named.
-- [Sync](documentation/sync.md) — what it sees, how a run decides, and why it needs no backend.
-- [Store listing](documentation/store-listing.md) — the name and descriptions every store shows, in one place.
-- Publishing — what is still to be done before the [iOS App Store](documentation/publishing/ios-app-store.md), the
-  [Mac App Store](documentation/publishing/mac-app-store.md) and the
-  [Microsoft Store](documentation/publishing/microsoft-store.md) have the app.
-- [CLAUDE.md](CLAUDE.md) — the architecture, the module graph and the per-platform build commands.
-
-### Notes
-
-Version 4.0 is a rewrite: the online song library is gone and there is **no migration**. The first launch starts with
-an empty library.
+- [Features](documentation/features.md) - everything the app does, at length, and what it does with your data.
+- [File format](documentation/file-format.md) - the ChordPro directives Campfire understands, the setlist JSON, and how files are named.
+- [Sync](documentation/sync.md) - what it sees, how a run decides, and why it needs no backend.
 
 ### To do
 - Add support for external control devices with a focus-by-section feature
@@ -97,6 +61,8 @@ an empty library.
 - Fix Songs screen async race animation issues
 - Improve code coverage
 - Review architecture / code quality
+- Publishing — what is still to be done before the [iOS App Store](documentation/publishing/ios-app-store.md), the [Mac App Store](documentation/publishing/mac-app-store.md) and the [Microsoft Store](documentation/publishing/microsoft-store.md) have the app.
+- Delete [Store listing](documentation/store-listing.md) once all listings are submitted.
 
 ### License
 

@@ -9,7 +9,7 @@
 -->
 # Features
 
-The long version of what Campfire does. The [README](../README.md) has the short one.
+Everything Campfire does, and what it does with your data. The [README](../README.md) has the one-paragraph version.
 
 ### Reading
 
@@ -68,6 +68,11 @@ The long version of what Campfire does. The [README](../README.md) has the short
   tag. The filter appears once the library holds more than one language. Campfire ships no list of language names:
   it asks the platform what each code is called in the language the app is set to.
 
+### Sync
+
+- Between your devices through your own Dropbox, if you want to. It is off until you connect a folder in Settings,
+  and there is no service of mine in between. The details are in [sync.md](sync.md).
+
 ### Appearance
 
 - Light, dark or system theme in eight colour schemes, plus the one Android 12+ takes from your wallpaper.
@@ -79,3 +84,15 @@ Android, iOS, macOS / Windows / Linux desktop and the web, from one Compose Mult
 keeps its library in the browser's Origin Private File System — a real directory tree in the browser's own storage,
 private to the origin — and asks the browser to make that storage persistent as it starts. Whether that is granted
 is the browser's business, so Settings reports the answer rather than the app insisting on it.
+
+### Your songs are yours
+
+The library is a folder of ordinary text files in Campfire's own storage on your device. Campfire uploads nothing and
+analyzes nothing, and it collects nothing at all — what it does with your data is written out in the
+[privacy policy](https://pandulapeter.com/legal/privacy_policy-campfire.html) linked from Settings. On a phone, the
+library and your settings are part of the device's own backup (Google's or iCloud's, whichever you have switched on),
+so they follow you to a new phone; that copy is made by the system and is yours, and Campfire never sees it.
+
+The one thing that ever touches the network is sync, and only after you have connected a cloud folder **you** own,
+which Campfire reaches directly with no service of mine in between. Everything can be exported at any time as a zip
+any other ChordPro tool can read, so leaving is as easy as arriving.

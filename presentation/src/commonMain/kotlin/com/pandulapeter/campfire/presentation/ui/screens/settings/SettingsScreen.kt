@@ -570,13 +570,14 @@ private fun DistributionsSection(
         )
     }
     // Where a store's rules kept some of the builds off the list, the way to the rest is the project's own page. The
-    // row names no platform, which is the whole of what those rules ask of the app itself.
+    // row names no platform, which is the whole of what those rules ask of the app itself. It opens at the README's "Get
+    // Campfire" section, whose anchor GitHub derives from the heading, so renaming that heading means changing it here.
     if (distributions.size < Distribution.entries.size) {
         LinkListItem(
             title = stringResource(Res.string.settings_distributions_all),
             description = stringResource(Res.string.settings_distributions_all_description),
             icon = painterResource(Res.drawable.ic_git_hub),
-            onClick = { urlOpener("$GIT_HUB_URL#readme") },
+            onClick = { urlOpener("$GIT_HUB_URL#get-campfire") },
         )
     }
 }
