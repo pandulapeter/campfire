@@ -52,7 +52,11 @@ compose.desktop {
             modules("java.instrument", "java.management", "jdk.unsupported")
             macOS {
                 iconFile.set(project.file("src/main/resources/appIcon.icns"))
-                chordProFileAssociations()
+                // Not fileAssociation(): the plugin writes its own document type with the "****" OS type, which claims
+                // every kind of file, and with no rank or content type. These are the iOS app's document types.
+                infoPlist {
+                    extraKeysRawXml = macChordProDocumentTypes()
+                }
             }
             windows {
                 iconFile.set(project.file("src/main/resources/appIcon.ico"))
@@ -93,13 +97,97 @@ kotlin {
 }
 
 /**
- * The extensions a ChordPro song is found under, ".cho" first. They are all registered as plain text, which is what
- * they are; zip and .txt are deliberately not here, since an app that claims those would be answering for every
- * archive and note on the machine.
+ * The ChordPro extensions the Windows installer claims: the ones no other application uses. An MSI can only make an
+ * application an extension's handler outright - there is no Alternate rank to register the shared ones with, the
+ * way iOS and macOS do - so ".crd", ".chord" and ".pro" (Qt's project files among others) are left to whoever has
+ * them, and are imported from inside the app. They are all registered as plain text, which is what they are; zip and
+ * .txt are deliberately not here, since an app that claims those would be answering for every archive and note on
+ * the machine.
  *
- * Kept in step with `LibraryFiles.SONG_EXTENSIONS` in `:data:model`, which the build file cannot see.
+ * A subset of `LibraryFiles.SONG_EXTENSIONS` in `:data:model`, which the build file cannot see.
  */
 fun org.jetbrains.compose.desktop.application.dsl.AbstractPlatformSettings.chordProFileAssociations() =
-    listOf("cho", "chopro", "chordpro", "crd", "chord", "pro").forEach { extension ->
+    listOf("cho", "chopro", "chordpro").forEach { extension ->
         fileAssociation(mimeType = "text/plain", extension = extension, description = "ChordPro song")
     }
+
+/**
+ * The macOS document types, the same as the iOS app's (`app/ios/iosApp/iosApp/Info.plist`): ".cho" claimed as the
+ * default, the rest of the family as an alternate, since those extensions are shared with other kinds of file, all
+ * of them imported as types that conform to plain text. Kept in step with `LibraryFiles.SONG_EXTENSIONS` in
+ * `:data:model`, which the build file cannot see.
+ */
+fun macChordProDocumentTypes() = """
+    <key>UTImportedTypeDeclarations</key>
+    <array>
+        <dict>
+            <key>UTTypeIdentifier</key>
+            <string>org.chordpro.cho</string>
+            <key>UTTypeDescription</key>
+            <string>ChordPro song</string>
+            <key>UTTypeConformsTo</key>
+            <array>
+                <string>public.plain-text</string>
+            </array>
+            <key>UTTypeTagSpecification</key>
+            <dict>
+                <key>public.filename-extension</key>
+                <array>
+                    <string>cho</string>
+                </array>
+            </dict>
+        </dict>
+        <dict>
+            <key>UTTypeIdentifier</key>
+            <string>org.chordpro.chordpro</string>
+            <key>UTTypeDescription</key>
+            <string>ChordPro song</string>
+            <key>UTTypeConformsTo</key>
+            <array>
+                <string>public.plain-text</string>
+            </array>
+            <key>UTTypeTagSpecification</key>
+            <dict>
+                <key>public.filename-extension</key>
+                <array>
+                    <string>chopro</string>
+                    <string>chordpro</string>
+                    <string>crd</string>
+                    <string>chord</string>
+                    <string>pro</string>
+                </array>
+            </dict>
+        </dict>
+    </array>
+    <key>CFBundleDocumentTypes</key>
+    <array>
+        <dict>
+            <key>CFBundleTypeName</key>
+            <string>ChordPro song</string>
+            <key>CFBundleTypeRole</key>
+            <string>Editor</string>
+            <key>CFBundleTypeIconFile</key>
+            <string>Campfire.icns</string>
+            <key>LSHandlerRank</key>
+            <string>Default</string>
+            <key>LSItemContentTypes</key>
+            <array>
+                <string>org.chordpro.cho</string>
+            </array>
+        </dict>
+        <dict>
+            <key>CFBundleTypeName</key>
+            <string>ChordPro song</string>
+            <key>CFBundleTypeRole</key>
+            <string>Editor</string>
+            <key>CFBundleTypeIconFile</key>
+            <string>Campfire.icns</string>
+            <key>LSHandlerRank</key>
+            <string>Alternate</string>
+            <key>LSItemContentTypes</key>
+            <array>
+                <string>org.chordpro.chordpro</string>
+            </array>
+        </dict>
+    </array>
+""".trimIndent()
