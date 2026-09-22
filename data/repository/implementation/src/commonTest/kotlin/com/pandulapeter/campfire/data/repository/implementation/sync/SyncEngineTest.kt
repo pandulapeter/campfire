@@ -156,6 +156,51 @@ class SyncEngineTest {
     }
 
     @Test
+    fun `a song saved while its own download is in flight is kept next to the incoming version`() = runTest {
+        val original = "Original".encodeToByteArray()
+        val edited = "Edited here".encodeToByteArray()
+        val incoming = "Edited there".encodeToByteArray()
+        val local = FakeLibraryFileLocalSource(files = mapOf(song(1) to original))
+        val provider = FakeSyncProvider(files = mapOf(song(1) to incoming))
+        provider.onDownload = { key -> if (key == song(1)) local.files[song(1)] = edited }
+
+        SyncEngine(local).synchronize(
+            provider = provider,
+            document = indexOf(song(1) to original),
+            accountId = ACCOUNT_ID,
+            onProgress = {},
+            onIndexChanged = {},
+            deletionPolicy = SyncDeletionPolicy.ASK,
+        )
+
+        assertContentEquals(edited, local.files[song(1)])
+        assertContentEquals(incoming, local.files[SyncKey(kind = LibraryFileKind.SONG, name = "song_1 (2).cho")])
+        assertContentEquals(edited, provider.files.getValue(song(1)).first)
+        assertEquals(1, provider.downloadCounts[song(1)])
+    }
+
+    @Test
+    fun `a song created under the name while its download is in flight is kept`() = runTest {
+        val mine = "Mine".encodeToByteArray()
+        val theirs = "Theirs".encodeToByteArray()
+        val local = FakeLibraryFileLocalSource()
+        val provider = FakeSyncProvider(files = mapOf(song(2) to theirs))
+        provider.onDownload = { key -> if (key == song(2)) local.files[song(2)] = mine }
+
+        SyncEngine(local).synchronize(
+            provider = provider,
+            document = SyncIndexDocument(),
+            accountId = ACCOUNT_ID,
+            onProgress = {},
+            onIndexChanged = {},
+            deletionPolicy = SyncDeletionPolicy.ASK,
+        )
+
+        assertContentEquals(mine, local.files[song(2)])
+        assertContentEquals(theirs, local.files[SyncKey(kind = LibraryFileKind.SONG, name = "song_2 (2).cho")])
+    }
+
+    @Test
     fun `a song edited while it waits to be deleted goes back up instead`() = runTest {
         val original = "Original".encodeToByteArray()
         val edited = "Edited here".encodeToByteArray()

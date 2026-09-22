@@ -277,8 +277,10 @@ internal class SyncEngine(
      * Overwrites the local file, so it is read, decided about and only then written: the plan was made from hashes
      * taken when the run listed the library, and a long run gives the user plenty of time to save an edit to a song
      * that is still waiting to come down. The same goes for a file that was not there at all when the run listed the
-     * library and is now: nothing planned for this name knew about it, so it is never written over. Checked here, the
-     * window in which such a save can be lost is one file's worth of transfer rather than the whole run.
+     * library and is now: nothing planned for this name knew about it, so it is never written over. Checked before the
+     * request, so that a file already in step is never transferred, and again after it, just before the write, so that
+     * the window in which such a save can be lost is the write itself rather than a request that may be retried for
+     * minutes.
      */
     private suspend fun download(
         provider: SyncProvider,
@@ -301,6 +303,13 @@ internal class SyncEngine(
             return resolve(provider, SyncOperation.Resolve(key, operation.revision), remoteFiles)
         }
         val bytes = downloadWithinLimit(provider, key, remoteFiles)
+        // The request can take minutes under rate limiting, and the user is free to save this very file meanwhile:
+        // decided again on what is there now, so that the window in which a save can be lost is one local write, not
+        // one request.
+        val current = libraryFileLocalSource.readLibraryFile(key.kind, key.name)
+        if (current != null && !current.contentEquals(local)) {
+            return resolveWith(provider, key, operation.revision, localBytes = current, remote = bytes)
+        }
         libraryFileLocalSource.writeLibraryFile(key.kind, key.name, bytes)
         return OperationOutcome(
             entries = mapOf(key to SyncIndexEntry(localContentHash(bytes), operation.revision)),
@@ -381,13 +390,24 @@ internal class SyncEngine(
             return OperationOutcome(entries = mapOf(key to SyncIndexEntry(localContentHash(local), operation.revision)))
         }
         val remote = downloadWithinLimit(provider, key, remoteFiles)
-        if (remote.contentEquals(local)) {
-            return OperationOutcome(entries = mapOf(key to SyncIndexEntry(localContentHash(local), operation.revision)))
+        return resolveWith(provider, key, operation.revision, localBytes = local, remote = remote)
+    }
+
+    /** [resolve] from the point where both versions are in hand, for a [download] that found a save under its write. */
+    private suspend fun resolveWith(
+        provider: SyncProvider,
+        key: SyncKey,
+        revision: String,
+        localBytes: ByteArray,
+        remote: ByteArray,
+    ): OperationOutcome {
+        if (remote.contentEquals(localBytes)) {
+            return OperationOutcome(entries = mapOf(key to SyncIndexEntry(localContentHash(localBytes), revision)))
         }
         val copyName = libraryFileLocalSource.writeLibraryFileToFreeName(key.kind, key.name, remote)
         val copyKey = SyncKey(kind = key.kind, name = copyName)
         val uploaded = try {
-            provider.upload(key.kind, key.name, local, operation.revision)
+            provider.upload(key.kind, key.name, localBytes, revision)
         } catch (exception: CancellationException) {
             // Nothing says whether the write landed, so the copy stays: see the KDoc.
             throw exception
@@ -402,14 +422,14 @@ internal class SyncEngine(
         if (uploaded !is RemoteWriteResult.Written) {
             // Contested - unless what is there now is what was just sent, which is how a write looks that landed and was
             // then retried. In that case the remote version is gone from the service, and the copy is all there is of it.
-            val isOwnWrite = provider.download(key.kind, key.name).contentEquals(local)
+            val isOwnWrite = provider.download(key.kind, key.name).contentEquals(localBytes)
             if (!isOwnWrite) discardCopy(copyKey, remote)
             return OperationOutcome(
                 summary = if (isOwnWrite) SyncSummary(conflicts = listOf(copyName)) else SyncSummary(),
                 hasUnresolvedConflict = true,
             )
         }
-        val entries = mutableMapOf(key to SyncIndexEntry(localContentHash(local), uploaded.revision))
+        val entries = mutableMapOf(key to SyncIndexEntry(localContentHash(localBytes), uploaded.revision))
         val copyUploaded = provider.upload(copyKey.kind, copyKey.name, remote, expectedRevision = null)
         if (copyUploaded is RemoteWriteResult.Written) {
             entries[copyKey] = SyncIndexEntry(localContentHash(remote), copyUploaded.revision)

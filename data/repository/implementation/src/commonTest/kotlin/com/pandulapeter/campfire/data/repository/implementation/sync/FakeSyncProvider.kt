@@ -28,7 +28,8 @@ import com.pandulapeter.campfire.data.source.remote.api.model.RemoteWriteResult
  * through a run or changes the local library under an operation that is already under way. [sizes] lets a listing
  * report a large file without the test allocating it. [account] is who the service says is connected, which is what
  * a repository test restores the connection from. [ignoresCase] makes it a service like Dropbox, which takes two names
- * that differ only by case for one file, and [listCount] is how many passes a run made.
+ * that differ only by case for one file, [listCount] is how many passes a run made and [downloadCounts] how many times
+ * each file was fetched.
  */
 internal class FakeSyncProvider(
     files: Map<SyncKey, ByteArray> = emptyMap(),
@@ -40,6 +41,8 @@ internal class FakeSyncProvider(
 ) : SyncProvider {
 
     var listCount = 0
+
+    val downloadCounts = mutableMapOf<SyncKey, Int>()
 
     val files = files.mapValues { (_, bytes) -> bytes to "r1" }.toMutableMap()
     private var nextRevision = 2
@@ -81,6 +84,7 @@ internal class FakeSyncProvider(
 
     override suspend fun download(kind: LibraryFileKind, name: String): ByteArray {
         val key = SyncKey(kind = kind, name = name)
+        downloadCounts[key] = (downloadCounts[key] ?: 0) + 1
         onDownload(key)
         return files.getValue(key).first
     }
