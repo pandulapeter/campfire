@@ -114,6 +114,11 @@ class ChordProHeaderTest {
     }
 
     @Test
+    fun `a directive added to a CR-only file is written with its line ending`() {
+        assertEquals("{title: T}\r{artist: }\r{capo: 2}\r\rThe first line\r", "{title: T}\r{capo: 2}\r\rThe first line\r".insert("artist"))
+    }
+
+    @Test
     fun `every spelling of a directive is reported as declared under one name`() {
         val text = "{t: T}\n{st: S}\n{meta: tag slow}\n{lang: hu}\n{capo: 2}"
 

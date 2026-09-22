@@ -46,16 +46,16 @@ object ChordProHighlighter {
         // Chords are not chords inside a tab or an environment handed to another program: the brackets there are part
         // of the tablature or of the notation, and the viewer leaves them alone too.
         var isVerbatim = false
-        var lineStart = 0
-        while (lineStart <= text.length) {
-            val lineBreak = text.indexOf('\n', lineStart)
-            val lineEnd = if (lineBreak == -1) text.length else lineBreak
-            val line = text.substring(lineStart, lineEnd)
+        // The lines and their offsets come from ChordProSyntax rather than from a walk of their own, so that a file
+        // written with any of the three line endings is highlighted the way it is parsed.
+        val lines = ChordProSyntax.splitLines(text)
+        val lineStarts = ChordProSyntax.lineStartOffsets(text)
+        lines.forEachIndexed { index, line ->
+            val lineStart = lineStarts[index]
             val trimmed = line.trim()
-            val trimmedDirectiveLine = trimmed.removeSuffix("\r")
-            val directive = ChordProSyntax.matchDirective(trimmedDirectiveLine)
+            val directive = ChordProSyntax.matchDirective(trimmed)
             when {
-                trimmed.startsWith(SOURCE_COMMENT) -> tokens += Token(TokenType.COMMENT, lineStart, lineEnd)
+                trimmed.startsWith(SOURCE_COMMENT) -> tokens += Token(TokenType.COMMENT, lineStart, lineStart + line.length)
 
                 directive != null -> {
                     ChordProSyntax.startOfEnvironment(directive.name)?.let { isVerbatim = it == TAB_ENVIRONMENT || it in ChordProSyntax.delegateEnvironments }
@@ -63,7 +63,7 @@ object ChordProHighlighter {
                     tokens += directive.tokens(
                         line = line,
                         lineStart = lineStart,
-                        valueStart = ChordProSyntax.directiveValueStart(trimmedDirectiveLine),
+                        valueStart = ChordProSyntax.directiveValueStart(trimmed),
                     )
                 }
 
@@ -75,8 +75,6 @@ object ChordProHighlighter {
                     )
                 }
             }
-            if (lineBreak == -1) break
-            lineStart = lineBreak + 1
         }
         return tokens
     }

@@ -160,4 +160,11 @@ class ChordProLanguagesTest {
 
         assertEquals("{title: T}\r\n{meta: language en}\r\n\r\nThe first line\r\n", ChordProLanguages.setLanguages(text, listOf("en")))
     }
+
+    @Test
+    fun `setting the languages of a CR-only file keeps its line endings`() {
+        val text = "{title: T}\r\rThe first line\r"
+
+        assertEquals("{title: T}\r{meta: language en}\r\rThe first line\r", ChordProLanguages.setLanguages(text, listOf("en")))
+    }
 }

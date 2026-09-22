@@ -90,11 +90,17 @@ internal object ChordProSyntax {
     }
 
     /**
-     * The line separator [text] is written with: CRLF where any line of it ends that way, LF otherwise. It is one
-     * answer for the whole file, so a file mixing CR-only or LF endings with CRLF ones comes out of an edit written with
-     * CRLF throughout, which is the separator such a file was most likely meant to have.
+     * The line separator [text] is written with: CRLF where any line of it ends that way, a bare CR where the file
+     * uses those and no CRLF, LF otherwise. It is one answer for the whole file, so a file mixing its endings comes
+     * out of an edit written with the one that wins, which is the separator such a file was most likely meant to
+     * have. The CR-only case is an old Mac export, and it is answered so that an edit of one line leaves every
+     * other byte of such a file alone, the way it does for the other two.
      */
-    fun lineSeparatorOf(text: String) = if (text.contains("\r\n")) "\r\n" else "\n"
+    fun lineSeparatorOf(text: String) = when {
+        text.contains("\r\n") -> "\r\n"
+        text.contains('\r') -> "\r"
+        else -> "\n"
+    }
 
     /**
      * The character offset every line of [splitLines] starts at in [text]. It is counted on the text itself rather

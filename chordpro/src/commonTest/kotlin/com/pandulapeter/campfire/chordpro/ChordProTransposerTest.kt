@@ -483,6 +483,11 @@ class ChordProTransposerTest {
     }
 
     @Test
+    fun `transposing text keeps a CR-only file's line endings`() {
+        assertEquals("[C#]la\r[G#]lo\r", ChordProTransposer.transposeText("[C]la\r[G]lo\r", 1, preferFlats = false))
+    }
+
+    @Test
     fun `a caret after a lyric keeps its lyric when every chord above it grows`() {
         val before = "[C]Amazing [F]grace, how [C]sweet the sound\nThat [C]saved a [G]wretch like [C]me\n[C]I once was [F]lost, but [C]now am found"
         val (after, mapped) = transposed(before, 1, before.length)
@@ -546,6 +551,14 @@ class ChordProTransposerTest {
         val (after, mapped) = transposed(before, 1, before.indexOf("\r\n", before.indexOf("lo")))
 
         assertEquals(after.indexOf("\r\n", after.indexOf("lo")), mapped)
+    }
+
+    @Test
+    fun `a caret at the end of a CR line stays at the end of that line`() {
+        val before = "[C]la\r[G]lo\r[C]end"
+        val (after, mapped) = transposed(before, 1, before.indexOf("\r", before.indexOf("lo")))
+
+        assertEquals(after.indexOf("\r", after.indexOf("lo")), mapped)
     }
 
     @Test

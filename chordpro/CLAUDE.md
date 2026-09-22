@@ -69,8 +69,9 @@ in `:domain:*`. `:data:source:local:implementation` uses it directly for the met
   own formatting has to survive a chip being tapped in the viewer. A new tag lands after the last one the file
   already has, or at the end of the directives it opens with. What makes "every other byte" true for all of these
   text edits (tags, languages, the transposition) is `ChordProSyntax.joinLines`: the line separator is detected per
-  file, CRLF where any line ends that way and LF otherwise, and a trailing line break is put back where the file had
-  one; `ChordProHeader.insert` writes its line break with the same separator. A file mixing its endings comes out with the one separator that picked.
+  file, CRLF where any line ends that way, a bare CR where the file uses those and no CRLF (an old Mac export), LF
+  otherwise, and a trailing line break is put back where the file had one; `ChordProHeader.insert` writes its line
+  break with the same separator. A file mixing its endings comes out with the one separator that picked.
 - `ChordProLanguages` — the languages a song is sung in, which ChordPro has no directive for at all: what Campfire
   writes is `{meta: language en}`, a custom metadata item, and what it reads is that plus `{meta: lang en}` and the
   bare `{language: en}` / `{lang: en}` a hand written file may carry. A value is normalized on the way in
@@ -154,7 +155,9 @@ in `:domain:*`. `:data:source:local:implementation` uses it directly for the met
   minor chord and never as a note.
 - `ChordProHighlighter` — the typed spans an editor wants to colour (directive name, directive value, chord,
   annotation, comment). It lives here rather than in the UI so that what counts as a chord is decided in exactly one
-  place; only what those look like on screen is the caller's business.
+  place; only what those look like on screen is the caller's business. It reads the file's lines through
+  `ChordProSyntax` rather than walking them itself, so it agrees with the parser about where a line ends whichever of
+  the three endings the file uses.
 
 Everything here is pure, so everything here is tested: `commonTest`, run with `./gradlew :chordpro:desktopTest`. A
 change to the dialect belongs in a test first.

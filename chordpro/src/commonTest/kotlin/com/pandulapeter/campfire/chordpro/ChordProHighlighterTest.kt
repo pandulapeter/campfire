@@ -123,6 +123,51 @@ class ChordProHighlighterTest {
     }
 
     @Test
+    fun `old Mac line endings do not hide the directives`() {
+        assertEquals(spans("{title: A}\n{c: x}\n[C]hello"), spans("{title: A}\r{c: x}\r[C]hello"))
+        assertEquals(
+            listOf(
+                TokenType.DIRECTIVE_NAME to "{title:",
+                TokenType.DIRECTIVE_VALUE to " A",
+                TokenType.DIRECTIVE_NAME to "}",
+                TokenType.DIRECTIVE_NAME to "{c:",
+                TokenType.DIRECTIVE_VALUE to " x",
+                TokenType.DIRECTIVE_NAME to "}",
+                TokenType.CHORD to "[C]",
+            ),
+            spans("{title: A}\r{c: x}\r[C]hello"),
+        )
+    }
+
+    @Test
+    fun `brackets inside a tab of a CR-only file are left alone`() {
+        assertEquals(
+            listOf(
+                TokenType.DIRECTIVE_NAME to "{start_of_tab}",
+                TokenType.DIRECTIVE_NAME to "{end_of_tab}",
+                TokenType.CHORD to "[Am]",
+            ),
+            spans("{start_of_tab}\re|--[3]--|\r{end_of_tab}\r[Am]after"),
+        )
+    }
+
+    @Test
+    fun `a file mixing its line endings is highlighted line by line`() {
+        assertEquals(
+            listOf(
+                TokenType.DIRECTIVE_NAME to "{title:",
+                TokenType.DIRECTIVE_VALUE to " A",
+                TokenType.DIRECTIVE_NAME to "}",
+                TokenType.DIRECTIVE_NAME to "{c:",
+                TokenType.DIRECTIVE_VALUE to " x",
+                TokenType.DIRECTIVE_NAME to "}",
+                TokenType.CHORD to "[C]",
+            ),
+            spans("{title: A}\r\n{c: x}\r[C]la\nlo"),
+        )
+    }
+
+    @Test
     fun `empty text has nothing to highlight`() {
         assertEquals(emptyList(), ChordProHighlighter.tokenize(""))
     }

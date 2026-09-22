@@ -83,6 +83,27 @@ class ChordProSyntaxTest {
         assertFalse(ChordProSyntax.hasBrackets("[".repeat(100_000)))
     }
 
+    @Test
+    fun `the line separator of a file is the one it is written with`() {
+        assertEquals("\r", ChordProSyntax.lineSeparatorOf("a\rb"))
+        assertEquals("\n", ChordProSyntax.lineSeparatorOf("a\nb"))
+        assertEquals("\r\n", ChordProSyntax.lineSeparatorOf("a\r\nb"))
+        assertEquals("\r\n", ChordProSyntax.lineSeparatorOf("a\rb\r\nc"))
+    }
+
+    @Test
+    fun `every line starts where the offsets say it does`() {
+        listOf("", "a", "a\n", "a\r", "a\r\n", "a\rb\nc").forEach { text ->
+            val lines = ChordProSyntax.splitLines(text)
+            val starts = ChordProSyntax.lineStartOffsets(text)
+            assertEquals(lines.size, starts.size, text)
+            lines.forEachIndexed { index, line ->
+                val end = starts.getOrNull(index + 1) ?: text.length
+                assertEquals(line, text.substring(starts[index], end).trimEnd('\r', '\n'), text)
+            }
+        }
+    }
+
     private fun <T> assertLinear(block: () -> T): T {
         val (result, duration) = measureTimedValue(block)
         assertTrue(duration < 5.seconds, "took $duration")

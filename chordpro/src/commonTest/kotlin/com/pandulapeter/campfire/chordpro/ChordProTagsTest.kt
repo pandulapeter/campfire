@@ -118,6 +118,16 @@ class ChordProTagsTest {
     }
 
     @Test
+    fun `a new tag is written with a CR-only file's line endings`() {
+        assertEquals("{title: A}\r{tag: Demo}\r[C]la\r", ChordProTags.addTag("{title: A}\r[C]la\r", "Demo"))
+    }
+
+    @Test
+    fun `removing a tag keeps a CR-only file's line endings`() {
+        assertEquals("{title: A}\r[C]la\r", ChordProTags.removeTag("{title: A}\r{tag: Demo}\r[C]la\r", "Demo"))
+    }
+
+    @Test
     fun `a file without a trailing line break does not gain one`() {
         assertEquals("{title: A}\n{tag: x}\nla", ChordProTags.addTag("{title: A}\nla", "x"))
     }
