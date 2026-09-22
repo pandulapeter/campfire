@@ -111,25 +111,15 @@ class GetScreenDataUseCaseImpl internal constructor(
         val availableTags = filterableSongs.toTags()
         val availableLanguages = filterableSongs.toLanguages()
         val songsByTag = filterableSongs.filterTags(filter, songListPreferences.tagMatchMode, availableTags)
-        val songsByLanguage = filterableSongs.filterLanguages(filter, availableLanguages)
+        val songsByLanguage = filterableSongs.filterLanguages(filter, songListPreferences.languageMatchMode, availableLanguages)
         val songSections = songsByTag
-            .filterLanguages(filter, availableLanguages)
+            .filterLanguages(filter, songListPreferences.languageMatchMode, availableLanguages)
             .sortIntoSections(songListPreferences)
         return SongPart(
             songs = songSections.flatMap { it.songs },
             songSections = songSections,
-            tags = songsByLanguage.toTags().withMissingSelected(
-                available = availableTags,
-                selected = filter.selectedTags.mapTo(mutableSetOf()) { it.lowercase() },
-                key = { it.name.lowercase() },
-                toEmpty = { it.copy(songCount = 0) },
-            ),
-            languages = songsByTag.toLanguages().withMissingSelected(
-                available = availableLanguages,
-                selected = filter.selectedLanguages,
-                key = { it.code },
-                toEmpty = { it.copy(songCount = 0) },
-            ),
+            tags = availableTags.recountedTagsOver(songsByLanguage),
+            languages = availableLanguages.recountedLanguagesOver(songsByTag),
             unfilteredSongs = this,
         )
     }
@@ -178,42 +168,57 @@ class GetScreenDataUseCaseImpl internal constructor(
      * before they meet. A selected tag no song carries any more is dropped instead of emptying the list: it is kept
      * in the filter on purpose, see [SongFilter.selectedTags].
      */
-    private fun List<Song>.filterTags(songFilter: SongFilter, matchMode: UserPreferences.TagMatchMode, tags: List<Tag>): List<Song> {
+    private fun List<Song>.filterTags(songFilter: SongFilter, matchMode: UserPreferences.MatchMode, tags: List<Tag>): List<Song> {
         val available = tags.mapTo(mutableSetOf()) { it.name.lowercase() }
         val selected = songFilter.selectedTags.map { it.lowercase() }.filter { it in available }
         if (selected.isEmpty()) return this
         return filter { song ->
             val songTags = song.tags.mapTo(mutableSetOf()) { it.lowercase() }
             when (matchMode) {
-                UserPreferences.TagMatchMode.ANY -> selected.any { it in songTags }
-                UserPreferences.TagMatchMode.ALL -> selected.all { it in songTags }
+                UserPreferences.MatchMode.ANY -> selected.any { it in songTags }
+                UserPreferences.MatchMode.ALL -> selected.all { it in songTags }
             }
         }
     }
 
     /**
      * The songs left by the language filter. A song carries its languages the way it carries its tags, so several
-     * selected languages mean a song sung in any one of them; [SongLanguage.UNKNOWN] selects the songs that declare
-     * none, which no song can name itself, see [SongLanguage.Companion.UNKNOWN].
+     * selected languages combine the way several tags do; [SongLanguage.UNKNOWN] selects the songs that declare none,
+     * which no song can name itself, see [SongLanguage.Companion.UNKNOWN]. Such a song is taken to be in that one
+     * "language", so asking for every one of several selected languages never finds it next to a named one.
      */
-    private fun List<Song>.filterLanguages(songFilter: SongFilter, languages: List<SongLanguage>): List<Song> {
+    private fun List<Song>.filterLanguages(songFilter: SongFilter, matchMode: UserPreferences.MatchMode, languages: List<SongLanguage>): List<Song> {
         val available = languages.mapTo(mutableSetOf()) { it.code }
         val selected = songFilter.selectedLanguages.filter { it in available }
         if (selected.isEmpty()) return this
         return filter { song ->
-            if (song.languages.isEmpty()) SongLanguage.UNKNOWN in selected else selected.any { it in song.languages }
+            val songLanguages = song.languages.ifEmpty { listOf(SongLanguage.UNKNOWN) }
+            when (matchMode) {
+                UserPreferences.MatchMode.ANY -> selected.any { it in songLanguages }
+                UserPreferences.MatchMode.ALL -> selected.all { it in songLanguages }
+            }
         }
     }
 
     /**
-     * A filter group as its controls show it, put back together after the other group has narrowed the songs it was
-     * counted over: whatever the user has selected and the narrowing counted down to nothing is appended with a
-     * count of zero. A filter that is on has to stay visible to be turned off, and a zero says exactly what it
-     * means — this combination of the two groups selects nothing.
+     * Every tag of the library as the filter controls show it, counted over [songs] - the ones the language filter
+     * leaves. A tag the language filter has counted down to nothing stays on the list with a zero rather than
+     * dropping off it: the chips would otherwise come and go under the user's finger as the other group changes, and
+     * a zero says exactly what it means - this combination of the two groups selects nothing. The zeros sort last,
+     * which keeps the tags that still do something among the ones shown before "show all".
      */
-    private fun <T> List<T>.withMissingSelected(available: List<T>, selected: Set<String>, key: (T) -> String, toEmpty: (T) -> T): List<T> {
-        val counted = mapTo(mutableSetOf(), key)
-        return this + available.filter { key(it) in selected && key(it) !in counted }.map(toEmpty)
+    private fun List<Tag>.recountedTagsOver(songs: List<Song>): List<Tag> {
+        val counts = mutableMapOf<String, Int>()
+        songs.forEach { song ->
+            song.tags.mapTo(mutableSetOf()) { it.lowercase() }.forEach { tag -> counts[tag] = (counts[tag] ?: 0) + 1 }
+        }
+        return map { it.copy(songCount = counts[it.name.lowercase()] ?: 0) }.sortedWith(tagOrder)
+    }
+
+    /** Every language of the library counted over [songs] - the ones the tag filter leaves - the way [recountedTagsOver] counts the tags. */
+    private fun List<SongLanguage>.recountedLanguagesOver(songs: List<Song>): List<SongLanguage> {
+        val counts = songs.toLanguages().associate { it.code to it.songCount }
+        return map { it.copy(songCount = counts[it.code] ?: 0) }.sortedWith(languageOrder)
     }
 
     /**
@@ -232,7 +237,7 @@ class GetScreenDataUseCaseImpl internal constructor(
         }
         return countsByCode
             .map { (code, songCount) -> SongLanguage(code = code, songCount = songCount) }
-            .sortedWith(compareBy<SongLanguage> { it.code == SongLanguage.UNKNOWN }.thenByDescending { it.songCount }.thenBy { it.code })
+            .sortedWith(languageOrder)
     }
 
     /**
@@ -255,9 +260,14 @@ class GetScreenDataUseCaseImpl internal constructor(
         }
         return tagsByName.values
             .map { Tag(name = it.name, songCount = it.songCount) }
-            // Tags fold case but not accents, so two of them can share the text they are sorted by.
-            .sortedWith(compareByDescending<Tag> { it.songCount }.thenBy { normalizeText(it.name) }.thenBy { it.name })
+            .sortedWith(tagOrder)
     }
+
+    /** Most used first, and the songs that declare none last, see [toLanguages]. */
+    private val languageOrder = compareBy<SongLanguage> { it.code == SongLanguage.UNKNOWN }.thenByDescending { it.songCount }.thenBy { it.code }
+
+    /** Most used first. Tags fold case but not accents, so two of them can share the text they are sorted by. */
+    private val tagOrder = compareByDescending<Tag> { it.songCount }.thenBy { normalizeText(it.name) }.thenBy { it.name }
 
     /**
      * A tag while it is being counted.
@@ -335,13 +345,15 @@ class GetScreenDataUseCaseImpl internal constructor(
     private data class SongListPreferences(
         val shouldShowSongsWithoutChords: Boolean,
         val sortingMode: UserPreferences.SortingMode,
-        val tagMatchMode: UserPreferences.TagMatchMode,
+        val tagMatchMode: UserPreferences.MatchMode,
+        val languageMatchMode: UserPreferences.MatchMode,
     )
 
     private fun UserPreferences.toSongListPreferences() = SongListPreferences(
         shouldShowSongsWithoutChords = shouldShowSongsWithoutChords,
         sortingMode = sortingMode,
         tagMatchMode = tagMatchMode,
+        languageMatchMode = languageMatchMode,
     )
 
     private fun <T, R> DataState<T>.mapData(transform: (T) -> R): DataState<R> = when (this) {

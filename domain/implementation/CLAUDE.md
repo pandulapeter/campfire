@@ -32,9 +32,11 @@ The ones that carry real logic:
   what still counts as a tag and what still counts as a language are both decided from the chord-filtered library
   before either filter runs, a selected value no song carries any more is ignored rather than emptying the list
   (which is what lets the filter keep it, see `SongFilter.selectedTags`), and one the *other* group has
-  narrowed down to nothing stays on the list with a count of zero, since a filter that is on has to be visible to be
-  turned off. Several selected languages always mean "any of them" — a song is sung in one language or another, never
-  in all of them at once, which is why there is no counterpart to `TagMatchMode` here.
+  narrowed down to nothing stays on the list with a count of zero, sorted last — the controls draw it disabled rather
+  than dropping it, so the chips hold still as the other group changes and a selected one can still be turned off. Several selected values of a group mean
+  "any of them" or "all of them" as the preferences say, each group on its own (`tagMatchMode`, `languageMatchMode`):
+  a song can carry several languages as much as several tags, so "every language" is the question of a bilingual
+  song book.
 - `LoadScreenDataUseCaseImpl` — fans the initial load (or a rescan) out across the repositories in parallel and waits
   for all of them, failures included: one unreadable part of the screen must not keep the rest empty.
 - `PrepareImportUseCaseImpl` / `ImportPlanner` / `ImportFilesUseCaseImpl` — the import policy, split the way sync's

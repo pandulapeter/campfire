@@ -1734,7 +1734,9 @@ class CampfireViewModel(
         filter.copy(selectedTags = filter.selectedTags.filterNotTo(mutableSetOf()) { it.lowercase() in libraryTags })
     }
 
-    fun setTagMatchMode(value: UserPreferences.TagMatchMode) = updateUserPreferences { copy(tagMatchMode = value) }
+    fun setTagMatchMode(value: UserPreferences.MatchMode) = updateUserPreferences { copy(tagMatchMode = value) }
+
+    fun setLanguageMatchMode(value: UserPreferences.MatchMode) = updateUserPreferences { copy(languageMatchMode = value) }
 
     /**
      * Accent and case insensitive text, for a screen that has to sort or search through something the library did

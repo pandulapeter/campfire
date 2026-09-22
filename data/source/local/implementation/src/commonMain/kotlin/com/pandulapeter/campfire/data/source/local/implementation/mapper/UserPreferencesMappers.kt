@@ -29,7 +29,8 @@ internal fun UserPreferencesDocument.toModel() = UserPreferences(
         isGermanNotationEnabled = isGermanNotationEnabled,
     ),
     transpositions = transpositions,
-    tagMatchMode = UserPreferences.TagMatchMode.entries.firstOrNull { it.id == tagMatchMode } ?: UserPreferences.TagMatchMode.ANY,
+    tagMatchMode = UserPreferences.MatchMode.entries.firstOrNull { it.id == tagMatchMode } ?: UserPreferences.MatchMode.ANY,
+    languageMatchMode = UserPreferences.MatchMode.entries.firstOrNull { it.id == languageMatchMode } ?: UserPreferences.MatchMode.ANY,
 )
 
 internal fun UserPreferences.toDocument() = UserPreferencesDocument(
@@ -48,4 +49,5 @@ internal fun UserPreferences.toDocument() = UserPreferencesDocument(
     isGermanNotationEnabled = chordSpelling.isGermanNotationEnabled,
     transpositions = transpositions,
     tagMatchMode = tagMatchMode.id,
+    languageMatchMode = languageMatchMode.id,
 )

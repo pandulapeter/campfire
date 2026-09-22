@@ -105,6 +105,9 @@
     <string name="songs_languages">Nyelvek</string>
     <string name="songs_languages_unknown">Ismeretlen</string>
     <string name="songs_languages_clear">Kijelölés törlése</string>
+    <string name="songs_languages_match_mode">A dal szóljon</string>
+    <string name="songs_languages_match_mode_any">Bármelyik nyelven</string>
+    <string name="songs_languages_match_mode_all">Mindegyik nyelven</string>
 
     <!-- Setlists screen -->
     <string name="setlists">Listák</string>

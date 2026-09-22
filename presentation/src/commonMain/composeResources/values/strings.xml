@@ -105,6 +105,9 @@
     <string name="songs_languages">Languages</string>
     <string name="songs_languages_unknown">Unknown</string>
     <string name="songs_languages_clear">Clear selection</string>
+    <string name="songs_languages_match_mode">A song has to be in</string>
+    <string name="songs_languages_match_mode_any">Any language</string>
+    <string name="songs_languages_match_mode_all">Every language</string>
 
     <!-- Setlists screen -->
     <string name="setlists">Setlists</string>

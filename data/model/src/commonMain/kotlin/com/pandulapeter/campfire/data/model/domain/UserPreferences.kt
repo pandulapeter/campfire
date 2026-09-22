@@ -39,11 +39,16 @@ data class UserPreferences(
      * stored — it lives in the presentation layer for as long as the app runs — but which of the two readings the
      * user prefers is a standing choice, like the sorting mode.
      */
-    val tagMatchMode: TagMatchMode,
+    val tagMatchMode: MatchMode,
+    /** How the languages selected in the song filter combine, a standing choice of its own like [tagMatchMode]. */
+    val languageMatchMode: MatchMode,
 ) {
 
-    /** What several selected tags mean together: a song that carries any one of them, or one that carries all. */
-    enum class TagMatchMode(val id: String) {
+    /**
+     * What several selected values of one filter group mean together: a song that carries any one of them, or one
+     * that carries all.
+     */
+    enum class MatchMode(val id: String) {
         ANY("any"),
         ALL("all"),
     }

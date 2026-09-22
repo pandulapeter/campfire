@@ -73,6 +73,9 @@ import com.pandulapeter.campfire.presentation.resources.setlists_sorting_mode_by
 import com.pandulapeter.campfire.presentation.resources.setlists_sorting_mode_newest_first
 import com.pandulapeter.campfire.presentation.resources.songs_languages
 import com.pandulapeter.campfire.presentation.resources.songs_languages_clear
+import com.pandulapeter.campfire.presentation.resources.songs_languages_match_mode
+import com.pandulapeter.campfire.presentation.resources.songs_languages_match_mode_all
+import com.pandulapeter.campfire.presentation.resources.songs_languages_match_mode_any
 import com.pandulapeter.campfire.presentation.resources.songs_show_without_chords
 import com.pandulapeter.campfire.presentation.resources.songs_sorting_mode
 import com.pandulapeter.campfire.presentation.resources.songs_sorting_mode_by_artist
@@ -246,7 +249,7 @@ internal fun SongsControls(
             TagFilters(
                 tags = tags,
                 selectedTags = songFilter.selectedTags,
-                matchMode = userPreferences?.tagMatchMode ?: UserPreferences.TagMatchMode.ANY,
+                matchMode = userPreferences?.tagMatchMode ?: UserPreferences.MatchMode.ANY,
                 onTagClicked = viewModel::toggleTagFilter,
                 onClear = viewModel::clearTagFilter,
                 onMatchModeSelected = viewModel::setTagMatchMode,
@@ -262,8 +265,10 @@ internal fun SongsControls(
             LanguageFilters(
                 languages = languages,
                 selectedLanguages = songFilter.selectedLanguages,
+                matchMode = userPreferences?.languageMatchMode ?: UserPreferences.MatchMode.ANY,
                 onLanguageClicked = viewModel::toggleLanguageFilter,
                 onClear = viewModel::clearLanguageFilter,
+                onMatchModeSelected = viewModel::setLanguageMatchMode,
             )
         }
     }
@@ -282,10 +287,10 @@ private fun TagFilters(
     modifier: Modifier = Modifier,
     tags: List<Tag>,
     selectedTags: Set<String>,
-    matchMode: UserPreferences.TagMatchMode,
+    matchMode: UserPreferences.MatchMode,
     onTagClicked: (String) -> Unit,
     onClear: () -> Unit,
-    onMatchModeSelected: (UserPreferences.TagMatchMode) -> Unit,
+    onMatchModeSelected: (UserPreferences.MatchMode) -> Unit,
 ) = Column(modifier = modifier) {
     var isExpanded by rememberSaveable { mutableStateOf(false) }
     val selected = remember(selectedTags) { selectedTags.mapTo(mutableSetOf()) { it.lowercase() } }
@@ -331,38 +336,30 @@ private fun TagFilters(
             )
         }
     }
-    // Only worth asking about once two tags are on: one tag means the same thing either way.
-    AnimatedVisibility(
-        visible = selected.size > 1,
-        enter = expandVertically() + fadeIn(),
-        exit = shrinkVertically() + fadeOut(),
-    ) {
-        Column {
-            SettingsSectionTitle(text = stringResource(Res.string.songs_tags_match_mode))
-            SegmentedChoice(
-                options = listOf(
-                    UserPreferences.TagMatchMode.ANY to stringResource(Res.string.songs_tags_match_mode_any),
-                    UserPreferences.TagMatchMode.ALL to stringResource(Res.string.songs_tags_match_mode_all),
-                ),
-                selected = matchMode,
-                onSelected = onMatchModeSelected,
-            )
-        }
-    }
+    MatchModeChoice(
+        isVisible = selected.size > 1,
+        title = stringResource(Res.string.songs_tags_match_mode),
+        anyText = stringResource(Res.string.songs_tags_match_mode_any),
+        allText = stringResource(Res.string.songs_tags_match_mode_all),
+        matchMode = matchMode,
+        onMatchModeSelected = onMatchModeSelected,
+    )
 }
 
 /**
- * The languages of the library as a filter, under the tags and deliberately simpler than they are: a library sings
- * in a handful of languages rather than in a hundred, so there is nothing to hide behind a "show all", and a song is
- * never sung in every selected language at once, so there is no "any / every" to ask about either.
+ * The languages of the library as a filter, under the tags and simpler than they are in one way: a library sings in
+ * a handful of languages rather than in a hundred, so there is nothing to hide behind a "show all". A song can carry
+ * several languages the way it carries several tags, though, so "any / every" is asked here too.
  */
 @Composable
 private fun LanguageFilters(
     modifier: Modifier = Modifier,
     languages: List<SongLanguage>,
     selectedLanguages: Set<String>,
+    matchMode: UserPreferences.MatchMode,
     onLanguageClicked: (String) -> Unit,
     onClear: () -> Unit,
+    onMatchModeSelected: (UserPreferences.MatchMode) -> Unit,
 ) = Column(modifier = modifier) {
     // The chips rather than the filter, for the same reason [TagFilters] counts them that way.
     val hasClearableSelection = remember(languages, selectedLanguages) { languages.any { it.code in selectedLanguages } }
@@ -383,6 +380,46 @@ private fun LanguageFilters(
                 onClick = { onLanguageClicked(language.code) },
             )
         }
+    }
+    MatchModeChoice(
+        isVisible = selectedLanguages.count { selected -> languages.any { it.code == selected } } > 1,
+        title = stringResource(Res.string.songs_languages_match_mode),
+        anyText = stringResource(Res.string.songs_languages_match_mode_any),
+        allText = stringResource(Res.string.songs_languages_match_mode_all),
+        matchMode = matchMode,
+        onMatchModeSelected = onMatchModeSelected,
+    )
+}
+
+/**
+ * Whether the values selected in a filter group mean "any of them" or "all of them", under the group's chips. Only
+ * worth asking about once two of them are on, since one value means the same thing either way.
+ */
+@Composable
+private fun MatchModeChoice(
+    modifier: Modifier = Modifier,
+    isVisible: Boolean,
+    title: String,
+    anyText: String,
+    allText: String,
+    matchMode: UserPreferences.MatchMode,
+    onMatchModeSelected: (UserPreferences.MatchMode) -> Unit,
+) = AnimatedVisibility(
+    modifier = modifier,
+    visible = isVisible,
+    enter = expandVertically() + fadeIn(),
+    exit = shrinkVertically() + fadeOut(),
+) {
+    Column {
+        SettingsSectionTitle(text = title)
+        SegmentedChoice(
+            options = listOf(
+                UserPreferences.MatchMode.ANY to anyText,
+                UserPreferences.MatchMode.ALL to allText,
+            ),
+            selected = matchMode,
+            onSelected = onMatchModeSelected,
+        )
     }
 }
 
@@ -443,6 +480,10 @@ private fun FilterSectionTitle(
  * part of the chip rather than a line under the group, since the number is what tells a tag worth picking from one
  * that would leave a single song on screen.
  *
+ * A value the other group has counted down to nothing is disabled rather than left out (see `ScreenData.tags`): the
+ * chips hold still while the other group changes, and picking it would only empty the list. One that is already on
+ * stays enabled whatever its count, since a filter that is on has to be possible to turn off.
+ *
  * It is a Material filter chip drawn by hand rather than [androidx.compose.material3.FilterChip] itself, for the one
  * thing the chip gets wrong: its press and hover state layer is drawn around the label instead of around the chip, so
  * only a band hugging the text lights up while the rest of what can be clicked stays dark. Everything the chip would
@@ -461,18 +502,24 @@ private fun CountedFilterChip(
     isSelected: Boolean,
     onClick: () -> Unit,
 ) {
+    val isEnabled = songCount > 0 || isSelected
     val colors = FilterChipDefaults.filterChipColors()
-    val contentColor = if (isSelected) colors.selectedLabelColor else colors.labelColor
+    val contentColor = when {
+        !isEnabled -> colors.disabledLabelColor
+        isSelected -> colors.selectedLabelColor
+        else -> colors.labelColor
+    }
     val interactionSource = remember { MutableInteractionSource() }
     Row(
         modifier = modifier
             .minimumInteractiveComponentSize()
             .clip(FilterChipDefaults.shape)
             .background(if (isSelected) colors.selectedContainerColor else colors.containerColor)
-            .border(FilterChipDefaults.filterChipBorder(enabled = true, selected = isSelected), FilterChipDefaults.shape)
+            .border(FilterChipDefaults.filterChipBorder(enabled = isEnabled, selected = isSelected), FilterChipDefaults.shape)
             .indication(interactionSource, ripple(color = contentColor))
             .selectable(
                 selected = isSelected,
+                enabled = isEnabled,
                 interactionSource = interactionSource,
                 indication = null,
                 role = Role.Checkbox,
@@ -511,7 +558,7 @@ private fun CountedFilterChip(
             ),
             text = songCount.toString(),
             style = MaterialTheme.typography.labelSmall,
-            color = MaterialTheme.colorScheme.onSurfaceVariant,
+            color = if (isEnabled) MaterialTheme.colorScheme.onSurfaceVariant else colors.disabledLabelColor,
         )
     }
 }

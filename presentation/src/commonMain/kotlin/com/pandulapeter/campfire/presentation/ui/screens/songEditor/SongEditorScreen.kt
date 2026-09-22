@@ -38,6 +38,7 @@ import androidx.compose.foundation.text.input.TextFieldLineLimits
 import androidx.compose.foundation.text.input.TextFieldState
 import androidx.compose.foundation.text.input.delete
 import androidx.compose.foundation.text.input.insert
+import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -268,6 +269,7 @@ private fun LoadedSongEditor(
     // Edit and Preview are one AnimatedContent, Split is a Row - and a scroll position kept inside it would go back to
     // the first line on every switch, rotation and resize across the split width.
     val fieldScrollState = rememberScrollState()
+    val fieldHorizontalScrollState = rememberScrollState()
     val previewScrollState = rememberScrollState()
     LaunchedEffect(editorField) {
         if (editorField.isDraftLost) viewModel.onEditorDraftLost()
@@ -432,6 +434,7 @@ private fun LoadedSongEditor(
                 modifier = paneModifier,
                 textFieldState = textFieldState,
                 scrollState = fieldScrollState,
+                horizontalScrollState = fieldHorizontalScrollState,
                 onSaveRequested = onSaveRequested,
                 contentPadding = PaddingValues(
                     start = contentPadding.calculateStartPadding(layoutDirection),
@@ -539,13 +542,19 @@ private enum class EditorPanes {
  * room, and this is the source of the file rather than the song. Scaling it would also move the columns of a tab
  * away from the width the monospaced font is keeping them at.
  *
+ * Lines are never wrapped: the staff lines of a tab only stay in their columns while each of them is one line on
+ * screen, and a source file is read by its lines, which a wrapped one shows as two. A line wider than the pane is
+ * scrolled to sideways instead.
+ *
  * @param scrollState The field's own scroll position, hoisted so that it survives the pane being composed again.
+ * @param horizontalScrollState How far the field is scrolled sideways, hoisted for the same reason.
  */
 @Composable
 private fun ChordProTextField(
     modifier: Modifier = Modifier,
     textFieldState: TextFieldState,
     scrollState: ScrollState,
+    horizontalScrollState: ScrollState,
     onSaveRequested: () -> Unit,
     contentPadding: PaddingValues,
 ) {
@@ -581,6 +590,12 @@ private fun ChordProTextField(
     }
     BasicTextField(
         modifier = modifier
+            // The field only ever scrolls along one axis of its own, the vertical one when it holds more than a line,
+            // so the sideways scrolling is a container around it. That container measures the field against an
+            // unbounded width, which is what keeps the text from wrapping, and it still passes the pane's width on as
+            // the minimum, so the whole pane stays the field and a press anywhere in it places the caret. The field
+            // asks its ancestors to bring the caret into view as it moves, so this follows the typing on its own.
+            .horizontalScroll(horizontalScrollState)
             // The same save as the app bar's button, for the hand that reaches for the keyboard instead. It lives on
             // the field rather than in the window's key handler, which has no way to reach this text. Not with Alt held:
             // AltGr arrives as Ctrl + Alt on Windows and the web, and AltGr + S types a character on some layouts.

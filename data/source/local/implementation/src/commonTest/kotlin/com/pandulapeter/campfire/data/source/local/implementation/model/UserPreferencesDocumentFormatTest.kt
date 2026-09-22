@@ -38,6 +38,7 @@ internal class UserPreferencesDocumentFormatTest {
             isGermanNotationEnabled = true,
             transpositions = mapOf("a.cho" to 2, "b.cho" to -3),
             tagMatchMode = "all",
+            languageMatchMode = "all",
         )
 
         val decoded = UserPreferencesDocumentFormat.decode(UserPreferencesDocumentFormat.encode(document))

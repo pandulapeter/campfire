@@ -36,4 +36,5 @@ internal data class UserPreferencesDocument(
     val isGermanNotationEnabled: Boolean = false,
     val transpositions: Map<String, Int> = emptyMap(),
     val tagMatchMode: String = "",
+    val languageMatchMode: String = "",
 )

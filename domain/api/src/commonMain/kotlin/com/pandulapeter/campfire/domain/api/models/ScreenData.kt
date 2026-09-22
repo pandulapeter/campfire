@@ -32,8 +32,9 @@ data class ScreenData(
     /**
      * Every tag the library uses, the most used one first, as the filter controls offer them. Counted before the tag
      * filter is applied and after every other one, so that selecting a tag does not empty the list of tags one could
-     * select next. A tag that is selected stays on the list even where the language filter has counted it down to
-     * nothing, since a filter that is on has to be visible to be turned off.
+     * select next. Every tag stays on the list even where the language filter has counted it down to nothing, with
+     * a count of zero and after the rest: the controls show it disabled rather than not at all, so the chips do not
+     * come and go as the other group changes, and a selected one can still be turned off.
      */
     val tags: List<Tag>,
     /**

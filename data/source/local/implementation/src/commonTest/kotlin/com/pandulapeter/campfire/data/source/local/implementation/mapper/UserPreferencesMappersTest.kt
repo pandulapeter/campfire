@@ -23,10 +23,12 @@ internal class UserPreferencesMappersTest {
             sortingMode = "by_mood",
             uiMode = UserPreferences.UiMode.DARK.id,
             tagMatchMode = "sometimes",
+            languageMatchMode = UserPreferences.MatchMode.ALL.id,
         ).toModel()
 
         assertEquals(UserPreferences.SortingMode.BY_ARTIST, preferences.sortingMode)
         assertEquals(UserPreferences.UiMode.DARK, preferences.uiMode)
-        assertEquals(UserPreferences.TagMatchMode.ANY, preferences.tagMatchMode)
+        assertEquals(UserPreferences.MatchMode.ANY, preferences.tagMatchMode)
+        assertEquals(UserPreferences.MatchMode.ALL, preferences.languageMatchMode)
     }
 }

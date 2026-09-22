@@ -16,8 +16,8 @@ import com.pandulapeter.campfire.data.model.domain.UserPreferences
  * What the song list is narrowed to right now, as opposed to how it is read: the tags and the languages picked in the
  * filter controls. It is deliberately not a preference and is never written anywhere — a filter is a question asked
  * of the library for the moment, and one that came back on the next launch would read as songs having gone missing.
- * How several selected tags combine ([UserPreferences.TagMatchMode]) is a standing choice instead, and stays a
- * preference.
+ * How several selected values of a group combine ([UserPreferences.tagMatchMode], [UserPreferences.languageMatchMode])
+ * is a standing choice instead, and stays a preference.
  */
 data class SongFilter(
     /**
@@ -27,9 +27,7 @@ data class SongFilter(
     val selectedTags: Set<String> = emptySet(),
     /**
      * The languages the list is narrowed to, empty when every song is shown, including [SongLanguage.UNKNOWN] for the
-     * songs that declare none. Kept rather than pruned like [selectedTags] is, and matched the way
-     * [UserPreferences.TagMatchMode.ANY] matches tags: a song is in one language or another, never in all of the
-     * selected ones at once, so there is nothing to ask the user here.
+     * songs that declare none. Kept rather than pruned like [selectedTags] is.
      */
     val selectedLanguages: Set<String> = emptySet(),
 )
