@@ -44,6 +44,9 @@ internal fun Project.configureKotlinMultiplatform(
                     excludes += "/META-INF/{AL2.0,LGPL2.1}"
                 }
             }
+            // The Android target compiles commonTest only when asked to, and warns about every module that has one
+            // otherwise. The tests are run on the desktop target; this only gives them a home on the Android one too.
+            withHostTest {}
         }
         jvm("desktop")
         iosArm64()

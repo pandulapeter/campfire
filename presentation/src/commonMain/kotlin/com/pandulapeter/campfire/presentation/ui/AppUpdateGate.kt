@@ -29,10 +29,11 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
-import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.backhandler.BackHandler
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.navigationevent.NavigationEventInfo
+import androidx.navigationevent.compose.NavigationBackHandler
+import androidx.navigationevent.compose.rememberNavigationEventState
 import com.pandulapeter.campfire.presentation.localization.stringResource
 import com.pandulapeter.campfire.presentation.resources.Res
 import com.pandulapeter.campfire.presentation.resources.app_update_available
@@ -137,7 +138,6 @@ internal fun AppUpdateGate(
  * the one the dispatcher reaches first. It closes the app rather than doing nothing: back on a screen with nothing
  * behind it means leaving, and letting it through instead would navigate an app the user cannot see.
  */
-@OptIn(ExperimentalComposeUiApi::class)
 @Composable
 private fun AppUpdateRequiredScreen(
     modifier: Modifier = Modifier,
@@ -147,7 +147,10 @@ private fun AppUpdateRequiredScreen(
     modifier = modifier.fillMaxSize(),
     color = MaterialTheme.colorScheme.background,
 ) {
-    BackHandler(onBack = onClose)
+    NavigationBackHandler(
+        state = rememberNavigationEventState(currentInfo = NavigationEventInfo.None),
+        onBackCompleted = onClose,
+    )
     Box(
         modifier = Modifier.fillMaxSize().windowInsetsPadding(WindowInsets.safeDrawing),
         contentAlignment = Alignment.Center,

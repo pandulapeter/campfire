@@ -56,6 +56,7 @@ they are:
 - Add support for external control devices with a focus-by-section feature
 - Songs: sort by year option
 - Add ability to add links
+- Add more automatic sync triggers
 - Improve performance mode description
 - Rename setlist date sort, maybe expose a date for Setlists
 - Fix Songs screen async race animation issues

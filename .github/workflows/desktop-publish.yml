@@ -45,8 +45,11 @@ jobs:
       fail-fast: false
       matrix:
         include:
+          # Pinned rather than "latest", since a .deb depends on the versions of the system libraries it was built
+          # against, and a runner that moves to a newer Ubuntu on its own would raise that bar for everyone who
+          # installs it.
           - name: Linux (amd64)
-            runner: ubuntu-latest
+            runner: ubuntu-24.04
             task: packageReleaseDeb
             format: deb
             asset: linux-amd64.deb
@@ -98,10 +101,13 @@ jobs:
       # The app image is asked for by name: the Compose plugin builds the macOS installer out of it, but on Linux and
       # Windows it hands jpackage the jars and the runtime directly, and the installer is the only thing left on disk.
       # Both tasks are made of the same ProGuard output, so the image is what the installer holds either way.
+      # The daemon is stopped afterwards because the Gradle cache is saved when the job ends, and on Windows the lock
+      # files a running daemon holds cannot be read into the archive, which fails the save.
       - name: Build the installer
         run: |
           ./gradlew :app:desktop:createReleaseDistributable :app:desktop:${{ matrix.task }} \
             -Pcampfire.dropbox.appKey="${{ secrets.DROPBOX_APP_KEY }}"
+          ./gradlew --stop
       # ProGuard breaks an application in ways that only starting it shows - a VerifyError on the first frame is how
       # the last one looked - so the app image is started once before anybody downloads the installer. The demo
       # library appearing in an empty data directory proves that Koin started, the window composed and the library

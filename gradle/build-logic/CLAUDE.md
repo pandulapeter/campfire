@@ -29,6 +29,8 @@ platform-wide compiler setting belongs — never in a module's own `build.gradle
   the name of the artifact it is built into, and half the modules here are called `api` or `implementation`, so the
   default would have several of them claiming the same identity.
 - The Android namespace is derived from the same path, so a module only declares one when it wants something else.
+- The Android target has host tests enabled (`withHostTest {}`), which is what makes it compile `commonTest` rather
+  than warn about every module that has one. The tests are still run on the desktop target (root `CLAUDE.md`).
 - Every version number comes from the catalog through `extensions/VersionCatalog.kt` (`jvmTarget` for the toolchain,
   `android-minSdk` / `android-compileSdk` for the Android target). Nothing here hardcodes a version; bumping one is
   an edit to `gradle/libs.versions.toml` alone.
