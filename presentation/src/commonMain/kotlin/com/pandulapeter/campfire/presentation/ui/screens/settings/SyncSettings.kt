@@ -47,8 +47,8 @@ import com.pandulapeter.campfire.presentation.resources.ic_clear
 import com.pandulapeter.campfire.presentation.resources.ic_sync
 import com.pandulapeter.campfire.presentation.resources.cancel
 import com.pandulapeter.campfire.presentation.resources.settings_sync_cancel
-import com.pandulapeter.campfire.presentation.resources.settings_sync_conflicts
 import com.pandulapeter.campfire.presentation.resources.settings_sync_connect_dropbox
+import com.pandulapeter.campfire.presentation.resources.settings_sync_conflicts
 import com.pandulapeter.campfire.presentation.resources.settings_sync_connected_as
 import com.pandulapeter.campfire.presentation.resources.settings_sync_connecting
 import com.pandulapeter.campfire.presentation.resources.settings_sync_connection_failed_authorization
@@ -78,6 +78,7 @@ import com.pandulapeter.campfire.presentation.resources.settings_sync_unavailabl
 import com.pandulapeter.campfire.presentation.ui.CampfireViewModel
 import com.pandulapeter.campfire.data.source.remote.api.model.AuthorizationCompletionPage
 import com.pandulapeter.campfire.presentation.ui.components.ActionListItem
+import com.pandulapeter.campfire.presentation.ui.components.pluralTextResource
 import com.pandulapeter.campfire.presentation.ui.components.textResource
 import com.pandulapeter.campfire.presentation.ui.platform.withSyncCounts
 import kotlin.time.ExperimentalTime
@@ -266,15 +267,22 @@ private fun SyncState.Connected.statusText(): String = when (val current = progr
         // thing only the app knows is that the run did finish, and when.
         is SyncOutcome.Success -> listOfNotNull(
             outcome.summary.failed.takeIf { it.isNotEmpty() }?.let { failed ->
-                pluralStringResource(
+                pluralTextResource(
                     Res.plurals.settings_sync_files_failed,
                     failed.size,
-                    failed.size,
+                    failed.size.toString(),
                     failed.take(MAXIMUM_NAMED_FILES).joinToString(),
                 )
             },
-            outcome.summary.conflicts.takeIf { it.isNotEmpty() }?.let {
-                textResource(Res.string.settings_sync_conflicts, it.joinToString())
+            // Capped like the failures: a first run on a device edited on both sides can keep hundreds of copies, and
+            // this line is not the place to list them.
+            outcome.summary.conflicts.takeIf { it.isNotEmpty() }?.let { conflicts ->
+                pluralTextResource(
+                    Res.plurals.settings_sync_conflicts,
+                    conflicts.size,
+                    conflicts.size.toString(),
+                    conflicts.take(MAXIMUM_NAMED_FILES).joinToString(),
+                )
             },
         ).ifEmpty { listOf(lastSyncedText(lastSyncedAt)) }.joinToString(separator = "\n")
 
@@ -345,5 +353,8 @@ private fun lastSyncedText(lastSyncedAt: Long?): String {
 
 private fun Int.padded() = toString().padStart(length = 2, padChar = '0')
 
-/** A full disk fails every file of a run, and the line under the account is not the place for all their names. */
+/**
+ * A full disk fails every file of a run, and a first run on a device edited on both sides can keep a copy of every song;
+ * the line under the account is not the place for all their names.
+ */
 private const val MAXIMUM_NAMED_FILES = 3

@@ -90,7 +90,8 @@ item bound to the device and `FileStorage.keepOutOfDeviceBackup` on the index.
   formatted strings must always be called with their arguments. A sentence that takes text somebody else wrote — a
   title, a tag, a header value, a file or account name — is read with `textResource(Res.string.x, text)`
   (`:presentation`'s `components/TextResource.kt`) instead: the plugin's formatter scans its own output a second
-  time, and the `% s` in `100% sure` is a format specifier to it. A counted sentence whose singular reads differently
+  time, and the `% s` in `100% sure` is a format specifier to it (`pluralTextResource` for a `<plurals>` that
+  carries such text). A counted sentence whose singular reads differently
   is a `<plurals>` with `one` and `other` items, read with `pluralStringResource`, rather than a second key.
 - The UI is Material 3 Expressive (`org.jetbrains.compose.material3:material3`, versioned separately from Compose
   Multiplatform in `jetbrains-compose-material3`); don't add `androidx.compose.material` (M2) back.

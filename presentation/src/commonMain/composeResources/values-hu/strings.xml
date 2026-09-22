@@ -308,7 +308,6 @@
     <string name="settings_sync_last_synced">Legutóbb sikeresen szinkronizálva: %1$s</string>
     <!-- A fenti sor dátum- és időrészének sorrendje: év, hónap, nap, óra, perc, mind előre kiegészítve. -->
     <string name="settings_sync_date_time">%1$s. %2$s. %3$s. %4$s:%5$s</string>
-    <string name="settings_sync_conflicts">Két helyen is módosult dal mindkét változata megmaradt: %1$s</string>
     <string name="settings_sync_failed_network">A szolgáltatás nem érhető el. A Campfire legközelebb újra megpróbálja.</string>
     <string name="settings_sync_failed_authorization">A kapcsolatot elutasították. Csatlakoztasd újra a fiókot.</string>
     <string name="settings_sync_failed_storage">A könyvtárat nem sikerült olvasni vagy írni.</string>
@@ -317,6 +316,10 @@
     <plurals name="settings_sync_files_failed">
         <item quantity="one">Egy fájlt nem sikerült szinkronizálni, a Campfire legközelebb újra megpróbálja: %2$s</item>
         <item quantity="other">%1$d fájlt nem sikerült szinkronizálni, a Campfire legközelebb újra megpróbálja. Köztük: %2$s</item>
+    </plurals>
+    <plurals name="settings_sync_conflicts">
+        <item quantity="one">Két helyen is módosult dal mindkét változata megmaradt: %2$s</item>
+        <item quantity="other">%1$d dal két helyen is módosult, mindkét változatuk megmaradt. Köztük: %2$s</item>
     </plurals>
 
     <string name="settings_sync_cancel">Szinkronizálás leállítása</string>
