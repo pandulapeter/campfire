@@ -67,8 +67,10 @@ holds the `@Module @ComponentScan object DataLocalSourceModule`, and every local
 - **`storage/secret/SecretStore.kt`** is where the sync credentials go, and nothing else: a refresh token is a
   long-lived credential. `AndroidSecretStore` encrypts it with an AES-GCM key generated inside the Android Keystore
   (never `security-crypto`, which is deprecated) and writes the IV and ciphertext as `preferences/sync-credentials.bin`;
-  a key that became unusable, or a file it cannot decrypt, is deleted and reads as no credentials, so the user
-  connects again rather than being stuck. `IosSecretStore` is a Keychain generic password, readable after the first
+  a key the system permanently invalidated, or a file whose tag does not verify, is deleted and reads as no
+  credentials, so the user connects again rather than being stuck. Any other Keystore failure (`KeyStoreException`,
+  `UnrecoverableKeyException`, which some devices answer with for a moment) is thrown as a `LibraryStorageException`
+  and the key and file are kept: that launch starts disconnected and the next one reads the same file again. `IosSecretStore` is a Keychain generic password, readable after the first
   unlock because a background sync may need it on a locked device, and bound to the device
   (`AfterFirstUnlockThisDeviceOnly`) so that it stays out of the backup, as Android's does; an item an older version
   wrote without that is moved over when it is read. Desktop and the web get `FileSecretStore`, the

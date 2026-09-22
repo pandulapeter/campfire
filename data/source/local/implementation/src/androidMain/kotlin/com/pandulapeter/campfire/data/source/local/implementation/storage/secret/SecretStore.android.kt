@@ -10,7 +10,9 @@
 package com.pandulapeter.campfire.data.source.local.implementation.storage.secret
 
 import android.security.keystore.KeyGenParameterSpec
+import android.security.keystore.KeyPermanentlyInvalidatedException
 import android.security.keystore.KeyProperties
+import com.pandulapeter.campfire.data.source.local.api.LibraryStorageException
 import com.pandulapeter.campfire.data.source.local.implementation.storage.file.FileStorage
 import com.pandulapeter.campfire.data.source.local.implementation.storage.file.StorageDirectory
 import kotlinx.coroutines.Dispatchers
@@ -19,6 +21,7 @@ import kotlinx.coroutines.withContext
 import org.koin.core.annotation.Single
 import java.security.GeneralSecurityException
 import java.security.KeyStore
+import javax.crypto.AEADBadTagException
 import javax.crypto.Cipher
 import javax.crypto.KeyGenerator
 import javax.crypto.SecretKey
@@ -40,14 +43,20 @@ internal class AndroidSecretStore(
         val fileName = encryptedFileName(key)
         val bytes = fileStorage.readBytes(StorageDirectory.PREFERENCES, fileName) ?: return@withContext null
         try {
-            if (bytes.size <= IV_LENGTH_BYTES) throw GeneralSecurityException("The stored secret is truncated.")
+            // Too short to hold an initialization vector and a tag, so this key cannot have written it.
+            if (bytes.size <= IV_LENGTH_BYTES) throw AEADBadTagException("The stored secret is truncated.")
             val cipher = Cipher.getInstance(TRANSFORMATION)
             cipher.init(Cipher.DECRYPT_MODE, secretKey(), GCMParameterSpec(TAG_LENGTH_BITS, bytes, 0, IV_LENGTH_BYTES))
             cipher.doFinal(bytes, IV_LENGTH_BYTES, bytes.size - IV_LENGTH_BYTES).decodeToString()
         } catch (exception: GeneralSecurityException) {
-            // A key the system has invalidated, or a file this key did not write, can never be decrypted again. Keeping
-            // either would leave the user unable to connect, so both go and the value is simply not there: the
-            // account is connected again and a new key encrypts what that writes.
+            // Only two of these can never come right. A tag that does not verify is a file this key did not write, and
+            // a permanently invalidated key is one the system took away when the lock screen changed; both mean the
+            // ciphertext is unreadable for good, so both go and the user connects again. Every other
+            // GeneralSecurityException is the Keystore having a bad moment - a KeyStoreException or an
+            // UnrecoverableKeyException, which some OEM builds answer with under memory pressure and then answer
+            // correctly a second later. Deleting the key for one of those destroys a refresh token that was never
+            // lost, so it is reported as a storage failure instead and the next launch reads the same file again.
+            if (!exception.isPermanent) throw LibraryStorageException("Could not read the stored secret.", exception)
             println("Could not decrypt the stored secret: ${exception::class.simpleName}")
             fileStorage.delete(StorageDirectory.PREFERENCES, fileName)
             keyStore().deleteEntry(KEY_ALIAS)
@@ -67,6 +76,14 @@ internal class AndroidSecretStore(
             fileStorage.writeBytes(StorageDirectory.PREFERENCES, fileName, cipher.iv + ciphertext)
         }
     }
+
+    /**
+     * Whether the ciphertext can never be read again, as opposed to the Keystore having refused this one attempt. A
+     * failed tag arrives as a plain `BadPaddingException` or `IllegalBlockSizeException` on some API levels, carrying
+     * the `AEADBadTagException` as its cause.
+     */
+    private val GeneralSecurityException.isPermanent
+        get() = this is KeyPermanentlyInvalidatedException || this is AEADBadTagException || cause is AEADBadTagException
 
     private fun encryptedFileName(key: String) = "${key.substringBeforeLast('.')}.bin"
 
