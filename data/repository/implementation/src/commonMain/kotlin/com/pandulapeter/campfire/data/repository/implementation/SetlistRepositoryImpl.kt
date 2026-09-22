@@ -23,6 +23,7 @@ import org.koin.core.annotation.Single
 @Single
 internal class SetlistRepositoryImpl(
     private val setlistLocalSource: SetlistLocalSource,
+    private val libraryFileLock: LibraryFileLock,
 ) : BaseLocalDataRepository<List<Setlist>>(), SetlistRepository {
 
     override val setlists = dataState
@@ -40,6 +41,9 @@ internal class SetlistRepositoryImpl(
      * runs under it is one [NonCancellable] step ([writing]): the file and the cache change together or not at all.
      * The repository outlives every screen, and a write that reached the disk with its caller cancelled on the way
      * back would leave the cache on the old version, which the next change then builds on and writes over the file.
+     *
+     * [libraryFileLock] is taken inside it for the same span, since sync writes setlist files too: a download landing
+     * between a change reading the file and writing it back would be written over by the version from before it.
      */
     private val writeMutex = Mutex()
 
@@ -88,8 +92,13 @@ internal class SetlistRepositoryImpl(
         forget(fileName)
     }
 
-    /** Runs [block] under [writeMutex], taken cancellably and held until the block has finished whatever happens. */
-    private suspend fun <T> writing(block: suspend () -> T): T = writeMutex.withLock { withContext(NonCancellable) { block() } }
+    /**
+     * Runs [block] under [writeMutex] and then [libraryFileLock], taken cancellably in that order and held until the
+     * block has finished whatever happens.
+     */
+    private suspend fun <T> writing(block: suspend () -> T): T = writeMutex.withLock {
+        libraryFileLock.withLock { withContext(NonCancellable) { block() } }
+    }
 
     /**
      * The setlist as its file holds it. Sync writes setlist files without going through this repository, and the cache

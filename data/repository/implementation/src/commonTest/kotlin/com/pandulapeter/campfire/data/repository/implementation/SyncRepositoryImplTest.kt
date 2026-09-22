@@ -599,6 +599,7 @@ class SyncRepositoryImplTest {
         songRepository = songRepository,
         setlistRepository = setlistRepository,
         libraryFileLocalSource = libraryFileLocalSource,
+        libraryFileLock = LibraryFileLock(),
     )
 
     /**

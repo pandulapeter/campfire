@@ -52,8 +52,8 @@ import — is the only thing that walks the directory again.
 
 - `SetlistRepositoryImpl` makes every write to a setlist file — `updateSetlist`, `renameSetlist`, `saveSetlist`,
   `deleteSetlist` — under one lock, held from reading the setlist out of its **file** to having the write back in the
-  cache, so a second change reads what the first one wrote, and a move or a deletion cannot cross a change that is
-  halfway through. The file and not the cache, because sync writes setlist files behind this repository's back and the
+  cache (and `LibraryFileLock` inside it for the same span), so a second change reads what the first one wrote, and a
+  move or a deletion cannot cross a change that is halfway through. The file and not the cache, because sync writes setlist files behind this repository's back and the
   cache only catches up at the next rescan: a change built on it in between would put the version from before the run
   back, and the next run would upload that over the other device's edit. A file that is gone drops the setlist from
   the cache and changes nothing; one that cannot be decoded is changed as the cache has it. The cache is the one place that is current straight after a write; anything observing
@@ -63,9 +63,10 @@ import — is the only thing that walks the directory again.
   change reads; the lock itself is waited for cancellably.
 - `SongRepositoryImpl` has the same kind of lock for the three writers that pick a free name before they write
   (`createSong`, `importSong`, `renameSong`): finding the name and writing under it are two trips to the storage, and a
-  second asker in between is given the same name. Its writes (`createSong`, `renameSong`, `deleteSong`, and `saveSong`
-  once its guard has passed) change the file and the cached list as one `NonCancellable` step as well, the lock itself
-  still being waited for cancellably. Every change to either cached list replaces by file name and never
+  second asker in between is given the same name. Every write, `saveSong`'s guard included, also holds
+  `LibraryFileLock`, which is what keeps a sync run from writing the file between the guard and the write. Its writes
+  (`createSong`, `renameSong`, `deleteSong`, and `saveSong` once its guard has passed) change the file and the cached
+  list as one `NonCancellable` step as well, the locks themselves still being waited for cancellably. Every change to either cached list replaces by file name and never
   appends, since the file name is what the lists key their rows by.
 - `SongContentRepositoryImpl` is not a `BaseLocalDataRepository`: it is a keyed in-memory cache of song *texts*, so
   paging through a setlist re-reads nothing. Bulk readers (the library export) pass `shouldCache = false` so that
@@ -101,7 +102,13 @@ import — is the only thing that walks the directory again.
   one goes up, and taken back if the service then says the remote file is still there, so the version that loses is
   never held only in memory. A download is decided about twice — before its request, so that a file already in step is
   not transferred, and again just before the write, so that a save made while the request was in flight is resolved
-  as a conflict rather than written over. The engine is written so that an
+  as a conflict rather than written over. That second check and the write, and every other change the engine makes to
+  a local file (a local deletion and the check before it, a conflict copy, taking a copy back), happen under
+  `LibraryFileLock`, a `@Single` the song and setlist repositories hold around their own writes from whatever they
+  check to the write, so that a save lands either before the engine's check, which then sees it, or after its write,
+  and is never overwritten or deleted with no conflict to show for it. It is only ever held around local file
+  calls, never a request, and is not reentrant: the repositories take their own locks first and this one inside
+  them, and nothing that holds it calls anything that takes it. The engine is written so that an
   interrupted run leaves the library usable: the index (`SyncIndexDocument`, the on-disk shape of `sync-index.json`)
   is only told about a file once that file has actually moved, so anything half done simply looks unsynced next time.
   It is filed under the account's id as the service gives it (`SyncAccount.indexKey`), never under a name or an

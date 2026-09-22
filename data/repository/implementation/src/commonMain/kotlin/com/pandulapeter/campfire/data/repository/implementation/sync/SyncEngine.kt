@@ -15,6 +15,7 @@ import com.pandulapeter.campfire.data.model.domain.SyncDeletionPolicy
 import com.pandulapeter.campfire.data.model.domain.SyncProgress
 import com.pandulapeter.campfire.data.model.domain.SyncSummary
 import com.pandulapeter.campfire.data.model.domain.normalizedToNfc
+import com.pandulapeter.campfire.data.repository.implementation.LibraryFileLock
 import com.pandulapeter.campfire.data.source.local.api.LibraryFileLocalSource
 import com.pandulapeter.campfire.data.source.remote.api.SyncAuthorizationException
 import com.pandulapeter.campfire.data.source.remote.api.SyncNetworkException
@@ -100,9 +101,13 @@ private fun SyncKey.folded() = copy(name = name.normalizedToNfc().lowercase())
  * from travelling, so only the failures that make every further call pointless - the credentials being refused, the
  * service being unreachable, the remote folder being full - stop it. A file that failed is named in the summary,
  * because a run that says nothing about it reads as a backup that works.
+ *
+ * Every change this makes to a library file is decided about and carried out under [libraryFileLock], the lock the
+ * song and setlist repositories write under, and nothing else is: a request is never made while it is held.
  */
 internal class SyncEngine(
     private val libraryFileLocalSource: LibraryFileLocalSource,
+    private val libraryFileLock: LibraryFileLock,
 ) {
 
     suspend fun synchronize(
@@ -387,9 +392,8 @@ internal class SyncEngine(
      * taken when the run listed the library, and a long run gives the user plenty of time to save an edit to a song
      * that is still waiting to come down. The same goes for a file that was not there at all when the run listed the
      * library and is now: nothing planned for this name knew about it, so it is never written over. Checked before the
-     * request, so that a file already in step is never transferred, and again after it, just before the write, so that
-     * the window in which such a save can be lost is the write itself rather than a request that may be retried for
-     * minutes.
+     * request, so that a file already in step is never transferred, and again after it, together with the write under
+     * [libraryFileLock], so that a save lands either before that check, which then sees it, or after the write.
      */
     private suspend fun download(
         provider: SyncProvider,
@@ -413,13 +417,18 @@ internal class SyncEngine(
         }
         val bytes = downloadWithinLimit(provider, key, remoteFiles)
         // The request can take minutes under rate limiting, and the user is free to save this very file meanwhile:
-        // decided again on what is there now, so that the window in which a save can be lost is one local write, not
-        // one request.
-        val current = libraryFileLocalSource.readLibraryFile(key.kind, key.name)
-        if (current != null && !current.contentEquals(local)) {
-            return resolveWith(provider, key, operation.revision, localBytes = current, remote = bytes)
+        // decided again on what is there now. The conflict it may turn out to be is resolved with the lock let go,
+        // since resolving it is more requests.
+        val changed = libraryFileLock.withLock {
+            val current = libraryFileLocalSource.readLibraryFile(key.kind, key.name)
+            if (current != null && !current.contentEquals(local)) {
+                current
+            } else {
+                libraryFileLocalSource.writeLibraryFile(key.kind, key.name, bytes)
+                null
+            }
         }
-        libraryFileLocalSource.writeLibraryFile(key.kind, key.name, bytes)
+        if (changed != null) return resolveWith(provider, key, operation.revision, localBytes = changed, remote = bytes)
         return OperationOutcome(
             entries = mapOf(key to SyncIndexEntry(localContentHash(bytes), operation.revision)),
             summary = SyncSummary(downloaded = 1),
@@ -429,7 +438,8 @@ internal class SyncEngine(
     /**
      * Read, decided about and only then deleted, for the same reason as [download]: the plan saw the file unchanged,
      * which says nothing about the minutes the run has taken since. An edit made in between beats the deletion, the
-     * same rule [SyncPlanner] applies, and puts the file back on the remote.
+     * same rule [SyncPlanner] applies, and puts the file back on the remote. The check and the deletion are one step
+     * under [libraryFileLock], so that a save cannot land between them.
      */
     private suspend fun deleteLocally(
         provider: SyncProvider,
@@ -438,12 +448,18 @@ internal class SyncEngine(
         caseCollisions: Set<SyncKey>,
     ): OperationOutcome {
         val key = operation.key
-        val local = libraryFileLocalSource.readLibraryFile(key.kind, key.name) ?: return OperationOutcome(removals = setOf(key))
-        if (localContentHash(local) != index[key]?.localHash) {
-            return upload(provider, SyncOperation.Upload(key, expectedRevision = null), caseCollisions)
+        val outcome = libraryFileLock.withLock {
+            val local = libraryFileLocalSource.readLibraryFile(key.kind, key.name)
+            when {
+                local == null -> OperationOutcome(removals = setOf(key))
+                localContentHash(local) != index[key]?.localHash -> null
+                else -> {
+                    libraryFileLocalSource.deleteLibraryFile(key.kind, key.name)
+                    OperationOutcome(removals = setOf(key), summary = SyncSummary(deletedLocally = 1))
+                }
+            }
         }
-        libraryFileLocalSource.deleteLibraryFile(key.kind, key.name)
-        return OperationOutcome(removals = setOf(key), summary = SyncSummary(deletedLocally = 1))
+        return outcome ?: upload(provider, SyncOperation.Upload(key, expectedRevision = null), caseCollisions)
     }
 
     private suspend fun upload(
@@ -513,7 +529,9 @@ internal class SyncEngine(
         if (remote.contentEquals(localBytes)) {
             return OperationOutcome(entries = mapOf(key to SyncIndexEntry(localContentHash(localBytes), revision)))
         }
-        val copyName = libraryFileLocalSource.writeLibraryFileToFreeName(key.kind, key.name, remote)
+        // Under the lock like every other write: the repositories pick a free name and write under it in two steps too,
+        // and would otherwise be given the one this is.
+        val copyName = libraryFileLock.withLock { libraryFileLocalSource.writeLibraryFileToFreeName(key.kind, key.name, remote) }
         val copyKey = SyncKey(kind = key.kind, name = copyName)
         val uploaded = try {
             provider.upload(key.kind, key.name, localBytes, revision)
@@ -557,8 +575,10 @@ internal class SyncEngine(
      */
     private suspend fun discardCopy(copyKey: SyncKey, written: ByteArray) {
         try {
-            if (libraryFileLocalSource.readLibraryFile(copyKey.kind, copyKey.name)?.contentEquals(written) == true) {
-                libraryFileLocalSource.deleteLibraryFile(copyKey.kind, copyKey.name)
+            libraryFileLock.withLock {
+                if (libraryFileLocalSource.readLibraryFile(copyKey.kind, copyKey.name)?.contentEquals(written) == true) {
+                    libraryFileLocalSource.deleteLibraryFile(copyKey.kind, copyKey.name)
+                }
             }
         } catch (exception: CancellationException) {
             throw exception
@@ -604,9 +624,11 @@ internal class SyncEngine(
         foreign.forEach { (key, entry) ->
             val isStillRemote = listed.any { it.kind == key.kind && it.name == key.name && it.revision == entry.remoteRevision }
             try {
-                val local = libraryFileLocalSource.readLibraryFile(key.kind, key.name)
-                if (isStillRemote && local != null && localContentHash(local) == entry.localHash) {
-                    libraryFileLocalSource.deleteLibraryFile(key.kind, key.name)
+                libraryFileLock.withLock {
+                    val local = libraryFileLocalSource.readLibraryFile(key.kind, key.name)
+                    if (isStillRemote && local != null && localContentHash(local) == entry.localHash) {
+                        libraryFileLocalSource.deleteLibraryFile(key.kind, key.name)
+                    }
                 }
             } catch (exception: CancellationException) {
                 throw exception

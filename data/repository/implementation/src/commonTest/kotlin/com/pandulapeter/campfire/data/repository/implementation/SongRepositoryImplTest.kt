@@ -36,7 +36,7 @@ class SongRepositoryImplTest {
     @Test
     fun `a guarded save over a file that changed underneath it writes nothing`() = runTest {
         val localSource = FakeSongLocalSource(mapOf(FILE_NAME to "synced"))
-        val repository = SongRepositoryImpl(localSource, SongContentRepositoryImpl(localSource))
+        val repository = SongRepositoryImpl(localSource, SongContentRepositoryImpl(localSource), LibraryFileLock())
 
         val isWritten = repository.saveSong(SongContent(FILE_NAME, "opened with a tag"), expectedText = "opened")
 
@@ -48,7 +48,7 @@ class SongRepositoryImplTest {
     fun `a refused save drops the cached text so that the next read reaches the file`() = runTest {
         val localSource = FakeSongLocalSource(mapOf(FILE_NAME to "opened"))
         val songContentRepository = SongContentRepositoryImpl(localSource)
-        val repository = SongRepositoryImpl(localSource, songContentRepository)
+        val repository = SongRepositoryImpl(localSource, songContentRepository, LibraryFileLock())
         songContentRepository.loadSongContent(FILE_NAME)
         localSource.files[FILE_NAME] = "synced"
         val invalidations = mutableListOf<String?>()
@@ -63,7 +63,7 @@ class SongRepositoryImplTest {
     @Test
     fun `a guarded save over the text it was built on is written`() = runTest {
         val localSource = FakeSongLocalSource(mapOf(FILE_NAME to "opened"))
-        val repository = SongRepositoryImpl(localSource, SongContentRepositoryImpl(localSource))
+        val repository = SongRepositoryImpl(localSource, SongContentRepositoryImpl(localSource), LibraryFileLock())
 
         val isWritten = repository.saveSong(SongContent(FILE_NAME, "opened with a tag"), expectedText = "opened")
 
@@ -74,7 +74,7 @@ class SongRepositoryImplTest {
     @Test
     fun `an unguarded save overwrites whatever the file holds`() = runTest {
         val localSource = FakeSongLocalSource(mapOf(FILE_NAME to "synced"))
-        val repository = SongRepositoryImpl(localSource, SongContentRepositoryImpl(localSource))
+        val repository = SongRepositoryImpl(localSource, SongContentRepositoryImpl(localSource), LibraryFileLock())
 
         val isWritten = repository.saveSong(SongContent(FILE_NAME, "the editor's draft"))
 
@@ -85,7 +85,7 @@ class SongRepositoryImplTest {
     @Test
     fun `two songs created at once get a name each`() = runTest {
         val localSource = FakeSongLocalSource(emptyMap())
-        val repository = SongRepositoryImpl(localSource, SongContentRepositoryImpl(localSource))
+        val repository = SongRepositoryImpl(localSource, SongContentRepositoryImpl(localSource), LibraryFileLock())
 
         val created = listOf(
             async { repository.createSong("song", "", "a") },
@@ -100,7 +100,7 @@ class SongRepositoryImplTest {
     @Test
     fun `a created song whose name the list already holds is listed once`() = runTest {
         val localSource = FakeSongLocalSource(mapOf(FILE_NAME to "old"))
-        val repository = SongRepositoryImpl(localSource, SongContentRepositoryImpl(localSource))
+        val repository = SongRepositoryImpl(localSource, SongContentRepositoryImpl(localSource), LibraryFileLock())
         repository.loadSongsIfNeeded()
         localSource.files.remove(FILE_NAME)
 
@@ -112,7 +112,7 @@ class SongRepositoryImplTest {
     @Test
     fun `a deletion whose caller is cancelled after the file went is gone from the list too`() = runTest {
         val localSource = FakeSongLocalSource(mapOf(FILE_NAME to "text"))
-        val repository = SongRepositoryImpl(localSource, SongContentRepositoryImpl(localSource))
+        val repository = SongRepositoryImpl(localSource, SongContentRepositoryImpl(localSource), LibraryFileLock())
         repository.loadSongsIfNeeded()
         val gate = CompletableDeferred<Unit>().also { localSource.afterWriteGate = it }
 
@@ -129,7 +129,7 @@ class SongRepositoryImplTest {
     @Test
     fun `a guarded save cancelled after it wrote updates the list`() = runTest {
         val localSource = FakeSongLocalSource(mapOf(FILE_NAME to "opened"))
-        val repository = SongRepositoryImpl(localSource, SongContentRepositoryImpl(localSource))
+        val repository = SongRepositoryImpl(localSource, SongContentRepositoryImpl(localSource), LibraryFileLock())
         repository.loadSongsIfNeeded()
         val gate = CompletableDeferred<Unit>().also { localSource.afterWriteGate = it }
 

@@ -25,6 +25,7 @@ import org.koin.core.annotation.Single
 internal class SongRepositoryImpl(
     private val songLocalSource: SongLocalSource,
     private val songContentRepository: SongContentRepository,
+    private val libraryFileLock: LibraryFileLock,
 ) : BaseLocalDataRepository<List<Song>>(), SongRepository {
 
     override val songs = dataState
@@ -53,25 +54,27 @@ internal class SongRepositoryImpl(
      * save in the editor cost a full rescan.
      *
      * Every change here writes the file and updates the list as one [NonCancellable] step, entered once the change has
-     * begun (its lock taken, its guard passed): the repository outlives the screen that asked, and a write that
+     * begun (its locks taken, its guard passed): the repository outlives the screen that asked, and a write that
      * reached the disk with its caller cancelled on the way back would leave the list, and the next change built on
-     * it, on the old version.
+     * it, on the old version. Each of them holds [libraryFileLock] from its guard to its write, so that a sync run
+     * never writes the file in between.
      */
-    override suspend fun saveSong(content: SongContent, expectedText: String?): Boolean {
+    override suspend fun saveSong(content: SongContent, expectedText: String?): Boolean = libraryFileLock.withLock {
         if (expectedText != null && songLocalSource.loadSongContent(content.fileName)?.text != expectedText) {
             // The cached text is what the refused change was built on, so it goes too: the caller's next read has to
             // reach the file rather than hand the same stale text back.
             songContentRepository.invalidate(content.fileName)
-            return false
-        }
-        withContext(NonCancellable) {
-            songLocalSource.saveSongContent(content)
-            songContentRepository.invalidate(content.fileName)
-            songLocalSource.loadSong(content.fileName)?.let { updated ->
-                updateData { current -> current.orEmpty().filterNot { it.fileName == updated.fileName } + updated }
+            false
+        } else {
+            withContext(NonCancellable) {
+                songLocalSource.saveSongContent(content)
+                songContentRepository.invalidate(content.fileName)
+                songLocalSource.loadSong(content.fileName)?.let { updated ->
+                    updateData { current -> current.orEmpty().filterNot { it.fileName == updated.fileName } + updated }
+                }
             }
+            true
         }
-        return true
     }
 
     override suspend fun createSong(title: String, artist: String, text: String): Song = naming {
@@ -86,7 +89,7 @@ internal class SongRepositoryImpl(
     override fun importFileName(fallbackTitle: String, text: String) = songLocalSource.importFileName(fallbackTitle, text)
 
     override suspend fun importSong(fileName: String, text: String, shouldReplace: Boolean) = nameMutex.withLock {
-        songLocalSource.importSong(fileName = fileName, text = text, shouldReplace = shouldReplace)
+        libraryFileLock.withLock { songLocalSource.importSong(fileName = fileName, text = text, shouldReplace = shouldReplace) }
     }
 
     override suspend fun renameSong(song: Song): Song? = naming {
@@ -98,12 +101,19 @@ internal class SongRepositoryImpl(
         renamed
     }
 
-    override suspend fun deleteSong(fileName: String) = withContext(NonCancellable) {
-        songLocalSource.deleteSong(fileName)
-        songContentRepository.invalidate(fileName)
-        updateData { current -> current.orEmpty().filterNot { it.fileName == fileName } }
+    override suspend fun deleteSong(fileName: String) = libraryFileLock.withLock {
+        withContext(NonCancellable) {
+            songLocalSource.deleteSong(fileName)
+            songContentRepository.invalidate(fileName)
+            updateData { current -> current.orEmpty().filterNot { it.fileName == fileName } }
+        }
     }
 
-    /** Runs [block] under [nameMutex], taken cancellably and held until the block has finished whatever happens. */
-    private suspend fun <T> naming(block: suspend () -> T): T = nameMutex.withLock { withContext(NonCancellable) { block() } }
+    /**
+     * Runs [block] under [nameMutex] and then [libraryFileLock], taken cancellably in that order and held until the
+     * block has finished whatever happens.
+     */
+    private suspend fun <T> naming(block: suspend () -> T): T = nameMutex.withLock {
+        libraryFileLock.withLock { withContext(NonCancellable) { block() } }
+    }
 }

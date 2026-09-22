@@ -11,15 +11,22 @@ package com.pandulapeter.campfire.data.repository.implementation.sync
 
 import com.pandulapeter.campfire.data.model.domain.ImportLimits
 import com.pandulapeter.campfire.data.model.domain.LibraryFileKind
+import com.pandulapeter.campfire.data.model.domain.SongContent
 import com.pandulapeter.campfire.data.model.domain.SyncAccount
 import com.pandulapeter.campfire.data.model.domain.SyncDeletionDirection
 import com.pandulapeter.campfire.data.model.domain.SyncDeletionPolicy
 import com.pandulapeter.campfire.data.model.domain.SyncProviderId
+import com.pandulapeter.campfire.data.repository.implementation.LibraryFileLock
+import com.pandulapeter.campfire.data.repository.implementation.SongContentRepositoryImpl
+import com.pandulapeter.campfire.data.repository.implementation.SongRepositoryImpl
 import com.pandulapeter.campfire.data.source.local.api.LibraryStorageException
 import com.pandulapeter.campfire.data.source.remote.api.SyncNetworkException
 import com.pandulapeter.campfire.data.source.remote.api.SyncRemoteStorageFullException
 import com.pandulapeter.campfire.data.source.remote.api.hashing.localContentHash
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.launch
 import kotlinx.coroutines.test.runTest
+import kotlinx.coroutines.yield
 import kotlin.test.Test
 import kotlin.test.assertContentEquals
 import kotlin.test.assertEquals
@@ -46,7 +53,7 @@ class SyncEngineTest {
         val snapshots = mutableListOf<() -> SyncIndexDocument>()
 
         assertFailsWith<SyncNetworkException> {
-            SyncEngine(FakeLibraryFileLocalSource()).synchronize(
+            SyncEngine(FakeLibraryFileLocalSource(), LibraryFileLock()).synchronize(
                 provider = provider,
                 document = SyncIndexDocument(),
                 accountId = ACCOUNT_ID,
@@ -72,7 +79,7 @@ class SyncEngineTest {
         val snapshots = mutableListOf<() -> SyncIndexDocument>()
 
         assertFailsWith<SyncNetworkException> {
-            SyncEngine(FakeLibraryFileLocalSource()).synchronize(
+            SyncEngine(FakeLibraryFileLocalSource(), LibraryFileLock()).synchronize(
                 provider = provider,
                 document = SyncIndexDocument(accountId = ACCOUNT_ID, lastSyncedAt = 42),
                 accountId = ACCOUNT_ID,
@@ -97,7 +104,7 @@ class SyncEngineTest {
         // the first one's transfer is where the user saves an edit to the second.
         provider.onDownload = { key -> if (key == song(1)) local.files[song(2)] = edited }
 
-        SyncEngine(local).synchronize(
+        SyncEngine(local, LibraryFileLock()).synchronize(
             provider = provider,
             document = indexOf(song(1) to original, song(2) to original),
             accountId = ACCOUNT_ID,
@@ -119,7 +126,7 @@ class SyncEngineTest {
             files = mapOf(song(1) to "B's edit".encodeToByteArray(), copy to "A's first edit".encodeToByteArray()),
         )
 
-        val result = SyncEngine(local).synchronize(
+        val result = SyncEngine(local, LibraryFileLock()).synchronize(
             provider = provider,
             document = indexOf(song(1) to "Original".encodeToByteArray()),
             accountId = ACCOUNT_ID,
@@ -145,7 +152,7 @@ class SyncEngineTest {
         val provider = FakeSyncProvider(files = mapOf(song(1) to "One".encodeToByteArray(), song(2) to theirs))
         provider.onDownload = { key -> if (key == song(1)) local.files[song(2)] = mine }
 
-        SyncEngine(local).synchronize(
+        SyncEngine(local, LibraryFileLock()).synchronize(
             provider = provider,
             document = SyncIndexDocument(),
             accountId = ACCOUNT_ID,
@@ -167,7 +174,7 @@ class SyncEngineTest {
         val provider = FakeSyncProvider(files = mapOf(song(1) to incoming))
         provider.onDownload = { key -> if (key == song(1)) local.files[song(1)] = edited }
 
-        SyncEngine(local).synchronize(
+        SyncEngine(local, LibraryFileLock()).synchronize(
             provider = provider,
             document = indexOf(song(1) to original),
             accountId = ACCOUNT_ID,
@@ -190,7 +197,7 @@ class SyncEngineTest {
         val provider = FakeSyncProvider(files = mapOf(song(2) to theirs))
         provider.onDownload = { key -> if (key == song(2)) local.files[song(2)] = mine }
 
-        SyncEngine(local).synchronize(
+        SyncEngine(local, LibraryFileLock()).synchronize(
             provider = provider,
             document = SyncIndexDocument(),
             accountId = ACCOUNT_ID,
@@ -204,13 +211,71 @@ class SyncEngineTest {
     }
 
     @Test
+    fun `a song saved between the last check of its download and the write is not written over`() = runTest {
+        val local = FakeLibraryFileLocalSource(files = mapOf(song(1) to ORIGINAL))
+        val songLocalSource = LibrarySongLocalSource(local)
+        val lock = LibraryFileLock()
+        val repository = SongRepositoryImpl(songLocalSource, SongContentRepositoryImpl(songLocalSource), lock)
+        val provider = FakeSyncProvider(files = mapOf(song(1) to THERE))
+        // The save starts once the engine has decided the file is still the one it saw, and gets as far as it can
+        // before the engine writes the download.
+        var save: Job? = null
+        local.onWrite = { key ->
+            if (key == song(1) && save == null) {
+                save = launch { repository.saveSong(SongContent(song(1).name, HERE.decodeToString())) }
+                yield()
+            }
+        }
+
+        SyncEngine(local, lock).synchronize(
+            provider = provider,
+            document = indexOf(song(1) to ORIGINAL),
+            accountId = ACCOUNT_ID,
+            onProgress = {},
+            onIndexChanged = {},
+            deletionPolicy = SyncDeletionPolicy.ASK,
+        )
+        save?.join()
+
+        assertContentEquals(HERE, local.files[song(1)])
+    }
+
+    @Test
+    fun `a song saved between the last check of its deletion and the deletion is not deleted`() = runTest {
+        val local = FakeLibraryFileLocalSource(files = mapOf(song(1) to ORIGINAL, song(2) to ORIGINAL))
+        val songLocalSource = LibrarySongLocalSource(local)
+        val lock = LibraryFileLock()
+        val repository = SongRepositoryImpl(songLocalSource, SongContentRepositoryImpl(songLocalSource), lock)
+        val provider = FakeSyncProvider(files = mapOf(song(2) to ORIGINAL))
+        var save: Job? = null
+        local.onDelete = { key ->
+            if (key == song(1) && save == null) {
+                save = launch { repository.saveSong(SongContent(song(1).name, HERE.decodeToString())) }
+                yield()
+            }
+        }
+
+        SyncEngine(local, lock).synchronize(
+            provider = provider,
+            document = syncedIndexOf(mapOf(song(1) to ORIGINAL, song(2) to ORIGINAL)),
+            accountId = ACCOUNT_ID,
+            onProgress = {},
+            onIndexChanged = {},
+            deletionPolicy = SyncDeletionPolicy.ASK,
+        )
+        save?.join()
+
+        assertContentEquals(HERE, local.files[song(1)])
+    }
+
+    @Test
     fun `a local file too large to sync is neither uploaded nor taken for a deletion`() = runTest {
         val synced = "Synced".encodeToByteArray()
         val local = FakeLibraryFileLocalSource(files = mapOf(song(1) to tooLarge()))
         var uploads = 0
         val provider = FakeSyncProvider(files = mapOf(song(1) to synced), onUpload = { uploads++ })
 
-        val result = SyncEngine(local).synchronize(
+        val result = SyncEngine(local, LibraryFileLock()).synchronize(
             provider = provider,
             document = indexOf(song(1) to synced),
             accountId = ACCOUNT_ID,
@@ -229,7 +294,7 @@ class SyncEngineTest {
         val local = FakeLibraryFileLocalSource(files = mapOf(song(1) to tooLarge()))
         val provider = FakeSyncProvider()
 
-        val result = SyncEngine(local).synchronize(
+        val result = SyncEngine(local, LibraryFileLock()).synchronize(
             provider = provider,
             document = SyncIndexDocument(),
             accountId = ACCOUNT_ID,
@@ -252,7 +317,7 @@ class SyncEngineTest {
         // first one comes down, before the deletions get their turn.
         provider.onDownload = { local.files[song(2)] = edited }
 
-        val result = SyncEngine(local).synchronize(
+        val result = SyncEngine(local, LibraryFileLock()).synchronize(
             provider = provider,
             document = indexOf(song(1) to original, song(2) to original),
             accountId = ACCOUNT_ID,
@@ -282,7 +347,7 @@ class SyncEngineTest {
             }
         }
 
-        SyncEngine(local).synchronize(
+        SyncEngine(local, LibraryFileLock()).synchronize(
             provider = provider,
             document = indexOf(song(1) to original),
             accountId = ACCOUNT_ID,
@@ -303,7 +368,7 @@ class SyncEngineTest {
         )
         val provider = FakeSyncProvider(files = mapOf(song(1) to THERE))
 
-        val result = SyncEngine(local).synchronize(
+        val result = SyncEngine(local, LibraryFileLock()).synchronize(
             provider = provider,
             document = indexOf(song(1) to ORIGINAL),
             accountId = ACCOUNT_ID,
@@ -331,7 +396,7 @@ class SyncEngineTest {
             }
         }
 
-        val result = SyncEngine(local).synchronize(
+        val result = SyncEngine(local, LibraryFileLock()).synchronize(
             provider = provider,
             document = indexOf(song(1) to ORIGINAL),
             accountId = ACCOUNT_ID,
@@ -353,7 +418,7 @@ class SyncEngineTest {
         val provider = FakeSyncProvider(files = mapOf(song(1) to THERE))
         provider.onUpload = { key -> if (key == song(1)) throw IllegalStateException("Refused") }
 
-        val result = SyncEngine(local).synchronize(
+        val result = SyncEngine(local, LibraryFileLock()).synchronize(
             provider = provider,
             document = indexOf(song(1) to ORIGINAL),
             accountId = ACCOUNT_ID,
@@ -374,7 +439,7 @@ class SyncEngineTest {
         provider.onUpload = { throw SyncNetworkException("Offline") }
 
         assertFailsWith<SyncNetworkException> {
-            SyncEngine(local).synchronize(
+            SyncEngine(local, LibraryFileLock()).synchronize(
                 provider = provider,
                 document = indexOf(song(1) to ORIGINAL),
                 accountId = ACCOUNT_ID,
@@ -392,7 +457,7 @@ class SyncEngineTest {
         val local = FakeLibraryFileLocalSource(onWrite = { key -> if (key == song(2)) throw LibraryStorageException("Full") })
         val provider = FakeSyncProvider(files = librarySongs(3))
 
-        val result = SyncEngine(local).synchronize(
+        val result = SyncEngine(local, LibraryFileLock()).synchronize(
             provider = provider,
             document = SyncIndexDocument(),
             accountId = ACCOUNT_ID,
@@ -423,7 +488,7 @@ class SyncEngineTest {
             }
         }
 
-        val result = SyncEngine(local).synchronize(
+        val result = SyncEngine(local, LibraryFileLock()).synchronize(
             provider = provider,
             document = SyncIndexDocument(),
             accountId = ACCOUNT_ID,
@@ -446,7 +511,7 @@ class SyncEngineTest {
             if (key == song(1)) provider.files[key] = provider.files.getValue(key).first to "r${100 + ++contestedUploads}"
         }
 
-        val result = SyncEngine(local).synchronize(
+        val result = SyncEngine(local, LibraryFileLock()).synchronize(
             provider = provider,
             document = syncedIndexOf(mapOf(song(1) to ORIGINAL)),
             accountId = ACCOUNT_ID,
@@ -467,7 +532,7 @@ class SyncEngineTest {
         provider.onUpload = { throw SyncRemoteStorageFullException("Full") }
 
         assertFailsWith<SyncRemoteStorageFullException> {
-            SyncEngine(local).synchronize(
+            SyncEngine(local, LibraryFileLock()).synchronize(
                 provider = provider,
                 document = SyncIndexDocument(),
                 accountId = ACCOUNT_ID,
@@ -484,7 +549,7 @@ class SyncEngineTest {
         val local = FakeLibraryFileLocalSource(files = mapOf(song("Song") to "Upper".encodeToByteArray(), song("song") to lower))
         val provider = FakeSyncProvider(files = mapOf(song("song") to lower), ignoresCase = true)
 
-        val result = SyncEngine(local).synchronize(
+        val result = SyncEngine(local, LibraryFileLock()).synchronize(
             provider = provider,
             // In step at the revision the fake holds it at, so the only thing left to do is the other spelling.
             document = SyncIndexDocument(
@@ -509,7 +574,7 @@ class SyncEngineTest {
         val local = FakeLibraryFileLocalSource(files = mapOf(song("hallelujah") to ORIGINAL))
         val provider = FakeSyncProvider(files = mapOf(song("Hallelujah") to ORIGINAL), ignoresCase = true)
 
-        val result = SyncEngine(local).synchronize(
+        val result = SyncEngine(local, LibraryFileLock()).synchronize(
             provider = provider,
             document = renamedIndexOf(song("Hallelujah") to ORIGINAL, revision = "r1"),
             accountId = ACCOUNT_ID,
@@ -529,7 +594,7 @@ class SyncEngineTest {
         val local = FakeLibraryFileLocalSource()
         val provider = FakeSyncProvider(files = mapOf(song("Hallelujah") to ORIGINAL), ignoresCase = true)
 
-        SyncEngine(local).synchronize(
+        SyncEngine(local, LibraryFileLock()).synchronize(
             provider = provider,
             document = renamedIndexOf(song("hallelujah") to ORIGINAL, revision = "r1"),
             accountId = ACCOUNT_ID,
@@ -548,7 +613,7 @@ class SyncEngineTest {
         val local = FakeLibraryFileLocalSource(files = mapOf(song("hallelujah") to ORIGINAL))
         val provider = FakeSyncProvider(files = mapOf(song("Hallelujah") to THERE), ignoresCase = true)
 
-        val result = SyncEngine(local).synchronize(
+        val result = SyncEngine(local, LibraryFileLock()).synchronize(
             provider = provider,
             document = renamedIndexOf(song("Hallelujah") to ORIGINAL, revision = "r0"),
             accountId = ACCOUNT_ID,
@@ -586,7 +651,7 @@ class SyncEngineTest {
         )
         val provider = FakeSyncProvider()
 
-        val result = SyncEngine(local).synchronize(
+        val result = SyncEngine(local, LibraryFileLock()).synchronize(
             provider = provider,
             document = SyncIndexDocument(),
             accountId = ACCOUNT_ID,
@@ -605,7 +670,7 @@ class SyncEngineTest {
         val provider = FakeSyncProvider()
         val account = SyncAccount(SyncProviderId.DROPBOX, id = "dbid:1", displayName = "Someone", email = "someone@example.com")
 
-        SyncEngine(local).synchronize(
+        SyncEngine(local, LibraryFileLock()).synchronize(
             provider = provider,
             document = indexOf(song(1) to ORIGINAL).adoptedBy(account),
             accountId = account.indexKey(),
@@ -623,7 +688,7 @@ class SyncEngineTest {
         val local = FakeLibraryFileLocalSource(files = (1..200).associate { song(it) to "Song $it".encodeToByteArray() })
         val provider = FakeSyncProvider()
 
-        val result = SyncEngine(local).synchronize(
+        val result = SyncEngine(local, LibraryFileLock()).synchronize(
             provider = provider,
             document = SyncIndexDocument(),
             accountId = ACCOUNT_ID,
@@ -675,7 +740,7 @@ class SyncEngineTest {
         val local = FakeLibraryFileLocalSource(files = mapOf(song("Song") to bytes))
         val provider = FakeSyncProvider(files = mapOf(song("song") to bytes))
 
-        val result = SyncEngine(local).synchronize(
+        val result = SyncEngine(local, LibraryFileLock()).synchronize(
             provider = provider,
             document = SyncIndexDocument(),
             accountId = ACCOUNT_ID,
@@ -693,7 +758,7 @@ class SyncEngineTest {
         val local = FakeLibraryFileLocalSource(canHoldFileName = { '?' !in it })
         val provider = FakeSyncProvider(files = mapOf(song("ok") to ORIGINAL, song("who?") to ORIGINAL))
 
-        val result = SyncEngine(local).synchronize(
+        val result = SyncEngine(local, LibraryFileLock()).synchronize(
             provider = provider,
             document = SyncIndexDocument(),
             accountId = ACCOUNT_ID,
@@ -714,7 +779,7 @@ class SyncEngineTest {
         val local = FakeLibraryFileLocalSource(files = mapOf(song("ok") to ORIGINAL), canHoldFileName = { '?' !in it })
         val provider = FakeSyncProvider(files = mapOf(song("ok") to ORIGINAL, song("who?") to ORIGINAL))
 
-        val result = SyncEngine(local).synchronize(
+        val result = SyncEngine(local, LibraryFileLock()).synchronize(
             provider = provider,
             document = syncedIndexOf(mapOf(song("ok") to ORIGINAL, song("who?") to ORIGINAL)),
             accountId = ACCOUNT_ID,
@@ -733,7 +798,7 @@ class SyncEngineTest {
         val local = FakeLibraryFileLocalSource(files = mapOf(song("who") to ORIGINAL), canHoldFileName = { '?' !in it })
         val provider = FakeSyncProvider(files = mapOf(song("who?") to THERE))
 
-        val result = SyncEngine(local).synchronize(
+        val result = SyncEngine(local, LibraryFileLock()).synchronize(
             provider = provider,
             document = SyncIndexDocument(),
             accountId = ACCOUNT_ID,
@@ -753,7 +818,7 @@ class SyncEngineTest {
         val local = FakeLibraryFileLocalSource()
         val provider = FakeSyncProvider(files = mapOf(song("ok") to ORIGINAL, song("who?") to ORIGINAL))
 
-        val result = SyncEngine(local).synchronize(
+        val result = SyncEngine(local, LibraryFileLock()).synchronize(
             provider = provider,
             document = SyncIndexDocument(),
             accountId = ACCOUNT_ID,
@@ -771,7 +836,7 @@ class SyncEngineTest {
         val local = FakeLibraryFileLocalSource(files = mapOf(song(COMPOSED) to ORIGINAL))
         val provider = FakeSyncProvider(files = mapOf(song(DECOMPOSED) to ORIGINAL))
 
-        val result = SyncEngine(local).synchronize(
+        val result = SyncEngine(local, LibraryFileLock()).synchronize(
             provider = provider,
             document = SyncIndexDocument(),
             accountId = ACCOUNT_ID,
@@ -790,7 +855,7 @@ class SyncEngineTest {
         val local = FakeLibraryFileLocalSource(files = mapOf(song(COMPOSED) to ORIGINAL))
         val provider = FakeSyncProvider(files = mapOf(song(COMPOSED) to ORIGINAL))
 
-        val result = SyncEngine(local).synchronize(
+        val result = SyncEngine(local, LibraryFileLock()).synchronize(
             provider = provider,
             document = renamedIndexOf(song(DECOMPOSED) to ORIGINAL, revision = "r1"),
             accountId = ACCOUNT_ID,
@@ -811,7 +876,7 @@ class SyncEngineTest {
         val library = librarySongs(10)
         val local = FakeLibraryFileLocalSource(files = library)
 
-        val result = SyncEngine(local).synchronize(
+        val result = SyncEngine(local, LibraryFileLock()).synchronize(
             provider = FakeSyncProvider(),
             document = indexOf(*library.toList().toTypedArray()),
             accountId = ACCOUNT_ID,
@@ -833,7 +898,7 @@ class SyncEngineTest {
         val local = FakeLibraryFileLocalSource(files = library)
         val provider = FakeSyncProvider()
 
-        val result = SyncEngine(local).synchronize(
+        val result = SyncEngine(local, LibraryFileLock()).synchronize(
             provider = provider,
             document = indexOf(*library.toList().toTypedArray()),
             accountId = ACCOUNT_ID,
@@ -852,7 +917,7 @@ class SyncEngineTest {
         val library = librarySongs(10)
         val local = FakeLibraryFileLocalSource(files = library)
 
-        val result = SyncEngine(local).synchronize(
+        val result = SyncEngine(local, LibraryFileLock()).synchronize(
             provider = FakeSyncProvider(),
             document = indexOf(*library.toList().toTypedArray()),
             accountId = ACCOUNT_ID,
@@ -870,7 +935,7 @@ class SyncEngineTest {
         val library = librarySongs(10)
         val provider = FakeSyncProvider(files = library)
 
-        val result = SyncEngine(FakeLibraryFileLocalSource(files = emptyMap())).synchronize(
+        val result = SyncEngine(FakeLibraryFileLocalSource(files = emptyMap()), LibraryFileLock()).synchronize(
             provider = provider,
             document = syncedIndexOf(library),
             accountId = ACCOUNT_ID,
@@ -893,7 +958,7 @@ class SyncEngineTest {
         // proportional rule asks about, and not the whole index either.
         val provider = FakeSyncProvider(files = library.filterKeys { it != song(1) && it != song(2) })
 
-        val result = SyncEngine(FakeLibraryFileLocalSource(files = emptyMap())).synchronize(
+        val result = SyncEngine(FakeLibraryFileLocalSource(files = emptyMap()), LibraryFileLock()).synchronize(
             provider = provider,
             document = syncedIndexOf(library),
             accountId = ACCOUNT_ID,
@@ -914,7 +979,7 @@ class SyncEngineTest {
         val library = librarySongs(10)
         val provider = FakeSyncProvider(files = library)
 
-        val result = SyncEngine(FakeLibraryFileLocalSource(files = emptyMap())).synchronize(
+        val result = SyncEngine(FakeLibraryFileLocalSource(files = emptyMap()), LibraryFileLock()).synchronize(
             provider = provider,
             document = syncedIndexOf(library),
             accountId = ACCOUNT_ID,
@@ -933,7 +998,7 @@ class SyncEngineTest {
         val local = FakeLibraryFileLocalSource(files = emptyMap())
         val provider = FakeSyncProvider(files = library)
 
-        val result = SyncEngine(local).synchronize(
+        val result = SyncEngine(local, LibraryFileLock()).synchronize(
             provider = provider,
             document = syncedIndexOf(library),
             accountId = ACCOUNT_ID,
@@ -952,7 +1017,7 @@ class SyncEngineTest {
         val library = librarySongs(10)
         val provider = FakeSyncProvider(files = library)
 
-        val result = SyncEngine(FakeLibraryFileLocalSource(files = emptyMap())).synchronize(
+        val result = SyncEngine(FakeLibraryFileLocalSource(files = emptyMap()), LibraryFileLock()).synchronize(
             provider = provider,
             document = syncedIndexOf(library),
             accountId = ACCOUNT_ID,
@@ -970,7 +1035,7 @@ class SyncEngineTest {
         val library = librarySongs(10)
         val local = FakeLibraryFileLocalSource(files = library)
 
-        val result = SyncEngine(local).synchronize(
+        val result = SyncEngine(local, LibraryFileLock()).synchronize(
             provider = FakeSyncProvider(),
             document = indexOf(*library.toList().toTypedArray()),
             accountId = ACCOUNT_ID,
@@ -985,7 +1050,7 @@ class SyncEngineTest {
 
     @Test
     fun `a run with no index never asks`() = runTest {
-        val result = SyncEngine(FakeLibraryFileLocalSource(files = emptyMap())).synchronize(
+        val result = SyncEngine(FakeLibraryFileLocalSource(files = emptyMap()), LibraryFileLock()).synchronize(
             provider = FakeSyncProvider(),
             document = SyncIndexDocument(),
             accountId = ACCOUNT_ID,
@@ -1003,7 +1068,7 @@ class SyncEngineTest {
         val local = FakeLibraryFileLocalSource(files = library)
         val provider = FakeSyncProvider(files = library.filterKeys { it != song(1) && it != song(2) })
 
-        val result = SyncEngine(local).synchronize(
+        val result = SyncEngine(local, LibraryFileLock()).synchronize(
             provider = provider,
             document = indexOf(*library.toList().toTypedArray()).let { document ->
                 // In step with the fake's starting revision, so that only the two missing files make a plan.
@@ -1029,7 +1094,7 @@ class SyncEngineTest {
         val provider = FakeSyncProvider(files = library)
 
         assertFailsWith<LibraryStorageException> {
-            SyncEngine(local).synchronize(
+            SyncEngine(local, LibraryFileLock()).synchronize(
                 provider = provider,
                 document = indexOf(*library.toList().toTypedArray()).let { document ->
                     document.copy(entries = document.entries.mapValues { (_, entry) -> entry.copy(remoteRevision = "r1") })
@@ -1056,7 +1121,7 @@ class SyncEngineTest {
         )
         val local = FakeLibraryFileLocalSource()
 
-        val result = SyncEngine(local).synchronize(
+        val result = SyncEngine(local, LibraryFileLock()).synchronize(
             provider = provider,
             document = SyncIndexDocument(),
             accountId = ACCOUNT_ID,
@@ -1078,7 +1143,7 @@ class SyncEngineTest {
         val bytes = "PDF".encodeToByteArray()
         val provider = FakeSyncProvider(files = mapOf(key to bytes))
 
-        val result = SyncEngine(FakeLibraryFileLocalSource()).synchronize(
+        val result = SyncEngine(FakeLibraryFileLocalSource(), LibraryFileLock()).synchronize(
             provider = provider,
             document = indexOf(key to bytes).let { document ->
                 document.copy(entries = document.entries.mapValues { (_, entry) -> entry.copy(remoteRevision = "r1") })
@@ -1102,7 +1167,7 @@ class SyncEngineTest {
         val local = FakeLibraryFileLocalSource(files = mapOf(key to bytes))
         val provider = FakeSyncProvider(files = mapOf(key to bytes))
 
-        SyncEngine(local).synchronize(
+        SyncEngine(local, LibraryFileLock()).synchronize(
             provider = provider,
             document = indexOf(key to bytes).let { document ->
                 document.copy(entries = document.entries.mapValues { (_, entry) -> entry.copy(remoteRevision = "r1") })
@@ -1125,7 +1190,7 @@ class SyncEngineTest {
         val local = FakeLibraryFileLocalSource(files = mapOf(key to changed))
         val provider = FakeSyncProvider(files = mapOf(key to indexed))
 
-        SyncEngine(local).synchronize(
+        SyncEngine(local, LibraryFileLock()).synchronize(
             provider = provider,
             document = indexOf(key to indexed).let { document ->
                 document.copy(entries = document.entries.mapValues { (_, entry) -> entry.copy(remoteRevision = "r1") })
@@ -1152,7 +1217,7 @@ class SyncEngineTest {
         )
         val local = FakeLibraryFileLocalSource()
 
-        val result = SyncEngine(local).synchronize(
+        val result = SyncEngine(local, LibraryFileLock()).synchronize(
             provider = provider,
             document = SyncIndexDocument(),
             accountId = ACCOUNT_ID,
@@ -1178,7 +1243,7 @@ class SyncEngineTest {
         )
         val document = indexOf(song(1) to original)
 
-        val result = SyncEngine(local).synchronize(
+        val result = SyncEngine(local, LibraryFileLock()).synchronize(
             provider = provider,
             document = document,
             accountId = ACCOUNT_ID,

@@ -84,10 +84,11 @@ internal class SyncRepositoryImpl(
     private val songRepository: SongRepository,
     private val setlistRepository: SetlistRepository,
     libraryFileLocalSource: LibraryFileLocalSource,
+    libraryFileLock: LibraryFileLock,
 ) : SyncRepository {
 
     private val providers = syncProviders.all
-    private val engine = SyncEngine(libraryFileLocalSource)
+    private val engine = SyncEngine(libraryFileLocalSource, libraryFileLock)
     private val _syncState = MutableStateFlow<SyncState>(SyncState.Disconnected)
     override val syncState = _syncState.asStateFlow()
     override val availableProviders = providers.map { it.id }
