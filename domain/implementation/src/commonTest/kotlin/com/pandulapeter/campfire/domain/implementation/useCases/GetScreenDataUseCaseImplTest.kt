@@ -180,6 +180,7 @@ class GetScreenDataUseCaseImplTest {
             priority = priority,
             isArchived = false,
             entries = emptyList(),
+            size = 0L,
         )
 
         fun song(title: String) = Song(
@@ -193,6 +194,7 @@ class GetScreenDataUseCaseImplTest {
             hasChords = true,
             canUpdateFileName = false,
             lastModified = 0L,
+            size = 0L,
         )
     }
 }

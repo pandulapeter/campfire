@@ -29,7 +29,7 @@ internal class SetlistDocumentFormatTest {
     fun fieldsThisVersionDoesNotKnowSurviveARewrite() {
         val text = """{"title":"Summer","venue":{"city":"Pécs"},"songs":[{"file":"a.cho","note":"capo 2"},{"file":"b.cho"}]}"""
 
-        val setlist = SetlistDocumentFormat.decode(text).toModel("summer.setlist.json")
+        val setlist = SetlistDocumentFormat.decode(text).toModel("summer.setlist.json", size = 0)
         val changed = setlist.copy(isArchived = true, entries = setlist.entries.reversed())
         val rewritten = Json.parseToJsonElement(SetlistDocumentFormat.encode(changed.toDocument())).jsonObject
 

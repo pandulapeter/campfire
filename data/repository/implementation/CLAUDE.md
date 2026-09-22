@@ -81,8 +81,6 @@ import — is the only thing that walks the directory again.
   source.
 - `ArchiveRepositoryImpl` is a pass-through to the zip code in the local source implementation; it exists so the domain
   layer can reach it without depending on a local source.
-- `LibraryRepositoryImpl` sums the sizes of the listing sync works from (`LibraryFileLocalSource.loadLibraryFiles`), so
-  it counts exactly the files the app takes for the library and none of whatever else the user keeps in the folder.
 - `sync/` is where local and remote meet, which is why it is in a repository rather than in either source.
   `SyncPlanner` is a **pure function** of (local hashes, remote listing, the index of what the last run saw) and is
   the one part of sync worth testing — `commonTest` covers every way a file can differ between two devices,

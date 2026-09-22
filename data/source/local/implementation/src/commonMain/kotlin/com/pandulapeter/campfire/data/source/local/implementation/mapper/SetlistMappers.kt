@@ -15,7 +15,7 @@ import com.pandulapeter.campfire.data.source.local.implementation.model.SetlistS
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonObject
 
-internal fun SetlistDocument.toModel(fileName: String) = Setlist(
+internal fun SetlistDocument.toModel(fileName: String, size: Long) = Setlist(
     fileName = fileName,
     title = title,
     description = description,
@@ -27,6 +27,7 @@ internal fun SetlistDocument.toModel(fileName: String) = Setlist(
     entries = songs.filter { it.file.isNotBlank() }.distinctBy { it.file }.map {
         Setlist.Entry(songFileName = it.file, transposition = it.transposition, unknownFields = it.unknownFields.toFieldsText())
     },
+    size = size,
     unknownFields = unknownFields.toFieldsText(),
 )
 

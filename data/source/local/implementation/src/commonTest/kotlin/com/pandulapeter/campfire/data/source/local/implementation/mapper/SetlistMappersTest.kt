@@ -39,7 +39,7 @@ internal class SetlistMappersTest {
                 Setlist.Entry(songFileName = "a.cho", transposition = 2, unknownFields = """{"note":"x"}"""),
                 Setlist.Entry(songFileName = "b.cho"),
             ),
-            actual = document.toModel("summer.setlist.json").entries,
+            actual = document.toModel("summer.setlist.json", size = 0).entries,
         )
     }
 
@@ -55,6 +55,7 @@ internal class SetlistMappersTest {
                 Setlist.Entry(songFileName = "a.cho", transposition = 2),
                 Setlist.Entry(songFileName = "a.cho"),
             ),
+            size = 0L,
         )
         assertEquals(
             expected = listOf(SetlistSongDocument(file = "a.cho", transposition = 2)),

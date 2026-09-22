@@ -413,13 +413,10 @@ private fun LibrarySection(
     val libraryPersistence by viewModel.libraryPersistence.collectAsStateWithLifecycle()
     val filePicker = LocalFilePicker.current
     AnimatedSettingsRow(value = librarySummary) { summary ->
-        val size = summary.size
         ListItem(
             colors = ListItemDefaults.colors(containerColor = Color.Transparent),
             headlineContent = { Text(stringResource(Res.string.settings_library_summary, summary.songCount, summary.setlistCount)) },
-            supportingContent = if (size == null) null else {
-                { Text(stringResource(Res.string.settings_library_size, formattedSize(size))) }
-            },
+            supportingContent = { Text(stringResource(Res.string.settings_library_size, formattedSize(summary.size))) },
         )
     }
     libraryLocation?.let { location ->

@@ -78,6 +78,49 @@ class LibraryListingTest {
     }
 
     @Test
+    fun `a scanned song carries the size of its file`() = runBlocking {
+        fileStorage.writeText(StorageDirectory.SONGS, "a.cho", "{title: A}\n")
+        fileStorage.writeText(StorageDirectory.SONGS, "b.cho", "{title: Bé}\nLonger text\n")
+
+        val songs = SongLocalSourceImpl(fileStorage).loadSongs {}
+
+        songs.forEach { song -> assertEquals(File(root, "library/songs/${song.fileName}").length(), song.size) }
+        assertEquals(2, songs.size)
+    }
+
+    @Test
+    fun `a saved setlist carries the size of its file`() = runBlocking {
+        val setlistLocalSource = SetlistLocalSourceImpl(fileStorage)
+        fun sizeOf(fileName: String) = File(root, "library/setlists/$fileName").length()
+
+        val saved = setlistLocalSource.saveSetlist(
+            Setlist(
+                fileName = "Summer.setlist.json",
+                title = "Summer",
+                description = "Pécs",
+                priority = 0,
+                isArchived = false,
+                entries = listOf(Setlist.Entry("a.cho")),
+                size = 0L,
+            ),
+        )
+        assertEquals(sizeOf(saved.fileName), saved.size)
+        // Only the case of the file name changes, which moveFile does with two writes.
+        val movedByCase = setlistLocalSource.renameSetlist(saved, "Summer")
+        assertEquals("summer.setlist.json", movedByCase.fileName)
+        assertEquals(sizeOf(movedByCase.fileName), movedByCase.size)
+        // The title changes but the name it gives does not, so the file is written where it is.
+        val retitled = setlistLocalSource.renameSetlist(movedByCase, "SUMMER")
+        assertEquals("summer.setlist.json", retitled.fileName)
+        assertEquals(sizeOf(retitled.fileName), retitled.size)
+        val moved = setlistLocalSource.renameSetlist(retitled, "Autumn evenings")
+        assertEquals("autumn_evenings.setlist.json", moved.fileName)
+        assertEquals(sizeOf(moved.fileName), moved.size)
+
+        assertEquals(listOf(sizeOf(moved.fileName)), setlistLocalSource.loadSetlists().map { it.size })
+    }
+
+    @Test
     fun `a scan of 1,000 songs publishes after 64, 128, 256 and 512 songs`() = runBlocking {
         (1..1000).forEach { fileStorage.writeText(StorageDirectory.SONGS, "song_$it.cho", "{title: Song $it}\n") }
         val published = mutableListOf<Int>()
@@ -104,6 +147,7 @@ class LibraryListingTest {
                 priority = 0,
                 isArchived = false,
                 entries = emptyList(),
+                size = 0L,
             ),
         )
         fileStorage.writeBytes(StorageDirectory.SETLISTS, "._summer.setlist.json", APPLE_DOUBLE)

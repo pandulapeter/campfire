@@ -31,8 +31,8 @@ Repository interfaces only. Consumed by `:domain:implementation`; implemented by
   service is involved: the screens see a `SyncState` and never learn which provider produced it.
 - `ArchiveRepository` — zip pack/unpack. It has no state to cache and exists only so that the use cases can reach the
   zip code without the domain layer having to see the local sources.
-- `LibraryRepository` — the library as files rather than as models: `loadLibrarySize()`, the bytes the song and setlist
-  files add up to, which the settings screen shows under the counts. Listed from disk on every call, never cached.
 
 A `rescan()` is the only thing that re-reads the library folder. Everything else keeps the cached list in step by
-updating the one entry it changed, so writing a song does not cost a directory scan.
+updating the one entry it changed, so writing a song does not cost a directory scan. The entry a setlist write puts in
+is the one `saveSetlist` returns, carrying the size of the file it wrote, since the settings screen adds the library's
+size up from the models.

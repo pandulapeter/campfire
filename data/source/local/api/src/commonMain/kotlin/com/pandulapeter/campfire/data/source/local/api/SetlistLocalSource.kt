@@ -24,16 +24,17 @@ interface SetlistLocalSource {
     suspend fun loadSetlist(fileName: String): Setlist?
 
     /**
-     * Writes an empty setlist under a file name derived from the title, suffixed until it is free, and returns it.
-     * File naming is the storage layer's business, so callers only supply what goes inside.
+     * Writes an empty setlist under a file name derived from the title, suffixed until it is free, and returns it,
+     * carrying the size of its file. File naming is the storage layer's business, so callers only supply what goes inside.
      */
     suspend fun createSetlist(title: String, description: String, priority: Int): Setlist
 
-    suspend fun saveSetlist(setlist: Setlist)
+    /** Writes [setlist] under the file name it carries and returns it carrying the size of the file it became. */
+    suspend fun saveSetlist(setlist: Setlist): Setlist
 
     /**
      * Saves the setlist under [title] and moves its file to the name that title gives it, returning the setlist as
-     * it now is. The file name is the identity of a setlist, so this is a different thing from [saveSetlist]: the
+     * it now is, carrying the size of its file. The file name is the identity of a setlist, so this is a different thing from [saveSetlist]: the
      * caller ends up with a setlist whose `fileName` may have changed. Everything else the setlist carries is
      * written as it is handed over, the description included, since only the title decides the name.
      *
@@ -49,7 +50,7 @@ interface SetlistLocalSource {
 
     /**
      * Writes [setlist] under the file name it carries, suffixed until it is free unless [shouldReplace] says
-     * otherwise, and returns it under the name it ended up with.
+     * otherwise, and returns it under the name it ended up with, carrying the size of its file.
      */
     suspend fun importSetlist(setlist: Setlist, shouldReplace: Boolean): Setlist
 

@@ -203,6 +203,17 @@ class SetlistRepositoryImplTest {
     }
 
     @Test
+    fun `the cache keeps the size the write reported`() = runTest {
+        val localSource = FakeSetlistLocalSource(listOf(setlist(FILE_NAME, "a.cho")))
+        val repository = SetlistRepositoryImpl(localSource)
+        repository.loadSetlistsIfNeeded()
+
+        repository.updateSetlist(FILE_NAME) { it.copy(isArchived = true) }
+
+        assertEquals(SAVED_SIZE, repository.setlists.first().data.orEmpty().single().size)
+    }
+
+    @Test
     fun `a rename is built on the file as well`() = runTest {
         val localSource = FakeSetlistLocalSource(listOf(setlist(FILE_NAME, "a.cho", "b.cho")))
         val repository = SetlistRepositoryImpl(localSource)
@@ -270,13 +281,16 @@ class SetlistRepositoryImplTest {
                 priority = priority,
                 isArchived = false,
                 entries = emptyList(),
+                size = 0L,
             ).also { files[it.fileName] = it }
         }
 
-        override suspend fun saveSetlist(setlist: Setlist) {
+        override suspend fun saveSetlist(setlist: Setlist): Setlist {
             saveGate?.await()
-            files[setlist.fileName] = setlist
+            val saved = setlist.copy(size = SAVED_SIZE)
+            files[setlist.fileName] = saved
             afterSaveGate?.await()
+            return saved
         }
 
         override suspend fun renameSetlist(setlist: Setlist, title: String): Setlist {
@@ -299,6 +313,7 @@ class SetlistRepositoryImplTest {
         const val FILE_NAME = "gig.setlist.json"
         const val SECOND_FILE_NAME = "gig_2.setlist.json"
         const val RENAMED_FILE_NAME = "summer.setlist.json"
+        const val SAVED_SIZE = 42L
 
         fun setlist(fileName: String, vararg songs: String) = Setlist(
             fileName = fileName,
@@ -307,6 +322,7 @@ class SetlistRepositoryImplTest {
             priority = 1,
             isArchived = false,
             entries = songs.map { Setlist.Entry(it) },
+            size = 0L,
         )
     }
 }

@@ -39,5 +39,6 @@ internal fun StoredFileInfo.toSong(summary: ChordProSummary): Song {
         canUpdateFileName = summary.metadata.title?.isNotBlank() == true &&
             !name.isNamed(songFileName(title = title, artist = artist, extension = name.knownExtension())),
         lastModified = lastModified,
+        size = size,
     )
 }

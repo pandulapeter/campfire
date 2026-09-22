@@ -57,10 +57,12 @@ internal class SetlistRepositoryImpl(
         }
     }
 
-    override suspend fun saveSetlist(setlist: Setlist) = writing { write(setlist) }
+    override suspend fun saveSetlist(setlist: Setlist) {
+        writing { write(setlist) }
+    }
 
     override suspend fun updateSetlist(fileName: String, transform: (Setlist) -> Setlist) = writing {
-        latest(fileName)?.let(transform)?.also { write(it) }
+        latest(fileName)?.let(transform)?.let { write(it) }
     }
 
     override suspend fun renameSetlist(fileName: String, title: String, description: String) = writing {
@@ -110,9 +112,10 @@ internal class SetlistRepositoryImpl(
 
     private fun forget(fileName: String) = updateData { current -> current.orEmpty().filterNot { it.fileName == fileName } }
 
-    /** Callers hold [writeMutex]. */
-    private suspend fun write(setlist: Setlist) {
-        setlistLocalSource.saveSetlist(setlist)
-        updateData { current -> current.orEmpty().filterNot { it.fileName == setlist.fileName } + setlist }
+    /** Callers hold [writeMutex]. Returns the setlist as it was written, carrying its file's size. */
+    private suspend fun write(setlist: Setlist): Setlist {
+        val saved = setlistLocalSource.saveSetlist(setlist)
+        updateData { current -> current.orEmpty().filterNot { it.fileName == saved.fileName } + saved }
+        return saved
     }
 }

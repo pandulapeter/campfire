@@ -102,6 +102,7 @@ internal class ImportPlannerTest {
         priority = 0,
         isArchived = false,
         entries = emptyList(),
+        size = 0L,
     )
 
     private companion object {

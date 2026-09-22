@@ -46,7 +46,7 @@ internal class SetlistLocalSourceImpl(
                         null
                     } else {
                         fileStorage.readText(StorageDirectory.SETLISTS, file.name)
-                            ?.let { SetlistDocumentFormat.decode(it).toModel(file.name) }
+                            ?.let { SetlistDocumentFormat.decode(it).toModel(file.name, size = file.size) }
                     }
                 } catch (exception: CancellationException) {
                     throw exception
@@ -62,7 +62,7 @@ internal class SetlistLocalSourceImpl(
         val size = fileStorage.info(StorageDirectory.SETLISTS, fileName)?.size ?: return@withContext null
         if (size > ImportLimits.MAX_TEXT_FILE_SIZE) throw LibraryStorageException("\"$fileName\" is too large to be a setlist.")
         fileStorage.readText(StorageDirectory.SETLISTS, fileName)
-            ?.let { SetlistDocumentFormat.decode(it).toModel(fileName) }
+            ?.let { SetlistDocumentFormat.decode(it).toModel(fileName, size = size) }
     }
 
     override suspend fun createSetlist(title: String, description: String, priority: Int): Setlist {
@@ -74,16 +74,19 @@ internal class SetlistLocalSourceImpl(
             priority = priority,
             isArchived = false,
             entries = emptyList(),
+            size = 0,
         )
-        saveSetlist(setlist)
-        return setlist
+        return saveSetlist(setlist)
     }
 
-    override suspend fun saveSetlist(setlist: Setlist) = fileStorage.writeText(
-        directory = StorageDirectory.SETLISTS,
-        name = setlist.fileName,
-        text = SetlistDocumentFormat.encode(setlist.toDocument()),
-    )
+    /** Returns [setlist] carrying the size of what was written, since that is what the cache keeps from now on. */
+    override suspend fun saveSetlist(setlist: Setlist): Setlist {
+        val text = SetlistDocumentFormat.encode(setlist.toDocument())
+        fileStorage.writeText(directory = StorageDirectory.SETLISTS, name = setlist.fileName, text = text)
+        // Every platform writes the text as UTF-8 with nothing before it, so this is the file's size without asking
+        // the storage for it again.
+        return setlist.copy(size = text.encodeToByteArray().size.toLong())
+    }
 
     override suspend fun renameSetlist(setlist: Setlist, title: String): Setlist {
         val renamed = setlist.copy(title = title)
@@ -91,21 +94,21 @@ internal class SetlistLocalSourceImpl(
         // A title that normalizes to the name the file already has (a change of capitals, or of the punctuation the
         // name never carried) moves nothing: the file is where it belongs, and the copy would only be its own.
         if (setlist.fileName.isNamed(desired)) {
-            saveSetlist(renamed)
-            return renamed
+            return saveSetlist(renamed)
         }
         val fileName = fileStorage.uniqueName(StorageDirectory.SETLISTS, desired, currentName = setlist.fileName)
+        var moved = renamed
         fileStorage.moveFile(StorageDirectory.SETLISTS, currentName = setlist.fileName, newName = fileName) { name ->
-            saveSetlist(renamed.copy(fileName = name))
+            moved = saveSetlist(renamed.copy(fileName = name))
         }
-        return renamed.copy(fileName = fileName)
+        return moved.copy(fileName = fileName)
     }
 
     /** The file name is derived from the title rather than kept, so that an exported setlist keeps its identity. */
     override suspend fun parseSetlist(document: String): Setlist? = try {
         SetlistDocumentFormat.decode(document)
             .takeIf { it.title.isNotBlank() }
-            ?.let { it.toModel(setlistFileName(it.title)) }
+            ?.let { it.toModel(setlistFileName(it.title), size = 0) }
     } catch (exception: Exception) {
         println("Could not parse an imported setlist: ${exception.message}")
         null
@@ -119,7 +122,7 @@ internal class SetlistLocalSourceImpl(
                 fileStorage.uniqueName(StorageDirectory.SETLISTS, setlist.fileName)
             },
         )
-        .also { saveSetlist(it) }
+        .let { saveSetlist(it) }
 
     override suspend fun loadSetlistDocument(fileName: String) = fileStorage.readText(StorageDirectory.SETLISTS, fileName)
 

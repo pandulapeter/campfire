@@ -33,6 +33,11 @@ data class Setlist(
     val isArchived: Boolean,
     val entries: List<Entry>,
     /**
+     * The bytes the file takes up, as the scan listed it or as the last write left it, which is what the library's
+     * size on the settings screen adds up. 0 for a setlist that is not in the library yet: one parsed out of an import.
+     */
+    val size: Long,
+    /**
      * The members of the file this version of the app does not know, as the text of a JSON object, or empty where
      * there are none. A later version may add a field to setlists while this one is still installed on another of
      * the user's devices: kept here, that field survives this version's next save of the setlist instead of being

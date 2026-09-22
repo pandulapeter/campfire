@@ -195,6 +195,7 @@ class SongRepositoryImplTest {
             hasChords = false,
             canUpdateFileName = false,
             lastModified = 0L,
+            size = 0L,
         )
     }
 

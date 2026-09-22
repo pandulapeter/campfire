@@ -69,6 +69,7 @@ class RenameTest {
             priority = 0,
             isArchived = false,
             entries = emptyList(),
+            size = 0L,
         )
         setlistLocalSource.saveSetlist(setlist)
 

@@ -50,4 +50,6 @@ data class Song(
      */
     val canUpdateFileName: Boolean,
     val lastModified: Long,
+    /** The bytes the file takes up, as the scan listed it, which is what the library's size on the settings screen adds up. */
+    val size: Long,
 )
