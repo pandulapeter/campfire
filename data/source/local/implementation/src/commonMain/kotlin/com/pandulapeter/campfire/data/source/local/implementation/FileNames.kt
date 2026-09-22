@@ -48,7 +48,8 @@ internal fun setlistFileName(title: String) = LibraryFiles.normalizedName(title)
  * @param currentName The name of the file being renamed, if this is a rename. A case-insensitive file system (macOS,
  *   Windows and iOS by default) says a name that differs from it only in case is taken, and it is taken by this very
  *   file, which is not a reason to number it. Such a candidate is held against the directory's listing instead, which
- *   carries the names exactly as they are: on a case-sensitive file system a different file may well be there under it.
+ *   carries the names exactly as they are: on a case-sensitive file system a different file may well be there under it
+ *   - and only then is the directory listed.
  */
 internal suspend fun FileStorage.uniqueName(
     directory: StorageDirectory,
@@ -58,7 +59,8 @@ internal suspend fun FileStorage.uniqueName(
 ): String {
     fun isOwnName(candidate: String) = candidate.equals(currentName, ignoreCase = true)
     if (!isOwnName(desired) && !exists(directory, desired)) return desired
-    val takenNames = listNames(directory).toHashSet()
+    // Only a rename needs the exact names (see currentName): for anything else, exists() already says all a listing would.
+    val takenNames = if (currentName == null) emptySet() else listNames(directory).toHashSet()
     suspend fun isFree(candidate: String) = candidate !in takenNames && (isOwnName(candidate) || !exists(directory, candidate))
     if (isFree(desired)) return desired
     val extension = desired.knownExtension()

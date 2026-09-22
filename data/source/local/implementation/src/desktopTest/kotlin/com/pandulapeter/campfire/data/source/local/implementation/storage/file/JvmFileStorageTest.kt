@@ -10,6 +10,7 @@
 package com.pandulapeter.campfire.data.source.local.implementation.storage.file
 
 import com.pandulapeter.campfire.data.source.local.api.LibraryStorageException
+import com.pandulapeter.campfire.data.source.local.implementation.uniqueName
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
@@ -24,6 +25,7 @@ import kotlin.test.assertFailsWith
 import kotlin.test.assertFalse
 import kotlin.test.assertNull
 import kotlin.test.assertTrue
+import kotlin.test.fail
 
 /**
  * Exercises the file system implementation the JVM platforms share against a temporary directory. The iOS and web
@@ -177,6 +179,24 @@ class JvmFileStorageTest {
         assertFailsWith<LibraryStorageException> { fileStorage.readText(StorageDirectory.SONGS, "a.cho") }
         assertFailsWith<LibraryStorageException> { fileStorage.readBytes(StorageDirectory.SONGS, "a.cho") }
         file.setReadable(true)
+    }
+
+    @Test
+    fun `numbers a collision without listing the directory`() = runBlocking {
+        fileStorage.writeText(StorageDirectory.SONGS, "a.cho", "first")
+        fileStorage.writeText(StorageDirectory.SONGS, "a_2.cho", "second")
+        val unlisted = object : FileStorage by fileStorage {
+            override suspend fun listNames(directory: StorageDirectory): List<String> = fail("The directory was listed.")
+        }
+
+        assertEquals("a_3.cho", unlisted.uniqueName(StorageDirectory.SONGS, "a.cho"))
+    }
+
+    @Test
+    fun `lists the directory for a rename that only changes case`() = runBlocking {
+        fileStorage.writeText(StorageDirectory.SONGS, "a.cho", "content")
+
+        assertEquals("A.cho", fileStorage.uniqueName(StorageDirectory.SONGS, "A.cho", currentName = "a.cho"))
     }
 
     @Test
