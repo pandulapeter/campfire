@@ -27,14 +27,14 @@ import androidx.compose.runtime.setValue
  *
  * @param state Whether the menu is open, hoisted only where something other than [button] opens it too.
  * @param button The button that opens the menu, handed the way to open it.
- * @param content The entries of the menu, handed the way to close it, which every entry has to call before the
- *   dialog or screen it opens appears.
+ * @param content The entries of the menu, handed the way to choose one: every entry acts through it, which closes the
+ *   menu before the action and ignores a second choice made while the menu is on its way out.
  */
 @Composable
 internal fun OverflowMenu(
     state: OverflowMenuState = rememberOverflowMenuState(),
     button: @Composable (open: () -> Unit) -> Unit,
-    content: @Composable (dismiss: () -> Unit) -> Unit,
+    content: @Composable (select: (action: () -> Unit) -> Unit) -> Unit,
 ) {
     if (state.isExpanded) {
         // Counted for as long as the menu is up, and given back by whatever takes it away - a choice, a click
@@ -50,7 +50,7 @@ internal fun OverflowMenu(
             expanded = state.isExpanded,
             onDismissRequest = state::dismiss,
         ) {
-            content(state::dismiss)
+            content(state::select)
         }
     }
 }
@@ -72,6 +72,18 @@ internal class OverflowMenuState {
 
     fun dismiss() {
         isExpanded = false
+    }
+
+    /**
+     * Closes the menu and runs [action] - once per opening. The menu does not leave with the tap that chose an entry
+     * but with the end of its exit animation, and until then every entry in it can still be tapped: a double tap on
+     * "Export" would download the file twice. The state is written as the tap is handled, so the second tap of the
+     * same gesture already reads it.
+     */
+    fun select(action: () -> Unit) {
+        if (!isExpanded) return
+        isExpanded = false
+        action()
     }
 }
 

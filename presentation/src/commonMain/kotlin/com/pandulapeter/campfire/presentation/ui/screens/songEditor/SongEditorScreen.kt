@@ -652,15 +652,12 @@ private fun SongPreview(
 private fun EditorMenu(
     canRevert: Boolean,
     onRevert: () -> Unit,
-) = ActionsMenu { dismiss ->
+) = ActionsMenu { select ->
     ActionsMenuItem(
         title = stringResource(Res.string.song_editor_revert),
         icon = painterResource(Res.drawable.ic_refresh),
         isEnabled = canRevert,
-        onClick = {
-            dismiss()
-            onRevert()
-        },
+        onClick = { select { onRevert() } },
     )
 }
 

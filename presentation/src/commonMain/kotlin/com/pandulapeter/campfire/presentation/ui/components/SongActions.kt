@@ -42,8 +42,8 @@ import org.jetbrains.compose.resources.painterResource
 
 /**
  * The overflow button of a list row and the menu it opens, filled by [content] with one [ActionsMenuItem] per
- * action. [content] is handed the way to close the menu, which every entry has to call before the dialog or screen
- * it opens appears.
+ * action. [content] is handed the way to choose an entry: every entry acts through it, which closes the menu before
+ * the action and ignores a second choice made while the menu is on its way out.
  *
  * Separate from [SongActionsButton] because not every row that wants a menu has a song behind it: a setlist entry
  * whose file has gone missing still has the one action of being taken out of the setlist.
@@ -56,7 +56,7 @@ import org.jetbrains.compose.resources.painterResource
 internal fun ActionsMenu(
     modifier: Modifier = Modifier,
     state: OverflowMenuState = rememberOverflowMenuState(),
-    content: @Composable (dismiss: () -> Unit) -> Unit,
+    content: @Composable (select: (action: () -> Unit) -> Unit) -> Unit,
 ) = OverflowMenu(
     state = state,
     button = { open ->
@@ -115,21 +115,18 @@ internal fun SongActionsButton(
     ActionsMenu(
         modifier = modifier,
         state = state,
-    ) { dismiss ->
+    ) { select ->
         // Collected here rather than by the button: this content is only composed while the menu is open, and the
         // button is in every row of the song list, where a collection of its own is a coroutine and a lifecycle
         // observer per row for a value none of them draws. The state is kept up to date by the view model whether
         // or not anybody collects it, so the menu opens on the right star rather than correcting itself a frame in.
         val songFileNamesInSetlists by viewModel.songFileNamesInSetlists.collectAsStateWithLifecycle()
-        // Each entry closes the menu before it acts, so that it is gone by the time the dialog or the picker it
-        // opens is on the screen.
+        // Each entry acts through `select`, which closes the menu before it acts - so that it is gone by the time the
+        // dialog or the picker it opens is on the screen - and only once.
         ActionsMenuItem(
             title = stringResource(Res.string.edit),
             icon = painterResource(Res.drawable.ic_edit),
-            onClick = {
-                dismiss()
-                viewModel.openEditor(song.fileName)
-            },
+            onClick = { select { viewModel.openEditor(song.fileName) } },
         )
         // One entry for both directions: the sheet it opens is a list of every setlist with a box each, so putting the
         // song into one and taking it out of another are the same gesture there, and a menu that offered them as two
@@ -138,10 +135,11 @@ internal fun SongActionsButton(
             title = stringResource(Res.string.songs_setlist_assignments),
             icon = painterResource(if (song.fileName in songFileNamesInSetlists) Res.drawable.ic_setlists else Res.drawable.ic_setlists_outline),
             onClick = {
-                dismiss()
-                viewModel.showDialog(
-                    CampfireViewModel.DialogType.SetlistPicker(song = song, lockedSetlistFileName = lockedSetlistFileName)
-                )
+                select {
+                    viewModel.showDialog(
+                        CampfireViewModel.DialogType.SetlistPicker(song = song, lockedSetlistFileName = lockedSetlistFileName)
+                    )
+                }
             },
         )
         // Only where it would do something: a file already named after its own metadata, or one with no title to be
@@ -150,38 +148,26 @@ internal fun SongActionsButton(
             ActionsMenuItem(
                 title = stringResource(Res.string.songs_update_file_name),
                 icon = painterResource(Res.drawable.ic_rename),
-                onClick = {
-                    dismiss()
-                    viewModel.updateSongFileName(song)
-                },
+                onClick = { select { viewModel.updateSongFileName(song) } },
             )
         }
         ActionsMenuItem(
             title = stringResource(Res.string.export),
             icon = painterResource(Res.drawable.ic_export),
-            onClick = {
-                dismiss()
-                viewModel.exportSong(filePicker, song.fileName)
-            },
+            onClick = { select { viewModel.exportSong(filePicker, song.fileName) } },
         )
         // Only where sending a file is a different thing from saving one, which on desktop and the web it is not.
         if (filePicker.canShare) {
             ActionsMenuItem(
                 title = stringResource(Res.string.share),
                 icon = painterResource(Res.drawable.ic_share),
-                onClick = {
-                    dismiss()
-                    viewModel.shareSong(filePicker, song.fileName)
-                },
+                onClick = { select { viewModel.shareSong(filePicker, song.fileName) } },
             )
         }
         ActionsMenuItem(
             title = stringResource(Res.string.delete),
             icon = painterResource(Res.drawable.ic_delete),
-            onClick = {
-                dismiss()
-                viewModel.showDialog(CampfireViewModel.DialogType.DeleteSong(song))
-            },
+            onClick = { select { viewModel.showDialog(CampfireViewModel.DialogType.DeleteSong(song)) } },
         )
     }
 }

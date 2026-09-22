@@ -488,13 +488,14 @@ private fun SetlistEntryActions(
         lockedSetlistFileName = null,
     )
 
-    is CampfireViewModel.SetlistWithSongs.Entry.Missing -> ActionsMenu { dismiss ->
+    is CampfireViewModel.SetlistWithSongs.Entry.Missing -> ActionsMenu { select ->
         ActionsMenuItem(
             title = stringResource(Res.string.setlists_remove_song),
             icon = painterResource(Res.drawable.ic_setlists_remove),
             onClick = {
-                dismiss()
-                viewModel.removeSongFromSetlist(songFileName = entry.songFileName, setlistFileName = setlistFileName)
+                select {
+                    viewModel.removeSongFromSetlist(songFileName = entry.songFileName, setlistFileName = setlistFileName)
+                }
             },
         )
     }

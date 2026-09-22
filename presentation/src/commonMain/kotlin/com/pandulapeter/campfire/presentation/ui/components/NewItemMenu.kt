@@ -57,22 +57,16 @@ internal fun NewItemMenu(
                 )
             }
         },
-    ) { dismiss ->
+    ) { select ->
         DropdownMenuItem(
             text = { Text(createLabel) },
             leadingIcon = { Icon(painter = painterResource(Res.drawable.ic_edit), contentDescription = null) },
-            onClick = {
-                dismiss()
-                onCreate()
-            },
+            onClick = { select { onCreate() } },
         )
         DropdownMenuItem(
             text = { Text(stringResource(Res.string.import_files)) },
             leadingIcon = { Icon(painter = painterResource(Res.drawable.ic_import), contentDescription = null) },
-            onClick = {
-                dismiss()
-                viewModel.importFiles(filePicker)
-            },
+            onClick = { select { viewModel.importFiles(filePicker) } },
         )
     }
 }

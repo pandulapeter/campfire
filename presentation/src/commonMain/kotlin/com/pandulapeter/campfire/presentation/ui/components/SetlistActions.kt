@@ -61,56 +61,38 @@ internal fun SetlistActionsMenu(
                 onClick = open,
             )
         },
-    ) { dismiss ->
-        // Each entry closes the menu before it acts, so that it is gone by the time the dialog or the picker it
-        // opens is on the screen.
+    ) { select ->
+        // Each entry acts through `select`, which closes the menu before it acts - so that it is gone by the time the
+        // dialog or the picker it opens is on the screen - and only once.
         SetlistActionsMenuItem(
             title = stringResource(Res.string.edit),
             icon = painterResource(Res.drawable.ic_edit),
-            onClick = {
-                dismiss()
-                viewModel.showDialog(CampfireViewModel.DialogType.EditSetlist(setlist))
-            },
+            onClick = { select { viewModel.showDialog(CampfireViewModel.DialogType.EditSetlist(setlist)) } },
         )
         SetlistActionsMenuItem(
             title = stringResource(Res.string.setlists_song_assignments),
             icon = painterResource(Res.drawable.ic_songs),
-            onClick = {
-                dismiss()
-                viewModel.showDialog(CampfireViewModel.DialogType.SongPicker(setlist))
-            },
+            onClick = { select { viewModel.showDialog(CampfireViewModel.DialogType.SongPicker(setlist)) } },
         )
         SetlistActionsMenuItem(
             title = stringResource(Res.string.setlists_duplicate),
             icon = painterResource(Res.drawable.ic_duplicate),
-            onClick = {
-                dismiss()
-                viewModel.showDialog(CampfireViewModel.DialogType.DuplicateSetlist(setlist))
-            },
+            onClick = { select { viewModel.showDialog(CampfireViewModel.DialogType.DuplicateSetlist(setlist)) } },
         )
         SetlistActionsMenuItem(
             title = if (setlist.isArchived) stringResource(Res.string.setlists_unarchive) else stringResource(Res.string.setlists_archive),
             icon = painterResource(if (setlist.isArchived) Res.drawable.ic_unarchive else Res.drawable.ic_archive),
-            onClick = {
-                dismiss()
-                viewModel.setSetlistArchived(setlist = setlist, isArchived = !setlist.isArchived)
-            },
+            onClick = { select { viewModel.setSetlistArchived(setlist = setlist, isArchived = !setlist.isArchived) } },
         )
         SetlistActionsMenuItem(
             title = stringResource(Res.string.setlists_export),
             icon = painterResource(Res.drawable.ic_export),
-            onClick = {
-                dismiss()
-                viewModel.exportSetlist(filePicker, setlist.fileName)
-            },
+            onClick = { select { viewModel.exportSetlist(filePicker, setlist.fileName) } },
         )
         SetlistActionsMenuItem(
             title = stringResource(Res.string.delete),
             icon = painterResource(Res.drawable.ic_delete),
-            onClick = {
-                dismiss()
-                viewModel.showDialog(CampfireViewModel.DialogType.DeleteSetlist(setlist))
-            },
+            onClick = { select { viewModel.showDialog(CampfireViewModel.DialogType.DeleteSetlist(setlist)) } },
         )
     }
 }
