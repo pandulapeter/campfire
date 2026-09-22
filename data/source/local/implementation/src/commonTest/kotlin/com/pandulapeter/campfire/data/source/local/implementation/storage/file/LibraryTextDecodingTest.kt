@@ -60,6 +60,31 @@ internal class LibraryTextDecodingTest {
     }
 
     @Test
+    fun readsAHungarianFileInWindows1250() {
+        // "Árvíztűrő tükörfúrógép": the ű and the ő are on the bytes where Windows-1252 has û and õ.
+        val bytes = bytes(0xC1, 0x72, 0x76, 0xED, 0x7A, 0x74, 0xFB, 0x72, 0xF5, 0x20, 0x74, 0xFC, 0x6B, 0xF6, 0x72, 0x66, 0xFA, 0x72, 0xF3, 0x67, 0xE9, 0x70)
+
+        assertEquals("Árvíztűrő tükörfúrógép", bytes.decodeLibraryText())
+    }
+
+    @Test
+    fun readsAPolishFileInWindows1250() {
+        // "Gęsi za wodą, żółw"
+        val bytes = bytes(0x47, 0xEA, 0x73, 0x69, 0x20, 0x7A, 0x61, 0x20, 0x77, 0x6F, 0x64, 0xB9, 0x2C, 0x20, 0xBF, 0xF3, 0xB3, 0x77)
+
+        assertEquals("Gęsi za wodą, żółw", bytes.decodeLibraryText())
+    }
+
+    @Test
+    fun keepsWesternFilesThatShareBytesWithCentralEuropeanLettersOnWindows1252() {
+        // Portuguese õ next to ç and ã, Estonian Õ next to ä, a French û with no á or í, and a Spanish ¿ opening a sentence.
+        assertEquals("Corações não", bytes(0x43, 0x6F, 0x72, 0x61, 0xE7, 0xF5, 0x65, 0x73, 0x20, 0x6E, 0xE3, 0x6F).decodeLibraryText())
+        assertEquals("Õhtu äär", bytes(0xD5, 0x68, 0x74, 0x75, 0x20, 0xE4, 0xE4, 0x72).decodeLibraryText())
+        assertEquals("Sûr été", bytes(0x53, 0xFB, 0x72, 0x20, 0xE9, 0x74, 0xE9).decodeLibraryText())
+        assertEquals("¿Qué año?", bytes(0xBF, 0x51, 0x75, 0xE9, 0x20, 0x61, 0xF1, 0x6F, 0x3F).decodeLibraryText())
+    }
+
+    @Test
     fun readsUtf16WithAndWithoutByteOrderMarks() {
         val text = "{title: Tükörfúrógép}\r\n[Am]Őszi szél"
         listOf(true, false).forEach { bigEndian ->

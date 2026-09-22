@@ -30,8 +30,8 @@ holds the `@Module @ComponentScan object DataLocalSourceModule`, and every local
     `NSURLIsExcludedFromBackupKey` again — it is an attribute of the file, and the atomic write replaces the file.
     Everywhere else it does nothing.
   - Text is written as UTF-8 and read through `:data:model`'s `decodeLibraryText`, the same rule the import uses: UTF-8
-    when the bytes are valid UTF-8, Windows-1252 when they are not (what every other Western text file dropped into the
-    library folder turns out to be), and a byte order mark stripped, because editors on Windows write one. A file read
+    when the bytes are valid UTF-8, and otherwise Windows-1250 for a file whose bytes can only be Hungarian or Polish and
+    Windows-1252 for everything else (see `:data:model`), and a byte order mark stripped, because editors on Windows write one. A file read
     through the fallback is written back as UTF-8 on its first save, which keeps its accents rather than replacing them.
   - Writes are atomic on the three platforms that can be (a `.campfire-<number>.tmp` temporary file of its own per write,
     named without the target so a name at the file-system limit still saves, flushed to the device
