@@ -39,6 +39,11 @@
 	<true/>
 	<key>LSSupportsOpeningDocumentsInPlace</key>
 	<true/>
+	<!-- Answers App Store Connect's export compliance question up front, so an upload does not wait for it by hand.
+	     The only cryptography is exempt: HTTPS through the system's networking, SHA-256 for content hashes and the
+	     PKCE challenge, and the Keychain. Anything that adds encryption of its own has to revisit this. -->
+	<key>ITSAppUsesNonExemptEncryption</key>
+	<false/>
 	<!--
 	     The scheme the sync service redirects to after the user has given consent in Safari. It matches
 	     REDIRECT_SCHEME in :data:source:remote:implementation, and is the only URL Campfire claims that is not a file.
