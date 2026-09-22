@@ -92,6 +92,16 @@ internal class JvmFileStorage(
     }
 
     /**
+     * Device names are not refused here, since they are mapped (see [toStoredName]) and so can be held. These cannot:
+     * no escape character exists that could not also be part of a name, and a name is a song's identity, so a mapping
+     * that failed to reverse on one name would upload a second copy of that song from this device to every other one.
+     * A trailing space or dot is one Windows strips, and a control character one it refuses.
+     */
+    override fun canHoldFileName(name: String) = !isWindows || (
+        name.none { it in WINDOWS_RESERVED_CHARACTERS || it < ' ' } && !name.endsWith(' ') && !name.endsWith('.')
+    )
+
+    /**
      * Retries [operation] while Windows refuses it because somebody else is holding the file open. An anti-virus
      * scanner opens every file that appears, and a rename over it or a deletion of it is refused for as long as it
      * does - for tens of milliseconds, not for seconds. A bounded retry of one named operating-system failure rather
@@ -181,6 +191,8 @@ internal class JvmFileStorage(
         val LEFTOVER_NAME = Regex("""\.campfire-\d+\.tmp|.+\.\d+\.tmp""")
         const val LEFTOVER_AGE_MILLIS = 60L * 60L * 1000L
         const val DEVICE_NAME_ESCAPE = '_'
+        /** The characters Windows refuses in a file name; `/` and `\` are already refused everywhere by `requireValidFileName`. */
+        const val WINDOWS_RESERVED_CHARACTERS = "?:*\"<>|"
         const val DENIED_RETRIES = 3
         const val DENIED_RETRY_DELAY_MILLIS = 20L
         val DEVICE_NAME = Regex("""con|prn|aux|nul|(com|lpt)[0-9¹²³]""", RegexOption.IGNORE_CASE)

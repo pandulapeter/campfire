@@ -79,6 +79,14 @@ interface FileStorage {
      * `:app:android` that names what travels, and the desktop and the web have no backup of the app's own.
      */
     suspend fun keepOutOfDeviceBackup(directory: StorageDirectory, name: String) = Unit
+
+    /**
+     * Whether a file called [name] can exist in this storage at all. Only Windows answers no: `? : * " < > |` are
+     * legal in a name on iOS, macOS, Linux, Android and OPFS, and a library assembled on any of those can hold one.
+     * Asked rather than attempted because the attempt is an `InvalidPathException` from deep inside the JVM, which is
+     * not an `IOException` and so is not a storage failure the caller could tell from any other.
+     */
+    fun canHoldFileName(name: String): Boolean = true
 }
 
 /** The path of a [StorageDirectory] relative to the platform's root, as segments each platform joins its own way. */

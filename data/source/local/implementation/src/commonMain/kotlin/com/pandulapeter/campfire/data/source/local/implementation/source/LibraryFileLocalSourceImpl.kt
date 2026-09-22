@@ -47,6 +47,8 @@ internal class LibraryFileLocalSourceImpl(
 
     override suspend fun deleteLibraryFile(kind: LibraryFileKind, name: String) = fileStorage.delete(kind.directory, name)
 
+    override fun canHoldFileName(kind: LibraryFileKind, name: String) = fileStorage.canHoldFileName(name)
+
     private fun StoredFileInfo.toLibraryFile(kind: LibraryFileKind) =
         LibraryFile(kind = kind, name = name, size = size, lastModified = lastModified)
 

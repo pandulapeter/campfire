@@ -134,13 +134,21 @@ internal class SyncEngine(
                 .filter { it.size > 1 }
                 .flatten()
                 .mapTo(mutableSetOf()) { it.key }
+            // The rule the local listing applies, applied here rather than in a provider so that every provider gets
+            // it: a file listed on one side only is a deletion as far as the planner can tell.
+            val (storable, unstorable) = listed
+                .filter { it.kind.matches(it.name) }
+                .partition { libraryFileLocalSource.canHoldFileName(it.kind, it.name) }
+            // Named once per run rather than tried again every time: this device's file system cannot hold the name,
+            // which no number of runs will change. Split off before the names are folded, so that such a name is never
+            // matched onto a local one either.
+            if (pass == 0) summary = summary.plus(SyncSummary(failed = unstorable.map { it.name }))
+            val unstorableKeys = unstorable.mapTo(mutableSetOf()) { SyncKey(kind = it.kind, name = it.name) }
             val remote = foldRemoteNamesOntoLocal(
                 // The files too large to read are folded onto as well, so that a remote spelling of one of them is
                 // recognized as that file and left out with it rather than planned as a download.
                 local = local + tooLarge.map { LocalFileState(key = it, hash = "") },
-                // The rule the local listing applies, applied here rather than in a provider so that every provider gets
-                // it: a file listed on one side only is a deletion as far as the planner can tell.
-                remote = listed.filter { it.kind.matches(it.name) }.map {
+                remote = storable.map {
                     RemoteFileState(
                         key = SyncKey(kind = it.kind, name = it.name),
                         revision = it.revision,
@@ -155,11 +163,11 @@ internal class SyncEngine(
                 index = index,
                 listed = (local.map { it.key } + tooLarge + remote.map { it.key }).toSet(),
             )
-            // A file too large to read is left out on both sides, its index entry included: with the entry kept, the
-            // planner would see a file gone here and unchanged there, and delete the remote copy. Without one, the day
-            // the file is small enough again it is on both sides with nothing to say which is newer, which the planner
-            // settles by content.
-            index = index - tooLarge
+            // A file too large to read, or one this device cannot store, is left out on both sides, its index entry
+            // included: with the entry kept, the planner would see a file gone here and unchanged there, and delete the
+            // remote copy. Without one, the day the file is small enough again, or renamed to something this device can
+            // hold, it is on both sides with nothing to say which is newer, which the planner settles by content.
+            index = index - tooLarge - unstorableKeys
             if (deletionPolicy == SyncDeletionPolicy.KEEP_AND_UPLOAD) {
                 // Forgetting that the last run saw these files is what makes them new on this device: a file that is
                 // here, is not there and has no index entry is planned as an upload.

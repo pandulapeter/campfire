@@ -54,7 +54,11 @@ holds the `@Module @ComponentScan object DataLocalSourceModule`, and every local
     preferences to application support, where it cannot.
   - The JVM storage removes its own temporary files older than an hour on first touching each directory. On Windows
     (`isWindows`, which also decides the retry below) it stores device names such as `con.cho` with a leading
-    underscore and reports the ordinary library name back.
+    underscore and reports the ordinary library name back. A name Windows cannot hold at all (`? : * " < > |`, a
+    trailing space or dot, a control character) is refused by `canHoldFileName` rather than mapped: a device name is
+    a dozen anchored cases whose escape can itself be escaped, while these can sit anywhere in a name and no escape
+    character exists that a name could not also contain — and a name is a song's identity, so a mapping that failed
+    to reverse would send a second copy of the song to every device.
   - The JVM storage reads through `Files.readAllBytes` rather than a `FileInputStream`, which Windows opens without
     sharing deletion: a scan reading sixty-four files at once would otherwise refuse the renames and deletions of a
     sync run writing at the same time. The move over the target and the delete retry three times (20, 40 and 80 ms) on

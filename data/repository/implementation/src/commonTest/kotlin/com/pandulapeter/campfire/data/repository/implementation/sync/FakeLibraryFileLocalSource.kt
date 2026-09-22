@@ -16,12 +16,13 @@ import com.pandulapeter.campfire.data.source.local.api.LibraryFileLocalSource
 /**
  * The library held in memory, for running [SyncEngine] against. [onRead] runs before a read answers, which is where a
  * test makes a file that is there impossible to read, and [onWrite] before a write is stored, with the name it chose,
- * which is where a test makes the disk full.
+ * which is where a test makes the disk full. [canHoldFileName] is where a test makes a Windows PC.
  */
 internal class FakeLibraryFileLocalSource(
     files: Map<SyncKey, ByteArray> = emptyMap(),
     var onRead: (SyncKey) -> Unit = {},
     var onWrite: (SyncKey) -> Unit = {},
+    private val canHoldFileName: (String) -> Boolean = { true },
 ) : LibraryFileLocalSource {
 
     val files = files.toMutableMap()
@@ -57,4 +58,6 @@ internal class FakeLibraryFileLocalSource(
     override suspend fun deleteLibraryFile(kind: LibraryFileKind, name: String) {
         files -= SyncKey(kind = kind, name = name)
     }
+
+    override fun canHoldFileName(kind: LibraryFileKind, name: String) = canHoldFileName(name)
 }

@@ -665,6 +665,84 @@ class SyncEngineTest {
     }
 
     @Test
+    fun `a remote file this device cannot store is left alone and named once`() = runTest {
+        val local = FakeLibraryFileLocalSource(canHoldFileName = { '?' !in it })
+        val provider = FakeSyncProvider(files = mapOf(song("ok") to ORIGINAL, song("who?") to ORIGINAL))
+
+        val result = SyncEngine(local).synchronize(
+            provider = provider,
+            document = SyncIndexDocument(),
+            accountId = ACCOUNT_ID,
+            onProgress = {},
+            onIndexChanged = {},
+            deletionPolicy = SyncDeletionPolicy.ASK,
+        )
+
+        val completed = assertIs<SyncEngine.Result.Completed>(result)
+        assertEquals(setOf(song("ok")), local.files.keys)
+        assertEquals(setOf(song("ok"), song("who?")), provider.files.keys)
+        assertEquals(listOf(song("who?").name), completed.summary.failed)
+        assertEquals(setOf(song("ok").path), completed.index.entries.keys)
+    }
+
+    @Test
+    fun `a remote file this device cannot store is not taken for a deletion`() = runTest {
+        val local = FakeLibraryFileLocalSource(files = mapOf(song("ok") to ORIGINAL), canHoldFileName = { '?' !in it })
+        val provider = FakeSyncProvider(files = mapOf(song("ok") to ORIGINAL, song("who?") to ORIGINAL))
+
+        val result = SyncEngine(local).synchronize(
+            provider = provider,
+            document = syncedIndexOf(mapOf(song("ok") to ORIGINAL, song("who?") to ORIGINAL)),
+            accountId = ACCOUNT_ID,
+            onProgress = {},
+            onIndexChanged = {},
+            deletionPolicy = SyncDeletionPolicy.ASK,
+        )
+
+        val completed = assertIs<SyncEngine.Result.Completed>(result)
+        assertTrue(song("who?") in provider.files)
+        assertEquals(setOf(song("ok").path), completed.index.entries.keys)
+    }
+
+    @Test
+    fun `a name this device cannot store is not folded onto a local one`() = runTest {
+        val local = FakeLibraryFileLocalSource(files = mapOf(song("who") to ORIGINAL), canHoldFileName = { '?' !in it })
+        val provider = FakeSyncProvider(files = mapOf(song("who?") to THERE))
+
+        val result = SyncEngine(local).synchronize(
+            provider = provider,
+            document = SyncIndexDocument(),
+            accountId = ACCOUNT_ID,
+            onProgress = {},
+            onIndexChanged = {},
+            deletionPolicy = SyncDeletionPolicy.ASK,
+        )
+
+        assertEquals(1, assertIs<SyncEngine.Result.Completed>(result).summary.uploaded)
+        assertContentEquals(THERE, provider.files.getValue(song("who?")).first)
+        assertContentEquals(ORIGINAL, provider.files.getValue(song("who")).first)
+        assertEquals(setOf(song("who")), local.files.keys)
+    }
+
+    @Test
+    fun `a device that can store every name reports no failures`() = runTest {
+        val local = FakeLibraryFileLocalSource()
+        val provider = FakeSyncProvider(files = mapOf(song("ok") to ORIGINAL, song("who?") to ORIGINAL))
+
+        val result = SyncEngine(local).synchronize(
+            provider = provider,
+            document = SyncIndexDocument(),
+            accountId = ACCOUNT_ID,
+            onProgress = {},
+            onIndexChanged = {},
+            deletionPolicy = SyncDeletionPolicy.ASK,
+        )
+
+        assertTrue(assertIs<SyncEngine.Result.Completed>(result).summary.failed.isEmpty())
+        assertEquals(setOf(song("ok"), song("who?")), local.files.keys)
+    }
+
+    @Test
     fun `a run that would delete the whole library stops and asks before anything moves`() = runTest {
         val library = librarySongs(10)
         val local = FakeLibraryFileLocalSource(files = library)

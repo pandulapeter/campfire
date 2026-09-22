@@ -94,7 +94,9 @@ import — is the only thing that walks the directory again.
   file an import reads, `ImportLimits.MAX_TEXT_FILE_SIZE`) is a per-file failure rather than filtered out of the
   listing for the same reason. A local file larger than a run downloads is not read or uploaded either: it is left out
   of the plan on both sides — its index entry too, so that it is not taken for a deletion — and named among the run's
-  failures. A conflict's incoming version is written next to the local one *before* the local
+  failures. So is a remote file whose name this device's file system cannot hold (`LibraryFileLocalSource.canHoldFileName`,
+  which only Windows answers no to), split off before the remote names are folded onto the local ones so that it is
+  never matched onto a local file either. A conflict's incoming version is written next to the local one *before* the local
   one goes up, and taken back if the service then says the remote file is still there, so the version that loses is
   never held only in memory. A download is decided about twice — before its request, so that a file already in step is
   not transferred, and again just before the write, so that a save made while the request was in flight is resolved

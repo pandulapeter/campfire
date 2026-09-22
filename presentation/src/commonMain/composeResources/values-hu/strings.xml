@@ -321,8 +321,8 @@
     <string name="settings_sync_failed_unknown">A szinkronizálás nem fejeződött be.</string>
     <string name="settings_sync_failed_remote_full">A felhőmappa megtelt, így több fájl nem tölthető fel. Szabadíts fel helyet, majd szinkronizálj újra.</string>
     <plurals name="settings_sync_files_failed">
-        <item quantity="one">Egy fájlt nem sikerült szinkronizálni, a Campfire legközelebb újra megpróbálja: %2$s</item>
-        <item quantity="other">%1$d fájlt nem sikerült szinkronizálni, a Campfire legközelebb újra megpróbálja. Köztük: %2$s</item>
+        <item quantity="one">Egy fájlt nem sikerült szinkronizálni: %2$s</item>
+        <item quantity="other">%1$d fájlt nem sikerült szinkronizálni. Köztük: %2$s</item>
     </plurals>
     <plurals name="settings_sync_conflicts">
         <item quantity="one">Két helyen is módosult dal mindkét változata megmaradt: %2$s</item>

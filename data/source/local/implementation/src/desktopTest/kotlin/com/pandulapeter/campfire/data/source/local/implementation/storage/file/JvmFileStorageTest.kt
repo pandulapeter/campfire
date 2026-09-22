@@ -183,6 +183,24 @@ class JvmFileStorageTest {
     }
 
     @Test
+    fun `refuses to hold a name Windows cannot store`() {
+        val storage = JvmFileStorage(root, isWindows = true)
+
+        UNSTORABLE_ON_WINDOWS.forEach { assertFalse(storage.canHoldFileName(it), it) }
+        assertTrue(storage.canHoldFileName("con.cho"))
+        assertTrue(storage.canHoldFileName("катюша.cho"))
+    }
+
+    @Test
+    fun `holds every name on a file system that is not Windows`() = runBlocking {
+        val storage = JvmFileStorage(root, isWindows = false)
+
+        UNSTORABLE_ON_WINDOWS.forEach { assertTrue(storage.canHoldFileName(it), it) }
+        storage.writeText(StorageDirectory.SONGS, "who?.cho", "content")
+        assertEquals("content", storage.readText(StorageDirectory.SONGS, "who?.cho"))
+    }
+
+    @Test
     fun `retries an operation Windows refuses while somebody else holds the file`() = runBlocking {
         var calls = 0
 
@@ -238,5 +256,20 @@ class JvmFileStorageTest {
         listOf("nested/a.cho", "..\\a.cho", ".", "..", "").forEach { name ->
             assertFailsWith<IllegalArgumentException>(name) { fileStorage.readText(StorageDirectory.SONGS, name) }
         }
+    }
+
+    private companion object {
+        val UNSTORABLE_ON_WINDOWS = listOf(
+            "who?.cho",
+            "a:b.cho",
+            "a*b.cho",
+            "a\".cho",
+            "a<b.cho",
+            "a>b.cho",
+            "a|b.cho",
+            "a.cho ",
+            "a.cho.",
+            "a\u0001.cho",
+        )
     }
 }
