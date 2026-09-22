@@ -57,6 +57,21 @@ internal class ZipReaderJvmTest {
     }
 
     @Test
+    fun readsNamesStoredInTheDosCodePage() {
+        val archive = ByteArrayOutputStream().also { stream ->
+            ZipOutputStream(stream, java.nio.charset.Charset.forName("IBM437")).use { zip ->
+                zip.putNextEntry(java.util.zip.ZipEntry("Tükörfúrógép.cho"))
+                zip.write(contents.getValue("hello.cho"))
+                zip.closeEntry()
+            }
+        }.toByteArray()
+
+        // Written without the UTF-8 flag, which is what makes the name code page 437 rather than UTF-8.
+        assertEquals(0, archive.u16(4 + 2) and 0x0800)
+        assertEquals(listOf("Tükörfúrógép.cho"), ZipReader.read(archive).entries.map { it.name })
+    }
+
+    @Test
     fun readsAnArchiveWithAComment() {
         val archive = ByteArrayOutputStream().also { stream ->
             ZipOutputStream(stream).use { zip ->

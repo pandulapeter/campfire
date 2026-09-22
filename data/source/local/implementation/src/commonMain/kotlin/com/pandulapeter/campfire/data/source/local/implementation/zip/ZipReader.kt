@@ -19,8 +19,8 @@ import com.pandulapeter.campfire.data.model.domain.ImportLimits
 internal object ZipReader {
 
     /**
-     * The file entries of [archive], directories skipped. Names are returned as stored (forward slashes, possibly with
-     * sub-directories), decoded as UTF-8.
+     * The file entries of [archive], directories skipped. Names are returned as stored, sub-directories included,
+     * decoded as UTF-8 or, where they are not UTF-8 and do not claim to be, as code page 437 (see [entryName]).
      *
      * Only an archive that cannot be walked at all throws. An entry that cannot be read - or that the caller does not
      * want, or that is too large - costs nothing but its name: the songs next to a recording, a PDF or a damaged
@@ -64,8 +64,9 @@ internal object ZipReader {
             val extraLength = archive.u16(position + 30)
             val commentLength = archive.u16(position + 32)
             val localHeaderOffset = archive.u32(position + 42)
-            val name = archive.utf8(position + 46, nameLength)
-            if (!name.endsWith("/")) {
+            val name = archive.entryName(position + 46, nameLength, flags)
+            // A backslash is a separator too: Windows PowerShell 5.1 writes the platform's own, against the format.
+            if (!name.endsWith("/") && !name.endsWith("\\")) {
                 val limit = limitOf(name)
                 val isUnsupported = flags and 0x0001 != 0 ||
                     compressedSize == 0xFFFFFFFFL || uncompressedSize == 0xFFFFFFFFL || localHeaderOffset == 0xFFFFFFFFL
@@ -158,11 +159,28 @@ internal object ZipReader {
         throw ZipException("Not a zip file: no end of central directory record found.")
     }
 
-    private fun ByteArray.utf8(offset: Int, length: Int): String {
+    /**
+     * The name of an entry. UTF-8 where the entry says so (bit 11) and wherever the bytes are valid UTF-8 anyway, since
+     * macOS writes UTF-8 names without setting the bit. Anything else is code page 437, which is what the format
+     * specifies for a name without the bit and what the DOS-era Windows tools wrote: the accented letters of Western
+     * and most Central European names come out right, instead of as a row of replacement characters.
+     */
+    private fun ByteArray.entryName(offset: Int, length: Int, flags: Int): String {
         if (length < 0 || offset < 0 || offset + length > size) {
             throw ZipException("Truncated archive: a $length byte name at offset $offset is outside the $size byte input.")
         }
-        return copyOfRange(offset, offset + length).decodeToString()
+        val bytes = copyOfRange(offset, offset + length)
+        if (flags and FLAG_UTF8_NAME != 0) return bytes.decodeToString()
+        return try {
+            bytes.decodeToString(throwOnInvalidSequence = true)
+        } catch (_: CharacterCodingException) {
+            buildString(length) {
+                for (byte in bytes) {
+                    val value = byte.toInt() and 0xFF
+                    append(if (value < 0x80) value.toChar() else CP437_CHARACTERS[value - 0x80])
+                }
+            }
+        }
     }
 
     private const val END_OF_CENTRAL_DIRECTORY_SIGNATURE = 0x06054B50L
@@ -171,4 +189,12 @@ internal object ZipReader {
     private const val METHOD_STORED = 0
     private const val METHOD_DEFLATE = 8
     private const val MAX_COMMENT_LENGTH = 65535
+    private const val FLAG_UTF8_NAME = 0x0800
+
+    /** 0x80-0xFF in IBM code page 437, the character set a zip entry name is in when it does not say otherwise. */
+    private const val CP437_CHARACTERS =
+        "ÇüéâäàåçêëèïîìÄÅÉæÆôöòûùÿÖÜ¢£¥₧ƒ" +
+            "áíóúñÑªº¿⌐¬½¼¡«»░▒▓│┤╡╢╖╕╣║╗╝╜╛┐" +
+            "└┴┬├─┼╞╟╚╔╩╦╠═╬╧╨╤╥╙╘╒╓╫╪┘┌█▄▌▐▀" +
+            "αßΓπΣσµτΦΘΩδ∞φε∩≡±≥≤⌠⌡÷≈°∙·√ⁿ²■\u00A0"
 }

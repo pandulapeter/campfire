@@ -88,8 +88,11 @@ internal class ArchiveLocalSourceImpl : ArchiveLocalSource {
         return read + unread
     }
 
-    /** The library is flat, so "songs/x.cho" and "x.cho" are the same file as far as an import is concerned. */
-    private val String.fileName get() = substringAfterLast('/')
+    /**
+     * The library is flat, so "songs/x.cho" and "x.cho" are the same file as far as an import is concerned. A
+     * backslash separates as well, since Windows PowerShell 5.1 writes one; no file name the library holds has one.
+     */
+    private val String.fileName get() = substringAfterLast('/').substringAfterLast('\\')
 
     /** How many bytes the archives of one import have inflated to so far, carried down the recursion, and the most they may. */
     private class InflatedBytes(val limit: Long) {

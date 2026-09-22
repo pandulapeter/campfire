@@ -116,7 +116,9 @@ holds the `@Module @ComponentScan object DataLocalSourceModule`, and every local
   compressed sizes may not add up to more than the archive holds, which is what a central directory pointing many
   entries at the same bytes (a zip bomb) runs into. An entry that cannot be read is left out and reported by name; only an archive
   that cannot be walked at all is a `ZipException`. The buffer still starts at no more than 1 MiB whatever the central
-  directory claims.
+  directory claims. Entry names are UTF-8 where they say so or are valid UTF-8 (macOS does not say so), and code page
+  437 otherwise, as the format specifies. A backslash separates paths as well as a slash, since Windows PowerShell 5.1
+  writes one.
 
 Tested with `commonTest` (zip round trips, reader rejections) and `desktopTest` (the JVM storage, what unpacking an
 archive keeps, and the inflater against archives the JVM produced), run with

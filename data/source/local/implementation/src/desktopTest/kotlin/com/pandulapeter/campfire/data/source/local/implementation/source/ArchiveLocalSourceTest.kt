@@ -26,6 +26,20 @@ class ArchiveLocalSourceTest {
     private val archiveLocalSource = ArchiveLocalSourceImpl()
 
     @Test
+    fun `strips backslash paths the way Windows PowerShell writes them`() = runBlocking {
+        val archive = ZipWriter.write(
+            listOf(
+                ZipEntry("songs\\", ByteArray(0)),
+                ZipEntry("songs\\a.cho", "{title: A}".encodeToByteArray()),
+            ),
+        )
+
+        val files = archiveLocalSource.unpack(archive = archive, maxSize = ImportLimits.MAX_IMPORT_SIZE)
+
+        assertEquals(listOf("a.cho"), files.map { it.name })
+    }
+
+    @Test
     fun `unpacks every file with its path stripped`() = runBlocking {
         val archive = ZipWriter.write(
             listOf(
