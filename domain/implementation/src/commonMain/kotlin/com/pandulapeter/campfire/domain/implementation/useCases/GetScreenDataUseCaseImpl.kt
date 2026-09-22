@@ -41,9 +41,10 @@ class GetScreenDataUseCaseImpl internal constructor(
 ) : GetScreenDataUseCase {
 
     /**
-     * Written from the transform of [combine], which runs one emission at a time, so a collection never races itself
-     * over it. It is marked volatile because that transform runs on [Dispatchers.Default] rather than on the main
-     * thread, and a second collection of this use case (the demo library waits on one) may read it from another thread.
+     * Written from the transform of the last [combine], which runs one emission at a time, so a collection never races
+     * itself over it. It is marked volatile because that transform runs on [Dispatchers.Default] rather than on the
+     * main thread, and a second collection of this use case (the demo library waits on one) may read it from another
+     * thread.
      */
     @Volatile
     private var cache: ScreenData? = null
@@ -51,67 +52,106 @@ class GetScreenDataUseCaseImpl internal constructor(
     /**
      * Built on [Dispatchers.Default] rather than wherever it is collected, which for the view model is the main thread:
      * normalizing, filtering, sorting and counting the whole library is one full pass per emission, and the first scan
-     * of a large library publishes a partial list every few dozen files, each of which would be one more pass before
-     * the first frame could respond.
+     * of a large library publishes a partial list as it goes, each of which would be one more pass before the first
+     * frame could respond.
+     *
+     * The songs and the setlists are built in two halves that are only put together at the end, so that each is built
+     * again only when what it is made of changes: every tick in a setlist's song picker, every reorder and every step
+     * of a transposition played from a setlist is a setlist write, and it must not have the whole library filtered and
+     * sorted again for it.
      */
-    override operator fun invoke(songFilter: Flow<SongFilter>) = combine(
-        setlistRepository.setlists,
-        songRepository.songs,
-        // Only the preferences the list is built from: a preference that changes on every step of a transposition (or
-        // on every frame of a pinch, once the debounce lets it through) must not have the whole library filtered and
-        // sorted again for it.
-        userPreferencesRepository.userPreferences.map { state -> state.mapData { it.toListPreferences() } }.distinctUntilChanged(),
-        songFilter.distinctUntilChanged(),
-    ) { setlistsDataState, songsDataState, listPreferencesDataState, filter ->
-
-        fun createScreenData() = setlistsDataState.data?.let { unsortedSetlists ->
-            songsDataState.data?.let { songs ->
-                listPreferencesDataState.data?.let { listPreferences ->
-                    val setlists = unsortedSetlists.sortSetlists(listPreferences)
-                    val filterableSongs = songs.filterHasChords(listPreferences)
-                    // What the library holds, whatever is selected: the two filter groups are counted over the songs
-                    // the other one leaves, but both of them decide what is still a tag and what is still a language
-                    // from here, or narrowing by one would quietly switch the other one off.
-                    val availableTags = filterableSongs.toTags()
-                    val availableLanguages = filterableSongs.toLanguages()
-                    val songsByTag = filterableSongs.filterTags(filter, listPreferences.tagMatchMode, availableTags)
-                    val songsByLanguage = filterableSongs.filterLanguages(filter, availableLanguages)
-                    val songSections = songsByTag
-                        .filterLanguages(filter, availableLanguages)
-                        .sortIntoSections(listPreferences)
+    override operator fun invoke(songFilter: Flow<SongFilter>): Flow<DataState<ScreenData>> {
+        val preferences = userPreferencesRepository.userPreferences
+        val songPart = combine(
+            songRepository.songs,
+            // Only the preferences the list is built from: a preference that changes on every step of a transposition
+            // (or on every frame of a pinch, once the debounce lets it through) must not have the whole library
+            // filtered and sorted again for it.
+            preferences.map { state -> state.mapData { it.toSongListPreferences() } }.distinctUntilChanged(),
+            songFilter.distinctUntilChanged(),
+        ) { songsDataState, songListPreferencesDataState, filter ->
+            listOf(songsDataState, songListPreferencesDataState).combinedState(
+                songsDataState.data?.let { songs ->
+                    songListPreferencesDataState.data?.let { songListPreferences -> songs.toSongPart(songListPreferences, filter) }
+                },
+            )
+        }
+        val setlistPart = combine(
+            setlistRepository.setlists,
+            preferences.map { state -> state.mapData { it.setlistSortingMode } }.distinctUntilChanged(),
+        ) { setlistsDataState, sortingModeDataState ->
+            listOf(setlistsDataState, sortingModeDataState).combinedState(
+                setlistsDataState.data?.let { setlists -> sortingModeDataState.data?.let { setlists.sortSetlists(it) } },
+            )
+        }
+        return combine(setlistPart, songPart) { setlistsDataState, songsDataState ->
+            val screenData = setlistsDataState.data?.let { setlists ->
+                songsDataState.data?.let { songPart ->
                     ScreenData(
                         setlists = setlists,
-                        songs = songSections.flatMap { it.songs },
-                        songSections = songSections,
-                        tags = songsByLanguage.toTags().withMissingSelected(
-                            available = availableTags,
-                            selected = filter.selectedTags.mapTo(mutableSetOf()) { it.lowercase() },
-                            key = { it.name.lowercase() },
-                            toEmpty = { it.copy(songCount = 0) },
-                        ),
-                        languages = songsByTag.toLanguages().withMissingSelected(
-                            available = availableLanguages,
-                            selected = filter.selectedLanguages,
-                            key = { it.code },
-                            toEmpty = { it.copy(songCount = 0) },
-                        ),
-                        unfilteredSongs = songs,
+                        songs = songPart.songs,
+                        songSections = songPart.songSections,
+                        tags = songPart.tags,
+                        languages = songPart.languages,
+                        unfilteredSongs = songPart.unfilteredSongs,
                     ).also {
                         cache = it
                     }
                 }
             }
-        }
+            listOf(setlistsDataState, songsDataState).combinedState(screenData ?: cache)
+        }.flowOn(Dispatchers.Default).distinctUntilChanged()
+    }
 
-        val dataStates = arrayOf(setlistsDataState, songsDataState, listPreferencesDataState)
-        if (dataStates.any { it is DataState.Failure }) {
-            DataState.Failure(createScreenData() ?: cache)
-        } else if (dataStates.any { it is DataState.Loading }) {
-            DataState.Loading(createScreenData() ?: cache)
-        } else {
-            DataState.Idle(createScreenData() ?: cache ?: throw IllegalStateException("No data available while all data states are idle."))
-        }
-    }.flowOn(Dispatchers.Default).distinctUntilChanged()
+    private fun List<Song>.toSongPart(songListPreferences: SongListPreferences, filter: SongFilter): SongPart {
+        val filterableSongs = filterHasChords(songListPreferences)
+        // What the library holds, whatever is selected: the two filter groups are counted over the songs the other one
+        // leaves, but both of them decide what is still a tag and what is still a language from here, or narrowing by
+        // one would quietly switch the other one off.
+        val availableTags = filterableSongs.toTags()
+        val availableLanguages = filterableSongs.toLanguages()
+        val songsByTag = filterableSongs.filterTags(filter, songListPreferences.tagMatchMode, availableTags)
+        val songsByLanguage = filterableSongs.filterLanguages(filter, availableLanguages)
+        val songSections = songsByTag
+            .filterLanguages(filter, availableLanguages)
+            .sortIntoSections(songListPreferences)
+        return SongPart(
+            songs = songSections.flatMap { it.songs },
+            songSections = songSections,
+            tags = songsByLanguage.toTags().withMissingSelected(
+                available = availableTags,
+                selected = filter.selectedTags.mapTo(mutableSetOf()) { it.lowercase() },
+                key = { it.name.lowercase() },
+                toEmpty = { it.copy(songCount = 0) },
+            ),
+            languages = songsByTag.toLanguages().withMissingSelected(
+                available = availableLanguages,
+                selected = filter.selectedLanguages,
+                key = { it.code },
+                toEmpty = { it.copy(songCount = 0) },
+            ),
+            unfilteredSongs = this,
+        )
+    }
+
+    /** The song half of [ScreenData], see there. */
+    private class SongPart(
+        val songs: List<Song>,
+        val songSections: List<SongSection>,
+        val tags: List<Tag>,
+        val languages: List<SongLanguage>,
+        val unfilteredSongs: List<Song>,
+    )
+
+    /**
+     * [data] in the state of the inputs it was built from: a failure anywhere beats a load anywhere, which beats every
+     * input being idle. An idle state always carries data, so an idle input never leaves [data] without it.
+     */
+    private fun <T> List<DataState<*>>.combinedState(data: T?): DataState<T> = when {
+        any { it is DataState.Failure } -> DataState.Failure(data)
+        any { it is DataState.Loading } -> DataState.Loading(data)
+        else -> DataState.Idle(data ?: throw IllegalStateException("No data available while all data states are idle."))
+    }
 
     /**
      * The setlists in the order the screen lists them. The archived ones come last whichever order that is: they are
@@ -123,14 +163,15 @@ class GetScreenDataUseCaseImpl internal constructor(
      * tie otherwise is the order of the repository's list, where a setlist moves to the end every time it is
      * written: the two would trade places on the screen whenever one of them was touched.
      */
-    private fun List<Setlist>.sortSetlists(listPreferences: ListPreferences) = sortedWith(
-        when (listPreferences.setlistSortingMode) {
+    private fun List<Setlist>.sortSetlists(sortingMode: UserPreferences.SetlistSortingMode) = sortedWith(
+        when (sortingMode) {
             UserPreferences.SetlistSortingMode.NEWEST_FIRST -> compareBy<Setlist> { it.isArchived }.thenByDescending { it.priority }
             UserPreferences.SetlistSortingMode.BY_TITLE -> compareBy<Setlist> { it.isArchived }.thenBy { normalizeText(it.title) }
         }.thenBy { it.fileName }
     )
 
-    private fun List<Song>.filterHasChords(listPreferences: ListPreferences) = if (listPreferences.shouldShowSongsWithoutChords) this else filter { it.hasChords }
+    private fun List<Song>.filterHasChords(songListPreferences: SongListPreferences) =
+        if (songListPreferences.shouldShowSongsWithoutChords) this else filter { it.hasChords }
 
     /**
      * Tags are matched without regard to case, here and everywhere else, so both sides are folded to lower case
@@ -237,15 +278,15 @@ class GetScreenDataUseCaseImpl internal constructor(
      * that no header can come up twice whatever a title starts with. The keys are computed once per song, since the
      * selector of a comparator runs on every comparison.
      */
-    private fun List<Song>.sortIntoSections(listPreferences: ListPreferences): List<SongSection> {
+    private fun List<Song>.sortIntoSections(songListPreferences: SongListPreferences): List<SongSection> {
         val sections = linkedMapOf<String, MutableList<SortableSong>>()
-        map { SortableSong(song = it, sortingMode = listPreferences.sortingMode, artist = normalizeText(it.artist), title = normalizeText(it.title)) }
+        map { SortableSong(song = it, sortingMode = songListPreferences.sortingMode, artist = normalizeText(it.artist), title = normalizeText(it.title)) }
             .sortedWith(SortableSong.ORDER)
             .forEach { sections.getOrPut(it.sectionKey) { mutableListOf() } += it }
         return sections.map { (key, songs) ->
             val first = songs.first()
             SongSection(
-                header = when (listPreferences.sortingMode) {
+                header = when (songListPreferences.sortingMode) {
                     UserPreferences.SortingMode.BY_ARTIST -> SongSection.Header.Artist(name = first.song.artist, initial = first.initial, key = key)
                     UserPreferences.SortingMode.BY_TITLE -> first.initial?.let { SongSection.Header.Letter(it) } ?: SongSection.Header.Symbols
                 },
@@ -291,17 +332,15 @@ class GetScreenDataUseCaseImpl internal constructor(
     }
 
     /** The part of the preferences the song list depends on. */
-    private data class ListPreferences(
+    private data class SongListPreferences(
         val shouldShowSongsWithoutChords: Boolean,
         val sortingMode: UserPreferences.SortingMode,
-        val setlistSortingMode: UserPreferences.SetlistSortingMode,
         val tagMatchMode: UserPreferences.TagMatchMode,
     )
 
-    private fun UserPreferences.toListPreferences() = ListPreferences(
+    private fun UserPreferences.toSongListPreferences() = SongListPreferences(
         shouldShowSongsWithoutChords = shouldShowSongsWithoutChords,
         sortingMode = sortingMode,
-        setlistSortingMode = setlistSortingMode,
         tagMatchMode = tagMatchMode,
     )
 

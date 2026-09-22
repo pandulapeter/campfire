@@ -77,6 +77,17 @@ class LibraryListingTest {
         assertEquals(listOf("summer.setlist.json"), setlistLocalSource.loadSetlists().map { it.fileName })
     }
 
+    @Test
+    fun `a scan of 1,000 songs publishes after 64, 128, 256 and 512 songs`() = runBlocking {
+        (1..1000).forEach { fileStorage.writeText(StorageDirectory.SONGS, "song_$it.cho", "{title: Song $it}\n") }
+        val published = mutableListOf<Int>()
+
+        val songs = SongLocalSourceImpl(fileStorage).loadSongs { published += it.size }
+
+        assertEquals(listOf(64, 128, 256, 512), published)
+        assertEquals(1000, songs.size)
+    }
+
     private fun tooLarge() = ByteArray((ImportLimits.MAX_TEXT_FILE_SIZE + 1).toInt()) { 'x'.code.toByte() }
 
     private suspend fun writeSongs() {

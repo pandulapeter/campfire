@@ -23,8 +23,8 @@ data already on screen in the `Loading` state, so a refresh never blanks the lis
 a failed scan would stand in for the whole library. A write that lands through `updateData` while a read is running
 makes that read go again once it has published, since its directory listing may predate the file.
 
-A load that arrives in pieces can publish them with `publishPartialData`, which is what the song scan does with each
-batch of files it has parsed — a library of thousands then fills the list as it is read instead of showing nothing
+A load that arrives in pieces can publish them with `publishPartialData`, which is what the song scan does with the
+batches it has parsed — a library of thousands then fills the list as it is read instead of showing nothing
 until the last file. Partial data is only ever published while there is nothing on screen: during a re-read the
 previous library is up, and replacing it with a partial one would make the list shrink and fill again under the user.
 A read that fails or is cancelled falls back on the data from *before* it started rather than on whatever it had

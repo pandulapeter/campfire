@@ -86,8 +86,9 @@ holds the `@Module @ComponentScan object DataLocalSourceModule`, and every local
   travels with the key, since the key a list names is the one the song sounds in), tags and "has chords" from a single
   `:chordpro` `summarize` call, so that neither the file nor the text is walked twice. The scan reads a batch of
   files at a time rather than all of them at once: that is what bounds the concurrency on a library of thousands,
-  and each finished batch is handed to the caller, so the song list fills up while the rest is still being read. A
-  file that cannot be read is skipped, and so is one larger than `ImportLimits.MAX_TEXT_FILE_SIZE`, which only the
+  and the list is handed to the caller after the first batch and then whenever it has doubled, so that the song list
+  fills up while the rest is still being read and the screen is rebuilt a handful of times rather than once per batch.
+  A file that cannot be read is skipped, and so is one larger than `ImportLimits.MAX_TEXT_FILE_SIZE`, which only the
   user can have put there (the folder is the Files app's on iOS and a plain folder on the desktop); a *directory* that
   cannot be listed throws, because "empty library" and "your library is unreachable" must not look the same to the
   user.

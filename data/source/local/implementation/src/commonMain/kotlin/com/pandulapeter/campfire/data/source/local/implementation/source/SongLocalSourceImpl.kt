@@ -45,8 +45,11 @@ internal class SongLocalSourceImpl(
     /**
      * Reading and parsing every file is the slowest thing the app does at start, so the files are read in parallel,
      * [BATCH_SIZE] of them at a time. The batching is what bounds the concurrency - a library of thousands of songs
-     * would otherwise have every one of its files open at once - and it is also what the screen is fed with, so that
-     * a long scan fills the list as it goes instead of showing nothing until the last file is parsed.
+     * would otherwise have every one of its files open at once. The list is handed to the caller after the first batch
+     * and then each time it has doubled, so that a long scan fills the list as it goes instead of showing nothing until
+     * the last file is parsed. Doubling rather than every batch because each hand-over has the whole list filtered and
+     * sorted again downstream: once per batch, that is quadratic in the size of the library, and on the web it shares
+     * the one thread with the scan; doubling keeps all of it under two full rebuilds.
      *
      * One unreadable file, or one far too large to be a song (put there from outside the app, which is the only way one
      * gets in), must not empty the whole list, so a failure skips that song instead of propagating.
@@ -54,11 +57,15 @@ internal class SongLocalSourceImpl(
     override suspend fun loadSongs(onProgress: (List<Song>) -> Unit): List<Song> = withContext(Dispatchers.Default) {
         val songs = mutableListOf<Song>()
         val batches = fileStorage.list(StorageDirectory.SONGS).filter { LibraryFiles.isSongFileName(it.name) }.chunked(BATCH_SIZE)
+        var publishedCount = 0
         batches.forEachIndexed { index, batch ->
             songs += batch.map { async { it.readSong() } }.awaitAll().filterNotNull()
             // The last batch is what the return value already says, and publishing it would only have everything
             // downstream sort and group the same list a second time.
-            if (index < batches.lastIndex) onProgress(songs.toList())
+            if (index < batches.lastIndex && songs.size >= publishedCount * 2) {
+                publishedCount = songs.size
+                onProgress(songs.toList())
+            }
         }
         songs
     }
