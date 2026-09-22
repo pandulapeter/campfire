@@ -1077,8 +1077,17 @@ class CampfireViewModel(
     /** Reported by the editor on every change, see [_editorDraft]. Nothing is written here. */
     fun onEditorTextChanged(fileName: String, text: String) = _editorDraft.update { SongContent(fileName = fileName, text = text) }
 
-    /** Reported by the editor once it is gone, whatever became of the text it had. */
-    fun onEditorClosed() = _editorDraft.update { null }
+    /**
+     * Reported by the editor once it is gone, whatever became of the text it had. An editor that is still on the
+     * stack is only being composed again - a rotation, the system changing its theme - and its draft stands until the
+     * new composition reports it: dropped in between, the moment would read as "nothing unsaved" to everything that
+     * asks, the update gate and the way out of the editor included.
+     */
+    fun onEditorClosed(fileName: String) {
+        if (backStack.none { it is CampfireDestination.SongEditor && it.fileName == fileName }) {
+            _editorDraft.update { draft -> draft?.takeUnless { it.fileName == fileName } }
+        }
+    }
 
     /**
      * Called by the editor whenever its state is saved. That includes one last time as the screen leaves for good,

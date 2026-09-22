@@ -155,10 +155,22 @@ internal fun SongEditorScreen(
     // The text the field starts from, taken once. What the file holds afterwards is only ever compared with what has
     // been typed: an editor that followed songTexts would be taken apart, the field and the draft with it, by a
     // sync run deleting the file or a rescan failing to read it - the two moments the draft is the only copy left.
-    var initialText by remember(destination.fileName) { mutableStateOf(viewModel.songTexts.value[destination.fileName]) }
+    //
+    // An editor that is composed again over a file that has gone - after a rotation, or in a process the system
+    // restored - still has its field to come back to, retained by the view model or saved with the screen, so it
+    // opens on that rather than waiting for a file that is not coming back. Whether it had opened is saved for the
+    // same reason: in a new process that flag is all there is to tell a draft worth restoring from a song that was
+    // never loaded. The empty text it opens with is only what the field is compared with, which is what the file
+    // holds now.
+    var hasOpened by rememberSaveable(destination.fileName) { mutableStateOf(false) }
+    var initialText by remember(destination.fileName) {
+        mutableStateOf(viewModel.songTexts.value[destination.fileName] ?: viewModel.retainedEditorField(destination.fileName)?.let { "" })
+    }
     LaunchedEffect(destination.fileName) {
-        viewModel.loadSongContent(destination.fileName)
+        viewModel.loadSongContent(destination.fileName).join()
+        if (initialText == null && hasOpened) initialText = viewModel.songTexts.value[destination.fileName] ?: ""
         initialText = initialText ?: viewModel.songTexts.mapNotNull { it[destination.fileName] }.first()
+        hasOpened = true
     }
     AnimatedContent(
         modifier = modifier.fillMaxSize(),
@@ -690,7 +702,7 @@ private fun ReportDraft(
         snapshotFlow { text.value }.collect { viewModel.onEditorTextChanged(fileName, it) }
     }
     // Whatever became of the text - saved, discarded, or the song deleted - there is no draft once the editor is gone.
-    DisposableEffect(fileName) { onDispose { viewModel.onEditorClosed() } }
+    DisposableEffect(fileName) { onDispose { viewModel.onEditorClosed(fileName) } }
 }
 
 /**
