@@ -19,6 +19,7 @@ import androidx.compose.ui.input.pointer.PointerEventType
 import androidx.compose.ui.input.pointer.isCtrlPressed
 import androidx.compose.ui.input.pointer.isMetaPressed
 import androidx.compose.ui.input.pointer.pointerInput
+import com.pandulapeter.campfire.presentation.ui.platform.verticalWheelNotches
 import kotlin.math.pow
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.coroutineScope
@@ -100,9 +101,9 @@ internal fun Modifier.fontScaleGestures(
                 while (true) {
                     val event = awaitPointerEvent(PointerEventPass.Initial)
                     if (event.type == PointerEventType.Scroll && (event.keyboardModifiers.isCtrlPressed || event.keyboardModifiers.isMetaPressed)) {
-                        val delta = event.changes.fold(0f) { total, change -> total + change.scrollDelta.y }
-                        // Scrolling up (negative delta) zooms in, like in a browser.
-                        changeFontScale((pendingFontScale ?: fontScale()) - delta * SCROLL_SENSITIVITY)
+                        // Towards the user (a positive delta) zooms out and away zooms in, like in a browser. Counted in notches,
+                        // since the web hands over the browser's own pixels.
+                        changeFontScale((pendingFontScale ?: fontScale()) - event.verticalWheelNotches() * SCROLL_SENSITIVITY)
                         event.changes.forEach { it.consume() }
                     }
                 }
@@ -118,4 +119,4 @@ private data class PinchStart(
 )
 
 private const val PINCH_SENSITIVITY = 0.4f // Exponent applied to the spread ratio of the fingers.
-private const val SCROLL_SENSITIVITY = 0.05f // Font scale change per scroll wheel unit.
+private const val SCROLL_SENSITIVITY = 0.05f // Font scale change per notch of the scroll wheel.

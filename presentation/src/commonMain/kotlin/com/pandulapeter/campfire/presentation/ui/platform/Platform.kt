@@ -9,6 +9,8 @@
  */
 package com.pandulapeter.campfire.presentation.ui.platform
 
+import androidx.compose.ui.input.pointer.PointerEvent
+
 /**
  * True on platforms driven by a pointer rather than touch, where holding a song row opens nothing: the long press
  * that opens the row's overflow menu is a touch gesture, and the button that opens the same menu is one click away.
@@ -39,6 +41,13 @@ internal expect val canAskForDonations: Boolean
  * a build say about the rest.
  */
 internal expect val currentDistribution: Distribution?
+
+/**
+ * How far a scroll wheel event turned the wheel vertically, in notches (positive towards the user), which is the unit a
+ * pointer event reports it in everywhere but the web: a browser hands over the DOM event's own delta, which is in
+ * pixels there - about a hundred for a notch - or in lines.
+ */
+internal expect fun PointerEvent.verticalWheelNotches(): Float
 
 internal sealed interface LibraryLocation {
 

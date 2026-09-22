@@ -9,6 +9,7 @@
  */
 package com.pandulapeter.campfire.presentation.ui.platform
 
+import androidx.compose.ui.input.pointer.PointerEvent
 import java.io.File
 
 internal actual val isDesktopPlatform = true
@@ -33,6 +34,8 @@ internal actual val currentDistribution: Distribution? = when {
     operatingSystem.contains("linux") -> Distribution.LINUX
     else -> null
 }
+
+internal actual fun PointerEvent.verticalWheelNotches() = changes.fold(0f) { total, change -> total + change.scrollDelta.y }
 
 private val operatingSystem get() = System.getProperty("os.name").orEmpty().lowercase()
 

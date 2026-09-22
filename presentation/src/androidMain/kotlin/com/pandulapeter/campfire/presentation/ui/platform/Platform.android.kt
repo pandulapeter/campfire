@@ -9,6 +9,8 @@
  */
 package com.pandulapeter.campfire.presentation.ui.platform
 
+import androidx.compose.ui.input.pointer.PointerEvent
+
 internal actual val isDesktopPlatform = false
 
 // The files live in the app's private storage, which no file manager will show.
@@ -18,3 +20,5 @@ internal actual val libraryLocation: LibraryLocation? = null
 internal actual val canAskForDonations = true
 
 internal actual val currentDistribution: Distribution? = Distribution.PLAY_STORE
+
+internal actual fun PointerEvent.verticalWheelNotches() = changes.fold(0f) { total, change -> total + change.scrollDelta.y }

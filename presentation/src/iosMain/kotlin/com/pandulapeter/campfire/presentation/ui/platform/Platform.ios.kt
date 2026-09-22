@@ -9,6 +9,8 @@
  */
 package com.pandulapeter.campfire.presentation.ui.platform
 
+import androidx.compose.ui.input.pointer.PointerEvent
+
 internal actual val isDesktopPlatform = false
 
 // Info.plist declares UIFileSharingEnabled and LSSupportsOpeningDocumentsInPlace, so the documents directory the
@@ -19,3 +21,5 @@ internal actual val libraryLocation: LibraryLocation? = LibraryLocation.FilesApp
 internal actual val canAskForDonations = false
 
 internal actual val currentDistribution: Distribution? = Distribution.APP_STORE
+
+internal actual fun PointerEvent.verticalWheelNotches() = changes.fold(0f) { total, change -> total + change.scrollDelta.y }
