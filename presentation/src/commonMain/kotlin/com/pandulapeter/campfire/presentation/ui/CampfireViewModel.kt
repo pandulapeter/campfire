@@ -112,6 +112,7 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 import kotlinx.coroutines.withContext
+import kotlinx.coroutines.withTimeoutOrNull
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.SerializationException
 import kotlinx.serialization.json.Json
@@ -1268,9 +1269,14 @@ class CampfireViewModel(
         }
     }
 
-    /** Null where the bundled files could not be read, which each caller then says as much about as it should. */
+    /**
+     * Null where the bundled files could not be read, which each caller then says as much about as it should. On the
+     * web they are requests to the site, and one that neither answers nor fails would otherwise hold whatever waits for
+     * it for good - on a first run, the launch screen, which only goes once the demo has been planted or given up on.
+     */
     private suspend fun readDemoLibrary() = try {
-        DemoLibrary.read()
+        withTimeoutOrNull(DEMO_LIBRARY_READ_TIMEOUT_MILLIS) { DemoLibrary.read() }
+            .also { if (it == null) println("Could not read the demo library in time.") }
     } catch (exception: CancellationException) {
         throw exception
     } catch (exception: Exception) {
@@ -2001,6 +2007,7 @@ class CampfireViewModel(
         private const val FONT_SCALE_SAVE_DELAY_MILLIS = 500L
         private const val SONG_EDIT_ATTEMPTS = 2
         private const val BACK_STACK_KEY = "backStack"
+        private const val DEMO_LIBRARY_READ_TIMEOUT_MILLIS = 10_000L // Past the drawables' five seconds: it cuts short a first impression, not a frame.
         private const val MAX_SAVED_BACK_STACK_LENGTH = 100_000 // Characters of JSON, about 200 KB as the UTF-16 a Bundle writes.
         private const val SONG_FILTER_KEY = "songFilter"
         private const val SONGS_SEARCH_KEY = "songsSearch"
