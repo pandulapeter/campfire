@@ -12,6 +12,7 @@ package com.pandulapeter.campfire
 import androidx.compose.ui.window.ComposeUIViewController
 import com.pandulapeter.campfire.data.model.domain.UserPreferences
 import com.pandulapeter.campfire.di.startCampfireDependencyGraph
+import com.pandulapeter.campfire.domain.api.useCases.CancelSynchronizationUseCase
 import com.pandulapeter.campfire.presentation.ui.CampfireIosApp
 import platform.Foundation.NSURL
 import platform.UIKit.UIApplication
@@ -19,6 +20,7 @@ import platform.UIKit.UIUserInterfaceStyle
 import platform.UIKit.UIViewController
 import platform.UIKit.UIWindow
 import platform.UIKit.UIWindowScene
+import org.koin.mp.KoinPlatform
 
 private val koinApplication by lazy { startCampfireDependencyGraph() }
 
@@ -30,7 +32,9 @@ fun CampfireViewController(): UIViewController {
     koinApplication
     // The picker needs something to present itself from, which is the controller being created here.
     var controller: UIViewController? = null
-    val syncNotifier = IosSyncNotifier()
+    val syncNotifier = IosSyncNotifier(
+        onBackgroundTimeExpired = { KoinPlatform.getKoin().get<CancelSynchronizationUseCase>().invoke() },
+    )
     val filePicker = IosFilePicker { requireNotNull(controller) }
     return ComposeUIViewController {
         CampfireIosApp(

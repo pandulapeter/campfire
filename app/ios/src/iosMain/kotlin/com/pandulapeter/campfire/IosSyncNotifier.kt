@@ -24,14 +24,18 @@ import platform.UserNotifications.UNUserNotificationCenter
  * Keeps a sync run going while the app is not in front of the user, and shows what it is doing.
  *
  * iOS is stricter than Android here, and honestly so: a background task buys a few tens of seconds, not minutes.
- * A library that cannot be finished in that time is suspended mid run - which is exactly the case the index's
- * "a run was going" marker exists for, so the next start reports it as interrupted and carries on from where it
- * stopped rather than from the beginning.
+ * A library that cannot be finished in that time is stopped when iOS says the time is up, the way Android's
+ * `onTimeout` stops it, so it writes its index and reports itself as interrupted; a process killed before that is
+ * still found by the index's "a run was going" marker at the next start. Either way the next Sync now carries on from
+ * where it stopped rather than from the beginning.
  *
  * The notification is informational: iOS has no progress bar in a notification and no way to put a button on one
  * without a registered category, so tapping it opens the app, where the settings screen has the stop action.
  */
-class IosSyncNotifier : SyncNotifier {
+class IosSyncNotifier(
+    /** Stops the run when iOS ends the background time, see [beginBackgroundTask]. */
+    private val onBackgroundTimeExpired: () -> Unit,
+) : SyncNotifier {
 
     private var backgroundTask: UIBackgroundTaskIdentifier = UIBackgroundTaskInvalid
     private var hasRequestedAuthorization = false
@@ -62,11 +66,16 @@ class IosSyncNotifier : SyncNotifier {
 
     /**
      * Asks iOS for time to finish once the app is backgrounded. The expiration handler is not optional: a task that
-     * is not ended when iOS asks gets the app killed, and a killed app is a worse outcome than a stopped sync.
+     * is not ended when iOS asks gets the app killed, and a killed app is a worse outcome than a stopped sync. It stops
+     * the run before ending the task, and does not wait for the run to wind down, since iOS also kills an app whose
+     * handler does not return promptly: the clean up resumes with the app if it is suspended half way.
      */
     private fun beginBackgroundTask() {
         if (backgroundTask != UIBackgroundTaskInvalid) return
         backgroundTask = UIApplication.sharedApplication.beginBackgroundTaskWithName("sync") {
+            // Stopped rather than left to be frozen mid request: frozen, it resumes into requests that have timed out and
+            // reports a network failure; stopped, it writes its index and says it was interrupted, which is what it was.
+            onBackgroundTimeExpired()
             endBackgroundTask()
         }
     }
