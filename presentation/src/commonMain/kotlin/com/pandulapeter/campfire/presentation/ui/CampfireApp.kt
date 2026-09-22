@@ -24,6 +24,8 @@ import androidx.compose.animation.fadeOut
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.asPaddingValues
 import androidx.compose.foundation.background
+import androidx.compose.foundation.gestures.awaitEachGesture
+import androidx.compose.foundation.gestures.awaitFirstDown
 import androidx.compose.foundation.layout.ExperimentalLayoutApi
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.calculateEndPadding
@@ -66,6 +68,8 @@ import androidx.compose.runtime.withFrameNanos
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.input.pointer.PointerEventPass
+import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.layout.SubcomposeLayout
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalLayoutDirection
@@ -81,6 +85,7 @@ import androidx.navigation3.ui.NavDisplay
 import androidx.navigationevent.NavigationEvent
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.compose.LifecycleEventEffect
+import androidx.lifecycle.compose.LocalLifecycleOwner
 import com.pandulapeter.campfire.data.model.domain.ImportedFile
 import com.pandulapeter.campfire.data.model.domain.SyncState
 import com.pandulapeter.campfire.presentation.resources.Res
@@ -395,6 +400,8 @@ private fun CampfireContent(
         ime = ime,
         density = density,
     )
+    // What the screens' own lifecycles are compared with, see ScreenSurface.
+    val hostLifecycle = LocalLifecycleOwner.current.lifecycle
 
     Box(
         modifier = Modifier.fillMaxSize()
@@ -446,7 +453,7 @@ private fun CampfireContent(
                 // These two cover the chrome, so they are the only ones laid out edge to edge.
                 entry<CampfireDestination.SongEditor>(metadata = navigationMetadata, clazzContentKey = { it.contentKey }) { destination ->
                     ReportNavigationTransition(viewModel)
-                    ScreenSurface {
+                    ScreenSurface(hostLifecycle) {
                         SongEditorScreen(
                             viewModel = viewModel,
                             destination = destination,
@@ -458,7 +465,7 @@ private fun CampfireContent(
                 }
                 entry<CampfireDestination.SongDetails>(metadata = navigationMetadata, clazzContentKey = { it.contentKey }) { destination ->
                     ReportNavigationTransition(viewModel)
-                    ScreenSurface {
+                    ScreenSurface(hostLifecycle) {
                         SongDetailsScreen(
                             viewModel = viewModel,
                             destination = destination,
@@ -633,13 +640,43 @@ private fun NavigationChrome(
  * A [Surface] rather than a plain box because it also blocks touches from reaching what is behind it: the chrome is
  * drawn under the screens, so without this the rail would still take taps through the song details screen covering
  * it, and a screen being covered would still take taps through the one landing on it.
+ *
+ * It also takes no touches while it is moving - being dealt, taken away, or uncovered by the card above it leaving.
+ * Navigation 3 holds every entry below RESUMED until its scene transition has settled, so an entry below RESUMED in a
+ * host that is RESUMED is one that is moving. The editor leaves on a spring that has cleared a finger within a tenth of
+ * a second, and without this the second tap of a double-tap on its Close would land on the Back arrow of the song
+ * underneath and close that too. The host is asked as well because it is not always RESUMED while the app is in use:
+ * a desktop window that does not have the focus is only STARTED, and the click that focuses it has to count.
  */
 @Composable
-private fun ScreenSurface(content: @Composable () -> Unit) = Surface(
-    modifier = Modifier.fillMaxSize(),
-    color = MaterialTheme.colorScheme.background,
-    content = content,
-)
+private fun ScreenSurface(
+    hostLifecycle: Lifecycle,
+    content: @Composable () -> Unit,
+) {
+    val entryLifecycle = LocalLifecycleOwner.current.lifecycle
+    Surface(
+        modifier = Modifier
+            .fillMaxSize()
+            .pointerInput(hostLifecycle, entryLifecycle) {
+                awaitEachGesture {
+                    val down = awaitFirstDown(requireUnconsumed = false, pass = PointerEventPass.Initial)
+                    // Asked when the finger comes down rather than for every event: a gesture that started on a screen
+                    // that had landed is the user's to finish, and one that started on a moving screen is not, even if
+                    // the screen lands before the finger is lifted. The down is consumed as well, or a child that does
+                    // not require an unconsumed down would still start its press ripple.
+                    if (hostLifecycle.currentState == Lifecycle.State.RESUMED && !entryLifecycle.currentState.isAtLeast(Lifecycle.State.RESUMED)) {
+                        down.consume()
+                        do {
+                            val event = awaitPointerEvent(PointerEventPass.Initial)
+                            event.changes.forEach { it.consume() }
+                        } while (event.changes.any { it.pressed })
+                    }
+                }
+            },
+        color = MaterialTheme.colorScheme.background,
+        content = content,
+    )
+}
 
 /**
  * One card of the deck next to the navigation chrome, inset from the navigation bar rather than clipped, so that the
