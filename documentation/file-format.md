@@ -51,20 +51,20 @@ Setlists are small JSON files (`<name>.setlist.json`) stored next to the songs, 
 `songs/` and `setlists/`:
 
 ```json
-{ "title": "Friday gig", "priority": 3, "songs": [ { "file": "oasis_wonderwall.cho", "transposition": 2 } ] }
+{ "title": "Friday gig", "priority": 3, "songs": [ { "file": "oasis-wonderwall.cho", "transposition": 2 } ] }
 ```
 
-An archived setlist carries `"isArchived": true` as well; every field is defaulted, so a hand-written file can leave
-out anything it has nothing to say about.
+A setlist can also carry a `"description"`, the sentence shown under its title, and an archived one carries
+`"isArchived": true`. A song is named by its file name exactly as it is in `songs/`. Every field is defaulted, so a
+hand-written file can leave out anything it has nothing to say about.
 
 ### File names
 
-A file name is a song's identity — it is what a setlist points at — and Campfire derives it from the song's own
-header rather than from whatever the file was called when it arrived: `{artist}`, `{title}` and `{subtitle}`, folded
-  to lowercase unaccented words joined with underscores — letters of other alphabets are kept, so `{title: Катюша}` is
-  `катюша.cho` — as `green_day-good_riddance_time_of_your_life.cho`. The name a
-file arrives under counts for nothing, except where the song inside declares no `{title}`, in which case it stands in
-as the title.
+A file name is a song's identity — it is what a setlist points at — and Campfire derives it from the song's own header
+rather than from whatever the file was called when it arrived: `{artist}`, `{title}` and `{subtitle}`, folded to
+lowercase unaccented words joined with underscores — letters of other alphabets are kept, so `{title: Катюша}` is
+`катюша.cho` — as `green_day-good_riddance_time_of_your_life.cho`. The name a file arrives under counts for nothing,
+except where the song inside declares no `{title}`, in which case it stands in as the title.
 
 The folding rules exist so that the same song written down by two people arrives at the same name: an apostrophe is
 dropped rather than turned into a separator (`dont_cry`), `&` and `+` are spelled out (`rock_and_roll`), and a credit
