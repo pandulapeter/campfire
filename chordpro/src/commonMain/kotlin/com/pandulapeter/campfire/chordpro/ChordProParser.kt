@@ -368,6 +368,12 @@ object ChordProParser {
                 "tag" -> ChordProSyntax.tag(directive)?.let(::addTag)
                 "language", "lang" -> ChordProSyntax.language(directive)?.let(::addLanguage)
                 "meta" -> {
+                    // The spec defines these as the standalone directive, so they are read as one: a song whose header is
+                    // all `{meta: title …}` lines is titled, named and keyed by it like any other.
+                    ChordProSyntax.standardMeta(directive)?.let {
+                        consume(it)
+                        return
+                    }
                     val name = value.substringBefore(' ').trim()
                     when {
                         name.equals(ChordProSyntax.TAG_NAME, ignoreCase = true) -> ChordProSyntax.tag(directive)?.let(::addTag)

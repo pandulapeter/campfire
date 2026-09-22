@@ -542,4 +542,19 @@ class ChordProParserTest {
             ChordProParser.parse("{Verse 2}").blocks,
         )
     }
+
+    @Test
+    fun `the standard meta names are read as their own directives`() {
+        val text = "{meta: title Amazing Grace}\n{meta: Artist John Newton}\n{meta: key G}\n{meta: capo 2}\n{meta: tuning DADGAD}"
+        val metadata = ChordProParser.parse(text).metadata
+
+        assertEquals("Amazing Grace", metadata.title)
+        assertEquals("John Newton", metadata.artist)
+        assertEquals("G", metadata.key)
+        assertEquals(2, metadata.capo)
+        assertEquals(mapOf("tuning" to listOf("DADGAD")), metadata.custom)
+        assertEquals(metadata, ChordProParser.summarize(text).metadata)
+        assertEquals(metadata, ChordProParser.parseMetadata(text))
+        assertEquals("B", ChordProParser.summarize("{meta: key H}\n[H]a").metadata.key)
+    }
 }

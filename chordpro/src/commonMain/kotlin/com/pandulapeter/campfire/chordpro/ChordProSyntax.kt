@@ -220,6 +220,26 @@ internal object ChordProSyntax {
     }?.takeIf { it.isNotEmpty() }
 
     /**
+     * The names the spec defines `{meta: name value}` to mean exactly what the standalone `{name: value}` means, of the
+     * ones the model has a field for; the tag and the language are read by [tag] and [language].
+     */
+    private val standardMetaNames = setOf(
+        "title", "subtitle", "artist", "composer", "lyricist", "album", "year", "key", "capo", "tempo", "time", "duration",
+    )
+
+    /**
+     * The standalone directive a `{meta}` one stands for (`{meta: title Amazing Grace}` is `{title: Amazing Grace}`), or
+     * null for every other directive, the custom metadata a `{meta}` may carry included. The name is matched ignoring
+     * case, like every directive name.
+     */
+    fun standardMeta(directive: Directive): Directive? {
+        if (directive.name != META) return null
+        val value = directive.value?.trim() ?: return null
+        val name = value.substringBefore(' ').trim().lowercase()
+        return if (name in standardMetaNames) Directive(name, value.substringAfter(' ', missingDelimiterValue = "").trim()) else null
+    }
+
+    /**
      * Equal for exactly the strings `equals(ignoreCase = true)` calls equal, char by char, so that it can key a hash set.
      * Not `lowercase()`, which turns a dotted capital I into two characters that no longer match the plain i the
      * comparison takes it for.
@@ -278,14 +298,17 @@ internal object ChordProSyntax {
 
     /**
      * The metadata directive a line declares, under the single name the app knows it by: the short spellings (`{t}`)
-     * and the `{meta}` ones (`{meta: language en}`) fold into the long one, so that a file writing a directive one
-     * way and a toolbar writing it another are understood to be talking about the same thing. Null for everything
-     * else, the directives that make up the body and the custom metadata a song may carry included.
+     * and the `{meta}` ones (`{meta: language en}`, `{meta: title …}`) fold into the long one, so that a file writing a
+     * directive one way and a toolbar writing it another are understood to be talking about the same thing. Null for
+     * everything else, the directives that make up the body and the custom metadata a song may carry included.
      */
     fun metadataKind(directive: Directive): String? = when {
         isTagMeta(directive) -> TAG_NAME
         isLanguageMeta(directive) -> LANGUAGE_NAME
-        else -> (metadataAliases[directive.name] ?: directive.name).takeIf { it in metadataOrder }
+        else -> {
+            val name = standardMeta(directive)?.name ?: directive.name
+            (metadataAliases[name] ?: name).takeIf { it in metadataOrder }
+        }
     }
 
     private val metadataAliases = mapOf(

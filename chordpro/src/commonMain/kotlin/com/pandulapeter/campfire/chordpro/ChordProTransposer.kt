@@ -223,8 +223,8 @@ object ChordProTransposer {
                         // moving them as one fingerboard would let the viewer and the editor disagree about the octave.
                         lines.transposeTab(tabLineIndices, semitones, rename)
                     }
-                    if (directive.name == KEY) {
-                        directive.value?.takeIf { it.isNotEmpty() }?.let { key -> lines[index] = transposeKeyLine(rawLine, key, rename) }
+                    (ChordProSyntax.standardMeta(directive) ?: directive).takeIf { it.name == KEY }?.value?.takeIf { it.isNotEmpty() }?.let { key ->
+                        lines[index] = transposeKeyLine(rawLine, key, rename)
                     }
                 }
 

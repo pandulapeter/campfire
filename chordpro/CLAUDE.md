@@ -45,8 +45,10 @@ in `:domain:*`. `:data:source:local:implementation` uses it directly for the met
 - `ChordProParser` — `parse` (the whole song), `summarize` (the directives plus "does it have chords", from one walk,
   which is what the library scan calls for every file at startup) and `parseMetadata` (directive lines only, for a
   caller with no interest in the body). Total: it never throws and never rejects a document, because the
-  file on disk is the user's and half of it may be under the caret. Unknown directives are ignored; `{define}`, fonts,
-  colours, images and page directives are parsed and dropped. It also understands the Campfire 3 dialect, where
+  file on disk is the user's and half of it may be under the caret. Unknown directives are ignored; `{meta: title …}`
+  and the other standard names the spec defines as their standalone directive (`subtitle`, `artist`, `composer`,
+  `lyricist`, `album`, `year`, `key`, `capo`, `tempo`, `time`, `duration`) are read as that directive; `{define}`,
+  fonts, colours, images and page directives are parsed and dropped. It also understands the Campfire 3 dialect, where
   `{comment: Verse 1}` outside an environment was a section heading; one that no line follows before a blank line,
   another section or the end of the file stays the comment it was, since a section with nothing in it is not drawn.
 - `ChordProSerializer` — writes the model back as canonical ChordPro. The editor works on raw text, so the user's own

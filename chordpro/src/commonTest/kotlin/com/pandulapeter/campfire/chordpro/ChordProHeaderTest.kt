@@ -118,6 +118,7 @@ class ChordProHeaderTest {
         val text = "{t: T}\n{st: S}\n{meta: tag slow}\n{lang: hu}\n{capo: 2}"
 
         assertEquals(setOf("title", "subtitle", "tag", "language", "capo"), ChordProHeader.declaredMetadata(text))
+        assertEquals(setOf("title", "key"), ChordProHeader.declaredMetadata("{meta: title X}\n{meta: key G}"))
     }
 
     @Test

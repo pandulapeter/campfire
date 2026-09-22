@@ -157,6 +157,12 @@ class ChordProTransposerTest {
     }
 
     @Test
+    fun `a key written as meta is transposed with the chords`() {
+        assertEquals("{meta: key A}\n[A]a", ChordProTransposer.transposeText("{meta: key G}\n[G]a", 2))
+        assertTrue(ChordProTransposer.prefersFlats(ChordProParser.parse("{meta: key F}\n[C]a"), 0))
+    }
+
+    @Test
     fun `transposing text leaves comments and annotations alone and updates the key`() {
         val text = """
             # a note with [Am] inside
