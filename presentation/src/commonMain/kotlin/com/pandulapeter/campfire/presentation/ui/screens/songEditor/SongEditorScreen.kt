@@ -68,6 +68,7 @@ import androidx.compose.ui.draw.rotate
 import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.input.key.Key
 import androidx.compose.ui.input.key.KeyEventType
+import androidx.compose.ui.input.key.isAltPressed
 import androidx.compose.ui.input.key.isCtrlPressed
 import androidx.compose.ui.input.key.isMetaPressed
 import androidx.compose.ui.input.key.key
@@ -560,9 +561,10 @@ private fun ChordProTextField(
     BasicTextField(
         modifier = modifier
             // The same save as the app bar's button, for the hand that reaches for the keyboard instead. It lives on
-            // the field rather than in the window's key handler, which has no way to reach this text.
+            // the field rather than in the window's key handler, which has no way to reach this text. Not with Alt held:
+            // AltGr arrives as Ctrl + Alt on Windows and the web, and AltGr + S types a character on some layouts.
             .onPreviewKeyEvent { keyEvent ->
-                if (keyEvent.type == KeyEventType.KeyDown && keyEvent.key == Key.S && (keyEvent.isCtrlPressed || keyEvent.isMetaPressed)) {
+                if (keyEvent.type == KeyEventType.KeyDown && keyEvent.key == Key.S && (keyEvent.isCtrlPressed || keyEvent.isMetaPressed) && !keyEvent.isAltPressed) {
                     onSaveRequested()
                     true
                 } else {

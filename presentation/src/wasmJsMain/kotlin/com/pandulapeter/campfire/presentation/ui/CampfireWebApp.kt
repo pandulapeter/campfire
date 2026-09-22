@@ -25,7 +25,9 @@ import org.koin.compose.viewmodel.koinViewModel
 
 /**
  * Web shell of the shared UI. Links open in a new browser tab, files dropped on the page are imported, and the
- * browser asks before the page is left with unsaved text in the editor.
+ * browser asks before the page is left with unsaved text in the editor. Escape reaches Compose from a focused text
+ * field too ([startForwardingEscapeKey]), and Ctrl / Cmd + S is kept from the browser's own "Save page as"
+ * ([startSuppressingBrowserSave]).
  */
 @Composable
 fun CampfireWebApp(
@@ -35,7 +37,11 @@ fun CampfireWebApp(
 ) {
     DisposableEffect(Unit) {
         startForwardingEscapeKey()
-        onDispose { stopForwardingEscapeKey() }
+        startSuppressingBrowserSave()
+        onDispose {
+            stopForwardingEscapeKey()
+            stopSuppressingBrowserSave()
+        }
     }
     // Collected in an effect rather than read as lifecycle-aware state: a tab that is closed from the tab strip
     // while another one is in front is a hidden page, and that is no moment to have stopped listening.
@@ -156,6 +162,40 @@ private fun startForwardingEscapeKey() {
             window.addEventListener('keydown', window.campfireEscapeRepeatFilter, true);
             window.addEventListener('keydown', window.campfireEscapeForwarder);
             window.addEventListener('keyup', window.campfireEscapeForwarder);
+        })()"""
+    )
+}
+
+/**
+ * Keeps Ctrl / Cmd + S from the browser, whose "Save page as" would otherwise open over the editor every time the
+ * song is saved with it: the editor handles the key itself (see SongEditorScreen), but a key pressed in the hidden
+ * `<input>` that holds the caret is handed to Compose only after the browser has already acted on it, so Compose
+ * consuming it cannot stop the browser. Only the default is prevented, in the capture phase: the event still reaches
+ * that input, and through it the editor. A page of this app saved as HTML is a copy of nothing.
+ */
+private fun startSuppressingBrowserSave() {
+    js(
+        """(function () {
+            if (window.campfireSaveSuppressor) return;
+            window.campfireSaveSuppressor = function (event) {
+                // code, as Compose goes by it (Key.S is the physical key); key for a virtual keyboard, which has none.
+                var isS = event.code === 'KeyS' || event.key === 's' || event.key === 'S';
+                if ((event.ctrlKey || event.metaKey) && !event.altKey && isS) {
+                    event.preventDefault();
+                }
+            };
+            window.addEventListener('keydown', window.campfireSaveSuppressor, true);
+        })()"""
+    )
+}
+
+/** Undoes [startSuppressingBrowserSave]. */
+private fun stopSuppressingBrowserSave() {
+    js(
+        """(function () {
+            if (!window.campfireSaveSuppressor) return;
+            window.removeEventListener('keydown', window.campfireSaveSuppressor, true);
+            window.campfireSaveSuppressor = null;
         })()"""
     )
 }
