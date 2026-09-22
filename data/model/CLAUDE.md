@@ -27,7 +27,7 @@ Song and setlist identity is the **file name**, extension included — not a gen
 `LibraryFile` / `LibraryFileKind` describe the library as sync sees it — a name in one of the two folders, plus what
 the file system could tell about it. `LibraryFileKind.matches` is the one rule for whether a name is a library file,
 shared by the local listing and the sync engine. `SyncState` and the types around it (`SyncProviderId`, `SyncAccount`,
-`SyncOutcome`, `SyncSummary`, `SyncFailureReason`) are everything the UI needs to know about sync; `SyncState.Connected`
+`SyncOutcome`, `SyncDeletionDirection`, `SyncSummary`, `SyncFailureReason`) are everything the UI needs to know about sync; `SyncState.Connected`
 carries the outcome of the last run rather than a message of its own, so a failure stays on screen until something
 replaces it instead of flashing past in a snackbar. `SyncSummary.failed` names the files a run that reached its end
 could not move, so that such a run is not reported as one that left the two sides in step.

@@ -339,6 +339,12 @@
     </plurals>
     <string name="settings_sync_delete_locally">Delete them here too</string>
     <string name="settings_sync_keep_and_upload">Keep them and upload</string>
+    <plurals name="settings_sync_remote_deletions_pending">
+        <item quantity="one">The file you had synced is gone from this device. Delete it from the cloud folder too, or keep it and download it again?</item>
+        <item quantity="other">%1$d of your %2$d synced files are gone from this device. Delete them from the cloud folder too, or keep them and download them again?</item>
+    </plurals>
+    <string name="settings_sync_delete_remotely">Delete them from the cloud too</string>
+    <string name="settings_sync_keep_and_download">Keep them and download</string>
     <string name="settings_sync_notification_channel">Sync</string>
     <string name="settings_sync_notification_title">Syncing the library</string>
     <string name="settings_sync_redirect_page_title">Campfire is connected</string>

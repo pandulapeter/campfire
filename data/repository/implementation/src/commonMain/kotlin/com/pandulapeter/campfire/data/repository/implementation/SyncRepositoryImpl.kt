@@ -366,7 +366,11 @@ internal class SyncRepositoryImpl(
                         updateConnected {
                             it.copy(
                                 progress = null,
-                                lastOutcome = SyncOutcome.DeletionsNeedConfirmation(count = result.count, total = result.total),
+                                lastOutcome = SyncOutcome.DeletionsNeedConfirmation(
+                                    count = result.count,
+                                    total = result.total,
+                                    direction = result.direction,
+                                ),
                             )
                         }
                     }

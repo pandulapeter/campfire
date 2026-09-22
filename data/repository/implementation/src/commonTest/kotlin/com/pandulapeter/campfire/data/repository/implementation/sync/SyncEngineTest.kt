@@ -12,6 +12,7 @@ package com.pandulapeter.campfire.data.repository.implementation.sync
 import com.pandulapeter.campfire.data.model.domain.ImportLimits
 import com.pandulapeter.campfire.data.model.domain.LibraryFileKind
 import com.pandulapeter.campfire.data.model.domain.SyncAccount
+import com.pandulapeter.campfire.data.model.domain.SyncDeletionDirection
 import com.pandulapeter.campfire.data.model.domain.SyncDeletionPolicy
 import com.pandulapeter.campfire.data.model.domain.SyncProviderId
 import com.pandulapeter.campfire.data.source.local.api.LibraryStorageException
@@ -510,7 +511,8 @@ class SyncEngineTest {
             accountId = ACCOUNT_ID,
             onProgress = {},
             onIndexChanged = {},
-            deletionPolicy = SyncDeletionPolicy.ASK,
+            // The one song is the whole library, which an ordinary run asks about before emptying the folder.
+            deletionPolicy = SyncDeletionPolicy.DELETE_REMOTELY,
         )
 
         assertTrue(provider.files.isEmpty())
@@ -676,7 +678,10 @@ class SyncEngineTest {
             deletionPolicy = SyncDeletionPolicy.ASK,
         )
 
-        assertEquals(SyncEngine.Result.DeletionsNeedConfirmation(count = 10, total = 10), result)
+        assertEquals(
+            SyncEngine.Result.DeletionsNeedConfirmation(count = 10, total = 10, direction = SyncDeletionDirection.LOCAL),
+            result,
+        )
         assertEquals(library.keys, local.files.keys)
     }
 
@@ -716,6 +721,138 @@ class SyncEngineTest {
 
         assertEquals(10, assertIs<SyncEngine.Result.Completed>(result).summary.deletedLocally)
         assertTrue(local.files.isEmpty())
+    }
+
+    @Test
+    fun `a run that would empty the cloud folder stops and asks before anything moves`() = runTest {
+        val library = librarySongs(10)
+        val provider = FakeSyncProvider(files = library)
+
+        val result = SyncEngine(FakeLibraryFileLocalSource(files = emptyMap())).synchronize(
+            provider = provider,
+            document = syncedIndexOf(library),
+            accountId = ACCOUNT_ID,
+            onProgress = {},
+            onIndexChanged = {},
+            deletionPolicy = SyncDeletionPolicy.ASK,
+        )
+
+        assertEquals(
+            SyncEngine.Result.DeletionsNeedConfirmation(count = 10, total = 10, direction = SyncDeletionDirection.REMOTE),
+            result,
+        )
+        assertEquals(library.keys, provider.files.keys)
+    }
+
+    @Test
+    fun `a small library that vanished from this device stops and asks`() = runTest {
+        val library = librarySongs(5)
+        // Two of the five are gone from the folder as well, so only three would be deleted from it: fewer than the
+        // proportional rule asks about, and not the whole index either.
+        val provider = FakeSyncProvider(files = library.filterKeys { it != song(1) && it != song(2) })
+
+        val result = SyncEngine(FakeLibraryFileLocalSource(files = emptyMap())).synchronize(
+            provider = provider,
+            document = syncedIndexOf(library),
+            accountId = ACCOUNT_ID,
+            onProgress = {},
+            onIndexChanged = {},
+            deletionPolicy = SyncDeletionPolicy.ASK,
+        )
+
+        assertEquals(
+            SyncEngine.Result.DeletionsNeedConfirmation(count = 3, total = 5, direction = SyncDeletionDirection.REMOTE),
+            result,
+        )
+        assertEquals(3, provider.files.size)
+    }
+
+    @Test
+    fun `deleting the files a run asked about removes them from the cloud folder`() = runTest {
+        val library = librarySongs(10)
+        val provider = FakeSyncProvider(files = library)
+
+        val result = SyncEngine(FakeLibraryFileLocalSource(files = emptyMap())).synchronize(
+            provider = provider,
+            document = syncedIndexOf(library),
+            accountId = ACCOUNT_ID,
+            onProgress = {},
+            onIndexChanged = {},
+            deletionPolicy = SyncDeletionPolicy.DELETE_REMOTELY,
+        )
+
+        assertEquals(10, assertIs<SyncEngine.Result.Completed>(result).summary.deletedRemotely)
+        assertTrue(provider.files.isEmpty())
+    }
+
+    @Test
+    fun `keeping the files a run asked about downloads them again`() = runTest {
+        val library = librarySongs(10)
+        val local = FakeLibraryFileLocalSource(files = emptyMap())
+        val provider = FakeSyncProvider(files = library)
+
+        val result = SyncEngine(local).synchronize(
+            provider = provider,
+            document = syncedIndexOf(library),
+            accountId = ACCOUNT_ID,
+            onProgress = {},
+            onIndexChanged = {},
+            deletionPolicy = SyncDeletionPolicy.KEEP_AND_DOWNLOAD,
+        )
+
+        assertEquals(10, assertIs<SyncEngine.Result.Completed>(result).summary.downloaded)
+        assertEquals(library.keys, local.files.keys)
+        assertEquals(library.keys, provider.files.keys)
+    }
+
+    @Test
+    fun `answering about this device does not let a run empty the cloud folder`() = runTest {
+        val library = librarySongs(10)
+        val provider = FakeSyncProvider(files = library)
+
+        val result = SyncEngine(FakeLibraryFileLocalSource(files = emptyMap())).synchronize(
+            provider = provider,
+            document = syncedIndexOf(library),
+            accountId = ACCOUNT_ID,
+            onProgress = {},
+            onIndexChanged = {},
+            deletionPolicy = SyncDeletionPolicy.DELETE_LOCALLY,
+        )
+
+        assertEquals(SyncDeletionDirection.REMOTE, assertIs<SyncEngine.Result.DeletionsNeedConfirmation>(result).direction)
+        assertEquals(library.keys, provider.files.keys)
+    }
+
+    @Test
+    fun `answering about the cloud folder does not let a run empty this device`() = runTest {
+        val library = librarySongs(10)
+        val local = FakeLibraryFileLocalSource(files = library)
+
+        val result = SyncEngine(local).synchronize(
+            provider = FakeSyncProvider(),
+            document = indexOf(*library.toList().toTypedArray()),
+            accountId = ACCOUNT_ID,
+            onProgress = {},
+            onIndexChanged = {},
+            deletionPolicy = SyncDeletionPolicy.DELETE_REMOTELY,
+        )
+
+        assertEquals(SyncDeletionDirection.LOCAL, assertIs<SyncEngine.Result.DeletionsNeedConfirmation>(result).direction)
+        assertEquals(library.keys, local.files.keys)
+    }
+
+    @Test
+    fun `a run with no index never asks`() = runTest {
+        val result = SyncEngine(FakeLibraryFileLocalSource(files = emptyMap())).synchronize(
+            provider = FakeSyncProvider(),
+            document = SyncIndexDocument(),
+            accountId = ACCOUNT_ID,
+            onProgress = {},
+            onIndexChanged = {},
+            deletionPolicy = SyncDeletionPolicy.ASK,
+        )
+
+        assertIs<SyncEngine.Result.Completed>(result)
     }
 
     @Test
@@ -938,6 +1075,14 @@ class SyncEngineTest {
             accountId = ACCOUNT_ID,
             lastSyncedAt = 1,
             index = mapOf(file.first to SyncIndexEntry(localHash = localContentHash(file.second), remoteRevision = revision)),
+        )
+
+        /** An index that says the last run saw [files] as they are, on this device and at the revision the fake holds. */
+        fun syncedIndexOf(files: Map<SyncKey, ByteArray>) = SyncIndexDocument.of(
+            providerId = SyncProviderId.DROPBOX.id,
+            accountId = ACCOUNT_ID,
+            lastSyncedAt = 1,
+            index = files.mapValues { (_, bytes) -> SyncIndexEntry(localHash = localContentHash(bytes), remoteRevision = "r1") },
         )
 
         fun indexOf(vararg files: Pair<SyncKey, ByteArray>) = SyncIndexDocument.of(

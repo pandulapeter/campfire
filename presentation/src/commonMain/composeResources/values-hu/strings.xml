@@ -339,6 +339,12 @@
     </plurals>
     <string name="settings_sync_delete_locally">Törlés itt is</string>
     <string name="settings_sync_keep_and_upload">Megtartás és feltöltés</string>
+    <plurals name="settings_sync_remote_deletions_pending">
+        <item quantity="one">A szinkronizált fájlod eltűnt erről az eszközről. Töröljük a felhőmappából is, vagy megtartod és újra letöltöd?</item>
+        <item quantity="other">%2$d szinkronizált fájlodból %1$d eltűnt erről az eszközről. Töröljük őket a felhőmappából is, vagy megtartod és újra letöltöd őket?</item>
+    </plurals>
+    <string name="settings_sync_delete_remotely">Törlés a felhőből is</string>
+    <string name="settings_sync_keep_and_download">Megtartás és letöltés</string>
     <string name="settings_sync_notification_channel">Szinkronizálás</string>
     <string name="settings_sync_notification_title">A könyvtár szinkronizálása</string>
     <string name="settings_sync_redirect_page_title">A Campfire csatlakozott</string>

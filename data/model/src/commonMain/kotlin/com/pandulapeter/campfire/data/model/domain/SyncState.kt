@@ -95,24 +95,55 @@ sealed interface SyncOutcome {
 
     /**
      * The run stopped before anything moved, because it would have deleted [count] of the [total] files the last run
-     * saw - the shape of a remote folder that was emptied, renamed or replaced rather than of songs deleted one by
-     * one. Nothing answers this on its own: the user decides with a [SyncDeletionPolicy], and an ordinary run asks
-     * again for as long as the folder stays that way.
+     * saw, on the side [direction] names - the shape of a remote folder that was emptied, renamed or replaced, or of
+     * a library folder that went missing on this device, rather than of songs deleted one by one. Nothing answers
+     * this on its own: the user decides with a [SyncDeletionPolicy], and an ordinary run asks again for as long as
+     * the folder stays that way.
      */
-    data class DeletionsNeedConfirmation(val count: Int, val total: Int) : SyncOutcome
+    data class DeletionsNeedConfirmation(
+        val count: Int,
+        val total: Int,
+        val direction: SyncDeletionDirection,
+    ) : SyncOutcome
 }
 
-/** What a run does with the files it finds gone from the remote folder, see [SyncOutcome.DeletionsNeedConfirmation]. */
+/** Which side a stopped run would have deleted from, see [SyncOutcome.DeletionsNeedConfirmation]. */
+enum class SyncDeletionDirection {
+
+    /** The files are gone from the cloud folder and the run would remove them from this device. */
+    LOCAL,
+
+    /** The files are gone from this device and the run would remove them from the cloud folder. */
+    REMOTE,
+}
+
+/**
+ * What a run does with the files it finds gone from one side, see [SyncOutcome.DeletionsNeedConfirmation]. Each answer
+ * other than [ASK] waives the guard of one direction only, so a run told to delete on one side still stops if it
+ * would also empty the other.
+ */
 enum class SyncDeletionPolicy {
 
     /** Deletes them, unless there are so many that it stops and asks instead. What every run does unless told otherwise. */
     ASK,
 
-    /** Deletes them however many there are: the user has seen the number and said yes. */
+    /** Deletes them from this device however many there are: the user has seen the number and said yes. */
     DELETE_LOCALLY,
 
-    /** Keeps them and treats them as new on this device, so they go back up into the folder. */
+    /** Keeps them here and treats them as new on this device, so they go back up into the folder. */
     KEEP_AND_UPLOAD,
+
+    /** Deletes them from the cloud folder however many there are. */
+    DELETE_REMOTELY,
+
+    /** Keeps them in the folder and treats them as new there, so they come back down onto this device. */
+    KEEP_AND_DOWNLOAD;
+
+    /** Whether this answer lets a run delete many files from this device without asking. */
+    val waivesLocalGuard get() = this == DELETE_LOCALLY || this == KEEP_AND_UPLOAD
+
+    /** Whether this answer lets a run delete many files from the cloud folder without asking. */
+    val waivesRemoteGuard get() = this == DELETE_REMOTELY || this == KEEP_AND_DOWNLOAD
 }
 
 /**

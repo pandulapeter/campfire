@@ -126,13 +126,17 @@ import — is the only thing that walks the directory again.
   that was interrupted, and its marker would be cleared under it.
   `commonTest` runs the engine against an in-memory `SyncProvider` and `LibraryFileLocalSource` for the behaviour the
   planner's tests cannot show, and `SyncRepositoryImplTest` runs the repository against the same fakes plus the ones
-  in `FakeSyncCollaborators.kt`. A plan whose local deletions are more than half of the index (at least
-  `MIN_DELETIONS_TO_ASK` of them) or the whole of it is not applied under `SyncDeletionPolicy.ASK`: the engine returns
-  `Result.DeletionsNeedConfirmation` before those deletions move, and the repository reports it as the run's outcome,
-  rescanning only when an earlier pass of the same run had already moved files. `DELETE_LOCALLY` applies such a plan
-  as it is, and `KEEP_AND_UPLOAD` first drops the index entries of
-  every file that is here and not there, which the planner then reads as new local files. The policy is a parameter
-  of the one run it was given to, never state. A failure on one file does not end a run; only the three failures
+  in `FakeSyncCollaborators.kt`. A plan whose deletions on one side are more than half of the index (at least
+  `MIN_DELETIONS_TO_ASK` of them) or the whole of it is not applied under `SyncDeletionPolicy.ASK`, and neither is one
+  that would delete anything remotely while the local listing is empty and the index is not — a library folder that
+  went missing lists as empty on every platform, however small the library was. The engine returns
+  `Result.DeletionsNeedConfirmation` with the `SyncDeletionDirection` before those deletions move, asking about this
+  device first, and the repository reports it as the run's outcome, rescanning only when an earlier pass of the same
+  run had already moved files. `DELETE_LOCALLY` and `DELETE_REMOTELY` apply such a plan as it is;
+  `KEEP_AND_UPLOAD` first drops the index entries of every file that is here and not there, which the planner then
+  reads as new local files, and `KEEP_AND_DOWNLOAD` those of every file that is there and not here, which it reads as
+  new remote ones. An answer waives the guard of its own direction only, so a run told to delete here still stops if it
+  would also empty the cloud folder. The policy is a parameter of the one run it was given to, never state. A failure on one file does not end a run; only the three failures
   that make every further call pointless (the credentials refused, the service unreachable, the remote folder full)
   do — and a `CancellationException` is caught *first* and rethrown, since a stopped run is not a few
   hundred files that failed. A file that failed is named in `SyncSummary.failed`, and a run that has any does not

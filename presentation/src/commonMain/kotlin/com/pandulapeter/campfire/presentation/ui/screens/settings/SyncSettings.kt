@@ -31,6 +31,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
+import com.pandulapeter.campfire.data.model.domain.SyncDeletionDirection
 import com.pandulapeter.campfire.data.model.domain.SyncDeletionPolicy
 import com.pandulapeter.campfire.data.model.domain.SyncFailureReason
 import com.pandulapeter.campfire.data.model.domain.SyncOutcome
@@ -56,6 +57,7 @@ import com.pandulapeter.campfire.presentation.resources.settings_sync_connection
 import com.pandulapeter.campfire.presentation.resources.settings_sync_connection_failed_unknown
 import com.pandulapeter.campfire.presentation.resources.settings_sync_date_time
 import com.pandulapeter.campfire.presentation.resources.settings_sync_delete_locally
+import com.pandulapeter.campfire.presentation.resources.settings_sync_delete_remotely
 import com.pandulapeter.campfire.presentation.resources.settings_sync_deletions_pending
 import com.pandulapeter.campfire.presentation.resources.settings_sync_description
 import com.pandulapeter.campfire.presentation.resources.settings_sync_disconnect
@@ -66,6 +68,7 @@ import com.pandulapeter.campfire.presentation.resources.settings_sync_failed_rem
 import com.pandulapeter.campfire.presentation.resources.settings_sync_failed_storage
 import com.pandulapeter.campfire.presentation.resources.settings_sync_failed_unknown
 import com.pandulapeter.campfire.presentation.resources.settings_sync_interrupted
+import com.pandulapeter.campfire.presentation.resources.settings_sync_keep_and_download
 import com.pandulapeter.campfire.presentation.resources.settings_sync_keep_and_upload
 import com.pandulapeter.campfire.presentation.resources.settings_sync_last_synced
 import com.pandulapeter.campfire.presentation.resources.settings_sync_never
@@ -74,6 +77,7 @@ import com.pandulapeter.campfire.presentation.resources.settings_sync_preparing
 import com.pandulapeter.campfire.presentation.resources.settings_sync_progress
 import com.pandulapeter.campfire.presentation.resources.settings_sync_redirect_page_message
 import com.pandulapeter.campfire.presentation.resources.settings_sync_redirect_page_title
+import com.pandulapeter.campfire.presentation.resources.settings_sync_remote_deletions_pending
 import com.pandulapeter.campfire.presentation.resources.settings_sync_unavailable
 import com.pandulapeter.campfire.presentation.ui.CampfireViewModel
 import com.pandulapeter.campfire.data.source.remote.api.model.AuthorizationCompletionPage
@@ -194,18 +198,35 @@ private fun ColumnScope.ConnectedSyncSettings(
         headlineContent = { Text(textResource(Res.string.settings_sync_connected_as, syncState.account.displayName)) },
         supportingContent = { Text(syncState.statusText()) },
     )
-    AnimatedSettingsRow(isVisible = syncState.lastOutcome is SyncOutcome.DeletionsNeedConfirmation) {
+    AnimatedSettingsRow(value = (syncState.lastOutcome as? SyncOutcome.DeletionsNeedConfirmation)?.direction) { direction ->
         Column {
-            ActionListItem(
-                title = stringResource(Res.string.settings_sync_delete_locally),
-                icon = painterResource(Res.drawable.ic_delete),
-                onClick = { viewModel.synchronizeLibrary(SyncDeletionPolicy.DELETE_LOCALLY) },
-            )
-            ActionListItem(
-                title = stringResource(Res.string.settings_sync_keep_and_upload),
-                icon = painterResource(Res.drawable.ic_cloud),
-                onClick = { viewModel.synchronizeLibrary(SyncDeletionPolicy.KEEP_AND_UPLOAD) },
-            )
+            when (direction) {
+                SyncDeletionDirection.LOCAL -> {
+                    ActionListItem(
+                        title = stringResource(Res.string.settings_sync_delete_locally),
+                        icon = painterResource(Res.drawable.ic_delete),
+                        onClick = { viewModel.synchronizeLibrary(SyncDeletionPolicy.DELETE_LOCALLY) },
+                    )
+                    ActionListItem(
+                        title = stringResource(Res.string.settings_sync_keep_and_upload),
+                        icon = painterResource(Res.drawable.ic_cloud),
+                        onClick = { viewModel.synchronizeLibrary(SyncDeletionPolicy.KEEP_AND_UPLOAD) },
+                    )
+                }
+
+                SyncDeletionDirection.REMOTE -> {
+                    ActionListItem(
+                        title = stringResource(Res.string.settings_sync_delete_remotely),
+                        icon = painterResource(Res.drawable.ic_delete),
+                        onClick = { viewModel.synchronizeLibrary(SyncDeletionPolicy.DELETE_REMOTELY) },
+                    )
+                    ActionListItem(
+                        title = stringResource(Res.string.settings_sync_keep_and_download),
+                        icon = painterResource(Res.drawable.ic_cloud),
+                        onClick = { viewModel.synchronizeLibrary(SyncDeletionPolicy.KEEP_AND_DOWNLOAD) },
+                    )
+                }
+            }
         }
     }
     // Never swapped for "Stop syncing" in its own place: the second tap of a double tap lands on whatever the first
@@ -247,7 +268,10 @@ private fun SyncState.Connected.statusText(): String = when (val current = progr
     null -> when (val outcome = lastOutcome) {
         SyncOutcome.Interrupted -> stringResource(Res.string.settings_sync_interrupted)
         is SyncOutcome.DeletionsNeedConfirmation -> pluralStringResource(
-            Res.plurals.settings_sync_deletions_pending,
+            when (outcome.direction) {
+                SyncDeletionDirection.LOCAL -> Res.plurals.settings_sync_deletions_pending
+                SyncDeletionDirection.REMOTE -> Res.plurals.settings_sync_remote_deletions_pending
+            },
             outcome.count,
             outcome.count,
             outcome.total,

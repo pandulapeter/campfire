@@ -10,6 +10,7 @@
 package com.pandulapeter.campfire.data.repository.implementation.sync
 
 import com.pandulapeter.campfire.data.model.domain.ImportLimits
+import com.pandulapeter.campfire.data.model.domain.SyncDeletionDirection
 import com.pandulapeter.campfire.data.model.domain.SyncDeletionPolicy
 import com.pandulapeter.campfire.data.model.domain.SyncProgress
 import com.pandulapeter.campfire.data.model.domain.SyncSummary
@@ -166,12 +167,43 @@ internal class SyncEngine(
                 val remoteKeys = remote.mapTo(mutableSetOf()) { it.key }
                 index = index.filterKeys { it !in localKeys || it in remoteKeys }
             }
+            if (deletionPolicy == SyncDeletionPolicy.KEEP_AND_DOWNLOAD) {
+                // The same the other way round: a file that is there, is not here and has no index entry is a
+                // download, which is how the folder's files come back onto a device that lost its library folder.
+                val localKeys = local.mapTo(mutableSetOf()) { it.key }
+                val remoteKeys = remote.mapTo(mutableSetOf()) { it.key }
+                index = index.filterKeys { it !in remoteKeys || it in localKeys }
+            }
             val plan = SyncPlanner.plan(local = local, remote = remote, index = index)
             // Which is what most runs find, so nothing below this costs anything on an ordinary launch.
             if (plan.isEmpty()) break
-            val deletions = plan.count { it is SyncOperation.DeleteLocal }
-            if (deletionPolicy == SyncDeletionPolicy.ASK && index.isNotEmpty() && deletions.isTooManyToDeleteOutOf(index.size)) {
-                return Result.DeletionsNeedConfirmation(count = deletions, total = index.size)
+            // This device is asked about first: it is the side the user is looking at, and the one they can still fix.
+            // An answer waives only the guard it was given for, so a run that would empty both sides asks twice, once
+            // per run - two questions about one folder are better than one answer that empties both of them.
+            val localDeletions = plan.count { it is SyncOperation.DeleteLocal }
+            if (!deletionPolicy.waivesLocalGuard && index.isNotEmpty() && localDeletions.isTooManyToDeleteOutOf(index.size)) {
+                return Result.DeletionsNeedConfirmation(
+                    count = localDeletions,
+                    total = index.size,
+                    direction = SyncDeletionDirection.LOCAL,
+                )
+            }
+            val remoteDeletions = plan.count { it is SyncOperation.DeleteRemote }
+            // A library folder that is gone rather than emptied looks exactly like one emptied on purpose: the JVM
+            // storage recreates it and lists nothing, and iOS lists nothing for a directory that is not there. So an
+            // empty local listing with an index that is not empty always asks, however small the library - the
+            // proportional rule below would let most of a small library go without a word.
+            val hasLostEverythingLocally = local.isEmpty() && index.isNotEmpty()
+            if (!deletionPolicy.waivesRemoteGuard &&
+                index.isNotEmpty() &&
+                remoteDeletions > 0 &&
+                (hasLostEverythingLocally || remoteDeletions.isTooManyToDeleteOutOf(index.size))
+            ) {
+                return Result.DeletionsNeedConfirmation(
+                    count = remoteDeletions,
+                    total = index.size,
+                    direction = SyncDeletionDirection.REMOTE,
+                )
             }
             val outcome = apply(
                 provider = provider,
@@ -584,8 +616,9 @@ internal class SyncEngine(
     )
 
     /**
-     * Whether a plan deletes enough of what the last run saw that it is more likely a remote folder that was emptied,
-     * renamed or replaced than songs somebody deleted. Without this, every device would carry out such a folder's
+     * Whether a plan deletes, on one side, enough of what the last run saw that it is more likely a folder that was
+     * emptied, renamed, replaced or lost than songs somebody deleted one by one - the remote folder for a deletion on
+     * this device, the library folder for one in the cloud. Without this, a run would carry out such a folder's
      * absence faithfully, keeping only what had been edited since the last run - and edit-beats-deletion is exactly
      * what would make that loss quiet. More than half is the threshold, with [MIN_DELETIONS_TO_ASK] so that tidying
      * up a small library does not ask every time, except where the plan deletes everything the index knows.
@@ -600,10 +633,14 @@ internal class SyncEngine(
             val index: SyncIndexDocument,
         ) : Result
 
-        /** Nothing moved: the plan would have deleted [count] of the [total] files the index knows, and asks first. */
+        /**
+         * Nothing moved: the plan would have deleted [count] of the [total] files the index knows from the side
+         * [direction] names, and asks first.
+         */
         data class DeletionsNeedConfirmation(
             val count: Int,
             val total: Int,
+            val direction: SyncDeletionDirection,
         ) : Result
     }
 
@@ -627,7 +664,7 @@ internal class SyncEngine(
     private companion object {
         const val MAXIMUM_PASSES = 2
 
-        /** The fewest local deletions that can stop a run, unless they are the whole library, see [isTooManyToDeleteOutOf]. */
+        /** The fewest deletions on one side that can stop a run, unless they are the whole library, see [isTooManyToDeleteOutOf]. */
         const val MIN_DELETIONS_TO_ASK = 5
 
         /** How many library files are read and hashed at once while the run is preparing. */

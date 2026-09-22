@@ -93,9 +93,9 @@ interface SyncRepository {
      * how it ended arrive through [syncState]. That is also what lets it carry on while the app is in the
      * background on Android, where the screen that started it may be gone.
      *
-     * @param deletionPolicy What happens to files found gone from the remote folder. [SyncDeletionPolicy.ASK] stops a
-     *   run that would delete most of the library and reports [SyncOutcome.DeletionsNeedConfirmation]; the other two
-     *   are the answers to that question.
+     * @param deletionPolicy What happens to files found gone from one side. [SyncDeletionPolicy.ASK] stops a run that
+     *   would delete most of the library on this device or in the cloud folder and reports
+     *   [SyncOutcome.DeletionsNeedConfirmation]; the other four are the answers to that question, two per direction.
      */
     fun synchronize(deletionPolicy: SyncDeletionPolicy = SyncDeletionPolicy.ASK)
 

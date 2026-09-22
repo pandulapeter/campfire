@@ -33,6 +33,11 @@ your own storage. Until you do, nothing on the network is touched at all.
   and following it would leave every device with only the songs edited since the last sync. **Delete them here too**
   goes ahead; **Keep them and upload** puts the files back into the cloud folder instead. Until you answer, every run
   asks again.
+- The same holds the other way round: a run that would delete most of the cloud folder because the files are gone
+  from this device stops and asks too — and it always asks when this device's library is empty, however few songs it
+  held, since a library folder that was moved or deleted looks exactly like that. **Delete them from the cloud too**
+  goes ahead; **Keep them and download** brings the files back onto this device instead. An answer covers one
+  direction only, so a run that would empty both sides asks about each in turn.
 - A song that changed on two devices at once is never merged. The local one keeps its name and the incoming one lands
   next to it as ` (2)`, a copy for you to look at and delete.
 - Renaming a file reaches sync as a deletion and a new file, since a run is keyed by name and knows nothing of moves.

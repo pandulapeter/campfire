@@ -103,6 +103,20 @@ class SyncPlannerTest {
         ),
     )
 
+    /** The input a library folder that went missing hands the planner, and what the engine's remote guard keys on. */
+    @Test
+    fun `every file the index knows becomes a remote deletion when the library folder is gone`() {
+        val keys = (1..5).map { SyncKey(LibraryFileKind.SONG, "song_$it.cho") }
+        assertEquals(
+            expected = keys.map { SyncOperation.DeleteRemote(it, revision = "r1") },
+            actual = SyncPlanner.plan(
+                local = emptyList(),
+                remote = keys.map { remote(it, "r1") },
+                index = keys.associateWith { entry(hash = "a", revision = "r1") },
+            ),
+        )
+    }
+
     /**
      * The rule that keeps work from disappearing: a song edited on the phone while it was deleted on the laptop
      * comes back, rather than the deletion winning and the edit being lost with nothing to show for it.

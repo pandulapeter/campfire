@@ -11,6 +11,7 @@ package com.pandulapeter.campfire.data.repository.implementation
 
 import com.pandulapeter.campfire.data.model.domain.LibraryFileKind
 import com.pandulapeter.campfire.data.model.domain.SyncAccount
+import com.pandulapeter.campfire.data.model.domain.SyncDeletionDirection
 import com.pandulapeter.campfire.data.model.domain.SyncDeletionPolicy
 import com.pandulapeter.campfire.data.model.domain.SyncFailureReason
 import com.pandulapeter.campfire.data.model.domain.SyncOutcome
@@ -167,6 +168,41 @@ class SyncRepositoryImplTest {
 
         assertIs<SyncOutcome.DeletionsNeedConfirmation>(state.lastOutcome)
         assertTrue(song(12) in snapshots.last())
+    }
+
+    @Test
+    fun `a run that would empty the cloud folder says so in its outcome`() = runTest {
+        val json = Json {
+            prettyPrint = true
+            encodeDefaults = true
+        }
+        val library = (1..10).associate { song(it) to "Song $it".encodeToByteArray() }
+        val stateLocalSource = FakeSyncStateLocalSource(
+            index = json.encodeToString(
+                SyncIndexDocument.of(
+                    providerId = SyncProviderId.DROPBOX.id,
+                    accountId = ACCOUNT.indexKey(),
+                    lastSyncedAt = 1,
+                    index = library.mapValues { (_, bytes) -> SyncIndexEntry(localHash = localContentHash(bytes), remoteRevision = "r1") },
+                ),
+            ),
+        )
+        val provider = FakeSyncProvider(files = library, account = ACCOUNT)
+        val repository = repository(
+            provider = provider,
+            stateLocalSource = stateLocalSource,
+            libraryFileLocalSource = FakeLibraryFileLocalSource(files = emptyMap()),
+        )
+
+        repository.restore()
+        repository.synchronize(SyncDeletionPolicy.ASK)
+        val state = repository.awaitOutcome()
+
+        assertEquals(
+            SyncOutcome.DeletionsNeedConfirmation(count = 10, total = 10, direction = SyncDeletionDirection.REMOTE),
+            state.lastOutcome,
+        )
+        assertEquals(library.keys, provider.files.keys)
     }
 
     /** What the browser engine of the HTTP client throws for a request that failed, were it to get past the provider. */
