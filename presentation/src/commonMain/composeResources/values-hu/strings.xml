@@ -112,6 +112,8 @@
     <string name="setlists_new_setlist_title">Lista címe</string>
     <string name="setlists_remove_song">Eltávolítás a listáról</string>
     <string name="setlists_reorder">Átrendezés</string>
+    <string name="setlists_move_up">Mozgatás feljebb</string>
+    <string name="setlists_move_down">Mozgatás lejjebb</string>
     <string name="setlists_actions">Műveletek</string>
     <string name="setlists_song_assignments">Dalok hozzárendelése</string>
     <string name="setlists_add_songs">Dalok hozzáadása</string>

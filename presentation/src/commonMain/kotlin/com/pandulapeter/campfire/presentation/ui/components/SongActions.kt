@@ -102,6 +102,8 @@ internal fun ActionsMenuItem(
  *   screen that opened it is showing the song as part of that setlist and would have the ground pulled from under
  *   it. Null on the setlists screen, where a row is the song's membership of the setlist and giving it up is the
  *   whole point, and null in the library, where no setlist is in play.
+ * @param leadingItems Entries that belong to the row rather than to the song, put before the song's own: moving a row
+ *   of a setlist up or down.
  */
 @Composable
 internal fun SongActionsButton(
@@ -110,6 +112,7 @@ internal fun SongActionsButton(
     viewModel: CampfireViewModel,
     song: Song,
     lockedSetlistFileName: String?,
+    leadingItems: @Composable (select: (action: () -> Unit) -> Unit) -> Unit = {},
 ) {
     val filePicker = LocalFilePicker.current
     ActionsMenu(
@@ -121,6 +124,7 @@ internal fun SongActionsButton(
         // observer per row for a value none of them draws. The state is kept up to date by the view model whether
         // or not anybody collects it, so the menu opens on the right star rather than correcting itself a frame in.
         val songFileNamesInSetlists by viewModel.songFileNamesInSetlists.collectAsStateWithLifecycle()
+        leadingItems(select)
         // Each entry acts through `select`, which closes the menu before it acts - so that it is gone by the time the
         // dialog or the picker it opens is on the screen - and only once.
         ActionsMenuItem(

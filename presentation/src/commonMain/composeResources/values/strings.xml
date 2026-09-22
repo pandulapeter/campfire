@@ -112,6 +112,8 @@
     <string name="setlists_new_setlist_title">Setlist title</string>
     <string name="setlists_remove_song">Remove from setlist</string>
     <string name="setlists_reorder">Reorder</string>
+    <string name="setlists_move_up">Move up</string>
+    <string name="setlists_move_down">Move down</string>
     <string name="setlists_actions">Setlist actions</string>
     <string name="setlists_song_assignments">Song assignments</string>
     <string name="setlists_add_songs">Add songs</string>

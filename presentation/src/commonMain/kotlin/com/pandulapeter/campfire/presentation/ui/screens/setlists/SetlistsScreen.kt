@@ -39,6 +39,9 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.input.nestedscroll.nestedScroll
+import androidx.compose.ui.semantics.CustomAccessibilityAction
+import androidx.compose.ui.semantics.customActions
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -46,12 +49,16 @@ import com.pandulapeter.campfire.data.model.domain.UserPreferences
 import com.pandulapeter.campfire.presentation.resources.Res
 import com.pandulapeter.campfire.presentation.resources.ic_add
 import com.pandulapeter.campfire.presentation.resources.ic_archive
+import com.pandulapeter.campfire.presentation.resources.ic_move_down
+import com.pandulapeter.campfire.presentation.resources.ic_move_up
 import com.pandulapeter.campfire.presentation.resources.ic_setlists_remove
 import com.pandulapeter.campfire.presentation.resources.ic_tune
 import com.pandulapeter.campfire.presentation.resources.setlists
 import com.pandulapeter.campfire.presentation.resources.setlists_add_songs
 import com.pandulapeter.campfire.presentation.resources.setlists_archived
 import com.pandulapeter.campfire.presentation.resources.setlists_create_setlist
+import com.pandulapeter.campfire.presentation.resources.setlists_move_down
+import com.pandulapeter.campfire.presentation.resources.setlists_move_up
 import com.pandulapeter.campfire.presentation.resources.setlists_new_setlist
 import com.pandulapeter.campfire.presentation.resources.setlists_search
 import com.pandulapeter.campfire.presentation.resources.setlists_sort_and_filter
@@ -346,8 +353,9 @@ private fun SetlistList(
                             )
                         }
                     }
+                    val rows = setlistWithSongs.rows(draggedSetlist)
                     items(
-                        items = setlistWithSongs.rows(draggedSetlist),
+                        items = rows,
                         key = { row -> SetlistItemKey(setlistFileName = setlistWithSongs.setlist.fileName, songFileName = row.entry.songFileName).string.orEmpty() },
                         contentType = { "song" },
                     ) { row ->
@@ -356,6 +364,26 @@ private fun SetlistList(
                         // A setlist of one song has no order to change, so its row offers no grip and no long press to
                         // drag it by: a handle that can only put the row back where it was promises something it cannot do.
                         val isReorderable = !isPerformanceModeEnabled && setlistWithSongs.entries.size > 1
+                        // The drag written as two steps, for whoever cannot drag: a screen reader, a keyboard. Each is the
+                        // same single write a finished drag makes, and a row with nowhere to go in a direction is offered
+                        // no step that way.
+                        val songFileNames = rows.map { it.entry.songFileName }
+                        val onMoveUp: (() -> Unit)? = songFileNames.movedOnePlace(entry.songFileName, by = -1)?.takeIf { isReorderable }?.let { order ->
+                            { viewModel.reorderSetlist(setlistFileName = setlistWithSongs.setlist.fileName, songFileNames = order) }
+                        }
+                        val onMoveDown: (() -> Unit)? = songFileNames.movedOnePlace(entry.songFileName, by = 1)?.takeIf { isReorderable }?.let { order ->
+                            { viewModel.reorderSetlist(setlistFileName = setlistWithSongs.setlist.fileName, songFileNames = order) }
+                        }
+                        val moveUpLabel = stringResource(Res.string.setlists_move_up)
+                        val moveDownLabel = stringResource(Res.string.setlists_move_down)
+                        // Merged so that a missing song's row, which has no clickable of its own, is still the one node a
+                        // screen reader lands on; a present row is merged by its own click handling already.
+                        val moveActions = Modifier.semantics(mergeDescendants = true) {
+                            customActions = listOfNotNull(
+                                onMoveUp?.let { CustomAccessibilityAction(moveUpLabel) { it(); true } },
+                                onMoveDown?.let { CustomAccessibilityAction(moveDownLabel) { it(); true } },
+                            )
+                        }
                         val onDragStarted: (Offset) -> Unit = { draggingSetlistFileName = setlistWithSongs.setlist.fileName }
                         // The placement animation goes to ReorderableItem rather than onto the item itself, because it
                         // is what decides which rows may have one: the row under the finger is placed by the drag's own
@@ -395,13 +423,15 @@ private fun SetlistList(
                                                 viewModel = viewModel,
                                                 entry = entry,
                                                 setlistFileName = setlistWithSongs.setlist.fileName,
+                                                onMoveUp = onMoveUp,
+                                                onMoveDown = onMoveDown,
                                             )
                                         }
                                     }
                                 }
                                 when (entry) {
                                     is CampfireViewModel.SetlistWithSongs.Entry.Present -> SongListItem(
-                                        modifier = Modifier.longPressDraggableHandle(enabled = isReorderable, onDragStarted = onDragStarted, onDragStopped = onDragStopped),
+                                        modifier = moveActions.longPressDraggableHandle(enabled = isReorderable, onDragStarted = onDragStarted, onDragStopped = onDragStopped),
                                         song = entry.song,
                                         index = row.index,
                                         // The setlist's own transposition of this song, which is why the same song
@@ -420,7 +450,7 @@ private fun SetlistList(
 
                                     // Nothing to open, but it still takes its place in the order and can be removed.
                                     is CampfireViewModel.SetlistWithSongs.Entry.Missing -> MissingSongListItem(
-                                        modifier = Modifier.longPressDraggableHandle(enabled = isReorderable, onDragStarted = onDragStarted, onDragStopped = onDragStopped),
+                                        modifier = moveActions.longPressDraggableHandle(enabled = isReorderable, onDragStarted = onDragStarted, onDragStopped = onDragStopped),
                                         index = row.index,
                                         songFileName = entry.songFileName,
                                         actions = actions,
@@ -457,6 +487,13 @@ private fun CampfireViewModel.SetlistWithSongs.rows(draggedSetlist: DraggedSetli
     }
 }
 
+/** This order with [songFileName] one place further along it ([by] = 1) or back ([by] = -1), or null where it has no room to go. */
+private fun List<String>.movedOnePlace(songFileName: String, by: Int): List<String>? {
+    val from = indexOf(songFileName)
+    val to = from + by
+    return if (from < 0 || to !in indices) null else toMutableList().apply { add(to, removeAt(from)) }
+}
+
 /** One row of a setlist as it is drawn: the entry, and the place it sits in right now. */
 private data class SetlistRow(
     val entry: CampfireViewModel.SetlistWithSongs.Entry,
@@ -473,12 +510,17 @@ private data class DraggedSetlist(
  * The overflow button of one row of a setlist and the actions behind it. A row whose file has gone missing has no
  * song to act on, so it is offered the only thing that still applies to it - being taken out of the setlist -
  * rather than a list full of entries that would all fail.
+ *
+ * @param onMoveUp Null where the row cannot move that way, or cannot be moved at all.
+ * @param onMoveDown Null where the row cannot move that way, or cannot be moved at all.
  */
 @Composable
 private fun SetlistEntryActions(
     viewModel: CampfireViewModel,
     entry: CampfireViewModel.SetlistWithSongs.Entry,
     setlistFileName: String,
+    onMoveUp: (() -> Unit)?,
+    onMoveDown: (() -> Unit)?,
 ) = when (entry) {
     // Nothing is locked: the sheet's box for this very setlist is what unticks the song out of it, which is the
     // swipe written as a list rather than as a gesture.
@@ -486,9 +528,11 @@ private fun SetlistEntryActions(
         viewModel = viewModel,
         song = entry.song,
         lockedSetlistFileName = null,
+        leadingItems = { select -> MoveMenuItems(select, onMoveUp, onMoveDown) },
     )
 
     is CampfireViewModel.SetlistWithSongs.Entry.Missing -> ActionsMenu { select ->
+        MoveMenuItems(select, onMoveUp, onMoveDown)
         ActionsMenuItem(
             title = stringResource(Res.string.setlists_remove_song),
             icon = painterResource(Res.drawable.ic_setlists_remove),
@@ -497,6 +541,29 @@ private fun SetlistEntryActions(
                     viewModel.removeSongFromSetlist(songFileName = entry.songFileName, setlistFileName = setlistFileName)
                 }
             },
+        )
+    }
+}
+
+/** The two steps a row of a setlist can be moved by without a drag, for as far as it can go each way. */
+@Composable
+private fun MoveMenuItems(
+    select: (action: () -> Unit) -> Unit,
+    onMoveUp: (() -> Unit)?,
+    onMoveDown: (() -> Unit)?,
+) {
+    onMoveUp?.let { onClick ->
+        ActionsMenuItem(
+            title = stringResource(Res.string.setlists_move_up),
+            icon = painterResource(Res.drawable.ic_move_up),
+            onClick = { select(onClick) },
+        )
+    }
+    onMoveDown?.let { onClick ->
+        ActionsMenuItem(
+            title = stringResource(Res.string.setlists_move_down),
+            icon = painterResource(Res.drawable.ic_move_down),
+            onClick = { select(onClick) },
         )
     }
 }
