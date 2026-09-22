@@ -51,7 +51,7 @@ internal class SearchState(
      * It also outlives [close] by design, since the field animates away rather than disappearing and one that
      * emptied itself on the first frame of that animation would be read as the text having been deleted.
      */
-    val textFieldState = TextFieldState(initialText = initialQuery)
+    val textFieldState = TextFieldState(initialText = initialQuery.take(MAX_SEARCH_QUERY_LENGTH))
 
     /**
      * How far a back gesture that would close the search has been dragged, from 0 to 1, and 0 whenever there is no
@@ -78,3 +78,10 @@ internal class SearchState(
         _isOpen.value = false
     }
 }
+
+/**
+ * The longest query a search field takes. A search is a few words, and the field's text goes into the saved state of
+ * the Activity - twice, for a list screen - where a paste of a few hundred thousand characters is more than one Binder
+ * transaction holds, and Android crashes the app on its way to the background.
+ */
+internal const val MAX_SEARCH_QUERY_LENGTH = 100

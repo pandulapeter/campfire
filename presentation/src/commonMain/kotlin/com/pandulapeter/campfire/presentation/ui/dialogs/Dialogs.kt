@@ -140,6 +140,7 @@ import com.pandulapeter.campfire.data.model.domain.SongLanguage
 import com.pandulapeter.campfire.presentation.ui.CampfireViewModel
 import com.pandulapeter.campfire.presentation.ui.components.ActionListItem
 import com.pandulapeter.campfire.presentation.ui.components.CheckboxListItem
+import com.pandulapeter.campfire.presentation.ui.components.MAX_SEARCH_QUERY_LENGTH
 import com.pandulapeter.campfire.presentation.ui.components.PickableLanguage
 import com.pandulapeter.campfire.presentation.ui.components.RadioListItem
 import com.pandulapeter.campfire.presentation.ui.components.SettingsSectionTitle
@@ -784,7 +785,7 @@ private fun SongLanguagesDialog(
                 OutlinedTextField(
                     modifier = Modifier.fillMaxWidth().focusRequester(focusRequester),
                     value = query,
-                    onValueChange = { query = it.replace("\n", "") },
+                    onValueChange = { query = it.replace("\n", "").take(MAX_SEARCH_QUERY_LENGTH) },
                     label = { Text(stringResource(Res.string.song_details_language_search)) },
                     singleLine = true,
                     keyboardOptions = KeyboardOptions(imeAction = ImeAction.Search),
@@ -1035,7 +1036,7 @@ private fun PickerSearchField(
     OutlinedTextField(
         modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp),
         value = query,
-        onValueChange = { onQueryChange(it.replace("\n", "")) },
+        onValueChange = { onQueryChange(it.replace("\n", "").take(MAX_SEARCH_QUERY_LENGTH)) },
         placeholder = { Text(placeholder) },
         leadingIcon = {
             Icon(

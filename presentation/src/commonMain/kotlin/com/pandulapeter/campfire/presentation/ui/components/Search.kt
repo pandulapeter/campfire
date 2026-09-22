@@ -41,7 +41,9 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.foundation.text.input.InputTransformation
 import androidx.compose.foundation.text.input.KeyboardActionHandler
+import androidx.compose.foundation.text.input.TextFieldBuffer
 import androidx.compose.foundation.text.input.TextFieldLineLimits
 import androidx.compose.foundation.text.input.clearText
 import androidx.compose.foundation.text.input.placeCursorAtEnd
@@ -523,6 +525,7 @@ private fun SearchField(
             BasicTextField(
                 modifier = Modifier.weight(1f).padding(end = 8.dp).focusRequester(focusRequester),
                 state = searchState.textFieldState,
+                inputTransformation = TruncateSearchQuery,
                 lineLimits = TextFieldLineLimits.SingleLine,
                 textStyle = MaterialTheme.typography.bodyLarge.copy(color = MaterialTheme.colorScheme.onSurface),
                 cursorBrush = SolidColor(MaterialTheme.colorScheme.primary),
@@ -569,6 +572,13 @@ private fun SearchField(
                 }
             }
         }
+    }
+}
+
+/** Keeps what fits of a paste rather than refusing all of it, which is what `InputTransformation.maxLength` does. */
+private object TruncateSearchQuery : InputTransformation {
+    override fun TextFieldBuffer.transformInput() {
+        if (length > MAX_SEARCH_QUERY_LENGTH) replace(MAX_SEARCH_QUERY_LENGTH, length, "")
     }
 }
 
