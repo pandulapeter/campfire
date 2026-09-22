@@ -19,9 +19,18 @@ import com.pandulapeter.campfire.chordpro.model.GridToken
  */
 object ChordProTransposer {
 
-    /** Transposes a chord name, keeping an optional chord's parentheses and its bass note. */
-    fun transposeChord(name: String, semitones: Int, preferFlats: Boolean) =
-        ChordProChordNames.rewriteNotes(name) { note -> transposeNote(note, semitones, preferFlats) }
+    /**
+     * Transposes a chord name, keeping an optional chord's parentheses and its bass note.
+     *
+     * A word that is not a chord name is returned as it was. Brackets are how a chart marks its parts as often as
+     * they hold chords — `[Intro]`, `[Break]`, `[Chorus 2x]` — and every one of those that starts with a note letter
+     * would otherwise be moved, with the `b` after an `E` eaten as a flat sign. [ChordProNotation.toGerman] has
+     * asked the same question of the same names since it was written.
+     */
+    fun transposeChord(name: String, semitones: Int, preferFlats: Boolean): String {
+        if (!ChordProChordNames.isChordName(name)) return name
+        return ChordProChordNames.rewriteNotes(name) { note -> transposeNote(note, semitones, preferFlats) }
+    }
 
     /**
      * Transposes every chord in the model (lyrics chords, grid chords, tabs; never annotations) and the key.
@@ -274,7 +283,7 @@ object ChordProTransposer {
     private fun isWrittenInFlats(names: List<String>): Boolean {
         var flats = 0
         var sharps = 0
-        names.flatMap(ChordProChordNames::notes).forEach { note ->
+        names.filter(ChordProChordNames::isChordName).flatMap(ChordProChordNames::notes).forEach { note ->
             if (noteIndices.containsKey(note.getOrNull(0))) {
                 when (accidentals[note.getOrNull(1)]) {
                     1 -> sharps++

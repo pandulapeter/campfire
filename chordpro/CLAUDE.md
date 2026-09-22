@@ -35,9 +35,8 @@ in `:domain:*`. `:data:source:local:implementation` uses it directly for the met
   heading. The two halves of a tab are runs of their own, so the text transposition moves them as two fingerboards as
   well. A grid line keeps what comes before its first bar and after its last one as text, the margins ChordPro puts
   labels and comments in, and a cell may hold several chords joined with `~`, each transposed on its own.
-- `ChordProSyntax` — the shared low-level rules (the directive and chord regexes, `chordNameRegex` for "is this whole
-  word a chord and not a word that starts with a letter", long/short directive names, a value separated from a
-  known directive name by a colon or by whitespace alone (the spec allows both, and a line in braces whose name the app
+- `ChordProSyntax` — the shared low-level rules (the directive and chord regexes, long/short directive names, a value
+  separated from a known directive name by a colon or by whitespace alone (the spec allows both, and a line in braces whose name the app
   does not know stays the lyrics it has always been shown as), the `start_of_` / `end_of_` prefixes, `label`
   attributes in either quotes, and no label at all for a value made of other attributes, what counts as a tag or a language directive, `metadataKind` for the one name a
   directive is known by whichever of its spellings a file uses, `isStaffLine` for "is this line of a tab environment
@@ -102,8 +101,10 @@ in `:domain:*`. `:data:source:local:implementation` uses it directly for the met
   against the file already on disk with: the same song, tagged in the app or written by hand, is not a conflict.
 - `ChordProTransposer` — moves chords by semitones, on the model (the viewer) or directly on the text keeping every
   byte of formatting (the editor's transpose action). Chooses sharps or flats from the song's key, follows the bass
-  note after `/`, understands German `H`, and leaves annotations alone. A caller that knows better passes
-  `preferFlats` and gets that spelling instead, which is what the accidentals preference does; forced that way it is
+  note after `/`, understands German `H`, and leaves annotations alone. A bracket is only moved when
+  `ChordProChordNames.isChordName` accepts the whole of it, so a `[Break]` or a `[Chorus 2x]` somebody wrote without
+  the `*` is left where it is, and does not vote on the spelling either — the same question `ChordProNotation` has
+  always asked. A caller that knows better passes `preferFlats` and gets that spelling instead, which is what the accidentals preference does; forced that way it is
   worth running for no semitones at all, so only `semitones == 0` *and* no forced spelling short-circuits. Its walk
   over the model is `rewriteChords`, which takes the rename as a function so that `ChordProNotation` can reuse it;
   the two differ only in what a tab is, a fingerboard to one and a page of chord names to the other.

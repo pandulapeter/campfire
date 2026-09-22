@@ -206,6 +206,68 @@ class ChordProTransposerTest {
     }
 
     @Test
+    fun `a section label in brackets is not transposed`() {
+        val text = "[Intro] [Break] [Chorus 2x] [Bass] [Ebony]"
+
+        assertEquals(text, ChordProTransposer.transposeText(text, 3))
+        assertEquals(ChordProParser.parse(text), ChordProTransposer.transpose(ChordProParser.parse(text), 3))
+    }
+
+    @Test
+    fun `a forced spelling leaves a label alone`() {
+        assertEquals("[Ebony] tower", ChordProTransposer.transposeText("[Ebony] tower", 0, preferFlats = false))
+    }
+
+    @Test
+    fun `a label keeps the spaces inside its brackets`() {
+        assertEquals("[ Break ]la", ChordProTransposer.transposeText("[ Break ]la", 2))
+    }
+
+    @Test
+    fun `a grid cell that is not a chord is left alone`() {
+        assertEquals(
+            "{start_of_grid}\n| Bm . A | Coda |\n{end_of_grid}",
+            ChordProTransposer.transposeText("{start_of_grid}\n| Am . G | Coda |\n{end_of_grid}", 2, preferFlats = false),
+        )
+    }
+
+    @Test
+    fun `a key that is not a chord name is left alone`() {
+        assertEquals("{key: Dm (capo 2)}", ChordProTransposer.transposeText("{key: Dm (capo 2)}", 2))
+        assertEquals("{key: Em}", ChordProTransposer.transposeText("{key: Dm}", 2))
+    }
+
+    @Test
+    fun `a real chord is still transposed`() {
+        listOf(
+            "C", "Am7/G", "C#m7b5", "Bsus4", "(Em)", "F#m", "Gadd9", "Cmaj7", "Am(no3)", "D7sus4/A", "Bb/D", "H7", "A-", "D♭",
+            "G♯m", "D/f#",
+        ).forEach { name ->
+            assertTrue(ChordProTransposer.transposeChord(name, 1, preferFlats = false) != name, name)
+        }
+    }
+
+    @Test
+    fun `a caret keeps its place on a line of labels that did not change`() {
+        val before = "[Break]la\n[C]lo"
+        val (after, inside) = transposed(before, 1, 3)
+
+        assertEquals("[Break]la\n[C#]lo", after)
+        assertEquals(3, inside)
+        assertEquals(after.length, transposed(before, 1, before.length).second)
+    }
+
+    @Test
+    fun `a tab chord row still moves and its labels do not`() {
+        val text = "{start_of_tab}\nRiff 1\nAm      G\ne|-0-----3-|\n{end_of_tab}"
+
+        assertEquals(
+            "{start_of_tab}\nRiff 1\nBm      A\ne|-2-----5-|\n{end_of_tab}",
+            ChordProTransposer.transposeText(text, 2, preferFlats = false),
+        )
+    }
+
+    @Test
     fun `an abc block is left alone by the transposition`() {
         val text = "{start_of_abc}\n[CEG]2\n{end_of_abc}\n[C]la"
 
