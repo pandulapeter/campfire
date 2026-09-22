@@ -135,8 +135,9 @@ in `:domain:*`. `:data:source:local:implementation` uses it directly for the met
   cut at columns of its own and its rows come before the next one's. Every row after the first
   repeats the string names in front of the staff (`e|`, `B|`, padded to one width where an `Eb|` sits above a ` G|`),
   and a line above the staff is left out of the rows it has nothing to say in, so the chord names travel with the
-  notes they are written over. A run with no staff line in it at all is not tablature but preformatted text, which
-  `isTablature` says, and it is returned whole for the viewer to scroll instead. Nothing in it is a measurement: it
+  notes they are written over. Such a line is cut at the nearest place in front of the column that is not inside a
+  character, so a surrogate pair or a letter and its combining mark travel into one row whole. A run with no staff
+  line in it at all is not tablature but preformatted text, which `isTablature` says, and it is returned whole for the viewer to scroll instead. Nothing in it is a measurement: it
   is asked for a number of characters, and the viewer works that out from its font. A run that would wrap into more
   row lines than half its characters, which only a crafted file does, is returned whole.
 - `ChordProNotation` — German notation, and the one thing in here that is about how a song is *read* rather than what

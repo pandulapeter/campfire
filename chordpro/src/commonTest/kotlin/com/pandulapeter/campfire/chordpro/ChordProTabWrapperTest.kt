@@ -120,6 +120,51 @@ class ChordProTabWrapperTest {
     }
 
     @Test
+    fun `a row is never cut through a surrogate pair`() {
+        val staff = "|" + "-".repeat(8)
+
+        assertEquals(
+            listOf(
+                listOf("x" + "\uD834\uDD1E".repeat(4), "e$staff", "B$staff"),
+                listOf("  " + "\uD834\uDD1E".repeat(2), "e$staff", "B$staff"),
+                listOf("e|--|", "B|--|"),
+            ),
+            ChordProTabWrapper.wrap(clefs, maxColumns = 10),
+        )
+    }
+
+    @Test
+    fun `a row is never cut between a letter and its accent`() {
+        val rows = ChordProTabWrapper.wrap(accent, maxColumns = 12)
+
+        assertEquals("a".repeat(11), rows.first().first())
+        assertEquals("  e\u0301bbbb", rows[1].first())
+    }
+
+    @Test
+    fun `nothing is lost or repeated by moving a cut back`() {
+        listOf(clefs to 10, accent to 12).forEach { (lines, maxColumns) ->
+            val rows = ChordProTabWrapper.wrap(lines, maxColumns)
+            // Every row after the first puts the width of the string names in front of the text line.
+            val text = rows.mapIndexedNotNull { index, row ->
+                row.first().takeUnless { it.startsWith("e|") }?.let { line -> if (index == 0) line else line.drop(2) }
+            }.joinToString("")
+
+            assertEquals(lines.first().trimEnd(), text)
+            assertTrue(rows.flatten().none { line -> line.hasLoneSurrogate() })
+        }
+    }
+
+    @Test
+    fun `a line of nothing but combining marks does not stall the wrap`() {
+        val staff = listOf("e|" + "-".repeat(200) + "|", "B|" + "-".repeat(200) + "|")
+        val rows = ChordProTabWrapper.wrap(listOf("\u0301".repeat(200)) + staff, maxColumns = 20)
+
+        assertEquals(ChordProTabWrapper.wrap(staff, maxColumns = 20).size, rows.size)
+        assertEquals(200, rows.flatten().sumOf { line -> line.count { it == '\u0301' } })
+    }
+
+    @Test
     fun `a quiet cut never falls inside a chord name`() {
         val lines = listOf(
             "                Cmaj7",
@@ -295,4 +340,24 @@ class ChordProTabWrapperTest {
         "e|---0---|---1---|",
         "B|---1---|---1---|",
     )
+
+    /** A line above the staff made of `x` and six G clefs, each of which is a surrogate pair. */
+    private val clefs = listOf(
+        "x" + "\uD834\uDD1E".repeat(6),
+        "e|" + "-".repeat(18) + "|",
+        "B|" + "-".repeat(18) + "|",
+    )
+
+    /** A line above the staff with an `e` accented by a combining mark where the first row wants to end. */
+    private val accent = listOf(
+        "a".repeat(11) + "e\u0301bbbb",
+        "e|" + "-".repeat(18) + "|",
+        "B|" + "-".repeat(18) + "|",
+    )
+
+    private fun String.hasLoneSurrogate() = indices.any { index ->
+        val character = this[index]
+        (character.isHighSurrogate() && getOrNull(index + 1)?.isLowSurrogate() != true) ||
+                (character.isLowSurrogate() && getOrNull(index - 1)?.isHighSurrogate() != true)
+    }
 }

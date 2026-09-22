@@ -87,7 +87,12 @@ object ChordProTabWrapper {
             val capacity = (maxColumns - prefixWidth).coerceAtLeast(MIN_CAPACITY)
             val end = if (length - contentStart <= capacity) length else cutColumn(lines, isStaffLine, barColumns, contentStart, contentStart + capacity)
             val rowLines = lines.mapIndexedNotNull { index, line ->
-                val content = if (start < line.length) line.substring(start, minOf(end, line.length)) else ""
+                // The same boundary on both ends: this row stops where the next one starts, so a character the shared
+                // column falls inside travels whole into the row whose column has passed it. A staff line is ASCII, so
+                // for it the boundary is the column itself, which is what makes this safe to ask of every line.
+                val from = cutBoundary(line, start)
+                val to = cutBoundary(line, end)
+                val content = if (from < to) line.substring(from, to) else ""
                 val row = if (start == 0) content else (if (isStaffLine[index]) prefixes[index].padStart(prefixWidth) else " ".repeat(prefixWidth)) + content
                 row.trimEnd().takeIf { isStaffLine[index] || it.isNotBlank() }
             }
@@ -192,6 +197,40 @@ object ChordProTabWrapper {
         return maxEnd
     }
 
+    /**
+     * Where [line] may be cut for a row that the staff under it wants to end at [column].
+     *
+     * A tab is cut at columns the staff decides, and the staff is dashes, bars and digits. A line written above it
+     * is somebody's own text, where a character may be written with more than one `Char` — an astral symbol as a
+     * surrogate pair, a letter and the mark that accents it — and cutting through one draws a replacement glyph at
+     * the end of one row and another at the start of the next. So the column is moved back off the middle of a
+     * character. It is moved back for both sides of the cut, since the next row starts where this one ended, which
+     * is what keeps the character in exactly one row.
+     */
+    private fun cutBoundary(line: String, column: Int): Int {
+        var index = column.coerceAtMost(line.length)
+        var moved = 0
+        while (index > 0 && index < line.length && moved < MAX_CLUSTER && line.isInsideCharacter(index)) {
+            index--
+            moved++
+        }
+        return index
+    }
+
+    /** Whether the character at [index] belongs to the one in front of it rather than starting one of its own. */
+    private fun String.isInsideCharacter(index: Int) =
+        (this[index].isLowSurrogate() && this[index - 1].isHighSurrogate()) || this[index].isCombiningMark()
+
+    /**
+     * The combining marks a pasted title or chord name carries: the Latin block a decomposed accent is written
+     * with, and the general categories every other script's marks fall in. `:data:model` has its own, narrower
+     * answer for folding accents out of a file name; this module depends on nothing, so it carries its own.
+     */
+    private fun Char.isCombiningMark() = this in '\u0300'..'\u036F' ||
+            category == CharCategory.NON_SPACING_MARK ||
+            category == CharCategory.COMBINING_SPACING_MARK ||
+            category == CharCategory.ENCLOSING_MARK
+
     /** Whether nothing on the line would be torn by a cut in front of [column]: a dash on a staff, a space elsewhere. */
     private fun isQuietColumn(line: String, isStaffLine: Boolean, column: Int) =
         column >= line.length || line[column] == (if (isStaffLine) DASH else ' ')
@@ -203,4 +242,10 @@ object ChordProTabWrapper {
     private const val DASH = '-'
     private const val MAX_PREFIX_LETTERS = 2
     private const val SHARP = '#'
+
+    /**
+     * A crafted line of nothing but combining marks would otherwise make the walk back as long as the line, once per
+     * row; past this many the cut is made where the staff asked and one glyph is drawn wrong.
+     */
+    private const val MAX_CLUSTER = 16
 }
