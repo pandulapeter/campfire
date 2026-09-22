@@ -214,11 +214,12 @@ item bound to the device and `FileStorage.keepOutOfDeviceBackup` on the index.
 ## Build
 
 - Dependency versions in `gradle/libs.versions.toml` (including `android-compileSdk` / `android-minSdk`). The iOS
-  version lives in the Xcode project.
+  version and build number are `campfire.versionName` and `campfire.ios.buildNumber`, written into the built
+  `Info.plist` by a build phase of the Xcode project, which sets no version of its own.
 - **Everything configurable is a `campfire.*` Gradle property**, declared with a default in `gradle.properties` and
-  read with `project.property("campfire.x")`: the app version and version code, the Android release signing values,
-  and the Dropbox app key. `property` rather than `findProperty`, so a typo fails the build instead of writing the
-  string "null" into an APK. Inside a `tasks.registering { }` block it has to be `project.property(...)`, or the
+  read with `project.property("campfire.x")`: the app version, the Android version code and the iOS build number, the
+  Android release signing values, the Dropbox app key, and whether the web distribution is precompressed. `property`
+  rather than `findProperty`, so a typo fails the build instead of writing the string "null" into an APK. Inside a `tasks.registering { }` block it has to be `project.property(...)`, or the
   lookup goes to the task.
 - **`local.properties` overrides any of them, and is never committed.** `settings.gradle.kts` loads it and writes each
   entry onto every project before it is configured, so no build file knows the mechanism exists — they all just read
