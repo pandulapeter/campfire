@@ -141,7 +141,7 @@ internal class DropboxSyncProvider(
         // Best effort: the local credentials are already gone, and a token that cannot be revoked simply expires.
         try {
             withTimeoutOrNull(REVOKE_TIMEOUT_MILLIS) {
-                httpClient.post(REVOKE_URL) { header("Authorization", "Bearer $accessToken") }
+                transport { httpClient.post(REVOKE_URL) { header("Authorization", "Bearer $accessToken") } }
             }
         } catch (exception: CancellationException) {
             throw exception
@@ -376,7 +376,9 @@ internal class DropboxSyncProvider(
     /**
      * Anything the transport throws - no route to the host, a dropped connection, a timeout - is one thing to the
      * user: the service could not be reached, and trying again later is worth doing. Only the call itself is
-     * wrapped, so that a body Campfire cannot make sense of stays the programming error it is.
+     * wrapped, so that a body Campfire cannot make sense of stays the programming error it is. The browser engine
+     * reports a failed `fetch` as a `kotlin.Error`, not an `Exception`, so the last branch takes any `Throwable`:
+     * everything `block` can throw that is not a cancellation is the call failing.
      *
      * A cancellation is the one exception that says nothing about the network. Stopping a run or giving up on a
      * consent page resumes every suspended request with one, and it has to leave here as what it is: the engine and
@@ -396,8 +398,8 @@ internal class DropboxSyncProvider(
         throw exception
     } catch (exception: DropboxApiException) {
         throw exception
-    } catch (exception: Exception) {
-        throw SyncNetworkException(exception.message ?: "Dropbox could not be reached.", exception)
+    } catch (throwable: Throwable) {
+        throw SyncNetworkException(throwable.message ?: "Dropbox could not be reached.", throwable)
     }
 
     private suspend fun HttpResponse.ensureSuccessful() {

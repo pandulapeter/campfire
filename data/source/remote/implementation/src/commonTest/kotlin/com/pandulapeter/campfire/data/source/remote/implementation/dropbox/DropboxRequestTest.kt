@@ -158,6 +158,35 @@ class DropboxRequestTest {
         assertFailsWith<SyncNetworkException> { provider.list() }
     }
 
+    /** What the browser engine throws for a `fetch` that failed: a `kotlin.Error`, not an `Exception`. */
+    @Test
+    fun `a request the browser could not send is the service not being reached`() = runTest {
+        val provider = provider { throw Error("Fail to fetch") }
+        assertFailsWith<SyncNetworkException> { provider.list() }
+        assertFailsWith<SyncNetworkException> { provider.download(LibraryFileKind.SONG, "song.cho") }
+        assertFailsWith<SyncNetworkException> { provider.upload(LibraryFileKind.SONG, "song.cho", ByteArray(1), null) }
+    }
+
+    @Test
+    fun `a token exchange the browser could not send is the service not being reached`() = runTest {
+        val provider = provider(storage = ConnectedStorage(expiresAt = 0)) { request ->
+            if (request.url.toString() == TOKEN_URL) throw Error("Fail to fetch")
+            respondJson("""{"entries":[],"cursor":"","has_more":false}""")
+        }
+        assertFailsWith<SyncNetworkException> { provider.list() }
+    }
+
+    @Test
+    fun `disconnecting while the browser cannot send the revocation still disconnects`() = runTest {
+        val storage = ConnectedStorage()
+        val provider = provider(storage = storage) { request ->
+            if (request.url.toString() == REVOKE_URL) throw Error("Fail to fetch")
+            error("No other request was expected.")
+        }
+        provider.disconnect()
+        assertNull(storage.credentials)
+    }
+
     @Test
     fun `the stored account is answered without a request`() = runTest {
         val provider = provider(
@@ -256,12 +285,19 @@ class DropboxRequestTest {
         headers = headersOf("Content-Type", "application/json"),
     )
 
-    /** A connection whose access token is good for as long as any test runs, so no request needs a refresh. */
-    private class ConnectedStorage(private val names: String = "") : SyncStateLocalSource {
-        override suspend fun loadSyncCredentials() =
-            """{"providerId":"dropbox","accessToken":"access","refreshToken":"refresh","expiresAt":${Long.MAX_VALUE}$names}"""
+    /**
+     * A connection whose access token is good for as long as any test runs unless [expiresAt] says otherwise, so no
+     * request needs a refresh. [credentials] is what the provider last stored.
+     */
+    private class ConnectedStorage(names: String = "", expiresAt: Long = Long.MAX_VALUE) : SyncStateLocalSource {
+        var credentials: String? =
+            """{"providerId":"dropbox","accessToken":"access","refreshToken":"refresh","expiresAt":$expiresAt$names}"""
 
-        override suspend fun saveSyncCredentials(document: String?) = Unit
+        override suspend fun loadSyncCredentials() = credentials
+
+        override suspend fun saveSyncCredentials(document: String?) {
+            credentials = document
+        }
         override suspend fun loadSyncIndex(): String? = null
         override suspend fun saveSyncIndex(document: String?) = Unit
     }
@@ -269,5 +305,6 @@ class DropboxRequestTest {
     private companion object {
         const val APP_KEY = "test-app-key"
         const val TOKEN_URL = "https://api.dropboxapi.com/oauth2/token"
+        const val REVOKE_URL = "https://api.dropboxapi.com/2/auth/token/revoke"
     }
 }

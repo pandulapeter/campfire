@@ -385,6 +385,13 @@ internal class SyncRepositoryImpl(
                 println("The sync run failed: ${exception.message}")
                 withContext(NonCancellable) { finishRunCutShort(latestIndex, hasFinishedOperations) }
                 updateConnected { it.copy(progress = null, lastOutcome = SyncOutcome.Failure(exception.toFailureReason())) }
+            } catch (throwable: Throwable) {
+                // Not an Exception: what a synchronous js(...) call throws on the web (a JsException), or a real Error.
+                // The run still owes everything a failed one owes, or the marker stays on disk and the lists keep the
+                // old library. Not thrown on, since the scope's handler would only log it again.
+                println("The sync run failed: $throwable")
+                withContext(NonCancellable) { finishRunCutShort(latestIndex, hasFinishedOperations) }
+                updateConnected { it.copy(progress = null, lastOutcome = SyncOutcome.Failure(SyncFailureReason.UNKNOWN)) }
             } finally {
                 // The one thing that has to be true on every way out, including any added later: no progress means
                 // the settings screen offers to start a run again instead of offering to stop one that is over.

@@ -111,6 +111,29 @@ class SyncRepositoryImplTest {
         assertTrue(song(1) in snapshots.last())
     }
 
+    /** What the browser engine of the HTTP client throws for a request that failed, were it to get past the provider. */
+    @Test
+    fun `a run that ends in something other than an exception still reports and clears its marker`() = runTest {
+        val stateLocalSource = FakeSyncStateLocalSource()
+        var downloads = 0
+        val repository = repository(
+            provider = FakeSyncProvider(
+                files = (1..3).associate { song(it) to "Song $it".encodeToByteArray() },
+                onDownload = { if (++downloads == 2) throw Error("Fail to fetch") },
+                account = ACCOUNT,
+            ),
+            stateLocalSource = stateLocalSource,
+        )
+
+        repository.restore()
+        repository.synchronize(SyncDeletionPolicy.ASK)
+        val state = repository.awaitOutcome()
+
+        assertEquals(SyncOutcome.Failure(SyncFailureReason.UNKNOWN), state.lastOutcome)
+        assertNull(state.progress)
+        assertFalse("\"isRunInProgress\": true" in stateLocalSource.index.orEmpty())
+    }
+
     @Test
     fun `a run in which a file failed keeps the time of the last run that was in step`() = runTest {
         val stateLocalSource = FakeSyncStateLocalSource(index = """{"lastSyncedAt":42}""")

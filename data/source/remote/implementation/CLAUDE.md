@@ -80,7 +80,9 @@ redirect URIs character for character, which is why the desktop port is fixed.
   concatenated, hashed again), both on the `Sha256` in `:data:source:remote:api`.
 - `network/` — the `HttpClient` factory, one engine per target (OkHttp, CIO, Darwin, `fetch`), and `Json.kt`:
   `toAsciiJsonString` exists because Dropbox takes upload and download arguments in an HTTP header, which may only
-  carry ASCII, and Campfire's files are named after song titles.
+  carry ASCII, and Campfire's files are named after song titles. The browser engine reports a failed `fetch` as a
+  `kotlin.Error` rather than an `Exception`, so the provider's `transport` takes any `Throwable` that is not a
+  cancellation as the service not being reached.
 
 Tested in `commonTest`, run on the desktop target: the hashing, the encoders, and the authorization URL — get a
 parameter wrong there and the user meets an error page on the service's own site with nothing in the app to say why —
