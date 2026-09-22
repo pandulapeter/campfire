@@ -72,7 +72,9 @@ The ones that carry real logic:
   one needs no mapper — the preference is a flag, and `ChordProNotation` either runs or does not.
 - `NormalizeTextUseCaseImpl` — accent-insensitive, case-insensitive text for sorting and searching, over
   `:data:model`'s `withoutAccent` table, which the normalized file names share, with the combining marks of a
-  decomposed accent dropped (`isCombiningMark`).
+  decomposed accent dropped (`isCombiningMark`). `NormalizeSearchTextUseCaseImpl` is the search's key on top of it:
+  the same text with the spaces, punctuation and symbols taken out, so `ymca` finds `Y.M.C.A.` and `acdc` finds
+  `AC/DC`. It stays apart because a sort by it would file `a b` after `ab c`.
 - `ExportFileNames.kt` — what a file is called on the way out: `LibraryFiles.normalizedName` over the whole name, or
   over each half of a song's `artist - title` separately so that the dash between them survives. Which separator it
   splits on is what makes the rule idempotent — a hand written library name still has the spaced one, a name the app

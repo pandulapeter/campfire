@@ -16,7 +16,7 @@ the parser itself.
 Conventions: one interface per use case, a single `operator fun invoke(...)`, named `Get*` (observe a flow or read one
 value), `Load*` (trigger a read), `Save*` / `Create*` / `Update*` / `Rename*` / `Delete*` (change something), `Import*` / `Export*` for the file
 paths, `Is*` for a question with a yes or no answer (`IsFirstRun`), or a verb for pure transforms (`NormalizeText`,
-`ParseChordPro`, `TransposeChordPro`, `TransposeChordProText`, `ConvertChordProNotation`).
+`NormalizeSearchText`, `ParseChordPro`, `TransposeChordPro`, `TransposeChordProText`, `ConvertChordProNotation`).
 
 - `ScreenData` bundles what the song and setlist screens need in one object: the setlists (every one of them, archived
   included, in the order `UserPreferences.SetlistSortingMode` asks for), the songs filtered and sorted the way the

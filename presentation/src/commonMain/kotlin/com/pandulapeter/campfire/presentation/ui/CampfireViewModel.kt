@@ -65,6 +65,7 @@ import com.pandulapeter.campfire.domain.api.useCases.ImportFilesUseCase
 import com.pandulapeter.campfire.domain.api.useCases.IsFirstRunUseCase
 import com.pandulapeter.campfire.domain.api.useCases.LoadScreenDataUseCase
 import com.pandulapeter.campfire.domain.api.useCases.NormalizeLanguageCodeUseCase
+import com.pandulapeter.campfire.domain.api.useCases.NormalizeSearchTextUseCase
 import com.pandulapeter.campfire.domain.api.useCases.NormalizeTextUseCase
 import com.pandulapeter.campfire.domain.api.useCases.ParseChordProUseCase
 import com.pandulapeter.campfire.domain.api.useCases.PrepareImportUseCase
@@ -160,6 +161,7 @@ class CampfireViewModel(
     private val synchronizeLibrary: SynchronizeLibraryUseCase,
     private val normalizeLanguageCode: NormalizeLanguageCodeUseCase,
     private val normalizeText: NormalizeTextUseCase,
+    private val normalizeSearchText: NormalizeSearchTextUseCase,
     private val parseChordPro: ParseChordProUseCase,
     private val transposeChordPro: TransposeChordProUseCase,
     private val transposeChordProText: TransposeChordProTextUseCase,
@@ -511,7 +513,7 @@ class CampfireViewModel(
      * once per keystroke: the search runs over the whole list on every character typed.
      */
     private val searchableSongs = filteredSongs.map { songs ->
-        songs.map { SearchableSong(song = it, title = normalizeText(it.title), artist = normalizeText(it.artist)) }
+        songs.map { SearchableSong(song = it, title = normalizeSearchText(it.title), artist = normalizeSearchText(it.artist)) }
     }.asState(emptyList())
 
     /**
@@ -522,7 +524,7 @@ class CampfireViewModel(
      * artist in the library: collected cold it would do all of that once per reader, on every library change.
      */
     private val searchableSongsByFileName = allSongs.map { songs ->
-        songs.associateBy({ it.fileName }) { SearchableSong(song = it, title = normalizeText(it.title), artist = normalizeText(it.artist)) }
+        songs.associateBy({ it.fileName }) { SearchableSong(song = it, title = normalizeSearchText(it.title), artist = normalizeSearchText(it.artist)) }
     }.asState(emptyMap())
 
     /**
@@ -636,7 +638,7 @@ class CampfireViewModel(
         if (query.isBlank()) {
             setlists
         } else {
-            val normalizedQuery = normalizeText(query)
+            val normalizedQuery = normalizeSearchText(query)
             setlists.filter { it.setlist.matchesSearch(normalizedQuery = normalizedQuery, songs = songsByFileName) }
         }
     }.asState(emptyList())
@@ -1741,6 +1743,9 @@ class CampfireViewModel(
      */
     fun normalize(text: String) = normalizeText(text)
 
+    /** What the pickers' search fields and the tag suggestions compare, the same key the two list screens search by. */
+    fun normalizeForSearch(text: String) = normalizeSearchText(text)
+
     /**
      * The language a piece of text names, for the picker's search field: a reader who knows a song is in Hungarian
      * may well type `hun` or `HU` rather than the word the app would show them, and either has to find the one row
@@ -1920,7 +1925,7 @@ class CampfireViewModel(
      * ranking is decided before sorting - a comparator's selector runs on every comparison, not once per song.
      */
     private fun List<SearchableSong>.filterAndRank(query: String): List<Song> {
-        val normalizedQuery = normalizeText(query)
+        val normalizedQuery = normalizeSearchText(query)
         return mapNotNull { song ->
             // Both sides are already lower case, so these don't have to pay for a case insensitive comparison.
             if (song.title.contains(normalizedQuery) || song.artist.contains(normalizedQuery)) {
@@ -1946,8 +1951,8 @@ class CampfireViewModel(
      * searched for, so it matches nothing.
      */
     private fun Setlist.matchesSearch(normalizedQuery: String, songs: Map<String, SearchableSong>): Boolean =
-        normalizeText(title).contains(normalizedQuery) ||
-            normalizeText(description).contains(normalizedQuery) ||
+        normalizeSearchText(title).contains(normalizedQuery) ||
+            normalizeSearchText(description).contains(normalizedQuery) ||
             entries.any { entry ->
                 songs[entry.songFileName]?.let { it.title.contains(normalizedQuery) || it.artist.contains(normalizedQuery) } == true
             }
@@ -2077,7 +2082,7 @@ class CampfireViewModel(
         val doesArtistStartWithQuery: Boolean,
     )
 
-    /** A song with the normalized title and artist the search and the grouping compare. */
+    /** A song with the title and artist the search compares, normalized for searching. */
     private class SearchableSong(
         val song: Song,
         val title: String,

@@ -678,9 +678,11 @@ private fun AddSongTagDialog(
         viewModel.setSongTag(fileName = dialog.song.fileName, tag = tag, isSelected = true)
         viewModel.dismissDialog()
     }
-    val suggestions = remember(tags, dialog.song, value) {
+    val searchableTags = remember(tags) { tags.map { it to viewModel.normalizeForSearch(it.name) } }
+    val suggestions = remember(searchableTags, dialog.song, value) {
         val songTags = dialog.song.tags.mapTo(mutableSetOf()) { it.lowercase() }
-        tags.filter { it.name.lowercase() !in songTags && it.name.contains(value.trim(), ignoreCase = true) }
+        val normalizedValue = viewModel.normalizeForSearch(value)
+        searchableTags.mapNotNull { (tag, name) -> tag.takeIf { it.name.lowercase() !in songTags && normalizedValue in name } }
     }
     AlertDialog(
         onDismissRequest = viewModel::dismissDialog,
@@ -862,8 +864,10 @@ private fun SetlistPicker(
     // Answered by the title or the description, the way the setlists screen's own search answers, but not by the
     // songs inside: the song this sheet is about is the only one that matters here.
     val matches = remember(pickableSetlists, query) {
-        val normalizedQuery = viewModel.normalize(query)
-        pickableSetlists.filter { normalizedQuery in viewModel.normalize(it.title) || normalizedQuery in viewModel.normalize(it.description) }
+        val normalizedQuery = viewModel.normalizeForSearch(query)
+        pickableSetlists.filter { setlist ->
+            normalizedQuery in viewModel.normalizeForSearch(setlist.title) || normalizedQuery in viewModel.normalizeForSearch(setlist.description)
+        }
     }
     val isCreatingFirstSetlist = rememberSaveable { setlists.isEmpty() }
     var isNamingNewSetlist by rememberSaveable { mutableStateOf(isCreatingFirstSetlist) }
@@ -959,14 +963,21 @@ private fun SongPicker(
     // Normalized once per library rather than once per keystroke, since the search runs over every song on every
     // character typed.
     val pickableSongs = remember(songs, initialSongFileNames) {
-        val pickable = songs.map { PickableSong(song = it, title = viewModel.normalize(it.title), artist = viewModel.normalize(it.artist)) }
+        val pickable = songs.map { song ->
+            PickableSong(
+                song = song,
+                title = viewModel.normalizeForSearch(song.title),
+                artist = viewModel.normalizeForSearch(song.artist),
+            )
+        }
         val pickableByFileName = pickable.associateBy { it.song.fileName }
         val initial = initialSongFileNames.toSet()
         initialSongFileNames.mapNotNull { pickableByFileName[it] } +
-            pickable.filterNot { it.song.fileName in initial }.sortedWith(compareBy({ it.title }, { it.artist }, { it.song.fileName }))
+            pickable.filterNot { it.song.fileName in initial }
+                .sortedWith(compareBy({ viewModel.normalize(it.song.title) }, { viewModel.normalize(it.song.artist) }, { it.song.fileName }))
     }
     val matches = remember(pickableSongs, query) {
-        val normalizedQuery = viewModel.normalize(query)
+        val normalizedQuery = viewModel.normalizeForSearch(query)
         pickableSongs.filter { normalizedQuery in it.title || normalizedQuery in it.artist }
     }
     CampfireBottomSheet(

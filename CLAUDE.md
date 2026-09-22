@@ -127,7 +127,8 @@ item bound to the device and `FileStorage.keepOutOfDeviceBackup` on the index.
   the screen's name until the search is opened, and the one search icon is the one close button (the mark morphs
   between the two as the button travels from the actions to the start of the bar, with the field after it, see
   `:presentation`). On the desktop and the web Ctrl / Cmd + F opens it, in place of the browser's find bar there.
-  The songs are searched by title and artist; a setlist answers by its own title or description, or by holding a
+  The songs are searched by title and artist, ignoring case, accents, spaces and punctuation alike (`ymca` finds
+  `Y.M.C.A.`); a setlist answers by its own title or description, or by holding a
   song that does — and a setlist that answers is shown **whole**, since a setlist is the list somebody wrote down and
   three of its twelve songs is not that list.
 - **Tags are part of the song file**, not a store of their own: ChordPro `{tag}` directives, read by `:chordpro`
