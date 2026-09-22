@@ -30,6 +30,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.widthIn
+import androidx.compose.foundation.ScrollState
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.foundation.text.KeyboardOptions
@@ -251,6 +252,11 @@ private fun LoadedSongEditor(
         )
     }
     val textFieldState = editorField.textFieldState
+    // Owned here rather than by the panes, because a pane is composed again from scratch whenever the layout changes -
+    // Edit and Preview are one AnimatedContent, Split is a Row - and a scroll position kept inside it would go back to
+    // the first line on every switch, rotation and resize across the split width.
+    val fieldScrollState = rememberScrollState()
+    val previewScrollState = rememberScrollState()
     LaunchedEffect(editorField) {
         if (editorField.isDraftLost) viewModel.onEditorDraftLost()
     }
@@ -412,6 +418,7 @@ private fun LoadedSongEditor(
             ChordProTextField(
                 modifier = paneModifier,
                 textFieldState = textFieldState,
+                scrollState = fieldScrollState,
                 onSaveRequested = onSaveRequested,
                 contentPadding = PaddingValues(
                     start = contentPadding.calculateStartPadding(layoutDirection),
@@ -426,6 +433,7 @@ private fun LoadedSongEditor(
                 modifier = paneModifier,
                 viewModel = viewModel,
                 text = text,
+                scrollState = previewScrollState,
                 transposition = transpositions[destination.fileName, null],
                 fontScale = fontScale,
                 isHorizontalFlow = userPreferences?.isHorizontalSectionFlowEnabled == true,
@@ -517,11 +525,14 @@ private enum class EditorPanes {
  * The text size preference deliberately does not reach here: it is how large the lyrics are read from across a
  * room, and this is the source of the file rather than the song. Scaling it would also move the columns of a tab
  * away from the width the monospaced font is keeping them at.
+ *
+ * @param scrollState The field's own scroll position, hoisted so that it survives the pane being composed again.
  */
 @Composable
 private fun ChordProTextField(
     modifier: Modifier = Modifier,
     textFieldState: TextFieldState,
+    scrollState: ScrollState,
     onSaveRequested: () -> Unit,
     contentPadding: PaddingValues,
 ) {
@@ -538,9 +549,6 @@ private fun ChordProTextField(
     val bodyLarge = MaterialTheme.typography.bodyLarge
     val layoutDirection = LocalLayoutDirection.current
     val density = LocalDensity.current
-    // The field does its own scrolling when it is allowed more than one line; wrapping it in a scrollable
-    // swallows the press that should have put the caret in it, and nothing can be typed at all.
-    val scrollState = rememberScrollState()
     val insetBottomPadding = contentPadding.calculateBottomPadding() + 32.dp
     val insetBottomPaddingPx = with(density) { insetBottomPadding.roundToPx() }
     // Unlike SongPreview's bottom padding, which sits inside its own verticalScroll and is therefore only ever
@@ -591,17 +599,24 @@ private fun ChordProTextField(
         lineLimits = TextFieldLineLimits.MultiLine(),
         outputTransformation = outputTransformation,
         cursorBrush = SolidColor(colorScheme.primary),
+        // The field does its own scrolling when it is allowed more than one line; wrapping it in a scrollable
+        // swallows the press that should have put the caret in it, and nothing can be typed at all.
         scrollState = scrollState,
     )
 }
 
-/** The rendered song, kept a beat behind the text so that typing does not re-parse on every keystroke. */
+/**
+ * The rendered song, kept a beat behind the text so that typing does not re-parse on every keystroke.
+ *
+ * @param scrollState Where the preview is scrolled to, hoisted so that it survives the pane being composed again.
+ */
 @OptIn(FlowPreview::class)
 @Composable
 private fun SongPreview(
     modifier: Modifier = Modifier,
     viewModel: CampfireViewModel,
     text: State<String>,
+    scrollState: ScrollState,
     transposition: Int,
     fontScale: Float,
     isHorizontalFlow: Boolean,
@@ -617,7 +632,6 @@ private fun SongPreview(
     }
     val song = remember(previewedText, transposition, chordSpelling) { viewModel.renderSong(previewedText, transposition, chordSpelling) }
     val layoutDirection = LocalLayoutDirection.current
-    val scrollState = rememberScrollState()
     val topPadding = 8.dp
     val bottomPadding = contentPadding.calculateBottomPadding() + 32.dp
     BoxWithConstraints(modifier = modifier) {
