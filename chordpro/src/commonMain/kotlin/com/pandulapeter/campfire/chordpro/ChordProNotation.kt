@@ -50,9 +50,9 @@ object ChordProNotation {
         rename = { name -> toGerman(name) },
     )
 
-    /** Whether [name] is a real chord that uses German notation's `H`, at its root or bass, a lowercase `h` minor included. */
+    /** Whether [name] is a real chord that uses German notation's `H`, at its root or bass, a lowercase `h` minor or bass note included. */
     internal fun isGermanName(name: String) = (ChordProChordNames.lowercaseMinorExpanded(name) ?: name).let { chord ->
-        ChordProChordNames.isChordName(chord) && ChordProChordNames.notes(chord).any { it.startsWith(GERMAN_B_NATURAL) }
+        ChordProChordNames.isChordName(chord) && ChordProChordNames.notes(chord).any { it.uppercase().startsWith(GERMAN_B_NATURAL) }
     }
 
     /** Whether a file's song was written in German notation, which it says by using an `H` chord anywhere. */

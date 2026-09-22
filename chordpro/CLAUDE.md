@@ -147,7 +147,10 @@ in `:domain:*`. `:data:source:local:implementation` uses it directly for the met
   `ChordProTransposer.transposeText`, the editor's action, has no counterpart here on purpose. The same charts often
   write a minor chord as its root in lowercase (`a` for `Am`, `h` for `Hm`), and that is read as the minor chord it
   stands for, in either notation; a lowercase `h` marks a song as German like an uppercase one. The model spells them
-  out; the editor's transposition keeps the file's lowercase.
+  out; the editor's transposition keeps the file's lowercase. The note after a `/` may be lowercase for the same
+  reason (`D/f#`, `C/h`): it is transposed and respelled like any other note and folded back to the case the file
+  used, and a lowercase `h` there marks a song as German as well. Only there: a lowercase root is still read as a
+  minor chord and never as a note.
 - `ChordProHighlighter` — the typed spans an editor wants to colour (directive name, directive value, chord,
   annotation, comment). It lives here rather than in the UI so that what counts as a chord is decided in exactly one
   place; only what those look like on screen is the caller's business.

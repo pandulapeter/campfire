@@ -48,4 +48,20 @@ class ChordProChordNamesTest {
         assertEquals("c#7", ChordProChordNames.lowercaseMinorFolded("C#m7"))
         assertEquals("(bb)", ChordProChordNames.lowercaseMinorFolded("(Bbm)"))
     }
+
+    @Test
+    fun `a bass note may be written in lowercase`() {
+        listOf("D/f#", "A/c#", "C/h", "Dm/f#").forEach { assertTrue(ChordProChordNames.isChordName(it), it) }
+        assertEquals(listOf("D", "f#"), ChordProChordNames.notes("D/f#"))
+    }
+
+    @Test
+    fun `a lowercase root is still not a chord on its own`() {
+        listOf("a", "h7", "f#", "break").forEach { assertFalse(ChordProChordNames.isChordName(it), it) }
+    }
+
+    @Test
+    fun `a lowercase minor with a lowercase bass expands`() {
+        assertEquals("Dm/f#", ChordProChordNames.lowercaseMinorExpanded("d/f#"))
+    }
 }

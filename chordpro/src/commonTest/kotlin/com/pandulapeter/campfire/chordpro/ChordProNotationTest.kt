@@ -49,6 +49,16 @@ class ChordProNotationTest {
     }
 
     @Test
+    fun `a lowercase bass note is read and written in German notation`() {
+        assertEquals("C/h", ChordProNotation.toGerman("C/b"))
+        assertEquals("C/b", ChordProNotation.toGerman("C/bb"))
+        assertEquals("C/b", ChordProNotation.fromGerman("C/h"))
+        assertEquals("C/bb", ChordProNotation.fromGerman("C/b"))
+        assertTrue(ChordProNotation.isGermanName("C/h"))
+        assertTrue(ChordProNotation.isGermanNotated(ChordProParser.parseAsWritten("[D]a [C/h]b")))
+    }
+
+    @Test
     fun `lowercase minors are read spelled out`() {
         assertEquals(listOf("B", "Bm", "Am", "Bbm"), ChordProParser.parse("[H]a [h]b [a]c [b]d").chordNames())
         assertEquals(listOf("F", "Dm"), ChordProParser.parse("[F]a [d]b").chordNames())

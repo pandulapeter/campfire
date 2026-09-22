@@ -41,6 +41,37 @@ class ChordProTransposerTest {
     }
 
     @Test
+    fun `a lowercase bass note is transposed and stays lowercase`() {
+        assertEquals("E/g#", ChordProTransposer.transposeChord("D/f#", 2, preferFlats = false))
+        assertEquals("[E/g#] [e/g#]", ChordProTransposer.transposeText("[D/f#] [d/f#]", 2, preferFlats = false))
+    }
+
+    @Test
+    fun `a lowercase bass note round-trips`() {
+        val text = "[D/f#]a [d/f#]b [A/c#]c [Am7/G]d"
+
+        assertEquals(text, ChordProTransposer.transposeText(ChordProTransposer.transposeText(text, 2, preferFlats = false), -2, preferFlats = false))
+    }
+
+    @Test
+    fun `a grid cell with a lowercase bass note is transposed`() {
+        assertEquals(
+            "{start_of_grid}\n| E/g# | A |\n{end_of_grid}",
+            ChordProTransposer.transposeText("{start_of_grid}\n| D/f# | G |\n{end_of_grid}", 2, preferFlats = false),
+        )
+    }
+
+    @Test
+    fun `a lowercase bass note is transposed on the model`() {
+        assertEquals(listOf("E/g#", "Em/g#"), ChordProTransposer.transpose(ChordProParser.parse("[D/f#]a [d/f#]b"), 2, preferFlats = false).chordNames())
+    }
+
+    @Test
+    fun `a capitalised bass note stays capitalised`() {
+        assertEquals("[Bm7/A]", ChordProTransposer.transposeText("[Am7/G]", 2, preferFlats = false))
+    }
+
+    @Test
     fun `accidentals follow the preferred spelling`() {
         assertEquals("B", ChordProTransposer.transposeChord("Bb", 1, preferFlats = true))
         assertEquals("C", ChordProTransposer.transposeChord("C#", -1, preferFlats = false))

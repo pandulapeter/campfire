@@ -26,7 +26,7 @@ internal object ChordProChordNames {
                 '(' -> index = groupEnd(name, index + 1)
                 '/' -> {
                     val digits = digitsEnd(name, index + 1)
-                    if (digits > index + 1) index = digits else return noteEnd(name, index + 1) == name.length
+                    if (digits > index + 1) index = digits else return bassNoteEnd(name, index + 1) == name.length
                 }
                 else -> index = alterationEnd(name, index)
             }
@@ -38,19 +38,36 @@ internal object ChordProChordNames {
     fun notes(name: String): List<String> {
         val chord = unwrapped(name)
         val separator = chord.lastIndexOf('/')
-        return if (separator >= 0 && noteEnd(chord, separator + 1) >= 0) listOf(chord.substring(0, separator), chord.substring(separator + 1)) else listOf(chord)
+        return if (separator >= 0 && bassNoteEnd(chord, separator + 1) >= 0) listOf(chord.substring(0, separator), chord.substring(separator + 1)) else listOf(chord)
     }
 
     fun rewriteNotes(name: String, rewrite: (String) -> String): String {
-        val rewritten = notes(name).joinToString("/", transform = rewrite)
+        val notes = notes(name)
+        val rewritten = (listOf(rewrite(notes.first())) + notes.drop(1).map { bass -> rewriteBassNote(bass, rewrite) }).joinToString("/")
         return if (isParenthesized(name)) "($rewritten)" else rewritten
+    }
+
+    /**
+     * [rewrite] applied to the bass note of a chord name, in capitals however the file spells it, and folded back to
+     * the case it was written in. Every rewriter here knows the capital letters only, and a chart that writes `D/f#`
+     * has to get `E/g#` back rather than `E/G#`: the file keeps its own convention, the same way
+     * [ChordProTransposer.transposeText] keeps a lowercase minor root. The root is handed over as it is written,
+     * since a lowercase one reaching this far is a word in brackets (`[fine]`) rather than a note, see
+     * [lowercaseMinorExpanded].
+     */
+    private fun rewriteBassNote(note: String, rewrite: (String) -> String): String {
+        val letter = note.firstOrNull() ?: return rewrite(note)
+        if (!letter.isLowerCase()) return rewrite(note)
+        val rewritten = rewrite(letter.uppercaseChar() + note.substring(1))
+        val first = rewritten.firstOrNull() ?: return rewritten
+        return first.lowercaseChar() + rewritten.substring(1)
     }
 
     /**
      * [word] as the minor chord a lowercase root stands for in Central European charts — `a` is `Am`, `h7` is `Hm7`,
      * `f#` is `F#m`, `(e)` is `(Em)` — or null for anything else. A suffix that starts with an `m` is not taken, since
-     * `am` would say minor twice and `amaj7` would be neither. The bass note after `/` is a note and not a chord, so it
-     * is written in capitals as everywhere else.
+     * `am` would say minor twice and `amaj7` would be neither. The bass note after `/` is left as it is written, in
+     * either case, see [bassNoteEnd].
      */
     fun lowercaseMinorExpanded(word: String): String? {
         val name = unwrapped(word)
@@ -74,6 +91,17 @@ internal object ChordProChordNames {
     private fun unwrapped(name: String) = if (isParenthesized(name)) name.substring(1, name.length - 1) else name
     private fun noteEnd(name: String, index: Int): Int {
         if (name.getOrNull(index) !in 'A'..'H') return -1
+        return if (name.getOrNull(index + 1)?.let { it in "#b♯♭" } == true) index + 2 else index + 1
+    }
+    /**
+     * The same as [noteEnd] for the note after a `/`. A chart that writes its minor roots in lowercase writes the
+     * bass note that way too (`D/f#`, `C/h`), and unlike a root there is nothing a lowercase letter there could be
+     * instead: the slash has already said a note follows. The root stays capitals only, since a lowercase one is
+     * how the same charts write a minor chord, see [lowercaseMinorExpanded].
+     */
+    private fun bassNoteEnd(name: String, index: Int): Int {
+        val letter = name.getOrNull(index) ?: return -1
+        if (letter.uppercaseChar() !in 'A'..'H') return -1
         return if (name.getOrNull(index + 1)?.let { it in "#b♯♭" } == true) index + 2 else index + 1
     }
     private fun digitsEnd(name: String, start: Int): Int { var index = start; while (name.getOrNull(index)?.isDigit() == true) index++; return index }
