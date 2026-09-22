@@ -37,6 +37,7 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
@@ -202,6 +203,11 @@ private fun SetlistList(
     // away: a move that had to go to disk and come back through the repository left the row under the finger
     // snapping between where it was and where it had been put.
     var draggedSetlist by remember { mutableStateOf<DraggedSetlist?>(null) }
+    // The setlist a drag was started in, known from the press that starts it rather than from its first move: the rows
+    // of every other setlist stop being places to drop it for as long as it lasts. A move onto one of them is refused
+    // below, but only after the reorderable state has locked itself for up to a second waiting for the list to answer
+    // it, which froze the rows under the finger.
+    var draggingSetlistFileName by remember { mutableStateOf<String?>(null) }
     val reorderableState = rememberReorderableLazyGridState(listState) { from, to ->
         val fromKey = SetlistItemKey(from.key as? String)
         val toKey = SetlistItemKey(to.key as? String)
@@ -223,6 +229,7 @@ private fun SetlistList(
     }
     // Written once the finger lifts rather than on every move, so that one drag is one write.
     val onDragStopped = {
+        draggingSetlistFileName = null
         draggedSetlist?.let { viewModel.reorderSetlist(setlistFileName = it.setlistFileName, songFileNames = it.songFileNames) }
         Unit
     }
@@ -349,6 +356,7 @@ private fun SetlistList(
                         // A setlist of one song has no order to change, so its row offers no grip and no long press to
                         // drag it by: a handle that can only put the row back where it was promises something it cannot do.
                         val isReorderable = !isPerformanceModeEnabled && setlistWithSongs.entries.size > 1
+                        val onDragStarted: (Offset) -> Unit = { draggingSetlistFileName = setlistWithSongs.setlist.fileName }
                         // The placement animation goes to ReorderableItem rather than onto the item itself, because it
                         // is what decides which rows may have one: the row under the finger is placed by the drag's own
                         // translation, and a placement animation on top of that animates it back towards the slot it is
@@ -356,6 +364,7 @@ private fun SetlistList(
                         ReorderableItem(
                             state = reorderableState,
                             key = key.string.orEmpty(),
+                            enabled = draggingSetlistFileName.let { it == null || it == setlistWithSongs.setlist.fileName },
                             animateItemModifier = listItemAnimation(
                                 listState = listState,
                                 isEnabled = hasLoadedLibrary,
@@ -380,7 +389,7 @@ private fun SetlistList(
                                             // The grip goes in front of the overflow button rather than after it, so that
                                             // the button lands exactly where the songs screen has its own.
                                             if (isReorderable) {
-                                                DragHandle(modifier = Modifier.draggableHandle(onDragStopped = onDragStopped))
+                                                DragHandle(modifier = Modifier.draggableHandle(onDragStarted = onDragStarted, onDragStopped = onDragStopped))
                                             }
                                             SetlistEntryActions(
                                                 viewModel = viewModel,
@@ -392,7 +401,7 @@ private fun SetlistList(
                                 }
                                 when (entry) {
                                     is CampfireViewModel.SetlistWithSongs.Entry.Present -> SongListItem(
-                                        modifier = Modifier.longPressDraggableHandle(enabled = isReorderable, onDragStopped = onDragStopped),
+                                        modifier = Modifier.longPressDraggableHandle(enabled = isReorderable, onDragStarted = onDragStarted, onDragStopped = onDragStopped),
                                         song = entry.song,
                                         index = row.index,
                                         // The setlist's own transposition of this song, which is why the same song
@@ -411,7 +420,7 @@ private fun SetlistList(
 
                                     // Nothing to open, but it still takes its place in the order and can be removed.
                                     is CampfireViewModel.SetlistWithSongs.Entry.Missing -> MissingSongListItem(
-                                        modifier = Modifier.longPressDraggableHandle(enabled = isReorderable, onDragStopped = onDragStopped),
+                                        modifier = Modifier.longPressDraggableHandle(enabled = isReorderable, onDragStarted = onDragStarted, onDragStopped = onDragStopped),
                                         index = row.index,
                                         songFileName = entry.songFileName,
                                         actions = actions,
