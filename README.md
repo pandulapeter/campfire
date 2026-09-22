@@ -96,9 +96,11 @@ Version 4.0 is a rewrite: the online song library is gone and there is **no migr
 an empty library.
 
 ### To do
-- Rename setlist date sort, maybe expose a date for Setlists?
-- Improve performance mode description
+- ProGuard for desktop builds
+- Add support for external control devices
 - Songs: sort by year option
+- Improve performance mode description
+- Rename setlist date sort, maybe expose a date for Setlists
 - Fix Songs screen async race animation issues
 - Update the screenshots in the Readme
 
