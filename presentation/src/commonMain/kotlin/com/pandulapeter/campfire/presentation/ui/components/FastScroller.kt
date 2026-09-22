@@ -209,16 +209,22 @@ private fun Modifier.thumbDragGestures(
     awaitEachGesture {
         val down = awaitFirstDown()
         down.consume()
-        state.startDrag(pressY = down.position.y)?.let { fraction ->
-            coroutineScope.launch { state.scrollToFraction(fraction) }
+        // Ended in a finally: the element this runs on is taken away the moment the list stops being scrollable,
+        // which cancels the gesture in the middle of a drag - the keyboard going down under a search results list is
+        // enough - and a drag that never ends leaves the bubble up and the thumb frozen the next time it comes back.
+        try {
+            state.startDrag(pressY = down.position.y)?.let { fraction ->
+                coroutineScope.launch { state.scrollToFraction(fraction) }
+            }
+            drag(down.id) { change ->
+                // The delta has to be read before consuming the change, as consumed changes report none.
+                val fraction = state.dragBy(change.positionChange().y)
+                change.consume()
+                coroutineScope.launch { state.scrollToFraction(fraction) }
+            }
+        } finally {
+            state.endDrag()
         }
-        drag(down.id) { change ->
-            // The delta has to be read before consuming the change, as consumed changes report none.
-            val fraction = state.dragBy(change.positionChange().y)
-            change.consume()
-            coroutineScope.launch { state.scrollToFraction(fraction) }
-        }
-        state.endDrag()
     }
 }
 
