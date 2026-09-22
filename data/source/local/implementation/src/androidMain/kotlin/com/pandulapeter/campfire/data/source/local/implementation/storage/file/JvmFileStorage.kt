@@ -13,10 +13,12 @@ import com.pandulapeter.campfire.data.model.domain.decodeLibraryText
 import com.pandulapeter.campfire.data.source.local.api.LibraryStorageException
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.IO
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.withContext
 import java.io.File
 import java.io.IOException
 import java.nio.channels.FileChannel
+import java.nio.file.AccessDeniedException
 import java.nio.file.AtomicMoveNotSupportedException
 import java.nio.file.Files
 import java.nio.file.StandardCopyOption
@@ -35,7 +37,7 @@ import java.util.concurrent.ConcurrentHashMap
  */
 internal class JvmFileStorage(
     private val root: File,
-    private val escapesDeviceNames: Boolean = System.getProperty("os.name").orEmpty().startsWith("windows", ignoreCase = true),
+    private val isWindows: Boolean = System.getProperty("os.name").orEmpty().startsWith("windows", ignoreCase = true),
 ) : FileStorage {
 
     private val sweptDirectories = ConcurrentHashMap.newKeySet<StorageDirectory>()
@@ -66,11 +68,11 @@ internal class JvmFileStorage(
     }
 
     override suspend fun readText(directory: StorageDirectory, name: String) = withContext(Dispatchers.IO) {
-        file(directory, name).let { if (it.isFile) failingAsStorage(name) { it.readBytes().decodeLibraryText() } else null }
+        file(directory, name).let { if (it.isFile) failingAsStorage(name) { it.readAllBytes().decodeLibraryText() } else null }
     }
 
     override suspend fun readBytes(directory: StorageDirectory, name: String) = withContext(Dispatchers.IO) {
-        file(directory, name).let { if (it.isFile) failingAsStorage(name) { it.readBytes() } else null }
+        file(directory, name).let { if (it.isFile) failingAsStorage(name) { it.readAllBytes() } else null }
     }
 
     override suspend fun writeText(directory: StorageDirectory, name: String, text: String) = withContext(Dispatchers.IO) {
@@ -83,12 +85,42 @@ internal class JvmFileStorage(
 
     override suspend fun delete(directory: StorageDirectory, name: String) = withContext(Dispatchers.IO) {
         val file = file(directory, name)
-        if (file.exists() && !file.delete()) {
-            throw IllegalStateException("Could not delete \"$name\".")
-        }
+        // Not File.delete(), whose false says nothing about why: an AccessDeniedException is a file somebody else is
+        // holding open and worth retrying, and anything else belongs in the message.
+        failingAsStorage(name) { retryingWhileDenied { Files.deleteIfExists(file.toPath()) } }
+        Unit
     }
 
-    private fun writeAtomically(directory: StorageDirectory, name: String, write: (File) -> Unit) {
+    /**
+     * Retries [operation] while Windows refuses it because somebody else is holding the file open. An anti-virus
+     * scanner opens every file that appears, and a rename over it or a deletion of it is refused for as long as it
+     * does - for tens of milliseconds, not for seconds. A bounded retry of one named operating-system failure rather
+     * than a wait for a race to settle: the app's own reads share deletion (see [readAllBytes]), so anything still
+     * holding the file is outside the process and will let go or will not. Anywhere else the same exception is a
+     * permission that will not clear, and is thrown at once.
+     */
+    internal suspend fun <T> retryingWhileDenied(operation: () -> T): T {
+        if (isWindows) {
+            repeat(DENIED_RETRIES) { attempt ->
+                try {
+                    return operation()
+                } catch (_: AccessDeniedException) {
+                    delay(DENIED_RETRY_DELAY_MILLIS shl attempt)
+                }
+            }
+        }
+        return operation()
+    }
+
+    /**
+     * Not [File.readBytes], which opens a `FileInputStream`: on Windows the JDK opens one without
+     * `FILE_SHARE_DELETE`, so for as long as a scan holds the stream, a rename over that file or a deletion of it is
+     * refused - and a scan reads sixty-four files at a time while a sync run is writing. The NIO channel behind
+     * `Files.readAllBytes` shares deletion, so the same read leaves the file movable.
+     */
+    private fun File.readAllBytes(): ByteArray = Files.readAllBytes(toPath())
+
+    private suspend fun writeAtomically(directory: StorageDirectory, name: String, write: (File) -> Unit) {
         val target = file(directory, name).toPath()
         // A name of its own per write, so two writes of one file cannot share a temporary file.
         val temporary = Files.createTempFile(target.parent, TEMPORARY_FILE_PREFIX, TEMPORARY_FILE_SUFFIX)
@@ -96,12 +128,14 @@ internal class JvmFileStorage(
             write(temporary.toFile())
             // Flushed to the device before the rename, or a power loss right after could keep the name and lose the bytes.
             FileChannel.open(temporary, StandardOpenOption.WRITE).use { it.force(true) }
-            try {
-                Files.move(temporary, target, StandardCopyOption.ATOMIC_MOVE, StandardCopyOption.REPLACE_EXISTING)
-            } catch (_: AtomicMoveNotSupportedException) {
-                // Some file systems (network shares, some Android storage) cannot do it in one step; the plain move still
-                // never leaves the target truncated, since it copies first and replaces at the end.
-                Files.move(temporary, target, StandardCopyOption.REPLACE_EXISTING)
+            retryingWhileDenied {
+                try {
+                    Files.move(temporary, target, StandardCopyOption.ATOMIC_MOVE, StandardCopyOption.REPLACE_EXISTING)
+                } catch (_: AtomicMoveNotSupportedException) {
+                    // Some file systems (network shares, some Android storage) cannot do it in one step; the plain move
+                    // still never leaves the target truncated, since it copies first and replaces at the end.
+                    Files.move(temporary, target, StandardCopyOption.REPLACE_EXISTING)
+                }
             }
         } finally {
             Files.deleteIfExists(temporary)
@@ -134,9 +168,9 @@ internal class JvmFileStorage(
             ?.forEach { it.delete() }
     }
 
-    private fun String.toStoredName() = if (escapesDeviceNames && trimStart(DEVICE_NAME_ESCAPE).isDeviceName()) DEVICE_NAME_ESCAPE + this else this
+    private fun String.toStoredName() = if (isWindows && trimStart(DEVICE_NAME_ESCAPE).isDeviceName()) DEVICE_NAME_ESCAPE + this else this
 
-    private fun String.toLibraryName() = if (escapesDeviceNames && startsWith(DEVICE_NAME_ESCAPE) && trimStart(DEVICE_NAME_ESCAPE).isDeviceName()) drop(1) else this
+    private fun String.toLibraryName() = if (isWindows && startsWith(DEVICE_NAME_ESCAPE) && trimStart(DEVICE_NAME_ESCAPE).isDeviceName()) drop(1) else this
 
     private fun String.isDeviceName() = DEVICE_NAME.matches(substringBefore('.').trimEnd(' '))
 
@@ -147,6 +181,8 @@ internal class JvmFileStorage(
         val LEFTOVER_NAME = Regex("""\.campfire-\d+\.tmp|.+\.\d+\.tmp""")
         const val LEFTOVER_AGE_MILLIS = 60L * 60L * 1000L
         const val DEVICE_NAME_ESCAPE = '_'
+        const val DENIED_RETRIES = 3
+        const val DENIED_RETRY_DELAY_MILLIS = 20L
         val DEVICE_NAME = Regex("""con|prn|aux|nul|(com|lpt)[0-9¹²³]""", RegexOption.IGNORE_CASE)
     }
 }

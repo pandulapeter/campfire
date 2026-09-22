@@ -16,6 +16,7 @@ import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.runBlocking
 import java.io.File
+import java.nio.file.AccessDeniedException
 import java.nio.file.Files
 import kotlin.test.AfterTest
 import kotlin.test.Test
@@ -125,7 +126,7 @@ class JvmFileStorageTest {
 
     @Test
     fun `stores a Windows device name under an escaped one and reports the name it was given`() = runBlocking {
-        val storage = JvmFileStorage(root, escapesDeviceNames = true)
+        val storage = JvmFileStorage(root, isWindows = true)
         storage.writeText(StorageDirectory.SONGS, "con.cho", "content")
         storage.writeText(StorageDirectory.SONGS, "_con.cho", "other")
 
@@ -179,6 +180,39 @@ class JvmFileStorageTest {
         assertFailsWith<LibraryStorageException> { fileStorage.readText(StorageDirectory.SONGS, "a.cho") }
         assertFailsWith<LibraryStorageException> { fileStorage.readBytes(StorageDirectory.SONGS, "a.cho") }
         file.setReadable(true)
+    }
+
+    @Test
+    fun `retries an operation Windows refuses while somebody else holds the file`() = runBlocking {
+        var calls = 0
+
+        val result = JvmFileStorage(root, isWindows = true).retryingWhileDenied {
+            if (++calls < 3) throw AccessDeniedException("a.cho")
+            "done"
+        }
+
+        assertEquals("done", result)
+        assertEquals(3, calls)
+    }
+
+    @Test
+    fun `gives up on an operation Windows keeps refusing`() = runBlocking {
+        var calls = 0
+
+        assertFailsWith<AccessDeniedException> {
+            JvmFileStorage(root, isWindows = true).retryingWhileDenied { calls++; throw AccessDeniedException("a.cho") }
+        }
+        assertEquals(4, calls)
+    }
+
+    @Test
+    fun `does not retry a refusal outside Windows`() = runBlocking {
+        var calls = 0
+
+        assertFailsWith<AccessDeniedException> {
+            JvmFileStorage(root, isWindows = false).retryingWhileDenied { calls++; throw AccessDeniedException("a.cho") }
+        }
+        assertEquals(1, calls)
     }
 
     @Test

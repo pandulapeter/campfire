@@ -52,8 +52,14 @@ holds the `@Module @ComponentScan object DataLocalSourceModule`, and every local
     and reports a storage failure.
   - iOS splits the two: the library goes to the documents directory, where the Files app can reach it, and the
     preferences to application support, where it cannot.
-  - The JVM storage removes its own temporary files older than an hour on first touching each directory. On Windows it
-    stores device names such as `con.cho` with a leading underscore and reports the ordinary library name back.
+  - The JVM storage removes its own temporary files older than an hour on first touching each directory. On Windows
+    (`isWindows`, which also decides the retry below) it stores device names such as `con.cho` with a leading
+    underscore and reports the ordinary library name back.
+  - The JVM storage reads through `Files.readAllBytes` rather than a `FileInputStream`, which Windows opens without
+    sharing deletion: a scan reading sixty-four files at once would otherwise refuse the renames and deletions of a
+    sync run writing at the same time. The move over the target and the delete retry three times (20, 40 and 80 ms) on
+    a Windows `AccessDeniedException`, which is an anti-virus scanner holding a file that just appeared; anywhere else
+    that exception is a permission, and is reported at once. A delete that fails throws `LibraryStorageException`.
 - **`storage/secret/SecretStore.kt`** is where the sync credentials go, and nothing else: a refresh token is a
   long-lived credential. `AndroidSecretStore` encrypts it with an AES-GCM key generated inside the Android Keystore
   (never `security-crypto`, which is deprecated) and writes the IV and ciphertext as `preferences/sync-credentials.bin`;
