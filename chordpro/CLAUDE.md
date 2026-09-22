@@ -139,11 +139,15 @@ in `:domain:*`. `:data:source:local:implementation` uses it directly for the met
   letters, not the `#` and `b` signs, not the quality. (The classical German names spell every accidental out as
   `Cis` or `Es`; chord charts in those countries stop at the two letters, and so does this — a German chord chart
   writes `B` for what an English one calls `Bb`, but never `Ais`.) It runs after the
-  transposition, never before, because the transposition works in the notation the file is written in. Nothing that
-  goes back to disk passes through it: `ChordProTransposer.transposeText`, the editor's action, has no counterpart
-  here on purpose. The same charts often write a minor chord as its root in lowercase (`a` for `Am`, `h` for `Hm`), and
-  that is read as the minor chord it stands for, in either notation; a lowercase `h` marks a song as German like an
-  uppercase one. The model spells them out; the editor's transposition keeps the file's lowercase.
+  transposition, never before, because the transposition works in the notation the file is written in. A file is taken
+  for German-notated when one of its chords uses `H` (a key counts too), and for nothing else, since the file carries no
+  marker: a German chart in a flat key, which never needs an `H`, reads as English, so the `B` in it is B natural —
+  drawn as `H` with the German notation preference on and transposed as B. Writing that chord `Bb`, or any `H` chord in
+  the song, is what tells the two apart. Nothing that goes back to disk passes through it:
+  `ChordProTransposer.transposeText`, the editor's action, has no counterpart here on purpose. The same charts often
+  write a minor chord as its root in lowercase (`a` for `Am`, `h` for `Hm`), and that is read as the minor chord it
+  stands for, in either notation; a lowercase `h` marks a song as German like an uppercase one. The model spells them
+  out; the editor's transposition keeps the file's lowercase.
 - `ChordProHighlighter` — the typed spans an editor wants to colour (directive name, directive value, chord,
   annotation, comment). It lives here rather than in the UI so that what counts as a chord is decided in exactly one
   place; only what those look like on screen is the caller's business.
