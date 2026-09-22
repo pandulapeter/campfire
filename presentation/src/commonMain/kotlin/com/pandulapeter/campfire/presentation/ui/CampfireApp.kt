@@ -59,7 +59,6 @@ import androidx.compose.runtime.SideEffect
 import androidx.compose.runtime.Stable
 import androidx.compose.runtime.State
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberUpdatedState
@@ -503,18 +502,15 @@ private fun Messages(
     viewModel: CampfireViewModel,
 ) {
     val snackbarHostState = remember { SnackbarHostState() }
-    // Queued rather than collected straight into the snackbar: the text of a message can only be built in a
-    // composition (string resources are composable), and two identical results in a row are still two messages -
-    // which is what the numbering is for. Two failed exports are the same object, and an effect keyed on the message
-    // alone would not restart for the second one: it would sit at the head of the queue forever, unshown, with
-    // everything after it stuck behind it.
-    val queue = remember { mutableStateListOf<IndexedValue<CampfireViewModel.Message>>() }
-    LaunchedEffect(viewModel) {
-        var count = 0
-        viewModel.messages.collect { queue += IndexedValue(count++, it) }
-    }
-    val current: CampfireViewModel.Message? = queue.firstOrNull()?.value
-    val text = when (current) {
+    // Only the head of the view model's queue is read: the text of a message can only be built in a composition
+    // (string resources are composable), and two identical results in a row are still two messages - which is what
+    // the numbering is for. Two failed exports are the same object, and an effect keyed on the message alone would not
+    // restart for the second one: it would sit at the head of the queue forever, unshown, with everything after it
+    // stuck behind it. A message that was on screen as the composition was recreated is shown again from the start,
+    // since it was cut short.
+    val queue by viewModel.messageQueue.collectAsStateWithLifecycle()
+    val head = queue.firstOrNull()
+    val text = when (val current = head?.value) {
         is CampfireViewModel.Message.ImportFinished -> stringResource(
             Res.string.import_result,
             current.result.importedSongFileNames.size,
@@ -534,10 +530,10 @@ private fun Messages(
         is CampfireViewModel.Message.LinkNotOpened -> textResource(Res.string.error_link_not_opened, current.url)
         null -> null
     }
-    LaunchedEffect(queue.firstOrNull()?.index) {
-        if (text != null) {
+    LaunchedEffect(head?.index) {
+        if (head != null && text != null) {
             snackbarHostState.showSnackbar(text)
-            queue.removeFirstOrNull()
+            viewModel.onMessageShown(head)
         }
     }
     SnackbarHost(

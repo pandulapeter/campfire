@@ -105,7 +105,6 @@ import kotlinx.coroutines.flow.filterNotNull
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.map
-import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.flow.runningFold
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
@@ -656,11 +655,22 @@ class CampfireViewModel(
     val isSavingSong: StateFlow<Boolean> = _isSavingSong.asStateFlow()
 
     /**
-     * One-shot notifications for the snackbar. A channel rather than a state, so that two identical results in a row
-     * are two messages and a message that has been shown is not shown again when the screen is recreated.
+     * Messages waiting for the snackbar, oldest first, each with a number of its own so that two identical results in
+     * a row are still two messages. Held here rather than by the screen that shows them: Android recreates that screen
+     * on every rotation, and a message it had already taken would go with it unshown. A message leaves the queue once
+     * it has been shown, see [onMessageShown].
      */
-    private val _messages = Channel<Message>(Channel.BUFFERED)
-    val messages = _messages.receiveAsFlow()
+    private val _messageQueue = MutableStateFlow(emptyList<IndexedValue<Message>>())
+    val messageQueue: StateFlow<List<IndexedValue<Message>>> = _messageQueue.asStateFlow()
+    private var messageCount = 0
+
+    private fun sendMessage(message: Message) {
+        val indexedMessage = IndexedValue(messageCount++, message)
+        _messageQueue.update { it + indexedMessage }
+    }
+
+    /** Called by the snackbar host once [message] has been on screen for its whole duration, or dismissed. */
+    fun onMessageShown(message: IndexedValue<Message>) = _messageQueue.update { queue -> queue.filterNot { it.index == message.index } }
 
     // Dialogs
     private val _visibleDialog = MutableStateFlow<DialogType?>(null)
@@ -703,7 +713,7 @@ class CampfireViewModel(
                     // is said out loud because saving is what puts the file back, which the user would otherwise have
                     // no reason to do.
                     if (content == null && _editorDraft.value?.fileName == name) {
-                        _messages.send(Message.EditedSongFileGone)
+                        sendMessage(Message.EditedSongFileGone)
                     }
                 }
             }
@@ -946,7 +956,7 @@ class CampfireViewModel(
                 if (edited == text || withContext(NonCancellable) { writeSongContent(fileName = fileName, text = edited, expectedText = text) }) return
             }
         }
-        _messages.send(Message.OperationFailed)
+        sendMessage(Message.OperationFailed)
     }
 
     // The editor
@@ -977,7 +987,7 @@ class CampfireViewModel(
 
     /** Reported by the editor when it came back from a saved state that could not hold its unsaved text. */
     fun onEditorDraftLost() {
-        _messages.trySend(Message.EditorDraftLost)
+        sendMessage(Message.EditorDraftLost)
     }
 
     /**
@@ -1048,7 +1058,7 @@ class CampfireViewModel(
         throw exception
     } catch (exception: Exception) {
         println("Could not save the song \"$fileName\": ${exception.message}")
-        _messages.send(Message.SaveFailed)
+        sendMessage(Message.SaveFailed)
         false
     } finally {
         _isSavingSong.update { false }
@@ -1174,7 +1184,7 @@ class CampfireViewModel(
             throw exception
         } catch (exception: Exception) {
             println("Could not pick the files to import: ${exception.message}")
-            _messages.send(Message.ImportFailed)
+            sendMessage(Message.ImportFailed)
             return@launchFileTransfer
         }
         enqueueImport(files)
@@ -1224,7 +1234,7 @@ class CampfireViewModel(
         if (_isImporting.value || !isAddingDemoLibrary.compareAndSet(expect = false, update = true)) return@launch
         val files = readDemoLibrary()
         if (files == null) {
-            _messages.send(Message.ImportFailed)
+            sendMessage(Message.ImportFailed)
         } else {
             enqueueImport(files).await()
         }
@@ -1301,7 +1311,7 @@ class CampfireViewModel(
             throw exception
         } catch (exception: Exception) {
             println("Could not read the files to import: ${exception.message}")
-            _messages.send(Message.ImportFailed)
+            sendMessage(Message.ImportFailed)
             _isImporting.update { false }
             return
         }
@@ -1348,16 +1358,16 @@ class CampfireViewModel(
                 (result.importedSongFileNames + result.duplicateFileNames).singleOrNull()?.let(::openImportedSong)
             }
             if (request.shouldAnnounceResult) {
-                _messages.send(Message.ImportFinished(result))
+                sendMessage(Message.ImportFinished(result))
                 if (result.oversizedFileNames.isNotEmpty()) {
-                    _messages.send(Message.ImportOversized(result.oversizedFileNames.size))
+                    sendMessage(Message.ImportOversized(result.oversizedFileNames.size))
                 }
             }
         } catch (exception: CancellationException) {
             throw exception
         } catch (exception: Exception) {
             println("Could not import the files: ${exception.message}")
-            _messages.send(Message.ImportFailed)
+            sendMessage(Message.ImportFailed)
         } finally {
             _isImporting.update { false }
         }
@@ -1381,12 +1391,12 @@ class CampfireViewModel(
 
     /** For the Android shell, whose picker can finish an export long after the coroutine that asked for it is gone. */
     fun onExportFailed() {
-        _messages.trySend(Message.ExportFailed)
+        sendMessage(Message.ExportFailed)
     }
 
     /** For the shells, which are what opens a link and so what finds out that nothing did. */
     fun onLinkNotOpened(url: String) {
-        _messages.trySend(Message.LinkNotOpened(url))
+        sendMessage(Message.LinkNotOpened(url))
     }
 
     /**
@@ -1398,17 +1408,17 @@ class CampfireViewModel(
     private suspend fun save(filePicker: FilePicker, isShare: Boolean = false, export: suspend () -> ExportedFile?) = try {
         val file = export()
         when {
-            file == null -> _messages.send(Message.ExportFailed)
+            file == null -> sendMessage(Message.ExportFailed)
             isShare -> filePicker.shareFile(file)
             filePicker.saveFile(file) && file.mimeType == ExportedFile.ZIP_MIME_TYPE && file.bytes.size > ImportLimits.MAX_IMPORT_SIZE ->
-                _messages.send(Message.ExportTooLargeToImport)
+                sendMessage(Message.ExportTooLargeToImport)
         }
         Unit
     } catch (exception: CancellationException) {
         throw exception
     } catch (exception: Exception) {
         println("Could not export: ${exception.message}")
-        _messages.send(Message.ExportFailed)
+        sendMessage(Message.ExportFailed)
     }
 
     // Setlists
@@ -1463,7 +1473,7 @@ class CampfireViewModel(
         updateSetlist(setlistFileName) { setlist ->
             val entriesBySongFileName = setlist.entries.associateBy { it.songFileName }
             setlist.copy(entries = songFileNames.map { entriesBySongFileName[it] ?: Setlist.Entry(songFileName = it) })
-        } ?: _messages.send(Message.OperationFailed)
+        } ?: sendMessage(Message.OperationFailed)
     }
 
     /**
@@ -1473,7 +1483,7 @@ class CampfireViewModel(
      * opened, and the rest of the setlist may have moved on since. One that is gone by now is not brought back.
      */
     fun editSetlist(setlistFileName: String, title: String, description: String) = launchLibraryChange {
-        editSetlist.invoke(fileName = setlistFileName, title = title, description = description) ?: _messages.send(Message.OperationFailed)
+        editSetlist.invoke(fileName = setlistFileName, title = title, description = description) ?: sendMessage(Message.OperationFailed)
     }
 
     /**
@@ -1718,7 +1728,7 @@ class CampfireViewModel(
             throw exception
         } catch (exception: Exception) {
             println("The change could not be written: ${exception.message}")
-            _messages.send(Message.OperationFailed)
+            sendMessage(Message.OperationFailed)
         }
     }
 
