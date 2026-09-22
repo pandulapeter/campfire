@@ -18,6 +18,9 @@ import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.FastOutLinearInEasing
 import androidx.compose.animation.core.LinearEasing
 import androidx.compose.animation.core.LinearOutSlowInEasing
+import androidx.compose.animation.core.SpringSpec
+import androidx.compose.animation.core.VisibilityThreshold
+import androidx.compose.animation.core.spring
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
@@ -75,6 +78,7 @@ import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.Density
 import androidx.compose.ui.unit.Dp
+import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.LayoutDirection
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation3.runtime.entryProvider
@@ -771,7 +775,7 @@ private fun AnimatedContentTransitionScope<Scene<CampfireDestination>>.pushTrans
 ) = ContentTransform(
     targetContentEnter = slideIntoContainer(
         towards = if (isModal) AnimatedContentTransitionScope.SlideDirection.Up else AnimatedContentTransitionScope.SlideDirection.Start,
-        animationSpec = motionScheme.defaultSpatialSpec(),
+        animationSpec = motionScheme.slideSpec(),
     ),
     initialContentExit = ExitTransition.KeepUntilTransitionsFinished,
     targetContentZIndex = targetState.zIndex,
@@ -789,10 +793,22 @@ private fun AnimatedContentTransitionScope<Scene<CampfireDestination>>.popTransi
     targetContentEnter = EnterTransition.None,
     initialContentExit = slideOutOfContainer(
         towards = if (isModal) AnimatedContentTransitionScope.SlideDirection.Down else AnimatedContentTransitionScope.SlideDirection.End,
-        animationSpec = motionScheme.defaultSpatialSpec(),
+        animationSpec = motionScheme.slideSpec(),
     ),
     targetContentZIndex = targetState.zIndex,
 )
+
+/**
+ * The theme's default spatial spring, made to settle once the card is within a pixel of where it lands. The theme's
+ * spring carries no visibility threshold, so on an [IntOffset] it runs on to a hundredth of a pixel: a screen that
+ * has not moved a whole pixel for the last third of a second is still counted as moving, and [ScreenSurface] takes
+ * no taps until it is not. An offset is drawn in whole pixels, so nothing past this one is ever seen.
+ */
+@OptIn(ExperimentalMaterial3ExpressiveApi::class)
+private fun MotionScheme.slideSpec() = when (val spec = defaultSpatialSpec<IntOffset>()) {
+    is SpringSpec -> spring(dampingRatio = spec.dampingRatio, stiffness = spec.stiffness, visibilityThreshold = IntOffset.VisibilityThreshold)
+    else -> spec
+}
 
 /**
  * The pop driven by the predictive back gesture (Android) or the edge swipe (iOS): the same uncovering as

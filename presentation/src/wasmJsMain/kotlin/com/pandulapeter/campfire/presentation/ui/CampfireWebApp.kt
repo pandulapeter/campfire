@@ -22,14 +22,18 @@ import com.pandulapeter.campfire.presentation.ui.platform.LocalFilePicker
 import com.pandulapeter.campfire.presentation.ui.platform.WebFilePicker
 import com.pandulapeter.campfire.presentation.ui.platform.droppedFiles
 import kotlinx.browser.window
+import org.w3c.dom.events.Event
+import org.w3c.dom.events.KeyboardEvent
 import kotlin.js.ExperimentalWasmJsInterop
+import kotlin.js.unsafeCast
 import org.koin.compose.viewmodel.koinViewModel
 
 /**
  * Web shell of the shared UI. Links open in a new browser tab, files dropped on the page are imported, and the
  * browser asks before the page is left with unsaved text in the editor. Escape reaches Compose from a focused text
- * field too ([startForwardingEscapeKey]), and Ctrl / Cmd + S is kept from the browser's own "Save page as"
- * ([startSuppressingBrowserSave]). Every screen has an address of its own, and the browser's history follows the
+ * field too ([startForwardingEscapeKey]), Ctrl / Cmd + S is kept from the browser's own "Save page as"
+ * ([startSuppressingBrowserSave]), and Ctrl / Cmd + F opens the search of a list screen in place of the browser's
+ * find bar ([SearchShortcutEffect]). Every screen has an address of its own, and the browser's history follows the
  * app's back stack ([BrowserHistoryEffect]).
  */
 @Composable
@@ -52,6 +56,7 @@ fun CampfireWebApp(
     // screen has to know it is waiting for the address before the library it waits for can have been read.
     remember(viewModel) { viewModel.navigateToBrowserAddress() }
     BrowserHistoryEffect(viewModel)
+    SearchShortcutEffect(viewModel)
     LaunchedEffect(viewModel) {
         viewModel.hasUnsavedEditorChanges.collect { hasUnsavedChanges ->
             if (hasUnsavedChanges) startWarningBeforeUnload() else stopWarningBeforeUnload()
@@ -66,6 +71,33 @@ fun CampfireWebApp(
         filesToImport = remember { droppedFiles() },
         onAppReady = ::dismissLoadingScreen,
     )
+}
+
+/**
+ * Opens the search of the list screen that is on top on Ctrl / Cmd + F ([CampfireViewModel.openCurrentSearch]), and
+ * keeps the browser's own find bar shut when it does: that bar searches the page's text, and the whole of this page is
+ * one canvas with none. Everywhere else - another screen, a dialog - the key is left alone and the browser opens its
+ * bar as it always does.
+ *
+ * It is a listener on the window in the capture phase rather than a key handler inside the composition, for two
+ * reasons. Nothing on a list screen is focused until its search is, and a key event only reaches Compose along the
+ * focus path. And a key pressed in the hidden `<input>` that holds the caret of a field reaches Compose only after
+ * the browser has acted on it (see [startSuppressingBrowserSave]), so a Compose handler could never have stopped the
+ * find bar opening over the app. The listener is a Kotlin function rather than a `js(...)` block because what it has
+ * to decide is the view model's, and has to be decided before the browser moves on.
+ */
+@Composable
+private fun SearchShortcutEffect(viewModel: CampfireViewModel) = DisposableEffect(viewModel) {
+    val listener: (Event) -> Unit = { event ->
+        val keyEvent = event.unsafeCast<KeyboardEvent>()
+        // code, as Compose goes by it (Key.F is the physical key); key for a virtual keyboard, which has none.
+        val isF = keyEvent.code == "KeyF" || keyEvent.key == "f" || keyEvent.key == "F"
+        if ((keyEvent.ctrlKey || keyEvent.metaKey) && !keyEvent.altKey && isF && viewModel.openCurrentSearch()) {
+            keyEvent.preventDefault()
+        }
+    }
+    window.addEventListener(EVENT_KEY_DOWN, listener, true)
+    onDispose { window.removeEventListener(EVENT_KEY_DOWN, listener, true) }
 }
 
 /**
@@ -223,3 +255,5 @@ private fun stopForwardingEscapeKey() {
         })()"""
     )
 }
+
+private const val EVENT_KEY_DOWN = "keydown"

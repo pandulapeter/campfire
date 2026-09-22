@@ -24,6 +24,9 @@ import androidx.compose.ui.draganddrop.awtTransferable
 import androidx.compose.ui.input.key.Key
 import androidx.compose.ui.input.key.KeyEvent
 import androidx.compose.ui.input.key.KeyEventType
+import androidx.compose.ui.input.key.isAltPressed
+import androidx.compose.ui.input.key.isCtrlPressed
+import androidx.compose.ui.input.key.isMetaPressed
 import androidx.compose.ui.input.key.key
 import androidx.compose.ui.input.key.type
 import com.pandulapeter.campfire.presentation.ui.components.isAnyOverflowMenuOpen
@@ -97,12 +100,18 @@ fun CampfireDesktopApp(
 
 
 /**
- * To be wired into the window's key event handler. Returns true if the event was consumed.
+ * To be wired into the window's key event handler. Returns true if the event was consumed. Ctrl / Cmd + F opens the
+ * search of the list screen that is on top ([CampfireViewModel.openCurrentSearch]); it is answered here because this
+ * handler hears the keys that nothing focused in the window took, and nothing is focused on a list screen until its
+ * search is.
  *
  * @param onExit Closes the application, called when there is nothing left to navigate back from, and only once a save
  *   that is still being written has finished, see [CampfireViewModel.requestExit].
  */
 fun CampfireViewModel.handleKeyEvent(keyEvent: KeyEvent, onExit: () -> Unit): Boolean {
+    if (keyEvent.type == KeyEventType.KeyDown && keyEvent.key == Key.F && (keyEvent.isCtrlPressed || keyEvent.isMetaPressed) && !keyEvent.isAltPressed) {
+        return openCurrentSearch()
+    }
     if (keyEvent.type == KeyEventType.KeyDown && keyEvent.key == Key.Escape) {
         // Window key handlers run before Compose turns Escape into a back event, so consuming it here would pop the
         // back stack behind an open dialog, bottom sheet or overflow menu. Those register their own back handlers:

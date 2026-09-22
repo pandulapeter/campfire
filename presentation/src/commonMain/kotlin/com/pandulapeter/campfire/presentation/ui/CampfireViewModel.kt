@@ -81,6 +81,7 @@ import com.pandulapeter.campfire.domain.api.useCases.TransposeChordProUseCase
 import com.pandulapeter.campfire.domain.api.useCases.UpdateSetlistUseCase
 import com.pandulapeter.campfire.presentation.ui.components.ScrollPosition
 import com.pandulapeter.campfire.presentation.ui.components.SearchState
+import com.pandulapeter.campfire.presentation.ui.components.isAnyOverflowMenuOpen
 import com.pandulapeter.campfire.presentation.ui.navigation.CampfireDestination
 import com.pandulapeter.campfire.presentation.ui.navigation.NavigationState
 import com.pandulapeter.campfire.presentation.ui.platform.FilePicker
@@ -258,6 +259,21 @@ class CampfireViewModel(
             CampfireDestination.Setlists -> setlistsSearch
             else -> null
         }
+
+    /**
+     * Answers Ctrl / Cmd + F, which the desktop window and the web page both hear before anything in the composition
+     * does: nothing on a list screen is focused while its search is closed, and a key event only travels along the
+     * focus path. It opens the search of the list screen that is on top, or brings the caret back into it if it is
+     * open already, and answers whether it did, so that the key is left to whoever else wants it everywhere else - the
+     * browser's own find bar among them. A dialog, a sheet or an overflow menu keeps it from reaching the screen under
+     * it, the way it keeps Escape from reaching it.
+     */
+    internal fun openCurrentSearch(): Boolean {
+        if (visibleDialog.value != null || isAnyOverflowMenuOpen) return false
+        val search = currentSearch ?: return false
+        search.openOrFocus()
+        return true
+    }
 
     // Data
     val isLoading = screenData.map { it is DataState.Loading }.asState(true)

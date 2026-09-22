@@ -47,6 +47,7 @@ import androidx.compose.foundation.text.input.TextFieldBuffer
 import androidx.compose.foundation.text.input.TextFieldLineLimits
 import androidx.compose.foundation.text.input.clearText
 import androidx.compose.foundation.text.input.placeCursorAtEnd
+import androidx.compose.foundation.text.input.selectAll
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.IconButtonDefaults
@@ -514,6 +515,13 @@ private fun SearchField(
         LaunchedEffect(isOpening) {
             if (isOpening) {
                 searchState.textFieldState.edit { placeCursorAtEnd() }
+                focusRequester.requestFocus()
+                keyboardController?.show()
+            }
+        }
+        LaunchedEffect(searchState) {
+            searchState.focusRequests.collect {
+                searchState.textFieldState.edit { selectAll() }
                 focusRequester.requestFocus()
                 keyboardController?.show()
             }

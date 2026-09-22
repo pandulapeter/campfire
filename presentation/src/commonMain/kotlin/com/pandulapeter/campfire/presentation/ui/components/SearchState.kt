@@ -16,8 +16,10 @@ import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.setValue
 import androidx.compose.runtime.snapshotFlow
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.combine
 
@@ -76,6 +78,25 @@ internal class SearchState(
 
     fun close() {
         _isOpen.value = false
+    }
+
+    private val _focusRequests = MutableSharedFlow<Unit>(extraBufferCapacity = 1)
+
+    /**
+     * Asks an open field for the caret back, with what it holds selected, see [openOrFocus]. Events rather than state,
+     * since a field composed again on the way back to its screen must not take a request it has already answered for
+     * a new one.
+     */
+    val focusRequests: Flow<Unit> = _focusRequests.asSharedFlow()
+
+    /**
+     * What Ctrl / Cmd + F does: opens the search, or hands the caret back to a field that is already open with its text
+     * selected, so that typing replaces the last query the way it does in the find bar of any other application. The
+     * field keeps its text in that case rather than being emptied the way [open] empties it, since a search that is
+     * still narrowing the list is one the user may only want to refine.
+     */
+    fun openOrFocus() {
+        if (_isOpen.value) _focusRequests.tryEmit(Unit) else open()
     }
 }
 
