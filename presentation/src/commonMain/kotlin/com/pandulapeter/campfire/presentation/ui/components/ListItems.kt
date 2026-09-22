@@ -29,7 +29,6 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.selection.selectable
 import androidx.compose.foundation.selection.toggleable
@@ -60,6 +59,8 @@ import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.lerp
 import androidx.compose.ui.graphics.painter.Painter
+import androidx.compose.ui.layout.layout
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalWindowInfo
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.contentDescription
@@ -69,6 +70,8 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.offset
+import androidx.compose.ui.unit.sp
 import com.pandulapeter.campfire.data.model.domain.Song
 import com.pandulapeter.campfire.presentation.localization.stringResource
 import com.pandulapeter.campfire.presentation.resources.Res
@@ -362,7 +365,7 @@ private fun ListItemHeadline(
 
 /**
  * The place of a song inside a setlist, counted from one because it is read by whoever is playing the set rather
- * than by the code that orders it. Laid out over a fixed width ([LIST_ITEM_INDEX_KEYLINE]) instead of around the
+ * than by the code that orders it. Laid out over at least [LIST_ITEM_INDEX_KEYLINE] instead of around the
  * number, so that the titles of a setlist stay on a single keyline however far its numbering has run and a drag
  * that renumbers the rows it passes does not shift them sideways underneath the finger.
  */
@@ -371,17 +374,27 @@ private fun ListItemIndex(
     modifier: Modifier = Modifier,
     index: Int,
 ) = Text(
-    modifier = modifier.width(LIST_ITEM_INDEX_KEYLINE),
+    modifier = modifier.widthIn(min = with(LocalDensity.current) { LIST_ITEM_INDEX_KEYLINE.toDp() }),
     text = (index + 1).toString(),
     style = MaterialTheme.typography.labelLarge,
     color = MaterialTheme.colorScheme.onSurfaceVariant,
+    softWrap = false,
+    maxLines = 1,
 )
 
 /**
  * What goes under a [ListItemHeadline] starts where its title starts rather than under the number in front of it,
  * since the number is the row's and not the title's.
  */
-private fun Modifier.listItemIndexIndent(hasIndex: Boolean) = padding(start = if (hasIndex) LIST_ITEM_INDEX_KEYLINE else 0.dp)
+private fun Modifier.listItemIndexIndent(hasIndex: Boolean) = if (hasIndex) {
+    layout { measurable, constraints ->
+        val indent = LIST_ITEM_INDEX_KEYLINE.toDp().roundToPx()
+        val placeable = measurable.measure(constraints.offset(horizontal = -indent))
+        layout(placeable.width + indent, placeable.height) { placeable.placeRelative(indent, 0) }
+    }
+} else {
+    this
+}
 
 /**
  * The grip that says a row can be dragged somewhere else, placed in front of the row's overflow button so that the
@@ -879,9 +892,11 @@ private val LIST_ITEM_TRAILING_KEYLINE_ADJUSTMENT = 4.dp
 
 /**
  * How far after the start of a [ListItemIndex] the title of its row starts: two digits and the gap they keep from
- * the title, since a setlist long enough to need three has other problems.
+ * the title. In sp, because it is measured against the digits and has to grow with them when the font does. A number
+ * of three digits takes a little more than this and pushes its own title along, rather than every row of every
+ * setlist making room for it.
  */
-private val LIST_ITEM_INDEX_KEYLINE = 24.dp
+private val LIST_ITEM_INDEX_KEYLINE = 24.sp
 
 /**
  * The width of a [DragHandle]'s touch target. It is narrower than the `IconButton` after it, and can be, since
