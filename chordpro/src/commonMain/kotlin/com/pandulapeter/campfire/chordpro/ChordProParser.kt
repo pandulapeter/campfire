@@ -88,15 +88,16 @@ object ChordProParser {
                 return@forEach
             }
             val isLookingForChords = shouldDetectChords && !hasChords
-            val isLookingForNotation = !isGermanNotated && GERMAN_LETTER in rawLine
+            val isLookingForNotation = !isGermanNotated && (GERMAN_LETTER in rawLine || GERMAN_LETTER.lowercaseChar() in rawLine)
             if (!isLookingForChords && !isLookingForNotation) return@forEach
             val names = writtenChordNames(rawLine, trimmedLine, environment)
             if (isLookingForChords && environment != TAB) hasChords = names.isNotEmpty()
             if (isLookingForNotation) isGermanNotated = names.any(ChordProNotation::isGermanName)
         }
         val declared = metadata.build()
-        val isGermanKey = declared.key?.let(ChordProNotation::isGermanName) == true
-        val key = declared.key?.let { key ->
+        val expandedKey = declared.key?.let { written -> ChordProChordNames.lowercaseMinorExpanded(written) ?: written }
+        val isGermanKey = expandedKey?.let(ChordProNotation::isGermanName) == true
+        val key = expandedKey?.let { key ->
             ChordProNotation.withAsciiAccidentals(if (isGermanNotated || isGermanKey) ChordProNotation.fromGerman(key) else key)
         }
         return ChordProSummary(

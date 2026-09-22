@@ -141,7 +141,9 @@ in `:domain:*`. `:data:source:local:implementation` uses it directly for the met
   writes `B` for what an English one calls `Bb`, but never `Ais`.) It runs after the
   transposition, never before, because the transposition works in the notation the file is written in. Nothing that
   goes back to disk passes through it: `ChordProTransposer.transposeText`, the editor's action, has no counterpart
-  here on purpose.
+  here on purpose. The same charts often write a minor chord as its root in lowercase (`a` for `Am`, `h` for `Hm`), and
+  that is read as the minor chord it stands for, in either notation; a lowercase `h` marks a song as German like an
+  uppercase one. The model spells them out; the editor's transposition keeps the file's lowercase.
 - `ChordProHighlighter` — the typed spans an editor wants to colour (directive name, directive value, chord,
   annotation, comment). It lives here rather than in the UI so that what counts as a chord is decided in exactly one
   place; only what those look like on screen is the caller's business.

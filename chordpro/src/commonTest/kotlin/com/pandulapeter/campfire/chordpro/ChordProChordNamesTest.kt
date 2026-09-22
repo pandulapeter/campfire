@@ -12,6 +12,7 @@ package com.pandulapeter.campfire.chordpro
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFalse
+import kotlin.test.assertNull
 import kotlin.test.assertTrue
 
 class ChordProChordNamesTest {
@@ -34,5 +35,17 @@ class ChordProChordNamesTest {
     fun `the bass follows the last slash`() {
         assertEquals(listOf("B6/9", "F#"), ChordProChordNames.notes("B6/9/F#"))
         assertEquals("(bm7/f#)", ChordProChordNames.rewriteNotes("(Bm7/F#)") { it.lowercase() })
+    }
+
+    @Test
+    fun `a lowercase root is a minor chord`() {
+        assertEquals("Am", ChordProChordNames.lowercaseMinorExpanded("a"))
+        assertEquals("Hm7", ChordProChordNames.lowercaseMinorExpanded("h7"))
+        assertEquals("F#m", ChordProChordNames.lowercaseMinorExpanded("f#"))
+        assertEquals("(Em)", ChordProChordNames.lowercaseMinorExpanded("(e)"))
+        assertEquals("Em/G", ChordProChordNames.lowercaseMinorExpanded("e/G"))
+        listOf("am", "amaj7", "add", "fine", "A", "N.C.").forEach { assertNull(ChordProChordNames.lowercaseMinorExpanded(it), it) }
+        assertEquals("c#7", ChordProChordNames.lowercaseMinorFolded("C#m7"))
+        assertEquals("(bb)", ChordProChordNames.lowercaseMinorFolded("(Bbm)"))
     }
 }

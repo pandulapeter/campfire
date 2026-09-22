@@ -44,6 +44,17 @@ class ChordProNotationTest {
     }
 
     @Test
+    fun `a lowercase h marks a song as German`() {
+        assertTrue(ChordProNotation.isGermanNotated(ChordProParser.parseAsWritten("[D]a [h]b")))
+    }
+
+    @Test
+    fun `lowercase minors are read spelled out`() {
+        assertEquals(listOf("B", "Bm", "Am", "Bbm"), ChordProParser.parse("[H]a [h]b [a]c [b]d").chordNames())
+        assertEquals(listOf("F", "Dm"), ChordProParser.parse("[F]a [d]b").chordNames())
+    }
+
+    @Test
     fun `every chord of a grid cell is respelled`() {
         assertEquals(listOf("H~B"), ChordProNotation.toGerman(ChordProParser.parse("{sog}\n| B~Bb |\n{eog}")).chordNames())
     }

@@ -116,19 +116,31 @@ object ChordProTransposer {
     /** Transposes raw ChordPro text in place, keeping its formatting and original notation. */
     fun transposeText(text: String, semitones: Int, preferFlats: Boolean? = null): String {
         if (semitones == 0 && preferFlats == null) return text
-        val written = ChordProParser.parseAsWritten(text)
+        val written = ChordProNotation.withLowercaseMinorsExpanded(ChordProParser.parseAsWritten(text))
         val isGermanNotated = ChordProNotation.isGermanNotated(written)
         val song = if (isGermanNotated) ChordProNotation.fromGerman(written) else written
         val flats = preferFlats ?: prefersFlats(song, semitones)
         val transposeName = { name: String -> transposeChord(name, semitones, flats) }
-        if (!isGermanNotated) return rewriteText(text, semitones, transposeName)
+        if (!isGermanNotated) return rewriteText(text, semitones, keepingLowercaseMinors(transposeName))
         val staysGermanNotated = writtenChordNames(song).any { name ->
             ChordProNotation.isGermanName(ChordProNotation.toGerman(transposeName(name)))
         }
-        return rewriteText(text, semitones) { name ->
-            val transposedName = transposeName(ChordProNotation.fromGerman(name))
-            if (staysGermanNotated) ChordProNotation.toGerman(transposedName) else transposedName
-        }
+        return rewriteText(
+            text,
+            semitones,
+            keepingLowercaseMinors { name ->
+                val transposedName = transposeName(ChordProNotation.fromGerman(name))
+                if (staysGermanNotated) ChordProNotation.toGerman(transposedName) else transposedName
+            },
+        )
+    }
+
+    /**
+     * [rename] for a chord as the file writes it: a lowercase minor is spelled out for it and folded back afterwards,
+     * so that the file keeps its own convention.
+     */
+    private fun keepingLowercaseMinors(rename: (String) -> String) = { name: String ->
+        ChordProChordNames.lowercaseMinorExpanded(name)?.let { ChordProChordNames.lowercaseMinorFolded(rename(it)) } ?: rename(name)
     }
 
     /**

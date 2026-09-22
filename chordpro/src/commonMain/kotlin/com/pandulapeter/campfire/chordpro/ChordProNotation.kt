@@ -50,9 +50,10 @@ object ChordProNotation {
         rename = { name -> toGerman(name) },
     )
 
-    /** Whether [name] is a real chord that uses German notation's `H`, at its root or bass. */
-    internal fun isGermanName(name: String) = ChordProChordNames.isChordName(name) &&
-            ChordProChordNames.notes(name).any { it.startsWith(GERMAN_B_NATURAL) }
+    /** Whether [name] is a real chord that uses German notation's `H`, at its root or bass, a lowercase `h` minor included. */
+    internal fun isGermanName(name: String) = (ChordProChordNames.lowercaseMinorExpanded(name) ?: name).let { chord ->
+        ChordProChordNames.isChordName(chord) && ChordProChordNames.notes(chord).any { it.startsWith(GERMAN_B_NATURAL) }
+    }
 
     /** Whether a file's song was written in German notation, which it says by using an `H` chord anywhere. */
     internal fun isGermanNotated(song: ChordProSong) = ChordProTransposer.writtenChordNames(song).any(::isGermanName)
@@ -70,6 +71,13 @@ object ChordProNotation {
         rename = ::fromGerman,
     )
 
+    /** [song] with its lowercase minor chords spelled out, and nothing else changed. */
+    internal fun withLowercaseMinorsExpanded(song: ChordProSong) = ChordProTransposer.rewriteChords(
+        song = song,
+        rewriteTabLines = { lines -> lines },
+        rename = { name -> ChordProChordNames.lowercaseMinorExpanded(name) ?: name },
+    )
+
     /** A chord name with musical accidental signs folded to the ASCII spelling the app writes. */
     internal fun withAsciiAccidentals(name: String) = name.replace(SHARP_SIGN, '#').replace(FLAT_SIGN, 'b')
 
@@ -77,8 +85,13 @@ object ChordProNotation {
     internal fun normalized(song: ChordProSong): ChordProSong {
         val names = ChordProTransposer.writtenChordNames(song).toList()
         val german = names.any(::isGermanName)
-        if (!german && names.none { SHARP_SIGN in it || FLAT_SIGN in it }) return song
-        val rename = { name: String -> withAsciiAccidentals(if (german) fromGerman(name) else name) }
+        val hasLowercaseMinors = names.any { ChordProChordNames.lowercaseMinorExpanded(it) != null }
+        if (!german && !hasLowercaseMinors && names.none { SHARP_SIGN in it || FLAT_SIGN in it }) return song
+        // The expansion comes first, so that a German `b` (B flat minor) becomes `Bm` and then `Bbm`.
+        val rename = { name: String ->
+            val expanded = ChordProChordNames.lowercaseMinorExpanded(name) ?: name
+            withAsciiAccidentals(if (german) fromGerman(expanded) else expanded)
+        }
         return ChordProTransposer.rewriteChords(
             song = song,
             rewriteTabLines = { lines -> ChordProTabTransposer.rewriteChordNames(lines, rename) },

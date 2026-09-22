@@ -46,6 +46,30 @@ internal object ChordProChordNames {
         return if (isParenthesized(name)) "($rewritten)" else rewritten
     }
 
+    /**
+     * [word] as the minor chord a lowercase root stands for in Central European charts — `a` is `Am`, `h7` is `Hm7`,
+     * `f#` is `F#m`, `(e)` is `(Em)` — or null for anything else. A suffix that starts with an `m` is not taken, since
+     * `am` would say minor twice and `amaj7` would be neither. The bass note after `/` is a note and not a chord, so it
+     * is written in capitals as everywhere else.
+     */
+    fun lowercaseMinorExpanded(word: String): String? {
+        val name = unwrapped(word)
+        val root = name.firstOrNull()?.takeIf { it in 'a'..'h' } ?: return null
+        val noteLength = if (name.getOrNull(1)?.let { it in "#b♯♭" } == true) 2 else 1
+        if (name.startsWith("m", noteLength)) return null
+        val expanded = root.uppercaseChar() + name.substring(1, noteLength) + "m" + name.substring(noteLength)
+        if (!isChordName(expanded)) return null
+        return if (isParenthesized(word)) "($expanded)" else expanded
+    }
+
+    /** The other way: [name], a minor chord, written with a lowercase root and no `m`. */
+    fun lowercaseMinorFolded(name: String): String {
+        val chord = unwrapped(name)
+        val noteLength = if (chord.getOrNull(1)?.let { it in "#b♯♭" } == true) 2 else 1
+        val folded = chord[0].lowercaseChar() + chord.substring(1, noteLength) + chord.substring(noteLength).removePrefix("m")
+        return if (isParenthesized(name)) "($folded)" else folded
+    }
+
     private fun isParenthesized(name: String) = name.length > 2 && name.first() == '(' && name.last() == ')'
     private fun unwrapped(name: String) = if (isParenthesized(name)) name.substring(1, name.length - 1) else name
     private fun noteEnd(name: String, index: Int): Int {

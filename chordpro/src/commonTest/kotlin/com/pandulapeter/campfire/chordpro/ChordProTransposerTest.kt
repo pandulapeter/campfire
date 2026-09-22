@@ -157,6 +157,24 @@ class ChordProTransposerTest {
     }
 
     @Test
+    fun `lowercase minors are transposed and keep their spelling in the text`() {
+        assertEquals("[C#]a [c#]b [h]c", ChordProTransposer.transposeText("[H]a [h]b [a]c", 2, preferFlats = false))
+        assertEquals("[D]a [b]b [A]c", ChordProTransposer.transposeText("[C]a [a]b [G]c", 2, preferFlats = false))
+        assertEquals("[H]a [h]b [a]c", ChordProTransposer.transposeText("[C#]a [c#]b [h]c", -2, preferFlats = false))
+        assertEquals("[C]a [a]b [G]c", ChordProTransposer.transposeText("[D]a [b]b [A]c", -2, preferFlats = false))
+    }
+
+    @Test
+    fun `lowercase minors are transposed on the model`() {
+        assertEquals(listOf("D", "Bm"), ChordProTransposer.transpose(ChordProParser.parse("[C]a [a]b"), 2, preferFlats = false).chordNames())
+    }
+
+    @Test
+    fun `a lowercase word in brackets is not a chord`() {
+        assertEquals("[fine]", ChordProTransposer.transposeText("[fine]", 2))
+    }
+
+    @Test
     fun `an abc block is left alone by the transposition`() {
         val text = "{start_of_abc}\n[CEG]2\n{end_of_abc}\n[C]la"
 
