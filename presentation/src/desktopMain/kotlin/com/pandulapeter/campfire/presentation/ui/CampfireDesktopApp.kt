@@ -118,6 +118,36 @@ fun CampfireViewModel.handleKeyEvent(keyEvent: KeyEvent, onExit: () -> Unit): Bo
 }
 
 /**
+ * To be wired into the window's preview key handler, which sees every key event before anything in the window does.
+ * Swallows the Escapes a held key repeats: AWT sends one `KEY_PRESSED` per repeat with no release in between, and every
+ * one of them would otherwise be another back - holding the key a moment too long closed every screen and then the
+ * app, and in the editor it opened and dismissed the unsaved changes question over and over.
+ *
+ * A release is recognised however it reaches the window, so a press that was consumed by something else still ends.
+ * Where the platform reports a repeat as a release and a press (X11 without detectable auto-repeat), a repeat looks
+ * like a new press and nothing can be done about it here.
+ */
+fun handlePreviewKeyEvent(keyEvent: KeyEvent): Boolean {
+    if (keyEvent.key != Key.Escape) return false
+    return when (keyEvent.type) {
+        KeyEventType.KeyDown -> isEscapeHeld.also { isEscapeHeld = true }
+        KeyEventType.KeyUp -> false.also { isEscapeHeld = false }
+        else -> false
+    }
+}
+
+/**
+ * Forgets a held Escape. A window that loses the focus while the key is down never gets its release, and without this
+ * the first Escape after coming back would be taken for a repeat and swallowed.
+ */
+fun resetEscapeKey() {
+    isEscapeHeld = false
+}
+
+/** One window, only ever touched on the AWT event thread, so a top-level flag is all the state [handlePreviewKeyEvent] needs. */
+private var isEscapeHeld = false
+
+/**
  * Opens [url] in the system's browser and answers whether anything took it. `java.awt.Desktop` goes first, and the
  * operating system's own command is what is left - both where AWT has no desktop to speak of, which is a Linux
  * session without the GNOME libraries it looks for, and where it has one that fails, as `browse` does on a machine

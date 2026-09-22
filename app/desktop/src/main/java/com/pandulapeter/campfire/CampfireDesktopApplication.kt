@@ -25,11 +25,15 @@ import com.pandulapeter.campfire.di.startCampfireDependencyGraph
 import com.pandulapeter.campfire.presentation.ui.CampfireDesktopApp
 import com.pandulapeter.campfire.presentation.ui.CampfireViewModel
 import com.pandulapeter.campfire.presentation.ui.handleKeyEvent
+import com.pandulapeter.campfire.presentation.ui.handlePreviewKeyEvent
+import com.pandulapeter.campfire.presentation.ui.resetEscapeKey
 import com.pandulapeter.campfire.presentation.ui.platform.desktopDataDirectory
 import com.pandulapeter.campfire.resources.Res
 import com.pandulapeter.campfire.resources.app_icon
 import java.awt.Desktop
 import java.awt.Dimension
+import java.awt.event.WindowEvent
+import java.awt.event.WindowFocusListener
 import java.io.File
 import javax.swing.SwingUtilities
 import kotlin.system.exitProcess
@@ -81,9 +85,18 @@ fun main(args: Array<String>) {
             title = "Campfire",
             onCloseRequest = requestExit,
             icon = painterResource(Res.drawable.app_icon),
+            onPreviewKeyEvent = ::handlePreviewKeyEvent,
             onKeyEvent = { keyEvent -> viewModel.value?.handleKeyEvent(keyEvent, onExit = ::exitApplication) == true },
         ) {
             window.minimumSize = Dimension(400, 400)
+            DisposableEffect(window) {
+                val focusListener = object : WindowFocusListener {
+                    override fun windowGainedFocus(event: WindowEvent) = Unit
+                    override fun windowLostFocus(event: WindowEvent) = resetEscapeKey()
+                }
+                window.addWindowFocusListener(focusListener)
+                onDispose { window.removeWindowFocusListener(focusListener) }
+            }
             // Another process was asked to open Campfire and handed over to this one, so this is the window the
             // user is looking for.
             LaunchedEffect(Unit) {

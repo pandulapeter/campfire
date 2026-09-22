@@ -114,6 +114,10 @@ private fun dismissLoadingScreen() {
  * Only a press Compose has not already seen is forwarded: the canvas' own listener runs first and calls
  * `preventDefault` on everything it processes, an Escape always among them. The forwarded event does not bubble, so
  * it cannot come back here either.
+ *
+ * Repeats of a held Escape are stopped in the capture phase, before the canvas or the forwarder sees them: every one
+ * would be another back, so holding the key a moment too long emptied the back stack and flickered the editor's
+ * unsaved changes question. Being `preventDefault`ed, a stopped repeat is not forwarded either.
  */
 private fun startForwardingEscapeKey() {
     js(
@@ -143,6 +147,13 @@ private fun startForwardingEscapeKey() {
                     cancelable: true
                 }));
             };
+            window.campfireEscapeRepeatFilter = function (event) {
+                if (event.key === 'Escape' && event.repeat) {
+                    event.preventDefault();
+                    event.stopImmediatePropagation();
+                }
+            };
+            window.addEventListener('keydown', window.campfireEscapeRepeatFilter, true);
             window.addEventListener('keydown', window.campfireEscapeForwarder);
             window.addEventListener('keyup', window.campfireEscapeForwarder);
         })()"""
@@ -153,6 +164,10 @@ private fun startForwardingEscapeKey() {
 private fun stopForwardingEscapeKey() {
     js(
         """(function () {
+            if (window.campfireEscapeRepeatFilter) {
+                window.removeEventListener('keydown', window.campfireEscapeRepeatFilter, true);
+                window.campfireEscapeRepeatFilter = null;
+            }
             if (!window.campfireEscapeForwarder) return;
             window.removeEventListener('keydown', window.campfireEscapeForwarder);
             window.removeEventListener('keyup', window.campfireEscapeForwarder);
