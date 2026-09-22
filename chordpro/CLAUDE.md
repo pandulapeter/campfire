@@ -40,11 +40,14 @@ in `:domain:*`. `:data:source:local:implementation` uses it directly for the met
   does not know stays the lyrics it has always been shown as), the `start_of_` / `end_of_` prefixes, `label`
   attributes in either quotes, and no label at all for a value made of other attributes, what counts as a tag or a language directive, `metadataKind` for the one name a
   directive is known by whichever of its spellings a file uses, `isStaffLine` for "is this line of a tab environment
-  the staff or something written above it", and where a new one goes in a file the user wrote).
+  the staff or something written above it", `words` for the words of a line and their ranges, and where a new one
+  goes in a file the user wrote).
   `metadataInsertionIndex` is that last rule: after the last directive of the same kind, and otherwise into the
   header in `metadataOrder`, the order the app lists metadata in — which leaves a header arranged some other way
   exactly as it is, since it only ever decides where a line is *added*. Every other object here goes through it, so
-  the dialect is defined once.
+  the dialect is defined once. What counts as a space is decided in `words`, by `Char.isWhitespace` and not by a
+  regex: the three platforms' regex engines disagree about `\s`, and a chart pasted from a web page is full of
+  non-breaking spaces.
 - `ChordProParser` — `parse` (the whole song), `summarize` (the directives plus "does it have chords", from one walk,
   which is what the library scan calls for every file at startup) and `parseMetadata` (directive lines only, for a
   caller with no interest in the body). Total: it never throws and never rejects a document, because the

@@ -28,6 +28,22 @@ class ChordProTabWrapperTest {
     )
 
     @Test
+    fun `a staff indented with a non-breaking space keeps its string names in the continuation rows`() {
+        val lines = listOf(
+            "\u00A0e|---0---|---2---|",
+            "\u00A0B|---1---|---3---|",
+        )
+
+        assertEquals(
+            listOf(
+                listOf("\u00A0e|---0---|", "\u00A0B|---1---|"),
+                listOf("\u00A0e|---2---|", "\u00A0B|---3---|"),
+            ),
+            ChordProTabWrapper.wrap(lines, maxColumns = 12),
+        )
+    }
+
+    @Test
     fun `a run that fits is returned as it is`() {
         val rows = ChordProTabWrapper.wrap(riff, maxColumns = riff.maxOf { it.length })
         assertEquals(1, rows.size)

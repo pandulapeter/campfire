@@ -356,7 +356,9 @@ object ChordProTransposer {
     }
 
     private fun transposeGridLine(rawLine: String, trimmedLine: String, rename: (String) -> String): String {
-        val matches = tokenRegex.findAll(trimmedLine).toList()
+        // The ranges and the tokens are zipped by index, which is only safe because both are the same list of words:
+        // parseGridTokens reads the line through ChordProSyntax.words as well.
+        val matches = ChordProSyntax.words(trimmedLine)
         val tokens = ChordProSyntax.parseGridTokens(trimmedLine)
         val body = buildString {
             var consumedUntil = 0
@@ -400,7 +402,6 @@ object ChordProTransposer {
     private const val GRID = "grid"
     private const val BRACKET_OPEN = '['
     private const val BRACKET_CLOSE = ']'
-    private val tokenRegex = Regex("\\S+")
     private val sharpNames = listOf("C", "C#", "D", "D#", "E", "F", "F#", "G", "G#", "A", "A#", "B")
     private val flatNames = listOf("C", "Db", "D", "Eb", "E", "F", "Gb", "G", "Ab", "A", "Bb", "B")
     private val flatMajorKeys = setOf("C", "F", "Bb", "Eb", "Ab", "Db")

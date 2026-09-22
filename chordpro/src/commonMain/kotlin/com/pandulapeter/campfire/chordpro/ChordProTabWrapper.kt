@@ -142,7 +142,20 @@ object ChordProTabWrapper {
      * The string name and the bar line that open a staff line (`e|`, `E |`, ` G|` next to an `Eb|`, or nothing at
      * all), which is what a continuation row repeats in front of its piece of the staff.
      */
-    private fun staffPrefix(line: String) = staffPrefixRegex.find(line)?.value.orEmpty()
+    private fun staffPrefix(line: String): String {
+        var index = 0
+        while (index < line.length && line[index].isWhitespace()) index++
+        var letters = 0
+        while (letters < MAX_PREFIX_LETTERS && line.getOrNull(index)?.isStringNameCharacter == true) {
+            index++
+            letters++
+        }
+        while (index < line.length && line[index].isWhitespace()) index++
+        if (line.getOrNull(index) == BAR) index++
+        return line.substring(0, index)
+    }
+
+    private val Char.isStringNameCharacter get() = this in 'A'..'Z' || this in 'a'..'z' || this == SHARP
 
     /**
      * The columns where every staff line that reaches them has a bar line. A staff line that has already ended does
@@ -188,5 +201,6 @@ object ChordProTabWrapper {
     private const val MIN_BAR_WIDTH = 3 // A cut after the bar that opens a line would make a row of nothing but it.
     private const val BAR = '|'
     private const val DASH = '-'
-    private val staffPrefixRegex = Regex("^\\s*[A-Za-z#]{0,2}\\s*\\|?")
+    private const val MAX_PREFIX_LETTERS = 2
+    private const val SHARP = '#'
 }

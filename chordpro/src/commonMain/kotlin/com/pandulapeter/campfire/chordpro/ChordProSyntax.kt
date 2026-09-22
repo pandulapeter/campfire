@@ -19,9 +19,14 @@ internal object ChordProSyntax {
 
 
 
+    /**
+     * The `\\s` in these two means the ASCII spaces on the JVM and on Kotlin/Native and every Unicode space in a
+     * browser, unlike [words]. They are left that way because the difference only ever fails in one direction: a value
+     * with a non-breaking space in front of `label=` is not read as attributes on some platforms, and [label] then
+     * shows the user's own text as the heading rather than nothing, with nothing half-rewritten.
+     */
     private val labelAttributeRegex = Regex("(?:^|\\s)label\\s*=\\s*(?:\"([^\"]*)\"|'([^']*)')")
     private val attributeRegex = Regex("\\s*[A-Za-z_][A-Za-z0-9_-]*\\s*=\\s*(?:\"[^\"]*\"|'[^']*')")
-    private val whitespaceRegex = Regex("\\s+")
     private val barLines = setOf("|", "||", "|.", "|:", ":|", ":|:")
     private val voltaRegex = Regex(":?\\|\\d+>?")
 
@@ -451,6 +456,32 @@ internal object ChordProSyntax {
         return if (base in selectableEnvironments) base else environment
     }
 
+    /** One word of a line and the range it covers, see [words]. */
+    data class Word(val range: IntRange, val value: String)
+
+    /**
+     * The words of [line]: every run of characters no whitespace separates, each with the range it sits in, so that
+     * a caller rewriting one of them can put the answer back in the same columns.
+     *
+     * Scanned by hand rather than with a `\\S+` regex. `\\s` is the six ASCII spaces to the JVM's and to
+     * Kotlin/Native's regex engines and every Unicode space to a browser's, so the same line would be read one way
+     * on a phone and another on the web; and a chart pasted from a web page is full of non-breaking spaces, which
+     * the ASCII answer glues onto the chord beside them. [Char.isWhitespace] is the same answer on every platform,
+     * and the one `trim` and [isStaffLine] already give this module.
+     */
+    fun words(line: String): List<Word> {
+        val words = mutableListOf<Word>()
+        var index = 0
+        while (index < line.length) {
+            while (index < line.length && line[index].isWhitespace()) index++
+            if (index == line.length) break
+            val start = index
+            while (index < line.length && !line[index].isWhitespace()) index++
+            words += Word(range = start until index, value = line.substring(start, index))
+        }
+        return words
+    }
+
     /**
      * Splits a grid line into tokens. ChordPro puts whatever comes before the first bar line in the left margin and
      * whatever follows the last one in the right margin, so on a line that has a bar both are text: a margin label
@@ -458,7 +489,7 @@ internal object ChordProSyntax {
      * chord is played and is not one either.
      */
     fun parseGridTokens(trimmedLine: String): List<GridToken> {
-        val words = trimmedLine.split(whitespaceRegex).filter { it.isNotEmpty() }
+        val words = words(trimmedLine).map { it.value }
         val firstBarIndex = words.indexOfFirst { isBar(it) }
         val lastBarIndex = words.indexOfLast { isBar(it) }
         return words.mapIndexed { index, word ->

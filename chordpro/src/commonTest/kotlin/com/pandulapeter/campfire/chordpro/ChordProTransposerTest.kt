@@ -276,6 +276,24 @@ class ChordProTransposerTest {
     }
 
     @Test
+    fun `a grid written with non-breaking spaces is transposed`() {
+        assertEquals(
+            "{start_of_grid}\n|\u00A0Bm\u00A0.\u00A0A\u00A0|\n{end_of_grid}",
+            ChordProTransposer.transposeText("{start_of_grid}\n|\u00A0Am\u00A0.\u00A0G\u00A0|\n{end_of_grid}", 2, preferFlats = false),
+        )
+    }
+
+    @Test
+    fun `the ranges of a grid line and its tokens are the same list`() {
+        val line = "A \u00A0|\u00A0Am . G~C\u00A0|\u00A0 | F |\u00A0Coda"
+
+        assertEquals(
+            "{sog}\nA \u00A0|\u00A0Bm . A~D\u00A0|\u00A0 | G |\u00A0Coda\n{eog}",
+            ChordProTransposer.transposeText("{sog}\n$line\n{eog}", 2, preferFlats = false),
+        )
+    }
+
+    @Test
     fun `a grid keeps its margin labels and moves every chord of a cell`() {
         val text = "{start_of_grid}\nA    || G7 . | C~A . |\nCoda | D7 |.\n{end_of_grid}"
 

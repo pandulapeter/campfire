@@ -58,9 +58,9 @@ internal object ChordProTabTransposer {
         val ranges = mutableListOf<IntRange>()
         var index = 0
         while (index < line.length) {
-            if (line[index].isDigit()) {
+            if (line[index].isAsciiDigit) {
                 var endIndex = index
-                while (endIndex + 1 < line.length && line[endIndex + 1].isDigit()) {
+                while (endIndex + 1 < line.length && line[endIndex + 1].isAsciiDigit) {
                     endIndex++
                 }
                 if (line.getOrNull(index - 1)?.lowercaseChar() != REPEAT_COUNT_MARKER) {
@@ -73,6 +73,12 @@ internal object ChordProTabTransposer {
         }
         return ranges
     }
+
+    /**
+     * A fret number is ASCII. [Char.isDigit] takes every script's digits, and `toIntOrNull` reads those on the JVM but
+     * not on Kotlin/Native or in the browser, so the same tab would be transposed on one platform and left on another.
+     */
+    private val Char.isAsciiDigit get() = this in '0'..'9'
 
     private fun fretNumbers(line: String) = fretRanges(line).mapNotNull { line.substring(it).toIntOrNull() }
 
@@ -114,13 +120,12 @@ internal object ChordProTabTransposer {
     }
 
     /** The chord names of a line that holds only chords and markers, or null when the line is prose. */
-    private fun chordWords(line: String): List<MatchResult>? {
-        val chordWords = mutableListOf<MatchResult>()
-        wordRegex.findAll(line).forEach { match ->
-            val word = match.value
+    private fun chordWords(line: String): List<ChordProSyntax.Word>? {
+        val chordWords = mutableListOf<ChordProSyntax.Word>()
+        ChordProSyntax.words(line).forEach { word ->
             when {
-                ChordProChordNames.isChordName(word) -> chordWords += match
-                isMarker(word) -> Unit
+                ChordProChordNames.isChordName(word.value) -> chordWords += word
+                isMarker(word.value) -> Unit
                 else -> return null
             }
         }
@@ -176,7 +181,6 @@ internal object ChordProTabTransposer {
     private const val BEAT = "."
     private const val REPEAT = "%"
     private const val DOUBLE_REPEAT = "%%"
-    private val wordRegex = Regex("\\S+")
     private val dashesRegex = Regex("-+")
     private val repeatCountRegex = Regex("\\(?[xX]\\d+\\)?")
 

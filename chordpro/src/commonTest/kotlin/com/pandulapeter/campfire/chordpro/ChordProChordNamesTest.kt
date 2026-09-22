@@ -61,6 +61,12 @@ class ChordProChordNamesTest {
     }
 
     @Test
+    fun `a chord number is an ASCII digit`() {
+        assertFalse(ChordProChordNames.isChordName("C\u06637"))
+        assertTrue(ChordProChordNames.isChordName("C7"))
+    }
+
+    @Test
     fun `a lowercase minor with a lowercase bass expands`() {
         assertEquals("Dm/f#", ChordProChordNames.lowercaseMinorExpanded("d/f#"))
     }

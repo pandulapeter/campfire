@@ -104,7 +104,13 @@ internal object ChordProChordNames {
         if (letter.uppercaseChar() !in 'A'..'H') return -1
         return if (name.getOrNull(index + 1)?.let { it in "#b♯♭" } == true) index + 2 else index + 1
     }
-    private fun digitsEnd(name: String, start: Int): Int { var index = start; while (name.getOrNull(index)?.isDigit() == true) index++; return index }
+    private fun digitsEnd(name: String, start: Int): Int { var index = start; while (name.getOrNull(index)?.isAsciiDigit == true) index++; return index }
+
+    /**
+     * A chord's numbers are ASCII digits. [Char.isDigit] takes every script's, which `C٣7` would pass, and what
+     * `toInt` makes of those differs between the JVM and the other platforms.
+     */
+    private val Char.isAsciiDigit get() = this in '0'..'9'
     private fun qualityAt(name: String, index: Int) = qualities.firstOrNull { name.startsWith(it, index) }
     private fun alterationEnd(name: String, index: Int): Int {
         val word = alterations.firstOrNull { name.startsWith(it, index) }

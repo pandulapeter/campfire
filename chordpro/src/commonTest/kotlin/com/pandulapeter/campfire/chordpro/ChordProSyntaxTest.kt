@@ -9,6 +9,7 @@
  */
 package com.pandulapeter.campfire.chordpro
 
+import com.pandulapeter.campfire.chordpro.model.GridToken
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFalse
@@ -102,6 +103,23 @@ class ChordProSyntaxTest {
                 assertEquals(line, text.substring(starts[index], end).trimEnd('\r', '\n'), text)
             }
         }
+    }
+
+    @Test
+    fun `words are separated by any space the platform calls one`() {
+        assertEquals(
+            listOf(ChordProSyntax.Word(0..0, "a"), ChordProSyntax.Word(2..2, "b"), ChordProSyntax.Word(5..5, "c")),
+            ChordProSyntax.words("a\u00A0b \u00A0c"),
+        )
+        listOf("", "   ", "\u00A0").forEach { assertTrue(ChordProSyntax.words(it).isEmpty(), it) }
+    }
+
+    @Test
+    fun `a grid separated by non-breaking spaces is still a grid`() {
+        assertEquals(
+            listOf(GridToken.Bar("|"), GridToken.Chord("Am"), GridToken.Beat, GridToken.Chord("G"), GridToken.Bar("|")),
+            ChordProSyntax.parseGridTokens("|\u00A0Am\u00A0.\u00A0G\u00A0|"),
+        )
     }
 
     private fun <T> assertLinear(block: () -> T): T {

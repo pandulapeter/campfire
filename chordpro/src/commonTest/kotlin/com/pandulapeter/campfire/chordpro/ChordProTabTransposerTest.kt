@@ -22,6 +22,23 @@ class ChordProTabTransposerTest {
     }
 
     @Test
+    fun `a chord row written with non-breaking spaces is transposed with the frets`() {
+        val text = "{start_of_tab}\nAm\u00A0   G\ne|--0--2--|\nB|--1--3--|\nG|--2--0--|\n{end_of_tab}"
+
+        assertEquals(
+            "{start_of_tab}\nBm\u00A0   A\ne|--2--4--|\nB|--3--5--|\nG|--4--2--|\n{end_of_tab}",
+            ChordProTransposer.transposeText(text, 2, preferFlats = false),
+        )
+    }
+
+    @Test
+    fun `a prose line in a tab is still left alone`() {
+        val text = "{sot}\nTuning:\u00A0D\u00A0A\u00A0D\u00A0G\u00A0A\u00A0D\ne|--0--|\n{eot}"
+
+        assertEquals("{sot}\nTuning:\u00A0D\u00A0A\u00A0D\u00A0G\u00A0A\u00A0D\ne|--2--|\n{eot}", ChordProTransposer.transposeText(text, 2))
+    }
+
+    @Test
     fun `every abbreviation of no chord is a marker`() {
         val lines = listOf("C NC D n.c E N.C", "e|--0--|")
 
