@@ -44,6 +44,11 @@ class ChordProSyntaxTest {
     }
 
     @Test
+    fun `a negated selector names the directive it is written on`() {
+        assertEquals(ChordProSyntax.Directive("tag", "Folk"), ChordProSyntax.matchDirective("{tag-guitar!: Folk}"))
+    }
+
+    @Test
     fun `the value start is after the colon or after the whitespace`() {
         assertEquals(7, ChordProSyntax.directiveValueStart("{title: X}"))
         assertEquals(7, ChordProSyntax.directiveValueStart("{title X}"))

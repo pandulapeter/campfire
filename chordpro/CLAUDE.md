@@ -49,13 +49,16 @@ in `:domain:*`. `:data:source:local:implementation` uses it directly for the met
 - `ChordProParser` — `parse` (the whole song), `summarize` (the directives plus "does it have chords", from one walk,
   which is what the library scan calls for every file at startup) and `parseMetadata` (directive lines only, for a
   caller with no interest in the body). Total: it never throws and never rejects a document, because the
-  file on disk is the user's and half of it may be under the caret. Unknown directives are ignored; a song that changes
-  key is in the key its first `{key}` names; `{meta: title …}` and the other standard names the spec defines as their
-  standalone directive (`subtitle`, `artist`, `composer`, `lyricist`, `album`, `year`, `key`, `capo`, `tempo`, `time`,
-  `duration`) are read as that directive; `{define}`, fonts, colours, images and page directives are parsed and dropped.
-  It also understands the Campfire 3 dialect, where `{comment: Verse 1}` outside an environment was a section heading;
-  one that no line follows before a blank line, another section or the end of the file stays the comment it was, since a
-  section with nothing in it is not drawn.
+  file on disk is the user's and half of it may be under the caret. Unknown directives are ignored; a directive with a
+  selector suffix (`{title-guitar}`) is dropped, since there is nothing to match it against, and one with a negated
+  selector (`{title-guitar!}`) is read as the directive it is on for the same reason; an environment with a selector is
+  the environment it selects, since its lines are the song itself; a song that changes key is in the key its first
+  `{key}` names; `{meta: title …}` and the other standard names the spec defines as their standalone directive
+  (`subtitle`, `artist`, `composer`, `lyricist`, `album`, `year`, `key`, `capo`, `tempo`, `time`, `duration`) are read
+  as that directive; `{define}`, fonts, colours, images and page directives are parsed and dropped. It also understands
+  the Campfire 3 dialect, where `{comment: Verse 1}` outside an environment was a section heading; one that no line
+  follows before a blank line, another section or the end of the file stays the comment it was, since a section with
+  nothing in it is not drawn.
 - `ChordProSerializer` — writes the model back as canonical ChordPro. The editor works on raw text, so the user's own
   formatting does not have to survive this; `parse(serialize(parse(x))) == parse(x)` does.
 - `ChordProTags` — the tags of a song. ChordPro's own `{tag: Needs study}` directive, one tag per directive and as

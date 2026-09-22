@@ -611,4 +611,26 @@ class ChordProParserTest {
         val textBlock = ChordProParser.parse("{start_of_textblock}\nfirst\n{comment: Chorus}\nsecond\n{end_of_textblock}").blocks
         assertEquals(ChordProBlock.Comment("Chorus", CommentStyle.PLAIN), textBlock[1])
     }
+
+    @Test
+    fun `an environment with a selector is the environment it selects`() {
+        val blocks = ChordProParser.parse("{start_of_chorus-guitar}\n[C]la\n{end_of_chorus}\n{chorus}").blocks
+
+        assertEquals(SectionType.Chorus, (blocks[0] as ChordProBlock.Section).type)
+        assertEquals(ChordProBlock.ChorusRecall(null), blocks[1])
+        assertEquals(
+            SectionType.Custom("pre-chorus"),
+            (ChordProParser.parse("{start_of_pre-chorus}\n[C]la\n{end_of_pre-chorus}").blocks.single() as ChordProBlock.Section).type,
+        )
+        val tab = ChordProParser.parse("{start_of_tab-guitar}\ne|--0--|\n{end_of_tab}").blocks.single() as ChordProBlock.Section
+        assertEquals(listOf(ChordProLine.Tab("e|--0--|")), tab.lines)
+    }
+
+    @Test
+    fun `a negated selector is read as the directive it is written on`() {
+        assertEquals("X", ChordProParser.parse("{title-guitar!: X}").metadata.title)
+        assertNull(ChordProParser.parse("{title-guitar: Y}").metadata.title)
+        assertNull(ChordProSyntax.matchDirective("{tit!le: X}"))
+        assertNull(ChordProSyntax.matchDirective("{title!: X}"))
+    }
 }

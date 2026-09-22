@@ -169,7 +169,10 @@ internal object ChordProSyntax {
         while (index < closeIndex && trimmedLine[index].isDirectiveNameCharacter) index++
         if (index == nameStartIndex) return null
         val nameEndIndex = index
-        val name = trimmedLine.substring(nameStartIndex, nameEndIndex).lowercase()
+        val writtenName = trimmedLine.substring(nameStartIndex, nameEndIndex).lowercase()
+        // A negated selector holds wherever nothing matches the selector, which in Campfire is everywhere, so the
+        // directive is read as the one it is written on. A `!` anywhere else is not part of a directive name.
+        val name = if ('!' in writtenName) negatedSelectorBase(writtenName) ?: return null else writtenName
         while (index < closeIndex && trimmedLine[index].isWhitespace()) index++
         return when {
             index == closeIndex -> name to -1
@@ -177,6 +180,13 @@ internal object ChordProSyntax {
             index > nameEndIndex && isKnownName(name) -> name to index
             else -> null
         }
+    }
+
+    /** `title` for `title-guitar!`: the known directive a negated selector is written on, or null. */
+    private fun negatedSelectorBase(name: String): String? {
+        if (!name.endsWith('!') || name.count { it == '!' } != 1) return null
+        val base = name.dropLast(1).substringBeforeLast('-', missingDelimiterValue = "")
+        return base.takeIf { it.isNotEmpty() && isKnownName(it) }
     }
 
     /** Whether [name] is a directive ChordPro defines, a custom `x_` one or one of those with a selector suffix. */
@@ -205,7 +215,7 @@ internal object ChordProSyntax {
     }
 
     /** The characters an ASCII directive name may contain. */
-    private val Char.isDirectiveNameCharacter get() = this in 'a'..'z' || this in 'A'..'Z' || this in '0'..'9' || this == '_' || this == '-'
+    private val Char.isDirectiveNameCharacter get() = this in 'a'..'z' || this in 'A'..'Z' || this in '0'..'9' || this == '_' || this == '-' || this == '!'
 
     /**
      * The tag a directive carries, or null if it is not a tag directive. ChordPro documents `{tag: Needs study}` and
@@ -395,7 +405,10 @@ internal object ChordProSyntax {
         return true
     }
 
-    /** True for names such as `title-guitar`: a known directive with a selector suffix, which is out of scope. */
+    /**
+     * True for names such as `title-guitar`: a known directive with a (non-negated) selector suffix, which Campfire
+     * matches nothing against and drops. Environments are the exception, see [startOfEnvironment].
+     */
     fun hasSelectorSuffix(name: String): Boolean {
         if (name.startsWith(START_OF_PREFIX) || name.startsWith(END_OF_PREFIX)) return false
         val separatorIndex = name.lastIndexOf('-')
@@ -404,11 +417,33 @@ internal object ChordProSyntax {
 
     /** The environment name of a `{start_of_x}` / `{soc}` style directive, or null if this is not one. */
     fun startOfEnvironment(name: String) = startShortNames[name]
-        ?: name.takeIf { it.startsWith(START_OF_PREFIX) && it.length > START_OF_PREFIX.length }?.substring(START_OF_PREFIX.length)
+        ?: name.takeIf { it.startsWith(START_OF_PREFIX) && it.length > START_OF_PREFIX.length }
+            ?.substring(START_OF_PREFIX.length)
+            ?.removeSuffix("!")
+            ?.let(::withoutSelector)
 
     /** The environment name of an `{end_of_x}` / `{eoc}` style directive, or null if this is not one. */
     fun endOfEnvironment(name: String) = endShortNames[name]
-        ?: name.takeIf { it.startsWith(END_OF_PREFIX) && it.length > END_OF_PREFIX.length }?.substring(END_OF_PREFIX.length)
+        ?: name.takeIf { it.startsWith(END_OF_PREFIX) && it.length > END_OF_PREFIX.length }
+            ?.substring(END_OF_PREFIX.length)
+            ?.removeSuffix("!")
+            ?.let(::withoutSelector)
+
+    /**
+     * The environments a selector suffix is looked for on. A custom environment may have a dash in its own name
+     * (`start_of_pre-chorus`), so only these are taken to have a selector after theirs.
+     */
+    private val selectableEnvironments = setOf("chorus", "verse", "bridge", "tab", "grid") + delegateEnvironments
+
+    /**
+     * [environment] without a selector suffix. Campfire has nothing to match a selector against, and an environment
+     * is part of the song itself, so `{start_of_chorus-guitar}` is shown as the chorus it selects rather than left
+     * out; its `{end_of_chorus}` carries no selector, as the spec has it.
+     */
+    private fun withoutSelector(environment: String): String {
+        val base = environment.substringBeforeLast('-', missingDelimiterValue = environment)
+        return if (base in selectableEnvironments) base else environment
+    }
 
     /**
      * Splits a grid line into tokens. ChordPro puts whatever comes before the first bar line in the left margin and
