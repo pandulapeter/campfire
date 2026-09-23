@@ -132,5 +132,5 @@ both are always written:
   Never pick a number above 0 on your own; mention the line when reporting back, so a release that fixes
   something serious can be raised before it is published.
 
-Where `android-publish.yml` is dispatched by hand instead, its `release_notes` input is a single-line
+Where `publish-android.yml` is dispatched by hand instead, its `release_notes` input is a single-line
 field that takes the same text with a literal `\n` for every line break.

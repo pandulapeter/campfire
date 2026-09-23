@@ -125,7 +125,7 @@ jobs:
   android:
     name: Android
     needs: prepare
-    uses: ./.github/workflows/android-publish.yml
+    uses: ./.github/workflows/publish-android.yml
     with:
       update_priority: ${{ needs.prepare.outputs.update_priority }}
       release_notes: ${{ needs.prepare.outputs.release_notes }}
@@ -135,13 +135,13 @@ jobs:
   web:
     name: Web
     needs: prepare
-    uses: ./.github/workflows/web-publish.yml
+    uses: ./.github/workflows/publish-web.yml
     secrets: inherit
 
   linux:
     name: Linux
     needs: prepare
-    uses: ./.github/workflows/linux-publish.yml
+    uses: ./.github/workflows/publish-linux.yml
     with:
       release_tag: ${{ github.event.release.tag_name }}
     secrets: inherit
@@ -149,8 +149,8 @@ jobs:
   windows:
     name: Windows
     needs: prepare
-    uses: ./.github/workflows/windows-publish.yml
-    # The Microsoft Store is signed into with the job's OIDC token (see windows-publish.yml), and a called workflow
+    uses: ./.github/workflows/publish-windows.yml
+    # The Microsoft Store is signed into with the job's OIDC token (see publish-windows.yml), and a called workflow
     # gets no permission its caller does not grant.
     permissions:
       contents: read
@@ -164,7 +164,7 @@ jobs:
   ios:
     name: iOS
     needs: prepare
-    uses: ./.github/workflows/ios-publish.yml
+    uses: ./.github/workflows/publish-ios.yml
     with:
       release_tag: ${{ github.event.release.tag_name }}
       release_notes: ${{ needs.prepare.outputs.release_notes }}
@@ -174,7 +174,7 @@ jobs:
   macos:
     name: macOS
     needs: prepare
-    uses: ./.github/workflows/macos-publish.yml
+    uses: ./.github/workflows/publish-macos.yml
     with:
       release_tag: ${{ github.event.release.tag_name }}
       release_notes: ${{ needs.prepare.outputs.release_notes }}

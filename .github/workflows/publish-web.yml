@@ -56,7 +56,7 @@ jobs:
           fi
           echo "name=$VERSION_NAME" >> "$GITHUB_OUTPUT"
           echo "Publishing version $VERSION_NAME"
-      # Through local.properties rather than -P, for the reason android-publish.yml gives: a -P value is in the
+      # Through local.properties rather than -P, for the reason publish-android.yml gives: a -P value is in the
       # runner's process list, and a secret interpolated into the script is re-read by the shell.
       - name: Build web distribution
         env:

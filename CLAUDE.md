@@ -295,10 +295,10 @@ uninstall and nothing else does.
   Nothing for the Mac or for Windows is attached: the Mac App Store build is the Mac build, and it is Apple silicon
   only, and the Microsoft Store build is the Windows build. `packageReleaseMsi` and `packageDmg` still build, and
   nothing publishes either.
-  - `web-publish.yml` builds the distribution and copies it over `campfire/` in the `pandulapeter.github.io`
+  - `publish-web.yml` builds the distribution and copies it over `campfire/` in the `pandulapeter.github.io`
     repository, which it reaches with the deploy key in `WEBSITE_DEPLOY_KEY`. The copy is an `rsync --delete`, so the
     folder holds nothing but the distribution — the privacy policy and the rest of the site live elsewhere there.
-  - `linux-publish.yml` builds `packageReleaseDeb` on amd64 and arm64 — jpackage only packages for the machine it runs
+  - `publish-linux.yml` builds `packageReleaseDeb` on amd64 and arm64 — jpackage only packages for the machine it runs
     on — and attaches both to the release, which is the whole of how the Linux build is handed out (the README's "Get
     Campfire" section links to the latest release's page, and a `.deb` is not something anybody signs on its own).
     It builds on the oldest supported Ubuntu rather than the newest, since a `.deb` asks for the system libraries it
@@ -307,7 +307,7 @@ uninstall and nothing else does.
     builds the app image (`createReleaseDistributable`; the plugin packages the jars directly and leaves no image
     behind on its own) and starts it under Xvfb with an empty data directory, and attaches nothing unless the demo
     library appears, the process is still there after that, and its log names no exception.
-  - `windows-publish.yml` builds `packageReleaseMsix` on a Windows runner (whose image has the SDK's makeappx),
+  - `publish-windows.yml` builds `packageReleaseMsix` on a Windows runner (whose image has the SDK's makeappx),
     checks the identity and the version in the package's manifest against `gradle.properties`, starts the app image it
     was made of the way the Linux legs do (the Windows launcher writes no log, so there only an exit counts), keeps
     the `.msix` as an artifact of the run and, called by a release (a hand dispatch only when its box is ticked),
@@ -324,7 +324,7 @@ uninstall and nothing else does.
     environment and why `release.yml` grants it `id-token: write` — so, like everything Apple's workflows use, nothing
     it signs in with expires (a client secret would, after two years at most). The package is unsigned, since the
     Store signs what it certifies, and nothing is attached to the release.
-  - `macos-publish.yml` builds `packageReleasePkg` on an Apple silicon runner — asking for the `.pkg` is what signs
+  - `publish-macos.yml` builds `packageReleasePkg` on an Apple silicon runner — asking for the `.pkg` is what signs
     and sandboxes it — signed with a Mac App
     Distribution and a Mac Installer Distribution certificate and the two Mac App Store provisioning profiles (the
     app's and the bundled Java runtime's) that the run creates for itself and revokes at the end (see below), all of
@@ -334,7 +334,7 @@ uninstall and nothing else does.
     the fresh sandbox container. It uploads the `.pkg` with `altool` and the same App Store Connect API key as iOS,
     and submits it for review the way iOS does (below); its `build_number` input uploads a release again under a
     number App Store Connect has not seen.
-  - `ios-publish.yml` archives the app signed with an Apple Distribution certificate the run creates for itself and
+  - `publish-ios.yml` archives the app signed with an Apple Distribution certificate the run creates for itself and
     revokes at the end, lets xcodebuild make the App Store profile for it with the App Store Connect API key, and
     uploads the exported
     `.ipa` to App Store Connect, where it lands in TestFlight. Nothing is attached to the release.
@@ -359,7 +359,7 @@ uninstall and nothing else does.
     hand. Revoking a distribution certificate does not touch builds already in TestFlight or on the store, which Apple
     signs again. It must never be used for a Developer ID certificate, whose revocation breaks every copy of an app
     already downloaded.
-  - `android-publish.yml` writes the keystore out of `ANDROID_KEYSTORE_BASE64`, builds `assembleRelease` signed with
+  - `publish-android.yml` writes the keystore out of `ANDROID_KEYSTORE_BASE64`, builds `assembleRelease` signed with
     the other three `ANDROID_*` secrets and uploads it and its mapping file to the production track with
     `PLAY_SERVICE_ACCOUNT_JSON`; nothing is attached to the release. It is an **APK** and not an app bundle because the Play listing predates the bundle
     requirement and was never migrated; a `bundleRelease` would be rejected on upload. The "what's new" text comes
@@ -434,7 +434,7 @@ three. The gate wraps the whole app inside `CampfireApp`, so it speaks the theme
   4–5 covers the app with a screen that cannot be dismissed until the update is there. The thresholds live in
   `AppUpdate.android.kt`. The priority also says which kind of flow an update already in progress is, since Play's
   answer does not — which is what lets an Activity recreated mid-download pick the download up instead of offering
-  it again. `android-publish.yml` asks for the number as its `update_priority` input — which a release
+  it again. `publish-android.yml` asks for the number as its `update_priority` input — which a release
   sets with a `<!-- play-store update-priority: N -->` comment in its description — defaulting to 0 — the number belongs to the release being published, not to the code being published.
 - Back on the blocking screen closes the app. The app it covers is still composed behind it, so the gesture has to
   be taken rather than allowed through, and leaving is the only thing it can honestly mean there.

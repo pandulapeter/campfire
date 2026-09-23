@@ -46,6 +46,7 @@ Campfire is available for the following platforms:
 - [Sync](documentation/sync.md) - what it sees, how a run decides, and why it needs no backend.
 
 ### To do
+- Once Microsoft Store, App Store and Mac App Store listings are approved, update included URL-s + this Readme
 - Add more automatic sync triggers
 - Add ability to add links
 - Songs: sort by year option
@@ -55,8 +56,6 @@ Campfire is available for the following platforms:
 - Fix Songs screen async race animation issues
 - Improve code coverage
 - Review architecture / code quality
-- Publishing — what is still to be done before the [iOS App Store](documentation/publishing/ios-app-store.md), the [Mac App Store](documentation/publishing/mac-app-store.md) and the [Microsoft Store](documentation/publishing/microsoft-store.md) have the app.
-- Delete [Store listing](documentation/store-listing.md) once all listings are submitted.
 
 ### License
 
