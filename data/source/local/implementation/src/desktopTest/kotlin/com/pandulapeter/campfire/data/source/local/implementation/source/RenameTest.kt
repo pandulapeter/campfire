@@ -11,7 +11,9 @@ package com.pandulapeter.campfire.data.source.local.implementation.source
 
 import com.pandulapeter.campfire.data.model.domain.Setlist
 import com.pandulapeter.campfire.data.model.domain.normalizedToNfc
+import com.pandulapeter.campfire.data.source.local.api.LibraryStorageException
 import com.pandulapeter.campfire.data.source.local.implementation.moveFile
+import com.pandulapeter.campfire.data.source.local.implementation.storage.file.FileStorage
 import com.pandulapeter.campfire.data.source.local.implementation.storage.file.JvmFileStorage
 import com.pandulapeter.campfire.data.source.local.implementation.storage.file.StorageDirectory
 import kotlinx.coroutines.runBlocking
@@ -77,6 +79,38 @@ class RenameTest {
 
         assertEquals("bar_live_2.cho", renamed?.fileName)
         assertEquals(listOf("bar.cho", "bar_live.cho", "bar_live_2.cho"), fileStorage.list(StorageDirectory.SONGS).map { it.name })
+    }
+
+    @Test
+    fun `a rename that cannot read the moved file back still says where it went`() = runBlocking {
+        val failingInfo = object : FileStorage by fileStorage {
+            override suspend fun info(directory: StorageDirectory, name: String) =
+                if (name == "bar.cho") throw LibraryStorageException("Held open.") else fileStorage.info(directory, name)
+        }
+
+        assertRenamedDespite(failingInfo)
+    }
+
+    @Test
+    fun `a rename whose moved file is not found yet still says where it went`() = runBlocking {
+        val lateInfo = object : FileStorage by fileStorage {
+            override suspend fun info(directory: StorageDirectory, name: String) =
+                if (name == "bar.cho") null else fileStorage.info(directory, name)
+        }
+
+        assertRenamedDespite(lateInfo)
+    }
+
+    private suspend fun assertRenamedDespite(storage: FileStorage) {
+        fileStorage.writeText(StorageDirectory.SONGS, "Old name.cho", "{title: Bar}\n")
+        val song = songLocalSource.loadSong("Old name.cho")!!
+
+        val renamed = SongLocalSourceImpl(storage).renameSong(song)
+
+        assertEquals("bar.cho", renamed?.fileName)
+        assertEquals("Bar", renamed?.title)
+        assertEquals(false, renamed?.canUpdateFileName)
+        assertEquals(listOf("bar.cho"), fileStorage.list(StorageDirectory.SONGS).map { it.name })
     }
 
     @Test

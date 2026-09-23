@@ -69,8 +69,11 @@ interface SongLocalSource {
     suspend fun importSong(fileName: String, text: String, shouldReplace: Boolean): Song
 
     /**
-     * Moves the song's file to the name its own metadata gives it and returns it under that name, or null when the
-     * file could not be read or is already named that way ([Song.canUpdateFileName] is what asks beforehand).
+     * Moves the song's file to the name its own metadata gives it and returns it under that name, or null when nothing
+     * moved: the file could not be read before the move, or is already named that way ([Song.canUpdateFileName] is what
+     * asks beforehand). Once the file has moved the answer is never null - a song that cannot be read back is returned
+     * as it was, under the new name - since a caller told that nothing moved would leave everything that names the old
+     * file pointing at one that is gone. A move that fails throws.
      *
      * Only the file moves. Everything that refers to the song by its old name - the setlists holding it, the saved
      * transposition - is the caller's to follow, the same way a deletion is.

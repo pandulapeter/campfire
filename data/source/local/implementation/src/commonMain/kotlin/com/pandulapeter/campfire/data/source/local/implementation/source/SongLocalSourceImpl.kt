@@ -110,7 +110,19 @@ internal class SongLocalSourceImpl(
         fileStorage.moveFile(StorageDirectory.SONGS, currentName = song.fileName, newName = fileName) { name ->
             fileStorage.writeText(StorageDirectory.SONGS, name, text)
         }
-        return loadSong(fileName)
+        // The file has moved by now whatever the read back says, so the answer is where it went: a null here would tell
+        // every caller that nothing moved, and the setlists, the saved transposition and the open screens would stay on
+        // a name that is gone. The text was written unchanged, so the song is the one that was renamed, under the new
+        // name - which only a read that failed (a scanner holding the brand new file open) makes the fallback.
+        val moved = try {
+            loadSong(fileName)
+        } catch (exception: CancellationException) {
+            throw exception
+        } catch (exception: Exception) {
+            println("Could not read the song \"$fileName\" back after the rename: ${exception.message}")
+            null
+        }
+        return moved ?: song.copy(fileName = fileName, canUpdateFileName = false)
     }
 
     override suspend fun deleteSong(fileName: String) = fileStorage.delete(StorageDirectory.SONGS, fileName)
