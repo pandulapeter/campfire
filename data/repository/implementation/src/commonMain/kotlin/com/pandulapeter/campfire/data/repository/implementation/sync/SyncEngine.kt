@@ -99,7 +99,8 @@ private fun SyncKey.folded() = copy(name = name.normalizedToNfc().lowercase())
  * sides with nothing to say which is newer, and any the user edited in between would end up as a conflict copy.
  *
  * A failure on one file does not end the run. A song the storage cannot read must not keep the other four hundred
- * from travelling, so only the failures that make every further call pointless - the credentials being refused, the
+ * from travelling: it is left out of the plan on both sides, its index entry kept for the run that can read it, and
+ * named in the summary. Only the failures that make every further call pointless - the credentials being refused, the
  * service being unreachable, the remote folder being full - stop it. A file that failed is named in the summary,
  * because a run that says nothing about it reads as a backup that works.
  *
@@ -139,7 +140,13 @@ internal class SyncEngine(
             val localListing = readLocalStates()
             val local = localListing.states
             val tooLarge = localListing.tooLarge
+            val unreadable = localListing.unreadable
             if (pass == 0) summary = summary.plus(SyncSummary(failed = tooLarge.map { it.name }))
+            // Every pass: a file can be readable in the first one and not in the second.
+            summary = summary.plus(SyncSummary(failed = unreadable.map { it.name }))
+            // Neither a file too large to read nor one that could not be read is absent, and both are folded onto
+            // below, so that a remote spelling of one is recognized as that file and left out with it.
+            val excluded = tooLarge + unreadable
             // Names a service that ignores case takes for one file. Only ever consulted once such a service has refused
             // one of them, so a service with exact names never notices.
             val caseCollisions = local.groupBy { it.key.folded() }.values
@@ -157,9 +164,7 @@ internal class SyncEngine(
             if (pass == 0) summary = summary.plus(SyncSummary(failed = unstorable.map { it.name }))
             val unstorableKeys = unstorable.mapTo(mutableSetOf()) { SyncKey(kind = it.kind, name = it.name) }
             val remote = foldRemoteNamesOntoLocal(
-                // The files too large to read are folded onto as well, so that a remote spelling of one of them is
-                // recognized as that file and left out with it rather than planned as a download.
-                local = local + tooLarge.map { LocalFileState(key = it, hash = "") },
+                local = local + excluded.map { LocalFileState(key = it, hash = "") },
                 remote = storable.map {
                     RemoteFileState(
                         key = SyncKey(kind = it.kind, name = it.name),
@@ -168,12 +173,12 @@ internal class SyncEngine(
                         size = it.size,
                     )
                 },
-            ).filterNot { it.key in tooLarge }
+            ).filterNot { it.key in excluded }
             // After the listings have been matched with each other, so that an entry follows the spelling the plan
             // uses for its file.
             index = foldIndexNamesOntoListings(
                 index = index,
-                listed = (local.map { it.key } + tooLarge + remote.map { it.key }).toSet(),
+                listed = (local.map { it.key } + excluded + remote.map { it.key }).toSet(),
             )
             // A file too large to read, or one this device cannot store, is left out on both sides, its index entry
             // included: with the entry kept, the planner would see a file gone here and unchanged there, and delete the
@@ -194,7 +199,10 @@ internal class SyncEngine(
                 val remoteKeys = remote.mapTo(mutableSetOf()) { it.key }
                 index = index.filterKeys { it !in remoteKeys || it in localKeys }
             }
-            val plan = SyncPlanner.plan(local = local, remote = remote, index = index)
+            // The entry of a file that could not be read is kept for the run that can read it, but the planner does
+            // not see it: with it, a file gone from this side's listing and unchanged on the other is a deletion.
+            val planningIndex = index - unreadable
+            val plan = SyncPlanner.plan(local = local, remote = remote, index = planningIndex)
             // Which is what most runs find, so nothing below this costs anything on an ordinary launch.
             if (plan.isEmpty()) {
                 unresolved = emptySet()
@@ -204,10 +212,10 @@ internal class SyncEngine(
             // An answer waives only the guard it was given for, so a run that would empty both sides asks twice, once
             // per run - two questions about one folder are better than one answer that empties both of them.
             val localDeletions = plan.count { it is SyncOperation.DeleteLocal }
-            if (!deletionPolicy.waivesLocalGuard && index.isNotEmpty() && localDeletions.isTooManyToDeleteOutOf(index.size)) {
+            if (!deletionPolicy.waivesLocalGuard && planningIndex.isNotEmpty() && localDeletions.isTooManyToDeleteOutOf(planningIndex.size)) {
                 return Result.DeletionsNeedConfirmation(
                     count = localDeletions,
-                    total = index.size,
+                    total = planningIndex.size,
                     direction = SyncDeletionDirection.LOCAL,
                 )
             }
@@ -216,15 +224,15 @@ internal class SyncEngine(
             // storage recreates it and lists nothing, and iOS lists nothing for a directory that is not there. So an
             // empty local listing with an index that is not empty always asks, however small the library - the
             // proportional rule below would let most of a small library go without a word.
-            val hasLostEverythingLocally = local.isEmpty() && index.isNotEmpty()
+            val hasLostEverythingLocally = local.isEmpty() && planningIndex.isNotEmpty()
             if (!deletionPolicy.waivesRemoteGuard &&
-                index.isNotEmpty() &&
+                planningIndex.isNotEmpty() &&
                 remoteDeletions > 0 &&
-                (hasLostEverythingLocally || remoteDeletions.isTooManyToDeleteOutOf(index.size))
+                (hasLostEverythingLocally || remoteDeletions.isTooManyToDeleteOutOf(planningIndex.size))
             ) {
                 return Result.DeletionsNeedConfirmation(
                     count = remoteDeletions,
-                    total = index.size,
+                    total = planningIndex.size,
                     direction = SyncDeletionDirection.REMOTE,
                 )
             }
@@ -265,29 +273,50 @@ internal class SyncEngine(
      * Reading and hashing every file is the slow part of the preparation, so the files are read in parallel. A file
      * over [MAXIMUM_FILE_SIZE] is not read at all: nothing the app writes is that large, so it was put into the folder
      * from outside, and it is no song any other device would download.
+     *
+     * A file whose read fails is one file's failure, like any other in a run, and is handed back as unreadable rather
+     * than left out: left out, it would be a file gone from this device, which the planner carries out as a deletion
+     * on every other one. Only a library of which not one file could be read ends the run, since that is the storage
+     * failing rather than a file.
      */
     private suspend fun readLocalStates(): LocalListing = coroutineScope {
         val (tooLarge, files) = libraryFileLocalSource.loadLibraryFiles().partition { it.size > MAXIMUM_FILE_SIZE }
         tooLarge.forEach { println("Skipped \"${it.name}\": ${it.size} bytes is more than a library file can hold.") }
         // In batches for the same reason as the song scan in SongLocalSourceImpl: unbounded, a large library is
         // thousands of open handles and all of its bytes in memory at once.
-        val states = files
+        val reads = files
             .chunked(READ_BATCH_SIZE)
-            .flatMap { batch ->
-                batch.map { file ->
-                    async {
-                        val key = SyncKey(kind = file.kind, name = file.name)
-                        libraryFileLocalSource.readLibraryFile(file.kind, file.name)
-                            ?.let { LocalFileState(key = key, hash = localContentHash(it)) }
-                    }
-                }.awaitAll()
-            }
-            .filterNotNull()
-        LocalListing(states = states, tooLarge = tooLarge.mapTo(mutableSetOf()) { SyncKey(kind = it.kind, name = it.name) })
+            .flatMap { batch -> batch.map { file -> async { readLocalState(SyncKey(kind = file.kind, name = file.name)) } }.awaitAll() }
+        val states = reads.mapNotNull { (it as? LocalRead.Read)?.state }
+        val failures = reads.filterIsInstance<LocalRead.Failed>()
+        if (states.isEmpty() && failures.isNotEmpty()) throw failures.first().exception
+        LocalListing(
+            states = states,
+            tooLarge = tooLarge.mapTo(mutableSetOf()) { SyncKey(kind = it.kind, name = it.name) },
+            unreadable = failures.mapTo(mutableSetOf()) { it.key },
+        )
     }
 
-    /** What [readLocalStates] found: the files it read, and the ones it left alone for their size. */
-    private class LocalListing(val states: List<LocalFileState>, val tooLarge: Set<SyncKey>)
+    private suspend fun readLocalState(key: SyncKey): LocalRead = try {
+        libraryFileLocalSource.readLibraryFile(key.kind, key.name)
+            ?.let { LocalRead.Read(LocalFileState(key = key, hash = localContentHash(it))) }
+            ?: LocalRead.Absent
+    } catch (exception: CancellationException) {
+        throw exception
+    } catch (exception: Exception) {
+        println("Could not read \"${key.path}\": ${exception.message}")
+        LocalRead.Failed(key, exception)
+    }
+
+    /** What reading one listed file came to. [Absent] is a file deleted since the listing, which really is gone. */
+    private sealed interface LocalRead {
+        class Read(val state: LocalFileState) : LocalRead
+        data object Absent : LocalRead
+        class Failed(val key: SyncKey, val exception: Exception) : LocalRead
+    }
+
+    /** What [readLocalStates] found: the files it read, the ones it left alone for their size, and the ones it could not read. */
+    private class LocalListing(val states: List<LocalFileState>, val tooLarge: Set<SyncKey>, val unreadable: Set<SyncKey>)
 
     /**
      * Every operation is at least one request of its own, and they used to be run one after another - which made a

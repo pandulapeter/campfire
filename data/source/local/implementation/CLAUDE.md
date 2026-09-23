@@ -50,8 +50,10 @@ holds the `@Module @ComponentScan object DataLocalSourceModule`, and every local
     one: iOS asks
     `dataWithContentsOfFile` for its `NSError` rather than taking its nil as absence, the JVM wraps the `IOException`,
     and OPFS folds only a `NotFoundError` into null. Sync is why: a file reported as missing is planned as a deletion,
-    and that deletion reaches every other device. The song scan skips such a song with a log line; a sync run stops
-    and reports a storage failure. On OPFS an entry that disappears between the directory listing and the question
+    and that deletion reaches every other device. The song scan skips such a song with a log line; a sync run leaves
+    it out on both sides, keeps its index entry for the run that can read it again, and names it among the run's
+    failures — unless not one file of the library could be read, which is the storage failing, and ends the run as a
+    storage failure. On OPFS an entry that disappears between the directory listing and the question
     about its size is left out of the listing rather than failing it, since a sync run deletes files while the live
     rescan is listing the same directory: that is a file no longer in the directory, not a read folded into null.
     A file removed between the existence check and the read is not there either: the JVM catches
@@ -61,7 +63,8 @@ holds the `@Module @ComponentScan object DataLocalSourceModule`, and every local
     preferences to application support, where it cannot.
   - The JVM storage removes its own temporary files older than an hour on first touching each directory. On Windows
     (`isWindows`, which also decides the retry below) it stores device names such as `con.cho` with a leading
-    underscore and reports the ordinary library name back. A name Windows cannot hold at all (`? : * " < > |`, a
+    underscore and reports the ordinary library name back. A name that is a path or nothing (`/`, `\`, `.`, `..`) is
+    refused by `canHoldFileName` on every platform, since no storage here can address it. A name Windows cannot hold at all (`? : * " < > |`, a
     trailing space or dot, a control character) is refused by `canHoldFileName` rather than mapped: a device name is
     a dozen anchored cases whose escape can itself be escaped, while these can sit anywhere in a name and no escape
     character exists that a name could not also contain — and a name is a song's identity, so a mapping that failed

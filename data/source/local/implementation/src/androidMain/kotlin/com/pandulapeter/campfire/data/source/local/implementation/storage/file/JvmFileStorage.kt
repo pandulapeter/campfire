@@ -98,8 +98,8 @@ internal class JvmFileStorage(
      * that failed to reverse on one name would upload a second copy of that song from this device to every other one.
      * A trailing space or dot is one Windows strips, and a control character one it refuses.
      */
-    override fun canHoldFileName(name: String) = !isWindows || (
-        name.none { it in WINDOWS_RESERVED_CHARACTERS || it < ' ' } && !name.endsWith(' ') && !name.endsWith('.')
+    override fun canHoldFileName(name: String) = isValidFileName(name) && (
+        !isWindows || (name.none { it in WINDOWS_RESERVED_CHARACTERS || it < ' ' } && !name.endsWith(' ') && !name.endsWith('.'))
     )
 
     /**

@@ -33,6 +33,7 @@ import kotlin.test.assertEquals
 import kotlin.test.assertFalse
 import kotlin.test.assertFailsWith
 import kotlin.test.assertIs
+import kotlin.test.assertNull
 import kotlin.test.assertTrue
 import kotlin.test.fail
 
@@ -1108,28 +1109,66 @@ class SyncEngineTest {
     }
 
     @Test
-    fun `a file that is there but cannot be read stops the run instead of being deleted remotely`() = runTest {
+    fun `a file that is there but cannot be read is named and neither deleted nor overwritten`() = runTest {
         val library = librarySongs(3)
         val local = FakeLibraryFileLocalSource(
             files = library,
             onRead = { key -> if (key == song(2)) throw LibraryStorageException("Locked") },
         )
         val provider = FakeSyncProvider(files = library)
+        val edit = "Three, edited".encodeToByteArray()
+        provider.files[song(3)] = edit to "r5"
 
-        assertFailsWith<LibraryStorageException> {
-            SyncEngine(local, LibraryFileLock()).synchronize(
-                provider = provider,
-                document = indexOf(*library.toList().toTypedArray()).let { document ->
-                    document.copy(entries = document.entries.mapValues { (_, entry) -> entry.copy(remoteRevision = "r1") })
-                },
-                accountId = ACCOUNT_ID,
-                onProgress = {},
-                onIndexChanged = {},
-                deletionPolicy = SyncDeletionPolicy.ASK,
-            )
-        }
+        val completed = assertIs<SyncEngine.Result.Completed>(synchronize(local, provider, syncedIndexOf(library)))
+
+        assertEquals(listOf("song_2.cho"), completed.summary.failed)
+        assertContentEquals(library.getValue(song(2)), provider.files.getValue(song(2)).first)
+        assertContentEquals(edit, local.files.getValue(song(3)))
+        assertNull(provider.downloadCounts[song(2)])
+        assertTrue(song(2).path in completed.index.entries)
+    }
+
+    @Test
+    fun `a remote edit to a file that cannot be read here is not downloaded over it`() = runTest {
+        val library = librarySongs(3)
+        val local = FakeLibraryFileLocalSource(
+            files = library,
+            onRead = { key -> if (key == song(1)) throw LibraryStorageException("Locked") },
+        )
+        val provider = FakeSyncProvider(files = library)
+        provider.files[song(1)] = "One, edited".encodeToByteArray() to "r5"
+
+        val completed = assertIs<SyncEngine.Result.Completed>(synchronize(local, provider, syncedIndexOf(library)))
+
+        assertNull(provider.downloadCounts[song(1)])
+        assertContentEquals(library.getValue(song(1)), local.files.getValue(song(1)))
+        assertTrue("song_1.cho" in completed.summary.failed)
+    }
+
+    @Test
+    fun `a library of which no file can be read ends the run as a storage failure`() = runTest {
+        val library = librarySongs(3)
+        val local = FakeLibraryFileLocalSource(files = library, onRead = { throw LibraryStorageException("Locked") })
+        val provider = FakeSyncProvider(files = library)
+
+        assertFailsWith<LibraryStorageException> { synchronize(local, provider, syncedIndexOf(library)) }
 
         assertEquals(library.keys, provider.files.keys)
+    }
+
+    @Test
+    fun `a file that cannot be read is not taken for a deletion when the index knows it`() = runTest {
+        val library = librarySongs(3)
+        val local = FakeLibraryFileLocalSource(
+            files = library,
+            onRead = { key -> if (key == song(1)) throw LibraryStorageException("Locked") },
+        )
+        val provider = FakeSyncProvider(files = library)
+
+        synchronize(local, provider, syncedIndexOf(library))
+
+        assertTrue(song(1) in provider.files)
+        assertTrue(provider.deleteCalls.isEmpty())
     }
 
     @Test
@@ -1280,6 +1319,19 @@ class SyncEngineTest {
         assertEquals(0, completed.summary.deletedLocally)
         assertEquals(document.entries, completed.index.entries)
     }
+
+    private suspend fun synchronize(
+        local: FakeLibraryFileLocalSource,
+        provider: FakeSyncProvider,
+        document: SyncIndexDocument,
+    ) = SyncEngine(local, LibraryFileLock()).synchronize(
+        provider = provider,
+        document = document,
+        accountId = ACCOUNT_ID,
+        onProgress = {},
+        onIndexChanged = {},
+        deletionPolicy = SyncDeletionPolicy.ASK,
+    )
 
     private companion object {
         const val ACCOUNT_ID = "dropbox:someone@example.com"

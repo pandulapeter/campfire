@@ -83,12 +83,13 @@ interface FileStorage {
     suspend fun keepOutOfDeviceBackup(directory: StorageDirectory, name: String) = Unit
 
     /**
-     * Whether a file called [name] can exist in this storage at all. Only Windows answers no: `? : * " < > |` are
-     * legal in a name on iOS, macOS, Linux, Android and OPFS, and a library assembled on any of those can hold one.
-     * Asked rather than attempted because the attempt is an `InvalidPathException` from deep inside the JVM, which is
-     * not an `IOException` and so is not a storage failure the caller could tell from any other.
+     * Whether a file called [name] can exist in this storage at all. No storage takes a path or nothing for a name
+     * ([isValidFileName]: a `/` or `\` anywhere in it, `.`, `..`), and Windows also refuses `? : * " < > |`, which are
+     * legal on iOS, macOS, Linux, Android and OPFS. Asked rather than attempted because the attempt is an
+     * `IllegalArgumentException` from [requireValidFileName] or an `InvalidPathException` from deep inside the JVM,
+     * neither of which is a storage failure the caller could tell from any other.
      */
-    fun canHoldFileName(name: String): Boolean = true
+    fun canHoldFileName(name: String): Boolean = isValidFileName(name)
 }
 
 /** The path of a [StorageDirectory] relative to the platform's root, as segments each platform joins its own way. */
@@ -99,9 +100,11 @@ internal val StorageDirectory.pathSegments: List<String>
         StorageDirectory.PREFERENCES -> listOf("preferences")
     }
 
-internal fun requireValidFileName(name: String) = require(
+/** Whether [name] is a name rather than a path or nothing: what every storage can be asked about at all. */
+internal fun isValidFileName(name: String) =
     name.isNotEmpty() && name != "." && name != ".." && !name.contains('/') && !name.contains('\\')
-) { "Invalid file name: \"$name\"." }
+
+internal fun requireValidFileName(name: String) = require(isValidFileName(name)) { "Invalid file name: \"$name\"." }
 
 /** Songs and setlists sit next to each other so that they can be exported as a single archive. */
 private const val LIBRARY_DIRECTORY = "library"

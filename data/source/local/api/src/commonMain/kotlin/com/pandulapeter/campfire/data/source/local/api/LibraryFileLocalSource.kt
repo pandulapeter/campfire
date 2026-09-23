@@ -48,9 +48,9 @@ interface LibraryFileLocalSource {
     suspend fun deleteLibraryFile(kind: LibraryFileKind, name: String)
 
     /**
-     * Whether this device's file system can hold a library file called [name] at all. Only Windows answers no, for a
-     * name another platform allows (`? : * " < > |` among others); sync leaves such a file where it is rather than
-     * failing on it every run.
+     * Whether this device's file system can hold a library file called [name] at all. Every platform answers no for a
+     * name that is a path or nothing (a `/` or `\` in it, `.`, `..`), and Windows also for a name another platform
+     * allows (`? : * " < > |` among others); sync leaves such a file where it is rather than failing on it every run.
      */
     fun canHoldFileName(kind: LibraryFileKind, name: String): Boolean
 }

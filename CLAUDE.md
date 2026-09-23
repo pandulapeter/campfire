@@ -327,7 +327,7 @@ the only possible one. The per-module `CLAUDE.md` files carry the detail; the sh
   are **opaque strings** the engine never parses, and a service's content hash stays in the provider — which is what
   keeps Drive's file ids and MD5s out of the engine when it arrives. What is not a song or a setlist by its extension
   is invisible to the engine on both sides, so whatever else the user keeps in the folder is left alone. A remote file
-  whose name the device cannot hold (`? : * " < > |` on Windows) is left out too, and named once in the run's summary
+  whose name the device cannot hold (a `\` anywhere, or `? : * " < > |` on Windows) is left out too, and named once in the run's summary
   rather than failed on every run.
 - `SyncPlanner` is a pure function of (local hashes, remote listing, the index of what the last run saw) and is the
   part that is tested. Content decides what changed, never a clock: the platforms disagree about modification times

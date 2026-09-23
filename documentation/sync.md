@@ -21,7 +21,7 @@ your own storage. Until you do, nothing on the network is touched at all.
 - Only song and setlist files are synced. Anything else you keep in those two folders is left exactly where it is,
   and so is a file too large to be a song (over 8 MB). On Windows, a file whose name has a character Windows does not
   allow (`? : * " < > |`) is left where it is too, and named in the run's summary; renaming it on another device lets
-  it through.
+  it through. A file with a `\` in its name is left where it is on every device, the same way.
 - Only the library is synced. Your settings, your text size and your transpositions stay on the device they were made
   on (a phone's own backup does carry them to its replacement).
 
@@ -57,7 +57,8 @@ your own storage. Until you do, nothing on the network is touched at all.
   time and slows down when the service tells it to.
 - A file that cannot be moved does not hold up the others: Settings names it, and the next run tries again. The same
   goes for a file another device keeps changing while the run is trying to send it up. A cloud folder that is full
-  does stop the run, and Settings says so.
+  does stop the run, and Settings says so. A song on this device that cannot be read — a file another app is
+  holding, one whose permissions were taken away — is named the same way and left alone on both sides until it can be.
 
 ### Signing in
 

@@ -218,6 +218,7 @@ class JvmFileStorageTest {
         assertTrue(storage.canHoldFileName("катюша.cho"))
     }
 
+    /** Every name that is a name at all, that is: one that is a path or nothing is refused everywhere, see the next test. */
     @Test
     fun `holds every name on a file system that is not Windows`() = runBlocking {
         val storage = JvmFileStorage(root, isWindows = false)
@@ -225,6 +226,14 @@ class JvmFileStorageTest {
         UNSTORABLE_ON_WINDOWS.forEach { assertTrue(storage.canHoldFileName(it), it) }
         storage.writeText(StorageDirectory.SONGS, "who?.cho", "content")
         assertEquals("content", storage.readText(StorageDirectory.SONGS, "who?.cho"))
+    }
+
+    @Test
+    fun `refuses to hold a name that is a path on every platform`() {
+        listOf(true, false).forEach { isWindows ->
+            val storage = JvmFileStorage(root, isWindows = isWindows)
+            listOf("a\\b.cho", "a/b.cho", ".", "..", "").forEach { assertFalse(storage.canHoldFileName(it), "\"$it\" on Windows: $isWindows") }
+        }
     }
 
     @Test
