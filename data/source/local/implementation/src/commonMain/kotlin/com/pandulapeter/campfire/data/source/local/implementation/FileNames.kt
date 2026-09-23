@@ -47,10 +47,10 @@ internal fun setlistFileName(title: String) = LibraryFiles.normalizedName(title)
  *   brackets in a name that has neither. [arrivingCollisionSuffix] is for the one caller that writes a file under a
  *   name it did not invent.
  * @param currentName The name of the file being renamed, if this is a rename. A case-insensitive file system (macOS,
- *   Windows and iOS by default) says a name that differs from it only in case is taken, and it is taken by this very
- *   file, which is not a reason to number it. Such a candidate is held against the directory's listing instead, which
- *   carries the names exactly as they are: on a case-sensitive file system a different file may well be there under it
- *   - and only then is the directory listed.
+ *   Windows and iOS by default) says a name that differs from it only in case or in Unicode form (a Mac hands names
+ *   out decomposed) is taken, and it is taken by this very file, which is not a reason to number it. Such a candidate
+ *   is held against the directory's listing instead, which carries the names exactly as they are: on a case-sensitive
+ *   file system a different file may well be there under it - and only then is the directory listed.
  * @param isTaken Names that are not free for a reason the directory cannot see - a file of that name elsewhere that
  *   will arrive here. Consulted for every candidate alongside the directory itself.
  */
@@ -61,7 +61,7 @@ internal suspend fun FileStorage.uniqueName(
     currentName: String? = null,
     isTaken: (name: String) -> Boolean = { false },
 ): String {
-    fun isOwnName(candidate: String) = candidate.equals(currentName, ignoreCase = true)
+    fun isOwnName(candidate: String) = currentName != null && candidate.isSameFileNameAs(currentName)
     if (!isOwnName(desired) && !isTaken(desired) && !exists(directory, desired)) return desired
     // Only a rename needs the exact names (see currentName): for anything else, exists() already says all a listing would.
     val takenNames = if (currentName == null) emptySet() else listNames(directory).toHashSet()
@@ -83,9 +83,9 @@ internal suspend fun FileStorage.uniqueName(
  * removing the old one. Written before the old one is removed, so that a move that fails halfway leaves the file twice
  * over rather than not at all.
  *
- * A name that differs from the current one only in case goes through a temporary name in between: on a
- * case-insensitive file system writing it is writing the current file, and the deletion that follows would remove the
- * only copy. That costs three writes, for a move that happens once to a file somebody named by hand.
+ * A name that differs from the current one only in case or in Unicode form goes through a temporary name in
+ * between: on a file system that ignores those, writing it is writing the current file, and the deletion that follows
+ * would remove the only copy. That costs three writes, for a move that happens once to a file somebody named by hand.
  */
 internal suspend fun FileStorage.moveFile(
     directory: StorageDirectory,
@@ -93,7 +93,7 @@ internal suspend fun FileStorage.moveFile(
     newName: String,
     write: suspend (name: String) -> Unit,
 ) {
-    if (newName.equals(currentName, ignoreCase = true)) {
+    if (newName.isSameFileNameAs(currentName)) {
         val extension = newName.knownExtension()
         val temporaryName = uniqueName(directory, newName.removeSuffix(extension) + TEMPORARY_MOVE_SUFFIX + extension)
         write(temporaryName)
@@ -105,6 +105,14 @@ internal suspend fun FileStorage.moveFile(
         delete(directory, currentName)
     }
 }
+
+/**
+ * Whether [other] names the same file as this on a file system that ignores case and Unicode form - macOS by default,
+ * and Windows for case - where writing the one is writing the other. [uniqueName] and [moveFile] have to agree about
+ * it: a name taken for another file's by the first and for this file's by the second is a move that deletes what it
+ * just wrote.
+ */
+private fun String.isSameFileNameAs(other: String) = normalizedToNfc().equals(other.normalizedToNfc(), ignoreCase = true)
 
 /** The collision suffix of a name the app derived itself, which is every name it writes into the library. */
 internal fun normalizedCollisionSuffix(index: Int) = LibraryFiles.NAME_SEPARATOR + index

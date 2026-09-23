@@ -10,6 +10,8 @@
 package com.pandulapeter.campfire.data.source.local.implementation.source
 
 import com.pandulapeter.campfire.data.model.domain.Setlist
+import com.pandulapeter.campfire.data.model.domain.normalizedToNfc
+import com.pandulapeter.campfire.data.source.local.implementation.moveFile
 import com.pandulapeter.campfire.data.source.local.implementation.storage.file.JvmFileStorage
 import com.pandulapeter.campfire.data.source.local.implementation.storage.file.StorageDirectory
 import kotlinx.coroutines.runBlocking
@@ -47,6 +49,21 @@ class RenameTest {
         assertNull(renamed)
         assertEquals(listOf("Foo.cho"), fileStorage.list(StorageDirectory.SONGS).map { it.name })
         assertFalse(songLocalSource.loadSong("Foo.cho")!!.canUpdateFileName)
+    }
+
+    @Test
+    fun `a move to the same name in another case and form keeps the file`() = runBlocking {
+        // `Ένα.cho` decomposed, as macOS hands it out, moved to the composed lowercase name the library would give it.
+        val current = "\u0395\u0301\u03bd\u03b1.cho"
+        val new = "\u03ad\u03bd\u03b1.cho"
+        fileStorage.writeText(StorageDirectory.SONGS, current, "{title: Ένα}\n")
+
+        fileStorage.moveFile(StorageDirectory.SONGS, currentName = current, newName = new) {
+            fileStorage.writeText(StorageDirectory.SONGS, it, "{title: Ένα}\n")
+        }
+
+        assertEquals("{title: Ένα}\n", fileStorage.readText(StorageDirectory.SONGS, new))
+        assertEquals(listOf(new), fileStorage.list(StorageDirectory.SONGS).map { it.name.normalizedToNfc() })
     }
 
     @Test

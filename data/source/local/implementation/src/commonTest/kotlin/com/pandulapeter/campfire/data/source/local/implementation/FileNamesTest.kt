@@ -11,6 +11,13 @@ package com.pandulapeter.campfire.data.source.local.implementation
 
 import com.pandulapeter.campfire.data.model.domain.LibraryFileKind
 import com.pandulapeter.campfire.data.model.domain.LibraryFiles
+import com.pandulapeter.campfire.data.model.domain.normalizedToNfc
+import com.pandulapeter.campfire.data.source.local.implementation.storage.file.FileStorage
+import com.pandulapeter.campfire.data.source.local.implementation.storage.file.StorageDirectory
+import com.pandulapeter.campfire.data.source.local.implementation.storage.file.StoredFileInfo
+import kotlin.coroutines.Continuation
+import kotlin.coroutines.EmptyCoroutineContext
+import kotlin.coroutines.startCoroutine
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFalse
@@ -135,6 +142,39 @@ internal class FileNamesTest {
     }
 
     @Test
+    fun aRenameToTheSameNameInAnotherCaseAndFormIsNotNumbered() = runSuspending {
+        val storage = InMemoryFileStorage(foldsNames = true)
+        storage.writeText(StorageDirectory.SONGS, DECOMPOSED_CAPITAL, "{title: \u0388\u03bd\u03b1}")
+
+        assertEquals(COMPOSED_LOWERCASE, storage.uniqueName(StorageDirectory.SONGS, COMPOSED_LOWERCASE, currentName = DECOMPOSED_CAPITAL))
+    }
+
+    @Test
+    fun aMoveToTheSameNameInAnotherCaseAndFormKeepsTheFile() = runSuspending {
+        val storage = InMemoryFileStorage(foldsNames = true)
+        storage.writeText(StorageDirectory.SONGS, DECOMPOSED_CAPITAL, "{title: \u0388\u03bd\u03b1}")
+
+        storage.moveFile(StorageDirectory.SONGS, currentName = DECOMPOSED_CAPITAL, newName = COMPOSED_LOWERCASE) {
+            storage.writeText(StorageDirectory.SONGS, it, "{title: \u0388\u03bd\u03b1}")
+        }
+
+        assertEquals("{title: \u0388\u03bd\u03b1}", storage.readText(StorageDirectory.SONGS, COMPOSED_LOWERCASE))
+        assertEquals(listOf(COMPOSED_LOWERCASE), storage.listNames(StorageDirectory.SONGS))
+    }
+
+    @Test
+    fun aDifferentFileUnderTheOtherFormIsStillACollision() = runSuspending {
+        val storage = InMemoryFileStorage(foldsNames = false)
+        storage.writeText(StorageDirectory.SONGS, DECOMPOSED_CAPITAL, "{title: \u0388\u03bd\u03b1}")
+        storage.writeText(StorageDirectory.SONGS, COMPOSED_LOWERCASE, "{title: Something else}")
+
+        assertEquals(
+            "\u03ad\u03bd\u03b1_2.cho",
+            storage.uniqueName(StorageDirectory.SONGS, COMPOSED_LOWERCASE, currentName = DECOMPOSED_CAPITAL),
+        )
+    }
+
+    @Test
     fun aConflictCopyIsRecognizedAsItsOwn() {
         assertTrue("x (2).cho".isNamed("x.cho"))
         assertTrue(!"_2.cho".isNamed(".cho"))
@@ -210,6 +250,40 @@ internal class FileNamesTest {
         listOf("gesi_za_woda", "isik", "viet_nam", "thu").forEach { assertEquals(it, LibraryFiles.normalizedName(it)) }
     }
 
+    /**
+     * Just enough of a [FileStorage] for [uniqueName] and [moveFile]. With [foldsNames] it behaves like APFS: a file
+     * keeps the spelling it was first written with, and every question about a name is answered by its folded form,
+     * so that two spellings of one name are one file. Without it every spelling is a file of its own, as on ext4.
+     */
+    private class InMemoryFileStorage(private val foldsNames: Boolean) : FileStorage {
+
+        private val files = mutableMapOf<String, Pair<String, String>>()
+
+        private fun key(name: String) = if (foldsNames) name.normalizedToNfc().lowercase() else name
+
+        override suspend fun list(directory: StorageDirectory): List<StoredFileInfo> = TODO()
+
+        override suspend fun listNames(directory: StorageDirectory) = files.values.map { it.first }
+
+        override suspend fun info(directory: StorageDirectory, name: String): StoredFileInfo? = TODO()
+
+        override suspend fun exists(directory: StorageDirectory, name: String) = key(name) in files
+
+        override suspend fun readText(directory: StorageDirectory, name: String) = files[key(name)]?.second
+
+        override suspend fun readBytes(directory: StorageDirectory, name: String): ByteArray? = TODO()
+
+        override suspend fun writeText(directory: StorageDirectory, name: String, text: String) {
+            files[key(name)] = (files[key(name)]?.first ?: name) to text
+        }
+
+        override suspend fun writeBytes(directory: StorageDirectory, name: String, bytes: ByteArray) = TODO()
+
+        override suspend fun delete(directory: StorageDirectory, name: String) {
+            files -= key(name)
+        }
+    }
+
     private companion object {
 
         /** One name per script in both of its forms, written as escapes so that the source file's own encoding decides nothing. */
@@ -219,5 +293,18 @@ internal class FileNamesTest {
             "\u05E9\u05C1\u05B8\u05DC\u05D5\u05B9\u05DD" to "\u05E9\u05B8\u05C1\u05DC\u05D5\u05B9\u05DD",
             "Vie\u0323\u0302t Nam" to "Vi\u1EC7t Nam",
         )
+
+        /** `Ένα.cho` the way macOS hands it out: a capital Epsilon followed by a separate accent. */
+        const val DECOMPOSED_CAPITAL = "\u0395\u0301\u03bd\u03b1.cho"
+
+        /** `ένα.cho`, the name the library would give the song. */
+        const val COMPOSED_LOWERCASE = "\u03ad\u03bd\u03b1.cho"
+
+        /** Runs [block] to its end right away, which it reaches without suspending, since nothing it calls waits. */
+        fun runSuspending(block: suspend () -> Unit) {
+            var result: Result<Unit>? = null
+            block.startCoroutine(Continuation(EmptyCoroutineContext) { result = it })
+            checkNotNull(result) { "The block suspended." }.getOrThrow()
+        }
     }
 }

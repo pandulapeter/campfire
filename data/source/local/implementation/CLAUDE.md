@@ -99,9 +99,11 @@ holds the `@Module @ComponentScan object DataLocalSourceModule`, and every local
   be given, that suffix included, ignoring case and Unicode form, which is
   what keeps "Update file name" from offering itself to a song that has made way for another one. Nothing in the
   library is ever overwritten implicitly. A rename goes through `moveFile`, which writes the new file before it
-  removes the old one; a new name that differs from the old only in case is not numbered on a case-insensitive file
-  system, where it is taken by the very file being renamed, and is moved through a temporary name, since writing it
-  there is writing the old file and the deletion after would remove the only copy.
+  removes the old one; a new name that differs from the old only in case or in Unicode form is not numbered on a file
+  system that ignores them (macOS does both, Windows case), where it is taken by the very file being renamed, and is
+  moved through a temporary name, since writing it there is writing the old file and the deletion after would remove
+  the only copy. The two functions decide it with one predicate: a name one of them took for another file and the
+  other for this one would be exactly that deletion.
 - **`source/`** — the four local sources. `SongLocalSourceImpl` reads the whole ChordPro family
   (`LibraryFiles.SONG_EXTENSIONS`) — hidden files left out, by `LibraryFiles.isSongFileName`, the rule every listing
   of the folder shares — but writes only `.cho` — `importFileName` included, so a `.crd` that is imported
