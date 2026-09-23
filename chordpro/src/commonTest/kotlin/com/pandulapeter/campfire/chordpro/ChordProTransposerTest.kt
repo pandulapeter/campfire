@@ -280,6 +280,11 @@ class ChordProTransposerTest {
     }
 
     @Test
+    fun `the braces of a delegate block are not directives to the transposition`() {
+        assertEquals("{start_of_ly}\n{ key G }\n{end_of_ly}", ChordProTransposer.transposeText("{start_of_ly}\n{ key G }\n{end_of_ly}", 2))
+    }
+
+    @Test
     fun `a key spelled out in words is transposed`() {
         assertEquals("{key: A major}\n[A]a", ChordProTransposer.transposeText("{key: G major}\n[G]a", 2, preferFlats = false))
         assertEquals("{key: C minor}", ChordProTransposer.transposeText("{key: A minor}", 3, preferFlats = false))

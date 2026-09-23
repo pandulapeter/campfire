@@ -43,9 +43,11 @@ object ChordProHighlighter {
 
     fun tokenize(text: String): List<Token> {
         val tokens = mutableListOf<Token>()
-        // Chords are not chords inside a tab or an environment handed to another program: the brackets there are part
-        // of the tablature or of the notation, and the viewer leaves them alone too.
-        var isVerbatim = false
+        // Chords are not chords on the staff of a tab or inside an environment handed to another program: the brackets
+        // there are part of the tablature or of the notation, and the viewer leaves them alone too. The other lines of
+        // a tab are rows of chord names, whose brackets the transposition renames.
+        var isInTab = false
+        var isInDelegate = false
         // The lines and their offsets come from ChordProSyntax rather than from a walk of their own, so that a file
         // written with any of the three line endings is highlighted the way it is parsed.
         val lines = ChordProSyntax.splitLines(text)
@@ -53,13 +55,19 @@ object ChordProHighlighter {
         lines.forEachIndexed { index, line ->
             val lineStart = lineStarts[index]
             val trimmed = line.trim()
-            val directive = ChordProSyntax.matchDirective(trimmed)
+            val directive = if (isInDelegate) ChordProSyntax.matchDelegatedDirective(trimmed) else ChordProSyntax.matchDirective(trimmed)
             when {
-                trimmed.startsWith(SOURCE_COMMENT) -> tokens += Token(TokenType.COMMENT, lineStart, lineStart + line.length)
+                trimmed.startsWith(SOURCE_COMMENT) && !isInDelegate -> tokens += Token(TokenType.COMMENT, lineStart, lineStart + line.length)
 
                 directive != null -> {
-                    ChordProSyntax.startOfEnvironment(directive.name)?.let { isVerbatim = it == TAB_ENVIRONMENT || it in ChordProSyntax.delegateEnvironments }
-                    ChordProSyntax.endOfEnvironment(directive.name)?.let { if (it == TAB_ENVIRONMENT || it in ChordProSyntax.delegateEnvironments) isVerbatim = false }
+                    ChordProSyntax.startOfEnvironment(directive.name)?.let {
+                        isInTab = it == TAB_ENVIRONMENT
+                        isInDelegate = it in ChordProSyntax.delegateEnvironments
+                    }
+                    ChordProSyntax.endOfEnvironment(directive.name)?.let {
+                        if (it == TAB_ENVIRONMENT) isInTab = false
+                        if (it in ChordProSyntax.delegateEnvironments) isInDelegate = false
+                    }
                     tokens += directive.tokens(
                         line = line,
                         lineStart = lineStart,
@@ -67,7 +75,9 @@ object ChordProHighlighter {
                     )
                 }
 
-                !isVerbatim -> ChordProSyntax.brackets(line).forEach { bracket ->
+                // A staff line's brackets are part of the tablature, which the transposition moves by its frets; the
+                // brackets of any other line of a tab are chords to it, and are coloured as chords here.
+                !isInDelegate && !(isInTab && ChordProSyntax.isStaffLine(line)) -> ChordProSyntax.brackets(line).forEach { bracket ->
                     // Trimmed, and empty brackets left out, because that is how the parser and the transposition read
                     // a bracket: a `[ *softly]` is the annotation the viewer will draw in the lyrics, and a `[]` is
                     // not a chord to anything downstream. What counts as a chord is decided in one place or in none.

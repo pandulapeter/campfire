@@ -23,7 +23,8 @@ in `:domain:*`. `:data:source:local:implementation` uses it directly for the met
   switch the kind of `ChordProLine` that is read until they close, inside whatever section is running, so a solo
   written as a line of chords with tablature under it is one section and not three. Outside every environment they
   open the same implicit paragraph a bare line of lyrics would, carrying their own label, which is the only place
-  `{start_of_tab: Riff}` can still say "Riff". Everything downstream follows: the serializer wraps each *run* of tab
+  `{start_of_tab: Riff}` can still say "Riff"; one that holds no line leaves no paragraph behind, so its label heads
+  nothing. Everything downstream follows: the serializer wraps each *run* of tab
   or grid lines back in its environment, the transposer moves each run of frets as its own fingerboard, and the viewer
   cuts each run into rows that fit its width (`ChordProTabWrapper`) with the lyrics around it. A blank line inside an
   environment does not end its run for either of the first two: the serializer writes it inside the environment,
@@ -31,7 +32,9 @@ in `:domain:*`. `:data:source:local:implementation` uses it directly for the met
   A second environment does end it, even one only a blank line away or written straight after the first:
   `ChordProLine.Tab.continuesEnvironment` is what tells the two apart, and the serializer writes the boundary back.
   The environments ChordPro hands to another program (`abc`, `ly`, `svg`, `textblock`) are sections whose lines are kept
-  verbatim as lyrics with no chords, so the transposition, the chord detection of the library scan and the highlighter
+  verbatim as lyrics with no chords — `#` lines and braces included: only the `{end_of_…}` that closes one and a
+  directive written with a colon are read as directives inside it (`ChordProSyntax.matchDelegatedDirective`), by the
+  parser, the summary, the transposition and the highlighter alike — so the transposition, the chord detection of the library scan and the highlighter
   all leave them alone. A `{comment}`, a break or a `{chorus}` inside an environment cuts the section in two the way it
   does anywhere else, and the environment carries on in the second half; a comment there is never read as a Campfire 3
   heading. The second half is marked `isContinuation`: it is the rest of a section the file wrote once, so the viewer
@@ -137,7 +140,7 @@ in `:domain:*`. `:data:source:local:implementation` uses it directly for the met
   that would take a fret off the fingerboard moves all of it by octaves instead of producing an unplayable number,
   and a tab that fits in no octave (one spanning more than 24 frets) is left alone rather than half moved. Only lines
   that look like tablature are touched that way; a line above them holding nothing but chord names (bar lines, repeats
-  and an `N.C.` allowed) gets those transposed, and anything else in the environment (`Tuning: D A D G A D`, a note
+  and an `N.C.` allowed) gets those transposed; a repeat count after the last bar line (`x3`, `3x`) is not a fret, and anything else in the environment (`Tuning: D A D G A D`, a note
   to the player) is left byte for byte — while a bare `E A D G B E` is six chord names and is transposed as such. Fret numbers are not all the same width, so the dashes around them are absorbed or padded to keep the columns
   lining up; where there is no dash to take (inside a `0h1p0` group) the line grows by a character instead. The same
   column bookkeeping serves `rewriteChordNames`, which only respells those chord names — `Bb` is a character wider
@@ -180,7 +183,8 @@ in `:domain:*`. `:data:source:local:implementation` uses it directly for the met
   place; only what those look like on screen is the caller's business. It reads the file's lines through
   `ChordProSyntax` rather than walking them itself, so it agrees with the parser about where a line ends whichever of
   the three endings the file uses, and reads a bracket trimmed the way the parser does, so a `[ *softly]` is an
-  annotation and an empty `[]` is not a chord.
+  annotation and an empty `[]` is not a chord. Inside a tab it colours the brackets of the lines that are not the staff,
+  which are the ones the transposition renames.
 
 Everything here is pure, so everything here is tested: `commonTest`, run with `./gradlew :chordpro:desktopTest`. A
 change to the dialect belongs in a test first.

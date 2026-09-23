@@ -364,6 +364,25 @@ class ChordProParserTest {
     }
 
     @Test
+    fun `a delegate block keeps its braces and hash lines`() {
+        val section = ChordProParser.parse("{start_of_ly}\n\\relative c' {\n{ c d e }\n#(set-global-staff-size 20)\n}\n{end_of_ly}").blocks.single() as ChordProBlock.Section
+
+        assertEquals(
+            listOf("\\relative c' {", "{ c d e }", "#(set-global-staff-size 20)", "}").map { ChordProLine.Lyrics(it, emptyList()) },
+            section.lines,
+        )
+    }
+
+    @Test
+    fun `an empty tab environment labels nothing`() {
+        assertEquals(
+            listOf(ChordProBlock.Section(SectionType.Paragraph, null, listOf(ChordProParser.parseLyrics("[C]la la")))),
+            ChordProParser.parse("{start_of_tab: Riff}\n{end_of_tab}\n[C]la la").blocks,
+        )
+        assertEquals(emptyList(), ChordProParser.parse("{sot: Riff}\n\n{eot}").blocks)
+    }
+
+    @Test
     fun `tab lines keep their indentation`() {
         val section = ChordProParser.parse("{start_of_tab: Riff}\n  e|---0---|\n{end_of_tab}").blocks.single() as ChordProBlock.Section
 

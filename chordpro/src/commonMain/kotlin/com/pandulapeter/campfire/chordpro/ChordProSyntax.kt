@@ -150,6 +150,17 @@ internal object ChordProSyntax {
     }
 
     /** Matches a directive in one linear walk, which keeps malformed input cheap while the user types. */
+    /**
+     * [matchDirective] for a line of an environment ChordPro hands to another program, whose own syntax is full of
+     * braces and `#`: only the `{end_of_…}` that closes it and a directive written with a colon are directives there,
+     * since `{ c d e }` is LilyPond and not `{c: d e}`.
+     */
+    fun matchDelegatedDirective(trimmedLine: String): Directive? {
+        val (name, valueStart) = walkDirective(trimmedLine) ?: return null
+        val hasColon = valueStart > 0 && trimmedLine[valueStart - 1] == DIRECTIVE_VALUE_SEPARATOR
+        return if (endOfEnvironment(name) != null || hasColon) matchDirective(trimmedLine) else null
+    }
+
     fun matchDirective(trimmedLine: String): Directive? {
         val (name, valueStart) = walkDirective(trimmedLine) ?: return null
         return Directive(name, if (valueStart < 0) null else trimmedLine.substring(valueStart, trimmedLine.length - 1).trim())

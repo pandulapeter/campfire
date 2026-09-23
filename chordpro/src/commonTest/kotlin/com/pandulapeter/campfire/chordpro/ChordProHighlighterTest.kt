@@ -131,6 +131,32 @@ class ChordProHighlighterTest {
     }
 
     @Test
+    fun `the brackets above a staff are chords`() {
+        val text = "{start_of_tab}\n[Am]      [C]\ne|--0--1--|\n{end_of_tab}"
+        assertEquals(
+            listOf(
+                TokenType.DIRECTIVE_NAME to "{start_of_tab}",
+                TokenType.CHORD to "[Am]",
+                TokenType.CHORD to "[C]",
+                TokenType.DIRECTIVE_NAME to "{end_of_tab}",
+            ),
+            spans(text),
+        )
+    }
+
+    @Test
+    fun `a delegate block's braces and hash lines are not tokens`() {
+        val text = "{start_of_ly}\n{ c d e }\n#(x)\n{end_of_ly}"
+        assertEquals(
+            listOf(
+                TokenType.DIRECTIVE_NAME to "{start_of_ly}",
+                TokenType.DIRECTIVE_NAME to "{end_of_ly}",
+            ),
+            spans(text),
+        )
+    }
+
+    @Test
     fun `offsets are absolute across lines`() {
         val text = "one\n[Am]two"
         assertEquals(listOf(ChordProHighlighter.Token(TokenType.CHORD, 4, 8)), ChordProHighlighter.tokenize(text))

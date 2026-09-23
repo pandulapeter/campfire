@@ -15,6 +15,13 @@ import kotlin.test.assertEquals
 class ChordProTabTransposerTest {
 
     @Test
+    fun `a repeat count written before its x is not a fret`() {
+        assertEquals("{sot}\ne|--2--4--| 3x\n{eot}", ChordProTransposer.transposeText("{sot}\ne|--0--2--| 3x\n{eot}", 2))
+        assertEquals("{sot}\ne|--2--4--| (3x)\n{eot}", ChordProTransposer.transposeText("{sot}\ne|--0--2--| (3x)\n{eot}", 2))
+        assertEquals("{sot}\ne|--5x--|\n{eot}", ChordProTransposer.transposeText("{sot}\ne|--3x--|\n{eot}", 2))
+    }
+
+    @Test
     fun `a chord row with no chord in it is still transposed`() {
         val text = "{sot}\nAm   N.C.  G\ne|--0--3--|\n{eot}"
 

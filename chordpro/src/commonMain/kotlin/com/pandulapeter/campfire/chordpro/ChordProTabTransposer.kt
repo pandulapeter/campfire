@@ -53,9 +53,14 @@ internal object ChordProTabTransposer {
         rewriteChordNames(lines) { name -> name.also(::add) }
     }
 
-    /** The positions of the fret numbers of a staff line: every run of digits that is not the count of an `x4`. */
+    /**
+     * The positions of the fret numbers of a staff line: every run of digits that is not a repeat count, `x4` or, after
+     * the last bar line, `4x`. Inside the staff a `3x` is a fret and a dead note on the next column, and moves.
+     */
     private fun fretRanges(line: String): List<IntRange> {
         val ranges = mutableListOf<IntRange>()
+        // What stands after the last bar line is a note to the player (`x3`, `3x`, `(3x)`), not a string's frets.
+        val lastBar = line.lastIndexOf('|')
         var index = 0
         while (index < line.length) {
             if (line[index].isAsciiDigit) {
@@ -63,9 +68,9 @@ internal object ChordProTabTransposer {
                 while (endIndex + 1 < line.length && line[endIndex + 1].isAsciiDigit) {
                     endIndex++
                 }
-                if (line.getOrNull(index - 1)?.lowercaseChar() != REPEAT_COUNT_MARKER) {
-                    ranges += index..endIndex
-                }
+                val isCountAfter = line.getOrNull(index - 1)?.lowercaseChar() == REPEAT_COUNT_MARKER
+                val isCountBefore = index > lastBar && lastBar >= 0 && line.getOrNull(endIndex + 1)?.lowercaseChar() == REPEAT_COUNT_MARKER
+                if (!isCountAfter && !isCountBefore) ranges += index..endIndex
                 index = endIndex + 1
             } else {
                 index++
@@ -176,7 +181,7 @@ internal object ChordProTabTransposer {
     private const val MAX_FRET = 24
     private const val SEMITONES_IN_OCTAVE = 12
     private const val DASH = '-'
-    private const val REPEAT_COUNT_MARKER = 'x' // The `x` of an `x4` after a bar, whose number is not a fret.
+    private const val REPEAT_COUNT_MARKER = 'x' // The `x` of an `x4` after a bar or a `4x` after the last one, whose number is not a fret.
     private const val SOURCE_COMMENT = "#"
     private const val BEAT = "."
     private const val REPEAT = "%"

@@ -76,6 +76,13 @@ class ChordProSerializerTest {
     }
 
     @Test
+    fun `an empty tab environment survives serializing`() {
+        val parsed = ChordProParser.parse("{start_of_tab: Riff}\n{end_of_tab}\n[C]la la")
+
+        assertEquals(parsed, ChordProParser.parse(ChordProSerializer.serialize(parsed)))
+    }
+
+    @Test
     fun `an abc block survives serializing`() {
         val parsed = ChordProParser.parse("{start_of_abc}\nX:1\n[CEG]2 [A2B] |\n{end_of_abc}")
 

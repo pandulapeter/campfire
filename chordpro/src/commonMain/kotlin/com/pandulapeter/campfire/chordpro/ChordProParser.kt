@@ -45,8 +45,9 @@ object ChordProParser {
         val transposition = Transposition()
         ChordProSyntax.splitLines(text).forEach { rawLine ->
             val trimmedLine = rawLine.trim()
-            if (trimmedLine.startsWith(SOURCE_COMMENT)) return@forEach
-            val directive = ChordProSyntax.matchDirective(trimmedLine)
+            // Inside an environment handed to another program a `#` and a brace are that program's syntax.
+            if (trimmedLine.startsWith(SOURCE_COMMENT) && !section.isDelegated) return@forEach
+            val directive = if (section.isDelegated) ChordProSyntax.matchDelegatedDirective(trimmedLine) else ChordProSyntax.matchDirective(trimmedLine)
             if (directive == null) {
                 if (trimmedLine.isNotEmpty()) transposition.startBody()
                 section.addContent(rawLine, trimmedLine)
@@ -162,8 +163,13 @@ object ChordProParser {
         var isGermanNotated = false
         ChordProSyntax.splitLines(text).forEach { rawLine ->
             val trimmedLine = rawLine.trim()
-            if (trimmedLine.startsWith(SOURCE_COMMENT)) return@forEach
-            val directive = if (trimmedLine.startsWith(DIRECTIVE_START)) ChordProSyntax.matchDirective(trimmedLine) else null
+            val isDelegated = environment in ChordProSyntax.delegateEnvironments
+            if (trimmedLine.startsWith(SOURCE_COMMENT) && !isDelegated) return@forEach
+            val directive = when {
+                !trimmedLine.startsWith(DIRECTIVE_START) -> null
+                isDelegated -> ChordProSyntax.matchDelegatedDirective(trimmedLine)
+                else -> ChordProSyntax.matchDirective(trimmedLine)
+            }
             if (directive != null) {
                 if (!ChordProSyntax.hasSelectorSuffix(directive.name)) {
                     if (directive.name == TRANSPOSE) {
@@ -357,6 +363,12 @@ object ChordProParser {
          */
         val isInLineMode get() = lineMode != null
 
+        /** Whether one of the environments ChordPro hands to another program is open, see [ChordProSyntax.matchDelegatedDirective]. */
+        val isDelegated get() = lineMode == LineMode.VERBATIM
+
+        /** Whether the running paragraph was opened by the tab or grid environment that is open, see [closeLineMode]. */
+        private var isOpenedByLineMode = false
+
         fun open(
             type: SectionType,
             label: String?,
@@ -370,6 +382,7 @@ object ChordProParser {
             this.headingText = headingText
             this.isContinuation = isContinuation
             hasTabLine = false
+            isOpenedByLineMode = false
             lines.clear()
         }
 
@@ -381,13 +394,22 @@ object ChordProParser {
          * and the section's own wins.
          */
         fun openLineMode(mode: LineMode, label: String?) {
-            if (type == null) open(SectionType.Paragraph, label = label, isExplicit = false)
+            if (type == null) {
+                open(SectionType.Paragraph, label = label, isExplicit = false)
+                isOpenedByLineMode = true
+            }
             lineMode = mode
             hasTabLine = false
         }
 
+        /**
+         * An environment that opened a paragraph of its own and wrote nothing in it leaves nothing behind: its label
+         * names that environment, and a line after it would otherwise be headed by it.
+         */
         fun closeLineMode() {
             lineMode = null
+            if (isOpenedByLineMode && lines.all { it == ChordProLine.Blank }) close()
+            isOpenedByLineMode = false
         }
 
         fun close() {
@@ -406,6 +428,7 @@ object ChordProParser {
             isExplicit = false
             isContinuation = false
             hasTabLine = false
+            isOpenedByLineMode = false
             headingText = null
             lines.clear()
         }

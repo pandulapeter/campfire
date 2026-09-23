@@ -285,9 +285,16 @@ object ChordProTransposer {
         var environment: String? = null
         lines.forEachIndexed { index, rawLine ->
             val trimmedLine = rawLine.trim()
-            val directive = if (trimmedLine.startsWith(SOURCE_COMMENT)) null else ChordProSyntax.matchDirective(trimmedLine)
+            // Inside an environment handed to another program a `#` and a brace are that program's syntax.
+            val isDelegated = environment in ChordProSyntax.delegateEnvironments
+            val isSourceComment = trimmedLine.startsWith(SOURCE_COMMENT) && !isDelegated
+            val directive = when {
+                isSourceComment -> null
+                isDelegated -> ChordProSyntax.matchDelegatedDirective(trimmedLine)
+                else -> ChordProSyntax.matchDirective(trimmedLine)
+            }
             when {
-                trimmedLine.startsWith(SOURCE_COMMENT) -> Unit
+                isSourceComment -> Unit
                 directive != null -> if (!ChordProSyntax.hasSelectorSuffix(directive.name)) {
                     ChordProSyntax.startOfEnvironment(directive.name)?.let {
                         lines.transposeTab(tabLineIndices, semitones, rename)
