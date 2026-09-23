@@ -1078,11 +1078,13 @@ class CampfireViewModel(
     /**
      * Where a file opened with the app lands. It is put on top of whatever is on screen, so that Back returns there,
      * except over a song that is already open, which it takes the place of rather than stacking a second pager on.
-     * An editor is left alone: the song's arrival is announced all the same, and taking the screen away from somebody
-     * in the middle of typing is not something a file opened elsewhere gets to do.
+     * An editor is covered like any other screen as long as everything in it is saved, and Back returns to it. One
+     * holding unsaved text is left alone, as [selectTopLevelDestination] leaves it: the song's arrival is announced all
+     * the same, and the unsaved changes question is only ever asked of an editor on top, so the text would be one
+     * closed window away from being lost without it.
      */
     private fun openImportedSong(fileName: String) {
-        if (backStack.any { it is CampfireDestination.SongEditor }) return
+        if (hasUnsavedEditorText() && backStack.any { it is CampfireDestination.SongEditor }) return
         val songFileNames = listOf(fileName)
         val current = backStack.lastOrNull()
         if (current is CampfireDestination.SongDetails && current.setlistFileName == null && current.songFileNames == songFileNames) return
