@@ -394,6 +394,16 @@ internal object ChordProSyntax {
     private val bodyNames = blockNames + setOf("new_song", "ns")
 
     /**
+     * Whether the value of the directive [name] is text the song shows — a comment, or the label of a section or of a
+     * chorus recall — rather than a setting. Its brackets are then chords, as they are in a line of lyrics: that is
+     * where an intro is written down as a row of chords, so the transposition moves them and the highlighter colours
+     * them.
+     */
+    fun hasChordsInValue(name: String) = name in shownValueNames || startOfEnvironment(name) != null
+
+    private val shownValueNames = setOf("chorus", "comment", "c", "comment_italic", "ci", "comment_box", "cb", "highlight")
+
+    /**
      * The environments ChordPro hands to another program — ABC and LilyPond notation, SVG, a block of preformatted
      * text. Their lines are that program's input rather than lyrics: `[CEG]` is an ABC chord of three notes, and moving
      * it as a ChordPro chord would corrupt music nobody asked to change. They are kept line for line and nothing in

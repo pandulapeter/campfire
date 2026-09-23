@@ -12,6 +12,7 @@ package com.pandulapeter.campfire.chordpro
 import com.pandulapeter.campfire.chordpro.model.ChordProBlock
 import com.pandulapeter.campfire.chordpro.model.ChordProLine
 import com.pandulapeter.campfire.chordpro.model.ChordProSong
+import com.pandulapeter.campfire.chordpro.model.CommentStyle
 import com.pandulapeter.campfire.chordpro.model.GridToken
 import kotlin.test.Test
 import kotlin.test.assertEquals
@@ -393,7 +394,75 @@ class ChordProTransposerTest {
     }
 
     @Test
-    fun `transposing text leaves comments and annotations alone and updates the key`() {
+    fun `the chords of a comment are transposed in the text`() {
+        listOf("comment", "c", "ci", "cb", "highlight").forEach { name ->
+            assertEquals(
+                "{$name: Intro: [A] [F#m] [*softly] [Chorus x2]}\n\n[A]a",
+                ChordProTransposer.transposeText("{$name: Intro: [G] [Em] [*softly] [Chorus x2]}\n\n[G]a", 2, preferFlats = false),
+            )
+        }
+    }
+
+    @Test
+    fun `the chords of a comment are transposed on the model`() {
+        val song = ChordProParser.parse("{c: Outro: [G] [Em] [*softly] [Chorus x2]}\n\n[G]a")
+
+        assertEquals(
+            ChordProBlock.Comment("Outro: [A] [F#m] [*softly] [Chorus x2]", CommentStyle.PLAIN),
+            ChordProTransposer.transpose(song, 2, preferFlats = false).blocks.first(),
+        )
+    }
+
+    @Test
+    fun `the chords of a Campfire 3 heading are transposed on its label`() {
+        // "Intro" makes the comment the heading of the section below it, so the chords end up in a label.
+        val song = ChordProParser.parse("{key: G}\n{comment: Intro: [G] [Em] [C] [D]}\n[G]Some lyrics [Em]here")
+
+        assertEquals(
+            "Intro: [A] [F#m] [D] [E]",
+            (ChordProTransposer.transpose(song, 2, preferFlats = false).blocks.first() as ChordProBlock.Section).label,
+        )
+    }
+
+    @Test
+    fun `the chords of a label and of a chorus recall are transposed`() {
+        val text = "{start_of_chorus: Chorus [G]}\n[G]a\n{end_of_chorus}\n\n{chorus: Again, in [G]}"
+        val transposed = ChordProTransposer.transpose(ChordProParser.parse(text), 2, preferFlats = false)
+
+        assertEquals("Chorus [A]", (transposed.blocks.first() as ChordProBlock.Section).label)
+        assertEquals("Again, in [A]", (transposed.blocks.last() as ChordProBlock.ChorusRecall).label)
+        assertEquals(
+            "{start_of_chorus: Chorus [A]}\n[A]a\n{end_of_chorus}\n\n{chorus: Again, in [A]}",
+            ChordProTransposer.transposeText(text, 2, preferFlats = false),
+        )
+    }
+
+    @Test
+    fun `the model and the text agree about the chords of comments and labels`() {
+        listOf(
+            "{key: G}\n{comment: Intro: [G] [Em] [C] [D]}\n[G]Some lyrics [Em]here",
+            "{key: G}\n{comment: Intro: [G] [Em] [C] [D]}\n\n[G]Some lyrics [Em]here\n\n{ci: Outro: [C] [G]}",
+            "{start_of_verse: Verse [Em]}\n[G]a\n{end_of_verse}\n{cb: [Bb] and [*hold] [Coda]}",
+        ).forEach { text ->
+            assertEquals(
+                ChordProTransposer.transpose(ChordProParser.parse(text), 2, preferFlats = false),
+                ChordProParser.parse(ChordProTransposer.transposeText(text, 2, preferFlats = false)),
+            )
+        }
+    }
+
+    @Test
+    fun `the chords of a comment are respelled in German notation but do not make a song German`() {
+        val english = ChordProParser.parse("{c: Intro: [B]}\n\n[B]a")
+        assertEquals(ChordProBlock.Comment("Intro: [H]", CommentStyle.PLAIN), ChordProNotation.toGerman(english).blocks.first())
+
+        val onlyTheCommentIsGerman = ChordProParser.parse("{c: Intro: [H]}\n\n[B]a")
+        assertFalse(ChordProNotation.isGermanNotated(onlyTheCommentIsGerman))
+        assertEquals(ChordProBlock.Comment("Intro: [H]", CommentStyle.PLAIN), onlyTheCommentIsGerman.blocks.first())
+    }
+
+    @Test
+    fun `transposing text leaves source comments, prose comments and annotations alone and updates the key`() {
         val text = """
             # a note with [Am] inside
             {key: E}

@@ -43,6 +43,47 @@ class ChordProHighlighterTest {
     }
 
     @Test
+    fun `the chords of a comment or a label are coloured as chords, and nothing else in it`() {
+        assertEquals(
+            listOf(
+                TokenType.DIRECTIVE_NAME to "{c:",
+                TokenType.DIRECTIVE_VALUE to " Intro: ",
+                TokenType.CHORD to "[G]",
+                TokenType.DIRECTIVE_VALUE to " [*softly] [Chorus x2] [] ",
+                TokenType.CHORD to "[F#m]",
+                TokenType.DIRECTIVE_VALUE to " ",
+                TokenType.CHORD to "[a]",
+                TokenType.DIRECTIVE_NAME to "}",
+            ),
+            spans("{c: Intro: [G] [*softly] [Chorus x2] [] [F#m] [a]}"),
+        )
+        assertEquals(
+            listOf(
+                TokenType.DIRECTIVE_NAME to "{soc:",
+                TokenType.DIRECTIVE_VALUE to " ",
+                TokenType.CHORD to "[Am]",
+                TokenType.DIRECTIVE_NAME to "}",
+            ),
+            spans("{soc: [Am]}"),
+        )
+    }
+
+    @Test
+    fun `the chords of a comment's text are the ones the transposition moves`() {
+        val text = "Outro: [D] [*softly] [A] [Chorus x2] [bm] [b]"
+
+        assertEquals(listOf("[D]", "[A]", "[b]"), ChordProHighlighter.chordsOfShownText(text).map { text.substring(it.start, it.end) })
+    }
+
+    @Test
+    fun `the brackets of a setting are not chords`() {
+        assertEquals(
+            listOf(TokenType.DIRECTIVE_NAME to "{title:", TokenType.DIRECTIVE_VALUE to " Song [G]", TokenType.DIRECTIVE_NAME to "}"),
+            spans("{title: Song [G]}"),
+        )
+    }
+
+    @Test
     fun `a directive with no colon is split after its name`() {
         assertEquals(
             listOf(TokenType.DIRECTIVE_NAME to "{title ", TokenType.DIRECTIVE_VALUE to "Song", TokenType.DIRECTIVE_NAME to "}"),

@@ -78,17 +78,7 @@ object ChordProHighlighter {
                 // A staff line's brackets are part of the tablature, which the transposition moves by its frets; the
                 // brackets of any other line of a tab are chords to it, and are coloured as chords here.
                 !isInDelegate && !(isInTab && ChordProSyntax.isStaffLine(line)) -> ChordProSyntax.brackets(line).forEach { bracket ->
-                    // Trimmed, and empty brackets left out, because that is how the parser and the transposition read
-                    // a bracket: a `[ *softly]` is the annotation the viewer will draw in the lyrics, and a `[]` is
-                    // not a chord to anything downstream. What counts as a chord is decided in one place or in none.
-                    val content = bracket.content.trim()
-                    if (content.isNotEmpty()) {
-                        tokens += Token(
-                            type = if (content.startsWith(ANNOTATION_PREFIX)) TokenType.ANNOTATION else TokenType.CHORD,
-                            start = lineStart + bracket.range.first,
-                            end = lineStart + bracket.range.last + 1,
-                        )
-                    }
+                    bracket.token(lineStart)?.let { tokens += it }
                 }
             }
         }
@@ -112,14 +102,65 @@ object ChordProHighlighter {
         val nameEnd = if (hasValue) open + valueStart else close + 1
         val name = Token(TokenType.DIRECTIVE_NAME, lineStart + open, lineStart + nameEnd)
         return if (hasValue) {
-            listOf(
-                name,
-                Token(TokenType.DIRECTIVE_VALUE, lineStart + nameEnd, lineStart + close),
-                Token(TokenType.DIRECTIVE_NAME, lineStart + close, lineStart + close + 1),
-            )
+            buildList {
+                add(name)
+                addAll(valueTokens(line.substring(nameEnd, close), lineStart + nameEnd))
+                add(Token(TokenType.DIRECTIVE_NAME, lineStart + close, lineStart + close + 1))
+            }
         } else {
             listOf(name)
         }
+    }
+
+    /**
+     * The chords of the text of a comment or a label, offsets into [text]: the brackets the transposition moves there.
+     * Only a whole chord name counts (a lowercase minor included), since such a text is drawn as it is written: a
+     * `[Chorus x2]` is not moved and a `[*softly]` is not lifted out of it the way an annotation is lifted out of the
+     * lyrics.
+     */
+    fun chordsOfShownText(text: String): List<Token> = ChordProSyntax.brackets(text)
+        .filter { it.content.trim().isMovedChordName() }
+        .mapNotNull { it.token(0) }
+
+    /**
+     * The value of a directive, cut around the chords in it where it is text the song shows (see
+     * [ChordProSyntax.hasChordsInValue]): those brackets are moved by the transposition, and the editor says so.
+     */
+    private fun ChordProSyntax.Directive.valueTokens(value: String, valueStart: Int): List<Token> {
+        val chords = if (ChordProSyntax.hasChordsInValue(name)) {
+            chordsOfShownText(value).map { it.copy(start = valueStart + it.start, end = valueStart + it.end) }
+        } else {
+            emptyList()
+        }
+        val tokens = mutableListOf<Token>()
+        var consumedUntil = valueStart
+        chords.forEach { chord ->
+            if (chord.start > consumedUntil) tokens += Token(TokenType.DIRECTIVE_VALUE, consumedUntil, chord.start)
+            tokens += chord
+            consumedUntil = chord.end
+        }
+        if (valueStart + value.length > consumedUntil) tokens += Token(TokenType.DIRECTIVE_VALUE, consumedUntil, valueStart + value.length)
+        return tokens
+    }
+
+    /** Whether the transposition moves this bracket's content, a lowercase minor (`a` for `Am`) included. */
+    private fun String.isMovedChordName() =
+        ChordProChordNames.isChordName(this) || ChordProChordNames.lowercaseMinorExpanded(this)?.let(ChordProChordNames::isChordName) == true
+
+    /**
+     * The token of a bracket that starts [offset] characters into the text, trimmed and with an empty one left out,
+     * because that is how the parser and the transposition read a bracket: a `[ *softly]` is the annotation the viewer
+     * will draw in the lyrics, and a `[]` is not a chord to anything downstream. What counts as a chord is decided in
+     * one place or in none.
+     */
+    private fun ChordProSyntax.Bracket.token(offset: Int): Token? {
+        val content = content.trim()
+        if (content.isEmpty()) return null
+        return Token(
+            type = if (content.startsWith(ANNOTATION_PREFIX)) TokenType.ANNOTATION else TokenType.CHORD,
+            start = offset + range.first,
+            end = offset + range.last + 1,
+        )
     }
 
     private const val SOURCE_COMMENT = "#"

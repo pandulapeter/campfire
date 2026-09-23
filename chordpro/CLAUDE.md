@@ -125,7 +125,11 @@ in `:domain:*`. `:data:source:local:implementation` uses it directly for the met
   byte of formatting (the editor's transpose action). Chooses sharps or flats from the song's key, follows the bass
   note after `/`, understands German `H`, moves a key spelled out in words (`G major`, `A minor`, `Bb-Dur`) by its note
   and keeps the words (`renameKey`), which is also what the notation and the library scan use for the key, and leaves
-  annotations alone. A bracket is only moved when
+  annotations alone. The brackets of a comment (`{comment}`, `{ci}`, `{cb}`, `{highlight}`) and of a label (a section's,
+  a chorus recall's) are read as a line of lyrics and moved the same way on the model and in the text
+  (`ChordProSyntax.hasChordsInValue` names those directives), since that is where an intro is written down as a row of
+  chords — and a Campfire 3 heading, `{comment: Intro: [G] [Em]}`, is a comment in the file and a label in the model.
+  They are renamed but do not vote on the spelling or the notation, which the library scan could not see. A bracket is only moved when
   `ChordProChordNames.isChordName` accepts the whole of it, so a `[Break]` or a `[Chorus 2x]` somebody wrote without
   the `*` is left where it is, and does not vote on the spelling either — the same question `ChordProNotation` has
   always asked. A caller that knows better passes `preferFlats` and gets that spelling instead, which is what the accidentals preference does; forced that way it is
@@ -186,7 +190,9 @@ in `:domain:*`. `:data:source:local:implementation` uses it directly for the met
   `ChordProSyntax` rather than walking them itself, so it agrees with the parser about where a line ends whichever of
   the three endings the file uses, and reads a bracket trimmed the way the parser does, so a `[ *softly]` is an
   annotation and an empty `[]` is not a chord. Inside a tab it colours the brackets of the lines that are not the staff,
-  which are the ones the transposition renames.
+  which are the ones the transposition renames, and in the value of a comment or a label it colours the chords the
+  transposition moves there too — whole chord names only, since a comment is drawn as it is written and neither moves a
+  `[Chorus x2]` nor lifts an annotation out.
 
 Everything here is pure, so everything here is tested: `commonTest`, run with `./gradlew :chordpro:desktopTest`. A
 change to the dialect belongs in a test first.

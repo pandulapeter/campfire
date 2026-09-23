@@ -51,10 +51,12 @@ import androidx.compose.ui.semantics.isTraversalGroup
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.semantics.traversalIndex
 import androidx.compose.ui.text.AnnotatedString
+import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.TextLayoutResult
 import androidx.compose.ui.text.TextMeasurer
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.TextStyle
+import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.drawText
 import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.text.font.FontWeight
@@ -64,6 +66,7 @@ import androidx.compose.ui.text.style.ResolvedTextDirection
 import androidx.compose.ui.text.style.TextDirection
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.isSpecified
+import com.pandulapeter.campfire.chordpro.ChordProHighlighter
 import com.pandulapeter.campfire.chordpro.ChordProTabWrapper
 import com.pandulapeter.campfire.chordpro.model.ChordProBlock
 import com.pandulapeter.campfire.chordpro.model.ChordProLine
@@ -384,10 +387,18 @@ private fun SongComment(
     val style = MaterialTheme.typography.bodyMedium.scaled(fontScale).let {
         if (comment.style == CommentStyle.ITALIC) it.copy(fontStyle = FontStyle.Italic) else it
     }
+    val chordColor = MaterialTheme.colorScheme.primary
+    // The transposition moves the brackets of a comment as it moves those of the lyrics, so they are drawn as chords.
+    val annotatedText = remember(comment.text, chordColor) {
+        buildAnnotatedString {
+            append(comment.text)
+            ChordProHighlighter.chordsOfShownText(comment.text).forEach { addStyle(SpanStyle(color = chordColor, fontWeight = FontWeight.Bold), it.start, it.end) }
+        }
+    }
     val text = @Composable { boxModifier: Modifier ->
         Text(
             modifier = boxModifier,
-            text = comment.text,
+            text = annotatedText,
             style = style,
             color = MaterialTheme.colorScheme.onSurfaceVariant,
         )

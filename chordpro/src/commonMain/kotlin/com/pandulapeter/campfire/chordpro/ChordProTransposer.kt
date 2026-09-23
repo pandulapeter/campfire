@@ -98,10 +98,23 @@ object ChordProTransposer {
         )
     }
 
+    /**
+     * A comment and a label are where an intro or an outro is written down as a row of chords (`Intro: [G] [Em]`), and
+     * a Campfire 3 file wrote its headings as comments, so their brackets are chords to be moved like those of a line of
+     * lyrics. They are not in [writtenChordNames]: the library scan never reads a directive's value, and letting them
+     * decide the notation or the spelling would make the song list and the viewer disagree about the song.
+     */
     private fun rewriteBlock(block: ChordProBlock, rewrite: ChordRewrite): ChordProBlock = when (block) {
-        is ChordProBlock.Section -> block.copy(lines = rewriteLines(block.lines, rewrite.rewriteTabLines, rewrite.rename))
+        is ChordProBlock.Section -> block.copy(
+            label = block.label?.let { rewriteLyricsLineChords(it, rewrite.rename) },
+            lines = rewriteLines(block.lines, rewrite.rewriteTabLines, rewrite.rename),
+        )
         // The chorus a recall repeats travels inside it, so it is spelled and moved the way the chorus itself is.
-        is ChordProBlock.ChorusRecall -> block.copy(blocks = block.blocks.map { rewriteBlock(it, rewrite) })
+        is ChordProBlock.ChorusRecall -> block.copy(
+            label = block.label?.let { rewriteLyricsLineChords(it, rewrite.rename) },
+            blocks = block.blocks.map { rewriteBlock(it, rewrite) },
+        )
+        is ChordProBlock.Comment -> block.copy(text = rewriteLyricsLineChords(block.text, rewrite.rename))
         else -> block
     }
 
@@ -312,6 +325,8 @@ object ChordProTransposer {
                     (ChordProSyntax.standardMeta(directive) ?: directive).takeIf { it.name == KEY }?.value?.takeIf { it.isNotEmpty() }?.let { key ->
                         lines[index] = transposeKeyLine(rawLine, key, rename)
                     }
+                    // The directive's name holds no brackets, so the line can be read as a line of lyrics whole.
+                    if (ChordProSyntax.hasChordsInValue(directive.name)) lines[index] = rewriteLyricsLineChords(rawLine, rename)
                 }
 
                 environment == TAB -> tabLineIndices += index
