@@ -121,6 +121,20 @@ internal class FileNamesTest {
     }
 
     @Test
+    fun aNameThatDiffersOnlyInCaseIsAlreadyNamed() {
+        assertTrue("Hallelujah.cho".isNamed("hallelujah.cho"))
+        assertTrue("Hallelujah_2.cho".isNamed("hallelujah.cho"))
+        assertTrue("Summer.setlist.json".isNamed(setlistFileName("Summer")))
+        assertFalse("Hallelujah2.cho".isNamed("hallelujah.cho"))
+    }
+
+    @Test
+    fun aNameThatDiffersInCaseAndFormIsAlreadyNamed() {
+        // A capital Epsilon with a separate accent, as a Mac hands it out, against the composed lowercase name.
+        assertTrue("\u0395\u0301\u03bd\u03b1.cho".isNamed("\u03ad\u03bd\u03b1.cho"))
+    }
+
+    @Test
     fun aConflictCopyIsRecognizedAsItsOwn() {
         assertTrue("x (2).cho".isNamed("x.cho"))
         assertTrue(!"_2.cho".isNamed(".cho"))

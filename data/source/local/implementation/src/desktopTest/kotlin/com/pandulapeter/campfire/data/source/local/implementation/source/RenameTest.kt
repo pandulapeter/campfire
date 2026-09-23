@@ -18,6 +18,8 @@ import java.nio.file.Files
 import kotlin.test.AfterTest
 import kotlin.test.Test
 import kotlin.test.assertEquals
+import kotlin.test.assertFalse
+import kotlin.test.assertNull
 
 /**
  * Renames against the real file system of the machine running the tests, which on macOS and Windows is
@@ -36,15 +38,15 @@ class RenameTest {
     }
 
     @Test
-    fun `a song renamed only in case keeps its name without a number`() = runBlocking {
+    fun `a song whose name differs from its header only in case is not renamed`() = runBlocking {
         fileStorage.writeText(StorageDirectory.SONGS, "Foo.cho", "{title: Foo}\n")
         val song = songLocalSource.loadSong("Foo.cho")!!
 
         val renamed = songLocalSource.renameSong(song)
 
-        assertEquals("foo.cho", renamed?.fileName)
-        assertEquals(listOf("foo.cho"), fileStorage.list(StorageDirectory.SONGS).map { it.name })
-        assertEquals("{title: Foo}\n", fileStorage.readText(StorageDirectory.SONGS, "foo.cho"))
+        assertNull(renamed)
+        assertEquals(listOf("Foo.cho"), fileStorage.list(StorageDirectory.SONGS).map { it.name })
+        assertFalse(songLocalSource.loadSong("Foo.cho")!!.canUpdateFileName)
     }
 
     @Test
@@ -61,7 +63,7 @@ class RenameTest {
     }
 
     @Test
-    fun `a setlist renamed only in case keeps its name without a number`() = runBlocking {
+    fun `a setlist retitled only in case keeps its file`() = runBlocking {
         val setlist = Setlist(
             fileName = "Summer.setlist.json",
             title = "Summer",
@@ -75,8 +77,8 @@ class RenameTest {
 
         val renamed = setlistLocalSource.renameSetlist(setlist, "Summer")
 
-        assertEquals("summer.setlist.json", renamed.fileName)
-        assertEquals(listOf("summer.setlist.json"), fileStorage.list(StorageDirectory.SETLISTS).map { it.name })
+        assertEquals("Summer.setlist.json", renamed.fileName)
+        assertEquals(listOf("Summer.setlist.json"), fileStorage.list(StorageDirectory.SETLISTS).map { it.name })
         assertEquals("Summer", setlistLocalSource.loadSetlists().single().title)
     }
 }

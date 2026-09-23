@@ -46,7 +46,8 @@ data class Song(
      *
      * False for a file that declares no `{title}`: its name is what titles it, so there is nothing better to rename
      * it to. False as well for a name that only differs by the suffix a collision added, which is already as close
-     * as that song can get.
+     * as that song can get. False as well for a name that differs from the derived one only in case or Unicode form,
+     * which is the same file to the file systems and to sync.
      */
     val canUpdateFileName: Boolean,
     val lastModified: Long,

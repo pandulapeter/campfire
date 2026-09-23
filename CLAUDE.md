@@ -193,8 +193,10 @@ uninstall and nothing else does.
   (`normalizedToNfc`, an expect/actual in `:data:model`), since macOS and iOS hand out names decomposed and every other
   platform composed, and a non-Latin letter keeps its marks — so the two forms would be two songs; sync's name matching
   composes too. The rule is idempotent, which it has to be, since a name that left the app is normalized again on its
-  way back in. Nothing is migrated: a file whose name is decomposed keeps it until **Update file name** (or, for a
-  setlist, a new title) moves it.
+  way back in. Nothing is migrated, and a name that differs from the normalized one only by case or by Unicode form
+  is taken as that name — it is the same file to APFS, NTFS and the sync service, and a move nothing else can see is
+  one other devices never follow — so a capitalised or decomposed file keeps its spelling until **Update file name**
+  (or, for a setlist, a new title) moves it for a reason that is part of the name.
 - **A song is named by its own header, wherever it came from**: `{artist}`, `{title}` and `{subtitle}`, the subtitle
   joining the title half (`green_day-good_riddance_time_of_your_life.cho`) because it is part of the title everywhere
   else in the app. That holds for a song written in the editor, one that arrives through an import
@@ -210,7 +212,7 @@ uninstall and nothing else does.
   user gets to say about a setlist). A song's does not: its name is what titles it wherever the file declares no `{title}`, it
   is what a setlist points at, and on the platforms where the library is a folder the user may have chosen it — an
   import is not one of those cases, since nothing has pointed at the incoming name yet. Where
-  a song's name and its metadata have drifted apart, `Song.canUpdateFileName` puts an **Update file name** entry in
+  a song's name and its metadata have drifted apart (by more than case or Unicode form), `Song.canUpdateFileName` puts an **Update file name** entry in
   its menu, and taking it moves the file and everything that named it — every setlist entry, the saved transposition,
   the open screens (`RenameSongFileUseCase`), a setlist that already named the file under its new name keeping the one
   entry it had. Files that were named before any of this keep their names until one of those two things happens to

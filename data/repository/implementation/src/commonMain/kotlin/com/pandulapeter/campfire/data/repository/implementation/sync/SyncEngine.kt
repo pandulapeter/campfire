@@ -57,9 +57,9 @@ internal fun foldRemoteNamesOntoLocal(local: List<LocalFileState>, remote: List<
  * Files an index entry under the spelling the listings now have for its file, where the two differ only by case.
  *
  * [foldRemoteNamesOntoLocal] matches the two listings with each other, but the planner looks the index up by exact
- * name as well. A song moved to another spelling of the same name ("Update file name" on `Hallelujah.cho`) keeps the
- * old spelling on a service that ignores case, and its entry under whichever spelling the last run saw. Left like that,
- * the planner reads one file as two: an entry whose file is gone from both sides, which it forgets, and a file
+ * name as well. A song moved to another spelling of the same name (a file renamed by hand from `Hallelujah.cho`)
+ * keeps the old spelling on a service that ignores case, and its entry under whichever spelling the last run saw. Left
+ * like that, the planner reads one file as two: an entry whose file is gone from both sides, which it forgets, and a file
  * nobody has seen, which it downloads. A deletion made here then brings the song back, and an edit made elsewhere is
  * taken for a conflict. An entry only moves when its own name is in neither listing and exactly one listed name
  * folds to it and has no entry of its own, so an index that already matches is returned as it is.

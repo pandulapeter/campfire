@@ -105,13 +105,9 @@ class LibraryListingTest {
             ),
         )
         assertEquals(sizeOf(saved.fileName), saved.size)
-        // Only the case of the file name changes, which moveFile does with two writes.
-        val movedByCase = setlistLocalSource.renameSetlist(saved, "Summer")
-        assertEquals("summer.setlist.json", movedByCase.fileName)
-        assertEquals(sizeOf(movedByCase.fileName), movedByCase.size)
-        // The title changes but the name it gives does not, so the file is written where it is.
-        val retitled = setlistLocalSource.renameSetlist(movedByCase, "SUMMER")
-        assertEquals("summer.setlist.json", retitled.fileName)
+        // The title changes but the name it gives differs from the file's only in case, so the file is written where it is.
+        val retitled = setlistLocalSource.renameSetlist(saved, "SUMMER")
+        assertEquals("Summer.setlist.json", retitled.fileName)
         assertEquals(sizeOf(retitled.fileName), retitled.size)
         val moved = setlistLocalSource.renameSetlist(retitled, "Autumn evenings")
         assertEquals("autumn_evenings.setlist.json", moved.fileName)

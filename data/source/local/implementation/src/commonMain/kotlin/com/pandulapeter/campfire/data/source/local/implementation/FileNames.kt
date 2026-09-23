@@ -122,17 +122,20 @@ internal fun arrivingCollisionSuffix(index: Int) = " ($index)"
  * make way for another one is named as well as it can be, and an offer to rename it again would be one that never
  * goes away however often it is taken.
  *
- * The file's own name is composed before it is compared, since [desired] always is: a file named on a Mac arrives
- * decomposed and would otherwise never be named as it should be, offering a rename that, once taken, offers itself
- * again. Composing it does not rename anything - an existing file keeps the form it was written in until the user
- * asks for its name to be updated.
+ * Neither case nor Unicode form counts. A name that differs from [desired] only in those is the same file to the file
+ * systems the library lives on by default - APFS on a Mac and an iPhone ignores both, NTFS ignores case - and to the
+ * sync service, so moving it would be a move nothing else can see: another device keeps the old spelling while the
+ * setlists that follow the move reach it, and shows the song as missing from them. A file named on a Mac arrives
+ * decomposed, and one written by an older version may be capitalised; either keeps its spelling until something that
+ * is part of the name changes. Composing it does not rename anything.
  */
 internal fun String.isNamed(desired: String): Boolean {
     val extension = knownExtension()
     if (!extension.equals(desired.knownExtension(), ignoreCase = true)) return false
     val base = removeSuffix(extension).normalizedToNfc()
     val desiredBase = desired.removeSuffix(desired.knownExtension())
-    return base == desiredBase || LibraryFiles.withoutCollisionSuffix(base) == desiredBase
+    return base.equals(desiredBase, ignoreCase = true) ||
+        LibraryFiles.withoutCollisionSuffix(base)?.equals(desiredBase, ignoreCase = true) == true
 }
 
 /**
