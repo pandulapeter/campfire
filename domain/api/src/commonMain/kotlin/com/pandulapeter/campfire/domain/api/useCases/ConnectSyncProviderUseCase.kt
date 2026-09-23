@@ -54,8 +54,8 @@ interface RestoreSyncUseCase {
      * Picks sync back up at start up: reads the stored account, and finishes an authorization the app was closed in
      * the middle of. Runs a first sync if that leaves it connected.
      *
-     * @return Whether this start up was the answer to a consent page the app had been sent away to, which only
-     *   happens on the web. True either way the service answered: it says the user is coming back from connecting
+     * @return Whether this start up was the answer to a consent page the app had been sent away to, which happens
+     *   on the web, and on Android when the process was reclaimed behind the browser. True either way the service answered: it says the user is coming back from connecting
      *   an account, and so should be shown the screen they started that from rather than the one the app opens on.
      */
     suspend operator fun invoke(): Boolean

@@ -795,10 +795,7 @@ class CampfireViewModel(
                 // folder. In this coroutine rather than beside it, because it is the one thing that must happen
                 // before restore() reads those credentials.
                 if (isFirstLaunch.await()) forgetSyncConnection()
-                if (restoreSync()) {
-                    settingsTab = SettingsTab.LIBRARY
-                    selectTopLevelDestination(CampfireDestination.Settings)
-                }
+                if (restoreSync()) openSyncSettingsAfterConsent()
             } catch (exception: CancellationException) {
                 throw exception
             } catch (exception: Exception) {
@@ -969,8 +966,29 @@ class CampfireViewModel(
         }
     }
 
+    /**
+     * Shows the answer to a consent page the app was sent away to, which is where the user was when they left: Settings,
+     * on the tab holding the sync section. Only onto a stack nobody has built on since the app started - the songs the
+     * app opens on, or the settings screen Android brings back after reclaiming the process behind the browser. The
+     * code exchange this follows can take a minute on a bad network, and a user who has gone somewhere else meanwhile
+     * has moved on: the settings screen says the same thing whenever they get there, and an editor they opened in the
+     * meantime holds text that nothing but its own ways out may take away.
+     */
+    private fun openSyncSettingsAfterConsent() {
+        val stack = backStack.toList()
+        if (stack != listOf(CampfireDestination.Songs) && stack != listOf(CampfireDestination.Songs, CampfireDestination.Settings)) return
+        settingsTab = SettingsTab.LIBRARY
+        selectTopLevelDestination(CampfireDestination.Settings)
+    }
+
+    /**
+     * Rebuilds the stack around a top level screen. Refused while an editor on the stack holds unsaved text: the
+     * navigation chrome that calls this is hidden over the editor, and nothing else may take that text off the screen
+     * without asking, see [navigateBack].
+     */
     fun selectTopLevelDestination(destination: CampfireDestination.TopLevel) {
         if (backStack.lastOrNull() == destination) return
+        if (hasUnsavedEditorText() && backStack.any { it is CampfireDestination.SongEditor }) return
         updateBackStack {
             clear()
             add(CampfireDestination.Songs)
