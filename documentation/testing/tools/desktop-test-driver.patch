@@ -1,0 +1,103 @@
+This file is part of Campfire.
+Copyright (c) Pandula Péter 2017-2026.
+https://github.com/pandulapeter/campfire
+
+This Source Code Form is subject to the terms of the Mozilla Public License, v. 2.0.
+If a copy of the MPL was not distributed with this file, You can obtain one at
+https://mozilla.org/MPL/2.0/.
+
+A TEST-ONLY change to the desktop app, never to be committed: a command-file driver (TestDriver.kt, reading
+<user.home>/driver/cmd and logging every sync state to <user.home>/driver/state.log) and a hook that writes the
+Dropbox consent URL to <user.home>/driver/authurl instead of opening the default browser (while
+<user.home>/driver/nobrowser exists). Apply with `git apply documentation/testing/tools/desktop-test-driver.patch`,
+revert with `git apply -R` on the same file. If it no longer applies, recreate it from this description.
+
+diff --git a/app/desktop/build.gradle.kts b/app/desktop/build.gradle.kts
+index d426b0c2..0bb031c1 100644
+--- a/app/desktop/build.gradle.kts
++++ b/app/desktop/build.gradle.kts
+@@ -20,6 +20,7 @@ plugins {
+ dependencies {
+     implementation(project(":app:di"))
+     implementation(project(":data:model"))
++    implementation(project(":data:source:remote:api")) // TEMPORARY test driver
+     implementation(project(":presentation"))
+     implementation(libs.compose.components.resources)
+     implementation(compose.desktop.currentOs)
+diff --git a/app/desktop/src/main/java/com/pandulapeter/campfire/CampfireDesktopApplication.kt b/app/desktop/src/main/java/com/pandulapeter/campfire/CampfireDesktopApplication.kt
+index 3033c9a4..683900d3 100644
+--- a/app/desktop/src/main/java/com/pandulapeter/campfire/CampfireDesktopApplication.kt
++++ b/app/desktop/src/main/java/com/pandulapeter/campfire/CampfireDesktopApplication.kt
+@@ -132,6 +132,7 @@ fun main(args: Array<String>) {
+             ) {
+                 val currentViewModel = koinViewModel<CampfireViewModel>()
+                 SideEffect { viewModel.value = currentViewModel }
++                LaunchedEffect(currentViewModel) { TestDriver.run(currentViewModel) }
+                 CampfireDesktopApp(
+                     viewModel = currentViewModel,
+                     filesToImport = OpenedFiles.files,
+diff --git a/data/source/remote/implementation/src/desktopMain/kotlin/com/pandulapeter/campfire/data/source/remote/implementation/auth/SyncAuthenticator.desktop.kt b/data/source/remote/implementation/src/desktopMain/kotlin/com/pandulapeter/campfire/data/source/remote/implementation/auth/SyncAuthenticator.desktop.kt
+index 9a03458a..7442e0cb 100644
+--- a/data/source/remote/implementation/src/desktopMain/kotlin/com/pandulapeter/campfire/data/source/remote/implementation/auth/SyncAuthenticator.desktop.kt
++++ b/data/source/remote/implementation/src/desktopMain/kotlin/com/pandulapeter/campfire/data/source/remote/implementation/auth/SyncAuthenticator.desktop.kt
+@@ -84,7 +84,9 @@ internal class DesktopSyncAuthenticator(
+             withContext(Dispatchers.IO) {
+                 // Nothing will arrive at the socket if no browser was opened, and waiting out the five minute
+                 // timeout for that is telling the user nothing while they watch a spinner.
+-                if (!systemBrowser.open(authorizationUrl)) {
++                // TEMPORARY test hook
++                java.io.File(System.getProperty("user.home"), "driver").apply { mkdirs() }.resolve("authurl").writeText(authorizationUrl)
++                if (!java.io.File(System.getProperty("user.home"), "driver/nobrowser").exists() && !systemBrowser.open(authorizationUrl)) {
+                     return@withContext SyncAuthenticator.AuthorizationOutcome.Cancelled("No browser could be opened.")
+                 }
+                 socket.awaitRedirect(completionPage)
+diff --git a/app/desktop/src/main/java/com/pandulapeter/campfire/TestDriver.kt b/app/desktop/src/main/java/com/pandulapeter/campfire/TestDriver.kt
+new file mode 100644
+index 00000000..d2c23e4b
+--- /dev/null
++++ b/app/desktop/src/main/java/com/pandulapeter/campfire/TestDriver.kt
+@@ -0,0 +1,44 @@
++package com.pandulapeter.campfire
++
++// TEMPORARY sync test driver - remove before committing anything.
++
++import com.pandulapeter.campfire.data.model.domain.SyncDeletionPolicy
++import com.pandulapeter.campfire.data.source.remote.api.model.AuthorizationCompletionPage
++import com.pandulapeter.campfire.presentation.ui.CampfireViewModel
++import java.io.File
++import kotlinx.coroutines.Dispatchers
++import kotlinx.coroutines.coroutineScope
++import kotlinx.coroutines.delay
++import kotlinx.coroutines.launch
++import kotlinx.coroutines.withContext
++
++object TestDriver {
++    private val dir = File(System.getProperty("user.home"), "driver").apply { mkdirs() }
++    private fun log(file: String, line: String) = File(dir, file).appendText("${System.currentTimeMillis()} $line\n")
++
++    suspend fun run(viewModel: CampfireViewModel) = coroutineScope {
++        launch { viewModel.syncState.collect { log("state.log", it.toString()) } }
++        val cmd = File(dir, "cmd")
++        while (true) {
++            val line = withContext(Dispatchers.IO) { if (cmd.exists()) cmd.readText().trim().also { cmd.delete() } else null }
++            if (!line.isNullOrBlank()) {
++                log("cmd.log", line)
++                val parts = line.split(" ", limit = 2)
++                val arg = parts.getOrNull(1).orEmpty()
++                runCatching {
++                    when (parts[0]) {
++                        "sync" -> viewModel.synchronizeLibrary(if (arg.isEmpty()) SyncDeletionPolicy.ASK else SyncDeletionPolicy.valueOf(arg))
++                        "stop" -> viewModel.cancelSynchronization()
++                        "save" -> viewModel.saveSongContent(arg, File(dir, "text").readText())
++                        "delete" -> viewModel.deleteSong(arg)
++                        "connect" -> viewModel.connectSyncProvider(viewModel.syncProviders.first(), AuthorizationCompletionPage("Campfire is connected", "You can close this tab."))
++                        "disconnect" -> viewModel.disconnectSyncProvider()
++                        else -> log("cmd.log", "UNKNOWN $line")
++                    }
++                }.onFailure { log("cmd.log", "FAILED $line: $it") }
++                log("cmd.log", "DONE $line")
++            }
++            delay(200)
++        }
++    }
++}
