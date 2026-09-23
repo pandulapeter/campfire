@@ -1,5 +1,10 @@
 # Pre-release review, sixth pass, 2026-09-23: after every known fix
 
+**Note (2026-09-23):** the per-platform manual test scripts in `documentation/testing/` (`00-core-functional.md` to
+`08-release-and-stores.md`) and their fixture generator have since been replaced by `release-check.md`. Steps in
+these plans that edit those files are to be skipped, and plan 47 no longer has anything to change; the old files
+can be read with `git show 2065e47f:documentation/testing/<file>`.
+
 One file per issue, numbered by lane. Every file is a self-contained brief for an agent (or a person): what the user
 sees, where the cause is, exactly what to change, the tests to add, how to verify it, which docs become untrue, which
 files it touches and which plans must land first. Delete a file once its change has landed.
