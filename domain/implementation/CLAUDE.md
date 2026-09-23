@@ -110,6 +110,8 @@ The ones that carry real logic:
   the cache, which does not know what sync or an import wrote since the last rescan; each one is changed through
   `updateSetlist`, so it builds on the latest version and waits for a change that is being written; and every
   reference is attempted even after one fails, the deletion answering like the rename whether all of them followed.
+- `EditorDraftUseCaseImpls.kt` — the two editor draft use cases in one file, each a line over
+  `EditorDraftRepository`.
 - `SyncUseCaseImpls.kt` — all eight sync use cases in one file, since each is a line over `SyncRepository` and they
   are one feature. The two that are not: connecting runs a first sync straight away (an account connected onto a
   library that then stays empty leaves the user to work out that something else is expected of them), and restoring

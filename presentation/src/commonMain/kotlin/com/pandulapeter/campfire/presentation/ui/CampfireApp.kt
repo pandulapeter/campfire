@@ -103,6 +103,7 @@ import com.pandulapeter.campfire.presentation.resources.import_failed
 import com.pandulapeter.campfire.presentation.resources.import_oversized
 import com.pandulapeter.campfire.presentation.resources.import_result
 import com.pandulapeter.campfire.presentation.resources.song_editor_draft_lost
+import com.pandulapeter.campfire.presentation.resources.song_editor_draft_restored
 import com.pandulapeter.campfire.presentation.resources.song_editor_file_gone
 import com.pandulapeter.campfire.presentation.resources.song_editor_save_failed
 import com.pandulapeter.campfire.presentation.resources.ic_campfire
@@ -180,6 +181,10 @@ fun CampfireApp(
             if (hasResumedBefore) viewModel.refresh() else hasResumedBefore = true
         }
     }
+    // The editor's unsaved text goes to disk whenever the app stops being the one in front, see
+    // CampfireViewModel.onAppPaused. ON_PAUSE rather than ON_STOP: it always comes first, and an app swiped away from
+    // iOS's app switcher may never have got any further.
+    LifecycleEventEffect(Lifecycle.Event.ON_PAUSE) { viewModel.onAppPaused() }
     val userPreferences by viewModel.userPreferences.collectAsStateWithLifecycle()
     val arePreferencesLoaded by viewModel.arePreferencesLoaded.collectAsStateWithLifecycle()
     val hasLibraryToShow by viewModel.hasLibraryToShow.collectAsStateWithLifecycle()
@@ -570,6 +575,7 @@ private fun Messages(
         )
         CampfireViewModel.Message.SaveFailed -> stringResource(Res.string.song_editor_save_failed)
         CampfireViewModel.Message.EditorDraftLost -> stringResource(Res.string.song_editor_draft_lost)
+        CampfireViewModel.Message.EditorDraftRestored -> stringResource(Res.string.song_editor_draft_restored)
         CampfireViewModel.Message.EditedSongFileGone -> stringResource(Res.string.song_editor_file_gone)
         CampfireViewModel.Message.OperationFailed -> stringResource(Res.string.error_operation_failed)
         CampfireViewModel.Message.SongFileRenamedPartly -> stringResource(Res.string.songs_update_file_name_partly)

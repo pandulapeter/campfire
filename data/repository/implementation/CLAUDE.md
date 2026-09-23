@@ -69,6 +69,9 @@ import — is the only thing that walks the directory again.
   (`createSong`, `renameSong`, `deleteSong`, and `saveSong` once its guard has passed) change the file and the cached
   list as one `NonCancellable` step as well, the locks themselves still being waited for cancellably. Every change to either cached list replaces by file name and never
   appends, since the file name is what the lists key their rows by.
+- `EditorDraftRepositoryImpl` is not a `BaseLocalDataRepository` either, and holds no cache: the draft is read once
+  per start and written on every pause, under a lock so that a pause's write and the deletion that follows a save
+  land in the order they were asked for.
 - `SongContentRepositoryImpl` is not a `BaseLocalDataRepository`: it is a keyed in-memory cache of song *texts*, so
   paging through a setlist re-reads nothing. Bulk readers (the library export) pass `shouldCache = false` so that
   walking the whole library does not leave all of it in memory. The editor invalidates one entry after a save. The

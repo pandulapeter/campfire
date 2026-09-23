@@ -67,6 +67,10 @@ paths, `Is*` for a question with a yes or no answer (`IsFirstRun`), or a verb fo
   text-level counterpart on purpose — that one rewrites the file, and a file is always written in the app's own
   notation, which is why the two halves of `ChordSpelling` do not travel together everywhere.
 
+`GetEditorDraftUseCase` and `SaveEditorDraftUseCase` read and replace the editor's unsaved text kept outside the
+library, which is what reopens an editor the system ended the app under; the stored draft is a copy against the process
+ending, never a write of the song.
+
 Sync adds `GetSyncStateUseCase`, `GetSyncProvidersUseCase`, `ConnectSyncProviderUseCase`,
 `DisconnectSyncProviderUseCase`, `ForgetSyncConnectionUseCase`, `CancelSyncConnectionUseCase`, `RestoreSyncUseCase`,
 `SynchronizeLibraryUseCase` and `CancelSynchronizationUseCase` — the only ones that share a file with each other (two

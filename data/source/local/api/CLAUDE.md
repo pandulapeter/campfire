@@ -48,6 +48,10 @@ platform types.
   index that is not there; one that is there and cannot be read throws `LibraryStorageException`, since a run that
   took it for none would undo every deletion since the last one. Unreadable credentials are still treated as none,
   which connecting again answers.
+- `EditorDraftLocalSource` — the editor's unsaved text, `preferences/editor-draft.json`, kept so that the system
+  ending the app in the background does not end the text with it. Outside `library/`, so it is never exported or
+  synced, and kept out of the device backup. A draft that cannot be read is answered as none: it is a copy worth
+  keeping, not one worth failing over.
 
 **File naming is the storage layer's business.** Callers hand over a title, an artist and some text; the source decides
 what the file is called, normalizes it to what every file system, shell and service agrees about and suffixes it until

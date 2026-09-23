@@ -26,7 +26,8 @@ holds the `@Module @ComponentScan object DataLocalSourceModule`, and every local
     Android's backup rules in `:app:android` name `library/` and `preferences/preferences.json` by path, so moving a
     directory or renaming the preferences file means changing those two XML files as well. iOS backs up both of its
     directories whole, so what must stay behind says so itself: `SyncStateLocalSourceImpl` calls
-    `keepOutOfDeviceBackup` after every write of `sync-index.json` and of the forget-pending note, which `IosFileStorage` answers by setting
+    `keepOutOfDeviceBackup` after every write of `sync-index.json` and of the forget-pending note, and
+    `EditorDraftLocalSourceImpl` after every write of `editor-draft.json`, which `IosFileStorage` answers by setting
     `NSURLIsExcludedFromBackupKey` again — it is an attribute of the file, and the atomic write replaces the file.
     Everywhere else it does nothing.
   - Text is written as UTF-8 and read through `:data:model`'s `decodeLibraryText`, the same rule the import uses: UTF-8

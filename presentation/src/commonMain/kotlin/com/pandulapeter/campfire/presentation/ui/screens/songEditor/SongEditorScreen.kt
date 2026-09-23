@@ -259,8 +259,10 @@ private fun LoadedSongEditor(
             )
         },
     ) {
+        // A field the view model already holds for this file is taken as it is: the draft a previous run left, reopened
+        // on launch. Otherwise a new one over the file's text.
         EditorField(
-            TextFieldState(
+            viewModel.retainedEditorField(destination.fileName) ?: TextFieldState(
                 initialText = initialText,
                 initialSelection = if (destination.shouldStartInsideFirstSection) {
                     TextRange(initialText.caretInsideFirstSection())

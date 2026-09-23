@@ -1,0 +1,21 @@
+/*
+ * This file is part of Campfire.
+ * Copyright (c) Pandula Péter 2017-2026.
+ * https://github.com/pandulapeter/campfire
+ *
+ * This Source Code Form is subject to the terms of the Mozilla Public License, v. 2.0.
+ * If a copy of the MPL was not distributed with this file, You can obtain one at
+ * https://mozilla.org/MPL/2.0/.
+ */
+package com.pandulapeter.campfire.domain.api.useCases
+
+import com.pandulapeter.campfire.data.model.domain.SongContent
+
+interface SaveEditorDraftUseCase {
+
+    /**
+     * Keeps the editor's unsaved text outside the library, where the process ending in the background does not take it
+     * along, or removes what was kept when [draft] is null. It is never exported, synced or backed up.
+     */
+    suspend operator fun invoke(draft: SongContent?)
+}

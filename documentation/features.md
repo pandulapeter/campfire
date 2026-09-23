@@ -33,7 +33,8 @@ Everything Campfire does, and what it does with your data. The [README](../READM
 
 - A built-in editor with ChordPro syntax highlighting and a live preview of the finished song.
 - Nothing is written until you save it, and leaving with unsaved changes asks first — closing or reloading the browser
-  tab included. Ctrl/Cmd + S saves.
+  tab included. Unsaved changes also survive the system ending the app in the background: the editor opens on them
+  again next time. Ctrl/Cmd + S saves.
 - Metadata is edited through the song's header rather than by hand, and tags and languages are put on or taken off
   there too.
 

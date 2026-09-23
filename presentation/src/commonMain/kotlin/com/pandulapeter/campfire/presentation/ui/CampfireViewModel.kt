@@ -58,6 +58,7 @@ import com.pandulapeter.campfire.domain.api.useCases.ExportSetlistUseCase
 import com.pandulapeter.campfire.domain.api.useCases.ExportSongsUseCase
 import com.pandulapeter.campfire.domain.api.useCases.GetScreenDataUseCase
 import com.pandulapeter.campfire.domain.api.useCases.GetSongContentInvalidationsUseCase
+import com.pandulapeter.campfire.domain.api.useCases.GetEditorDraftUseCase
 import com.pandulapeter.campfire.domain.api.useCases.GetSongContentUseCase
 import com.pandulapeter.campfire.domain.api.useCases.GetSyncProvidersUseCase
 import com.pandulapeter.campfire.domain.api.useCases.GetSyncStateUseCase
@@ -72,6 +73,7 @@ import com.pandulapeter.campfire.domain.api.useCases.ParseChordProUseCase
 import com.pandulapeter.campfire.domain.api.useCases.PrepareImportUseCase
 import com.pandulapeter.campfire.domain.api.useCases.RestoreSyncUseCase
 import com.pandulapeter.campfire.domain.api.useCases.RenameSongFileUseCase
+import com.pandulapeter.campfire.domain.api.useCases.SaveEditorDraftUseCase
 import com.pandulapeter.campfire.domain.api.useCases.SaveSetlistUseCase
 import com.pandulapeter.campfire.domain.api.useCases.SaveSongContentUseCase
 import com.pandulapeter.campfire.domain.api.useCases.SaveUserPreferencesUseCase
@@ -137,6 +139,8 @@ class CampfireViewModel(
     private val loadScreenData: LoadScreenDataUseCase,
     private val isFirstRun: IsFirstRunUseCase,
     private val getSongContent: GetSongContentUseCase,
+    private val getEditorDraft: GetEditorDraftUseCase,
+    private val saveEditorDraft: SaveEditorDraftUseCase,
     getSongContentInvalidations: GetSongContentInvalidationsUseCase,
     private val createSong: CreateSongUseCase,
     private val deleteSong: DeleteSongUseCase,
@@ -310,18 +314,35 @@ class CampfireViewModel(
     private var hasNavigatedOnLaunch = false
 
     /**
+     * True until the draft a previous run left behind has been read and, where there was one, the editor reopened on
+     * it (see [recoverEditorDraft]). The launch screen waits for it, so that the app is uncovered on the editor rather
+     * than on the songs a moment before the editor slides in over them.
+     */
+    private val _isEditorDraftRecoveryPending = MutableStateFlow(true)
+
+    /** Completed with whether the editor was reopened on a stored draft, which the other start-up navigations defer to. */
+    private val editorDraftRecovery = CompletableDeferred<Boolean>()
+
+    /**
      * False for as long as the song list would have nothing on it but a loading indicator, which is what the launch
      * screen stays up in place of. Either the read has put songs together - the first batch of one that publishes as
      * it goes counts, so a slow read still fills the list in front of the user rather than behind the launch screen -
      * or it has finished with none, which is an answer to show as much as a library is. On the one run where a
      * library that has finished empty is about to be filled anyway ([isDemoLibraryPending]), neither is true yet, and
-     * neither is it while the screen the app was asked to open on is still being looked for ([isLaunchNavigationPending]).
+     * neither is it while the screen the app was asked to open on is still being looked for ([isLaunchNavigationPending]),
+     * nor while a draft a previous run left is being reopened ([_isEditorDraftRecoveryPending]).
      *
      * Latched like [arePreferencesLoaded]: a rescan reads the library again and says so, and none of that is a reason
      * to put the launch screen back up over an app the user is already using.
      */
-    val hasLibraryToShow = combine(screenData, isDemoLibraryPending, _isLaunchNavigationPending) { state, isDemoLibraryPending, isLaunchNavigationPending ->
-        !isDemoLibraryPending && !isLaunchNavigationPending && (state !is DataState.Loading || state.data?.songs?.isNotEmpty() == true)
+    val hasLibraryToShow = combine(
+        screenData,
+        isDemoLibraryPending,
+        _isLaunchNavigationPending,
+        _isEditorDraftRecoveryPending,
+    ) { state, isDemoLibraryPending, isLaunchNavigationPending, isEditorDraftRecoveryPending ->
+        !isDemoLibraryPending && !isLaunchNavigationPending && !isEditorDraftRecoveryPending &&
+                (state !is DataState.Loading || state.data?.songs?.isNotEmpty() == true)
     }
         .runningFold(false) { hasHadSomethingToShow, hasSomethingToShow -> hasHadSomethingToShow || hasSomethingToShow }
         .asState(false)
@@ -438,6 +459,13 @@ class CampfireViewModel(
      * that holds the field being there any more. Null whenever no editor is open.
      */
     private val _editorDraft = MutableStateFlow<SongContent?>(null)
+
+    /**
+     * The draft as it was last put on disk, so that a pause that finds the same text writes nothing. Only read or written
+     * under [editorDraftStoreMutex], and only once [recoverEditorDraft] has read what a previous run left.
+     */
+    private var storedEditorDraft: SongContent? = null
+    private val editorDraftStoreMutex = Mutex()
 
     /**
      * The open editor's field as its screen last saved it, by file name. The screen's saved state only holds the text,
@@ -847,6 +875,20 @@ class CampfireViewModel(
                 dialog?.takeIf { fileName != null && !isLoading && fileName !in songsBeingRenamed && songs.none { it.fileName == fileName } }
             }.filterNotNull().collect(::dismissSheet)
         }
+        // The editor's unsaved text as a previous run left it, when the process ended in the background (see
+        // onAppPaused). Once that is settled, whatever leaves the editor with nothing unsaved takes the stored
+        // draft with it - a save, a discard, a revert, the song deleted - so a crash after a save never brings back
+        // text that was saved. Asked of the draft itself rather than of hasUnsavedEditorChanges alone, which may not
+        // have caught up yet with a draft this has just reopened.
+        viewModelScope.launch {
+            try {
+                editorDraftRecovery.complete(recoverEditorDraft())
+            } finally {
+                editorDraftRecovery.complete(false)
+                _isEditorDraftRecoveryPending.value = false
+            }
+            hasUnsavedEditorChanges.collect { if (!it && !hasUnsavedEditorText()) storeEditorDraft(null) }
+        }
         viewModelScope.launch {
             _songFilter.collect { persist(SONG_FILTER_KEY, SavedSongFilter(selectedTags = it.selectedTags.toList(), selectedLanguages = it.selectedLanguages.toList())) }
         }
@@ -968,6 +1010,8 @@ class CampfireViewModel(
                     .first { it != null && it !is DataState.Loading }
                     ?.data
                 val destination = resolve(state?.unfilteredSongs.orEmpty(), state?.setlists.orEmpty())
+                // A draft reopened on launch is unsaved text on screen, which an address does not get to replace.
+                editorDraftRecovery.await()
                 if (destination != null && backStack.toList() == listOf(CampfireDestination.Songs)) {
                     restoreNavigationState(destination)
                 }
@@ -1243,6 +1287,67 @@ class CampfireViewModel(
     /** Reported by the editor when it came back from a saved state that could not hold its unsaved text. */
     fun onEditorDraftLost() {
         sendMessage(Message.EditorDraftLost)
+    }
+
+    /**
+     * Called by the app whenever it stops being the one in front (ON_PAUSE), which is the last moment it is certainly
+     * running: iOS ends a process in the background without a word, and so does Android to a task swiped away and a
+     * mobile browser to a tab it wants the memory of. Stores the unsaved text, or removes what was stored when there
+     * is none. Nothing before the draft a previous run left has been read, or it would be written over.
+     */
+    fun onAppPaused() {
+        if (_isEditorDraftRecoveryPending.value) return
+        val draft = _editorDraft.value?.takeIf { hasUnsavedEditorText() }
+        viewModelScope.launch { storeEditorDraft(draft) }
+    }
+
+    /** Not cancellable once started: a pause is often the last thing the process does. A write that fails is only a copy lost. */
+    private suspend fun storeEditorDraft(draft: SongContent?) = withContext(NonCancellable) {
+        editorDraftStoreMutex.withLock {
+            if (draft == storedEditorDraft) return@withLock
+            try {
+                saveEditorDraft(draft)
+                storedEditorDraft = draft
+            } catch (exception: CancellationException) {
+                throw exception
+            } catch (exception: Exception) {
+                println("Could not store the editor's draft: ${exception::class.simpleName}")
+            }
+        }
+    }
+
+    /**
+     * Reopens the editor on the draft a previous run left, answering whether it did. Not over a stack that already has
+     * an editor - an Android process restored on the editor has its text from the saved state - and not for a draft the
+     * file already holds. A file that is gone is reopened all the same: the draft is all there is, and saving puts the
+     * file back, which is what an editor whose file goes while it is open does too.
+     */
+    private suspend fun recoverEditorDraft(): Boolean {
+        val draft = try {
+            getEditorDraft()
+        } catch (exception: CancellationException) {
+            throw exception
+        } catch (exception: Exception) {
+            println("Could not read the editor's draft: ${exception::class.simpleName}")
+            null
+        }
+        editorDraftStoreMutex.withLock { storedEditorDraft = draft }
+        if (draft == null || backStack.any { it is CampfireDestination.SongEditor }) return false
+        val content = getSongContent(draft.fileName)
+        if (content?.text == draft.text) {
+            storeEditorDraft(null)
+            return false
+        }
+        content?.let { _songTexts.update { texts -> texts + (it.fileName to it.text) } }
+        // The draft is the editor's before the editor exists, so that nothing asking whether there is unsaved text in
+        // the moments before it composes - a pause, the update gate - hears "no".
+        onEditorTextChanged(fileName = draft.fileName, text = draft.text)
+        updateBackStack { add(CampfireDestination.SongEditor(fileName = draft.fileName)) }
+        // Taken by the editor as its field, see LoadedSongEditor, the same way a field it retained across a rotation is.
+        retainedEditorField = draft.fileName to TextFieldState(initialText = draft.text)
+        sendMessage(Message.EditorDraftRestored)
+        if (content == null) sendMessage(Message.EditedSongFileGone)
+        return true
     }
 
     /**
@@ -2186,6 +2291,9 @@ class CampfireViewModel(
 
         /** A long document's unsaved text did not survive the process being killed in the background. */
         data object EditorDraftLost : Message
+
+        /** The editor was reopened on the unsaved text a previous run left when it ended in the background. */
+        data object EditorDraftRestored : Message
 
         /** A change to the library (a new setlist, a deleted song, a moved entry) that could not be written. */
         data object OperationFailed : Message

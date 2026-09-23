@@ -66,13 +66,17 @@ preferences/sync-credentials.json    the connected account's tokens, and an unfi
                                      Android and iOS
 preferences/sync-index.json          what the last successful sync run saw
 preferences/sync-credentials-forget-pending   a previous installation's credentials a first launch could not forget yet
+preferences/editor-draft.json        the editor's unsaved text as the app last left the front, so that the system
+                                     ending it in the background does not end the text too; gone once it is saved or
+                                     discarded
 instance.lock / instance.endpoint    desktop only: what keeps a second process off the library (see app/desktop)
 ```
 
 On Android and iOS `library/` and `preferences/preferences.json` are in the system backup and the transfer to a new
-device; the sync credentials and `sync-index.json` are not, so a restored installation starts disconnected and its
-first sync run compares by content. Android does it with an allow-list of paths in `:app:android`, iOS with a Keychain
-item bound to the device and `FileStorage.keepOutOfDeviceBackup` on the index. A reinstall starts disconnected too: a
+device; the sync credentials, `sync-index.json` and `editor-draft.json` are not, so a restored installation starts
+disconnected and its first sync run compares by content. Android does it with an allow-list of paths in
+`:app:android`, iOS with a Keychain item bound to the device and `FileStorage.keepOutOfDeviceBackup` on the index and
+the draft. A reinstall starts disconnected too: a
 launch that finds no preferences document forgets any credentials it finds, since the iOS Keychain outlives an
 uninstall and nothing else does.
 
