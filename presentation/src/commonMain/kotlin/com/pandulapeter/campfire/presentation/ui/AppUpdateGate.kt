@@ -23,7 +23,9 @@ import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.compositionLocalOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.saveable.rememberSaveable
@@ -51,6 +53,14 @@ import com.pandulapeter.campfire.presentation.ui.components.EmptyStateAction
 import com.pandulapeter.campfire.presentation.ui.platform.AppUpdateState
 import com.pandulapeter.campfire.presentation.ui.platform.rememberAppUpdateController
 import org.jetbrains.compose.resources.painterResource
+
+/**
+ * True while the "update required" screen covers the app. That screen is drawn over the app's content, but a dialog,
+ * a bottom sheet and a dropdown menu are windows of their own on Android, above the activity's content and so above
+ * the screen, where they could still be used. Whatever opens one reads this and composes nothing while it is true;
+ * what it was showing stays in its state, so an update that does not install leaves it where it was.
+ */
+internal val LocalIsCoveredByRequiredUpdate = compositionLocalOf { false }
 
 /**
  * Wraps the app in whatever the store has to say about a newer build of it, which on three of the four platforms is
@@ -91,7 +101,9 @@ internal fun AppUpdateGate(
         if (isRequiredScreenVisible) controller.startRequiredUpdateOnce()
     }
     Box(modifier = modifier.fillMaxSize()) {
-        content()
+        CompositionLocalProvider(LocalIsCoveredByRequiredUpdate provides isRequiredScreenVisible) {
+            content()
+        }
         AnimatedVisibility(
             visible = isRequiredScreenVisible,
             enter = fadeIn(),

@@ -18,6 +18,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import com.pandulapeter.campfire.presentation.ui.LocalIsCoveredByRequiredUpdate
 
 /**
  * The menu behind every overflow button in the app, and the one place that knows whether one of them is open: a
@@ -36,7 +37,10 @@ internal fun OverflowMenu(
     button: @Composable (open: () -> Unit) -> Unit,
     content: @Composable (select: (action: () -> Unit) -> Unit) -> Unit,
 ) {
-    if (state.isExpanded) {
+    // A menu is a window of its own, which the update required screen cannot cover; it is left open in its state and
+    // comes back if that screen ever goes, see LocalIsCoveredByRequiredUpdate.
+    val isShown = state.isExpanded && !LocalIsCoveredByRequiredUpdate.current
+    if (isShown) {
         // Counted for as long as the menu is up, and given back by whatever takes it away - a choice, a click
         // outside it, or the row it hangs from leaving the list.
         DisposableEffect(Unit) {
@@ -47,7 +51,7 @@ internal fun OverflowMenu(
     Box {
         button(state::open)
         DropdownMenu(
-            expanded = state.isExpanded,
+            expanded = isShown,
             onDismissRequest = state::dismiss,
         ) {
             content(state::select)

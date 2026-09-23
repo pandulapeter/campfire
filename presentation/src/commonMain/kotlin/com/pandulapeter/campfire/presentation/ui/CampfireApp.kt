@@ -500,10 +500,14 @@ private fun CampfireContent(
                 }
             },
         )
-        CampfireDialogs(
-            viewModel = viewModel,
-            urlOpener = urlOpener,
-        )
+        // Not while the update required screen covers the app: every one of these is a window of its own on Android,
+        // which that screen, drawn inside the activity's content, cannot cover.
+        if (!LocalIsCoveredByRequiredUpdate.current) {
+            CampfireDialogs(
+                viewModel = viewModel,
+                urlOpener = urlOpener,
+            )
+        }
         Messages(
             modifier = Modifier
                 .align(Alignment.BottomCenter)

@@ -394,7 +394,8 @@ three. The gate wraps the whole app inside `CampfireApp`, so it speaks the theme
 - Back on the blocking screen closes the app. The app it covers is still composed behind it, so the gesture has to
   be taken rather than allowed through, and leaving is the only thing it can honestly mean there.
 - The blocking screen is drawn **over** the app rather than in place of it, so a required update that turns out not
-  to install leaves the library exactly where the user was.
+  to install leaves the library exactly where the user was. Nothing that is a window of its own — a dialog, a sheet,
+  a menu — is shown while it is up.
 - Neither the blocking screen (nor the immediate flow started with it) nor the flexible update's Restart is put over
   an editor with unsaved text: the gate waits until the text has been saved or let go of (`hasUnsavedEditorChanges`).
   Restart waits for a sync run too; a required update does not — a run it cuts off is reported as interrupted the
