@@ -31,7 +31,7 @@ The platform shells all live in the `ui` package next to `CampfireApp`, one per 
   are gone forward to rather than pushed again**: Chrome marks an entry that added another without a user gesture as
   one its Back button skips, so re-pushing the editor after its question was asked had the next Back jump off the page.
   A Back over several entries (the long press menu) is taken one step at a time, two frames apart so the next reaches
-  whatever is on top by then. Forward restores the `NavigationState` recorded when the entry was last on top, cut short
+  whatever is on top by then. Forward restores the `NavigationState` recorded when the entry was last on top, a search with the text its field still holds, cut short
   at whatever the library no longer holds, with a song read from a setlist paging through what the setlist holds now,
   or opens the entry's address — but only an address exactly as deep as the entry, since it stands for a whole stack
   built up from the songs; one that is not (an editor whose setlist page underneath was paged on) is left again. The

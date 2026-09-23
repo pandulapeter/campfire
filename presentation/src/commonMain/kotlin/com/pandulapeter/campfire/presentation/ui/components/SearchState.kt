@@ -80,6 +80,14 @@ internal class SearchState(
         _isOpen.value = false
     }
 
+    /**
+     * Opens the search onto whatever its field still holds, which is what going back to a search the user left is:
+     * the browser's Forward returning to it. The search button asks [open] instead, since that is a new question.
+     */
+    fun reopen() {
+        _isOpen.value = true
+    }
+
     private val _focusRequests = MutableSharedFlow<Unit>(extraBufferCapacity = 1)
 
     /**

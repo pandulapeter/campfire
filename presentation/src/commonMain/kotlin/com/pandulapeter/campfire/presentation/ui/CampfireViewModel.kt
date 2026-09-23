@@ -922,13 +922,14 @@ class CampfireViewModel(
     /**
      * Takes the user to [state] in one step, which is how the web build follows an address it was opened on or the
      * browser's Forward button. Refused, returning false, while the editor holds unsaved text: nothing but the
-     * editor's own ways out may take that text off the screen, and those ask first.
+     * editor's own ways out may take that text off the screen, and those ask first. A search it opens is reopened on the
+     * text its field still holds, since this is stepping back to a place rather than asking anything new.
      */
     internal fun restoreNavigationState(state: NavigationState): Boolean {
         if (state.backStack.isEmpty() || hasUnsavedEditorText()) return false
         settingsTab = state.settingsTab
         listOf(songsSearch to state.isSongsSearchOpen, setlistsSearch to state.isSetlistsSearchOpen).forEach { (search, isOpen) ->
-            if (isOpen != search.isOpen.value) if (isOpen) search.open() else search.close()
+            if (isOpen != search.isOpen.value) if (isOpen) search.reopen() else search.close()
         }
         if (backStack.toList() != state.backStack) {
             updateBackStack {
