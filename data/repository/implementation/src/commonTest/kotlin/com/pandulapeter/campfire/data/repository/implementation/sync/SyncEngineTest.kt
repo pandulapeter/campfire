@@ -1112,6 +1112,22 @@ class SyncEngineTest {
         assertEquals(8, local.files.size)
     }
 
+    /** A phone restored from a backup, which carries the library but not the index, signing in again. */
+    @Test
+    fun `with no index a file that is the same on both sides moves nothing`() = runTest {
+        val library = librarySongs(1)
+        val local = FakeLibraryFileLocalSource(files = library)
+        var uploads = 0
+        val provider = FakeSyncProvider(files = library, onUpload = { uploads++ })
+
+        val completed = assertIs<SyncEngine.Result.Completed>(synchronize(local, provider, SyncIndexDocument()))
+
+        assertFalse(completed.summary.hasChanges)
+        assertEquals(0, uploads)
+        assertNull(provider.downloadCounts[song(1)])
+        assertEquals(setOf(song(1).path), completed.index.entries.keys)
+    }
+
     @Test
     fun `a conflict copy is not given a name the cloud folder already holds`() = runTest {
         val another = "Another song".encodeToByteArray()
