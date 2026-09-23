@@ -53,7 +53,6 @@ they are:
 - [Sync](documentation/sync.md) - what it sees, how a run decides, and why it needs no backend.
 
 ### To do
-- Predictive back from Setlists / Settings should crossfade
 - Add support for external control devices with a focus-by-section feature
 - Songs: sort by year option
 - Add ability to add links

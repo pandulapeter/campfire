@@ -848,9 +848,24 @@ private fun MotionScheme.slideSpec() = when (val spec = defaultSpatialSpec<IntOf
  * [popTransition], except that the card follows the finger, so the spec is linear and the direction depends on the
  * edge the gesture started from. The modal goes down whichever edge the finger came from, since that is the one
  * way it ever leaves.
+ *
+ * Going back from Setlists or Settings to Songs is a swap of tabs rather than a card being taken off, so it cross
+ * fades in place, for the reasons [navigationTransition] gives. It is a cross fade rather than [tabTransition]'s fade
+ * through, since the gesture can be held anywhere along its way, and a fade through would show neither screen for
+ * the middle of it.
  */
 @OptIn(ExperimentalAnimationApi::class)
 private fun AnimatedContentTransitionScope<Scene<CampfireDestination>>.predictivePopTransition(@NavigationEvent.SwipeEdge swipeEdge: Int): ContentTransform {
+    if (CampfireDestination.TopLevel.fromContentKey(initialState.entries.lastOrNull()?.contentKey) != null &&
+        CampfireDestination.TopLevel.fromContentKey(targetState.entries.lastOrNull()?.contentKey) != null
+    ) {
+        val spec = tween<Float>(PREDICTIVE_BACK_DURATION, easing = LinearEasing)
+        return ContentTransform(
+            targetContentEnter = fadeIn(spec),
+            initialContentExit = fadeOut(spec),
+            targetContentZIndex = targetState.zIndex,
+        )
+    }
     val towards = when {
         isSongEditorTransition -> AnimatedContentTransitionScope.SlideDirection.Down
         swipeEdge == NavigationEvent.EDGE_RIGHT -> AnimatedContentTransitionScope.SlideDirection.Left
