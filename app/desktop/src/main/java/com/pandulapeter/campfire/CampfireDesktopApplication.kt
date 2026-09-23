@@ -19,8 +19,12 @@ import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.awt.ComposeWindow
 import androidx.compose.ui.configureSwingGlobalsForCompose
 import androidx.compose.ui.platform.LocalLayoutDirection
+import androidx.compose.ui.unit.DpSize
 import androidx.compose.ui.unit.LayoutDirection
+import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.min
 import androidx.compose.ui.window.Window
+import androidx.compose.ui.window.WindowState
 import androidx.compose.ui.window.application
 import androidx.compose.ui.window.rememberWindowState
 import com.pandulapeter.campfire.di.startCampfireDependencyGraph
@@ -32,13 +36,18 @@ import com.pandulapeter.campfire.presentation.ui.resetEscapeKey
 import com.pandulapeter.campfire.presentation.ui.platform.desktopDataDirectory
 import com.pandulapeter.campfire.resources.Res
 import com.pandulapeter.campfire.resources.app_icon
+import java.awt.Component
 import java.awt.Desktop
 import java.awt.Dimension
 import java.awt.Toolkit
+import java.awt.Window
+import java.awt.event.WindowAdapter
 import java.awt.event.WindowEvent
 import java.awt.event.WindowFocusListener
+import java.beans.PropertyChangeListener
 import java.io.File
 import javax.swing.SwingUtilities
+import kotlin.math.ceil
 import kotlin.system.exitProcess
 import kotlinx.coroutines.channels.Channel
 import org.jetbrains.compose.resources.painterResource
@@ -75,7 +84,7 @@ fun main(args: Array<String>) {
     OpenedFiles.open(args.toList())
     startCampfireDependencyGraph()
     application {
-        val windowState = rememberWindowState()
+        val windowState = rememberWindowState(size = INITIAL_WINDOW_SIZE)
         // The view model is created inside the window (which owns the ViewModelStore), but the key handler needs it here.
         val viewModel = remember { mutableStateOf<CampfireViewModel?>(null) }
         // From the moment the app decides to go, another process's files are not accepted any more: this one would only
@@ -119,7 +128,21 @@ fun main(args: Array<String>) {
             onPreviewKeyEvent = ::handlePreviewKeyEvent,
             onKeyEvent = { keyEvent -> viewModel.value?.handleKeyEvent(keyEvent, onExit = exit) == true },
         ) {
-            window.minimumSize = Dimension(400, 400)
+            DisposableEffect(window) {
+                window.fitSizeToScreen(windowState)
+                // Showing the window hands the unscaled minimum to Windows again, and moving it to a display of another
+                // scale changes what the scaled one is.
+                val openedListener = object : WindowAdapter() {
+                    override fun windowOpened(event: WindowEvent) = window.scaleNativeMinimumSize()
+                }
+                val displayListener = PropertyChangeListener { window.scaleNativeMinimumSize() }
+                window.addWindowListener(openedListener)
+                window.addPropertyChangeListener("graphicsConfiguration", displayListener)
+                onDispose {
+                    window.removeWindowListener(openedListener)
+                    window.removePropertyChangeListener("graphicsConfiguration", displayListener)
+                }
+            }
             DisposableEffect(window) {
                 val focusListener = object : WindowFocusListener {
                     override fun windowGainedFocus(event: WindowEvent) = Unit
@@ -147,6 +170,58 @@ fun main(args: Array<String>) {
                 )
             }
         }
+    }
+}
+
+/**
+ * Both are in AWT's units, which are the scaled ones Compose's dp map to, so they look the same at any display scaling.
+ * The initial size gives the lists room without covering a laptop's screen.
+ */
+private val MINIMUM_WINDOW_SIZE = DpSize(480.dp, 480.dp)
+private val INITIAL_WINDOW_SIZE = DpSize(800.dp, 600.dp)
+
+/**
+ * A window smaller than its minimum is grown to it, past the edge of the screen if need be, so on a display with less
+ * room than these sizes ask for, both are brought down to the area the task bar or the dock leaves free.
+ */
+private fun ComposeWindow.fitSizeToScreen(windowState: WindowState) {
+    val insets = Toolkit.getDefaultToolkit().getScreenInsets(graphicsConfiguration)
+    val bounds = graphicsConfiguration.bounds
+    val available = DpSize(
+        width = (bounds.width - insets.left - insets.right).dp,
+        height = (bounds.height - insets.top - insets.bottom).dp,
+    )
+    windowState.size = DpSize(min(windowState.size.width, available.width), min(windowState.size.height, available.height))
+    minimumSize = Dimension(
+        min(MINIMUM_WINDOW_SIZE.width, available.width).value.toInt(),
+        min(MINIMUM_WINDOW_SIZE.height, available.height).value.toInt(),
+    )
+    scaleNativeMinimumSize()
+}
+
+/**
+ * OpenJDK on Windows hands the minimum size to the system in the units it was given, which Windows takes for physical
+ * pixels, while AWT sizes the window itself in scaled ones: at 200% the window could be dragged down to half the
+ * minimum. Scaling [Window.setMinimumSize]'s own value up is no way around it, since AWT would then grow the window to
+ * that. So the scaled value goes to the peer's private setter directly, which is what the `--add-opens` of the Windows
+ * build are for (see build.gradle.kts). The JetBrains Runtime scales it by itself, and anything that goes wrong here
+ * leaves the unscaled minimum, which is too small rather than harmful.
+ */
+private fun ComposeWindow.scaleNativeMinimumSize() {
+    if (!System.getProperty("os.name").orEmpty().lowercase().contains("windows")) return
+    if (System.getProperty("java.vendor").orEmpty().contains("JetBrains")) return
+    if (!isMinimumSizeSet) return
+    runCatching {
+        val peer = Component::class.java.getDeclaredField("peer").apply { isAccessible = true }.get(this) ?: return
+        val transform = graphicsConfiguration.defaultTransform
+        Class.forName("sun.awt.windows.WWindowPeer")
+            .getDeclaredMethod("setMinSize", Int::class.javaPrimitiveType, Int::class.javaPrimitiveType)
+            .apply { isAccessible = true }
+            .invoke(
+                peer,
+                ceil(minimumSize.width * transform.scaleX).toInt(),
+                ceil(minimumSize.height * transform.scaleY).toInt(),
+            )
     }
 }
 

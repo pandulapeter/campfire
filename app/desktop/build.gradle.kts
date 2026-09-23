@@ -46,6 +46,11 @@ compose.desktop {
         if (isLinuxHost) {
             jvmArgs("--add-opens=java.desktop/sun.awt.X11=ALL-UNNAMED")
         }
+        // The window's minimum size reaches Windows unscaled through a private setter of the peer, which these two
+        // packages hold; see scaleNativeMinimumSize.
+        if (isWindowsHost) {
+            jvmArgs("--add-opens=java.desktop/java.awt=ALL-UNNAMED", "--add-opens=java.desktop/sun.awt.windows=ALL-UNNAMED")
+        }
         buildTypes.release.proguard {
             configurationFiles.from(project.file("proguard-rules.pro"))
             // One jar instead of a hundred. Windows Defender scans every file the app opens again whenever its
