@@ -69,8 +69,8 @@ them. If a change has no effect a user could notice, it is not in the notes.
    - to paste **all of it** into the description of a new release tagged `<version>` on the commit
      that carries that `campfire.versionName` (`release.yml` refuses a tag that disagrees with it), with
      "Set as a pre-release" left off, since a pre-release ships nothing;
-   - that **publishing the release is what ships it**: `release.yml` sends the build to Play and the
-     website, and attaches the APK, the desktop installers and the iOS build to the release itself —
+   - that **publishing the release is what ships it**: `release.yml` sends the builds to Play, App Store
+     Connect and the website, and attaches the desktop installers to the release itself —
      so the notes never list or link downloads.
 
 8. **Do not create the tag, the release, or commit anything.** Drafting the notes is the whole job.

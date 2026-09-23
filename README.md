@@ -39,14 +39,12 @@ Campfire is available for the following platforms:
 <a href="https://github.com/pandulapeter/campfire/releases/latest"><img src="documentation/images/badge_macos.png" alt="Campfire for macOS" height="32px" /></a>
 <a href="https://github.com/pandulapeter/campfire/releases/latest"><img src="documentation/images/badge_windows.png" alt="Campfire for Windows" height="32px" /></a>
 
-Until the stores have them, every release also carries these three builds, marked `unsigned` because that is what
+Until the stores have them, every release also carries these two builds, marked `unsigned` because that is what
 they are:
 
 - **macOS** (`.dmg`, Apple silicon and Intel): macOS refuses to open an app it cannot trace to a developer. Open it
   once, then allow it under *System Settings → Privacy & Security → Open Anyway*.
 - **Windows** (`.msi`): SmartScreen warns about an unknown publisher; *More info → Run anyway* gets past it.
-- **iOS** (`.ipa`): cannot be installed as it is. It is the file a sideloading tool such as
-  [AltStore](https://altstore.io) or [Sideloadly](https://sideloadly.io) signs with your own Apple ID.
 
 ### Documentation
 

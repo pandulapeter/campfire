@@ -6,11 +6,15 @@
 # If a copy of the MPL was not distributed with this file, You can obtain one at
 # https://mozilla.org/MPL/2.0/.
 
-# Builds the iOS app without signing it and attaches it to a GitHub release as an .ipa. No iPhone installs that file
-# as it is: it is what a sideloading tool signs with its user's own Apple ID, and a stopgap until the App Store has the
-# app — at which point this workflow is the one that turns into the TestFlight upload.
+# Builds the iOS app, signs it for the App Store and uploads it to App Store Connect, where it lands in TestFlight. It
+# stops there: submitting the build for review, and writing its "What's New", is done by hand in App Store Connect. A
+# green run therefore means the build was delivered, not that it was accepted — processing and review answer by email.
 #
-# Called by release.yml for every release; dispatched by hand to attach the build to a release that is already there.
+# Signing uses the team's Apple Distribution certificate from the secrets, imported into a keychain of the run's own,
+# and the App Store Connect API key, with which xcodebuild fetches or creates the App Store provisioning profile.
+#
+# Called by release.yml for every release; dispatched by hand to upload a release again, which App Store Connect only
+# accepts under a build number it has not seen yet — hence the override, which leaves gradle.properties as it was.
 
 name: 'Publish iOS'
 
@@ -23,19 +27,72 @@ on:
   workflow_dispatch:
     inputs:
       release_tag:
-        description: 'Tag of the existing GitHub release to build and attach the app to'
+        description: 'Tag of the release to build and upload'
         type: string
         required: true
+      build_number:
+        description: 'Build number to upload under instead of campfire.ios.buildNumber (for a repeated upload)'
+        type: string
+        required: false
 
 permissions:
-  contents: write
+  contents: read
+
+env:
+  XCODE_PROJECT: app/ios/iosApp/iosApp.xcodeproj
+  # No scheme is checked in; xcodebuild creates this one for the target of the same name when it finds none.
+  XCODE_SCHEME: iosApp
 
 jobs:
   build:
-    name: Build and Publish
+    name: Build and Upload
     # Named rather than "latest", so that the Xcode the project was last saved with is the one that opens it.
     runs-on: macos-26
     steps:
+      # `gh secret set` stores an empty value without complaint when it has no terminal to prompt on, and an empty or
+      # base64-encoded-by-mistake secret only surfaces much later as a cryptic codesign or xcodebuild failure.
+      - name: Check the secrets
+        env:
+          DROPBOX_APP_KEY: ${{ secrets.DROPBOX_APP_KEY }}
+          CERTIFICATE_BASE64: ${{ secrets.IOS_DISTRIBUTION_CERTIFICATE_BASE64 }}
+          CERTIFICATE_PASSWORD: ${{ secrets.IOS_DISTRIBUTION_CERTIFICATE_PASSWORD }}
+          ASC_KEY_ID: ${{ secrets.APP_STORE_CONNECT_KEY_ID }}
+          ASC_ISSUER_ID: ${{ secrets.APP_STORE_CONNECT_ISSUER_ID }}
+          ASC_PRIVATE_KEY: ${{ secrets.APP_STORE_CONNECT_PRIVATE_KEY }}
+        run: |
+          PROBLEMS=0
+          problem() {
+            echo "::error::$1: $2" >&2
+            PROBLEMS=$((PROBLEMS + 1))
+          }
+          # The empty string is the checked-in default, because a fresh clone has to build without a secret, so
+          # nothing downstream would notice a published build that has no sync provider at all.
+          [ -n "$DROPBOX_APP_KEY" ] || problem DROPBOX_APP_KEY "empty or not visible to this workflow"
+          if [ -z "$CERTIFICATE_BASE64" ]; then
+            problem IOS_DISTRIBUTION_CERTIFICATE_BASE64 "empty or unset"
+          elif ! printf '%s' "$CERTIFICATE_BASE64" | base64 --decode > /dev/null 2>&1; then
+            problem IOS_DISTRIBUTION_CERTIFICATE_BASE64 "not valid base64 (expected: base64 -i certificate.p12)"
+          fi
+          [ -n "$CERTIFICATE_PASSWORD" ] || problem IOS_DISTRIBUTION_CERTIFICATE_PASSWORD "empty or unset"
+          if [ -z "$ASC_KEY_ID" ]; then
+            problem APP_STORE_CONNECT_KEY_ID "empty or unset"
+          elif ! [[ "$ASC_KEY_ID" =~ ^[A-Z0-9]{10}$ ]]; then
+            problem APP_STORE_CONNECT_KEY_ID "expected 10 upper case letters and digits, as in the AuthKey_<id>.p8 file name"
+          fi
+          if [ -z "$ASC_ISSUER_ID" ]; then
+            problem APP_STORE_CONNECT_ISSUER_ID "empty or unset"
+          elif ! [[ "$ASC_ISSUER_ID" =~ ^[0-9a-fA-F-]{36}$ ]]; then
+            problem APP_STORE_CONNECT_ISSUER_ID "expected a UUID, found ${#ASC_ISSUER_ID} characters"
+          fi
+          if [ -z "$ASC_PRIVATE_KEY" ]; then
+            problem APP_STORE_CONNECT_PRIVATE_KEY "empty or unset"
+          elif ! printf '%s' "$ASC_PRIVATE_KEY" | grep -q 'BEGIN PRIVATE KEY'; then
+            problem APP_STORE_CONNECT_PRIVATE_KEY "expected the text of the AuthKey_<id>.p8 file, BEGIN PRIVATE KEY line included, not base64"
+          fi
+          if [ "$PROBLEMS" -gt 0 ]; then
+            echo "Set them from a terminal that can prompt for hidden input: gh secret set <name> --repo $GITHUB_REPOSITORY" >&2
+            exit 1
+          fi
       - name: Check out repository
         uses: actions/checkout@v5
         with:
@@ -46,44 +103,141 @@ jobs:
           distribution: 'zulu'
           java-version: 21
           cache: 'gradle'
-      # Gradle is started by a build phase of the Xcode project here, which passes it no properties, so the key goes
-      # where a developer's own machine keeps it. A published build with an empty key has no sync provider at all, and
-      # nothing downstream would notice: the empty string is the checked-in default, because a fresh clone has to
-      # build without a secret.
+      # Gradle is started by a build phase of the Xcode project here, which passes it no properties, and the version
+      # build phase reads local.properties after gradle.properties with the last value winning — so both the sync key
+      # and a build number override go where a developer's own machine keeps them.
       - name: Write local.properties
+        id: version
         env:
           DROPBOX_APP_KEY: ${{ secrets.DROPBOX_APP_KEY }}
+          BUILD_NUMBER_OVERRIDE: ${{ inputs.build_number }}
         run: |
-          if [ -z "$DROPBOX_APP_KEY" ]; then
-            echo "::error::DROPBOX_APP_KEY is empty or not visible to this workflow. The published app would have no sync provider at all." >&2
-            exit 1
-          fi
+          VERSION_NAME=$(sed -n 's/^campfire\.versionName=//p' gradle.properties | tr -d '\r')
+          BUILD_NUMBER=$(sed -n 's/^campfire\.ios\.buildNumber=//p' gradle.properties | tr -d '\r')
           printf 'campfire.dropbox.appKey=%s\n' "${DROPBOX_APP_KEY//\\/\\\\}" > local.properties
-      - name: Build the app
-        run: |
-          xcodebuild \
-            -project app/ios/iosApp/iosApp.xcodeproj \
-            -target iosApp \
-            -configuration Release \
-            -sdk iphoneos \
-            -arch arm64 \
-            SYMROOT="$RUNNER_TEMP/products" \
-            OBJROOT="$RUNNER_TEMP/intermediates" \
-            CODE_SIGNING_ALLOWED=NO \
-            build
-      - name: Attach the app to the GitHub release
+          if [ -n "$BUILD_NUMBER_OVERRIDE" ]; then
+            if ! [[ "$BUILD_NUMBER_OVERRIDE" =~ ^[0-9]+$ ]]; then
+              echo "::error::The build number override has to be a whole number, not \"$BUILD_NUMBER_OVERRIDE\"." >&2
+              exit 1
+            fi
+            BUILD_NUMBER=$BUILD_NUMBER_OVERRIDE
+            printf 'campfire.ios.buildNumber=%s\n' "$BUILD_NUMBER" >> local.properties
+          fi
+          echo "name=$VERSION_NAME" >> "$GITHUB_OUTPUT"
+          echo "build=$BUILD_NUMBER" >> "$GITHUB_OUTPUT"
+          echo "Building $VERSION_NAME ($BUILD_NUMBER) with $(xcodebuild -version | head -n 1)"
+      - name: Set up code signing
         env:
-          GH_TOKEN: ${{ github.token }}
+          CERTIFICATE_BASE64: ${{ secrets.IOS_DISTRIBUTION_CERTIFICATE_BASE64 }}
+          CERTIFICATE_PASSWORD: ${{ secrets.IOS_DISTRIBUTION_CERTIFICATE_PASSWORD }}
+          ASC_KEY_ID: ${{ secrets.APP_STORE_CONNECT_KEY_ID }}
+          ASC_PRIVATE_KEY: ${{ secrets.APP_STORE_CONNECT_PRIVATE_KEY }}
         run: |
-          VERSION_NAME=$(sed -n 's/^campfire\.versionName=//p' gradle.properties)
-          APP="$RUNNER_TEMP/products/Release-iphoneos/Campfire.app"
-          if [ ! -d "$APP" ]; then
-            echo "The app is missing from $RUNNER_TEMP/products/Release-iphoneos" >&2
+          KEYCHAIN_PATH="$RUNNER_TEMP/signing.keychain-db"
+          KEYCHAIN_PASSWORD=$(uuidgen)
+          echo "KEYCHAIN_PATH=$KEYCHAIN_PATH" >> "$GITHUB_ENV"
+          security create-keychain -p "$KEYCHAIN_PASSWORD" "$KEYCHAIN_PATH"
+          # Long enough that the keychain does not lock itself in the middle of a slow Kotlin build.
+          security set-keychain-settings -lut 21600 "$KEYCHAIN_PATH"
+          security unlock-keychain -p "$KEYCHAIN_PASSWORD" "$KEYCHAIN_PATH"
+          printf '%s' "$CERTIFICATE_BASE64" | base64 --decode > "$RUNNER_TEMP/certificate.p12"
+          if ! security import "$RUNNER_TEMP/certificate.p12" -k "$KEYCHAIN_PATH" -P "$CERTIFICATE_PASSWORD" -T /usr/bin/codesign -t cert -f pkcs12; then
+            rm -f "$RUNNER_TEMP/certificate.p12"
+            echo "::error::Could not import the certificate, which usually means IOS_DISTRIBUTION_CERTIFICATE_PASSWORD is not the password the .p12 was exported with." >&2
             exit 1
           fi
-          # An .ipa is a zip archive with the app in a folder called Payload, and nothing else is asked of it.
-          ASSET="$PWD/campfire-$VERSION_NAME-ios-unsigned.ipa"
-          mkdir -p "$RUNNER_TEMP/ipa/Payload"
-          cp -R "$APP" "$RUNNER_TEMP/ipa/Payload/"
-          (cd "$RUNNER_TEMP/ipa" && zip --quiet --recurse-paths --symlinks "$ASSET" Payload)
-          gh release upload "${{ inputs.release_tag }}" "$ASSET" --clobber
+          rm "$RUNNER_TEMP/certificate.p12"
+          # Without the partition list codesign stops to ask for the keychain password, which nobody can type here.
+          security set-key-partition-list -S apple-tool:,apple:,codesign: -s -k "$KEYCHAIN_PASSWORD" "$KEYCHAIN_PATH" > /dev/null
+          security list-keychains -d user -s "$KEYCHAIN_PATH" $(security list-keychains -d user | tr -d '"')
+          if ! security find-identity -v -p codesigning "$KEYCHAIN_PATH" | grep -q 'Apple Distribution'; then
+            echo "::error::The certificate imported but left no Apple Distribution signing identity behind. Export the .p12 from the My Certificates tab of Keychain Access, so that it carries the private key." >&2
+            exit 1
+          fi
+          # altool looks for the key by its name in this directory; xcodebuild is given the path.
+          ASC_KEY_PATH="$HOME/.appstoreconnect/private_keys/AuthKey_$ASC_KEY_ID.p8"
+          mkdir -p "$(dirname "$ASC_KEY_PATH")"
+          printf '%s\n' "$ASC_PRIVATE_KEY" > "$ASC_KEY_PATH"
+          chmod 600 "$ASC_KEY_PATH"
+          echo "ASC_KEY_PATH=$ASC_KEY_PATH" >> "$GITHUB_ENV"
+      - name: Archive the app
+        env:
+          ASC_KEY_ID: ${{ secrets.APP_STORE_CONNECT_KEY_ID }}
+          ASC_ISSUER_ID: ${{ secrets.APP_STORE_CONNECT_ISSUER_ID }}
+        run: |
+          xcodebuild archive \
+            -project "$XCODE_PROJECT" \
+            -scheme "$XCODE_SCHEME" \
+            -configuration Release \
+            -destination 'generic/platform=iOS' \
+            -archivePath "$RUNNER_TEMP/Campfire.xcarchive" \
+            -allowProvisioningUpdates \
+            -authenticationKeyPath "$ASC_KEY_PATH" \
+            -authenticationKeyID "$ASC_KEY_ID" \
+            -authenticationKeyIssuerID "$ASC_ISSUER_ID" \
+            OTHER_CODE_SIGN_FLAGS="--keychain $KEYCHAIN_PATH"
+      # The version is written into the Info.plist by a build phase rather than by a build setting, so a phase that
+      # silently did not run would upload a build numbered 0, which App Store Connect takes for an old one.
+      - name: Check the archived version
+        run: |
+          PLIST="$RUNNER_TEMP/Campfire.xcarchive/Products/Applications/Campfire.app/Info.plist"
+          ARCHIVED_NAME=$(/usr/libexec/PlistBuddy -c 'Print :CFBundleShortVersionString' "$PLIST")
+          ARCHIVED_BUILD=$(/usr/libexec/PlistBuddy -c 'Print :CFBundleVersion' "$PLIST")
+          echo "Archived $ARCHIVED_NAME ($ARCHIVED_BUILD)"
+          if [ "$ARCHIVED_NAME" != "${{ steps.version.outputs.name }}" ] || [ "$ARCHIVED_BUILD" != "${{ steps.version.outputs.build }}" ]; then
+            echo "::error::The archive does not carry ${{ steps.version.outputs.name }} (${{ steps.version.outputs.build }})." >&2
+            exit 1
+          fi
+      - name: Export the .ipa
+        env:
+          ASC_KEY_ID: ${{ secrets.APP_STORE_CONNECT_KEY_ID }}
+          ASC_ISSUER_ID: ${{ secrets.APP_STORE_CONNECT_ISSUER_ID }}
+        run: |
+          TEAM_ID=$(sed -n 's/^TEAM_ID *= *//p' app/ios/iosApp/Configuration/Config.xcconfig)
+          cat > "$RUNNER_TEMP/ExportOptions.plist" <<PLIST
+          <?xml version="1.0" encoding="UTF-8"?>
+          <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+          <plist version="1.0">
+          <dict>
+            <key>method</key>
+            <string>app-store-connect</string>
+            <key>teamID</key>
+            <string>$TEAM_ID</string>
+            <key>signingStyle</key>
+            <string>automatic</string>
+            <key>destination</key>
+            <string>export</string>
+            <key>uploadSymbols</key>
+            <true/>
+            <key>manageAppVersionAndBuildNumber</key>
+            <false/>
+          </dict>
+          </plist>
+          PLIST
+          xcodebuild -exportArchive \
+            -archivePath "$RUNNER_TEMP/Campfire.xcarchive" \
+            -exportPath "$RUNNER_TEMP/export" \
+            -exportOptionsPlist "$RUNNER_TEMP/ExportOptions.plist" \
+            -allowProvisioningUpdates \
+            -authenticationKeyPath "$ASC_KEY_PATH" \
+            -authenticationKeyID "$ASC_KEY_ID" \
+            -authenticationKeyIssuerID "$ASC_ISSUER_ID"
+      - name: Upload to App Store Connect
+        env:
+          ASC_KEY_ID: ${{ secrets.APP_STORE_CONNECT_KEY_ID }}
+          ASC_ISSUER_ID: ${{ secrets.APP_STORE_CONNECT_ISSUER_ID }}
+        run: |
+          IPA=$(find "$RUNNER_TEMP/export" -maxdepth 1 -name '*.ipa' | head -n 1)
+          if [ -z "$IPA" ]; then
+            echo "::error::No .ipa was exported to $RUNNER_TEMP/export" >&2
+            exit 1
+          fi
+          xcrun altool --upload-app --type ios --file "$IPA" --apiKey "$ASC_KEY_ID" --apiIssuer "$ASC_ISSUER_ID"
+          echo "Uploaded ${{ steps.version.outputs.name }} (${{ steps.version.outputs.build }}). It appears in TestFlight once App Store Connect has processed it, and goes to review only when submitted there by hand."
+      - name: Clean up credentials
+        if: always()
+        run: |
+          if [ -n "$KEYCHAIN_PATH" ] && [ -f "$KEYCHAIN_PATH" ]; then
+            security delete-keychain "$KEYCHAIN_PATH"
+          fi
+          rm -f "$HOME/.appstoreconnect/private_keys/"*.p8

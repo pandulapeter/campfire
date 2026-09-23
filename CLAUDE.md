@@ -285,14 +285,16 @@ uninstall and nothing else does.
   that the tag is the `campfire.versionName` of the commit it is on — a tag on a commit that still carries the last
   version would submit that version again under a new name — and that `campfire.android.versionCode` and
   `campfire.ios.buildNumber` are higher than the last published release's, since Play would refuse a used one only
-  after the APK had been attached to the release, and then calling the four workflows below side by
+  after the other three builds had gone out, and then calling the four workflows below side by
   side. Each of them is the local build command plus the secrets a checkout does not have, and each can still be
   dispatched by hand, to publish without a release or to repeat one half of a release that went wrong. Every build
   passes `campfire.dropbox.appKey` from the `DROPBOX_APP_KEY` secret, because a published app built without it would
   quietly have no sync provider at all — so each workflow, and `release.yml` before it calls any of them, refuses to
   start when that secret is empty. The check is in the workflows rather than in Gradle: an empty key is the
   checked-in default and has to keep building a fresh clone. A store that gets a pipeline later (the Microsoft Store) is one more workflow of this shape and one more job in
-  `release.yml`. **What a release carries that no store has signed says so in its name** (`-unsigned`), and the app
+  `release.yml`. **A release carries only what no official channel offers**: nothing that Play, the App Store or the
+  website already hands out is attached to it, which today leaves the Linux `.deb` and the stopgap macOS and Windows
+  installers. **What a release carries that no store has signed says so in its name** (`-unsigned`), and the app
   links to none of those: they are for somebody who reads the README and knows what the word means.
   - `web-publish.yml` builds the distribution and copies it over `campfire/` in the `pandulapeter.github.io`
     repository, which it reaches with the deploy key in `WEBSITE_DEPLOY_KEY`. The copy is an `rsync --delete`, so the
@@ -311,16 +313,19 @@ uninstall and nothing else does.
     plugin packages the jars directly and leaves no image behind on its own) and starts it — under Xvfb on Linux,
     with an empty data directory — and attaches nothing unless the demo library appears, the process is still there
     after that, and its log names no exception.
-  - `ios-publish.yml` builds the Release configuration for devices with `CODE_SIGNING_ALLOWED=NO` and zips the app
-    into an `.ipa`, which no iPhone installs as it is — it is what a sideloading tool signs with its user's own Apple
-    ID. The Xcode project starts Gradle itself and passes it no properties, so the sync key is written into
-    `local.properties` there — which the version build phase reads too, after `gradle.properties` and with the last
-    value winning, so a build number can be raised for a re-upload without a commit. This is the workflow that becomes the TestFlight upload.
+  - `ios-publish.yml` archives the app signed with the team's Apple Distribution certificate
+    (`IOS_DISTRIBUTION_CERTIFICATE_BASE64` and its password, imported into a keychain of the run's own), lets
+    xcodebuild fetch the App Store profile with the App Store Connect API key (`APP_STORE_CONNECT_KEY_ID`,
+    `_ISSUER_ID` and `_PRIVATE_KEY`, the last one the `.p8` file's text rather than base64), and uploads the exported
+    `.ipa` to App Store Connect, where it lands in TestFlight. It stops there: submitting the build for review is done
+    by hand, so a green run means delivered, not accepted, and nothing is attached to the release. The Xcode project
+    starts Gradle itself and passes it no properties, so the sync key is written into `local.properties` there —
+    which the version build phase reads too, after `gradle.properties` and with the last value winning, which is how
+    the hand-dispatched form's `build_number` uploads a release again under a number App Store Connect has not seen
+    without a commit. The archived `Info.plist` is checked against the expected version before anything is uploaded.
   - `android-publish.yml` writes the keystore out of `ANDROID_KEYSTORE_BASE64`, builds `assembleRelease` signed with
-    the other three `ANDROID_*` secrets, attaches the APK to the release it was called for — the same file Play
-    gets, under the same signature, so an installation can move between the two — and uploads it and its mapping
-    file to the production track with `PLAY_SERVICE_ACCOUNT_JSON`. The app itself never links to that APK: a Play
-    build pointing at a copy of itself outside Play is what Play's policy is about. It is an **APK** and not an app bundle because the Play listing predates the bundle
+    the other three `ANDROID_*` secrets and uploads it and its mapping file to the production track with
+    `PLAY_SERVICE_ACCOUNT_JSON`; nothing is attached to the release. It is an **APK** and not an app bundle because the Play listing predates the bundle
     requirement and was never migrated; a `bundleRelease` would be rejected on upload. The "what's new" text comes
     from the workflow's `release_notes` input, which `release.yml` fills from comments in the release's description
     that the rendered page hides (`<!-- whats-new en-US … -->`, written for every store, and `<!-- play-store update-priority: 0 -->`; the

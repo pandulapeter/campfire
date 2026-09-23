@@ -6,9 +6,10 @@
 # If a copy of the MPL was not distributed with this file, You can obtain one at
 # https://mozilla.org/MPL/2.0/.
 
-# Builds the signed release APK, attaches it to a GitHub release where one is named, and uploads it to the production
-# track of the Play Console. Called by release.yml for every release; dispatched by hand to publish without one, or to
-# repeat the Android half of a release that went wrong.
+# Builds the signed release APK and uploads it to the production track of the Play Console. Nothing is attached to the
+# GitHub release: Play is where the Android build is had, and a release only carries what no official channel offers.
+# Called by release.yml for every release; dispatched by hand to publish without one, or to repeat the Android half of
+# a release that went wrong.
 
 name: 'Publish Android'
 
@@ -37,13 +38,12 @@ on:
         type: string
         required: false
       release_tag:
-        description: 'Tag of an existing GitHub release to build and attach the APK to (leave empty to build this branch and attach nothing)'
+        description: 'Tag of the release to build (leave empty to build this branch)'
         type: string
         required: false
 
-# Write access is what attaching the APK to a release takes.
 permissions:
-  contents: write
+  contents: read
 
 jobs:
   build:
@@ -162,16 +162,6 @@ jobs:
             printf 'campfire.android.keystorePassword=%s\n' "$(escape "$ANDROID_KEYSTORE_PASSWORD")"
           } > local.properties
           ./gradlew :app:android:assembleRelease
-      # Before the upload rather than after it, so that a release Play turns down still has its APK. It is the very
-      # file Play gets, signed with the same key, so an installation can move between the two sources freely.
-      - name: Attach the APK to the GitHub release
-        if: inputs.release_tag != ''
-        env:
-          GH_TOKEN: ${{ github.token }}
-        run: |
-          ASSET="campfire-${{ steps.version.outputs.name }}-android.apk"
-          cp app/android/build/outputs/apk/release/*.apk "$ASSET"
-          gh release upload "${{ inputs.release_tag }}" "$ASSET" --clobber
       - name: Upload the APK to the Play Console
         uses: r0adkll/upload-google-play@v1.1.5
         with:

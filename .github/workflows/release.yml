@@ -6,8 +6,9 @@
 # If a copy of the MPL was not distributed with this file, You can obtain one at
 # https://mozilla.org/MPL/2.0/.
 
-# The whole release, started by publishing a GitHub release: the Android build goes to Play and onto the release, the
-# web build onto the website, and the desktop installers and the iOS build onto the release. Each of the four is a
+# The whole release, started by publishing a GitHub release: the Android build goes to Play, the web build onto the
+# website, the iOS build to App Store Connect, and the desktop installers, which no store offers yet, onto the release
+# itself — a release carries only what no official channel does. Each of the four is a
 # workflow of its own that this one calls, so any of them can also be dispatched by hand, and a job that failed here
 # can be run again from the run's page without repeating the ones that went through.
 #
@@ -54,8 +55,8 @@ jobs:
             exit 1
           fi
           echo "Releasing version $VERSION_NAME"
-      # Play refuses a version code it has seen and App Store Connect a build number, but Play says so only after the
-      # APK has been built, signed and attached to the release and the other three builds have gone out. The previous
+      # Play refuses a version code it has seen and App Store Connect a build number, but each says so only after its
+      # build has been made and signed and the other three builds have gone out. The previous
       # release is the last one published, whatever its version: Play wants the code higher than every one it has had,
       # so a fix to an older line is compared with the newest release too. Pre-releases reach no store and are left out.
       - name: Check the build numbers against the previous release
