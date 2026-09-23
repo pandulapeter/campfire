@@ -64,7 +64,7 @@ internal class IosFileStorage : FileStorage {
         // Null means the directory could not be listed. If it is there all the same, that is a failure to report
         // rather than an empty library, see the JVM implementation.
         val entries = fileManager.contentsOfDirectoryAtPath(directoryPath, null)
-            ?: if (fileManager.fileExistsAtPath(directoryPath)) throw IllegalStateException("Could not read \"$directoryPath\".") else emptyList<Any?>()
+            ?: if (fileManager.fileExistsAtPath(directoryPath)) throw LibraryStorageException("Could not read \"$directoryPath\".") else emptyList<Any?>()
         entries.filterIsInstance<String>()
             .mapNotNull { name -> info(path = "$directoryPath/$name", name = name) }
             .sortedBy { it.name }
@@ -73,7 +73,7 @@ internal class IosFileStorage : FileStorage {
     override suspend fun listNames(directory: StorageDirectory) = withContext(Dispatchers.IO) {
         val directoryPath = directoryPath(directory)
         fileManager.contentsOfDirectoryAtPath(directoryPath, null)?.filterIsInstance<String>()
-            ?: if (fileManager.fileExistsAtPath(directoryPath)) throw IllegalStateException("Could not read \"$directoryPath\".") else emptyList()
+            ?: if (fileManager.fileExistsAtPath(directoryPath)) throw LibraryStorageException("Could not read \"$directoryPath\".") else emptyList()
     }
 
     override suspend fun info(directory: StorageDirectory, name: String) = withContext(Dispatchers.IO) {
@@ -116,7 +116,7 @@ internal class IosFileStorage : FileStorage {
     override suspend fun delete(directory: StorageDirectory, name: String) = withContext(Dispatchers.IO) {
         val path = filePath(directory, name)
         if (fileManager.fileExistsAtPath(path) && !fileManager.removeItemAtPath(path, null)) {
-            throw IllegalStateException("Could not delete \"$name\".")
+            throw LibraryStorageException("Could not delete \"$name\".")
         }
     }
 

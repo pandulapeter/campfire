@@ -33,8 +33,10 @@ data class StoredFileInfo(
  * path separator or are "." / "..", throwing [IllegalArgumentException].
  *
  * All functions are suspend and run off the main thread (on the web, which has a single thread, on
- * [kotlinx.coroutines.Dispatchers.Default]); errors surface as exceptions of the platform, callers map them to
- * `DataState.Failure`.
+ * [kotlinx.coroutines.Dispatchers.Default]). A file or directory that is there and cannot be listed, read, written or
+ * deleted throws `LibraryStorageException` on every platform (sync reports that as a storage failure rather than an
+ * unknown one); a name that is a path throws [IllegalArgumentException] (see `requireValidFileName`). Callers map either
+ * to `DataState.Failure`.
  *
  * Text is always UTF-8, and a byte order mark at the start of a file that has one is stripped while reading.
  */

@@ -49,7 +49,7 @@ internal class JvmFileStorage(
         // there but cannot be listed is a failure and has to be reported as one: passing it off as an empty library
         // would invite the user to create songs in a folder the app cannot read.
         val files = directoryFile.listFiles()
-            ?: if (directoryFile.isDirectory) throw IOException("Could not read \"${directoryFile.absolutePath}\".") else emptyArray()
+            ?: if (directoryFile.isDirectory) throw LibraryStorageException("Could not read \"${directoryFile.absolutePath}\".") else emptyArray()
         files.filter { it.isFile && !it.name.endsWith(TEMPORARY_FILE_SUFFIX) }
             .map { StoredFileInfo(name = it.name.toLibraryName(), size = it.length(), lastModified = it.lastModified()) }
             .sortedBy { it.name }
@@ -57,7 +57,7 @@ internal class JvmFileStorage(
 
     override suspend fun listNames(directory: StorageDirectory) = withContext(Dispatchers.IO) {
         val directoryFile = directoryFile(directory)
-        directoryFile.list()?.toList() ?: if (directoryFile.isDirectory) throw IOException("Could not read \"${directoryFile.absolutePath}\".") else emptyList()
+        directoryFile.list()?.toList() ?: if (directoryFile.isDirectory) throw LibraryStorageException("Could not read \"${directoryFile.absolutePath}\".") else emptyList()
     }
 
     override suspend fun info(directory: StorageDirectory, name: String) = withContext(Dispatchers.IO) {

@@ -45,7 +45,9 @@ holds the `@Module @ComponentScan object DataLocalSourceModule`, and every local
   - Every `catch (Exception)` around a read rethrows `CancellationException` first: a scan that was cancelled is not
     a library of unreadable songs.
   - A read answers null for a file that is **not there** and for nothing else. A file that is there and cannot be
-    read or written throws `LibraryStorageException` (from `:data:source:local:api`) on every platform: iOS asks
+    read, written or deleted, and a directory that is there and cannot be listed, throw `LibraryStorageException`
+    (from `:data:source:local:api`) on every platform, so that sync reports a storage failure rather than an unknown
+    one: iOS asks
     `dataWithContentsOfFile` for its `NSError` rather than taking its nil as absence, the JVM wraps the `IOException`,
     and OPFS folds only a `NotFoundError` into null. Sync is why: a file reported as missing is planned as a deletion,
     and that deletion reaches every other device. The song scan skips such a song with a log line; a sync run stops
@@ -68,7 +70,7 @@ holds the `@Module @ComponentScan object DataLocalSourceModule`, and every local
     sharing deletion: a scan reading sixty-four files at once would otherwise refuse the renames and deletions of a
     sync run writing at the same time. The move over the target and the delete retry three times (20, 40 and 80 ms) on
     a Windows `AccessDeniedException`, which is an anti-virus scanner holding a file that just appeared; anywhere else
-    that exception is a permission, and is reported at once. A delete that fails throws `LibraryStorageException`.
+    that exception is a permission, and is reported at once.
 - **`storage/secret/SecretStore.kt`** is where the sync credentials go, and nothing else: a refresh token is a
   long-lived credential. `AndroidSecretStore` encrypts it with an AES-GCM key generated inside the Android Keystore
   (never `security-crypto`, which is deprecated) and writes the IV and ciphertext as `preferences/sync-credentials.bin`;

@@ -184,6 +184,22 @@ class JvmFileStorageTest {
     }
 
     @Test
+    fun `reports a directory it cannot list as a storage failure`() = runBlocking {
+        fileStorage.writeText(StorageDirectory.SONGS, "a.cho", "content")
+        val directory = root.walk().first { it.name == "songs" && it.isDirectory }
+        directory.setReadable(false)
+        // Permissions mean nothing to a superuser or on Windows, and the case cannot be set up there.
+        if (directory.list() != null) {
+            directory.setReadable(true)
+            return@runBlocking
+        }
+
+        assertFailsWith<LibraryStorageException> { fileStorage.list(StorageDirectory.SONGS) }
+        assertFailsWith<LibraryStorageException> { fileStorage.listNames(StorageDirectory.SONGS) }
+        directory.setReadable(true)
+    }
+
+    @Test
     fun `reads a file removed just before the read as missing`() {
         assertNull(fileStorage.readingAsStorage("a.cho") { throw NoSuchFileException("a.cho") })
     }

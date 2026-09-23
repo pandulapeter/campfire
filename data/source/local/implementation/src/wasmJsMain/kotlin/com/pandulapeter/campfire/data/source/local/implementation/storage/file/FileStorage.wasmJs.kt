@@ -40,8 +40,10 @@ import kotlin.js.toJsString
 internal class OpfsFileStorage : FileStorage {
 
     override suspend fun list(directory: StorageDirectory) = withContext(Dispatchers.Default) {
-        // One string instead of a handle per file: crossing the Kotlin/JS boundary for every entry would be far slower.
-        listEntries(directoryHandle(directory)).await()?.toString().orEmpty()
+        failingAsStorage(directory.displayName) {
+            // One string instead of a handle per file: crossing the Kotlin/JS boundary for every entry would be far slower.
+            listEntries(directoryHandle(directory)).await()?.toString().orEmpty()
+        }
             .split(ENTRY_SEPARATOR)
             .filter { it.isNotEmpty() }
             .mapNotNull { entry ->
@@ -57,7 +59,8 @@ internal class OpfsFileStorage : FileStorage {
     }
 
     override suspend fun listNames(directory: StorageDirectory) = withContext(Dispatchers.Default) {
-        listEntryNames(directoryHandle(directory)).await()?.toString().orEmpty().split(ENTRY_SEPARATOR).filter { it.isNotEmpty() }
+        failingAsStorage(directory.displayName) { listEntryNames(directoryHandle(directory)).await()?.toString().orEmpty() }
+            .split(ENTRY_SEPARATOR).filter { it.isNotEmpty() }
     }
 
     override suspend fun info(directory: StorageDirectory, name: String) = withContext(Dispatchers.Default) {
@@ -99,8 +102,10 @@ internal class OpfsFileStorage : FileStorage {
     }
 
     override suspend fun delete(directory: StorageDirectory, name: String) = withContext(Dispatchers.Default) {
-        requireValidFileName(name)
-        removeEntry(directoryHandle(directory), name).await()
+        failingAsStorage(name) {
+            requireValidFileName(name)
+            removeEntry(directoryHandle(directory), name).await()
+        }
         Unit
     }
 
@@ -109,7 +114,8 @@ internal class OpfsFileStorage : FileStorage {
      * coroutines library can only unwrap a Kotlin one), and a synchronous `js(...)` call throws a `JsException`, which
      * is not an `Exception` at all; neither says anything a caller could tell apart from any other failure. Only a file
      * that is not there is folded into null (see `getFileHandle`); everything else the browser refuses - a
-     * `NotAllowedError`, a `QuotaExceededError`, a file locked by a writable - is a file that exists and cannot be used.
+     * `NotAllowedError`, a `QuotaExceededError`, a file locked by a writable - is a file or a directory that exists and
+     * cannot be used.
      */
     private suspend fun <T> failingAsStorage(name: String, operation: suspend () -> T): T = try {
         operation()
@@ -123,6 +129,8 @@ internal class OpfsFileStorage : FileStorage {
     } catch (exception: Throwable) {
         throw LibraryStorageException("Could not access \"$name\".", exception)
     }
+
+    private val StorageDirectory.displayName get() = pathSegments.joinToString("/")
 
     private suspend fun fileHandle(directory: StorageDirectory, name: String): JsAny? {
         requireValidFileName(name)
