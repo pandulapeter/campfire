@@ -26,8 +26,33 @@ object ChordProSerializer {
     fun serialize(song: ChordProSong): String {
         val chunks = mutableListOf<String>()
         serializeMetadata(song.metadata).takeIf { it.isNotEmpty() }?.let { chunks += it.joinToString("\n") }
-        song.blocks.forEach { block -> chunks += serializeBlock(block) }
+        var index = 0
+        while (index < song.blocks.size) {
+            val block = song.blocks[index]
+            if (block is ChordProBlock.Section) {
+                // A section a comment, a break or a recall cut in two goes back into the one environment it was read
+                // from, with what cut it inside: written as two, it would come back as two sections.
+                val end = sectionEnd(song.blocks, index)
+                chunks += serializeSection(song.blocks.subList(index, end))
+                index = end
+            } else {
+                chunks += serializeBlock(block)
+                index++
+            }
+        }
         return chunks.joinToString("\n\n")
+    }
+
+    /** The index after the last continuation of the section at [start]; what follows its last piece is not its own. */
+    private fun sectionEnd(blocks: List<ChordProBlock>, start: Int): Int {
+        var end = start + 1
+        for (index in start + 1 until blocks.size) {
+            val block = blocks[index]
+            if (block !is ChordProBlock.Section) continue
+            if (!block.isContinuation) break
+            end = index + 1
+        }
+        return end
     }
 
     private fun serializeMetadata(metadata: ChordProMetadata) = buildList {
@@ -52,7 +77,7 @@ object ChordProSerializer {
     }
 
     private fun serializeBlock(block: ChordProBlock) = when (block) {
-        is ChordProBlock.Section -> serializeSection(block)
+        is ChordProBlock.Section -> serializeSection(listOf(block))
         is ChordProBlock.ChorusRecall -> block.label?.let { "{chorus: $it}" } ?: "{chorus}"
         is ChordProBlock.Comment -> when (block.style) {
             CommentStyle.PLAIN -> "{comment: ${block.text}}"
@@ -63,11 +88,13 @@ object ChordProSerializer {
         ChordProBlock.Break -> "{column_break}"
     }
 
-    private fun serializeSection(section: ChordProBlock.Section): String {
+    /** A section and its continuations, with the blocks that stood between them, as [sectionEnd] collects them. */
+    private fun serializeSection(pieces: List<ChordProBlock>): String {
+        val section = pieces.first() as ChordProBlock.Section
         // A paragraph has no environment of its own, so a label it carries came from the tablature or grid inside
         // it and has to go back onto that; see `SectionBuilder.openLineMode`.
-        if (section.type == SectionType.Paragraph) return serializeLines(section.lines, section.label)
-        val body = serializeLines(section.lines)
+        if (section.type == SectionType.Paragraph) return serializeLines(pieces, section.label)
+        val body = serializeLines(pieces)
         val name = environmentName(section.type)
         val header = section.label?.let { "{start_of_$name: $it}" } ?: "{start_of_$name}"
         return if (body.isEmpty()) "$header\n{end_of_$name}" else "$header\n$body\n{end_of_$name}"
@@ -77,11 +104,26 @@ object ChordProSerializer {
      * The lines of a section, with each run of tablature or grid lines wrapped in the environment that says how it
      * is written. They are runs rather than sections of their own, so a solo written as a line of chords over a tab
      * comes back out as one section with a `{start_of_tab}` in the middle of it.
+     *
+     * The lines of every piece are walked together with the blocks between the pieces, in the order the file had them.
+     * A block is written inside a tab or grid environment that the next line after it is still in, which is where the
+     * parser found it: a Campfire 3 `{comment: Verse 2}` written outside the tab it stood in would come back as a heading.
      */
-    private fun serializeLines(lines: List<ChordProLine>, environmentLabel: String? = null) = buildList {
+    private fun serializeLines(pieces: List<ChordProBlock>, environmentLabel: String? = null) = buildList {
+        val items: List<Any> = pieces.flatMap { piece -> if (piece is ChordProBlock.Section) piece.lines else listOf(piece) }
         var openEnvironment: String? = null
         var label = environmentLabel
-        lines.forEach { line ->
+        items.forEachIndexed { index, item ->
+            if (item is ChordProBlock) {
+                val nextLine = items.subList(index + 1, items.size).firstOrNull { it is ChordProLine } as ChordProLine?
+                if (openEnvironment != null && nextLine?.let { lineEnvironmentName(it, openEnvironment) } != openEnvironment) {
+                    add("{end_of_$openEnvironment}")
+                    openEnvironment = null
+                }
+                add(serializeBlock(item))
+                return@forEachIndexed
+            }
+            val line = item as ChordProLine
             val environment = lineEnvironmentName(line, openEnvironment)
             if (environment != openEnvironment) {
                 openEnvironment?.let { add("{end_of_$it}") }

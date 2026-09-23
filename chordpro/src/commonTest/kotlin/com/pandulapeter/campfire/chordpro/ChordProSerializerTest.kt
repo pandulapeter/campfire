@@ -31,6 +31,23 @@ class ChordProSerializerTest {
     }
 
     @Test
+    fun `a chorus cut by a comment comes back as one environment`() {
+        val parsed = ChordProParser.parse("{soc}\n[C]one\n{comment: softly}\n[G]two\n{eoc}\n\n{chorus}")
+
+        val serialized = ChordProSerializer.serialize(parsed)
+
+        assertEquals("{start_of_chorus}\n[C]one\n{comment: softly}\n[G]two\n{end_of_chorus}\n\n{chorus}", serialized)
+        assertEquals(parsed, ChordProParser.parse(serialized))
+    }
+
+    @Test
+    fun `a legacy heading name cut into a tab comes back inside the tab`() {
+        val parsed = ChordProParser.parse("{sot}\ne|---0---|\n{c: Solo}\ne|---3---|\n{eot}")
+
+        assertEquals(parsed, ChordProParser.parse(ChordProSerializer.serialize(parsed)))
+    }
+
+    @Test
     fun `an abc block survives serializing`() {
         val parsed = ChordProParser.parse("{start_of_abc}\nX:1\n[CEG]2 [A2B] |\n{end_of_abc}")
 

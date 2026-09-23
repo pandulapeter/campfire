@@ -22,10 +22,23 @@ sealed interface ChordProBlock {
         val type: SectionType,
         val label: String?, // "Verse 1" from {start_of_verse: Verse 1} or {sov: label="Verse 1"}
         val lines: List<ChordProLine>,
+        /**
+         * Whether this is the rest of the section before it, which a comment, a break or a chorus recall standing
+         * inside that section cut in two. It is still the section the file wrote once, so it has no heading of its own
+         * to show, and a recall of a chorus repeats it together with the part before it.
+         */
+        val isContinuation: Boolean = false,
     ) : ChordProBlock
 
-    /** {chorus} / {chorus: label}: repeat the most recent chorus. The renderer decides how to show it. */
-    data class ChorusRecall(val label: String?) : ChordProBlock
+    /**
+     * {chorus} / {chorus: label}: repeat the most recent chorus. [blocks] is that chorus as the parser found it — its
+     * first section, and where something cut it, whatever stood inside it and the continuations after — or empty where
+     * no chorus came before. The renderer decides how to show it.
+     */
+    data class ChorusRecall(
+        val label: String?,
+        val blocks: List<ChordProBlock> = emptyList(),
+    ) : ChordProBlock
 
     data class Comment(val text: String, val style: CommentStyle) : ChordProBlock
 

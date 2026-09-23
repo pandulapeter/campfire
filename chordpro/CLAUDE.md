@@ -32,7 +32,11 @@ in `:domain:*`. `:data:source:local:implementation` uses it directly for the met
   verbatim as lyrics with no chords, so the transposition, the chord detection of the library scan and the highlighter
   all leave them alone. A `{comment}`, a break or a `{chorus}` inside an environment cuts the section in two the way it
   does anywhere else, and the environment carries on in the second half; a comment there is never read as a Campfire 3
-  heading. The two halves of a tab are runs of their own, so the text transposition moves them as two fingerboards as
+  heading. The second half is marked `isContinuation`: it is the rest of a section the file wrote once, so the viewer
+  does not head it again, and the serializer writes the pieces back into one environment with what cut them inside. A
+  `ChorusRecall` carries the chorus it repeats (`blocks`) — every piece of the last chorus that was over where it
+  stands, and what stood between them — resolved by the parser, so that the transposition and the notation reach it
+  like any other block. The two halves of a tab are runs of their own, so the text transposition moves them as two fingerboards as
   well. A grid line keeps what comes before its first bar and after its last one as text, the margins ChordPro puts
   labels and comments in, and a cell may hold several chords joined with `~`, each transposed on its own.
 - `ChordProSyntax` — the shared low-level rules (the directive and chord regexes, long/short directive names, a value

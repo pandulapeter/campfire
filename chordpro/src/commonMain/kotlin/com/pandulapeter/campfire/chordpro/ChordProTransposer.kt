@@ -69,10 +69,19 @@ object ChordProTransposer {
         rename: (String) -> String,
     ): ChordProSong = song.copy(
         metadata = song.metadata.copy(key = song.metadata.key?.let(rename)),
-        blocks = song.blocks.map { block ->
-            if (block is ChordProBlock.Section) block.copy(lines = rewriteLines(block.lines, rewriteTabLines, rename)) else block
-        },
+        blocks = song.blocks.map { block -> rewriteBlock(block, rewriteTabLines, rename) },
     )
+
+    private fun rewriteBlock(
+        block: ChordProBlock,
+        rewriteTabLines: (List<String>) -> List<String>,
+        rename: (String) -> String,
+    ): ChordProBlock = when (block) {
+        is ChordProBlock.Section -> block.copy(lines = rewriteLines(block.lines, rewriteTabLines, rename))
+        // The chorus a recall repeats travels inside it, so it is spelled and moved the way the chorus itself is.
+        is ChordProBlock.ChorusRecall -> block.copy(blocks = block.blocks.map { rewriteBlock(it, rewriteTabLines, rename) })
+        else -> block
+    }
 
     /** Every name [rewriteChords] would hand to its rename, without rewriting anything. */
     internal fun writtenChordNames(song: ChordProSong): Sequence<String> = sequence {

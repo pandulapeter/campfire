@@ -53,7 +53,41 @@ object ChordProParser {
             }
         }
         section.close()
-        return ChordProSong(metadata = metadata.build(), blocks = blocks)
+        return ChordProSong(metadata = metadata.build(), blocks = withChorusesRecalled(blocks))
+    }
+
+    /**
+     * [blocks] with every recall carrying the chorus it repeats: the last one that was over by the time the recall is
+     * reached, all of it — a chorus cut in two by a comment is its first section, the comment and the continuation. A
+     * recall standing inside a chorus (in a tab written there) repeats the chorus before that one, since the one it
+     * stands in is not over yet. A recall inside the recalled chorus is left out of the copy, which would otherwise
+     * repeat a chorus inside a repeat of itself.
+     */
+    private fun withChorusesRecalled(blocks: List<ChordProBlock>): List<ChordProBlock> {
+        if (blocks.none { it is ChordProBlock.ChorusRecall }) return blocks
+        // Every chorus, by the index of its last piece; ascending, since they are found in order.
+        val choruses = mutableListOf<Pair<Int, List<ChordProBlock>>>()
+        var pieces: MutableList<ChordProBlock>? = null
+        var lastPieceIndex = -1
+        blocks.forEachIndexed { index, block ->
+            if (block !is ChordProBlock.Section) return@forEachIndexed
+            val chorus = pieces
+            if (chorus != null && block.isContinuation) {
+                chorus += blocks.subList(lastPieceIndex + 1, index).filterNot { it is ChordProBlock.ChorusRecall }
+                chorus += block
+            } else {
+                chorus?.let { choruses += lastPieceIndex to it }
+                pieces = if (block.type == SectionType.Chorus) mutableListOf(block) else null
+            }
+            lastPieceIndex = index
+        }
+        pieces?.let { choruses += lastPieceIndex to it }
+        var chorusIndex = -1
+        return blocks.mapIndexed { index, block ->
+            if (block !is ChordProBlock.ChorusRecall) return@mapIndexed block
+            while (chorusIndex + 1 < choruses.size && choruses[chorusIndex + 1].first < index) chorusIndex++
+            block.copy(blocks = choruses.getOrNull(chorusIndex)?.second.orEmpty())
+        }
     }
 
     /** Only scans directive lines, so that it is cheap enough for a caller that has no interest in the body. */
@@ -243,17 +277,26 @@ object ChordProParser {
         var isExplicit = false
             private set
 
+        private var isContinuation = false
+
         /**
          * Whether a `{start_of_tab}`, a `{start_of_grid}` or one of the verbatim environments is open, which says how
          * lines are read and not what section they are in.
          */
         val isInLineMode get() = lineMode != null
 
-        fun open(type: SectionType, label: String?, isExplicit: Boolean, headingText: String? = null) {
+        fun open(
+            type: SectionType,
+            label: String?,
+            isExplicit: Boolean,
+            headingText: String? = null,
+            isContinuation: Boolean = false,
+        ) {
             this.type = type
             this.label = label
             this.isExplicit = isExplicit
             this.headingText = headingText
+            this.isContinuation = isContinuation
             lines.clear()
         }
 
@@ -280,13 +323,14 @@ object ChordProParser {
                 lines.removeAt(lines.lastIndex)
             }
             if (lines.isNotEmpty()) {
-                blocks += ChordProBlock.Section(type = type, label = label, lines = lines.toList())
+                blocks += ChordProBlock.Section(type = type, label = label, lines = lines.toList(), isContinuation = isContinuation)
             } else {
                 headingText?.let { blocks += ChordProBlock.Comment(it, CommentStyle.PLAIN) }
             }
             this.type = null
             label = null
             isExplicit = false
+            isContinuation = false
             headingText = null
             lines.clear()
         }
@@ -296,7 +340,8 @@ object ChordProParser {
          * Only a section with lines in it is flushed, so the heading of the one being reopened has already been shown
          * as its label, and the reopened half does not carry [headingText]: were nothing to follow the block, it
          * would otherwise come back as a comment repeating that label. A tab or grid environment that is open carries
-         * on in the reopened half.
+         * on in the reopened half. The reopened half is marked as the continuation it is, so that it is neither headed a
+         * second time nor left out of a recall of its chorus.
          */
         fun addBlock(block: ChordProBlock) {
             if (type != null && lines.isNotEmpty()) {
@@ -309,7 +354,7 @@ object ChordProParser {
                 val lineMode = this.lineMode
                 close()
                 blocks += block
-                open(type, label, isExplicit)
+                open(type, label, isExplicit, isContinuation = true)
                 this.lineMode = lineMode
             } else {
                 blocks += block

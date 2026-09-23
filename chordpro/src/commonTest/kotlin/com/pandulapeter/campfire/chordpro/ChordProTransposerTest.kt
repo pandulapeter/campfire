@@ -180,6 +180,25 @@ class ChordProTransposerTest {
     }
 
     @Test
+    fun `a recalled chorus is transposed with the song`() {
+        val song = ChordProTransposer.transpose(ChordProParser.parse(CUT_CHORUS_AND_RECALL), semitones = 2)
+
+        assertEquals(listOf("D", "A"), (song.blocks.last() as ChordProBlock.ChorusRecall).blocks.recalledChordNames())
+    }
+
+    @Test
+    fun `a recalled chorus is respelled in German notation`() {
+        val song = ChordProNotation.toGerman(ChordProParser.parse(CUT_CHORUS_AND_RECALL.replace("[G]", "[B]")))
+
+        assertEquals(listOf("C", "H"), (song.blocks.last() as ChordProBlock.ChorusRecall).blocks.recalledChordNames())
+    }
+
+    private fun List<ChordProBlock>.recalledChordNames() = filterIsInstance<ChordProBlock.Section>()
+        .flatMap { it.lines }
+        .filterIsInstance<ChordProLine.Lyrics>()
+        .flatMap { line -> line.chords.map { it.name } }
+
+    @Test
     fun `the key keeps the spelling of its directive and a chord the spaces in its brackets`() {
         assertEquals("{KEY:A}\n[ A ]la [Bm ]la", ChordProTransposer.transposeText("{KEY:G}\n[ G ]la [Am ]la", 2))
         assertEquals("  { key : A }  ", ChordProTransposer.transposeText("  { key : G }  ", 2))
@@ -599,5 +618,9 @@ class ChordProTransposerTest {
     private fun transposed(before: String, semitones: Int, offset: Int): Pair<String, Int> {
         val after = ChordProTransposer.transposeText(before, semitones, preferFlats = false)
         return after to ChordProTransposer.transposedOffset(before, after, offset)
+    }
+
+    private companion object {
+        const val CUT_CHORUS_AND_RECALL = "{soc}\n[C]one\n{comment: softly}\n[G]two\n{eoc}\n\n{chorus}"
     }
 }

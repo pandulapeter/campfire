@@ -156,8 +156,57 @@ class ChordProParserTest {
         val blocks = ChordProParser.parse("{start_of_chorus}\n[C]a\n{end_of_chorus}\n\n{chorus}\n\n{chorus: Chorus 2}").blocks
 
         assertEquals(3, blocks.size)
-        assertEquals(ChordProBlock.ChorusRecall(null), blocks[1])
-        assertEquals(ChordProBlock.ChorusRecall("Chorus 2"), blocks[2])
+        assertEquals(ChordProBlock.ChorusRecall(null, blocks = listOf(blocks[0])), blocks[1])
+        assertEquals(ChordProBlock.ChorusRecall("Chorus 2", blocks = listOf(blocks[0])), blocks[2])
+    }
+
+    @Test
+    fun `the half of a section after a comment is its continuation`() {
+        listOf(
+            "{soc}\n[C]one\n{comment: softly}\n[G]two\n{eoc}",
+            "{soc}\n[C]one\n{colb}\n[G]two\n{eoc}",
+            "{soc}\n[C]one\n{ci: x}\n[G]two\n{eoc}",
+            "{c: Verse 1}\n[G]a\n{ci: x}\n[C]b",
+        ).forEach { text ->
+            val blocks = ChordProParser.parse(text).blocks
+
+            assertEquals(3, blocks.size, text)
+            val first = blocks[0] as ChordProBlock.Section
+            val second = blocks[2] as ChordProBlock.Section
+            assertFalse(first.isContinuation, text)
+            assertTrue(second.isContinuation, text)
+            assertEquals(first.type, second.type, text)
+            assertEquals(first.label, second.label, text)
+        }
+    }
+
+    @Test
+    fun `a recall carries every piece of the last chorus`() {
+        val blocks = ChordProParser.parse("{soc}\n[C]one\n{comment: softly}\n[G]two\n{eoc}\n\n{chorus}").blocks
+
+        assertEquals(
+            listOf(
+                ChordProBlock.Section(SectionType.Chorus, null, listOf(ChordProParser.parseLyrics("[C]one"))),
+                ChordProBlock.Comment("softly", CommentStyle.PLAIN),
+                ChordProBlock.Section(SectionType.Chorus, null, listOf(ChordProParser.parseLyrics("[G]two")), isContinuation = true),
+            ),
+            (blocks.last() as ChordProBlock.ChorusRecall).blocks,
+        )
+    }
+
+    @Test
+    fun `a recall with no chorus before it carries nothing`() {
+        val blocks = ChordProParser.parse("{sov}\n[C]one\n{eov}\n{chorus}").blocks
+
+        assertEquals(ChordProBlock.ChorusRecall(null), blocks.last())
+    }
+
+    @Test
+    fun `a recall inside a chorus repeats the chorus before it`() {
+        val blocks = ChordProParser.parse("{soc}\n[A]first\n{eoc}\n{soc}\n{sot}\ne|-0-|\n{chorus}\ne|-2-|\n{eot}\n{eoc}").blocks
+
+        val recall = blocks.filterIsInstance<ChordProBlock.ChorusRecall>().single()
+        assertEquals(listOf(blocks[0]), recall.blocks)
     }
 
     @Test
@@ -617,7 +666,7 @@ class ChordProParserTest {
         val blocks = ChordProParser.parse("{start_of_chorus-guitar}\n[C]la\n{end_of_chorus}\n{chorus}").blocks
 
         assertEquals(SectionType.Chorus, (blocks[0] as ChordProBlock.Section).type)
-        assertEquals(ChordProBlock.ChorusRecall(null), blocks[1])
+        assertEquals(ChordProBlock.ChorusRecall(null, blocks = listOf(blocks[0])), blocks[1])
         assertEquals(
             SectionType.Custom("pre-chorus"),
             (ChordProParser.parse("{start_of_pre-chorus}\n[C]la\n{end_of_pre-chorus}").blocks.single() as ChordProBlock.Section).type,

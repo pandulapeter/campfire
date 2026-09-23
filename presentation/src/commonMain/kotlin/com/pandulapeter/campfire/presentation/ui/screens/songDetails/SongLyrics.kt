@@ -1230,16 +1230,33 @@ private sealed interface RenderSection {
 /**
  * Flattens the parsed song into the sections the layout places.
  *
- * A `{chorus}` recall repeats the most recent chorus, so the choruses are remembered as they go by. In lyrics-only
- * mode the chords go away with the sections that consist of nothing else: tabs and grids say nothing without them,
- * and a line that was only chords would leave a blank behind.
+ * A `{chorus}` recall repeats the chorus the parser found for it (`ChordProBlock.ChorusRecall.blocks`), every piece of
+ * it and the comments that cut it, headed once. The continuation of a section a comment or a break cut in two carries
+ * no heading of its own. In lyrics-only mode the chords go away with the sections that consist of nothing else: tabs
+ * and grids say nothing without them, and a line that was only chords would leave a blank behind.
  */
 private fun ChordProSong.toRenderSections(
     shouldShowChords: Boolean,
     defaultLabels: DefaultSectionLabels,
 ): List<RenderSection> {
     val sections = mutableListOf<RenderSection>()
-    var lastChorus: ChordProBlock.Section? = null
+
+    /** Adds a section, or nothing where lyrics-only mode leaves it with nothing to show; true when it was added. */
+    fun addSection(section: ChordProBlock.Section, header: String?): Boolean {
+        // A section that is nothing but tablature or a grid goes away entirely in lyrics-only mode, its heading with
+        // it: neither says anything without the chords, and a heading over nothing is worse than no heading at all.
+        if (!shouldShowChords && section.lines.all { it.needsChords() || it.isBlank() }) return false
+        val lines = section.lines.prepareForDisplay(shouldShowChords)
+        // A section that ended up with nothing to show is dropped, unless its header still says something.
+        if (lines.isEmpty() && header == null) return false
+        sections += RenderSection.Lines(
+            header = header,
+            lines = lines,
+            isOnCard = section.type == SectionType.Chorus,
+        )
+        return true
+    }
+
     blocks.forEach { block ->
         when (block) {
             is ChordProBlock.Break -> Unit // The column layout makes its own breaks.
@@ -1247,31 +1264,21 @@ private fun ChordProSong.toRenderSections(
             is ChordProBlock.Comment -> sections += RenderSection.Comment(text = block.text, style = block.style)
 
             is ChordProBlock.ChorusRecall -> {
-                val chorus = lastChorus
-                sections += RenderSection.Lines(
-                    header = block.label ?: chorus?.label ?: defaultLabels.chorus,
-                    lines = chorus?.lines?.prepareForDisplay(shouldShowChords).orEmpty(),
-                    isOnCard = true,
-                )
+                // The heading goes on the first piece of the chorus that is shown, and stays behind on its own when
+                // none is: a recall has always said where the chorus is sung, even with nothing under it.
+                var header: String? = block.label ?: (block.blocks.firstOrNull() as? ChordProBlock.Section)?.label ?: defaultLabels.chorus
+                block.blocks.forEach { recalled ->
+                    when (recalled) {
+                        is ChordProBlock.Section -> if (addSection(recalled, header)) header = null
+                        is ChordProBlock.Comment -> sections += RenderSection.Comment(text = recalled.text, style = recalled.style)
+                        else -> Unit
+                    }
+                }
+                header?.let { sections += RenderSection.Lines(header = it, lines = emptyList(), isOnCard = true) }
             }
 
-            is ChordProBlock.Section -> {
-                if (block.type == SectionType.Chorus) lastChorus = block
-                // A section that is nothing but tablature or a grid goes away entirely in lyrics-only mode, its
-                // heading with it: neither says anything without the chords, and a heading over nothing is worse
-                // than no heading at all.
-                if (!shouldShowChords && block.lines.all { it.needsChords() || it.isBlank() }) return@forEach
-                val lines = block.lines.prepareForDisplay(shouldShowChords)
-                val header = block.header(defaultLabels)
-                // A section that ended up with nothing to show is dropped, unless its header still says something.
-                if (lines.isNotEmpty() || header != null) {
-                    sections += RenderSection.Lines(
-                        header = header,
-                        lines = lines,
-                        isOnCard = block.type == SectionType.Chorus,
-                    )
-                }
-            }
+            // The rest of a section a comment or a break cut in two was headed where it started.
+            is ChordProBlock.Section -> addSection(block, if (block.isContinuation) null else block.header(defaultLabels))
         }
     }
     return sections
