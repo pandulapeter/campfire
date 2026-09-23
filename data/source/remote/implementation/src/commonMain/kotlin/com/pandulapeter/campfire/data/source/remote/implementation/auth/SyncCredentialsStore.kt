@@ -9,6 +9,7 @@
  */
 package com.pandulapeter.campfire.data.source.remote.implementation.auth
 
+import com.pandulapeter.campfire.data.source.local.api.LibraryStorageException
 import com.pandulapeter.campfire.data.source.local.api.SyncStateLocalSource
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.sync.Mutex
@@ -54,6 +55,10 @@ internal class SyncCredentialsStore(
                 // Nothing has been found out yet, so nothing may be remembered: this object outlives whoever was
                 // cancelled, and "no credentials" kept from here on is what a later authorization would write its
                 // pending state over.
+                throw exception
+            } catch (exception: LibraryStorageException) {
+                // Unreadable for now, which is not the same as none: remembered, "none" is what the next authorization
+                // would write its pending state over, destroying tokens that were never lost. Asked again next time.
                 throw exception
             } catch (exception: Exception) {
                 // A parse failure's message quotes the input around where it failed, which here can be a piece of a token.

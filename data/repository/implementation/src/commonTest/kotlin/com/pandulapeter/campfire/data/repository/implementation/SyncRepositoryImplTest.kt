@@ -626,6 +626,33 @@ class SyncRepositoryImplTest {
         assertTrue(provider.hasForgottenCredentials)
     }
 
+    @Test
+    fun `credentials that cannot be read right now are reported as that and start nothing`() = runTest {
+        val provider = FakeSyncProvider(account = ACCOUNT).apply {
+            onIsConnected = { throw LibraryStorageException("Keystore busy") }
+        }
+        val repository = repository(provider = provider)
+
+        assertFalse(repository.restore().isConnected)
+
+        assertEquals(SyncState.ConnectionFailed(SyncProviderId.DROPBOX, SyncFailureReason.STORAGE), repository.syncState.value)
+        assertEquals(0, provider.listCount)
+    }
+
+    @Test
+    fun `a disconnect whose credentials cannot be read still ends disconnected`() = runTest {
+        val provider = FakeSyncProvider(account = ACCOUNT)
+        val stateLocalSource = FakeSyncStateLocalSource(index = "{}")
+        val repository = repository(provider = provider, stateLocalSource = stateLocalSource)
+        repository.restore()
+        provider.onIsConnected = { throw LibraryStorageException("Keystore busy") }
+
+        repository.disconnect()
+
+        assertEquals(SyncState.Disconnected, repository.syncState.value)
+        assertNull(stateLocalSource.index)
+    }
+
     /** A storage that takes the pending authorization and then refuses to let go of it. */
     private fun failingAfterFirstWrite(): () -> Unit {
         var writeCount = 0

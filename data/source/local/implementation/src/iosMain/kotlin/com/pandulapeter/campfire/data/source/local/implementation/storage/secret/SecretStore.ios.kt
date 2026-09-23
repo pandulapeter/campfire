@@ -11,6 +11,7 @@
 
 package com.pandulapeter.campfire.data.source.local.implementation.storage.secret
 
+import com.pandulapeter.campfire.data.source.local.api.LibraryStorageException
 import kotlinx.cinterop.BetaInteropApi
 import kotlinx.cinterop.ExperimentalForeignApi
 import kotlinx.cinterop.MemScope
@@ -90,7 +91,9 @@ internal class IosSecretStore : SecretStore {
                     ?.toString()
 
                 errSecItemNotFound -> null
-                else -> throw IllegalStateException("The Keychain could not read \"$key\": $status.")
+                // Every other status is the Keychain refusing for now - locked before the first unlock, interaction not
+                // allowed - rather than an item that is not there.
+                else -> throw LibraryStorageException("The Keychain could not read \"$key\": $status.")
             }
         }
     }

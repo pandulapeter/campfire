@@ -54,6 +54,7 @@ import com.pandulapeter.campfire.presentation.resources.settings_sync_connected_
 import com.pandulapeter.campfire.presentation.resources.settings_sync_connecting
 import com.pandulapeter.campfire.presentation.resources.settings_sync_connection_failed_authorization
 import com.pandulapeter.campfire.presentation.resources.settings_sync_connection_failed_network
+import com.pandulapeter.campfire.presentation.resources.settings_sync_connection_failed_storage
 import com.pandulapeter.campfire.presentation.resources.settings_sync_connection_failed_unknown
 import com.pandulapeter.campfire.presentation.resources.settings_sync_date_time
 import com.pandulapeter.campfire.presentation.resources.settings_sync_delete_locally
@@ -163,7 +164,7 @@ private fun ColumnScope.DisconnectedSyncSettings(
                 when (reason) {
                     SyncFailureReason.NETWORK -> Res.string.settings_sync_connection_failed_network
                     SyncFailureReason.AUTHORIZATION -> Res.string.settings_sync_connection_failed_authorization
-                    SyncFailureReason.STORAGE,
+                    SyncFailureReason.STORAGE -> Res.string.settings_sync_connection_failed_storage
                     SyncFailureReason.REMOTE_STORAGE_FULL,
                     SyncFailureReason.UNKNOWN -> Res.string.settings_sync_connection_failed_unknown
                 }

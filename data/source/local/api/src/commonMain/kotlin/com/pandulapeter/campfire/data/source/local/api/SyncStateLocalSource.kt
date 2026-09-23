@@ -20,7 +20,9 @@ interface SyncStateLocalSource {
 
     /**
      * The tokens of the connected account. Null when nothing is connected, and also when what was stored can no
-     * longer be read, which only connecting again can answer.
+     * longer be read, which only connecting again can answer. Credentials that are there and cannot be read right now
+     * - a secret store that refuses for a moment - throw [LibraryStorageException] instead, since taking them for none
+     * would have the next authorization written over tokens that still work.
      *
      * Android keeps them encrypted with a key held by the Keystore and iOS in the Keychain. Desktop and the web keep
      * them in a file of app-private storage, which is as private as the platform makes it - the origin on the web,

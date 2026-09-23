@@ -10,6 +10,7 @@
 package com.pandulapeter.campfire.data.source.remote.implementation.auth
 
 import com.pandulapeter.campfire.data.model.domain.SyncProviderId
+import com.pandulapeter.campfire.data.source.local.api.LibraryStorageException
 import com.pandulapeter.campfire.data.source.local.api.SyncStateLocalSource
 import com.pandulapeter.campfire.data.source.remote.api.model.RemoteAuthorizationRequest
 import kotlinx.coroutines.CancellationException
@@ -49,6 +50,30 @@ class SyncCredentialsStoreTest {
         val stored = Json { ignoreUnknownKeys = true }.decodeFromString<SyncCredentialsDocument>(storage.credentials.orEmpty())
         assertEquals("refresh", stored.refreshToken)
         assertEquals("state", stored.pending?.state)
+    }
+
+    @Test
+    fun `a read the storage refused is not remembered as no credentials`() = runTest {
+        val storage = FakeStorage(CONNECTED).apply { shouldFailNextRead = true }
+        val store = SyncCredentialsStore(storage)
+
+        assertFailsWith<LibraryStorageException> { store.load() }
+
+        assertEquals("refresh", store.load()?.refreshToken)
+        assertEquals(2, storage.readCount)
+    }
+
+    @Test
+    fun `an authorization started while the credentials cannot be read writes nothing over them`() = runTest {
+        val storage = FakeStorage(CONNECTED).apply { shouldFailNextRead = true }
+        val store = SyncCredentialsStore(storage)
+
+        assertFailsWith<LibraryStorageException> {
+            PendingAuthorizationStoreImpl(store).savePendingAuthorization(providerId = SyncProviderId.DROPBOX, request = REQUEST)
+        }
+
+        assertEquals(0, storage.writeAttemptCount)
+        assertEquals(CONNECTED, storage.credentials)
     }
 
     @Test
@@ -114,11 +139,13 @@ class SyncCredentialsStoreTest {
     }
 
     /**
-     * Credentials in a variable, with a first read that can be made to end the way a cleared view model ends it, and
-     * writes that can be refused or cancelled once they have gone through.
+     * Credentials in a variable, with a first read that can be made to end the way a cleared view model ends it or the
+     * way a secret store that refuses for a moment does, and writes that can be refused or cancelled once they have
+     * gone through.
      */
     private class FakeStorage(var credentials: String?) : SyncStateLocalSource {
         var shouldCancelNextRead = false
+        var shouldFailNextRead = false
         var readCount = 0
         var writeAttemptCount = 0
         var shouldRefuseNextWrite = false
@@ -129,6 +156,10 @@ class SyncCredentialsStoreTest {
             if (shouldCancelNextRead) {
                 shouldCancelNextRead = false
                 throw CancellationException("The reader went away.")
+            }
+            if (shouldFailNextRead) {
+                shouldFailNextRead = false
+                throw LibraryStorageException("Keystore busy")
             }
             return credentials
         }

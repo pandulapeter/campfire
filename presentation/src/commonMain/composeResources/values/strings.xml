@@ -310,6 +310,7 @@
     <string name="settings_sync_connection_failed_network">Could not reach the service. Check the internet connection and try again.</string>
     <string name="settings_sync_connection_failed_authorization">Dropbox refused the connection.</string>
     <string name="settings_sync_connection_failed_unknown">The connection did not go through.</string>
+    <string name="settings_sync_connection_failed_storage">Campfire could not read or save the connection on this device. It will try again the next time it starts.</string>
     <string name="settings_sync_connected_as">Connected as %1$s</string>
     <string name="settings_sync_disconnect">Disconnect</string>
     <string name="settings_sync_disconnect_confirmation">Disconnect %1$s? Campfire forgets the account and stops syncing. Nothing is removed from the library or from the cloud folder.</string>

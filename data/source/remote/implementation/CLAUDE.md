@@ -55,6 +55,8 @@ redirect URIs character for character, which is why the desktop port is fixed.
   renewed inside a single `SyncCredentialsStore.update`, so the several requests of one run cannot each start a
   refresh and have the last one to finish overwrite the tokens the others are using. The store remembers only what it
   has seen stored: a write that is refused or cancelled drops the cache, and the next caller reads the storage again.
+  A read the storage refuses (`LibraryStorageException`) is thrown and not cached, like a cancelled one, so a document
+  without tokens is never written over tokens that could not be read for a moment.
   Dropbox may hand out a new refresh token on renewal, and dropping it would end the connection silently. Whether a
   token is still good is judged by the device's clock, which can be wrong, so a 401 is answered once with a forced
   refresh and the request sent again — a refresh only of the token that was refused, so that the transfers refused

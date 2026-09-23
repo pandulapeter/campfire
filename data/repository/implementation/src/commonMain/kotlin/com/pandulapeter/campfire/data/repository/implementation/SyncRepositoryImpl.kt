@@ -157,7 +157,16 @@ internal class SyncRepositoryImpl(
                 wasInterrupted = !connected.isSyncing && connected.lastOutcome == SyncOutcome.Interrupted,
             )
         }
-        val connected = providers.firstOrNull { it.isConnected() }
+        val connected = try {
+            providers.firstOrNull { it.isConnected() }
+        } catch (exception: LibraryStorageException) {
+            // The credentials are there and could not be read right now. Shown as not connected, the user would
+            // connect again and the new authorization would be written over tokens that still work; this says
+            // what happened, starts no run, and the next start - or the next attempt - reads them again.
+            println("Could not read the stored sync credentials: ${exception.message}")
+            _syncState.update { SyncState.ConnectionFailed(providers.first().id, SyncFailureReason.STORAGE) }
+            return disconnectedResult
+        }
         if (connected == null) {
             _syncState.update { SyncState.Disconnected }
             return disconnectedResult
@@ -269,14 +278,13 @@ internal class SyncRepositoryImpl(
         syncJob = null
         withContext(NonCancellable) {
             providers.forEach { provider ->
-                if (provider.isConnected()) {
-                    try {
-                        provider.disconnect()
-                    } catch (exception: CancellationException) {
-                        throw exception
-                    } catch (exception: Exception) {
-                        println("Could not disconnect from ${provider.id}: ${exception.message}")
-                    }
+                // Asked inside the try, so that credentials that cannot be read right now still end in a disconnect.
+                try {
+                    if (provider.isConnected()) provider.disconnect()
+                } catch (exception: CancellationException) {
+                    throw exception
+                } catch (exception: Exception) {
+                    println("Could not disconnect from ${provider.id}: ${exception.message}")
                 }
             }
             // The index describes a remote folder this device is no longer looking at. Kept, and it would read that
@@ -345,7 +353,15 @@ internal class SyncRepositoryImpl(
         // it rather than being dropped, which is what "stop, then start again" looks like from the settings screen.
         // Two runs at once are prevented by syncJob in synchronize().
         mutex.withLock {
-            val provider = providers.firstOrNull { it.isConnected() } ?: run {
+            val provider = try {
+                providers.firstOrNull { it.isConnected() }
+            } catch (exception: LibraryStorageException) {
+                // Outside the run's own try below, so a failure here would reach the scope's handler with nothing on
+                // screen. A successful read is cached, but a failed credentials write clears it for the next one.
+                println("Could not read the stored sync credentials: ${exception.message}")
+                updateConnected { it.copy(progress = null, lastOutcome = SyncOutcome.Failure(SyncFailureReason.STORAGE)) }
+                return@withLock
+            } ?: run {
                 // The credentials are gone while the screen still shows the account - a disconnect that did not get to
                 // the end, a storage that lost them. Saying so is the only way the user gets a button that works.
                 updateConnected { SyncState.ConnectionFailed(it.account.providerId, SyncFailureReason.AUTHORIZATION) }

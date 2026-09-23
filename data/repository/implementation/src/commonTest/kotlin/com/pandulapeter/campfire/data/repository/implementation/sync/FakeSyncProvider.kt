@@ -64,7 +64,13 @@ internal class FakeSyncProvider(
 
     override val id = SyncProviderId.DROPBOX
 
-    override suspend fun isConnected() = connected
+    /** Runs before every question about the stored credentials, which is where a test makes reading them fail. */
+    var onIsConnected: suspend () -> Unit = {}
+
+    override suspend fun isConnected(): Boolean {
+        onIsConnected()
+        return connected
+    }
 
     override fun buildAuthorizationRequest(redirectUri: String?) = RemoteAuthorizationRequest(
         authorizationUrl = "https://example.com/authorize",

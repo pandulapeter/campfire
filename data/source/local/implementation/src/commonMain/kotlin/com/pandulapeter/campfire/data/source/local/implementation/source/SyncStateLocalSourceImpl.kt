@@ -9,6 +9,7 @@
  */
 package com.pandulapeter.campfire.data.source.local.implementation.source
 
+import com.pandulapeter.campfire.data.source.local.api.LibraryStorageException
 import com.pandulapeter.campfire.data.source.local.api.SyncStateLocalSource
 import com.pandulapeter.campfire.data.source.local.implementation.storage.file.FileStorage
 import com.pandulapeter.campfire.data.source.local.implementation.storage.file.StorageDirectory
@@ -22,10 +23,18 @@ internal class SyncStateLocalSourceImpl(
     private val secretStore: SecretStore,
 ) : SyncStateLocalSource {
 
-    /** Unreadable credentials are treated as none, which the user answers by connecting again. */
+    /**
+     * Credentials that are there and cannot be read right now - a Keystore or a Keychain that refuses for a moment, a
+     * file somebody else holds - throw [LibraryStorageException], so that nobody takes them for none and writes a
+     * document without them over the good one. Anything else that goes wrong is treated as none, which the user
+     * answers by connecting again.
+     */
     override suspend fun loadSyncCredentials() = try {
         secretStore.load(CREDENTIALS_FILE_NAME) ?: migratePlainFileIfPresent()
     } catch (exception: CancellationException) {
+        throw exception
+    } catch (exception: LibraryStorageException) {
+        println("Could not read the sync credentials for now: ${exception::class.simpleName}")
         throw exception
     } catch (exception: Exception) {
         // The message of a failure is free to quote what it failed on, which here would be a token.
