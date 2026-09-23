@@ -80,7 +80,9 @@ in `:domain:*`. `:data:source:local:implementation` uses it directly for the met
 - `ChordProTags` — the tags of a song. ChordPro's own `{tag: Needs study}` directive, one tag per directive and as
   many of them as the song has; `{meta: tag Needs study}`, which the spec documents as the same thing, is read as
   well but never written. The value is taken whole, commas included, because the spec calls a tag arbitrary text — arbitrary text on one line: a line break in a value handed to `addTag` or `removeTag` is read as a space, since it would otherwise end the directive and leave the rest of it in the song as lyrics.
-  Two spellings of the same word are one tag everywhere: matching ignores case, and the library shows the spelling
+  Two spellings of the same word are one tag everywhere: matching ignores case, and a caller may pass the Unicode
+  normalization this module does not have (`fold`), which the app does, so that a tag written on a Mac is the tag typed
+  anywhere else; the library shows the spelling
   of the song that comes first by file name. `addTag` and `removeTag` edit the text rather than the model, for the same
   reason `ChordProTransposer.transposeText` does — the result is written straight back to the user's file, so their
   own formatting has to survive a chip being tapped in the viewer. A new tag lands after the last one the file

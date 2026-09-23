@@ -10,6 +10,7 @@
 package com.pandulapeter.campfire.domain.implementation.useCases
 
 import com.pandulapeter.campfire.chordpro.ChordProTags
+import com.pandulapeter.campfire.data.model.domain.normalizedToNfc
 import com.pandulapeter.campfire.domain.api.useCases.SetChordProTagUseCase
 import org.koin.core.annotation.Factory
 
@@ -17,8 +18,8 @@ import org.koin.core.annotation.Factory
 class SetChordProTagUseCaseImpl internal constructor() : SetChordProTagUseCase {
 
     override operator fun invoke(text: String, tag: String, isSelected: Boolean) = if (isSelected) {
-        ChordProTags.addTag(text, tag)
+        ChordProTags.addTag(text, tag, fold = String::normalizedToNfc)
     } else {
-        ChordProTags.removeTag(text, tag)
+        ChordProTags.removeTag(text, tag, fold = String::normalizedToNfc)
     }
 }

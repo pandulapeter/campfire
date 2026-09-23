@@ -12,6 +12,7 @@ package com.pandulapeter.campfire.data.source.local.implementation.mapper
 import com.pandulapeter.campfire.chordpro.model.ChordProSummary
 import com.pandulapeter.campfire.chordpro.model.displayTitle
 import com.pandulapeter.campfire.data.model.domain.Song
+import com.pandulapeter.campfire.data.model.domain.normalizedToNfc
 import com.pandulapeter.campfire.data.source.local.implementation.isNamed
 import com.pandulapeter.campfire.data.source.local.implementation.knownExtension
 import com.pandulapeter.campfire.data.source.local.implementation.songFileName
@@ -31,7 +32,9 @@ internal fun StoredFileInfo.toSong(summary: ChordProSummary): Song {
         artist = artist,
         key = summary.metadata.key?.takeIf { it.isNotBlank() },
         transpose = summary.metadata.transpose,
-        tags = summary.metadata.tags,
+        // Composed, so that a tag written on a Mac and the same tag typed anywhere else are one tag to the filter:
+        // the two forms look the same and every comparison above this is by case only. See normalizedToNfc.
+        tags = summary.metadata.tags.map { it.normalizedToNfc() }.distinctBy { it.lowercase() },
         languages = summary.metadata.languages,
         hasChords = summary.hasChords,
         // A file that names no title of its own is titled by its file name, so there is nothing better to rename it

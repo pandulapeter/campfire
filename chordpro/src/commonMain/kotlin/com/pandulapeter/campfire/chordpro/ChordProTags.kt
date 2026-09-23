@@ -22,10 +22,14 @@ object ChordProTags {
     /**
      * Writes a `{tag}` directive for [tag], after the last tag the file already has or, if it has none, at the end of
      * the directives it opens with. A blank tag, or one the song already carries, returns the text unchanged.
+     *
+     * @param fold What two spellings of a tag are compared as, besides their case — the caller's Unicode normalization,
+     *   which this module has none of. The tag is written as it was given.
      */
-    fun addTag(text: String, tag: String): String {
+    fun addTag(text: String, tag: String, fold: (String) -> String = { it }): String {
         val trimmedTag = tag.asTag()
-        if (trimmedTag.isEmpty() || ChordProParser.parseMetadata(text).tags.any { it.equals(trimmedTag, ignoreCase = true) }) return text
+        val key = fold(trimmedTag)
+        if (trimmedTag.isEmpty() || ChordProParser.parseMetadata(text).tags.any { fold(it).equals(key, ignoreCase = true) }) return text
         val lines = ChordProSyntax.splitLines(text).toMutableList()
         lines.add(ChordProSyntax.metadataInsertionIndex(lines, ChordProSyntax.TAG_NAME), "{${ChordProSyntax.TAG_NAME}: $trimmedTag}")
         return ChordProSyntax.joinLines(lines, text)
@@ -34,11 +38,14 @@ object ChordProTags {
     /**
      * Drops every tag directive naming [tag], whichever of the two spellings of it the file uses. A directive holds
      * one tag, so there is never anything left of the line to keep.
+     *
+     * @param fold As for [addTag]: every spelling it folds to the same key is dropped, a decomposed one included.
      */
-    fun removeTag(text: String, tag: String): String {
+    fun removeTag(text: String, tag: String, fold: (String) -> String = { it }): String {
         val trimmedTag = tag.asTag()
         if (trimmedTag.isEmpty()) return text
-        val lines = ChordProSyntax.splitLines(text).filterNot { line -> line.tag()?.equals(trimmedTag, ignoreCase = true) == true }
+        val key = fold(trimmedTag)
+        val lines = ChordProSyntax.splitLines(text).filterNot { line -> line.tag()?.let(fold)?.equals(key, ignoreCase = true) == true }
         return ChordProSyntax.joinLines(lines, text)
     }
 

@@ -157,4 +157,18 @@ class ChordProTagsTest {
 
         assertEquals(text, ChordProTags.removeTag(ChordProTags.addTag(text, "a\rb"), "a\rb"))
     }
+
+    @Test
+    fun `a tag is not added again in another normalization form`() {
+        assertEquals("{tag: Cafe\u0301}", ChordProTags.addTag("{tag: Cafe\u0301}", "Caf\u00e9", fold))
+        assertEquals("{tag: Cafe\u0301}\n{tag: Caf\u00e9}", ChordProTags.addTag("{tag: Cafe\u0301}", "Caf\u00e9"))
+    }
+
+    @Test
+    fun `removing a tag removes it in every normalization form`() {
+        assertEquals("[C]a", ChordProTags.removeTag("{tag: Cafe\u0301}\n{tag: Caf\u00e9}\n[C]a", "Caf\u00e9", fold))
+    }
+
+    /** A stand-in for the Unicode normalization the app passes, which this module does not have. */
+    private val fold = { value: String -> value.replace("e\u0301", "\u00e9") }
 }

@@ -111,7 +111,7 @@ holds the `@Module @ComponentScan object DataLocalSourceModule`, and every local
   (`LibraryFiles.SONG_EXTENSIONS`) — hidden files left out, by `LibraryFiles.isSongFileName`, the rule every listing
   of the folder shares — but writes only `.cho` — `importFileName` included, so a `.crd` that is imported
   is stored as the `.cho` it is written back as — and gets a song's title, artist, key, the `{transpose}` it opens with (which
-  travels with the key, since the key a list names is the one the song sounds in), tags and "has chords" from a single
+  travels with the key, since the key a list names is the one the song sounds in), tags (composed to NFC and merged, the way file names are) and "has chords" from a single
   `:chordpro` `summarize` call, so that neither the file nor the text is walked twice. The scan reads a batch of
   files at a time rather than all of them at once: that is what bounds the concurrency on a library of thousands,
   and the list is handed to the caller after the first batch and then whenever it has doubled, so that the song list
