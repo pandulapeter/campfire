@@ -90,8 +90,9 @@ compose.desktop {
                 iconFile.set(project.file("src/main/resources/appIcon.icns"))
                 bundleID = "com.pandulapeter.campfire"
                 appCategory = "public.app-category.music"
-                // What the bundled JDK and skiko are built for; the plugin's own default is older than either.
-                minimumSystemVersion = "11.0"
+                // The App Store takes a Mac app built for Apple silicon alone only from macOS 12 on. The bundled JDK and
+                // skiko would run on 11, and the plugin's own default is older than either.
+                minimumSystemVersion = "12.0"
                 packageBuildVersion = project.property("campfire.mac.buildNumber").toString()
                 // Not fileAssociation(): the plugin writes its own document type with the "****" OS type, which claims
                 // every kind of file, and with no rank or content type. These are the iOS app's document types.
@@ -232,6 +233,25 @@ val addLaunchAfterInstallToMsi = tasks.register<AddLaunchAfterInstallToMsi>("add
 }
 tasks.matching { it.name == "packageMsi" || it.name == "packageReleaseMsi" }.configureEach {
     finalizedBy(addLaunchAfterInstallToMsi)
+}
+
+/**
+ * Clears the extended attributes of the provisioning profiles before they are copied into the bundle. A profile is
+ * downloaded through a browser, which marks it with `com.apple.quarantine`, the copy keeps the mark, and App Store
+ * Connect refuses a build with a quarantined file anywhere in it - after the upload, by mail.
+ */
+tasks.matching { isMacAppStoreBuild && (it.name == "createDistributable" || it.name == "createReleaseDistributable") }.configureEach {
+    val profiles = listOf("campfire.mac.provisioningProfile", "campfire.mac.runtimeProvisioningProfile")
+        .map { project.property(it).toString() }
+        .filter { it.isNotEmpty() }
+        .map { project.file(it) }
+    doFirst {
+        profiles.filter { it.isFile }.forEach { profile ->
+            val xattr = ProcessBuilder("xattr", "-c", profile.absolutePath).redirectErrorStream(true).start()
+            val output = xattr.inputStream.bufferedReader().readText()
+            if (xattr.waitFor() != 0) throw GradleException("Could not clear the attributes of ${profile.name}:\n$output")
+        }
+    }
 }
 
 /**

@@ -41,8 +41,8 @@ Delete this file once the last box is ticked: by then `CLAUDE.md` describes how 
 
 ## 2. Changes to the project
 
-- [x] `TargetFormat.Pkg`, `bundleID`, `appCategory` (*Music*), `minimumSystemVersion` 11.0 (what the bundled JDK
-      and skiko are built for) and `packageBuildVersion` from `campfire.mac.buildNumber`, in
+- [x] `TargetFormat.Pkg`, `bundleID`, `appCategory` (*Music*), `minimumSystemVersion` 12.0 (App Store Connect
+      refuses an arm64-only build that asks for less) and `packageBuildVersion` from `campfire.mac.buildNumber`, in
       `app/desktop/build.gradle.kts`.
 - [x] Signing from `campfire.mac.signingIdentity` / `.signingKeychain`, and — only with
       `campfire.desktop.distribution=mac-app-store` — `appStore`, the two profiles
