@@ -70,7 +70,9 @@ internal class SongLocalSourceImpl(
         songs
     }
 
-    override suspend fun loadSongFileNames() = fileStorage.list(StorageDirectory.SONGS).map { it.name }.filter(LibraryFiles::isSongFileName)
+    override suspend fun loadSongFileSizes() = fileStorage.list(StorageDirectory.SONGS)
+        .filter { LibraryFiles.isSongFileName(it.name) }
+        .associate { it.name to it.size }
 
     override suspend fun loadSong(fileName: String): Song? = withContext(Dispatchers.Default) {
         fileStorage.info(StorageDirectory.SONGS, fileName)?.readSong()

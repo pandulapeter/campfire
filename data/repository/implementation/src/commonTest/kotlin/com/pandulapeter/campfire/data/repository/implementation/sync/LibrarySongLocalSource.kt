@@ -25,7 +25,7 @@ internal class LibrarySongLocalSource(private val library: FakeLibraryFileLocalS
     override suspend fun loadSongs(onProgress: (List<Song>) -> Unit) =
         library.files.keys.filter { it.kind == LibraryFileKind.SONG }.map { song(it.name) }
 
-    override suspend fun loadSongFileNames() = throw UnsupportedOperationException()
+    override suspend fun loadSongFileSizes() = throw UnsupportedOperationException()
 
     override suspend fun loadSong(fileName: String) = if (key(fileName) in library.files) song(fileName) else null
 

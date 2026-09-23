@@ -42,7 +42,7 @@ internal class SongRepositoryImpl(
 
     override suspend fun loadSongsIfNeeded() = loadDataIfNeeded()
 
-    override suspend fun loadSongFileNames() = songLocalSource.loadSongFileNames()
+    override suspend fun loadSongFileSizes() = songLocalSource.loadSongFileSizes()
 
     override suspend fun rescan() {
         songContentRepository.invalidate()

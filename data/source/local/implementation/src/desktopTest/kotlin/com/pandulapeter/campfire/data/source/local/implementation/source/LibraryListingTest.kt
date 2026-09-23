@@ -59,6 +59,14 @@ class LibraryListingTest {
     }
 
     @Test
+    fun `the song files of the folder are listed with their sizes`() = runBlocking {
+        fileStorage.writeText(StorageDirectory.SONGS, "a.cho", "abc")
+        fileStorage.writeText(StorageDirectory.SONGS, "notes.txt", "Not a song.")
+
+        assertEquals(mapOf("a.cho" to 3L), SongLocalSourceImpl(fileStorage).loadSongFileSizes())
+    }
+
+    @Test
     fun `a song file larger than any song is left out of the scan`() = runBlocking {
         writeSongs()
         fileStorage.writeBytes(StorageDirectory.SONGS, "b.cho", tooLarge())

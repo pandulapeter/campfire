@@ -81,9 +81,10 @@ The ones that carry real logic:
   The name the file leaves under goes through `ExportFileNames.kt` (`campfire_library.zip`, `campfire_songs.zip`, the
   song's or setlist's own title otherwise); what is *inside* an archive keeps its library names, since a
   setlist points at its songs by file name and the import follows those names. A library export whose song or setlist
-  scan failed is a failed export (null), never an archive of what happened to be read; one that could not read some
-  files returns their names beside the archive, the songs held against the folder (`SongRepository.loadSongFileNames`)
-  rather than the scan, so that a song the scan skipped is named too. The view model says so after the save.
+  scan failed is a failed export (null), never an archive of what happened to be read; the songs are taken from the folder
+  (`SongRepository.loadSongFileSizes`) rather than from the scan, so that a song written since the scan is in the
+  archive and one the scan skipped is read again; what cannot be read, or is larger than a song can be (and so is
+  never opened), is named beside the archive. The view model says so after the save.
 - `CreateSongUseCaseImpl` — writes the new-song template (`{title}`, `{artist}`, `{key}` and an empty verse).
 - `TransposeChordProUseCaseImpl` / `TransposeChordProTextUseCaseImpl` / `ParseChordProUseCaseImpl` /
   `ConvertChordProNotationUseCaseImpl` — thin wrappers over `:chordpro`, so the presentation layer never calls the

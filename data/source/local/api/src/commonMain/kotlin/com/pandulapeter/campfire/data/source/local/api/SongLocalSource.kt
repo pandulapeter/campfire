@@ -25,11 +25,12 @@ interface SongLocalSource {
     suspend fun loadSongs(onProgress: (List<Song>) -> Unit): List<Song>
 
     /**
-     * The name of every song file in the library folder, whether [loadSongs] could read it or not, without opening any
-     * of them. What an export holds its archive against, since the songs a scan skipped are exactly the ones that
-     * would otherwise be left out of it without a word.
+     * Every song file in the library folder with its size in bytes, whether [loadSongs] could read it or not, without
+     * opening any of them. What an export works from, since the songs a scan skipped, and the ones written since it
+     * ran, are exactly the ones that would otherwise be left out of it without a word - and the size is what tells one
+     * that can be read from one too large to be a song, which is not opened at all.
      */
-    suspend fun loadSongFileNames(): List<String>
+    suspend fun loadSongFileSizes(): Map<String, Long>
 
     /** The metadata of a single file, so that saving one song does not have to rescan the whole library. */
     suspend fun loadSong(fileName: String): Song?

@@ -10,6 +10,7 @@
 package com.pandulapeter.campfire.domain.implementation.useCases
 
 import com.pandulapeter.campfire.data.model.DataState
+import com.pandulapeter.campfire.data.model.domain.ImportLimits
 import com.pandulapeter.campfire.data.model.domain.ImportedFile
 import com.pandulapeter.campfire.data.model.domain.Setlist
 import com.pandulapeter.campfire.data.model.domain.Song
@@ -23,8 +24,10 @@ import kotlinx.coroutines.flow.emptyFlow
 import kotlinx.coroutines.test.runTest
 import kotlin.test.Test
 import kotlin.test.assertEquals
+import kotlin.test.assertFalse
 import kotlin.test.assertNotNull
 import kotlin.test.assertNull
+import kotlin.test.assertTrue
 
 /**
  * What the library export puts into the archive and what it says it left out: an export is the one copy of the library
@@ -33,6 +36,7 @@ import kotlin.test.assertNull
 class ExportLibraryUseCaseImplTest {
 
     private val archive = FakeArchiveRepository()
+    private val songContents = FakeSongContentRepository()
 
     @Test
     fun `exports nothing when the song scan failed`() = runTest {
@@ -67,13 +71,36 @@ class ExportLibraryUseCaseImplTest {
     }
 
     @Test
-    fun `names a song that is in the folder but not in the scan`() = runTest {
+    fun `names a song in the folder that is too large to be a song`() = runTest {
         val result = useCase(
             songs = listOf(song("a"), song("b"), song("c")),
-            folder = listOf("a.cho", "b.cho", "c.cho", "huge.cho"),
+            folder = mapOf("a.cho" to 10L, "b.cho" to 10L, "c.cho" to 10L, "huge.cho" to ImportLimits.MAX_TEXT_FILE_SIZE + 1),
         ).invoke()
 
         assertEquals(listOf("huge.cho"), assertNotNull(result).skippedFileNames)
+        assertFalse("huge.cho" in songContents.reads)
+    }
+
+    @Test
+    fun `exports a song in the folder that the scan has not seen yet`() = runTest {
+        val result = useCase(
+            songs = listOf(song("a"), song("b")),
+            folder = mapOf("a.cho" to 10L, "b.cho" to 10L, "new.cho" to 10L),
+        ).invoke()
+
+        assertEquals(emptyList(), assertNotNull(result).skippedFileNames)
+        assertTrue("songs/new.cho" in archive.packed.keys)
+    }
+
+    @Test
+    fun `names a song in the folder it could not read`() = runTest {
+        val result = useCase(
+            songs = listOf(song("a")),
+            folder = mapOf("a.cho" to 10L, "b.cho" to 10L),
+            unreadable = setOf("b.cho"),
+        ).invoke()
+
+        assertEquals(listOf("b.cho"), assertNotNull(result).skippedFileNames)
     }
 
     @Test
@@ -99,22 +126,22 @@ class ExportLibraryUseCaseImplTest {
     private fun useCase(
         songs: List<Song>?,
         setlists: List<Setlist>? = emptyList(),
-        folder: List<String> = songs.orEmpty().map { it.fileName },
+        folder: Map<String, Long> = songs.orEmpty().associate { it.fileName to 10L },
         unreadable: Set<String> = emptySet(),
     ) = ExportLibraryUseCaseImpl(
         songRepository = FakeSongRepository(scanned = songs, folder = folder),
-        songContentRepository = FakeSongContentRepository(unreadable = unreadable),
+        songContentRepository = songContents.also { it.unreadable = unreadable },
         setlistRepository = FakeSetlistRepository(scanned = setlists, unreadable = unreadable),
         archiveRepository = archive,
     )
 
     private class FakeSongRepository(
         private val scanned: List<Song>?,
-        private val folder: List<String>,
+        private val folder: Map<String, Long>,
     ) : SongRepository {
         override val songs: Flow<DataState<List<Song>>> = emptyFlow()
         override suspend fun loadSongsIfNeeded() = scanned
-        override suspend fun loadSongFileNames() = folder
+        override suspend fun loadSongFileSizes() = folder
         override suspend fun rescan() = throw UnsupportedOperationException()
         override suspend fun saveSong(content: SongContent, expectedText: String?) = throw UnsupportedOperationException()
         override suspend fun createSong(title: String, artist: String, text: String) = throw UnsupportedOperationException()
@@ -124,10 +151,14 @@ class ExportLibraryUseCaseImplTest {
         override suspend fun deleteSong(fileName: String) = throw UnsupportedOperationException()
     }
 
-    private class FakeSongContentRepository(private val unreadable: Set<String>) : SongContentRepository {
+    private class FakeSongContentRepository : SongContentRepository {
+        var unreadable = emptySet<String>()
+        val reads = mutableListOf<String>()
         override val invalidations: Flow<String?> = emptyFlow()
-        override suspend fun loadSongContent(fileName: String, shouldCache: Boolean) =
-            if (fileName in unreadable) null else SongContent(fileName = fileName, text = "{title: $fileName}")
+        override suspend fun loadSongContent(fileName: String, shouldCache: Boolean): SongContent? {
+            reads += fileName
+            return if (fileName in unreadable) null else SongContent(fileName = fileName, text = "{title: $fileName}")
+        }
 
         override suspend fun invalidate(fileName: String?) = throw UnsupportedOperationException()
     }

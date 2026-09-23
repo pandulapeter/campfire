@@ -113,7 +113,7 @@ class ImportFilesUseCaseImplTest {
         val importCalls = mutableListOf<Pair<String, Boolean>>()
         override val songs: Flow<DataState<List<Song>>> = emptyFlow()
         override suspend fun loadSongsIfNeeded() = files.keys.map(::song)
-        override suspend fun loadSongFileNames() = files.keys.toList()
+        override suspend fun loadSongFileSizes() = files.mapValues { it.value.length.toLong() }
         override suspend fun rescan() = Unit
         override suspend fun saveSong(content: SongContent, expectedText: String?) = throw UnsupportedOperationException()
         override suspend fun createSong(title: String, artist: String, text: String) = throw UnsupportedOperationException()

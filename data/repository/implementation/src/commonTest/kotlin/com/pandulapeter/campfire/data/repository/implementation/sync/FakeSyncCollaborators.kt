@@ -122,7 +122,7 @@ internal class RecordingSongRepository(
 
     override suspend fun loadSongsIfNeeded(): List<Song>? = throw UnsupportedOperationException()
 
-    override suspend fun loadSongFileNames(): List<String> = throw UnsupportedOperationException()
+    override suspend fun loadSongFileSizes(): Map<String, Long> = throw UnsupportedOperationException()
 
     override suspend fun rescan() {
         rescanCount++

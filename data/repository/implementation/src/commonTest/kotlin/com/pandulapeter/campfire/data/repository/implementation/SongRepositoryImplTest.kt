@@ -153,7 +153,7 @@ class SongRepositoryImplTest {
 
         override suspend fun loadSongs(onProgress: (List<Song>) -> Unit) = files.keys.map(::song)
 
-        override suspend fun loadSongFileNames() = throw UnsupportedOperationException()
+        override suspend fun loadSongFileSizes() = throw UnsupportedOperationException()
 
         override suspend fun loadSong(fileName: String) = if (fileName in files) song(fileName) else null
 
