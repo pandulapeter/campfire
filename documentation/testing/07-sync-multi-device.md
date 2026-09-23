@@ -10,9 +10,8 @@
 
 # Dropbox sync across devices — manual test script
 
-Written 2026-09-23 against `master` at `2740892c`. Sync is the one part of Campfire that can destroy a library that is
-not on the device being used: a wrong deletion propagates to every device on the next run. **None of the checks below
-has ever been run against a real account.** This is the most important document of the set; section 3 (deletions and
+Sync is the one part of Campfire that can destroy a library that is not on the device being used: a wrong deletion
+propagates to every device on the next run. This is the most important document of the set; section 3 (deletions and
 the deletion guard) is the most important part of it.
 
 The rules being tested, in one breath (details in `documentation/sync.md`): content decides what changed, never a
@@ -22,15 +21,15 @@ library **on this device** stops and asks, and so does one that would delete mos
 files are gone from this device (and it always asks when this device's library is empty); an interrupted run is
 reported next time and not restarted by itself.
 
-`🆕` marks tests of something changed in this round. **P0** = can lose or corrupt a library, **P1** = visible
-breakage, **P2** = polish. Single-device sync behaviour that is specific to one platform (the web's consent page, the
+**P0** = can lose or corrupt a library, **P1** = visible breakage, **P2** = polish. Single-device sync behaviour that is specific to one platform (the web's consent page, the
 Android foreground notification, the iOS background task) is in that platform's own document.
 
 ## Before you start
 
-- **The account.** Use the throwaway Dropbox account only; it will be wiped. Never connect a real one while running
-  this document. Everything Campfire touches is `Apps/Campfire Sync/songs` and `Apps/Campfire Sync/setlists` in that
-  account (app-folder permission). "dropbox.com" below means that folder in the Dropbox web UI, standing in for a
+- **The account.** The tests below empty the app folder and delete from it on purpose. Use an account made for
+  testing, or snapshot the folder first and restore it afterwards, as the README's "The Dropbox account" describes.
+  Everything Campfire touches is `Apps/Campfire Sync/songs` and `Apps/Campfire Sync/setlists` in that account
+  (app-folder permission). "dropbox.com" below means that folder in the Dropbox web UI, standing in for a
   device.
 - **Builds.** Every build must have `campfire.dropbox.appKey` in `local.properties`; a build without it says "This
   build of Campfire was made without sync credentials…" in Settings → Library. Registered redirects: `campfire://oauth`
@@ -56,7 +55,7 @@ Android foreground notification, the iOS background task) is in that platform's 
 - **Fixtures** (see `README.md`): fixture: the Windows-illegal-names folder, fixture: NFD vs NFC titles, fixture: the
   large library generator, fixture: the keep-both pair.
 - **Resetting between sections:** Disconnect on every device (leaves files on both sides), empty `Apps/Campfire Sync` on
-  dropbox.com, and clear or replace each library. A disconnect forgets the account and the index; reconnecting the
+  dropbox.com (or `tools/dropbox_folder.py … empty /songs` and `… empty /setlists`), and clear or replace each library. A disconnect forgets the account and the index; reconnecting the
   same account compares by content.
 
 ---
@@ -103,7 +102,7 @@ Android foreground notification, the iOS background task) is in that platform's 
   `preferences`. 2: `sync-index.json` does not exist afterwards.
   <sub>[r1-17][r2-24][sync.md]</sub>
 
-- [ ] **SYNC-006** 🆕 (P0) A fresh installation never inherits a connection
+- [ ] **SYNC-006** (P0) A fresh installation never inherits a connection
   1. IOS: connect and sync. Delete the app. Reinstall it (from Xcode / TestFlight) and open it.
   2. AND: connect and sync. Uninstall, reinstall, open. (And an Android backup restore, if a spare phone is at hand:
      see `01-android.md`.)
@@ -138,10 +137,10 @@ Android foreground notification, the iOS background task) is in that platform's 
   moves. Hidden local files are never uploaded.
   <sub>[r2-01][r2-27][sync.md]</sub>
 
-- [ ] **SYNC-013** 🆕 (P0) A name written two ways is one song (Unicode NFC)
+- [ ] **SYNC-013** (P0) A name written two ways is one song (Unicode NFC)
   1. On IOS (or MAC) create a song titled with a Cyrillic or accented title from fixture: NFD vs NFC titles (e.g.
      `Катюша` by `Кино`, and one with a decomposed `й`). Sync.
-  2. On dropbox.com (or via the API, see section 7), upload the **decomposed** spelling of the same name with
+  2. On dropbox.com (or with `tools/dropbox_folder.py … put`), upload the **decomposed** spelling of the same name with
      different content.
   3. Sync MAC, AND, WEB, WIN twice each.
   **Expected:** one file per song on Dropbox and on every device — never two that look identical. Dropbox takes the
@@ -150,7 +149,7 @@ Android foreground notification, the iOS background task) is in that platform's 
   since its last sync.) A second run on each device plans nothing.
   <sub>[r5-07][r2-26]</sub>
 
-- [ ] **SYNC-014** 🆕 (P1) A name Windows cannot store is skipped on Windows and named, not failed forever
+- [ ] **SYNC-014** (P1) A name Windows cannot store is skipped on Windows and named, not failed forever
   1. Upload fixture: the Windows-illegal-names folder into `Apps/Campfire Sync/songs` (names with `? : * " < > |`, and
      a trailing space or dot if Dropbox accepts it).
   2. Sync WIN. Sync MAC.
@@ -231,7 +230,7 @@ Prepare: at least 12 songs synced to two devices A and B (MAC and WEB are the qu
   them). Check the Hungarian wording once.
   <sub>[sync.md][r4-38][r4-46]</sub>
 
-- [ ] **SYNC-034** 🆕 (P0) A library folder gone from this device stops the run instead of emptying the cloud
+- [ ] **SYNC-034** (P0) A library folder gone from this device stops the run instead of emptying the cloud
   1. Desktop A with 12 synced songs: quit Campfire, move `library/songs` out of the data folder (keep `setlists`),
      start Campfire.
   2. Read the question; look at dropbox.com.
@@ -246,7 +245,7 @@ Prepare: at least 12 songs synced to two devices A and B (MAC and WEB are the qu
   though only 2 are gone, because the library is empty. Hungarian sentences and buttons correct.
   <sub>[r5-01][sync.md]</sub>
 
-- [ ] **SYNC-035** 🆕 (P0) A library folder replaced with a different one is not taken for mass deletions
+- [ ] **SYNC-035** (P0) A library folder replaced with a different one is not taken for mass deletions
   1. Desktop A with 12 synced songs: quit, move `library/songs` away and put 3 unrelated songs in its place (a restored
      old backup, a folder copied from another computer). Start A.
   2. Answer **Keep them and download**.
@@ -291,7 +290,7 @@ Prepare: at least 12 songs synced to two devices A and B (MAC and WEB are the qu
   the singular sentence with its name. Hungarian too.
   <sub>[r3-38]</sub>
 
-- [ ] **SYNC-043** 🆕 (P0) Saving a song while a run downloads it keeps the saved text
+- [ ] **SYNC-043** (P0) Saving a song while a run downloads it keeps the saved text
   1. On B (or dropbox.com), change a long song X; sync B.
   2. On A, turn on "Very Bad Network". Press Sync now; while "Syncing…" shows, open X in the editor, change a word, and
      Save before the run finishes.
@@ -302,16 +301,16 @@ Prepare: at least 12 songs synced to two devices A and B (MAC and WEB are the qu
   downloads that setlist.
   <sub>[r3-03][follow-up: sync save race]</sub>
 
-- [ ] **SYNC-044** 🆕 (P0) Saving a song while a run deletes it keeps the song
+- [ ] **SYNC-044** (P0) Saving a song while a run deletes it keeps the song
   1. Delete song Y on B, sync B.
   2. On A with "Very Bad Network", Sync now; while it runs, open Y and save an edit.
   **Expected:** Y survives on A with the edit, and goes back up to Dropbox (an edit beats a deletion) — it is not
   deleted from under the save.
   <sub>[follow-up: sync save race]</sub>
 
-- [ ] **SYNC-045** 🆕 (P1) A file changed on the other side through every pass is reported, not "synced successfully"
-  1. On A, edit song Z. On the other side, keep rewriting `songs/z.cho` every half second for a minute (the API loop
-     in section 7 — this is impractical by hand).
+- [ ] **SYNC-045** (P1) A file changed on the other side through every pass is reported, not "synced successfully"
+  1. On A, edit song Z. On the other side, keep rewriting `songs/z.cho` every half second for a minute (`tools/dropbox_folder.py … rewrite songs/z.cho 60`
+     — this is impractical by hand).
   2. Sync now on A while the loop runs.
   **Expected:** the run ends with "One file could not be synced: z.cho" (or a kept-both line plus that); "Last synced
   successfully on …" **does not move**. Stop the loop, Sync now: it settles (Z plus a ` (2)` copy) and the date moves.
@@ -387,55 +386,26 @@ Run in this order after sections 1–5, or on its own as a regression pass befor
 11. Final: Sync now on every device twice; the second run of each plans nothing; the file counts match on every
     device and Dropbox.
 
-## 7. Claude-run on this Mac
+## 7. Running this document from a script
 
-Once given the throwaway account, Claude can run most of sections 2–5 on this Mac by itself, with up to five
-"devices" on one machine. What it needs from the user is at the end.
+Most of sections 2–5 run on one Mac without a person at the keyboard, with the setup the README's "Running the tests
+from a script" describes: two or more isolated desktop installations as devices A and B, the web build, the Android
+emulator and the iOS simulator as further devices, and `tools/dropbox_folder.py` standing in for dropbox.com. A
+workable order:
 
-**The devices Claude can drive:**
+1. Build every target with the app key. Connect the first desktop installation with an empty library: if the account
+   holds a library that matters, that first run is the snapshot (see the README).
+2. Connect the other devices one after another.
+3. Sections 2 and 4 across the desktop installations and the web. SYNC-013 and SYNC-014 with uploads through
+   `dropbox_folder.py` (SYNC-014 only as far as "the Mac receives them" — the Windows half needs WIN).
+4. Section 3 in order, on the desktop installations only: SYNC-034 and SYNC-035 move library folders around, which
+   only an isolated home makes harmless.
+5. SYNC-043 and SYNC-044 need a run that lasts: a slowed network, or a test-only delay before the transfer of files
+   named `slowtest…`. SYNC-045 uses `dropbox_folder.py … rewrite`.
+6. Section 5 with `kill -9`, `adb shell am force-stop` and `xcrun simctl terminate`.
+7. Section 6, without WIN.
+8. Disconnect every test installation, restore the folder from the snapshot (or empty it), and write up the run log.
 
-- **Two desktop installations at once.** Each is the desktop app with its own `user.home` (the data folder and the
-  single-instance lock are both derived from it, so two homes are two independent installations): build once with
-  `./gradlew :app:desktop:createDistributable` and start `…/build/compose/binaries/main/app/Campfire.app/Contents/MacOS/Campfire`
-  with `JAVA_TOOL_OPTIONS=-Duser.home=<scratchpad>/homeA` (and `homeB`), or temporarily add
-  `jvmArgs("-Duser.home=…")` to `app/desktop/build.gradle.kts` for `:app:desktop:run` and revert it afterwards.
-  Libraries and `preferences/sync-index.json` are then plain files Claude reads and seeds directly. Clicks are
-  unreliable from a session, so anything that has to be pressed is done by a temporary in-app driver (a
-  `LaunchedEffect` calling the view model's sync, delete, save and answer functions and writing marker files), with
-  window-only screenshots (`screencapture -l <window id>`, app activated just before each capture) as the second
-  check. Desktop A and B connect **one after the other**: the loopback redirect uses the fixed port 53682.
-- **The web build** on the dev server in the Claude-in-Chrome tab (with the `requestAnimationFrame` override the
-  hidden tab needs), its OPFS library read and written from the console.
-- **The iOS simulator** (built with the `-target iosApp` recipe, installed with `simctl`), its library in the app
-  container, taps through a CGEvent tool gated on the DeviceHub window being frontmost. A reinstall on the simulator is
-  a reasonable stand-in for SYNC-006 if the simulator's keychain survives the uninstall the way a device's does; the
-  run says which it observed.
-- **The Android emulator** (`.debug` build via `adb install`), its library seeded as root (`adb root`, copy,
-  `chown`), read with `run-as`, driven with `adb shell input`, killed with `am force-stop`.
-- **"dropbox.com" as a device**, through the Dropbox HTTP API rather than the web UI: desktop A's
-  `preferences/sync-credentials.json` holds a refresh token; exchanging it for an access token needs only the app key
-  (`POST https://api.dropboxapi.com/oauth2/token` with `grant_type=refresh_token`, `refresh_token`, `client_id`), after
-  which `files/list_folder`, `files/upload`, `files/delete_v2` and `files/move_v2` on `/songs` and `/setlists` (paths
-  are relative to the app folder) let Claude empty the folder, upload the fixtures (decomposed names, illegal names,
-  8 MiB+ files), and run SYNC-045's rewrite loop. The token stays in the scratchpad, is never written into the
-  repository or a log, and the account is wiped afterwards. The Dropbox web UI in Chrome is the fallback.
-
-**Order of runs:** (1) build all four targets with the app key; (2) connect desktop A (user approves), then desktop B,
-web, simulator, emulator; (3) SYNC-010–012, 015–019 across desktop A/B and web; (4) SYNC-013 and SYNC-014 via API
-uploads (SYNC-014 only as far as "the Mac receives them" — the Windows half needs WIN); (5) section 3 in order on
-desktop A with desktop B as the other device — **SYNC-034/035 first on the scratch homes only**; (6) section 4,
-including SYNC-043/044 with a slowed network (Network Link Conditioner needs the user to switch it on, or a delay
-patched into the provider for that run) and SYNC-045 with the API loop; (7) section 5 with `kill -9`, `am
-force-stop` and `simctl terminate`; (8) the scripted pass of section 6 minus WIN; (9) disconnect everything, empty
-the app folder, report.
-
-**What still needs the user's hands:**
-
-- Logging in to Dropbox on each consent page (password, 2FA); Claude can press Allow in Chrome but should not type
-  the password, and the desktop app opens the system's default browser, outside Claude's tab group.
-- The Windows machine (SYNC-014's Windows half, the WIN column of section 6), a real iPhone (SYNC-006 on hardware, the
-  Files-app deletion of SYNC-034, background runs), a real Android phone's backup restore.
-- Network Link Conditioner (a System Settings pane Claude should not toggle on its own) and changing the system clock
-  (SYNC-004).
-- Revoking the app in the Dropbox account settings (SYNC-003), unless the user is happy for Claude to do it in the
-  logged-in Chrome session.
+What still needs a person: logging in on a consent page, the Windows machine, a real iPhone (SYNC-006 on hardware,
+the Files-app deletion of SYNC-034, background runs), a real Android phone's backup restore, switching Network Link
+Conditioner on, changing the system clock (SYNC-004), and revoking the app in the account's settings (SYNC-003).

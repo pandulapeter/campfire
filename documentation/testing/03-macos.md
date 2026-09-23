@@ -41,7 +41,6 @@ packaged runtime that ProGuard and jlink produce. Anything that behaves the same
   (`…/Campfire.app/Contents/MacOS/Campfire`).
 
 Legend: **P0** can lose or corrupt the library, or blocks the release. **P1** is visible breakage. **P2** is polish.
-🆕 marks behaviour changed in the 2026-09-23 round of fixes.
 
 ## Smoke (10 minutes, packaged build)
 
@@ -78,24 +77,24 @@ Legend: **P0** can lose or corrupt the library, or blocks the release. **P1** is
 The quit request macOS sends to an app (Cmd+Q, the app menu's Quit, logout, restart and shutdown) is now *answered*
 rather than cancelled up front.
 
-- [ ] **MAC-001** 🆕 (P0) Cmd+Q with nothing unsaved
+- [ ] **MAC-001** (P0) Cmd+Q with nothing unsaved
   1. Press Cmd+Q on the Songs screen.
 
   **Expected:** the app quits at once, with no dialog.
   <sub>[r5-26]</sub>
-- [ ] **MAC-002** 🆕 (P0) Cmd+Q with unsaved editor text, answered with Save
+- [ ] **MAC-002** (P0) Cmd+Q with unsaved editor text, answered with Save
   1. Type into the editor without saving.
   2. Press Cmd+Q, then choose Save.
 
   **Expected:** the unsaved-changes question appears. After Save the file is written and then the app quits. On the
   next start the text is there.
   <sub>[r5-26][r1-54]</sub>
-- [ ] **MAC-003** 🆕 (P0) Cmd+Q, answered with Discard
+- [ ] **MAC-003** (P0) Cmd+Q, answered with Discard
   1. Repeat MAC-002, but choose Discard.
 
   **Expected:** the app quits and the file is unchanged.
   <sub>[r5-26]</sub>
-- [ ] **MAC-004** 🆕 (P1) Cmd+Q, answered with Cancel
+- [ ] **MAC-004** (P1) Cmd+Q, answered with Cancel
   1. Repeat MAC-002, but choose Cancel.
 
   **Expected:** the app stays open with the editor and the text as they were. A second Cmd+Q asks again.
@@ -132,12 +131,12 @@ rather than cancelled up front.
   **Expected:** the unsaved-changes question replaces the import question. Choose to stay, then import again: the
   import asks again.
   <sub>[r2-55]</sub>
-- [ ] **MAC-010** 🆕 (P0) Log out with nothing unsaved (throwaway account)
+- [ ] **MAC-010** (P0) Log out with nothing unsaved (throwaway account)
   1. With Campfire running, choose Apple menu → Log Out.
 
   **Expected:** the logout completes, and no "Campfire interrupted log out" alert appears.
   <sub>[r5-26]</sub>
-- [ ] **MAC-011** 🆕 (P0) Log out with unsaved text, answered with Save
+- [ ] **MAC-011** (P0) Log out with unsaved text, answered with Save
   1. Leave unsaved text in the editor.
   2. Choose Apple menu → Log Out.
   3. Choose Save in Campfire's question.
@@ -145,20 +144,20 @@ rather than cancelled up front.
   **Expected:** Campfire's question appears over the app and the logout waits for it. After Save the file is written,
   Campfire quits and the logout continues on its own.
   <sub>[r5-26]</sub>
-- [ ] **MAC-012** 🆕 (P1) Log out with unsaved text, answered with Cancel
+- [ ] **MAC-012** (P1) Log out with unsaved text, answered with Cancel
   1. Leave unsaved text in the editor.
   2. Choose Log Out, then Cancel in Campfire's question.
 
   **Expected:** the logout stops, with macOS naming Campfire as the app that interrupted it. Campfire stays open with
   the text. Logging out again afterwards works normally.
   <sub>[r5-26]</sub>
-- [ ] **MAC-013** 🆕 (P1) Restart cancelled from the system dialog
+- [ ] **MAC-013** (P1) Restart cancelled from the system dialog
   1. Choose Apple menu → Restart…, then Cancel in the system's own confirmation.
   2. Choose Log Out.
 
   **Expected:** the logout goes through, with no stale "interrupted" state left behind.
   <sub>[r5-26]</sub>
-- [ ] **MAC-014** 🆕 (P1) Quitting after handing over to a second process
+- [ ] **MAC-014** (P1) Quitting after handing over to a second process
   1. Start the app.
   2. Start a second copy with a song (`open -n …/Campfire.app --args <file>`). It hands over and exits.
   3. Leave unsaved text in the first copy, press Cmd+Q and choose Save.
@@ -169,7 +168,7 @@ rather than cancelled up front.
 
 ## 2. Keyboard
 
-- [ ] **MAC-020** 🆕 (P1) Modified arrow keys on song details
+- [ ] **MAC-020** (P1) Modified arrow keys on song details
   1. Open a song from a setlist with at least three songs.
   2. Press plain Up/Down, then plain Left/Right.
   3. Press Cmd+Left, Cmd+Right, Alt+Left, Alt+Right and Ctrl+Left.
@@ -297,7 +296,7 @@ rather than cancelled up front.
 
 ## 4. The library folder from Finder
 
-- [ ] **MAC-050** 🆕 (P0) A decomposed (NFD) name from Finder stays one song
+- [ ] **MAC-050** (P0) A decomposed (NFD) name from Finder stays one song
   1. Copy fixture: NFD title (a song whose file name is in decomposed form) into `library/songs`. Its NFC twin should
      already be in the library.
   2. Switch back to Campfire.
@@ -312,14 +311,14 @@ rather than cancelled up front.
 
   **Expected:** the list follows each change when the window regains focus. No screen has pull to refresh.
   <sub>[presentation][app/desktop]</sub>
-- [ ] **MAC-052** 🆕 (P0) An export names the files it could not read
+- [ ] **MAC-052** (P0) An export names the files it could not read
   1. Make one song unreadable (`chmod a-r library/songs/x.cho`).
   2. Export the whole library.
 
   **Expected:** the export finishes with a message naming `x.cho` as left out. The zip holds every other file.
   Restore the file with `chmod u+r`.
   <sub>[r5-06]</sub>
-- [ ] **MAC-053** 🆕 (P0) An export whose scan failed does not produce a partial backup
+- [ ] **MAC-053** (P0) An export whose scan failed does not produce a partial backup
   1. Make `library/songs` unlistable (`chmod a-rx`).
   2. Export the whole library.
 
@@ -350,7 +349,7 @@ rather than cancelled up front.
 
   **Expected:** the launch hands over smoothly and the list fills without freezing. Scrolling and search stay fluid.
   <sub>[r1-31]</sub>
-- [ ] **MAC-058** 🆕 (P1) Right-to-left lyrics
+- [ ] **MAC-058** (P1) Right-to-left lyrics
   1. Import fixture: RTL song (Hebrew, four chords per line).
   2. Open it, then make the window narrow until the lines wrap.
 
@@ -361,37 +360,37 @@ rather than cancelled up front.
 
 ## 5. The packaged runtime and the release bundle
 
-- [ ] **MAC-060** 🆕 (P1) Language names are localized in the packaged app
+- [ ] **MAC-060** (P1) Language names are localized in the packaged app
   1. In the packaged app, set the language to Hungarian.
   2. Open the Songs filter with at least two languages in the library.
 
   **Expected:** the chips read *angol* / *magyar*, not English / Hungarian. The language chip on song details agrees.
   <sub>[r5-17]</sub>
-- [ ] **MAC-061** 🆕 (P2) The runtime carries the two added modules
+- [ ] **MAC-061** (P2) The runtime carries the two added modules
   1. Run `grep -o 'MODULES="[^"]*"' …/Campfire.app/Contents/runtime/Contents/Home/release`.
 
   **Expected:** the list contains `jdk.accessibility` and `jdk.localedata`.
   <sub>[r5-17]</sub>
-- [ ] **MAC-062** 🆕 (P1) VoiceOver in the packaged app
+- [ ] **MAC-062** (P1) VoiceOver in the packaged app
   1. Turn VoiceOver on (Cmd+F5) and move through the Songs screen, a song, and Settings.
 
   **Expected:** rows, app bar actions and the tag remove button are announced by name. A chorded line reads with its
   chords in brackets.
   <sub>[r5-17][r2-63]</sub>
-- [ ] **MAC-063** 🆕 (P1) The About section on a direct download
+- [ ] **MAC-063** (P1) The About section on a direct download
   1. Open Settings → About on the default (`download`) build.
 
   **Expected:** one untitled section with these rows: the author and version, GitHub, Report a problem, "Every version
   of Campfire", Privacy policy, and Buy me a coffee. There is **no** rating row, because the Mac App Store listing URL
   is still empty. There are no per-platform "Coming soon" rows. Every link opens in the default browser.
   <sub>[r5-16][r5-15]</sub>
-- [ ] **MAC-064** 🆕 (P1) The Mac App Store build hides the donation link
+- [ ] **MAC-064** (P1) The Mac App Store build hides the donation link
   1. Build with `-Pcampfire.desktop.distribution=mac-app-store`.
   2. Open Settings → About.
 
   **Expected:** the coffee row is gone and everything else is the same.
   <sub>[r5-15]</sub>
-- [ ] **MAC-065** 🆕 (P2) A mistyped distribution value fails the build
+- [ ] **MAC-065** (P2) A mistyped distribution value fails the build
   1. Build with `-Pcampfire.desktop.distribution=appstore`.
 
   **Expected:** Gradle fails at configuration, naming the four allowed values.
@@ -410,7 +409,7 @@ rather than cancelled up front.
 
 ## 6. Links and sync from the desktop
 
-- [ ] **MAC-070** 🆕 (P0) Connect Dropbox from the desktop
+- [ ] **MAC-070** (P0) Connect Dropbox from the desktop
   1. Settings → Library → Connect.
 
   **Expected:** the consent page opens in the **default** browser, the same way the About links do. After allowing,
@@ -429,10 +428,10 @@ rather than cancelled up front.
   **Expected:** a snackbar names the address instead of nothing happening.
   <sub>[r2-45][r5-31]</sub>
 
-## Not yet possible
+## The Mac App Store build
 
-The sandboxed **Mac App Store build** is deferred: there is no `.pkg` target, no entitlements and no sandbox yet.
-Once it exists, test these:
+Run this section only once a sandboxed Mac App Store build exists (a `.pkg` target, entitlements and the sandbox).
+Until then there is nothing to run it against. Test these:
 
 - The library lives in `~/Library/Containers/com.pandulapeter.campfire/Data/Library/Application Support/Campfire`,
   and the Location row points there.

@@ -10,14 +10,16 @@
 
 # Manual test scripts
 
-Five review rounds (2026-09-14 to 2026-09-23, about 270 fixes) were written and landed from reading the code. The
-unit tests cover `:chordpro`, the import planner, the zip and file storage, the sync planner and engine. **Nothing
-else in them has run on the device it is about**: no real iPhone, no Windows PC, no Linux desktop, no packaged
-macOS build, no Dropbox account with two devices, and no Play internal track. These documents are the checks that
-are still owed. They are written for a tester who knows Campfire as a user but has not read its code.
+This folder is Campfire's full regression suite: every check that the unit tests cannot make, because it needs a
+real device, a real window, a real Dropbox account or a real release. The unit tests cover `:chordpro`, the import
+planner, the zip and file storage, and the sync planner and engine; everything else is here. The documents are
+written for a tester who knows Campfire as a user but has not read its code, and they describe the app as it
+should behave, so they can be run against any build.
 
-They were written at `2740892c` (version 4.3.0). A test that names a behaviour the app no longer has is a bug in
-this document. Fix the test rather than the app.
+**Keeping them true is part of every change.** A change to what the user sees or what happens to their files updates
+the test that describes it, or adds one, in the same commit. A test that names a behaviour the app no longer has is
+a bug in this folder: fix the test, not the app — unless the behaviour went away by mistake, which is exactly what
+the suite is here to catch.
 
 ## Which document on which device
 
@@ -28,10 +30,26 @@ this document. Fix the test rather than the app.
 | Android phone | [01 Android](01-android.md) | Rotation, process death, TalkBack, open with, backup. Some checks want API 29/30 as well as 34+ (emulator). |
 | Windows PC | [04 Windows](04-windows.md), [06 Web](06-web.md) in Edge, Chrome and Firefox | MSI install, antivirus, foreign file names, Narrator. |
 | Linux (optional) | [05 Linux](05-linux.md) | A VM or a live USB of Ubuntu 22.04 **and** 24.04: the `.deb` has to install on both. |
-| Two or more of the above, plus the throwaway Dropbox account | [07 Sync, multi-device](07-sync-multi-device.md) | The riskiest document: the deletion guard is the one change that can destroy a library if it is wrong. |
+| Two or more of the above, plus a Dropbox account (see below) | [07 Sync, multi-device](07-sync-multi-device.md) | The riskiest document: the deletion guard is the one change that can destroy a library if it is wrong. |
 | Release day | [08 Release and stores](08-release-and-stores.md) | Workflows, signing, store submissions, Play's update priority. |
 
-## Recommended order
+## Running a regression
+
+A full regression is every document, on every device in the table above. Before a release, run at least the
+smoke test of each platform document and every P0; after a change to one area, run that area's tests in every
+document that has them.
+
+**Don't tick the boxes in these files.** They are the suite, not a record of one pass through it. Keep each run's
+results in a run log outside the repository (a copy of the documents, a spreadsheet, or a GitHub issue per run) that
+names, at the top:
+
+- the build: `git rev-parse --short HEAD` or the release tag, and the version Settings → About shows;
+- the date, and who (or what) ran it;
+- every device, with its OS version, and every browser, with its version.
+
+Then one line per test: its ID, pass / fail / skipped, and for a skip the reason ("no Windows PC").
+
+### Recommended order
 
 1. **00 Core functional on the macOS desktop build.** Most behaviour is shared code, and the desktop is where a
    file can be put into the library folder and checked afterwards with a text editor or `xxd`.
@@ -44,16 +62,13 @@ Priorities:
 - **P1** is visible breakage: a crash, a wrong result, a dead control, text that cannot be read.
 - **P2** is polish.
 
-Tests marked 🆕 cover a change made in the last round: the 35 fixes of the fifth review, the four fixes that followed
-it, and right-to-left lyrics. No build before `2740892c` has these changes, so these tests have never been run at all.
-
 ## Format
 
 Every document starts with **Before you start**, which covers the build to install and how, the fixtures to load, a
 rough time, and what to write down. The tests follow, grouped by area and ordered by risk within each group:
 
 ```
-- [ ] **CORE-042** (P1) 🆕 Title
+- [ ] **CORE-042** (P1) Title
   1. Step.
   2. Step.
   **Expected:** what must happen.
@@ -61,8 +76,9 @@ rough time, and what to write down. The tests follow, grouped by area and ordere
 ```
 
 The ID prefix names the document: `CORE`, `AND`, `IOS`, `MAC`, `WIN`, `LNX`, `WEB`, `SYNC`, `REL`. The small tag at the
-end names the review plan the check came from (`r3-17` is plan 17 of the third review; `r5-*` are the fifth, the ones
-just landed). Reviews 1–4 can be read with `git show <commit>:documentation/issues/<file>`:
+end names where the check came from, which is where to read why the behaviour is the way it is. `r3-17` is plan 17
+of the third pre-release review; each review's plans can be read with
+`git show <commit>:documentation/issues/<file>` (`git ls-tree <commit> documentation/issues/` lists them):
 
 | Review | Commit |
 | --- | --- |
@@ -73,7 +89,8 @@ just landed). Reviews 1–4 can be read with `git show <commit>:documentation/is
 | r5 | `a8597f89` |
 
 The other tags are `features`, `sync.md`, `file-format` (the `documentation/*.md` files), `CLAUDE` (the root
-`CLAUDE.md`), and module names for the module `CLAUDE.md` files.
+`CLAUDE.md`), and module names for the module `CLAUDE.md` files. A test added later carries the tag of whatever
+asked for it in the same way: a review plan, a GitHub issue (`#123`) or the document that states the rule.
 
 Behaviour that is the same everywhere is tested once, in 00. The device documents test what differs on that
 platform. Each also opens with a **10-minute smoke test** to run first on every new build of that platform.
@@ -126,26 +143,59 @@ the zip itself into Campfire: it is a bundle of fixtures, not a library archive.
 
 ## The Dropbox account
 
-Use a **throwaway account and nothing else**. The deletion-guard tests in 07 empty the app folder, rename it, and
-answer "delete them here too" on purpose. Before each session, check that the Dropbox app folder is
-`Apps/Campfire Sync/`, with `songs/` and `setlists/` inside it. Sync is only in builds that have
-`campfire.dropbox.appKey` in `local.properties`; a build without it says so in Settings. This checkout has the key.
+Sync only exists in builds that have `campfire.dropbox.appKey` in `local.properties`; a build without it says so in
+Settings → Library. Campfire's Dropbox app is registered for the *app folder* permission, so everything it and the
+tests touch is `Apps/Campfire Sync/` (`songs/` and `setlists/` inside it) and nothing else in the account.
 
-## What Claude can run, and what needs your hands
+The deletion-guard tests in 07 empty that folder and answer "delete them here too" on purpose, so either:
 
-On this Mac, Claude can drive the **desktop build**, the **web build in Chrome**, the **iOS simulator** and the
-**Android emulator**. Each can be set up with an isolated library and connected to the temporary Dropbox account,
-which gives four "devices" against one folder. That covers most of 07: ordinary runs, conflicts, the deletion guard
-in both directions, an interrupted run, rate limiting on a large first sync, and names from another platform.
-07's **Claude-run** section lists these tests. Claude also covers everything in 00 that the desktop build can show.
+- use an **account made for testing**, or
+- use a **real account, and snapshot the folder first**. Every real installation connected to it has to be
+  disconnected before the run (Settings → Library → Disconnect, which removes nothing), and none of them may be
+  opened until the folder is restored: the tests would reach their libraries. Then:
+  1. Connect a desktop installation made for the test (see "Isolated desktop installations" below) with an **empty**
+     library. Its first run downloads the whole folder, and its `library/` folder is the snapshot. Copy it aside.
+  2. After the run, restore with `tools/dropbox_folder.py --credentials <that installation>/preferences/sync-credentials.json restore <snapshot>`,
+     which makes the folder hold exactly the snapshot and checks every file against Dropbox's content hash.
+  3. Disconnect every test installation, and reconnect the real ones. A reconnected installation that was
+     *disconnected* compares by content, so it moves nothing that is the same. One that was only *refused* (SYNC-003
+     revokes the app for the whole account) keeps its index and also finds nothing to do.
 
-These need a person:
+Either way, check at the start of a session that the app folder holds only `songs/` and `setlists/`.
+
+`tools/dropbox_folder.py` is also what the sync tests mean by "via the API": it lists, uploads, deletes, empties a
+folder and rewrites one file in a loop, borrowing the refresh token of a test installation. `--help` lists its
+commands.
+
+## Running the tests from a script
+
+Much of 00, 06 and 07 can be run on one Mac without a person at the keyboard, by Claude or by anyone scripting it:
+
+- **Isolated desktop installations.** The desktop app derives its data folder and its single-instance lock from
+  `user.home`, so `JAVA_TOOL_OPTIONS=-Duser.home=<dir> …/Campfire.app/Contents/MacOS/Campfire` (after
+  `./gradlew :app:desktop:createDistributable`) is an installation of its own, and several of them are several
+  devices. Their libraries and `preferences/sync-index.json` are plain files to seed and read. Connect them one
+  after the other: the desktop's sign-in redirect uses the fixed port 53682.
+- **Pressing things.** Synthetic clicks are unreliable against a Compose window. What works is a temporary driver in
+  `app/desktop` (a `LaunchedEffect` next to where the view model is obtained) that reads commands from a file in the
+  installation's home — sync with a given deletion policy, stop, save, delete, connect, disconnect — and logs every
+  `syncState` it sees. To open the consent page in a browser tab of your choosing, have the desktop authenticator
+  write the authorization URL to a file instead of opening the default browser. Both are test-only edits: never
+  commit them.
+- **A slow network**, where a test needs a run to still be going: macOS Network Link Conditioner, or a temporary
+  delay in `SyncEngine` before the transfer of files whose name contains a marker (for example `slowtest`).
+- **The web build** in a Chrome tab, its OPFS library read and written from the console (see `06-web.md`); the
+  **Android emulator** (`.debug` build, `adb`); and the **iOS simulator** (`simctl`). A Play system image has no
+  root, so the Android library is changed through the app itself there.
+
+These always need a person:
 
 - a **real iPhone**: iCloud Drive files opened in place, AirDrop and Mail, a reinstall that keeps its Keychain
   items, Dynamic Type, VoiceOver;
-- the **Windows PC**: the MSI, an antivirus scanning the library, Narrator, the Microsoft Store listing;
-- a **real macOS logout or restart** with the app open and unsaved text;
+- a **Windows PC**: the MSI, an antivirus scanning the library, Narrator, the Microsoft Store listing;
+- a **real macOS logout or restart** with the app open and unsaved text, and changing the system clock;
 - **TalkBack**, **VoiceOver** and **Narrator** in general, a hardware page-turner pedal, and the on-screen keyboards;
+- **logging in** to Dropbox on a consent page, and **revoking** the app in the account's settings;
 - anything behind a **store account**: the Play internal track and its update priority, TestFlight, and App Store
   Connect.
 
@@ -161,4 +211,4 @@ For each failure, write down:
 5. **The files involved**: the song or setlist file, or the whole library folder zipped. Settings → Library shows
    where it is; on the web, use Export library. For sync, add the Dropbox folder's state and the time of the run.
 
-Add it as a GitHub issue, or as a line under the test in a copy of the document.
+Add it as a GitHub issue, and put its link next to the test's line in the run log.

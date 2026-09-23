@@ -39,7 +39,6 @@ Everything else is in `00-core-functional.md`.
   `/opt/campfire/bin/Campfire` from a terminal and keep its output.
 
 Legend: **P0** can lose or corrupt the library, or blocks the release. **P1** is visible breakage. **P2** is polish.
-🆕 marks behaviour changed in the 2026-09-23 round of fixes.
 
 ## Smoke (10 minutes, on 24.04)
 
@@ -62,22 +61,22 @@ Legend: **P0** can lose or corrupt the library, or blocks the release. **P1** is
 
 ## 1. The package and the `t64` transition
 
-- [ ] **LIN-001** 🆕 (P0) No `t64` dependencies
+- [ ] **LIN-001** (P0) No `t64` dependencies
   1. Run `dpkg-deb --field campfire-*-linux-amd64.deb Depends`.
 
   **Expected:** no package name ends in `t64` (for example `libasound2`, not `libasound2t64`).
   <sub>[r5-18]</sub>
-- [ ] **LIN-002** 🆕 (P0) Install and start on 22.04
+- [ ] **LIN-002** (P0) Install and start on 22.04
   1. On Ubuntu 22.04, `sudo apt install ./campfire-*.deb` and start the app.
 
   **Expected:** it installs and starts, with the window and the demo library.
   <sub>[r5-18]</sub>
-- [ ] **LIN-003** 🆕 (P0) Install and start on 24.04
+- [ ] **LIN-003** (P0) Install and start on 24.04
   1. On Ubuntu 24.04, install the same `.deb` and start the app.
 
   **Expected:** it installs and starts. The one package works on both sides of the transition.
   <sub>[r5-18]</sub>
-- [ ] **LIN-004** 🆕 (P1) A clean container install on 22.04
+- [ ] **LIN-004** (P1) A clean container install on 22.04
   1. Run `docker run --rm -it -v "$PWD:/pkg" ubuntu:22.04 bash -c 'apt-get update && apt-get install -y
      /pkg/campfire-*-linux-amd64.deb && echo INSTALLED'`.
 
@@ -98,30 +97,30 @@ Legend: **P0** can lose or corrupt the library, or blocks the release. **P1** is
 
 ## 2. Matching the window to its launcher
 
-- [ ] **LIN-010** 🆕 (P1) The desktop entry has a `StartupWMClass`
+- [ ] **LIN-010** (P1) The desktop entry has a `StartupWMClass`
   1. Run `grep StartupWMClass /usr/share/applications/*ampfire*.desktop`.
   2. Run `desktop-file-validate` on that file.
 
   **Expected:** exactly one `StartupWMClass=Campfire` line, and the file validates with no errors.
   <sub>[r5-23]</sub>
-- [ ] **LIN-011** 🆕 (P1) The window's class (X11)
+- [ ] **LIN-011** (P1) The window's class (X11)
   1. In an X11 session, run `xprop WM_CLASS` and click the Campfire window.
 
   **Expected:** `WM_CLASS(STRING) = "campfire", "Campfire"`, not `com-pandulapeter-campfire-…`.
   <sub>[r5-23]</sub>
-- [ ] **LIN-012** 🆕 (P1) Alt-tab and the overview on GNOME
+- [ ] **LIN-012** (P1) Alt-tab and the overview on GNOME
   1. On GNOME, start the app and press Alt+Tab, then open the Activities overview.
 
   **Expected:** both show "Campfire" with the app's icon, not a generic gear or a Java name.
   <sub>[r5-23]</sub>
-- [ ] **LIN-013** 🆕 (P1) Pinning does not add a second entry
+- [ ] **LIN-013** (P1) Pinning does not add a second entry
   1. On GNOME, right-click the running app in the dash and choose Pin to Dash.
   2. Close the app and start it from the pinned icon.
 
   **Expected:** there is one dash entry, not a second one beside the pinned launcher. The running app is shown on the
   pinned icon.
   <sub>[r5-23]</sub>
-- [ ] **LIN-014** 🆕 (P2) The task manager on KDE
+- [ ] **LIN-014** (P2) The task manager on KDE
   1. On KDE, repeat LIN-012 and LIN-013 with the task manager.
 
   **Expected:** the same result.
@@ -134,12 +133,12 @@ Legend: **P0** can lose or corrupt the library, or blocks the release. **P1** is
 
 ## 3. Links and the sync consent page
 
-- [ ] **LIN-020** 🆕 (P0) Connect Dropbox
+- [ ] **LIN-020** (P0) Connect Dropbox
   1. Settings → Library → Connect.
 
   **Expected:** the default browser opens the consent page, and after consent the app shows the account.
   <sub>[r5-31]</sub>
-- [ ] **LIN-021** 🆕 (P1) Connect with a broken default browser
+- [ ] **LIN-021** (P1) Connect with a broken default browser
   1. Point the default browser at something missing:
      `xdg-settings set default-web-browser nonexistent.desktop`.
   2. Press Connect.
@@ -152,7 +151,7 @@ Legend: **P0** can lose or corrupt the library, or blocks the release. **P1** is
 
   **Expected:** `xdg-open` opens it and the window stays. Where nothing can open it, a snackbar names the address.
   <sub>[r2-45][r5-31]</sub>
-- [ ] **LIN-023** 🆕 (P1) The About section on Linux
+- [ ] **LIN-023** (P1) The About section on Linux
   1. Open Settings → About.
 
   **Expected:** there is no rating row (Linux has no store). The coffee row is shown, and "Every version of Campfire"
@@ -199,13 +198,13 @@ Legend: **P0** can lose or corrupt the library, or blocks the release. **P1** is
 
   **Expected:** the characters are committed correctly.
   <sub>[r3-20]</sub>
-- [ ] **LIN-037** 🆕 (P1) Fonts for other scripts
+- [ ] **LIN-037** (P1) Fonts for other scripts
   1. Import fixture: RTL song and a Cyrillic song.
 
   **Expected:** the Hebrew renders (install `fonts-noto` if it shows boxes, and note it) and is right-aligned, with
   chords over their words. The Cyrillic song reads correctly.
   <sub>[r5-35]</sub>
-- [ ] **LIN-038** 🆕 (P1) Language names are localized
+- [ ] **LIN-038** (P1) Language names are localized
   1. Set the app to Hungarian and open the language filter.
 
   **Expected:** the chips read *angol* / *magyar*. This proves the packaged runtime carries `jdk.localedata`.

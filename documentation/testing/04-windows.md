@@ -9,11 +9,10 @@
 -->
 # Manual tests: Windows desktop
 
-**Nothing in this file has ever been run.** The MSI has never been installed on a Windows PC. Windows differs from the
-Mac in ways the code can only guess at:
+Windows differs from the Mac in ways that only a real PC shows:
 
 - it refuses to replace or delete a file that another process has open (an antivirus, the indexer, Explorer's
-  preview), and the app now retries through that;
+  preview), and the app retries through that;
 - some names are illegal (`? : * " < > |`, a trailing dot or space, `CON`, `NUL`…);
 - per-user MSI installs and upgrades;
 - `toFront()` only flashes the taskbar;
@@ -46,7 +45,6 @@ tests on Windows too.
   For failures, a screenshot plus any `hs_err_pid*.log` next to the app. The Windows launcher writes no console log.
 
 Legend: **P0** can lose or corrupt the library, or blocks the release. **P1** is visible breakage. **P2** is polish.
-🆕 marks behaviour changed in the 2026-09-23 round of fixes.
 
 ## Smoke (10 minutes)
 
@@ -77,13 +75,13 @@ Legend: **P0** can lose or corrupt the library, or blocks the release. **P1** is
 
 ## 1. File locking and antivirus
 
-- [ ] **WIN-001** 🆕 (P0) Import while the scanner is busy
+- [ ] **WIN-001** (P0) Import while the scanner is busy
   1. With Defender on, import fixture: zip archive (a few hundred songs).
   2. While it runs, click out of the window and back in a few times, which triggers rescans.
 
   **Expected:** every song is imported, no file is reported as failed, and no "could not be written" message appears.
   <sub>[r5-02]</sub>
-- [ ] **WIN-002** 🆕 (P0) Saving a file Explorer has open
+- [ ] **WIN-002** (P0) Saving a file Explorer has open
   1. Open a song in Explorer's preview pane (select it with Alt+P on). In Campfire, edit the same song and save, ten
      times in a row.
   2. Keep the song open in Notepad, save again from Campfire, then delete the song from Campfire.
@@ -91,13 +89,13 @@ Legend: **P0** can lose or corrupt the library, or blocks the release. **P1** is
   **Expected:** every save succeeds, and the file on disk holds the last text. The delete succeeds, or fails with a
   clear message. It never fails silently.
   <sub>[r5-02]</sub>
-- [ ] **WIN-003** 🆕 (P0) A first sync of a few hundred songs
+- [ ] **WIN-003** (P0) A first sync of a few hundred songs
   1. Connect the Dropbox that holds fixture: large library (a few hundred songs).
   2. Press Sync now and scroll the Songs list while it runs.
 
   **Expected:** the run finishes clean, with no "files could not be synced". "Last synced" shows the current time.
   <sub>[r5-02]</sub>
-- [ ] **WIN-004** 🆕 (P1) Renaming and deleting are retried, not failed
+- [ ] **WIN-004** (P1) Renaming and deleting are retried, not failed
   1. Use Update file name on a song, then delete a setlist, with Defender scanning.
 
   **Expected:** both succeed on the first try from the user's point of view.
@@ -143,7 +141,7 @@ Legend: **P0** can lose or corrupt the library, or blocks the release. **P1** is
 
 ## 3. Sync with names Windows cannot store
 
-- [ ] **WIN-040** 🆕 (P0) A cloud file Windows cannot hold is skipped and named once
+- [ ] **WIN-040** (P0) A cloud file Windows cannot hold is skipped and named once
   1. On the Mac, put fixture: Windows-illegal-names folder's `Who Are You?.cho` and `AC|DC - Thunder.cho` into the
      Dropbox folder `Apps/Campfire Sync/songs`, through the Dropbox website or the Mac library.
   2. Sync on Windows.
@@ -151,18 +149,18 @@ Legend: **P0** can lose or corrupt the library, or blocks the release. **P1** is
   **Expected:** the run finishes, every other file is in step, and the message names each of those files once as not
   syncable on this device, promising no retry. "Last synced" still advances for the rest.
   <sub>[r5-03]</sub>
-- [ ] **WIN-041** 🆕 (P1) A skipped file is not reported again
+- [ ] **WIN-041** (P1) A skipped file is not reported again
   1. Sync on Windows twice more.
 
   **Expected:** there are no repeated failures and nothing is uploaded or deleted for those names.
   <sub>[r5-03]</sub>
-- [ ] **WIN-042** 🆕 (P1) A renamed file arrives
+- [ ] **WIN-042** (P1) A renamed file arrives
   1. On the Mac, rename `Who Are You?.cho` to a legal name and sync.
   2. Sync on Windows.
 
   **Expected:** Windows now downloads it.
   <sub>[r5-03]</sub>
-- [ ] **WIN-043** 🆕 (P0) The deletion guard, seen from Windows
+- [ ] **WIN-043** (P0) The deletion guard, seen from Windows
   1. Sync Windows with a library of at least 10 songs.
   2. Rename the Dropbox folder `Apps/Campfire Sync` in the Dropbox website.
   3. Sync on Windows.
@@ -240,7 +238,7 @@ Legend: **P0** can lose or corrupt the library, or blocks the release. **P1** is
 
   **Expected:** the song is saved.
   <sub>[r3-20]</sub>
-- [ ] **WIN-053** 🆕 (P1) Modified arrow keys on song details
+- [ ] **WIN-053** (P1) Modified arrow keys on song details
   1. On song details in a setlist, press Alt+Left and Alt+Right, then Ctrl+Left and Ctrl+Right.
 
   **Expected:** none of them pages or scrolls the song. Plain arrows still scroll and page.
@@ -270,31 +268,31 @@ Legend: **P0** can lose or corrupt the library, or blocks the release. **P1** is
 
 ## 7. The packaged runtime, links and accessibility
 
-- [ ] **WIN-060** 🆕 (P1) Language names are localized
+- [ ] **WIN-060** (P1) Language names are localized
   1. Set the app to Hungarian and open the language filter.
 
   **Expected:** the chips read *angol* / *magyar*.
   <sub>[r5-17]</sub>
-- [ ] **WIN-061** 🆕 (P1) Narrator reads the app
+- [ ] **WIN-061** (P1) Narrator reads the app
   1. Run `jabswitch /enable` from `%LOCALAPPDATA%\Programs\Campfire\runtime\bin` (or the install folder's
      `runtime\bin`), then sign out and back in.
   2. Start Narrator (Win+Ctrl+Enter) and Tab through Songs, a song and Settings.
 
   **Expected:** rows, app bar actions and buttons are announced by name.
   <sub>[r5-17]</sub>
-- [ ] **WIN-062** 🆕 (P0) Connect Dropbox
+- [ ] **WIN-062** (P0) Connect Dropbox
   1. Settings → Library → Connect.
 
   **Expected:** the consent page opens in the **default** browser. A firewall prompt for `127.0.0.1:53682` may
   appear; allow it for private networks. After consent, the app shows the account.
   <sub>[r5-31][pub-ms]</sub>
-- [ ] **WIN-063** 🆕 (P1) The About section on Windows
+- [ ] **WIN-063** (P1) The About section on Windows
   1. Open Settings → About.
 
   **Expected:** there is no rating row, because the Microsoft Store listing URL is still empty. The coffee row is
   shown. Every link opens in the default browser.
   <sub>[r5-16][r5-15]</sub>
-- [ ] **WIN-064** 🆕 (P1) Right-to-left lyrics
+- [ ] **WIN-064** (P1) Right-to-left lyrics
   1. Import fixture: RTL song.
 
   **Expected:** the lines are right-aligned and the chords spread over their words, as in MAC-058. This checks the
@@ -306,9 +304,10 @@ Legend: **P0** can lose or corrupt the library, or blocks the release. **P1** is
   **Expected:** it shows the `%APPDATA%\Campfire` path and opens it in Explorer.
   <sub>[app/desktop]</sub>
 
-## Not yet possible
+## The Microsoft Store build
 
-The **Microsoft Store (MSIX)** build does not exist yet. Once it does, test these:
+Run this section only once a Microsoft Store (MSIX) build exists. Until then there is nothing to run it against.
+Test these:
 
 - The packaged app's `%APPDATA%` redirection (`%LOCALAPPDATA%\Packages\…\LocalCache\Roaming`), and what the Location
   row shows.

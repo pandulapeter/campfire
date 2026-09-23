@@ -10,22 +10,23 @@
 
 # Web — manual test script
 
-Written 2026-09-23 against `master` at `2740892c`. What the web build does differently from the other three: the
+What the web build does differently from the other three: the
 library is in the browser's Origin Private File System (OPFS), the app has to be downloaded before it starts, one tab
 owns the library, and the browser's history is the app's back stack. Everything that behaves the same on every
 platform (the editor, setlists, tags, import rules, transposition…) is in `00-core-functional.md`; run that once on the
 web too if time allows, but it is not repeated here. Multi-device sync is in `07-sync-multi-device.md`; only the parts
 of sync that are specific to a browser are here.
 
-`🆕` marks a test of something changed in this round (the fifth review and its four follow-ups). Priorities: **P0**
-can lose or corrupt the library or blocks the release, **P1** is visible breakage, **P2** is polish.
+Priorities: **P0** can lose or corrupt the library or blocks the release, **P1** is visible breakage, **P2** is
+polish.
 
 ## Before you start
 
-- **Browsers.** Chrome (current), Firefox (current), Safari 26 on macOS, Edge on the Windows PC, Safari on an iPhone
-  (iOS 26). For the OPFS worker fallback you also need **one browser that lacks `createWritable`**: Safari 18.2–18.x
-  (a Mac still on macOS 15, an iPhone/iPad on iOS 18.2–18.x, or an iOS 18 simulator runtime). Check in that browser's
-  console: `'createWritable' in FileSystemFileHandle.prototype` must print `false`.
+- **Browsers.** The current Chrome, Firefox and Safari on macOS, Edge on the Windows PC, and Safari on an iPhone
+  with the current iOS. For the OPFS worker fallback you also need **one browser that lacks `createWritable`**:
+  Safari 18.2–18.x (a Mac still on macOS 15, an iPhone/iPad on iOS 18.2–18.x, or an iOS 18 simulator runtime). Check
+  in that browser's console: `'createWritable' in FileSystemFileHandle.prototype` must print `false`. Once no such
+  browser can be had, the fallback serves nobody: skip its tests and say so in the run log.
 - **Three ways to run the build**, and some tests name one:
   1. **Dev server:** `./gradlew :app:web:wasmJsBrowserDevelopmentRun` → `http://localhost:8080/`. It does not rebuild
      on source changes; restart it after every pull.
@@ -34,8 +35,8 @@ can lose or corrupt the library or blocks the release, **P1** is visible breakag
      to `<dir>`, and serve `<dir>` on `localhost:8080` with a small Python `http.server` subclass whose 404 answers
      with that `404.html` (status 404) and that serves `.wasm` as `application/wasm`. Open
      `http://localhost:8080/campfire/`.
-  3. **Deployed:** `https://pandulapeter.com/campfire/` (after the next `web-publish.yml` run — until then it is the
-     previous release, so 🆕 tests only apply to 1 and 2).
+  3. **Deployed:** `https://pandulapeter.com/campfire/` (the last release: a change that has not been released yet can
+     only be tested on 1 and 2).
 - **Sync** needs a build with `campfire.dropbox.appKey` in `local.properties` (the dev server and the local copy read
   it at build time). The web redirect URIs Dropbox knows are `https://pandulapeter.com/campfire/` and
   `http://localhost:8080/` — the local production copy at `/campfire/` is **not** registered, so do web sync tests on
@@ -64,7 +65,7 @@ can lose or corrupt the library or blocks the release, **P1** is visible breakag
   `opfs-writer.js` worker on these three browsers (they have `createWritable`).
   <sub>[r2-12][r3-01]</sub>
 
-- [ ] **WEB-002** 🆕 (P0) The worker fallback saves whole files on Safari 18.x
+- [ ] **WEB-002** (P0) The worker fallback saves whole files on Safari 18.x
   1. In the Safari 18.x browser (see "Before you start"), open the dev server (or a local production copy on a Mac
      running macOS 15). Clear site data, reload.
   2. Confirm the demo library appears. Create a song, save it, then **edit it to be shorter** (delete half the text)
@@ -78,7 +79,7 @@ can lose or corrupt the library or blocks the release, **P1** is visible breakag
   first write. Export the library and compare with the imported zip: the same files come back.
   <sub>[r2-12][r3-01][follow-up: OPFS partial write]</sub>
 
-- [ ] **WEB-003** 🆕 (P1) (dev patch) A write that stops short is reported, not taken for a save
+- [ ] **WEB-003** (P1) (dev patch) A write that stops short is reported, not taken for a save
   1. In `app/web/src/wasmJsMain/resources/opfs-writer.js`, make the handle's `write` return half the bytes it was given
      on its first call and 0 on the second (the follow-up's node reproduction does the same). Force the fallback in
      Chrome by adding `<script>delete FileSystemFileHandle.prototype.createWritable</script>` as the first script of
@@ -97,7 +98,7 @@ can lose or corrupt the library or blocks the release, **P1** is visible breakag
   new OPFS entry. Step 3 saves normally.
   <sub>[r2-12]</sub>
 
-- [ ] **WEB-005** 🆕 (P1) A file that vanishes while the library is being listed is skipped, not an error
+- [ ] **WEB-005** (P1) A file that vanishes while the library is being listed is skipped, not an error
   1. Import fixture: the few-hundred-song zip. Reload so the song list fills in batches.
   2. While the list is still filling, open a song's menu and delete it.
   3. (With Dropbox connected on this tab, see WEB-050.) In another browser, delete 20 of those songs from dropbox.com,
@@ -243,7 +244,7 @@ can lose or corrupt the library or blocks the release, **P1** is visible breakag
   **Expected:** each Escape closes the dialog it was pressed in. A held Escape closes one thing only. Chrome and Safari.
   <sub>[r3-19][r3-20]</sub>
 
-- [ ] **WEB-033** 🆕 (P1) Modified arrow keys reach the browser on the song details screen
+- [ ] **WEB-033** (P1) Modified arrow keys reach the browser on the song details screen
   1. Open a song from a setlist of three songs. Press Left / Right: the pager moves.
   2. Press Alt+Left (Windows/Linux) or Cmd+Left (Mac), and Alt/Cmd+Right after that.
   3. Press Ctrl+Up/Down and plain Up/Down.
@@ -259,7 +260,7 @@ can lose or corrupt the library or blocks the release, **P1** is visible breakag
 
 ## 5. Files in and out
 
-- [ ] **WEB-040** 🆕 (P0) Keep both keeps an imported setlist pointing at the numbered song
+- [ ] **WEB-040** (P0) Keep both keeps an imported setlist pointing at the numbered song
   1. Import fixture: the keep-both pair, part 1 (`song.cho` + a setlist naming it). Import part 2 (an edited
      `song.cho` + the same setlist file).
   2. Answer **Keep both**.
@@ -290,11 +291,11 @@ can lose or corrupt the library or blocks the release, **P1** is visible breakag
   **Expected:** one download per menu opening; zip entry times are the local time, not UTC.
   <sub>[r3-11][r2-31]</sub>
 
-- [ ] **WEB-044** 🆕 (P1) A library export of a large library is whole
+- [ ] **WEB-044** (P1) A library export of a large library is whole
   1. Import fixture: the large library (2,000+ songs) and a few setlists. Export the library.
   2. Unzip it and count the files.
   **Expected:** every song and setlist is in the archive, and the export's message does not mention skipped files.
-  (Making one file unreadable is not practical in OPFS; the "names the files it could not read" half of this fix is
+  (Making one file unreadable is not practical in OPFS; the "names the files it could not read" half of this is
   tested on the desktop.)
   <sub>[r5-06]</sub>
 
@@ -311,7 +312,7 @@ can lose or corrupt the library or blocks the release, **P1** is visible breakag
   paint, not swapped in later.
   <sub>[presentation][app/web]</sub>
 
-- [ ] **WEB-047** 🆕 (P1) Right-to-left lyrics read from the right, with their chords spread over them
+- [ ] **WEB-047** (P1) Right-to-left lyrics read from the right, with their chords spread over them
   1. Import fixture: the Hebrew RTL song (four chords per line). Open it; narrow the window until a line wraps.
   **Expected:** the Hebrew lines start at the right edge; each chord sits over the word it belongs to (the first chord
   at the right, the last at the left); none stack on each other. After a wrap, chords follow their words onto the
@@ -320,7 +321,8 @@ can lose or corrupt the library or blocks the release, **P1** is visible breakag
 
 ## 6. Sync — the parts that are the browser's
 
-Run with the throwaway Dropbox account on the dev server (`http://localhost:8080/`) or the deployed site.
+Run with a Dropbox account prepared as the README's "The Dropbox account" describes, on the dev server
+(`http://localhost:8080/`) or the deployed site.
 
 - [ ] **WEB-050** (P0) Connecting returns to the app, not to `index.html`
   1. Settings → Library → Connect Dropbox. Log in, Allow.
@@ -357,7 +359,7 @@ Run with the throwaway Dropbox account on the dev server (`http://localhost:8080
   `QuotaExceededError`.
   <sub>[r3-29]</sub>
 
-- [ ] **WEB-055** 🆕 (P0) Saving a song while a sync downloads it keeps the saved text
+- [ ] **WEB-055** (P0) Saving a song while a sync downloads it keeps the saved text
   1. Two tabs are not possible (Web Lock), so use dropbox.com in another browser as the other device. Sync a long song
      to the web. On dropbox.com, replace that song's content with a changed version.
   2. DevTools → Network → "Slow 3G". On the web app press Sync now, and while "Syncing…" shows, open that song's

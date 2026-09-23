@@ -10,14 +10,13 @@
 
 # Release pipeline and stores — manual test script
 
-Written 2026-09-23 against `master` at `2740892c`. Publishing a GitHub release is the release: `release.yml` checks the
+Publishing a GitHub release is the release: `release.yml` checks the
 tag and the sync key and then calls `android-publish.yml`, `web-publish.yml`, `desktop-publish.yml` and
-`ios-publish.yml` side by side. Five of this round's fixes changed those workflows (15, 18, 19, 20, 21) and two the
-iOS project (22, 24); **none of them has run on GitHub yet** — they were read and reasoned about, and only the parts
-that can run on a laptop were run. So the first real release is also the first test of them, and it is much cheaper to
-find a mistake in a rehearsal.
+`ios-publish.yml` side by side. The workflows only really run on GitHub, so a change to any of them, or to the
+iOS project's build settings, is tested first by the rehearsal on a fork described below: a mistake is much cheaper
+to find there than in a release that has already gone out to the stores.
 
-`🆕` marks tests of something changed in this round. **P0** blocks the release or ships a broken/unsafe build, **P1**
+**P0** blocks the release or ships a broken/unsafe build, **P1**
 is visible breakage, **P2** polish.
 
 ## Before you start
@@ -38,7 +37,7 @@ is visible breakage, **P2** polish.
 
 ## 1. Local checks (no GitHub)
 
-- [ ] **REL-001** 🆕 (P0) Secrets with awkward characters survive `local.properties`
+- [ ] **REL-001** (P0) Secrets with awkward characters survive `local.properties`
   1. In a scratch copy of the repository (never the real `local.properties` with the real keys), write
      `local.properties` the way `android-publish.yml` does — each value with every `\` doubled — with
      `campfire.android.keyPassword` set to a password containing `$`, a backtick, `"`, `'` and `\` (e.g.
@@ -48,7 +47,7 @@ is visible breakage, **P2** polish.
   **Expected:** the value printed is exactly the original password, not a shell-expanded or backslash-eaten version.
   <sub>[r5-20]</sub>
 
-- [ ] **REL-002** 🆕 (P1) The desktop distribution property is enforced
+- [ ] **REL-002** (P1) The desktop distribution property is enforced
   1. `./gradlew :app:desktop:createReleaseDistributable` (default), then with
      `-Pcampfire.desktop.distribution=mac-app-store`, then with `-Pcampfire.desktop.distribution=appstore`.
   **Expected:** the default builds as `download`; `mac-app-store` builds and the running app's About section has **no**
@@ -56,7 +55,7 @@ is visible breakage, **P2** polish.
   `microsoft-store`, `linux`).
   <sub>[r5-15]</sub>
 
-- [ ] **REL-003** 🆕 (P1) The packaged desktop runtime has locale data and the accessibility bridge
+- [ ] **REL-003** (P1) The packaged desktop runtime has locale data and the accessibility bridge
   1. `./gradlew :app:desktop:createReleaseDistributable`; read the `release` file of the bundled runtime
      (`…/Campfire.app/Contents/runtime/Contents/Home/release` on macOS).
   2. Start that app image, switch the app to Hungarian, open a song's language picker.
@@ -64,7 +63,7 @@ is visible breakage, **P2** polish.
   ("német", "angol"), not English — the release image, not `:app:desktop:run`, is the test.
   <sub>[r5-17]</sub>
 
-- [ ] **REL-004** 🆕 (P1) The iOS version phase reads `local.properties`
+- [ ] **REL-004** (P1) The iOS version phase reads `local.properties`
   1. Build the iOS app for the simulator with the recipe in the root `CLAUDE.md` (Release configuration).
   2. Put `campfire.ios.buildNumber=99` into `local.properties`, build again; remove it, build again.
   **Expected:** the build log shows "note: version set from gradle.properties: <version> (<build>)"; the built
@@ -72,7 +71,7 @@ is visible breakage, **P2** polish.
   99 while the override is there. It builds with no `local.properties` at all.
   <sub>[r5-22]</sub>
 
-- [ ] **REL-005** 🆕 (P2) The App Store category is in `Info.plist`
+- [ ] **REL-005** (P2) The App Store category is in `Info.plist`
   1. In the built app of REL-004: `plutil -p …/Campfire.app/Info.plist`.
   2. Install on the simulator and look at the home screen.
   **Expected:** `LSApplicationCategoryType` = `public.app-category.music`; `CFBundleName` = `Campfire`; the home-screen
@@ -90,10 +89,10 @@ is visible breakage, **P2** polish.
 
 ## 2. Workflow rehearsal on a fork
 
-- [ ] **REL-010** 🆕 (P0) Every publish workflow refuses to build without the Dropbox key
+- [ ] **REL-010** (P0) Every publish workflow refuses to build without the Dropbox key
   1. In the fork, with **no** `DROPBOX_APP_KEY` secret, dispatch Publish Android, Publish Web, Publish Desktop and
      Publish iOS by hand.
-  2. Publish a release in the fork (tag = the current `campfire.versionName`, e.g. `v4.3.0`).
+  2. Publish a release in the fork (tag = `v` followed by the current `campfire.versionName`).
   **Expected:** 1: each fails within seconds at "Check the sync credentials" (iOS: "Write local.properties") with an
   `::error::DROPBOX_APP_KEY is empty or not visible to this workflow…` line, and **no Gradle run**. 2: `release.yml`
   fails in its first job at "Check the sync credentials", before any of the four builds starts.
@@ -106,7 +105,7 @@ is visible breakage, **P2** polish.
   gradle.properties at that tag says campfire.versionName=…"; the pre-release triggers nothing.
   <sub>[CLAUDE]</sub>
 
-- [ ] **REL-012** 🆕 (P0) The Linux packages build on Ubuntu 22.04 and install on both sides of `t64`
+- [ ] **REL-012** (P0) The Linux packages build on Ubuntu 22.04 and install on both sides of `t64`
   1. In the fork, dispatch Publish Desktop against a pre-release.
   2. Download `…linux-amd64.deb`; install it in an Ubuntu 22.04 and an Ubuntu 24.04 (Docker or VMs):
      `apt install ./campfire…deb`.
@@ -124,7 +123,7 @@ is visible breakage, **P2** polish.
   missing `jdk.localedata` — REL-003 does.)
   <sub>[CLAUDE][r5-15][r5-17][r5-23]</sub>
 
-- [ ] **REL-014** 🆕 (P1) Release-notes backslashes are kept on a release, expanded only by hand
+- [ ] **REL-014** (P1) Release-notes backslashes are kept on a release, expanded only by hand
   1. In the fork, dispatch Publish Android with `release_notes` = `- One\n- Two` (stop it after "Generate release
      notes"; the fork has no signing secrets anyway) and read the generated `whatsnew-en-US`.
   2. Publish a throwaway release in the fork whose description holds `<!-- whats-new en-US` … `Fixed importing from
@@ -149,7 +148,7 @@ is visible breakage, **P2** polish.
 
 ## 3. The real repository
 
-- [ ] **REL-020** 🆕 (P0) Secrets stay off the command line and the APK is signed with the Play key
+- [ ] **REL-020** (P0) Secrets stay off the command line and the APK is signed with the Play key
   1. Dispatch Publish Android by hand with no `release_tag` (it builds and uploads to Play — do this only for a
      version you are happy to ship, or stop it before the upload step).
   2. Read the "Build release APK" log.
@@ -192,7 +191,7 @@ is visible breakage, **P2** polish.
   **Expected:** installs as an update (same signature); library and settings kept.
   <sub>[CLAUDE]</sub>
 
-- [ ] **REL-032** 🆕 (P1) The rating row opens the Play listing
+- [ ] **REL-032** (P1) The rating row opens the Play listing
   1. On a Play install and on a sideloaded APK: Settings → About → "Rate Campfire".
   **Expected:** the Play listing opens (a Custom Tab or the Play app) on both.
   <sub>[r5-16]</sub>
@@ -206,7 +205,7 @@ is visible breakage, **P2** polish.
   privacy report lists File Timestamp C617.1 and 3B52.1; everything in step 2 works.
   <sub>[r4-09][r4-10][pub-ios]</sub>
 
-- [ ] **REL-041** 🆕 (P0) Nothing in the iOS build breaks App Review's rules
+- [ ] **REL-041** (P0) Nothing in the iOS build breaks App Review's rules
   1. Settings → About on the TestFlight build.
   **Expected:** no donation / "Buy me a coffee" row, no other store or platform named, no "Coming soon" rows; the
   rating row is absent until the App Store listing URL is filled in.

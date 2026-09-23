@@ -25,7 +25,7 @@ platform-agnostic behaviour (ChordPro rendering, import rules, setlists, file na
   real signing keys in `local.properties`. The debug keystore works for everything except "an installation moves
   between Play and the GitHub APK".
 - **Sync**: `campfire.dropbox.appKey=…` in `local.properties` before building. Without it, Settings says sync is not
-  configured. Use the throwaway Dropbox account, never a real one.
+  configured. Use a Dropbox account prepared as the README's "The Dropbox account" describes.
 - **Devices**: an emulator for the adb-driven tests, and a real phone for touch, TalkBack, the pedal and the camera
   cutout. Where it matters, run on **API 29/30 and 34+**.
 - **Library on disk**: `adb shell run-as $P ls -R files` shows `library/songs`, `library/setlists`,
@@ -41,9 +41,7 @@ platform-agnostic behaviour (ChordPro rendering, import rules, setlists, file na
 - **What to record**: for each failure, the test ID, the device and API level, a screenshot or screen recording, and
   `adb logcat -d | grep -iE "campfire|AndroidRuntime|FATAL"` output.
 
-**Legend.** 🆕 = covers a change made in the 2026-09-23 round (the fifth review's 35 fixes, the four follow-up
-fixes, right-to-left lyrics). P0 = can lose or corrupt the library, or blocks the release. P1 = visible breakage.
-P2 = polish.
+**Legend.** P0 = can lose or corrupt the library, or blocks the release. P1 = visible breakage. P2 = polish.
 
 ## Smoke test (10 minutes, every build)
 
@@ -54,13 +52,13 @@ P2 = polish.
 - [ ] **AND-S03** Edit a song, type a word, Back → the unsaved changes question → Save → the word is in the viewer.
 - [ ] **AND-S04** Open a `.cho` from the Files app with Campfire → one import snackbar, the song opens.
 - [ ] **AND-S05** Settings → About: the rows are the author/version, GitHub, Report a problem, *Every version of
-  Campfire*, *Rate Campfire* (opens Play), the privacy policy and *Buy me a coffee*. 🆕
+  Campfire*, *Rate Campfire* (opens Play), the privacy policy and *Buy me a coffee*.
 - [ ] **AND-S06** Settings → Library → Export library → save to Downloads → the zip opens on a computer and holds
   every song.
 
 ## 1. Library safety (P0 first)
 
-- [ ] **AND-001** (P0) 🆕 Sync never writes over a save made during the run
+- [ ] **AND-001** (P0) Sync never writes over a save made during the run
   1. Connect Dropbox and have ~200 songs in both places. On a computer, edit song X in the Dropbox folder.
   2. On the phone, open song X's editor, add a line, but don't save yet. Start *Sync now* in Settings, go straight
      back to the editor and save while the run is still going (use Network Link Conditioner or a throttled emulator
@@ -69,7 +67,7 @@ P2 = polish.
   **Expected:** your saved line is in song X, and the Dropbox version is next to it as `x (2).cho` (or gets picked up
   on the next run as a conflict). Your edit is never replaced by the downloaded text, and never deleted.
   <sub>follow-up fix (sync save race)</sub>
-- [ ] **AND-002** (P0) 🆕 A mass local deletion does not empty the Dropbox folder without asking
+- [ ] **AND-002** (P0) A mass local deletion does not empty the Dropbox folder without asking
   1. Connect, sync a library of at least 10 songs.
   2. Delete more than half of them in the app (song menu → Delete, one by one), then *Sync now*.
   **Expected:** the run stops before anything moves, Settings → Library has a dot on its tab, and asks whether to
@@ -88,13 +86,13 @@ P2 = polish.
   **Expected:** the app stays open, and Settings shows a storage failure under the account. Delete the filler,
   *Sync now* → it completes.
   <sub>[r2-06]</sub>
-- [ ] **AND-005** (P0) 🆕 A library export that could not read everything says so
+- [ ] **AND-005** (P0) A library export that could not read everything says so
   1. Make one song unreadable: `adb shell run-as $P chmod 000 files/library/songs/<a song>.cho`.
   2. Settings → Export library → save.
   **Expected:** the export either fails with a message, or saves and then names the file it could not read. It is
   never a silent half library. Undo with `chmod 600`.
   <sub>[r5-06]</sub>
-- [ ] **AND-006** (P1) 🆕 Import and sync after a large import (the non-atomic move path)
+- [ ] **AND-006** (P1) Import and sync after a large import (the non-atomic move path)
   1. Import fixture: a zip of a few hundred songs. With sync connected, *Sync now*.
   **Expected:** every song is uploaded, no failures are listed, and nothing is duplicated.
   <sub>[r5-02]</sub>
@@ -174,7 +172,7 @@ P2 = polish.
      → lists `CampfireActivity`. Same for `…%2FSong.CHO`; not for `song.txt`.
   2. API 29/30: listed for `Hey.Jude.cho` and `Songs 2.0/Hey.Jude.cho`; not for `song.txt` or `Song.CHO` (a
      documented limit).
-  3. A `file://…/x.cho` URI no longer resolves to Campfire. A zip or txt is never claimed.
+  3. A `file://…/x.cho` URI does not resolve to Campfire. A zip or txt is never claimed.
   **Expected:** as listed; long press in Files → Open with offers Campfire for the ChordPro extensions
   (`.cho .chopro .chordpro .crd .chord .pro`).
   <sub>[r4-13][r3-23]</sub>
@@ -264,7 +262,7 @@ P2 = polish.
   **Expected:** as listed; the snackbar sits directly above the keyboard and moves with it, and above the navigation
   bar once the keyboard is down.
   <sub>[r2-60][r4-36]</sub>
-- [ ] **AND-055** (P1) 🆕 Right-to-left lyrics
+- [ ] **AND-055** (P1) Right-to-left lyrics
   1. Import fixture: the Hebrew song with four chords per line. Open it; rotate; set a large text size.
   **Expected:** each line starts at the right edge, and each chord sits over its own word (the first chord at the
   right). The chords never pile up at one edge, and they follow their words onto a wrapped line.
@@ -279,7 +277,7 @@ P2 = polish.
   **Expected:** setlist numbers keep their titles on one keyline; a 1,000-line song still scrolls.
   <sub>[r4-35][r2-54]</sub>
 - [ ] **AND-058** (P2) Screen stays on while a song is open, and turns off normally elsewhere. <sub>[presentation]</sub>
-- [ ] **AND-059** (P2) 🆕 Page-turner pedal (Bluetooth keyboard)
+- [ ] **AND-059** (P2) Page-turner pedal (Bluetooth keyboard)
   1. On song details: arrows scroll and page. Alt + Left and Ctrl + arrows are not consumed.
   **Expected:** Up/Down scroll and Left/Right change the song; modified arrows do nothing in the app.
   <sub>[r5-34]</sub>
@@ -295,7 +293,7 @@ P2 = polish.
   2. `adb shell run-as $P ls files/preferences`.
   **Expected:** no `sync-credentials.json`, and an opaque `sync-credentials.bin`.
   <sub>[r1-20]</sub>
-- [ ] **AND-071** (P0) 🆕 A momentary Keystore failure keeps the account
+- [ ] **AND-071** (P0) A momentary Keystore failure keeps the account
   1. Baseline: connect, kill, restart → connected.
   2. Change the lock screen (add or remove a PIN) → the app starts disconnected, `.bin` is gone, reconnecting works.
   3. **(dev patch)** make `secretKey()` throw `KeyStoreException` once → the app starts disconnected but `.bin` is
@@ -313,7 +311,7 @@ P2 = polish.
   `sync-credentials.bin` or `sync-index.json`. Connecting the same account and syncing creates no ` (2)` copies.
   Repeat with device-to-device (`backup_enable_d2d_test_mode 1`). Restore the GMS transport at the end.
   <sub>[r2-25][CLAUDE]</sub>
-- [ ] **AND-073** (P0) 🆕 Reinstall starts disconnected and uploads nothing
+- [ ] **AND-073** (P0) Reinstall starts disconnected and uploads nothing
   1. Connect, sync, `adb uninstall $P`, install again.
   **Expected:** disconnected, the demo is planted, and nothing is uploaded to Dropbox.
   <sub>[r5-25]</sub>
@@ -352,12 +350,12 @@ Two-device behaviour, conflicts and the deletion guards across devices are in `0
   2. `adb shell am force-stop $P` during a run, then start.
   **Expected:** (2) says "The last sync was stopped before it finished" and does not start a run by itself.
   <sub>[r2-17]</sub>
-- [ ] **AND-085** (P1) 🆕 A file another device keeps changing is reported, not counted as success
+- [ ] **AND-085** (P1) A file another device keeps changing is reported, not counted as success
   1. **(dev-assisted)** While a run uploads, keep changing the same file on Dropbox from a computer (or use the
      sync test hook), so that both passes conflict.
   **Expected:** the run's summary names the file as not synced, and "last synced" does not move forward.
   <sub>follow-up fix (exhausted retries)</sub>
-- [ ] **AND-086** (P1) 🆕 A Dropbox name Windows cannot store is still fine here
+- [ ] **AND-086** (P1) A Dropbox name Windows cannot store is still fine here
   1. Put `aux.cho` and `a:b.cho` in the Dropbox songs folder from a Mac or the web, then sync.
   **Expected:** Android downloads them (only Windows skips them, see `04-windows.md`).
   <sub>[r5-03]</sub>

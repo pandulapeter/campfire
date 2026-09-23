@@ -232,7 +232,7 @@ need a touch screen. They are marked *(touch)*: do them on the phone while runni
 
 ## 3. Song details
 
-- [ ] **CORE-030** (P1) 🆕 Right-to-left lyrics start at the right edge, with each chord over its word
+- [ ] **CORE-030** (P1) Right-to-left lyrics start at the right edge, with each chord over its word
   1. Import `songs/rtl-hebrew.cho` and open it.
   2. Import `songs/rtl-arabic.cho` and open it. Narrow the window until its long line wraps, then widen it again.
   3. Open a demo song at the smallest and at the largest text size (Cmd + scroll wheel).
@@ -311,7 +311,7 @@ need a touch screen. They are marked *(touch)*: do them on the phone while runni
   on a single song, the keys do nothing.
   <sub>r3-32, features</sub>
 
-- [ ] **CORE-038** (P1) 🆕 Arrow keys with a modifier are left to the system
+- [ ] **CORE-038** (P1) Arrow keys with a modifier are left to the system
   1. On the song details screen, press Cmd+Left, Cmd+Right, Alt+Left and Ctrl+Left.
   2. Press Escape.
   3. Press Cmd+F from a list screen.
@@ -337,7 +337,7 @@ need a touch screen. They are marked *(touch)*: do them on the phone while runni
 
 ## 4. Chords, transposition, notation
 
-- [ ] **CORE-050** (P0) 🆕 Bracketed words are never transposed, not even in the file
+- [ ] **CORE-050** (P0) Bracketed words are never transposed, not even in the file
   1. Import `songs/bracket-labels.cho` and open it. Transpose +2 on the details screen.
   2. Open the editor, transpose +2 there, and save. Open the file in a text editor.
   3. Set Accidentals to Sharps, then to Flats.
@@ -347,14 +347,14 @@ need a touch screen. They are marked *(touch)*: do them on the phone while runni
   `[]` is not colored as a chord.
   <sub>r5-08, r5-14</sub>
 
-- [ ] **CORE-051** (P1) 🆕 A lowercase bass note follows its chord
+- [ ] **CORE-051** (P1) A lowercase bass note follows its chord
   1. Import `songs/bass-notes.cho`. Transpose +2 on the details screen, then +2 in the editor, and save.
 
   **Expected:** `D/f#` becomes `E/g#`, `d/f#` becomes `e/g#`, `A/c#` becomes `B/d#`, and `Am7/G` becomes `Bm7/A`. The
   bass note keeps its case, both on the screen and in the saved file.
   <sub>r5-09</sub>
 
-- [ ] **CORE-052** (P1) 🆕 German notation reads `C/h` as C over B
+- [ ] **CORE-052** (P1) German notation reads `C/h` as C over B
   1. Import `songs/german-bass.cho`. Turn the German notation setting off, then on. Transpose +1.
   2. Import `songs/german-notation.cho` and do the same.
 
@@ -396,20 +396,20 @@ need a touch screen. They are marked *(touch)*: do them on the phone while runni
   longer offers Title or Artist for it. The saved file says `{meta: key A}`.
   <sub>r4-19, r4-21</sub>
 
-- [ ] **CORE-057** (P1) 🆕 Non-breaking spaces in tabs and grids
+- [ ] **CORE-057** (P1) Non-breaking spaces in tabs and grids
   1. Import `songs/nbsp-tab-grid.cho`, transpose +2, and compare with the same file on the web build (06).
 
   **Expected:** The tab columns stay aligned and the grid bars read as bars. The two builds show identical text.
   <sub>r5-11</sub>
 
-- [ ] **CORE-058** (P1) 🆕 A wrapped tab row is never cut through a character
+- [ ] **CORE-058** (P1) A wrapped tab row is never cut through a character
   1. Import `songs/wide-tab-multibyte.cho`. Narrow the window step by step until the tab wraps into several rows.
 
   **Expected:** At no width does a `�` or half a glyph appear at either edge of a row. The emoji, the `𝄞` and the
   `é` land whole on one row.
   <sub>r5-12</sub>
 
-- [ ] **CORE-059** (P0) 🆕 A CR-only file keeps its line endings
+- [ ] **CORE-059** (P0) A CR-only file keeps its line endings
   1. Import `songs/cr-only.cho` and open it in the editor.
   2. Add a tag from the details header. Check the file with `xxd`.
   3. Transpose it in the editor and save. Check the file again.
@@ -491,7 +491,7 @@ need a touch screen. They are marked *(touch)*: do them on the phone while runni
   **Expected:** Each pane comes back where it was.
   <sub>r3-31</sub>
 
-- [ ] **CORE-077** (P1) 🆕 Highlighting follows every keystroke, CR-only and empty brackets included
+- [ ] **CORE-077** (P1) Highlighting follows every keystroke, CR-only and empty brackets included
   1. Type inside a chord, a directive, a comment and a tab block.
   2. Undo, redo, Revert and transpose.
   3. Type `[ *softly]`, `[]` and `[ G ]`.
@@ -639,7 +639,7 @@ need a touch screen. They are marked *(touch)*: do them on the phone while runni
 
 ## 8. Import
 
-- [ ] **CORE-120** (P0) 🆕 "Keep both" keeps the setlist pointing at the edited song
+- [ ] **CORE-120** (P0) "Keep both" keeps the setlist pointing at the edited song
   1. Start from an empty library. Import `import/keep-both-1.zip`.
   2. Import `import/keep-both-2.zip`. The conflicts question appears: answer **Keep both**.
   3. Open both setlists, and the song from each.
@@ -661,7 +661,7 @@ need a touch screen. They are marked *(touch)*: do them on the phone while runni
   (or `_3`). Cancel leaves the library untouched.
   <sub>r1-06, r2-02, r2-15, r4-17</sub>
 
-- [ ] **CORE-122** (P1) 🆕 A byte order mark is never content
+- [ ] **CORE-122** (P1) A byte order mark is never content
   1. Import `songs/bom-start.cho`, `songs/bom-double.cho` and `songs/bom-joined.cho`.
   2. Import `songs/bom-joined.cho` again.
 
@@ -679,7 +679,7 @@ need a touch screen. They are marked *(touch)*: do them on the phone while runni
   (`7b 74 69`).
   <sub>r1-32, r4-06, r2-28</sub>
 
-- [ ] **CORE-124** (P0) 🆕 Composed and decomposed names are one song
+- [ ] **CORE-124** (P0) Composed and decomposed names are one song
   1. Import everything in `songs/nfc/`. Then import `songs/nfd/`.
   2. Put the NFD files into the library folder directly, and bring the app to the front.
 
@@ -744,7 +744,7 @@ need a touch screen. They are marked *(touch)*: do them on the phone while runni
 
 ## 9. Export
 
-- [ ] **CORE-140** (P0) 🆕 An export never hands out half a library
+- [ ] **CORE-140** (P0) An export never hands out half a library
   1. `chmod 000` one song, then Export library.
   2. `chmod 000 <library>/songs`, then Export library.
   3. Put `size/huge-20mb.cho` into `library/songs`, restore the permissions, then Export library.
@@ -787,23 +787,23 @@ need a touch screen. They are marked *(touch)*: do them on the phone while runni
   The export proposes the same name.
   <sub>r2-26, r4-20, CLAUDE</sub>
 
-- [ ] **CORE-151** (P0) 🆕 Renaming never names a song twice
+- [ ] **CORE-151** (P0) Renaming never names a song twice
   1. Put `hello.cho` (`{title: Hello}`, `{artist: Adele}`) into the library, plus a setlist `gig.setlist.json` that
      names `adele-hello.cho` (missing) and then `hello.cho`.
   2. On the Setlists screen, Gig shows one missing row and "Hello".
   3. From the Songs screen, choose Update file name on Hello.
 
   **Expected:** Gig holds a single "Hello" row and the missing row is gone. The file names `adele-hello.cho` once.
-  Nothing crashes. Before this fix it crashed with "Key … was already used".
+  Nothing crashes.
   <sub>r5-32</sub>
 
-- [ ] **CORE-152** (P1) 🆕 Renaming from the song details screen keeps you on the song
+- [ ] **CORE-152** (P1) Renaming from the song details screen keeps you on the song
   1. Put `old name.cho` (Adele / Hello) in 3 setlists and give it a library transposition.
   2. Open it from Songs, and choose Update file name from its menu.
   3. Open it from a setlist, and do the same on another copy.
 
   **Expected:** The screen stays on the song, the bar names it, and the transposition is kept. Opened from a
-  setlist, the pager stays on the song. Every setlist follows the new name. Before this fix the screen closed itself.
+  setlist, the pager stays on the song. Every setlist follows the new name.
   <sub>r5-33, r2-33</sub>
 
 - [ ] **CORE-153** (P1) Older names offer Update file name
@@ -859,14 +859,14 @@ need a touch screen. They are marked *(touch)*: do them on the phone while runni
   bridge section is "Átkötés" everywhere. Each language is named in its own name in the list.
   <sub>features, r4-38, r4-39, r5-16</sub>
 
-- [ ] **CORE-173** (P1) 🆕 The About tab
+- [ ] **CORE-173** (P1) The About tab
   1. Open Settings → About on the desktop build.
   2. Click every row.
 
   **Expected:** One untitled section: the author and version (linking the author's site), Campfire on GitHub, Report
   a problem, **Every version of Campfire** (opens the README's "Get Campfire" section), Privacy Policy, and Buy me a
-  coffee. **Rate Campfire** is absent, because the Mac App Store listing does not exist yet. There are no per-store
-  rows and no "Coming soon" rows. Every link opens. The platform documents cover the rating row on Android, and the
+  coffee. **Rate Campfire** is there only once the app has a Mac App Store listing, and then opens it. There are no
+  per-store rows and no "Coming soon" rows. Every link opens. The platform documents cover the rating row on Android, and the
   missing coffee row on iOS and on a Mac App Store build.
   <sub>r5-15, r5-16</sub>
 

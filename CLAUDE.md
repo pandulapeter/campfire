@@ -224,7 +224,10 @@ uninstall and nothing else does.
   `:data:repository:implementation` (`SyncPlanner`, which decides what happens to every file in a sync run), run on
   the desktop target with
   `./gradlew :chordpro:desktopTest :domain:implementation:desktopTest :data:source:local:implementation:desktopTest :data:source:remote:api:desktopTest :data:source:remote:implementation:desktopTest :data:repository:implementation:desktopTest`.
-  The UI is untested.
+  The UI is untested by code. Everything the unit tests cannot reach is the **manual regression suite** in
+  `documentation/testing/` (its `README.md` is the entry point): one document per platform plus sync and the
+  release, written as the app should behave rather than as a record of one pass. A change to what the user sees or to
+  what happens to their files updates the test that describes it, or adds one, in the same change.
 
 ## Build
 
