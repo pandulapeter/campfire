@@ -29,7 +29,15 @@ sealed interface ChordProLine {
      * too wide (see [com.pandulapeter.campfire.chordpro.ChordProTabWrapper]); transposed on the frets, not on the
      * notes. A run of them can sit anywhere inside a section, with lyrics before and after it.
      */
-    data class Tab(val text: String) : ChordProLine
+    data class Tab(
+        val text: String,
+        /**
+         * Whether the tab line before this one in the section was written in the same `{start_of_tab}` environment.
+         * A run of tablature is moved as one fingerboard for as long as this holds; a second environment in the same
+         * section, even one only a blank line away, is a fingerboard of its own, as it is to the text transposition.
+         */
+        val continuesEnvironment: Boolean = false,
+    ) : ChordProLine
 
     /** One line inside {start_of_grid}: tokens separated by whitespace. */
     data class Grid(val tokens: List<GridToken>) : ChordProLine

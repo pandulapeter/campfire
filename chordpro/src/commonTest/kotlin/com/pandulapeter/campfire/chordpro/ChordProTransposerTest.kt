@@ -435,6 +435,20 @@ class ChordProTransposerTest {
     }
 
     @Test
+    fun `two tabs in one section are two fingerboards in the model as in the text`() {
+        listOf(
+            "{start_of_verse: Solo}\n{start_of_tab}\ne|--0--|\n{end_of_tab}\n\n{start_of_tab}\ne|--12--|\n{end_of_tab}\n{end_of_verse}",
+            "{start_of_verse: Solo}\n{start_of_tab}\ne|--0--|\n{end_of_tab}\n{start_of_tab}\ne|--12--|\n{end_of_tab}\n{end_of_verse}",
+        ).forEach { text ->
+            assertEquals(
+                ChordProTransposer.transpose(ChordProParser.parse(text), -1, preferFlats = false),
+                ChordProParser.parse(ChordProTransposer.transposeText(text, -1, preferFlats = false)),
+            )
+            assertEquals(listOf("e|--11-|", "e|--11--|"), ChordProTransposer.transpose(ChordProParser.parse(text), -1, preferFlats = false).tabLines())
+        }
+    }
+
+    @Test
     fun `a tab with a blank line in it is one fingerboard in the model as in the text`() {
         val text = "{sov}\n{sot}\ne|--0--|\n\ne|--20--|\n{eot}\n{eov}"
 

@@ -48,6 +48,21 @@ class ChordProSerializerTest {
     }
 
     @Test
+    fun `two tabs in one section come back as two`() {
+        val blankBetween = ChordProParser.parse(
+            "{start_of_verse: Solo}\n{start_of_tab}\ne|--0--|\n{end_of_tab}\n\n{start_of_tab}\ne|--12--|\n{end_of_tab}\n{end_of_verse}",
+        )
+        val adjacent = ChordProParser.parse("{sov}\n{sot}\ne|-0-|\n{eot}\n{sot}\ne|-2-|\n{eot}\n{eov}")
+
+        assertEquals(blankBetween, ChordProParser.parse(ChordProSerializer.serialize(blankBetween)))
+        assertEquals(
+            "{start_of_verse}\n{start_of_tab}\ne|-0-|\n{end_of_tab}\n{start_of_tab}\ne|-2-|\n{end_of_tab}\n{end_of_verse}",
+            ChordProSerializer.serialize(adjacent),
+        )
+        assertEquals(adjacent, ChordProParser.parse(ChordProSerializer.serialize(adjacent)))
+    }
+
+    @Test
     fun `an abc block survives serializing`() {
         val parsed = ChordProParser.parse("{start_of_abc}\nX:1\n[CEG]2 [A2B] |\n{end_of_abc}")
 

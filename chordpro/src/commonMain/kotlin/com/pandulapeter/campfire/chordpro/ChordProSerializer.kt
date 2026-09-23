@@ -116,7 +116,12 @@ object ChordProSerializer {
         items.forEachIndexed { index, item ->
             if (item is ChordProBlock) {
                 val nextLine = items.subList(index + 1, items.size).firstOrNull { it is ChordProLine } as ChordProLine?
-                if (openEnvironment != null && nextLine?.let { lineEnvironmentName(it, openEnvironment) } != openEnvironment) {
+                // A tab stays open across the block only where the tab line after it is still in the same environment.
+                val keepsEnvironmentOpen = when (openEnvironment) {
+                    "tab" -> (nextLine as? ChordProLine.Tab)?.continuesEnvironment == true
+                    else -> nextLine?.let { lineEnvironmentName(it, openEnvironment) } == openEnvironment
+                }
+                if (openEnvironment != null && !keepsEnvironmentOpen) {
                     add("{end_of_$openEnvironment}")
                     openEnvironment = null
                 }
@@ -125,7 +130,9 @@ object ChordProSerializer {
             }
             val line = item as ChordProLine
             val environment = lineEnvironmentName(line, openEnvironment)
-            if (environment != openEnvironment) {
+            // A tab line that starts an environment of its own is written in one, even straight after another.
+            val startsTab = line is ChordProLine.Tab && !line.continuesEnvironment && openEnvironment == "tab"
+            if (environment != openEnvironment || startsTab) {
                 openEnvironment?.let { add("{end_of_$it}") }
                 environment?.let { name ->
                     add(label?.let { "{start_of_$name: $it}" } ?: "{start_of_$name}")

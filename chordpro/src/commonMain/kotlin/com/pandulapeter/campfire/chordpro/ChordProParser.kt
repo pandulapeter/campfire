@@ -279,6 +279,9 @@ object ChordProParser {
 
         private var isContinuation = false
 
+        /** Whether the tab environment that is open has had a line yet, see [ChordProLine.Tab.continuesEnvironment]. */
+        private var hasTabLine = false
+
         /**
          * Whether a `{start_of_tab}`, a `{start_of_grid}` or one of the verbatim environments is open, which says how
          * lines are read and not what section they are in.
@@ -297,6 +300,7 @@ object ChordProParser {
             this.isExplicit = isExplicit
             this.headingText = headingText
             this.isContinuation = isContinuation
+            hasTabLine = false
             lines.clear()
         }
 
@@ -310,6 +314,7 @@ object ChordProParser {
         fun openLineMode(mode: LineMode, label: String?) {
             if (type == null) open(SectionType.Paragraph, label = label, isExplicit = false)
             lineMode = mode
+            hasTabLine = false
         }
 
         fun closeLineMode() {
@@ -331,6 +336,7 @@ object ChordProParser {
             label = null
             isExplicit = false
             isContinuation = false
+            hasTabLine = false
             headingText = null
             lines.clear()
         }
@@ -352,10 +358,12 @@ object ChordProParser {
                 // that one ends at its own `{end_of_…}`, which is where the text transposition, the summary and the
                 // highlighter end it as well.
                 val lineMode = this.lineMode
+                val hasTabLine = this.hasTabLine
                 close()
                 blocks += block
                 open(type, label, isExplicit, isContinuation = true)
                 this.lineMode = lineMode
+                this.hasTabLine = hasTabLine
             } else {
                 blocks += block
             }
@@ -374,7 +382,7 @@ object ChordProParser {
                 open(SectionType.Paragraph, label = null, isExplicit = false)
             }
             lines += when (lineMode) {
-                LineMode.TAB -> ChordProLine.Tab(rawLine)
+                LineMode.TAB -> ChordProLine.Tab(rawLine, continuesEnvironment = hasTabLine).also { hasTabLine = true }
                 LineMode.GRID -> ChordProLine.Grid(ChordProSyntax.parseGridTokens(trimmedLine))
                 LineMode.VERBATIM -> ChordProLine.Lyrics(text = rawLine, chords = emptyList())
                 null -> parseLyrics(rawLine)

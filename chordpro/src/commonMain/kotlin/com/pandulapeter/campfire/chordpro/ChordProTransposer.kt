@@ -99,9 +99,10 @@ object ChordProTransposer {
     /**
      * Splits the lines into runs of tablature and everything else, and rewrites each the way it has to be.
      *
-     * A blank line does not end a run: a tab environment keeps its blank lines, and the text path moves an environment
-     * as one fingerboard however many systems it is written in, so the model has to make the same octave decision for
-     * the same lines. Only the tab lines are handed to [rewriteTabLines]; the blanks go back where they were.
+     * A blank line does not end a run, a second environment does: a tab environment keeps its blank lines, and the text
+     * path moves an environment as one fingerboard however many systems it is written in, and every environment as a
+     * fingerboard of its own, so the model has to make the same octave decisions for the same lines. Only the tab lines
+     * are handed to [rewriteTabLines]; the blanks go back where they were.
      */
     private fun rewriteLines(
         lines: List<ChordProLine>,
@@ -114,12 +115,16 @@ object ChordProTransposer {
         fun flushRun() {
             if (run.isEmpty()) return
             val tabLines = rewriteTabLines(run.filterIsInstance<ChordProLine.Tab>().map { it.text }).iterator()
-            rewritten += run.map { line -> if (line is ChordProLine.Tab) ChordProLine.Tab(tabLines.next()) else line }
+            rewritten += run.map { line -> if (line is ChordProLine.Tab) line.copy(text = tabLines.next()) else line }
             run = mutableListOf()
         }
         lines.forEach { line ->
             when {
-                line is ChordProLine.Tab -> run += line
+                line is ChordProLine.Tab -> {
+                    // A second environment is a fingerboard of its own, whatever stands between the two.
+                    if (!line.continuesEnvironment) flushRun()
+                    run += line
+                }
                 line == ChordProLine.Blank && run.isNotEmpty() -> run += line
                 else -> {
                     flushRun()
