@@ -280,6 +280,25 @@ class ChordProTransposerTest {
     }
 
     @Test
+    fun `a key spelled out in words is transposed`() {
+        assertEquals("{key: A major}\n[A]a", ChordProTransposer.transposeText("{key: G major}\n[G]a", 2, preferFlats = false))
+        assertEquals("{key: C minor}", ChordProTransposer.transposeText("{key: A minor}", 3, preferFlats = false))
+        assertEquals("{key: C-Dur}", ChordProTransposer.transposeText("{key: Bb-Dur}", 2, preferFlats = false))
+        assertEquals("{key: F minor}", ChordProTransposer.transposeText("{key: F# minor}", -1, preferFlats = false))
+        assertEquals("A major", ChordProTransposer.transpose(ChordProParser.parse("{key: G major}\n[G]a"), 2).metadata.key)
+    }
+
+    @Test
+    fun `a key spelled out in words keeps choosing the spelling`() {
+        assertTrue(ChordProTransposer.prefersFlats(ChordProParser.parse("{key: D minor}\n[Dm]a"), 0))
+    }
+
+    @Test
+    fun `a lowercase key stays as written`() {
+        assertEquals("{key: a-moll}", ChordProTransposer.transposeText("{key: a-moll}", 2))
+    }
+
+    @Test
     fun `a real chord is still transposed`() {
         listOf(
             "C", "Am7/G", "C#m7b5", "Bsus4", "(Em)", "F#m", "Gadd9", "Cmaj7", "Am(no3)", "D7sus4/A", "Bb/D", "H7", "A-", "D♭",

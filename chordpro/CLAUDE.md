@@ -117,7 +117,9 @@ in `:domain:*`. `:data:source:local:implementation` uses it directly for the met
   U+FEFF is not whitespace to `trim`, so a `{title}` behind it would be read as lyrics.
 - `ChordProTransposer` — moves chords by semitones, on the model (the viewer) or directly on the text keeping every
   byte of formatting (the editor's transpose action). Chooses sharps or flats from the song's key, follows the bass
-  note after `/`, understands German `H`, and leaves annotations alone. A bracket is only moved when
+  note after `/`, understands German `H`, moves a key spelled out in words (`G major`, `A minor`, `Bb-Dur`) by its note
+  and keeps the words (`renameKey`), which is also what the notation and the library scan use for the key, and leaves
+  annotations alone. A bracket is only moved when
   `ChordProChordNames.isChordName` accepts the whole of it, so a `[Break]` or a `[Chorus 2x]` somebody wrote without
   the `*` is left where it is, and does not vote on the spelling either — the same question `ChordProNotation` has
   always asked. A caller that knows better passes `preferFlats` and gets that spelling instead, which is what the accidentals preference does; forced that way it is

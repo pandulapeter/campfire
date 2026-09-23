@@ -21,6 +21,13 @@ import kotlin.test.assertTrue
 class ChordProNotationTest {
 
     @Test
+    fun `a key spelled out in words is written in German notation`() {
+        assertEquals("H major", ChordProNotation.toGerman(ChordProParser.parse("{key: B major}\n[B]a")).metadata.key)
+        assertEquals("B major", ChordProParser.parse("{key: H major}\n[H]a").metadata.key)
+        assertEquals(ChordProParser.parse("{key: H major}\n[H]a").metadata.key, ChordProParser.summarize("{key: H major}\n[H]a").metadata.key)
+    }
+
+    @Test
     fun `accidental signs are folded wherever they stand in a name`() {
         assertEquals("Bbm7b5/C#", ChordProNotation.withAsciiAccidentals("B♭m7♭5/C♯"))
     }

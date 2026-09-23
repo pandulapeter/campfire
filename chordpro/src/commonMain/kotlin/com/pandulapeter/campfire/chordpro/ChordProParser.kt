@@ -190,7 +190,7 @@ object ChordProParser {
         val expandedKey = declared.key?.let { written -> ChordProChordNames.lowercaseMinorExpanded(written) ?: written }
         val isGermanKey = expandedKey?.let(ChordProNotation::isGermanName) == true
         val key = expandedKey?.let { key ->
-            ChordProNotation.withAsciiAccidentals(if (isGermanNotated || isGermanKey) ChordProNotation.fromGerman(key) else key)
+            ChordProNotation.withAsciiAccidentals(if (isGermanNotated || isGermanKey) ChordProTransposer.renameKey(key, ChordProNotation::fromGerman) else key)
         }
         return ChordProSummary(
             metadata = declared.copy(key = key),
