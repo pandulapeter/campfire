@@ -12,6 +12,9 @@ build/
 .kotlin/
 /local.properties
 /app/android/release.keystore
+# Written by Android Studio when a Gradle JDK is picked. It would move the daemon of every checkout and of CI onto that
+# JDK, while the workflows install the one the build targets.
+/gradle/gradle-daemon-jvm.properties
 
 # IDE
 /.idea/

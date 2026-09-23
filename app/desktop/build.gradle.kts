@@ -10,6 +10,7 @@
 import java.security.MessageDigest
 import javax.inject.Inject
 import org.jetbrains.compose.desktop.application.dsl.TargetFormat
+import org.jetbrains.compose.desktop.application.tasks.AbstractJLinkTask
 
 plugins {
     alias(libs.plugins.kotlin.jvm)
@@ -31,6 +32,11 @@ val versionName = project.property("campfire.versionName").toString()
 group = "com.pandulapeter.campfire"
 version = versionName
 
+/** The JDK the app is compiled with, and the one whose runtime image, `jpackage` and `java` the packaging uses. */
+val toolchainLauncher = javaToolchains.launcherFor {
+    languageVersion = JavaLanguageVersion.of(libs.versions.jvmTarget.get().toInt())
+}
+
 compose.desktop {
     application {
         mainClass = "com.pandulapeter.campfire.CampfireDesktopApplicationKt"
@@ -42,13 +48,17 @@ compose.desktop {
         }
         buildTypes.release.proguard {
             configurationFiles.from(project.file("proguard-rules.pro"))
+            // One jar instead of a hundred. Windows Defender scans every file the app opens again whenever its
+            // signatures have been updated since, which happens several times a day, and it takes as long over a jar of
+            // thirty kilobytes as over one of twenty megabytes: the first start after an update took six seconds with
+            // every dependency in a jar of its own and under two with one jar. Nothing is lost in the merge, as long as
+            // no two jars carry a META-INF/services file of the same name - ProGuard keeps the first copy of a duplicate.
+            joinOutputJars = true
         }
         // Package with the toolchain JDK rather than the JVM running Gradle, which may lack jpackage.
-        javaHome = javaToolchains.launcherFor {
-            languageVersion = JavaLanguageVersion.of(libs.versions.jvmTarget.get().toInt())
-        }.get().metadata.installationPath.asFile.absolutePath
+        javaHome = toolchainLauncher.get().metadata.installationPath.asFile.absolutePath
         nativeDistributions {
-            targetFormats(TargetFormat.Dmg, TargetFormat.Exe, TargetFormat.Msi, TargetFormat.Deb)
+            targetFormats(TargetFormat.Dmg, TargetFormat.Msi, TargetFormat.Deb)
             packageName = "Campfire"
             packageVersion = versionName
             description = "Your songbook, on every screen you own"
@@ -81,8 +91,12 @@ compose.desktop {
                 shortcut = true
                 // Installs into the user's own profile, so the installer never asks for an administrator.
                 perUserInstall = true
-                // What makes a newer installer replace the installed version rather than land next to it, so it has to
-                // stay what it is for as long as the app exists.
+                // What makes a newer installer replace the installed version rather than land next to it. Windows
+                // Installer only looks for a product with the same upgrade code in the context it is installing into
+                // itself, so this and perUserInstall above both have to stay what they are for as long as the app
+                // exists: changing either leaves every existing installation where it is, with a second one in Apps.
+                // 4.2.2 is that installation - per machine, under the code jpackage derives when it is given none -
+                // and 4.2.3 was the change.
                 upgradeUuid = "243e51a3-b5a0-49a7-9a61-2c276db59db9"
             }
             linux {
@@ -96,6 +110,38 @@ compose.desktop {
                 debMaintainer = "pandulapeter@gmail.com"
             }
         }
+    }
+}
+
+/**
+ * Writes the class data sharing archive of the JDK's own classes into the runtime image, which every JDK ships in
+ * `lib/server` (`bin/server` on Windows) and the JVM maps at startup instead of loading and verifying those classes one
+ * by one. jlink leaves it out of the image the Compose plugin asks for, and its own `--generate-cds-archive` cannot
+ * put it back: that runs the image's `java`, which `--strip-native-commands` has removed. So the toolchain's launcher
+ * - the image is jlinked from that same JDK - is put into the image for as long as the archive takes to write. A JVM
+ * that finds the archive does not match ignores it without a word, so the worst it can do is nothing.
+ *
+ * The app's own classes are not archived. Only a JVM that runs the app can write that archive
+ * (`-XX:+AutoCreateSharedArchive`), and on JDK 21 the start that records it takes about six times as long, the file
+ * would be written into the install folder, where no uninstaller knows about it, and a JVM that finds one written for
+ * other jars neither uses it nor replaces it - which after an update is every one of them.
+ */
+tasks.withType<AbstractJLinkTask>().configureEach {
+    val runtimeImage = destinationDir
+    val java = toolchainLauncher.map { it.executablePath.asFile }
+    doLast {
+        val launcher = runtimeImage.get().asFile.resolve("bin/${java.get().name}")
+        java.get().copyTo(launcher, overwrite = true)
+        launcher.setExecutable(true)
+        try {
+            val dump = ProcessBuilder(launcher.absolutePath, "-Xshare:dump").redirectErrorStream(true).start()
+            val output = dump.inputStream.bufferedReader().readText()
+            if (dump.waitFor() != 0) throw GradleException("Could not write the class data sharing archive:\n$output")
+        } finally {
+            launcher.delete()
+        }
+        // The JVM writes it read-only, which on Windows stops the next jlink run from clearing its output directory.
+        runtimeImage.get().asFile.walkTopDown().filter { it.extension == "jsa" }.forEach { it.setWritable(true) }
     }
 }
 
@@ -122,6 +168,28 @@ tasks.matching { it.name == "packageDeb" || it.name == "packageReleaseDeb" }.con
     finalizedBy(addStartupWmClassToDeb)
 }
 
+/**
+ * Puts a ticked "Launch Campfire" checkbox on the last page of the Windows installer, which starts the app when the
+ * installer is closed with Finish. jpackage has no option for it and takes WiX sources only through the --resource-dir
+ * the Compose plugin owns, so `add-launch-after-install.ps1` adds it to the finished .msi - the script says how. It is
+ * a finalizer of the packaging task, so whatever builds the .msi - `desktop-publish.yml` included - gets it without
+ * asking, and a script that cannot find what it edits fails that build rather than letting an installer out without it.
+ */
+val addLaunchAfterInstallToMsi = tasks.register<AddLaunchAfterInstallToMsi>("addLaunchAfterInstallToMsi") {
+    onlyIf { isWindowsHost }
+    val packages = fileTree(layout.buildDirectory.dir("compose/binaries")) { include("main/msi/*.msi", "main-release/msi/*.msi") }
+    this.packages.from(packages)
+    script = project.file("add-launch-after-install.ps1")
+    launcherName = "Campfire.exe"
+    checkboxText = "Launch Campfire"
+    // As with the .deb, the package is rewritten in place, so it is both what the task reads and what it leaves behind.
+    inputs.files(packages)
+    outputs.files(packages)
+}
+tasks.matching { it.name == "packageMsi" || it.name == "packageReleaseMsi" }.configureEach {
+    finalizedBy(addLaunchAfterInstallToMsi)
+}
+
 compose.resources {
     publicResClass = false
     packageOfResClass = "com.pandulapeter.campfire.resources"
@@ -134,6 +202,45 @@ kotlin {
 
 /** Whether this build runs on Linux, which is the only host jpackage builds the .deb on. */
 val isLinuxHost get() = System.getProperty("os.name").orEmpty().lowercase().contains("linux")
+
+/** Whether this build runs on Windows, which is the only host jpackage builds the .msi on. */
+val isWindowsHost get() = System.getProperty("os.name").orEmpty().lowercase().contains("windows")
+
+/** Runs `add-launch-after-install.ps1` over each .msi, which fails the build rather than leave an installer without it. */
+abstract class AddLaunchAfterInstallToMsi : DefaultTask() {
+
+    @get:Inject
+    abstract val execOperations: ExecOperations
+
+    @get:Internal
+    abstract val packages: ConfigurableFileCollection
+
+    @get:InputFile
+    abstract val script: RegularFileProperty
+
+    @get:Input
+    abstract val launcherName: Property<String>
+
+    @get:Input
+    abstract val checkboxText: Property<String>
+
+    @TaskAction
+    fun addLaunchAfterInstall() {
+        val msis = packages.files.filter { it.isFile }
+        if (msis.isEmpty()) throw GradleException("There is no .msi to add the launch checkbox to.")
+        msis.forEach { msi ->
+            execOperations.exec {
+                commandLine(
+                    "powershell", "-NoProfile", "-NonInteractive", "-ExecutionPolicy", "Bypass",
+                    "-File", script.get().asFile.absolutePath,
+                    "-Path", msi.absolutePath,
+                    "-Launcher", launcherName.get(),
+                    "-Text", checkboxText.get(),
+                )
+            }
+        }
+    }
+}
 
 /**
  * Unpacks each .deb, adds the StartupWMClass key to its one desktop entry and builds it again. It fails rather than
