@@ -172,8 +172,8 @@ uninstall and nothing else does.
   their listing URLs, a null `listingUrl` marking one the app is not on yet; publishing is filling it in.
   `currentDistribution` says which store the build was published on, and is what decides whether it may ask for
   money at all (`canAskForDonations`: never on Apple's stores, guideline 3.1.1). `storeForRating` is a different
-  question — the store of the platform the app is **running** on, so the direct `.dmg` and the Mac App Store build
-  both send a review to the Mac App Store — and it is what the one "Rate Campfire" row opens, absent on Linux, on
+  question — the store of the platform the app is **running** on, so a Mac build made by hand and the Mac App Store
+  build both send a review to the Mac App Store — and it is what the one "Rate Campfire" row opens, absent on Linux, on
   the web, and wherever that listing does not exist yet. The row says *rate* and never *install*: a store page
   carries an install button, and a second copy of the app would come with a library of its own. **GitHub is the
   project's website and its issue tracker**; the About section links nothing else but the author's own site, the
@@ -283,18 +283,18 @@ uninstall and nothing else does.
   the deployable site to `app/web/build/dist/wasmJs/productionExecutable`.
 - **Publishing a GitHub release is the release.** `release.yml` answers it (a pre-release is left alone) by checking
   that the tag is the `campfire.versionName` of the commit it is on — a tag on a commit that still carries the last
-  version would submit that version again under a new name — and that `campfire.android.versionCode` and
-  `campfire.ios.buildNumber` are higher than the last published release's, since Play would refuse a used one only
-  after the other three builds had gone out, and then calling the four workflows below side by
-  side. Each of them is the local build command plus the secrets a checkout does not have, and each can still be
+  version would submit that version again under a new name — and that `campfire.android.versionCode`,
+  `campfire.ios.buildNumber` and `campfire.mac.buildNumber` are higher than the last published release's (a counter
+  the previous release did not have yet is let through), since a store would refuse a used one only after the other
+  builds had gone out, and then calling the five workflows below side by side. Each of them is the local build command plus the secrets a checkout does not have, and each can still be
   dispatched by hand, to publish without a release or to repeat one half of a release that went wrong. Every build
   passes `campfire.dropbox.appKey` from the `DROPBOX_APP_KEY` secret, because a published app built without it would
   quietly have no sync provider at all — so each workflow, and `release.yml` before it calls any of them, refuses to
   start when that secret is empty. The check is in the workflows rather than in Gradle: an empty key is the
   checked-in default and has to keep building a fresh clone. A store that gets a pipeline later (the Microsoft Store) is one more workflow of this shape and one more job in
   `release.yml`. **A release carries only what no official channel offers**: nothing that Play, the App Store or the
-  website already hands out is attached to it, which today leaves the Linux `.deb` and the stopgap macOS and Windows
-  installers. **What a release carries that no store has signed says so in its name** (`-unsigned`), and the app
+  website already hands out is attached to it, which today leaves the Linux `.deb` and the stopgap Windows installer.
+  Nothing for the Mac is attached: the Mac App Store build is the Mac build, and it is Apple silicon only. **What a release carries that no store has signed says so in its name** (`-unsigned`), and the app
   links to none of those: they are for somebody who reads the README and knows what the word means.
   - `web-publish.yml` builds the distribution and copies it over `campfire/` in the `pandulapeter.github.io`
     repository, which it reaches with the deploy key in `WEBSITE_DEPLOY_KEY`. The copy is an `rsync --delete`, so the
@@ -304,15 +304,23 @@ uninstall and nothing else does.
     is handed out (the README's "Get Campfire" section links to the latest release's page, and a `.deb` is not
     something anybody signs on its own), built on the oldest supported Ubuntu rather than the newest, since a `.deb`
     asks for the system libraries it was built against and the runner therefore decides the lowest distribution it
-    installs on, and an unsigned `packageReleaseDmg` for both kinds of Mac and `packageReleaseMsi` for Windows,
-    a stopgap until the two stores have the app. Each leg passes `campfire.desktop.distribution` (`linux` or
-    `download`), which is how a build that goes through App Review is told not to offer the donation link. jpackage signs the macOS app ad hoc, which is what lets it run at all
-    on Apple silicon once Gatekeeper has been overridden. The legs do not cancel each other. Every one of them runs
-    ProGuard, which breaks an app in ways only starting it shows (see `app/desktop`), so each leg also builds the
-    app image (`createReleaseDistributable`, which only the macOS installer is made of; on Linux and Windows the
-    plugin packages the jars directly and leaves no image behind on its own) and starts it — under Xvfb on Linux,
-    with an empty data directory — and attaches nothing unless the demo library appears, the process is still there
-    after that, and its log names no exception.
+    installs on, and an unsigned `packageReleaseMsi` for Windows, a stopgap until the Microsoft Store has the app.
+    Each leg passes `campfire.desktop.distribution` (`linux` or `download`). The legs do not cancel each other. Every
+    one of them runs ProGuard, which breaks an app in ways only starting it shows (see `app/desktop`), so each leg
+    also builds the app image (`createReleaseDistributable`; the plugin packages the jars directly and leaves no image
+    behind on its own) and starts it — under Xvfb on Linux, with an empty data directory — and attaches nothing unless
+    the demo library appears, the process is still there after that, and its log names no exception.
+  - `macos-publish.yml` builds `packageReleasePkg` with `campfire.desktop.distribution=mac-app-store` on an Apple
+    silicon runner — which is what signs and sandboxes it and takes the donation link out — signed with the Mac App
+    Distribution and Mac Installer Distribution certificates (`MAC_CERTIFICATES_BASE64`, one `.p12` holding both,
+    and its password, imported into a keychain of the run's own) and the two Mac App Store provisioning profiles
+    (`MAC_PROVISIONING_PROFILE_BASE64` for the app, `MAC_RUNTIME_PROVISIONING_PROFILE_BASE64` for the bundled Java
+    runtime), all of them written into `local.properties` as a developer's machine keeps them. A build signed for
+    the store does not start outside TestFlight, so the start check of the other desktop legs is made on a copy
+    signed ad hoc with the same entitlements less the two that name the App ID — the demo library has to appear in
+    the fresh sandbox container. It uploads the `.pkg` with `altool` and the same App Store Connect API key as iOS,
+    and, like iOS, stops at TestFlight; its `build_number` input uploads a release again under a number App Store
+    Connect has not seen.
   - `ios-publish.yml` archives the app signed with the team's Apple Distribution certificate
     (`IOS_DISTRIBUTION_CERTIFICATE_BASE64` and its password, imported into a keychain of the run's own), lets
     xcodebuild fetch the App Store profile with the App Store Connect API key (`APP_STORE_CONNECT_KEY_ID`,

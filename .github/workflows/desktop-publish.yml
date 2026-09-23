@@ -6,20 +6,18 @@
 # If a copy of the MPL was not distributed with this file, You can obtain one at
 # https://mozilla.org/MPL/2.0/.
 
-# Builds the installers of the desktop app and attaches them to a GitHub release. jpackage only ever packages for the
-# machine it runs on, so there is one runner per operating system and processor.
+# Builds the Linux and Windows installers of the desktop app and attaches them to a GitHub release. jpackage only ever
+# packages for the machine it runs on, so there is one runner per operating system and processor. The Mac build goes
+# to the Mac App Store instead (macos-publish.yml), and nothing for the Mac is attached to a release.
 #
 # For Linux this is the whole of how the build is handed out: no store carries it, a Debian package is not something
-# anybody signs on its own, and the release page is what Settings links to. The macOS and the Windows installers are a
-# stopgap until the two stores have the app, and their names say what they are: "unsigned" is a Gatekeeper refusal
-# that has to be overridden in System Settings on the former and a SmartScreen warning on the latter, which is why the
-# app links to neither.
+# anybody signs on its own, and the release page is what Settings links to. The Windows installer is a stopgap until
+# the Microsoft Store has the app, and its name says what it is: "unsigned" is a SmartScreen warning, which is why the
+# app does not link to it.
 #
 # Every leg tells the build which distribution it is (campfire.desktop.distribution), since the operating system it
-# is packaged on cannot tell a store build from the direct download: these are "download" and "linux". The Mac App
-# Store and the Microsoft Store builds, once they have workflows of their own, pass "mac-app-store" and
-# "microsoft-store", and the former is how a build that goes through App Review is told not to link to the donation
-# page.
+# is packaged on cannot tell a store build from the direct download: these are "download" and "linux". The Microsoft
+# Store build, once it has a workflow of its own, passes "microsoft-store".
 #
 # Called by release.yml for every release; dispatched by hand to attach the installers to a release that is already
 # there.
@@ -71,18 +69,6 @@ jobs:
             task: packageReleaseDeb
             format: deb
             asset: linux-arm64.deb
-          - name: macOS (Apple silicon)
-            runner: macos-latest
-            distribution: download
-            task: packageReleaseDmg
-            format: dmg
-            asset: macos-arm64-unsigned.dmg
-          - name: macOS (Intel)
-            runner: macos-15-intel
-            distribution: download
-            task: packageReleaseDmg
-            format: dmg
-            asset: macos-x64-unsigned.dmg
           - name: Windows
             runner: windows-latest
             distribution: download
@@ -124,9 +110,9 @@ jobs:
       - name: Install packaging tools
         if: runner.os == 'Linux'
         run: sudo apt-get update && sudo apt-get install --yes fakeroot xvfb libegl1 libgl1
-      # The app image is asked for by name: the Compose plugin builds the macOS installer out of it, but on Linux and
-      # Windows it hands jpackage the jars and the runtime directly, and the installer is the only thing left on disk.
-      # Both tasks are made of the same ProGuard output, so the image is what the installer holds either way.
+      # The app image is asked for by name: the Compose plugin hands jpackage the jars and the runtime directly, and the
+      # installer would be the only thing left on disk. Both tasks are made of the same ProGuard output, so the image
+      # is what the installer holds.
       # The daemon is stopped afterwards because the Gradle cache is saved when the job ends, and on Windows the lock
       # files a running daemon holds cannot be read into the archive, which fails the save.
       - name: Build the installer
@@ -150,10 +136,6 @@ jobs:
           export JAVA_TOOL_OPTIONS="-Duser.home=$HOME_DIRECTORY"
           LAUNCHER=()
           case "$RUNNER_OS" in
-            macOS)
-              APP="$BINARIES/Campfire.app/Contents/MacOS/Campfire"
-              DATA="$HOME_DIRECTORY/Library/Application Support/Campfire"
-              ;;
             Linux)
               APP="$BINARIES/Campfire/bin/Campfire"
               DATA="$HOME_DIRECTORY/.local/share/campfire"
@@ -174,7 +156,7 @@ jobs:
           PID=$!
           # The Windows launcher is not a process Git Bash can signal, and it writes nothing to the log - so there an
           # exception that leaves the process running (Compose Desktop survives one thrown in a LaunchedEffect) goes
-          # unseen. The other legs run the same ProGuard output and read the log.
+          # unseen. The Linux legs run the same ProGuard output and read the log.
           is_running() {
             if [ "$RUNNER_OS" = Windows ]; then
               tasklist //FI "IMAGENAME eq Campfire.exe" | grep -q Campfire.exe

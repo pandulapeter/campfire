@@ -1,0 +1,267 @@
+# This file is part of Campfire.
+# Copyright (c) Pandula Péter 2017-2026.
+# https://github.com/pandulapeter/campfire
+#
+# This Source Code Form is subject to the terms of the Mozilla Public License, v. 2.0.
+# If a copy of the MPL was not distributed with this file, You can obtain one at
+# https://mozilla.org/MPL/2.0/.
+
+# Builds the Mac App Store package of the desktop app, sandboxed and signed, and uploads it to App Store Connect, where
+# it lands in TestFlight. It stops there, as the iOS workflow does: submitting the build for review, with its "What's
+# New", is done by hand, and a green run means the build was delivered, not accepted — processing and review answer by
+# email.
+#
+# The build is Apple silicon only: jpackage packages for the machine it runs on, and App Store Connect takes an
+# arm64-only Mac app from macOS 12 on. Signing uses the Mac App Distribution and Mac Installer Distribution
+# certificates, exported together as one .p12, imported into a keychain of the run's own, and the two Mac App Store
+# provisioning profiles, the app's and the bundled Java runtime's. campfire.desktop.distribution=mac-app-store is what
+# turns all of it on, and what takes the donation link out of the app (guideline 3.1.1).
+#
+# Called by release.yml for every release; dispatched by hand to upload a release again, which App Store Connect only
+# accepts under a build number it has not seen yet — hence the override, which leaves gradle.properties as it was.
+
+name: 'Publish macOS'
+
+on:
+  workflow_call:
+    inputs:
+      release_tag:
+        type: string
+        required: true
+  workflow_dispatch:
+    inputs:
+      release_tag:
+        description: 'Tag of the release to build and upload'
+        type: string
+        required: true
+      build_number:
+        description: 'Build number to upload under instead of campfire.mac.buildNumber (for a repeated upload)'
+        type: string
+        required: false
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    name: Build and Upload
+    runs-on: macos-latest
+    steps:
+      # `gh secret set` stores an empty value without complaint when it has no terminal to prompt on, and an empty or
+      # wrongly encoded secret only surfaces much later as a cryptic codesign or jpackage failure.
+      - name: Check the secrets
+        env:
+          DROPBOX_APP_KEY: ${{ secrets.DROPBOX_APP_KEY }}
+          CERTIFICATES_BASE64: ${{ secrets.MAC_CERTIFICATES_BASE64 }}
+          CERTIFICATES_PASSWORD: ${{ secrets.MAC_CERTIFICATES_PASSWORD }}
+          PROFILE_BASE64: ${{ secrets.MAC_PROVISIONING_PROFILE_BASE64 }}
+          RUNTIME_PROFILE_BASE64: ${{ secrets.MAC_RUNTIME_PROVISIONING_PROFILE_BASE64 }}
+          ASC_KEY_ID: ${{ secrets.APP_STORE_CONNECT_KEY_ID }}
+          ASC_ISSUER_ID: ${{ secrets.APP_STORE_CONNECT_ISSUER_ID }}
+          ASC_PRIVATE_KEY: ${{ secrets.APP_STORE_CONNECT_PRIVATE_KEY }}
+        run: |
+          PROBLEMS=0
+          problem() {
+            echo "::error::$1: $2" >&2
+            PROBLEMS=$((PROBLEMS + 1))
+          }
+          check_base64() {
+            if [ -z "$2" ]; then
+              problem "$1" "empty or unset"
+            elif ! printf '%s' "$2" | base64 --decode > /dev/null 2>&1; then
+              problem "$1" "not valid base64 (expected: base64 -i $3)"
+            fi
+          }
+          # The empty string is the checked-in default, because a fresh clone has to build without a secret, so
+          # nothing downstream would notice a published build that has no sync provider at all.
+          [ -n "$DROPBOX_APP_KEY" ] || problem DROPBOX_APP_KEY "empty or not visible to this workflow"
+          check_base64 MAC_CERTIFICATES_BASE64 "$CERTIFICATES_BASE64" certificates.p12
+          [ -n "$CERTIFICATES_PASSWORD" ] || problem MAC_CERTIFICATES_PASSWORD "empty or unset"
+          check_base64 MAC_PROVISIONING_PROFILE_BASE64 "$PROFILE_BASE64" embedded.provisionprofile
+          check_base64 MAC_RUNTIME_PROVISIONING_PROFILE_BASE64 "$RUNTIME_PROFILE_BASE64" runtime.provisionprofile
+          if [ -z "$ASC_KEY_ID" ]; then
+            problem APP_STORE_CONNECT_KEY_ID "empty or unset"
+          elif ! [[ "$ASC_KEY_ID" =~ ^[A-Z0-9]{10}$ ]]; then
+            problem APP_STORE_CONNECT_KEY_ID "expected 10 upper case letters and digits, as in the AuthKey_<id>.p8 file name"
+          fi
+          if [ -z "$ASC_ISSUER_ID" ]; then
+            problem APP_STORE_CONNECT_ISSUER_ID "empty or unset"
+          elif ! [[ "$ASC_ISSUER_ID" =~ ^[0-9a-fA-F-]{36}$ ]]; then
+            problem APP_STORE_CONNECT_ISSUER_ID "expected a UUID, found ${#ASC_ISSUER_ID} characters"
+          fi
+          if [ -z "$ASC_PRIVATE_KEY" ]; then
+            problem APP_STORE_CONNECT_PRIVATE_KEY "empty or unset"
+          elif ! printf '%s' "$ASC_PRIVATE_KEY" | grep -q 'BEGIN PRIVATE KEY'; then
+            problem APP_STORE_CONNECT_PRIVATE_KEY "expected the text of the AuthKey_<id>.p8 file, BEGIN PRIVATE KEY line included, not base64"
+          fi
+          if [ "$PROBLEMS" -gt 0 ]; then
+            echo "Set them from a terminal that can prompt for hidden input: gh secret set <name> --repo $GITHUB_REPOSITORY" >&2
+            exit 1
+          fi
+      - name: Check out repository
+        uses: actions/checkout@v5
+        with:
+          ref: ${{ inputs.release_tag }}
+      - name: Set up JDK 21
+        uses: actions/setup-java@v5
+        with:
+          distribution: 'zulu'
+          java-version: 21
+          cache: 'gradle'
+      - name: Set up code signing
+        env:
+          CERTIFICATES_BASE64: ${{ secrets.MAC_CERTIFICATES_BASE64 }}
+          CERTIFICATES_PASSWORD: ${{ secrets.MAC_CERTIFICATES_PASSWORD }}
+          PROFILE_BASE64: ${{ secrets.MAC_PROVISIONING_PROFILE_BASE64 }}
+          RUNTIME_PROFILE_BASE64: ${{ secrets.MAC_RUNTIME_PROVISIONING_PROFILE_BASE64 }}
+          ASC_KEY_ID: ${{ secrets.APP_STORE_CONNECT_KEY_ID }}
+          ASC_PRIVATE_KEY: ${{ secrets.APP_STORE_CONNECT_PRIVATE_KEY }}
+        run: |
+          KEYCHAIN_PATH="$RUNNER_TEMP/signing.keychain-db"
+          KEYCHAIN_PASSWORD=$(uuidgen)
+          echo "KEYCHAIN_PATH=$KEYCHAIN_PATH" >> "$GITHUB_ENV"
+          security create-keychain -p "$KEYCHAIN_PASSWORD" "$KEYCHAIN_PATH"
+          # Long enough that the keychain does not lock itself in the middle of a slow Kotlin build.
+          security set-keychain-settings -lut 21600 "$KEYCHAIN_PATH"
+          security unlock-keychain -p "$KEYCHAIN_PASSWORD" "$KEYCHAIN_PATH"
+          printf '%s' "$CERTIFICATES_BASE64" | base64 --decode > "$RUNNER_TEMP/certificates.p12"
+          if ! security import "$RUNNER_TEMP/certificates.p12" -k "$KEYCHAIN_PATH" -P "$CERTIFICATES_PASSWORD" \
+            -T /usr/bin/codesign -T /usr/bin/productbuild -t cert -f pkcs12; then
+            rm -f "$RUNNER_TEMP/certificates.p12"
+            echo "::error::Could not import the certificates, which usually means MAC_CERTIFICATES_PASSWORD is not the password the .p12 was exported with." >&2
+            exit 1
+          fi
+          rm "$RUNNER_TEMP/certificates.p12"
+          # Without the partition list codesign and productbuild stop to ask for the keychain password, which nobody
+          # can type here.
+          security set-key-partition-list -S apple-tool:,apple:,codesign: -s -k "$KEYCHAIN_PASSWORD" "$KEYCHAIN_PATH" > /dev/null
+          security list-keychains -d user -s "$KEYCHAIN_PATH" $(security list-keychains -d user | tr -d '"')
+          # The build is given the name the two certificates share, without the prefix it adds itself.
+          IDENTITY=$(security find-identity -v "$KEYCHAIN_PATH" | sed -n 's/.*"3rd Party Mac Developer Application: \(.*\)"$/\1/p' | head -n 1)
+          if [ -z "$IDENTITY" ]; then
+            echo "::error::The .p12 left no Mac App Distribution signing identity behind. Export both certificates from the My Certificates tab of Keychain Access, so that they carry their private keys." >&2
+            exit 1
+          fi
+          if ! security find-identity -v "$KEYCHAIN_PATH" | grep -qF "3rd Party Mac Developer Installer: $IDENTITY"; then
+            echo "::error::The .p12 holds no Mac Installer Distribution certificate for $IDENTITY, which signs the .pkg." >&2
+            exit 1
+          fi
+          echo "MAC_SIGNING_IDENTITY=$IDENTITY" >> "$GITHUB_ENV"
+          printf '%s' "$PROFILE_BASE64" | base64 --decode > "$RUNNER_TEMP/embedded.provisionprofile"
+          printf '%s' "$RUNTIME_PROFILE_BASE64" | base64 --decode > "$RUNNER_TEMP/runtime.provisionprofile"
+          ASC_KEY_PATH="$HOME/.appstoreconnect/private_keys/AuthKey_$ASC_KEY_ID.p8"
+          mkdir -p "$(dirname "$ASC_KEY_PATH")"
+          printf '%s\n' "$ASC_PRIVATE_KEY" > "$ASC_KEY_PATH"
+          chmod 600 "$ASC_KEY_PATH"
+      # Where a developer's machine keeps the same values, so that the Gradle invocation is the one CLAUDE.md names.
+      # Backslashes are doubled because java.util.Properties reads one as an escape.
+      - name: Write local.properties
+        id: version
+        env:
+          DROPBOX_APP_KEY: ${{ secrets.DROPBOX_APP_KEY }}
+          BUILD_NUMBER_OVERRIDE: ${{ inputs.build_number }}
+        run: |
+          VERSION_NAME=$(sed -n 's/^campfire\.versionName=//p' gradle.properties | tr -d '\r')
+          BUILD_NUMBER=$(sed -n 's/^campfire\.mac\.buildNumber=//p' gradle.properties | tr -d '\r')
+          {
+            printf 'campfire.dropbox.appKey=%s\n' "${DROPBOX_APP_KEY//\\/\\\\}"
+            printf 'campfire.mac.signingIdentity=%s\n' "$MAC_SIGNING_IDENTITY"
+            printf 'campfire.mac.signingKeychain=%s\n' "$KEYCHAIN_PATH"
+            printf 'campfire.mac.provisioningProfile=%s\n' "$RUNNER_TEMP/embedded.provisionprofile"
+            printf 'campfire.mac.runtimeProvisioningProfile=%s\n' "$RUNNER_TEMP/runtime.provisionprofile"
+          } > local.properties
+          if [ -n "$BUILD_NUMBER_OVERRIDE" ]; then
+            if ! [[ "$BUILD_NUMBER_OVERRIDE" =~ ^[0-9]+$ ]]; then
+              echo "::error::The build number override has to be a whole number, not \"$BUILD_NUMBER_OVERRIDE\"." >&2
+              exit 1
+            fi
+            BUILD_NUMBER=$BUILD_NUMBER_OVERRIDE
+            printf 'campfire.mac.buildNumber=%s\n' "$BUILD_NUMBER" >> local.properties
+          fi
+          echo "name=$VERSION_NAME" >> "$GITHUB_OUTPUT"
+          echo "build=$BUILD_NUMBER" >> "$GITHUB_OUTPUT"
+          echo "Building $VERSION_NAME ($BUILD_NUMBER), signed as $MAC_SIGNING_IDENTITY"
+      - name: Build the package
+        run: |
+          ./gradlew :app:desktop:packageReleasePkg -Pcampfire.desktop.distribution=mac-app-store
+          ./gradlew --stop
+      # A version that did not reach the Info.plist would be uploaded under whatever the plugin defaults to, which App
+      # Store Connect takes for an old build.
+      - name: Check the packaged version
+        run: |
+          PLIST="app/desktop/build/compose/binaries/main-release/app/Campfire.app/Contents/Info.plist"
+          PACKAGED_NAME=$(/usr/libexec/PlistBuddy -c 'Print :CFBundleShortVersionString' "$PLIST")
+          PACKAGED_BUILD=$(/usr/libexec/PlistBuddy -c 'Print :CFBundleVersion' "$PLIST")
+          echo "Packaged $PACKAGED_NAME ($PACKAGED_BUILD)"
+          if [ "$PACKAGED_NAME" != "${{ steps.version.outputs.name }}" ] || [ "$PACKAGED_BUILD" != "${{ steps.version.outputs.build }}" ]; then
+            echo "::error::The package does not carry ${{ steps.version.outputs.name }} (${{ steps.version.outputs.build }})." >&2
+            exit 1
+          fi
+      # ProGuard breaks an application in ways that only starting it shows, and the sandbox can break it in more. A
+      # build signed for the store does not start outside TestFlight, so a copy is signed ad hoc with the same
+      # entitlements, less the two that tie it to the App ID, which only a provisioning profile may grant. The demo
+      # library appearing in the fresh container proves that Koin started, the window composed and the library was
+      # written inside the sandbox; the process still being there a while later proves the first frames did not kill
+      # it.
+      - name: Start the release build once
+        run: |
+          COPY="$RUNNER_TEMP/Campfire.app"
+          LOG="$RUNNER_TEMP/campfire.log"
+          DATA="$HOME/Library/Containers/com.pandulapeter.campfire/Data/Library/Application Support/Campfire"
+          cp -R app/desktop/build/compose/binaries/main-release/app/Campfire.app "$COPY"
+          rm -f "$COPY/Contents/embedded.provisionprofile" "$COPY/Contents/runtime/Contents/embedded.provisionprofile"
+          python3 - app/desktop/app-store.entitlements "$RUNNER_TEMP/local.entitlements" <<'PYTHON'
+          import plistlib, sys
+          with open(sys.argv[1], "rb") as source:
+              entitlements = plistlib.load(source)
+          entitlements.pop("com.apple.application-identifier")
+          entitlements.pop("com.apple.developer.team-identifier")
+          with open(sys.argv[2], "wb") as target:
+              plistlib.dump(entitlements, target)
+          PYTHON
+          find "$COPY/Contents/runtime" "$COPY/Contents/app" -type f \( -name '*.dylib' -o -perm -u+x \) -print0 \
+            | xargs -0 codesign --force --sign - --options runtime --entitlements app/desktop/app-store-runtime.entitlements
+          codesign --force --sign - "$COPY/Contents/runtime"
+          codesign --force --sign - --options runtime --entitlements "$RUNNER_TEMP/local.entitlements" "$COPY"
+          "$COPY/Contents/MacOS/Campfire" > "$LOG" 2>&1 &
+          PID=$!
+          fail() {
+            echo "::error::$1"
+            cat "$LOG"
+            kill "$PID" 2> /dev/null || true
+            exit 1
+          }
+          for _ in $(seq 120); do
+            kill -0 "$PID" 2> /dev/null || fail "The release build exited on its own before the library was written."
+            if [ -f "$DATA/preferences/preferences.json" ] && ls "$DATA/library/songs/"*.cho > /dev/null 2>&1; then
+              break
+            fi
+            sleep 1
+          done
+          ls "$DATA/library/songs/"*.cho > /dev/null 2>&1 || fail "The release build did not write the demo library in two minutes."
+          sleep 15
+          kill -0 "$PID" 2> /dev/null || fail "The release build exited on its own after it had written the library."
+          grep -q "Exception" "$LOG" && fail "The release build logged an exception."
+          kill "$PID" 2> /dev/null || true
+          cat "$LOG"
+          echo "The release build started in the sandbox and wrote: $(ls "$DATA/library/songs")"
+      - name: Upload to App Store Connect
+        env:
+          ASC_KEY_ID: ${{ secrets.APP_STORE_CONNECT_KEY_ID }}
+          ASC_ISSUER_ID: ${{ secrets.APP_STORE_CONNECT_ISSUER_ID }}
+        run: |
+          PACKAGE=$(find app/desktop/build/compose/binaries/main-release/pkg -name '*.pkg' | head -n 1)
+          if [ -z "$PACKAGE" ]; then
+            echo "::error::No .pkg was built." >&2
+            exit 1
+          fi
+          # altool finds the key by its name in ~/.appstoreconnect/private_keys.
+          xcrun altool --upload-app --type macos --file "$PACKAGE" --apiKey "$ASC_KEY_ID" --apiIssuer "$ASC_ISSUER_ID"
+          echo "Uploaded ${{ steps.version.outputs.name }} (${{ steps.version.outputs.build }}). It appears in TestFlight once App Store Connect has processed it, and goes to review only when submitted there by hand."
+      - name: Clean up credentials
+        if: always()
+        run: |
+          if [ -n "$KEYCHAIN_PATH" ] && [ -f "$KEYCHAIN_PATH" ]; then
+            security delete-keychain "$KEYCHAIN_PATH"
+          fi
+          rm -f "$HOME/.appstoreconnect/private_keys/"*.p8 "$RUNNER_TEMP/"*.provisionprofile local.properties

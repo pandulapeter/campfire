@@ -35,14 +35,14 @@ internal expect val libraryLocation: LibraryLocation?
 
 /**
  * Which store this build was published on, or null where it came from none of them: the Linux package, the unsigned
- * desktop installers the GitHub release carries, and the web build. It decides nothing the user sees directly - what
+ * Windows installer the GitHub release carries, a desktop build made by hand, and the web build. It decides nothing the user sees directly - what
  * it answers is [canAskForDonations], since a build that goes through App Review may not ask for money at all.
  */
 internal expect val currentDistribution: Distribution?
 
 /**
  * The store whose listing the settings screen's rating row opens, decided by the platform the app is **running on**
- * rather than by where the build came from: somebody who downloaded the .dmg is still a Mac user, and the Mac App
+ * rather than by where the build came from: somebody running a Mac build made by hand is still a Mac user, and the Mac App
  * Store listing is still where a review of Campfire on a Mac goes. Null where the platform has no store to rate the
  * app on - Linux has none, and the web build runs on all of them, so any one choice would be a guess.
  *

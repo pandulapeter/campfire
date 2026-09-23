@@ -101,8 +101,8 @@ compose.desktop {
                 }
                 if (isMacAppStoreBuild) {
                     // Only the store build is signed. A real signature enforces the hardened runtime, under which the
-                    // JVM needs the entitlements that only this build is given; the .dmg keeps its ad hoc signature,
-                    // which does not, until it gets entitlements and notarization of its own.
+                    // JVM needs the entitlements that only this build is given; a .dmg built by hand keeps its ad hoc
+                    // signature, which does not.
                     if (macSigningIdentity.isNotEmpty()) {
                         signing {
                             sign = true

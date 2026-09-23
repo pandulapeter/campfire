@@ -7,8 +7,8 @@
 # https://mozilla.org/MPL/2.0/.
 
 # The whole release, started by publishing a GitHub release: the Android build goes to Play, the web build onto the
-# website, the iOS build to App Store Connect, and the desktop installers, which no store offers yet, onto the release
-# itself — a release carries only what no official channel does. Each of the four is a
+# website, the iOS and the macOS builds to App Store Connect, and the Linux and Windows installers, which no store
+# offers yet, onto the release itself — a release carries only what no official channel does. Each of the five is a
 # workflow of its own that this one calls, so any of them can also be dispatched by hand, and a job that failed here
 # can be run again from the run's page without repeating the ones that went through.
 #
@@ -56,7 +56,7 @@ jobs:
           fi
           echo "Releasing version $VERSION_NAME"
       # Play refuses a version code it has seen and App Store Connect a build number, but each says so only after its
-      # build has been made and signed and the other three builds have gone out. The previous
+      # build has been made and signed and the other four builds have gone out. The previous
       # release is the last one published, whatever its version: Play wants the code higher than every one it has had,
       # so a fix to an older line is compared with the newest release too. Pre-releases reach no store and are left out.
       - name: Check the build numbers against the previous release
@@ -73,11 +73,14 @@ jobs:
           git fetch --depth=1 origin "refs/tags/$PREVIOUS_TAG:refs/tags/$PREVIOUS_TAG"
           git show "refs/tags/$PREVIOUS_TAG:gradle.properties" > "$RUNNER_TEMP/previous.properties"
           FAILED=0
-          for KEY in campfire.android.versionCode campfire.ios.buildNumber; do
+          for KEY in campfire.android.versionCode campfire.ios.buildNumber campfire.mac.buildNumber; do
             PATTERN="s/^${KEY//./\\.}=//p"
             CURRENT=$(sed -n "$PATTERN" gradle.properties | tr -d '\r')
             PREVIOUS=$(sed -n "$PATTERN" "$RUNNER_TEMP/previous.properties" | tr -d '\r')
-            if ! [[ "$CURRENT" =~ ^[0-9]+$ && "$PREVIOUS" =~ ^[0-9]+$ ]]; then
+            # A counter the previous release did not have yet belongs to a store it did not publish to.
+            if [ -z "$PREVIOUS" ] && [[ "$CURRENT" =~ ^[0-9]+$ ]]; then
+              echo "$KEY: new since $PREVIOUS_TAG, $CURRENT now"
+            elif ! [[ "$CURRENT" =~ ^[0-9]+$ && "$PREVIOUS" =~ ^[0-9]+$ ]]; then
               echo "::error::Could not read $KEY as a number here ($CURRENT) or at $PREVIOUS_TAG ($PREVIOUS)." >&2
               FAILED=1
             elif [ "$CURRENT" -le "$PREVIOUS" ]; then
@@ -90,7 +93,7 @@ jobs:
           exit $FAILED
       # A published build with an empty key has no sync provider at all, and nothing downstream would notice: the
       # empty string is the checked-in default, because a fresh clone has to build without a secret. Asked here as
-      # well as in each workflow, so a release fails before four builds have run rather than after.
+      # well as in each workflow, so a release fails before five builds have run rather than after.
       - name: Check the sync credentials
         env:
           DROPBOX_APP_KEY: ${{ secrets.DROPBOX_APP_KEY }}
@@ -151,6 +154,14 @@ jobs:
     name: iOS
     needs: prepare
     uses: ./.github/workflows/ios-publish.yml
+    with:
+      release_tag: ${{ github.event.release.tag_name }}
+    secrets: inherit
+
+  macos:
+    name: macOS
+    needs: prepare
+    uses: ./.github/workflows/macos-publish.yml
     with:
       release_tag: ${{ github.event.release.tag_name }}
     secrets: inherit
