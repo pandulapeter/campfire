@@ -93,7 +93,7 @@ compose.desktop {
                 // The App Store takes a Mac app built for Apple silicon alone only from macOS 12 on. The bundled JDK and
                 // skiko would run on 11, and the plugin's own default is older than either.
                 minimumSystemVersion = "12.0"
-                packageBuildVersion = project.property("campfire.mac.buildNumber").toString()
+                packageBuildVersion = project.property("campfire.buildNumber").toString()
                 // Not fileAssociation(): the plugin writes its own document type with the "****" OS type, which claims
                 // every kind of file, and with no rank or content type. These are the iOS app's document types.
                 infoPlist {

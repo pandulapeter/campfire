@@ -30,7 +30,7 @@ Delete this file once the last box is ticked: by then `CLAUDE.md` describes how 
 ## 2. Changes to the project
 
 - [x] `TargetFormat.Pkg`, `bundleID`, `appCategory` (*Music*), `minimumSystemVersion` 12.0 (App Store Connect
-      refuses an arm64-only build that asks for less) and `packageBuildVersion` from `campfire.mac.buildNumber`, in
+      refuses an arm64-only build that asks for less) and `packageBuildVersion` from `campfire.buildNumber`, in
       `app/desktop/build.gradle.kts`.
 - [x] Signing from `campfire.mac.signingIdentity` / `.signingKeychain`, and — only with
       `campfire.desktop.distribution=mac-app-store` — `appStore`, the two profiles
@@ -75,7 +75,7 @@ on macOS names only the Mac App Store, in its rating row (`storeForRating`). A b
 ## 5. Automating it
 
 `macos-publish.yml` builds, signs, starts a copy in the sandbox and uploads; `release.yml` calls it and checks
-`campfire.mac.buildNumber` with the other counters. `desktop-publish.yml` no longer builds anything for the Mac.
+`campfire.buildNumber`. `desktop-publish.yml` no longer builds anything for the Mac.
 
 - [x] No certificate or profile is stored: the run creates both certificates and both profiles through the API and
       revokes them at the end (`.github/scripts/app_store_signing.py`), with the Admin API key iOS uses. The ones

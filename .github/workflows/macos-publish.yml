@@ -45,7 +45,7 @@ on:
         type: string
         required: true
       build_number:
-        description: 'Build number to upload under instead of campfire.mac.buildNumber (for a repeated upload)'
+        description: 'Build number to upload under instead of campfire.buildNumber (for a repeated upload)'
         type: string
         required: false
       submit_for_review:
@@ -157,7 +157,7 @@ jobs:
           BUILD_NUMBER_OVERRIDE: ${{ inputs.build_number }}
         run: |
           VERSION_NAME=$(sed -n 's/^campfire\.versionName=//p' gradle.properties | tr -d '\r')
-          BUILD_NUMBER=$(sed -n 's/^campfire\.mac\.buildNumber=//p' gradle.properties | tr -d '\r')
+          BUILD_NUMBER=$(sed -n 's/^campfire\.buildNumber=//p' gradle.properties | tr -d '\r')
           {
             printf 'campfire.dropbox.appKey=%s\n' "${DROPBOX_APP_KEY//\\/\\\\}"
             printf 'campfire.mac.signingIdentity=%s\n' "$MAC_SIGNING_IDENTITY"
@@ -171,7 +171,7 @@ jobs:
               exit 1
             fi
             BUILD_NUMBER=$BUILD_NUMBER_OVERRIDE
-            printf 'campfire.mac.buildNumber=%s\n' "$BUILD_NUMBER" >> local.properties
+            printf 'campfire.buildNumber=%s\n' "$BUILD_NUMBER" >> local.properties
           fi
           echo "name=$VERSION_NAME" >> "$GITHUB_OUTPUT"
           echo "build=$BUILD_NUMBER" >> "$GITHUB_OUTPUT"

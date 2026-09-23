@@ -18,7 +18,7 @@ them. If a change has no effect a user could notice, it is not in the notes.
 ## Process
 
 1. **Determine the version.** The release version is `campfire.versionName` in `gradle.properties`
-   (`campfire.android.versionCode` and `campfire.ios.buildNumber` move with it, and should match). The
+   (`campfire.buildNumber`, which every platform shares, moves with it). The
    GitHub tag is that number without the `v` prefix (`4.0.1`), even though the bump commit spells it
    with one.
 

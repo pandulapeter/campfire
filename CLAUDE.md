@@ -239,8 +239,10 @@ uninstall and nothing else does.
 
 ## Build
 
-- Dependency versions in `gradle/libs.versions.toml` (including `android-compileSdk` / `android-minSdk`). The iOS
-  version and build number are `campfire.versionName` and `campfire.ios.buildNumber`, written into the built
+- Dependency versions in `gradle/libs.versions.toml` (including `android-compileSdk` / `android-minSdk`). The
+  version and the build number are `campfire.versionName` and `campfire.buildNumber`, one of each for every platform:
+  the build number is Android's version code, the Mac build's `CFBundleVersion` and the iOS one's, the last written
+  into the built
   `Info.plist` by a build phase of the Xcode project, which sets no version of its own, reading `gradle.properties`
   and then `local.properties` the way Gradle does.
 - **Everything configurable is a `campfire.*` Gradle property**, declared with a default in `gradle.properties` and
@@ -283,10 +285,9 @@ uninstall and nothing else does.
   the deployable site to `app/web/build/dist/wasmJs/productionExecutable`.
 - **Publishing a GitHub release is the release.** `release.yml` answers it (a pre-release is left alone) by checking
   that the tag is the `campfire.versionName` of the commit it is on — a tag on a commit that still carries the last
-  version would submit that version again under a new name — and that `campfire.android.versionCode`,
-  `campfire.ios.buildNumber` and `campfire.mac.buildNumber` are higher than the last published release's (a counter
-  the previous release did not have yet is let through), since a store would refuse a used one only after the other
-  builds had gone out, and then calling the five workflows below side by side. Each of them is the local build command plus the secrets a checkout does not have, and each can still be
+  version would submit that version again under a new name — and that `campfire.buildNumber` is higher than the
+  last published release's (the highest of the three per-store counters, for a release from before there was one),
+  since a store would refuse a used one only after the other builds had gone out, and then calling the five workflows below side by side. Each of them is the local build command plus the secrets a checkout does not have, and each can still be
   dispatched by hand, to publish without a release or to repeat one half of a release that went wrong. Every build
   passes `campfire.dropbox.appKey` from the `DROPBOX_APP_KEY` secret, because a published app built without it would
   quietly have no sync provider at all — so each workflow, and `release.yml` before it calls any of them, refuses to

@@ -75,9 +75,9 @@ jobs:
         id: version
         run: |
           VERSION_NAME=$(sed -n 's/^campfire\.versionName=//p' gradle.properties)
-          VERSION_CODE=$(sed -n 's/^campfire\.android\.versionCode=//p' gradle.properties)
+          VERSION_CODE=$(sed -n 's/^campfire\.buildNumber=//p' gradle.properties)
           if [ -z "$VERSION_NAME" ] || [ -z "$VERSION_CODE" ]; then
-            echo "Could not read campfire.versionName / campfire.android.versionCode from gradle.properties" >&2
+            echo "Could not read campfire.versionName / campfire.buildNumber from gradle.properties" >&2
             exit 1
           fi
           echo "name=$VERSION_NAME" >> "$GITHUB_OUTPUT"

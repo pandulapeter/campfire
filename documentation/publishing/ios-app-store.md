@@ -42,7 +42,7 @@ Delete this file once the last box is ticked: by then `CLAUDE.md` describes how 
       https://kotlinlang.org/docs/apple-privacy-manifest.html *(verify)*
 - [x] No shared scheme is needed: `xcodebuild archive -scheme iosApp` finds the one xcodebuild creates for the target
       when none is checked in.
-- [x] `campfire.ios.buildNumber` has to be raised with every release; `release.yml` refuses a release whose number is
+- [x] `campfire.buildNumber`, shared by every platform, has to be raised with every release; `release.yml` refuses a release whose number is
       not higher than the previous release's, since App Store Connect refuses a build number it has seen.
 
 ## 3. The store listing (by hand, once)

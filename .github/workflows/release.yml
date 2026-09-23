@@ -73,25 +73,19 @@ jobs:
           fi
           git fetch --depth=1 origin "refs/tags/$PREVIOUS_TAG:refs/tags/$PREVIOUS_TAG"
           git show "refs/tags/$PREVIOUS_TAG:gradle.properties" > "$RUNNER_TEMP/previous.properties"
-          FAILED=0
-          for KEY in campfire.android.versionCode campfire.ios.buildNumber campfire.mac.buildNumber; do
-            PATTERN="s/^${KEY//./\\.}=//p"
-            CURRENT=$(sed -n "$PATTERN" gradle.properties | tr -d '\r')
-            PREVIOUS=$(sed -n "$PATTERN" "$RUNNER_TEMP/previous.properties" | tr -d '\r')
-            # A counter the previous release did not have yet belongs to a store it did not publish to.
-            if [ -z "$PREVIOUS" ] && [[ "$CURRENT" =~ ^[0-9]+$ ]]; then
-              echo "$KEY: new since $PREVIOUS_TAG, $CURRENT now"
-            elif ! [[ "$CURRENT" =~ ^[0-9]+$ && "$PREVIOUS" =~ ^[0-9]+$ ]]; then
-              echo "::error::Could not read $KEY as a number here ($CURRENT) or at $PREVIOUS_TAG ($PREVIOUS)." >&2
-              FAILED=1
-            elif [ "$CURRENT" -le "$PREVIOUS" ]; then
-              echo "::error::$KEY is $CURRENT, but the previous release ($PREVIOUS_TAG) already had $PREVIOUS. Raise it in gradle.properties and tag again." >&2
-              FAILED=1
-            else
-              echo "$KEY: $PREVIOUS at $PREVIOUS_TAG, $CURRENT now"
-            fi
-          done
-          exit $FAILED
+          CURRENT=$(sed -n 's/^campfire\.buildNumber=//p' gradle.properties | tr -d '\r')
+          # A release from before the platforms shared one counter carries one per store; the highest of them is the
+          # number every store has seen by now.
+          PREVIOUS=$(sed -n -E 's/^campfire\.(buildNumber|android\.versionCode|ios\.buildNumber|mac\.buildNumber)=//p' \
+            "$RUNNER_TEMP/previous.properties" | tr -d '\r' | sort -n | tail -n 1)
+          if ! [[ "$CURRENT" =~ ^[0-9]+$ && "$PREVIOUS" =~ ^[0-9]+$ ]]; then
+            echo "::error::Could not read the build number as a number here ($CURRENT) or at $PREVIOUS_TAG ($PREVIOUS)." >&2
+            exit 1
+          elif [ "$CURRENT" -le "$PREVIOUS" ]; then
+            echo "::error::campfire.buildNumber is $CURRENT, but the previous release ($PREVIOUS_TAG) already had $PREVIOUS. Raise it in gradle.properties and tag again." >&2
+            exit 1
+          fi
+          echo "campfire.buildNumber: $PREVIOUS at $PREVIOUS_TAG, $CURRENT now"
       # A published build with an empty key has no sync provider at all, and nothing downstream would notice: the
       # empty string is the checked-in default, because a fresh clone has to build without a secret. Asked here as
       # well as in each workflow, so a release fails before five builds have run rather than after.
