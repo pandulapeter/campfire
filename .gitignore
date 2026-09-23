@@ -31,3 +31,6 @@ build/
 # Release notes scratch files
 /.release-notes/
 /app/desktop/*.provisionprofile
+
+# Python bytecode, written next to the workflow scripts whenever they are run locally
+__pycache__/
