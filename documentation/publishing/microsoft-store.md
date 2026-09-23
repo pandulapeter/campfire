@@ -53,9 +53,12 @@ The rest of this file assumes MSIX.
       six ChordPro file type associations that `chordProFileAssociations()` declares for the `.msi`.
 - [ ] Add the tile and logo images the manifest refers to (44×44, 150×150 and the 50×50 store logo at least), made
       from `app_icon.png`.
-- [ ] Build the package from the unpacked application: `./gradlew :app:desktop:createDistributable`, copy the
-      manifest and the images next to `Campfire.exe`, then `makeappx pack` from the Windows SDK, which the
-      `windows-latest` runner has. No signing: an unsigned `.msix` is what Partner Center takes.
+- [ ] Build the package from the unpacked application:
+      `./gradlew :app:desktop:createReleaseDistributable -Pcampfire.desktop.distribution=microsoft-store`, copy the
+      manifest and the images next to `Campfire.exe` in `app/desktop/build/compose/binaries/main-release/app/Campfire/`,
+      then `makeappx pack` from the Windows SDK, which the `windows-latest` runner has. No signing: an unsigned `.msix`
+      is what Partner Center takes. Start that image once before packing it: ProGuard breaks things only a start shows
+      (see `app/desktop/CLAUDE.md`).
 - [ ] Check what packaging does to the library. A packaged app's writes to `%APPDATA%` are redirected into the
       package's own folder (`%LOCALAPPDATA%\Packages\<package family>\LocalCache\Roaming`), so the "Location" row in
       Settings would name a folder that is not where the files are. Either show the real path when the app finds
@@ -63,9 +66,9 @@ The rest of this file assumes MSIX.
 - [ ] To try a package before submitting it, sign it with a self-signed certificate and install it on a machine that
       trusts that certificate — a Store package cannot be sideloaded otherwise.
 
-Nothing to change for the store's rules: the Microsoft Store has no rule against naming other platforms, so Settings
-lists them all, and the donation link is allowed (policy 10.8) as long as the submission says the app links to an
-external payment *(verify the current wording of 10.8)*.
+Nothing to change for the store's rules: Settings names no other build (only a link to the README), and the donation
+link is allowed (policy 10.8) as long as the submission says the app links to an external payment *(verify the current
+wording of 10.8)*.
 
 ## 5. The store listing (by hand, once)
 
@@ -99,7 +102,7 @@ A Windows-only job next to the `.msi` leg of `desktop-publish.yml`, or a `window
 
 ## 7. When the listing is live
 
-- [ ] Fill in `Distribution.MICROSOFT_STORE`'s `url` in `presentation/…/ui/platform/Platform.kt`
+- [ ] Fill in `Distribution.MICROSOFT_STORE`'s `listingUrl` in `presentation/…/ui/platform/Platform.kt`
       (`https://apps.microsoft.com/detail/<product id>`).
 - [ ] Point the Windows badge in `README.md` at the listing and move it up among the published ones. Decide whether
       the unsigned `.msi` stays on the releases; it is of little use once the Store has the app.

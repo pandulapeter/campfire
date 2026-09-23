@@ -10,8 +10,8 @@
 # Publishing to the iOS App Store
 
 What is left between the iOS build as it is today and a listing on the App Store that every GitHub release updates by
-itself. The app builds and runs; `ios-publish.yml` already produces an unsigned `.ipa` for every release. None of the
-steps below has been done yet, and the ones marked *(verify)* rest on rules that change — read the current version
+itself. The app builds and runs; `ios-publish.yml` already produces an unsigned `.ipa` for every release. The boxes that
+are ticked are done in the repository; nothing else has been started. The ones marked *(verify)* rest on rules that change — read the current version
 before relying on them.
 
 Delete this file once the last box is ticked: by then `CLAUDE.md` describes how it works.
@@ -31,11 +31,11 @@ Delete this file once the last box is ticked: by then `CLAUDE.md` describes how 
 
 ## 2. Changes to the project
 
-- [ ] Add `ITSAppUsesNonExemptEncryption` = `NO` to `app/ios/iosApp/iosApp/Info.plist`. The app only uses the
-      system's HTTPS, which is exempt, and without the key every upload stops to ask.
-- [ ] Add a privacy manifest (`PrivacyInfo.xcprivacy`) to the app target. There is none today, and Kotlin/Native and
-      Compose Multiplatform touch "required reason" APIs (file timestamps among them), which App Store Connect rejects
-      without a declaration. JetBrains documents the entries:
+- [x] `ITSAppUsesNonExemptEncryption` = `NO` is in `app/ios/iosApp/iosApp/Info.plist` (the app only uses the
+      system's HTTPS, which is exempt; without the key every upload stops to ask).
+- [x] The privacy manifest (`app/ios/iosApp/iosApp/PrivacyInfo.xcprivacy`, in the target's resources) declares no
+      tracking, no collected data and the file-timestamp reasons Kotlin/Native and Compose need (`C617.1`, `3B52.1`).
+      Check it against JetBrains' list again before the first upload, since App Store Connect rejects a missing reason:
       https://kotlinlang.org/docs/apple-privacy-manifest.html *(verify)*
 - [ ] Share a scheme in the Xcode project (*Product → Scheme → Manage Schemes → Shared*). There is none checked in, and
       `xcodebuild archive` wants a scheme where today's `-target` build does not.
@@ -91,7 +91,7 @@ unsigned `.ipa` as well, or stop.
 
 ## 6. When the listing is live
 
-- [ ] Fill in `Distribution.APP_STORE`'s `url` in `presentation/…/ui/platform/Platform.kt`
+- [ ] Fill in `Distribution.APP_STORE`'s `listingUrl` in `presentation/…/ui/platform/Platform.kt`
       (`https://apps.apple.com/app/id<the app's id>`). That is all it takes for every build to link to it.
 - [ ] Point the iOS badge in `README.md` at the listing and move it up among the published ones.
 - [ ] Update the release-flow section of the root `CLAUDE.md`.

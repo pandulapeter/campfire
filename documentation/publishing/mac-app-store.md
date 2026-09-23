@@ -56,9 +56,6 @@ All in `app/desktop/build.gradle.kts`, inside `nativeDistributions { macOS { …
     `com.apple.security.cs.disable-library-validation` *(verify against the guide)*
 - [ ] Add `ITSAppUsesNonExemptEncryption` = `false` through `infoPlist { extraKeysRawXml }`.
 - [ ] Check that `appIcon.icns` holds every size up to 1024×1024; the store validates the icon.
-- [ ] **Turn the donation link off in the store build.** `canAskForDonations` is `true` for the whole desktop target,
-      and guideline 3.1.1 applies on the Mac as it does on iOS. One jar serves the `.dmg` and the store alike, so the
-      decision has to be made at runtime: a sandboxed process has `APP_SANDBOX_CONTAINER_ID` in its environment.
 - [ ] Decide the processor question. jpackage packages for the machine it runs on, and one version of an app takes
       one build, so the two `.pkg` files of the two runners cannot both be uploaded. Either ship Apple silicon only
       *(verify that App Store Connect accepts an arm64-only build for a new app)*, or merge the two app images into a
@@ -100,7 +97,9 @@ In `desktop-publish.yml`, on the macOS leg (or legs), next to the `.dmg` that is
       (base64), and the App Store Connect API key if the iOS workflow has not added it already
       (`APP_STORE_CONNECT_KEY_ID`, `APP_STORE_CONNECT_ISSUER_ID`, `APP_STORE_CONNECT_KEY_BASE64`).
 - [ ] Import the `.p12` into a temporary keychain on the runner, write the profiles out, run
-      `./gradlew :app:desktop:packagePkg` with the signing properties, and upload with
+      `./gradlew :app:desktop:packagePkg -Pcampfire.desktop.distribution=mac-app-store` with the signing properties —
+      the distribution property is what takes the donation link out (guideline 3.1.1), and a leg that forgets it
+      uploads a build App Review turns down — and upload with
       `xcrun altool --upload-package … --type macos --apiKey … --apiIssuer …` *(verify the current upload command;
       Apple has been moving this between tools)*.
 - [ ] Submitting for review and "What's New" text are the same decision, and the same `<!-- app-store … -->` blocks,
@@ -118,6 +117,6 @@ Independent of the store, and much less work: with a *Developer ID Application* 
 
 ## 7. When the listing is live
 
-- [ ] Fill in `Distribution.MAC_APP_STORE`'s `url` in `presentation/…/ui/platform/Platform.kt`.
+- [ ] Fill in `Distribution.MAC_APP_STORE`'s `listingUrl` in `presentation/…/ui/platform/Platform.kt`.
 - [ ] Point the macOS badge in `README.md` at the listing and move it up among the published ones.
 - [ ] Update the release-flow section of the root `CLAUDE.md` and the packaging paragraph of `app/desktop/CLAUDE.md`.
