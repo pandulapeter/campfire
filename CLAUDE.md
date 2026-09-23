@@ -318,10 +318,12 @@ uninstall and nothing else does.
     green run means submitted, not certified. A submission already in progress with this version is left alone, so a
     repeated run succeeds; one in progress with anything else stops the run rather than being deleted, since it may
     be somebody's draft and a product has only one at a time. It signs in as a Microsoft Entra application with the
-    Manager role in Partner Center (`MICROSOFT_STORE_TENANT_ID`, `_CLIENT_ID` and `_CLIENT_SECRET`); unlike
-    everything Apple's workflows use, **its key expires**, two years at most after it was made, and has to be
-    replaced in Partner Center and in the secret when it does. The package is unsigned, since the Store signs what it
-    certifies, and nothing is attached to the release.
+    Manager role in Partner Center (`MICROSOFT_STORE_TENANT_ID` and `_CLIENT_ID`) and **with no secret**: the
+    application has a federated credential that trusts the OIDC token GitHub hands the job, for the subject
+    `repo:pandulapeter/campfire:environment:microsoft-store` — which is why the job runs in the `microsoft-store`
+    environment and why `release.yml` grants it `id-token: write` — so, like everything Apple's workflows use, nothing
+    it signs in with expires (a client secret would, after two years at most). The package is unsigned, since the
+    Store signs what it certifies, and nothing is attached to the release.
   - `macos-publish.yml` builds `packageReleasePkg` on an Apple silicon runner — asking for the `.pkg` is what signs
     and sandboxes it — signed with a Mac App
     Distribution and a Mac Installer Distribution certificate and the two Mac App Store provisioning profiles (the

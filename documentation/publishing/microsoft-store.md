@@ -85,9 +85,14 @@ release any more.
 
 - [ ] In Partner Center, under Account settings → Tenants, associate a Microsoft Entra ID tenant (or create a new one
       there, which is free). Then, under User management → Microsoft Entra applications, create an application,
-      give it the **Manager** role, and on its page copy the tenant ID and the client ID and add a key.
-- [ ] Add three repository secrets: `MICROSOFT_STORE_TENANT_ID`, `MICROSOFT_STORE_CLIENT_ID` and
-      `MICROSOFT_STORE_CLIENT_SECRET` (the key). The key expires, two years at most after it was made: note the date.
+      give it the **Manager** role, and on its page copy the tenant ID and the client ID.
+- [x] Add two repository secrets: `MICROSOFT_STORE_TENANT_ID` and `MICROSOFT_STORE_CLIENT_ID`.
+- [x] Give the application a federated credential instead of a key, since a key expires two years at most after it was
+      made: in the Microsoft Entra admin center, App registrations → the application → Certificates & secrets →
+      Federated credentials, with the issuer `https://token.actions.githubusercontent.com`, the subject
+      `repo:pandulapeter/campfire:environment:microsoft-store` and the audience `api://AzureADTokenExchange`.
+- [ ] Once a run has signed in that way, delete the application's client secret in Entra (and in Partner Center, if
+      it is listed there) and the `MICROSOFT_STORE_CLIENT_SECRET` repository secret, which nothing reads any more.
 - [ ] Once the first submission is published, dispatch *Publish Windows* by hand without ticking *submit*, to see the
       Windows build go through on a runner. The first real submission is the next release.
 - [ ] Remember what green means: the package was **submitted**. Certification happens afterwards, usually within a

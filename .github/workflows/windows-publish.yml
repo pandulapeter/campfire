@@ -13,9 +13,11 @@
 # certification answers by email.
 #
 # The package is unsigned, because Partner Center signs what it certifies, so nothing here signs anything. What it
-# needs is a Microsoft Entra application with the Manager role in Partner Center: MICROSOFT_STORE_TENANT_ID,
-# MICROSOFT_STORE_CLIENT_ID and MICROSOFT_STORE_CLIENT_SECRET, the last of which expires - two years at most after it
-# was made - and has to be replaced in Partner Center and here when it does.
+# needs is a Microsoft Entra application with the Manager role in Partner Center, named by MICROSOFT_STORE_TENANT_ID and
+# MICROSOFT_STORE_CLIENT_ID. It signs in with no secret: the application has a federated credential that trusts the OIDC
+# token GitHub hands this job, for the subject repo:pandulapeter/campfire:environment:microsoft-store, which is why the
+# job runs in that environment and asks for id-token: write - and why the release workflow that calls it has to grant
+# that too. A client secret would expire two years after it was made; this has nothing that does.
 #
 # Nothing is attached to the release: the Store is how the Windows build is handed out.
 
@@ -50,11 +52,15 @@ on:
 
 permissions:
   contents: read
+  id-token: write
 
 jobs:
   build:
     name: Build and Submit
     runs-on: windows-latest
+    # The subject of GitHub's token names the environment rather than the tag, which changes with every release, and
+    # the federated credential in Entra has to match it exactly.
+    environment: microsoft-store
     defaults:
       run:
         # Git Bash, so the steps read like the other workflows' scripts.
@@ -67,7 +73,6 @@ jobs:
           DROPBOX_APP_KEY: ${{ secrets.DROPBOX_APP_KEY }}
           TENANT_ID: ${{ secrets.MICROSOFT_STORE_TENANT_ID }}
           CLIENT_ID: ${{ secrets.MICROSOFT_STORE_CLIENT_ID }}
-          CLIENT_SECRET: ${{ secrets.MICROSOFT_STORE_CLIENT_SECRET }}
           SUBMIT: ${{ inputs.submit }}
         run: |
           PROBLEMS=0
@@ -81,7 +86,6 @@ jobs:
           if [ "$SUBMIT" = true ]; then
             [[ "$TENANT_ID" =~ ^[0-9a-fA-F-]{36}$ ]] || problem MICROSOFT_STORE_TENANT_ID "expected a GUID, found ${#TENANT_ID} characters"
             [[ "$CLIENT_ID" =~ ^[0-9a-fA-F-]{36}$ ]] || problem MICROSOFT_STORE_CLIENT_ID "expected a GUID, found ${#CLIENT_ID} characters"
-            [ -n "$CLIENT_SECRET" ] || problem MICROSOFT_STORE_CLIENT_SECRET "empty or unset"
           fi
           if [ "$PROBLEMS" -gt 0 ]; then
             echo "Set them from a terminal that can prompt for hidden input: gh secret set <name> --repo $GITHUB_REPOSITORY" >&2
@@ -184,7 +188,6 @@ jobs:
         env:
           MICROSOFT_STORE_TENANT_ID: ${{ secrets.MICROSOFT_STORE_TENANT_ID }}
           MICROSOFT_STORE_CLIENT_ID: ${{ secrets.MICROSOFT_STORE_CLIENT_ID }}
-          MICROSOFT_STORE_CLIENT_SECRET: ${{ secrets.MICROSOFT_STORE_CLIENT_SECRET }}
           RELEASE_NOTES: ${{ inputs.release_notes }}
         run: |
           # A single-line text box has no other way to ask for a line break; the notes release.yml passes on are

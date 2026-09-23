@@ -24,9 +24,11 @@ not fail on its own success. One in progress with anything else - a draft starte
 release still in certification, a commit that failed - stops the run instead of being deleted: it may be somebody's
 work, and the product can only have one submission in progress at a time.
 
-Uses the Microsoft Store submission API with the client credentials of a Microsoft Entra application that has the
-Manager role in Partner Center, read from MICROSOFT_STORE_TENANT_ID, MICROSOFT_STORE_CLIENT_ID and
-MICROSOFT_STORE_CLIENT_SECRET. Only needs the Python standard library.
+Uses the Microsoft Store submission API as a Microsoft Entra application that has the Manager role in Partner Center,
+named by MICROSOFT_STORE_TENANT_ID and MICROSOFT_STORE_CLIENT_ID. It proves who it is with no secret at all: the
+application trusts the OIDC token GitHub Actions hands a job in this repository's microsoft-store environment (a
+federated credential on the application in Entra), so the job needs the id-token: write permission and nothing kept
+anywhere expires. Only needs the Python standard library.
 """
 
 import base64
@@ -58,25 +60,43 @@ def fail(message):
     sys.exit(1)
 
 
+def github_token():
+    """The job's OIDC token from GitHub, which is what the federated credential on the Entra application trusts."""
+    url = os.environ.get("ACTIONS_ID_TOKEN_REQUEST_URL")
+    if not url:
+        fail("GitHub hands out no OIDC token to this job: it needs the id-token: write permission, in the calling "
+             "workflow too.")
+    url += "&audience=" + urllib.parse.quote("api://AzureADTokenExchange")
+    headers = {"Authorization": f"Bearer {os.environ['ACTIONS_ID_TOKEN_REQUEST_TOKEN']}"}
+    with urllib.request.urlopen(urllib.request.Request(url, headers=headers)) as response:
+        return json.loads(response.read())["value"]
+
+
 def token():
     """An access token for the API, fetched again a few minutes before it runs out, since one lasts an hour."""
     if time.time() < _token["expires"] - 300:
         return _token["value"]
     tenant = os.environ["MICROSOFT_STORE_TENANT_ID"]
+    # GitHub's token is asked for again every time, since it lasts minutes rather than the hour Entra's does.
     body = urllib.parse.urlencode({
         "grant_type": "client_credentials",
         "client_id": os.environ["MICROSOFT_STORE_CLIENT_ID"],
-        "client_secret": os.environ["MICROSOFT_STORE_CLIENT_SECRET"],
-        "resource": "https://manage.devcenter.microsoft.com",
+        "client_assertion_type": "urn:ietf:params:oauth:client-assertion-type:jwt-bearer",
+        "client_assertion": github_token(),
+        "scope": "https://manage.devcenter.microsoft.com/.default",
     }).encode()
     try:
-        with urllib.request.urlopen(f"https://login.microsoftonline.com/{tenant}/oauth2/token", data=body) as response:
+        url = f"https://login.microsoftonline.com/{tenant}/oauth2/v2.0/token"
+        with urllib.request.urlopen(url, data=body) as response:
             answer = json.loads(response.read())
     except urllib.error.HTTPError as error:
-        # An Entra application's keys expire, two years at most after they were made, and this is where that shows.
-        fail(f"Microsoft Entra ID refused the credentials ({error.code}): {error.read().decode(errors='replace')}\n"
-             "If the key has expired, add a new one to the application under Partner Center > Account settings > "
-             "User management > Microsoft Entra applications and update MICROSOFT_STORE_CLIENT_SECRET.")
+        # AADSTS70021 is a subject nobody trusts: the job is not in the environment the credential names, or the
+        # credential's subject is not the one GitHub writes (repo:<owner>/<repository>:environment:<name>).
+        fail(f"Microsoft Entra ID refused the GitHub token ({error.code}): {error.read().decode(errors='replace')}\n"
+             "The application needs a federated credential with the issuer "
+             f"https://token.actions.githubusercontent.com, the subject "
+             f"repo:{os.environ.get('GITHUB_REPOSITORY')}:environment:microsoft-store and the audience "
+             "api://AzureADTokenExchange.")
     _token["value"] = answer["access_token"]
     _token["expires"] = time.time() + int(answer.get("expires_in", 3600))
     return _token["value"]

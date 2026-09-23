@@ -150,6 +150,11 @@ jobs:
     name: Windows
     needs: prepare
     uses: ./.github/workflows/windows-publish.yml
+    # The Microsoft Store is signed into with the job's OIDC token (see windows-publish.yml), and a called workflow
+    # gets no permission its caller does not grant.
+    permissions:
+      contents: read
+      id-token: write
     with:
       release_tag: ${{ github.event.release.tag_name }}
       release_notes: ${{ needs.prepare.outputs.release_notes }}
