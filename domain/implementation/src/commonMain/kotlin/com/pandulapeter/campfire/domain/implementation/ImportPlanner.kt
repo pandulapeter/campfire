@@ -39,7 +39,16 @@ internal object ImportPlanner {
         val sourceFileName: String,
     )
 
-    /** Plans each song by comparing only the library files in its collision family. */
+    /**
+     * Plans each song by comparing only the library files in its collision family.
+     *
+     * Two passes, because whether a song is a question depends on the rest of the batch: a library file the batch
+     * brings back unchanged is one the batch says belongs in the library, and replacing it with a different song that
+     * wants its name would lose the very song the batch carries - and point every setlist of the batch that names it
+     * at the song that replaced it. So every song is held against the library first, and only then against the songs
+     * before it, with the library files the batch carries known. A song that wants the name of one of those is one more
+     * song of the batch wanting a name an earlier one has, which goes in numbered.
+     */
     suspend fun planSongs(
         incoming: List<IncomingSong>,
         libraryFileNames: Collection<String>,
@@ -48,7 +57,8 @@ internal object ImportPlanner {
         val libraryFamilies = libraryFileNames.groupedByFamily(LibraryFiles.SONG_EXTENSIONS)
         val libraryFileNameSet = libraryFileNames.toHashSet()
         val families = mutableMapOf<String, SongFamily>()
-        return incoming.inArrivingOrder(LibraryFiles.SONG_EXTENSIONS, { it.fileName }, { it.sourceFileName }).mapIndexed { index, song ->
+        val songs = incoming.inArrivingOrder(LibraryFiles.SONG_EXTENSIONS, { it.fileName }, { it.sourceFileName })
+        val libraryMatches = songs.map { song ->
             val family = families.getOrPut(song.fileName) {
                 readSongFamily(
                     desired = song.fileName,
@@ -63,24 +73,40 @@ internal object ImportPlanner {
             val arrivedAs = song.sourceFileName?.takeIf { it != song.fileName && it in libraryFileNameSet }
             // Most songs of most imports are the only one of their name, and folding the text of every one of them
             // for a comparison nothing asks for would copy the whole batch once more.
-            val comparable = if (family.hasNothingToCompareWith && arrivedAs == null) null else ChordProSplitter.comparable(song.text)
+            val comparable = if (!family.hasLibraryTexts && arrivedAs == null) null else ChordProSplitter.comparable(song.text)
             val libraryFileName = comparable?.let(family::libraryFileNameOf)
                 ?: arrivedAs?.takeIf { readLibraryText(it)?.let(ChordProSplitter::comparable) == comparable }
-            val repeatedEntryIndex = comparable?.let(family::plannedEntryIndexOf)
-            when {
-                libraryFileName != null -> song.toEntry(fileName = libraryFileName, status = ImportPlan.Status.IDENTICAL)
-                repeatedEntryIndex != null -> song.toEntry(status = ImportPlan.Status.IDENTICAL, repeatedEntryIndex = repeatedEntryIndex)
-                else -> {
-                    family.plan(index = index, text = song.text)
-                    // The question is about the one file the library has under this name, so it is raised once:
-                    // a second song wanting the name has nothing left to replace, and goes in numbered.
-                    val isConflicting = family.isNameTaken && !family.hasConflict
-                    family.hasConflict = family.hasConflict || isConflicting
-                    song.toEntry(status = if (isConflicting) ImportPlan.Status.CONFLICTING else ImportPlan.Status.NEW)
-                }
+            LibraryMatch(family = family, comparable = comparable, libraryFileName = libraryFileName)
+        }
+        val keptLibraryFileNames = libraryMatches.mapNotNullTo(hashSetOf()) { it.libraryFileName }
+        return songs.mapIndexed { index, song ->
+            val (family, libraryComparable, libraryFileName) = libraryMatches[index]
+            if (libraryFileName != null) {
+                return@mapIndexed song.toEntry(fileName = libraryFileName, status = ImportPlan.Status.IDENTICAL)
             }
+            // Folded only once there is an earlier song of the family to hold it against.
+            val comparable = libraryComparable ?: if (family.hasPlannedSongs) ChordProSplitter.comparable(song.text) else null
+            val repeatedEntryIndex = comparable?.let(family::plannedEntryIndexOf)
+            if (repeatedEntryIndex != null) {
+                return@mapIndexed song.toEntry(status = ImportPlan.Status.IDENTICAL, repeatedEntryIndex = repeatedEntryIndex)
+            }
+            family.plan(index = index, text = song.text)
+            // The question is about the one file the library has under this name, so it is raised once: a second song
+            // wanting the name has nothing left to replace, and goes in numbered. So does every song wanting a name
+            // whose file the batch brings back unchanged, which is not the library's to give up.
+            val isConflicting = family.isNameTaken && song.fileName !in keptLibraryFileNames && !family.hasConflict
+            family.hasConflict = family.hasConflict || isConflicting
+            song.toEntry(status = if (isConflicting) ImportPlan.Status.CONFLICTING else ImportPlan.Status.NEW)
         }
     }
+
+    /** What the first pass of [planSongs] found out about one song: the library file it already is, if any. */
+    private data class LibraryMatch(
+        val family: SongFamily,
+        /** The song's text folded for comparison, where the first pass needed it; null where there was nothing to hold it against. */
+        val comparable: String?,
+        val libraryFileName: String?,
+    )
 
     /**
      * Plans setlists by their collision family, without treating another file in the batch as a library conflict.
@@ -139,24 +165,32 @@ internal object ImportPlanner {
     ): List<ImportPlan.SetlistEntry> {
         val libraryFamilies = librarySetlists.map { it.fileName }.groupedByFamily(SETLIST_EXTENSIONS)
         val librarySetlistsByFileName = librarySetlists.associateBy { it.fileName }
-        val plannedSetlists = mutableMapOf<String, MutableList<Setlist>>()
-        val conflictingFileNames = mutableSetOf<String>()
-        return incoming.map { (setlist, sourceFileName) ->
-            val written = setlist.withSongFileNames(songFileNames)
+        val written = incoming.map { it.setlist.withSongFileNames(songFileNames) }
+        // See planSongs: every setlist against the library first, so that a library setlist the batch brings back
+        // unchanged is known before a different one wanting its name could be made a question about replacing it.
+        val identicalSetlists = incoming.mapIndexed { index, (setlist, sourceFileName) ->
             val members = setlist.fileName.familyKeys(SETLIST_EXTENSIONS).firstOrNull()?.let(libraryFamilies::get).orEmpty()
                 .mapNotNull(librarySetlistsByFileName::get)
-            val identical = members.firstOrNull { it.holdsTheSameAs(written) }
+            members.firstOrNull { it.holdsTheSameAs(written[index]) }
                 // See planSongs: a setlist file named before today's rule, arriving under that name.
-                ?: librarySetlistsByFileName[sourceFileName]?.takeIf { it.holdsTheSameAs(written) }
-            val planned = plannedSetlists.getOrPut(setlist.fileName) { mutableListOf() }
+                ?: librarySetlistsByFileName[sourceFileName]?.takeIf { it.holdsTheSameAs(written[index]) }
+        }
+        val keptLibraryFileNames = identicalSetlists.mapNotNullTo(hashSetOf()) { it?.fileName }
+        val plannedSetlists = mutableMapOf<String, MutableList<Setlist>>()
+        val conflictingFileNames = mutableSetOf<String>()
+        return incoming.mapIndexed { index, (setlist, sourceFileName) ->
             fun entry(fileName: String, status: ImportPlan.Status) =
                 ImportPlan.SetlistEntry(fileName = fileName, setlist = setlist, status = status, sourceFileName = sourceFileName)
+            val identical = identicalSetlists[index]
+            val planned = plannedSetlists.getOrPut(setlist.fileName) { mutableListOf() }
             when {
                 identical != null -> entry(fileName = identical.fileName, status = ImportPlan.Status.IDENTICAL)
-                planned.any { it.holdsTheSameAs(written) } -> entry(fileName = setlist.fileName, status = ImportPlan.Status.IDENTICAL)
+                planned.any { it.holdsTheSameAs(written[index]) } -> entry(fileName = setlist.fileName, status = ImportPlan.Status.IDENTICAL)
                 else -> {
-                    planned += written
-                    val isConflicting = setlist.fileName in librarySetlistsByFileName && conflictingFileNames.add(setlist.fileName)
+                    planned += written[index]
+                    val isConflicting = setlist.fileName in librarySetlistsByFileName &&
+                        setlist.fileName !in keptLibraryFileNames &&
+                        conflictingFileNames.add(setlist.fileName)
                     entry(fileName = setlist.fileName, status = if (isConflicting) ImportPlan.Status.CONFLICTING else ImportPlan.Status.NEW)
                 }
             }
@@ -210,7 +244,11 @@ internal object ImportPlanner {
         private var foldedSongCount = 0
         var hasConflict = false
 
-        val hasNothingToCompareWith get() = libraryFileNames.isEmpty() && plannedSongs.isEmpty()
+        /** Whether the library holds any text in this family, which is what makes folding an incoming song worth it. */
+        val hasLibraryTexts get() = libraryFileNames.isNotEmpty()
+
+        /** Whether an earlier song of the batch has been planned under this name, which is what a repeat is held against. */
+        val hasPlannedSongs get() = plannedSongs.isNotEmpty()
 
         fun libraryFileNameOf(comparable: String) = libraryFileNames[comparable]
 

@@ -179,7 +179,9 @@ uninstall and nothing else does.
   under that name or a numbered sibling of it (`x_2.cho`) — or under the very name it arrived with, which is what an
   export of a file named by an older rule carries — is disregarded rather than copied (for a song, line endings
   and blank lines at either end of the file aside, `ChordProSplitter.comparable`), and two different files of one
-  batch that want the same name are never a question: the second is numbered like any other collision. The names
+  batch that want the same name are never a question: the second is numbered like any other collision — the
+  library's own file among them: a song or setlist the batch brings back unchanged is never offered up for
+  replacement, so a different one wanting its name is numbered next to it. The names
   taken by something *different* are put to the user as one question about the whole batch — keep both, replace,
   skip, or cancel the import. Replacing is the
   only thing in the app that ever overwrites a library file, and it takes an answer to that dialog.

@@ -44,12 +44,18 @@ class ImportFilesUseCaseImpl internal constructor(
             // is wherever that one went, which was not known when the plan was made.
             val storedNames = arrayOfNulls<String>(plan.songs.size)
             val replacedSongFileNames = mutableSetOf<String>()
+            // The planner never asks about a name whose library file this import brings back unchanged; held here too,
+            // since this is the one place anything is overwritten and the song lost would be one the import carries.
+            val keptSongFileNames = plan.songs
+                .filter { it.status == ImportPlan.Status.IDENTICAL && it.repeatedEntryIndex == null }
+                .mapTo(hashSetOf()) { it.fileName }
             plan.songs.forEachIndexed { index, entry ->
                 val storedName = when (val action = entry.action(resolution)) {
                     Action.WRITE, Action.REPLACE -> songRepository.importSong(
                         fileName = entry.fileName,
                         text = entry.text,
-                        shouldReplace = action == Action.REPLACE && replacedSongFileNames.add(entry.fileName),
+                        shouldReplace = action == Action.REPLACE && entry.fileName !in keptSongFileNames &&
+                            replacedSongFileNames.add(entry.fileName),
                     ).fileName.also { importedSongFileNames += it }
 
                     // Already in the library, or already written by this import, so the name it arrived under points there.
@@ -70,6 +76,7 @@ class ImportFilesUseCaseImpl internal constructor(
                 librarySetlists = librarySetlists,
                 songFileNames = storedSongFileNames,
             )
+            val keptSetlistFileNames = setlists.filter { it.status == ImportPlan.Status.IDENTICAL }.mapTo(hashSetOf()) { it.fileName }
             plan.setlists.zip(setlists).forEach { (planned, entry) ->
                 // A setlist the question was not about goes in numbered rather than being replaced or left out by it.
                 val action = if (entry.status == ImportPlan.Status.CONFLICTING && planned.status != ImportPlan.Status.CONFLICTING) {
@@ -80,7 +87,8 @@ class ImportFilesUseCaseImpl internal constructor(
                 when (action) {
                     Action.WRITE, Action.REPLACE -> importedSetlistFileNames += setlistRepository.importSetlist(
                         setlist = entry.setlist.withSongFileNames(storedSongFileNames).copy(priority = priority++),
-                        shouldReplace = action == Action.REPLACE && replacedSetlistFileNames.add(entry.fileName),
+                        shouldReplace = action == Action.REPLACE && entry.fileName !in keptSetlistFileNames &&
+                            replacedSetlistFileNames.add(entry.fileName),
                     ).fileName
 
                     Action.DISREGARD -> duplicateFileNames += entry.fileName

@@ -79,7 +79,10 @@ data class ImportPlan(
 
     /** What the library already has under the name the entry wants. */
     enum class Status {
-        /** The name is free, or taken only by an earlier file of the same import, so the storage layer numbers it if needed. */
+        /**
+         * The name is free, taken only by an earlier file of the same import, or taken by a library file that the same
+         * import brings back unchanged — which it is not the library's to give up — so the storage layer numbers it if needed.
+         */
         NEW,
 
         /**
@@ -90,7 +93,10 @@ data class ImportPlan(
          */
         IDENTICAL,
 
-        /** The name is taken in the library by something else, which only the user can decide about. */
+        /**
+         * The name is taken in the library by something else that the import does not bring back itself, which only the
+         * user can decide about.
+         */
         CONFLICTING,
     }
 

@@ -48,8 +48,11 @@ The ones that carry real logic:
   file of exactly that name holding the same text — an export hands songs out under their library names, and one
   named before today's rule is still the same song. `ImportPlanner`
   compares a song with the whole family of its name (the unnumbered file and its numbered siblings), records a repeat
-  in the batch by entry index, asks one conflict question per library name and leaves numbering to the write that can
-  see the directory. Only a decision made before anything is written can be put to the user as one question about a
+  in the batch by entry index, asks one conflict question per library name — and none about a library file the batch
+  itself brings back unchanged, which the planner finds in a first pass over the whole batch before it plans in
+  arriving order, since the unchanged copy may come after the song that wants its name — and leaves numbering to the
+  write that can see the directory. `ImportFilesUseCaseImpl` holds the same rule once more at the one place a file is
+  overwritten. Only a decision made before anything is written can be put to the user as one question about a
   whole archive, which is the reason for the split — three hundred questions is not a choice. A song is compared by
   Preparing runs on `Dispatchers.Default`, because decoding, splitting, header parsing and comparisons would otherwise
   occupy the view model's main thread, and yields between songs so the web can paint and cancellation can stop it.
