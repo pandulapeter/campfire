@@ -41,7 +41,7 @@ your own storage. Until you do, nothing on the network is touched at all.
   goes ahead; **Keep them and download** brings the files back onto this device instead. An answer covers one
   direction only, so a run that would empty both sides asks about each in turn.
 - A song that changed on two devices at once is never merged. The local one keeps its name and the incoming one lands
-  next to it as ` (2)`, a copy for you to look at and delete.
+  next to it as ` (2)` (or the next number that is free everywhere), a copy for you to look at and delete.
 - Renaming a file reaches sync as a deletion and a new file, since a run is keyed by name and knows nothing of moves.
   The rule above then applies: a device that edited the file under its old name since the last run puts that file
   back, leaving both.

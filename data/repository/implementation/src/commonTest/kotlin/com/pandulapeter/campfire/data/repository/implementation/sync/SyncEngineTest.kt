@@ -140,9 +140,13 @@ class SyncEngineTest {
         assertEquals("A's second edit", local.files.getValue(song(1)).decodeToString())
         assertEquals(expected, local.files.values.map { it.decodeToString() }.toSet())
         assertEquals(expected, provider.files.values.map { it.first.decodeToString() }.toSet())
-        assertEquals("B's edit", local.files.getValue(copy).decodeToString())
-        assertEquals("B's edit", provider.files.getValue(copy).first.decodeToString())
-        assertEquals(2, assertIs<SyncEngine.Result.Completed>(result).summary.conflicts.size)
+        // The copy takes the first name free on both sides, so the file waiting under "(2)" comes down as it is.
+        val nextCopy = SyncKey(kind = LibraryFileKind.SONG, name = "song_1 (3).cho")
+        assertEquals("A's first edit", local.files.getValue(copy).decodeToString())
+        assertEquals("A's first edit", provider.files.getValue(copy).first.decodeToString())
+        assertEquals("B's edit", local.files.getValue(nextCopy).decodeToString())
+        assertEquals("B's edit", provider.files.getValue(nextCopy).first.decodeToString())
+        assertEquals(listOf(nextCopy.name), assertIs<SyncEngine.Result.Completed>(result).summary.conflicts)
     }
 
     @Test
@@ -1106,6 +1110,24 @@ class SyncEngineTest {
 
         assertEquals(2, assertIs<SyncEngine.Result.Completed>(result).summary.deletedLocally)
         assertEquals(8, local.files.size)
+    }
+
+    @Test
+    fun `a conflict copy is not given a name the cloud folder already holds`() = runTest {
+        val another = "Another song".encodeToByteArray()
+        val local = FakeLibraryFileLocalSource(files = mapOf(song("x") to HERE))
+        val provider = FakeSyncProvider(files = mapOf(song("x") to THERE, song("x (2)") to another))
+
+        val completed = assertIs<SyncEngine.Result.Completed>(synchronize(local, provider, indexOf(song("x") to ORIGINAL)))
+
+        assertEquals(listOf("x (3).cho"), completed.summary.conflicts)
+        assertContentEquals(HERE, local.files.getValue(song("x")))
+        assertContentEquals(another, local.files.getValue(song("x (2)")))
+        assertContentEquals(THERE, local.files.getValue(song("x (3)")))
+        assertContentEquals(HERE, provider.files.getValue(song("x")).first)
+        assertContentEquals(another, provider.files.getValue(song("x (2)")).first)
+        assertEquals("r1", provider.files.getValue(song("x (2)")).second)
+        assertContentEquals(THERE, provider.files.getValue(song("x (3)")).first)
     }
 
     @Test

@@ -36,7 +36,8 @@ platform types.
   the same rule as the library scan (`LibraryFiles.isSongFileName` / `isSetlistFileName`), so sync never moves a
   file the app does not show.
   `writeLibraryFileToFreeName` is how an incoming copy of a file that changed on both sides lands next to the local
-  one, numbered ` (2)` rather than with the `_2` of a name the app derived itself. `readLibraryFile` answers null only
+  one, numbered ` (2)` rather than with the `_2` of a name the app derived itself, and on a name sync says is free in
+  the cloud folder too. `readLibraryFile` answers null only
   for a file that is not there; one that is there and cannot be read throws `LibraryStorageException`, since sync
   would carry a missing file out as a deletion on every device.
 - `SyncStateLocalSource` — the two documents sync remembers between runs, kept next to the preferences and so outside

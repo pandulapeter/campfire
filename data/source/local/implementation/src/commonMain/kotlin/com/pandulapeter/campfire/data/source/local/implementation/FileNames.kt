@@ -51,18 +51,22 @@ internal fun setlistFileName(title: String) = LibraryFiles.normalizedName(title)
  *   file, which is not a reason to number it. Such a candidate is held against the directory's listing instead, which
  *   carries the names exactly as they are: on a case-sensitive file system a different file may well be there under it
  *   - and only then is the directory listed.
+ * @param isTaken Names that are not free for a reason the directory cannot see - a file of that name elsewhere that
+ *   will arrive here. Consulted for every candidate alongside the directory itself.
  */
 internal suspend fun FileStorage.uniqueName(
     directory: StorageDirectory,
     desired: String,
     collisionSuffix: (index: Int) -> String = ::normalizedCollisionSuffix,
     currentName: String? = null,
+    isTaken: (name: String) -> Boolean = { false },
 ): String {
     fun isOwnName(candidate: String) = candidate.equals(currentName, ignoreCase = true)
-    if (!isOwnName(desired) && !exists(directory, desired)) return desired
+    if (!isOwnName(desired) && !isTaken(desired) && !exists(directory, desired)) return desired
     // Only a rename needs the exact names (see currentName): for anything else, exists() already says all a listing would.
     val takenNames = if (currentName == null) emptySet() else listNames(directory).toHashSet()
-    suspend fun isFree(candidate: String) = candidate !in takenNames && (isOwnName(candidate) || !exists(directory, candidate))
+    suspend fun isFree(candidate: String) =
+        candidate !in takenNames && !isTaken(candidate) && (isOwnName(candidate) || !exists(directory, candidate))
     if (isFree(desired)) return desired
     val extension = desired.knownExtension()
     val base = desired.removeSuffix(extension)

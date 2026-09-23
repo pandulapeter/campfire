@@ -46,12 +46,17 @@ internal class FakeLibraryFileLocalSource(
         files[key] = bytes
     }
 
-    override suspend fun writeLibraryFileToFreeName(kind: LibraryFileKind, desiredName: String, bytes: ByteArray): String {
+    override suspend fun writeLibraryFileToFreeName(
+        kind: LibraryFileKind,
+        desiredName: String,
+        bytes: ByteArray,
+        isTaken: (name: String) -> Boolean,
+    ): String {
         val extension = desiredName.substringAfter('.', "")
         val base = desiredName.substringBefore('.')
         val name = generateSequence(2) { it + 1 }
             .map { "$base ($it).$extension" }
-            .first { SyncKey(kind = kind, name = it) !in files }
+            .first { SyncKey(kind = kind, name = it) !in files && !isTaken(it) }
         val key = SyncKey(kind = kind, name = name)
         onWrite(key)
         files[key] = bytes

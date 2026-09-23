@@ -490,7 +490,7 @@ internal class SyncEngine(
                 null
             }
         }
-        if (changed != null) return resolveWith(provider, key, operation.revision, localBytes = changed, remote = bytes)
+        if (changed != null) return resolveWith(provider, key, operation.revision, localBytes = changed, remote = bytes, remoteFiles = remoteFiles)
         return OperationOutcome(
             entries = mapOf(key to SyncIndexEntry(localContentHash(bytes), operation.revision)),
             summary = SyncSummary(downloaded = 1),
@@ -577,7 +577,7 @@ internal class SyncEngine(
             return OperationOutcome(entries = mapOf(key to SyncIndexEntry(localContentHash(local), operation.revision)))
         }
         val remote = downloadWithinLimit(provider, key, remoteFiles)
-        return resolveWith(provider, key, operation.revision, localBytes = local, remote = remote)
+        return resolveWith(provider, key, operation.revision, localBytes = local, remote = remote, remoteFiles = remoteFiles)
     }
 
     /** [resolve] from the point where both versions are in hand, for a [download] that found a save under its write. */
@@ -587,13 +587,23 @@ internal class SyncEngine(
         revision: String,
         localBytes: ByteArray,
         remote: ByteArray,
+        remoteFiles: Map<SyncKey, RemoteFileState>,
     ): OperationOutcome {
         if (remote.contentEquals(localBytes)) {
             return OperationOutcome(entries = mapOf(key to SyncIndexEntry(localContentHash(localBytes), revision)))
         }
+        // Free on both sides, not only here: the listing may hold a file under the copy's name that has not come down
+        // yet - another device's copy, or a song that simply has that name - and is planned as a download later in
+        // this pass. A copy written under it here would be taken for that file changed on this device, go up over it,
+        // and push the file itself on to the next number. Folded, as the service may take two spellings for one name.
+        val remoteNames = remoteFiles.keys.filter { it.kind == key.kind }.mapTo(hashSetOf()) { it.folded().name }
         // Under the lock like every other write: the repositories pick a free name and write under it in two steps too,
         // and would otherwise be given the one this is.
-        val copyName = libraryFileLock.withLock { libraryFileLocalSource.writeLibraryFileToFreeName(key.kind, key.name, remote) }
+        val copyName = libraryFileLock.withLock {
+            libraryFileLocalSource.writeLibraryFileToFreeName(key.kind, key.name, remote) { name ->
+                SyncKey(kind = key.kind, name = name).folded().name in remoteNames
+            }
+        }
         val copyKey = SyncKey(kind = key.kind, name = copyName)
         val uploaded = try {
             provider.upload(key.kind, key.name, localBytes, revision)

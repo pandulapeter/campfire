@@ -362,8 +362,9 @@ the only possible one. The per-module `CLAUDE.md` files carry the detail; the sh
   run the app never came back from — killed, swiped away, suspended by iOS — is reported as interrupted next time
   rather than silently forgotten, and that run is left for the user to start rather than started on launch.
 - A file changed on both sides is never merged: the local one keeps the name and the incoming one lands next to it
-  as ` (2)` — a name of the other device's making, numbered the way any document is, rather than with the underscore
-  a name the app derived itself collides with (`_2`).
+  as ` (2)` — or the first number free both on this device and in the cloud folder, so that it never takes the name
+  of a file still on its way down — a name of the other device's making, numbered the way any document is, rather
+  than with the underscore a name the app derived itself collides with (`_2`).
 - Authorization is OAuth 2.0 with PKCE and no client secret, which is what lets this work with no backend. The four
   platforms get back from the consent page in four different ways, all behind `SyncAuthenticator`.
 

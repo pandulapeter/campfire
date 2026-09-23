@@ -39,8 +39,13 @@ internal class LibraryFileLocalSourceImpl(
     override suspend fun writeLibraryFile(kind: LibraryFileKind, name: String, bytes: ByteArray) =
         fileStorage.writeBytes(kind.directory, name, bytes)
 
-    override suspend fun writeLibraryFileToFreeName(kind: LibraryFileKind, desiredName: String, bytes: ByteArray): String {
-        val name = fileStorage.uniqueName(kind.directory, desiredName, ::arrivingCollisionSuffix)
+    override suspend fun writeLibraryFileToFreeName(
+        kind: LibraryFileKind,
+        desiredName: String,
+        bytes: ByteArray,
+        isTaken: (name: String) -> Boolean,
+    ): String {
+        val name = fileStorage.uniqueName(kind.directory, desiredName, ::arrivingCollisionSuffix, isTaken = isTaken)
         fileStorage.writeBytes(kind.directory, name, bytes)
         return name
     }

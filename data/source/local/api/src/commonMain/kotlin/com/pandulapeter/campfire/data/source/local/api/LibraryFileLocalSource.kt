@@ -41,9 +41,15 @@ interface LibraryFileLocalSource {
     /**
      * Writes [bytes] under the first free variant of [desiredName] (" (2)", " (3)"…) and returns the name it got.
      * This is what an incoming copy of a file that changed on both sides lands under: nothing is ever overwritten
-     * implicitly, here as everywhere else in the library.
+     * implicitly, here as everywhere else in the library. A name [isTaken] answers yes to is not free either, which is
+     * how sync keeps the copy off a name the cloud folder already holds for a file that has not come down yet.
      */
-    suspend fun writeLibraryFileToFreeName(kind: LibraryFileKind, desiredName: String, bytes: ByteArray): String
+    suspend fun writeLibraryFileToFreeName(
+        kind: LibraryFileKind,
+        desiredName: String,
+        bytes: ByteArray,
+        isTaken: (name: String) -> Boolean = { false },
+    ): String
 
     suspend fun deleteLibraryFile(kind: LibraryFileKind, name: String)
 

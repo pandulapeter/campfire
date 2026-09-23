@@ -10,6 +10,7 @@
 package com.pandulapeter.campfire.data.source.local.implementation.storage.file
 
 import com.pandulapeter.campfire.data.source.local.api.LibraryStorageException
+import com.pandulapeter.campfire.data.source.local.implementation.arrivingCollisionSuffix
 import com.pandulapeter.campfire.data.source.local.implementation.uniqueName
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.async
@@ -197,6 +198,13 @@ class JvmFileStorageTest {
         assertFailsWith<LibraryStorageException> { fileStorage.list(StorageDirectory.SONGS) }
         assertFailsWith<LibraryStorageException> { fileStorage.listNames(StorageDirectory.SONGS) }
         directory.setReadable(true)
+    }
+
+    @Test
+    fun `skips a name that is taken elsewhere`() = runBlocking {
+        fileStorage.writeText(StorageDirectory.SONGS, "a.cho", "content")
+
+        assertEquals("a (3).cho", fileStorage.uniqueName(StorageDirectory.SONGS, "a.cho", ::arrivingCollisionSuffix) { it == "a (2).cho" })
     }
 
     @Test

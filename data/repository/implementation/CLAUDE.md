@@ -102,8 +102,10 @@ import — is the only thing that walks the directory again.
   read fails: it is folded onto and left out like a too-large one, but its index entry is kept — the planner just does
   not see it — so the run that can read it again decides as usual; a library of which no file can be read ends the
   run instead. A conflict's incoming version is written next to the local one *before* the local
-  one goes up, and taken back if the service then says the remote file is still there, so the version that loses is
-  never held only in memory. A download is decided about twice — before its request, so that a file already in step is
+  one goes up, under a name free on both sides: the pass's remote listing is passed to the free-name search, since a
+  file under the copy's name that has not come down yet would otherwise be taken for the copy changed here. The copy
+  is taken back if the service then says the remote file is still there, so the version that loses is never held only
+  in memory. A download is decided about twice — before its request, so that a file already in step is
   not transferred, and again just before the write, so that a save made while the request was in flight is resolved
   as a conflict rather than written over. That second check and the write, and every other change the engine makes to
   a local file (a local deletion and the check before it, a conflict copy, taking a copy back), happen under
