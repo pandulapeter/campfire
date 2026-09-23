@@ -836,6 +836,17 @@ class CampfireViewModel(
                 }
             }
         }
+        // A sheet or a dialog about one song goes when the song does - deleted or renamed by a sync run, or taken out
+        // of the folder behind the app's back - whichever screen opened it: the details screen underneath closes
+        // itself, but the dialogs are not its own, and a setlist picker left behind would write the name of a file that
+        // is not there into every setlist ticked in it. Only against a library that has been read, and never for a song
+        // this app is renaming, which is missing from the library for a few writes on purpose (songsBeingRenamed).
+        viewModelScope.launch {
+            combine(_visibleDialog, allSongs, isLoading, _songsBeingRenamed) { dialog, songs, isLoading, songsBeingRenamed ->
+                val fileName = dialog?.songFileName
+                dialog?.takeIf { fileName != null && !isLoading && fileName !in songsBeingRenamed && songs.none { it.fileName == fileName } }
+            }.filterNotNull().collect(::dismissSheet)
+        }
         viewModelScope.launch {
             _songFilter.collect { persist(SONG_FILTER_KEY, SavedSongFilter(selectedTags = it.selectedTags.toList(), selectedLanguages = it.selectedLanguages.toList())) }
         }
@@ -2008,6 +2019,17 @@ class CampfireViewModel(
     }
 
     // Helpers
+
+    /** The song a dialog is about, for the ones that are about one, see the collector in `init`. */
+    private val DialogType.songFileName: String?
+        get() = when (this) {
+            is DialogType.SetlistPicker -> song.fileName
+            is DialogType.SongDisplayControls -> songFileName
+            is DialogType.DeleteSong -> song.fileName
+            is DialogType.AddSongTag -> song.fileName
+            is DialogType.SongLanguages -> song.fileName
+            else -> null
+        }
 
     private fun restoreSearch(key: String) = restore<SavedSearch>(key).let { saved ->
         SearchState(isInitiallyOpen = saved?.isOpen == true, initialQuery = saved?.query.orEmpty())
