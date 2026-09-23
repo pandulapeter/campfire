@@ -40,6 +40,8 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.ime
 import androidx.compose.foundation.layout.systemBars
+import androidx.compose.foundation.layout.displayCutout
+import androidx.compose.foundation.layout.union
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
 import androidx.compose.material3.Icon
@@ -351,6 +353,16 @@ private class KeyboardAwarePadding(
     override fun hashCode() = listOf(start, end, bottom, coveredHeight, density).hashCode()
 }
 
+/**
+ * The edges the screens keep their content clear of: the system bars and, where the window is laid out into it, the
+ * display cutout. Android's edge to edge window reaches into the cutout on every side, and Material's app bars, rail
+ * and navigation bar already keep clear of it there (their default insets are these); a camera in the middle of a
+ * landscape phone's long edge would otherwise be drawn over the ends of the list rows and the lyrics. Elsewhere the
+ * cutout is either nothing or inside the system bars already, which a union leaves as it is.
+ */
+internal val WindowInsets.Companion.contentEdges: WindowInsets
+    @Composable get() = systemBars.union(displayCutout)
+
 @OptIn(ExperimentalLayoutApi::class, ExperimentalMaterial3ExpressiveApi::class)
 @Composable
 private fun CampfireContent(
@@ -386,9 +398,10 @@ private fun CampfireContent(
     val settledListWidth = windowWidth - railWidth
     val settledSongDetailsWidth = windowWidth
 
-    // What is left of the window insets once the chrome has covered the edge it sits on. The screens hand these to
-    // their lists as content padding, so that items scroll under the system bars instead of stopping short of them.
-    val systemBars = WindowInsets.systemBars.asPaddingValues()
+    // What is left of the system bars and the display cutout once the chrome has covered the edge it sits on. The screens
+    // hand these to their lists as content padding, so that items scroll under the system bars instead of stopping short
+    // of them.
+    val systemBars = WindowInsets.contentEdges.asPaddingValues()
     // Never read here, see KeyboardAwarePadding.
     val ime = rememberUpdatedState(WindowInsets.ime)
     val shellContentPadding: PaddingValues = KeyboardAwarePadding(
