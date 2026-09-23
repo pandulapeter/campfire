@@ -9,7 +9,7 @@
 # Builds the web distribution and copies it over campfire/ in the website's repository. Called by release.yml for
 # every release; dispatched by hand to publish this branch without one.
 
-name: 'Publish Web'
+name: 'Publish web'
 
 on:
   workflow_call:

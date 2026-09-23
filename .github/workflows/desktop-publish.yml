@@ -22,7 +22,7 @@
 # Called by release.yml for every release; dispatched by hand to attach the installers to a release that is already
 # there.
 
-name: 'Publish Desktop'
+name: 'Publish Linux and Windows'
 
 on:
   workflow_call:
