@@ -331,8 +331,8 @@
         <item quantity="other">%1$d fájlt nem sikerült szinkronizálni. Köztük: %2$s</item>
     </plurals>
     <plurals name="settings_sync_conflicts">
-        <item quantity="one">Két helyen is módosult dal mindkét változata megmaradt: %2$s</item>
-        <item quantity="other">%1$d dal két helyen is módosult, mindkét változatuk megmaradt. Köztük: %2$s</item>
+        <item quantity="one">Két helyen is módosult fájl mindkét változata megmaradt: %2$s</item>
+        <item quantity="other">%1$d fájl két helyen is módosult, mindkét változatuk megmaradt. Köztük: %2$s</item>
     </plurals>
 
     <string name="settings_sync_cancel">Szinkronizálás leállítása</string>

@@ -331,8 +331,8 @@
         <item quantity="other">%1$d files could not be synced. Among them: %2$s</item>
     </plurals>
     <plurals name="settings_sync_conflicts">
-        <item quantity="one">Kept both versions of a song that changed in two places: %2$s</item>
-        <item quantity="other">Kept both versions of %1$d songs that changed in two places. Among them: %2$s</item>
+        <item quantity="one">Kept both versions of a file that changed in two places: %2$s</item>
+        <item quantity="other">Kept both versions of %1$d files that changed in two places. Among them: %2$s</item>
     </plurals>
 
     <string name="settings_sync_cancel">Stop syncing</string>
