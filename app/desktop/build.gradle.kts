@@ -274,6 +274,8 @@ abstract class AddStartupWmClassToDeb : DefaultTask() {
         debs.forEach { deb ->
             val extracted = workingDirectory.get().asFile.resolve(deb.nameWithoutExtension)
             extracted.deleteRecursively()
+            // dpkg-deb creates the extraction target itself, but not its parent, which a clean checkout does not have yet.
+            workingDirectory.get().asFile.mkdirs()
             execOperations.exec { commandLine("dpkg-deb", "--raw-extract", deb.absolutePath, extracted.absolutePath) }
             val entries = extracted.walkTopDown()
                 .filter { it.isFile && it.extension == "desktop" && !it.relativeTo(extracted).startsWith("DEBIAN") }
