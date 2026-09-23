@@ -13,6 +13,8 @@ import androidx.compose.ui.input.pointer.PointerEvent
 
 internal actual val isDesktopPlatform = false
 
+internal actual val isLaunchScreenWholeStartup = false
+
 // Info.plist declares UIFileSharingEnabled and LSSupportsOpeningDocumentsInPlace, so the documents directory the
 // library lives in shows up under "On My iPhone".
 internal actual val libraryLocation: LibraryLocation? = LibraryLocation.FilesApp

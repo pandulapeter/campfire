@@ -127,7 +127,7 @@ import com.pandulapeter.campfire.presentation.ui.platform.LocalSyncNotifier
 import com.pandulapeter.campfire.presentation.ui.platform.withSyncCounts
 import com.pandulapeter.campfire.presentation.ui.platform.SyncNotification
 import com.pandulapeter.campfire.presentation.ui.platform.areDrawablesLoaded
-import com.pandulapeter.campfire.presentation.ui.platform.isDesktopPlatform
+import com.pandulapeter.campfire.presentation.ui.platform.isLaunchScreenWholeStartup
 import com.pandulapeter.campfire.presentation.ui.platform.libraryLocation
 import com.pandulapeter.campfire.presentation.ui.dialogs.CampfireDialogs
 import com.pandulapeter.campfire.presentation.ui.navigation.CampfireDestination
@@ -230,20 +230,20 @@ fun CampfireApp(
             }
             if (!isAppReady) {
                 val opacity = remember { Animatable(1f) }
-                // On the desktop the mark grows as it goes, over the slower of the two effect springs so that the
-                // movement has the time to be read as one: this is the one platform where the launch screen is the
-                // whole of the startup - the first frame the window paints and the last one before the app - so it
+                // In the desktop application the mark grows as it goes, over the slower of the two effect springs so
+                // that the movement has the time to be read as one: this is the one platform where the launch screen is
+                // the whole of the startup - the first frame the window paints and the last one before the app - so it
                 // is worth leaving by opening into the app rather than by merely thinning out. The other three
                 // open on a startup screen of their own and never watch this one go: Android's splash and the web's
                 // loading page cover the fade entirely, and on iOS the mark is already the second thing shown - so
                 // there it stays the plain, quicker dissolve, and the extra frames are not spent.
-                val markGrowth = if (isDesktopPlatform) LAUNCH_MARK_EXIT_GROWTH else 0f
+                val markGrowth = if (isLaunchScreenWholeStartup) LAUNCH_MARK_EXIT_GROWTH else 0f
                 LaunchScreen(
                     modifier = Modifier.graphicsLayer { alpha = opacity.value.coerceIn(0f, 1f) },
                     markScale = { 1f + (1f - opacity.value.coerceIn(0f, 1f)) * markGrowth },
                 )
                 val motionScheme = MaterialTheme.motionScheme
-                val fadeSpec = if (isDesktopPlatform) motionScheme.slowEffectsSpec<Float>() else motionScheme.defaultEffectsSpec<Float>()
+                val fadeSpec = if (isLaunchScreenWholeStartup) motionScheme.slowEffectsSpec<Float>() else motionScheme.defaultEffectsSpec<Float>()
                 // The icons have to be in as well, or the app would be uncovered while it is still fetching them one
                 // by one and every list row, button and chip holding one would resize around it as it lands. Asking
                 // for them here rather than anywhere earlier is what pays for the wait out of time the launch screen

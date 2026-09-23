@@ -13,6 +13,8 @@ import androidx.compose.ui.input.pointer.PointerEvent
 
 internal actual val isDesktopPlatform = false
 
+internal actual val isLaunchScreenWholeStartup = false
+
 // The files live in the app's private storage, which no file manager will show.
 internal actual val libraryLocation: LibraryLocation? = null
 

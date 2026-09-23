@@ -15,6 +15,8 @@ import java.io.File
 
 internal actual val isDesktopPlatform = true
 
+internal actual val isLaunchScreenWholeStartup = true
+
 /**
  * The folder the songs and setlists are in, which on desktop is a folder the user can open and edit files in.
  *

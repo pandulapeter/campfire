@@ -18,6 +18,15 @@ import androidx.compose.ui.input.pointer.PointerEvent
 internal expect val isDesktopPlatform: Boolean
 
 /**
+ * Whether the app's own launch screen is the whole of the startup the user watches, from the first frame the window
+ * paints to the app: true only in the desktop application. Android and the web put a startup screen of their own over
+ * it (the system splash, the page's loading screen) and iOS shows its storyboard first, so there the launch screen's
+ * exit is never watched and is kept short. Not [isDesktopPlatform], which on the web says which input the page is
+ * used with rather than what is on screen before it.
+ */
+internal expect val isLaunchScreenWholeStartup: Boolean
+
+/**
  * Where the library's files can be found, or null where there is nothing the user could go and look at. It is a
  * value rather than a string so that the wording that needs translating stays in the string resources, while a path
  * (which does not) can be handed over as it is.

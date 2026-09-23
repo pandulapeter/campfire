@@ -20,6 +20,9 @@ import org.w3c.dom.events.WheelEvent
 // touch treatment is used (a long press and a bottom sheet), without one the desktop treatment is.
 internal actual val isDesktopPlatform = !hasTouchScreen()
 
+// The page's own loading screen is over the app until the launch screen has gone, whatever the input.
+internal actual val isLaunchScreenWholeStartup = false
+
 // The Origin Private File System is not reachable from outside the page.
 internal actual val libraryLocation: LibraryLocation? = null
 
