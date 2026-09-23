@@ -51,9 +51,7 @@ import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.geometry.CornerRadius
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
-import androidx.compose.ui.graphics.CompositingStrategy
 import androidx.compose.ui.graphics.TransformOrigin
-import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.graphics.lerp
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.input.pointer.positionChange
@@ -132,26 +130,26 @@ internal fun FastScroller(
             .width(FAST_SCROLLER_WIDTH)
             .padding(vertical = TRACK_VERTICAL_PADDING)
             .onSizeChanged { state.trackHeight = it.height }
-            // Alpha applied to every draw call rather than through an offscreen buffer, which would be the size of the
-            // column and cut off the bubble that reaches out of it over the list.
-            .graphicsLayer {
-                this.alpha = alpha
-                compositingStrategy = CompositingStrategy.ModulateAlpha
-            }
     ) {
         Box(
             modifier = Modifier
                 .fillMaxSize()
+                // The fade is applied to the colors here rather than through a graphicsLayer: the web build does not
+                // redraw a layer's content when only its alpha changes, which left the thumb invisible on the web
+                // until hovering it recorded the drawing again. The bubble needs none of it, as it is only shown while
+                // dragging, which ends the moment the scroller goes away.
                 .drawBehind {
                     val thumbWidth = THUMB_WIDTH.toPx()
                     drawRoundRect(
                         color = trackColor,
+                        alpha = alpha,
                         topLeft = Offset(x = size.width - thumbWidth - THUMB_END_PADDING.toPx(), y = 0f),
                         size = Size(width = thumbWidth, height = size.height),
                         cornerRadius = CornerRadius(thumbWidth / 2),
                     )
                     drawRoundRect(
                         color = thumbColor,
+                        alpha = alpha,
                         topLeft = Offset(x = size.width - thumbWidth - THUMB_END_PADDING.toPx(), y = state.thumbTop),
                         size = Size(width = thumbWidth, height = state.thumbHeight),
                         cornerRadius = CornerRadius(thumbWidth / 2),

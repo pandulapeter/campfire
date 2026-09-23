@@ -54,7 +54,6 @@ they are:
 
 ### To do
 - Predictive back from Setlists / Settings should crossfade
-- Fast scroller is invisible when opening the screen for the first time, then after the first hover it becomes always visible
 - Add support for external control devices with a focus-by-section feature
 - Songs: sort by year option
 - Add ability to add links
