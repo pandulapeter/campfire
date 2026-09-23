@@ -550,7 +550,8 @@ class CampfireViewModel(
      */
     val librarySummary = screenData
         .map { state ->
-            state.data?.let { data ->
+            // A library with an unreadable part standing in empty is not one to count.
+            state.data?.takeIf { it.isWholeLibrary }?.let { data ->
                 LibrarySummary(
                     songCount = data.unfilteredSongs.size,
                     setlistCount = data.setlists.size,
@@ -593,7 +594,7 @@ class CampfireViewModel(
      * takes, which is exactly while it is fading out of the list.
      */
     val demoLibraryOffer = combine(screenData, isAddingDemoLibrary, _isImporting) { state, isAddingDemoLibrary, isImporting ->
-        when (state.data?.let { DemoLibrary.isPresentIn(songs = it.unfilteredSongs, setlists = it.setlists) }) {
+        when (state.data?.takeIf { it.isWholeLibrary }?.let { DemoLibrary.isPresentIn(songs = it.unfilteredSongs, setlists = it.setlists) }) {
             false -> if (isAddingDemoLibrary || isImporting) DemoLibraryOffer.UNAVAILABLE else DemoLibraryOffer.AVAILABLE
             true, null -> null
         }
@@ -1492,7 +1493,9 @@ class CampfireViewModel(
                 // library looks empty while it is still being read. Nothing else writes to it meanwhile, since the
                 // import queue waits for this.
                 val library = screenData.first { it !is DataState.Loading }.data
-                if (library != null && library.unfilteredSongs.isEmpty() && library.setlists.isEmpty()) {
+                // An unreadable songs or setlists folder stands in empty so that the rest can be shown, and is not an
+                // empty library to plant into.
+                if (library != null && library.isWholeLibrary && library.unfilteredSongs.isEmpty() && library.setlists.isEmpty()) {
                     // Imported here rather than through importQueue, where a file opened with the app is already
                     // waiting; see demoLibraryDecision. An empty library has no names for it to collide with, so
                     // this never asks anything.

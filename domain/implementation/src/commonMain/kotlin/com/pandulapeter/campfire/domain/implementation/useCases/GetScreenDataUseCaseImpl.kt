@@ -67,7 +67,8 @@ class GetScreenDataUseCaseImpl internal constructor(
             // Only the preferences the list is built from: a preference that changes on every step of a transposition
             // (or on every frame of a pinch, once the debounce lets it through) must not have the whole library
             // filtered and sorted again for it.
-            preferences.map { state -> state.mapData { it.toSongListPreferences() } }.distinctUntilChanged(),
+            preferences.map { state -> state.mapData { it.toSongListPreferences() }.orWhenUnreadable(DEFAULT_SONG_LIST_PREFERENCES) }
+                .distinctUntilChanged(),
             songFilter.distinctUntilChanged(),
         ) { songsDataState, songListPreferencesDataState, filter ->
             listOf(songsDataState, songListPreferencesDataState).combinedState(
@@ -78,30 +79,59 @@ class GetScreenDataUseCaseImpl internal constructor(
         }
         val setlistPart = combine(
             setlistRepository.setlists,
-            preferences.map { state -> state.mapData { it.setlistSortingMode } }.distinctUntilChanged(),
+            preferences.map { state -> state.mapData { it.setlistSortingMode }.orWhenUnreadable(DEFAULT_SETLIST_SORTING_MODE) }
+                .distinctUntilChanged(),
         ) { setlistsDataState, sortingModeDataState ->
             listOf(setlistsDataState, sortingModeDataState).combinedState(
                 setlistsDataState.data?.let { setlists -> sortingModeDataState.data?.let { setlists.sortSetlists(it) } },
             )
         }
         return combine(setlistPart, songPart) { setlistsDataState, songsDataState ->
-            val screenData = setlistsDataState.data?.let { setlists ->
-                songsDataState.data?.let { songPart ->
-                    ScreenData(
-                        setlists = setlists,
-                        songs = songPart.songs,
-                        songSections = songPart.songSections,
-                        tags = songPart.tags,
-                        languages = songPart.languages,
-                        unfilteredSongs = songPart.unfilteredSongs,
-                    ).also {
-                        cache = it
-                    }
+            val setlists = setlistsDataState.data
+            val songPart = songsDataState.data
+            val screenData = if (setlists != null && songPart != null) {
+                ScreenData(
+                    setlists = setlists,
+                    songs = songPart.songs,
+                    songSections = songPart.songSections,
+                    tags = songPart.tags,
+                    languages = songPart.languages,
+                    unfilteredSongs = songPart.unfilteredSongs,
+                ).also {
+                    cache = it
                 }
+            } else {
+                null
             }
-            listOf(setlistsDataState, songsDataState).combinedState(screenData ?: cache)
+            listOf(setlistsDataState, songsDataState).combinedState(
+                screenData ?: cache ?: partialScreenData(setlistsDataState, songsDataState),
+            )
         }.flowOn(Dispatchers.Default).distinctUntilChanged()
     }
+
+    /**
+     * The part that was read, with the part whose first read failed standing in empty, so that one unreadable
+     * directory does not keep the other one's screen empty. Null while either part is still being read for the
+     * first time: filling that in would put something on screen that the real data then replaces. Never cached,
+     * since it is not the library.
+     */
+    private fun partialScreenData(setlistsDataState: DataState<List<Setlist>>, songsDataState: DataState<SongPart>): ScreenData? {
+        val setlists = setlistsDataState.data ?: emptyList<Setlist>().takeIf { setlistsDataState is DataState.Failure } ?: return null
+        val songPart = songsDataState.data ?: EMPTY_SONG_PART.takeIf { songsDataState is DataState.Failure } ?: return null
+        return ScreenData(
+            setlists = setlists,
+            songs = songPart.songs,
+            songSections = songPart.songSections,
+            tags = songPart.tags,
+            languages = songPart.languages,
+            unfilteredSongs = songPart.unfilteredSongs,
+            isWholeLibrary = false,
+        )
+    }
+
+    /** A value whose first read failed stands in as [default]; a value that is merely not read yet stays missing. */
+    private fun <T> DataState<T>.orWhenUnreadable(default: T): DataState<T> =
+        if (this is DataState.Failure && data == null) DataState.Failure(default) else this
 
     private fun List<Song>.toSongPart(songListPreferences: SongListPreferences, filter: SongFilter): SongPart {
         val filterableSongs = filterHasChords(songListPreferences)
@@ -360,5 +390,24 @@ class GetScreenDataUseCaseImpl internal constructor(
         is DataState.Idle -> DataState.Idle(transform(data))
         is DataState.Loading -> DataState.Loading(data?.let(transform))
         is DataState.Failure -> DataState.Failure(data?.let(transform))
+    }
+
+    private companion object {
+
+        /** What `UserPreferencesDocument().toModel()` gives a device that has never saved any, see `:data:source:local`. */
+        val DEFAULT_SONG_LIST_PREFERENCES = SongListPreferences(
+            shouldShowSongsWithoutChords = true,
+            sortingMode = UserPreferences.SortingMode.BY_ARTIST,
+            tagMatchMode = UserPreferences.MatchMode.ANY,
+            languageMatchMode = UserPreferences.MatchMode.ANY,
+        )
+        val DEFAULT_SETLIST_SORTING_MODE = UserPreferences.SetlistSortingMode.NEWEST_FIRST
+        val EMPTY_SONG_PART = SongPart(
+            songs = emptyList(),
+            songSections = emptyList(),
+            tags = emptyList(),
+            languages = emptyList(),
+            unfilteredSongs = emptyList(),
+        )
     }
 }

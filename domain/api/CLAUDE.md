@@ -28,7 +28,8 @@ paths, `Is*` for a question with a yes or no answer (`IsFirstRun`), or a verb fo
   are read from: a setlist shows what somebody wrote down rather than a view of the library, so the song filters
   never reach into one, and an entry missing from there is a file that is really gone. Each of the two filter groups
   is counted after every other filter but before its own, so that selecting one value does not empty the list of the
-  ones that could be selected next.
+  ones that could be selected next. `isWholeLibrary` is false for a value in which an unreadable part stands in empty;
+  the demo library and the library counts ask it.
 - `EditSetlistUseCase` / `RenameSongFileUseCase` are the two that move a file rather than write one. A setlist's
   file follows its title on its own, since nothing in the library points at a setlist by name — which is why editing
   one is a single use case: the title it is filed under and the description it carries are written together, and only

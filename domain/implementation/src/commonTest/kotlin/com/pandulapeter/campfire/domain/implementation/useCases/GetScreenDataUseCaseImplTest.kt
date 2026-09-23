@@ -29,9 +29,11 @@ import kotlinx.coroutines.test.TestScope
 import kotlinx.coroutines.test.runTest
 import kotlin.test.Test
 import kotlin.test.assertEquals
+import kotlin.test.assertFalse
 import kotlin.test.assertIs
 import kotlin.test.assertNotSame
 import kotlin.test.assertSame
+import kotlin.test.assertTrue
 
 /**
  * The screen data is built in two halves, so that a setlist being written does not filter and sort the whole library
@@ -70,9 +72,12 @@ class GetScreenDataUseCaseImplTest {
         val first = latest.idle()
         assertEquals(listOf("a", "b"), first.setlists.map { it.title })
 
-        preferences.value = DataState.Idle(PREFERENCES.copy(setlistSortingMode = UserPreferences.SetlistSortingMode.BY_TITLE))
+        // The setlist first and the preference second, each awaited: the two halves are collected side by side, so two
+        // changes made at once may arrive in either order.
         setlists.value = DataState.Idle(setlists.value.data.orEmpty() + setlist("c", priority = 3))
-        val second = latest.first { it?.data?.setlists?.size == 3 }?.data
+        assertEquals(listOf("c", "a", "b"), latest.first { it?.data?.setlists?.size == 3 }?.data?.setlists?.map { it.title })
+        preferences.value = DataState.Idle(PREFERENCES.copy(setlistSortingMode = UserPreferences.SetlistSortingMode.BY_TITLE))
+        val second = latest.first { it?.data?.setlists?.firstOrNull()?.title == "a" }?.data
 
         assertEquals(listOf("a", "b", "c"), second?.setlists?.map { it.title })
         assertSame(first.songSections, second?.songSections)
@@ -155,6 +160,79 @@ class GetScreenDataUseCaseImplTest {
         assertEquals(emptyList(), latest.first { it?.data?.songs?.isEmpty() == true }?.data?.songs)
     }
 
+    @Test
+    fun `an unreadable setlist folder does not hide the songs`() = runTest {
+        setlists.value = DataState.Failure(null)
+
+        val screenData = assertIs<DataState.Failure<ScreenData>>(collectScreenData().first { it != null }).data
+
+        assertEquals(listOf("Hey Jude", "Yesterday"), screenData?.songs?.map { it.title })
+        assertEquals(emptyList(), screenData?.setlists)
+        assertEquals(false, screenData?.isWholeLibrary)
+    }
+
+    @Test
+    fun `an unreadable song folder does not hide the setlists`() = runTest {
+        songs.value = DataState.Failure(null)
+
+        val screenData = assertIs<DataState.Failure<ScreenData>>(collectScreenData().first { it != null }).data
+
+        assertEquals(listOf("a", "b"), screenData?.setlists?.map { it.title })
+        assertEquals(emptyList(), screenData?.songs)
+        assertEquals(false, screenData?.isWholeLibrary)
+    }
+
+    @Test
+    fun `unreadable preferences sort by the defaults`() = runTest {
+        songs.value = DataState.Idle(listOf(song("Hey Jude", artist = "Zed"), song("Yesterday", artist = "Abba")))
+        preferences.value = DataState.Failure(null)
+
+        val screenData = assertIs<DataState.Failure<ScreenData>>(collectScreenData().first { it != null }).data
+
+        assertEquals(listOf("Yesterday", "Hey Jude"), screenData?.songs?.map { it.title })
+        assertEquals(listOf("a", "b"), screenData?.setlists?.map { it.title })
+        assertEquals(true, screenData?.isWholeLibrary)
+    }
+
+    @Test
+    fun `a part that is still loading is not filled in`() = runTest {
+        setlists.value = DataState.Loading(null)
+
+        val state = assertIs<DataState.Loading<ScreenData>>(collectScreenData().first { it != null })
+
+        assertEquals(null, state.data)
+    }
+
+    @Test
+    fun `a failure after a complete read carries the complete library`() = runTest {
+        val latest = collectScreenData()
+        val last = latest.idle()
+
+        setlists.value = DataState.Failure(null)
+        val failure = latest.first { it is DataState.Failure }
+
+        assertSame(last, failure?.data)
+        assertTrue(last.isWholeLibrary)
+    }
+
+    @Test
+    fun `a partial value is never cached`() = runTest {
+        setlists.value = DataState.Failure(null)
+        val latest = collectScreenData()
+        assertFalse(assertIs<DataState.Failure<ScreenData>>(latest.first { it != null }).data?.isWholeLibrary ?: true)
+
+        songs.value = DataState.Loading(null)
+        latest.first { it is DataState.Failure && it.data == null }
+
+        setlists.value = DataState.Idle(listOf(setlist("a", priority = 1)))
+        songs.value = DataState.Idle(listOf(song("Yesterday")))
+        val complete = assertIs<DataState.Idle<ScreenData>>(latest.first { it is DataState.Idle }).data
+        assertTrue(complete.isWholeLibrary)
+
+        setlists.value = DataState.Failure(null)
+        assertSame(complete, latest.first { it is DataState.Failure }?.data)
+    }
+
     /**
      * One collection for the whole test, since what is under test is what a collection reuses from one emission to
      * the next. The use case builds on [kotlinx.coroutines.Dispatchers.Default], so the emissions are awaited rather
@@ -231,10 +309,15 @@ class GetScreenDataUseCaseImplTest {
             size = 0L,
         )
 
-        fun song(title: String, tags: List<String> = emptyList(), languages: List<String> = emptyList()) = Song(
+        fun song(
+            title: String,
+            tags: List<String> = emptyList(),
+            languages: List<String> = emptyList(),
+            artist: String = "The Beatles",
+        ) = Song(
             fileName = "${title.lowercase().replace(' ', '_')}.cho",
             title = title,
-            artist = "The Beatles",
+            artist = artist,
             key = null,
             transpose = 0,
             tags = tags,

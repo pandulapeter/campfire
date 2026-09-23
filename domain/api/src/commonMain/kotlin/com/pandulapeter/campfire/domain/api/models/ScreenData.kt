@@ -49,4 +49,11 @@ data class ScreenData(
      * whatever the song list is currently narrowed to, and an entry missing from here is a file that is really gone.
      */
     val unfilteredSongs: List<Song>,
+    /**
+     * False when the songs or the setlists could not be read at all and stand in here as empty, so that the part that
+     * was read can still be shown - the state this arrives in is then a failure. Nothing that decides something from
+     * what the library holds (whether it is empty, what it counts, whether the demo songs are in it) may take such a
+     * value for the library.
+     */
+    val isWholeLibrary: Boolean = true,
 )
