@@ -6,9 +6,10 @@
 # If a copy of the MPL was not distributed with this file, You can obtain one at
 # https://mozilla.org/MPL/2.0/.
 
-# Builds the iOS app, signs it for the App Store and uploads it to App Store Connect, where it lands in TestFlight. It
-# stops there: submitting the build for review, and writing its "What's New", is done by hand in App Store Connect. A
-# green run therefore means the build was delivered, not that it was accepted — processing and review answer by email.
+# Builds the iOS app, signs it for the App Store and uploads it to App Store Connect, where it lands in TestFlight.
+# Called by a release, it then waits for the build to be processed and submits it for review with the release's notes
+# as its "What's New", to be released as soon as Apple approves it; dispatched by hand, it does so only when asked.
+# Either way a green run means submitted, not accepted — review answers by email.
 #
 # Nothing it signs with is stored anywhere, so nothing of it can expire: the run creates an Apple Distribution
 # certificate for a key made on the runner through the App Store Connect API (.github/scripts/app_store_signing.py),
@@ -26,6 +27,12 @@ on:
       release_tag:
         type: string
         required: true
+      release_notes:
+        type: string
+        required: false
+      submit_for_review:
+        type: boolean
+        default: false
   workflow_dispatch:
     inputs:
       release_tag:
@@ -34,6 +41,14 @@ on:
         required: true
       build_number:
         description: 'Build number to upload under instead of campfire.ios.buildNumber (for a repeated upload)'
+        type: string
+        required: false
+      submit_for_review:
+        description: 'Submit the build for review once it has been processed, to be released as soon as it is approved'
+        type: boolean
+        default: false
+      release_notes:
+        description: '"What''s New" for the submission, use \n for line breaks'
         type: string
         required: false
 
@@ -222,7 +237,25 @@ jobs:
             exit 1
           fi
           xcrun altool --upload-app --type ios --file "$IPA" --apiKey "$ASC_KEY_ID" --apiIssuer "$ASC_ISSUER_ID"
-          echo "Uploaded ${{ steps.version.outputs.name }} (${{ steps.version.outputs.build }}). It appears in TestFlight once App Store Connect has processed it, and goes to review only when submitted there by hand."
+          echo "Uploaded ${{ steps.version.outputs.name }} (${{ steps.version.outputs.build }}). It appears in TestFlight once App Store Connect has processed it."
+      # Waits for App Store Connect to process the build, which can take half an hour, and submits it with the release's
+      # notes as its "What's New", to be released as soon as it is approved (.github/scripts/app_store_submission.py).
+      - name: Submit for review
+        if: inputs.submit_for_review
+        env:
+          ASC_KEY_ID: ${{ secrets.APP_STORE_CONNECT_KEY_ID }}
+          ASC_ISSUER_ID: ${{ secrets.APP_STORE_CONNECT_ISSUER_ID }}
+          RELEASE_NOTES: ${{ inputs.release_notes }}
+        run: |
+          # A single-line text box has no other way to ask for a line break; the notes release.yml passes on are
+          # carried through as they are, backslashes included.
+          if [ "$GITHUB_EVENT_NAME" = workflow_dispatch ]; then
+            printf '%b\n' "$RELEASE_NOTES" > "$RUNNER_TEMP/release-notes.txt"
+          else
+            printf '%s\n' "$RELEASE_NOTES" > "$RUNNER_TEMP/release-notes.txt"
+          fi
+          python3 .github/scripts/app_store_submission.py com.pandulapeter.campfire IOS \
+            "${{ steps.version.outputs.name }}" "${{ steps.version.outputs.build }}" "$RUNNER_TEMP/release-notes.txt"
       # Whatever the run got as far as creating, and nothing else, whether or not the build went through. The profile
       # xcodebuild made for the certificate is left to it: the next run's xcodebuild makes a new one.
       - name: Revoke the signing certificate

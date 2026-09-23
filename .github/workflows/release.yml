@@ -19,7 +19,8 @@
 #   -->
 #   <!-- play-store update-priority: 0 -->
 #
-# The notes are written for every store that shows them, and Play is the one this reads them for so far; the priority
+# The notes are written for every store that shows them: Play gets them as its release notes, and the App Store and
+# the Mac App Store as the "What's New" of the version the iOS and macOS jobs submit for review; the priority
 # is Play's alone (see the Updates section of CLAUDE.md for what the number decides). Both are optional. Without the
 # notes the visible description stands in for them, with its markdown taken out, and without the priority it is 0.
 
@@ -156,6 +157,8 @@ jobs:
     uses: ./.github/workflows/ios-publish.yml
     with:
       release_tag: ${{ github.event.release.tag_name }}
+      release_notes: ${{ needs.prepare.outputs.release_notes }}
+      submit_for_review: true
     secrets: inherit
 
   macos:
@@ -164,4 +167,6 @@ jobs:
     uses: ./.github/workflows/macos-publish.yml
     with:
       release_tag: ${{ github.event.release.tag_name }}
+      release_notes: ${{ needs.prepare.outputs.release_notes }}
+      submit_for_review: true
     secrets: inherit

@@ -318,13 +318,20 @@ uninstall and nothing else does.
     the store does not start outside TestFlight, so the start check of the other desktop legs is made on a copy
     signed ad hoc with the same entitlements less the two that name the App ID — the demo library has to appear in
     the fresh sandbox container. It uploads the `.pkg` with `altool` and the same App Store Connect API key as iOS,
-    and, like iOS, stops at TestFlight; its `build_number` input uploads a release again under a number App Store
-    Connect has not seen.
+    and submits it for review the way iOS does (below); its `build_number` input uploads a release again under a
+    number App Store Connect has not seen.
   - `ios-publish.yml` archives the app signed with an Apple Distribution certificate the run creates for itself and
     revokes at the end, lets xcodebuild make the App Store profile for it with the App Store Connect API key, and
     uploads the exported
-    `.ipa` to App Store Connect, where it lands in TestFlight. It stops there: submitting the build for review is done
-    by hand, so a green run means delivered, not accepted, and nothing is attached to the release. The Xcode project
+    `.ipa` to App Store Connect, where it lands in TestFlight. Nothing is attached to the release.
+  - **Both Apple workflows submit what they upload for review when a release calls them** (`submit_for_review`;
+    a hand dispatch only when its box is ticked): `.github/scripts/app_store_submission.py` waits for App Store
+    Connect to process the build, takes the platform's version for `campfire.versionName` — the existing one, the
+    editable one renamed, or a new one — sets it to be released as soon as it is approved, attaches the build, writes
+    the release's `whats-new` notes as its "What's New" (all but a platform's first version) and submits it. A green
+    run means submitted, not approved; App Review answers by email, and a rejection is answered in App Store Connect.
+    A version that is already in review with this build is left alone, so a repeated run succeeds; one in review with
+    another build stops the run, since a platform can have only one version in review at a time. The Xcode project
     starts Gradle itself and passes it no properties, so the sync key is written into `local.properties` there —
     which the version build phase reads too, after `gradle.properties` and with the last value winning, which is how
     the hand-dispatched form's `build_number` uploads a release again under a number App Store Connect has not seen
@@ -343,7 +350,7 @@ uninstall and nothing else does.
     `PLAY_SERVICE_ACCOUNT_JSON`; nothing is attached to the release. It is an **APK** and not an app bundle because the Play listing predates the bundle
     requirement and was never migrated; a `bundleRelease` would be rejected on upload. The "what's new" text comes
     from the workflow's `release_notes` input, which `release.yml` fills from comments in the release's description
-    that the rendered page hides (`<!-- whats-new en-US … -->`, written for every store, and `<!-- play-store update-priority: 0 -->`; the
+    that the rendered page hides (`<!-- whats-new en-US … -->`, written for every store and passed to the Apple workflows as well, and `<!-- play-store update-priority: 0 -->`; the
     format is in that file's header) — carried through as it is, backslashes included; only the hand-dispatched
     form's `\n` is expanded, since a single-line text box has no other way to ask for a line break. It falls back to the visible description with its markdown taken out — or,
     dispatched by hand with nothing given, to the commit log since the previous tag. Every store listing is in

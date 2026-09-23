@@ -80,11 +80,12 @@ link to the README, and its rating row names the App Store alone (`storeForRatin
       role, which creating certificates takes.
 - [x] Sign with an Apple Distribution certificate the run creates through the API and revokes at the end
       (`.github/scripts/app_store_signing.py`), so that no certificate is stored to expire; the key is an Admin key.
-- [x] The automation stops at the upload: the build lands in TestFlight, and it is submitted for review, with its
-      "What's New", by hand. Going further would mean App Store blocks in the release description, read by
-      `release.yml` the way the Play ones are, and the App Store Connect API or fastlane's `deliver`.
-- [ ] Run the workflow once by hand on the `4.3.0` tag with a `build_number` of 35, to see it get as far as TestFlight
-      before a release depends on it.
+- [x] A release submits the build for review with the release's `whats-new` notes as its "What's New", to be released
+      as soon as it is approved (`.github/scripts/app_store_submission.py`).
+- [ ] Watch the first release that does it: the writing half of the script (a new version, the build, the notes, the
+      submission) is only exercised by a real release.
+- [ ] Run the workflow once by hand with `master` as its `release_tag` and a `build_number` of 35, to see it get as far
+      as TestFlight with a certificate of its own before a release depends on it.
 
 ## 6. When the listing is live
 

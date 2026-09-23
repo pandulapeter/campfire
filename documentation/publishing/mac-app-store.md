@@ -82,7 +82,8 @@ on macOS names only the Mac App Store, in its rating row (`storeForRating`). A b
       made by hand in section 1 are only for building by hand, and expire in 2027 without the pipeline noticing.
 - [ ] Run the workflow once by hand with `master` as its `release_tag` (the `4.3.0` tag predates the Mac build) and a
       `build_number` of 36, to see it get as far as TestFlight before a release depends on it.
-- [ ] Submitting for review and "What's New" stay by hand, as for iOS. Green means **delivered**.
+- [x] A release submits the build for review with the release's notes, as for iOS; the first release that does it is
+      the test of the writing half of `.github/scripts/app_store_submission.py`.
 
 ## 6. When the listing is live
 
