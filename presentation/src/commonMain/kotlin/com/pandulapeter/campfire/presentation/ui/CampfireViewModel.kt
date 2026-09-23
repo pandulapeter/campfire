@@ -1500,9 +1500,15 @@ class CampfireViewModel(
                         awaitImportSettled()
                     }
                 }
-                // Before the preferences are written rather than after: the queue has no reason to wait for those.
+                // Before the preferences are written rather than after: neither the queue nor the launch screen has any
+                // reason to wait for those.
                 demoLibraryDecision.complete(Unit)
-                saveUserPreferences(userPreferences.filterNotNull().first())
+                isDemoLibraryPending.update { false }
+                // Whatever the read came to, rather than for one that succeeded: a read that failed is only tried again by
+                // a refresh, which may never come, and waiting for its value could wait for good. With nothing read there
+                // is nothing to write either, and the next start is a first run again - which plants nothing into a
+                // library that has songs in it.
+                userPreferencesState.first { it !is DataState.Loading }.data?.let { saveUserPreferences(it) }
             }
         } finally {
             // In a finally rather than at the end: whatever went wrong, the app is no longer waiting for this, and
