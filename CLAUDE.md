@@ -194,11 +194,11 @@ uninstall and nothing else does.
   is filed under `ft` however it was abbreviated. Before any of that the name is brought to Unicode NFC
   (`normalizedToNfc`, an expect/actual in `:data:model`), since macOS and iOS hand out names decomposed and every other
   platform composed, and a non-Latin letter keeps its marks — so the two forms would be two songs; sync's name matching
-  composes too. The rule is idempotent, which it has to be, since a name that left the app is normalized again on its
-  way back in. Nothing is migrated, and a name that differs from the normalized one only by case or by Unicode form
-  is taken as that name — it is the same file to APFS, NTFS and the sync service, and a move nothing else can see is
-  one other devices never follow — so a capitalised or decomposed file keeps its spelling until **Update file name**
-  (or, for a setlist, a new title) moves it for a reason that is part of the name.
+  and the import's family lookup compose too. The rule is idempotent, which it has to be, since a name that left the
+  app is normalized again on its way back in. Nothing is migrated, and a name that differs from the normalized one
+  only by case or by Unicode form is taken as that name — it is the same file to APFS, NTFS and the sync service, and
+  a move nothing else can see is one other devices never follow — so a capitalised or decomposed file keeps its
+  spelling until **Update file name** (or, for a setlist, a new title) moves it for a reason that is part of the name.
 - **A song is named by its own header, wherever it came from**: `{artist}`, `{title}` and `{subtitle}`, the subtitle
   joining the title half (`green_day-good_riddance_time_of_your_life.cho`) because it is part of the title everywhere
   else in the app. That holds for a song written in the editor, one that arrives through an import

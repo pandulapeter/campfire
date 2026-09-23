@@ -74,6 +74,33 @@ class ImportFilesUseCaseImplTest {
         assertEquals(mapOf("foo.cho" to A, "foo_2.cho" to B), songs.files)
     }
 
+    @Test
+    fun `a replacement goes over the spelling the library lists and keeping both under the derived name`() = runTest {
+        val plan = ImportPlan(
+            songs = listOf(
+                ImportPlan.SongEntry(
+                    fileName = "wonderwall.cho",
+                    text = B,
+                    status = ImportPlan.Status.CONFLICTING,
+                    sourceFileName = null,
+                    replacesFileName = "Wonderwall.cho",
+                ),
+            ),
+        )
+        val expectedCalls = mapOf(
+            ImportConflictResolution.REPLACE to ("Wonderwall.cho" to true),
+            ImportConflictResolution.KEEP_BOTH to ("wonderwall.cho" to false),
+        )
+
+        expectedCalls.forEach { (resolution, expectedCall) ->
+            val songs = FakeSongRepository(files = mutableMapOf("Wonderwall.cho" to A))
+
+            ImportFilesUseCaseImpl(songRepository = songs, setlistRepository = FakeSetlistRepository()).invoke(plan, resolution)
+
+            assertEquals(listOf(expectedCall), songs.importCalls, "$resolution")
+        }
+    }
+
     /** Numbers a taken name the way the storage layer does, `x_2`, `x_3`…, unless told to replace it. */
     private fun MutableMap<String, *>.freeName(fileName: String, extension: String): String {
         val name = fileName.removeSuffix(extension)
@@ -83,6 +110,7 @@ class ImportFilesUseCaseImplTest {
     }
 
     private inner class FakeSongRepository(val files: MutableMap<String, String>) : SongRepository {
+        val importCalls = mutableListOf<Pair<String, Boolean>>()
         override val songs: Flow<DataState<List<Song>>> = emptyFlow()
         override suspend fun loadSongsIfNeeded() = files.keys.map(::song)
         override suspend fun loadSongFileNames() = files.keys.toList()
@@ -91,6 +119,7 @@ class ImportFilesUseCaseImplTest {
         override suspend fun createSong(title: String, artist: String, text: String) = throw UnsupportedOperationException()
         override fun importFileName(fallbackTitle: String, text: String) = throw UnsupportedOperationException()
         override suspend fun importSong(fileName: String, text: String, shouldReplace: Boolean): Song {
+            importCalls += fileName to shouldReplace
             val storedName = if (shouldReplace) fileName else files.freeName(fileName, ".cho")
             files[storedName] = text
             return song(storedName)

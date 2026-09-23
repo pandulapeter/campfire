@@ -52,7 +52,11 @@ The ones that carry real logic:
   itself brings back unchanged, which the planner finds in a first pass over the whole batch before it plans in
   arriving order, since the unchanged copy may come after the song that wants its name — and leaves numbering to the
   write that can see the directory. `ImportFilesUseCaseImpl` holds the same rule once more at the one place a file is
-  overwritten. Only a decision made before anything is written can be put to the user as one question about a
+  overwritten. The names it records are the library's own spellings: where the file system answers the derived name
+  with a file listed under another spelling of it (another case on macOS and Windows, the other Unicode form on APFS),
+  the listed one is what an identical song maps to and what a replacement writes over
+  (`ImportPlan.SongEntry.replacesFileName`), so that no setlist of the batch is pointed at a name the song list does
+  not hold. Only a decision made before anything is written can be put to the user as one question about a
   whole archive, which is the reason for the split — three hundred questions is not a choice. A song is compared by
   Preparing runs on `Dispatchers.Default`, because decoding, splitting, header parsing and comparisons would otherwise
   occupy the view model's main thread, and yields between songs so the web can paint and cancellation can stop it.

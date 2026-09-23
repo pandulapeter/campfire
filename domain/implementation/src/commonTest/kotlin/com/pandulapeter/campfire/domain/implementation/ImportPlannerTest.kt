@@ -11,11 +11,13 @@ package com.pandulapeter.campfire.domain.implementation
 
 import com.pandulapeter.campfire.data.model.domain.ImportPlan
 import com.pandulapeter.campfire.data.model.domain.Setlist
+import com.pandulapeter.campfire.data.model.domain.normalizedToNfc
 import com.pandulapeter.campfire.domain.implementation.ImportPlanner.withSongFileNames
 import kotlinx.coroutines.test.runTest
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFalse
+import kotlin.test.assertNull
 import kotlin.test.assertTrue
 
 internal class ImportPlannerTest {
@@ -407,6 +409,93 @@ internal class ImportPlannerTest {
         assertEquals(listOf(ImportPlan.Status.IDENTICAL, ImportPlan.Status.NEW), replanned.map { it.status })
     }
 
+    @Test
+    fun anIdenticalSongIsRecordedUnderTheSpellingTheLibraryLists() = runTest {
+        val library = mapOf("Wonderwall.cho" to A)
+        val incoming = listOf(ImportPlanner.IncomingSong(fileName = "wonderwall.cho", text = A, sourceFileName = "Wonderwall.cho"))
+
+        listOf(library.folding(), library.exact()).forEach { read ->
+            val plan = ImportPlanner.planSongs(incoming, library.keys, read)
+
+            assertEquals(listOf(ImportPlan.Status.IDENTICAL), plan.map { it.status })
+            assertEquals(listOf("Wonderwall.cho"), plan.map { it.fileName })
+            assertEquals(mapOf("Wonderwall.cho" to "Wonderwall.cho"), ImportPlanner.plannedSongFileNames(plan))
+        }
+    }
+
+    @Test
+    fun aDifferentSongReplacesTheSpellingTheLibraryListsWhereTheFileSystemFoldsCase() = runTest {
+        val library = mapOf("Wonderwall.cho" to A)
+        val incoming = listOf(ImportPlanner.IncomingSong(fileName = "wonderwall.cho", text = B, sourceFileName = null))
+
+        val plan = ImportPlanner.planSongs(incoming, library.keys, library.folding())
+
+        assertEquals(listOf(ImportPlan.Status.CONFLICTING), plan.map { it.status })
+        assertEquals("wonderwall.cho", plan.single().fileName)
+        assertEquals("Wonderwall.cho", plan.single().replacesFileName)
+        assertEquals(listOf("Wonderwall.cho"), ImportPlan(songs = plan).summary.conflictingFileNames)
+    }
+
+    @Test
+    fun aDifferentSongIsANameOfItsOwnWhereTheFileSystemTellsCaseApart() = runTest {
+        val library = mapOf("Wonderwall.cho" to A)
+        val incoming = listOf(ImportPlanner.IncomingSong(fileName = "wonderwall.cho", text = B, sourceFileName = null))
+
+        val plan = ImportPlanner.planSongs(incoming, library.keys, library.exact())
+
+        assertEquals(listOf(ImportPlan.Status.NEW), plan.map { it.status })
+        assertNull(plan.single().replacesFileName)
+    }
+
+    @Test
+    fun aSongListedInDecomposedFormIsAMemberOfItsComposedFamily() = runTest {
+        // "йога", its first letter written as и and a combining breve, the way APFS may list it.
+        val library = mapOf("\u0438\u0306\u043e\u0433\u0430.cho" to A)
+        val incoming = listOf(ImportPlanner.IncomingSong(fileName = "\u0439\u043e\u0433\u0430.cho", text = A, sourceFileName = null))
+
+        listOf(library.folding(), library.exact()).forEach { read ->
+            val plan = ImportPlanner.planSongs(incoming, library.keys, read)
+
+            assertEquals(listOf(ImportPlan.Status.IDENTICAL), plan.map { it.status })
+            assertEquals(listOf(library.keys.single()), plan.map { it.fileName })
+        }
+    }
+
+    @Test
+    fun aDifferentSongNextToTheLibrarysUnderAnotherSpellingIsNew() = runTest {
+        val library = mapOf("Wonderwall.cho" to A)
+        val plan = ImportPlanner.planSongs(
+            incoming = listOf(
+                ImportPlanner.IncomingSong(fileName = "wonderwall.cho", text = A, sourceFileName = "Wonderwall.cho"),
+                ImportPlanner.IncomingSong(fileName = "wonderwall.cho", text = B, sourceFileName = null),
+            ),
+            libraryFileNames = library.keys,
+            readLibraryText = library.folding(),
+        )
+
+        assertEquals(listOf(ImportPlan.Status.IDENTICAL, ImportPlan.Status.NEW), plan.map { it.status })
+        assertEquals("Wonderwall.cho", plan.first().fileName)
+        assertFalse(ImportPlan(songs = plan).hasConflicts)
+    }
+
+    @Test
+    fun aSetlistFollowsItsSongToTheSpellingTheLibraryLists() = runTest {
+        val library = mapOf("Wonderwall.cho" to A)
+        val songs = ImportPlanner.planSongs(
+            incoming = listOf(ImportPlanner.IncomingSong(fileName = "wonderwall.cho", text = A, sourceFileName = "Wonderwall.cho")),
+            libraryFileNames = library.keys,
+            readLibraryText = library.folding(),
+        )
+        val setlist = SONG_SETLIST.copy(entries = listOf(Setlist.Entry(songFileName = "Wonderwall.cho")))
+        val planned = ImportPlanner.planSetlists(
+            incoming = listOf(ImportPlanner.IncomingSetlist(setlist, setlist.fileName)),
+            librarySetlists = listOf(setlist),
+            songFileNames = ImportPlanner.plannedSongFileNames(songs),
+        )
+
+        assertEquals(listOf(ImportPlan.Status.IDENTICAL), planned.map { it.status })
+    }
+
     /** The library holds song.cho and a setlist naming it; the import brings an edited song.cho and the same setlist. */
     private suspend fun planEditedSongWithItsSetlist(): Pair<List<ImportPlan.SongEntry>, List<ImportPlan.SetlistEntry>> {
         val songs = planEditedSong()
@@ -427,6 +516,14 @@ internal class ImportPlannerTest {
 
     private suspend fun plan(library: Map<String, String>, vararg incoming: ImportPlanner.IncomingSong) =
         ImportPlanner.planSongs(incoming.toList(), library.keys) { library[it] }
+
+    /** A read that finds only the exact name, as a case-sensitive file system does. */
+    private fun Map<String, String>.exact(): suspend (String) -> String? = { this[it] }
+
+    /** A read that ignores case and Unicode form, as macOS does. */
+    private fun Map<String, String>.folding(): suspend (String) -> String? = { name ->
+        entries.firstOrNull { it.key.normalizedToNfc().equals(name.normalizedToNfc(), ignoreCase = true) }?.value
+    }
 
     private fun song(text: String, sourceFileName: String? = null) =
         ImportPlanner.IncomingSong(fileName = "x.cho", text = text, sourceFileName = sourceFileName)

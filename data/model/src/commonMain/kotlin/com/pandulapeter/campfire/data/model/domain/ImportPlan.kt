@@ -39,7 +39,7 @@ data class ImportPlan(
             duplicateCount = songs.count { it.status == Status.IDENTICAL } + setlists.count { it.status == Status.IDENTICAL },
             skippedCount = skippedFileNames.size,
             oversizedCount = oversizedFileNames.size,
-            conflictingFileNames = songs.filter { it.status == Status.CONFLICTING }.map { it.fileName } +
+            conflictingFileNames = songs.filter { it.status == Status.CONFLICTING }.map { it.replacesFileName ?: it.fileName } +
                 setlists.filter { it.status == Status.CONFLICTING }.map { it.fileName },
         )
 
@@ -63,6 +63,13 @@ data class ImportPlan(
          * the plan can name the entry but not the file.
          */
         val repeatedEntryIndex: Int? = null,
+        /**
+         * For a [Status.CONFLICTING] entry whose name the library lists under another spelling of it -
+         * `Wonderwall.cho` for `wonderwall.cho`, on a file system that does not tell the two apart: the file a
+         * replacement writes over, so that the song keeps the name the library and its setlists know it by. Keeping
+         * both still writes under [fileName], the name the app gives the song, which the storage layer numbers.
+         */
+        val replacesFileName: String? = null,
     )
 
     data class SetlistEntry(

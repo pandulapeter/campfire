@@ -51,12 +51,18 @@ class ImportFilesUseCaseImpl internal constructor(
                 .mapTo(hashSetOf()) { it.fileName }
             plan.songs.forEachIndexed { index, entry ->
                 val storedName = when (val action = entry.action(resolution)) {
-                    Action.WRITE, Action.REPLACE -> songRepository.importSong(
-                        fileName = entry.fileName,
-                        text = entry.text,
-                        shouldReplace = action == Action.REPLACE && entry.fileName !in keptSongFileNames &&
-                            replacedSongFileNames.add(entry.fileName),
-                    ).fileName.also { importedSongFileNames += it }
+                    Action.WRITE, Action.REPLACE -> {
+                        // A replacement goes over the file as the library lists it; anything else is written under the
+                        // name the app gives the song, which the storage layer numbers if it is taken.
+                        val replacedFileName = entry.replacesFileName ?: entry.fileName
+                        val shouldReplace = action == Action.REPLACE && replacedFileName !in keptSongFileNames &&
+                            replacedSongFileNames.add(replacedFileName)
+                        songRepository.importSong(
+                            fileName = if (shouldReplace) replacedFileName else entry.fileName,
+                            text = entry.text,
+                            shouldReplace = shouldReplace,
+                        ).fileName.also { importedSongFileNames += it }
+                    }
 
                     // Already in the library, or already written by this import, so the name it arrived under points there.
                     Action.DISREGARD -> (entry.repeatedEntryIndex?.let(storedNames::getOrNull) ?: entry.fileName).also { duplicateFileNames += it }

@@ -13,6 +13,7 @@ import com.pandulapeter.campfire.chordpro.ChordProSplitter
 import com.pandulapeter.campfire.data.model.domain.ImportPlan
 import com.pandulapeter.campfire.data.model.domain.LibraryFiles
 import com.pandulapeter.campfire.data.model.domain.Setlist
+import com.pandulapeter.campfire.data.model.domain.normalizedToNfc
 
 /**
  * What an import does with each song and setlist of a batch, as a function of the batch and of what the library
@@ -94,9 +95,12 @@ internal object ImportPlanner {
             // The question is about the one file the library has under this name, so it is raised once: a second song
             // wanting the name has nothing left to replace, and goes in numbered. So does every song wanting a name
             // whose file the batch brings back unchanged, which is not the library's to give up.
-            val isConflicting = family.isNameTaken && song.fileName !in keptLibraryFileNames && !family.hasConflict
+            val isConflicting = family.isNameTaken && family.takenFileName !in keptLibraryFileNames && !family.hasConflict
             family.hasConflict = family.hasConflict || isConflicting
-            song.toEntry(status = if (isConflicting) ImportPlan.Status.CONFLICTING else ImportPlan.Status.NEW)
+            song.toEntry(
+                status = if (isConflicting) ImportPlan.Status.CONFLICTING else ImportPlan.Status.NEW,
+                replacesFileName = family.takenFileName?.takeIf { isConflicting && it != song.fileName },
+            )
         }
     }
 
@@ -206,12 +210,14 @@ internal object ImportPlanner {
         status: ImportPlan.Status,
         fileName: String = this.fileName,
         repeatedEntryIndex: Int? = null,
+        replacesFileName: String? = null,
     ) = ImportPlan.SongEntry(
         fileName = fileName,
         text = text,
         status = status,
         sourceFileName = sourceFileName,
         repeatedEntryIndex = repeatedEntryIndex,
+        replacesFileName = replacesFileName,
     )
 
     /** Reads a family once per import, however many incoming songs share its desired name. */
@@ -221,24 +227,43 @@ internal object ImportPlanner {
         readLibraryText: suspend (fileName: String) -> String?,
     ): SongFamily {
         val libraryFileNames = mutableMapOf<String, String>()
-        var isNameTaken = false
+        // The spelling the library lists the desired name under. Every name recorded here is what the setlists of the
+        // batch are pointed at and what the import opens, so it has to be one the song list holds - and a file system
+        // that does not tell case apart (macOS and Windows), or the two Unicode forms (APFS), answers a read of the
+        // derived name with the file listed under another spelling of it.
+        val listedDesired = members.firstOrNull { it == desired } ?: members.firstOrNull { it.isSpellingOf(desired) }
+        var takenFileName: String? = null
         // The name itself first and the rest by their number, so that where the library holds the same text twice
         // an incoming copy of it is always said to be the same one of them.
         val candidates = (members + desired).distinct().sortedWith(compareBy<String>({ it != desired }, { it.length }, { it }))
         candidates.forEach { fileName ->
+            // Already read, through the derived name the file system answered with it.
+            if (fileName != desired && fileName == takenFileName) return@forEach
             val text = readLibraryText(fileName) ?: return@forEach
-            if (fileName == desired) isNameTaken = true
-            libraryFileNames.getOrPut(ChordProSplitter.comparable(text)) { fileName }
+            // Only a read of the derived name itself says whether a replacement would have a file to write over. Where
+            // the listing does not hold that name, the file that answered is the one it lists under another spelling;
+            // with nothing listed under any spelling of it, it is a file written since the scan, under its own name.
+            val listedName = if (fileName == desired) listedDesired ?: desired else fileName
+            if (fileName == desired) takenFileName = listedName
+            libraryFileNames.getOrPut(ChordProSplitter.comparable(text)) { listedName }
         }
-        return SongFamily(isNameTaken = isNameTaken, libraryFileNames = libraryFileNames)
+        return SongFamily(takenFileName = takenFileName, libraryFileNames = libraryFileNames)
     }
 
+    /** Whether this listed name is [name] as a file system that ignores case and Unicode form would read it. */
+    private fun String.isSpellingOf(name: String) = normalizedToNfc().equals(name.normalizedToNfc(), ignoreCase = true)
+
     private class SongFamily(
-        /** Whether the library holds a file under the derived name itself, which is what makes a different song a question. */
-        val isNameTaken: Boolean,
+        /**
+         * The library file under the derived name itself, as the library lists it: what makes a different song a
+         * question, and what replacing it writes over. Null while the name is free.
+         */
+        val takenFileName: String?,
         /** The library file each comparable text of the family is found in. */
         private val libraryFileNames: Map<String, String>,
     ) {
+        val isNameTaken get() = takenFileName != null
+
         private val plannedSongs = mutableListOf<IndexedValue<String>>()
         private val plannedEntryIndices = mutableMapOf<String, Int>()
         private var foldedSongCount = 0
@@ -269,7 +294,7 @@ internal object ImportPlanner {
     /** The desired name and the unnumbered name a numbered sibling belongs to, without an extension. */
     private fun String.familyKeys(extensions: List<String>): List<String> {
         val extension = extensions.firstOrNull { endsWith(it, ignoreCase = true) } ?: return emptyList()
-        val name = dropLast(extension.length).lowercase()
+        val name = dropLast(extension.length).normalizedToNfc().lowercase()
         return listOfNotNull(name, LibraryFiles.withoutCollisionSuffix(name))
     }
 
