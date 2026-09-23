@@ -58,6 +58,15 @@ internal class SyncStateLocalSourceImpl(
         }
     }
 
+    override suspend fun isForgettingCredentialsOwed() = fileStorage.exists(StorageDirectory.PREFERENCES, FORGETTING_OWED_FILE_NAME)
+
+    override suspend fun setForgettingCredentialsOwed(isOwed: Boolean) {
+        write(FORGETTING_OWED_FILE_NAME, if (isOwed) "" else null)
+        if (isOwed) {
+            fileStorage.keepOutOfDeviceBackup(StorageDirectory.PREFERENCES, FORGETTING_OWED_FILE_NAME)
+        }
+    }
+
     /**
      * Credentials written as a plain file, before they moved into the platform's secret store, are moved there on the
      * first read, so an update does not disconnect anybody. Where the secret store is that same plain file (desktop
@@ -93,5 +102,6 @@ internal class SyncStateLocalSourceImpl(
         /** The name of the plain file on desktop and the web, and the key of the secret store's entry everywhere. */
         const val CREDENTIALS_FILE_NAME = "sync-credentials.json"
         const val INDEX_FILE_NAME = "sync-index.json"
+        const val FORGETTING_OWED_FILE_NAME = "sync-credentials-forget-pending"
     }
 }

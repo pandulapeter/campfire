@@ -56,6 +56,24 @@ internal class FakeSyncStateLocalSource(
         onSaveIndex(document)
         index = document
     }
+
+    var isForgettingOwed = false
+
+    /** Runs before a read of [isForgettingOwed] answers, which is where a test makes it fail. */
+    var onIsForgettingOwed: () -> Unit = {}
+
+    /** Runs before a write of [isForgettingOwed] is stored, which is where a test records or fails it. */
+    var onSetForgettingOwed: (Boolean) -> Unit = {}
+
+    override suspend fun isForgettingCredentialsOwed(): Boolean {
+        onIsForgettingOwed()
+        return isForgettingOwed
+    }
+
+    override suspend fun setForgettingCredentialsOwed(isOwed: Boolean) {
+        onSetForgettingOwed(isOwed)
+        isForgettingOwed = isOwed
+    }
 }
 
 /**

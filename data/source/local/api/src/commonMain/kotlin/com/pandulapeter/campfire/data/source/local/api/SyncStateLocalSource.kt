@@ -10,8 +10,8 @@
 package com.pandulapeter.campfire.data.source.local.api
 
 /**
- * Where sync keeps the two documents it has to remember between runs, next to the preferences and so outside
- * `library/`: neither of them is the user's data, and an export must not carry them.
+ * Where sync keeps the two documents it has to remember between runs, and one note about the credentials, next to
+ * the preferences and so outside `library/`: none of them is the user's data, and an export must not carry them.
  *
  * Both are opaque strings here. What is in them belongs to the layers that write them - the credentials to the
  * remote source, the index to the repository - and the storage layer has no business knowing either shape.
@@ -40,4 +40,15 @@ interface SyncStateLocalSource {
     suspend fun loadSyncIndex(): String?
 
     suspend fun saveSyncIndex(document: String?)
+
+    /**
+     * Whether forgetting the stored credentials is still owed: noted before a fresh installation forgets what a
+     * previous one left in a store that outlived it, and cleared once that has succeeded or a connection made here has
+     * replaced it. A file of this installation's own, so that the start up after a failed attempt - which is no longer
+     * a first launch - still knows the credentials in the store are not this installation's. Kept out of the device
+     * backup: it is about this device's Keychain, and another device has its own.
+     */
+    suspend fun isForgettingCredentialsOwed(): Boolean
+
+    suspend fun setForgettingCredentialsOwed(isOwed: Boolean)
 }

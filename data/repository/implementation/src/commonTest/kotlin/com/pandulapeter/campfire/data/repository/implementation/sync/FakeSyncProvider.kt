@@ -33,8 +33,9 @@ import com.pandulapeter.campfire.data.source.remote.api.model.RemoteWriteResult
  * each file was fetched and [deleteCalls] what each deletion request asked for; the names in [refusedDeletions] are
  * answered as refused. [connected] says whether credentials
  * are stored, and [onDisconnect] runs once a disconnect has cleared them; [hasForgottenCredentials] says whether they
- * were dropped without one, which does not run it. [onCompleteAuthorization] is what finishing an authorization does,
- * which is where a test stores credentials and then gives up or fails.
+ * were dropped without one, which does not run it, and [onForgetStoredCredentials] runs before they are, which is where
+ * a test makes that fail. [onCompleteAuthorization] is what finishing an authorization does, which is where a test
+ * stores credentials and then gives up or fails.
  */
 internal class FakeSyncProvider(
     files: Map<SyncKey, ByteArray> = emptyMap(),
@@ -52,6 +53,8 @@ internal class FakeSyncProvider(
     var onDisconnect: suspend () -> Unit = {}
 
     var hasForgottenCredentials = false
+
+    var onForgetStoredCredentials: suspend () -> Unit = {}
 
     val downloadCounts = mutableMapOf<SyncKey, Int>()
 
@@ -94,6 +97,7 @@ internal class FakeSyncProvider(
     }
 
     override suspend fun forgetStoredCredentials() {
+        onForgetStoredCredentials()
         connected = false
         hasForgottenCredentials = true
     }

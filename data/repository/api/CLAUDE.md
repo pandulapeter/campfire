@@ -26,7 +26,8 @@ Repository interfaces only. Consumed by `:domain:implementation`; implemented by
   Campfire has been used on, and it is deliberately uncached, since the very first save makes it false.
 - `SyncRepository` — the state machine around sync: `syncState: Flow<SyncState>`, the providers the build has, and
   `restore` / `connect` / `cancelConnection` / `disconnect` / `forgetStoredConnection` / `synchronize` /
-  `cancelSynchronization`; `forgetStoredConnection` is the local-only wipe a first launch does, with no request. Unlike the others it caches no list — the library keeps
+  `cancelSynchronization`; `forgetStoredConnection` is the local-only wipe a first launch does, with no request — retried by
+  `restore` until it has worked. Unlike the others it caches no list — the library keeps
   living in `SongRepository` and `SetlistRepository`, which is why a run that changed files has to be followed by a
   `rescan()`, done by `SynchronizeLibraryUseCase`. It is also the only thing above the data layer that knows a
   service is involved: the screens see a `SyncState` and never learn which provider produced it.

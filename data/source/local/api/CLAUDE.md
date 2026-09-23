@@ -40,7 +40,8 @@ platform types.
   the cloud folder too. `readLibraryFile` answers null only
   for a file that is not there; one that is there and cannot be read throws `LibraryStorageException`, since sync
   would carry a missing file out as a deletion on every device.
-- `SyncStateLocalSource` — the two documents sync remembers between runs, kept next to the preferences and so outside
+- `SyncStateLocalSource` — the two documents sync remembers between runs, and the note that forgetting the
+  credentials is still owed (see `SyncRepository.forgetStoredConnection`), kept next to the preferences and so outside
   `library/`: neither is the user's data and an export must not carry them. Both are **opaque strings** here — what
   is in them belongs to the layers that write them (the credentials to the remote source, the index to the
   repository), and the storage layer has no business knowing either shape. `loadSyncIndex` answers null only for an

@@ -187,4 +187,8 @@ import — is the only thing that walks the directory again.
   and a redirect that
   no authorization is waiting for is ignored, the stored account restored as usual. It shows the account from what is
   stored and asks the service behind that, so a slow network never makes a connected account look disconnected; a
-  refusal that arrives later takes the connection down then.
+  refusal that arrives later takes the connection down then. A forgetting of a previous installation's credentials
+  that failed is noted (`SyncStateLocalSource.setForgettingCredentialsOwed`) and retried by every `restore` before
+  anything else is read; while it keeps failing, `restore` answers disconnected — not a storage failure like
+  unreadable credentials, since what cannot be removed belongs to an earlier installation, and connecting again, which
+  writes over it and crosses the note off, is the right answer to it.

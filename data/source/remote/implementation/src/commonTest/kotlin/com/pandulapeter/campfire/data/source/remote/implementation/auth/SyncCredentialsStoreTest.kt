@@ -179,6 +179,8 @@ class SyncCredentialsStoreTest {
 
         override suspend fun loadSyncIndex(): String? = null
         override suspend fun saveSyncIndex(document: String?) = Unit
+        override suspend fun isForgettingCredentialsOwed() = false
+        override suspend fun setForgettingCredentialsOwed(isOwed: Boolean) = Unit
     }
 
     private companion object {

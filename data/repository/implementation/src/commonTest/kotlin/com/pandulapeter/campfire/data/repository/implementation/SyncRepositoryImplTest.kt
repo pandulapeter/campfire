@@ -481,13 +481,87 @@ class SyncRepositoryImplTest {
     @Test
     fun `an ordinary launch does not forget anything`() = runTest {
         val provider = FakeSyncProvider(account = ACCOUNT)
-        val repository = repository(provider = provider)
+        val stateLocalSource = FakeSyncStateLocalSource().apply { onSetForgettingOwed = { fail("A forgetting was noted.") } }
+        val repository = repository(provider = provider, stateLocalSource = stateLocalSource)
 
         val result = repository.restore()
 
         assertTrue(result.isConnected)
         assertFalse(provider.hasForgottenCredentials)
         assertEquals(ACCOUNT, (repository.syncState.value as SyncState.Connected).account)
+    }
+
+    @Test
+    fun `a forgetting that fails restores nothing and is owed`() = runTest {
+        val stateLocalSource = FakeSyncStateLocalSource()
+        val provider = FakeSyncProvider(account = ACCOUNT).apply { onForgetStoredCredentials = { error("The Keychain is locked.") } }
+        val repository = repository(provider = provider, stateLocalSource = stateLocalSource)
+
+        repository.forgetStoredConnection()
+        val result = repository.restore()
+
+        assertFalse(result.isConnected)
+        assertEquals(SyncState.Disconnected, repository.syncState.value)
+        assertTrue(stateLocalSource.isForgettingOwed)
+        assertTrue(provider.connected)
+    }
+
+    @Test
+    fun `the next start up forgets what the first one could not`() = runTest {
+        val stateLocalSource = FakeSyncStateLocalSource()
+        val provider = FakeSyncProvider(account = ACCOUNT).apply { onForgetStoredCredentials = { error("The Keychain is locked.") } }
+        repository(provider = provider, stateLocalSource = stateLocalSource).forgetStoredConnection()
+        provider.onForgetStoredCredentials = {}
+
+        assertFalse(repository(provider = provider, stateLocalSource = stateLocalSource).restore().isConnected)
+        assertTrue(provider.hasForgottenCredentials)
+        assertFalse(stateLocalSource.isForgettingOwed)
+
+        provider.connected = true
+        assertTrue(repository(provider = provider, stateLocalSource = stateLocalSource).restore().isConnected)
+    }
+
+    @Test
+    fun `a forgetting that works leaves nothing owed`() = runTest {
+        val notes = mutableListOf<Boolean>()
+        val stateLocalSource = FakeSyncStateLocalSource().apply { onSetForgettingOwed = { notes += it } }
+        val repository = repository(provider = FakeSyncProvider(account = ACCOUNT), stateLocalSource = stateLocalSource)
+
+        repository.forgetStoredConnection()
+
+        assertEquals(listOf(true, false), notes)
+        assertFalse(stateLocalSource.isForgettingOwed)
+    }
+
+    @Test
+    fun `connecting crosses off a forgetting still owed`() = runTest {
+        val stateLocalSource = FakeSyncStateLocalSource().apply { isForgettingOwed = true }
+        val provider = FakeSyncProvider(account = ACCOUNT).apply {
+            connected = false
+            onCompleteAuthorization = {
+                connected = true
+                ACCOUNT
+            }
+        }
+        val repository = repository(
+            provider = provider,
+            authenticator = FakeSyncAuthenticator(
+                outcome = SyncAuthenticator.AuthorizationOutcome.Received("https://example.com/?code=c&state=state"),
+            ),
+            stateLocalSource = stateLocalSource,
+        )
+
+        assertTrue(repository.connect(SyncProviderId.DROPBOX, COMPLETION_PAGE))
+        assertFalse(stateLocalSource.isForgettingOwed)
+        assertTrue(repository(provider = provider, stateLocalSource = stateLocalSource).restore().isConnected)
+    }
+
+    @Test
+    fun `not knowing whether forgetting is owed restores as usual`() = runTest {
+        val stateLocalSource = FakeSyncStateLocalSource().apply { onIsForgettingOwed = { error("Not readable.") } }
+        val repository = repository(provider = FakeSyncProvider(account = ACCOUNT), stateLocalSource = stateLocalSource)
+
+        assertTrue(repository.restore().isConnected)
     }
 
     @Test

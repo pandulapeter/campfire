@@ -147,6 +147,20 @@ internal class SyncRepositoryImpl(
                 wasInterrupted = false,
             )
         }
+        // A previous installation's credentials that the first launch could not forget are tried again before
+        // anything reads them - and while they still cannot be forgotten, nothing is restored from them.
+        val isForgettingOwed = try {
+            syncStateLocalSource.isForgettingCredentialsOwed()
+        } catch (exception: CancellationException) {
+            throw exception
+        } catch (exception: Exception) {
+            // Not knowing is not a reason to disconnect an ordinary installation, which is every one but this rare case.
+            println("Could not tell whether the sync credentials are to be forgotten: ${exception::class.simpleName}")
+            false
+        }
+        if (isForgettingOwed && !withContext(NonCancellable) { forgetStoredConnectionNow() }) {
+            return disconnectedResult
+        }
         // Already answered in this process. The connection, a run that may be going and whatever the last one ended in
         // all live in the state, and reading them again from the disk would replace them with what the index said when
         // that run started - "a run is going", which read at start up means "a run was interrupted".
@@ -298,29 +312,50 @@ internal class SyncRepositoryImpl(
         }
     }
 
-    override suspend fun forgetStoredConnection() = restoreMutex.withLock {
-        withContext(NonCancellable) {
-            providers.forEach { provider ->
-                try {
-                    provider.forgetStoredCredentials()
-                } catch (exception: CancellationException) {
-                    throw exception
-                } catch (exception: Exception) {
-                    println("Could not forget the ${provider.id} credentials: ${exception.message}")
-                }
-            }
-            // A build with no provider at all still has to lose an authorization written down by one that had one.
-            discardPendingAuthorization()
-            // There cannot be an index on a fresh installation, and one that is somehow there describes a folder
-            // this installation has never looked at.
+    override suspend fun forgetStoredConnection() {
+        restoreMutex.withLock { withContext(NonCancellable) { forgetStoredConnectionNow() } }
+    }
+
+    /**
+     * Forgets every provider's credentials, the unfinished authorization and the index, and answers whether the
+     * credentials are gone. It is noted as owed before anything is attempted and crossed off only once all of it
+     * worked: a failure leaves a previous installation's account in the store, and without the note the next start
+     * up - no longer a first launch - would restore it, and every one after it would too. [restoreConnection] asks
+     * about the note first. Callers hold [restoreMutex].
+     */
+    private suspend fun forgetStoredConnectionNow(): Boolean {
+        quietly("note that the sync credentials are to be forgotten") { syncStateLocalSource.setForgettingCredentialsOwed(true) }
+        var haveCredentialsGone = true
+        providers.forEach { provider ->
             try {
-                syncStateLocalSource.saveSyncIndex(null)
+                provider.forgetStoredCredentials()
             } catch (exception: CancellationException) {
                 throw exception
             } catch (exception: Exception) {
-                println("Could not clear the sync index: ${exception.message}")
+                println("Could not forget the ${provider.id} credentials: ${exception.message}")
+                haveCredentialsGone = false
             }
-            _syncState.update { SyncState.Disconnected }
+        }
+        // A build with no provider at all still has to lose an authorization written down by one that had one.
+        discardPendingAuthorization()
+        // There cannot be an index on a fresh installation, and one that is somehow there describes a folder
+        // this installation has never looked at.
+        quietly("clear the sync index") { syncStateLocalSource.saveSyncIndex(null) }
+        _syncState.update { SyncState.Disconnected }
+        if (haveCredentialsGone) {
+            quietly("note that the sync credentials are forgotten") { syncStateLocalSource.setForgettingCredentialsOwed(false) }
+        }
+        return haveCredentialsGone
+    }
+
+    /** For the clean-ups whose failure is worth a line in the log and nothing more. */
+    private suspend fun quietly(action: String, block: suspend () -> Unit) {
+        try {
+            block()
+        } catch (exception: CancellationException) {
+            throw exception
+        } catch (exception: Exception) {
+            println("Could not $action: ${exception::class.simpleName}")
         }
     }
 
@@ -639,6 +674,11 @@ internal class SyncRepositoryImpl(
                     verifier = pending.verifier,
                     redirectUri = pending.redirectUri,
                 )
+                // Connected on this installation, so whatever an earlier one left in the store has just been written
+                // over, and a forgetting still owed for it must not take this connection down at the next start up.
+                quietly("note that the sync credentials are this installation's") {
+                    syncStateLocalSource.setForgettingCredentialsOwed(false)
+                }
                 // The account decides which remote folder the index describes, so one written for a different
                 // account is worthless rather than merely stale. One that cannot be read is left for the run to find:
                 // replaced here, it could be the good index of this very account.
