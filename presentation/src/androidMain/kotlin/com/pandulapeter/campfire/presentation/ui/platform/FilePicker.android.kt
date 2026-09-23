@@ -57,9 +57,13 @@ internal fun rememberAndroidFilePicker(): AndroidFilePicker {
     // "* / *" rather than a list of types: .cho has no registered MIME type, and anything narrower would grey the
     // songs out in the system picker. What is not a song is skipped by the import and reported afterwards.
     val open = rememberLauncherForActivityResult(ActivityResultContracts.OpenMultipleDocuments(), picker::onFilesPicked)
-    // The contract bakes the type in, so there is one launcher per type the app can hand out.
+    // The contract bakes the type in, so there is one launcher per type the app can hand out. A song leaves as the .cho
+    // file it is, and .cho maps to no MIME type, so a storage provider asked for text/plain appends .txt to the name (it
+    // keeps a name's extension only where the extension maps to the type asked for). The generic binary type is the
+    // one it leaves every name alone for. Sharing still says text/plain, which is what decides the apps a share is
+    // offered to.
     val createText = rememberLauncherForActivityResult(
-        ActivityResultContracts.CreateDocument(ExportedFile.TEXT_MIME_TYPE),
+        ActivityResultContracts.CreateDocument(SONG_EXPORT_MIME_TYPE),
         picker::onSaveLocationPicked,
     )
     val createArchive = rememberLauncherForActivityResult(
@@ -286,6 +290,8 @@ private fun Uri.nameAndSize(context: Context): Pair<String, Long?> = context.con
         if (cursor.moveToFirst()) (cursor.getString(0) ?: fallbackName) to (if (cursor.isNull(1)) null else cursor.getLong(1)) else null
     }
     ?: (fallbackName to null)
+
+private const val SONG_EXPORT_MIME_TYPE = "application/octet-stream"
 
 private val Uri.fallbackName get() = lastPathSegment.orEmpty().substringAfterLast('/')
 

@@ -51,7 +51,7 @@ internal object DesktopFilePicker : FilePicker {
                 isVisible = true
                 val directory = this.directory
                 val name = this.file
-                if (directory == null || name == null) null else File(directory, name)
+                if (directory == null || name == null) null else File(directory, name).withExtensionOf(file.name)
             }
         } ?: return false
         return withContext(Dispatchers.IO) {
@@ -61,6 +61,20 @@ internal object DesktopFilePicker : FilePicker {
     }
 
     private const val DIALOG_TITLE = "Campfire"
+}
+
+/**
+ * The file the user chose, with the extension of the one the app offered put back if they typed a name without it.
+ * The dialog has no file type to add one by (see [DesktopFilePicker]), and a file named without its extension is one
+ * the import skips, since that is what decides what a file is. Not where a file already has that name: the dialog
+ * asked about replacing the name that was typed, and nothing it did not ask about is written over, so the name is
+ * then left exactly as typed.
+ */
+private fun File.withExtensionOf(offeredName: String): File {
+    val extension = offeredName.substringAfterLast('.', missingDelimiterValue = "")
+    if (extension.isEmpty() || name.endsWith(".$extension", ignoreCase = true)) return this
+    val extended = File(parentFile, "$name.$extension")
+    return if (extended.exists()) this else extended
 }
 
 /**
