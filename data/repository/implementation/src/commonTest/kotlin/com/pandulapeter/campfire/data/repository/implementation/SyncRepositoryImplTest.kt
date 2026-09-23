@@ -577,6 +577,55 @@ class SyncRepositoryImplTest {
         assertEquals(SyncState.Disconnected, repository.syncState.value)
     }
 
+    @Test
+    fun `giving up after the tokens were stored forgets them`() = runTest {
+        val provider = FakeSyncProvider().apply {
+            connected = false
+            onCompleteAuthorization = {
+                connected = true
+                awaitCancellation()
+            }
+        }
+        val repository = repository(
+            provider = provider,
+            authenticator = FakeSyncAuthenticator(outcome = SyncAuthenticator.AuthorizationOutcome.Received(REDIRECT)),
+        )
+
+        val job = launch { repository.connect(SyncProviderId.DROPBOX, COMPLETION_PAGE) }
+        runCurrent()
+        assertTrue(provider.connected)
+        job.cancelAndJoin()
+
+        assertTrue(provider.hasForgottenCredentials)
+        assertFalse(provider.isConnected())
+        assertEquals(SyncState.Disconnected, repository.syncState.value)
+        assertFalse(repository.restore().isConnected)
+    }
+
+    @Test
+    fun `a connection whose index cannot be reset forgets the tokens it stored`() = runTest {
+        val provider = FakeSyncProvider().apply {
+            connected = false
+            onCompleteAuthorization = {
+                connected = true
+                ACCOUNT
+            }
+        }
+        val repository = repository(
+            provider = provider,
+            authenticator = FakeSyncAuthenticator(outcome = SyncAuthenticator.AuthorizationOutcome.Received(REDIRECT)),
+            stateLocalSource = FakeSyncStateLocalSource(
+                index = """{"accountId":"someone-else"}""",
+                onSaveIndex = { throw LibraryStorageException("Full") },
+            ),
+        )
+
+        assertFalse(repository.connect(SyncProviderId.DROPBOX, COMPLETION_PAGE))
+
+        assertEquals(SyncState.ConnectionFailed(SyncProviderId.DROPBOX, SyncFailureReason.STORAGE), repository.syncState.value)
+        assertTrue(provider.hasForgottenCredentials)
+    }
+
     /** A storage that takes the pending authorization and then refuses to let go of it. */
     private fun failingAfterFirstWrite(): () -> Unit {
         var writeCount = 0
@@ -612,6 +661,7 @@ class SyncRepositoryImplTest {
 
     private companion object {
         val COMPLETION_PAGE = AuthorizationCompletionPage(title = "", message = "")
+        const val REDIRECT = "campfire://sync?code=c&state=state"
         val ACCOUNT = SyncAccount(
             providerId = SyncProviderId.DROPBOX,
             id = "dbid:1",

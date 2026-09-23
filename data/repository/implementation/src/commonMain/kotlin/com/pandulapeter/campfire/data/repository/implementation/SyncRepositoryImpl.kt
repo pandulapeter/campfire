@@ -636,9 +636,13 @@ internal class SyncRepositoryImpl(
                 true
             } catch (exception: CancellationException) {
                 // Giving up during the token exchange is not the exchange failing: connect() answers it by going back
-                // to Disconnected, which it can only do if this arrives there as a cancellation.
+                // to Disconnected, which it can only do if this arrives there as a cancellation. The tokens may be
+                // stored by now - a provider writes them before it asks whose they are - and left there, the next
+                // launch would find itself connected to an account the screen said was not, and sync it.
+                withContext(NonCancellable) { forgetCredentialsOf(provider) }
                 throw exception
             } catch (exception: Exception) {
+                withContext(NonCancellable) { forgetCredentialsOf(provider) }
                 fail(
                     providerId = pending.providerId,
                     reason = exception.toFailureReason(),
@@ -646,6 +650,19 @@ internal class SyncRepositoryImpl(
                 )
             }
         }
+    }
+
+    /**
+     * Drops whatever [provider] stored for an authorization that did not end connected, without telling the service:
+     * there is nothing to revoke on the user's behalf for a connection they never saw made. A failure is only logged,
+     * since the outcome the caller is on its way to report is the one that matters.
+     */
+    private suspend fun forgetCredentialsOf(provider: SyncProvider) = try {
+        provider.forgetStoredCredentials()
+    } catch (exception: CancellationException) {
+        throw exception
+    } catch (exception: Exception) {
+        println("Could not forget the ${provider.id} credentials: ${exception.message}")
     }
 
     private fun fail(providerId: SyncProviderId, reason: SyncFailureReason, message: String): Boolean {

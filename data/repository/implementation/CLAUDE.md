@@ -177,8 +177,10 @@ import — is the only thing that walks the directory again.
   `Connected`: a run that outlived the account it ran against must not bring that account back on screen.
   `cancelConnection` is the way out of `Connecting` that does not need the `connect()` that got there to be running
   still — on the web it never is, and a page restored from the back/forward cache is otherwise connecting for good.
-  `connect` never throws anything but a cancellation — every way out of it leaves `Connecting`, and a clean-up the
-  storage refuses is logged rather than allowed to replace the outcome. `restore` never throws
+  `connect` never throws anything but a cancellation — every way out of it leaves `Connecting`, and every way out of it
+  that does not end connected forgets whatever the provider stored during the token exchange
+  (`forgetStoredCredentials`, no request), so an authorization given up after the tokens arrived is not a connection
+  the next launch restores and syncs. A clean-up the storage refuses is logged rather than allowed to replace the outcome. `restore` never throws
   for a service that refuses the stored credentials — the app starts disconnected and says so — and a redirect that
   no authorization is waiting for is ignored, the stored account restored as usual. It shows the account from what is
   stored and asks the service behind that, so a slow network never makes a connected account look disconnected; a
