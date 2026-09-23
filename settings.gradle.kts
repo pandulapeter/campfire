@@ -73,7 +73,11 @@ dependencyResolutionManagement {
  */
 val localProperties = java.util.Properties()
 java.io.File(settingsDir, "local.properties").let { file ->
-    if (file.exists()) file.inputStream().use(localProperties::load)
+    // UTF-8 rather than the ISO-8859-1 Properties.load(InputStream) assumes: the workflows write the file with printf
+    // and people write it in their editor, both in UTF-8, and a password or a path with an accent would otherwise be
+    // read as something else. A file Properties.store wrote (Android Studio's sdk.dir) escapes non-ASCII as \uXXXX,
+    // so it reads the same either way.
+    if (file.exists()) file.reader(Charsets.UTF_8).use(localProperties::load)
 }
 gradle.beforeProject {
     localProperties.forEach { name, value -> extensions.extraProperties.set(name.toString(), value) }

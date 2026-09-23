@@ -54,6 +54,39 @@ jobs:
             exit 1
           fi
           echo "Releasing version $VERSION_NAME"
+      # Play refuses a version code it has seen and App Store Connect a build number, but Play says so only after the
+      # APK has been built, signed and attached to the release and the other three builds have gone out. The previous
+      # release is the last one published, whatever its version: Play wants the code higher than every one it has had,
+      # so a fix to an older line is compared with the newest release too. Pre-releases reach no store and are left out.
+      - name: Check the build numbers against the previous release
+        env:
+          GH_TOKEN: ${{ github.token }}
+          RELEASE_TAG: ${{ github.event.release.tag_name }}
+        run: |
+          PREVIOUS_TAG=$(gh api "repos/$GITHUB_REPOSITORY/releases?per_page=100" \
+            | jq -r --arg tag "$RELEASE_TAG" '[.[] | select((.draft | not) and (.prerelease | not) and .tag_name != $tag)] | sort_by(.published_at) | last | .tag_name // empty')
+          if [ -z "$PREVIOUS_TAG" ]; then
+            echo "There is no earlier release to compare the build numbers with."
+            exit 0
+          fi
+          git fetch --depth=1 origin "refs/tags/$PREVIOUS_TAG:refs/tags/$PREVIOUS_TAG"
+          git show "refs/tags/$PREVIOUS_TAG:gradle.properties" > "$RUNNER_TEMP/previous.properties"
+          FAILED=0
+          for KEY in campfire.android.versionCode campfire.ios.buildNumber; do
+            PATTERN="s/^${KEY//./\\.}=//p"
+            CURRENT=$(sed -n "$PATTERN" gradle.properties | tr -d '\r')
+            PREVIOUS=$(sed -n "$PATTERN" "$RUNNER_TEMP/previous.properties" | tr -d '\r')
+            if ! [[ "$CURRENT" =~ ^[0-9]+$ && "$PREVIOUS" =~ ^[0-9]+$ ]]; then
+              echo "::error::Could not read $KEY as a number here ($CURRENT) or at $PREVIOUS_TAG ($PREVIOUS)." >&2
+              FAILED=1
+            elif [ "$CURRENT" -le "$PREVIOUS" ]; then
+              echo "::error::$KEY is $CURRENT, but the previous release ($PREVIOUS_TAG) already had $PREVIOUS. Raise it in gradle.properties and tag again." >&2
+              FAILED=1
+            else
+              echo "$KEY: $PREVIOUS at $PREVIOUS_TAG, $CURRENT now"
+            fi
+          done
+          exit $FAILED
       # A published build with an empty key has no sync provider at all, and nothing downstream would notice: the
       # empty string is the checked-in default, because a fresh clone has to build without a secret. Asked here as
       # well as in each workflow, so a release fails before four builds have run rather than after.

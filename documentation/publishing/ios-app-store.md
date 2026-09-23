@@ -39,8 +39,8 @@ Delete this file once the last box is ticked: by then `CLAUDE.md` describes how 
       https://kotlinlang.org/docs/apple-privacy-manifest.html *(verify)*
 - [ ] Share a scheme in the Xcode project (*Product → Scheme → Manage Schemes → Shared*). There is none checked in, and
       `xcodebuild archive` wants a scheme where today's `-target` build does not.
-- [ ] Check that `campfire.ios.buildNumber` in `gradle.properties` is raised with every release. It already moves with
-      the Android version code; App Store Connect refuses a build number it has seen.
+- [x] `campfire.ios.buildNumber` has to be raised with every release; `release.yml` refuses a release whose number is
+      not higher than the previous release's, since App Store Connect refuses a build number it has seen.
 
 ## 3. The store listing (by hand, once)
 

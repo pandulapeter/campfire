@@ -264,8 +264,9 @@ uninstall and nothing else does.
   script through `env:` rather than being interpolated into it: a `-P` puts the value in the runner's process list,
   and a secret substituted into a `run:` block is re-read by the shell, so a password holding a `$`, a backtick or a
   quote would sign with something other than what is stored. Backslashes are doubled on the way in, since
-  `java.util.Properties` reads one as an escape. What stays on the command line is the things that are not secret —
-  `campfire.desktop.distribution`, which is worth having in the log.
+  `java.util.Properties` reads one as an escape. The file is read as UTF-8, so a value outside ASCII survives as well.
+  What stays on the command line is the things that are not secret — `campfire.desktop.distribution`, which is worth
+  having in the log.
 - The `campfire-library` convention plugin sets each module's `archivesName` from its Gradle path, because a klib
   carries the name of the artifact it is built into and half the modules here are called `api` or `implementation`.
 - `./gradlew :app:android:assembleDebug` — Android APK
@@ -278,7 +279,9 @@ uninstall and nothing else does.
   the deployable site to `app/web/build/dist/wasmJs/productionExecutable`.
 - **Publishing a GitHub release is the release.** `release.yml` answers it (a pre-release is left alone) by checking
   that the tag is the `campfire.versionName` of the commit it is on — a tag on a commit that still carries the last
-  version would submit that version again under a new name — and then calling the four workflows below side by
+  version would submit that version again under a new name — and that `campfire.android.versionCode` and
+  `campfire.ios.buildNumber` are higher than the last published release's, since Play would refuse a used one only
+  after the APK had been attached to the release, and then calling the four workflows below side by
   side. Each of them is the local build command plus the secrets a checkout does not have, and each can still be
   dispatched by hand, to publish without a release or to repeat one half of a release that went wrong. Every build
   passes `campfire.dropbox.appKey` from the `DROPBOX_APP_KEY` secret, because a published app built without it would
