@@ -58,9 +58,10 @@ direction.
   **There is deliberately no web app manifest and no service worker.** The web build is a page, not an installable
   app — every platform that should have an installable Campfire gets a native build instead.
 - `src/wasmJsMain/resources/opfs-writer.js` — the dedicated worker `OpfsFileStorage` writes through where there is no
-  `createWritable()`; a request is `{ id, path: [directory segments], name, data: bytes }`. It writes until every byte is in,
-  since `write()` may write fewer than it was given, and fails the save rather than truncate behind a write that
-  stopped short. Not preloaded and not part
+  `createWritable()`; a request is `{ id, path: [directory segments], name, data: bytes }`. It writes in place, so it grows the
+  file to the new length first (a quota refusal then comes before anything is overwritten), writes until every byte is
+  in, since `write()` may write fewer than it was given, and when a write still fails it puts the previous content back
+  and fails the save; only if that fails too is the file left damaged, and the error says so. Not preloaded and not part
   of the loading screen's byte count: it is only fetched by the first write that needs it.
 
 The library lives in the **Origin Private File System**, so it is per-origin and per-browser: a user's songs do not
