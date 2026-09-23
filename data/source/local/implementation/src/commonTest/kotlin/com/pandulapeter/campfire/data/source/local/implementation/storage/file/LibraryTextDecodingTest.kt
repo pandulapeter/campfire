@@ -85,6 +85,37 @@ internal class LibraryTextDecodingTest {
     }
 
     @Test
+    fun readsAStrayWindows1252ByteInsideUtf8AsTheLetterItStandsFor() {
+        assertEquals("éé", ("é".encodeToByteArray() + bytes(0xE9)).decodeLibraryText())
+    }
+
+    @Test
+    fun keepsEveryUtf8CharacterOfASongbookWithOneStrayLine() {
+        val songs = "{title: Tükörfúrógép}\n".repeat(20)
+        // "Café\n" in Windows-1252, pasted from an old document.
+        val bytes = songs.encodeToByteArray() + bytes(0x43, 0x61, 0x66, 0xE9, 0x0A)
+
+        assertEquals(songs + "Café\n", bytes.decodeLibraryText())
+    }
+
+    @Test
+    fun readsStrayHungarianBytesThroughWindows1250() {
+        // Only the double acutes of "tűrő" are Windows-1250; the UTF-8 "Á" and "í" are what make the text Hungarian.
+        assertEquals("Árvíz tűrő", ("Árvíz ".encodeToByteArray() + bytes(0x74, 0xFB, 0x72, 0xF5)).decodeLibraryText())
+    }
+
+    @Test
+    fun keepsAWindows1252FileWithOneAccidentalUtf8PairOnWindows1252() {
+        // "Ã©" happens to be a well-formed UTF-8 "é", against four accented letters that are not UTF-8 at all.
+        val bytes = bytes(
+            0xC3, 0xA9, 0x20, 0xE0, 0x20, 0x6C, 0x61, 0x20, 0x63, 0x72, 0xE8, 0x6D, 0x65, 0x2C, 0x20,
+            0x64, 0xE9, 0x6A, 0xE0, 0x20, 0x76, 0x75,
+        )
+
+        assertEquals("Ã© à la crème, déjà vu", bytes.decodeLibraryText())
+    }
+
+    @Test
     fun readsUtf16WithAndWithoutByteOrderMarks() {
         val text = "{title: Tükörfúrógép}\r\n[Am]Őszi szél"
         listOf(true, false).forEach { bigEndian ->
