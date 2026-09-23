@@ -523,8 +523,8 @@ private fun SetlistEntryActions(
     onMoveUp: (() -> Unit)?,
     onMoveDown: (() -> Unit)?,
 ) = when (entry) {
-    // Nothing is locked: the sheet's box for this very setlist is what unticks the song out of it, which is the
-    // swipe written as a list rather than as a gesture.
+    // Nothing is locked: the sheet's box for this very setlist is what unticks the song out of it, which is the one
+    // way a song is taken out of a setlist.
     is CampfireViewModel.SetlistWithSongs.Entry.Present -> SongActionsButton(
         viewModel = viewModel,
         song = entry.song,
