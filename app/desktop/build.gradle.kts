@@ -58,7 +58,7 @@ compose.desktop {
         // Package with the toolchain JDK rather than the JVM running Gradle, which may lack jpackage.
         javaHome = toolchainLauncher.get().metadata.installationPath.asFile.absolutePath
         nativeDistributions {
-            targetFormats(TargetFormat.Dmg, TargetFormat.Exe, TargetFormat.Msi, TargetFormat.Deb)
+            targetFormats(TargetFormat.Dmg, TargetFormat.Msi, TargetFormat.Deb)
             packageName = "Campfire"
             packageVersion = versionName
             description = "Your songbook, on every screen you own"
@@ -91,8 +91,12 @@ compose.desktop {
                 shortcut = true
                 // Installs into the user's own profile, so the installer never asks for an administrator.
                 perUserInstall = true
-                // What makes a newer installer replace the installed version rather than land next to it, so it has to
-                // stay what it is for as long as the app exists.
+                // What makes a newer installer replace the installed version rather than land next to it. Windows
+                // Installer only looks for a product with the same upgrade code in the context it is installing into
+                // itself, so this and perUserInstall above both have to stay what they are for as long as the app
+                // exists: changing either leaves every existing installation where it is, with a second one in Apps.
+                // 4.2.2 is that installation - per machine, under the code jpackage derives when it is given none -
+                // and 4.2.3 was the change.
                 upgradeUuid = "243e51a3-b5a0-49a7-9a61-2c276db59db9"
             }
             linux {
@@ -164,6 +168,28 @@ tasks.matching { it.name == "packageDeb" || it.name == "packageReleaseDeb" }.con
     finalizedBy(addStartupWmClassToDeb)
 }
 
+/**
+ * Puts a ticked "Launch Campfire" checkbox on the last page of the Windows installer, which starts the app when the
+ * installer is closed with Finish. jpackage has no option for it and takes WiX sources only through the --resource-dir
+ * the Compose plugin owns, so `add-launch-after-install.ps1` adds it to the finished .msi - the script says how. It is
+ * a finalizer of the packaging task, so whatever builds the .msi - `desktop-publish.yml` included - gets it without
+ * asking, and a script that cannot find what it edits fails that build rather than letting an installer out without it.
+ */
+val addLaunchAfterInstallToMsi = tasks.register<AddLaunchAfterInstallToMsi>("addLaunchAfterInstallToMsi") {
+    onlyIf { isWindowsHost }
+    val packages = fileTree(layout.buildDirectory.dir("compose/binaries")) { include("main/msi/*.msi", "main-release/msi/*.msi") }
+    this.packages.from(packages)
+    script = project.file("add-launch-after-install.ps1")
+    launcherName = "Campfire.exe"
+    checkboxText = "Launch Campfire"
+    // As with the .deb, the package is rewritten in place, so it is both what the task reads and what it leaves behind.
+    inputs.files(packages)
+    outputs.files(packages)
+}
+tasks.matching { it.name == "packageMsi" || it.name == "packageReleaseMsi" }.configureEach {
+    finalizedBy(addLaunchAfterInstallToMsi)
+}
+
 compose.resources {
     publicResClass = false
     packageOfResClass = "com.pandulapeter.campfire.resources"
@@ -176,6 +202,45 @@ kotlin {
 
 /** Whether this build runs on Linux, which is the only host jpackage builds the .deb on. */
 val isLinuxHost get() = System.getProperty("os.name").orEmpty().lowercase().contains("linux")
+
+/** Whether this build runs on Windows, which is the only host jpackage builds the .msi on. */
+val isWindowsHost get() = System.getProperty("os.name").orEmpty().lowercase().contains("windows")
+
+/** Runs `add-launch-after-install.ps1` over each .msi, which fails the build rather than leave an installer without it. */
+abstract class AddLaunchAfterInstallToMsi : DefaultTask() {
+
+    @get:Inject
+    abstract val execOperations: ExecOperations
+
+    @get:Internal
+    abstract val packages: ConfigurableFileCollection
+
+    @get:InputFile
+    abstract val script: RegularFileProperty
+
+    @get:Input
+    abstract val launcherName: Property<String>
+
+    @get:Input
+    abstract val checkboxText: Property<String>
+
+    @TaskAction
+    fun addLaunchAfterInstall() {
+        val msis = packages.files.filter { it.isFile }
+        if (msis.isEmpty()) throw GradleException("There is no .msi to add the launch checkbox to.")
+        msis.forEach { msi ->
+            execOperations.exec {
+                commandLine(
+                    "powershell", "-NoProfile", "-NonInteractive", "-ExecutionPolicy", "Bypass",
+                    "-File", script.get().asFile.absolutePath,
+                    "-Path", msi.absolutePath,
+                    "-Launcher", launcherName.get(),
+                    "-Text", checkboxText.get(),
+                )
+            }
+        }
+    }
+}
 
 /**
  * Unpacks each .deb, adds the StartupWMClass key to its one desktop entry and builds it again. It fails rather than
