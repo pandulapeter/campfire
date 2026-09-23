@@ -52,6 +52,9 @@ holds the `@Module @ComponentScan object DataLocalSourceModule`, and every local
     and reports a storage failure. On OPFS an entry that disappears between the directory listing and the question
     about its size is left out of the listing rather than failing it, since a sync run deletes files while the live
     rescan is listing the same directory: that is a file no longer in the directory, not a read folded into null.
+    A file removed between the existence check and the read is not there either: the JVM catches
+    `java.nio.file.NoSuchFileException` (not Kotlin's class of the same name), iOS asks `fileExistsAtPath` again when
+    the read comes back nil, and OPFS folds a `NotFoundError` from `getFile()` into null, as `fileInfo` already did.
   - iOS splits the two: the library goes to the documents directory, where the Files app can reach it, and the
     preferences to application support, where it cannot.
   - The JVM storage removes its own temporary files older than an hour on first touching each directory. On Windows

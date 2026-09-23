@@ -18,6 +18,7 @@ import kotlinx.coroutines.runBlocking
 import java.io.File
 import java.nio.file.AccessDeniedException
 import java.nio.file.Files
+import java.nio.file.NoSuchFileException
 import kotlin.test.AfterTest
 import kotlin.test.Test
 import kotlin.test.assertContentEquals
@@ -180,6 +181,16 @@ class JvmFileStorageTest {
         assertFailsWith<LibraryStorageException> { fileStorage.readText(StorageDirectory.SONGS, "a.cho") }
         assertFailsWith<LibraryStorageException> { fileStorage.readBytes(StorageDirectory.SONGS, "a.cho") }
         file.setReadable(true)
+    }
+
+    @Test
+    fun `reads a file removed just before the read as missing`() {
+        assertNull(fileStorage.readingAsStorage("a.cho") { throw NoSuchFileException("a.cho") })
+    }
+
+    @Test
+    fun `still reports any other failure of a read as a storage failure`() {
+        assertFailsWith<LibraryStorageException> { fileStorage.readingAsStorage("a.cho") { throw AccessDeniedException("a.cho") } }
     }
 
     @Test

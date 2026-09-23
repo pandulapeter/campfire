@@ -134,14 +134,18 @@ internal class IosFileStorage : FileStorage {
     /**
      * `dataWithContentsOfFile` answers nil for a file that is not there and for one it could not read alike, and only
      * the first of those may come back as null: a file reported as missing is a deletion as far as sync is concerned.
+     * A nil for a file that was there a moment ago is asked about again, since a save, a deletion or a sync run can
+     * remove it between the two calls.
      */
     private fun readData(directory: StorageDirectory, name: String): NSData? {
         val path = filePath(directory, name)
         if (!fileManager.fileExistsAtPath(path)) return null
         return memScoped {
             val error = alloc<ObjCObjectVar<NSError?>>()
-            NSData.dataWithContentsOfFile(path, options = 0u, error = error.ptr)
-                ?: throw LibraryStorageException("Could not read \"$name\": ${error.value?.localizedDescription}")
+            NSData.dataWithContentsOfFile(path, options = 0u, error = error.ptr) ?: run {
+                if (!fileManager.fileExistsAtPath(path)) return null
+                throw LibraryStorageException("Could not read \"$name\": ${error.value?.localizedDescription}")
+            }
         }
     }
 

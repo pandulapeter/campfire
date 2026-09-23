@@ -226,8 +226,18 @@ private fun fileInfo(handle: JsAny): Promise<JsString?> = js(
     })"""
 )
 
-private fun readFileBytes(handle: JsAny): Promise<Int8Array?> =
-    js("handle.getFile().then(function (file) { return file.arrayBuffer(); }).then(function (buffer) { return new Int8Array(buffer); })")
+/**
+ * The file's bytes, or `null` for a file removed between its handle and the read: a `NotFoundError` there is a file
+ * no longer in the directory, which is what `readFileBytes`' callers call missing, the same way `fileInfo` does.
+ */
+private fun readFileBytes(handle: JsAny): Promise<Int8Array?> = js(
+    """handle.getFile().then(function (file) { return file.arrayBuffer(); }).then(function (buffer) {
+        return new Int8Array(buffer);
+    }).catch(function (error) {
+        if (error && error.name === 'NotFoundError') return null;
+        throw error;
+    })"""
+)
 
 /**
  * A writable holds a lock on its file until it is closed or aborted, so one whose write fails is aborted before the

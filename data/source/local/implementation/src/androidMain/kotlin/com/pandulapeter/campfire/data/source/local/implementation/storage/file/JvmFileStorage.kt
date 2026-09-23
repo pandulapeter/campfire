@@ -21,6 +21,7 @@ import java.nio.channels.FileChannel
 import java.nio.file.AccessDeniedException
 import java.nio.file.AtomicMoveNotSupportedException
 import java.nio.file.Files
+import java.nio.file.NoSuchFileException
 import java.nio.file.StandardCopyOption
 import java.nio.file.StandardOpenOption
 import java.util.concurrent.ConcurrentHashMap
@@ -68,11 +69,11 @@ internal class JvmFileStorage(
     }
 
     override suspend fun readText(directory: StorageDirectory, name: String) = withContext(Dispatchers.IO) {
-        file(directory, name).let { if (it.isFile) failingAsStorage(name) { it.readAllBytes().decodeLibraryText() } else null }
+        file(directory, name).let { if (it.isFile) readingAsStorage(name) { it.readAllBytes() }?.decodeLibraryText() else null }
     }
 
     override suspend fun readBytes(directory: StorageDirectory, name: String) = withContext(Dispatchers.IO) {
-        file(directory, name).let { if (it.isFile) failingAsStorage(name) { it.readAllBytes() } else null }
+        file(directory, name).let { if (it.isFile) readingAsStorage(name) { it.readAllBytes() } else null }
     }
 
     override suspend fun writeText(directory: StorageDirectory, name: String, text: String) = withContext(Dispatchers.IO) {
@@ -155,6 +156,19 @@ internal class JvmFileStorage(
     /** A file that is there but will not be read or written is a failure of the storage, not of whoever asked. */
     private inline fun <T> failingAsStorage(name: String, operation: () -> T): T = try {
         operation()
+    } catch (exception: IOException) {
+        throw LibraryStorageException("Could not access \"$name\".", exception)
+    }
+
+    /**
+     * [failingAsStorage] for a read, which has one more answer: a file removed between the [File.isFile] check and
+     * the read is not there, and null is what the contract says about a file that is not there. Anything else is a
+     * file that is there and could not be read. Internal so that the test can hand it the exception.
+     */
+    internal inline fun <T : Any> readingAsStorage(name: String, read: () -> T): T? = try {
+        read()
+    } catch (_: NoSuchFileException) {
+        null
     } catch (exception: IOException) {
         throw LibraryStorageException("Could not access \"$name\".", exception)
     }
