@@ -180,7 +180,18 @@ internal fun SongDetailsScreen(
     // A setlist of one song is still a setlist being played, so it keeps the bar that names it; only a song opened
     // from the library, with nothing before or after it, goes without one.
     val hasPagerControls = canPage || (destination.setlistFileName != null && songs.isNotEmpty())
-    val setlistTitle = destination.setlistFileName?.let { fileName -> setlists.firstOrNull { it.fileName == fileName }?.title }
+    val setlist = destination.setlistFileName?.let { fileName -> setlists.firstOrNull { it.fileName == fileName } }
+    val setlistTitle = setlist?.title
+    // Each page's place in the setlist, the missing files included, which is what the setlist's rows are numbered by:
+    // a setlist is read by its own order, and "2 / 3" over the song its screen calls number 3 would read as a mistake.
+    // The pages only count themselves where one of them cannot be placed - the setlist is gone, or the library has not
+    // caught up with a change to it yet - so that two numberings are never mixed in one bar.
+    val setlistSlots = remember(setlist, songs) {
+        setlist?.let {
+            val slotByPage = songs.map { song -> setlist.entries.indexOfFirst { entry -> entry.songFileName == song.fileName } }
+            if (slotByPage.none { slot -> slot < 0 }) SetlistSlots(slotByPage = slotByPage, entryCount = setlist.entries.size) else null
+        }
+    }
     val shouldShowChords = userPreferences?.isLyricsOnlyModeEnabled != true
     val isHorizontalFlow = userPreferences?.isHorizontalSectionFlowEnabled == true
     val chordSpelling = userPreferences?.chordSpelling ?: UserPreferences.ChordSpelling.Default
@@ -380,6 +391,7 @@ internal fun SongDetailsScreen(
         if (hasPagerControls) {
             SongPagerControls(
                 setlistTitle = setlistTitle,
+                setlistSlots = setlistSlots,
                 currentPage = pagerState.currentPage,
                 targetPage = pagerState.targetPage,
                 pageCount = songs.size,
@@ -394,12 +406,15 @@ internal fun SongDetailsScreen(
  * The bar under the lyrics that steps through the songs of a setlist without swiping. Between the two buttons it
  * names the setlist being played and how far along it the current song is.
  *
+ * @param setlistSlots Where each page sits in the setlist, which is what the label numbers it by; null where the
+ *   pages are numbered by themselves.
  * @param currentPage The song on screen, which is what the label names.
  * @param targetPage The song the pager is on its way to, which is what decides whether there is anywhere left to step.
  */
 @Composable
 private fun SongPagerControls(
     setlistTitle: String?,
+    setlistSlots: SetlistSlots?,
     currentPage: Int,
     targetPage: Int,
     pageCount: Int,
@@ -456,8 +471,13 @@ private fun SongPagerControls(
                 targetState = currentPage,
                 transitionSpec = { fadeIn() togetherWith fadeOut() },
             ) { page ->
+                val position = setlistSlots?.slotByPage?.getOrNull(page)
                 Text(
-                    text = stringResource(Res.string.song_details_song_position, page + 1, pageCount),
+                    text = if (position != null) {
+                        stringResource(Res.string.song_details_song_position, position + 1, setlistSlots.entryCount)
+                    } else {
+                        stringResource(Res.string.song_details_song_position, page + 1, pageCount)
+                    },
                     style = MaterialTheme.typography.labelLarge,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                     textAlign = TextAlign.Center,
@@ -619,6 +639,12 @@ private class PageStepper(
         }
     }
 }
+
+/** Where each page of a setlist's pager sits in the setlist, see [SongPagerControls]. */
+private class SetlistSlots(
+    val slotByPage: List<Int>,
+    val entryCount: Int,
+)
 
 private const val LABEL_SEPARATOR = "·"
 private val PAGER_CONTROLS_HEIGHT = 48.dp
