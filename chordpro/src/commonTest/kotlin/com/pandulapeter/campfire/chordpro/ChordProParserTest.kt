@@ -76,6 +76,57 @@ class ChordProParserTest {
     }
 
     @Test
+    fun `only a transpose before the first line transposes the whole song`() {
+        val song = ChordProParser.parse(KEY_CHANGE)
+
+        assertEquals(0, song.metadata.transpose)
+        assertEquals(ChordProBlock.Transpose(2), song.blocks[1])
+        assertEquals(SectionType.Chorus, (song.blocks[2] as ChordProBlock.Section).type)
+        assertEquals(0, ChordProParser.summarize(KEY_CHANGE).metadata.transpose)
+    }
+
+    @Test
+    fun `a transpose in the header is the whole song's, the last one winning`() {
+        listOf(
+            "{transpose: 2}\n{transpose: 3}\n[C]a" to 3,
+            "{transpose: 2}\n{transpose}\n[C]a" to 0,
+            "{transpose: 2f}\n[C]a" to 2,
+        ).forEach { (text, expected) ->
+            val song = ChordProParser.parse(text)
+
+            assertEquals(expected, song.metadata.transpose, text)
+            assertTrue(song.blocks.none { it is ChordProBlock.Transpose }, text)
+            assertEquals(expected, ChordProParser.summarize(text).metadata.transpose, text)
+        }
+    }
+
+    @Test
+    fun `a transpose with no value restores the one before it`() {
+        val song = ChordProParser.parse("{transpose: 1}\n[C]a\n{transpose: 5}\n[C]b\n{transpose}\n[C]c")
+
+        assertEquals(1, song.metadata.transpose)
+        assertEquals(
+            listOf(
+                ChordProBlock.Section(SectionType.Paragraph, null, listOf(ChordProParser.parseLyrics("[C]a"))),
+                ChordProBlock.Transpose(4),
+                ChordProBlock.Section(SectionType.Paragraph, null, listOf(ChordProParser.parseLyrics("[C]b")), isContinuation = true),
+                ChordProBlock.Transpose(0),
+                ChordProBlock.Section(SectionType.Paragraph, null, listOf(ChordProParser.parseLyrics("[C]c")), isContinuation = true),
+            ),
+            song.blocks,
+        )
+    }
+
+    @Test
+    fun `a recalled chorus leaves the modulations inside it out`() {
+        val blocks = ChordProParser.parse("{soc}\n[C]a\n{transpose: 2}\n[C]b\n{eoc}\n{chorus}").blocks
+
+        val recall = blocks.last() as ChordProBlock.ChorusRecall
+        assertEquals(2, recall.blocks.size)
+        assertTrue(recall.blocks.none { it is ChordProBlock.Transpose })
+    }
+
+    @Test
     fun `short metadata directive names are parsed`() {
         val metadata = ChordProParser.parse("{t: Short Title}\n{st: Short Subtitle}").metadata
 
@@ -706,5 +757,9 @@ class ChordProParserTest {
         assertEquals(ChordProLine.Tab("e|-3-|"), (tab[0] as ChordProBlock.Section).lines.single())
         assertEquals(ChordProBlock.Comment("x", CommentStyle.PLAIN), tab[1])
         assertEquals(ChordProLine.Tab("e|-5-|", continuesEnvironment = true), (tab[2] as ChordProBlock.Section).lines.single())
+    }
+
+    private companion object {
+        const val KEY_CHANGE = "{title: Key Change}\n{start_of_verse}\n[C]one [G]two\n{end_of_verse}\n\n{transpose: 2}\n{start_of_chorus}\n[C]three [G]four\n{end_of_chorus}"
     }
 }

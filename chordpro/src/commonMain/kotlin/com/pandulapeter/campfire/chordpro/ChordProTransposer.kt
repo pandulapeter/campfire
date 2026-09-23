@@ -40,18 +40,30 @@ object ChordProTransposer {
      *   that is not transposed is exactly what a reader who always wants flats (or sharps) is asking for.
      */
     fun transpose(song: ChordProSong, semitones: Int, preferFlats: Boolean? = null): ChordProSong {
-        if (semitones == 0 && preferFlats == null) return song
-        return transpose(song, semitones, preferFlats ?: prefersFlats(song, semitones))
+        val isModulated = song.blocks.any { it is ChordProBlock.Transpose }
+        if (semitones == 0 && preferFlats == null && !isModulated) return song
+        val rewrites = mutableMapOf<Int, ChordRewrite>()
+        return rewriteChords(song) { offset ->
+            rewrites.getOrPut(semitones + offset) { rewriteBy(song, semitones + offset, preferFlats) }
+        }
     }
 
-    private fun transpose(song: ChordProSong, semitones: Int, preferFlats: Boolean): ChordProSong {
-        val rename = { name: String -> transposeChord(name, semitones, preferFlats) }
-        return rewriteChords(
-            song = song,
-            rewriteTabLines = { lines -> ChordProTabTransposer.transpose(lines, semitones, rename) },
-            rename = rename,
-        )
+    /**
+     * Moving by [shift] semitones, spelled for the key the song is in once it has moved that far. No move and no forced
+     * spelling leaves the chords exactly as written, as it does for a song with no modulation at all.
+     */
+    private fun rewriteBy(song: ChordProSong, shift: Int, preferFlats: Boolean?): ChordRewrite {
+        if (shift == 0 && preferFlats == null) return ChordRewrite(rewriteTabLines = { it }, rename = { it })
+        val flats = preferFlats ?: prefersFlats(song, shift)
+        val rename = { name: String -> transposeChord(name, shift, flats) }
+        return ChordRewrite(rewriteTabLines = { lines -> ChordProTabTransposer.transpose(lines, shift, rename) }, rename = rename)
     }
+
+    /** What [rewriteChords] does to the chords of one stretch of a song. */
+    internal class ChordRewrite(
+        val rewriteTabLines: (List<String>) -> List<String>,
+        val rename: (String) -> String,
+    )
 
     /**
      * Applies [rename] to every chord of a song — its key, the chords over its lyrics and the chords of its grids,
@@ -67,19 +79,29 @@ object ChordProTransposer {
         song: ChordProSong,
         rewriteTabLines: (List<String>) -> List<String>,
         rename: (String) -> String,
-    ): ChordProSong = song.copy(
-        metadata = song.metadata.copy(key = song.metadata.key?.let(rename)),
-        blocks = song.blocks.map { block -> rewriteBlock(block, rewriteTabLines, rename) },
-    )
+    ): ChordProSong = ChordRewrite(rewriteTabLines, rename).let { rewrite -> rewriteChords(song) { rewrite } }
 
-    private fun rewriteBlock(
-        block: ChordProBlock,
-        rewriteTabLines: (List<String>) -> List<String>,
-        rename: (String) -> String,
-    ): ChordProBlock = when (block) {
-        is ChordProBlock.Section -> block.copy(lines = rewriteLines(block.lines, rewriteTabLines, rename))
+    /**
+     * [rewriteChords] for a rewrite that depends on where in the song a chord is: [rewriteAt] is asked for the one of
+     * each stretch a `{transpose}` moved by the given offset, 0 before the first. A recall is rewritten with the
+     * offset in effect where it stands, which is what makes a chorus recalled after `{transpose: 2}` the key change it
+     * is written as.
+     */
+    internal fun rewriteChords(song: ChordProSong, rewriteAt: (Int) -> ChordRewrite): ChordProSong {
+        var offset = 0
+        return song.copy(
+            metadata = song.metadata.copy(key = song.metadata.key?.let(rewriteAt(0).rename)),
+            blocks = song.blocks.map { block ->
+                if (block is ChordProBlock.Transpose) offset = block.semitones
+                rewriteBlock(block, rewriteAt(offset))
+            },
+        )
+    }
+
+    private fun rewriteBlock(block: ChordProBlock, rewrite: ChordRewrite): ChordProBlock = when (block) {
+        is ChordProBlock.Section -> block.copy(lines = rewriteLines(block.lines, rewrite.rewriteTabLines, rewrite.rename))
         // The chorus a recall repeats travels inside it, so it is spelled and moved the way the chorus itself is.
-        is ChordProBlock.ChorusRecall -> block.copy(blocks = block.blocks.map { rewriteBlock(it, rewriteTabLines, rename) })
+        is ChordProBlock.ChorusRecall -> block.copy(blocks = block.blocks.map { rewriteBlock(it, rewrite) })
         else -> block
     }
 
@@ -253,7 +275,7 @@ object ChordProTransposer {
                         lines.transposeTab(tabLineIndices, semitones, rename)
                         environment = null
                     }
-                    if (directive.name in ChordProSyntax.blockNames) {
+                    if (directive.name in ChordProSyntax.blockNames || directive.name == TRANSPOSE) {
                         // The parser cuts the section in two here, and each half of the tab is a run of its own in the model;
                         // moving them as one fingerboard would let the viewer and the editor disagree about the octave.
                         lines.transposeTab(tabLineIndices, semitones, rename)
@@ -412,6 +434,7 @@ object ChordProTransposer {
     private const val SOURCE_COMMENT = "#"
     private const val ANNOTATION_MARKER = "*"
     private const val KEY = "key"
+    private const val TRANSPOSE = "transpose"
     private const val TAB = "tab"
     private const val GRID = "grid"
     private const val BRACKET_OPEN = '['

@@ -1314,19 +1314,15 @@ class CampfireViewModel(
     }
 
     /**
-     * Parses a song file and applies the file's own `{transpose}`, the transposition the user picked and the spelling
-     * they prefer, which is what the viewer renders. Call it from a `remember` keyed on all three: parsing a long song
-     * on every recomposition would be wasteful.
+     * Parses a song file and applies the file's own `{transpose}` — the one it opens with and the ones further down
+     * it — the transposition the user picked and the spelling they prefer, which is what the viewer renders. Call it
+     * from a `remember` keyed on all three: parsing a long song on every recomposition would be wasteful.
      */
     fun renderSong(text: String, transposition: Int, spelling: UserPreferences.ChordSpelling): ChordProSong {
         val parsed = parseChordPro(text)
-        val semitones = parsed.metadata.transpose + transposition
-        // A preferred spelling still respells a song nobody transposed, so only the two together mean there is nothing to do.
-        val transposed = if (semitones == 0 && spelling.accidentals == UserPreferences.Accidentals.ORIGINAL) {
-            parsed
-        } else {
-            transposeChordPro(parsed, semitones, spelling.accidentals)
-        }
+        // The file's own {transpose} (the one it opens with), the reader's, and the modulations further down: all
+        // three are the transposition's to apply, and it leaves a song none of them move exactly as it is.
+        val transposed = transposeChordPro(parsed, parsed.metadata.transpose + transposition, spelling.accidentals)
         // Last, and on the model only: the file, and the editor's transposition below, stay in the app's own notation.
         return convertChordProNotation(transposed, spelling)
     }

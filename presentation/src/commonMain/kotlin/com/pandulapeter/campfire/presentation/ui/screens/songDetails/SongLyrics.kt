@@ -1261,6 +1261,8 @@ private fun ChordProSong.toRenderSections(
         when (block) {
             is ChordProBlock.Break -> Unit // The column layout makes its own breaks.
 
+            is ChordProBlock.Transpose -> Unit // It moved the chords; there is nothing to draw.
+
             is ChordProBlock.Comment -> sections += RenderSection.Comment(text = block.text, style = block.style)
 
             is ChordProBlock.ChorusRecall -> {

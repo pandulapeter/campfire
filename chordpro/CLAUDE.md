@@ -61,7 +61,11 @@ in `:domain:*`. `:data:source:local:implementation` uses it directly for the met
   selector suffix (`{title-guitar}`) is dropped, since there is nothing to match it against, and one with a negated
   selector (`{title-guitar!}`) is read as the directive it is on for the same reason; an environment with a selector is
   the environment it selects, since its lines are the song itself; a song that changes key is in the key its first
-  `{key}` names; `{meta: title …}` and the other standard names the spec defines as their standalone directive
+  `{key}` names; a `{transpose}` before the song's first line transposes the whole of it (`ChordProMetadata.transpose`,
+  the last one there winning), and one further down is a modulation — a `ChordProBlock.Transpose` holding the offset
+  from the whole-song value for everything after it, cutting the section it stands in the way a comment does — each
+  value being the transposition of the rest of the song and a valueless one going back to the one before, as the spec
+  has it; `{meta: title …}` and the other standard names the spec defines as their standalone directive
   (`subtitle`, `artist`, `composer`, `lyricist`, `album`, `year`, `key`, `capo`, `tempo`, `time`, `duration`) are read
   as that directive; `{define}`, fonts, colours, images and page directives are parsed and dropped. It also understands
   the Campfire 3 dialect, where `{comment: Verse 1}` outside an environment was a section heading; one that no line
@@ -119,7 +123,10 @@ in `:domain:*`. `:data:source:local:implementation` uses it directly for the met
   always asked. A caller that knows better passes `preferFlats` and gets that spelling instead, which is what the accidentals preference does; forced that way it is
   worth running for no semitones at all, so only `semitones == 0` *and* no forced spelling short-circuits. Its walk
   over the model is `rewriteChords`, which takes the rename as a function so that `ChordProNotation` can reuse it;
-  the two differ only in what a tab is, a fingerboard to one and a page of chord names to the other.
+  the two differ only in what a tab is, a fingerboard to one and a page of chord names to the other. A modulation
+  moves the stretch after it by its offset on top of the transposition asked for, spelled for the key it lands in, and
+  a recall is moved by the offset where it stands; the text transposition leaves the `{transpose}` directives alone,
+  which keeps them right, since each is relative to the song as written.
   `transposedOffset` maps a caret through a text transposition (same line, same place between the brackets), which
   is what keeps the editor's caret next to the text it was at.
 - `ChordProTabTransposer` — the same move inside a `{start_of_tab}` environment, where it means the fret numbers and

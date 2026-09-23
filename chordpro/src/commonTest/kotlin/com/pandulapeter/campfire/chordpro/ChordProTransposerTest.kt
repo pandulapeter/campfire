@@ -193,6 +193,29 @@ class ChordProTransposerTest {
         assertEquals(listOf("C", "H"), (song.blocks.last() as ChordProBlock.ChorusRecall).blocks.recalledChordNames())
     }
 
+    @Test
+    fun `a modulation moves the chords after it only`() {
+        val song = ChordProTransposer.transpose(ChordProParser.parse(KEY_CHANGE), 0)
+
+        assertEquals(listOf("C", "G", "D", "A"), song.chordNames())
+    }
+
+    @Test
+    fun `a chorus recalled after a modulation is in the new key`() {
+        val song = ChordProTransposer.transpose(ChordProParser.parse("{soc}\n[C]a\n{eoc}\n{transpose: 2}\n{chorus}"), 0)
+
+        assertEquals(listOf("C"), song.chordNames())
+        assertEquals(listOf("D"), (song.blocks.last() as ChordProBlock.ChorusRecall).blocks.recalledChordNames())
+    }
+
+    @Test
+    fun `the text transposition agrees with the model across a modulation`() {
+        assertEquals(
+            ChordProTransposer.transpose(ChordProParser.parse(KEY_CHANGE), 3),
+            ChordProTransposer.transpose(ChordProParser.parse(ChordProTransposer.transposeText(KEY_CHANGE, 3)), 0),
+        )
+    }
+
     private fun List<ChordProBlock>.recalledChordNames() = filterIsInstance<ChordProBlock.Section>()
         .flatMap { it.lines }
         .filterIsInstance<ChordProLine.Lyrics>()
@@ -635,6 +658,7 @@ class ChordProTransposerTest {
     }
 
     private companion object {
+        const val KEY_CHANGE = "{title: Key Change}\n{start_of_verse}\n[C]one [G]two\n{end_of_verse}\n\n{transpose: 2}\n{start_of_chorus}\n[C]three [G]four\n{end_of_chorus}"
         const val CUT_CHORUS_AND_RECALL = "{soc}\n[C]one\n{comment: softly}\n[G]two\n{eoc}\n\n{chorus}"
     }
 }

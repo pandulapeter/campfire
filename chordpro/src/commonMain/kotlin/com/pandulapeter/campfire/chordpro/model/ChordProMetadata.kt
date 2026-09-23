@@ -26,7 +26,7 @@ data class ChordProMetadata(
     val tempo: String? = null, // {tempo}
     val time: String? = null, // {time}, e.g. "3/4"
     val duration: String? = null,
-    val transpose: Int = 0, // {transpose: N}, applied by the renderer on top of the user's transposition
+    val transpose: Int = 0, // the {transpose} before the song's first line, applied by the renderer on top of the user's transposition; see ChordProBlock.Transpose for the later ones
     /**
      * The labels the song was filed under, one per `{tag}` directive (or per `{meta: tag ...}`, which ChordPro
      * documents as the same thing). They are kept in the order the file lists them, without the duplicates a hand

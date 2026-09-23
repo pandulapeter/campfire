@@ -42,6 +42,13 @@ sealed interface ChordProBlock {
 
     data class Comment(val text: String, val style: CommentStyle) : ChordProBlock
 
+    /**
+     * `{transpose: N}` somewhere after the song has begun: from here on the chords are read [semitones] away from
+     * where the song's own transposition ([ChordProMetadata.transpose], the `{transpose}` it opens with) puts them —
+     * a key change written as a directive. 0 is back to that. It shows nothing; the transposition applies it.
+     */
+    data class Transpose(val semitones: Int) : ChordProBlock
+
     /** {column_break} / {new_page} and friends: a hint that the layout may break here. */
     data object Break : ChordProBlock
 }

@@ -63,6 +63,19 @@ class ChordProSerializerTest {
     }
 
     @Test
+    fun `a modulation survives serializing`() {
+        listOf(
+            "{title: Key Change}\n{start_of_verse}\n[C]one [G]two\n{end_of_verse}\n\n{transpose: 2}\n{start_of_chorus}\n[C]three [G]four\n{end_of_chorus}",
+            "{transpose: 1}\n[C]a\n{transpose: 5}\n[C]b\n{transpose}\n[C]c",
+            "{transpose: 1}\n[C]a\n{transpose: 5}\n[C]b",
+        ).forEach { text ->
+            val parsed = ChordProParser.parse(text)
+
+            assertEquals(parsed, ChordProParser.parse(ChordProSerializer.serialize(parsed)), text)
+        }
+    }
+
+    @Test
     fun `an abc block survives serializing`() {
         val parsed = ChordProParser.parse("{start_of_abc}\nX:1\n[CEG]2 [A2B] |\n{end_of_abc}")
 

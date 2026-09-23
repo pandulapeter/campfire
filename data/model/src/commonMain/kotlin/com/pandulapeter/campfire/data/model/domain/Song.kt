@@ -26,7 +26,7 @@ data class Song(
     /** `{key}` as written, null if the song does not declare one. */
     val key: String?,
     /**
-     * `{transpose}`, the amount the file asks to be read at on top of whatever the reader picked, see
+     * The `{transpose}` the file opens with, the amount it asks to be read at on top of whatever the reader picked, see
      * `ChordProMetadata.transpose`. It travels with the metadata because [key] means nothing without it: a list
      * naming the key of a song has to name the one it sounds in, and that is the only place the two are apart.
      */

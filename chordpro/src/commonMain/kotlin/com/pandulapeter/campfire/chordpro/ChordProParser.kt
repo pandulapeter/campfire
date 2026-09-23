@@ -42,18 +42,66 @@ object ChordProParser {
         val metadata = MetadataBuilder()
         val blocks = mutableListOf<ChordProBlock>()
         val section = SectionBuilder(blocks)
+        val transposition = Transposition()
         ChordProSyntax.splitLines(text).forEach { rawLine ->
             val trimmedLine = rawLine.trim()
             if (trimmedLine.startsWith(SOURCE_COMMENT)) return@forEach
             val directive = ChordProSyntax.matchDirective(trimmedLine)
             if (directive == null) {
+                if (trimmedLine.isNotEmpty()) transposition.startBody()
                 section.addContent(rawLine, trimmedLine)
             } else {
-                handleDirective(directive, metadata, blocks, section)
+                handleDirective(directive, metadata, blocks, section, transposition)
             }
         }
         section.close()
-        return ChordProSong(metadata = metadata.build(), blocks = withChorusesRecalled(blocks))
+        transposition.finish()
+        return ChordProSong(metadata = metadata.build(transpose = transposition.wholeSong), blocks = withChorusesRecalled(blocks))
+    }
+
+    /**
+     * The `{transpose}` directives of a song, the way the spec reads them: each one is the transposition of the rest of
+     * the song (not an addition to the one before it), and one with no value goes back to the one before it. What a
+     * song opens with — every `{transpose}` before its first line — is the whole song's; a later one is a modulation.
+     *
+     * The body begins at the first line that is not blank or a `#` comment, the first `{start_of_…}`, or the first
+     * directive that makes a block; a stray `{end_of_…}` or a directive that only sets metadata puts nothing in the song.
+     */
+    private class Transposition {
+        private val restorable = mutableListOf<Int>()
+        private var current = 0
+        private var lastReported = 0
+
+        /** The transposition of the whole song: what was in effect when the body began, or at the end of a song with none. */
+        var wholeSong = 0
+            private set
+        private var isInBody = false
+
+        fun startBody() {
+            if (isInBody) return
+            isInBody = true
+            wholeSong = current
+            lastReported = current
+        }
+
+        /** Reads one directive; the offset from [wholeSong] the chords after it are at, where that changed in the body. */
+        fun consume(value: String?): Int? {
+            val written = value?.trim().orEmpty()
+            if (written.isEmpty()) {
+                current = restorable.removeLastOrNull() ?: 0
+            } else {
+                // `2s` and `-3f` ask for sharps or flats as well; the reader's own spelling preference decides that here.
+                val number = written.removePrefix("+").let { if (it.lastOrNull()?.lowercaseChar() in SPELLING_SUFFIXES) it.dropLast(1) else it }
+                val semitones = number.trim().toIntOrNull() ?: return null
+                restorable += current
+                current = semitones
+            }
+            if (!isInBody || current == lastReported) return null
+            lastReported = current
+            return current - wholeSong
+        }
+
+        fun finish() = startBody()
     }
 
     /**
@@ -61,7 +109,8 @@ object ChordProParser {
      * reached, all of it — a chorus cut in two by a comment is its first section, the comment and the continuation. A
      * recall standing inside a chorus (in a tab written there) repeats the chorus before that one, since the one it
      * stands in is not over yet. A recall inside the recalled chorus is left out of the copy, which would otherwise
-     * repeat a chorus inside a repeat of itself.
+     * repeat a chorus inside a repeat of itself, and so is a `{transpose}` inside it: a recalled chorus is played at the
+     * transposition of the place it is recalled at.
      */
     private fun withChorusesRecalled(blocks: List<ChordProBlock>): List<ChordProBlock> {
         if (blocks.none { it is ChordProBlock.ChorusRecall }) return blocks
@@ -73,7 +122,7 @@ object ChordProParser {
             if (block !is ChordProBlock.Section) return@forEachIndexed
             val chorus = pieces
             if (chorus != null && block.isContinuation) {
-                chorus += blocks.subList(lastPieceIndex + 1, index).filterNot { it is ChordProBlock.ChorusRecall }
+                chorus += blocks.subList(lastPieceIndex + 1, index).filterNot { it is ChordProBlock.ChorusRecall || it is ChordProBlock.Transpose }
                 chorus += block
             } else {
                 chorus?.let { choruses += lastPieceIndex to it }
@@ -106,6 +155,7 @@ object ChordProParser {
      */
     private fun scan(text: String, shouldDetectChords: Boolean): ChordProSummary {
         val metadata = MetadataBuilder()
+        val transposition = Transposition()
         var hasChords = false
         var environment: String? = null
         var isGermanNotated = false
@@ -115,12 +165,19 @@ object ChordProParser {
             val directive = if (trimmedLine.startsWith(DIRECTIVE_START)) ChordProSyntax.matchDirective(trimmedLine) else null
             if (directive != null) {
                 if (!ChordProSyntax.hasSelectorSuffix(directive.name)) {
+                    if (directive.name == TRANSPOSE) {
+                        transposition.consume(directive.value)
+                    } else if (ChordProSyntax.startOfEnvironment(directive.name) != null || directive.name in ChordProSyntax.blockNames) {
+                        transposition.startBody()
+                    }
                     ChordProSyntax.startOfEnvironment(directive.name)?.let { environment = it.lowercase() }
                     ChordProSyntax.endOfEnvironment(directive.name)?.let { environment = null }
                     metadata.consume(directive)
                 }
                 return@forEach
             }
+            // Before the early return below, which skips lines once the chords are found: the body has begun either way.
+            if (trimmedLine.isNotEmpty()) transposition.startBody()
             val isLookingForChords = shouldDetectChords && !hasChords
             val isLookingForNotation = !isGermanNotated && (GERMAN_LETTER in rawLine || GERMAN_LETTER.lowercaseChar() in rawLine)
             if (!isLookingForChords && !isLookingForNotation) return@forEach
@@ -128,7 +185,8 @@ object ChordProParser {
             if (isLookingForChords && environment != TAB) hasChords = names.isNotEmpty()
             if (isLookingForNotation) isGermanNotated = names.any(ChordProNotation::isGermanName)
         }
-        val declared = metadata.build()
+        transposition.finish()
+        val declared = metadata.build(transpose = transposition.wholeSong)
         val expandedKey = declared.key?.let { written -> ChordProChordNames.lowercaseMinorExpanded(written) ?: written }
         val isGermanKey = expandedKey?.let(ChordProNotation::isGermanName) == true
         val key = expandedKey?.let { key ->
@@ -153,9 +211,16 @@ object ChordProParser {
         metadata: MetadataBuilder,
         blocks: MutableList<ChordProBlock>,
         section: SectionBuilder,
+        transposition: Transposition,
     ) {
         val name = directive.name
         if (ChordProSyntax.hasSelectorSuffix(name)) return
+        if (name == TRANSPOSE) {
+            // Inside a section the modulation cuts it in two, the way a comment does, and the rest is its continuation.
+            transposition.consume(directive.value)?.let { semitones -> section.addBlock(ChordProBlock.Transpose(semitones)) }
+            return
+        }
+        if (ChordProSyntax.startOfEnvironment(name) != null || name in ChordProSyntax.blockNames) transposition.startBody()
         ChordProSyntax.startOfEnvironment(name)?.let { environment ->
             // Tablature and grids are how the next few lines are written, not a section of their own: they open
             // inside whatever section is running, and a song with a solo written as a line of chords over a tab is
@@ -404,7 +469,6 @@ object ChordProParser {
         private var tempo: String? = null
         private var time: String? = null
         private var duration: String? = null
-        private var transpose = 0
         private val tags = mutableListOf<String>()
         private val tagKeys = mutableSetOf<String>()
         private val languages = mutableListOf<String>()
@@ -427,7 +491,6 @@ object ChordProParser {
                 "tempo" -> tempo = value
                 "time" -> time = value
                 "duration" -> duration = value
-                "transpose" -> value.removePrefix("+").toIntOrNull()?.let { transpose = it }
                 "tag" -> ChordProSyntax.tag(directive)?.let(::addTag)
                 "language", "lang" -> ChordProSyntax.language(directive)?.let(::addLanguage)
                 "meta" -> {
@@ -464,7 +527,7 @@ object ChordProParser {
             if (languageSet.add(value)) languages += value
         }
 
-        fun build() = ChordProMetadata(
+        fun build(transpose: Int) = ChordProMetadata(
             title = title,
             subtitle = subtitle,
             artist = artist,
@@ -494,4 +557,6 @@ object ChordProParser {
     private const val TAB = "tab"
     private const val GRID = "grid"
     private const val GERMAN_LETTER = 'H'
+    private const val TRANSPOSE = "transpose"
+    private val SPELLING_SUFFIXES = setOf('s', 'f')
 }

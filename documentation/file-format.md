@@ -38,7 +38,8 @@ Campfire understands the core of the format:
   chorus.
 - **Content**: `[Chord]` markers anchored to the syllable that follows them, `[*annotations]`, tab lines kept exactly
   as written, grid rows, `#` source comments, and `comment` / `highlight` / `comment_italic` / `comment_box` for shown
-  ones.
+  ones. `{transpose: N}` before the first line moves the whole song, further down it moves the chords from there on (a
+  key change), and `{transpose}` with no value goes back to the transposition before it.
 - **Page directives** (`new_page`, `column_break`, …) are treated as layout hints; chord diagrams (`define`), fonts,
   colours and images are parsed and ignored.
 - `{new_song}` / `{ns}` splits one imported file into several songs.

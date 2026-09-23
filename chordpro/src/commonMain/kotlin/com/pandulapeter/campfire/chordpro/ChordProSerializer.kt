@@ -33,10 +33,10 @@ object ChordProSerializer {
                 // A section a comment, a break or a recall cut in two goes back into the one environment it was read
                 // from, with what cut it inside: written as two, it would come back as two sections.
                 val end = sectionEnd(song.blocks, index)
-                chunks += serializeSection(song.blocks.subList(index, end))
+                chunks += serializeSection(song.blocks.subList(index, end), song.metadata.transpose)
                 index = end
             } else {
-                chunks += serializeBlock(block)
+                chunks += serializeBlock(block, song.metadata.transpose)
                 index++
             }
         }
@@ -76,8 +76,13 @@ object ChordProSerializer {
         }
     }
 
-    private fun serializeBlock(block: ChordProBlock) = when (block) {
-        is ChordProBlock.Section -> serializeSection(listOf(block))
+    /**
+     * @param wholeSongTranspose The `{transpose}` the song opens with, which a modulation is written back on top of:
+     *   it is read as the transposition of the rest of the song, not as an addition to the one before it.
+     */
+    private fun serializeBlock(block: ChordProBlock, wholeSongTranspose: Int): String = when (block) {
+        is ChordProBlock.Section -> serializeSection(listOf(block), wholeSongTranspose)
+        is ChordProBlock.Transpose -> "{transpose: ${wholeSongTranspose + block.semitones}}"
         is ChordProBlock.ChorusRecall -> block.label?.let { "{chorus: $it}" } ?: "{chorus}"
         is ChordProBlock.Comment -> when (block.style) {
             CommentStyle.PLAIN -> "{comment: ${block.text}}"
@@ -89,12 +94,12 @@ object ChordProSerializer {
     }
 
     /** A section and its continuations, with the blocks that stood between them, as [sectionEnd] collects them. */
-    private fun serializeSection(pieces: List<ChordProBlock>): String {
+    private fun serializeSection(pieces: List<ChordProBlock>, wholeSongTranspose: Int): String {
         val section = pieces.first() as ChordProBlock.Section
         // A paragraph has no environment of its own, so a label it carries came from the tablature or grid inside
         // it and has to go back onto that; see `SectionBuilder.openLineMode`.
-        if (section.type == SectionType.Paragraph) return serializeLines(pieces, section.label)
-        val body = serializeLines(pieces)
+        if (section.type == SectionType.Paragraph) return serializeLines(pieces, wholeSongTranspose, section.label)
+        val body = serializeLines(pieces, wholeSongTranspose)
         val name = environmentName(section.type)
         val header = section.label?.let { "{start_of_$name: $it}" } ?: "{start_of_$name}"
         return if (body.isEmpty()) "$header\n{end_of_$name}" else "$header\n$body\n{end_of_$name}"
@@ -109,7 +114,7 @@ object ChordProSerializer {
      * A block is written inside a tab or grid environment that the next line after it is still in, which is where the
      * parser found it: a Campfire 3 `{comment: Verse 2}` written outside the tab it stood in would come back as a heading.
      */
-    private fun serializeLines(pieces: List<ChordProBlock>, environmentLabel: String? = null) = buildList {
+    private fun serializeLines(pieces: List<ChordProBlock>, wholeSongTranspose: Int, environmentLabel: String? = null) = buildList {
         val items: List<Any> = pieces.flatMap { piece -> if (piece is ChordProBlock.Section) piece.lines else listOf(piece) }
         var openEnvironment: String? = null
         var label = environmentLabel
@@ -125,7 +130,7 @@ object ChordProSerializer {
                     add("{end_of_$openEnvironment}")
                     openEnvironment = null
                 }
-                add(serializeBlock(item))
+                add(serializeBlock(item, wholeSongTranspose))
                 return@forEachIndexed
             }
             val line = item as ChordProLine
