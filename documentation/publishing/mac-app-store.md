@@ -77,10 +77,9 @@ on macOS names only the Mac App Store, in its rating row (`storeForRating`). A b
 `macos-publish.yml` builds, signs, starts a copy in the sandbox and uploads; `release.yml` calls it and checks
 `campfire.mac.buildNumber` with the other counters. `desktop-publish.yml` no longer builds anything for the Mac.
 
-- [ ] Add the repository secrets: `MAC_CERTIFICATES_BASE64` (both certificates with their private keys, exported
-      together from Keychain Access as one `.p12`, then `base64 -i`), `MAC_CERTIFICATES_PASSWORD`,
-      `MAC_PROVISIONING_PROFILE_BASE64` and `MAC_RUNTIME_PROVISIONING_PROFILE_BASE64`. The App Store Connect API key
-      is already there for iOS.
+- [x] No certificate or profile is stored: the run creates both certificates and both profiles through the API and
+      revokes them at the end (`.github/scripts/app_store_signing.py`), with the Admin API key iOS uses. The ones
+      made by hand in section 1 are only for building by hand, and expire in 2027 without the pipeline noticing.
 - [ ] Run the workflow once by hand with `master` as its `release_tag` (the `4.3.0` tag predates the Mac build) and a
       `build_number` of 36, to see it get as far as TestFlight before a release depends on it.
 - [ ] Submitting for review and "What's New" stay by hand, as for iOS. Green means **delivered**.

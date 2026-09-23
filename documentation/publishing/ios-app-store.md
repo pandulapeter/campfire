@@ -76,10 +76,10 @@ link to the README, and its rating row names the App Store alone (`storeForRatin
 `ios-publish.yml` builds, signs and uploads, and no longer attaches an unsigned `.ipa` to the release.
 
 - [x] The team's App Store Connect API key, shared with Kubriko, is in `APP_STORE_CONNECT_KEY_ID`,
-      `APP_STORE_CONNECT_ISSUER_ID` and `APP_STORE_CONNECT_PRIVATE_KEY` (the `.p8` file's text, not base64).
-- [x] Sign with the team's Apple Distribution certificate, the same one Kubriko uses, from
-      `IOS_DISTRIBUTION_CERTIFICATE_BASE64` and `IOS_DISTRIBUTION_CERTIFICATE_PASSWORD`, with the key only fetching
-      the provisioning profile.
+      `APP_STORE_CONNECT_ISSUER_ID` and `APP_STORE_CONNECT_PRIVATE_KEY` (the `.p8` file's text, not base64). It has the Admin
+      role, which creating certificates takes.
+- [x] Sign with an Apple Distribution certificate the run creates through the API and revokes at the end
+      (`.github/scripts/app_store_signing.py`), so that no certificate is stored to expire; the key is an Admin key.
 - [x] The automation stops at the upload: the build lands in TestFlight, and it is submitted for review, with its
       "What's New", by hand. Going further would mean App Store blocks in the release description, read by
       `release.yml` the way the Play ones are, and the App Store Connect API or fastlane's `deliver`.

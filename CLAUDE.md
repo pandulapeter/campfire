@@ -311,26 +311,33 @@ uninstall and nothing else does.
     behind on its own) and starts it — under Xvfb on Linux, with an empty data directory — and attaches nothing unless
     the demo library appears, the process is still there after that, and its log names no exception.
   - `macos-publish.yml` builds `packageReleasePkg` with `campfire.desktop.distribution=mac-app-store` on an Apple
-    silicon runner — which is what signs and sandboxes it and takes the donation link out — signed with the Mac App
-    Distribution and Mac Installer Distribution certificates (`MAC_CERTIFICATES_BASE64`, one `.p12` holding both,
-    and its password, imported into a keychain of the run's own) and the two Mac App Store provisioning profiles
-    (`MAC_PROVISIONING_PROFILE_BASE64` for the app, `MAC_RUNTIME_PROVISIONING_PROFILE_BASE64` for the bundled Java
-    runtime), all of them written into `local.properties` as a developer's machine keeps them. A build signed for
+    silicon runner — which is what signs and sandboxes it and takes the donation link out — signed with a Mac App
+    Distribution and a Mac Installer Distribution certificate and the two Mac App Store provisioning profiles (the
+    app's and the bundled Java runtime's) that the run creates for itself and revokes at the end (see below), all of
+    them written into `local.properties` as a developer's machine keeps them. A build signed for
     the store does not start outside TestFlight, so the start check of the other desktop legs is made on a copy
     signed ad hoc with the same entitlements less the two that name the App ID — the demo library has to appear in
     the fresh sandbox container. It uploads the `.pkg` with `altool` and the same App Store Connect API key as iOS,
     and, like iOS, stops at TestFlight; its `build_number` input uploads a release again under a number App Store
     Connect has not seen.
-  - `ios-publish.yml` archives the app signed with the team's Apple Distribution certificate
-    (`IOS_DISTRIBUTION_CERTIFICATE_BASE64` and its password, imported into a keychain of the run's own), lets
-    xcodebuild fetch the App Store profile with the App Store Connect API key (`APP_STORE_CONNECT_KEY_ID`,
-    `_ISSUER_ID` and `_PRIVATE_KEY`, the last one the `.p8` file's text rather than base64), and uploads the exported
+  - `ios-publish.yml` archives the app signed with an Apple Distribution certificate the run creates for itself and
+    revokes at the end, lets xcodebuild make the App Store profile for it with the App Store Connect API key, and
+    uploads the exported
     `.ipa` to App Store Connect, where it lands in TestFlight. It stops there: submitting the build for review is done
     by hand, so a green run means delivered, not accepted, and nothing is attached to the release. The Xcode project
     starts Gradle itself and passes it no properties, so the sync key is written into `local.properties` there —
     which the version build phase reads too, after `gradle.properties` and with the last value winning, which is how
     the hand-dispatched form's `build_number` uploads a release again under a number App Store Connect has not seen
     without a commit. The archived `Info.plist` is checked against the expected version before anything is uploaded.
+  - **Nothing Apple signs with is stored, so nothing expires.** A distribution certificate lasts a year; the App Store
+    Connect API key (`APP_STORE_CONNECT_KEY_ID`, `_ISSUER_ID` and `_PRIVATE_KEY`, the last one the `.p8` file's text
+    rather than base64, an Admin key shared with Kubriko) does not. So the two Apple workflows make their own
+    identities with `.github/scripts/app_store_signing.py`: a key generated on the runner, a certificate for it and the
+    profiles that name it, created through the API into a keychain of the run's own, and revoked and deleted in an
+    `always()` step at the end — exactly what the run created, recorded in a state file, and never anything made by
+    hand. Revoking a distribution certificate does not touch builds already in TestFlight or on the store, which Apple
+    signs again. It must never be used for a Developer ID certificate, whose revocation breaks every copy of an app
+    already downloaded.
   - `android-publish.yml` writes the keystore out of `ANDROID_KEYSTORE_BASE64`, builds `assembleRelease` signed with
     the other three `ANDROID_*` secrets and uploads it and its mapping file to the production track with
     `PLAY_SERVICE_ACCOUNT_JSON`; nothing is attached to the release. It is an **APK** and not an app bundle because the Play listing predates the bundle

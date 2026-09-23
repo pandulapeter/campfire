@@ -49,12 +49,13 @@ because that is what it is: SmartScreen warns about an unknown publisher, and *M
 - [Sync](documentation/sync.md) - what it sees, how a run decides, and why it needs no backend.
 
 ### To do
-- Add support for external control devices with a focus-by-section feature
-- Songs: sort by year option
-- Add ability to add links
+- Get rid of the campfire.desktop.distribution flag
 - Add more automatic sync triggers
-- Improve performance mode description
+- Add ability to add links
+- Songs: sort by year option
 - Rename setlist date sort, maybe expose a date for Setlists
+- Add support for external control devices with a focus-by-section feature
+- Improve performance mode description
 - Fix Songs screen async race animation issues
 - Improve code coverage
 - Review architecture / code quality

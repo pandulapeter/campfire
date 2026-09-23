@@ -12,10 +12,14 @@
 # email.
 #
 # The build is Apple silicon only: jpackage packages for the machine it runs on, and App Store Connect takes an
-# arm64-only Mac app from macOS 12 on. Signing uses the Mac App Distribution and Mac Installer Distribution
-# certificates, exported together as one .p12, imported into a keychain of the run's own, and the two Mac App Store
-# provisioning profiles, the app's and the bundled Java runtime's. campfire.desktop.distribution=mac-app-store is what
-# turns all of it on, and what takes the donation link out of the app (guideline 3.1.1).
+# arm64-only Mac app from macOS 12 on. campfire.desktop.distribution=mac-app-store is what signs and sandboxes it, and
+# what takes the donation link out of the app (guideline 3.1.1).
+#
+# Nothing it signs with is stored anywhere, so nothing of it can expire: the run creates a Mac App Distribution and a
+# Mac Installer Distribution certificate for a key made on the runner, and the two Mac App Store provisioning profiles
+# (the app's and the bundled Java runtime's) that name them, through the App Store Connect API
+# (.github/scripts/app_store_signing.py), and revokes and deletes all of it at the end. That takes an API key with the
+# Admin role.
 #
 # Called by release.yml for every release; dispatched by hand to upload a release again, which App Store Connect only
 # accepts under a build number it has not seen yet — hence the override, which leaves gradle.properties as it was.
@@ -52,10 +56,6 @@ jobs:
       - name: Check the secrets
         env:
           DROPBOX_APP_KEY: ${{ secrets.DROPBOX_APP_KEY }}
-          CERTIFICATES_BASE64: ${{ secrets.MAC_CERTIFICATES_BASE64 }}
-          CERTIFICATES_PASSWORD: ${{ secrets.MAC_CERTIFICATES_PASSWORD }}
-          PROFILE_BASE64: ${{ secrets.MAC_PROVISIONING_PROFILE_BASE64 }}
-          RUNTIME_PROFILE_BASE64: ${{ secrets.MAC_RUNTIME_PROVISIONING_PROFILE_BASE64 }}
           ASC_KEY_ID: ${{ secrets.APP_STORE_CONNECT_KEY_ID }}
           ASC_ISSUER_ID: ${{ secrets.APP_STORE_CONNECT_ISSUER_ID }}
           ASC_PRIVATE_KEY: ${{ secrets.APP_STORE_CONNECT_PRIVATE_KEY }}
@@ -65,20 +65,9 @@ jobs:
             echo "::error::$1: $2" >&2
             PROBLEMS=$((PROBLEMS + 1))
           }
-          check_base64() {
-            if [ -z "$2" ]; then
-              problem "$1" "empty or unset"
-            elif ! printf '%s' "$2" | base64 --decode > /dev/null 2>&1; then
-              problem "$1" "not valid base64 (expected: base64 -i $3)"
-            fi
-          }
           # The empty string is the checked-in default, because a fresh clone has to build without a secret, so
           # nothing downstream would notice a published build that has no sync provider at all.
           [ -n "$DROPBOX_APP_KEY" ] || problem DROPBOX_APP_KEY "empty or not visible to this workflow"
-          check_base64 MAC_CERTIFICATES_BASE64 "$CERTIFICATES_BASE64" certificates.p12
-          [ -n "$CERTIFICATES_PASSWORD" ] || problem MAC_CERTIFICATES_PASSWORD "empty or unset"
-          check_base64 MAC_PROVISIONING_PROFILE_BASE64 "$PROFILE_BASE64" embedded.provisionprofile
-          check_base64 MAC_RUNTIME_PROVISIONING_PROFILE_BASE64 "$RUNTIME_PROFILE_BASE64" runtime.provisionprofile
           if [ -z "$ASC_KEY_ID" ]; then
             problem APP_STORE_CONNECT_KEY_ID "empty or unset"
           elif ! [[ "$ASC_KEY_ID" =~ ^[A-Z0-9]{10}$ ]]; then
@@ -110,13 +99,17 @@ jobs:
           cache: 'gradle'
       - name: Set up code signing
         env:
-          CERTIFICATES_BASE64: ${{ secrets.MAC_CERTIFICATES_BASE64 }}
-          CERTIFICATES_PASSWORD: ${{ secrets.MAC_CERTIFICATES_PASSWORD }}
-          PROFILE_BASE64: ${{ secrets.MAC_PROVISIONING_PROFILE_BASE64 }}
-          RUNTIME_PROFILE_BASE64: ${{ secrets.MAC_RUNTIME_PROVISIONING_PROFILE_BASE64 }}
           ASC_KEY_ID: ${{ secrets.APP_STORE_CONNECT_KEY_ID }}
+          ASC_ISSUER_ID: ${{ secrets.APP_STORE_CONNECT_ISSUER_ID }}
           ASC_PRIVATE_KEY: ${{ secrets.APP_STORE_CONNECT_PRIVATE_KEY }}
         run: |
+          # altool finds the key by its name in this directory; the signing script is given the path.
+          ASC_KEY_PATH="$HOME/.appstoreconnect/private_keys/AuthKey_$ASC_KEY_ID.p8"
+          mkdir -p "$(dirname "$ASC_KEY_PATH")"
+          printf '%s\n' "$ASC_PRIVATE_KEY" > "$ASC_KEY_PATH"
+          chmod 600 "$ASC_KEY_PATH"
+          echo "ASC_KEY_PATH=$ASC_KEY_PATH" >> "$GITHUB_ENV"
+          export ASC_KEY_PATH
           KEYCHAIN_PATH="$RUNNER_TEMP/signing.keychain-db"
           KEYCHAIN_PASSWORD=$(uuidgen)
           echo "KEYCHAIN_PATH=$KEYCHAIN_PATH" >> "$GITHUB_ENV"
@@ -124,35 +117,23 @@ jobs:
           # Long enough that the keychain does not lock itself in the middle of a slow Kotlin build.
           security set-keychain-settings -lut 21600 "$KEYCHAIN_PATH"
           security unlock-keychain -p "$KEYCHAIN_PASSWORD" "$KEYCHAIN_PATH"
-          printf '%s' "$CERTIFICATES_BASE64" | base64 --decode > "$RUNNER_TEMP/certificates.p12"
-          if ! security import "$RUNNER_TEMP/certificates.p12" -k "$KEYCHAIN_PATH" -P "$CERTIFICATES_PASSWORD" \
-            -T /usr/bin/codesign -T /usr/bin/productbuild -t cert -f pkcs12; then
-            rm -f "$RUNNER_TEMP/certificates.p12"
-            echo "::error::Could not import the certificates, which usually means MAC_CERTIFICATES_PASSWORD is not the password the .p12 was exported with." >&2
-            exit 1
-          fi
-          rm "$RUNNER_TEMP/certificates.p12"
+          SIGNING=.github/scripts/app_store_signing.py
+          python3 "$SIGNING" certificate MAC_APP_DISTRIBUTION "$KEYCHAIN_PATH"
+          python3 "$SIGNING" certificate MAC_INSTALLER_DISTRIBUTION "$KEYCHAIN_PATH"
+          python3 "$SIGNING" profile MAC_APP_STORE com.pandulapeter.campfire MAC_APP_DISTRIBUTION "$RUNNER_TEMP/embedded.provisionprofile"
+          python3 "$SIGNING" profile MAC_APP_STORE com.oracle.java.com.pandulapeter.campfire MAC_APP_DISTRIBUTION "$RUNNER_TEMP/runtime.provisionprofile"
           # Without the partition list codesign and productbuild stop to ask for the keychain password, which nobody
           # can type here.
           security set-key-partition-list -S apple-tool:,apple:,codesign: -s -k "$KEYCHAIN_PASSWORD" "$KEYCHAIN_PATH" > /dev/null
           security list-keychains -d user -s "$KEYCHAIN_PATH" $(security list-keychains -d user | tr -d '"')
           # The build is given the name the two certificates share, without the prefix it adds itself.
           IDENTITY=$(security find-identity -v "$KEYCHAIN_PATH" | sed -n 's/.*"3rd Party Mac Developer Application: \(.*\)"$/\1/p' | head -n 1)
-          if [ -z "$IDENTITY" ]; then
-            echo "::error::The .p12 left no Mac App Distribution signing identity behind. Export both certificates from the My Certificates tab of Keychain Access, so that they carry their private keys." >&2
-            exit 1
-          fi
-          if ! security find-identity -v "$KEYCHAIN_PATH" | grep -qF "3rd Party Mac Developer Installer: $IDENTITY"; then
-            echo "::error::The .p12 holds no Mac Installer Distribution certificate for $IDENTITY, which signs the .pkg." >&2
+          if [ -z "$IDENTITY" ] || ! security find-identity -v "$KEYCHAIN_PATH" | grep -qF "3rd Party Mac Developer Installer: $IDENTITY"; then
+            security find-identity -v "$KEYCHAIN_PATH"
+            echo "::error::The keychain does not hold both signing identities the certificates were created for." >&2
             exit 1
           fi
           echo "MAC_SIGNING_IDENTITY=$IDENTITY" >> "$GITHUB_ENV"
-          printf '%s' "$PROFILE_BASE64" | base64 --decode > "$RUNNER_TEMP/embedded.provisionprofile"
-          printf '%s' "$RUNTIME_PROFILE_BASE64" | base64 --decode > "$RUNNER_TEMP/runtime.provisionprofile"
-          ASC_KEY_PATH="$HOME/.appstoreconnect/private_keys/AuthKey_$ASC_KEY_ID.p8"
-          mkdir -p "$(dirname "$ASC_KEY_PATH")"
-          printf '%s\n' "$ASC_PRIVATE_KEY" > "$ASC_KEY_PATH"
-          chmod 600 "$ASC_KEY_PATH"
       # Where a developer's machine keeps the same values, so that the Gradle invocation is the one CLAUDE.md names.
       # Backslashes are doubled because java.util.Properties reads one as an escape.
       - name: Write local.properties
@@ -255,9 +236,18 @@ jobs:
             echo "::error::No .pkg was built." >&2
             exit 1
           fi
-          # altool finds the key by its name in ~/.appstoreconnect/private_keys.
           xcrun altool --upload-app --type macos --file "$PACKAGE" --apiKey "$ASC_KEY_ID" --apiIssuer "$ASC_ISSUER_ID"
           echo "Uploaded ${{ steps.version.outputs.name }} (${{ steps.version.outputs.build }}). It appears in TestFlight once App Store Connect has processed it, and goes to review only when submitted there by hand."
+      # Whatever the run got as far as creating, and nothing else, whether or not the build went through.
+      - name: Revoke the signing identities
+        if: always()
+        env:
+          ASC_KEY_ID: ${{ secrets.APP_STORE_CONNECT_KEY_ID }}
+          ASC_ISSUER_ID: ${{ secrets.APP_STORE_CONNECT_ISSUER_ID }}
+        run: |
+          if [ -f "$RUNNER_TEMP/app-store-signing.json" ]; then
+            python3 .github/scripts/app_store_signing.py cleanup
+          fi
       - name: Clean up credentials
         if: always()
         run: |
