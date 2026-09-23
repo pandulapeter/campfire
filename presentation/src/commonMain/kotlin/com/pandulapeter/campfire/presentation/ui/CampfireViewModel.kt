@@ -1368,17 +1368,37 @@ class CampfireViewModel(
     fun transposeText(text: String, semitones: Int, accidentals: UserPreferences.Accidentals) =
         transposeChordProText(text, semitones, accidentals)
 
-    /** A song opened from a setlist transposes inside that setlist; one opened from the library, in the preferences. */
-    fun setTransposition(songFileName: String, setlistFileName: String?, transposition: Int) = launchLibraryChange {
-        val clamped = transposition.coerceIn(MIN_TRANSPOSITION, MAX_TRANSPOSITION)
+    /**
+     * One step of the transposition stepper. A song opened from a setlist transposes inside that setlist; one opened from
+     * the library, in the preferences.
+     */
+    fun stepTransposition(songFileName: String, setlistFileName: String?, semitones: Int) =
+        changeTransposition(songFileName = songFileName, setlistFileName = setlistFileName) { it + semitones }
+
+    /** The stepper's value tapped: the song goes back to the key its file is written in. */
+    fun resetTransposition(songFileName: String, setlistFileName: String?) =
+        changeTransposition(songFileName = songFileName, setlistFileName = setlistFileName) { 0 }
+
+    /**
+     * Applies [change] to the transposition the store holds when the write runs rather than to the one the stepper was
+     * drawn with. A setlist's entry only reaches the screen once its write has been round tripped through the
+     * repository, and every tap inside that round trip reads the same number off the stepper, so an absolute value would
+     * turn five quick taps into two. The setlist's transform is handed the latest version of the file, one write at a
+     * time ([UpdateSetlistUseCase]); the preferences are published before they are written, so [userPreferences]
+     * already holds the previous tap.
+     *
+     * A setlist that is gone by now is not brought back, and saying nothing would leave a stepper that does nothing.
+     */
+    private fun changeTransposition(songFileName: String, setlistFileName: String?, change: (Int) -> Int) = launchLibraryChange {
         if (setlistFileName == null) {
             userPreferences.value?.let { preferences ->
+                val transposition = change(preferences.transpositions[songFileName] ?: 0).coerceIn(MIN_TRANSPOSITION, MAX_TRANSPOSITION)
                 saveUserPreferences(
                     preferences.copy(
-                        transpositions = if (clamped == 0) {
+                        transpositions = if (transposition == 0) {
                             preferences.transpositions - songFileName
                         } else {
-                            preferences.transpositions + (songFileName to clamped)
+                            preferences.transpositions + (songFileName to transposition)
                         }
                     )
                 )
@@ -1386,9 +1406,15 @@ class CampfireViewModel(
         } else {
             updateSetlist(setlistFileName) { setlist ->
                 setlist.copy(
-                    entries = setlist.entries.map { if (it.songFileName == songFileName) it.copy(transposition = clamped) else it }
+                    entries = setlist.entries.map { entry ->
+                        if (entry.songFileName == songFileName) {
+                            entry.copy(transposition = change(entry.transposition).coerceIn(MIN_TRANSPOSITION, MAX_TRANSPOSITION))
+                        } else {
+                            entry
+                        }
+                    }
                 )
-            }
+            } ?: sendMessage(Message.OperationFailed)
         }
     }
 

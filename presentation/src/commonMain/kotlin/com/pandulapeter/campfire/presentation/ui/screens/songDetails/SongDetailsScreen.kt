@@ -277,9 +277,8 @@ internal fun SongDetailsScreen(
                             isCompact = true,
                             transposition = currentTransposition,
                             key = currentKey,
-                            onTranspositionChanged = { transposition ->
-                                currentSong?.let { viewModel.setTransposition(it.fileName, destination.setlistFileName, transposition) }
-                            },
+                            onStep = { semitones -> currentSong?.let { viewModel.stepTransposition(it.fileName, destination.setlistFileName, semitones) } },
+                            onReset = { currentSong?.let { viewModel.resetTransposition(it.fileName, destination.setlistFileName) } },
                         )
                     }
                     FontScaleControls(

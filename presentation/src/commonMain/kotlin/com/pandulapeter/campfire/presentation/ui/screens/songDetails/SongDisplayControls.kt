@@ -99,7 +99,8 @@ internal fun SongDisplayControls(
                     TranspositionControls(
                         transposition = songTransposition,
                         key = transposedKey,
-                        onTranspositionChanged = { viewModel.setTransposition(song.fileName, dialog.setlistFileName, it) },
+                        onStep = { viewModel.stepTransposition(song.fileName, dialog.setlistFileName, it) },
+                        onReset = { viewModel.resetTransposition(song.fileName, dialog.setlistFileName) },
                     )
                 },
             )
@@ -125,7 +126,8 @@ internal fun TranspositionControls(
     transposition: Int,
     /** The key the song sounds in after transposing, shown next to the amount when the file declares one. */
     key: String? = null,
-    onTranspositionChanged: (Int) -> Unit,
+    onStep: (semitones: Int) -> Unit,
+    onReset: () -> Unit,
 ) = Stepper(
     modifier = modifier,
     isCompact = isCompact,
@@ -135,13 +137,13 @@ internal fun TranspositionControls(
     decreaseIcon = painterResource(Res.drawable.ic_subtract),
     decreaseLabel = stringResource(Res.string.song_details_transpose_down),
     canDecrease = transposition > CampfireViewModel.MIN_TRANSPOSITION,
-    onDecrease = { onTranspositionChanged(transposition - 1) },
+    onDecrease = { onStep(-1) },
     increaseIcon = painterResource(Res.drawable.ic_add),
     increaseLabel = stringResource(Res.string.song_details_transpose_up),
     canIncrease = transposition < CampfireViewModel.MAX_TRANSPOSITION,
-    onIncrease = { onTranspositionChanged(transposition + 1) },
+    onIncrease = { onStep(1) },
     resetLabel = stringResource(Res.string.song_details_transpose_reset),
-    onReset = { onTranspositionChanged(0) },
+    onReset = onReset,
 )
 
 /**
