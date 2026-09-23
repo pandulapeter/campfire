@@ -990,6 +990,29 @@ class SyncEngineTest {
 
         assertEquals(10, assertIs<SyncEngine.Result.Completed>(result).summary.deletedRemotely)
         assertTrue(provider.files.isEmpty())
+        // One request, so that another device listing the folder meanwhile does not see the deletion half done.
+        assertEquals(listOf(10), provider.deleteCalls.map { it.size })
+    }
+
+    @Test
+    fun `a remote deletion the service refuses fails that file and keeps it in the index`() = runTest {
+        val library = librarySongs(10)
+        val provider = FakeSyncProvider(files = library).apply { refusedDeletions = setOf(library.keys.first().name) }
+
+        val result = SyncEngine(FakeLibraryFileLocalSource(files = emptyMap()), LibraryFileLock()).synchronize(
+            provider = provider,
+            document = syncedIndexOf(library),
+            accountId = ACCOUNT_ID,
+            onProgress = {},
+            onIndexChanged = {},
+            deletionPolicy = SyncDeletionPolicy.DELETE_REMOTELY,
+        )
+
+        val completed = assertIs<SyncEngine.Result.Completed>(result)
+        assertEquals(9, completed.summary.deletedRemotely)
+        assertEquals(listOf(library.keys.first().name), completed.summary.failed)
+        assertEquals(setOf(library.keys.first()), provider.files.keys)
+        assertEquals(setOf(library.keys.first().path), completed.index.entries.keys)
     }
 
     @Test

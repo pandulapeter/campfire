@@ -153,7 +153,10 @@ import — is the only thing that walks the directory again.
   move `lastSyncedAt`. So is a file the service still reported as contested in the last of the `MAXIMUM_PASSES`
   passes (another device writing it under every upload): the two sides still differ, and the run did not settle it. Operations run `CONCURRENT_TRANSFERS` at a time within each ordering group rather than
   one after another: every one of them is a request, and serialising them made a first sync as slow as the round
-  trip times added up. `SyncRepositoryImpl` owns an application-lifetime scope, so a run outlives the screen and
+  trip times added up. The remote deletions are the exception: they go to `SyncProvider.delete` in one call, so that
+  a large deletion spends as little time as possible half done, which is what another device's guard would see. On
+  Dropbox that is still about seven files a second, so a device that syncs during a large approved deletion can
+  still see less than half of it gone and follow that part without asking; its next run asks about the rest. `SyncRepositoryImpl` owns an application-lifetime scope, so a run outlives the screen and
   (on Android) the activity that started it, and it is what tells the song and setlist repositories to rescan
   afterwards — after a completed run that changed something, and after a stopped or failed one in which any
   operation had finished (`finishRunCutShort`, always under `NonCancellable`), since files that moved before the run

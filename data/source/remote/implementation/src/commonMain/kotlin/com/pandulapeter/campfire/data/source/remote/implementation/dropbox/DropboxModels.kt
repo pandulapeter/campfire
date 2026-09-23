@@ -11,6 +11,9 @@ package com.pandulapeter.campfire.data.source.remote.implementation.dropbox
 
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
+import kotlinx.serialization.json.JsonObject
+import kotlinx.serialization.json.JsonPrimitive
+import kotlinx.serialization.json.contentOrNull
 
 /**
  * The parts of the Dropbox API's answers Campfire reads. Everything is defaulted and unknown keys are ignored, so
@@ -77,6 +80,35 @@ internal data class DropboxOAuthErrorResponse(
 internal data class DropboxErrorResponse(
     @SerialName("error_summary") val errorSummary: String = "",
 )
+
+/**
+ * What `delete_batch` and each `delete_batch/check` answer: a job still running (`async_job_id`, `in_progress`), its
+ * outcome (`complete`, with one entry per file in the order they were sent), or the job refused as a whole (`failed`).
+ */
+@Serializable
+internal data class DropboxDeleteBatchResponse(
+    @SerialName(".tag") val tag: String = "",
+    @SerialName("async_job_id") val asyncJobId: String = "",
+    val entries: List<DropboxDeleteBatchEntry> = emptyList(),
+    val failed: JsonObject? = null,
+)
+
+/** `success`, or `failure` with the reason as a tagged union in [failure]. */
+@Serializable
+internal data class DropboxDeleteBatchEntry(
+    @SerialName(".tag") val tag: String = "",
+    val failure: JsonObject? = null,
+)
+
+/**
+ * A tagged union written out the way an `error_summary` starts, so that both are matched by the same prefixes:
+ * `{".tag": "path_lookup", "path_lookup": {".tag": "not_found"}}` is `path_lookup/not_found`.
+ */
+internal fun JsonObject.tagPath(): String {
+    val tag = (this[".tag"] as? JsonPrimitive)?.contentOrNull ?: return ""
+    val inner = (this[tag] as? JsonObject)?.tagPath().orEmpty()
+    return if (inner.isEmpty()) tag else "$tag/$inner"
+}
 
 /**
  * The body of an answer that asks for patience: `{"error": {"reason": {...}, "retry_after": 3}}`. Only the number of

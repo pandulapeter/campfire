@@ -359,8 +359,8 @@ def build_dropbox_only():
         body = "{title: %s}\n{artist: Dropbox Only}\n\n[C]Uploaded from dropbox.com\n" % name.strip()
         write_text("dropbox-only/" + name, body)
     write_text("dropbox-only/README.txt", (
-        "Upload these files into Apps/Campfire/songs/ from the Dropbox web site (not through Campfire), then sync a\n"
-        "Windows build: con.cho, 'a.cho ' (trailing space), a:b.cho and what?.cho cannot exist on Windows and must be\n"
+        "Upload these files into Apps/Campfire Sync/songs/ from the Dropbox web site (not through Campfire), then sync\n"
+        "a Windows build: con.cho, 'a.cho ' (trailing space), a:b.cho and what?.cho cannot exist on Windows and must be\n"
         "skipped and named once. Hallelujah.cho is for the case-only rename check. See 04-windows.md and\n"
         "07-sync-multi-device.md. macOS may show a:b.cho as a/b.cho in Finder; that is the same file.\n"
     ))

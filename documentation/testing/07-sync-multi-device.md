@@ -29,8 +29,9 @@ Android foreground notification, the iOS background task) is in that platform's 
 ## Before you start
 
 - **The account.** Use the throwaway Dropbox account only; it will be wiped. Never connect a real one while running
-  this document. Everything Campfire touches is `Apps/Campfire/songs` and `Apps/Campfire/setlists` in that account
-  (app-folder permission). "dropbox.com" below means that folder in the Dropbox web UI, standing in for a device.
+  this document. Everything Campfire touches is `Apps/Campfire Sync/songs` and `Apps/Campfire Sync/setlists` in that
+  account (app-folder permission). "dropbox.com" below means that folder in the Dropbox web UI, standing in for a
+  device.
 - **Builds.** Every build must have `campfire.dropbox.appKey` in `local.properties`; a build without it says "This
   build of Campfire was made without sync credentials…" in Settings → Library. Registered redirects: `campfire://oauth`
   (Android, iOS), `http://127.0.0.1:53682` (desktop), `http://localhost:8080/` and
@@ -54,7 +55,7 @@ Android foreground notification, the iOS background task) is in that platform's 
   "100% Loss"), Chrome DevTools throttling, the Android emulator's network speed setting.
 - **Fixtures** (see `README.md`): fixture: the Windows-illegal-names folder, fixture: NFD vs NFC titles, fixture: the
   large library generator, fixture: the keep-both pair.
-- **Resetting between sections:** Disconnect on every device (leaves files on both sides), empty `Apps/Campfire` on
+- **Resetting between sections:** Disconnect on every device (leaves files on both sides), empty `Apps/Campfire Sync` on
   dropbox.com, and clear or replace each library. A disconnect forgets the account and the index; reconnecting the
   same account compares by content.
 
@@ -65,7 +66,7 @@ Android foreground notification, the iOS background task) is in that platform's 
 - [ ] **SYNC-001** (P0) Every platform connects and names the account
   1. On MAC, WIN, AND, IOS and WEB in turn: Settings → Library → Connect Dropbox, log in, Allow.
   **Expected:** each returns to the app on Settings → Library showing "Connected as <display name>" and runs a first
-  sync. Only `Apps/Campfire/songs` and `…/setlists` appear in the account. On desktop, `sync-index.json` is keyed
+  sync. Only `Apps/Campfire Sync/songs` and `…/setlists` appear in the account. On desktop, `sync-index.json` is keyed
   `dropbox:dbid:…`, not by e-mail. (Desktop: the consent page opens in the default browser and the tab then says
   "Campfire is connected — You can close this tab and go back to the app.")
   <sub>[r2-20][sync.md][remote-impl]</sub>
@@ -143,14 +144,15 @@ Android foreground notification, the iOS background task) is in that platform's 
   2. On dropbox.com (or via the API, see section 7), upload the **decomposed** spelling of the same name with
      different content.
   3. Sync MAC, AND, WEB, WIN twice each.
-  **Expected:** one file per song on Dropbox and on every device — never two that look identical. The decomposed
-  upload is treated as the same name (a conflict copy ` (2)` if the contents differ, otherwise nothing). A second
-  run on each device plans nothing.
+  **Expected:** one file per song on Dropbox and on every device — never two that look identical. Dropbox takes the
+  two spellings for one path, so the decomposed upload replaces the file there and reaches every device as an
+  ordinary change, under the composed name. (A ` (2)` copy appears only if the song was also edited on that device
+  since its last sync.) A second run on each device plans nothing.
   <sub>[r5-07][r2-26]</sub>
 
 - [ ] **SYNC-014** 🆕 (P1) A name Windows cannot store is skipped on Windows and named, not failed forever
-  1. Upload fixture: the Windows-illegal-names folder into `Apps/Campfire/songs` (names with `? : * " < > |`, and a
-     trailing space or dot if Dropbox accepts it).
+  1. Upload fixture: the Windows-illegal-names folder into `Apps/Campfire Sync/songs` (names with `? : * " < > |`, and
+     a trailing space or dot if Dropbox accepts it).
   2. Sync WIN. Sync MAC.
   3. On MAC, rename one of them to a legal name with "Update file name" (or on dropbox.com), sync MAC, then WIN.
   **Expected:** 2: WIN syncs every other file and names the illegal ones in "… could not be synced. Among them: …";
@@ -278,9 +280,9 @@ Prepare: at least 12 songs synced to two devices A and B (MAC and WEB are the qu
   <sub>[sync.md]</sub>
 
 - [ ] **SYNC-041** (P1) A second conflict on the same song
-  1. After SYNC-040, without syncing A, edit `x.cho` on A again; sync A.
-  **Expected:** A and Dropbox hold three files: A's second edit as `x.cho`, and the two other versions as copies —
-  nothing lost.
+  1. After SYNC-040, edit `x.cho` differently on A and on B again. Sync B, then A, then B.
+  **Expected:** A, B and Dropbox hold the same three files: A's second edit as `x.cho`, B's as `x (3).cho` next to
+  the `x (2).cho` SYNC-040 left — nothing lost.
   <sub>[r2-09]</sub>
 
 - [ ] **SYNC-042** (P1) Ten conflicts at once are summarised
@@ -371,8 +373,8 @@ Prepare: at least 12 songs synced to two devices A and B (MAC and WEB are the qu
 
 Run in this order after sections 1–5, or on its own as a regression pass before a release:
 
-1. Empty `Apps/Campfire`. MAC: clear library → demo library planted. Connect MAC → Dropbox gets the 2 demo songs +
-   setlist.
+1. Empty `Apps/Campfire Sync`. MAC: clear library → demo library planted. Connect MAC → Dropbox gets the 2 demo
+   songs + setlist.
 2. Connect WEB (fresh site data: demo planted) → no duplicates, no ` (2)` (same content).
 3. Connect AND and IOS the same way → still exactly 2 songs + 1 setlist on Dropbox.
 4. On WIN import fixture: the few-hundred-song zip, connect, sync → others sync → identical counts everywhere.

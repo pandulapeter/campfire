@@ -145,7 +145,7 @@ Legend: **P0** can lose or corrupt the library, or blocks the release. **P1** is
 
 - [ ] **WIN-040** 🆕 (P0) A cloud file Windows cannot hold is skipped and named once
   1. On the Mac, put fixture: Windows-illegal-names folder's `Who Are You?.cho` and `AC|DC - Thunder.cho` into the
-     Dropbox folder `Apps/Campfire/songs`, through the Dropbox website or the Mac library.
+     Dropbox folder `Apps/Campfire Sync/songs`, through the Dropbox website or the Mac library.
   2. Sync on Windows.
 
   **Expected:** the run finishes, every other file is in step, and the message names each of those files once as not
@@ -164,7 +164,7 @@ Legend: **P0** can lose or corrupt the library, or blocks the release. **P1** is
   <sub>[r5-03]</sub>
 - [ ] **WIN-043** 🆕 (P0) The deletion guard, seen from Windows
   1. Sync Windows with a library of at least 10 songs.
-  2. Rename the Dropbox folder `Apps/Campfire` in the Dropbox website.
+  2. Rename the Dropbox folder `Apps/Campfire Sync` in the Dropbox website.
   3. Sync on Windows.
 
   **Expected:** the run stops before anything moves and asks. Choose **Keep them and upload**: everything goes back

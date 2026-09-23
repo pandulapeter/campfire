@@ -16,6 +16,7 @@ import com.pandulapeter.campfire.data.source.remote.api.SyncProvider
 import com.pandulapeter.campfire.data.source.remote.api.hashing.localContentHash
 import com.pandulapeter.campfire.data.source.remote.api.model.RemoteAuthorizationRequest
 import com.pandulapeter.campfire.data.source.remote.api.model.RemoteAuthorizationResponse
+import com.pandulapeter.campfire.data.source.remote.api.model.RemoteDeletion
 import com.pandulapeter.campfire.data.source.remote.api.model.RemoteFile
 import com.pandulapeter.campfire.data.source.remote.api.model.RemoteListing
 import com.pandulapeter.campfire.data.source.remote.api.model.RemoteWriteResult
@@ -28,9 +29,11 @@ import com.pandulapeter.campfire.data.source.remote.api.model.RemoteWriteResult
  * through a run or changes the local library under an operation that is already under way. [sizes] lets a listing
  * report a large file without the test allocating it. [account] is who the service says is connected, which is what
  * a repository test restores the connection from. [ignoresCase] makes it a service like Dropbox, which takes two names
- * that differ only by case for one file, [listCount] is how many passes a run made and [downloadCounts] how many times
- * each file was fetched. [connected] says whether credentials are stored, and [onDisconnect] runs once a disconnect
- * has cleared them; [hasForgottenCredentials] says whether they were dropped without one, which does not run it.
+ * that differ only by case for one file, [listCount] is how many passes a run made, [downloadCounts] how many times
+ * each file was fetched and [deleteCalls] what each deletion request asked for; the names in [refusedDeletions] are
+ * answered as refused. [connected] says whether credentials
+ * are stored, and [onDisconnect] runs once a disconnect has cleared them; [hasForgottenCredentials] says whether they
+ * were dropped without one, which does not run it.
  */
 internal class FakeSyncProvider(
     files: Map<SyncKey, ByteArray> = emptyMap(),
@@ -50,6 +53,10 @@ internal class FakeSyncProvider(
     var hasForgottenCredentials = false
 
     val downloadCounts = mutableMapOf<SyncKey, Int>()
+
+    val deleteCalls = mutableListOf<List<RemoteDeletion>>()
+
+    var refusedDeletions = emptySet<String>()
 
     val files = files.mapValues { (_, bytes) -> bytes to "r1" }.toMutableMap()
     private var nextRevision = 2
@@ -130,7 +137,10 @@ internal class FakeSyncProvider(
         return RemoteWriteResult.Written(revision)
     }
 
-    override suspend fun delete(kind: LibraryFileKind, name: String, expectedRevision: String?) {
-        files -= stored(SyncKey(kind = kind, name = name))
+    override suspend fun delete(deletions: List<RemoteDeletion>): Map<RemoteDeletion, String> {
+        deleteCalls += deletions
+        val (refused, deleted) = deletions.partition { it.name in refusedDeletions }
+        deleted.forEach { files -= stored(SyncKey(kind = it.kind, name = it.name)) }
+        return refused.associateWith { "refused" }
     }
 }

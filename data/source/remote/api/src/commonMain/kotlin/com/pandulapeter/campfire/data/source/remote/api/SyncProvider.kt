@@ -14,6 +14,7 @@ import com.pandulapeter.campfire.data.model.domain.SyncAccount
 import com.pandulapeter.campfire.data.model.domain.SyncProviderId
 import com.pandulapeter.campfire.data.source.remote.api.model.RemoteAuthorizationRequest
 import com.pandulapeter.campfire.data.source.remote.api.model.RemoteAuthorizationResponse
+import com.pandulapeter.campfire.data.source.remote.api.model.RemoteDeletion
 import com.pandulapeter.campfire.data.source.remote.api.model.RemoteListing
 import com.pandulapeter.campfire.data.source.remote.api.model.RemoteWriteResult
 
@@ -115,8 +116,21 @@ interface SyncProvider {
         expectedRevision: String?,
     ): RemoteWriteResult
 
-    /** Does nothing if the file is already gone, which is the outcome the caller wanted anyway. */
-    suspend fun delete(kind: LibraryFileKind, name: String, expectedRevision: String?)
+    /**
+     * Deletes every file in [deletions], as one operation where the service has one, and answers the ones it could not
+     * delete, each with the reason. A file that is already gone counts as deleted, since that is the outcome the caller
+     * wanted, and so does one whose revision is no longer the expected one: it is left where it is, and the next run
+     * sees it as a file that changed rather than one to destroy.
+     *
+     * All of a run's deletions come in one call on purpose. Another device that lists the folder while they are
+     * under way sees some of the files gone and some still there, and the share it sees gone is what decides whether
+     * it asks before following - so the shorter that stretch is, the less of a large deletion can reach a device
+     * without its question. Use the service's bulk call where it has one, even one that is not atomic; without one,
+     * delete one file after the other as fast as the service allows.
+     *
+     * Throws what the other calls throw for a run that cannot go on; one file's refusal is an entry in the answer.
+     */
+    suspend fun delete(deletions: List<RemoteDeletion>): Map<RemoteDeletion, String>
 }
 
 /** The credentials are gone, were refused or were revoked: only connecting again can fix it. */

@@ -350,8 +350,11 @@ the only possible one. The per-module `CLAUDE.md` files carry the detail; the sh
   the way it provides `FilePicker`. The strings are resolved in the UI so the notification follows the language
   chosen *in the app*, not the system's.
 - `SyncEngine` runs the plan a few files at a time rather than one after another (which made a first sync one round
-  trip per file), and retries when the service asks it to slow down — being rate limited is the expected answer to a
-  first sync of a whole library, not a reason to give up on it. A file that fails on its own is named in the
+  trip per file), except the remote deletions, which go to the provider in one call — on Dropbox one batch job, about
+  seven files a second rather than one — so that the folder spends as little time as possible half deleted, the
+  state in which another device's guard can let part of a large deletion through unasked. It retries when the service asks
+  it to slow down — being rate limited is the expected answer to a first sync of a whole library, not a reason to
+  give up on it. A file that fails on its own is named in the
   run's summary rather than ending it, and such a run does not count as the last successful one.
 - The index carries an "a run was going" marker, written before anything moves and cleared when it finishes, so a
   run the app never came back from — killed, swiped away, suspended by iOS — is reported as interrupted next time

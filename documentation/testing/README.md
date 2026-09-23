@@ -128,7 +128,7 @@ the zip itself into Campfire: it is a bundle of fixtures, not a library archive.
 
 Use a **throwaway account and nothing else**. The deletion-guard tests in 07 empty the app folder, rename it, and
 answer "delete them here too" on purpose. Before each session, check that the Dropbox app folder is
-`Apps/Campfire/`, with `songs/` and `setlists/` inside it. Sync is only in builds that have
+`Apps/Campfire Sync/`, with `songs/` and `setlists/` inside it. Sync is only in builds that have
 `campfire.dropbox.appKey` in `local.properties`; a build without it says so in Settings. This checkout has the key.
 
 ## What Claude can run, and what needs your hands

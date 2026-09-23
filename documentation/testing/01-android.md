@@ -78,7 +78,7 @@ P2 = polish.
   without asking.
   <sub>[r5-01]</sub>
 - [ ] **AND-003** (P0) The emptied-remote guard still asks on this side
-  1. With 10+ synced songs, empty the Dropbox `Apps/Campfire/songs` folder from dropbox.com. *Sync now*.
+  1. With 10+ synced songs, empty the Dropbox `Apps/Campfire Sync/songs` folder from dropbox.com. *Sync now*.
   **Expected:** Settings asks *Delete them here too* / *Keep them and upload*; nothing is deleted on the phone until
   you answer. *Keep them and upload* puts them back on Dropbox.
   <sub>[sync.md][r5-01]</sub>

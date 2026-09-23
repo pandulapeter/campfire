@@ -28,10 +28,18 @@ and iOS, `http://127.0.0.1:53682` for the desktop, and the exact page URL for a 
 redirect URIs character for character, which is why the desktop port is fixed.
 
 - `dropbox/DropboxSyncProvider` — the app is registered for the *app folder* permission, so every path is inside
-  `Apps/Campfire` and the rest of the user's Dropbox is invisible to it. Uploads use Dropbox's `update` write mode
+  `Apps/Campfire Sync` (the folder is named after the app's name in the App Console) and the rest of the user's
+  Dropbox is invisible to it. Uploads use Dropbox's `update` write mode
   with the expected revision, so a write that would clobber another device's change is refused by the service rather
   than prevented by hope; `autorename` is off, because a name Dropbox invented would be a song nobody asked for.
-  Deletes carry `parent_rev` for the same reason, and "already gone" counts as success.
+  Deletes carry `parent_rev` for the same reason, and "already gone" counts as success. A run's deletions go as
+  `files/delete_batch` jobs of up to 1000 files, polled with `delete_batch/check` until they finish: Dropbox locks the
+  app folder for every write, so single deletions sent side by side mostly came back `too_many_write_operations` and
+  crawled through the back-off at about one a second, long enough for another device to list the folder half deleted
+  and follow the part it saw without asking. A job takes the lock once and removes about seven files a second
+  (measured: 314 files in 51 s). It is not atomic — the files disappear one after another while it runs — so the
+  window is shorter, not gone. Entries it turns away as busy (or a whole job refused that way) are sent again after
+  the same back-off as any other write.
 - Every call is retried while Dropbox answers 429, 5xx, or a 409 whose summary says `too_many_write_operations` (its
   answer to several writes landing in one folder at once, which the engine's own concurrency provokes), waiting what
   the body's `retry_after` or the `Retry-After` header asks for — or, where neither says, a wait that doubles from 2 s

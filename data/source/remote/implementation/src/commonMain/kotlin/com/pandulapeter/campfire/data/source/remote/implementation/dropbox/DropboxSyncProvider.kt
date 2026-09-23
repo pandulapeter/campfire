@@ -20,6 +20,7 @@ import com.pandulapeter.campfire.data.source.remote.api.SyncProvider
 import com.pandulapeter.campfire.data.source.remote.api.SyncRemoteStorageFullException
 import com.pandulapeter.campfire.data.source.remote.api.model.RemoteAuthorizationRequest
 import com.pandulapeter.campfire.data.source.remote.api.model.RemoteAuthorizationResponse
+import com.pandulapeter.campfire.data.source.remote.api.model.RemoteDeletion
 import com.pandulapeter.campfire.data.source.remote.api.model.RemoteFile
 import com.pandulapeter.campfire.data.source.remote.api.model.RemoteListing
 import com.pandulapeter.campfire.data.source.remote.api.model.RemoteWriteResult
@@ -51,13 +52,15 @@ import kotlinx.coroutines.ensureActive
 import kotlinx.coroutines.withTimeoutOrNull
 import kotlinx.serialization.SerializationException
 import kotlinx.serialization.json.Json
+import kotlinx.serialization.json.JsonObject
+import kotlinx.serialization.json.JsonPrimitive
 
 /**
  * Dropbox, seen through [SyncProvider].
  *
  * The app is registered for the "app folder" permission, so everything here addresses paths inside
- * `Apps/Campfire` and the rest of the user's Dropbox is not merely off limits - it is invisible. That folder is a
- * real one the user can open, which is the same promise the local library makes: plain files, in a place they can
+ * `Apps/Campfire Sync` and the rest of the user's Dropbox is not merely off limits - it is invisible. That folder is
+ * a real one the user can open, which is the same promise the local library makes: plain files, in a place they can
  * look at, in a format that is not Campfire's to own.
  *
  * Authorization is OAuth 2.0 with PKCE and no client secret, which is what lets this work with no server of
@@ -267,25 +270,72 @@ internal class DropboxSyncProvider(
         return RemoteWriteResult.Written(metadata.rev)
     }
 
-    override suspend fun delete(kind: LibraryFileKind, name: String, expectedRevision: String?) {
-        val body = buildString {
-            append("""{"path":${remotePath(kind, name).toAsciiJsonString()}""")
-            if (expectedRevision != null) {
-                append(""","parent_rev":${expectedRevision.toAsciiJsonString()}""")
+    override suspend fun delete(deletions: List<RemoteDeletion>): Map<RemoteDeletion, String> =
+        deletions.chunked(DELETE_BATCH_LIMIT).fold(emptyMap()) { failures, batch -> failures + deleteBatch(batch) }
+
+    /**
+     * One `delete_batch` job. Dropbox takes a lock on the whole app folder for every write, so single deletions sent
+     * side by side are mostly answered with `too_many_write_operations` and crawl through the back-off at about one
+     * file a second; a job takes the lock once and removes about seven a second. It is not atomic - the files go one
+     * after another while it runs - so it shortens the time the folder spends half deleted rather than removing it.
+     * Its entries can still be turned away as busy, and those go again in a job of their own after the same wait
+     * [request] would give a single write.
+     */
+    private suspend fun deleteBatch(deletions: List<RemoteDeletion>): Map<RemoteDeletion, String> {
+        val failures = mutableMapOf<RemoteDeletion, String>()
+        var pending = deletions
+        var attempt = 0
+        while (pending.isNotEmpty()) {
+            val entries = awaitDeleteBatch(pending)
+            val busy = mutableListOf<RemoteDeletion>()
+            pending.forEachIndexed { position, deletion ->
+                val entry = entries.getOrNull(position)
+                val reason = when {
+                    entry == null -> "no answer for this entry"
+                    entry.tag == "success" -> return@forEachIndexed
+                    else -> entry.failure?.tagPath().orEmpty()
+                }
+                when {
+                    // Already gone is the outcome that was asked for, and a file that changed since is one the next
+                    // run will see and bring back rather than destroy.
+                    reason.startsWith("path_lookup/not_found") || reason.startsWith("path_write/conflict") -> Unit
+                    reason.startsWith("too_many_write_operations") && attempt < MAXIMUM_RETRIES -> busy += deletion
+                    else -> failures[deletion] = reason
+                }
             }
-            append("}")
+            if (busy.isNotEmpty()) {
+                delay(min(DEFAULT_RETRY_SECONDS shl attempt, MAXIMUM_RETRY_SECONDS) * 1000L + Random.nextLong(RETRY_JITTER_MILLIS))
+                attempt++
+            }
+            pending = busy
         }
-        try {
-            rpc(DELETE_URL, body)
-        } catch (exception: DropboxApiException) {
-            // Already gone is the outcome that was asked for, and a file that changed since is one the next run
-            // will see and bring back rather than destroy.
-            if (!exception.errorSummary.startsWith("path_lookup/not_found") &&
-                !exception.errorSummary.startsWith("path_write/conflict")
-            ) {
-                throw exception
+        return failures
+    }
+
+    /**
+     * Starts a job and waits for it to finish. The entries of the answer are in the order the files were sent. A job
+     * refused as a whole is answered as every one of its entries refused for the same reason, which lets the caller
+     * treat a busy folder the same way whichever of the two Dropbox chose to say it with.
+     */
+    private suspend fun awaitDeleteBatch(deletions: List<RemoteDeletion>): List<DropboxDeleteBatchEntry> {
+        val body = deletions.joinToString(prefix = """{"entries":[""", postfix = "]}") { deletion ->
+            buildString {
+                append("""{"path":${remotePath(deletion.kind, deletion.name).toAsciiJsonString()}""")
+                deletion.expectedRevision?.let { revision -> append(""","parent_rev":${revision.toAsciiJsonString()}""") }
+                append("}")
             }
         }
+        var response = json.decodeFromString<DropboxDeleteBatchResponse>(rpc(DELETE_BATCH_URL, body))
+        val jobId = response.asyncJobId
+        while (response.tag == "async_job_id" || response.tag == "in_progress") {
+            delay(DELETE_BATCH_POLL_MILLIS)
+            response = json.decodeFromString<DropboxDeleteBatchResponse>(
+                rpc(DELETE_BATCH_CHECK_URL, """{"async_job_id":${jobId.toAsciiJsonString()}}"""),
+            )
+        }
+        if (response.tag == "complete") return response.entries
+        val reason = JsonPrimitive(response.failed?.tagPath() ?: response.tag)
+        return deletions.map { DropboxDeleteBatchEntry(tag = "failure", failure = JsonObject(mapOf(".tag" to reason))) }
     }
 
     private fun List<DropboxEntry>.toRemoteFiles() = mapNotNull { entry ->
@@ -502,12 +552,19 @@ internal class DropboxSyncProvider(
         const val ACCOUNT_URL = "https://api.dropboxapi.com/2/users/get_current_account"
         const val LIST_FOLDER_URL = "https://api.dropboxapi.com/2/files/list_folder"
         const val LIST_FOLDER_CONTINUE_URL = "https://api.dropboxapi.com/2/files/list_folder/continue"
-        const val DELETE_URL = "https://api.dropboxapi.com/2/files/delete_v2"
+        const val DELETE_BATCH_URL = "https://api.dropboxapi.com/2/files/delete_batch"
+        const val DELETE_BATCH_CHECK_URL = "https://api.dropboxapi.com/2/files/delete_batch/check"
         const val DOWNLOAD_URL = "https://content.dropboxapi.com/2/files/download"
         const val UPLOAD_URL = "https://content.dropboxapi.com/2/files/upload"
 
         /** How long disconnecting waits for Dropbox, first to renew the token and then to revoke it. */
         const val REVOKE_TIMEOUT_MILLIS = 10_000L
+
+        /** The most entries Dropbox takes in one `delete_batch`. */
+        const val DELETE_BATCH_LIMIT = 1000
+
+        /** How often a running `delete_batch` job is asked about. It removes about seven files a second. */
+        const val DELETE_BATCH_POLL_MILLIS = 1_000L
 
         /** Tokens are renewed slightly early, so that one does not expire between the check and the request. */
         const val EXPIRY_MARGIN_MILLIS = 60_000L

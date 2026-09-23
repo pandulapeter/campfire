@@ -16,6 +16,7 @@ import com.pandulapeter.campfire.data.source.local.api.SyncStateLocalSource
 import com.pandulapeter.campfire.data.source.remote.api.SyncAuthorizationException
 import com.pandulapeter.campfire.data.source.remote.api.SyncNetworkException
 import com.pandulapeter.campfire.data.source.remote.api.SyncRemoteStorageFullException
+import com.pandulapeter.campfire.data.source.remote.api.model.RemoteDeletion
 import com.pandulapeter.campfire.data.source.remote.api.model.RemoteWriteResult
 import com.pandulapeter.campfire.data.source.remote.implementation.auth.SyncCredentialsStore
 import io.ktor.client.HttpClient
@@ -28,6 +29,7 @@ import io.ktor.client.plugins.HttpTimeout
 import io.ktor.client.request.HttpRequestData
 import io.ktor.client.request.HttpResponseData
 import io.ktor.http.HttpStatusCode
+import io.ktor.http.content.TextContent
 import io.ktor.http.headersOf
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CompletableDeferred
@@ -67,6 +69,61 @@ class DropboxRequestTest {
             actual = provider.upload(LibraryFileKind.SONG, "song.cho", byteArrayOf(1, 2, 3), expectedRevision = null),
         )
         assertEquals(expected = 4, actual = requests.size)
+    }
+
+    /** A deletion made of single requests takes long enough for another device to see it half done. */
+    @Test
+    fun `deletes every file in one batch job and waits for it`() = runTest {
+        val requests = mutableListOf<String>()
+        val provider = provider { request ->
+            requests += request.url.encodedPath
+            when (requests.size) {
+                1 -> respondJson("""{".tag":"async_job_id","async_job_id":"job"}""")
+                2 -> respondJson("""{".tag":"in_progress"}""")
+                else -> respondJson(
+                    """{".tag":"complete","entries":[
+                        {".tag":"success","metadata":{}},
+                        {".tag":"failure","failure":{".tag":"path_lookup","path_lookup":{".tag":"not_found"}}},
+                        {".tag":"failure","failure":{".tag":"path_write","path_write":{".tag":"conflict","conflict":{".tag":"file"}}}},
+                        {".tag":"failure","failure":{".tag":"path_lookup","path_lookup":{".tag":"restricted_content"}}}
+                    ]}""",
+                )
+            }
+        }
+        val deletions = (1..4).map { RemoteDeletion(LibraryFileKind.SONG, "song_$it.cho", expectedRevision = "r$it") }
+
+        val failures = provider.delete(deletions)
+
+        assertEquals(
+            expected = listOf("/2/files/delete_batch", "/2/files/delete_batch/check", "/2/files/delete_batch/check"),
+            actual = requests,
+        )
+        // Gone already and changed since both count as done; only the real refusal is reported.
+        assertEquals(expected = mapOf(deletions[3] to "path_lookup/restricted_content"), actual = failures)
+    }
+
+    @Test
+    fun `sends the files of a busy batch again`() = runTest {
+        val bodies = mutableListOf<String>()
+        val provider = provider { request ->
+            bodies += (request.body as TextContent).text
+            if (bodies.size == 1) {
+                respondJson(
+                    """{".tag":"complete","entries":[
+                        {".tag":"success","metadata":{}},
+                        {".tag":"failure","failure":{".tag":"too_many_write_operations"}}
+                    ]}""",
+                )
+            } else {
+                respondJson("""{".tag":"failed","failed":{".tag":"too_many_write_operations"}}""").takeIf { bodies.size == 2 }
+                    ?: respondJson("""{".tag":"complete","entries":[{".tag":"success","metadata":{}}]}""")
+            }
+        }
+        val deletions = (1..2).map { RemoteDeletion(LibraryFileKind.SONG, "song_$it.cho", expectedRevision = null) }
+
+        assertEquals(expected = emptyMap(), actual = provider.delete(deletions))
+        assertEquals(expected = 3, actual = bodies.size)
+        assertTrue(bodies.drop(1).all { "song_2.cho" in it && "song_1.cho" !in it })
     }
 
     @Test

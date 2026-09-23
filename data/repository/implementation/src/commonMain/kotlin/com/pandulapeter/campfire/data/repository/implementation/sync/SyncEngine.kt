@@ -22,6 +22,7 @@ import com.pandulapeter.campfire.data.source.remote.api.SyncNetworkException
 import com.pandulapeter.campfire.data.source.remote.api.SyncProvider
 import com.pandulapeter.campfire.data.source.remote.api.SyncRemoteStorageFullException
 import com.pandulapeter.campfire.data.source.remote.api.hashing.localContentHash
+import com.pandulapeter.campfire.data.source.remote.api.model.RemoteDeletion
 import com.pandulapeter.campfire.data.source.remote.api.model.RemoteFile
 import com.pandulapeter.campfire.data.source.remote.api.model.RemoteWriteResult
 import kotlinx.coroutines.CancellationException
@@ -296,7 +297,8 @@ internal class SyncEngine(
      *
      * The ordering that does matter is kept between the groups: incoming files first, then outgoing ones, then the
      * deletions. A download has to be on disk before anything that reads the library acts on it, and a deletion that
-     * ran before a download would undo it.
+     * ran before a download would undo it. The remote deletions are the one group that is not spread over the
+     * permits: they go to the provider together ([deleteRemotely]).
      *
      * [onIndexChanged] is called under the same lock the results are merged under, so the snapshots arrive in the
      * order they were taken and the last one handed out is always the most complete. What is handed out is a way to
@@ -325,27 +327,30 @@ internal class SyncEngine(
         val permits = Semaphore(CONCURRENT_TRANSFERS)
         onProgress(SyncProgress(completed = 0, total = plan.size))
 
+        suspend fun record(operation: SyncOperation, outcome: OperationOutcome) = results.withLock {
+            updated += outcome.entries
+            updated -= outcome.removals
+            summary = summary.plus(outcome.summary)
+            if (outcome.isUnresolved) unresolved += operation.key
+            completed++
+            onProgress(SyncProgress(completed = completed, total = plan.size))
+            onIndexChanged {
+                SyncIndexDocument.of(
+                    providerId = provider.id.id,
+                    accountId = accountId,
+                    lastSyncedAt = lastSyncedAt,
+                    index = updated,
+                ).copy(isRunInProgress = true)
+            }
+        }
+
         plan.groupBy { it.order }.entries.sortedBy { it.key }.forEach { (_, group) ->
-            group.map { operation ->
-                async {
-                    val outcome = permits.withPermit { runOperation(provider, operation, index, remoteFiles, caseCollisions) }
-                    results.withLock {
-                        updated += outcome.entries
-                        updated -= outcome.removals
-                        summary = summary.plus(outcome.summary)
-                        if (outcome.isUnresolved) unresolved += operation.key
-                        completed++
-                        onProgress(SyncProgress(completed = completed, total = plan.size))
-                        onIndexChanged {
-                            SyncIndexDocument.of(
-                                providerId = provider.id.id,
-                                accountId = accountId,
-                                lastSyncedAt = lastSyncedAt,
-                                index = updated,
-                            ).copy(isRunInProgress = true)
-                        }
-                    }
-                }
+            val deletions = group.filterIsInstance<SyncOperation.DeleteRemote>()
+            if (deletions.isNotEmpty()) {
+                deleteRemotely(provider, deletions).forEach { (operation, outcome) -> record(operation, outcome) }
+            }
+            group.filterNot { it is SyncOperation.DeleteRemote }.map { operation ->
+                async { record(operation, permits.withPermit { runOperation(provider, operation, index, remoteFiles, caseCollisions) }) }
             }.awaitAll()
         }
         PassOutcome(summary = summary, index = updated, unresolved = unresolved)
@@ -364,28 +369,56 @@ internal class SyncEngine(
             is SyncOperation.Resolve -> resolve(provider, operation, remoteFiles)
             is SyncOperation.DeleteLocal -> deleteLocally(provider, operation, index, caseCollisions)
 
-            is SyncOperation.DeleteRemote -> {
-                provider.delete(operation.key.kind, operation.key.name, operation.revision)
-                OperationOutcome(removals = setOf(operation.key), summary = SyncSummary(deletedRemotely = 1))
-            }
+            is SyncOperation.DeleteRemote -> deleteRemotely(provider, listOf(operation)).single().second
 
             is SyncOperation.Forget -> OperationOutcome(removals = setOf(operation.key))
         }
-    } catch (exception: CancellationException) {
-        // First, and rethrown: a stopped run is not a file that failed. Caught as an ordinary failure it would fill
-        // the log with one line per file still in flight and hide whatever actually ended the run.
-        throw exception
-    } catch (exception: SyncAuthorizationException) {
-        throw exception
-    } catch (exception: SyncNetworkException) {
-        throw exception
-    } catch (exception: SyncRemoteStorageFullException) {
-        throw exception
     } catch (exception: Exception) {
-        // The index is left alone, so the next run sees this file as it was and tries again.
-        println("Could not sync \"${operation.key.path}\": ${exception.message}")
-        OperationOutcome(summary = SyncSummary(failed = listOf(operation.key.name)))
+        if (exception.endsTheRun) throw exception
+        failedOutcome(operation.key, exception.message)
     }
+
+    /**
+     * All of a pass's remote deletions go to the provider in one call rather than [CONCURRENT_TRANSFERS] at a time:
+     * another device that lists the folder while they are under way decides from what it sees gone whether to ask
+     * before following, so the shorter they take, the less of a large deletion reaches it unasked (see
+     * [SyncProvider.delete]). What ends a run ends it here too; anything else fails the files it was about.
+     */
+    private suspend fun deleteRemotely(
+        provider: SyncProvider,
+        operations: List<SyncOperation.DeleteRemote>,
+    ): List<Pair<SyncOperation, OperationOutcome>> {
+        val deletions = operations.associateBy { RemoteDeletion(kind = it.key.kind, name = it.key.name, expectedRevision = it.revision) }
+        val failures = try {
+            provider.delete(deletions.keys.toList())
+        } catch (exception: Exception) {
+            if (exception.endsTheRun) throw exception
+            deletions.keys.associateWith { exception.message.orEmpty() }
+        }
+        return deletions.map { (deletion, operation) ->
+            operation to when (val reason = failures[deletion]) {
+                null -> OperationOutcome(removals = setOf(operation.key), summary = SyncSummary(deletedRemotely = 1))
+                else -> failedOutcome(operation.key, reason)
+            }
+        }
+    }
+
+    /** The index is left alone, so the next run sees this file as it was and tries again. */
+    private fun failedOutcome(key: SyncKey, reason: String?): OperationOutcome {
+        println("Could not sync \"${key.path}\": $reason")
+        return OperationOutcome(summary = SyncSummary(failed = listOf(key.name)))
+    }
+
+    /**
+     * Whether this ends the whole run rather than failing one file. A stopped run is not a file that failed: caught as
+     * one, a cancellation would fill the log with a line per file still in flight and hide whatever actually ended the
+     * run. The other three say something about every file after this one as well.
+     */
+    private val Exception.endsTheRun
+        get() = this is CancellationException ||
+            this is SyncAuthorizationException ||
+            this is SyncNetworkException ||
+            this is SyncRemoteStorageFullException
 
     /**
      * Overwrites the local file, so it is read, decided about and only then written: the plan was made from hashes
