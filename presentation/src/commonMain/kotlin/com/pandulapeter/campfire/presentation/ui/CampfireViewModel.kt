@@ -2295,9 +2295,9 @@ class CampfireViewModel(
     companion object {
         const val MIN_TRANSPOSITION = -11
         const val MAX_TRANSPOSITION = 11
-        const val DEFAULT_FONT_SCALE = 1f
-        const val MIN_FONT_SCALE = 0.5f
-        const val MAX_FONT_SCALE = 2.5f
+        const val DEFAULT_FONT_SCALE = UserPreferences.DEFAULT_FONT_SCALE
+        const val MIN_FONT_SCALE = UserPreferences.MIN_FONT_SCALE
+        const val MAX_FONT_SCALE = UserPreferences.MAX_FONT_SCALE
         const val FONT_SCALE_STEP = 0.1f
         private const val FONT_SCALE_STEP_TOLERANCE = 0.01f // Floating point slack, so that 1.1000001 still counts as step 11.
         private const val FONT_SCALE_SAVE_DELAY_MILLIS = 500L

@@ -18,7 +18,10 @@ internal fun UserPreferencesDocument.toModel() = UserPreferences(
     shouldShowArchivedSetlists = shouldShowArchivedSetlists,
     isLyricsOnlyModeEnabled = isLyricsOnlyModeEnabled,
     isHorizontalSectionFlowEnabled = isHorizontalSectionFlowEnabled,
-    fontScale = fontScale,
+    // A hand edit or a newer version's wider range must not reach the screen as it is: a size of 40 is a column per
+    // word. Not a number at all is no size, and is the default.
+    fontScale = fontScale.takeIf { it.isFinite() }?.coerceIn(UserPreferences.MIN_FONT_SCALE, UserPreferences.MAX_FONT_SCALE)
+        ?: UserPreferences.DEFAULT_FONT_SCALE,
     sortingMode = UserPreferences.SortingMode.entries.firstOrNull { it.id == sortingMode } ?: UserPreferences.SortingMode.BY_ARTIST,
     setlistSortingMode = UserPreferences.SetlistSortingMode.entries.firstOrNull { it.id == setlistSortingMode } ?: UserPreferences.SetlistSortingMode.NEWEST_FIRST,
     uiMode = UserPreferences.UiMode.entries.firstOrNull { it.id == uiMode } ?: UserPreferences.UiMode.SYSTEM_DEFAULT,

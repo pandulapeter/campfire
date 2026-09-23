@@ -71,6 +71,13 @@ class UserPreferencesLocalSourceTest {
     }
 
     @Test
+    fun `a text size outside the app's range is loaded as the nearest one inside it`() = runBlocking {
+        fileStorage.writeText(StorageDirectory.PREFERENCES, FILE_NAME, """{"fontScale": 40}""")
+
+        assertEquals(2.5f, localSource.loadUserPreferences().fontScale)
+    }
+
+    @Test
     fun `an empty document is not copied`() = runBlocking {
         fileStorage.writeText(StorageDirectory.PREFERENCES, FILE_NAME, "")
 

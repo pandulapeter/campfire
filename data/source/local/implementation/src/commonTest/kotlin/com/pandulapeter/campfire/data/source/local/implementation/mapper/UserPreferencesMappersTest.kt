@@ -31,4 +31,18 @@ internal class UserPreferencesMappersTest {
         assertEquals(UserPreferences.MatchMode.ANY, preferences.tagMatchMode)
         assertEquals(UserPreferences.MatchMode.ALL, preferences.languageMatchMode)
     }
+
+    @Test
+    fun aStoredFontScaleOutsideTheRangeIsClampedToIt() {
+        assertEquals(UserPreferences.MAX_FONT_SCALE, UserPreferencesDocument(fontScale = 40f).toModel().fontScale)
+        assertEquals(UserPreferences.MIN_FONT_SCALE, UserPreferencesDocument(fontScale = 0f).toModel().fontScale)
+        assertEquals(UserPreferences.MIN_FONT_SCALE, UserPreferencesDocument(fontScale = -1f).toModel().fontScale)
+        assertEquals(1.3f, UserPreferencesDocument(fontScale = 1.3f).toModel().fontScale)
+    }
+
+    @Test
+    fun aStoredFontScaleThatIsNotANumberFallsBackToTheDefault() {
+        assertEquals(UserPreferences.DEFAULT_FONT_SCALE, UserPreferencesDocument(fontScale = Float.NaN).toModel().fontScale)
+        assertEquals(UserPreferences.DEFAULT_FONT_SCALE, UserPreferencesDocument(fontScale = Float.POSITIVE_INFINITY).toModel().fontScale)
+    }
 }

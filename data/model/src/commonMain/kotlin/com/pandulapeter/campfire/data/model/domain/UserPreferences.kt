@@ -25,7 +25,11 @@ data class UserPreferences(
     val shouldShowArchivedSetlists: Boolean,
     val isLyricsOnlyModeEnabled: Boolean,
     val isHorizontalSectionFlowEnabled: Boolean, // Whether the song sections are read across the columns (then downwards) instead of column by column.
-    val fontScale: Float, // Multiplier applied to the text size of the song details screen, 1 being the default.
+    /**
+     * Multiplier applied to the text size of the song details screen, [DEFAULT_FONT_SCALE] being the default, and
+     * never outside [MIN_FONT_SCALE] to [MAX_FONT_SCALE].
+     */
+    val fontScale: Float,
     val sortingMode: SortingMode,
     val setlistSortingMode: SetlistSortingMode,
     val uiMode: UiMode,
@@ -43,6 +47,13 @@ data class UserPreferences(
     /** How the languages selected in the song filter combine, a standing choice of its own like [tagMatchMode]. */
     val languageMatchMode: MatchMode,
 ) {
+
+    companion object {
+        /** The text size a song opens at, and the one a stored size that is not a size falls back on. */
+        const val DEFAULT_FONT_SCALE = 1f
+        const val MIN_FONT_SCALE = 0.5f
+        const val MAX_FONT_SCALE = 2.5f
+    }
 
     /**
      * What several selected values of one filter group mean together: a song that carries any one of them, or one

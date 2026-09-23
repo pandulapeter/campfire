@@ -124,7 +124,8 @@ holds the `@Module @ComponentScan object DataLocalSourceModule`, and every local
   missing field (`coerceInputValues`), in both documents. The preferences go further, since they are the one document
   the app overwrites as a whole: `UserPreferencesDocumentFormat` reads them field by field when they do not decode as
   they are — one transposition that is not a number costs that entry, not the map — and the local source copies such a
-  file to `preferences.json.bad` before anything can be saved over it. A setlist that does not decode is skipped and
+  file to `preferences.json.bad` before anything can be saved over it. The text size is clamped to `UserPreferences`'
+  range on the way in, so a hand edit or a newer version's value never reaches the song screen as it is. A setlist that does not decode is skipped and
   left alone, as before. A setlist naming a song twice is read as naming it once (the first mention wins), written
   back that way, and handed back that way from a save, since the screens key their rows by the song's file name and the
   caller caches the model the save returns rather than reading the file again. `SetlistDocumentFormat` reads and
