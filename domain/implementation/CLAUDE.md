@@ -79,8 +79,7 @@ The ones that carry real logic:
 - `ExportLibraryUseCaseImpl` / `ExportSongsUseCaseImpl` / `ExportSetlistUseCaseImpl` — decide what leaves as what: a
   single song is the `.cho` file as it is on disk, everything else is a zip. The user's transposition is never baked in.
   The name the file leaves under goes through `ExportFileNames.kt` (`campfire_library.zip`, `campfire_songs.zip`, the
-  song's or setlist's own title otherwise), where a song's two halves keep the dash of
-  `LibraryFiles.ARTIST_TITLE_SEPARATOR` between them; what is *inside* an archive keeps its library names, since a
+  song's or setlist's own title otherwise); what is *inside* an archive keeps its library names, since a
   setlist points at its songs by file name and the import follows those names. A library export whose song or setlist
   scan failed is a failed export (null), never an archive of what happened to be read; one that could not read some
   files returns their names beside the archive, the songs held against the folder (`SongRepository.loadSongFileNames`)
@@ -96,11 +95,10 @@ The ones that carry real logic:
   decomposed accent dropped (`isCombiningMark`). `NormalizeSearchTextUseCaseImpl` is the search's key on top of it:
   the same text with the spaces, punctuation and symbols taken out, so `ymca` finds `Y.M.C.A.` and `acdc` finds
   `AC/DC`. It stays apart because a sort by it would file `a b` after `ab c`.
-- `ExportFileNames.kt` — what a file is called on the way out: `LibraryFiles.normalizedName` over the whole name, or
-  over each half of a song's `artist - title` separately so that the dash between them survives. Which separator it
-  splits on is what makes the rule idempotent — a hand written library name still has the spaced one, a name the app
-  gave has only the bare dash, and normalizing that in one piece would fold the dash into an underscore, so exporting
-  a song twice would hand out two different names.
+- `ExportFileNames.kt` — what a file is called on the way out: a single song the name its own header gives it, by the
+  import's rule (`SongRepository.importFileName`, the file name standing in as the title only where the song declares
+  none) with its stored extension, so that it comes back under the name it left under; a setlist its title through
+  `LibraryFiles.normalizedName`.
 - `RenameSongFileUseCaseImpl` — the mirror image of `DeleteSongUseCaseImpl`: the same two places refer to a song by
   its file name (the setlists holding it, the saved transposition), and where a deletion drops those references a
   rename follows them. The file moves first, so nothing is ever pointed at a name that does not exist yet, and once it

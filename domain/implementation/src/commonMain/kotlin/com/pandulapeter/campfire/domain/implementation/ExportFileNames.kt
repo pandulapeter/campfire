@@ -10,6 +10,8 @@
 package com.pandulapeter.campfire.domain.implementation
 
 import com.pandulapeter.campfire.data.model.domain.LibraryFiles
+import com.pandulapeter.campfire.data.model.domain.SongContent
+import com.pandulapeter.campfire.data.repository.api.SongRepository
 
 /**
  * The name a file leaves the app under: [base] run through [LibraryFiles.normalizedName], plus [extension] as it is
@@ -25,25 +27,15 @@ import com.pandulapeter.campfire.data.model.domain.LibraryFiles
 internal fun exportFileName(base: String, extension: String) = LibraryFiles.normalizedName(base) + extension
 
 /**
- * The export name of a song file, which keeps whichever extension of the ChordPro family it is stored under.
- *
- * A song is named after its artist and its title with a separator between them, and that one piece of structure is
- * worth keeping: each half is normalized on its own and they are joined by the dash again, so the name still says
- * where the artist ends instead of reading as one run of underscored words.
- *
- * Which separator it is split on decides whether the name survives being exported twice. A library name written by
- * hand still has the spaced [LibraryFiles.ARTIST_TITLE_SEPARATOR] in it; one the app named itself has already been
- * through here and carries the bare [LibraryFiles.NORMALIZED_ARTIST_TITLE_SEPARATOR], which normalizing the whole
- * name in one piece would fold into an underscore like any other character that is not a letter.
+ * The export name of a song: the one its own header gives it, by the rule the import names an incoming song by
+ * ([SongRepository.importFileName]), so that a song leaves under the name it would come back under - whatever its
+ * library file happens to be called, numbered sibling or name from before its title changed. The file name stands in
+ * as the title only where the song declares none, as it does for the import. The extension is the stored one, since
+ * the library reads the whole ChordPro family and handing a file out under another one would be a claim about how it
+ * is written.
  */
-internal fun String.toSongExportFileName(): String {
-    val extension = LibraryFiles.SONG_EXTENSIONS.firstOrNull { endsWith(it, ignoreCase = true) }.orEmpty()
-    val base = dropLast(extension.length)
-    val separator = if (base.contains(LibraryFiles.ARTIST_TITLE_SEPARATOR)) {
-        LibraryFiles.ARTIST_TITLE_SEPARATOR
-    } else {
-        LibraryFiles.NORMALIZED_ARTIST_TITLE_SEPARATOR
-    }
-    return base.split(separator)
-        .joinToString(LibraryFiles.NORMALIZED_ARTIST_TITLE_SEPARATOR) { exportFileName(base = it, extension = "") } + extension
+internal fun SongRepository.songExportFileName(content: SongContent): String {
+    val extension = LibraryFiles.SONG_EXTENSIONS.firstOrNull { content.fileName.endsWith(it, ignoreCase = true) } ?: LibraryFiles.SONG_EXTENSION
+    return importFileName(fallbackTitle = content.fileName.substringBeforeLast('.'), text = content.text)
+        .removeSuffix(LibraryFiles.SONG_EXTENSION) + extension
 }
