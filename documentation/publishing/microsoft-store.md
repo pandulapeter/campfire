@@ -10,9 +10,8 @@
 # Publishing to the Microsoft Store
 
 What is left between the desktop build as it is today and a listing on the Microsoft Store that every GitHub release
-updates by itself. `desktop-publish.yml` already attaches an unsigned `.msi` to every release. None of the steps below
-has been done yet. The installer builds in CI, but **it has never been installed and used on Windows**, so step 1
-comes before everything else. The steps marked *(verify)* rest on rules that change.
+updates by itself. `desktop-publish.yml` already attaches an unsigned `.msi` to every release, and `packageReleaseMsix`
+builds the Store's package locally. The steps marked *(verify)* rest on rules that change.
 
 Delete this file once the last box is ticked: by then `CLAUDE.md` describes how it works.
 
@@ -27,44 +26,35 @@ Delete this file once the last box is ticked: by then `CLAUDE.md` describes how 
 
 ## 2. Account and name
 
-- [ ] Open a Partner Center developer account as an individual. *(verify the fee: it has been a small one-time payment,
-      and free for individuals in many countries since 2025.)*
+- [ ] Open a Partner Center developer account as an individual: free, with an ID and a selfie for verification.
 - [ ] Reserve the product name: "Campfire - Songbook & Chords", as in [store-listing.md](../store-listing.md). A
       reserved name can differ from the name under the icon, as on the App Store.
-- [ ] Note the three values on the *Product identity* page: `Package/Identity/Name`, `Package/Identity/Publisher` and
-      the publisher display name. The package manifest has to repeat them to the letter.
+- [ ] Copy the three values on the *Product identity* page into `gradle.properties`: `Package/Identity/Name` into
+      `campfire.windows.identityName`, `Package/Identity/Publisher` into `campfire.windows.publisher` and the publisher
+      display name into `campfire.windows.publisherDisplayName` (a character outside ASCII escaped as `\uXXXX`), and the
+      reserved name into `campfire.windows.displayName`. None of them is a secret, so they are committed.
 
-## 3. Choose the package format
+## 3. The package format
 
-- **MSIX (recommended).** The Store signs it, so **no code signing certificate has to be bought**, and it installs,
-  updates and uninstalls cleanly. Compose Desktop does not produce one, so it is assembled by hand (section 4).
-- **The existing `.msi`.** The Store also lists classic installers by URL, but then the installer has to be signed
-  with a certificate from a public authority (a yearly cost, and SmartScreen reputation still has to build up), be
-  hosted at a versioned HTTPS address and install silently. The release assets would do as the address. Not
-  recommended, but it needs no new packaging.
-
-The rest of this file assumes MSIX.
+MSIX. The Store signs it, so **no code signing certificate has to be bought**, and it installs, updates and uninstalls
+cleanly. The existing `.msi` could only be listed signed with a certificate from a public authority, which is a yearly
+cost and the one thing this project has avoided everywhere else.
 
 ## 4. Changes to the project
 
-- [ ] Add an `AppxManifest.xml` under `app/desktop`, with the identity values from step 2, a four-part version
-      (`campfire.versionName` plus `.0` — the Store keeps the last part for itself), the
-      `Windows.FullTrustApplication` entry point pointing at `Campfire.exe`, the `runFullTrust` capability, and the
-      six ChordPro file type associations that `chordProFileAssociations()` declares for the `.msi`.
-- [ ] Add the tile and logo images the manifest refers to (44×44, 150×150 and the 50×50 store logo at least), made
-      from `app_icon.png`.
-- [ ] Build the package from the unpacked application:
-      `./gradlew :app:desktop:createReleaseDistributable`, copy the
-      manifest and the images next to `Campfire.exe` in `app/desktop/build/compose/binaries/main-release/app/Campfire/`,
-      then `makeappx pack` from the Windows SDK, which the `windows-latest` runner has. No signing: an unsigned `.msix`
-      is what Partner Center takes. Start that image once before packing it: ProGuard breaks things only a start shows
-      (see `app/desktop/CLAUDE.md`).
-- [ ] Check what packaging does to the library. A packaged app's writes to `%APPDATA%` are redirected into the
-      package's own folder (`%LOCALAPPDATA%\Packages\<package family>\LocalCache\Roaming`), so the "Location" row in
-      Settings would name a folder that is not where the files are. Either show the real path when the app finds
-      itself packaged, or accept it and say so. A library from the `.msi` build is not carried over either way.
-- [ ] To try a package before submitting it, sign it with a self-signed certificate and install it on a machine that
-      trusts that certificate — a Store package cannot be sideloaded otherwise.
+- [x] `app/desktop/AppxManifest.xml` and `packageReleaseMsix`, which packs the release app image with makeappx, the
+      logos scaled from `app_icon.png` and indexed with makepri (see `app/desktop/CLAUDE.md`). It needs the Windows
+      SDK, or `campfire.windows.sdkBinDirectory` pointing at the `bin/<version>/x64` folder of the
+      `Microsoft.Windows.SDK.BuildTools` NuGet package.
+- [x] The library stays in `%APPDATA%\Campfire`: the manifest excludes it from the AppData virtualization of packaged
+      apps, so the "Location" row is right, an uninstall leaves the library behind as the `.msi` does, and somebody
+      moving from the `.msi` build finds their songs where they were.
+- [ ] Install the package on Windows 11 (Developer Mode, then
+      `Add-AppxPackage -Register app/desktop/build/tmp/packageReleaseMsix/package/AppxManifest.xml`) and check: the
+      Start menu entry and the taskbar icon, the demo library appearing in `%APPDATA%\Campfire` rather than under
+      `%LOCALAPPDATA%\Packages`, opening a `.cho` from Explorer (with the app closed and with it open), and connecting
+      Dropbox. `Get-AppxPackage Campfire* | Remove-AppxPackage` removes it, and the library has to survive that.
+- [ ] Once more on Windows 10 if one is at hand, where the exclusion is the older switch for the whole of AppData.
 
 Nothing to change for the store's rules: Settings names no other build (only a link to the README), and the donation
 link is allowed (policy 10.8) as long as the submission says the app links to an external payment *(verify the current
@@ -77,7 +67,9 @@ wording of 10.8)*.
 - [ ] Privacy policy URL (`https://pandulapeter.com/legal/privacy_policy-campfire.html`), support contact (the GitHub
       issues page), category *Music*, price *Free*, markets.
 - [ ] The age rating questionnaire (IARC, the same one Play uses).
-- [ ] Justify `runFullTrust` in the submission notes: "a desktop application packaged as MSIX" is the expected answer.
+- [ ] Justify the two restricted capabilities in the submission notes: `runFullTrust`, "a desktop application
+      packaged as MSIX"; `unvirtualizedResources`, "the song library is the user's own documents, kept in
+      %APPDATA%\Campfire so that it outlives an uninstall and is the folder the app shows the user".
 - [ ] Notes for certification: no account; sync is optional and needs the tester's own Dropbox.
 - [ ] Check the Dropbox app's status in the Dropbox App Console: an app in *development* status can only be connected
       by a limited number of users.

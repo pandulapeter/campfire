@@ -7,9 +7,13 @@
  * If a copy of the MPL was not distributed with this file, You can obtain one at
  * https://mozilla.org/MPL/2.0/.
  */
+import java.awt.RenderingHints
+import java.awt.image.BufferedImage
+import java.io.ByteArrayOutputStream
 import java.nio.file.FileSystems
 import java.nio.file.Files
 import java.security.MessageDigest
+import javax.imageio.ImageIO
 import javax.inject.Inject
 import org.jetbrains.compose.desktop.application.dsl.TargetFormat
 import org.jetbrains.compose.desktop.application.tasks.AbstractJLinkTask
@@ -241,6 +245,27 @@ tasks.matching { it.name == "packageMsi" || it.name == "packageReleaseMsi" }.con
 }
 
 /**
+ * Builds the `.msix` the Microsoft Store is given. The Compose plugin makes no such package, but the release app image
+ * is already everything one holds apart from `AppxManifest.xml` and its logos, so the image is packed as it is with the
+ * Windows SDK's makeappx. The package is left unsigned: Partner Center signs what it certifies, and a package is only
+ * installed outside the Store once somebody signs it with a certificate the machine trusts.
+ */
+tasks.register<PackageMsix>("packageReleaseMsix") {
+    dependsOn("createReleaseDistributable")
+    appImage = layout.buildDirectory.dir("compose/binaries/main-release/app/Campfire")
+    manifest = project.file("AppxManifest.xml")
+    icon = project.file("src/main/composeResources/drawable/app_icon.png")
+    displayName = project.property("campfire.windows.displayName").toString()
+    identityName = project.property("campfire.windows.identityName").toString()
+    publisher = project.property("campfire.windows.publisher").toString()
+    publisherDisplayName = project.property("campfire.windows.publisherDisplayName").toString()
+    // A package version has four parts, and the Store keeps the last one for itself.
+    packageVersion = (versionName.split('.') + listOf("0", "0")).take(3).joinToString(".") + ".0"
+    sdkBinDirectory = project.property("campfire.windows.sdkBinDirectory").toString()
+    outputFile = layout.buildDirectory.file("compose/binaries/main-release/msix/Campfire-$versionName.msix")
+}
+
+/**
  * Clears the extended attributes of the provisioning profiles before they are copied into the bundle. A profile is
  * downloaded through a browser, which marks it with `com.apple.quarantine`, the copy keeps the mark, and App Store
  * Connect refuses a build with a quarantined file anywhere in it - after the upload, by mail.
@@ -330,6 +355,142 @@ abstract class AddLaunchAfterInstallToMsi : DefaultTask() {
             }
         }
     }
+}
+
+/**
+ * Copies the app image, writes the manifest and the logos next to it, indexes the logos with makepri and packs the
+ * whole with makeappx. The logos are scaled from the app icon on every run rather than committed, so they cannot fall
+ * out of step with it.
+ */
+abstract class PackageMsix : DefaultTask() {
+
+    @get:Inject
+    abstract val execOperations: ExecOperations
+
+    @get:InputDirectory
+    abstract val appImage: DirectoryProperty
+
+    @get:InputFile
+    abstract val manifest: RegularFileProperty
+
+    @get:InputFile
+    abstract val icon: RegularFileProperty
+
+    @get:Input
+    abstract val displayName: Property<String>
+
+    @get:Input
+    abstract val identityName: Property<String>
+
+    @get:Input
+    abstract val publisher: Property<String>
+
+    @get:Input
+    abstract val publisherDisplayName: Property<String>
+
+    @get:Input
+    abstract val packageVersion: Property<String>
+
+    @get:Input
+    abstract val sdkBinDirectory: Property<String>
+
+    @get:OutputFile
+    abstract val outputFile: RegularFileProperty
+
+    @TaskAction
+    fun packageMsix() {
+        val sdk = sdkBinDirectory.get().takeIf { it.isNotEmpty() }?.let(::File) ?: newestWindowsSdkBinDirectory()
+        val makeAppx = sdk.resolve("makeappx.exe").takeIf { it.isFile }
+        val makePri = sdk.resolve("makepri.exe").takeIf { it.isFile }
+        if (makeAppx == null || makePri == null) {
+            throw GradleException(
+                "makeappx.exe and makepri.exe are not in $sdk. Install the Windows SDK, or point campfire.windows.sdkBinDirectory " +
+                    "at the bin/<version>/x64 folder of the Microsoft.Windows.SDK.BuildTools NuGet package.",
+            )
+        }
+        val root = temporaryDir.resolve("package")
+        root.deleteRecursively()
+        appImage.get().asFile.copyRecursively(root)
+        // The logos are indexed on their own: makepri indexes every file under the folder it is given, and the app
+        // image is a few hundred of them that are not resources of any kind.
+        val resources = temporaryDir.resolve("resources")
+        resources.deleteRecursively()
+        writeLogos(resources.resolve("assets"))
+        val manifestText = manifest.get().asFile.readText()
+            .replace("@DISPLAY_NAME@", displayName.get().escapedForXml())
+            .replace("@IDENTITY_NAME@", identityName.get().escapedForXml())
+            .replace("@PUBLISHER@", publisher.get().escapedForXml())
+            .replace("@PUBLISHER_DISPLAY_NAME@", publisherDisplayName.get().escapedForXml())
+            .replace("@VERSION@", packageVersion.get())
+        resources.resolve("AppxManifest.xml").writeText(manifestText)
+        val priConfig = temporaryDir.resolve("priconfig.xml")
+        execOperations.exec { commandLine(makePri, "createconfig", "/cf", priConfig, "/dq", "en-US", "/o") }
+        execOperations.exec {
+            commandLine(makePri, "new", "/pr", resources, "/cf", priConfig, "/mn", resources.resolve("AppxManifest.xml"), "/of", root.resolve("resources.pri"), "/o")
+        }
+        resources.copyRecursively(root, overwrite = true)
+        val output = outputFile.get().asFile
+        output.parentFile.mkdirs()
+        // makeappx names every file of the app image as it packs it, which is only worth reading when it fails.
+        val log = ByteArrayOutputStream()
+        val result = execOperations.exec {
+            commandLine(makeAppx, "pack", "/d", root, "/p", output, "/o")
+            standardOutput = log
+            errorOutput = log
+            isIgnoreExitValue = true
+        }
+        if (result.exitValue != 0) throw GradleException("makeappx could not pack ${output.name}:\n$log")
+        logger.lifecycle("Packed $output")
+    }
+
+    /**
+     * The logos the manifest names, in the sizes Windows picks from. The taskbar, the Start menu's list and the title
+     * bar ask for a target size, and without the unplated variants they would draw the icon shrunk onto a coloured
+     * tile. The 50 pixel one is the logo of the package, which Partner Center shows on the Store's pages.
+     */
+    private fun writeLogos(directory: File) {
+        directory.mkdirs()
+        val source = ImageIO.read(icon.get().asFile)
+        val logos = buildMap {
+            put("Square44x44Logo.scale-100.png", 44)
+            put("Square44x44Logo.scale-200.png", 88)
+            listOf(16, 24, 32, 48, 256).forEach { size ->
+                put("Square44x44Logo.targetsize-$size.png", size)
+                put("Square44x44Logo.targetsize-${size}_altform-unplated.png", size)
+            }
+            put("Square150x150Logo.scale-100.png", 150)
+            put("Square150x150Logo.scale-200.png", 300)
+            put("StoreLogo.scale-100.png", 50)
+            put("StoreLogo.scale-200.png", 100)
+        }
+        logos.forEach { (name, size) -> ImageIO.write(source.scaledTo(size), "png", directory.resolve(name)) }
+    }
+
+    /** Halves the image until one more halving would pass the target: a single bilinear step from 512 to 16 pixels skips most of them and aliases. */
+    private fun BufferedImage.scaledTo(size: Int): BufferedImage {
+        var image = this
+        while (image.width != size) {
+            val next = maxOf(size, image.width / 2)
+            image = BufferedImage(next, next, BufferedImage.TYPE_INT_ARGB).also { scaled ->
+                val graphics = scaled.createGraphics()
+                graphics.setRenderingHint(RenderingHints.KEY_INTERPOLATION, RenderingHints.VALUE_INTERPOLATION_BILINEAR)
+                graphics.drawImage(image, 0, 0, next, next, null)
+                graphics.dispose()
+            }
+        }
+        return image
+    }
+
+    private fun newestWindowsSdkBinDirectory(): File {
+        val kits = File(System.getenv("ProgramFiles(x86)").orEmpty(), "Windows Kits/10/bin")
+        return kits.listFiles { file -> file.isDirectory && file.name.startsWith("10.") }.orEmpty()
+            .map { it.resolve("x64") }
+            .filter { it.resolve("makeappx.exe").isFile }
+            .maxByOrNull { directory -> directory.parentFile.name.split('.').map { it.toIntOrNull() ?: 0 }.fold(0L) { total, part -> total * 100_000 + part } }
+            ?: kits
+    }
+
+    private fun String.escapedForXml() = replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt;").replace("\"", "&quot;")
 }
 
 /**
