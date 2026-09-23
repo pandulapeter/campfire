@@ -32,8 +32,8 @@ Delete this file once the last box is ticked: by then `CLAUDE.md` describes how 
 - [x] `TargetFormat.Pkg`, `bundleID`, `appCategory` (*Music*), `minimumSystemVersion` 12.0 (App Store Connect
       refuses an arm64-only build that asks for less) and `packageBuildVersion` from `campfire.buildNumber`, in
       `app/desktop/build.gradle.kts`.
-- [x] Signing from `campfire.mac.signingIdentity` / `.signingKeychain`, and — only with
-      `campfire.desktop.distribution=mac-app-store` — `appStore`, the two profiles
+- [x] Signing from `campfire.mac.signingIdentity` / `.signingKeychain`, and — only when a `.pkg` is asked for —
+      `appStore`, the two profiles
       (`campfire.mac.provisioningProfile` / `.runtimeProvisioningProfile`) and the two entitlements files,
       `app/desktop/app-store.entitlements` and `app-store-runtime.entitlements`, which say why each entitlement is
       there. Empty properties keep the ad hoc signature a checkout has always had.
@@ -69,8 +69,8 @@ signature cannot carry) on 2026-09-23:
 - [x] 4.3.0 (35) uploaded with *Transporter* and submitted for review.
 
 Already taken care of in the code: Settings lists no builds at all, only a link to the README, and a build running
-on macOS names only the Mac App Store, in its rating row (`storeForRating`). A build made with
-`-Pcampfire.desktop.distribution=mac-app-store` has no donation link (guideline 3.1.1, `canAskForDonations`).
+on macOS names only the Mac App Store, in its rating row (`platformStore`), and no build that runs on macOS has a
+donation link (guideline 3.1.1, `canAskForDonations`).
 
 ## 5. Automating it
 

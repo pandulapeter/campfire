@@ -9,8 +9,8 @@
  * https://mozilla.org/MPL/2.0/.
 -->
 <!--
- The entitlements of the Mac App Store build's own executable, which the JVM runs inside. Only the build made with
- campfire.desktop.distribution=mac-app-store is signed with them; see build.gradle.kts.
+ The entitlements of the Mac App Store build's own executable, which the JVM runs inside. Only the build a .pkg is
+ made of is signed with them; see build.gradle.kts.
 
  - The sandbox is what the store requires of every app. The library stays where the code puts it, because the JDK
    takes user.home from the container.

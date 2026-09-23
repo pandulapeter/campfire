@@ -34,8 +34,13 @@ val versionName = project.property("campfire.versionName").toString()
 group = "com.pandulapeter.campfire"
 version = versionName
 
-/** Whether this is the build that goes to the Mac App Store, which is sandboxed and packaged as a signed `.pkg`. */
-val isMacAppStoreBuild = project.property("campfire.desktop.distribution").toString() == "mac-app-store"
+/**
+ * Whether this is the build that goes to the Mac App Store, which is sandboxed and packaged as a signed `.pkg`. The
+ * `.pkg` is made for nothing else, so asking for one is asking for the store build; every other Mac build - `run`, an
+ * app image or a `.dmg` made by hand - stays an ordinary app, signed ad hoc, that starts on the machine it was made on,
+ * which a sandboxed one tied to its App ID does not.
+ */
+val isMacAppStoreBuild = gradle.startParameter.taskNames.any { it.substringAfterLast(':').endsWith("Pkg") }
 
 /** Empty for an unsigned store build, which on Apple silicon still gets the ad hoc signature it needs to start at all. */
 val macSigningIdentity = project.property("campfire.mac.signingIdentity").toString()

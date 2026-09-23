@@ -49,7 +49,6 @@ because that is what it is: SmartScreen warns about an unknown publisher, and *M
 - [Sync](documentation/sync.md) - what it sees, how a run decides, and why it needs no backend.
 
 ### To do
-- Get rid of the campfire.desktop.distribution flag
 - Add more automatic sync triggers
 - Add ability to add links
 - Songs: sort by year option

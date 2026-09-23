@@ -54,7 +54,7 @@ The rest of this file assumes MSIX.
 - [ ] Add the tile and logo images the manifest refers to (44×44, 150×150 and the 50×50 store logo at least), made
       from `app_icon.png`.
 - [ ] Build the package from the unpacked application:
-      `./gradlew :app:desktop:createReleaseDistributable -Pcampfire.desktop.distribution=microsoft-store`, copy the
+      `./gradlew :app:desktop:createReleaseDistributable`, copy the
       manifest and the images next to `Campfire.exe` in `app/desktop/build/compose/binaries/main-release/app/Campfire/`,
       then `makeappx pack` from the Windows SDK, which the `windows-latest` runner has. No signing: an unsigned `.msix`
       is what Partner Center takes. Start that image once before packing it: ProGuard breaks things only a start shows

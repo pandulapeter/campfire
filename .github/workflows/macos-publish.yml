@@ -12,8 +12,8 @@
 # does so only when asked. Either way a green run means submitted, not accepted — review answers by email.
 #
 # The build is Apple silicon only: jpackage packages for the machine it runs on, and App Store Connect takes an
-# arm64-only Mac app from macOS 12 on. campfire.desktop.distribution=mac-app-store is what signs and sandboxes it, and
-# what takes the donation link out of the app (guideline 3.1.1).
+# arm64-only Mac app from macOS 12 on. Asking for the .pkg is what signs and sandboxes it; the donation link is left
+# out of every build that runs on an Apple platform (guideline 3.1.1).
 #
 # Nothing it signs with is stored anywhere, so nothing of it can expire: the run creates a Mac App Distribution and a
 # Mac Installer Distribution certificate for a key made on the runner, and the two Mac App Store provisioning profiles
@@ -178,7 +178,7 @@ jobs:
           echo "Building $VERSION_NAME ($BUILD_NUMBER), signed as $MAC_SIGNING_IDENTITY"
       - name: Build the package
         run: |
-          ./gradlew :app:desktop:packageReleasePkg -Pcampfire.desktop.distribution=mac-app-store
+          ./gradlew :app:desktop:packageReleasePkg
           ./gradlew --stop
       # A version that did not reach the Info.plist would be uploaded under whatever the plugin defaults to, which App
       # Store Connect takes for an old build.

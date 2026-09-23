@@ -69,7 +69,7 @@ Delete this file once the last box is ticked: by then `CLAUDE.md` describes how 
 
 Already taken care of in the code: no donation link on iOS (guideline 3.1.1, `canAskForDonations`), no other platform
 or store named in Settings (2.3.10) and no "Coming soon" rows (2.1): the About section lists no builds at all, only a
-link to the README, and its rating row names the App Store alone (`storeForRating`).
+link to the README, and its rating row names the App Store alone (`platformStore`).
 
 ## 5. Automating it
 

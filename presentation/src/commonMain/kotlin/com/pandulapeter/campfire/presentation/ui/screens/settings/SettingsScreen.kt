@@ -139,7 +139,7 @@ import com.pandulapeter.campfire.presentation.ui.platform.LibraryPersistence
 import com.pandulapeter.campfire.presentation.ui.platform.LocalFilePicker
 import com.pandulapeter.campfire.presentation.ui.platform.canAskForDonations
 import com.pandulapeter.campfire.presentation.ui.platform.libraryLocation
-import com.pandulapeter.campfire.presentation.ui.platform.storeForRating
+import com.pandulapeter.campfire.presentation.ui.platform.platformStore
 import com.pandulapeter.campfire.presentation.ui.theme.isDarkTheme
 import com.pandulapeter.campfire.presentation.ui.theme.themeColorOptions
 import kotlinx.coroutines.launch
@@ -561,7 +561,7 @@ private fun AboutSection(
         icon = painterResource(Res.drawable.ic_phone),
         onClick = { urlOpener("$GIT_HUB_URL#get-campfire") },
     )
-    storeForRating?.let { store ->
+    platformStore?.let { store ->
         store.listingUrl?.let { listingUrl ->
             LinkListItem(
                 title = stringResource(Res.string.settings_rate),

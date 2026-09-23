@@ -35,36 +35,6 @@ val generateVersionFile = tasks.register("generateVersionFile") {
     }
 }
 
-/**
- * Which of the places the desktop app is handed out from this build is for. See `gradle.properties` for why the
- * build has to be told rather than asking the machine it runs on, and `ui/platform/Platform.desktop.kt` for what it
- * decides.
- */
-val generateDesktopDistributionFile = tasks.register("generateDesktopDistributionFile") {
-    val distribution = project.property("campfire.desktop.distribution").toString()
-    // A typo here would otherwise be a build that quietly calls itself the direct download, which is the one value
-    // that lets it ask for money.
-    require(distribution in DESKTOP_DISTRIBUTIONS) {
-        "campfire.desktop.distribution is \"$distribution\", which is not one of ${DESKTOP_DISTRIBUTIONS.joinToString()}."
-    }
-    val outputDirectory = layout.buildDirectory.dir("generated/distribution/kotlin")
-    inputs.property("distribution", distribution)
-    outputs.dir(outputDirectory)
-    doLast {
-        outputDirectory.get().asFile.resolve("com/pandulapeter/campfire/presentation").let { directory ->
-            directory.mkdirs()
-            directory.resolve("CampfireDistribution.kt").writeText(
-                """
-                package com.pandulapeter.campfire.presentation
-
-                internal const val CAMPFIRE_DESKTOP_DISTRIBUTION = "$distribution"
-
-                """.trimIndent()
-            )
-        }
-    }
-}
-
 kotlin {
     sourceSets {
         commonMain {
@@ -105,9 +75,6 @@ kotlin {
             // Play's in-app update flow, the one thing only the Android build has, see ui/platform/AppUpdate.kt.
             implementation(libs.google.playAppUpdate)
         }
-        desktopMain {
-            kotlin.srcDir(generateDesktopDistributionFile)
-        }
         wasmJsMain.dependencies {
             // Opening URLs in a new tab, done by the web shell in ui/CampfireWebApp.kt.
             implementation(libs.kotlin.browser)
@@ -130,5 +97,3 @@ localization {
 tasks.named("generateTranslateFile") {
     inputs.files(fileTree("src/commonMain/composeResources") { include("values*/strings.xml") })
 }
-
-private val DESKTOP_DISTRIBUTIONS = listOf("download", "mac-app-store", "microsoft-store", "linux")

@@ -10,7 +10,6 @@
 package com.pandulapeter.campfire.presentation.ui.platform
 
 import androidx.compose.ui.input.pointer.PointerEvent
-import com.pandulapeter.campfire.presentation.CAMPFIRE_DESKTOP_DISTRIBUTION
 import java.io.File
 
 internal actual val isDesktopPlatform = true
@@ -26,22 +25,9 @@ internal actual val isLaunchScreenWholeStartup = true
  */
 internal actual val libraryLocation: LibraryLocation? = LibraryLocation.Folder(File(desktopDataDirectory(), LIBRARY_DIRECTORY).absolutePath)
 
-/**
- * What the build was told it is (`campfire.desktop.distribution`), rather than what the machine it is running on
- * would suggest: the same operating system is served from a store and from the project's own download page alike,
- * and the two answer to different rules.
- */
-internal actual val currentDistribution: Distribution? = when (CAMPFIRE_DESKTOP_DISTRIBUTION) {
-    "mac-app-store" -> Distribution.MAC_APP_STORE
-    "microsoft-store" -> Distribution.MICROSOFT_STORE
-    // "linux" and "download" (the .msi the GitHub release carries, and every build nobody configured) answer
-    // to no store's rules, which is what a null says.
-    else -> null
-}
-
-// The store of the machine, not of the build: the Mac App Store listing is where a review of Campfire on a Mac
-// goes whether the app arrived from that store or was built by hand. Linux has no store.
-internal actual val storeForRating: Distribution? = when {
+// The store of the machine, not of the build: a Mac build made by hand answers to the Mac App Store's rules and sends
+// a review there like the one the store hands out. Linux has no store.
+internal actual val platformStore: Distribution? = when {
     isMacOs -> Distribution.MAC_APP_STORE
     isWindows -> Distribution.MICROSOFT_STORE
     else -> null

@@ -170,11 +170,11 @@ uninstall and nothing else does.
   section, which is a page that can be kept up to date without a release and the one place a store has nothing to
   say about. `Distribution` (in `:presentation`'s `ui/platform/Platform.kt`) is now just the four app stores and
   their listing URLs, a null `listingUrl` marking one the app is not on yet; publishing is filling it in.
-  `currentDistribution` says which store the build was published on, and is what decides whether it may ask for
-  money at all (`canAskForDonations`: never on Apple's stores, guideline 3.1.1). `storeForRating` is a different
-  question — the store of the platform the app is **running** on, so a Mac build made by hand and the Mac App Store
-  build both send a review to the Mac App Store — and it is what the one "Rate Campfire" row opens, absent on Linux, on
-  the web, and wherever that listing does not exist yet. The row says *rate* and never *install*: a store page
+  Every platform has exactly one official way to get the app, so no build is told where it is handed out:
+  `platformStore` is the store of the platform the app is **running** on — a Mac build made by hand is a Mac build
+  like the one the Mac App Store hands out — and it decides both the one "Rate Campfire" row, absent on Linux, on the
+  web and wherever that listing does not exist yet, and whether the app may ask for money at all
+  (`canAskForDonations`: never on an Apple platform, guideline 3.1.1). The row says *rate* and never *install*: a store page
   carries an install button, and a second copy of the app would come with a library of its own. **GitHub is the
   project's website and its issue tracker**; the About section links nothing else but the author's own site, the
   privacy policy and the donation page.
@@ -271,8 +271,6 @@ uninstall and nothing else does.
   and a secret substituted into a `run:` block is re-read by the shell, so a password holding a `$`, a backtick or a
   quote would sign with something other than what is stored. Backslashes are doubled on the way in, since
   `java.util.Properties` reads one as an escape. The file is read as UTF-8, so a value outside ASCII survives as well.
-  What stays on the command line is the things that are not secret — `campfire.desktop.distribution`, which is worth
-  having in the log.
 - The `campfire-library` convention plugin sets each module's `archivesName` from its Gradle path, because a klib
   carries the name of the artifact it is built into and half the modules here are called `api` or `implementation`.
 - `./gradlew :app:android:assembleDebug` — Android APK
@@ -306,13 +304,13 @@ uninstall and nothing else does.
     something anybody signs on its own), built on the oldest supported Ubuntu rather than the newest, since a `.deb`
     asks for the system libraries it was built against and the runner therefore decides the lowest distribution it
     installs on, and an unsigned `packageReleaseMsi` for Windows, a stopgap until the Microsoft Store has the app.
-    Each leg passes `campfire.desktop.distribution` (`linux` or `download`). The legs do not cancel each other. Every
+    The legs do not cancel each other. Every
     one of them runs ProGuard, which breaks an app in ways only starting it shows (see `app/desktop`), so each leg
     also builds the app image (`createReleaseDistributable`; the plugin packages the jars directly and leaves no image
     behind on its own) and starts it — under Xvfb on Linux, with an empty data directory — and attaches nothing unless
     the demo library appears, the process is still there after that, and its log names no exception.
-  - `macos-publish.yml` builds `packageReleasePkg` with `campfire.desktop.distribution=mac-app-store` on an Apple
-    silicon runner — which is what signs and sandboxes it and takes the donation link out — signed with a Mac App
+  - `macos-publish.yml` builds `packageReleasePkg` on an Apple silicon runner — asking for the `.pkg` is what signs
+    and sandboxes it — signed with a Mac App
     Distribution and a Mac Installer Distribution certificate and the two Mac App Store provisioning profiles (the
     app's and the bundled Java runtime's) that the run creates for itself and revokes at the end (see below), all of
     them written into `local.properties` as a developer's machine keeps them. A build signed for

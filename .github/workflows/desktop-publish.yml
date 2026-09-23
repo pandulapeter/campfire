@@ -15,10 +15,6 @@
 # the Microsoft Store has the app, and its name says what it is: "unsigned" is a SmartScreen warning, which is why the
 # app does not link to it.
 #
-# Every leg tells the build which distribution it is (campfire.desktop.distribution), since the operating system it
-# is packaged on cannot tell a store build from the direct download: these are "download" and "linux". The Microsoft
-# Store build, once it has a workflow of its own, passes "microsoft-store".
-#
 # Called by release.yml for every release; dispatched by hand to attach the installers to a release that is already
 # there.
 
@@ -59,19 +55,16 @@ jobs:
           # since it pins the build environment independently of the runner image.
           - name: Linux (amd64)
             runner: ubuntu-22.04
-            distribution: linux
             task: packageReleaseDeb
             format: deb
             asset: linux-amd64.deb
           - name: Linux (arm64)
             runner: ubuntu-22.04-arm
-            distribution: linux
             task: packageReleaseDeb
             format: deb
             asset: linux-arm64.deb
           - name: Windows
             runner: windows-latest
-            distribution: download
             task: packageReleaseMsi
             format: msi
             asset: windows-x64-unsigned.msi
@@ -120,8 +113,7 @@ jobs:
           DROPBOX_APP_KEY: ${{ secrets.DROPBOX_APP_KEY }}
         run: |
           printf 'campfire.dropbox.appKey=%s\n' "${DROPBOX_APP_KEY//\\/\\\\}" > local.properties
-          ./gradlew :app:desktop:createReleaseDistributable :app:desktop:${{ matrix.task }} \
-            -Pcampfire.desktop.distribution=${{ matrix.distribution }}
+          ./gradlew :app:desktop:createReleaseDistributable :app:desktop:${{ matrix.task }}
           ./gradlew --stop
       # ProGuard breaks an application in ways that only starting it shows - a VerifyError on the first frame is how
       # the last one looked - so the app image is started once before anybody downloads the installer. The demo

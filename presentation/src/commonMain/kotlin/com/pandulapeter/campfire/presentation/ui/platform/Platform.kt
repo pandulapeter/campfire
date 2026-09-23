@@ -34,33 +34,26 @@ internal expect val isLaunchScreenWholeStartup: Boolean
 internal expect val libraryLocation: LibraryLocation?
 
 /**
- * Which store this build was published on, or null where it came from none of them: the Linux package, the unsigned
- * Windows installer the GitHub release carries, a desktop build made by hand, and the web build. It decides nothing the user sees directly - what
- * it answers is [canAskForDonations], since a build that goes through App Review may not ask for money at all.
- */
-internal expect val currentDistribution: Distribution?
-
-/**
- * The store whose listing the settings screen's rating row opens, decided by the platform the app is **running on**
- * rather than by where the build came from: somebody running a Mac build made by hand is still a Mac user, and the Mac App
- * Store listing is still where a review of Campfire on a Mac goes. Null where the platform has no store to rate the
- * app on - Linux has none, and the web build runs on all of them, so any one choice would be a guess.
+ * The app store of the platform the app is **running on**, which is the one official way to get Campfire there: every
+ * platform has exactly one, and a build made by hand is still a build of that platform. The settings screen's rating
+ * row opens its listing, and it decides [canAskForDonations]. Null where the platform has no store - Linux has none,
+ * and the web build runs on all of them, so any one choice would be a guess.
  *
  * A build that goes through App Review only ever runs on an Apple platform, so this never names another company's
  * store to one (guideline 2.3.10) without a rule of its own having to say so.
  */
-internal expect val storeForRating: Distribution?
+internal expect val platformStore: Distribution?
 
 /**
- * Whether the settings screen may offer a link that asks for money, which is decided by the store the build is
- * published on.
+ * Whether the settings screen may offer a link that asks for money: everywhere but on Apple's platforms.
  *
  * The App Store and the Mac App Store forbid pointing at any way of paying the developer other than an in-app
- * purchase (guideline 3.1.1), and a tip is such a payment. Play's billing is only required for purchases of digital
- * content, which a donation that buys nothing is not; the Microsoft Store has no such rule; and the direct
- * installers, the Linux package and the web build answer to no store at all.
+ * purchase (guideline 3.1.1), and a tip is such a payment. Their builds are the only official ones on iOS and macOS,
+ * so the platform decides it rather than the build. Play's billing is only required for purchases of digital content,
+ * which a donation that buys nothing is not; the Microsoft Store has no such rule; and the Linux package and the web
+ * build answer to no store at all.
  */
-internal val canAskForDonations get() = currentDistribution?.isApple != true
+internal val canAskForDonations get() = platformStore?.isApple != true
 
 /**
  * How far a scroll wheel event turned the wheel vertically, in notches (positive towards the user), which is the unit a
