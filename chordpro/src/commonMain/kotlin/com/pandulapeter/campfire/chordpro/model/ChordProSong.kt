@@ -9,6 +9,9 @@
  */
 package com.pandulapeter.campfire.chordpro.model
 
+import com.pandulapeter.campfire.chordpro.ChordProSyntax
+import com.pandulapeter.campfire.chordpro.ChordProTabTransposer
+
 /**
  * A parsed ChordPro song: the directives that describe it plus the blocks that make up its body.
  */
@@ -17,14 +20,17 @@ data class ChordProSong(
     val blocks: List<ChordProBlock>,
 ) {
 
-    /** True if any lyrics or grid line contains at least one real chord (annotations don't count). */
+    /**
+     * True if any lyrics or grid line contains at least one real chord (annotations don't count), or a tab holds a
+     * staff or a row of chord names.
+     */
     val hasChords: Boolean
         get() = blocks.any { block ->
             block is ChordProBlock.Section && block.lines.any { line ->
                 when (line) {
                     is ChordProLine.Lyrics -> line.chords.any { !it.isAnnotation }
                     is ChordProLine.Grid -> line.tokens.any { it is GridToken.Chord }
-                    is ChordProLine.Tab -> false
+                    is ChordProLine.Tab -> ChordProSyntax.isStaffLine(line.text) || ChordProTabTransposer.chordNames(listOf(line.text)).isNotEmpty()
                     ChordProLine.Blank -> false
                 }
             }

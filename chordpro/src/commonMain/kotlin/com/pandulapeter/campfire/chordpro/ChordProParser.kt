@@ -150,8 +150,9 @@ object ChordProParser {
 
     /**
      * @param shouldDetectChords Whether the lines that are not directives are looked at as well. A real chord (not an
-     *   `[*annotation]`, not an empty `[]`) outside a tab environment is what counts as one; once one has been found
-     *   the rest of the body is skipped, since nothing later in the file can change the answer.
+     *   `[*annotation]`, not an empty `[]`) is what counts as one, and so is a line of tablature or a row of chord names
+     *   in a tab environment, since the transposition moves those too; once one has been found the rest of the body is
+     *   skipped, since nothing later in the file can change the answer.
      */
     private fun scan(text: String, shouldDetectChords: Boolean): ChordProSummary {
         val metadata = MetadataBuilder()
@@ -182,7 +183,10 @@ object ChordProParser {
             val isLookingForNotation = !isGermanNotated && (GERMAN_LETTER in rawLine || GERMAN_LETTER.lowercaseChar() in rawLine)
             if (!isLookingForChords && !isLookingForNotation) return@forEach
             val names = writtenChordNames(rawLine, trimmedLine, environment)
-            if (isLookingForChords && environment != TAB) hasChords = names.isNotEmpty()
+            if (isLookingForChords) {
+                // A tab is chords to the transposition as long as it has a staff to move or chord names over it.
+                hasChords = names.isNotEmpty() || (environment == TAB && ChordProSyntax.isStaffLine(rawLine))
+            }
             if (isLookingForNotation) isGermanNotated = names.any(ChordProNotation::isGermanName)
         }
         transposition.finish()

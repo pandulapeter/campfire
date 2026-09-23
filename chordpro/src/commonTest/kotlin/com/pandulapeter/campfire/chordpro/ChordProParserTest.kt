@@ -567,15 +567,36 @@ class ChordProParserTest {
     }
 
     @Test
-    fun `summarize reports chords in lyrics and in grids but not in tabs`() {
-        val inTab = "{start_of_tab}\ne|--[Am]--|\n{end_of_tab}"
-
+    fun `summarize reports chords in lyrics, grids and tabs, but not in preformatted text`() {
         assertTrue(ChordProParser.summarize("[Am]a").hasChords)
         assertTrue(ChordProParser.parse("[Am]a").hasChords)
         assertTrue(ChordProParser.summarize("{sog}\n| Am . . . |\n{eog}").hasChords)
         assertTrue(ChordProParser.parse("{sog}\n| Am . . . |\n{eog}").hasChords)
-        assertFalse(ChordProParser.summarize(inTab).hasChords)
-        assertFalse(ChordProParser.parse(inTab).hasChords)
+        listOf(
+            "{start_of_tab}\ne|--0--3--|\n{end_of_tab}",
+            "{start_of_tab}\nAm   G\n{end_of_tab}",
+            "{start_of_tab}\ne|--[Am]--|\n{end_of_tab}",
+        ).forEach { text ->
+            assertTrue(ChordProParser.summarize(text).hasChords, text)
+            assertTrue(ChordProParser.parse(text).hasChords, text)
+        }
+        val preformatted = "{start_of_tab}\nTuning: DADGAD\nlet ring\n{end_of_tab}"
+        assertFalse(ChordProParser.summarize(preformatted).hasChords)
+        assertFalse(ChordProParser.parse(preformatted).hasChords)
+    }
+
+    @Test
+    fun `summarize and parse agree about chords`() {
+        listOf(
+            "[Am]a",
+            "{sog}\n| Am . . . |\n{eog}",
+            "{start_of_tab}\ne|--0--3--|\n{end_of_tab}",
+            "{start_of_tab}\nAm   G\n{end_of_tab}",
+            "{start_of_tab}\ne|--[Am]--|\n{end_of_tab}",
+            "{start_of_tab}\nTuning: DADGAD\nlet ring\n{end_of_tab}",
+        ).forEach { text ->
+            assertEquals(ChordProParser.summarize(text).hasChords, ChordProParser.parse(text).hasChords, text)
+        }
     }
 
     @Test
