@@ -175,6 +175,14 @@ internal class FileNamesTest {
     }
 
     @Test
+    fun lettersWithNoDecompositionAreSpelledOut() {
+        mapOf("Gəl" to "gel", "Ɛdwoa" to "edwoa", "Ɔkɔm" to "okom", "Ŋgɔnɔ" to "ngono").forEach { (title, name) ->
+            assertEquals(name, LibraryFiles.normalizedName(title))
+            assertEquals(name, LibraryFiles.normalizedName(name))
+        }
+    }
+
+    @Test
     fun aConflictCopyIsRecognizedAsItsOwn() {
         assertTrue("x (2).cho".isNamed("x.cho"))
         assertTrue(!"_2.cho".isNamed(".cho"))

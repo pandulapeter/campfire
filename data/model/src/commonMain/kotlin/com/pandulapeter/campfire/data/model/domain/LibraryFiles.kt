@@ -124,6 +124,12 @@ object LibraryFiles {
                     'ǆ', 'ǳ' -> folded.append("dz")
                     'ǉ' -> folded.append("lj")
                     'ǌ' -> folded.append("nj")
+                    // Letters of their own rather than letters with marks, so withoutAccent does not know them, spelled
+                    // the way a keyboard without them spells them: Azerbaijani ə, the open ɛ and ɔ of Twi, Ewe and
+                    // Lingala, and the ŋ of those and of Sámi. Left out, each would become a hole in the name.
+                    'ə', 'ɛ' -> folded.append('e')
+                    'ɔ' -> folded.append('o')
+                    'ŋ' -> folded.append('n')
                     else -> folded.append(if (plain in 'a'..'z' || plain in '0'..'9') plain else NAME_SEPARATOR)
                 }
             }
