@@ -251,7 +251,7 @@ private fun SongList(
 
     ScrollToTopWhenChanged(
         listState = listState,
-        key = "$query|${userPreferences?.sortingMode?.name}|${songFilter.selectedTags.sorted()}|${userPreferences?.tagMatchMode?.name}|${songFilter.selectedLanguages.sorted()}|${userPreferences?.languageMatchMode?.name}",
+        key = "$query|${userPreferences?.sortingMode?.name}|${userPreferences?.shouldShowSongsWithoutChords}|${songFilter.selectedTags.sorted()}|${userPreferences?.tagMatchMode?.name}|${songFilter.selectedLanguages.sorted()}|${userPreferences?.languageMatchMode?.name}",
         contents = songGroups,
     )
 

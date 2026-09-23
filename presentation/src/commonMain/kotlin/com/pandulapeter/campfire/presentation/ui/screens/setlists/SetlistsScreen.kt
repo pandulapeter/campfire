@@ -258,8 +258,9 @@ private fun SetlistList(
     val isSearchOpen by viewModel.setlistsSearch.isOpen.collectAsStateWithLifecycle()
     ScrollToTopWhenChanged(
         listState = listState,
-        // A closed search narrows nothing whatever its field still holds, as on the songs screen.
-        key = if (isSearchOpen) viewModel.setlistsSearch.textFieldState.text.toString() else "",
+        // A closed search narrows nothing whatever its field still holds, as on the songs screen. The order and the
+        // archived setlists are the rest of what the screen's controls change about the list.
+        key = "${if (isSearchOpen) viewModel.setlistsSearch.textFieldState.text.toString() else ""}|${userPreferences?.setlistSortingMode?.name}|${userPreferences?.shouldShowArchivedSetlists}",
         contents = setlistsWithSongs,
     )
 
