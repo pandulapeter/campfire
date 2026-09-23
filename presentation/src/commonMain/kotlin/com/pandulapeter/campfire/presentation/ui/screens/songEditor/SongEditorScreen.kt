@@ -16,6 +16,7 @@ import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.ExperimentalFoundationApi
+import androidx.compose.foundation.focusable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
@@ -69,6 +70,8 @@ import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.rotate
+import androidx.compose.ui.focus.FocusRequester
+import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.input.key.Key
 import androidx.compose.ui.input.key.KeyEventType
@@ -319,9 +322,30 @@ private fun LoadedSongEditor(
     var isToolbarExpanded by rememberSaveable {
         mutableStateOf(with(density) { minOf(windowContainerSize.width, windowContainerSize.height).toDp() } >= SMALL_SCREEN_SIZE)
     }
+    // Key events only travel along the focus path, and nothing in the editor is focused until the text is clicked,
+    // nor at all while the preview is the only pane - or after the panes change places, which composes the field
+    // again. So the editor takes the focus itself as it opens and whenever the panes change, and the save shortcut
+    // sits in its preview pass, where it hears the key wherever inside the editor the focus has gone since: the field
+    // once it is clicked, the preview, a button of the bar.
+    val focusRequester = remember { FocusRequester() }
+    LaunchedEffect(panes) { focusRequester.requestFocus() }
 
     Column(
-        modifier = Modifier.fillMaxSize().nestedScroll(scrollBehavior.nestedScrollConnection)
+        modifier = Modifier
+            .fillMaxSize()
+            .nestedScroll(scrollBehavior.nestedScrollConnection)
+            .focusRequester(focusRequester)
+            .focusable()
+            // The same save as the app bar's button, for the hand that reaches for the keyboard instead. Not with Alt
+            // held: AltGr arrives as Ctrl + Alt on Windows and the web, and AltGr + S types a character on some layouts.
+            .onPreviewKeyEvent { keyEvent ->
+                if (keyEvent.type == KeyEventType.KeyDown && keyEvent.key == Key.S && (keyEvent.isCtrlPressed || keyEvent.isMetaPressed) && !keyEvent.isAltPressed) {
+                    onSaveRequested()
+                    true
+                } else {
+                    false
+                }
+            }
     ) {
         CampfireTopAppBar(
             scrollBehavior = scrollBehavior,
@@ -438,7 +462,6 @@ private fun LoadedSongEditor(
                 textFieldState = textFieldState,
                 scrollState = fieldScrollState,
                 horizontalScrollState = fieldHorizontalScrollState,
-                onSaveRequested = onSaveRequested,
                 contentPadding = PaddingValues(
                     start = contentPadding.calculateStartPadding(layoutDirection),
                     // Next to the preview the divider is the end of this pane, not the window.
@@ -558,7 +581,6 @@ private fun ChordProTextField(
     textFieldState: TextFieldState,
     scrollState: ScrollState,
     horizontalScrollState: ScrollState,
-    onSaveRequested: () -> Unit,
     contentPadding: PaddingValues,
 ) {
     val colorScheme = MaterialTheme.colorScheme
@@ -606,17 +628,6 @@ private fun ChordProTextField(
             // the minimum, so the whole pane stays the field and a press anywhere in it places the caret. The field
             // asks its ancestors to bring the caret into view as it moves, so this follows the typing on its own.
             .horizontalScroll(horizontalScrollState)
-            // The same save as the app bar's button, for the hand that reaches for the keyboard instead. It lives on
-            // the field rather than in the window's key handler, which has no way to reach this text. Not with Alt held:
-            // AltGr arrives as Ctrl + Alt on Windows and the web, and AltGr + S types a character on some layouts.
-            .onPreviewKeyEvent { keyEvent ->
-                if (keyEvent.type == KeyEventType.KeyDown && keyEvent.key == Key.S && (keyEvent.isCtrlPressed || keyEvent.isMetaPressed) && !keyEvent.isAltPressed) {
-                    onSaveRequested()
-                    true
-                } else {
-                    false
-                }
-            }
             // The keyboard reaches the field only through the content padding this screen was handed, see CampfireApp,
             // and only the part of it that covers the field is applied, once: applying the whole inset a second time
             // shrinks the field to a couple of lines as soon as the keyboard comes up. There is no top padding for the
