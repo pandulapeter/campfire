@@ -208,9 +208,11 @@ internal fun FontScaleControls(
  * increase button, in a tonal pill that keeps the three of them together: two of these sit next to each other in
  * the app bar of wide windows, where loose icon buttons would blend into one long row of controls.
  *
- * @param isCompact Trades the 48dp touch targets for a shorter pill. The app bar uses it, because there the height
- * of the buttons is what makes the two groups look oversized; the bottom sheet, which is what touch devices get,
- * does not.
+ * @param isCompact A shorter pill with narrower buttons, for the app bar, where full height buttons make the two groups
+ * look oversized: the inline steppers of a window at least 840dp wide, tablets and phones on their side included, and
+ * the editor's. On a touch screen the buttons still take a touch 48dp across, since Compose extends a small target's
+ * touch area to the minimum touch target size; only their drawn size shrinks. The bottom sheet of a narrower window
+ * keeps the full size.
  */
 @Composable
 private fun Stepper(

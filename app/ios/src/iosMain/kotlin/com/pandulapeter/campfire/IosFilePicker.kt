@@ -20,6 +20,7 @@ import kotlinx.cinterop.addressOf
 import kotlinx.cinterop.alloc
 import kotlinx.cinterop.memScoped
 import kotlinx.cinterop.ptr
+import kotlinx.cinterop.useContents
 import kotlinx.cinterop.usePinned
 import kotlinx.cinterop.value
 import kotlinx.coroutines.Dispatchers
@@ -27,6 +28,7 @@ import kotlinx.coroutines.IO
 import kotlinx.coroutines.NonCancellable
 import kotlinx.coroutines.suspendCancellableCoroutine
 import kotlinx.coroutines.withContext
+import platform.CoreGraphics.CGRectMake
 import platform.Foundation.NSData
 import platform.Foundation.NSDataReadingMappedIfSafe
 import platform.Foundation.NSError
@@ -106,6 +108,7 @@ internal class IosFilePicker(
 
     override val canShare = true
 
+    @OptIn(ExperimentalForeignApi::class)
     override suspend fun shareFile(file: ExportedFile): Boolean {
         val url = file.writeToTemporaryFile() ?: return false
         return withContext(Dispatchers.Main) {
@@ -119,8 +122,15 @@ internal class IosFilePicker(
                     continuation.resume(false)
                 } else {
                     val controller = UIActivityViewController(activityItems = listOf(url), applicationActivities = null)
-                    // An iPad presents this as a popover, which needs something to point at; the whole view will do.
-                    controller.popoverPresentationController?.sourceView = host.view
+                    // An iPad presents this as a popover, which needs something to point at. The menu the share was chosen
+                    // from is Compose's and out of reach from here, so the popover stands in the middle of the view with no
+                    // arrow rather than pointing at the view's corner, which is where a source rectangle left at zero is.
+                    controller.popoverPresentationController?.let { popover ->
+                        val bounds = host.view.bounds
+                        popover.sourceView = host.view
+                        popover.sourceRect = bounds.useContents { CGRectMake(origin.x + size.width / 2, origin.y + size.height / 2, 0.0, 0.0) }
+                        popover.permittedArrowDirections = 0uL
+                    }
                     // The sheet hands out copies and never takes the file away, so this is the only moment it is
                     // certainly finished with: an activity that is still reading it has not returned yet. A handler
                     // that never runs costs one file that iOS purges on its own, which is why the caller is still

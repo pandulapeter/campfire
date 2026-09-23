@@ -29,7 +29,7 @@ import androidx.compose.ui.platform.LocalContext
  * On Android 13 and above a foreground service still starts without it - the run is kept alive either way - but its
  * notification is silently dropped, so the user is left with a sync they cannot see, cannot follow and cannot stop
  * from outside the app. Nothing else here depends on it: a refusal costs the notification, not the sync, which is
- * why this asks and then never mentions it again.
+ * why a refusal is never argued with: nothing in the app mentions it.
  *
  * Asked at the moment sync is switched on rather than at startup, because that is the first point at which the
  * question means anything to the user. That moment includes an app opened with sync already connected, so that the
