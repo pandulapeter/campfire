@@ -15,7 +15,9 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.SideEffect
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.awt.ComposeWindow
+import androidx.compose.ui.configureSwingGlobalsForCompose
 import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.window.Window
@@ -47,8 +49,15 @@ import org.koin.compose.viewmodel.koinViewModel
  *   Windows and Linux: it launches the app with the file as an argument. macOS sends an event instead, see
  *   [OpenedFiles].
  */
+@OptIn(ExperimentalComposeUiApi::class)
 fun main(args: Array<String>) {
-    // Before anything touches AWT, since the toolkit reads the name when its first window is created.
+    // Compose's own set-up, which application() would only do later, has to come before anything that starts the
+    // AWT toolkit: on Linux it is what puts the display's scale into sun.java2d.uiScale, which the toolkit reads once,
+    // when it starts. Behind the same property application() checks, so that this is the same decision made earlier
+    // rather than a second one (application() calling it again is harmless - the library loads once).
+    if (System.getProperty("compose.application.configure.swing.globals") == "true") configureSwingGlobalsForCompose()
+    // After Compose's set-up and before the first window, since the toolkit reads the name when that window is
+    // created - and asking for the toolkit is what starts it.
     setLinuxWindowClassName()
     val activations = Channel<Unit>(Channel.CONFLATED)
     val isFirstInstance = claimSingleInstance(
@@ -166,7 +175,8 @@ private fun ComposeWindow.bringForward() {
  * is created under, beside the one the package installed. There is no API for it - the field belongs to the X11
  * toolkit, which is why the packaged Linux launcher opens that package (see build.gradle.kts) - and no other
  * platform has the field at all, so a failure here is a cosmetic loss and never a reason not to start. The value has
- * to stay what `addStartupWmClassToDeb` writes into the installed desktop entry.
+ * to stay what `addStartupWmClassToDeb` writes into the installed desktop entry. Asking for the toolkit starts it, and on
+ * Linux it reads the display scale when it starts, so this has to come after `configureSwingGlobalsForCompose`.
  */
 private fun setLinuxWindowClassName() {
     if (!System.getProperty("os.name").orEmpty().lowercase().contains("linux")) return
