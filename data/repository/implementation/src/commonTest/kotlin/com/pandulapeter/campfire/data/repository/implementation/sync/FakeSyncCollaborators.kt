@@ -152,6 +152,8 @@ internal class RecordingSetlistRepository : SetlistRepository {
 
     override suspend fun loadSetlistsIfNeeded(): List<Setlist>? = throw UnsupportedOperationException()
 
+    override suspend fun loadSetlistFileNamesNaming(songFileName: String): List<String> = throw UnsupportedOperationException()
+
     override suspend fun rescan() {
         rescanCount++
     }

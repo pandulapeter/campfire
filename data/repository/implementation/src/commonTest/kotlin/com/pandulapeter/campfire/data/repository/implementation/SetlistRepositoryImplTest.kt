@@ -22,6 +22,7 @@ import kotlinx.coroutines.test.runTest
 import kotlinx.coroutines.yield
 import kotlin.test.Test
 import kotlin.test.assertEquals
+import kotlin.test.assertFailsWith
 import kotlin.test.assertNull
 import kotlin.test.assertTrue
 
@@ -249,6 +250,38 @@ class SetlistRepositoryImplTest {
         assertEquals(listOf("a.cho", "b.cho"), localSource.files.getValue(FILE_NAME).entries.map { it.songFileName })
     }
 
+    @Test
+    fun `the setlists naming a song are read from the files`() = runTest {
+        val localSource = FakeSetlistLocalSource(listOf(setlist(FILE_NAME, "a.cho")))
+        val repository = SetlistRepositoryImpl(localSource, LibraryFileLock())
+        repository.loadSetlistsIfNeeded()
+        localSource.files[SECOND_FILE_NAME] = setlist(SECOND_FILE_NAME, "a.cho", "b.cho")
+
+        assertEquals(setOf(FILE_NAME, SECOND_FILE_NAME), repository.loadSetlistFileNamesNaming("a.cho").toSet())
+        assertTrue(repository.loadSetlistFileNamesNaming("c.cho").isEmpty())
+        assertEquals(listOf(FILE_NAME), repository.setlists.first().data?.map { it.fileName })
+    }
+
+    @Test
+    fun `a setlist only the cache knows still counts`() = runTest {
+        val localSource = FakeSetlistLocalSource(listOf(setlist(FILE_NAME, "a.cho")))
+        val repository = SetlistRepositoryImpl(localSource, LibraryFileLock())
+        repository.loadSetlistsIfNeeded()
+        localSource.unlistable = setOf(FILE_NAME)
+
+        assertEquals(listOf(FILE_NAME), repository.loadSetlistFileNamesNaming("a.cho"))
+    }
+
+    @Test
+    fun `setlists that cannot be listed are not taken for none`() = runTest {
+        val localSource = FakeSetlistLocalSource(listOf(setlist(FILE_NAME, "a.cho")))
+        val repository = SetlistRepositoryImpl(localSource, LibraryFileLock())
+        repository.loadSetlistsIfNeeded()
+        localSource.isListingBroken = true
+
+        assertFailsWith<IllegalStateException> { repository.loadSetlistFileNamesNaming("a.cho") }
+    }
+
     /** A setlists directory held in a map, whose writes can be held back until the test lets them through. */
     private class FakeSetlistLocalSource(setlists: List<Setlist>) : SetlistLocalSource {
 
@@ -262,7 +295,16 @@ class SetlistRepositoryImplTest {
         /** Set to make [loadSetlist] fail the way a file edited by hand into invalid JSON does. */
         var isUnreadable = false
 
-        override suspend fun loadSetlists() = files.values.toList()
+        /** Left out of the listing the way the storage skips a single file it cannot read. */
+        var unlistable = emptySet<String>()
+
+        /** Set to make [loadSetlists] fail the way a directory that cannot be listed does. */
+        var isListingBroken = false
+
+        override suspend fun loadSetlists(): List<Setlist> {
+            if (isListingBroken) throw IllegalStateException("Not a directory.")
+            return files.values.filter { it.fileName !in unlistable }
+        }
 
         override suspend fun loadSetlist(fileName: String): Setlist? {
             if (isUnreadable) throw IllegalStateException("Not a setlist.")

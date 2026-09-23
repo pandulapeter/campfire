@@ -20,6 +20,17 @@ interface SetlistRepository {
     /** The saved setlists, or null if they could not be read. */
     suspend fun loadSetlistsIfNeeded(): List<Setlist>?
 
+    /**
+     * The file name of every setlist that names [songFileName], read from the setlist files rather than from the cache:
+     * sync and an import write setlist files behind this repository's back, and the cache only catches up at the next
+     * rescan. For the walks that follow a song's file name - a rename, a deletion - where a setlist the cache has not
+     * seen yet would go on naming a file that is gone. A setlist the cache holds counts as well, since [updateSetlist]
+     * changes one whose file cannot be decoded as the cache has it. Nothing is cached.
+     *
+     * Throws when the setlists cannot be listed: not knowing which setlists name the song is not knowing that none do.
+     */
+    suspend fun loadSetlistFileNamesNaming(songFileName: String): List<String>
+
     /** Reads the setlists directory again, which is what a rescan and an import need. */
     suspend fun rescan()
 

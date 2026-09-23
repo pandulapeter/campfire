@@ -103,8 +103,11 @@ The ones that carry real logic:
   rename follows them. The file moves first, so nothing is ever pointed at a name that does not exist yet, and once it
   has moved every reference is attempted even after one fails; whether any failed is returned at the end rather than
   thrown, since the move has happened and the caller has to follow it either way, and the walk is not cancellable
-  once the file has moved (nor is the deletion's once the file is gone). Both walks change each setlist through
-  `updateSetlist`, so they build on the latest version of it and wait for a change that is being written.
+  once the file has moved (nor is the deletion's once the file is gone). Both are one walk (`useCases/SongReferences.kt`):
+  which setlists name the song is asked of the files (`SetlistRepository.loadSetlistFileNamesNaming`) rather than of
+  the cache, which does not know what sync or an import wrote since the last rescan; each one is changed through
+  `updateSetlist`, so it builds on the latest version and waits for a change that is being written; and every
+  reference is attempted even after one fails, the deletion answering like the rename whether all of them followed.
 - `SyncUseCaseImpls.kt` — all eight sync use cases in one file, since each is a line over `SyncRepository` and they
   are one feature. The two that are not: connecting runs a first sync straight away (an account connected onto a
   library that then stays empty leaves the user to work out that something else is expected of them), and restoring

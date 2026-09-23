@@ -1124,7 +1124,7 @@ class CampfireViewModel(
     }
 
     fun deleteSong(fileName: String) = launchLibraryChange {
-        deleteSong.invoke(fileName)
+        val haveReferencesBeenRemoved = deleteSong.invoke(fileName)
         // Nobody is asked to save a file that has just been deleted, so the draft goes before the screens holding it.
         _editorDraft.update { null }
         // A screen showing the file that has just gone is closed first, or it would sit there on nothing. The editor
@@ -1133,6 +1133,8 @@ class CampfireViewModel(
             popBackStack()
         }
         _songTexts.update { it - fileName }
+        // Said once the screens have let go of the file, which is gone whatever else could not be rewritten.
+        if (!haveReferencesBeenRemoved) sendMessage(Message.SongDeletedPartly)
     }
 
     /**
@@ -2118,6 +2120,9 @@ class CampfireViewModel(
 
         /** The song's file was renamed, but a setlist or its saved transposition still names the old file. */
         data object SongFileRenamedPartly : Message
+
+        /** The song's file was deleted, but a setlist or its saved transposition still names it. */
+        data object SongDeletedPartly : Message
 
         /** A link nothing on this machine would open. The address is shown, since reading it is all that is left. */
         data class LinkNotOpened(val url: String) : Message

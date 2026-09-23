@@ -138,6 +138,7 @@ class ExportLibraryUseCaseImplTest {
     ) : SetlistRepository {
         override val setlists: Flow<DataState<List<Setlist>>> = emptyFlow()
         override suspend fun loadSetlistsIfNeeded() = scanned
+        override suspend fun loadSetlistFileNamesNaming(songFileName: String) = throw UnsupportedOperationException()
         override suspend fun rescan() = throw UnsupportedOperationException()
         override suspend fun createSetlist(title: String, description: String, priority: Int) = throw UnsupportedOperationException()
         override suspend fun saveSetlist(setlist: Setlist) = throw UnsupportedOperationException()

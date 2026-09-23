@@ -115,6 +115,7 @@ import com.pandulapeter.campfire.presentation.resources.settings_sync_notificati
 import com.pandulapeter.campfire.presentation.resources.settings_sync_preparing
 import com.pandulapeter.campfire.presentation.resources.settings_sync_progress
 import com.pandulapeter.campfire.presentation.resources.songs
+import com.pandulapeter.campfire.presentation.resources.songs_delete_song_partly
 import com.pandulapeter.campfire.presentation.resources.songs_update_file_name_partly
 import com.pandulapeter.campfire.presentation.ui.components.TopLevelScreenLayout
 import com.pandulapeter.campfire.presentation.ui.components.WindowSize
@@ -555,6 +556,7 @@ private fun Messages(
         CampfireViewModel.Message.EditedSongFileGone -> stringResource(Res.string.song_editor_file_gone)
         CampfireViewModel.Message.OperationFailed -> stringResource(Res.string.error_operation_failed)
         CampfireViewModel.Message.SongFileRenamedPartly -> stringResource(Res.string.songs_update_file_name_partly)
+        CampfireViewModel.Message.SongDeletedPartly -> stringResource(Res.string.songs_delete_song_partly)
         is CampfireViewModel.Message.LinkNotOpened -> textResource(Res.string.error_link_not_opened, current.url)
         null -> null
     }

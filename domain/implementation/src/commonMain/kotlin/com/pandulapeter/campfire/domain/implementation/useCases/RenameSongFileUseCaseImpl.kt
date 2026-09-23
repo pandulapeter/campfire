@@ -15,7 +15,6 @@ import com.pandulapeter.campfire.data.repository.api.SongRepository
 import com.pandulapeter.campfire.data.repository.api.UserPreferencesRepository
 import com.pandulapeter.campfire.domain.api.models.SongFileRename
 import com.pandulapeter.campfire.domain.api.useCases.RenameSongFileUseCase
-import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.NonCancellable
 import kotlinx.coroutines.withContext
 import org.koin.core.annotation.Factory
@@ -37,50 +36,14 @@ class RenameSongFileUseCaseImpl internal constructor(
      * exception: the move has happened, and the caller has to follow it either way. One setlist that cannot be saved
      * would otherwise leave every setlist after it, and the transposition, pointing at a name that is gone. For the
      * same reason the walk is not cancellable once the file has moved: a screen going away half way through would
-     * leave the rest of the references on the old name just the same.
+     * leave the rest of the references on the old name just the same. Which setlists hold the song is asked of the files
+     * rather than the cache (see `followSongReferences`).
      */
     override suspend operator fun invoke(song: Song): SongFileRename? {
         val renamed = songRepository.renameSong(song)?.fileName ?: return null
-        val haveReferencesFollowed = withContext(NonCancellable) { updateReferences(song = song, renamed = renamed) }
+        val haveReferencesFollowed = withContext(NonCancellable) {
+            followSongReferences(setlistRepository, userPreferencesRepository, fileName = song.fileName, newFileName = renamed)
+        }
         return SongFileRename(fileName = renamed, haveReferencesFollowed = haveReferencesFollowed)
-    }
-
-    private suspend fun updateReferences(song: Song, renamed: String): Boolean {
-        val failures = mutableListOf<Exception>()
-        setlistRepository.loadSetlistsIfNeeded().orEmpty()
-            .filter { setlist -> setlist.entries.any { it.songFileName == song.fileName } }
-            .forEach { setlist ->
-                attempt(failures) {
-                    setlistRepository.updateSetlist(setlist.fileName) { latest ->
-                        latest.copy(
-                            entries = latest.entries.map { entry ->
-                                if (entry.songFileName == song.fileName) entry.copy(songFileName = renamed) else entry
-                            },
-                        )
-                    }
-                }
-            }
-        attempt(failures) {
-            userPreferencesRepository.loadUserPreferencesIfNeeded()
-                ?.takeIf { song.fileName in it.transpositions }
-                ?.let { preferences ->
-                    val transposition = preferences.transpositions.getValue(song.fileName)
-                    userPreferencesRepository.saveUserPreferences(
-                        preferences.copy(transpositions = preferences.transpositions - song.fileName + (renamed to transposition))
-                    )
-                }
-        }
-        failures.forEach { println("A reference to the renamed song could not be updated: ${it.message}") }
-        return failures.isEmpty()
-    }
-
-    private suspend fun attempt(failures: MutableList<Exception>, block: suspend () -> Unit) {
-        try {
-            block()
-        } catch (exception: CancellationException) {
-            throw exception
-        } catch (exception: Exception) {
-            failures += exception
-        }
     }
 }

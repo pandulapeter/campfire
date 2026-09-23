@@ -170,6 +170,7 @@ class GetScreenDataUseCaseImplTest {
 
     private class FakeSetlistRepository(override val setlists: MutableStateFlow<DataState<List<Setlist>>>) : SetlistRepository {
         override suspend fun loadSetlistsIfNeeded() = throw UnsupportedOperationException()
+        override suspend fun loadSetlistFileNamesNaming(songFileName: String) = throw UnsupportedOperationException()
         override suspend fun rescan() = throw UnsupportedOperationException()
         override suspend fun createSetlist(title: String, description: String, priority: Int) = throw UnsupportedOperationException()
         override suspend fun saveSetlist(setlist: Setlist) = throw UnsupportedOperationException()

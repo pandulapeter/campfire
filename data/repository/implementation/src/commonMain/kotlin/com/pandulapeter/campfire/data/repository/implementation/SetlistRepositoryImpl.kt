@@ -51,6 +51,17 @@ internal class SetlistRepositoryImpl(
 
     override suspend fun loadSetlistsIfNeeded() = loadDataIfNeeded()
 
+    /**
+     * Read outside [writing] on purpose: [updateSetlist] reads each file again under both locks before it changes it, so
+     * this list only decides which files to ask, and [libraryFileLock] is not reentrant.
+     */
+    override suspend fun loadSetlistFileNamesNaming(songFileName: String): List<String> {
+        fun Setlist.names() = entries.any { it.songFileName == songFileName }
+        val onDisk = setlistLocalSource.loadSetlists().filter { it.names() }.map { it.fileName }
+        val cached = loadDataIfNeeded().orEmpty().filter { it.names() }.map { it.fileName }
+        return (onDisk + cached).distinct()
+    }
+
     override suspend fun rescan() {
         reloadData()
     }

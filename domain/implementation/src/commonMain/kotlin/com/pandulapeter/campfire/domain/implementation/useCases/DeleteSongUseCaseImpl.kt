@@ -27,23 +27,13 @@ class DeleteSongUseCaseImpl internal constructor(
     /**
      * A deleted song must not stay behind as a dangling entry: every setlist that held it and its saved transposition
      * are cleaned up too, so that nothing refers to a file that is no longer there. Once the file is gone that walk is
-     * not cancellable, so a screen going away half way through cannot leave the rest of it undone.
+     * not cancellable, so a screen going away half way through cannot leave the rest of it undone, and it is the
+     * rename's walk (`followSongReferences`), so one reference that cannot be removed does not stop the others.
      */
-    override suspend operator fun invoke(fileName: String) {
+    override suspend operator fun invoke(fileName: String): Boolean {
         songRepository.deleteSong(fileName)
-        withContext(NonCancellable) { removeReferences(fileName) }
-    }
-
-    private suspend fun removeReferences(fileName: String) {
-        setlistRepository.loadSetlistsIfNeeded().orEmpty()
-            .filter { setlist -> setlist.entries.any { it.songFileName == fileName } }
-            .forEach { setlist ->
-                setlistRepository.updateSetlist(setlist.fileName) { latest ->
-                    latest.copy(entries = latest.entries.filterNot { it.songFileName == fileName })
-                }
-            }
-        userPreferencesRepository.loadUserPreferencesIfNeeded()
-            ?.takeIf { fileName in it.transpositions }
-            ?.let { userPreferencesRepository.saveUserPreferences(it.copy(transpositions = it.transpositions - fileName)) }
+        return withContext(NonCancellable) {
+            followSongReferences(setlistRepository, userPreferencesRepository, fileName = fileName, newFileName = null)
+        }
     }
 }

@@ -60,7 +60,8 @@ import — is the only thing that walks the directory again.
   `setlists` catches up a few hops later. Creating and importing a setlist take it as well, from the storage finding
   a name free to the file being there under it. The write and the cache update under that lock run as one
   `NonCancellable` step, so a change whose screen goes away while it is being written is still in the cache the next
-  change reads; the lock itself is waited for cancellably.
+  change reads; the lock itself is waited for cancellably. `loadSetlistFileNamesNaming` reads every setlist file afresh
+  for the reference walks, outside the locks — `updateSetlist` reads each one again under them.
 - `SongRepositoryImpl` has the same kind of lock for the three writers that pick a free name before they write
   (`createSong`, `importSong`, `renameSong`): finding the name and writing under it are two trips to the storage, and a
   second asker in between is given the same name. Every write, `saveSong`'s guard included, also holds
