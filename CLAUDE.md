@@ -285,30 +285,43 @@ uninstall and nothing else does.
   that the tag is the `campfire.versionName` of the commit it is on — a tag on a commit that still carries the last
   version would submit that version again under a new name — and that `campfire.buildNumber` is higher than the
   last published release's (the highest of the three per-store counters, for a release from before there was one),
-  since a store would refuse a used one only after the other builds had gone out, and then calling the five workflows below side by side. Each of them is the local build command plus the secrets a checkout does not have, and each can still be
+  since a store would refuse a used one only after the other builds had gone out, and then calling the six workflows below side by side. Each of them is the local build command plus the secrets a checkout does not have, and each can still be
   dispatched by hand, to publish without a release or to repeat one half of a release that went wrong. Every build
   passes `campfire.dropbox.appKey` from the `DROPBOX_APP_KEY` secret, because a published app built without it would
   quietly have no sync provider at all — so each workflow, and `release.yml` before it calls any of them, refuses to
   start when that secret is empty. The check is in the workflows rather than in Gradle: an empty key is the
-  checked-in default and has to keep building a fresh clone. A store that gets a pipeline later (the Microsoft Store) is one more workflow of this shape and one more job in
-  `release.yml`. **A release carries only what no official channel offers**: nothing that Play, the App Store or the
-  website already hands out is attached to it, which today leaves the Linux `.deb` and the stopgap Windows installer.
-  Nothing for the Mac is attached: the Mac App Store build is the Mac build, and it is Apple silicon only. **What a release carries that no store has signed says so in its name** (`-unsigned`), and the app
-  links to none of those: they are for somebody who reads the README and knows what the word means.
+  checked-in default and has to keep building a fresh clone. **A release carries only what no official channel
+  offers**: nothing that a store or the website already hands out is attached to it, which leaves the Linux `.deb`.
+  Nothing for the Mac or for Windows is attached: the Mac App Store build is the Mac build, and it is Apple silicon
+  only, and the Microsoft Store build is the Windows build. `packageReleaseMsi` and `packageDmg` still build, and
+  nothing publishes either.
   - `web-publish.yml` builds the distribution and copies it over `campfire/` in the `pandulapeter.github.io`
     repository, which it reaches with the deploy key in `WEBSITE_DEPLOY_KEY`. The copy is an `rsync --delete`, so the
     folder holds nothing but the distribution — the privacy policy and the rest of the site live elsewhere there.
-  - `desktop-publish.yml` builds one installer per runner — jpackage only packages for the machine it runs on — and
-    attaches them to the release: `packageReleaseDeb` on amd64 and arm64, which is the whole of how the Linux build
-    is handed out (the README's "Get Campfire" section links to the latest release's page, and a `.deb` is not
-    something anybody signs on its own), built on the oldest supported Ubuntu rather than the newest, since a `.deb`
-    asks for the system libraries it was built against and the runner therefore decides the lowest distribution it
-    installs on, and an unsigned `packageReleaseMsi` for Windows, a stopgap until the Microsoft Store has the app.
-    The legs do not cancel each other. Every
-    one of them runs ProGuard, which breaks an app in ways only starting it shows (see `app/desktop`), so each leg
-    also builds the app image (`createReleaseDistributable`; the plugin packages the jars directly and leaves no image
-    behind on its own) and starts it — under Xvfb on Linux, with an empty data directory — and attaches nothing unless
-    the demo library appears, the process is still there after that, and its log names no exception.
+  - `linux-publish.yml` builds `packageReleaseDeb` on amd64 and arm64 — jpackage only packages for the machine it runs
+    on — and attaches both to the release, which is the whole of how the Linux build is handed out (the README's "Get
+    Campfire" section links to the latest release's page, and a `.deb` is not something anybody signs on its own).
+    It builds on the oldest supported Ubuntu rather than the newest, since a `.deb` asks for the system libraries it
+    was built against and the runner therefore decides the lowest distribution it installs on. The two legs do not
+    cancel each other. ProGuard breaks an app in ways only starting it shows (see `app/desktop`), so each leg also
+    builds the app image (`createReleaseDistributable`; the plugin packages the jars directly and leaves no image
+    behind on its own) and starts it under Xvfb with an empty data directory, and attaches nothing unless the demo
+    library appears, the process is still there after that, and its log names no exception.
+  - `windows-publish.yml` builds `packageReleaseMsix` on a Windows runner (whose image has the SDK's makeappx),
+    checks the identity and the version in the package's manifest against `gradle.properties`, starts the app image it
+    was made of the way the Linux legs do (the Windows launcher writes no log, so there only an exit counts), keeps
+    the `.msix` as an artifact of the run and, called by a release (a hand dispatch only when its box is ticked),
+    submits it with `.github/scripts/microsoft_store_submission.py`. That finds the app by its package identity name,
+    so no Store ID is kept anywhere, creates a submission — a copy of the last published one — swaps its package for
+    the new one, writes the release's `whats-new` notes as its "What's new in this version", sets it to be published
+    as soon as it passes certification, uploads and commits it, and waits for Partner Center to accept the commit. A
+    green run means submitted, not certified. A submission already in progress with this version is left alone, so a
+    repeated run succeeds; one in progress with anything else stops the run rather than being deleted, since it may
+    be somebody's draft and a product has only one at a time. It signs in as a Microsoft Entra application with the
+    Manager role in Partner Center (`MICROSOFT_STORE_TENANT_ID`, `_CLIENT_ID` and `_CLIENT_SECRET`); unlike
+    everything Apple's workflows use, **its key expires**, two years at most after it was made, and has to be
+    replaced in Partner Center and in the secret when it does. The package is unsigned, since the Store signs what it
+    certifies, and nothing is attached to the release.
   - `macos-publish.yml` builds `packageReleasePkg` on an Apple silicon runner — asking for the `.pkg` is what signs
     and sandboxes it — signed with a Mac App
     Distribution and a Mac Installer Distribution certificate and the two Mac App Store provisioning profiles (the
@@ -349,7 +362,7 @@ uninstall and nothing else does.
     `PLAY_SERVICE_ACCOUNT_JSON`; nothing is attached to the release. It is an **APK** and not an app bundle because the Play listing predates the bundle
     requirement and was never migrated; a `bundleRelease` would be rejected on upload. The "what's new" text comes
     from the workflow's `release_notes` input, which `release.yml` fills from comments in the release's description
-    that the rendered page hides (`<!-- whats-new en-US … -->`, written for every store and passed to the Apple workflows as well, and `<!-- play-store update-priority: 0 -->`; the
+    that the rendered page hides (`<!-- whats-new en-US … -->`, written for every store and passed to the Apple and Windows workflows as well, and `<!-- play-store update-priority: 0 -->`; the
     format is in that file's header) — carried through as it is, backslashes included; only the hand-dispatched
     form's `\n` is expanded, since a single-line text box has no other way to ask for a line break. It falls back to the visible description with its markdown taken out — or,
     dispatched by hand with nothing given, to the commit log since the previous tag. Every store listing is in

@@ -10,8 +10,8 @@
 # Publishing to the Microsoft Store
 
 What is left between the desktop build as it is today and a listing on the Microsoft Store that every GitHub release
-updates by itself. `desktop-publish.yml` already attaches an unsigned `.msi` to every release, and `packageReleaseMsix`
-builds the Store's package locally. The steps marked *(verify)* rest on rules that change.
+updates by itself. The first submission is in certification, and `windows-publish.yml` submits every release after it.
+The steps marked *(verify)* rest on rules that change.
 
 Delete this file once the last box is ticked: by then `CLAUDE.md` describes how it works.
 
@@ -73,22 +73,23 @@ wording of 10.8)*.
 - [ ] Notes for certification: no account; sync is optional and needs the tester's own Dropbox.
 - [ ] Check the Dropbox app's status in the Dropbox App Console: an app in *development* status can only be connected
       by a limited number of users.
-- [ ] Upload the first `.msix` and submit it by hand. The submission API only works for a product that has been
+- [x] Upload the first `.msix` and submit it by hand. The submission API only works for a product that has been
       through certification once.
 
 ## 6. Automating it
 
-A Windows-only job next to the `.msi` leg of `desktop-publish.yml`, or a `windows-store-publish.yml` of its own that
-`release.yml` calls like the others.
+`windows-publish.yml` builds and checks the package and, for a release, submits it through the Microsoft Store
+submission API (`.github/scripts/microsoft_store_submission.py`) with the release's `whats-new` block as its "What's
+new in this version". `linux-publish.yml` is what is left of `desktop-publish.yml`, and nothing attaches an `.msi` to a
+release any more.
 
-- [ ] In Partner Center, link a Microsoft Entra ID tenant and create an application with the *Manager* role. Add four
-      repository secrets: `MICROSOFT_STORE_TENANT_ID`, `MICROSOFT_STORE_CLIENT_ID`, `MICROSOFT_STORE_CLIENT_SECRET` and
-      `MICROSOFT_STORE_SELLER_ID`. The product ID is not a secret and can sit in the workflow.
-- [ ] Use the Microsoft Store Developer CLI: the `microsoft/setup-msstore-cli` action, `msstore reconfigure` with the
-      four values, then `msstore publish` with the `.msix`. *(verify the current command line.)*
-- [ ] "What's new in this version" is part of the listing. If it should come from the release: a
-      `<!-- microsoft-store en-US … -->` block in the release description, read in `release.yml`'s `prepare` job the
-      way the Play blocks are read, and written by the `release-notes` skill.
+- [ ] In Partner Center, under Account settings → Tenants, associate a Microsoft Entra ID tenant (or create a new one
+      there, which is free). Then, under User management → Microsoft Entra applications, create an application,
+      give it the **Manager** role, and on its page copy the tenant ID and the client ID and add a key.
+- [ ] Add three repository secrets: `MICROSOFT_STORE_TENANT_ID`, `MICROSOFT_STORE_CLIENT_ID` and
+      `MICROSOFT_STORE_CLIENT_SECRET` (the key). The key expires, two years at most after it was made: note the date.
+- [ ] Once the first submission is published, dispatch *Publish Windows* by hand without ticking *submit*, to see the
+      Windows build go through on a runner. The first real submission is the next release.
 - [ ] Remember what green means: the package was **submitted**. Certification happens afterwards, usually within a
       few days, and a failure arrives by email rather than as a failed job.
 
@@ -96,6 +97,4 @@ A Windows-only job next to the `.msi` leg of `desktop-publish.yml`, or a `window
 
 - [ ] Fill in `Distribution.MICROSOFT_STORE`'s `listingUrl` in `presentation/…/ui/platform/Platform.kt`
       (`https://apps.microsoft.com/detail/<product id>`).
-- [ ] Point the Windows badge in `README.md` at the listing and move it up among the published ones. Decide whether
-      the unsigned `.msi` stays on the releases; it is of little use once the Store has the app.
-- [ ] Update the release-flow section of the root `CLAUDE.md` and the packaging paragraph of `app/desktop/CLAUDE.md`.
+- [ ] Point the Windows badge in `README.md` at the listing and move it up among the published ones.

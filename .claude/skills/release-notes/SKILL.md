@@ -70,9 +70,9 @@ them. If a change has no effect a user could notice, it is not in the notes.
      that carries that `campfire.versionName` (`release.yml` refuses a tag that disagrees with it), with
      "Set as a pre-release" left off, since a pre-release ships nothing;
    - that **publishing the release is what ships it**: `release.yml` sends the builds to Play and the
-     website, submits the iOS and macOS builds for App Review (released as soon as Apple approves them), and
-     attaches the Linux and Windows installers to the release itself — so the notes never list or link
-     downloads.
+     website, submits the iOS and macOS builds for App Review and the Windows build for Microsoft Store
+     certification (each published as soon as it passes), and attaches the Linux packages to the release
+     itself — so the notes never list or link downloads.
 
 8. **Do not create the tag, the release, or commit anything.** Drafting the notes is the whole job.
 
@@ -116,7 +116,7 @@ both are always written:
 
 - **`whats-new en-US`** is the changelog every store gets, not Play's alone — the App Store and the Mac App
   Store read the same block as the "What's New" of the version submitted for review, and the Microsoft Store
-  will when its pipeline arrives — so nothing in it may
+  as the "What's new in this version" of its submission — so nothing in it may
   be about one store or assume one platform unless the bullet itself is about that platform. The
   release's bullets, trimmed to the ones a store visitor would care about, in the same voice as the
   GitHub notes, one per line.

@@ -39,9 +39,6 @@ Campfire is available for the following platforms:
 <a href="https://github.com/pandulapeter/campfire/releases/latest"><img src="documentation/images/badge_macos.png" alt="Campfire for macOS" height="32px" /></a>
 <a href="https://github.com/pandulapeter/campfire/releases/latest"><img src="documentation/images/badge_windows.png" alt="Campfire for Windows" height="32px" /></a>
 
-Until the Microsoft Store has it, every release also carries the **Windows** build (`.msi`), marked `unsigned`
-because that is what it is: SmartScreen warns about an unknown publisher, and *More info → Run anyway* gets past it.
-
 ### Documentation
 
 - [Features](documentation/features.md) - everything the app does, at length, and what it does with your data.

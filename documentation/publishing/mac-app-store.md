@@ -75,7 +75,7 @@ donation link (guideline 3.1.1, `canAskForDonations`).
 ## 5. Automating it
 
 `macos-publish.yml` builds, signs, starts a copy in the sandbox and uploads; `release.yml` calls it and checks
-`campfire.buildNumber`. `desktop-publish.yml` no longer builds anything for the Mac.
+`campfire.buildNumber`. No other workflow builds anything for the Mac.
 
 - [x] No certificate or profile is stored: the run creates both certificates and both profiles through the API and
       revokes them at the end (`.github/scripts/app_store_signing.py`), with the Admin API key iOS uses. The ones

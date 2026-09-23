@@ -6,19 +6,14 @@
 # If a copy of the MPL was not distributed with this file, You can obtain one at
 # https://mozilla.org/MPL/2.0/.
 
-# Builds the Linux and Windows installers of the desktop app and attaches them to a GitHub release. jpackage only ever
-# packages for the machine it runs on, so there is one runner per operating system and processor. The Mac build goes
-# to the Mac App Store instead (macos-publish.yml), and nothing for the Mac is attached to a release.
+# Builds the Linux packages of the desktop app and attaches them to a GitHub release. jpackage only ever packages for the
+# machine it runs on, so there is one runner per processor. This is the whole of how the Linux build is handed out: no
+# store carries it, a Debian package is not something anybody signs on its own, and the release page is what the
+# README's "Get Campfire" section links to.
 #
-# For Linux this is the whole of how the build is handed out: no store carries it, a Debian package is not something
-# anybody signs on its own, and the release page is what Settings links to. The Windows installer is a stopgap until
-# the Microsoft Store has the app, and its name says what it is: "unsigned" is a SmartScreen warning, which is why the
-# app does not link to it.
-#
-# Called by release.yml for every release; dispatched by hand to attach the installers to a release that is already
-# there.
+# Called by release.yml for every release; dispatched by hand to attach the packages to a release that is already there.
 
-name: 'Publish Linux and Windows'
+name: 'Publish Linux'
 
 on:
   workflow_call:
@@ -29,7 +24,7 @@ on:
   workflow_dispatch:
     inputs:
       release_tag:
-        description: 'Tag of the existing GitHub release to build and attach the installers to'
+        description: 'Tag of the existing GitHub release to build and attach the packages to'
         type: string
         required: true
 
@@ -41,7 +36,7 @@ jobs:
     name: ${{ matrix.name }}
     runs-on: ${{ matrix.runner }}
     strategy:
-      # An installer that cannot be built is no reason to withhold the others.
+      # A package that cannot be built is no reason to withhold the other.
       fail-fast: false
       matrix:
         include:
@@ -55,28 +50,11 @@ jobs:
           # since it pins the build environment independently of the runner image.
           - name: Linux (amd64)
             runner: ubuntu-22.04
-            task: packageReleaseDeb
-            format: deb
             asset: linux-amd64.deb
           - name: Linux (arm64)
             runner: ubuntu-22.04-arm
-            task: packageReleaseDeb
-            format: deb
             asset: linux-arm64.deb
-          - name: Windows
-            runner: windows-latest
-            task: packageReleaseMsi
-            format: msi
-            asset: windows-x64-unsigned.msi
-    defaults:
-      run:
-        # Git Bash on the Windows runner, so the steps are the same script everywhere.
-        shell: bash
     steps:
-      # Git for Windows checks text files out with CRLF line endings unless told otherwise, and a gradlew that has
-      # them is not a script Bash can run.
-      - name: Keep line endings as they are
-        run: git config --global core.autocrlf false
       - name: Check out repository
         uses: actions/checkout@v5
         with:
@@ -101,68 +79,38 @@ jobs:
       # the display the release build is started on before it is attached, and the GL libraries are what Skiko's
       # native library is linked against - every desktop has them, but the arm64 runner image does not.
       - name: Install packaging tools
-        if: runner.os == 'Linux'
         run: sudo apt-get update && sudo apt-get install --yes fakeroot xvfb libegl1 libgl1
       # The app image is asked for by name: the Compose plugin hands jpackage the jars and the runtime directly, and the
-      # installer would be the only thing left on disk. Both tasks are made of the same ProGuard output, so the image
-      # is what the installer holds.
-      # The daemon is stopped afterwards because the Gradle cache is saved when the job ends, and on Windows the lock
-      # files a running daemon holds cannot be read into the archive, which fails the save.
-      - name: Build the installer
+      # package would be the only thing left on disk. Both tasks are made of the same ProGuard output, so the image
+      # is what the package holds.
+      - name: Build the package
         env:
           DROPBOX_APP_KEY: ${{ secrets.DROPBOX_APP_KEY }}
         run: |
           printf 'campfire.dropbox.appKey=%s\n' "${DROPBOX_APP_KEY//\\/\\\\}" > local.properties
-          ./gradlew :app:desktop:createReleaseDistributable :app:desktop:${{ matrix.task }}
+          ./gradlew :app:desktop:createReleaseDistributable :app:desktop:packageReleaseDeb
           ./gradlew --stop
       # ProGuard breaks an application in ways that only starting it shows - a VerifyError on the first frame is how
-      # the last one looked - so the app image is started once before anybody downloads the installer. The demo
+      # the last one looked - so the app image is started once before anybody downloads the package. The demo
       # library appearing in an empty data directory proves that Koin started, the window composed and the library
       # was written; the process still being there a while later proves the first frames did not kill it.
       - name: Start the release build once
         run: |
-          BINARIES="app/desktop/build/compose/binaries/main-release/app"
+          APP="app/desktop/build/compose/binaries/main-release/app/Campfire/bin/Campfire"
           HOME_DIRECTORY="$RUNNER_TEMP/campfire-home"
+          DATA="$HOME_DIRECTORY/.local/share/campfire"
           LOG="$RUNNER_TEMP/campfire.log"
           mkdir -p "$HOME_DIRECTORY"
           export JAVA_TOOL_OPTIONS="-Duser.home=$HOME_DIRECTORY"
-          LAUNCHER=()
-          case "$RUNNER_OS" in
-            Linux)
-              APP="$BINARIES/Campfire/bin/Campfire"
-              DATA="$HOME_DIRECTORY/.local/share/campfire"
-              unset XDG_DATA_HOME
-              LAUNCHER=(xvfb-run --auto-servernum)
-              # Xvfb has no OpenGL. Skiko would fall back to software rendering on its own, but it logs the failed
-              # attempt as a RenderException first, which the check below would take for a crash.
-              export SKIKO_RENDER_API=SOFTWARE_FAST
-              ;;
-            Windows)
-              APP="$BINARIES/Campfire/Campfire.exe"
-              DATA="$HOME_DIRECTORY/AppData/Roaming/Campfire"
-              export JAVA_TOOL_OPTIONS="-Duser.home=$(cygpath -w "$HOME_DIRECTORY")"
-              export APPDATA="$(cygpath -w "$HOME_DIRECTORY/AppData/Roaming")"
-              ;;
-          esac
-          "${LAUNCHER[@]}" "$APP" > "$LOG" 2>&1 &
+          unset XDG_DATA_HOME
+          # Xvfb has no OpenGL. Skiko would fall back to software rendering on its own, but it logs the failed attempt
+          # as a RenderException first, which the check below would take for a crash.
+          export SKIKO_RENDER_API=SOFTWARE_FAST
+          xvfb-run --auto-servernum "$APP" > "$LOG" 2>&1 &
           PID=$!
-          # The Windows launcher is not a process Git Bash can signal, and it writes nothing to the log - so there an
-          # exception that leaves the process running (Compose Desktop survives one thrown in a LaunchedEffect) goes
-          # unseen. The Linux legs run the same ProGuard output and read the log.
-          is_running() {
-            if [ "$RUNNER_OS" = Windows ]; then
-              tasklist //FI "IMAGENAME eq Campfire.exe" | grep -q Campfire.exe
-            else
-              kill -0 "$PID" 2> /dev/null
-            fi
-          }
           stop() {
-            if [ "$RUNNER_OS" = Windows ]; then
-              taskkill //F //IM Campfire.exe > /dev/null 2>&1 || true
-            else
-              pkill -f "$APP" || true
-              kill "$PID" 2> /dev/null || true
-            fi
+            pkill -f "$APP" || true
+            kill "$PID" 2> /dev/null || true
           }
           fail() {
             echo "::error::$1"
@@ -171,7 +119,7 @@ jobs:
             exit 1
           }
           for _ in $(seq 120); do
-            is_running || fail "The release build exited on its own before the library was written."
+            kill -0 "$PID" 2> /dev/null || fail "The release build exited on its own before the library was written."
             if [ -f "$DATA/preferences/preferences.json" ] && ls "$DATA/library/songs/"*.cho > /dev/null 2>&1; then
               break
             fi
@@ -179,22 +127,22 @@ jobs:
           done
           ls "$DATA/library/songs/"*.cho > /dev/null 2>&1 || fail "The release build did not write the demo library in two minutes."
           sleep 15
-          is_running || fail "The release build exited on its own after it had written the library."
+          kill -0 "$PID" 2> /dev/null || fail "The release build exited on its own after it had written the library."
           grep -q "Exception" "$LOG" && fail "The release build logged an exception."
           stop
           cat "$LOG"
           echo "The release build started and wrote: $(ls "$DATA/library/songs")"
-      - name: Attach the installer to the GitHub release
+      - name: Attach the package to the GitHub release
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
           VERSION_NAME=$(sed -n 's/^campfire\.versionName=//p' gradle.properties)
-          DIRECTORY="app/desktop/build/compose/binaries/main-release/${{ matrix.format }}"
-          INSTALLER=$(find "$DIRECTORY" -name '*.${{ matrix.format }}' | head -n 1)
-          if [ -z "$INSTALLER" ]; then
-            echo "The installer is missing from $DIRECTORY" >&2
+          DIRECTORY="app/desktop/build/compose/binaries/main-release/deb"
+          PACKAGE=$(find "$DIRECTORY" -name '*.deb' | head -n 1)
+          if [ -z "$PACKAGE" ]; then
+            echo "The package is missing from $DIRECTORY" >&2
             exit 1
           fi
           ASSET="campfire-$VERSION_NAME-${{ matrix.asset }}"
-          cp "$INSTALLER" "$ASSET"
+          cp "$PACKAGE" "$ASSET"
           gh release upload "${{ inputs.release_tag }}" "$ASSET" --clobber

@@ -7,10 +7,10 @@
 # https://mozilla.org/MPL/2.0/.
 
 # The whole release, started by publishing a GitHub release: the Android build goes to Play, the web build onto the
-# website, the iOS and the macOS builds to App Store Connect, and the Linux and Windows installers, which no store
-# offers yet, onto the release itself — a release carries only what no official channel does. Each of the five is a
-# workflow of its own that this one calls, so any of them can also be dispatched by hand, and a job that failed here
-# can be run again from the run's page without repeating the ones that went through.
+# website, the iOS and the macOS builds to App Store Connect, the Windows build to the Microsoft Store, and the Linux
+# packages, which no store offers, onto the release itself — a release carries only what no official channel does. Each
+# of the six is a workflow of its own that this one calls, so any of them can also be dispatched by hand, and a job that
+# failed here can be run again from the run's page without repeating the ones that went through.
 #
 # The "what's new" text for the stores is read out of the release's description, from comments the rendered page hides:
 #
@@ -19,10 +19,11 @@
 #   -->
 #   <!-- play-store update-priority: 0 -->
 #
-# The notes are written for every store that shows them: Play gets them as its release notes, and the App Store and
-# the Mac App Store as the "What's New" of the version the iOS and macOS jobs submit for review; the priority
-# is Play's alone (see the Updates section of CLAUDE.md for what the number decides). Both are optional. Without the
-# notes the visible description stands in for them, with its markdown taken out, and without the priority it is 0.
+# The notes are written for every store that shows them: Play gets them as its release notes, the App Store and the
+# Mac App Store as the "What's New" of the version the iOS and macOS jobs submit for review, and the Microsoft Store as
+# the "What's new in this version" of the submission the Windows job makes; the priority is Play's alone (see the
+# Updates section of CLAUDE.md for what the number decides). Both are optional. Without the notes the visible
+# description stands in for them, with its markdown taken out, and without the priority it is 0.
 
 name: 'Release'
 
@@ -57,7 +58,7 @@ jobs:
           fi
           echo "Releasing version $VERSION_NAME"
       # Play refuses a version code it has seen and App Store Connect a build number, but each says so only after its
-      # build has been made and signed and the other four builds have gone out. The previous
+      # build has been made and signed and the other builds have gone out. The previous
       # release is the last one published, whatever its version: Play wants the code higher than every one it has had,
       # so a fix to an older line is compared with the newest release too. Pre-releases reach no store and are left out.
       - name: Check the build numbers against the previous release
@@ -88,7 +89,7 @@ jobs:
           echo "campfire.buildNumber: $PREVIOUS at $PREVIOUS_TAG, $CURRENT now"
       # A published build with an empty key has no sync provider at all, and nothing downstream would notice: the
       # empty string is the checked-in default, because a fresh clone has to build without a secret. Asked here as
-      # well as in each workflow, so a release fails before five builds have run rather than after.
+      # well as in each workflow, so a release fails before six builds have run rather than after.
       - name: Check the sync credentials
         env:
           DROPBOX_APP_KEY: ${{ secrets.DROPBOX_APP_KEY }}
@@ -137,12 +138,22 @@ jobs:
     uses: ./.github/workflows/web-publish.yml
     secrets: inherit
 
-  desktop:
-    name: Desktop
+  linux:
+    name: Linux
     needs: prepare
-    uses: ./.github/workflows/desktop-publish.yml
+    uses: ./.github/workflows/linux-publish.yml
     with:
       release_tag: ${{ github.event.release.tag_name }}
+    secrets: inherit
+
+  windows:
+    name: Windows
+    needs: prepare
+    uses: ./.github/workflows/windows-publish.yml
+    with:
+      release_tag: ${{ github.event.release.tag_name }}
+      release_notes: ${{ needs.prepare.outputs.release_notes }}
+      submit: true
     secrets: inherit
 
   ios:

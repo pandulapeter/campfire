@@ -226,8 +226,8 @@ tasks.matching { it.name == "packageDeb" || it.name == "packageReleaseDeb" }.con
  * Puts a ticked "Launch Campfire" checkbox on the last page of the Windows installer, which starts the app when the
  * installer is closed with Finish. jpackage has no option for it and takes WiX sources only through the --resource-dir
  * the Compose plugin owns, so `add-launch-after-install.ps1` adds it to the finished .msi - the script says how. It is
- * a finalizer of the packaging task, so whatever builds the .msi - `desktop-publish.yml` included - gets it without
- * asking, and a script that cannot find what it edits fails that build rather than letting an installer out without it.
+ * a finalizer of the packaging task, so whatever builds the .msi gets it without asking, and a script that cannot find
+ * what it edits fails that build rather than letting an installer out without it.
  */
 val addLaunchAfterInstallToMsi = tasks.register<AddLaunchAfterInstallToMsi>("addLaunchAfterInstallToMsi") {
     onlyIf { isWindowsHost }

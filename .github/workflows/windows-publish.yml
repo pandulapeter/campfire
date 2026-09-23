@@ -1,0 +1,201 @@
+# This file is part of Campfire.
+# Copyright (c) Pandula Péter 2017-2026.
+# https://github.com/pandulapeter/campfire
+#
+# This Source Code Form is subject to the terms of the Mozilla Public License, v. 2.0.
+# If a copy of the MPL was not distributed with this file, You can obtain one at
+# https://mozilla.org/MPL/2.0/.
+
+# Builds the Microsoft Store package of the desktop app (packageReleaseMsix) and, called by a release, submits it for
+# certification with the release's notes as its "What's new in this version", to be published as soon as it passes
+# (.github/scripts/microsoft_store_submission.py). Dispatched by hand it submits only when asked, and the package is
+# kept as an artifact of the run either way, for an upload made by hand. A green run means submitted, not certified -
+# certification answers by email.
+#
+# The package is unsigned, because Partner Center signs what it certifies, so nothing here signs anything. What it
+# needs is a Microsoft Entra application with the Manager role in Partner Center: MICROSOFT_STORE_TENANT_ID,
+# MICROSOFT_STORE_CLIENT_ID and MICROSOFT_STORE_CLIENT_SECRET, the last of which expires - two years at most after it
+# was made - and has to be replaced in Partner Center and here when it does.
+#
+# Nothing is attached to the release: the Store is how the Windows build is handed out.
+
+name: 'Publish Windows'
+
+on:
+  workflow_call:
+    inputs:
+      release_tag:
+        type: string
+        required: true
+      release_notes:
+        type: string
+        required: false
+      submit:
+        type: boolean
+        default: false
+  workflow_dispatch:
+    inputs:
+      release_tag:
+        description: 'Tag of the release to build'
+        type: string
+        required: true
+      submit:
+        description: 'Submit the package to the Microsoft Store for certification, to be published as soon as it passes'
+        type: boolean
+        default: false
+      release_notes:
+        description: '"What''s new in this version" for the submission, use \n for line breaks'
+        type: string
+        required: false
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    name: Build and Submit
+    runs-on: windows-latest
+    defaults:
+      run:
+        # Git Bash, so the steps read like the other workflows' scripts.
+        shell: bash
+    steps:
+      # `gh secret set` stores an empty value without complaint when it has no terminal to prompt on, and an empty
+      # secret would only surface after a twenty minute build, as a refused sign-in.
+      - name: Check the secrets
+        env:
+          DROPBOX_APP_KEY: ${{ secrets.DROPBOX_APP_KEY }}
+          TENANT_ID: ${{ secrets.MICROSOFT_STORE_TENANT_ID }}
+          CLIENT_ID: ${{ secrets.MICROSOFT_STORE_CLIENT_ID }}
+          CLIENT_SECRET: ${{ secrets.MICROSOFT_STORE_CLIENT_SECRET }}
+          SUBMIT: ${{ inputs.submit }}
+        run: |
+          PROBLEMS=0
+          problem() {
+            echo "::error::$1: $2" >&2
+            PROBLEMS=$((PROBLEMS + 1))
+          }
+          # The empty string is the checked-in default, because a fresh clone has to build without a secret, so
+          # nothing downstream would notice a published build that has no sync provider at all.
+          [ -n "$DROPBOX_APP_KEY" ] || problem DROPBOX_APP_KEY "empty or not visible to this workflow"
+          if [ "$SUBMIT" = true ]; then
+            [[ "$TENANT_ID" =~ ^[0-9a-fA-F-]{36}$ ]] || problem MICROSOFT_STORE_TENANT_ID "expected a GUID, found ${#TENANT_ID} characters"
+            [[ "$CLIENT_ID" =~ ^[0-9a-fA-F-]{36}$ ]] || problem MICROSOFT_STORE_CLIENT_ID "expected a GUID, found ${#CLIENT_ID} characters"
+            [ -n "$CLIENT_SECRET" ] || problem MICROSOFT_STORE_CLIENT_SECRET "empty or unset"
+          fi
+          if [ "$PROBLEMS" -gt 0 ]; then
+            echo "Set them from a terminal that can prompt for hidden input: gh secret set <name> --repo $GITHUB_REPOSITORY" >&2
+            exit 1
+          fi
+      # Git for Windows checks text files out with CRLF line endings unless told otherwise, and a gradlew that has
+      # them is not a script Bash can run.
+      - name: Keep line endings as they are
+        run: git config --global core.autocrlf false
+      - name: Check out repository
+        uses: actions/checkout@v5
+        with:
+          ref: ${{ inputs.release_tag }}
+      - name: Set up JDK 21
+        uses: actions/setup-java@v5
+        with:
+          distribution: 'zulu'
+          java-version: 21
+          cache: 'gradle'
+      # makeappx and makepri come from the Windows SDK the runner image carries. The daemon is stopped afterwards because
+      # the Gradle cache is saved when the job ends, and on Windows the lock files a running daemon holds cannot be read
+      # into the archive, which fails the save.
+      - name: Build the package
+        env:
+          DROPBOX_APP_KEY: ${{ secrets.DROPBOX_APP_KEY }}
+        run: |
+          printf 'campfire.dropbox.appKey=%s\n' "${DROPBOX_APP_KEY//\\/\\\\}" > local.properties
+          ./gradlew :app:desktop:packageReleaseMsix
+          ./gradlew --stop
+      # A package whose identity or version does not match Partner Center is refused only after it has been uploaded.
+      - name: Check the package
+        id: package
+        run: |
+          VERSION_NAME=$(sed -n 's/^campfire\.versionName=//p' gradle.properties | tr -d '\r')
+          IDENTITY=$(sed -n 's/^campfire\.windows\.identityName=//p' gradle.properties | tr -d '\r')
+          PACKAGE="app/desktop/build/compose/binaries/main-release/msix/Campfire-$VERSION_NAME.msix"
+          python - "$PACKAGE" "$IDENTITY" "$VERSION_NAME.0" <<'PYTHON'
+          import re, sys, zipfile
+          package, identity, version = sys.argv[1:]
+          manifest = zipfile.ZipFile(package).read("AppxManifest.xml").decode("utf-8")
+          element = re.search(r"<Identity\b[^>]*>", manifest).group(0)
+          found = dict(re.findall(r'(\w+)="([^"]*)"', element))
+          print(f"Packaged {found.get('Name')} {found.get('Version')}")
+          if found.get("Name") != identity or found.get("Version") != version:
+              print(f"::error::The package does not carry {identity} {version}.", file=sys.stderr)
+              sys.exit(1)
+          PYTHON
+          echo "path=$PACKAGE" >> "$GITHUB_OUTPUT"
+          echo "identity=$IDENTITY" >> "$GITHUB_OUTPUT"
+          echo "version=$VERSION_NAME.0" >> "$GITHUB_OUTPUT"
+      # ProGuard breaks an application in ways that only starting it shows - a VerifyError on the first frame is how
+      # the last one looked - so the app image the package was made of is started once before anything is submitted.
+      # The demo library appearing in an empty data directory proves that Koin started, the window composed and the
+      # library was written; the process still being there a while later proves the first frames did not kill it. The
+      # Windows launcher writes no log, so an exception that leaves the process running goes unseen here; the Linux
+      # workflow starts the same ProGuard output and reads its log.
+      - name: Start the release build once
+        run: |
+          APP="app/desktop/build/compose/binaries/main-release/app/Campfire/Campfire.exe"
+          HOME_DIRECTORY="$RUNNER_TEMP/campfire-home"
+          DATA="$HOME_DIRECTORY/AppData/Roaming/Campfire"
+          mkdir -p "$HOME_DIRECTORY"
+          export JAVA_TOOL_OPTIONS="-Duser.home=$(cygpath -w "$HOME_DIRECTORY")"
+          export APPDATA="$(cygpath -w "$HOME_DIRECTORY/AppData/Roaming")"
+          "$APP" &
+          # The launcher is not a process Git Bash can signal, so it is asked about and stopped by name.
+          is_running() {
+            tasklist //FI "IMAGENAME eq Campfire.exe" | grep -q Campfire.exe
+          }
+          stop() {
+            taskkill //F //IM Campfire.exe > /dev/null 2>&1 || true
+          }
+          fail() {
+            echo "::error::$1"
+            stop
+            exit 1
+          }
+          for _ in $(seq 120); do
+            is_running || fail "The release build exited on its own before the library was written."
+            if [ -f "$DATA/preferences/preferences.json" ] && ls "$DATA/library/songs/"*.cho > /dev/null 2>&1; then
+              break
+            fi
+            sleep 1
+          done
+          ls "$DATA/library/songs/"*.cho > /dev/null 2>&1 || fail "The release build did not write the demo library in two minutes."
+          sleep 15
+          is_running || fail "The release build exited on its own after it had written the library."
+          stop
+          echo "The release build started and wrote: $(ls "$DATA/library/songs")"
+      - name: Keep the package
+        uses: actions/upload-artifact@v4
+        with:
+          name: campfire-msix
+          path: ${{ steps.package.outputs.path }}
+          retention-days: 30
+      # Creates the submission, swaps in the package, writes the notes, commits it and waits for Partner Center to
+      # accept the commit (.github/scripts/microsoft_store_submission.py).
+      - name: Submit for certification
+        if: inputs.submit
+        env:
+          MICROSOFT_STORE_TENANT_ID: ${{ secrets.MICROSOFT_STORE_TENANT_ID }}
+          MICROSOFT_STORE_CLIENT_ID: ${{ secrets.MICROSOFT_STORE_CLIENT_ID }}
+          MICROSOFT_STORE_CLIENT_SECRET: ${{ secrets.MICROSOFT_STORE_CLIENT_SECRET }}
+          RELEASE_NOTES: ${{ inputs.release_notes }}
+        run: |
+          # A single-line text box has no other way to ask for a line break; the notes release.yml passes on are
+          # carried through as they are, backslashes included.
+          if [ "$GITHUB_EVENT_NAME" = workflow_dispatch ]; then
+            printf '%b\n' "$RELEASE_NOTES" > "$RUNNER_TEMP/release-notes.txt"
+          else
+            printf '%s\n' "$RELEASE_NOTES" > "$RUNNER_TEMP/release-notes.txt"
+          fi
+          python .github/scripts/microsoft_store_submission.py "${{ steps.package.outputs.identity }}" \
+            "${{ steps.package.outputs.version }}" "${{ steps.package.outputs.path }}" "$RUNNER_TEMP/release-notes.txt"
+      - name: Clean up credentials
+        if: always()
+        run: rm -f local.properties
