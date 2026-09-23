@@ -22,6 +22,8 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.asPaddingValues
 import androidx.compose.foundation.layout.calculateEndPadding
 import androidx.compose.foundation.layout.calculateStartPadding
 import androidx.compose.foundation.layout.fillMaxHeight
@@ -113,6 +115,7 @@ import com.pandulapeter.campfire.presentation.resources.song_editor_shortcuts
 import com.pandulapeter.campfire.presentation.resources.song_editor_show_shortcuts
 import com.pandulapeter.campfire.presentation.resources.song_editor_undo
 import com.pandulapeter.campfire.presentation.ui.CampfireViewModel
+import com.pandulapeter.campfire.presentation.ui.contentEdges
 import com.pandulapeter.campfire.presentation.ui.components.ActionsMenu
 import com.pandulapeter.campfire.presentation.ui.components.ActionsMenuItem
 import com.pandulapeter.campfire.presentation.ui.components.CampfireTopAppBar
@@ -571,8 +574,15 @@ private fun ChordProTextField(
     val bodyLarge = MaterialTheme.typography.bodyLarge
     val layoutDirection = LocalLayoutDirection.current
     val density = LocalDensity.current
-    val insetBottomPadding = contentPadding.calculateBottomPadding() + 32.dp
-    val insetBottomPaddingPx = with(density) { insetBottomPadding.roundToPx() }
+    // The bottom of the padding this screen was handed is the navigation bar, or the keyboard wherever that reaches
+    // higher, and the two are spent differently here. The keyboard covers the bottom of the field whatever it is
+    // scrolled to, so what it covers beyond the bar is always taken off the field: the field then ends at the top of
+    // the keyboard, and keeping the caret in view - which it does whenever its size changes - keeps it above it. The
+    // bar and the room after the last line only mean anything once scrolled past, so they are spent at the end alone.
+    val restingBottomInset = WindowInsets.contentEdges.asPaddingValues().calculateBottomPadding()
+    val keyboardPadding = (contentPadding.calculateBottomPadding() - restingBottomInset).coerceAtLeast(0.dp)
+    val endPadding = restingBottomInset + 32.dp
+    val endPaddingPx = with(density) { endPadding.roundToPx() }
     // Unlike SongPreview's bottom padding, which sits inside its own verticalScroll and is therefore only ever
     // spent once scrolled past the last line, this field's padding is outside the scrolling BasicTextField manages
     // internally - there is no way to hand it a padding that only counts once the content runs out. Applying it
@@ -583,9 +593,9 @@ private fun ChordProTextField(
     // Requiring the field to have scrolled back up by at least the padding's own height before giving it up is what
     // breaks that loop.
     var respectsBottomInset by remember { mutableStateOf(false) }
-    LaunchedEffect(scrollState, insetBottomPaddingPx) {
+    LaunchedEffect(scrollState, endPaddingPx) {
         snapshotFlow { scrollState.value to scrollState.maxValue }.collect { (value, maxValue) ->
-            respectsBottomInset = if (respectsBottomInset) value >= maxValue - insetBottomPaddingPx else value >= maxValue
+            respectsBottomInset = if (respectsBottomInset) value >= maxValue - endPaddingPx else value >= maxValue
         }
     }
     BasicTextField(
@@ -607,15 +617,16 @@ private fun ChordProTextField(
                     false
                 }
             }
-            // The keyboard is already in the content padding this screen was handed, see CampfireApp; applying the
-            // inset a second time here shrank the field to a couple of lines as soon as the keyboard came up. There
-            // is no top padding for the same reason the bottom one is conditional: it would sit outside the field's
-            // own scrolling, so the text would scroll under a strip of nothing below the toolbar rather than up to
-            // its edge. The toolbar's own bottom padding is the space between the two at rest.
+            // The keyboard reaches the field only through the content padding this screen was handed, see CampfireApp,
+            // and only the part of it that covers the field is applied, once: applying the whole inset a second time
+            // shrinks the field to a couple of lines as soon as the keyboard comes up. There is no top padding for the
+            // same reason the bottom one is split: it would sit outside the field's own scrolling, so the text would
+            // scroll under a strip of nothing below the toolbar rather than up to its edge. The toolbar's own bottom
+            // padding is the space between the two at rest.
             .padding(
                 start = contentPadding.calculateStartPadding(layoutDirection) + 16.dp,
                 end = contentPadding.calculateEndPadding(layoutDirection) + 16.dp,
-                bottom = if (respectsBottomInset) insetBottomPadding else 0.dp,
+                bottom = keyboardPadding + if (respectsBottomInset) endPadding else 0.dp,
             ),
         state = textFieldState,
         textStyle = bodyLarge.copy(
