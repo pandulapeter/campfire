@@ -30,3 +30,4 @@ build/
 
 # Release notes scratch files
 /.release-notes/
+/app/desktop/*.provisionprofile

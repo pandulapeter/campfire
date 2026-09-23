@@ -7,6 +7,8 @@
  * If a copy of the MPL was not distributed with this file, You can obtain one at
  * https://mozilla.org/MPL/2.0/.
  */
+import java.nio.file.FileSystems
+import java.nio.file.Files
 import java.security.MessageDigest
 import javax.inject.Inject
 import org.jetbrains.compose.desktop.application.dsl.TargetFormat
@@ -31,6 +33,12 @@ dependencies {
 val versionName = project.property("campfire.versionName").toString()
 group = "com.pandulapeter.campfire"
 version = versionName
+
+/** Whether this is the build that goes to the Mac App Store, which is sandboxed and packaged as a signed `.pkg`. */
+val isMacAppStoreBuild = project.property("campfire.desktop.distribution").toString() == "mac-app-store"
+
+/** Empty for an unsigned store build, which on Apple silicon still gets the ad hoc signature it needs to start at all. */
+val macSigningIdentity = project.property("campfire.mac.signingIdentity").toString()
 
 /** The JDK the app is compiled with, and the one whose runtime image, `jpackage` and `java` the packaging uses. */
 val toolchainLauncher = javaToolchains.launcherFor {
@@ -63,7 +71,7 @@ compose.desktop {
         // Package with the toolchain JDK rather than the JVM running Gradle, which may lack jpackage.
         javaHome = toolchainLauncher.get().metadata.installationPath.asFile.absolutePath
         nativeDistributions {
-            targetFormats(TargetFormat.Dmg, TargetFormat.Msi, TargetFormat.Deb)
+            targetFormats(TargetFormat.Dmg, TargetFormat.Pkg, TargetFormat.Msi, TargetFormat.Deb)
             packageName = "Campfire"
             packageVersion = versionName
             description = "Your songbook, on every screen you own"
@@ -80,10 +88,38 @@ compose.desktop {
             modules("java.instrument", "java.management", "jdk.accessibility", "jdk.localedata", "jdk.unsupported")
             macOS {
                 iconFile.set(project.file("src/main/resources/appIcon.icns"))
+                bundleID = "com.pandulapeter.campfire"
+                appCategory = "public.app-category.music"
+                // What the bundled JDK and skiko are built for; the plugin's own default is older than either.
+                minimumSystemVersion = "11.0"
+                packageBuildVersion = project.property("campfire.mac.buildNumber").toString()
                 // Not fileAssociation(): the plugin writes its own document type with the "****" OS type, which claims
                 // every kind of file, and with no rank or content type. These are the iOS app's document types.
                 infoPlist {
-                    extraKeysRawXml = macChordProDocumentTypes()
+                    extraKeysRawXml = macChordProDocumentTypes() + "\n" + nonExemptEncryptionKey()
+                }
+                if (isMacAppStoreBuild) {
+                    // Only the store build is signed. A real signature enforces the hardened runtime, under which the
+                    // JVM needs the entitlements that only this build is given; the .dmg keeps its ad hoc signature,
+                    // which does not, until it gets entitlements and notarization of its own.
+                    if (macSigningIdentity.isNotEmpty()) {
+                        signing {
+                            sign = true
+                            identity = macSigningIdentity
+                            project.property("campfire.mac.signingKeychain").toString().takeIf { it.isNotEmpty() }?.let {
+                                keychain = it
+                            }
+                        }
+                    }
+                    appStore = true
+                    entitlementsFile = project.file("app-store.entitlements")
+                    runtimeEntitlementsFile = project.file("app-store-runtime.entitlements")
+                    project.property("campfire.mac.provisioningProfile").toString().takeIf { it.isNotEmpty() }?.let {
+                        provisioningProfile = project.file(it)
+                    }
+                    project.property("campfire.mac.runtimeProvisioningProfile").toString().takeIf { it.isNotEmpty() }?.let {
+                        runtimeProvisioningProfile = project.file(it)
+                    }
                 }
             }
             windows {
@@ -144,6 +180,9 @@ tasks.withType<AbstractJLinkTask>().configureEach {
             if (dump.waitFor() != 0) throw GradleException("Could not write the class data sharing archive:\n$output")
         } finally {
             launcher.delete()
+            // copyTo created the folder, which the stripped image does not have, and jpackage refuses a Mac App Store
+            // runtime that has one at all, empty or not.
+            launcher.parentFile.takeIf { it.list().isNullOrEmpty() }?.delete()
         }
         // The JVM writes it read-only, which on Windows stops the next jlink run from clearing its output directory.
         runtimeImage.get().asFile.walkTopDown().filter { it.extension == "jsa" }.forEach { it.setWritable(true) }
@@ -193,6 +232,27 @@ val addLaunchAfterInstallToMsi = tasks.register<AddLaunchAfterInstallToMsi>("add
 }
 tasks.matching { it.name == "packageMsi" || it.name == "packageReleaseMsi" }.configureEach {
     finalizedBy(addLaunchAfterInstallToMsi)
+}
+
+/**
+ * Takes the skiko library of the other kind of Mac out of the jar ProGuard joins everything into. The macOS skiko
+ * runtime jar carries the libraries of both processors; the packaging moves the one for the machine it runs on into
+ * the bundle and signs it there, and would leave the other one in the jar, unsigned. It is never loaded, but it is
+ * twenty megabytes of every download, and a native binary without a signature inside a jar is exactly what the Mac
+ * App Store's validation and notarization look for.
+ */
+tasks.matching { it.name == "proguardReleaseJars" }.configureEach {
+    val proguardOutput = layout.buildDirectory.dir("compose/tmp/main-release/proguard")
+    doLast {
+        if (!System.getProperty("os.name").orEmpty().lowercase().contains("mac")) return@doLast
+        val otherArchitecture = if (System.getProperty("os.arch") == "aarch64") "x64" else "arm64"
+        val unused = listOf("libskiko-macos-$otherArchitecture.dylib", "libskiko-macos-$otherArchitecture.dylib.sha256")
+        proguardOutput.get().asFile.listFiles { file -> file.extension == "jar" }.orEmpty().forEach { jar ->
+            FileSystems.newFileSystem(jar.toPath()).use { zip ->
+                unused.map { zip.getPath(it) }.forEach { Files.deleteIfExists(it) }
+            }
+        }
+    }
 }
 
 compose.resources {
@@ -314,6 +374,16 @@ fun org.jetbrains.compose.desktop.application.dsl.AbstractPlatformSettings.chord
     listOf("cho", "chopro", "chordpro").forEach { extension ->
         fileAssociation(mimeType = "text/plain", extension = extension, description = "ChordPro song")
     }
+
+/**
+ * Tells App Store Connect that the app's only cryptography is the system's HTTPS and hashing, which is exempt, so that
+ * no upload stops to ask the export compliance questions. The iOS app's `Info.plist` gives the same answer; anything
+ * that adds encryption of its own has to change both.
+ */
+fun nonExemptEncryptionKey() = """
+    <key>ITSAppUsesNonExemptEncryption</key>
+    <false/>
+""".trimIndent()
 
 /**
  * The macOS document types, the same as the iOS app's (`app/ios/iosApp/iosApp/Info.plist`): ".cho" claimed as the

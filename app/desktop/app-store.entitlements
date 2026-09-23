@@ -1,0 +1,50 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+ * This file is part of Campfire.
+ * Copyright (c) Pandula Péter 2017-2026.
+ * https://github.com/pandulapeter/campfire
+ *
+ * This Source Code Form is subject to the terms of the Mozilla Public License, v. 2.0.
+ * If a copy of the MPL was not distributed with this file, You can obtain one at
+ * https://mozilla.org/MPL/2.0/.
+-->
+<!--
+ The entitlements of the Mac App Store build's own executable, which the JVM runs inside. Only the build made with
+ campfire.desktop.distribution=mac-app-store is signed with them; see build.gradle.kts.
+
+ - The sandbox is what the store requires of every app. The library stays where the code puts it, because the JDK
+   takes user.home from the container.
+ - allow-jit, allow-unsigned-executable-memory and disable-library-validation are what a JVM needs under the
+   hardened runtime: HotSpot writes machine code at run time, and loads skiko and its own libraries, which are not
+   signed as part of this executable.
+ - network.client is sync. network.server is two loopback sockets: the one the Dropbox consent page redirects to on
+   127.0.0.1:53682 for the length of one authorization, and the one that hands a second launch's files over to the
+   running instance (SingleInstance.kt). Neither is reachable from outside the machine.
+ - user-selected.read-write is the import and export dialogs, and the files opened from Finder or dropped on the
+   window.
+ - The last two tie the build to the App ID its provisioning profile was made for; TestFlight refuses a build
+   without them.
+-->
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+    <key>com.apple.security.app-sandbox</key>
+    <true/>
+    <key>com.apple.security.cs.allow-jit</key>
+    <true/>
+    <key>com.apple.security.cs.allow-unsigned-executable-memory</key>
+    <true/>
+    <key>com.apple.security.cs.disable-library-validation</key>
+    <true/>
+    <key>com.apple.security.network.client</key>
+    <true/>
+    <key>com.apple.security.network.server</key>
+    <true/>
+    <key>com.apple.security.files.user-selected.read-write</key>
+    <true/>
+    <key>com.apple.application-identifier</key>
+    <string>N45A6ZHDGY.com.pandulapeter.campfire</string>
+    <key>com.apple.developer.team-identifier</key>
+    <string>N45A6ZHDGY</string>
+</dict>
+</plist>
