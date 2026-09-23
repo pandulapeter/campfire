@@ -101,7 +101,9 @@ internal fun stopListeningForOtherInstances() {
 
 /**
  * Referenced for the life of the process on purpose: a lock belongs to its channel, and a channel nobody holds is
- * closed by the garbage collector, which would let the next process in while this one is still running.
+ * closed by the garbage collector, which would let the next process in while this one is still running. Nothing reads
+ * it, so the release build keeps it with a rule in `proguard-rules.pro` that names it: renaming or moving it means
+ * changing that rule too.
  */
 private var heldLock: FileLock? = null
 

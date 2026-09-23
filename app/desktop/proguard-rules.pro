@@ -30,3 +30,11 @@
 #
 # https://github.com/Guardsquare/proguard/issues/533
 -optimizations !method/specialization/*,!method/generalization/*,!field/specialization/*,!field/generalization/*
+
+# The single instance lock is held by keeping its FileLock in a field that nothing ever reads, since holding it is the
+# whole of its job. ProGuard removes a field that is only written, the lock and its channel are then unreachable, and
+# the first garbage collection closes the channel and releases the lock: every file opened in Explorer after that
+# starts a window of its own, while the files opened in the first seconds are still handed over.
+-keepclassmembers class com.pandulapeter.campfire.SingleInstanceKt {
+    private static java.nio.channels.FileLock heldLock;
+}
