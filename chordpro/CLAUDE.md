@@ -22,9 +22,11 @@ in `:domain:*`. `:data:source:local:implementation` uses it directly for the met
   chord grid are ways of **writing lines down** rather than parts of a song. `{start_of_tab}` and `{start_of_grid}`
   switch the kind of `ChordProLine` that is read until they close, inside whatever section is running, so a solo
   written as a line of chords with tablature under it is one section and not three. Outside every environment they
-  open the same implicit paragraph a bare line of lyrics would, carrying their own label, which is the only place
-  `{start_of_tab: Riff}` can still say "Riff"; one that holds no line leaves no paragraph behind, so its label heads
-  nothing. Everything downstream follows: the serializer wraps each *run* of tab
+  open the same implicit paragraph a bare line of lyrics would, carrying their own label as its heading; one that
+  holds no line leaves no paragraph behind, so its label heads nothing. Inside a running section the section's heading
+  wins, and the environment's label is carried by every line written in it instead (`ChordProLine.Tab.label`,
+  `ChordProLine.Grid.label`), which the viewer names the run's fold by and the serializer writes back where the
+  environment opens — a grid labelled differently from the one just before it opening an environment of its own. Everything downstream follows: the serializer wraps each *run* of tab
   or grid lines back in its environment, the transposer moves each run of frets as its own fingerboard, and the viewer
   cuts each run into rows that fit its width (`ChordProTabWrapper`) with the lyrics around it. A blank line inside an
   environment does not end its run for either of the first two: the serializer writes it inside the environment,

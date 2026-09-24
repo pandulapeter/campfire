@@ -37,10 +37,16 @@ sealed interface ChordProLine {
          * section, even one only a blank line away, is a fingerboard of its own, as it is to the text transposition.
          */
         val continuesEnvironment: Boolean = false,
+        /** The label of the `{start_of_tab}` the line was written in (`{start_of_tab: Riff}`), on every line of it. */
+        val label: String? = null,
     ) : ChordProLine
 
     /** One line inside {start_of_grid}: tokens separated by whitespace. */
-    data class Grid(val tokens: List<GridToken>) : ChordProLine
+    data class Grid(
+        val tokens: List<GridToken>,
+        /** The label of the `{start_of_grid}` the line was written in, on every line of it. */
+        val label: String? = null,
+    ) : ChordProLine
 
     /** An empty line inside an environment. */
     data object Blank : ChordProLine

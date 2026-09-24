@@ -388,7 +388,7 @@ class ChordProParserTest {
 
         assertEquals(SectionType.Paragraph, section.type)
         assertEquals("Riff", section.label)
-        assertEquals(ChordProLine.Tab("  e|---0---|"), section.lines.single())
+        assertEquals(ChordProLine.Tab("  e|---0---|", label = "Riff"), section.lines.single())
     }
 
     @Test
@@ -415,6 +415,31 @@ class ChordProParserTest {
     }
 
     @Test
+    fun `a tab or grid environment inside a section keeps its own label on its lines`() {
+        val section = ChordProParser.parse(
+            """
+            {start_of_verse: Intro}
+            [Am] [C]
+            {start_of_tab: Picking pattern}
+            e|---0---|
+            {end_of_tab}
+            {start_of_grid: Changes}
+            | Am . | C . |
+            {end_of_grid}
+            {start_of_tab}
+            e|---3---|
+            {end_of_tab}
+            {end_of_verse}
+            """.trimIndent()
+        ).blocks.single() as ChordProBlock.Section
+
+        assertEquals("Intro", section.label)
+        assertEquals("Picking pattern", (section.lines[1] as ChordProLine.Tab).label)
+        assertEquals("Changes", (section.lines[2] as ChordProLine.Grid).label)
+        assertNull((section.lines[3] as ChordProLine.Tab).label)
+    }
+
+    @Test
     fun `a grid environment inside a section does not break it up either`() {
         val section = ChordProParser.parse(
             """
@@ -438,11 +463,11 @@ class ChordProParserTest {
         val blocks = ChordProParser.parse("{start_of_tab: Riff}\ne|---0---2---|\n{comment: Repeat x2}\ne|---3---5---|\n{end_of_tab}\nla [C]la").blocks
 
         assertEquals(3, blocks.size)
-        assertEquals(ChordProLine.Tab("e|---0---2---|"), (blocks[0] as ChordProBlock.Section).lines.single())
+        assertEquals(ChordProLine.Tab("e|---0---2---|", label = "Riff"), (blocks[0] as ChordProBlock.Section).lines.single())
         assertEquals(ChordProBlock.Comment("Repeat x2", CommentStyle.PLAIN), blocks[1])
         val secondSection = blocks[2] as ChordProBlock.Section
         assertEquals("Riff", secondSection.label)
-        assertEquals(ChordProLine.Tab("e|---3---5---|", continuesEnvironment = true), secondSection.lines[0])
+        assertEquals(ChordProLine.Tab("e|---3---5---|", continuesEnvironment = true, label = "Riff"), secondSection.lines[0])
         assertEquals(ChordProParser.parseLyrics("la [C]la"), secondSection.lines[1])
     }
 

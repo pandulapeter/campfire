@@ -63,6 +63,21 @@ class ChordProSerializerTest {
     }
 
     @Test
+    fun `the labels of tab and grid environments inside a section survive serializing`() {
+        val parsed = ChordProParser.parse(
+            "{sov: Intro}\n[Am] [C]\n{sot: Picking pattern}\ne|-0-|\n{c: again}\ne|-2-|\n{eot}\n" +
+                "{sog: First}\n| Am . |\n{eog}\n{sog: Second}\n| C . |\n{eog}\n{eov}",
+        )
+
+        assertEquals(
+            "{start_of_verse: Intro}\n[Am] [C]\n{start_of_tab: Picking pattern}\ne|-0-|\n{comment: again}\ne|-2-|\n{end_of_tab}\n" +
+                "{start_of_grid: First}\n| Am . |\n{end_of_grid}\n{start_of_grid: Second}\n| C . |\n{end_of_grid}\n{end_of_verse}",
+            ChordProSerializer.serialize(parsed),
+        )
+        assertEquals(parsed, ChordProParser.parse(ChordProSerializer.serialize(parsed)))
+    }
+
+    @Test
     fun `a modulation survives serializing`() {
         listOf(
             "{title: Key Change}\n{start_of_verse}\n[C]one [G]two\n{end_of_verse}\n\n{transpose: 2}\n{start_of_chorus}\n[C]three [G]four\n{end_of_chorus}",

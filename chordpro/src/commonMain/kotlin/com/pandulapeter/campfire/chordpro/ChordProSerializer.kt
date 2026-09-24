@@ -97,7 +97,7 @@ object ChordProSerializer {
     private fun serializeSection(pieces: List<ChordProBlock>, wholeSongTranspose: Int): String {
         val section = pieces.first() as ChordProBlock.Section
         // A paragraph has no environment of its own, so a label it carries came from the tablature or grid inside
-        // it and has to go back onto that; see `SectionBuilder.openLineMode`.
+        // it and has to go back onto that, where its lines do not carry it themselves; see `SectionBuilder.openLineMode`.
         if (section.type == SectionType.Paragraph) return serializeLines(pieces, wholeSongTranspose, section.label)
         val body = serializeLines(pieces, wholeSongTranspose)
         val name = environmentName(section.type)
@@ -117,6 +117,7 @@ object ChordProSerializer {
     private fun serializeLines(pieces: List<ChordProBlock>, wholeSongTranspose: Int, environmentLabel: String? = null) = buildList {
         val items: List<Any> = pieces.flatMap { piece -> if (piece is ChordProBlock.Section) piece.lines else listOf(piece) }
         var openEnvironment: String? = null
+        var openEnvironmentLabel: String? = null
         var label = environmentLabel
         items.forEachIndexed { index, item ->
             if (item is ChordProBlock) {
@@ -135,12 +136,16 @@ object ChordProSerializer {
             }
             val line = item as ChordProLine
             val environment = lineEnvironmentName(line, openEnvironment)
-            // A tab line that starts an environment of its own is written in one, even straight after another.
+            // A tab line that starts an environment of its own is written in one, even straight after another, and so
+            // is a grid line whose environment was labelled differently from the one before it.
             val startsTab = line is ChordProLine.Tab && !line.continuesEnvironment && openEnvironment == "tab"
-            if (environment != openEnvironment || startsTab) {
+            val startsGrid = line is ChordProLine.Grid && openEnvironment == "grid" && line.label != openEnvironmentLabel
+            if (environment != openEnvironment || startsTab || startsGrid) {
                 openEnvironment?.let { add("{end_of_$it}") }
                 environment?.let { name ->
-                    add(label?.let { "{start_of_$name: $it}" } ?: "{start_of_$name}")
+                    val environmentLabel = line.environmentLabel ?: label
+                    add(environmentLabel?.let { "{start_of_$name: $it}" } ?: "{start_of_$name}")
+                    openEnvironmentLabel = environmentLabel
                     label = null
                 }
                 openEnvironment = environment
@@ -161,6 +166,13 @@ object ChordProSerializer {
         ChordProLine.Blank -> openEnvironment
         else -> null
     }
+
+    private val ChordProLine.environmentLabel
+        get() = when (this) {
+            is ChordProLine.Tab -> label
+            is ChordProLine.Grid -> label
+            is ChordProLine.Lyrics, ChordProLine.Blank -> null
+        }
 
     private fun environmentName(type: SectionType) = when (type) {
         SectionType.Verse -> "verse"

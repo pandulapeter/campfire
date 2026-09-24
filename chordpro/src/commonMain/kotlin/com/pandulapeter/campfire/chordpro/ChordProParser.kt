@@ -340,6 +340,9 @@ object ChordProParser {
         private var type: SectionType? = null
         private var label: String? = null
         private var lineMode: LineMode? = null
+
+        /** The label of the tab or grid environment that is open, which each of its lines carries. */
+        private var lineModeLabel: String? = null
         private val lines = mutableListOf<ChordProLine>()
 
         /**
@@ -389,9 +392,9 @@ object ChordProParser {
         /**
          * A tab or grid environment starts. It never opens a section of its own, but it does need one to live in,
          * so a file that puts tablature outside every environment gets the same implicit paragraph a bare line of
-         * lyrics would get - carrying the environment's own label, which is the only place `{start_of_tab: Riff}`
-         * can still say "Riff". Inside a section that is already running there is nowhere for a second label to go,
-         * and the section's own wins.
+         * lyrics would get - carrying the environment's own label as its heading. Inside a section that is already
+         * running the section's own heading wins, and the environment's label is carried by its lines instead
+         * ([ChordProLine.Tab.label], [ChordProLine.Grid.label]), which is where a viewer finds "Riff" for the run.
          */
         fun openLineMode(mode: LineMode, label: String?) {
             if (type == null) {
@@ -399,6 +402,7 @@ object ChordProParser {
                 isOpenedByLineMode = true
             }
             lineMode = mode
+            lineModeLabel = label
             hasTabLine = false
         }
 
@@ -408,12 +412,14 @@ object ChordProParser {
          */
         fun closeLineMode() {
             lineMode = null
+            lineModeLabel = null
             if (isOpenedByLineMode && lines.all { it == ChordProLine.Blank }) close()
             isOpenedByLineMode = false
         }
 
         fun close() {
             lineMode = null
+            lineModeLabel = null
             val type = type ?: return
             while (lines.isNotEmpty() && lines.last() == ChordProLine.Blank) {
                 lines.removeAt(lines.lastIndex)
@@ -450,11 +456,13 @@ object ChordProParser {
                 // that one ends at its own `{end_of_…}`, which is where the text transposition, the summary and the
                 // highlighter end it as well.
                 val lineMode = this.lineMode
+                val lineModeLabel = this.lineModeLabel
                 val hasTabLine = this.hasTabLine
                 close()
                 blocks += block
                 open(type, label, isExplicit, isContinuation = true)
                 this.lineMode = lineMode
+                this.lineModeLabel = lineModeLabel
                 this.hasTabLine = hasTabLine
             } else {
                 blocks += block
@@ -474,8 +482,8 @@ object ChordProParser {
                 open(SectionType.Paragraph, label = null, isExplicit = false)
             }
             lines += when (lineMode) {
-                LineMode.TAB -> ChordProLine.Tab(rawLine, continuesEnvironment = hasTabLine).also { hasTabLine = true }
-                LineMode.GRID -> ChordProLine.Grid(ChordProSyntax.parseGridTokens(trimmedLine))
+                LineMode.TAB -> ChordProLine.Tab(rawLine, continuesEnvironment = hasTabLine, label = lineModeLabel).also { hasTabLine = true }
+                LineMode.GRID -> ChordProLine.Grid(ChordProSyntax.parseGridTokens(trimmedLine), label = lineModeLabel)
                 LineMode.VERBATIM -> ChordProLine.Lyrics(text = rawLine, chords = emptyList())
                 null -> parseLyrics(rawLine)
             }
