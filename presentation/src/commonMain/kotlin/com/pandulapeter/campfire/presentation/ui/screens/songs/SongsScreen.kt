@@ -298,12 +298,9 @@ private fun SongList(
     val filePicker = LocalFilePicker.current
     val keyboardController = LocalSoftwareKeyboardController.current
     val coroutineScope = rememberCoroutineScope()
-    // The section label of every list item (headers included), in the order of the lazy grid, for the fast scroller.
-    val sectionLabels = remember(songGroups) {
-        songGroups.flatMap { group ->
-            val label = group.header?.fastScrollerLabel
-            List(size = group.songs.size + (if (group.header == null) 0 else 1)) { label }
-        }
+    // One boundary and label per group, in lazy-grid item coordinates, for the fast scroller and pushed header.
+    val sectionIndex = remember(songGroups) {
+        SongSectionIndex(songGroups.map { SongSectionIndex.Group(songCount = it.songs.size, header = it.header) })
     }
     val pushedHeader = pushedSectionHeader(listState, contentType = "header")
     val topFade = rememberListTopFade(listState)
@@ -452,7 +449,7 @@ private fun SongList(
         // past that edge under the transparent app bar rather than ending at it; a bar that has filled in is drawn
         // over it.
         pushedHeader?.let { pushed ->
-            val header = songGroups.mapNotNull { it.header }.firstOrNull { "header_${it.key}" == pushed.key }
+            val header = sectionIndex.headerForKey(pushed.key)
             if (header != null) {
                 val density = LocalDensity.current
                 SectionHeader(
@@ -472,7 +469,7 @@ private fun SongList(
         FastScroller(
             modifier = Modifier.align(Alignment.TopEnd).padding(top = appBarOverlap.height).padding(contentPadding.only(top = true, end = true, bottom = true)),
             gridState = listState,
-            labelForItem = { sectionLabels.getOrNull(it) },
+            labelForItem = sectionIndex::labelForItem,
         )
     }
 }
@@ -486,6 +483,38 @@ private val SongSection.Header.fastScrollerLabel: String
         is SongSection.Header.Letter -> letter.toString()
         SongSection.Header.Symbols -> SYMBOLS_LABEL
     }
+
+/** Cumulative lazy-grid boundaries keep fast-scroll lookup and pushed-header lookup proportional to sections. */
+internal class SongSectionIndex(groups: List<Group>) {
+    data class Group(val songCount: Int, val header: SongSection.Header?)
+
+    private val ends = IntArray(groups.size)
+    private val labels = ArrayList<String?>(groups.size)
+    private val headersByKey = mutableMapOf<String, SongSection.Header>()
+
+    init {
+        var end = 0
+        groups.forEachIndexed { index, group ->
+            end += group.songCount + if (group.header == null) 0 else 1
+            ends[index] = end
+            labels += group.header?.fastScrollerLabel
+            group.header?.let { headersByKey["header_${it.key}"] = it }
+        }
+    }
+
+    fun labelForItem(index: Int): String? {
+        if (index < 0 || ends.isEmpty() || index >= ends.last()) return null
+        var low = 0
+        var high = ends.lastIndex
+        while (low < high) {
+            val middle = (low + high) / 2
+            if (index < ends[middle]) high = middle else low = middle + 1
+        }
+        return labels[low]
+    }
+
+    fun headerForKey(key: Any): SongSection.Header? = headersByKey[key]
+}
 
 @Composable
 private fun SongSection.Header.displayText(): String = when (this) {
