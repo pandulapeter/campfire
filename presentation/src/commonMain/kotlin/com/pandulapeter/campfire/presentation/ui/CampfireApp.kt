@@ -45,6 +45,7 @@ import androidx.compose.foundation.layout.union
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
 import androidx.compose.material3.Icon
+import androidx.compose.material3.LocalContentColor
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.MotionScheme
 import androidx.compose.material3.NavigationBar
@@ -59,6 +60,7 @@ import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.SideEffect
 import androidx.compose.runtime.Stable
@@ -68,6 +70,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.setValue
+import androidx.compose.runtime.snapshotFlow
 import androidx.compose.runtime.withFrameNanos
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.Alignment
@@ -87,7 +90,6 @@ import androidx.navigation3.runtime.entryProvider
 import androidx.navigation3.scene.Scene
 import androidx.navigation3.ui.LocalNavAnimatedContentScope
 import androidx.navigation3.ui.NavDisplay
-import androidx.navigationevent.NavigationEvent
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.compose.LifecycleEventEffect
 import androidx.lifecycle.compose.LocalLifecycleOwner
@@ -140,12 +142,14 @@ import com.pandulapeter.campfire.presentation.ui.screens.songs.SongsScreen
 import com.pandulapeter.campfire.presentation.ui.theme.ApplyLanguagePreference
 import com.pandulapeter.campfire.presentation.ui.theme.CampfireTheme
 import org.jetbrains.compose.resources.DrawableResource
+import kotlin.math.roundToInt
 import org.jetbrains.compose.resources.StringResource
 import org.jetbrains.compose.resources.painterResource
 import com.pandulapeter.campfire.presentation.localization.pluralStringResource
 import com.pandulapeter.campfire.presentation.localization.stringResource
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.emptyFlow
+import kotlinx.coroutines.flow.first
 import org.koin.compose.viewmodel.koinViewModel
 
 /**
@@ -368,23 +372,74 @@ private class KeyboardAwarePadding(
 internal val WindowInsets.Companion.contentEdges: WindowInsets
     @Composable get() = systemBars.union(displayCutout)
 
-@OptIn(ExperimentalLayoutApi::class, ExperimentalMaterial3ExpressiveApi::class)
 @Composable
 private fun CampfireContent(
     viewModel: CampfireViewModel,
     urlOpener: (String) -> Unit,
-) = NavigationChromeScaffold(
-    // Painted here as well as on every screen, so that the two screens of a cross fading tab transition blend into
-    // the same color they are painted in and the fade stays invisible.
-    modifier = Modifier.fillMaxSize().background(MaterialTheme.colorScheme.background),
-    chrome = { windowSize ->
-        NavigationChrome(
+) {
+    val backStack = viewModel.backStack
+    var isNavigationTransitionRunning by remember { mutableStateOf(false) }
+    var isChromeInScreens by remember { mutableStateOf(false) }
+    val isTopLevelScreenCovered = backStack.lastOrNull() !is CampfireDestination.TopLevel
+    // The chrome moves into the top level screens as soon as a card covers them, which is the frame the push starts
+    // in, and moves back out only once the pop has settled. NavDisplay starts animating a pop from an effect, so its
+    // transition is only reported as running a frame after the back stack changed, and reading the report any sooner
+    // would take the pop for one that had already settled: the transition is given two frames to start before it is
+    // waited on, and one that never starts (nothing animates behind the launch screen) is simply not waited on.
+    LaunchedEffect(isTopLevelScreenCovered) {
+        if (isTopLevelScreenCovered) {
+            isChromeInScreens = true
+        } else {
+            repeat(2) { withFrameNanos { } }
+            snapshotFlow { isNavigationTransitionRunning }.first { !it }
+            isChromeInScreens = false
+        }
+    }
+    val chromeInScreens = isChromeInScreens || isTopLevelScreenCovered
+
+    NavigationChromeScaffold(
+        // Painted here as well as on every screen, so that the two screens of a cross fading tab transition blend into
+        // the same color they are painted in and the fade stays invisible.
+        modifier = Modifier.fillMaxSize().background(MaterialTheme.colorScheme.background),
+        isChromePlaced = !chromeInScreens,
+        chrome = { windowSize ->
+            NavigationChrome(
+                windowSize = windowSize,
+                currentTopLevelDestination = backStack.lastOrNull { it is CampfireDestination.TopLevel } as? CampfireDestination.TopLevel,
+                onDestinationSelected = viewModel::selectTopLevelDestination,
+            )
+        },
+    ) { windowWidth, windowSize, chromeThickness ->
+        CampfireScreens(
+            viewModel = viewModel,
+            urlOpener = urlOpener,
+            windowWidth = windowWidth,
             windowSize = windowSize,
-            currentTopLevelDestination = viewModel.backStack.lastOrNull { it is CampfireDestination.TopLevel } as? CampfireDestination.TopLevel,
-            onDestinationSelected = viewModel::selectTopLevelDestination,
+            chromeThickness = chromeThickness,
+            chromeInScreens = chromeInScreens,
+            onNavigationTransitionRunningChanged = { isNavigationTransitionRunning = it },
         )
-    },
-) { windowWidth, windowSize, chromeThickness ->
+    }
+}
+
+/**
+ * The [NavDisplay] and everything laid out over it, sized for the window [NavigationChromeScaffold] measured.
+ *
+ * While [chromeInScreens] is set, every top level screen draws a navigation chrome of its own, under itself and
+ * selected on its own destination, so that the bar or the rail moves with the screen when a card is dealt over it or
+ * taken off it, the predictive back gesture included, instead of standing still while the screen slides past it.
+ */
+@OptIn(ExperimentalLayoutApi::class, ExperimentalMaterial3ExpressiveApi::class)
+@Composable
+private fun CampfireScreens(
+    viewModel: CampfireViewModel,
+    urlOpener: (String) -> Unit,
+    windowWidth: Dp,
+    windowSize: WindowSize,
+    chromeThickness: Dp,
+    chromeInScreens: Boolean,
+    onNavigationTransitionRunningChanged: (Boolean) -> Unit,
+) {
     val backStack = viewModel.backStack
     val layoutDirection = LocalLayoutDirection.current
     val density = LocalDensity.current
@@ -437,6 +492,19 @@ private fun CampfireContent(
         ime = ime,
         density = density,
     )
+    val screenChrome: (CampfireDestination.TopLevel) -> (@Composable () -> Unit)? = { destination ->
+        if (chromeInScreens) {
+            {
+                NavigationChrome(
+                    windowSize = windowSize,
+                    currentTopLevelDestination = destination,
+                    onDestinationSelected = viewModel::selectTopLevelDestination,
+                )
+            }
+        } else {
+            null
+        }
+    }
     // What the screens' own lifecycles are compared with, see ScreenSurface.
     val hostLifecycle = LocalLifecycleOwner.current.lifecycle
 
@@ -453,12 +521,16 @@ private fun CampfireContent(
             // the launch screen fades would be the app arriving twice.
             transitionSpec = { if (viewModel.hasShownApp) navigationTransition(motionScheme) else ContentTransform(EnterTransition.None, ExitTransition.None) },
             popTransitionSpec = { if (viewModel.hasShownApp) navigationTransition(motionScheme) else ContentTransform(EnterTransition.None, ExitTransition.None) },
-            predictivePopTransitionSpec = { swipeEdge -> predictivePopTransition(swipeEdge) },
+            predictivePopTransitionSpec = { predictivePopTransition() },
             // Stable string content keys, so that the transitions can recognize the top level destinations.
             entryProvider = entryProvider {
-                entry<CampfireDestination.Songs>(metadata = navigationMetadata, clazzContentKey = { it.contentKey }) {
-                    ReportNavigationTransition(viewModel)
-                    TopLevelScreenSurface(navigationBarHeight) {
+                entry<CampfireDestination.Songs>(metadata = navigationMetadata, clazzContentKey = { it.contentKey }) { destination ->
+                    ReportNavigationTransition(viewModel, onNavigationTransitionRunningChanged)
+                    TopLevelScreenSurface(
+                        windowSize = windowSize,
+                        navigationBarHeight = navigationBarHeight,
+                        chrome = screenChrome(destination),
+                    ) {
                         SongsScreen(
                             viewModel = viewModel,
                             settledWidth = settledListWidth,
@@ -467,9 +539,13 @@ private fun CampfireContent(
                         )
                     }
                 }
-                entry<CampfireDestination.Setlists>(metadata = navigationMetadata, clazzContentKey = { it.contentKey }) {
-                    ReportNavigationTransition(viewModel)
-                    TopLevelScreenSurface(navigationBarHeight) {
+                entry<CampfireDestination.Setlists>(metadata = navigationMetadata, clazzContentKey = { it.contentKey }) { destination ->
+                    ReportNavigationTransition(viewModel, onNavigationTransitionRunningChanged)
+                    TopLevelScreenSurface(
+                        windowSize = windowSize,
+                        navigationBarHeight = navigationBarHeight,
+                        chrome = screenChrome(destination),
+                    ) {
                         SetlistsScreen(
                             viewModel = viewModel,
                             settledWidth = settledListWidth,
@@ -478,9 +554,13 @@ private fun CampfireContent(
                         )
                     }
                 }
-                entry<CampfireDestination.Settings>(metadata = navigationMetadata, clazzContentKey = { it.contentKey }) {
-                    ReportNavigationTransition(viewModel)
-                    TopLevelScreenSurface(navigationBarHeight) {
+                entry<CampfireDestination.Settings>(metadata = navigationMetadata, clazzContentKey = { it.contentKey }) { destination ->
+                    ReportNavigationTransition(viewModel, onNavigationTransitionRunningChanged)
+                    TopLevelScreenSurface(
+                        windowSize = windowSize,
+                        navigationBarHeight = navigationBarHeight,
+                        chrome = screenChrome(destination),
+                    ) {
                         SettingsScreen(
                             viewModel = viewModel,
                             settledWidth = settledListWidth,
@@ -492,7 +572,7 @@ private fun CampfireContent(
                 }
                 // These two cover the chrome, so they are the only ones laid out edge to edge.
                 entry<CampfireDestination.SongEditor>(metadata = navigationMetadata, clazzContentKey = { it.contentKey }) { destination ->
-                    ReportNavigationTransition(viewModel)
+                    ReportNavigationTransition(viewModel, onNavigationTransitionRunningChanged)
                     ScreenSurface(hostLifecycle) {
                         SongEditorScreen(
                             viewModel = viewModel,
@@ -504,7 +584,7 @@ private fun CampfireContent(
                     }
                 }
                 entry<CampfireDestination.SongDetails>(metadata = navigationMetadata, clazzContentKey = { it.contentKey }) { destination ->
-                    ReportNavigationTransition(viewModel)
+                    ReportNavigationTransition(viewModel, onNavigationTransitionRunningChanged)
                     ScreenSurface(hostLifecycle) {
                         SongDetailsScreen(
                             viewModel = viewModel,
@@ -613,11 +693,14 @@ private fun Messages(
  * through a `BoxWithConstraints`, which is a [SubcomposeLayout] of exactly this kind.
  *
  * The chrome is placed *under* [content]: the song details screen is dealt over the whole window and covers it,
- * rather than the two of them animating side by side.
+ * rather than the two of them animating side by side. While the top level screens draw a chrome of their own
+ * ([isChromePlaced] off), this one is still measured, for its thickness, but not placed, so it is neither drawn nor
+ * touched; it stays composed, so the state of its items carries on once it is placed again.
  */
 @Composable
 private fun NavigationChromeScaffold(
     modifier: Modifier = Modifier,
+    isChromePlaced: Boolean,
     chrome: @Composable (windowSize: WindowSize) -> Unit,
     content: @Composable (windowWidth: Dp, windowSize: WindowSize, chromeThickness: Dp) -> Unit,
 ) = SubcomposeLayout(modifier) { constraints ->
@@ -634,10 +717,12 @@ private fun NavigationChromeScaffold(
     layout(constraints.maxWidth, constraints.maxHeight) {
         // Placed relatively, so that the rail sits on the start edge the screens are inset from rather than always
         // on the left one.
-        chromePlaceable.placeRelative(
-            x = 0,
-            y = if (windowSize.usesNavigationRail) 0 else constraints.maxHeight - chromePlaceable.height,
-        )
+        if (isChromePlaced) {
+            chromePlaceable.placeRelative(
+                x = 0,
+                y = if (windowSize.usesNavigationRail) 0 else constraints.maxHeight - chromePlaceable.height,
+            )
+        }
         contentPlaceable.placeRelative(x = 0, y = 0)
     }
 }
@@ -646,8 +731,11 @@ private enum class ChromeSlot { CHROME, CONTENT }
 
 /**
  * The navigation bar (under 600dp) or navigation rail that every top level screen shares. It belongs to the bottom
- * of the deck rather than to any one screen: it is laid out once for the window and stays there, so it never
- * animates alongside a screen that is sliding, and the song details screen simply covers it.
+ * of the deck rather than to any one screen: it is laid out once for the window and stays there while the tabs fade
+ * through in place next to it. A card dealt over the deck moves the screen under it a little, and the chrome is part
+ * of that screen as far as the eye can tell, so for as long as a card covers the deck or is being taken off it every
+ * top level screen draws a copy of it instead (see [CampfireScreens]), which moves with the screen and which the card
+ * covers.
  */
 @Composable
 private fun NavigationChrome(
@@ -731,33 +819,49 @@ private fun ScreenSurface(
 
 /**
  * One card of the deck next to the navigation chrome, inset from the navigation bar rather than clipped, so that the
- * bar stays visible under it.
+ * bar stays visible under it. Given a [chrome], it draws that under itself where [NavigationChromeScaffold] places the
+ * shared one, so that nothing moves as the one hands over to the other.
  *
  * It is not inset from the navigation rail, and it is not a surface: the app bar of a top level screen spans the
  * rail's column, so the screen leaves that column open under its bar by itself and paints and blocks only the parts
- * it draws, see [TopLevelScreenLayout].
+ * it draws, see [TopLevelScreenLayout]. Not being a surface, it provides the content color one over the background
+ * would, or every text and icon on these screens that does not pick a color of its own would be drawn in the
+ * default black, which is unreadable in the dark theme.
  */
 @OptIn(ExperimentalLayoutApi::class)
 @Composable
 private fun TopLevelScreenSurface(
+    windowSize: WindowSize,
     navigationBarHeight: Dp,
+    chrome: (@Composable () -> Unit)?,
     content: @Composable () -> Unit,
 ) = Box(
-    modifier = Modifier
-        .fillMaxSize()
-        .padding(bottom = navigationBarHeight)
-        // The bar covers the insets on its own edge, so nothing inside should apply them a second time.
-        .consumeWindowInsets(PaddingValues(bottom = navigationBarHeight)),
+    modifier = Modifier.fillMaxSize(),
 ) {
-    content()
+    if (chrome != null) {
+        Box(
+            modifier = Modifier.align(if (windowSize.usesNavigationRail) Alignment.TopStart else Alignment.BottomStart),
+        ) {
+            chrome()
+        }
+    }
+    Box(
+        modifier = Modifier
+            .fillMaxSize()
+            .padding(bottom = navigationBarHeight)
+            // The bar covers the insets on its own edge, so nothing inside should apply them a second time.
+            .consumeWindowInsets(PaddingValues(bottom = navigationBarHeight)),
+    ) {
+        CompositionLocalProvider(LocalContentColor provides MaterialTheme.colorScheme.onBackground, content = content)
+    }
 }
 
 /**
  * The screens are a deck of cards. Pushing one deals it over the top of the deck: it slides in from the end while
- * the screen it lands on stays exactly where it is. Popping takes the top card off again: it slides back out and
- * the screen underneath is uncovered, without moving. Nothing ever moves except the card being dealt or taken, so
- * a screen keeps whatever it had on screen (its scroll position, its navigation chrome, the caret in its search
- * field) in the same place across the whole transition.
+ * the screen it lands on gives way in the same direction over a small fraction of the distance. Popping takes the
+ * top card off again: it slides back out and the screen underneath returns from that short offset. The screen
+ * underneath moves as one piece, its navigation chrome included, so it keeps whatever it had on screen (its scroll
+ * position, the caret in its search field) in the same place relative to itself across the whole transition.
  *
  * Switching between top level destinations is not a deal but a swap of the bottom card, so those fade through in
  * place, next to a navigation bar and a navigation rail alike: nothing about two tabs puts one of them in any
@@ -797,39 +901,51 @@ private val AnimatedContentTransitionScope<Scene<CampfireDestination>>.isSongEdi
             CampfireDestination.SongEditor.isContentKey(targetState.entries.lastOrNull()?.contentKey)
 
 /**
- * The card being dealt slides in over the deck. The screen underneath does not animate at all;
- * [ExitTransition.KeepUntilTransitionsFinished] is what keeps it in the composition, unmoved and fully drawn, until
- * the card has landed, instead of it being disposed the moment the back stack changes.
+ * The card being dealt slides in over the deck. The screen underneath follows in the same direction over a much
+ * shorter distance. [ExitTransition.KeepUntilTransitionsFinished] keeps it drawn until the card has landed.
  */
 @OptIn(ExperimentalAnimationApi::class, ExperimentalMaterial3ExpressiveApi::class)
 private fun AnimatedContentTransitionScope<Scene<CampfireDestination>>.pushTransition(
     motionScheme: MotionScheme,
     isModal: Boolean,
-) = ContentTransform(
-    targetContentEnter = slideIntoContainer(
-        towards = if (isModal) AnimatedContentTransitionScope.SlideDirection.Up else AnimatedContentTransitionScope.SlideDirection.Start,
-        animationSpec = motionScheme.slideSpec(),
-    ),
-    initialContentExit = ExitTransition.KeepUntilTransitionsFinished,
-    targetContentZIndex = targetState.zIndex,
-)
+): ContentTransform {
+    val direction = if (isModal) AnimatedContentTransitionScope.SlideDirection.Up else AnimatedContentTransitionScope.SlideDirection.Left
+    val spec = motionScheme.slideSpec()
+    return ContentTransform(
+        targetContentEnter = slideIntoContainer(towards = direction, animationSpec = spec),
+        initialContentExit = slideOutOfContainer(
+            towards = direction,
+            animationSpec = spec,
+            targetOffset = ::backgroundSlideOffset,
+        ) + ExitTransition.KeepUntilTransitionsFinished,
+        targetContentZIndex = targetState.zIndex,
+    )
+}
 
 /**
- * The top card slides away and the screen underneath is simply uncovered: it is put back on screen at its full size
- * right away ([EnterTransition.None]) and the z indices keep the card that is leaving above it.
+ * The top card slides away while the screen underneath follows it from a shorter offset. The z indices keep the
+ * card that is leaving above the screen it reveals.
  */
 @OptIn(ExperimentalAnimationApi::class, ExperimentalMaterial3ExpressiveApi::class)
 private fun AnimatedContentTransitionScope<Scene<CampfireDestination>>.popTransition(
     motionScheme: MotionScheme,
     isModal: Boolean,
-) = ContentTransform(
-    targetContentEnter = EnterTransition.None,
-    initialContentExit = slideOutOfContainer(
-        towards = if (isModal) AnimatedContentTransitionScope.SlideDirection.Down else AnimatedContentTransitionScope.SlideDirection.End,
-        animationSpec = motionScheme.slideSpec(),
-    ),
-    targetContentZIndex = targetState.zIndex,
-)
+): ContentTransform {
+    val direction = if (isModal) AnimatedContentTransitionScope.SlideDirection.Down else AnimatedContentTransitionScope.SlideDirection.Right
+    val spec = motionScheme.slideSpec()
+    return ContentTransform(
+        targetContentEnter = slideIntoContainer(
+            towards = direction,
+            animationSpec = spec,
+            initialOffset = ::backgroundSlideOffset,
+        ),
+        initialContentExit = slideOutOfContainer(towards = direction, animationSpec = spec),
+        targetContentZIndex = targetState.zIndex,
+    )
+}
+
+/** The underlying screen travels a small fraction of the card's full slide, using the same animation progress. */
+private fun backgroundSlideOffset(fullSlideOffset: Int) = (fullSlideOffset * BACKGROUND_SLIDE_FRACTION).roundToInt()
 
 /**
  * The theme's default spatial spring, made to settle once the card is within a pixel of where it lands. The theme's
@@ -845,9 +961,8 @@ private fun MotionScheme.slideSpec() = when (val spec = defaultSpatialSpec<IntOf
 
 /**
  * The pop driven by the predictive back gesture (Android) or the edge swipe (iOS): the same uncovering as
- * [popTransition], except that the card follows the finger, so the spec is linear and the direction depends on the
- * edge the gesture started from. The modal goes down whichever edge the finger came from, since that is the one
- * way it ever leaves.
+ * [popTransition], except that both screens follow the finger with linear specs. Their direction is fixed by the
+ * screen being dismissed, regardless of which edge the gesture started from.
  *
  * Going back from Setlists or Settings to Songs is a swap of tabs rather than a card being taken off, so it cross
  * fades in place, for the reasons [navigationTransition] gives. It is a cross fade rather than [tabTransition]'s fade
@@ -855,7 +970,7 @@ private fun MotionScheme.slideSpec() = when (val spec = defaultSpatialSpec<IntOf
  * the middle of it.
  */
 @OptIn(ExperimentalAnimationApi::class)
-private fun AnimatedContentTransitionScope<Scene<CampfireDestination>>.predictivePopTransition(@NavigationEvent.SwipeEdge swipeEdge: Int): ContentTransform {
+private fun AnimatedContentTransitionScope<Scene<CampfireDestination>>.predictivePopTransition(): ContentTransform {
     if (CampfireDestination.TopLevel.fromContentKey(initialState.entries.lastOrNull()?.contentKey) != null &&
         CampfireDestination.TopLevel.fromContentKey(targetState.entries.lastOrNull()?.contentKey) != null
     ) {
@@ -866,14 +981,11 @@ private fun AnimatedContentTransitionScope<Scene<CampfireDestination>>.predictiv
             targetContentZIndex = targetState.zIndex,
         )
     }
-    val towards = when {
-        isSongEditorTransition -> AnimatedContentTransitionScope.SlideDirection.Down
-        swipeEdge == NavigationEvent.EDGE_RIGHT -> AnimatedContentTransitionScope.SlideDirection.Left
-        else -> AnimatedContentTransitionScope.SlideDirection.Right
-    }
+    val towards = if (isSongEditorTransition) AnimatedContentTransitionScope.SlideDirection.Down else AnimatedContentTransitionScope.SlideDirection.Right
+    val spec = tween<IntOffset>(PREDICTIVE_BACK_DURATION, easing = LinearEasing)
     return ContentTransform(
-        targetContentEnter = EnterTransition.None,
-        initialContentExit = slideOutOfContainer(towards, tween(PREDICTIVE_BACK_DURATION, easing = LinearEasing)),
+        targetContentEnter = slideIntoContainer(towards, spec, initialOffset = ::backgroundSlideOffset),
+        initialContentExit = slideOutOfContainer(towards, spec),
         targetContentZIndex = targetState.zIndex,
     )
 }
@@ -913,12 +1025,19 @@ private val CampfireDestination.TopLevel.label: StringResource
 
 /**
  * Every entry reports whether the [NavDisplay] transition hosting it is running, so that the view model knows when
- * a back stack change interrupts an animation (see [CampfireViewModel.navigationGeneration]).
+ * a back stack change interrupts an animation (see [CampfireViewModel.navigationGeneration]), and so that
+ * [CampfireContent] knows when a pop has settled and the navigation chrome can leave the top level screens again.
  */
 @Composable
-private fun ReportNavigationTransition(viewModel: CampfireViewModel) {
+private fun ReportNavigationTransition(
+    viewModel: CampfireViewModel,
+    onRunningChanged: (Boolean) -> Unit,
+) {
     val isRunning = LocalNavAnimatedContentScope.current.transition.isRunning
-    SideEffect { viewModel.setNavigationTransitionRunning(isRunning) }
+    SideEffect {
+        viewModel.setNavigationTransitionRunning(isRunning)
+        onRunningChanged(isRunning)
+    }
 }
 
 private val LAUNCH_MARK_SIZE = 72.dp
@@ -933,6 +1052,7 @@ private const val NAVIGATION_GENERATION_METADATA_KEY = "navigationGeneration"
 private const val TAB_FADE_OUT_DURATION = 90
 private const val TAB_FADE_IN_DURATION = 210
 private const val PREDICTIVE_BACK_DURATION = 350
+private const val BACKGROUND_SLIDE_FRACTION = 0.12f
 
 /** How many of the files an export left out its message names, the rest being counted rather than listed. */
 private const val MAXIMUM_NAMED_FILES = 3

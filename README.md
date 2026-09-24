@@ -47,11 +47,10 @@ Campfire is available for the following platforms:
 
 ### To do
 - Once Microsoft Store, App Store and Mac App Store listings are approved, update included URL-s + this Readme
-- Tag row should be horizontally scrollable on cards
-- Improve screen transitions, inspired by Samsung settings
 - Android .cho files should open with Campfire
 - Move Song assignment / Setlist assignment shortcuts to the top-level
 - Make the "Edit" action more specific to the situation
+- Animate layout changes
 - Delete song should not be an option in Setlist mode
 - Cover art thumbnails: https://musicbrainz.org/doc/Cover_Art_Archive/API
 - Shared element transitions?

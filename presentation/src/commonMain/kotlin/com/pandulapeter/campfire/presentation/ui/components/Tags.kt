@@ -9,7 +9,9 @@
  */
 package com.pandulapeter.campfire.presentation.ui.components
 
+import androidx.compose.foundation.ScrollState
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.FlowRow
@@ -17,6 +19,7 @@ import androidx.compose.foundation.layout.FlowRowScope
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material3.Icon
 import androidx.compose.material3.LocalMinimumInteractiveComponentSize
@@ -28,46 +31,99 @@ import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.drawWithContent
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.geometry.Size
+import androidx.compose.ui.graphics.BlendMode
+import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.CompositingStrategy
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.graphics.painter.Painter
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.Dp
+import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.dp
 import com.pandulapeter.campfire.presentation.resources.Res
 import com.pandulapeter.campfire.presentation.resources.ic_language
 import org.jetbrains.compose.resources.painterResource
 
 /**
- * What a song is filed under, wherever those are only read: under its title in a song list. They wrap onto at most
- * [maxLines] rows and whatever is left over is clipped, so that a row of a list cannot grow taller because somebody
- * filed one song under a dozen labels — which is also why the languages come first, being the ones a reader scanning
- * a mixed library is looking for.
+ * What a song is filed under, wherever those are only read: under its title in a song list. They stay on one line,
+ * so that a row of a list cannot grow taller because somebody filed one song under a dozen labels, and whatever does
+ * not fit is scrolled to sideways rather than cut off — which is also why the languages come first, being the ones a
+ * reader scanning a mixed library is looking for and the ones that are always in sight.
  */
 @Composable
 internal fun SongLabels(
     modifier: Modifier = Modifier,
     languages: List<String>,
     tags: List<String>,
-    maxLines: Int = 1,
-) = TagFlowRow(
-    modifier = modifier,
-    maxLines = maxLines,
 ) {
-    // A language carries the mark the song details header gives it, since it is the one label here that is not the
-    // user's own word for the song: without it a pill reading "Magyar" is a tag somebody typed, and there is no
-    // telling the two apart in a list.
-    languages.forEach { code ->
-        TagPill(
-            text = languageLabel(code),
-            leadingIcon = painterResource(Res.drawable.ic_language),
-        )
+    val scrollState = rememberScrollState()
+    Row(
+        modifier = modifier
+            .horizontalFadingEdges(scrollState)
+            .horizontalScroll(scrollState),
+        horizontalArrangement = Arrangement.spacedBy(TAG_GAP),
+    ) {
+        // A language carries the mark the song details header gives it, since it is the one label here that is not the
+        // user's own word for the song: without it a pill reading "Magyar" is a tag somebody typed, and there is no
+        // telling the two apart in a list.
+        languages.forEach { code ->
+            TagPill(
+                text = languageLabel(code),
+                leadingIcon = painterResource(Res.drawable.ic_language),
+            )
+        }
+        tags.forEach { tag -> TagPill(text = tag) }
     }
-    tags.forEach { tag -> TagPill(text = tag) }
 }
 
 /**
- * The layout every group of tags is laid out in. A tag is a word of whatever length its author chose, so they are
- * flowed rather than put in a row that would have to scroll or a grid whose columns would all be as wide as the
- * longest one.
+ * Fades out the content of a sideways scrolling row towards whichever edge it continues past, which is what tells the
+ * reader that there is more of it: a pill cut off by the edge of the card reads as the end of the row.
+ *
+ * Each fade is as wide as the distance left to scroll in its direction, up to [HORIZONTAL_FADE_WIDTH], so it grows in
+ * and shrinks away with the scroll itself instead of switching on as the row leaves its end. The scroll position is
+ * only read while drawing, so scrolling redraws the row without recomposing or measuring it again. The mask is drawn
+ * with [BlendMode.DstIn] over the row's own pixels, which needs the offscreen layer: drawn straight into the card, it
+ * would erase the card behind the row as well, and the fade would be to a hole instead of to the card's color.
+ * It has to be applied outside [horizontalScroll], so that it masks the visible part of the row rather than the
+ * ends of the content.
+ */
+private fun Modifier.horizontalFadingEdges(scrollState: ScrollState) = graphicsLayer {
+    compositingStrategy = CompositingStrategy.Offscreen
+}.drawWithContent {
+    drawContent()
+    val fadeWidth = HORIZONTAL_FADE_WIDTH.toPx()
+    val startFade = scrollState.value.toFloat().coerceAtMost(fadeWidth)
+    val endFade = (scrollState.maxValue - scrollState.value).toFloat().coerceIn(0f, fadeWidth)
+    // The scroll offset counts from the start of the row, which is its right edge in a right to left layout.
+    val isRtl = layoutDirection == LayoutDirection.Rtl
+    val leftFade = if (isRtl) endFade else startFade
+    val rightFade = if (isRtl) startFade else endFade
+    if (leftFade > 0f) {
+        drawRect(
+            brush = Brush.horizontalGradient(0f to Color.Transparent, 1f to Color.Black, startX = 0f, endX = leftFade),
+            size = Size(leftFade, size.height),
+            blendMode = BlendMode.DstIn,
+        )
+    }
+    if (rightFade > 0f) {
+        drawRect(
+            brush = Brush.horizontalGradient(0f to Color.Black, 1f to Color.Transparent, startX = size.width - rightFade, endX = size.width),
+            topLeft = Offset(size.width - rightFade, 0f),
+            size = Size(rightFade, size.height),
+            blendMode = BlendMode.DstIn,
+        )
+    }
+}
+
+/**
+ * The layout every group of tags is laid out in where it may take as many lines as it needs, which is everywhere but
+ * a song list's rows ([SongLabels]). A tag is a word of whatever length its author chose, so they are flowed rather
+ * than put in a grid whose columns would all be as wide as the longest one.
  */
 @Composable
 internal fun TagFlowRow(
@@ -120,9 +176,11 @@ internal fun TagPill(
                 )
             }
             Text(
-                // Weighted so that the icons are measured first: a tag as long as the row is ellipsized rather than
-                // pushing its own remove button out of the pill.
-                modifier = Modifier.weight(1f, fill = false).padding(vertical = TAG_TEXT_PADDING),
+                // Weighted so that the remove button is measured first: a tag as long as the row is ellipsized rather
+                // than pushing it out of the pill. Only then, because a weight is worked out of the width the pill is
+                // given, and in the sideways scrolling row of a song list (SongLabels) that is unbounded, which leaves
+                // a weighted text no width at all. A leading icon comes before the text anyway, so it needs no weight.
+                modifier = (if (trailingIcon == null) Modifier else Modifier.weight(1f, fill = false)).padding(vertical = TAG_TEXT_PADDING),
                 text = text,
                 style = MaterialTheme.typography.labelMedium,
                 maxLines = 1,
@@ -172,6 +230,8 @@ internal fun TagPill(
 
 /** The gap between two tags, horizontally and between the rows they wrap onto. */
 internal val TAG_GAP = 4.dp
+
+private val HORIZONTAL_FADE_WIDTH = 24.dp
 
 private val TAG_PADDING = 8.dp
 private val TAG_TEXT_PADDING = 4.dp
