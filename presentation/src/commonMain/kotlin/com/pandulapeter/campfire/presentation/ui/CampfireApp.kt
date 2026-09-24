@@ -59,6 +59,11 @@ import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBarDefaults
+import androidx.compose.material3.WideNavigationRail
+import androidx.compose.material3.WideNavigationRailDefaults
+import androidx.compose.material3.WideNavigationRailItem
+import androidx.compose.material3.WideNavigationRailValue
+import androidx.compose.material3.rememberWideNavigationRailState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.LaunchedEffect
@@ -124,6 +129,7 @@ import com.pandulapeter.campfire.presentation.resources.songs_delete_song_partly
 import com.pandulapeter.campfire.presentation.resources.songs_update_file_name_partly
 import com.pandulapeter.campfire.presentation.ui.components.TopLevelScreenLayout
 import com.pandulapeter.campfire.presentation.ui.components.WindowSize
+import com.pandulapeter.campfire.presentation.ui.components.hasRoomForSidePanel
 import com.pandulapeter.campfire.presentation.ui.components.pluralTextResource
 import com.pandulapeter.campfire.presentation.ui.components.textResource
 import com.pandulapeter.campfire.presentation.ui.platform.LocalSyncNotifier
@@ -402,19 +408,21 @@ private fun CampfireContent(
         // the same color they are painted in and the fade stays invisible.
         modifier = Modifier.fillMaxSize().background(MaterialTheme.colorScheme.background),
         isChromePlaced = !chromeInScreens,
-        chrome = { windowSize ->
+        chrome = { windowSize, isNavigationRailExpanded ->
             NavigationChrome(
                 windowSize = windowSize,
+                isNavigationRailExpanded = isNavigationRailExpanded,
                 currentTopLevelDestination = backStack.lastOrNull { it is CampfireDestination.TopLevel } as? CampfireDestination.TopLevel,
                 onDestinationSelected = viewModel::selectTopLevelDestination,
             )
         },
-    ) { windowWidth, windowSize, chromeThickness ->
+    ) { windowWidth, windowSize, isNavigationRailExpanded, chromeThickness ->
         CampfireScreens(
             viewModel = viewModel,
             urlOpener = urlOpener,
             windowWidth = windowWidth,
             windowSize = windowSize,
+            isNavigationRailExpanded = isNavigationRailExpanded,
             chromeThickness = chromeThickness,
             chromeInScreens = chromeInScreens,
             onNavigationTransitionRunningChanged = { isNavigationTransitionRunning = it },
@@ -436,6 +444,7 @@ private fun CampfireScreens(
     urlOpener: (String) -> Unit,
     windowWidth: Dp,
     windowSize: WindowSize,
+    isNavigationRailExpanded: Boolean,
     chromeThickness: Dp,
     chromeInScreens: Boolean,
     onNavigationTransitionRunningChanged: (Boolean) -> Unit,
@@ -497,6 +506,7 @@ private fun CampfireScreens(
             {
                 NavigationChrome(
                     windowSize = windowSize,
+                    isNavigationRailExpanded = isNavigationRailExpanded,
                     currentTopLevelDestination = destination,
                     onDestinationSelected = viewModel::selectTopLevelDestination,
                 )
@@ -701,17 +711,18 @@ private fun Messages(
 private fun NavigationChromeScaffold(
     modifier: Modifier = Modifier,
     isChromePlaced: Boolean,
-    chrome: @Composable (windowSize: WindowSize) -> Unit,
-    content: @Composable (windowWidth: Dp, windowSize: WindowSize, chromeThickness: Dp) -> Unit,
+    chrome: @Composable (windowSize: WindowSize, isNavigationRailExpanded: Boolean) -> Unit,
+    content: @Composable (windowWidth: Dp, windowSize: WindowSize, isNavigationRailExpanded: Boolean, chromeThickness: Dp) -> Unit,
 ) = SubcomposeLayout(modifier) { constraints ->
     val windowWidth = constraints.maxWidth.toDp()
     val windowSize = WindowSize.fromWidth(windowWidth)
+    val isNavigationRailExpanded = isNavigationRailExpanded(windowWidth)
     // Loose constraints, so that the rail and the bar each take only the one dimension they want.
-    val chromePlaceable = subcompose(ChromeSlot.CHROME) { chrome(windowSize) }
+    val chromePlaceable = subcompose(ChromeSlot.CHROME) { chrome(windowSize, isNavigationRailExpanded) }
         .single()
         .measure(constraints.copy(minWidth = 0, minHeight = 0))
     val chromeThickness = if (windowSize.usesNavigationRail) chromePlaceable.width else chromePlaceable.height
-    val contentPlaceable = subcompose(ChromeSlot.CONTENT) { content(windowWidth, windowSize, chromeThickness.toDp()) }
+    val contentPlaceable = subcompose(ChromeSlot.CONTENT) { content(windowWidth, windowSize, isNavigationRailExpanded, chromeThickness.toDp()) }
         .single()
         .measure(constraints)
     layout(constraints.maxWidth, constraints.maxHeight) {
@@ -730,20 +741,60 @@ private fun NavigationChromeScaffold(
 private enum class ChromeSlot { CHROME, CONTENT }
 
 /**
- * The navigation bar (under 600dp) or navigation rail that every top level screen shares. It belongs to the bottom
- * of the deck rather than to any one screen: it is laid out once for the window and stays there while the tabs fade
- * through in place next to it. A card dealt over the deck moves the screen under it a little, and the chrome is part
- * of that screen as far as the eye can tell, so for as long as a card covers the deck or is being taken off it every
- * top level screen draws a copy of it instead (see [CampfireScreens]), which moves with the screen and which the card
- * covers.
+ * Whether a window this wide has the room for the expanded navigation rail, the one with each label beside its icon
+ * rather than under it. That rail is well over a hundred dp wider than the collapsed one, and the lists next to it are
+ * what pays for it, so it is only used where the list screens still keep their filter side panel beside it. Deciding
+ * it from anything else would have the panel come, go and come again as a window is widened past both thresholds.
+ *
+ * Material decides the expanded rail's width from its items, [EXPANDED_NAVIGATION_RAIL_MIN_WIDTH] being where it
+ * starts; the three labels here fit inside that in every language the app speaks.
+ */
+private fun isNavigationRailExpanded(windowWidth: Dp) =
+    WindowSize.fromWidth(windowWidth).usesNavigationRail && hasRoomForSidePanel(windowWidth - EXPANDED_NAVIGATION_RAIL_MIN_WIDTH)
+
+private val EXPANDED_NAVIGATION_RAIL_MIN_WIDTH = 220.dp
+
+/** The gap the collapsed [NavigationRail] leaves above its first item. */
+private val EXPANDED_NAVIGATION_RAIL_TOP_PADDING = 4.dp
+
+/**
+ * The navigation bar (under 600dp), navigation rail or expanded navigation rail (see [isNavigationRailExpanded]) that
+ * every top level screen shares. It belongs to the bottom of the deck rather than to any one screen: it is laid out
+ * once for the window and stays there while the tabs fade through in place next to it. A card dealt over the deck
+ * moves the screen under it a little, and the chrome is part of that screen as far as the eye can tell, so for as long
+ * as a card covers the deck or is being taken off it every top level screen draws a copy of it instead (see
+ * [CampfireScreens]), which moves with the screen and which the card covers.
  */
 @Composable
 private fun NavigationChrome(
     windowSize: WindowSize,
+    isNavigationRailExpanded: Boolean,
     currentTopLevelDestination: CampfireDestination.TopLevel?,
     onDestinationSelected: (CampfireDestination.TopLevel) -> Unit,
 ) {
-    if (windowSize.usesNavigationRail) {
+    if (isNavigationRailExpanded) {
+        // The wide rail's own collapsed state is not used: its collapsed form is wider than the plain rail, and the
+        // window size alone decides which of the two a window gets, so there is nothing for the rail to animate
+        // between either. The state is only ever the expanded one.
+        WideNavigationRail(
+            state = rememberWideNavigationRailState(initialValue = WideNavigationRailValue.Expanded),
+            // Starts under the app bar for the same reason the collapsed rail does, see below.
+            windowInsets = WideNavigationRailDefaults.windowInsets.add(WindowInsets(top = TopAppBarDefaults.TopAppBarExpandedHeight)),
+            // The default leaves room above the items for a header this rail does not have, which would drop them
+            // 40dp lower than the collapsed rail's as the window crosses from the one to the other.
+            contentPadding = PaddingValues(top = EXPANDED_NAVIGATION_RAIL_TOP_PADDING),
+        ) {
+            CampfireDestination.TopLevel.entries.forEach { destination ->
+                WideNavigationRailItem(
+                    selected = destination == currentTopLevelDestination,
+                    onClick = { onDestinationSelected(destination) },
+                    icon = { Icon(painter = painterResource(destination.icon), contentDescription = null) },
+                    label = { Text(stringResource(destination.label)) },
+                    railExpanded = true,
+                )
+            }
+        }
+    } else if (windowSize.usesNavigationRail) {
         NavigationRail(
             // The app bar of every top level screen spans the rail's column, so the rail starts under it. The bar is
             // the pinned, single row one on all three screens, which is what lets its height be known here.

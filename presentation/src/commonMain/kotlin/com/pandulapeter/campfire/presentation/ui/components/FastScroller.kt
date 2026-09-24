@@ -154,7 +154,7 @@ internal fun FastScroller(
                     )
                 }
         )
-        // The label stays below and to the start of the finger on the thumb, clamped into the track near its end.
+        // The label is centered on the thumb, at the same height as the finger on it, clamped into the track near its end.
         // It is wider than the touch column, so measure it without the column's width.
         AnimatedVisibility(
             visible = state.isDragging && label != null,
@@ -164,7 +164,7 @@ internal fun FastScroller(
                     val bubbleHeight = BUBBLE_SIZE.roundToPx().toFloat()
                     IntOffset(
                         x = -BUBBLE_END_MARGIN.roundToPx(),
-                        y = bubbleTop(state.thumbCenter + BUBBLE_VERTICAL_OFFSET.toPx(), state.trackHeight, bubbleHeight).roundToInt(),
+                        y = bubbleTop(state.thumbCenter - bubbleHeight / 2, state.trackHeight, bubbleHeight).roundToInt(),
                     )
                 }
                 .wrapContentWidth(align = Alignment.End, unbounded = true),
@@ -355,8 +355,7 @@ private val THUMB_END_PADDING = 4.dp
 private val MIN_THUMB_HEIGHT = 48.dp
 private val BUBBLE_SIZE = 48.dp
 private val BUBBLE_END_MARGIN = 32.dp
-private val BUBBLE_VERTICAL_OFFSET = 16.dp
 private val BUBBLE_ELEVATION = 2.dp
-private val BUBBLE_TRANSFORM_ORIGIN = TransformOrigin(pivotFractionX = 1f, pivotFractionY = 0f)
+private val BUBBLE_TRANSFORM_ORIGIN = TransformOrigin(pivotFractionX = 1f, pivotFractionY = 0.5f)
 private const val IDLE_THUMB_ALPHA = 0.5f
 private const val TRACK_ALPHA = 0.12f

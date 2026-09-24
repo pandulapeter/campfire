@@ -95,9 +95,12 @@ import org.jetbrains.compose.resources.painterResource
 /**
  * Whether the [ControlsSidePanel] fits into a screen of the given width: the list comes first, so the panel only gets
  * its space when at least [SIDE_PANEL_MIN_COLUMN_COUNT] columns of songs remain next to it. On narrower screens the
- * same controls are shown in a bottom sheet instead.
+ * same controls are shown in a bottom sheet instead. The [FastScroller]'s column is taken off as well, since
+ * [songListColumnCount] takes it off too, and a panel granted by a width the list then lays out one column fewer in
+ * would leave the list with less than the columns it was promised.
  */
-internal fun hasRoomForSidePanel(screenWidth: Dp) = columnCountForWidth(screenWidth - SIDE_PANEL_WIDTH) >= SIDE_PANEL_MIN_COLUMN_COUNT
+internal fun hasRoomForSidePanel(screenWidth: Dp) =
+    columnCountForWidth(screenWidth - SIDE_PANEL_WIDTH - FAST_SCROLLER_WIDTH) >= SIDE_PANEL_MIN_COLUMN_COUNT
 
 /**
  * The panel and the sheet are the same controls shown two different ways, so a window resize that grows the panel
@@ -588,7 +591,7 @@ internal fun CountedFilterChip(
 
 private val SIDE_PANEL_WIDTH = 320.dp
 private val SIDE_PANEL_BOTTOM_PADDING = 16.dp
-private const val SIDE_PANEL_MIN_COLUMN_COUNT = 3
+private const val SIDE_PANEL_MIN_COLUMN_COUNT = 2
 private const val MAX_COLLAPSED_TAG_COUNT = 12
 private val MAX_TAG_WIDTH = 160.dp
 private val CONTROLS_PADDING = 16.dp
