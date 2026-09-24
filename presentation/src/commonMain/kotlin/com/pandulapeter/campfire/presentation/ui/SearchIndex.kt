@@ -21,6 +21,50 @@ internal data class SearchableSong(
     fun matches(query: String) = title.contains(query) || artist.contains(query) || tags.any { it.contains(query) }
 }
 
+internal data class SongSearchSnapshot(
+    val filtered: List<SearchableSong>,
+    val byFileName: Map<String, SearchableSong>,
+    val songsByFileName: Map<String, Song>,
+) {
+    companion object {
+        val Empty = SongSearchSnapshot(emptyList(), emptyMap(), emptyMap())
+    }
+}
+
+/** Reuses normalized fields while replacing each entry's Song with the latest library model. */
+internal class SongSearchIndex(private val normalize: (String) -> String) {
+    private var previous = emptyMap<String, SearchableSong>()
+
+    fun update(allSongs: List<Song>, filteredSongs: List<Song>): SongSearchSnapshot {
+        val byFileName = LinkedHashMap<String, SearchableSong>(allSongs.size)
+        val songsByFileName = LinkedHashMap<String, Song>(allSongs.size)
+        for (song in allSongs) {
+            val indexed = index(song, previous[song.fileName])
+            byFileName[song.fileName] = indexed
+            songsByFileName[song.fileName] = song
+        }
+        val filtered = filteredSongs.map { song ->
+            val indexed = byFileName[song.fileName]
+            if (indexed?.song === song) indexed else index(song, indexed)
+        }
+        previous = byFileName
+        return SongSearchSnapshot(filtered, byFileName, songsByFileName)
+    }
+
+    private fun index(song: Song, previous: SearchableSong?): SearchableSong = if (
+        previous != null && previous.song.title == song.title && previous.song.artist == song.artist && previous.song.tags == song.tags
+    ) {
+        previous.copy(song = song)
+    } else {
+        SearchableSong(
+            song = song,
+            title = normalize(song.title),
+            artist = normalize(song.artist),
+            tags = song.tags.map(normalize),
+        )
+    }
+}
+
 /** The three Boolean ranking keys have only eight values; each bucket preserves source order. */
 internal fun rankSongs(songs: List<SearchableSong>, query: String): List<Song> {
     val buckets = Array(8) { mutableListOf<Song>() }

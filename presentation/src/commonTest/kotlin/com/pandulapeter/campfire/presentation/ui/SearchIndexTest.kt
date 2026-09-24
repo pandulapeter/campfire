@@ -51,6 +51,34 @@ class SearchIndexTest {
         assertEquals(setOf("one"), index.update(listOf(entryEdit)).keys)
     }
 
+    @Test
+    fun songFieldsAreNormalizedOnceAndLatestModelsReplaceCachedOnes() {
+        var calls = 0
+        val index = SongSearchIndex { text -> calls++; text.lowercase() }
+        val first = song("first").copy(title = "First", artist = "Artist", tags = listOf("Tag"))
+        val second = song("second").copy(title = "Second", artist = "Artist")
+        val initial = index.update(listOf(first, second), listOf(second, first))
+        assertEquals(5, calls)
+        assertEquals(listOf(second, first), initial.filtered.map { it.song })
+
+        val metadataEdit = first.copy(size = 100L, key = "C")
+        val reused = index.update(listOf(metadataEdit, second), listOf(metadataEdit))
+        assertEquals(5, calls)
+        assertSame(metadataEdit, reused.byFileName.getValue("first.cho").song)
+        assertEquals(listOf(metadataEdit), reused.filtered.map { it.song })
+
+        val titleEdit = metadataEdit.copy(title = "Changed")
+        val changed = index.update(listOf(titleEdit, second), listOf(titleEdit))
+        assertEquals(8, calls)
+        assertEquals("changed", changed.byFileName.getValue("first.cho").title)
+
+        val renamed = titleEdit.copy(fileName = "renamed.cho")
+        val final = index.update(listOf(renamed), listOf(renamed))
+        assertEquals(setOf("renamed.cho"), final.byFileName.keys)
+        assertEquals(setOf("renamed.cho"), final.songsByFileName.keys)
+        assertEquals(11, calls)
+    }
+
     private fun searchable(name: String, title: String, artist: String, tags: List<String>) = SearchableSong(
         song = song(name), title = title, artist = artist, tags = tags,
     )

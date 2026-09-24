@@ -529,9 +529,6 @@ class CampfireViewModel(
      */
     val allSongs = screenData.map { it.data?.unfilteredSongs.orEmpty() }.asState(emptyList())
 
-    /** Shared file-name lookup for screens that resolve songs from a destination or a setlist. */
-    val songsByFileName = allSongs.map { songs -> songs.associateBy { it.fileName } }.asState(emptyMap())
-
     /**
      * The labels every song in the library carries, which the song rows leave off: a tag that is on every song tells
      * one song from no other, and a library that sings in one language has nothing to mark a song with. Counted over
@@ -545,16 +542,6 @@ class CampfireViewModel(
             languages = songs.map { it.languages.toSet() }.reduceOrNull { a, b -> a intersect b }.orEmpty(),
         )
     }.asState(LabelsOnEverySong())
-
-    /**
-     * The library as the song list shows it: narrowed by [songFilter] and sorted the way the preferences ask for.
-     * Distinct, because [screenData] also emits for every write to a setlist with the song list exactly as it was, and
-     * each of those would otherwise have the whole library normalized again for nothing.
-     */
-    private val filteredSongs = screenData.map { it.data?.songs.orEmpty() }.distinctUntilChanged()
-
-    /** [filteredSongs] as the domain layer cut it into sections, distinct for the same reason. */
-    private val songSections = screenData.map { it.data?.songSections.orEmpty() }.distinctUntilChanged()
 
     /**
      * Every tag the library uses, most used first, as both the filter controls and the suggestions of the tag
@@ -586,22 +573,20 @@ class CampfireViewModel(
         tags.any { it.name.lowercase() in selectedTags } || (languages.size > 1 && languages.any { it.code in filter.selectedLanguages })
     }.asState(false)
 
-    /**
-     * Every song with its title, artist and tags normalized for searching, done once per library rather than
-     * once per keystroke: the search runs over the whole list on every character typed.
-     */
-    private val searchableSongs = filteredSongs.map { songs -> songs.map { it.toSearchableSong() } }.asState(emptyList())
+    /** One library emission supplies both song-search views and the matching section order. */
+    private val songSearchIndex = SongSearchIndex { normalizeSearchText(it) }
+    private val indexedSongs = screenData.map { state ->
+        IndexedSongInput(
+            all = state.data?.unfilteredSongs.orEmpty(),
+            filtered = state.data?.songs.orEmpty(),
+            sections = state.data?.songSections.orEmpty(),
+        )
+    }.distinctUntilChanged().map { input ->
+        IndexedSongs(input.sections, songSearchIndex.update(input.all, input.filtered))
+    }.asState(IndexedSongs(emptyList(), SongSearchSnapshot.Empty))
 
-    /**
-     * The same for the whole library, looked up by file name, which is what the setlists search reads: a setlist
-     * names its songs whatever the song filters hide, so it cannot be answered from [searchableSongs].
-     *
-     * A state rather than a plain flow because two of the states below read it, and this normalizes every title,
-     * artist and tag in the library: collected cold it would do all of that once per reader, on every library change.
-     */
-    private val searchableSongsByFileName = allSongs.map { songs ->
-        songs.associateBy({ it.fileName }) { it.toSearchableSong() }
-    }.asState(emptyMap())
+    /** Shared file-name lookup for screens that resolve songs from a destination or a setlist. */
+    val songsByFileName = indexedSongs.map { it.search.songsByFileName }.asState(emptyMap())
 
     /**
      * Null until the library has actually been read, so that the settings screen never flashes a count of zero. The size
@@ -623,13 +608,13 @@ class CampfireViewModel(
 
     // The sections arrive cut, from the same pass that sorted them. Cutting them here would take the sorting mode
     // from the preferences, which change before the list sorted by them arrives.
-    val songGroups = combine(songSections, searchableSongs, songsSearch.activeQuery) { sections, songs, query ->
+    val songGroups = combine(indexedSongs, songsSearch.activeQuery) { indexed, query ->
         if (query.isBlank()) {
-            sections.map { SongGroup(header = it.header, songs = it.songs) }
+            indexed.sections.map { SongGroup(header = it.header, songs = it.songs) }
         } else {
             // No groups at all when nothing matches, rather than one empty group: a search with no results has to
             // look empty to whoever decides between the list and a placeholder, not like a list with one section.
-            rankSongs(songs, normalizeSearchText(query)).takeIf { it.isNotEmpty() }?.let { listOf(SongGroup(header = null, songs = it)) }.orEmpty()
+            rankSongs(indexed.search.filtered, normalizeSearchText(query)).takeIf { it.isNotEmpty() }?.let { listOf(SongGroup(header = null, songs = it)) }.orEmpty()
         }
     }.asState(emptyList())
 
@@ -688,9 +673,10 @@ class CampfireViewModel(
      *
      * Kept apart from the search below so that the placeholder can tell a setlist list emptied by the archive filter
      * from one emptied by the search, the way the song list tells its own two empty states apart - and a state
-     * rather than a plain flow for the same reason [searchableSongsByFileName] is, since both of them read it.
+     * rather than a plain flow because several consumers read it.
      */
-    private val visibleSetlists = combine(setlists, searchableSongsByFileName, shouldShowArchivedSetlists) { setlists, songsByFileName, shouldShowArchivedSetlists ->
+    private val visibleSetlists = combine(setlists, indexedSongs, shouldShowArchivedSetlists) { setlists, indexed, shouldShowArchivedSetlists ->
+        val songsByFileName = indexed.search.byFileName
         setlists.filter { shouldShowArchivedSetlists || !it.isArchived }.map { setlist ->
             SetlistWithSongs(
                 setlist = setlist,
@@ -714,22 +700,22 @@ class CampfireViewModel(
     private val setlistSearchIndex = SearchableSetlistIndex { normalizeSearchText(it) }
     private val searchableSetlists = setlists.map { setlistSearchIndex.update(it) }.asState(emptyMap())
 
-    val setlistsWithSongs = combine(visibleSetlists, searchableSongsByFileName, searchableSetlists, setlistsSearch.activeQuery) { setlists, songsByFileName, searchableSetlists, query ->
+    val setlistsWithSongs = combine(visibleSetlists, indexedSongs, searchableSetlists, setlistsSearch.activeQuery) { setlists, indexed, searchableSetlists, query ->
         if (query.isBlank()) {
             setlists
         } else {
             val normalizedQuery = normalizeSearchText(query)
             setlists.filter { setlist ->
-                val indexed = searchableSetlists[setlist.setlist.fileName]
-                val matchesOwnText = if (indexed?.title == setlist.setlist.title && indexed.description == setlist.setlist.description) {
-                    indexed.matches(normalizedQuery)
+                val indexedSetlist = searchableSetlists[setlist.setlist.fileName]
+                val matchesOwnText = if (indexedSetlist?.title == setlist.setlist.title && indexedSetlist.description == setlist.setlist.description) {
+                    indexedSetlist.matches(normalizedQuery)
                 } else {
                     // The visible list and its text index are separate states and can arrive one emission apart.
                     normalizeSearchText(setlist.setlist.title).contains(normalizedQuery) ||
                         normalizeSearchText(setlist.setlist.description).contains(normalizedQuery)
                 }
                 matchesOwnText ||
-                    setlist.setlist.entries.any { entry -> songsByFileName[entry.songFileName]?.matches(normalizedQuery) == true }
+                    setlist.setlist.entries.any { entry -> indexed.search.byFileName[entry.songFileName]?.matches(normalizedQuery) == true }
             }
         }
     }.asState(emptyList())
@@ -2264,13 +2250,6 @@ class CampfireViewModel(
         initialValue = initialValue,
     )
 
-    private fun Song.toSearchableSong() = SearchableSong(
-        song = this,
-        title = normalizeSearchText(title),
-        artist = normalizeSearchText(artist),
-        tags = tags.map { normalizeSearchText(it) },
-    )
-
     /**
      * One batch in [importQueue].
      *
@@ -2397,6 +2376,17 @@ class CampfireViewModel(
         val songCount: Int,
         val setlistCount: Int,
         val size: Long,
+    )
+
+    private data class IndexedSongInput(
+        val all: List<Song>,
+        val filtered: List<Song>,
+        val sections: List<SongSection>,
+    )
+
+    private data class IndexedSongs(
+        val sections: List<SongSection>,
+        val search: SongSearchSnapshot,
     )
 
     /**
