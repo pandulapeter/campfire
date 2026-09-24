@@ -110,7 +110,6 @@ import com.pandulapeter.campfire.presentation.resources.setlists_new_setlist
 import com.pandulapeter.campfire.presentation.resources.setlists_new_setlist_title
 import com.pandulapeter.campfire.presentation.resources.setlists_no_search_results
 import com.pandulapeter.campfire.presentation.resources.setlists_search
-import com.pandulapeter.campfire.presentation.resources.setlists_sort_and_filter
 import com.pandulapeter.campfire.presentation.resources.setlists_song_assignments
 import com.pandulapeter.campfire.presentation.resources.settings_sync_disconnect
 import com.pandulapeter.campfire.presentation.resources.settings_sync_disconnect_confirmation
@@ -136,7 +135,7 @@ import com.pandulapeter.campfire.presentation.resources.songs_clear
 import com.pandulapeter.campfire.presentation.resources.songs_empty_title
 import com.pandulapeter.campfire.presentation.resources.songs_no_search_results
 import com.pandulapeter.campfire.presentation.resources.songs_search
-import com.pandulapeter.campfire.presentation.resources.songs_sort_and_filter
+import com.pandulapeter.campfire.presentation.resources.songs_filter
 import com.pandulapeter.campfire.data.model.domain.ImportConflictResolution
 import com.pandulapeter.campfire.data.model.domain.ImportPlan
 import com.pandulapeter.campfire.data.model.domain.Song
@@ -150,8 +149,7 @@ import com.pandulapeter.campfire.presentation.ui.components.MAX_SEARCH_QUERY_LEN
 import com.pandulapeter.campfire.presentation.ui.components.PickableLanguage
 import com.pandulapeter.campfire.presentation.ui.components.RadioListItem
 import com.pandulapeter.campfire.presentation.ui.components.SettingsSectionTitle
-import com.pandulapeter.campfire.presentation.ui.components.SetlistsControls
-import com.pandulapeter.campfire.presentation.ui.components.SongsControls
+import com.pandulapeter.campfire.presentation.ui.components.SongFilters
 import com.pandulapeter.campfire.presentation.ui.components.TagFlowRow
 import com.pandulapeter.campfire.presentation.ui.components.TagPill
 import com.pandulapeter.campfire.presentation.ui.components.fadingTopEdge
@@ -222,21 +220,11 @@ internal fun CampfireDialogs(
             },
         )
 
-        CampfireViewModel.DialogType.SongsControls -> CampfireBottomSheet(
-            title = stringResource(Res.string.songs_sort_and_filter),
-            onDismiss = { viewModel.dismissSheet(CampfireViewModel.DialogType.SongsControls) },
+        CampfireViewModel.DialogType.SongFilters -> CampfireBottomSheet(
+            title = stringResource(Res.string.songs_filter),
+            onDismiss = { viewModel.dismissSheet(CampfireViewModel.DialogType.SongFilters) },
         ) { contentPadding ->
-            SongsControls(
-                viewModel = viewModel,
-                contentPadding = contentPadding,
-            )
-        }
-
-        CampfireViewModel.DialogType.SetlistsControls -> CampfireBottomSheet(
-            title = stringResource(Res.string.setlists_sort_and_filter),
-            onDismiss = { viewModel.dismissSheet(CampfireViewModel.DialogType.SetlistsControls) },
-        ) { contentPadding ->
-            SetlistsControls(
+            SongFilters(
                 viewModel = viewModel,
                 contentPadding = contentPadding,
             )
@@ -1315,6 +1303,8 @@ private fun CampfireBottomSheet(
     ModalBottomSheet(
         onDismissRequest = onDismiss,
         sheetState = sheetState,
+        // The screens' own background rather than Material's surface container, so a sheet reads as part of the app.
+        containerColor = MaterialTheme.colorScheme.background,
         dragHandle = null,
         contentWindowInsets = { WindowInsets.safeDrawing.only(WindowInsetsSides.Top) },
     ) {

@@ -20,7 +20,6 @@ internal data class UserPreferencesDocument(
     val isPerformanceModeEnabled: Boolean = false,
     // On by default: a song created in the app starts out as a title and an artist, so hiding songs without chords
     // would hide every new song right after it was made.
-    val shouldShowSongsWithoutChords: Boolean = true,
     val shouldShowArchivedSetlists: Boolean = false,
     val isLyricsOnlyModeEnabled: Boolean = false,
     // On by default: reading the sections across the columns means that scrolling never sends the reader back up,

@@ -18,7 +18,6 @@
     <string name="create">Create</string>
     <string name="save">Save</string>
     <string name="share">Share</string>
-    <string name="filters">Filters</string>
     <string name="retry">Retry</string>
     <string name="add_demo_songs">Add the demo songs</string>
 
@@ -71,12 +70,11 @@
     <string name="songs">Songs</string>
     <string name="songs_search">Search in songs</string>
     <string name="songs_clear">Clear</string>
-    <string name="songs_sort_and_filter">Sort and filter</string>
-    <string name="songs_sort_and_filter_active">Sort and filter, filters are on</string>
+    <string name="songs_sort">Sort songs</string>
+    <string name="songs_filter">Filter songs</string>
+    <string name="songs_filter_active">Filter songs, filters are on</string>
     <string name="songs_unsorted_label">0 - 9</string>
     <string name="songs_unknown_artist">Unknown artist</string>
-    <string name="songs_show_without_chords">Show songs without chords</string>
-    <string name="songs_sorting_mode">Sort by</string>
     <string name="songs_sorting_mode_by_artist">Artist</string>
     <string name="songs_sorting_mode_by_title">Title</string>
     <string name="songs_empty_title">Your library is empty</string>
@@ -135,7 +133,7 @@
     <string name="setlists_duplicate_setlist">Duplicate setlist</string>
     <string name="setlists_duplicate_title">%1$s (copy)</string>
     <string name="setlists_archive">Archive setlist</string>
-    <string name="setlists_unarchive">Move setlist out of the archive</string>
+    <string name="setlists_unarchive">Unarchive setlist</string>
     <string name="setlists_archived">Archived</string>
     <string name="setlists_export">Export setlist</string>
     <string name="setlists_missing_song">File not found</string>
@@ -144,8 +142,7 @@
     <string name="setlists_search">Search in setlists</string>
     <string name="setlists_no_search_results">No matching setlists</string>
     <string name="setlists_no_search_results_hint">No setlist matches this search, either by what it is called or by the songs in it.</string>
-    <string name="setlists_sort_and_filter">Sort and filter</string>
-    <string name="setlists_sorting_mode">Sort by</string>
+    <string name="setlists_sort">Sort setlists</string>
     <string name="setlists_sorting_mode_newest_first">Newest</string>
     <string name="setlists_sorting_mode_by_title">Title</string>
     <string name="setlists_show_archived">Show archived setlists</string>

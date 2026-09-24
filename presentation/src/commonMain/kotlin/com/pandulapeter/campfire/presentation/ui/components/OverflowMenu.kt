@@ -21,15 +21,15 @@ import androidx.compose.runtime.setValue
 import com.pandulapeter.campfire.presentation.ui.LocalIsCoveredByRequiredUpdate
 
 /**
- * The menu behind every overflow button in the app, and the one place that knows whether one of them is open: a
+ * The popup behind app bar and overflow buttons, and the one place that knows whether one is open: a
  * [DropdownMenu] keeps that next to the button that opened it, inside the composition, where the desktop window's
  * key handler (`CampfireViewModel.handleKeyEvent`) cannot see it - and an Escape pressed with a menu up belongs to
  * the menu rather than to the back stack.
  *
  * @param state Whether the menu is open, hoisted only where something other than [button] opens it too.
  * @param button The button that opens the menu, handed the way to open it.
- * @param content The entries of the menu, handed the way to choose one: every entry acts through it, which closes the
- *   menu before the action and ignores a second choice made while the menu is on its way out.
+ * @param content The entries of the menu. Actions that should close it use the handed [OverflowMenuState.select]
+ *   helper; choices that keep it open act directly.
  */
 @Composable
 internal fun OverflowMenu(

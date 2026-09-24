@@ -17,7 +17,6 @@ data class UserPreferences(
      * which is where the mode is switched back off and therefore keeps working.
      */
     val isPerformanceModeEnabled: Boolean,
-    val shouldShowSongsWithoutChords: Boolean,
     /**
      * Whether the setlists screen shows the setlists that have been archived ([Setlist.isArchived]) as well as the
      * ones still in use. Off by default, which is the whole point of archiving one.

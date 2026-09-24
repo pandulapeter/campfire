@@ -233,9 +233,9 @@ class CampfireViewModel(
     internal val settingsScrollPositions = SettingsTab.entries.associateWith { ScrollPosition() }
 
     /**
-     * Which tab of the settings screen is open, kept here for the reason the scroll positions are: the screen is taken
-     * off the back stack as it is left, and coming back to it should be coming back to where one was. The screen only
-     * reads it as it is composed, but it is a state because the web build's address names the tab, and follows it.
+     * Which tab of the settings screen is open, kept here so that the screen's own recompositions and the sync consent
+     * can reach it. Selecting Settings from another top level screen starts it over on the first tab, scrolled to the
+     * top, unlike the other two screens. The screen only reads it as it is composed, but it is a state because the web build's address names the tab, and follows it.
      */
     internal var settingsTab by mutableStateOf(SettingsTab.GENERAL)
 
@@ -539,6 +539,12 @@ class CampfireViewModel(
      * controls offer them. Empty, or a single entry, is a library with nothing to filter by.
      */
     val languages = screenData.map { it.data?.languages.orEmpty() }.asState(emptyList())
+
+    /**
+     * Whether the filter controls have anything to offer: a tag, or a choice between two languages. Without either,
+     * the songs screen leaves out both the controls and the action that opens them rather than showing an empty sheet.
+     */
+    val hasSongFilters = combine(tags, languages) { tags, languages -> tags.isNotEmpty() || languages.size > 1 }.asState(false)
 
     /**
      * Whether the song list is narrowed by anything the filter controls show as selected, which is what the badge on
@@ -1032,8 +1038,8 @@ class CampfireViewModel(
     private fun openSyncSettingsAfterConsent() {
         val stack = backStack.toList()
         if (stack != listOf(CampfireDestination.Songs) && stack != listOf(CampfireDestination.Songs, CampfireDestination.Settings)) return
-        settingsTab = SettingsTab.LIBRARY
         selectTopLevelDestination(CampfireDestination.Settings)
+        settingsTab = SettingsTab.LIBRARY
     }
 
     /**
@@ -1048,6 +1054,11 @@ class CampfireViewModel(
             return
         }
         if (hasUnsavedEditorText() && backStack.any { it is CampfireDestination.SongEditor }) return
+        // Settings is always arrived at as if for the first time; the other two screens keep where they were left.
+        if (destination == CampfireDestination.Settings) {
+            settingsTab = SettingsTab.GENERAL
+            settingsScrollPositions.values.forEach { it.offset = 0 }
+        }
         updateBackStack {
             clear()
             add(CampfireDestination.Songs)
@@ -1961,7 +1972,6 @@ class CampfireViewModel(
 
     // User preferences
 
-    fun setShouldShowSongsWithoutChords(value: Boolean) = updateUserPreferences { copy(shouldShowSongsWithoutChords = value) }
 
     fun setShouldShowArchivedSetlists(value: Boolean) = updateUserPreferences { copy(shouldShowArchivedSetlists = value) }
 
@@ -2441,8 +2451,7 @@ class CampfireViewModel(
     sealed interface DialogType {
         data object NewSetlist : DialogType
         data object NewSong : DialogType
-        data object SongsControls : DialogType
-        data object SetlistsControls : DialogType
+        data object SongFilters : DialogType
         /**
          * Every setlist with a box each, which is how a song is both put into one and taken out of another.
          *

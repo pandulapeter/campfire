@@ -10,6 +10,7 @@
 package com.pandulapeter.campfire.presentation.ui.screens.songs
 
 import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.Crossfade
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.scaleIn
@@ -32,8 +33,10 @@ import androidx.compose.material3.Badge
 import androidx.compose.material3.BadgedBox
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.SideEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -52,12 +55,16 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.pandulapeter.campfire.data.model.domain.UserPreferences
 import com.pandulapeter.campfire.domain.api.models.SongSection
 import com.pandulapeter.campfire.presentation.resources.Res
-import com.pandulapeter.campfire.presentation.resources.ic_tune
+import com.pandulapeter.campfire.presentation.resources.ic_filter
+import com.pandulapeter.campfire.presentation.resources.ic_filter_outline
 import com.pandulapeter.campfire.presentation.resources.songs_create_song
 import com.pandulapeter.campfire.presentation.resources.songs_new_song
 import com.pandulapeter.campfire.presentation.resources.songs_search
-import com.pandulapeter.campfire.presentation.resources.songs_sort_and_filter
-import com.pandulapeter.campfire.presentation.resources.songs_sort_and_filter_active
+import com.pandulapeter.campfire.presentation.resources.songs_filter
+import com.pandulapeter.campfire.presentation.resources.songs_filter_active
+import com.pandulapeter.campfire.presentation.resources.songs_sort
+import com.pandulapeter.campfire.presentation.resources.songs_sorting_mode_by_artist
+import com.pandulapeter.campfire.presentation.resources.songs_sorting_mode_by_title
 import com.pandulapeter.campfire.presentation.resources.songs_unknown_artist
 import com.pandulapeter.campfire.presentation.resources.songs_unsorted_label
 import com.pandulapeter.campfire.presentation.ui.CampfireViewModel
@@ -77,7 +84,8 @@ import com.pandulapeter.campfire.presentation.ui.components.SectionHeader
 import com.pandulapeter.campfire.presentation.ui.components.SectionHeaderState
 import com.pandulapeter.campfire.presentation.ui.components.SongActionsButton
 import com.pandulapeter.campfire.presentation.ui.components.SongListItem
-import com.pandulapeter.campfire.presentation.ui.components.SongsControls
+import com.pandulapeter.campfire.presentation.ui.components.SongFilters
+import com.pandulapeter.campfire.presentation.ui.components.SortMenu
 import com.pandulapeter.campfire.presentation.ui.components.allowsNewItemMenu
 import com.pandulapeter.campfire.presentation.ui.components.animateAppBarReveal
 import com.pandulapeter.campfire.presentation.ui.components.besideSidePanel
@@ -114,8 +122,9 @@ internal fun SongsScreen(
     val isPerformanceModeEnabled by viewModel.isPerformanceModeEnabled.collectAsStateWithLifecycle()
     val visibleDialog by viewModel.visibleDialog.collectAsStateWithLifecycle()
     val isSongFilterActive by viewModel.isSongFilterActive.collectAsStateWithLifecycle()
+    val hasSongFilters by viewModel.hasSongFilters.collectAsStateWithLifecycle()
     val listState = rememberRetainedLazyGridState(viewModel.songsScrollPosition)
-    val isSidePanelVisible = hasRoomForSidePanel(settledWidth)
+    val isSidePanelVisible = hasSongFilters && hasRoomForSidePanel(settledWidth)
     val listContentPadding = contentPadding.besideSidePanel(isSidePanelVisible)
     val columnCount = songListColumnCount(
         settledWidth = settledWidth,
@@ -126,9 +135,13 @@ internal fun SongsScreen(
     HideKeyboardWhenScrolledDown(listState)
     DismissSheetWhenSidePanelAppears(
         isSidePanelVisible = isSidePanelVisible,
-        isSheetVisible = visibleDialog == CampfireViewModel.DialogType.SongsControls,
+        isSheetVisible = visibleDialog == CampfireViewModel.DialogType.SongFilters,
         onDismiss = viewModel::dismissDialog,
     )
+    // A sync run can take the last tag out of the library under an open sheet, which would leave it empty.
+    LaunchedEffect(hasSongFilters) {
+        if (!hasSongFilters && visibleDialog == CampfireViewModel.DialogType.SongFilters) viewModel.dismissDialog()
+    }
     // The widest the app bar's buttons reach in over the list, which a pinned header keeps clear of - nothing once
     // the bar has filled in and moved the list down under itself.
     var appBarReach by remember { mutableStateOf(0.dp) }
@@ -172,10 +185,12 @@ internal fun SongsScreen(
                         }
                     },
                     actions = {
-                        if (!isSidePanelVisible) {
-                            SongsControlsAction(
+                        SongSortMenu(viewModel)
+                        // The last tag leaving the library takes the filters with it while the list is being looked at.
+                        AnimatedVisibility(visible = hasSongFilters && !isSidePanelVisible) {
+                            SongFiltersAction(
                                 isSongFilterActive = isSongFilterActive,
-                                onClick = { viewModel.showDialog(CampfireViewModel.DialogType.SongsControls) },
+                                onClick = { viewModel.showDialog(CampfireViewModel.DialogType.SongFilters) },
                             )
                         }
                     },
@@ -185,7 +200,7 @@ internal fun SongsScreen(
                 isVisible = isSidePanelVisible,
                 contentPadding = contentPadding,
             ) { panelModifier, panelContentPadding ->
-                SongsControls(
+                SongFilters(
                     modifier = panelModifier,
                     viewModel = viewModel,
                     contentPadding = panelContentPadding,
@@ -196,14 +211,29 @@ internal fun SongsScreen(
     }
 }
 
+@Composable
+private fun SongSortMenu(viewModel: CampfireViewModel) {
+    val userPreferences by viewModel.userPreferences.collectAsStateWithLifecycle()
+    SortMenu(
+        contentDescription = stringResource(Res.string.songs_sort),
+        options = listOf(
+            UserPreferences.SortingMode.BY_ARTIST to stringResource(Res.string.songs_sorting_mode_by_artist),
+            UserPreferences.SortingMode.BY_TITLE to stringResource(Res.string.songs_sorting_mode_by_title),
+        ),
+        selected = userPreferences?.sortingMode,
+        onSelected = viewModel::setSortingMode,
+    )
+}
+
 /**
- * The action that opens the sorting and the filters where there is no room for them beside the list. It carries a
- * badge while a filter is on, since that is the one thing in the sheet that hides songs for the moment rather than
- * as a standing preference, and a list that is shorter than the library with nothing on screen saying why reads as
- * songs having gone missing. The side panel needs no such mark, since the selected chips are in it.
+ * The action that opens the filters where there is no room for them beside the list. While a filter is on its funnel
+ * is filled in and carries a badge in the accent color, since a filter hides songs for the moment rather than as a
+ * standing preference, and a list that is shorter than the library with nothing on screen saying why reads as songs
+ * having gone missing. The badge is not Material's default error red: nothing is wrong, the list is only narrowed.
+ * The side panel needs no such mark, since the selected chips are in it.
  */
 @Composable
-private fun SongsControlsAction(
+private fun SongFiltersAction(
     modifier: Modifier = Modifier,
     isSongFilterActive: Boolean,
     onClick: () -> Unit,
@@ -218,19 +248,22 @@ private fun SongsControlsAction(
                 enter = fadeIn() + scaleIn(),
                 exit = fadeOut() + scaleOut(),
             ) {
-                Badge()
+                Badge(containerColor = MaterialTheme.colorScheme.primary)
             }
         },
     ) {
-        Icon(
-            painter = painterResource(Res.drawable.ic_tune),
-            // The badge is drawn and nothing else, so a screen reader would otherwise never hear that the list is narrowed.
-            contentDescription = if (isSongFilterActive) {
-                stringResource(Res.string.songs_sort_and_filter_active)
-            } else {
-                stringResource(Res.string.songs_sort_and_filter)
-            },
-        )
+        Crossfade(targetState = isSongFilterActive) { isActive ->
+            Icon(
+                painter = painterResource(if (isActive) Res.drawable.ic_filter else Res.drawable.ic_filter_outline),
+                // The badge and the fill are drawn and nothing else, so a screen reader would otherwise never hear that
+                // the list is narrowed.
+                contentDescription = if (isActive) {
+                    stringResource(Res.string.songs_filter_active)
+                } else {
+                    stringResource(Res.string.songs_filter)
+                },
+            )
+        }
     }
 }
 
@@ -274,7 +307,7 @@ private fun SongList(
 
     ScrollToTopWhenChanged(
         listState = listState,
-        key = "$query|${userPreferences?.sortingMode?.name}|${userPreferences?.shouldShowSongsWithoutChords}|${songFilter.selectedTags.sorted()}|${userPreferences?.tagMatchMode?.name}|${songFilter.selectedLanguages.sorted()}|${userPreferences?.languageMatchMode?.name}",
+        key = "$query|${userPreferences?.sortingMode?.name}|${songFilter.selectedTags.sorted()}|${userPreferences?.tagMatchMode?.name}|${songFilter.selectedLanguages.sorted()}|${userPreferences?.languageMatchMode?.name}",
         contents = songGroups,
     )
 

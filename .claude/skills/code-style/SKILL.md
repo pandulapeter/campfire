@@ -87,7 +87,7 @@ wrong or undo it".
 - **`modifier: Modifier = Modifier` is the first parameter** of a Composable that takes one — this repo's
   order, even though the Compose guidelines say otherwise. Follow the repo.
 - A Composable reads as a short list of named children. When a body grows several distinct visual groups,
-  extract each into its own `private @Composable` named for what it *is* in the UI (`SongsControls`,
+  extract each into its own `private @Composable` named for what it *is* in the UI (`SongFilters`,
   `SectionHeader`), not for where it sits. A single focused widget needs no extraction.
 - Extraction must not change the rendered output: don't add a `Row`/`Column`/`Box` a group didn't have,
   don't drop one it relied on, and apply parent-scope modifiers (`Modifier.weight`) at the call site.

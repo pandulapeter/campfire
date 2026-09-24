@@ -134,14 +134,13 @@ class GetScreenDataUseCaseImpl internal constructor(
         if (this is DataState.Failure && data == null) DataState.Failure(default) else this
 
     private fun List<Song>.toSongPart(songListPreferences: SongListPreferences, filter: SongFilter): SongPart {
-        val filterableSongs = filterHasChords(songListPreferences)
         // What the library holds, whatever is selected: the two filter groups are counted over the songs the other one
         // leaves, but both of them decide what is still a tag and what is still a language from here, or narrowing by
         // one would quietly switch the other one off.
-        val availableTags = filterableSongs.toTags()
-        val availableLanguages = filterableSongs.toLanguages()
-        val songsByTag = filterableSongs.filterTags(filter, songListPreferences.tagMatchMode, availableTags)
-        val songsByLanguage = filterableSongs.filterLanguages(filter, songListPreferences.languageMatchMode, availableLanguages)
+        val availableTags = toTags()
+        val availableLanguages = toLanguages()
+        val songsByTag = filterTags(filter, songListPreferences.tagMatchMode, availableTags)
+        val songsByLanguage = filterLanguages(filter, songListPreferences.languageMatchMode, availableLanguages)
         val songSections = songsByTag
             .filterLanguages(filter, songListPreferences.languageMatchMode, availableLanguages)
             .sortIntoSections(songListPreferences)
@@ -189,9 +188,6 @@ class GetScreenDataUseCaseImpl internal constructor(
             UserPreferences.SetlistSortingMode.BY_TITLE -> compareBy<Setlist> { it.isArchived }.thenBy { normalizeText(it.title) }
         }.thenBy { it.fileName }
     )
-
-    private fun List<Song>.filterHasChords(songListPreferences: SongListPreferences) =
-        if (songListPreferences.shouldShowSongsWithoutChords) this else filter { it.hasChords }
 
     /**
      * Tags are matched without regard to case, here and everywhere else, so both sides are folded to lower case
@@ -373,14 +369,12 @@ class GetScreenDataUseCaseImpl internal constructor(
 
     /** The part of the preferences the song list depends on. */
     private data class SongListPreferences(
-        val shouldShowSongsWithoutChords: Boolean,
         val sortingMode: UserPreferences.SortingMode,
         val tagMatchMode: UserPreferences.MatchMode,
         val languageMatchMode: UserPreferences.MatchMode,
     )
 
     private fun UserPreferences.toSongListPreferences() = SongListPreferences(
-        shouldShowSongsWithoutChords = shouldShowSongsWithoutChords,
         sortingMode = sortingMode,
         tagMatchMode = tagMatchMode,
         languageMatchMode = languageMatchMode,
@@ -396,7 +390,6 @@ class GetScreenDataUseCaseImpl internal constructor(
 
         /** What `UserPreferencesDocument().toModel()` gives a device that has never saved any, see `:data:source:local`. */
         val DEFAULT_SONG_LIST_PREFERENCES = SongListPreferences(
-            shouldShowSongsWithoutChords = true,
             sortingMode = UserPreferences.SortingMode.BY_ARTIST,
             tagMatchMode = UserPreferences.MatchMode.ANY,
             languageMatchMode = UserPreferences.MatchMode.ANY,

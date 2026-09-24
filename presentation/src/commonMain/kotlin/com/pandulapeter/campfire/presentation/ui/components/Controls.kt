@@ -67,21 +67,12 @@ import com.pandulapeter.campfire.data.model.domain.Tag
 import com.pandulapeter.campfire.data.model.domain.UserPreferences
 import com.pandulapeter.campfire.presentation.localization.stringResource
 import com.pandulapeter.campfire.presentation.resources.Res
-import com.pandulapeter.campfire.presentation.resources.filters
 import com.pandulapeter.campfire.presentation.resources.ic_check
-import com.pandulapeter.campfire.presentation.resources.setlists_show_archived
-import com.pandulapeter.campfire.presentation.resources.setlists_sorting_mode
-import com.pandulapeter.campfire.presentation.resources.setlists_sorting_mode_by_title
-import com.pandulapeter.campfire.presentation.resources.setlists_sorting_mode_newest_first
 import com.pandulapeter.campfire.presentation.resources.songs_languages
 import com.pandulapeter.campfire.presentation.resources.songs_languages_clear
 import com.pandulapeter.campfire.presentation.resources.songs_languages_match_mode
 import com.pandulapeter.campfire.presentation.resources.songs_languages_match_mode_all
 import com.pandulapeter.campfire.presentation.resources.songs_languages_match_mode_any
-import com.pandulapeter.campfire.presentation.resources.songs_show_without_chords
-import com.pandulapeter.campfire.presentation.resources.songs_sorting_mode
-import com.pandulapeter.campfire.presentation.resources.songs_sorting_mode_by_artist
-import com.pandulapeter.campfire.presentation.resources.songs_sorting_mode_by_title
 import com.pandulapeter.campfire.presentation.resources.songs_tags
 import com.pandulapeter.campfire.presentation.resources.songs_tags_clear
 import com.pandulapeter.campfire.presentation.resources.songs_tags_match_mode
@@ -138,8 +129,7 @@ internal fun songListColumnCount(
 }
 
 /**
- * A screen's controls ([SongsControls], [SetlistsControls]) in a panel next to the list, shown on screens that are
- * wide enough for it, see [hasRoomForSidePanel]. The list screens' app bar spans the list alone (see
+ * The [SongFilters] in a panel next to the list, shown on screens that are wide enough for it, see [hasRoomForSidePanel]. The list screens' app bar spans the list alone (see
  * [SearchableTopAppBar]), so the panel reaches the top of the screen beside it.
  *
  * @param content The controls themselves, handed the modifier that gives the panel its size and the insets the panel
@@ -175,46 +165,13 @@ internal fun PaddingValues.besideSidePanel(isSidePanelVisible: Boolean) =
     if (isSidePanelVisible) only(start = true, top = true, bottom = true) else this
 
 /**
- * Sorting and filter controls of the setlists screen, shown in a side panel on wide enough screens and in a bottom
- * sheet otherwise, exactly as [SongsControls] is. They are a screen apart and deliberately not the same controls:
- * the song filters narrow a view of the library, while a setlist is a list somebody wrote down and shows what it
- * holds either way. What is left to ask here is the order the setlists come in, and whether the ones that have been
- * put away are among them.
+ * The filters of the song list, shown in a side panel on wide enough screens and in a bottom sheet otherwise, and
+ * neither where there is nothing to filter by (`CampfireViewModel.hasSongFilters`). The order of the list is not among
+ * them: it is a [SortMenu] in the app bar, as on the setlists screen, since it changes how the library is laid out
+ * rather than which songs are in it.
  */
 @Composable
-internal fun SetlistsControls(
-    modifier: Modifier = Modifier,
-    viewModel: CampfireViewModel,
-    contentPadding: PaddingValues = PaddingValues(),
-) {
-    val userPreferences by viewModel.userPreferences.collectAsStateWithLifecycle()
-    Column(
-        modifier = modifier.fillMaxWidth().verticalScroll(rememberScrollState()).padding(contentPadding)
-    ) {
-        SettingsSectionTitle(text = stringResource(Res.string.setlists_sorting_mode))
-        SegmentedChoice(
-            options = listOf(
-                UserPreferences.SetlistSortingMode.NEWEST_FIRST to stringResource(Res.string.setlists_sorting_mode_newest_first),
-                UserPreferences.SetlistSortingMode.BY_TITLE to stringResource(Res.string.setlists_sorting_mode_by_title),
-            ),
-            selected = userPreferences?.setlistSortingMode,
-            onSelected = viewModel::setSetlistSortingMode,
-        )
-        SettingsSectionTitle(text = stringResource(Res.string.filters))
-        CheckboxListItem(
-            title = stringResource(Res.string.setlists_show_archived),
-            isChecked = userPreferences?.shouldShowArchivedSetlists == true,
-            onCheckedChange = viewModel::setShouldShowArchivedSetlists,
-        )
-    }
-}
-
-/**
- * Sorting and filter controls of the song list, shown in a side panel on wide enough screens and in a bottom sheet
- * otherwise.
- */
-@Composable
-internal fun SongsControls(
+internal fun SongFilters(
     modifier: Modifier = Modifier,
     viewModel: CampfireViewModel,
     contentPadding: PaddingValues = PaddingValues(),
@@ -229,21 +186,6 @@ internal fun SongsControls(
             .verticalScroll(rememberScrollState())
             .padding(contentPadding)
     ) {
-        SettingsSectionTitle(text = stringResource(Res.string.songs_sorting_mode))
-        SegmentedChoice(
-            options = listOf(
-                UserPreferences.SortingMode.BY_ARTIST to stringResource(Res.string.songs_sorting_mode_by_artist),
-                UserPreferences.SortingMode.BY_TITLE to stringResource(Res.string.songs_sorting_mode_by_title),
-            ),
-            selected = userPreferences?.sortingMode,
-            onSelected = viewModel::setSortingMode,
-        )
-        SettingsSectionTitle(text = stringResource(Res.string.filters))
-        CheckboxListItem(
-            title = stringResource(Res.string.songs_show_without_chords),
-            isChecked = userPreferences?.shouldShowSongsWithoutChords == true,
-            onCheckedChange = viewModel::setShouldShowSongsWithoutChords,
-        )
         // A library nobody has tagged has nothing to offer here, and a section title above an empty row would only
         // ask a question the songs cannot answer yet.
         AnimatedVisibility(
@@ -282,7 +224,7 @@ internal fun SongsControls(
 /**
  * The tags of the library as a filter. There is no fixed set of tags to lay out: they are whatever the songs happen
  * to carry, so the most used ones come first and the rest are a tap away ([MAX_COLLAPSED_TAG_COUNT]) - a library
- * with two hundred tags must not push the sorting mode off the top of the panel.
+ * with two hundred tags must not push the groups under it off the bottom of the panel.
  *
  * A selected tag is always among the ones shown, whatever its position: the filter that is on has to be visible to
  * be turned off.

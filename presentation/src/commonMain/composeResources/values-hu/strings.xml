@@ -18,7 +18,6 @@
     <string name="create">Létrehozás</string>
     <string name="save">Mentés</string>
     <string name="share">Megosztás</string>
-    <string name="filters">Szűrők</string>
     <string name="retry">Újra</string>
     <string name="add_demo_songs">Bemutató dalok hozzáadása</string>
 
@@ -71,12 +70,11 @@
     <string name="songs">Dalok</string>
     <string name="songs_search">Keresés a dalokban</string>
     <string name="songs_clear">Törlés</string>
-    <string name="songs_sort_and_filter">Rendezés és szűrés</string>
-    <string name="songs_sort_and_filter_active">Rendezés és szűrés, szűrők bekapcsolva</string>
+    <string name="songs_sort">Dalok rendezése</string>
+    <string name="songs_filter">Dalok szűrése</string>
+    <string name="songs_filter_active">Dalok szűrése, szűrők bekapcsolva</string>
     <string name="songs_unsorted_label">0 - 9</string>
     <string name="songs_unknown_artist">Ismeretlen előadó</string>
-    <string name="songs_show_without_chords">Akkord nélküli dalok mutatása</string>
-    <string name="songs_sorting_mode">Rendezési mód</string>
     <string name="songs_sorting_mode_by_artist">Előadó</string>
     <string name="songs_sorting_mode_by_title">Cím</string>
     <string name="songs_empty_title">A könyvtárad üres</string>
@@ -144,8 +142,7 @@
     <string name="setlists_search">Keresés a listákban</string>
     <string name="setlists_no_search_results">Nincs találat</string>
     <string name="setlists_no_search_results_hint">Egyetlen lista sem felel meg a keresésnek, sem a neve, sem a rajta lévő dalok alapján.</string>
-    <string name="setlists_sort_and_filter">Rendezés és szűrés</string>
-    <string name="setlists_sorting_mode">Rendezési mód</string>
+    <string name="setlists_sort">Listák rendezése</string>
     <string name="setlists_sorting_mode_newest_first">Legújabb</string>
     <string name="setlists_sorting_mode_by_title">Cím</string>
     <string name="setlists_show_archived">Archivált listák mutatása</string>

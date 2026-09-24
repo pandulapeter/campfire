@@ -1038,7 +1038,10 @@ private val SECTION_HEADER_PILL_HEIGHT = 48.dp
 /** Puts a header's text on the cards' keyline, the pill starting at their edge. */
 private val SECTION_HEADER_PILL_START_PADDING = 16.dp
 
-/** What the pill leaves after an action at its end, the same as the app bar's pill leaves after its buttons. */
-private val SECTION_HEADER_PILL_ACTION_END_PADDING = 4.dp
+/**
+ * What the pill leaves after an action at its end. The pill ends at the cards' edge and a card's overflow button stops
+ * [LIST_ITEM_TRAILING_KEYLINE_ADJUSTMENT] short of it, so the two menus stand on one keyline.
+ */
+private val SECTION_HEADER_PILL_ACTION_END_PADDING = LIST_ITEM_TRAILING_KEYLINE_ADJUSTMENT
 
 private const val SECTION_HEADER_CONTENT_PARALLAX_FRACTION = 0.5f

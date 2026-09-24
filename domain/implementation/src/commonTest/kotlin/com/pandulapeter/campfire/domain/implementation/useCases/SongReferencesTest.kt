@@ -177,7 +177,6 @@ class SongReferencesTest {
     private companion object {
         val PREFERENCES = UserPreferences(
             isPerformanceModeEnabled = false,
-            shouldShowSongsWithoutChords = true,
             shouldShowArchivedSetlists = false,
             isLyricsOnlyModeEnabled = false,
             isHorizontalSectionFlowEnabled = false,

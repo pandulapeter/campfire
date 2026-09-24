@@ -160,7 +160,7 @@ import org.jetbrains.compose.resources.painterResource
  * @param placeholder What the field says while it is empty, which also names the search action, see [SearchAction].
  * @param onReachChanged Called with how far the closed bar's buttons reach in from the end edge of the screen.
  * @param closedSearchActions The screen's actions that have nothing to do with a search in progress - making something
- *   new - which follow the search action while the search is closed and make way for the field while it is open,
+ *   new - which come last, after [actions], while the search is closed and make way for the field while it is open,
  *   leaving and coming back on the spring the search action travels on so that the field's edge and they move as one.
  * @param actions The screen's other actions, which stay whether or not the search is open.
  */
@@ -311,6 +311,7 @@ internal fun SearchableTopAppBar(
                             searchAction(actionModifier, placeholder)
                         }
                     }
+                    actions()
                     val closedSearchActionsSizeSpec = searchTravelSpec(visibilityThreshold = IntSize.VisibilityThreshold)
                     val closedSearchActionsFadeSpec = searchTravelSpec<Float>()
                     searchTransition.AnimatedVisibility(
@@ -322,7 +323,6 @@ internal fun SearchableTopAppBar(
                             closedSearchActions()
                         }
                     }
-                    actions()
                 }
             }
         }

@@ -24,7 +24,6 @@ internal class UserPreferencesDocumentFormatTest {
     fun readsWhatItWrote() {
         val document = UserPreferencesDocument(
             isPerformanceModeEnabled = true,
-            shouldShowSongsWithoutChords = false,
             shouldShowArchivedSetlists = true,
             isLyricsOnlyModeEnabled = true,
             isHorizontalSectionFlowEnabled = false,

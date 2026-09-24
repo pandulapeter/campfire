@@ -15,7 +15,6 @@ import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.calculateEndPadding
-import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.offset
@@ -25,8 +24,6 @@ import androidx.compose.foundation.lazy.grid.GridItemSpan
 import androidx.compose.foundation.lazy.grid.LazyGridState
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.itemsIndexed
-import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -56,7 +53,6 @@ import com.pandulapeter.campfire.presentation.resources.ic_move_down
 import com.pandulapeter.campfire.presentation.resources.ic_move_up
 import com.pandulapeter.campfire.presentation.resources.ic_more
 import com.pandulapeter.campfire.presentation.resources.ic_setlists_remove
-import com.pandulapeter.campfire.presentation.resources.ic_tune
 import com.pandulapeter.campfire.presentation.resources.setlists_add_songs
 import com.pandulapeter.campfire.presentation.resources.setlists_archived
 import com.pandulapeter.campfire.presentation.resources.setlists_create_setlist
@@ -64,15 +60,17 @@ import com.pandulapeter.campfire.presentation.resources.setlists_move_down
 import com.pandulapeter.campfire.presentation.resources.setlists_move_up
 import com.pandulapeter.campfire.presentation.resources.setlists_new_setlist
 import com.pandulapeter.campfire.presentation.resources.setlists_search
-import com.pandulapeter.campfire.presentation.resources.setlists_sort_and_filter
+import com.pandulapeter.campfire.presentation.resources.setlists_show_archived
+import com.pandulapeter.campfire.presentation.resources.setlists_sort
+import com.pandulapeter.campfire.presentation.resources.setlists_sorting_mode_by_title
+import com.pandulapeter.campfire.presentation.resources.setlists_sorting_mode_newest_first
 import com.pandulapeter.campfire.presentation.resources.setlists_remove_song
 import com.pandulapeter.campfire.presentation.ui.CampfireViewModel
 import com.pandulapeter.campfire.presentation.ui.components.ActionListItem
 import com.pandulapeter.campfire.presentation.ui.components.AppBarOverlap
 import com.pandulapeter.campfire.presentation.ui.components.ActionsMenu
 import com.pandulapeter.campfire.presentation.ui.components.ActionsMenuItem
-import com.pandulapeter.campfire.presentation.ui.components.ControlsSidePanel
-import com.pandulapeter.campfire.presentation.ui.components.DismissSheetWhenSidePanelAppears
+import com.pandulapeter.campfire.presentation.ui.components.CheckboxListItem
 import com.pandulapeter.campfire.presentation.ui.components.DragHandle
 import com.pandulapeter.campfire.presentation.ui.components.FastScroller
 import com.pandulapeter.campfire.presentation.ui.components.FAST_SCROLLER_WIDTH
@@ -85,15 +83,13 @@ import com.pandulapeter.campfire.presentation.ui.components.SearchableTopAppBar
 import com.pandulapeter.campfire.presentation.ui.components.SectionHeader
 import com.pandulapeter.campfire.presentation.ui.components.SectionHeaderState
 import com.pandulapeter.campfire.presentation.ui.components.SetlistActionsMenu
-import com.pandulapeter.campfire.presentation.ui.components.SetlistsControls
 import com.pandulapeter.campfire.presentation.ui.components.MissingSongListItem
 import com.pandulapeter.campfire.presentation.ui.components.SongListItem
 import com.pandulapeter.campfire.presentation.ui.components.SongActionsButton
+import com.pandulapeter.campfire.presentation.ui.components.SortMenu
 import com.pandulapeter.campfire.presentation.ui.components.allowsNewItemMenu
 import com.pandulapeter.campfire.presentation.ui.components.animateAppBarReveal
-import com.pandulapeter.campfire.presentation.ui.components.besideSidePanel
 import com.pandulapeter.campfire.presentation.ui.components.draggedListItemContainerColor
-import com.pandulapeter.campfire.presentation.ui.components.hasRoomForSidePanel
 import com.pandulapeter.campfire.presentation.ui.components.listItemAnimation
 import com.pandulapeter.campfire.presentation.ui.components.rememberListTopFade
 import com.pandulapeter.campfire.presentation.ui.components.listTopFadeViewport
@@ -123,82 +119,63 @@ internal fun SetlistsScreen(
     val listState = rememberRetainedLazyGridState(viewModel.setlistsScrollPosition)
     val isPerformanceModeEnabled by viewModel.isPerformanceModeEnabled.collectAsStateWithLifecycle()
     val setlistsPlaceholder by viewModel.setlistsPlaceholder.collectAsStateWithLifecycle()
-    val visibleDialog by viewModel.visibleDialog.collectAsStateWithLifecycle()
-    val isSidePanelVisible = hasRoomForSidePanel(settledWidth)
     val columnCount = songListColumnCount(
         settledWidth = settledWidth,
         contentPadding = contentPadding,
-        isSidePanelVisible = isSidePanelVisible,
+        isSidePanelVisible = false,
     )
     HideKeyboardWhenScrolledDown(listState)
-    DismissSheetWhenSidePanelAppears(
-        isSidePanelVisible = isSidePanelVisible,
-        isSheetVisible = visibleDialog == CampfireViewModel.DialogType.SetlistsControls,
-        onDismiss = viewModel::dismissDialog,
-    )
     // See the songs screen: how far the app bar's buttons reach in over a pinned header, which it narrows to clear.
     var appBarReach by remember { mutableStateOf(0.dp) }
     val appBarReveal = animateAppBarReveal(
         searchState = viewModel.setlistsSearch,
         isShownWithoutSearch = setlistsPlaceholder != null,
     )
-    val listContentPadding = contentPadding.besideSidePanel(isSidePanelVisible)
     Box(modifier = modifier.fillMaxSize()) {
-        Row {
-            // The bar spans the list alone rather than the whole screen, so that its buttons and the search stay at the
-            // top of the list they act on instead of standing over the side panel beside it.
-            Box(modifier = Modifier.weight(1f).fillMaxHeight()) {
-                SetlistList(
-                    modifier = Modifier.fillMaxSize().underAppBar { appBarReveal.value },
-                    viewModel = viewModel,
-                    listState = listState,
-                    columnCount = columnCount,
-                    contentPadding = listContentPadding,
-                    appBarOverlap = AppBarOverlap.of(reach = appBarReach, appBarReveal = appBarReveal.value),
-                )
-                SearchableTopAppBar(
-                    contentPadding = listContentPadding,
-                    appBarReveal = { appBarReveal.value },
-                    placeholder = stringResource(Res.string.setlists_search),
-                    searchState = viewModel.setlistsSearch,
-                    onReachChanged = { appBarReach = it },
-                    closedSearchActions = {
-                        // The setlists being read and performance mode being switched both happen while the bar is being
-                        // looked at, so the button makes room for itself rather than appearing between two frames, as on
-                        // the songs screen.
-                        AnimatedVisibility(visible = !isPerformanceModeEnabled && setlistsPlaceholder.allowsNewItemMenu) {
-                            NewItemMenu(
-                                viewModel = viewModel,
-                                contentDescription = stringResource(Res.string.setlists_new_setlist),
-                                createLabel = stringResource(Res.string.setlists_create_setlist),
-                                onCreate = { viewModel.showDialog(CampfireViewModel.DialogType.NewSetlist) },
-                            )
-                        }
-                    },
-                    actions = {
-                        if (!isSidePanelVisible) {
-                            IconButton(onClick = { viewModel.showDialog(CampfireViewModel.DialogType.SetlistsControls) }) {
-                                Icon(
-                                    painter = painterResource(Res.drawable.ic_tune),
-                                    contentDescription = stringResource(Res.string.setlists_sort_and_filter),
-                                )
-                            }
-                        }
-                    },
-                )
-            }
-            ControlsSidePanel(
-                isVisible = isSidePanelVisible,
-                contentPadding = contentPadding,
-            ) { panelModifier, panelContentPadding ->
-                SetlistsControls(
-                    modifier = panelModifier,
-                    viewModel = viewModel,
-                    contentPadding = panelContentPadding,
-                )
-            }
-        }
+        SetlistList(
+            modifier = Modifier.fillMaxSize().underAppBar { appBarReveal.value },
+            viewModel = viewModel,
+            listState = listState,
+            columnCount = columnCount,
+            contentPadding = contentPadding,
+            appBarOverlap = AppBarOverlap.of(reach = appBarReach, appBarReveal = appBarReveal.value),
+        )
+        SearchableTopAppBar(
+            contentPadding = contentPadding,
+            appBarReveal = { appBarReveal.value },
+            placeholder = stringResource(Res.string.setlists_search),
+            searchState = viewModel.setlistsSearch,
+            onReachChanged = { appBarReach = it },
+            closedSearchActions = {
+                // The setlists being read and performance mode being switched both happen while the bar is being
+                // looked at, so the button makes room for itself rather than appearing between two frames, as on
+                // the songs screen.
+                AnimatedVisibility(visible = !isPerformanceModeEnabled && setlistsPlaceholder.allowsNewItemMenu) {
+                    NewItemMenu(
+                        viewModel = viewModel,
+                        contentDescription = stringResource(Res.string.setlists_new_setlist),
+                        createLabel = stringResource(Res.string.setlists_create_setlist),
+                        onCreate = { viewModel.showDialog(CampfireViewModel.DialogType.NewSetlist) },
+                    )
+                }
+            },
+            actions = { SetlistSortMenu(viewModel) },
+        )
     }
+}
+
+@Composable
+private fun SetlistSortMenu(viewModel: CampfireViewModel) {
+    val userPreferences by viewModel.userPreferences.collectAsStateWithLifecycle()
+    SortMenu(
+        contentDescription = stringResource(Res.string.setlists_sort),
+        options = listOf(
+            UserPreferences.SetlistSortingMode.NEWEST_FIRST to stringResource(Res.string.setlists_sorting_mode_newest_first),
+            UserPreferences.SetlistSortingMode.BY_TITLE to stringResource(Res.string.setlists_sorting_mode_by_title),
+        ),
+        selected = userPreferences?.setlistSortingMode,
+        onSelected = viewModel::setSetlistSortingMode,
+    )
 }
 
 @Composable
@@ -211,6 +188,7 @@ private fun SetlistList(
     appBarOverlap: AppBarOverlap,
 ) {
     val setlistsWithSongs by viewModel.setlistsWithSongs.collectAsStateWithLifecycle()
+    val setlists by viewModel.setlists.collectAsStateWithLifecycle()
     val userPreferences by viewModel.userPreferences.collectAsStateWithLifecycle()
     val transpositions by viewModel.transpositions.collectAsStateWithLifecycle()
     val labelsOnEverySong by viewModel.labelsOnEverySong.collectAsStateWithLifecycle()
@@ -277,9 +255,9 @@ private fun SetlistList(
     val isSearchOpen by viewModel.setlistsSearch.isOpen.collectAsStateWithLifecycle()
     ScrollToTopWhenChanged(
         listState = listState,
-        // A closed search narrows nothing whatever its field still holds, as on the songs screen. The order and the
-        // archived setlists are the rest of what the screen's controls change about the list.
-        key = "${if (isSearchOpen) viewModel.setlistsSearch.textFieldState.text.toString() else ""}|${userPreferences?.setlistSortingMode?.name}|${userPreferences?.shouldShowArchivedSetlists}",
+        // A closed search narrows nothing whatever its field still holds, as on the songs screen. Sorting sends the
+        // list to its new first setlist, but the archive toggle lives at the end and must stay within reach there.
+        key = "${if (isSearchOpen) viewModel.setlistsSearch.textFieldState.text.toString() else ""}|${userPreferences?.setlistSortingMode?.name}",
         contents = setlistsWithSongs,
     )
 
@@ -358,22 +336,6 @@ private fun SetlistList(
                                 text = setlistWithSongs.setlist.description,
                                 style = MaterialTheme.typography.bodyMedium,
                                 color = MaterialTheme.colorScheme.onSurfaceVariant,
-                            )
-                        }
-                    }
-                    // An empty setlist is one that is waiting for its songs, so the way to them takes the place the songs
-                    // will take, rather than staying behind the header's menu.
-                    if (setlistWithSongs.entries.isEmpty() && !isPerformanceModeEnabled) {
-                        item(
-                            key = "add_songs_${setlistWithSongs.setlist.fileName}",
-                            span = { GridItemSpan(maxLineSpan) },
-                            contentType = "setlist_action",
-                        ) {
-                            ActionListItem(
-                                modifier = listItemAnimation(listState, hasLoadedLibrary).fadingUnderListTop(topFade),
-                                title = stringResource(Res.string.setlists_add_songs),
-                                icon = painterResource(Res.drawable.ic_add),
-                                onClick = { viewModel.showDialog(CampfireViewModel.DialogType.SongPicker(setlistWithSongs.setlist)) },
                             )
                         }
                     }
@@ -485,6 +447,36 @@ private fun SetlistList(
                             }
                         }
                     }
+                    // Every setlist ends in the way to more songs, which for an empty one is also all there is under its
+                    // header, so the way to them is where the songs will be rather than behind the header's menu.
+                    if (!isPerformanceModeEnabled) {
+                        item(
+                            key = "add_songs_${setlistWithSongs.setlist.fileName}",
+                            span = { GridItemSpan(maxLineSpan) },
+                            contentType = "setlist_action",
+                        ) {
+                            ActionListItem(
+                                modifier = listItemAnimation(listState, hasLoadedLibrary).fadingUnderListTop(topFade),
+                                title = stringResource(Res.string.setlists_add_songs),
+                                icon = painterResource(Res.drawable.ic_add),
+                                onClick = { viewModel.showDialog(CampfireViewModel.DialogType.SongPicker(setlistWithSongs.setlist)) },
+                            )
+                        }
+                    }
+                }
+            }
+            if (setlists.any { it.isArchived }) {
+                item(
+                    key = "show_archived_setlists",
+                    span = { GridItemSpan(maxLineSpan) },
+                    contentType = "setlist_archive_toggle",
+                ) {
+                    CheckboxListItem(
+                        modifier = listItemAnimation(listState, hasLoadedLibrary).fadingUnderListTop(topFade).fillMaxWidth(),
+                        title = stringResource(Res.string.setlists_show_archived),
+                        isChecked = userPreferences?.shouldShowArchivedSetlists == true,
+                        onCheckedChange = viewModel::setShouldShowArchivedSetlists,
+                    )
                 }
             }
         }
