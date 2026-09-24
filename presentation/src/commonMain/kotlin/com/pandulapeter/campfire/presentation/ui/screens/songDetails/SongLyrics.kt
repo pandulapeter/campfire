@@ -240,6 +240,8 @@ internal fun SongLyrics(
                 sectionGap = SECTION_GAP,
                 rowGap = ROW_GAP,
                 availableHeight = if (availableHeight.isSpecified) (availableHeight - headerHeightDp).coerceAtLeast(0.dp) else availableHeight,
+                // A row is read once the header has scrolled away, so it has the whole of the screen to fit into.
+                maxRowHeight = availableHeight,
                 extraWidth = extraWidth,
                 sectionCount = sections.size,
                 isHorizontalFlow = isHorizontalFlow,
@@ -1123,7 +1125,9 @@ private fun TextStyle.scaled(scale: Float) = copy(
  * the next column, since whatever has been scrolled past has been played. Every row gets as many columns as its own
  * sections fill, so a row of two sections is split in two wider columns rather than leaving a hole where a third one
  * would go, and consecutive short sections are stacked into the same column of a row as long as the stack is no
- * taller than the tallest section of the row, so that the rows stay compact. The rows are told apart by a divider
+ * taller than the tallest section of the row, so that the rows stay compact. A row of several columns is never taller
+ * than [maxRowHeight], the whole of the screen, since the reader could not reach the top of its next column without
+ * scrolling back past what was just played (see [flowIntoRows]). The rows are told apart by a divider
  * drawn in the gap between them. (A single column reads the same way in both modes, so it is always laid out as a
  * plain column, without dividers.)
  *
@@ -1157,6 +1161,7 @@ private fun SongSectionsLayout(
     sectionGap: Dp,
     rowGap: Dp,
     availableHeight: Dp,
+    maxRowHeight: Dp,
     extraWidth: Dp,
     sectionCount: Int,
     isHorizontalFlow: Boolean,
@@ -1176,12 +1181,14 @@ private fun SongSectionsLayout(
     val rowGapPx = rowGap.roundToPx()
     val maxColumnWidthPx = maxColumnWidth.roundToPx()
     val availableHeightPx = if (availableHeight.isSpecified) availableHeight.roundToPx() else 0
+    val maxRowHeightPx = if (maxRowHeight.isSpecified && maxRowHeight > 0.dp) maxRowHeight.roundToPx() else Int.MAX_VALUE
     val maxColumnCount = ((settledWidth + columnGapPx) / (minColumnWidth.roundToPx() + columnGapPx)).coerceIn(1, maxOf(1, measurables.size))
     fun columnWidthFor(totalWidth: Int, columnCount: Int) = ((totalWidth - columnGapPx * (columnCount - 1)) / columnCount).coerceIn(0, maxColumnWidthPx)
 
     val gridKey = SectionGridKey(
         settledWidth = settledWidth,
         availableHeight = availableHeightPx,
+        maxRowHeight = maxRowHeightPx,
         maxColumnCount = maxColumnCount,
         isHorizontalFlow = isHorizontalFlow,
     )
@@ -1204,7 +1211,7 @@ private fun SongSectionsLayout(
                 heightAt = ::heightAt,
                 sectionGap = sectionGapPx,
                 rowGap = rowGapPx,
-                maxStackHeight = if (availableHeightPx > 0) availableHeightPx else Int.MAX_VALUE,
+                maxRowHeight = maxRowHeightPx,
             )
             else -> List(measurables.size) { heightAt(it, columnCount) }.balanceIntoColumns(columnCount, sectionGapPx)
         }
@@ -1308,6 +1315,7 @@ private class SectionMeasurements(private val sectionCount: Int) {
 private data class SectionGridKey(
     val settledWidth: Int,
     val availableHeight: Int,
+    val maxRowHeight: Int,
     val maxColumnCount: Int,
     val isHorizontalFlow: Boolean,
 )
@@ -1439,10 +1447,14 @@ private fun List<Int>.balanceIntoColumns(columnCount: Int, sectionGap: Int): Sec
  * Packs [sectionCount] sections into rows that are read across, then downwards, each row having between one and
  * [maxColumnCount] columns: [heightAt] tells how tall a section is in a row of a given number of columns, since fewer
  * columns are wider ones. A row is as tall as its tallest section, and a cell may hold several consecutive sections
- * (stacked [sectionGap] apart) as long as it stays no taller than that, and no taller than [maxStackHeight] (the
- * height of the screen): a section that is taller than the screen has to be scrolled anyway, but the sections stacked
- * next to it must not grow into a column that sends the reader back up once they reach its bottom. Rows are [rowGap]
- * apart.
+ * (stacked [sectionGap] apart) as long as it stays no taller than that, and no taller than [maxRowHeight] (the
+ * height of the screen). Rows are [rowGap] apart.
+ *
+ * **A row of more than one column is never taller than [maxRowHeight]**: its columns are read one after the other, and
+ * a column that runs past the bottom of the screen sends the reader back up to the top of the next one, which is the
+ * very thing the rows exist to avoid. A section taller than that therefore gets a row of its own, which is read from
+ * top to bottom like any other scrolling text, however much taller the song ends up for it - and so does a stack in a
+ * single column, since the same cap keeps it from growing past the one section that has to be scrolled anyway.
  *
  * A row has exactly as many columns as its sections fill, so no row is left with a hole in it: a hole in the middle
  * of a song looks like a mistake, and even at its end it is width the sections could have used to wrap less. Where a
@@ -1461,7 +1473,7 @@ private fun flowIntoRows(
     heightAt: (index: Int, columnCount: Int) -> Int,
     sectionGap: Int,
     rowGap: Int,
-    maxStackHeight: Int,
+    maxRowHeight: Int,
 ): SectionGrid {
     if (sectionCount == 0) return SectionGrid(rows = IntArray(0), columns = IntArray(0), columnCounts = IntArray(0))
     // heights[k - 1][i] is the height of section i in a row of k columns, heightSums[k - 1][i] the total height of
@@ -1477,7 +1489,7 @@ private fun flowIntoRows(
     // as tall as the tallest section of the row, but never taller than the screen, and returns the number of cells.
     fun stack(start: Int, end: Int, columnCount: Int, tallest: Int, onCell: (index: Int, cell: Int) -> Unit): Int {
         val sectionHeights = heights[columnCount - 1]
-        val cap = minOf(tallest, maxStackHeight)
+        val cap = minOf(tallest, maxRowHeight)
         var cell = 0
         var cellHeight = sectionHeights[start]
         onCell(start, cell)
@@ -1526,7 +1538,13 @@ private fun flowIntoRows(
                 }
                 val added = end - 1
                 tallest[column] = max(tallest[column], sectionHeights[added])
-                val cap = minOf(tallest[column], maxStackHeight)
+                // Every longer row holds this section too, so none of them can have this many columns either.
+                if (columnCount > 1 && tallest[column] > maxRowHeight) {
+                    isExhausted[column] = true
+                    exhaustedCount++
+                    continue
+                }
+                val cap = minOf(tallest[column], maxRowHeight)
                 // A taller section raises the cap, and what was stacked under the lower one may fit into fewer
                 // cells under the new one, so the row is stacked again from its start. Otherwise the stacking so
                 // far stands, and only the section that was added is placed.

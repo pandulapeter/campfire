@@ -41,8 +41,10 @@
         }(window.location));
     </script>
     <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
-    <!-- The two schemes of the app, so the browser chrome matches the splash screen and then the app itself. -->
-    <meta name="theme-color" content="#FFF8F5" media="(prefers-color-scheme: light)">
+    <!-- The two schemes of the app's own color: the dark background, and the light surfaceContainerHigh, since Chrome
+         ignores a theme-color as light as the light background. Once the preferences are read the app writes the
+         palette it is drawn in over both (see BrowserThemeColorEffect in CampfireWebApp.kt). -->
+    <meta name="theme-color" content="#F4E5DB" media="(prefers-color-scheme: light)">
     <meta name="theme-color" content="#19120D" media="(prefers-color-scheme: dark)">
     <meta name="description" content="Song lyrics and chords, in a library of plain ChordPro files that stays yours.">
     <title>Campfire</title>
