@@ -477,18 +477,20 @@ internal fun sectionHeaderState(listState: LazyGridState, headerIndex: Int): Sec
  * The list screens have no title in their app bar, and the header pinned at the top of the list is what stands in its
  * place, under the bar's buttons: so the row is as tall as that bar ([LIST_APP_BAR_HEIGHT]) and the pill as tall as the
  * bar's pill, its text on one line in the style of the settings screen's tab labels. The pill is as wide as the cards,
- * and narrows only to make room for the bar's buttons ([appBarReach]) as the header comes into the pinned place
+ * and narrows only to make room for the bar's buttons ([AppBarOverlap.reach]) as the header comes into the pinned place
  * ([SectionHeaderState.pinnedFraction], eased), so a pinned header never runs under them - its text cut off sooner,
- * and a setlist's menu, which ends the pill, carried up to the buttons.
+ * and a setlist's menu, which ends the pill, carried up to the buttons. It widens again along the same eased curve as
+ * an opening search moves the list down out from under the buttons ([AppBarOverlap.coverage]), and narrows along it
+ * as a closing one brings the list back up.
  *
- * The row extends through the grid's end padding, beneath the fast scroller, so that [appBarReach] and the pill's end
- * are measured from the same edge. A decorative copy can be drawn outside the grid while the row is pushed up
+ * The row extends through the grid's end padding, beneath the fast scroller, so that the reach and the pill's end are
+ * measured from the same edge. A decorative copy can be drawn outside the grid while the row is pushed up
  * ([pushedDistancePx]); its content lags behind the row there and fades with [contentOpacity].
  *
  * @param action The button at the end of the pill, handed the modifier that keeps it from taking the focus
  *   ([unfocusable]).
- * @param appBarReach How far in from the row's end edge the app bar's buttons reach while this row is pinned under
- *   them, or zero where nothing of the bar is over the list.
+ * @param appBarOverlap How far in from the row's end edge the app bar's buttons reach while this row is pinned under
+ *   them, and how much of the pinned place they still cover.
  */
 @Composable
 internal fun SectionHeader(
@@ -504,7 +506,7 @@ internal fun SectionHeader(
     opacity: Float = 1f,
     contentOpacity: Float = 1f,
     pushedDistancePx: Int = 0,
-    appBarReach: Dp = 0.dp,
+    appBarOverlap: AppBarOverlap,
 ) = Box(
     modifier = modifier
         .extendIntoEndPadding(endPadding)
@@ -522,10 +524,15 @@ internal fun SectionHeader(
         .layout { measurable, constraints ->
             // The cards end at the scroller's column, and a pinned header ends where the bar's buttons begin.
             val cardsEndInset = (endPadding + SONG_CARD_OUTER_PADDING).toPx()
-            val pinnedEndInset = maxOf(cardsEndInset, (appBarReach + SECTION_HEADER_APP_BAR_GAP).toPx())
+            val pinnedEndInset = maxOf(cardsEndInset, (appBarOverlap.reach + SECTION_HEADER_APP_BAR_GAP).toPx())
             // Eased rather than linear, since the fraction is the scroll position itself: the header gives way
             // gently as it starts coming into the bar's place and settles into the room it has left the same way.
-            val endInset = cardsEndInset + (pinnedEndInset - cardsEndInset) * FastOutSlowInEasing.transform(state.pinnedFraction)
+            // The list moving down under an opening search takes a pinned header out of that place, so the same
+            // curve is run on how much of it the buttons still cover, and a pinned one widens and narrows along
+            // the path it narrowed along as it was scrolled up.
+            val coveredFraction = FastOutSlowInEasing.transform(state.pinnedFraction) *
+                FastOutSlowInEasing.transform(appBarOverlap.coverage)
+            val endInset = cardsEndInset + (pinnedEndInset - cardsEndInset) * coveredFraction
             val width = (constraints.maxWidth - endInset.roundToInt()).coerceAtLeast(0)
             val placeable = measurable.measure(constraints.copy(minWidth = width, maxWidth = width))
             layout(placeable.width, placeable.height) { placeable.placeRelative(0, 0) }

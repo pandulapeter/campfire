@@ -330,6 +330,7 @@ private fun LoadedSongEditor(
     val focusRequester = remember { FocusRequester() }
     LaunchedEffect(panes) { focusRequester.requestFocus() }
 
+    val layoutDirection = LocalLayoutDirection.current
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -409,7 +410,11 @@ private fun LoadedSongEditor(
                 // Transposing, switching pane and folding the insertions away are the things here that do not write at
                 // the caret, so they are the ones that stay when the insertions leave.
                 Row(
-                    modifier = Modifier.padding(start = 16.dp, end = 4.dp, bottom = 8.dp),
+                    modifier = Modifier.padding(
+                        start = contentPadding.calculateStartPadding(layoutDirection) + 16.dp,
+                        end = contentPadding.calculateEndPadding(layoutDirection) + 4.dp,
+                        bottom = 8.dp,
+                    ),
                     verticalAlignment = Alignment.CenterVertically,
                 ) {
                     TextTranspositionControls(
@@ -453,7 +458,6 @@ private fun LoadedSongEditor(
                 }
             },
         )
-        val layoutDirection = LocalLayoutDirection.current
         val editor: @Composable (Modifier) -> Unit = { paneModifier ->
             ChordProTextField(
                 modifier = paneModifier,

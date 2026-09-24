@@ -76,7 +76,6 @@ import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.geometry.CornerRadius
-import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Rect
 import androidx.compose.ui.geometry.lerp
 import androidx.compose.ui.graphics.Color
@@ -89,7 +88,6 @@ import androidx.compose.ui.layout.LookaheadScope
 import androidx.compose.ui.layout.layout
 import androidx.compose.ui.layout.onPlaced
 import androidx.compose.ui.layout.onSizeChanged
-import androidx.compose.ui.layout.positionInWindow
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
@@ -123,7 +121,7 @@ import org.jetbrains.compose.resources.painterResource
  * is drawn over the top of the list rather than above it. So all a closed search leaves here is the actions, the
  * search action at their head, on a tonal pill that sets them apart from the pinned header under them as the screen's
  * own - the header keeps its text and its own action clear of them
- * (see [SectionHeader]'s `appBarReach`). Nothing in the bar but its buttons takes a touch, so the header underneath is
+ * (see [SectionHeader]'s `appBarOverlap`). Nothing in the bar but its buttons takes a touch, so the header underneath is
  * still pressed and dragged anywhere else along its length.
  *
  * An open search is a bar of its own: the search action stands at the very start of it, where a back button would,
@@ -224,6 +222,7 @@ internal fun SearchableTopAppBar(
     val pill = remember { SearchPill() }
     val pillProgress = searchTransition.animateFloat(transitionSpec = { searchTravelSpec() }) { if (it) 1f else 0f }
     LookaheadScope {
+        val lookaheadScope = this
         val actionModifier = Modifier
             .offset { IntOffset(x = if (searchTransition.targetState) recession.startEdgeTravel else 0, y = 0) }
             .animateBounds(
@@ -246,16 +245,17 @@ internal fun SearchableTopAppBar(
         Row(
             modifier = modifier
                 .fillMaxWidth()
-                .onPlaced { pill.bar = it.positionInWindow() }
+                .onPlaced { pill.bar = it }
                 .drawBehind {
                     drawRect(color = containerColor, alpha = appBarReveal().coerceIn(0f, 1f))
-                    val bounds = lerp(pill.actions, pill.field, pillProgress.value).translate(-pill.bar)
+                    // Always fully opaque: the pill is one surface whose color must not change anywhere along the trip,
+                    // a back gesture's preview included, which fades what the field holds and leaves the pill alone.
+                    val bounds = lerp(pill.closedActions, pill.openField, pillProgress.value)
                     drawRoundRect(
                         color = pillColor,
                         topLeft = bounds.topLeft,
                         size = bounds.size,
                         cornerRadius = CornerRadius(bounds.height / 2),
-                        alpha = 1f - recession.progress.value * RECEDED_ALPHA_LOSS,
                     )
                 }
                 .padding(
@@ -279,7 +279,11 @@ internal fun SearchableTopAppBar(
                 searchState = searchState,
                 searchTransition = searchTransition,
                 recession = recession,
-                fieldModifier = fieldModifier.onPlaced { pill.field = it.boundsInWindowUnclipped() },
+                fieldModifier = fieldModifier.onPlaced {
+                    if (searchTransition.targetState) {
+                        pill.openField = lookaheadScope.lookaheadBoundsOf(pill.bar, it)
+                    }
+                },
             )
             // The actions of a top app bar are drawn in a quieter color than its content.
             CompositionLocalProvider(LocalContentColor provides MaterialTheme.colorScheme.onSurfaceVariant) {
@@ -291,7 +295,11 @@ internal fun SearchableTopAppBar(
                         .onSizeChanged {
                             if (isClosedAndSettled) onReachChanged(with(density) { it.width.toDp() } + endPadding)
                         }
-                        .onPlaced { pill.actions = it.boundsInWindowUnclipped() }
+                        .onPlaced {
+                            if (!searchTransition.targetState) {
+                                pill.closedActions = lookaheadScope.lookaheadBoundsOf(pill.bar, it)
+                            }
+                        }
                         .padding(horizontal = ACTIONS_PILL_PADDING),
                     verticalAlignment = Alignment.CenterVertically,
                 ) {
@@ -345,9 +353,16 @@ internal fun animateAppBarReveal(
  * What of a list the app bar's buttons stand over while the bar is not filled in: how far in from the list's end edge
  * they reach, which a pinned [SectionHeader] keeps its text and its action clear of, and how far down from its top,
  * which the [FastScroller] starts below so that its thumb is never under a button that would take the press.
+ *
+ * @param reach How far the buttons reach in from the end edge of the list, whether or not the list is under them.
+ * @param coverage How much of the row at the top of the list is still under the buttons: all of it while the bar is
+ *   not filled in, none of it once the list has moved down out of its way. The header narrows by it the way it does
+ *   by its own pinned fraction, since the list moving down under a pinned header and a header scrolling up into the
+ *   pinned place are the same movement relative to the buttons.
  */
 internal data class AppBarOverlap(
     val reach: Dp,
+    val coverage: Float,
     val height: Dp,
 ) {
 
@@ -359,7 +374,7 @@ internal data class AppBarOverlap(
          */
         fun of(reach: Dp, appBarReveal: Float): AppBarOverlap {
             val uncovered = 1f - appBarReveal.coerceIn(0f, 1f)
-            return AppBarOverlap(reach = reach * uncovered, height = LIST_APP_BAR_HEIGHT * uncovered)
+            return AppBarOverlap(reach = reach, coverage = uncovered, height = LIST_APP_BAR_HEIGHT * uncovered)
         }
     }
 }
@@ -704,23 +719,30 @@ private object TruncateSearchQuery : InputTransformation {
  * rather than as the pinned header's: sitting on the header's row next to its name, they would otherwise look like
  * that one section's actions.
  *
- * It is drawn by the bar, from where the two things it stands behind are laid out on the frame it is drawn: both are
- * already moving on the spring the search action travels on (the buttons' row narrowing as the action leaves it, the
- * field following the action's edge), and the pill goes from the one to the other on that same spring, so it never
- * lags behind either and settles exactly on whichever it ends up behind. Positions are kept in window coordinates
- * because the three are laid out by different parents, and the bar's own is taken off again as it draws.
+ * It is drawn by the bar, and goes from where the buttons' row settles when the search is closed to where the field
+ * settles when it is open, on the spring the search action travels on. Both ends are the *lookahead* rectangles, the
+ * ones the layout is heading for, each taken from the state it belongs to: the rectangles of the frame itself are
+ * still moving (the buttons' row narrowing as the action leaves it, the field's edges sweeping in from beyond the
+ * bar's end), and an edge interpolated between two moving ones overshoots and comes back, where between two that stand
+ * still it only ever travels the one way. Positions are kept in window coordinates because the three are laid out by
+ * different parents, and the bar's own is taken off again as it draws.
  */
 private class SearchPill {
 
-    var bar by mutableStateOf(Offset.Zero)
+    /** The bar's own coordinates, which the two rectangles are measured from. Read only from placement callbacks. */
+    var bar: LayoutCoordinates? = null
 
-    var actions by mutableStateOf(Rect.Zero)
+    var closedActions by mutableStateOf(Rect.Zero)
 
-    var field by mutableStateOf(Rect.Zero)
+    var openField by mutableStateOf(Rect.Zero)
 }
 
-/** Where a layout is in the window, all of it: the field starts out beyond the bar's end, which a clip would cut off. */
-private fun LayoutCoordinates.boundsInWindowUnclipped() = Rect(offset = positionInWindow(), size = size.toSize())
+/** Where a layout is heading to, in the coordinates of the [bar] that holds it: the rectangle it has once its animations end. */
+private fun LookaheadScope.lookaheadBoundsOf(bar: LayoutCoordinates?, coordinates: LayoutCoordinates) =
+    if (bar == null) Rect.Zero else Rect(
+        offset = bar.localLookaheadPositionOf(coordinates),
+        size = coordinates.toLookaheadCoordinates().size.toSize(),
+    )
 
 /**
  * How far a back gesture that would close the search has taken the field towards closing: the gesture's own progress
@@ -752,7 +774,7 @@ private fun <T> searchTravelSpec(visibilityThreshold: T? = null) = spring(
     visibilityThreshold = visibilityThreshold,
 )
 
-/** How much of the field's opacity a back gesture dragged all the way takes away before it is let go of. */
+/** How much of the opacity of what the field holds a back gesture dragged all the way takes away before it is let go of. */
 private const val RECEDED_ALPHA_LOSS = 0.5f
 
 /** How much of the field's width a back gesture dragged all the way collapses before it is let go of. */

@@ -21,9 +21,6 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.pandulapeter.campfire.data.model.domain.Song
 import com.pandulapeter.campfire.presentation.localization.stringResource
 import com.pandulapeter.campfire.presentation.resources.Res
-import com.pandulapeter.campfire.presentation.resources.delete
-import com.pandulapeter.campfire.presentation.resources.edit
-import com.pandulapeter.campfire.presentation.resources.export
 import com.pandulapeter.campfire.presentation.resources.ic_delete
 import com.pandulapeter.campfire.presentation.resources.ic_edit
 import com.pandulapeter.campfire.presentation.resources.ic_export
@@ -34,8 +31,11 @@ import com.pandulapeter.campfire.presentation.resources.ic_setlists_outline
 import com.pandulapeter.campfire.presentation.resources.ic_share
 import com.pandulapeter.campfire.presentation.resources.share
 import com.pandulapeter.campfire.presentation.resources.songs_actions
-import com.pandulapeter.campfire.presentation.resources.songs_update_file_name
+import com.pandulapeter.campfire.presentation.resources.songs_delete_song
+import com.pandulapeter.campfire.presentation.resources.songs_edit_song
+import com.pandulapeter.campfire.presentation.resources.songs_export_song
 import com.pandulapeter.campfire.presentation.resources.songs_setlist_assignments
+import com.pandulapeter.campfire.presentation.resources.songs_update_file_name
 import com.pandulapeter.campfire.presentation.ui.CampfireViewModel
 import com.pandulapeter.campfire.presentation.ui.platform.LocalFilePicker
 import org.jetbrains.compose.resources.painterResource
@@ -129,7 +129,7 @@ internal fun SongActionsButton(
         // Each entry acts through `select`, which closes the menu before it acts - so that it is gone by the time the
         // dialog or the picker it opens is on the screen - and only once.
         ActionsMenuItem(
-            title = stringResource(Res.string.edit),
+            title = stringResource(Res.string.songs_edit_song),
             icon = painterResource(Res.drawable.ic_edit),
             onClick = { select { viewModel.openEditor(song.fileName) } },
         )
@@ -157,7 +157,7 @@ internal fun SongActionsButton(
             )
         }
         ActionsMenuItem(
-            title = stringResource(Res.string.export),
+            title = stringResource(Res.string.songs_export_song),
             icon = painterResource(Res.drawable.ic_export),
             onClick = { select { viewModel.exportSong(filePicker, song.fileName) } },
         )
@@ -170,7 +170,7 @@ internal fun SongActionsButton(
             )
         }
         ActionsMenuItem(
-            title = stringResource(Res.string.delete),
+            title = stringResource(Res.string.songs_delete_song),
             icon = painterResource(Res.drawable.ic_delete),
             onClick = { select { viewModel.showDialog(CampfireViewModel.DialogType.DeleteSong(song)) } },
         )

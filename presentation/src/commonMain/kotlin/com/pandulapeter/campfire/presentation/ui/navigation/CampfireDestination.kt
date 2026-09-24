@@ -100,14 +100,6 @@ sealed interface CampfireDestination : NavKey {
 
         companion object {
             private const val CONTENT_KEY_PREFIX = "songEditor|"
-
-            /**
-             * Whether a [NavEntry][androidx.navigation3.runtime.NavEntry] content key belongs to an editor. The
-             * editor is presented as a modal rather than as another card of the stack, so the transitions in
-             * `CampfireApp` have to recognize it from the content key alone, the way the top level destinations are
-             * recognized by [TopLevel.fromContentKey].
-             */
-            fun isContentKey(contentKey: Any?) = (contentKey as? String)?.startsWith(CONTENT_KEY_PREFIX) == true
         }
     }
 }

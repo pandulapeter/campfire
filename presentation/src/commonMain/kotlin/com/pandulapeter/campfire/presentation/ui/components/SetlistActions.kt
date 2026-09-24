@@ -18,8 +18,6 @@ import androidx.compose.ui.graphics.painter.Painter
 import com.pandulapeter.campfire.data.model.domain.Setlist
 import com.pandulapeter.campfire.presentation.localization.stringResource
 import com.pandulapeter.campfire.presentation.resources.Res
-import com.pandulapeter.campfire.presentation.resources.delete
-import com.pandulapeter.campfire.presentation.resources.edit
 import com.pandulapeter.campfire.presentation.resources.ic_archive
 import com.pandulapeter.campfire.presentation.resources.ic_delete
 import com.pandulapeter.campfire.presentation.resources.ic_duplicate
@@ -29,7 +27,9 @@ import com.pandulapeter.campfire.presentation.resources.ic_songs
 import com.pandulapeter.campfire.presentation.resources.ic_unarchive
 import com.pandulapeter.campfire.presentation.resources.setlists_actions
 import com.pandulapeter.campfire.presentation.resources.setlists_archive
-import com.pandulapeter.campfire.presentation.resources.setlists_duplicate
+import com.pandulapeter.campfire.presentation.resources.setlists_delete_setlist
+import com.pandulapeter.campfire.presentation.resources.setlists_duplicate_setlist
+import com.pandulapeter.campfire.presentation.resources.setlists_edit_title_and_description
 import com.pandulapeter.campfire.presentation.resources.setlists_export
 import com.pandulapeter.campfire.presentation.resources.setlists_song_assignments
 import com.pandulapeter.campfire.presentation.resources.setlists_unarchive
@@ -61,7 +61,7 @@ internal fun SetlistActionsMenu(
         // Each entry acts through `select`, which closes the menu before it acts - so that it is gone by the time the
         // dialog or the picker it opens is on the screen - and only once.
         SetlistActionsMenuItem(
-            title = stringResource(Res.string.edit),
+            title = stringResource(Res.string.setlists_edit_title_and_description),
             icon = painterResource(Res.drawable.ic_edit),
             onClick = { select { viewModel.showDialog(CampfireViewModel.DialogType.EditSetlist(setlist)) } },
         )
@@ -71,7 +71,7 @@ internal fun SetlistActionsMenu(
             onClick = { select { viewModel.showDialog(CampfireViewModel.DialogType.SongPicker(setlist)) } },
         )
         SetlistActionsMenuItem(
-            title = stringResource(Res.string.setlists_duplicate),
+            title = stringResource(Res.string.setlists_duplicate_setlist),
             icon = painterResource(Res.drawable.ic_duplicate),
             onClick = { select { viewModel.showDialog(CampfireViewModel.DialogType.DuplicateSetlist(setlist)) } },
         )
@@ -86,7 +86,7 @@ internal fun SetlistActionsMenu(
             onClick = { select { viewModel.exportSetlist(filePicker, setlist.fileName) } },
         )
         SetlistActionsMenuItem(
-            title = stringResource(Res.string.delete),
+            title = stringResource(Res.string.setlists_delete_setlist),
             icon = painterResource(Res.drawable.ic_delete),
             onClick = { select { viewModel.showDialog(CampfireViewModel.DialogType.DeleteSetlist(setlist)) } },
         )

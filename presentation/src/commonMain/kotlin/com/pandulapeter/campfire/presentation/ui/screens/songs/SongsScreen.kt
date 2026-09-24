@@ -341,7 +341,7 @@ private fun SongList(
                             text = header.displayText(),
                             onClick = { coroutineScope.launch { listState.animateScrollToItem(headerIndex) } },
                             opacity = if (headerState.visibleFraction < 1f) 0f else 1f,
-                            appBarReach = appBarOverlap.reach,
+                            appBarOverlap = appBarOverlap,
                         )
                     }
                 }
@@ -409,7 +409,7 @@ private fun SongList(
                     onClick = null,
                     contentOpacity = pushed.visibleFraction,
                     pushedDistancePx = pushed.pushedDistance,
-                    appBarReach = appBarOverlap.reach,
+                    appBarOverlap = appBarOverlap,
                 )
             }
         }

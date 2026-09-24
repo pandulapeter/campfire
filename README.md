@@ -49,8 +49,7 @@ Campfire is available for the following platforms:
 - Once Microsoft Store, App Store and Mac App Store listings are approved, update included URL-s + this Readme
 - Android .cho files should open with Campfire
 - Move Song assignment / Setlist assignment shortcuts to the top-level
-- Make the "Edit" action more specific to the situation
-- Setlists: the "Add songs" button should always be present at the bottom of the list (unless in performance mode)
+- Sort and filter should be separated
 - Delete song should not be an option in Setlist mode
 - Cover art thumbnails: https://musicbrainz.org/doc/Cover_Art_Archive/API
 - Add more automatic sync triggers

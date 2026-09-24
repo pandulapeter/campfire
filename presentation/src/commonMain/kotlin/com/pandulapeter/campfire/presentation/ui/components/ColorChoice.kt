@@ -71,8 +71,7 @@ internal fun <T> ColorChoice(
  *
  * The ring is what says "this is the one in use", and the check inside only seconds it: with an icon on some of the
  * discs, a mark in the middle is first read as *what this color is* rather than as a selection, so the selection has
- * to be somewhere an icon can never be. It is drawn in the option's own color, which for the selected one is the
- * color the whole app is wearing.
+ * to be somewhere an icon can never be. It is drawn in the option's own color, matching the disc it surrounds.
  *
  * Its own composable rather than part of the loop above because the row it sits in is a `FlowRow`, and the
  * `AnimatedVisibility` of the check would resolve to the `RowScope` overload inside it.

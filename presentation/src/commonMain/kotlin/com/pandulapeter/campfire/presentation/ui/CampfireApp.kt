@@ -39,6 +39,7 @@ import androidx.compose.foundation.layout.WindowInsetsSides
 import androidx.compose.foundation.layout.consumeWindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.ime
 import androidx.compose.foundation.layout.systemBars
 import androidx.compose.foundation.layout.displayCutout
@@ -86,6 +87,7 @@ import androidx.compose.ui.layout.Placeable
 import androidx.compose.ui.layout.SubcomposeLayout
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalLayoutDirection
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.Density
 import androidx.compose.ui.unit.Dp
@@ -872,6 +874,9 @@ private class NavigationChromeTransition {
 
 private val EXPANDED_NAVIGATION_RAIL_MIN_WIDTH = 220.dp
 
+/** Material adds the icon and its padding to this reserved label width, giving every item a 180dp pill. */
+private val EXPANDED_NAVIGATION_RAIL_LABEL_WIDTH = 116.dp
+
 /** The gap the collapsed [NavigationRail] leaves above its first item. */
 private val EXPANDED_NAVIGATION_RAIL_TOP_PADDING = 4.dp
 
@@ -904,7 +909,14 @@ private fun NavigationChrome(
                     selected = destination == currentTopLevelDestination,
                     onClick = { onDestinationSelected(destination) },
                     icon = { Icon(painter = painterResource(destination.icon), contentDescription = null) },
-                    label = { Text(stringResource(destination.label)) },
+                    label = {
+                        Text(
+                            text = stringResource(destination.label),
+                            modifier = Modifier.width(EXPANDED_NAVIGATION_RAIL_LABEL_WIDTH),
+                            maxLines = 1,
+                            overflow = TextOverflow.Ellipsis,
+                        )
+                    },
                     railExpanded = true,
                 )
             }
@@ -1030,11 +1042,6 @@ private fun TopLevelScreenSurface(
  * place, next to a navigation bar and a navigation rail alike: nothing about two tabs puts one of them in any
  * direction of the other.
  *
- * The editor is the one screen that is not a card of the deck but a modal put in front of it, so it always comes up
- * from the bottom edge and leaves the same way, in every direction the gesture that dismisses it may have come
- * from. It is the vertical movement, and not only its Close button, that says the editor is something the song
- * being read is still waiting behind.
- *
  * Whether a transition is a push or a pop is decided here from the depth of the scenes instead of relying on
  * Navigation 3's own detection: when a back stack change interrupts a running transition, Navigation 3 records the
  * already updated back stack as the transition's starting point and animates a pop with the push spec. That leaves
@@ -1049,18 +1056,10 @@ private fun AnimatedContentTransitionScope<Scene<CampfireDestination>>.navigatio
     val to = CampfireDestination.TopLevel.fromContentKey(targetState.entries.lastOrNull()?.contentKey)
     return when {
         from != null && to != null -> tabTransition()
-        targetState.zIndex < initialState.zIndex -> popTransition(motionScheme, isModal = isSongEditorTransition)
-        else -> pushTransition(motionScheme, isModal = isSongEditorTransition)
+        targetState.zIndex < initialState.zIndex -> popTransition(motionScheme)
+        else -> pushTransition(motionScheme)
     }
 }
-
-/**
- * Whether the screen being dealt or taken is the editor, which is the one screen that moves vertically. Either
- * scene can be the one holding it: it is the target of a push and the initial state of a pop.
- */
-private val AnimatedContentTransitionScope<Scene<CampfireDestination>>.isSongEditorTransition: Boolean
-    get() = CampfireDestination.SongEditor.isContentKey(initialState.entries.lastOrNull()?.contentKey) ||
-            CampfireDestination.SongEditor.isContentKey(targetState.entries.lastOrNull()?.contentKey)
 
 /**
  * The card being dealt slides in over the deck. The screen underneath follows in the same direction over a much
@@ -1069,9 +1068,8 @@ private val AnimatedContentTransitionScope<Scene<CampfireDestination>>.isSongEdi
 @OptIn(ExperimentalAnimationApi::class, ExperimentalMaterial3ExpressiveApi::class)
 private fun AnimatedContentTransitionScope<Scene<CampfireDestination>>.pushTransition(
     motionScheme: MotionScheme,
-    isModal: Boolean,
 ): ContentTransform {
-    val direction = if (isModal) AnimatedContentTransitionScope.SlideDirection.Up else AnimatedContentTransitionScope.SlideDirection.Left
+    val direction = AnimatedContentTransitionScope.SlideDirection.Left
     val spec = motionScheme.slideSpec()
     return ContentTransform(
         targetContentEnter = slideIntoContainer(towards = direction, animationSpec = spec),
@@ -1091,9 +1089,8 @@ private fun AnimatedContentTransitionScope<Scene<CampfireDestination>>.pushTrans
 @OptIn(ExperimentalAnimationApi::class, ExperimentalMaterial3ExpressiveApi::class)
 private fun AnimatedContentTransitionScope<Scene<CampfireDestination>>.popTransition(
     motionScheme: MotionScheme,
-    isModal: Boolean,
 ): ContentTransform {
-    val direction = if (isModal) AnimatedContentTransitionScope.SlideDirection.Down else AnimatedContentTransitionScope.SlideDirection.Right
+    val direction = AnimatedContentTransitionScope.SlideDirection.Right
     val spec = motionScheme.slideSpec()
     return ContentTransform(
         targetContentEnter = slideIntoContainer(
@@ -1123,8 +1120,8 @@ private fun MotionScheme.slideSpec() = when (val spec = defaultSpatialSpec<IntOf
 
 /**
  * The pop driven by the predictive back gesture (Android) or the edge swipe (iOS): the same uncovering as
- * [popTransition], except that both screens follow the finger with linear specs. Their direction is fixed by the
- * screen being dismissed, regardless of which edge the gesture started from.
+ * [popTransition], except that both screens follow the finger with linear specs. Their direction is fixed to the
+ * horizontal pop, regardless of which edge the gesture started from.
  *
  * Going back from Setlists or Settings to Songs is a swap of tabs rather than a card being taken off, so it cross
  * fades in place, for the reasons [navigationTransition] gives. It is a cross fade rather than [tabTransition]'s fade
@@ -1143,7 +1140,7 @@ private fun AnimatedContentTransitionScope<Scene<CampfireDestination>>.predictiv
             targetContentZIndex = targetState.zIndex,
         )
     }
-    val towards = if (isSongEditorTransition) AnimatedContentTransitionScope.SlideDirection.Down else AnimatedContentTransitionScope.SlideDirection.Right
+    val towards = AnimatedContentTransitionScope.SlideDirection.Right
     val spec = tween<IntOffset>(PREDICTIVE_BACK_DURATION, easing = LinearEasing)
     return ContentTransform(
         targetContentEnter = slideIntoContainer(towards, spec, initialOffset = ::backgroundSlideOffset),

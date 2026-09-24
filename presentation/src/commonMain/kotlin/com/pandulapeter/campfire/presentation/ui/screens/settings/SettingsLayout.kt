@@ -64,7 +64,7 @@ internal enum class SettingsTab {
 /**
  * The tabs of the settings screen, which stay where they are while a page scrolls under them.
  *
- * The tabs are capped at [MAX_TAB_ROW_WIDTH] and start where every list of the app starts - four tabs spread across a
+ * The tabs are capped at [SETTINGS_TAB_ROW_MAX_WIDTH] and start where every list of the app starts - four tabs spread across a
  * wide window are four words a hand's width apart.
  *
  * @param badgedTab A tab holding something that waits for an answer, marked with a dot so that it is found from the
@@ -84,7 +84,7 @@ internal fun SettingsTabRow(
     PrimaryTabRow(
         modifier = Modifier
             .padding(start = startPadding, end = endPadding)
-            .widthIn(max = MAX_TAB_ROW_WIDTH),
+            .widthIn(max = SETTINGS_TAB_ROW_MAX_WIDTH),
         selectedTabIndex = selectedTab.ordinal,
         containerColor = Color.Transparent,
         divider = {},
@@ -297,8 +297,8 @@ internal fun ColumnScope.AnimatedSettingsRow(
 /** What an [AnimatedSettingsRow] draws while it leaves. Not a state, since nothing is ever redrawn because of it. */
 private class LastValue<T>(var value: T?)
 
-/** The width of the [SettingsCategoryPane]. */
-internal val SETTINGS_CATEGORY_PANE_WIDTH = 280.dp
+/** Leaves a full [MIN_COLUMN_WIDTH] for a page as soon as the tab row reaches its width cap. */
+internal val SETTINGS_CATEGORY_PANE_WIDTH = 180.dp
 
 /** Below this a column is too narrow for a switch next to two lines of description, so a tab stacks its sections. */
 private val MIN_COLUMN_WIDTH = 380.dp
@@ -316,7 +316,7 @@ private val PAGE_TOP_PADDING = 8.dp
 private val SECTION_TITLE_PADDING = 8.dp
 
 /** Above this four tabs are four words spread apart rather than a row of tabs. */
-private val MAX_TAB_ROW_WIDTH = 560.dp
+internal val SETTINGS_TAB_ROW_MAX_WIDTH = 560.dp
 
 /** The room a [SettingsSubsection] keeps above and below itself, which is what a list item pads itself by. */
 private val SUBSECTION_PADDING = 12.dp

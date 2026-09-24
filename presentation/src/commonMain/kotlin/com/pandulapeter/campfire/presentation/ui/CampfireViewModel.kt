@@ -1042,7 +1042,11 @@ class CampfireViewModel(
      * without asking, see [navigateBack].
      */
     fun selectTopLevelDestination(destination: CampfireDestination.TopLevel) {
-        if (backStack.lastOrNull() == destination) return
+        if (backStack.lastOrNull() == destination) {
+            // Pressing the item of the screen that is already open takes that screen back to its resting state.
+            if (destination == CampfireDestination.Settings) settingsTab = SettingsTab.GENERAL else currentSearch?.close()
+            return
+        }
         if (hasUnsavedEditorText() && backStack.any { it is CampfireDestination.SongEditor }) return
         updateBackStack {
             clear()

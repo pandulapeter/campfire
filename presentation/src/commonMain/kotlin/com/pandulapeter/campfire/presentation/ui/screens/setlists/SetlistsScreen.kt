@@ -343,7 +343,7 @@ private fun SetlistList(
                                 }
                             },
                             opacity = if (headerState.visibleFraction < 1f) 0f else 1f,
-                            appBarReach = appBarOverlap.reach,
+                            appBarOverlap = appBarOverlap,
                         )
                     }
                     // Under the header: the row names the setlist, then this is the first thing to read about it.
@@ -505,7 +505,7 @@ private fun SetlistList(
                     actionIcon = if (isPerformanceModeEnabled) null else painterResource(Res.drawable.ic_more),
                     contentOpacity = pushed.visibleFraction,
                     pushedDistancePx = pushed.pushedDistance,
-                    appBarReach = appBarOverlap.reach,
+                    appBarOverlap = appBarOverlap,
                 )
             }
         }

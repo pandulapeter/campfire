@@ -111,6 +111,7 @@ import com.pandulapeter.campfire.presentation.resources.settings_sync
 import com.pandulapeter.campfire.presentation.resources.settings_user_interface_language
 import com.pandulapeter.campfire.presentation.resources.settings_user_interface_language_english
 import com.pandulapeter.campfire.presentation.resources.settings_user_interface_language_hungarian
+import com.pandulapeter.campfire.presentation.resources.settings_user_interface_language_more_coming
 import com.pandulapeter.campfire.presentation.resources.settings_user_interface_language_system_default
 import com.pandulapeter.campfire.presentation.resources.settings_user_interface_language_with_own_name
 import com.pandulapeter.campfire.presentation.resources.settings_user_interface_theme
@@ -137,7 +138,6 @@ import com.pandulapeter.campfire.presentation.ui.components.LinkListItem
 import com.pandulapeter.campfire.presentation.ui.components.RadioListItem
 import com.pandulapeter.campfire.presentation.ui.components.SegmentedChoice
 import com.pandulapeter.campfire.presentation.ui.components.SwitchListItem
-import com.pandulapeter.campfire.presentation.ui.components.WindowSize
 import com.pandulapeter.campfire.presentation.ui.components.rememberRetainedScrollState
 import com.pandulapeter.campfire.presentation.ui.platform.Distribution
 import com.pandulapeter.campfire.presentation.ui.platform.LibraryLocation
@@ -152,7 +152,7 @@ import kotlinx.coroutines.launch
 import org.jetbrains.compose.resources.painterResource
 
 /**
- * The settings of the app as four [SettingsTab]s. Where the window is wide (`WindowSize.EXPANDED`) they are the entries
+ * The settings of the app as four [SettingsTab]s. Once the screen is wider than the tab row's maximum width they are the entries
  * of a [SettingsCategoryPane] at the start of the screen with the selected page next to it, the way a list and its
  * detail sit side by side; anywhere narrower they are a row of tabs at the top with one page of a pager under each
  * (see [SettingsTabPager]), so that they stay in reach however far a page is scrolled. Either way there is no app bar
@@ -201,7 +201,7 @@ internal fun SettingsScreen(
     val fadeSpec = MaterialTheme.motionScheme.defaultEffectsSpec<Float>()
     Crossfade(
         modifier = modifier.fillMaxSize(),
-        targetState = WindowSize.fromWidth(pageWidth) == WindowSize.EXPANDED,
+        targetState = pageWidth > SETTINGS_TAB_ROW_MAX_WIDTH,
         animationSpec = fadeSpec,
     ) { isWide ->
         if (isWide) {
@@ -282,6 +282,13 @@ private fun SettingsTabPager(
     // the tab that is open. The settled page, so that a swipe is one change of address rather than two.
     LaunchedEffect(pagerState) {
         snapshotFlow { pagerState.settledPage }.collect { viewModel.settingsTab = SettingsTab.entries[it] }
+    }
+    // The other direction: pressing Settings again in the navigation chrome sets the tab from outside, and the pager
+    // has to follow it, which it only does for a value it did not settle on itself.
+    LaunchedEffect(pagerState) {
+        snapshotFlow { viewModel.settingsTab }.collect {
+            if (it.ordinal != pagerState.targetPage) pagerState.animateScrollToPage(it.ordinal)
+        }
     }
     Column(modifier = modifier.fillMaxSize()) {
         // The tab being headed for rather than the one on screen, so that the indicator sets off the moment a tab is
@@ -440,12 +447,12 @@ private fun GeneralSection(
         )
     }
     SettingsSubsection(title = stringResource(Res.string.settings_user_interface_theme_color)) {
-        // Each disc is painted in the half of its palette that is on screen, so that they all change with the light
-        // and dark switch above them instead of advertising colors nothing would actually be drawn in.
+        // Use the opposite half of each palette for the discs: brighter colors in light mode and deeper colors in
+        // dark mode. Keep each disc's onPrimary from the same half so its icon stays legible.
         val isDarkTheme = userPreferences?.uiMode.isDarkTheme()
         ColorChoice(
             options = themeColorOptions().map { (themeColor, colorSchemePair) ->
-                val colorScheme = if (isDarkTheme) colorSchemePair.dark else colorSchemePair.light
+                val colorScheme = if (isDarkTheme) colorSchemePair.light else colorSchemePair.dark
                 ColorChoiceOption(
                     value = themeColor,
                     color = colorScheme.primary,
@@ -487,6 +494,7 @@ private fun GeneralSection(
                 )
             }
         }
+        SettingsMessage(text = stringResource(Res.string.settings_user_interface_language_more_coming))
     }
 }
 
