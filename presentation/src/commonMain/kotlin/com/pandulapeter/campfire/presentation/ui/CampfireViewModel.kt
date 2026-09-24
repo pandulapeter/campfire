@@ -529,6 +529,9 @@ class CampfireViewModel(
      */
     val allSongs = screenData.map { it.data?.unfilteredSongs.orEmpty() }.asState(emptyList())
 
+    /** Shared file-name lookup for screens that resolve songs from a destination or a setlist. */
+    val songsByFileName = allSongs.map { songs -> songs.associateBy { it.fileName } }.asState(emptyMap())
+
     /**
      * The labels every song in the library carries, which the song rows leave off: a tag that is on every song tells
      * one song from no other, and a library that sings in one language has nothing to mark a song with. Counted over

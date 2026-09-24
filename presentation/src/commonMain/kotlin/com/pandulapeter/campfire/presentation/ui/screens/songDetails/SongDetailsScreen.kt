@@ -67,6 +67,7 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.pandulapeter.campfire.chordpro.model.ChordProSong
 import com.pandulapeter.campfire.data.model.domain.Song
+import com.pandulapeter.campfire.data.model.domain.Setlist
 import com.pandulapeter.campfire.data.model.domain.UserPreferences
 import com.pandulapeter.campfire.presentation.localization.stringResource
 import com.pandulapeter.campfire.presentation.resources.Res
@@ -127,7 +128,7 @@ internal fun SongDetailsScreen(
     contentPadding: PaddingValues,
     onBack: () -> Unit,
 ) {
-    val allSongs by viewModel.allSongs.collectAsStateWithLifecycle()
+    val songsByFileName by viewModel.songsByFileName.collectAsStateWithLifecycle()
     val setlists by viewModel.setlists.collectAsStateWithLifecycle()
     val songTexts by viewModel.songTexts.collectAsStateWithLifecycle()
     val failedSongFileNames by viewModel.failedSongFileNames.collectAsStateWithLifecycle()
@@ -137,8 +138,7 @@ internal fun SongDetailsScreen(
     val fontScale by viewModel.fontScale.collectAsStateWithLifecycle()
     val songsBeingRenamed by viewModel.songsBeingRenamed.collectAsStateWithLifecycle()
     val songFileNamesInSetlists by viewModel.songFileNamesInSetlists.collectAsStateWithLifecycle()
-    val songs = remember(destination, allSongs, songsBeingRenamed) {
-        val songsByFileName = allSongs.associateBy { it.fileName }
+    val songs = remember(destination, songsByFileName, songsBeingRenamed) {
         // A song whose file is being renamed is still this screen's song. The library drops the old name as the file
         // moves and the back stack is rewritten a few writes later, and in between the destination names a song the
         // library does not hold: resolving it to the song as it was keeps the pages - and their count - exactly
@@ -187,12 +187,7 @@ internal fun SongDetailsScreen(
     // a setlist is read by its own order, and "2 / 3" over the song its screen calls number 3 would read as a mistake.
     // The pages only count themselves where one of them cannot be placed - the setlist is gone, or the library has not
     // caught up with a change to it yet - so that two numberings are never mixed in one bar.
-    val setlistSlots = remember(setlist, songs) {
-        setlist?.let {
-            val slotByPage = songs.map { song -> setlist.entries.indexOfFirst { entry -> entry.songFileName == song.fileName } }
-            if (slotByPage.none { slot -> slot < 0 }) SetlistSlots(slotByPage = slotByPage, entryCount = setlist.entries.size) else null
-        }
-    }
+    val setlistSlots = remember(setlist, songs) { setlist?.let { buildSetlistSlots(it.entries, songs.map { song -> song.fileName }) } }
     val shouldShowChords = userPreferences?.isLyricsOnlyModeEnabled != true
     val isHorizontalFlow = userPreferences?.isHorizontalSectionFlowEnabled == true
     val chordSpelling = userPreferences?.chordSpelling ?: UserPreferences.ChordSpelling.Default
@@ -690,10 +685,20 @@ private class PageStepper(
 }
 
 /** Where each page of a setlist's pager sits in the setlist, see [SongPagerControls]. */
-private class SetlistSlots(
+internal data class SetlistSlots(
     val slotByPage: List<Int>,
     val entryCount: Int,
 )
+
+/** A missing page invalidates the numbering, while absent entries still count toward the total. */
+internal fun buildSetlistSlots(entries: List<Setlist.Entry>, songFileNames: List<String>): SetlistSlots? {
+    val entryIndexByFileName = mutableMapOf<String, Int>()
+    entries.forEachIndexed { index, entry ->
+        if (entry.songFileName !in entryIndexByFileName) entryIndexByFileName[entry.songFileName] = index
+    }
+    val slotByPage = songFileNames.map { entryIndexByFileName[it] ?: return null }
+    return SetlistSlots(slotByPage = slotByPage, entryCount = entries.size)
+}
 
 private const val LABEL_SEPARATOR = "·"
 private val PAGER_CONTROLS_HEIGHT = 48.dp
