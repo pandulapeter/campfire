@@ -34,6 +34,7 @@ internal data class UserPreferencesDocument(
     val accidentals: String = "",
     val isGermanNotationEnabled: Boolean = false,
     val transpositions: Map<String, Int> = emptyMap(),
+    val foldedSections: Map<String, List<String>> = emptyMap(),
     val tagMatchMode: String = "",
     val languageMatchMode: String = "",
 )

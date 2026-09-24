@@ -703,7 +703,6 @@ private fun SongPreview(
             shouldShowChords = true,
             fontScale = fontScale,
             isHorizontalFlow = isHorizontalFlow,
-            scrollState = scrollState,
         )
     }
 }

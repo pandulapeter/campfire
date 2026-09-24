@@ -38,6 +38,13 @@ data class UserPreferences(
     /** Song file name to semitones, for songs opened from the library rather than from a setlist. */
     val transpositions: Map<String, Int>,
     /**
+     * Song file name to the sections (and the tabs and grids inside them) the reader has folded away on the song details
+     * screen, as the opaque keys that screen names them by. One set per song, wherever the song is opened from: unlike a
+     * transposition, which the band plays the song in, how much of it one reader keeps open is their own business, so it
+     * is never written into a setlist, exported or synced.
+     */
+    val foldedSections: Map<String, Set<String>>,
+    /**
      * How the tags selected in the song filter combine. The selection itself is not a preference and is never
      * stored — it lives in the presentation layer for as long as the app runs — but which of the two readings the
      * user prefers is a standing choice, like the sorting mode.

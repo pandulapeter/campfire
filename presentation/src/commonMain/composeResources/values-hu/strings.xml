@@ -292,6 +292,8 @@
     <string name="song_details_tab_collapse">Tab elrejtése</string>
     <string name="song_details_grid_expand">Rács megjelenítése</string>
     <string name="song_details_grid_collapse">Rács elrejtése</string>
+    <string name="song_details_section_expand">Szakasz megjelenítése</string>
+    <string name="song_details_section_collapse">Szakasz elrejtése</string>
     <string name="song_details_tag_add">Címke hozzáadása</string>
     <string name="song_details_tag_remove">A(z) „%1$s” címke eltávolítása</string>
     <string name="song_details_tag_name">Címke</string>

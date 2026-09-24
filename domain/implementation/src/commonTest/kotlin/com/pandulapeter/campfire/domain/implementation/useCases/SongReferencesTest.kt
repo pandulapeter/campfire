@@ -83,6 +83,17 @@ class SongReferencesTest {
     }
 
     @Test
+    fun `the folded sections follow a rename and go with a deletion`() = runTest {
+        val folded = FakeUserPreferencesRepository(transpositions = emptyMap(), foldedSections = mapOf("a.cho" to setOf("chorus#1"), "b.cho" to setOf("verse#2")))
+
+        assertTrue(followSongReferences(setlistRepository = setlists, userPreferencesRepository = folded, fileName = "a.cho", newFileName = "c.cho"))
+        assertEquals(mapOf("b.cho" to setOf("verse#2"), "c.cho" to setOf("chorus#1")), folded.foldedSections)
+
+        assertTrue(followSongReferences(setlistRepository = setlists, userPreferencesRepository = folded, fileName = "c.cho", newFileName = null))
+        assertEquals(mapOf("b.cho" to setOf("verse#2")), folded.foldedSections)
+    }
+
+    @Test
     fun `a setlist that went away is nothing left to follow`() = runTest {
         setlists.gone = setOf("first.setlist.json")
 
@@ -147,11 +158,15 @@ class SongReferencesTest {
         override suspend fun deleteSetlist(fileName: String) = throw UnsupportedOperationException()
     }
 
-    private class FakeUserPreferencesRepository(var transpositions: Map<String, Int>) : UserPreferencesRepository {
+    private class FakeUserPreferencesRepository(
+        var transpositions: Map<String, Int>,
+        var foldedSections: Map<String, Set<String>> = emptyMap(),
+    ) : UserPreferencesRepository {
         override val userPreferences: Flow<DataState<UserPreferences>> = emptyFlow()
-        override suspend fun loadUserPreferencesIfNeeded() = PREFERENCES.copy(transpositions = transpositions)
+        override suspend fun loadUserPreferencesIfNeeded() = PREFERENCES.copy(transpositions = transpositions, foldedSections = foldedSections)
         override suspend fun saveUserPreferences(userPreferences: UserPreferences) {
             transpositions = userPreferences.transpositions
+            foldedSections = userPreferences.foldedSections
         }
 
         override suspend fun hasStoredUserPreferences() = throw UnsupportedOperationException()
@@ -188,6 +203,7 @@ class SongReferencesTest {
             language = UserPreferences.Language.SYSTEM_DEFAULT,
             chordSpelling = UserPreferences.ChordSpelling.Default,
             transpositions = emptyMap(),
+            foldedSections = emptyMap(),
             tagMatchMode = UserPreferences.MatchMode.ANY,
             languageMatchMode = UserPreferences.MatchMode.ANY,
         )

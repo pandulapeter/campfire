@@ -12,12 +12,12 @@ package com.pandulapeter.campfire.presentation.ui.screens.songDetails
 import androidx.compose.animation.ExperimentalSharedTransitionApi
 import androidx.compose.animation.animateBounds
 import androidx.compose.animation.core.Animatable
-import androidx.compose.foundation.ScrollState
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.FlowRow
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.offset
@@ -41,7 +41,6 @@ import androidx.compose.ui.semantics.Role
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.layout.Layout
@@ -96,6 +95,8 @@ import com.pandulapeter.campfire.presentation.resources.song_details_language
 import com.pandulapeter.campfire.presentation.resources.song_details_lyricist
 import com.pandulapeter.campfire.presentation.resources.song_details_section_bridge
 import com.pandulapeter.campfire.presentation.resources.song_details_section_chorus
+import com.pandulapeter.campfire.presentation.resources.song_details_section_collapse
+import com.pandulapeter.campfire.presentation.resources.song_details_section_expand
 import com.pandulapeter.campfire.presentation.resources.song_details_section_grid
 import com.pandulapeter.campfire.presentation.resources.song_details_section_tab
 import com.pandulapeter.campfire.presentation.resources.song_details_tab_collapse
@@ -112,7 +113,6 @@ import com.pandulapeter.campfire.presentation.ui.components.languageLabel
 import com.pandulapeter.campfire.presentation.ui.components.textResource
 import com.pandulapeter.campfire.presentation.ui.theme.LocalMonospaceFontFamily
 import com.pandulapeter.campfire.presentation.localization.stringResource
-import kotlinx.coroutines.launch
 import org.jetbrains.compose.resources.painterResource
 import kotlin.math.ceil
 import kotlin.math.max
@@ -141,8 +141,10 @@ import kotlin.math.roundToInt
  * squeezed into narrow columns).
  * @param isHorizontalFlow Whether the sections should be read across the columns and then downwards (see
  * [SongSectionsLayout]) instead of column by column.
- * @param scrollState The state of the scrolling container this layout is placed in, so that clicking a section
- * header can scroll back to the start of its section.
+ * @param foldedSections The keys of the sections, tabs and grids of this song the reader has folded away (see
+ * [SongSectionContent]), which are saved per song, and [onFoldToggled] is handed each key a fold toggles to save it.
+ * Null where nothing folds, which is the editor's preview: it is there to show what is being written, and a section
+ * folded on the details screen would hide the lines being typed into it.
  */
 @OptIn(ExperimentalSharedTransitionApi::class)
 @Composable
@@ -154,7 +156,8 @@ internal fun SongLyrics(
     shouldShowChords: Boolean = true,
     fontScale: Float = 1f,
     isHorizontalFlow: Boolean = false,
-    scrollState: ScrollState,
+    foldedSections: Set<String> = emptySet(),
+    onFoldToggled: ((key: String) -> Unit)? = null,
     onAddTag: (() -> Unit)? = null,
     onRemoveTag: ((String) -> Unit)? = null,
     onEditLanguages: (() -> Unit)? = null,
@@ -167,15 +170,24 @@ internal fun SongLyrics(
         grid = stringResource(Res.string.song_details_section_grid),
     )
     val sections = remember(song, shouldShowChords, defaultLabels) { song.toRenderSections(shouldShowChords, defaultLabels) }
-    // Where the sections ended up, published by the layout so that a header can scroll back to its own section.
-    val sectionBounds = remember(sections) { List(sections.size) { SectionBounds() } }
+    // Whether each section is too tall to be animated, which only the layout finds out.
+    val sectionAnimations = remember(sections) { List(sections.size) { SectionAnimation() } }
     val density = LocalDensity.current
     // Kept across a new song text rather than keyed on it, since a transposition or a tag put on rewrites the song and
-    // must not unfold what the reader has folded away.
-    val foldedRuns = remember { FoldedRuns() }
+    // must not make what was just unfolded fade in a second time.
+    var toggledFolds by remember { mutableStateOf(emptySet<String>()) }
+    val foldedRuns = onFoldToggled?.let {
+        FoldedRuns(
+            collapsed = foldedSections,
+            toggled = toggledFolds,
+            onToggled = { key ->
+                toggledFolds += key
+                onFoldToggled(key)
+            },
+        )
+    }
     // Everything the height of a section depends on apart from the width it is measured at, the folded runs included.
-    val sectionMeasurements = remember(sections, fontScale, density, foldedRuns.collapsed) { SectionMeasurements(sectionCount = sections.size) }
-    val coroutineScope = rememberCoroutineScope()
+    val sectionMeasurements = remember(sections, fontScale, density, foldedSections) { SectionMeasurements(sectionCount = sections.size) }
     // The styles the lines are measured with carry no color, which is given where the text is drawn instead: every
     // line of the song is measured again whenever a key of its measurement changes, and the color scheme changes on
     // every frame of a theme cross-fade while the size of the text does not.
@@ -231,16 +243,15 @@ internal fun SongLyrics(
                 extraWidth = extraWidth,
                 sectionCount = sections.size,
                 isHorizontalFlow = isHorizontalFlow,
-                sectionBounds = sectionBounds,
+                sectionAnimations = sectionAnimations,
                 sectionMeasurements = sectionMeasurements,
             ) {
                 sections.forEachIndexed { index, section ->
-                    val bounds = sectionBounds[index]
                     // A section the layout found too tall is measured in full only once this is off it: see maxAnimatedSectionHeight.
                     // Each section is read as a whole and in the order the song declares, whatever column it was put in:
                     // the reading order is otherwise worked out from the geometry, line by line across the page, which
                     // with two columns reads the first line of each, then the second line of each.
-                    val sectionModifier = if (extraWidth > 0.dp || bounds.isTooTallToAnimate) {
+                    val sectionModifier = if (extraWidth > 0.dp || sectionAnimations[index].isTooTallToAnimate) {
                         Modifier
                     } else {
                         Modifier.animateBounds(this@LookaheadScope).layoutId(AnimatedSectionLayoutId)
@@ -263,9 +274,7 @@ internal fun SongLyrics(
                                 shadowElevation = CARD_ELEVATION,
                             ) {
                                 SongSectionContent(
-                                    modifier = Modifier.padding(CARD_PADDING),
                                     section = section,
-                                    sectionIndex = index,
                                     isOnCard = true,
                                     headerStyle = headerStyle,
                                     lyricsStyle = lyricsStyle,
@@ -282,7 +291,6 @@ internal fun SongLyrics(
                             SongSectionContent(
                                 modifier = sectionModifier.padding(horizontal = CARD_PADDING),
                                 section = section,
-                                sectionIndex = index,
                                 isOnCard = false,
                                 headerStyle = headerStyle,
                                 lyricsStyle = lyricsStyle,
@@ -291,10 +299,6 @@ internal fun SongLyrics(
                                 foldedRuns = foldedRuns,
                                 defaultLabels = defaultLabels,
                                 fontScale = fontScale,
-                                // Scrolls the section back to the top of the screen. The sections start under the
-                                // song's header, so its height is part of where they are; the top padding the caller
-                                // puts above everything is left showing, as it is at the start of the song.
-                                onHeaderClick = { coroutineScope.launch { scrollState.animateScrollTo(headerHeight + bounds.top) } },
                             )
                         }
                     }
@@ -450,180 +454,276 @@ private fun SongComment(
  *
  * The header is the same raised pill the song lists use for their section headers, so that the sections are told
  * apart at a glance, and it scrolls with its section like everything else on the screen. A chorus already stands out
- * through its card, where another raised surface would only add noise, so there ([isOnCard]) the header stays a
- * plain label. The pill hangs into the section's left padding, so that its text starts on the same keyline as the
- * lyrics below it.
+ * through its card, where another raised surface would only add noise, so there ([isOnCard]) the header is the card's
+ * own title row instead. The pill hangs into the section's left padding, so that its text starts on the same keyline
+ * as the lyrics below it.
  *
- * Every run of tablature and every run of a chord grid can be folded away ([foldedRuns]), since a solo written out
- * fret by fret or bar by bar is as tall as several verses and is of no use to somebody who only sings the song. A
- * section that is nothing but one of the two is folded as a whole, and from its header wherever it has one: the header
- * then does that instead of scrolling back to the start of the section, a folded section being short enough to have
- * nothing to scroll back to. Anywhere else a run is folded from a toggle of its own, named the way a section of nothing
- * else would be ([defaultLabels]), which is what stays behind of it once it is folded. Lyrics only mode drops both
- * altogether (see [prepareForDisplay]), so there is nothing to fold there.
+ * **Every section with a header folds from it** ([foldedRuns]), so that a song can be read as the handful of parts that
+ * are still to be learned: the pill is the toggle, its chevron after the name, and on a card the whole title row is,
+ * its chevron at the far end the way an expandable card carries it — so that a folded chorus is a slim card of its
+ * own that still stands out, and pressing anywhere along its top answers. A section with no header has nothing to fold
+ * it from, except one that is nothing but tablature or a grid, which gets a toggle named after that.
+ *
+ * Inside a section every run of tablature and every run of a chord grid folds on its own as well, since a solo written
+ * out fret by fret or bar by bar is as tall as several verses and is of no use to somebody who only sings the song. It
+ * is folded from a toggle of its own, named by the environment's label or the way a section of nothing else would be
+ * ([defaultLabels]), which is what stays behind of it once it is folded. Lyrics only mode drops both altogether (see
+ * [prepareForDisplay]), so there is nothing of that kind to fold there.
+ *
+ * On a card the paddings are laid out here rather than by the caller, so that the title row's press reaches the edges
+ * of the card.
  */
 @Composable
 private fun SongSectionContent(
     modifier: Modifier = Modifier,
     section: RenderSection.Lines,
-    sectionIndex: Int,
     isOnCard: Boolean,
     headerStyle: TextStyle,
     lyricsStyle: TextStyle,
     chordStyle: TextStyle,
     textMeasurements: SongTextMeasurements,
-    foldedRuns: FoldedRuns,
+    foldedRuns: FoldedRuns?,
     defaultLabels: DefaultSectionLabels,
     fontScale: Float,
-    onHeaderClick: () -> Unit = {},
 ) = Column(
     modifier = modifier
 ) {
+    val header = section.header
     val wholeSectionKind = section.lines.wholeFoldableKind()
-    val wholeSectionRun = wholeSectionKind?.let { FoldableRunId(section = sectionIndex, run = 0) }
+    val sectionFold = section.foldKey
+    fun foldToggle(key: String) = foldedRuns?.let { FoldToggle(isExpanded = !it.isCollapsed(key), onToggled = { it.toggle(key) }) }
+    // A header over nothing (a recalled chorus with nothing left to show) has nothing to fold.
+    val sectionToggle = if (section.parts.isNotEmpty() && (header != null || wholeSectionKind != null)) foldToggle(sectionFold) else null
+    val hasBody = section.parts.isNotEmpty() && sectionToggle?.isExpanded != false
     val chevronSize = FOLD_CHEVRON_SIZE * fontScale
     // Tablature and grids are both columns of characters that have to line up with the ones above and below them.
     val monospaceFontFamily = LocalMonospaceFontFamily.current
     val monospaceLyricsStyle = lyricsStyle.copy(fontFamily = monospaceFontFamily)
     val monospaceChordStyle = chordStyle.copy(fontFamily = monospaceFontFamily)
-    fun foldToggle(id: FoldableRunId) = FoldToggle(isExpanded = !foldedRuns.isCollapsed(id), onToggled = { foldedRuns.toggle(id) })
-    section.header?.let { header ->
-        val headerFoldToggle = wholeSectionRun?.let(::foldToggle)
-        val headerContent = @Composable { textModifier: Modifier ->
-            Row(
-                modifier = textModifier,
-                verticalAlignment = Alignment.CenterVertically,
-            ) {
-                Text(
-                    text = header,
-                    style = headerStyle,
-                    color = MaterialTheme.colorScheme.primary,
+    when {
+        header != null && isOnCard -> CardTitleRow(
+            // The gap under the title belongs to the lines under it, so that a folded card is as deep above its title
+            // as below it.
+            modifier = Modifier.padding(
+                start = CARD_PADDING,
+                top = CARD_PADDING,
+                end = CARD_PADDING,
+                bottom = if (hasBody) HEADER_GAP else CARD_PADDING,
+            ),
+            header = header,
+            toggle = sectionToggle,
+            style = headerStyle,
+            chevronSize = chevronSize,
+        )
+
+        header != null -> SectionHeaderPill(
+            header = header,
+            toggle = sectionToggle,
+            style = headerStyle,
+            chevronSize = chevronSize,
+        )
+
+        sectionToggle != null && wholeSectionKind != null -> FoldToggleRow(
+            modifier = if (isOnCard) Modifier.padding(start = CARD_PADDING, top = CARD_PADDING, end = CARD_PADDING) else Modifier,
+            kind = wholeSectionKind,
+            label = section.lines.firstNotNullOfOrNull { it.environmentLabel } ?: defaultLabels.labelOf(wholeSectionKind),
+            toggle = sectionToggle,
+            style = headerStyle,
+            chevronSize = chevronSize,
+        )
+    }
+    if (!hasBody) return@Column
+    val hasTitle = header != null || sectionToggle != null
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .fadingIn(isFadingIn = foldedRuns?.hasBeenToggled(sectionFold) == true)
+            .padding(
+                if (isOnCard) {
+                    PaddingValues(start = CARD_PADDING, top = if (hasTitle) 0.dp else CARD_PADDING, end = CARD_PADDING, bottom = CARD_PADDING)
+                } else {
+                    PaddingValues(top = if (header != null) HEADER_GAP else 0.dp)
+                }
+            ),
+    ) {
+        // Tablature and grids are runs of lines inside a section rather than sections of their own, so the lines are
+        // grouped: each run is folded as one, a run of tablature is also measured as one block (its columns only line
+        // up while they are measured together), and everything else is laid out line by line around them. A comment
+        // that cut the section stands where the file has it, between the lines around it. A section that is nothing
+        // but one run is folded as the section it is, so its run has no toggle of its own.
+        val runNameCounts = mutableMapOf<String, Int>()
+        section.parts.forEach { part ->
+            when (part) {
+                is RenderSection.Comment -> SongComment(
+                    modifier = Modifier.padding(vertical = INLINE_COMMENT_GAP),
+                    comment = part,
+                    fontScale = fontScale,
                 )
-                if (headerFoldToggle != null && wholeSectionKind != null) {
-                    FoldChevron(
-                        modifier = Modifier.padding(start = FOLD_CHEVRON_GAP).size(chevronSize),
-                        kind = wholeSectionKind,
-                        isExpanded = headerFoldToggle.isExpanded,
-                        tint = MaterialTheme.colorScheme.primary,
-                    )
-                }
-            }
-        }
-        if (isOnCard) {
-            headerContent(
-                Modifier
-                    .fillMaxWidth()
-                    .then(if (headerFoldToggle == null) Modifier else Modifier.foldToggleClickable(headerFoldToggle))
-                    .padding(bottom = HEADER_GAP)
-            )
-        } else {
-            // The pill is laid out at its own size: the touch target enforcement would grow it to 48dp and push the
-            // lines of the section down, just as it would in the lists (see [SectionHeader]).
-            CompositionLocalProvider(LocalMinimumInteractiveComponentSize provides Dp.Unspecified) {
-                Surface(
-                    onClick = headerFoldToggle?.onToggled ?: onHeaderClick,
-                    modifier = Modifier
-                        .offset(x = -HEADER_HORIZONTAL_PADDING)
-                        .padding(bottom = HEADER_GAP),
-                    shape = MaterialTheme.shapes.large,
-                    color = MaterialTheme.colorScheme.surfaceContainerHigh,
-                    shadowElevation = HEADER_ELEVATION,
-                ) {
-                    headerContent(Modifier.padding(horizontal = HEADER_HORIZONTAL_PADDING, vertical = HEADER_VERTICAL_PADDING))
-                }
-            }
-        }
-    }
-    if (wholeSectionKind != null && wholeSectionRun != null) {
-        if (section.header == null) {
-            FoldToggleRow(
-                kind = wholeSectionKind,
-                label = section.lines.firstNotNullOfOrNull { it.environmentLabel } ?: defaultLabels.labelOf(wholeSectionKind),
-                toggle = foldToggle(wholeSectionRun),
-                style = headerStyle,
-                chevronSize = chevronSize,
-            )
-        }
-        if (foldedRuns.isCollapsed(wholeSectionRun)) return@Column
-    }
-    // Tablature and grids are runs of lines inside a section rather than sections of their own, so the lines are
-    // grouped: each run is folded as one, a run of tablature is also measured as one block (its columns only line up
-    // while they are measured together), and everything else is laid out line by line around them. A comment that cut
-    // the section stands where the file has it, between the lines around it.
-    var foldableRunIndex = 0
-    section.parts.forEach { part ->
-        when (part) {
-            is RenderSection.Comment -> SongComment(
-                modifier = Modifier.padding(vertical = INLINE_COMMENT_GAP),
-                comment = part,
-                fontScale = fontScale,
-            )
 
-            is SectionPart.Lines -> part.lines.groupIntoRuns().forEach { group ->
-                val kind = group.first().foldableKind()
-                if (kind == null) {
-                    group.forEach { line ->
-                        when (line) {
-                            is ChordProLine.Lyrics -> if (line.chords.isEmpty()) {
-                                Text(
-                                    modifier = Modifier.fillMaxWidth(),
-                                    text = line.text,
-                                    style = lyricsStyle,
-                                    color = MaterialTheme.colorScheme.onSurface,
-                                )
-                            } else {
-                                SongLineWithChords(
-                                    line = line,
-                                    lyricsStyle = lyricsStyle,
-                                    textMeasurements = textMeasurements,
-                                )
-                            }
-
-                            // Never reached: tablature and grid lines are always part of a run of their own.
-                            is ChordProLine.Tab, is ChordProLine.Grid -> Unit
-
-                            ChordProLine.Blank -> Text(
-                                text = "",
-                                style = lyricsStyle,
-                            )
-                        }
-                    }
-                    return@forEach
-                }
-                val run = wholeSectionRun ?: FoldableRunId(section = sectionIndex, run = foldableRunIndex++)
-                if (wholeSectionRun == null) {
-                    FoldToggleRow(
-                        kind = kind,
-                        label = group.first().environmentLabel ?: defaultLabels.labelOf(kind),
-                        toggle = foldToggle(run),
-                        style = headerStyle,
-                        chevronSize = chevronSize,
-                    )
-                    if (foldedRuns.isCollapsed(run)) return@forEach
-                }
-                val fadeModifier = Modifier.fadingIn(isFadingIn = foldedRuns.hasBeenToggled(run))
-                when (kind) {
-                    FoldableKind.TAB -> SongTabRun(
-                        modifier = fadeModifier.fillMaxWidth(),
-                        lines = group.map { (it as? ChordProLine.Tab)?.text.orEmpty() },
-                        style = monospaceLyricsStyle,
-                        textMeasurer = textMeasurements.textMeasurer,
-                    )
-
-                    FoldableKind.GRID -> Column(modifier = fadeModifier.fillMaxWidth()) {
+                is SectionPart.Lines -> part.lines.groupIntoRuns().forEach { group ->
+                    val kind = group.first().foldableKind()
+                    if (kind == null) {
                         group.forEach { line ->
-                            if (line is ChordProLine.Grid) {
-                                SongGridLine(
-                                    line = line,
-                                    lyricsStyle = monospaceLyricsStyle,
-                                    chordStyle = monospaceChordStyle,
+                            when (line) {
+                                is ChordProLine.Lyrics -> if (line.chords.isEmpty()) {
+                                    Text(
+                                        modifier = Modifier.fillMaxWidth(),
+                                        text = line.text,
+                                        style = lyricsStyle,
+                                        color = MaterialTheme.colorScheme.onSurface,
+                                    )
+                                } else {
+                                    SongLineWithChords(
+                                        line = line,
+                                        lyricsStyle = lyricsStyle,
+                                        textMeasurements = textMeasurements,
+                                    )
+                                }
+
+                                // Never reached: tablature and grid lines are always part of a run of their own.
+                                is ChordProLine.Tab, is ChordProLine.Grid -> Unit
+
+                                ChordProLine.Blank -> Text(
+                                    text = "",
+                                    style = lyricsStyle,
                                 )
+                            }
+                        }
+                        return@forEach
+                    }
+                    val runModifier = if (wholeSectionKind != null || foldedRuns == null) {
+                        Modifier
+                    } else {
+                        val runName = group.first().environmentLabel ?: kind.name.lowercase()
+                        val run = "$sectionFold/${runNameCounts.nextFoldKey(runName)}"
+                        FoldToggleRow(
+                            kind = kind,
+                            label = group.first().environmentLabel ?: defaultLabels.labelOf(kind),
+                            toggle = FoldToggle(isExpanded = !foldedRuns.isCollapsed(run), onToggled = { foldedRuns.toggle(run) }),
+                            style = headerStyle,
+                            chevronSize = chevronSize,
+                        )
+                        if (foldedRuns.isCollapsed(run)) return@forEach
+                        Modifier.fadingIn(isFadingIn = foldedRuns.hasBeenToggled(run))
+                    }
+                    when (kind) {
+                        FoldableKind.TAB -> SongTabRun(
+                            modifier = runModifier.fillMaxWidth(),
+                            lines = group.map { (it as? ChordProLine.Tab)?.text.orEmpty() },
+                            style = monospaceLyricsStyle,
+                            textMeasurer = textMeasurements.textMeasurer,
+                        )
+
+                        FoldableKind.GRID -> Column(modifier = runModifier.fillMaxWidth()) {
+                            group.forEach { line ->
+                                if (line is ChordProLine.Grid) {
+                                    SongGridLine(
+                                        line = line,
+                                        lyricsStyle = monospaceLyricsStyle,
+                                        chordStyle = monospaceChordStyle,
+                                    )
+                                }
                             }
                         }
                     }
                 }
             }
         }
+    }
+}
+
+/**
+ * The raised pill a section is headed by, which folds the section where it has anything to fold ([toggle]). It is laid
+ * out at its own size: the touch target enforcement would grow it to 48dp and push the lines of the section down, just
+ * as it would in the lists (see [SectionHeader]).
+ */
+@Composable
+private fun SectionHeaderPill(
+    modifier: Modifier = Modifier,
+    header: String,
+    toggle: FoldToggle?,
+    style: TextStyle,
+    chevronSize: Dp,
+) = CompositionLocalProvider(LocalMinimumInteractiveComponentSize provides Dp.Unspecified) {
+    val pillModifier = modifier.offset(x = -HEADER_HORIZONTAL_PADDING)
+    val content = @Composable {
+        SectionTitle(
+            modifier = Modifier.padding(horizontal = HEADER_HORIZONTAL_PADDING, vertical = HEADER_VERTICAL_PADDING),
+            header = header,
+            toggle = toggle,
+            style = style,
+            chevronSize = chevronSize,
+        )
+    }
+    if (toggle == null) {
+        Surface(
+            modifier = pillModifier,
+            shape = MaterialTheme.shapes.large,
+            color = MaterialTheme.colorScheme.surfaceContainerHigh,
+            shadowElevation = HEADER_ELEVATION,
+            content = content,
+        )
+    } else {
+        Surface(
+            onClick = toggle.onToggled,
+            modifier = pillModifier,
+            shape = MaterialTheme.shapes.large,
+            color = MaterialTheme.colorScheme.surfaceContainerHigh,
+            shadowElevation = HEADER_ELEVATION,
+            content = content,
+        )
+    }
+}
+
+/**
+ * The title row of a section drawn on a card, which folds the section where it has anything to fold ([toggle]). It is
+ * as wide as the card and pressed as a whole, with the chevron at its far end, since a card has no pill to press.
+ */
+@Composable
+private fun CardTitleRow(
+    modifier: Modifier = Modifier,
+    header: String,
+    toggle: FoldToggle?,
+    style: TextStyle,
+    chevronSize: Dp,
+) = SectionTitle(
+    modifier = Modifier
+        .fillMaxWidth()
+        .then(if (toggle == null) Modifier else Modifier.foldToggleClickable(toggle))
+        .then(modifier),
+    header = header,
+    toggle = toggle,
+    style = style,
+    chevronSize = chevronSize,
+    isChevronAtEnd = true,
+)
+
+/** A section's name, followed by the chevron that folds it where it can be folded. */
+@Composable
+private fun SectionTitle(
+    modifier: Modifier = Modifier,
+    header: String,
+    toggle: FoldToggle?,
+    style: TextStyle,
+    chevronSize: Dp,
+    isChevronAtEnd: Boolean = false,
+) = Row(
+    modifier = modifier,
+    verticalAlignment = Alignment.CenterVertically,
+) {
+    Text(
+        modifier = if (isChevronAtEnd) Modifier.weight(1f) else Modifier,
+        text = header,
+        style = style,
+        color = MaterialTheme.colorScheme.primary,
+    )
+    toggle?.let {
+        FoldChevron(
+            modifier = Modifier.padding(start = FOLD_CHEVRON_GAP).size(chevronSize),
+            kind = null,
+            isExpanded = it.isExpanded,
+            tint = MaterialTheme.colorScheme.primary,
+        )
     }
 }
 
@@ -713,31 +813,36 @@ private fun List<ChordProLine>.groupIntoRuns(): List<List<ChordProLine>> {
     return groups
 }
 
-/** One run of tablature or of a grid on a page: the section it is in and its place among that section's runs. */
-private data class FoldableRunId(
-    val section: Int,
-    val run: Int,
-)
-
 /**
- * Which runs of tablature and grids on one page the reader has folded away. A run nobody has touched is unfolded, and
- * it is told apart from one that was folded and unfolded again, so that only the latter fades in: a page opening onto
- * a tab that fades in would be an animation nobody asked for.
+ * Which sections, tabs and grids of the song are folded away: [collapsed] is what the preferences hold for it, and a
+ * toggle goes to [onToggled] to be saved there. What the page keeps of its own is which keys were [toggled] while it
+ * was open, so that only those fade in as they unfold: a page opening onto a section that fades in would be an
+ * animation nobody asked for.
+ *
+ * A section is keyed by what the file calls it and which of the sections called that it is (`chorus#2`, see
+ * [RenderSection.Lines.foldKey]), and a run inside it by the section's key and the same two things of the run
+ * (`intro#1/picking pattern#1`), never by its position on the page, so that what is saved still names the same part of
+ * the song after a verse was added above it. A key that names nothing any more (the section was renamed or removed)
+ * simply unfolds nothing.
  */
-private class FoldedRuns {
+private class FoldedRuns(
+    private val collapsed: Set<String>,
+    private val toggled: Set<String>,
+    private val onToggled: (key: String) -> Unit,
+) {
 
-    private var states by mutableStateOf(emptyMap<FoldableRunId, Boolean>())
+    fun isCollapsed(key: String) = key in collapsed
 
-    /** The folded runs, which is what the heights of the sections depend on. */
-    val collapsed: Set<FoldableRunId> get() = states.filterValues { it }.keys
+    fun hasBeenToggled(key: String) = key in toggled
 
-    fun isCollapsed(id: FoldableRunId) = states[id] == true
+    fun toggle(key: String) = onToggled(key)
+}
 
-    fun hasBeenToggled(id: FoldableRunId) = id in states
-
-    fun toggle(id: FoldableRunId) {
-        states = states + (id to !isCollapsed(id))
-    }
+/** The next key of a fold named [name] where the ones before it were counted in this map: `name#1`, `name#2`… */
+private fun MutableMap<String, Int>.nextFoldKey(name: String): String {
+    val occurrence = (this[name] ?: 0) + 1
+    this[name] = occurrence
+    return "$name#$occurrence"
 }
 
 /** Whether a run (or a section that is nothing else) is unfolded, and how to fold or unfold it. */
@@ -786,11 +891,11 @@ private fun Modifier.foldToggleClickable(toggle: FoldToggle) = clickable(
     onClick = toggle.onToggled,
 )
 
-/** The app's fold chevron, named for what pressing it does to a tab or a grid. */
+/** The app's fold chevron, named for what pressing it does to a tab, a grid, or a whole section where [kind] is null. */
 @Composable
 private fun FoldChevron(
     modifier: Modifier = Modifier,
-    kind: FoldableKind,
+    kind: FoldableKind?,
     isExpanded: Boolean,
     tint: Color,
 ) = ExpandChevron(
@@ -800,6 +905,7 @@ private fun FoldChevron(
         when (kind) {
             FoldableKind.TAB -> if (isExpanded) Res.string.song_details_tab_collapse else Res.string.song_details_tab_expand
             FoldableKind.GRID -> if (isExpanded) Res.string.song_details_grid_collapse else Res.string.song_details_grid_expand
+            null -> if (isExpanded) Res.string.song_details_section_collapse else Res.string.song_details_section_expand
         }
     ),
     tint = tint,
@@ -1054,7 +1160,7 @@ private fun SongSectionsLayout(
     extraWidth: Dp,
     sectionCount: Int,
     isHorizontalFlow: Boolean,
-    sectionBounds: List<SectionBounds>,
+    sectionAnimations: List<SectionAnimation>,
     sectionMeasurements: SectionMeasurements,
     content: @Composable () -> Unit,
 ) = Layout(
@@ -1137,7 +1243,7 @@ private fun SongSectionsLayout(
         val placeable = measurable.measure(Constraints(minWidth = columnWidth, maxWidth = columnWidth, maxHeight = maxHeight))
         // The approach pass of an animated section reports the size the animation is at, which says nothing about
         // the size it is going to: only the lookahead pass measures that.
-        if (isLookingAhead) sectionBounds[index].isTooTallToAnimate = placeable.height >= heightLimit
+        if (isLookingAhead) sectionAnimations[index].isTooTallToAnimate = placeable.height >= heightLimit
         placeable
     }
     val arrangement = grid.arrange(heights = IntArray(placeables.size) { placeables[it].height }, sectionGap = sectionGapPx, rowGap = rowGapPx)
@@ -1159,8 +1265,6 @@ private fun SongSectionsLayout(
     layout(width, arrangement.height.coerceIn(constraints.minHeight, constraints.maxHeight)) {
         placeables.forEachIndexed { index, placeable ->
             val row = grid.rows[index]
-            // Published before the section is placed, so that its header can already scroll to the new position.
-            sectionBounds[index].top = arrangement.tops[index]
             placeable.place(x = rowStarts[row] + grid.columns[index] * (columnWidths[row] + columnGapPx), y = arrangement.tops[index])
         }
         dividers.forEach { (placeable, position) -> placeable.place(position) }
@@ -1209,14 +1313,12 @@ private data class SectionGridKey(
 )
 
 /**
- * Where a section ended up inside [SongSectionsLayout]. The layout is the only one that knows this, and the sections
- * need it to scroll back to their own start when their header is clicked, so it is handed back to them through this.
- * It is also the only one that knows how tall a section is, which decides whether the section can be animated at
- * all (see [maxAnimatedSectionHeight]).
+ * Whether a section can be animated to its place inside [SongSectionsLayout]. The layout is the only one that knows
+ * how tall a section is, which decides that (see [maxAnimatedSectionHeight]), so it is handed back to the section
+ * through this.
  */
-private class SectionBounds {
+private class SectionAnimation {
 
-    var top by mutableIntStateOf(0)
     var isTooTallToAnimate by mutableStateOf(false)
 }
 
@@ -1491,6 +1593,8 @@ private sealed interface RenderSection {
     /** A titled block of lines: an environment, an implicit paragraph, or a repeated chorus. */
     data class Lines(
         val header: String?,
+        /** What the section is folded away by, see [FoldedRuns]. */
+        val foldKey: String,
         /** The lines, and the comments that stand between them inside the section, in the order the file has them. */
         val parts: List<SectionPart>,
         /** Choruses (and their recalls) are drawn on a raised card so that they stand out. */
@@ -1533,12 +1637,15 @@ private fun ChordProSong.toRenderSections(
     defaultLabels: DefaultSectionLabels,
 ): List<RenderSection> {
     val sections = mutableListOf<RenderSection>()
+    // Counted for every section the file has, whether or not this mode shows it, so that lyrics-only mode dropping a
+    // tab does not rename the sections after it.
+    val foldNameCounts = mutableMapOf<String, Int>()
 
     /**
      * Adds a section and what [joinCutSections] joined to it, or only the comments where lyrics-only mode leaves it
      * with nothing else to show; true when a section was added.
      */
-    fun addSection(pieces: List<ChordProBlock>, header: String?): Boolean {
+    fun addSection(pieces: List<ChordProBlock>, header: String?, foldKey: String): Boolean {
         val comments = pieces.filterIsInstance<ChordProBlock.Comment>().map { RenderSection.Comment(text = it.text, style = it.style) }
         val sectionPieces = pieces.filterIsInstance<ChordProBlock.Section>()
         // A section that is nothing but tablature or a grid goes away entirely in lyrics-only mode, its heading with
@@ -1576,6 +1683,7 @@ private fun ChordProSong.toRenderSections(
         }
         sections += RenderSection.Lines(
             header = header,
+            foldKey = foldKey,
             parts = parts,
             isOnCard = sectionPieces.first().type == SectionType.Chorus,
         )
@@ -1593,19 +1701,31 @@ private fun ChordProSong.toRenderSections(
             is ChordProBlock.ChorusRecall -> {
                 // The heading goes on the first piece of the chorus that is shown, and stays behind on its own when
                 // none is: a recall has always said where the chorus is sung, even with nothing under it.
-                var header: String? = block.label ?: (block.blocks.firstOrNull() as? ChordProBlock.Section)?.label ?: defaultLabels.chorus
-                block.blocks.joinCutSections().forEach { recalled ->
+                val label = block.label ?: (block.blocks.firstOrNull() as? ChordProBlock.Section)?.label
+                var header: String? = label ?: defaultLabels.chorus
+                // A recall is folded apart from the chorus it repeats, as the chorus it is, and whatever of it is
+                // shown after its first piece is named after that piece.
+                val recallFoldKey = foldNameCounts.nextFoldKey(label ?: SectionType.Chorus.foldName)
+                block.blocks.joinCutSections().forEachIndexed { index, recalled ->
                     when (val first = recalled.first()) {
-                        is ChordProBlock.Section -> if (addSection(recalled, header)) header = null
+                        is ChordProBlock.Section -> {
+                            val foldKey = if (index == 0) recallFoldKey else "$recallFoldKey/$index"
+                            if (addSection(recalled, header, foldKey)) header = null
+                        }
+
                         is ChordProBlock.Comment -> sections += RenderSection.Comment(text = first.text, style = first.style)
                         else -> Unit
                     }
                 }
-                header?.let { sections += RenderSection.Lines(header = it, parts = emptyList(), isOnCard = true) }
+                header?.let { sections += RenderSection.Lines(header = it, foldKey = recallFoldKey, parts = emptyList(), isOnCard = true) }
             }
 
             // The rest of a section a comment or a break cut in two was headed where it started.
-            is ChordProBlock.Section -> addSection(pieces, if (block.isContinuation) null else block.header(defaultLabels))
+            is ChordProBlock.Section -> addSection(
+                pieces = pieces,
+                header = if (block.isContinuation) null else block.header(defaultLabels),
+                foldKey = foldNameCounts.nextFoldKey(block.foldName()),
+            )
         }
     }
     return sections
@@ -1639,6 +1759,31 @@ private fun List<ChordProBlock>.joinCutSections(): List<List<ChordProBlock>> {
 
 /** Whether the block is one that cuts a section in two without being a section itself (see `ChordProParser`). */
 private fun ChordProBlock.isSectionCut() = this is ChordProBlock.Comment || this is ChordProBlock.Break || this is ChordProBlock.Transpose
+
+/**
+ * What a section's fold is keyed by: its label as the file writes it, or what kind of section it is where it has
+ * none. Never the heading it is shown under, which is translated for the sections the file leaves unnamed, and a
+ * folded chorus would unfold with the app's language otherwise.
+ */
+private fun ChordProBlock.Section.foldName() = label ?: when (val sectionType = type) {
+    is SectionType.Custom -> sectionType.name
+    SectionType.Paragraph -> when {
+        lines.areAll<ChordProLine.Tab>() -> FoldableKind.TAB.name.lowercase()
+        lines.areAll<ChordProLine.Grid>() -> FoldableKind.GRID.name.lowercase()
+        else -> sectionType.foldName
+    }
+
+    else -> sectionType.foldName
+}
+
+private val SectionType.foldName
+    get() = when (this) {
+        SectionType.Verse -> "verse"
+        SectionType.Chorus -> "chorus"
+        SectionType.Bridge -> "bridge"
+        SectionType.Paragraph -> "paragraph"
+        is SectionType.Custom -> name
+    }
 
 private fun ChordProBlock.Section.header(defaultLabels: DefaultSectionLabels): String? = label ?: when (val sectionType = type) {
     SectionType.Chorus -> defaultLabels.chorus

@@ -10,6 +10,7 @@
 package com.pandulapeter.campfire.data.source.local.implementation.model
 
 import kotlinx.serialization.json.Json
+import kotlinx.serialization.json.JsonArray
 import kotlinx.serialization.json.JsonElement
 import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.JsonPrimitive
@@ -63,14 +64,17 @@ internal object UserPreferencesDocumentFormat {
     /**
      * The field if a document holding nothing else decodes, which asks the serializer itself instead of repeating
      * the type of every field here - a field added to the document later is covered without being named. The
-     * transpositions are the one field looked into, because they are the one that is a collection of the user's
-     * own choices: a single entry that is not a number costs that entry and not the map.
+     * transpositions and the folded sections are the fields looked into, because they are the ones that are a
+     * collection of the user's own choices: a single entry of the wrong shape costs that entry and not the map.
      */
     private fun readableField(key: String, value: JsonElement): Pair<String, JsonElement>? {
-        val field = if (key == TRANSPOSITIONS_KEY && value is JsonObject) {
-            JsonObject(value.filterValues { it is JsonPrimitive && it.intOrNull != null })
-        } else {
-            value
+        val field = when {
+            key == TRANSPOSITIONS_KEY && value is JsonObject -> JsonObject(value.filterValues { it is JsonPrimitive && it.intOrNull != null })
+            key == FOLDED_SECTIONS_KEY && value is JsonObject -> JsonObject(
+                value.filterValues { it is JsonArray }.mapValues { (_, keys) -> JsonArray((keys as JsonArray).filter { it is JsonPrimitive && it.isString }) }
+            )
+
+            else -> value
         }
         return try {
             json.decodeFromJsonElement<UserPreferencesDocument>(JsonObject(mapOf(key to field)))
@@ -81,4 +85,5 @@ internal object UserPreferencesDocumentFormat {
     }
 
     private const val TRANSPOSITIONS_KEY = "transpositions"
+    private const val FOLDED_SECTIONS_KEY = "foldedSections"
 }

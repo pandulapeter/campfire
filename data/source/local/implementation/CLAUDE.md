@@ -127,7 +127,8 @@ holds the `@Module @ComponentScan object DataLocalSourceModule`, and every local
   iOS and desktop the user can do — keeps whatever it does carry instead of failing to parse. A `null` is read as a
   missing field (`coerceInputValues`), in both documents. The preferences go further, since they are the one document
   the app overwrites as a whole: `UserPreferencesDocumentFormat` reads them field by field when they do not decode as
-  they are — one transposition that is not a number costs that entry, not the map — and the local source copies such a
+  they are — one transposition that is not a number costs that entry, not the map, and one folded section key that
+  is not text costs that key — and the local source copies such a
   file to `preferences.json.bad` before anything can be saved over it. The text size is clamped to `UserPreferences`'
   range on the way in, so a hand edit or a newer version's value never reaches the song screen as it is. A setlist that does not decode is skipped and
   left alone, as before. A setlist naming a song twice is read as naming it once (the first mention wins), written

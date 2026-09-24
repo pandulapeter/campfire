@@ -36,6 +36,7 @@ internal class UserPreferencesDocumentFormatTest {
             accidentals = "flats",
             isGermanNotationEnabled = true,
             transpositions = mapOf("a.cho" to 2, "b.cho" to -3),
+            foldedSections = mapOf("a.cho" to listOf("chorus#1", "intro#1/tab#1")),
             tagMatchMode = "all",
             languageMatchMode = "all",
         )
@@ -82,6 +83,16 @@ internal class UserPreferencesDocumentFormatTest {
         )
 
         assertEquals(mapOf("a.cho" to 2, "c.cho" to -3), decoded.document.transpositions)
+        assertFalse(decoded.isIntact)
+    }
+
+    @Test
+    fun givesUpOnlyTheFoldedSectionsThatAreNotText() {
+        val decoded = UserPreferencesDocumentFormat.decode(
+            """{"foldedSections": {"a.cho": ["chorus#1", 2, "verse#1"], "b.cho": "chorus#1", "c.cho": ["bridge#1"]}}""",
+        )
+
+        assertEquals(mapOf("a.cho" to listOf("chorus#1", "verse#1"), "c.cho" to listOf("bridge#1")), decoded.document.foldedSections)
         assertFalse(decoded.isIntact)
     }
 

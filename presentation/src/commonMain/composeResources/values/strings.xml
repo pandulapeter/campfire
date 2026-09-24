@@ -292,6 +292,8 @@
     <string name="song_details_tab_collapse">Hide the tab</string>
     <string name="song_details_grid_expand">Show the grid</string>
     <string name="song_details_grid_collapse">Hide the grid</string>
+    <string name="song_details_section_expand">Show the section</string>
+    <string name="song_details_section_collapse">Hide the section</string>
     <string name="song_details_tag_add">Add tag</string>
     <string name="song_details_tag_remove">Remove the \"%1$s\" tag</string>
     <string name="song_details_tag_name">Tag</string>

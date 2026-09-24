@@ -31,6 +31,7 @@ internal fun UserPreferencesDocument.toModel() = UserPreferences(
         isGermanNotationEnabled = isGermanNotationEnabled,
     ),
     transpositions = transpositions,
+    foldedSections = foldedSections.mapValues { (_, keys) -> keys.toSet() }.filterValues { it.isNotEmpty() },
     tagMatchMode = UserPreferences.MatchMode.entries.firstOrNull { it.id == tagMatchMode } ?: UserPreferences.MatchMode.ANY,
     languageMatchMode = UserPreferences.MatchMode.entries.firstOrNull { it.id == languageMatchMode } ?: UserPreferences.MatchMode.ANY,
 )
@@ -49,6 +50,7 @@ internal fun UserPreferences.toDocument() = UserPreferencesDocument(
     accidentals = chordSpelling.accidentals.id,
     isGermanNotationEnabled = chordSpelling.isGermanNotationEnabled,
     transpositions = transpositions,
+    foldedSections = foldedSections.mapValues { (_, keys) -> keys.toList() },
     tagMatchMode = tagMatchMode.id,
     languageMatchMode = languageMatchMode.id,
 )

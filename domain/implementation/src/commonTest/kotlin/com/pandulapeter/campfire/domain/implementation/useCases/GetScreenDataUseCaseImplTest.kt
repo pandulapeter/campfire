@@ -294,6 +294,7 @@ class GetScreenDataUseCaseImplTest {
             language = UserPreferences.Language.SYSTEM_DEFAULT,
             chordSpelling = UserPreferences.ChordSpelling.Default,
             transpositions = emptyMap(),
+            foldedSections = emptyMap(),
             tagMatchMode = UserPreferences.MatchMode.ANY,
             languageMatchMode = UserPreferences.MatchMode.ANY,
         )

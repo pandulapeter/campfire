@@ -101,7 +101,7 @@ The ones that carry real logic:
   none) with its stored extension, so that it comes back under the name it left under; a setlist its title through
   `LibraryFiles.normalizedName`.
 - `RenameSongFileUseCaseImpl` — the mirror image of `DeleteSongUseCaseImpl`: the same two places refer to a song by
-  its file name (the setlists holding it, the saved transposition), and where a deletion drops those references a
+  its file name (the setlists holding it, the saved transposition and folded sections), and where a deletion drops those references a
   rename follows them. The file moves first, so nothing is ever pointed at a name that does not exist yet, and once it
   has moved every reference is attempted even after one fails; whether any failed is returned at the end rather than
   thrown, since the move has happened and the caller has to follow it either way, and the walk is not cancellable

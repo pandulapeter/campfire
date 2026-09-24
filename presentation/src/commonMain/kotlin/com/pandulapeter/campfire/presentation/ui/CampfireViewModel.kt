@@ -2000,6 +2000,17 @@ class CampfireViewModel(
 
     fun setHorizontalSectionFlowEnabled(value: Boolean) = updateUserPreferences { copy(isHorizontalSectionFlowEnabled = value) }
 
+    /**
+     * Folds or unfolds one section of a song (or one tab or grid inside it), [key] being the name the song details
+     * screen gives it. One set per song, wherever it is opened from, and kept in the preferences rather than in a
+     * setlist, since it is how one reader reads the song rather than how the band plays it. It toggles what the
+     * preferences hold when the write runs, which already has the previous tap in it (see [changeTransposition]).
+     */
+    fun toggleSectionFold(songFileName: String, key: String) = updateUserPreferences {
+        val folded = foldedSections[songFileName].orEmpty().let { if (key in it) it - key else it + key }
+        copy(foldedSections = if (folded.isEmpty()) foldedSections - songFileName else foldedSections + (songFileName to folded))
+    }
+
     fun setFontScale(value: Float) = pendingFontScale.update { value.coerceIn(MIN_FONT_SCALE, MAX_FONT_SCALE) }
 
     /**
