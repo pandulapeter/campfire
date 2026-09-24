@@ -559,22 +559,20 @@ class CampfireViewModel(
     }.asState(false)
 
     /**
-     * Every song with its title and artist normalized for searching, done once per library rather than
+     * Every song with its title, artist and tags normalized for searching, done once per library rather than
      * once per keystroke: the search runs over the whole list on every character typed.
      */
-    private val searchableSongs = filteredSongs.map { songs ->
-        songs.map { SearchableSong(song = it, title = normalizeSearchText(it.title), artist = normalizeSearchText(it.artist)) }
-    }.asState(emptyList())
+    private val searchableSongs = filteredSongs.map { songs -> songs.map { it.toSearchableSong() } }.asState(emptyList())
 
     /**
      * The same for the whole library, looked up by file name, which is what the setlists search reads: a setlist
      * names its songs whatever the song filters hide, so it cannot be answered from [searchableSongs].
      *
-     * A state rather than a plain flow because two of the states below read it, and this normalizes every title and
-     * artist in the library: collected cold it would do all of that once per reader, on every library change.
+     * A state rather than a plain flow because two of the states below read it, and this normalizes every title,
+     * artist and tag in the library: collected cold it would do all of that once per reader, on every library change.
      */
     private val searchableSongsByFileName = allSongs.map { songs ->
-        songs.associateBy({ it.fileName }) { SearchableSong(song = it, title = normalizeSearchText(it.title), artist = normalizeSearchText(it.artist)) }
+        songs.associateBy({ it.fileName }) { it.toSearchableSong() }
     }.asState(emptyMap())
 
     /**
@@ -2201,7 +2199,7 @@ class CampfireViewModel(
      * last value comes back with an answer the library may have outgrown meanwhile (a first sync fills it from the
      * settings screen), and one that forgets it comes back to [initialValue].
      *
-     * What it costs is that the states doing real work - normalizing every title and artist, grouping the song list,
+     * What it costs is that the states doing real work - normalizing every title, artist and tag, grouping the song list,
      * matching the setlists against the library - also do it for changes to the library made while their screen is not
      * showing, which is work those screens would otherwise do the moment they were opened.
      */
@@ -2214,22 +2212,30 @@ class CampfireViewModel(
     /**
      * Runs on every keystroke over the whole library, so the songs come pre-normalized ([searchableSongs]) and the
      * ranking is decided before sorting - a comparator's selector runs on every comparison, not once per song.
+     *
+     * A song found by one of its tags alone comes after every song found by its title or artist: a tag is shared by
+     * a whole shelf of songs, so a query that names one song and also happens to be part of a tag would otherwise
+     * have that song buried somewhere in the shelf.
      */
     private fun List<SearchableSong>.filterAndRank(query: String): List<Song> {
         val normalizedQuery = normalizeSearchText(query)
         return mapNotNull { song ->
             // Both sides are already lower case, so these don't have to pay for a case insensitive comparison.
-            if (song.title.contains(normalizedQuery) || song.artist.contains(normalizedQuery)) {
+            val isTitleOrArtistMatch = song.title.contains(normalizedQuery) || song.artist.contains(normalizedQuery)
+            if (isTitleOrArtistMatch || song.tags.any { it.contains(normalizedQuery) }) {
                 MatchingSong(
                     song = song.song,
                     doesTitleStartWithQuery = song.title.startsWith(normalizedQuery),
                     doesArtistStartWithQuery = song.artist.startsWith(normalizedQuery),
+                    isTitleOrArtistMatch = isTitleOrArtistMatch,
                 )
             } else {
                 null
             }
         }.sortedWith(
-            compareByDescending<MatchingSong> { it.doesTitleStartWithQuery }.thenByDescending { it.doesArtistStartWithQuery }
+            compareByDescending<MatchingSong> { it.doesTitleStartWithQuery }
+                .thenByDescending { it.doesArtistStartWithQuery }
+                .thenByDescending { it.isTitleOrArtistMatch }
         ).map { it.song }
     }
 
@@ -2245,8 +2251,18 @@ class CampfireViewModel(
         normalizeSearchText(title).contains(normalizedQuery) ||
             normalizeSearchText(description).contains(normalizedQuery) ||
             entries.any { entry ->
-                songs[entry.songFileName]?.let { it.title.contains(normalizedQuery) || it.artist.contains(normalizedQuery) } == true
+                songs[entry.songFileName]?.matchesSearch(normalizedQuery) == true
             }
+
+    private fun SearchableSong.matchesSearch(normalizedQuery: String) =
+        title.contains(normalizedQuery) || artist.contains(normalizedQuery) || tags.any { it.contains(normalizedQuery) }
+
+    private fun Song.toSearchableSong() = SearchableSong(
+        song = this,
+        title = normalizeSearchText(title),
+        artist = normalizeSearchText(artist),
+        tags = tags.map { normalizeSearchText(it) },
+    )
 
     /**
      * One batch in [importQueue].
@@ -2380,13 +2396,15 @@ class CampfireViewModel(
         val song: Song,
         val doesTitleStartWithQuery: Boolean,
         val doesArtistStartWithQuery: Boolean,
+        val isTitleOrArtistMatch: Boolean,
     )
 
-    /** A song with the title and artist the search compares, normalized for searching. */
+    /** A song with the title, artist and tags the search compares, normalized for searching. */
     private class SearchableSong(
         val song: Song,
         val title: String,
         val artist: String,
+        val tags: List<String>,
     )
 
     /**
@@ -2452,13 +2470,8 @@ class CampfireViewModel(
         data object NewSetlist : DialogType
         data object NewSong : DialogType
         data object SongFilters : DialogType
-        /**
-         * Every setlist with a box each, which is how a song is both put into one and taken out of another.
-         *
-         * @param lockedSetlistFileName The one setlist whose box cannot be touched, because the screen that
-         *   opened the sheet is showing the song as part of that setlist.
-         */
-        data class SetlistPicker(val song: Song, val lockedSetlistFileName: String?) : DialogType
+        /** Every setlist with a box each, which is how a song is both put into one and taken out of another. */
+        data class SetlistPicker(val song: Song) : DialogType
         /**
          * Every song of the library with a box each, which is how a setlist is filled from its own side rather than
          * one song at a time from the menu of each. [setlist] is the setlist the sheet was opened on, and only stands

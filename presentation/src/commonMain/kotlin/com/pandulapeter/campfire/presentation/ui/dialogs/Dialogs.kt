@@ -890,7 +890,6 @@ private fun SetlistPicker(
                 ) { setlist ->
                     CheckboxListItem(
                         title = setlist.title,
-                        isEnabled = dialog.lockedSetlistFileName != setlist.fileName,
                         isChecked = setlist.entries.any { it.songFileName == dialog.song.fileName },
                         onCheckedChange = { isChecked ->
                             if (isChecked) {
@@ -971,6 +970,7 @@ private fun SongPicker(
                 title = viewModel.normalizeForSearch(song.title),
                 artist = viewModel.normalizeForSearch(song.artist),
                 tags = song.tags.mapTo(mutableSetOf()) { it.lowercase() },
+                searchableTags = song.tags.map { viewModel.normalizeForSearch(it) },
                 languages = song.languages.ifEmpty { listOf(SongLanguage.UNKNOWN) }.toSet(),
             )
         }
@@ -995,7 +995,8 @@ private fun SongPicker(
     val matches = remember(pickableSongs, query, activeTags, activeLanguages) {
         val normalizedQuery = viewModel.normalizeForSearch(query)
         pickableSongs.filter { pickableSong ->
-            (normalizedQuery in pickableSong.title || normalizedQuery in pickableSong.artist) &&
+            (normalizedQuery in pickableSong.title || normalizedQuery in pickableSong.artist ||
+                pickableSong.searchableTags.any { normalizedQuery in it }) &&
                 (activeTags.isEmpty() || activeTags.any { it in pickableSong.tags }) &&
                 (activeLanguages.isEmpty() || activeLanguages.any { it in pickableSong.languages })
         }
@@ -1055,6 +1056,7 @@ private class PickableSong(
     val title: String,
     val artist: String,
     val tags: Set<String>,
+    val searchableTags: List<String>,
     val languages: Set<String>,
 )
 

@@ -134,8 +134,8 @@ uninstall and nothing else does.
   no title — the list's pinned section header stands in its place — and the one search icon is the one close button (the mark morphs
   between the two as the button travels from the actions to the start of the bar, with the field after it, see
   `:presentation`). On the desktop and the web Ctrl / Cmd + F opens it, in place of the browser's find bar there.
-  The songs are searched by title and artist, ignoring case, accents, spaces and punctuation alike (`ymca` finds
-  `Y.M.C.A.`); a setlist answers by its own title or description, or by holding a
+  The songs are searched by title, artist and tags, ignoring case, accents, spaces and punctuation alike (`ymca` finds
+  `Y.M.C.A.`), a song found by a tag alone coming after those found by their title or artist; a setlist answers by its own title or description, or by holding a
   song that does — and a setlist that answers is shown **whole**, since a setlist is the list somebody wrote down and
   three of its twelve songs is not that list.
 - **Tags are part of the song file**, not a store of their own: ChordPro `{tag}` directives, read by `:chordpro`

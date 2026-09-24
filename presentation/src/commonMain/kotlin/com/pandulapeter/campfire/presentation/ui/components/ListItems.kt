@@ -357,7 +357,8 @@ private fun CenteredSongCardContent(
 }
 
 /**
- * Whatever a card carries at its end: the overflow button, and on the setlists screen the drag handle beside it.
+ * Whatever a card carries at its end: the overflow button, with the setlist assignments button beside it on the songs
+ * screen and the drag handle on the setlists screen.
  * Move the controls slightly toward the card's edge without changing the width reserved for them in the body.
  */
 @Composable
@@ -667,16 +668,13 @@ internal fun CheckboxListItem(
     title: String,
     description: String? = null,
     isChecked: Boolean,
-    isEnabled: Boolean = true,
     onCheckedChange: (Boolean) -> Unit,
 ) = ListItem(
-    modifier = modifier
-        .toggleable(value = isChecked, enabled = isEnabled, role = Role.Checkbox, onValueChange = onCheckedChange)
-        .alpha(if (isEnabled) 1f else 0.5f),
+    modifier = modifier.toggleable(value = isChecked, role = Role.Checkbox, onValueChange = onCheckedChange),
     colors = ListItemDefaults.colors(containerColor = Color.Transparent),
     headlineContent = { Text(title) },
     supportingContent = description?.let { { Text(it) } },
-    leadingContent = { Checkbox(checked = isChecked, enabled = isEnabled, onCheckedChange = null) },
+    leadingContent = { Checkbox(checked = isChecked, onCheckedChange = null) },
 )
 
 @Composable

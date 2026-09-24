@@ -168,7 +168,7 @@
     <string name="settings_export_all">Könyvtár exportálása zipként</string>
     <string name="settings_songs">Dalok</string>
     <string name="settings_performance_mode">Előadás mód</string>
-    <string name="settings_performance_mode_description">Eltünteti az alkalmazásból mindazt, ami a könyvtárat megváltoztatná, így játék közben semmit sem lehet szerkeszteni, exportálni, törölni, átrendezni vagy transzponálni</string>
+    <string name="settings_performance_mode_description">Előadás közben csak olvashatóvá teszi az alkalmazást: a szerkesztés, a törlés, az átrendezés és a transzponálás eltűnik, így egy véletlen érintés sem változtat meg semmit</string>
     <string name="settings_lyrics_only_mode">Csak dalszöveg</string>
     <string name="settings_lyrics_only_mode_description">Az akkordok elrejtése, hogy csak a szöveg maradjon</string>
     <string name="settings_horizontal_section_flow">Olvasás az oszlopokon át</string>

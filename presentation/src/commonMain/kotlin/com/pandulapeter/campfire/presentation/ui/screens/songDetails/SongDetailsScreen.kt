@@ -91,6 +91,7 @@ import com.pandulapeter.campfire.presentation.ui.components.DelayedLoadingIndica
 import com.pandulapeter.campfire.presentation.ui.components.EmptyState
 import com.pandulapeter.campfire.presentation.ui.components.EmptyStateAction
 import com.pandulapeter.campfire.presentation.ui.components.fadingTopEdge
+import com.pandulapeter.campfire.presentation.ui.components.SetlistAssignmentsButton
 import com.pandulapeter.campfire.presentation.ui.components.SongActionsButton
 import com.pandulapeter.campfire.presentation.ui.components.WindowSize
 import com.pandulapeter.campfire.presentation.ui.navigation.CampfireDestination
@@ -136,6 +137,7 @@ internal fun SongDetailsScreen(
     val isPerformanceModeEnabled by viewModel.isPerformanceModeEnabled.collectAsStateWithLifecycle()
     val fontScale by viewModel.fontScale.collectAsStateWithLifecycle()
     val songsBeingRenamed by viewModel.songsBeingRenamed.collectAsStateWithLifecycle()
+    val songFileNamesInSetlists by viewModel.songFileNamesInSetlists.collectAsStateWithLifecycle()
     val songs = remember(destination, allSongs, songsBeingRenamed) {
         val songsByFileName = allSongs.associateBy { it.fileName }
         // A song whose file is being renamed is still this screen's song. The library drops the old name as the file
@@ -316,10 +318,20 @@ internal fun SongDetailsScreen(
                     }
                 }
                 currentSong?.takeIf { !isPerformanceModeEnabled }?.let { song ->
+                    // Only a song read from the library gets the button: one read from a setlist is already filed, and
+                    // is taken out of it from the setlist's own row.
+                    val isReadFromLibrary = destination.setlistFileName == null
+                    if (isReadFromLibrary) {
+                        SetlistAssignmentsButton(
+                            viewModel = viewModel,
+                            song = song,
+                            isInSetlist = song.fileName in songFileNamesInSetlists,
+                        )
+                    }
                     SongActionsButton(
                         viewModel = viewModel,
                         song = song,
-                        lockedSetlistFileName = destination.setlistFileName,
+                        isDeletable = isReadFromLibrary,
                     )
                 }
             },

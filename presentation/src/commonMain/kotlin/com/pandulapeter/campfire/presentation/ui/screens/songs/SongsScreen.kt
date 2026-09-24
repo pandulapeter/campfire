@@ -15,6 +15,7 @@ import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.scaleIn
 import androidx.compose.animation.scaleOut
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Row
@@ -82,6 +83,7 @@ import com.pandulapeter.campfire.presentation.ui.components.ScrollToTopWhenChang
 import com.pandulapeter.campfire.presentation.ui.components.SearchableTopAppBar
 import com.pandulapeter.campfire.presentation.ui.components.SectionHeader
 import com.pandulapeter.campfire.presentation.ui.components.SectionHeaderState
+import com.pandulapeter.campfire.presentation.ui.components.SetlistAssignmentsButton
 import com.pandulapeter.campfire.presentation.ui.components.SongActionsButton
 import com.pandulapeter.campfire.presentation.ui.components.SongListItem
 import com.pandulapeter.campfire.presentation.ui.components.SongFilters
@@ -289,6 +291,7 @@ private fun SongList(
     val transpositions by viewModel.transpositions.collectAsStateWithLifecycle()
     val labelsOnEverySong by viewModel.labelsOnEverySong.collectAsStateWithLifecycle()
     val isPerformanceModeEnabled by viewModel.isPerformanceModeEnabled.collectAsStateWithLifecycle()
+    val songFileNamesInSetlists by viewModel.songFileNamesInSetlists.collectAsStateWithLifecycle()
     // Lyrics only mode takes the chords out of the viewer, and the key is the shortest way of writing them down.
     val shouldShowChords = userPreferences?.isLyricsOnlyModeEnabled != true
     val chordSpelling = userPreferences?.chordSpelling ?: UserPreferences.ChordSpelling.Default
@@ -413,12 +416,22 @@ private fun SongList(
                             null
                         } else {
                             {
-                                SongActionsButton(
-                                    state = actionsMenuState,
-                                    viewModel = viewModel,
-                                    song = song,
-                                    lockedSetlistFileName = null,
-                                )
+                                Row(
+                                    horizontalArrangement = Arrangement.spacedBy(-SETLIST_ASSIGNMENTS_BUTTON_OVERLAP),
+                                    verticalAlignment = Alignment.CenterVertically,
+                                ) {
+                                    SetlistAssignmentsButton(
+                                        viewModel = viewModel,
+                                        song = song,
+                                        isInSetlist = song.fileName in songFileNamesInSetlists,
+                                    )
+                                    SongActionsButton(
+                                        state = actionsMenuState,
+                                        viewModel = viewModel,
+                                        song = song,
+                                        isDeletable = true,
+                                    )
+                                }
                             }
                         },
                     )
@@ -473,3 +486,11 @@ private fun SongSection.Header.displayText(): String = when (this) {
 }
 
 private const val SYMBOLS_LABEL = "#"
+
+/**
+ * How far the setlist assignments button of a song row reaches into the overflow button after it. A setlist row puts
+ * its drag handle's icon right against that button, so its two icons are only the button's own padding apart, and
+ * two buttons side by side would put twice that between the star and the dots. The button drawn last is the one a
+ * press on the overlap reaches, which still leaves the star most of its touch target.
+ */
+private val SETLIST_ASSIGNMENTS_BUTTON_OVERLAP = 12.dp

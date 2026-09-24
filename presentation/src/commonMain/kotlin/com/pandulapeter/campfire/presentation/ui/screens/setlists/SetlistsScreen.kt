@@ -547,7 +547,7 @@ private data class DraggedSetlist(
 
 /**
  * The overflow button of one row of a setlist and the actions behind it. A row whose file has gone missing has no
- * song to act on, so it is offered the only thing that still applies to it - being taken out of the setlist -
+ * song to act on, so it is offered only what still applies to it - moving it and taking it out of the setlist -
  * rather than a list full of entries that would all fail.
  *
  * @param onMoveUp Null where the row cannot move that way, or cannot be moved at all.
@@ -560,36 +560,34 @@ private fun SetlistEntryActions(
     setlistFileName: String,
     onMoveUp: (() -> Unit)?,
     onMoveDown: (() -> Unit)?,
-) = when (entry) {
-    // Nothing is locked: the sheet's box for this very setlist is what unticks the song out of it, which is the one
-    // way a song is taken out of a setlist.
-    is CampfireViewModel.SetlistWithSongs.Entry.Present -> SongActionsButton(
-        viewModel = viewModel,
-        song = entry.song,
-        lockedSetlistFileName = null,
-        leadingItems = { select -> MoveMenuItems(select, onMoveUp, onMoveDown) },
-    )
-
-    is CampfireViewModel.SetlistWithSongs.Entry.Missing -> ActionsMenu { select ->
-        MoveMenuItems(select, onMoveUp, onMoveDown)
-        ActionsMenuItem(
-            title = stringResource(Res.string.setlists_remove_song),
-            icon = painterResource(Res.drawable.ic_setlists_remove),
-            onClick = {
-                select {
-                    viewModel.removeSongFromSetlist(songFileName = entry.songFileName, setlistFileName = setlistFileName)
-                }
-            },
+) {
+    val onRemove: () -> Unit = { viewModel.removeSongFromSetlist(songFileName = entry.songFileName, setlistFileName = setlistFileName) }
+    when (entry) {
+        is CampfireViewModel.SetlistWithSongs.Entry.Present -> SongActionsButton(
+            viewModel = viewModel,
+            song = entry.song,
+            isDeletable = false,
+            leadingItems = { select -> SetlistRowMenuItems(select, onMoveUp, onMoveDown, onRemove) },
         )
+
+        is CampfireViewModel.SetlistWithSongs.Entry.Missing -> ActionsMenu { select ->
+            SetlistRowMenuItems(select, onMoveUp, onMoveDown, onRemove)
+        }
     }
 }
 
-/** The two steps a row of a setlist can be moved by without a drag, for as far as it can go each way. */
+/**
+ * The entries of a setlist row's menu that are about the row rather than the song in it: the two steps it can be
+ * moved by without a drag, for as far as it can go each way, and taking it out of the setlist. The last one carries
+ * the setlists tab's list with a minus rather than the bin, since the song stays in the library and every other
+ * setlist, and a menu that also offers Delete elsewhere in the app must not have the two read alike.
+ */
 @Composable
-private fun MoveMenuItems(
+private fun SetlistRowMenuItems(
     select: (action: () -> Unit) -> Unit,
     onMoveUp: (() -> Unit)?,
     onMoveDown: (() -> Unit)?,
+    onRemove: () -> Unit,
 ) {
     onMoveUp?.let { onClick ->
         ActionsMenuItem(
@@ -605,6 +603,11 @@ private fun MoveMenuItems(
             onClick = { select(onClick) },
         )
     }
+    ActionsMenuItem(
+        title = stringResource(Res.string.setlists_remove_song),
+        icon = painterResource(Res.drawable.ic_setlists_remove),
+        onClick = { select(onRemove) },
+    )
 }
 
 /**

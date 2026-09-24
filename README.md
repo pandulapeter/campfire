@@ -47,15 +47,10 @@ Campfire is available for the following platforms:
 
 ### To do
 - Once Microsoft Store, App Store and Mac App Store listings are approved, update included URL-s + this Readme
-- Move Song assignment / Setlist assignment shortcuts to the top-level
-- Delete song should not be an option in Setlist mode
 - Cover art thumbnails: https://musicbrainz.org/doc/Cover_Art_Archive/API
+- Add ability to add links as metadata items
 - Add more automatic sync triggers
-- Add ability to add links
-- Rename setlist date sort, maybe expose a date for Setlists
 - Add support for external control devices with a focus-by-section feature
-- Improve performance mode description
-- Fix Songs screen async race animation issues
 - Improve code coverage
 - Review architecture / code quality
 
