@@ -691,15 +691,25 @@ internal fun SwitchListItem(
     isChecked: Boolean,
     isEnabled: Boolean = true,
     onCheckedChange: (Boolean) -> Unit,
-) = ListItem(
+) = Row(
     modifier = modifier
         .toggleable(value = isChecked, enabled = isEnabled, role = Role.Switch, onValueChange = onCheckedChange)
-        .alpha(if (isEnabled) 1f else 0.5f),
-    colors = ListItemDefaults.colors(containerColor = Color.Transparent),
-    headlineContent = { Text(title) },
-    supportingContent = description?.let { { Text(it) } },
-    trailingContent = { Switch(checked = isChecked, enabled = isEnabled, onCheckedChange = null) },
-)
+        .alpha(if (isEnabled) 1f else 0.5f)
+        .defaultMinSize(minHeight = if (description == null) 56.dp else 72.dp)
+        .padding(horizontal = LIST_ITEM_KEYLINE, vertical = 8.dp),
+    verticalAlignment = Alignment.CenterVertically,
+    horizontalArrangement = Arrangement.spacedBy(LIST_ITEM_KEYLINE),
+) {
+    // Not a ListItem: it top-aligns its trailing content once the description takes a third line, which left the
+    // switch hanging at the top of the tallest rows instead of in the middle of them.
+    Column(modifier = Modifier.weight(1f)) {
+        Text(text = title, style = MaterialTheme.typography.bodyLarge, color = MaterialTheme.colorScheme.onSurface)
+        if (description != null) {
+            Text(text = description, style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
+        }
+    }
+    Switch(checked = isChecked, enabled = isEnabled, onCheckedChange = null)
+}
 
 @Composable
 internal fun CheckboxListItem(

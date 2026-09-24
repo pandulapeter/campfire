@@ -65,6 +65,7 @@ import com.pandulapeter.campfire.presentation.resources.setlists_sorting_mode_by
 import com.pandulapeter.campfire.presentation.resources.setlists_sorting_mode_newest_first
 import com.pandulapeter.campfire.presentation.resources.setlists_remove_song
 import com.pandulapeter.campfire.presentation.ui.CampfireViewModel
+import com.pandulapeter.campfire.presentation.ui.navigation.CampfireDestination
 import com.pandulapeter.campfire.presentation.ui.components.ActionListItem
 import com.pandulapeter.campfire.presentation.ui.components.AppBarOverlap
 import com.pandulapeter.campfire.presentation.ui.components.ActionsMenu
@@ -124,6 +125,9 @@ internal fun SetlistsScreen(
         isSidePanelVisible = false,
     )
     HideKeyboardWhenScrolledDown(listState)
+    LaunchedEffect(viewModel, listState) {
+        viewModel.scrollToTopRequests.collect { if (it == CampfireDestination.Setlists) listState.animateScrollToItem(0) }
+    }
     // See the songs screen: how far the app bar's buttons reach in over a pinned header, which it narrows to clear.
     var appBarReach by remember { mutableStateOf(0.dp) }
     val appBarReveal = animateAppBarReveal(

@@ -130,6 +130,7 @@ import com.pandulapeter.campfire.presentation.resources.settings_user_interface_
 import com.pandulapeter.campfire.presentation.resources.settings_user_interface_theme_system_default
 import com.pandulapeter.campfire.presentation.resources.settings_version
 import com.pandulapeter.campfire.presentation.ui.CampfireViewModel
+import com.pandulapeter.campfire.presentation.ui.navigation.CampfireDestination
 import com.pandulapeter.campfire.presentation.ui.components.ActionListItem
 import com.pandulapeter.campfire.presentation.ui.components.ColorChoice
 import com.pandulapeter.campfire.presentation.ui.components.ColorChoiceOption
@@ -181,6 +182,16 @@ internal fun SettingsScreen(
     urlOpener: (String) -> Unit,
 ) {
     val scrollStates = SettingsTab.entries.map { rememberRetainedScrollState(viewModel.settingsScrollPositions.getValue(it)) }
+    val coroutineScope = rememberCoroutineScope()
+    val scrollTabToTop = { tab: SettingsTab -> coroutineScope.launch { scrollStates[tab.ordinal].animateScrollTo(0) }; Unit }
+    LaunchedEffect(viewModel, scrollStates) {
+        viewModel.scrollToTopRequests.collect {
+            if (it == CampfireDestination.Settings) {
+                viewModel.settingsTab = SettingsTab.GENERAL
+                scrollStates[SettingsTab.GENERAL.ordinal].animateScrollTo(0)
+            }
+        }
+    }
     val isImporting by viewModel.isImporting.collectAsStateWithLifecycle()
     val isPerformanceModeEnabled by viewModel.isPerformanceModeEnabled.collectAsStateWithLifecycle()
     val userPreferences by viewModel.userPreferences.collectAsStateWithLifecycle()
@@ -213,7 +224,7 @@ internal fun SettingsScreen(
                         selectedTab = viewModel.settingsTab,
                         badgedTab = badgedTab,
                         label = { it.label() },
-                        onTabSelected = { viewModel.settingsTab = it },
+                        onTabSelected = { if (it == viewModel.settingsTab) scrollTabToTop(it) else viewModel.settingsTab = it },
                     )
                     Crossfade(
                         modifier = Modifier.weight(1f),
@@ -241,6 +252,7 @@ internal fun SettingsScreen(
                 isImporting = isImporting,
                 startPadding = startPadding,
                 endPadding = endPadding,
+                onSelectedTabPressed = scrollTabToTop,
             ) { tab ->
                 SettingsTabPage(
                     viewModel = viewModel,
@@ -274,6 +286,7 @@ private fun SettingsTabPager(
     isImporting: Boolean,
     startPadding: Dp,
     endPadding: Dp,
+    onSelectedTabPressed: (SettingsTab) -> Unit,
     page: @Composable (SettingsTab) -> Unit,
 ) {
     val pagerState = rememberPagerState(initialPage = viewModel.settingsTab.ordinal) { SettingsTab.entries.size }
@@ -283,7 +296,7 @@ private fun SettingsTabPager(
     LaunchedEffect(pagerState) {
         snapshotFlow { pagerState.settledPage }.collect { viewModel.settingsTab = SettingsTab.entries[it] }
     }
-    // The other direction: pressing Settings again in the navigation chrome sets the tab from outside, and the pager
+    // The other direction: the wide layout's pane and the web build's address set the tab from outside, and the pager
     // has to follow it, which it only does for a value it did not settle on itself.
     LaunchedEffect(pagerState) {
         snapshotFlow { viewModel.settingsTab }.collect {
@@ -301,7 +314,9 @@ private fun SettingsTabPager(
             label = { it.label() },
             startPadding = startPadding,
             endPadding = endPadding,
-            onTabSelected = { coroutineScope.launch { pagerState.animateScrollToPage(it.ordinal) } },
+            onTabSelected = {
+                if (it.ordinal == pagerState.targetPage) onSelectedTabPressed(it) else coroutineScope.launch { pagerState.animateScrollToPage(it.ordinal) }
+            },
         )
         ImportProgress(isImporting = isImporting)
         HorizontalPager(

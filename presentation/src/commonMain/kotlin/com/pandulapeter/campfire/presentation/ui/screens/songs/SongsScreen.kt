@@ -69,6 +69,7 @@ import com.pandulapeter.campfire.presentation.resources.songs_sorting_mode_by_ti
 import com.pandulapeter.campfire.presentation.resources.songs_unknown_artist
 import com.pandulapeter.campfire.presentation.resources.songs_unsorted_label
 import com.pandulapeter.campfire.presentation.ui.CampfireViewModel
+import com.pandulapeter.campfire.presentation.ui.navigation.CampfireDestination
 import com.pandulapeter.campfire.presentation.ui.components.AppBarOverlap
 import com.pandulapeter.campfire.presentation.ui.components.ControlsSidePanel
 import com.pandulapeter.campfire.presentation.ui.components.DismissSheetWhenSidePanelAppears
@@ -135,6 +136,9 @@ internal fun SongsScreen(
     )
     val hasLoadedLibrary = rememberHasLoadedLibrary(isLoading)
     HideKeyboardWhenScrolledDown(listState)
+    LaunchedEffect(viewModel, listState) {
+        viewModel.scrollToTopRequests.collect { if (it == CampfireDestination.Songs) listState.animateScrollToItem(0) }
+    }
     DismissSheetWhenSidePanelAppears(
         isSidePanelVisible = isSidePanelVisible,
         isSheetVisible = visibleDialog == CampfireViewModel.DialogType.SongFilters,

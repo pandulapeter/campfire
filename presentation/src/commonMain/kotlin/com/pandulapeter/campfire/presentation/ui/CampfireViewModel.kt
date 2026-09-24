@@ -234,8 +234,8 @@ class CampfireViewModel(
 
     /**
      * Which tab of the settings screen is open, kept here so that the screen's own recompositions and the sync consent
-     * can reach it. Selecting Settings from another top level screen starts it over on the first tab, scrolled to the
-     * top, unlike the other two screens. The screen only reads it as it is composed, but it is a state because the web build's address names the tab, and follows it.
+     * can reach it. Like the other two screens' scroll positions it lasts for the session; unlike them, the tabs' scroll
+     * is thrown away when Settings is selected from another top level screen. The screen only reads it as it is composed, but it is a state because the web build's address names the tab, and follows it.
      */
     internal var settingsTab by mutableStateOf(SettingsTab.GENERAL)
 
@@ -495,6 +495,10 @@ class CampfireViewModel(
      * undo history and a draft of any length can simply be handed back.
      */
     private var retainedEditorField: Pair<String, TextFieldState>? = null
+
+    /** Emitted when the item of the top level screen that is already open is pressed; that screen scrolls to its top. */
+    private val _scrollToTopRequests = MutableSharedFlow<CampfireDestination.TopLevel>(extraBufferCapacity = 1)
+    val scrollToTopRequests = _scrollToTopRequests.asSharedFlow()
 
     /** Asked for by the confirmation dialog and answered by the editor screen, see [revertEditorChanges]. */
     private val _editorRevertRequests = MutableSharedFlow<Unit>(extraBufferCapacity = 1)
@@ -1057,7 +1061,8 @@ class CampfireViewModel(
     private fun openSyncSettingsAfterConsent() {
         val stack = backStack.toList()
         if (stack != listOf(CampfireDestination.Songs) && stack != listOf(CampfireDestination.Songs, CampfireDestination.Settings)) return
-        selectTopLevelDestination(CampfireDestination.Settings)
+        // Not through the re-selection of an open settings screen, which would send it back to General a moment after.
+        if (backStack.lastOrNull() != CampfireDestination.Settings) selectTopLevelDestination(CampfireDestination.Settings)
         settingsTab = SettingsTab.LIBRARY
     }
 
@@ -1069,13 +1074,14 @@ class CampfireViewModel(
     fun selectTopLevelDestination(destination: CampfireDestination.TopLevel) {
         if (backStack.lastOrNull() == destination) {
             // Pressing the item of the screen that is already open takes that screen back to its resting state.
-            if (destination == CampfireDestination.Settings) settingsTab = SettingsTab.GENERAL else currentSearch?.close()
+            if (destination != CampfireDestination.Settings) currentSearch?.close()
+            _scrollToTopRequests.tryEmit(destination)
             return
         }
         if (hasUnsavedEditorText() && backStack.any { it is CampfireDestination.SongEditor }) return
-        // Settings is always arrived at as if for the first time; the other two screens keep where they were left.
+        // Settings keeps its tab for the session but is always scrolled to the top of it on arrival; the other two screens
+        // keep where they were left.
         if (destination == CampfireDestination.Settings) {
-            settingsTab = SettingsTab.GENERAL
             settingsScrollPositions.values.forEach { it.offset = 0 }
         }
         updateBackStack {
