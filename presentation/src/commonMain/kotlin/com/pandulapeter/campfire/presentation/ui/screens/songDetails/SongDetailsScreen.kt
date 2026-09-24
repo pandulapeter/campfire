@@ -201,11 +201,9 @@ internal fun SongDetailsScreen(
         if (isPerformanceModeEnabled || !shouldShowChords) {
             emptyList()
         } else {
-            songs.filter { it.hasChords }.flatMap { song ->
-                (CampfireViewModel.MIN_TRANSPOSITION..CampfireViewModel.MAX_TRANSPOSITION).map { transposition ->
-                    transpositionLabel(transposition, viewModel.renderKey(song = song, transposition = transposition, spelling = chordSpelling))
-                }
-            }.distinct()
+            transpositionLabelsForSongs(songs, chordSpelling) { song, transposition ->
+                viewModel.renderKey(song = song, transposition = transposition, spelling = chordSpelling)
+            }
         }
     }
     val inlineControlsWidth = rememberCompactSteppersWidth(transpositionLabels = transpositionLabels, spacing = INLINE_CONTROL_SPACING)
@@ -699,6 +697,22 @@ internal fun buildSetlistSlots(entries: List<Setlist.Entry>, songFileNames: List
     val slotByPage = songFileNames.map { entryIndexByFileName[it] ?: return null }
     return SetlistSlots(slotByPage = slotByPage, entryCount = entries.size)
 }
+
+/** One representative per key and file transposition can cover every possible stepper label. */
+internal fun transpositionLabelsForSongs(
+    songs: List<Song>,
+    spelling: UserPreferences.ChordSpelling,
+    renderKey: (Song, Int) -> String?,
+): List<String> = songs.asSequence()
+    .filter { it.hasChords }
+    .distinctBy { Triple(it.key, it.transpose, spelling) }
+    .flatMap { song ->
+        (CampfireViewModel.MIN_TRANSPOSITION..CampfireViewModel.MAX_TRANSPOSITION).asSequence().map { transposition ->
+            transpositionLabel(transposition, renderKey(song, transposition))
+        }
+    }
+    .distinct()
+    .toList()
 
 private const val LABEL_SEPARATOR = "·"
 private val PAGER_CONTROLS_HEIGHT = 48.dp
