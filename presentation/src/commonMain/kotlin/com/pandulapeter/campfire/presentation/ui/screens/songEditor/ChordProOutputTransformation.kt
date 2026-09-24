@@ -23,7 +23,8 @@ import com.pandulapeter.campfire.chordpro.ChordProHighlighter
  *
  * Which parts count as what comes from [ChordProHighlighter], next to the parser; only the styles are decided here,
  * and they are the viewer's, so that a chord looks like a chord in both places. The tokens come through a
- * [ChordProTokenCache], so a value that only moved the caret costs the styles and nothing else.
+ * [ChordProTokenCache], so a value that only moved the caret costs the styles and a content comparison. Compose
+ * discards the transformed buffer after each display, so its current API still requires applying every style again.
  */
 internal class ChordProOutputTransformation(
     private val tokenCache: ChordProTokenCache,
@@ -35,7 +36,7 @@ internal class ChordProOutputTransformation(
 ) : OutputTransformation {
 
     override fun TextFieldBuffer.transformOutput() {
-        tokenCache.tokensOf(originalText.toString()).forEach { token ->
+        tokenCache.tokensOf(originalText).forEach { token ->
             addStyle(
                 when (token.type) {
                     ChordProHighlighter.TokenType.DIRECTIVE_NAME -> directiveName
@@ -83,15 +84,21 @@ internal class ChordProTokenCache {
     private var text: String? = null
     private var tokens = emptyList<ChordProHighlighter.Token>()
 
-    /**
-     * Compared by content: the field makes a new string for every value, the ones that only moved the caret
-     * included, so the instance says nothing about whether the text is the same.
-     */
-    fun tokensOf(text: String): List<ChordProHighlighter.Token> {
-        if (text != this.text) {
-            tokens = ChordProHighlighter.tokenize(text)
-            this.text = text
+    /** A selection change may supply a different [CharSequence] with the same content. */
+    fun tokensOf(text: CharSequence): List<ChordProHighlighter.Token> {
+        if (!text.matches(this.text)) {
+            val changedText = text.toString()
+            tokens = ChordProHighlighter.tokenize(changedText)
+            this.text = changedText
         }
         return tokens
+    }
+
+    private fun CharSequence.matches(cached: String?): Boolean {
+        if (cached == null || length != cached.length) return false
+        for (index in indices) {
+            if (this[index] != cached[index]) return false
+        }
+        return true
     }
 }
