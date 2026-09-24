@@ -660,6 +660,10 @@ private fun NewSongDialog(
  * One tag to put on a song, typed or picked. The suggestions are the tags the rest of the library already uses,
  * narrowed by whatever has been typed so far, because a library where the same idea is filed under "christmas",
  * "Christmas" and "xmas" is a library whose tags filter nothing.
+ *
+ * Opened from a row of the song list, it names the song it tags, the way the picker sheets do: a tag put on the row
+ * next to the one that was meant is a file quietly rewritten. Over the song details screen it does not, since the
+ * screen behind it is that song.
  */
 @Composable
 private fun AddSongTagDialog(
@@ -685,8 +689,26 @@ private fun AddSongTagDialog(
         title = { Text(stringResource(Res.string.song_details_tag_add)) },
         text = {
             Column {
+                if (dialog.shouldNameSong) {
+                    Text(
+                        text = dialog.song.title,
+                        style = MaterialTheme.typography.bodyLarge,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis,
+                    )
+                    // Nothing requires an artist, and an empty line would only push the field down.
+                    if (dialog.song.artist.isNotBlank()) {
+                        Text(
+                            text = dialog.song.artist,
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            maxLines = 1,
+                            overflow = TextOverflow.Ellipsis,
+                        )
+                    }
+                }
                 OutlinedTextField(
-                    modifier = Modifier.fillMaxWidth().focusRequester(focusRequester),
+                    modifier = Modifier.padding(top = if (dialog.shouldNameSong) 16.dp else 0.dp).fillMaxWidth().focusRequester(focusRequester),
                     value = value,
                     onValueChange = { value = it.asSingleLine().take(MAX_TAG_LENGTH) },
                     label = { Text(stringResource(Res.string.song_details_tag_name)) },

@@ -58,6 +58,7 @@ import androidx.compose.material3.LocalMinimumInteractiveComponentSize
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
+import androidx.compose.material3.VerticalDivider
 import androidx.compose.material3.minimumInteractiveComponentSize
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
@@ -159,9 +160,13 @@ import org.jetbrains.compose.resources.painterResource
  * @param appBarReveal How far the bar is filled in, read while it is drawn.
  * @param placeholder What the field says while it is empty, which also names the search action, see [SearchAction].
  * @param onReachChanged Called with how far the closed bar's buttons reach in from the end edge of the screen.
+ * @param areClosedSearchActionsShown Whether the screen offers [closedSearchActions] at all. The reasons they come and go
+ *   (the list being read, performance mode being switched) happen while the bar is being looked at, so they make room
+ *   for themselves rather than appearing between two frames and pushing the actions beside them aside as they land.
  * @param closedSearchActions The screen's actions that have nothing to do with a search in progress - making something
- *   new - which come last, after [actions], while the search is closed and make way for the field while it is open,
- *   leaving and coming back on the spring the search action travels on so that the field's edge and they move as one.
+ *   new - which come last, after [actions] and a divider that sets them apart, while the search is closed and make way
+ *   for the field while it is open, leaving and coming back on the spring the search action travels on so that the
+ *   field's edge and they move as one.
  * @param actions The screen's other actions, which stay whether or not the search is open.
  */
 @OptIn(ExperimentalSharedTransitionApi::class)
@@ -173,6 +178,7 @@ internal fun SearchableTopAppBar(
     placeholder: String,
     searchState: SearchState,
     onReachChanged: (Dp) -> Unit,
+    areClosedSearchActionsShown: Boolean = false,
     closedSearchActions: @Composable RowScope.() -> Unit = {},
     actions: @Composable RowScope.() -> Unit,
 ) {
@@ -312,15 +318,20 @@ internal fun SearchableTopAppBar(
                         }
                     }
                     actions()
-                    val closedSearchActionsSizeSpec = searchTravelSpec(visibilityThreshold = IntSize.VisibilityThreshold)
-                    val closedSearchActionsFadeSpec = searchTravelSpec<Float>()
-                    searchTransition.AnimatedVisibility(
-                        visible = { !it },
-                        enter = fadeIn(closedSearchActionsFadeSpec) + expandHorizontally(closedSearchActionsSizeSpec),
-                        exit = fadeOut(closedSearchActionsFadeSpec) + shrinkHorizontally(closedSearchActionsSizeSpec),
-                    ) {
+                    AnimatedVisibility(visible = areClosedSearchActionsShown) {
                         Row(verticalAlignment = Alignment.CenterVertically) {
-                            closedSearchActions()
+                            ClosedSearchActionsDivider(searchProgress = { pillProgress.value })
+                            val closedSearchActionsSizeSpec = searchTravelSpec(visibilityThreshold = IntSize.VisibilityThreshold)
+                            val closedSearchActionsFadeSpec = searchTravelSpec<Float>()
+                            searchTransition.AnimatedVisibility(
+                                visible = { !it },
+                                enter = fadeIn(closedSearchActionsFadeSpec) + expandHorizontally(closedSearchActionsSizeSpec),
+                                exit = fadeOut(closedSearchActionsFadeSpec) + shrinkHorizontally(closedSearchActionsSizeSpec),
+                            ) {
+                                Row(verticalAlignment = Alignment.CenterVertically) {
+                                    closedSearchActions()
+                                }
+                            }
                         }
                     }
                 }
@@ -328,6 +339,33 @@ internal fun SearchableTopAppBar(
         }
     }
 }
+
+/**
+ * The line that sets the closed search's own actions apart from the rest of the bar's: those change how the list is
+ * shown, while these add to what it holds.
+ *
+ * It narrows and fades on the search action's spring rather than inside the animation of the actions it stands in
+ * front of, which shrink towards their end edge clipped to their bounds: the divider is the first thing at their
+ * start, and the first few pixels of that shrink would cut it off while the button behind it was still fading. So it
+ * is laid out at a width that follows the search and drawn centered in it, never clipped, and it is gone by the time
+ * that width is.
+ *
+ * @param searchProgress How far the search is open, from 0 while it is closed to 1 while it is open.
+ */
+@Composable
+private fun ClosedSearchActionsDivider(searchProgress: () -> Float) = VerticalDivider(
+    modifier = Modifier
+        .layout { measurable, constraints ->
+            val placeable = measurable.measure(constraints)
+            val width = (placeable.width * (1f - searchProgress())).roundToInt().coerceAtLeast(0)
+            layout(width, placeable.height) {
+                placeable.placeRelative(x = (width - placeable.width) / 2, y = 0)
+            }
+        }
+        .graphicsLayer { alpha = (1f - searchProgress()).coerceIn(0f, 1f) }
+        .padding(horizontal = CLOSED_SEARCH_ACTIONS_DIVIDER_GAP)
+        .height(CLOSED_SEARCH_ACTIONS_DIVIDER_HEIGHT),
+)
 
 /**
  * How far the app bar of a list screen is filled in (see [SearchableTopAppBar]): not at all while a closed search leaves
@@ -797,6 +835,12 @@ internal val LIST_APP_BAR_HEIGHT = 56.dp
 
 /** The room the pill behind the closed bar's buttons leaves at either end of them. */
 private val ACTIONS_PILL_PADDING = 4.dp
+
+/** The room on either side of [ClosedSearchActionsDivider]. */
+private val CLOSED_SEARCH_ACTIONS_DIVIDER_GAP = 4.dp
+
+/** The length of [ClosedSearchActionsDivider], short of the buttons' height so that it reads as a separator between them. */
+private val CLOSED_SEARCH_ACTIONS_DIVIDER_HEIGHT = 24.dp
 
 /** The padding `TopAppBar` keeps at either end of its row, which this bar keeps so its buttons sit where a bar's would. */
 private val APP_BAR_HORIZONTAL_PADDING = 4.dp

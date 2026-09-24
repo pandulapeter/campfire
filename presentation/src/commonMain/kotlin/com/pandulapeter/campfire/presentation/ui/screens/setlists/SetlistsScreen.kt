@@ -9,7 +9,6 @@
  */
 package com.pandulapeter.campfire.presentation.ui.screens.setlists
 
-import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.animateDpAsState
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Box
@@ -146,18 +145,14 @@ internal fun SetlistsScreen(
             placeholder = stringResource(Res.string.setlists_search),
             searchState = viewModel.setlistsSearch,
             onReachChanged = { appBarReach = it },
+            areClosedSearchActionsShown = !isPerformanceModeEnabled && setlistsPlaceholder.allowsNewItemMenu,
             closedSearchActions = {
-                // The setlists being read and performance mode being switched both happen while the bar is being
-                // looked at, so the button makes room for itself rather than appearing between two frames, as on
-                // the songs screen.
-                AnimatedVisibility(visible = !isPerformanceModeEnabled && setlistsPlaceholder.allowsNewItemMenu) {
-                    NewItemMenu(
-                        viewModel = viewModel,
-                        contentDescription = stringResource(Res.string.setlists_new_setlist),
-                        createLabel = stringResource(Res.string.setlists_create_setlist),
-                        onCreate = { viewModel.showDialog(CampfireViewModel.DialogType.NewSetlist) },
-                    )
-                }
+                NewItemMenu(
+                    viewModel = viewModel,
+                    contentDescription = stringResource(Res.string.setlists_new_setlist),
+                    createLabel = stringResource(Res.string.setlists_create_setlist),
+                    onCreate = { viewModel.showDialog(CampfireViewModel.DialogType.NewSetlist) },
+                )
             },
             actions = { SetlistSortMenu(viewModel) },
         )
@@ -428,6 +423,7 @@ private fun SetlistList(
                                     ),
                                     shouldShowChords = shouldShowChords,
                                     labelsOnEverySong = labelsOnEverySong,
+                                    shouldShowLabels = false,
                                     containerColor = containerColor,
                                     shadowElevation = elevation,
                                     onClick = { viewModel.openSongInSetlist(setlistWithSongs, entry.song) },

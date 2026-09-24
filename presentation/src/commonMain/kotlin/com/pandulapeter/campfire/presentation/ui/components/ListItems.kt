@@ -45,12 +45,15 @@ import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
 import androidx.compose.material3.Icon
 import androidx.compose.material3.ListItem
 import androidx.compose.material3.ListItemDefaults
+import androidx.compose.material3.LocalContentColor
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
+import androidx.compose.material3.ProvideTextStyle
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -78,6 +81,7 @@ import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.offset
 import com.pandulapeter.campfire.data.model.domain.Song
+import com.pandulapeter.campfire.domain.api.models.SongFilter
 import com.pandulapeter.campfire.presentation.localization.stringResource
 import com.pandulapeter.campfire.presentation.resources.Res
 import com.pandulapeter.campfire.presentation.resources.add_demo_songs
@@ -126,6 +130,14 @@ import kotlin.math.roundToInt
  *   showing chords.
  * @param labelsOnEverySong The tags and languages the row leaves off, because every song in the library carries
  *   them and a label that is on every row tells the reader nothing about this one.
+ * @param shouldShowLabels False inside a setlist, which lists the songs somebody wrote down rather than a view of the
+ *   library that a tag or a language could narrow, so neither says anything there about why the song is in it.
+ * @param songFilter What the song list is filtered by, whose pills are drawn selected.
+ * @param onTagClicked Toggles a tag in the song list's filter, exactly as its chip in the filters does. Null, together
+ *   with [onLanguageClicked], leaves the pills to be read only.
+ * @param onLanguageClicked The same for a language.
+ * @param onAddTag Opens the tag dialog for this song, whose chip then ends the labels the way it ends them in the song
+ *   details header. Null where the song's file is not to be written from here (performance mode, a setlist).
  * @param onLongClick A shortcut to the row's overflow menu, on the touch platforms where holding a row is a natural
  *   way to ask what can be done to it.
  * @param cardPadding The card's space from the edges of its grid cell, adjusted for inner columns in wide grids.
@@ -142,6 +154,11 @@ internal fun SongListItem(
     key: String? = null,
     shouldShowChords: Boolean = true,
     labelsOnEverySong: CampfireViewModel.LabelsOnEverySong,
+    shouldShowLabels: Boolean = true,
+    songFilter: SongFilter = SongFilter(),
+    onTagClicked: ((String) -> Unit)? = null,
+    onLanguageClicked: ((String) -> Unit)? = null,
+    onAddTag: (() -> Unit)? = null,
     cardPadding: PaddingValues = PaddingValues(horizontal = SONG_CARD_OUTER_PADDING, vertical = SONG_CARD_VERTICAL_PADDING),
     containerColor: Color = MaterialTheme.colorScheme.surfaceContainerLow,
     shadowElevation: Dp = 0.dp,
@@ -168,8 +185,8 @@ internal fun SongListItem(
 
         else -> null
     }
-    val languages = song.languages.filterNot { it in labelsOnEverySong.languages }
-    val tags = song.tags.filterNot { it.lowercase() in labelsOnEverySong.tags }
+    val languages = if (shouldShowLabels) song.languages.filterNot { it in labelsOnEverySong.languages } else emptyList()
+    val tags = if (shouldShowLabels) song.tags.filterNot { it.lowercase() in labelsOnEverySong.tags } else emptyList()
     Surface(
         modifier = modifier.fillMaxWidth().padding(cardPadding),
         shape = MaterialTheme.shapes.medium,
@@ -186,7 +203,7 @@ internal fun SongListItem(
             // here shares the title's line: a title is the longest thing on the row and the one that must never be
             // pushed out of sight, while the artist is short enough to leave the key room next to it. The languages and
             // tags go under both, since a row of those is as long as somebody chose to make it.
-            supportingContent = if (song.artist.isBlank() && note == null && languages.isEmpty() && tags.isEmpty()) {
+            supportingContent = if (song.artist.isBlank() && note == null && languages.isEmpty() && tags.isEmpty() && onAddTag == null) {
                 null
             } else {
                 {
@@ -239,11 +256,16 @@ internal fun SongListItem(
                                 }
                             }
                         }
-                        if (languages.isNotEmpty() || tags.isNotEmpty()) {
+                        if (languages.isNotEmpty() || tags.isNotEmpty() || onAddTag != null) {
                             SongLabels(
                                 modifier = Modifier.padding(top = if (song.artist.isBlank() && note == null) 0.dp else 4.dp),
                                 languages = languages,
                                 tags = tags,
+                                selectedTags = songFilter.selectedTags,
+                                selectedLanguages = songFilter.selectedLanguages,
+                                onTagClicked = onTagClicked,
+                                onLanguageClicked = onLanguageClicked,
+                                onAddTag = onAddTag,
                             )
                         }
                     }
@@ -322,7 +344,12 @@ internal fun MissingSongListItem(
     )
 }
 
-/** Material lays out three-line list items with a top-aligned trailing slot. Song cards center their actions. */
+/**
+ * The body of a song card next to its actions, both centered vertically. Not a [ListItem]: Material pins the content
+ * of a three-line item to its top and grows it to 88dp, so a card whose labels made it three lines left a band of
+ * empty card under them, and the actions, which Material top-aligns there too, would have been measured against a
+ * body they did not share a center with. The paddings, the minimum heights and the text styles are the list item's.
+ */
 @Composable
 private fun CenteredSongCardContent(
     modifier: Modifier = Modifier,
@@ -334,11 +361,23 @@ private fun CenteredSongCardContent(
     contents = listOf(
         { actions?.let { ListItemActions(content = it) } },
         {
-            ListItem(
-                colors = ListItemDefaults.colors(containerColor = Color.Transparent),
-                headlineContent = headlineContent,
-                supportingContent = supportingContent,
-            )
+            Box(
+                modifier = Modifier
+                    .heightIn(min = if (supportingContent == null) SONG_CARD_ONE_LINE_MIN_HEIGHT else SONG_CARD_TWO_LINE_MIN_HEIGHT)
+                    .padding(horizontal = LIST_ITEM_KEYLINE, vertical = SONG_CARD_VERTICAL_CONTENT_PADDING),
+                contentAlignment = Alignment.CenterStart,
+            ) {
+                Column {
+                    CompositionLocalProvider(LocalContentColor provides MaterialTheme.colorScheme.onSurface) {
+                        ProvideTextStyle(MaterialTheme.typography.bodyLarge, headlineContent)
+                    }
+                    if (supportingContent != null) {
+                        CompositionLocalProvider(LocalContentColor provides MaterialTheme.colorScheme.onSurfaceVariant) {
+                            ProvideTextStyle(MaterialTheme.typography.bodyMedium, supportingContent)
+                        }
+                    }
+                }
+            }
         },
     ),
 ) { (actionMeasurables, bodyMeasurables), constraints ->
@@ -1016,6 +1055,11 @@ internal fun songCardPadding(itemIndex: Int, columnCount: Int): PaddingValues {
         bottom = SONG_CARD_VERTICAL_PADDING,
     )
 }
+
+/** The height of a card that is only a title, and of one with anything under it, as Material's list items have them. */
+private val SONG_CARD_ONE_LINE_MIN_HEIGHT = 56.dp
+private val SONG_CARD_TWO_LINE_MIN_HEIGHT = 72.dp
+private val SONG_CARD_VERTICAL_CONTENT_PADDING = 10.dp
 
 private val SONG_CARD_OUTER_PADDING = 8.dp
 private val SONG_CARD_INNER_PADDING = 4.dp

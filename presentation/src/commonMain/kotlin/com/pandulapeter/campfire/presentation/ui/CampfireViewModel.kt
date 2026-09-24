@@ -2505,8 +2505,14 @@ class CampfireViewModel(
         data class EditSetlist(val setlist: Setlist) : DialogType
         data class DuplicateSetlist(val setlist: Setlist) : DialogType
         data class DeleteSong(val song: Song) : DialogType
-        /** Opened from the tag header of the song details screen; the suggestions come from [tags]. */
-        data class AddSongTag(val song: Song) : DialogType
+        /**
+         * Opened from the tag header of the song details screen or from a row of the song list; the suggestions come
+         * from [tags].
+         *
+         * @param shouldNameSong Whether the dialog says which song it tags: the song list's rows need it, while the
+         *   song details screen is already that song.
+         */
+        data class AddSongTag(val song: Song, val shouldNameSong: Boolean) : DialogType
         /** Opened from the same header, and asking about every language at once rather than one at a time. */
         data class SongLanguages(val song: Song) : DialogType
         /**

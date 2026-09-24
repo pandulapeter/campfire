@@ -173,18 +173,14 @@ internal fun SongsScreen(
                     placeholder = stringResource(Res.string.songs_search),
                     searchState = viewModel.songsSearch,
                     onReachChanged = { appBarReach = it },
+                    areClosedSearchActionsShown = !isPerformanceModeEnabled && placeholder.allowsNewItemMenu,
                     closedSearchActions = {
-                        // The reasons this one comes and goes are the library being read and the mode being switched,
-                        // both of which happen while the bar is being looked at, so it makes room for itself rather than
-                        // appearing between two frames and pushing the action beside it aside as it lands.
-                        AnimatedVisibility(visible = !isPerformanceModeEnabled && placeholder.allowsNewItemMenu) {
-                            NewItemMenu(
-                                viewModel = viewModel,
-                                contentDescription = stringResource(Res.string.songs_new_song),
-                                createLabel = stringResource(Res.string.songs_create_song),
-                                onCreate = { viewModel.showDialog(CampfireViewModel.DialogType.NewSong) },
-                            )
-                        }
+                        NewItemMenu(
+                            viewModel = viewModel,
+                            contentDescription = stringResource(Res.string.songs_new_song),
+                            createLabel = stringResource(Res.string.songs_create_song),
+                            onCreate = { viewModel.showDialog(CampfireViewModel.DialogType.NewSong) },
+                        )
                     },
                     actions = {
                         SongSortMenu(viewModel)
@@ -396,6 +392,16 @@ private fun SongList(
                         key = viewModel.renderKey(song, transpositions[song.fileName, null], chordSpelling),
                         shouldShowChords = shouldShowChords,
                         labelsOnEverySong = labelsOnEverySong,
+                        songFilter = songFilter,
+                        onTagClicked = viewModel::toggleTagFilter,
+                        onLanguageClicked = viewModel::toggleLanguageFilter,
+                        // Tagging writes the song's own file, which performance mode keeps out of reach.
+                        onAddTag = if (isPerformanceModeEnabled) null else {
+                            {
+                                keyboardController?.hide()
+                                viewModel.showDialog(CampfireViewModel.DialogType.AddSongTag(song = song, shouldNameSong = true))
+                            }
+                        },
                         onClick = {
                             keyboardController?.hide()
                             viewModel.openSong(song)

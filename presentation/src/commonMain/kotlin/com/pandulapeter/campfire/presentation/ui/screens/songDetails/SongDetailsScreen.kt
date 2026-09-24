@@ -418,7 +418,7 @@ internal fun SongDetailsScreen(
                     // Tagging writes the song's own file, so in performance mode the header's chips are read the way
                     // the editor's preview reads them.
                     onAddTag = if (isPerformanceModeEnabled) null else {
-                        { viewModel.showDialog(CampfireViewModel.DialogType.AddSongTag(song)) }
+                        { viewModel.showDialog(CampfireViewModel.DialogType.AddSongTag(song = song, shouldNameSong = false)) }
                     },
                     onRemoveTag = if (isPerformanceModeEnabled) null else {
                         { tag -> viewModel.setSongTag(fileName = song.fileName, tag = tag, isSelected = false) }

@@ -44,21 +44,36 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.dp
+import com.pandulapeter.campfire.presentation.localization.stringResource
 import com.pandulapeter.campfire.presentation.resources.Res
+import com.pandulapeter.campfire.presentation.resources.ic_add
 import com.pandulapeter.campfire.presentation.resources.ic_language
+import com.pandulapeter.campfire.presentation.resources.song_details_tag_add
 import org.jetbrains.compose.resources.painterResource
 
 /**
- * What a song is filed under, wherever those are only read: under its title in a song list. They stay on one line,
+ * What a song is filed under, under its title in a song list. They stay on one line,
  * so that a row of a list cannot grow taller because somebody filed one song under a dozen labels, and whatever does
  * not fit is scrolled to sideways rather than cut off — which is also why the languages come first, being the ones a
  * reader scanning a mixed library is looking for and the ones that are always in sight.
+ *
+ * @param onTagClicked Null where the tags are only read. Otherwise a tag is a shortcut to its own chip in the song
+ *   filters, and [selectedTags] (compared without regard to case, as the filter compares them) are drawn selected so
+ *   that a second tap reads as what it is, taking the filter off again.
+ * @param onLanguageClicked The same for the languages, against [selectedLanguages].
+ * @param onAddTag Null where the song is not to be tagged from here. Otherwise the row ends in the song details
+ *   header's own "Add tag" chip, so a song can be filed without being opened.
  */
 @Composable
 internal fun SongLabels(
     modifier: Modifier = Modifier,
     languages: List<String>,
     tags: List<String>,
+    selectedTags: Set<String> = emptySet(),
+    selectedLanguages: Set<String> = emptySet(),
+    onTagClicked: ((String) -> Unit)? = null,
+    onLanguageClicked: ((String) -> Unit)? = null,
+    onAddTag: (() -> Unit)? = null,
 ) {
     val scrollState = rememberScrollState()
     Row(
@@ -73,10 +88,25 @@ internal fun SongLabels(
         languages.forEach { code ->
             TagPill(
                 text = languageLabel(code),
+                isSelected = onLanguageClicked != null && code in selectedLanguages,
+                onClick = onLanguageClicked?.let { { it(code) } },
                 leadingIcon = painterResource(Res.drawable.ic_language),
             )
         }
-        tags.forEach { tag -> TagPill(text = tag) }
+        tags.forEach { tag ->
+            TagPill(
+                text = tag,
+                isSelected = onTagClicked != null && selectedTags.any { it.equals(tag, ignoreCase = true) },
+                onClick = onTagClicked?.let { { it(tag) } },
+            )
+        }
+        onAddTag?.let { onClick ->
+            TagPill(
+                text = stringResource(Res.string.song_details_tag_add),
+                onClick = onClick,
+                leadingIcon = painterResource(Res.drawable.ic_add),
+            )
+        }
     }
 }
 
@@ -143,7 +173,7 @@ internal fun TagFlowRow(
  * own size rather than being grown to the 48dp touch target even where it can be clicked: a row of tags each
  * reserving that much would be taller than the song title above it.
  *
- * @param onClick Null where the pill is only read, which is what a song list and the editor's preview show.
+ * @param onClick Null where the pill is only read, which is what the editor's preview shows.
  * @param onTrailingIconClick Answers a click on [trailingIcon] alone - taking a tag off the song being played, which
  *   a tap that only meant to read the tag must not do.
  */
