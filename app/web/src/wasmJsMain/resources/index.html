@@ -260,17 +260,32 @@
         }
 
         var isDrawScheduled = false;
+        var postDownloadTimer = null;
+        var lastTransform = null;
+        var lastPercent = -1;
 
         function draw() {
             isDrawScheduled = false;
+            if (isFailed) {
+                return;
+            }
             // Eased rather than snapped to the target: the byte counts arrive in bursts of whatever
             // size the network hands over, and following those exactly makes the bar stutter. Never
             // backwards either - a target that drops (a download that turned out to be longer than
             // the server said) is a correction the bar waits out rather than shows.
-            shown = Math.max(shown, shown + (target() - shown) * 0.15);
-            bar.style.transform = 'scaleX(' + shown.toFixed(4) + ')';
+            var destination = target();
+            shown = Math.max(shown, shown + (destination - shown) * 0.15);
+            var transform = 'scaleX(' + shown.toFixed(4) + ')';
+            if (transform !== lastTransform) {
+                bar.style.transform = transform;
+                lastTransform = transform;
+            }
             // Nothing on the screen says how far along it is, so the bar has to say it out loud.
-            track.setAttribute('aria-valuenow', String(Math.round(shown * 100)));
+            var percent = Math.round(shown * 100);
+            if (percent !== lastPercent) {
+                track.setAttribute('aria-valuenow', String(percent));
+                lastPercent = percent;
+            }
             if (isReady && shown > 0.999) {
                 splash.classList.add('is-done');
                 setTimeout(function () {
@@ -280,7 +295,15 @@
                 }, 300);
                 return;
             }
-            schedule();
+            if (isReady || !isStarting() && destination - shown > 0.00005) {
+                schedule();
+            } else if (isStarting() && !isReady && postDownloadTimer === null) {
+                // The post-download target changes with time; 30 updates per second are enough for the decay.
+                postDownloadTimer = setTimeout(function () {
+                    postDownloadTimer = null;
+                    schedule();
+                }, 34);
+            }
         }
 
         function schedule() {
@@ -360,6 +383,7 @@
                 if (!result.ok || !result.body) {
                     pending--;
                     completed++;
+                    schedule();
                     return result;
                 }
                 if (!BUILD) {
