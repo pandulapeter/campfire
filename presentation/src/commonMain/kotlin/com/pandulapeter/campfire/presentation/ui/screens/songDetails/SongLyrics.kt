@@ -491,7 +491,7 @@ private fun SongSectionContent(
     modifier = modifier
 ) {
     val header = section.header
-    val wholeSectionKind = section.lines.wholeFoldableKind()
+    val wholeSectionKind = section.wholeFoldableKind
     val sectionFold = section.foldKey
     fun foldToggle(key: String) = foldedRuns?.let { FoldToggle(isExpanded = !it.isCollapsed(key), onToggled = { it.toggle(key) }) }
     // A header over nothing (a recalled chorus with nothing left to show) has nothing to fold.
@@ -528,7 +528,7 @@ private fun SongSectionContent(
         sectionToggle != null && wholeSectionKind != null -> FoldToggleRow(
             modifier = if (isOnCard) Modifier.padding(start = CARD_PADDING, top = CARD_PADDING, end = CARD_PADDING) else Modifier,
             kind = wholeSectionKind,
-            label = section.lines.firstNotNullOfOrNull { it.environmentLabel } ?: defaultLabels.labelOf(wholeSectionKind),
+            label = section.firstEnvironmentLabel ?: defaultLabels.labelOf(wholeSectionKind),
             toggle = sectionToggle,
             style = headerStyle,
             chevronSize = chevronSize,
@@ -562,7 +562,7 @@ private fun SongSectionContent(
                     fontScale = fontScale,
                 )
 
-                is SectionPart.Lines -> part.lines.groupIntoRuns().forEach { group ->
+                is SectionPart.Lines -> part.runs.forEach { group ->
                     val kind = group.first().foldableKind()
                     if (kind == null) {
                         group.forEach { line ->
@@ -1675,8 +1675,10 @@ private sealed interface RenderSection {
         val isOnCard: Boolean,
     ) : RenderSection {
 
-        /** Every line of the section, whatever comments stand between them. */
-        val lines get() = parts.flatMap { (it as? SectionPart.Lines)?.lines.orEmpty() }
+        /** Text-dependent values are built with the section, never again during zoom or theme recomposition. */
+        val lines = parts.flatMap { (it as? SectionPart.Lines)?.lines.orEmpty() }
+        val wholeFoldableKind = lines.wholeFoldableKind()
+        val firstEnvironmentLabel = lines.firstNotNullOfOrNull { it.environmentLabel }
     }
 
     /** A comment between two sections, or one inside a section as one of its [SectionPart]s. */
@@ -1689,7 +1691,10 @@ private sealed interface RenderSection {
 /** A piece of a [RenderSection.Lines]: a run of its lines, or a comment standing between two of them. */
 private sealed interface SectionPart {
 
-    data class Lines(val lines: List<ChordProLine>) : SectionPart
+    data class Lines(val lines: List<ChordProLine>) : SectionPart {
+        /** Run boundaries depend on the lines alone, including their environment labels. */
+        val runs = lines.groupIntoRuns()
+    }
 }
 
 /**
