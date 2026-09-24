@@ -81,7 +81,6 @@ import androidx.compose.ui.input.key.isMetaPressed
 import androidx.compose.ui.input.key.key
 import androidx.compose.ui.input.key.onPreviewKeyEvent
 import androidx.compose.ui.input.key.type
-import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.platform.LocalWindowInfo
@@ -125,6 +124,7 @@ import com.pandulapeter.campfire.presentation.ui.components.CampfireTopAppBar
 import com.pandulapeter.campfire.presentation.ui.components.DelayedLoadingIndicator
 import com.pandulapeter.campfire.presentation.ui.components.EmptyState
 import com.pandulapeter.campfire.presentation.ui.components.EmptyStateAction
+import com.pandulapeter.campfire.presentation.ui.components.KeepTopAppBarInSync
 import com.pandulapeter.campfire.presentation.ui.components.SegmentedChoice
 import com.pandulapeter.campfire.presentation.ui.components.WindowSize
 import com.pandulapeter.campfire.presentation.ui.navigation.CampfireDestination
@@ -331,11 +331,18 @@ private fun LoadedSongEditor(
     // once it is clicked, the preview, a button of the bar.
     val focusRequester = remember { FocusRequester() }
     LaunchedEffect(panes) { focusRequester.requestFocus() }
+    // The bar follows the scroll positions of the panes on screen rather than the nested scroll connection, which
+    // adds the deltas of both panes of a split into one offset. The field also scrolls itself to keep the caret in
+    // view, which the connection never hears about.
+    when (panes) {
+        EditorPanes.EDIT -> KeepTopAppBarInSync(scrollBehavior, fieldScrollState)
+        EditorPanes.PREVIEW -> KeepTopAppBarInSync(scrollBehavior, previewScrollState)
+        EditorPanes.SPLIT -> KeepTopAppBarInSync(scrollBehavior, fieldScrollState, previewScrollState)
+    }
 
     Column(
         modifier = Modifier
             .fillMaxSize()
-            .nestedScroll(scrollBehavior.nestedScrollConnection)
             .focusRequester(focusRequester)
             .focusable()
             // The same save as the app bar's button, for the hand that reaches for the keyboard instead. Not with Alt

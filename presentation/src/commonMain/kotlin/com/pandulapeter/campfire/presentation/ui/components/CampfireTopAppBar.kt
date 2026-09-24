@@ -142,14 +142,19 @@ internal fun TopLevelScreenLayout(
 /**
  * Programmatic scrolls (jumping to the top on a new query, dragging the fast scroller) bypass the nested scroll
  * connection, so the overlap state of the app bar is corrected from the list here.
+ *
+ * Given several [scrollableStates] - panes side by side under one bar - the bar is overlapped while any of them is
+ * away from its top. A screen like that has to leave the nested scroll connection off and let this decide alone: the
+ * connection keeps a single content offset that every pane's deltas are added to, so scrolling one pane back up
+ * would clear the overlap while the other is still scrolled.
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 internal fun KeepTopAppBarInSync(
     scrollBehavior: TopAppBarScrollBehavior,
-    scrollableState: ScrollableState,
-) = LaunchedEffect(scrollBehavior, scrollableState) {
-    snapshotFlow { scrollableState.canScrollBackward }.collect { canScrollBackward ->
+    vararg scrollableStates: ScrollableState,
+) = LaunchedEffect(scrollBehavior, *scrollableStates) {
+    snapshotFlow { scrollableStates.any { it.canScrollBackward } }.collect { canScrollBackward ->
         if (!canScrollBackward) {
             scrollBehavior.state.contentOffset = 0f
         } else if (scrollBehavior.state.contentOffset == 0f) {
