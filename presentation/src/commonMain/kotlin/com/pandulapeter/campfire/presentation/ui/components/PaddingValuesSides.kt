@@ -17,7 +17,7 @@ import androidx.compose.ui.unit.dp
 
 /**
  * Some of the sides of [source], each asked of it at the moment it is used rather than when this is made, with
- * [extraTop] added above and [extraEnd] at the end.
+ * [extraTop] added above, [extraEnd] at the end and [extraBottom] below.
  *
  * The paddings the app hands its screens follow the keyboard (see `CampfireApp`), and they are only cheap for as
  * long as nobody takes them apart while composing: `PaddingValues(bottom = padding.calculateBottomPadding())`
@@ -33,6 +33,7 @@ private data class PaddingValuesSides(
     private val hasBottom: Boolean,
     private val extraTop: Dp,
     private val extraEnd: Dp,
+    private val extraBottom: Dp,
 ) : PaddingValues {
 
     override fun calculateLeftPadding(layoutDirection: LayoutDirection) =
@@ -45,7 +46,7 @@ private data class PaddingValuesSides(
         (if (if (layoutDirection == LayoutDirection.Ltr) hasEnd else hasStart) source.calculateRightPadding(layoutDirection) else 0.dp) +
             if (layoutDirection == LayoutDirection.Ltr) extraEnd else 0.dp
 
-    override fun calculateBottomPadding() = if (hasBottom) source.calculateBottomPadding() else 0.dp
+    override fun calculateBottomPadding() = (if (hasBottom) source.calculateBottomPadding() else 0.dp) + extraBottom
 }
 
 /** The named sides of these paddings and nothing on the others, see [PaddingValuesSides]. */
@@ -56,6 +57,7 @@ internal fun PaddingValues.only(
     bottom: Boolean = false,
     extraTop: Dp = 0.dp,
     extraEnd: Dp = 0.dp,
+    extraBottom: Dp = 0.dp,
 ): PaddingValues = PaddingValuesSides(
     source = this,
     hasStart = start,
@@ -64,4 +66,5 @@ internal fun PaddingValues.only(
     hasBottom = bottom,
     extraTop = extraTop,
     extraEnd = extraEnd,
+    extraBottom = extraBottom,
 )

@@ -15,6 +15,7 @@ import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.calculateEndPadding
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.offset
@@ -24,12 +25,10 @@ import androidx.compose.foundation.lazy.grid.GridItemSpan
 import androidx.compose.foundation.lazy.grid.LazyGridState
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.itemsIndexed
-import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
-import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -58,7 +57,6 @@ import com.pandulapeter.campfire.presentation.resources.ic_move_up
 import com.pandulapeter.campfire.presentation.resources.ic_more
 import com.pandulapeter.campfire.presentation.resources.ic_setlists_remove
 import com.pandulapeter.campfire.presentation.resources.ic_tune
-import com.pandulapeter.campfire.presentation.resources.setlists
 import com.pandulapeter.campfire.presentation.resources.setlists_add_songs
 import com.pandulapeter.campfire.presentation.resources.setlists_archived
 import com.pandulapeter.campfire.presentation.resources.setlists_create_setlist
@@ -70,6 +68,7 @@ import com.pandulapeter.campfire.presentation.resources.setlists_sort_and_filter
 import com.pandulapeter.campfire.presentation.resources.setlists_remove_song
 import com.pandulapeter.campfire.presentation.ui.CampfireViewModel
 import com.pandulapeter.campfire.presentation.ui.components.ActionListItem
+import com.pandulapeter.campfire.presentation.ui.components.AppBarOverlap
 import com.pandulapeter.campfire.presentation.ui.components.ActionsMenu
 import com.pandulapeter.campfire.presentation.ui.components.ActionsMenuItem
 import com.pandulapeter.campfire.presentation.ui.components.ControlsSidePanel
@@ -84,24 +83,29 @@ import com.pandulapeter.campfire.presentation.ui.components.HideKeyboardWhenScro
 import com.pandulapeter.campfire.presentation.ui.components.ScrollToTopWhenChanged
 import com.pandulapeter.campfire.presentation.ui.components.SearchableTopAppBar
 import com.pandulapeter.campfire.presentation.ui.components.SectionHeader
+import com.pandulapeter.campfire.presentation.ui.components.SectionHeaderState
 import com.pandulapeter.campfire.presentation.ui.components.SetlistActionsMenu
 import com.pandulapeter.campfire.presentation.ui.components.SetlistsControls
 import com.pandulapeter.campfire.presentation.ui.components.MissingSongListItem
 import com.pandulapeter.campfire.presentation.ui.components.SongListItem
 import com.pandulapeter.campfire.presentation.ui.components.SongActionsButton
-import com.pandulapeter.campfire.presentation.ui.components.TopLevelScreenLayout
 import com.pandulapeter.campfire.presentation.ui.components.allowsNewItemMenu
+import com.pandulapeter.campfire.presentation.ui.components.animateAppBarReveal
 import com.pandulapeter.campfire.presentation.ui.components.besideSidePanel
 import com.pandulapeter.campfire.presentation.ui.components.draggedListItemContainerColor
 import com.pandulapeter.campfire.presentation.ui.components.hasRoomForSidePanel
 import com.pandulapeter.campfire.presentation.ui.components.listItemAnimation
+import com.pandulapeter.campfire.presentation.ui.components.rememberListTopFade
+import com.pandulapeter.campfire.presentation.ui.components.listTopFadeViewport
+import com.pandulapeter.campfire.presentation.ui.components.fadingUnderListTop
 import com.pandulapeter.campfire.presentation.ui.components.only
 import com.pandulapeter.campfire.presentation.ui.components.pushedSectionHeader
 import com.pandulapeter.campfire.presentation.ui.components.rememberHasLoadedLibrary
 import com.pandulapeter.campfire.presentation.ui.components.rememberRetainedLazyGridState
-import com.pandulapeter.campfire.presentation.ui.components.sectionHeaderDividerState
+import com.pandulapeter.campfire.presentation.ui.components.sectionHeaderState
 import com.pandulapeter.campfire.presentation.ui.components.songCardPadding
 import com.pandulapeter.campfire.presentation.ui.components.songListColumnCount
+import com.pandulapeter.campfire.presentation.ui.components.underAppBar
 import com.pandulapeter.campfire.presentation.ui.platform.LocalFilePicker
 import com.pandulapeter.campfire.presentation.localization.stringResource
 import kotlinx.coroutines.launch
@@ -109,16 +113,13 @@ import org.jetbrains.compose.resources.painterResource
 import sh.calvin.reorderable.ReorderableItem
 import sh.calvin.reorderable.rememberReorderableLazyGridState
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 internal fun SetlistsScreen(
     modifier: Modifier = Modifier,
     viewModel: CampfireViewModel,
     settledWidth: Dp,
-    railWidth: Dp,
     contentPadding: PaddingValues,
 ) {
-    val scrollBehavior = TopAppBarDefaults.pinnedScrollBehavior()
     val listState = rememberRetainedLazyGridState(viewModel.setlistsScrollPosition)
     val isPerformanceModeEnabled by viewModel.isPerformanceModeEnabled.collectAsStateWithLifecycle()
     val setlistsPlaceholder by viewModel.setlistsPlaceholder.collectAsStateWithLifecycle()
@@ -135,50 +136,57 @@ internal fun SetlistsScreen(
         isSheetVisible = visibleDialog == CampfireViewModel.DialogType.SetlistsControls,
         onDismiss = viewModel::dismissDialog,
     )
-    TopLevelScreenLayout(
-        modifier = modifier,
-        railWidth = railWidth,
-        contentOverdrawsAppBar = true,
-        appBar = {
-            SearchableTopAppBar(
-                scrollBehavior = scrollBehavior,
-                scrollElevationEnabled = false,
-                title = stringResource(Res.string.setlists),
-                placeholder = stringResource(Res.string.setlists_search),
-                searchState = viewModel.setlistsSearch,
-                actions = {
-                    // The setlists being read and performance mode being switched both happen while the bar is being
-                    // looked at, so the button makes room for itself rather than appearing between two frames, as on
-                    // the songs screen.
-                    AnimatedVisibility(visible = !isPerformanceModeEnabled && setlistsPlaceholder.allowsNewItemMenu) {
-                        NewItemMenu(
-                            viewModel = viewModel,
-                            contentDescription = stringResource(Res.string.setlists_new_setlist),
-                            createLabel = stringResource(Res.string.setlists_create_setlist),
-                            onCreate = { viewModel.showDialog(CampfireViewModel.DialogType.NewSetlist) },
-                        )
-                    }
-                    if (!isSidePanelVisible) {
-                        IconButton(onClick = { viewModel.showDialog(CampfireViewModel.DialogType.SetlistsControls) }) {
-                            Icon(
-                                painter = painterResource(Res.drawable.ic_tune),
-                                contentDescription = stringResource(Res.string.setlists_sort_and_filter),
+    // See the songs screen: how far the app bar's buttons reach in over a pinned header, which it narrows to clear.
+    var appBarReach by remember { mutableStateOf(0.dp) }
+    val appBarReveal = animateAppBarReveal(
+        searchState = viewModel.setlistsSearch,
+        isShownWithoutSearch = setlistsPlaceholder != null,
+    )
+    val listContentPadding = contentPadding.besideSidePanel(isSidePanelVisible)
+    Box(modifier = modifier.fillMaxSize()) {
+        Row {
+            // The bar spans the list alone rather than the whole screen, so that its buttons and the search stay at the
+            // top of the list they act on instead of standing over the side panel beside it.
+            Box(modifier = Modifier.weight(1f).fillMaxHeight()) {
+                SetlistList(
+                    modifier = Modifier.fillMaxSize().underAppBar { appBarReveal.value },
+                    viewModel = viewModel,
+                    listState = listState,
+                    columnCount = columnCount,
+                    contentPadding = listContentPadding,
+                    appBarOverlap = AppBarOverlap.of(reach = appBarReach, appBarReveal = appBarReveal.value),
+                )
+                SearchableTopAppBar(
+                    contentPadding = listContentPadding,
+                    appBarReveal = { appBarReveal.value },
+                    placeholder = stringResource(Res.string.setlists_search),
+                    searchState = viewModel.setlistsSearch,
+                    onReachChanged = { appBarReach = it },
+                    closedSearchActions = {
+                        // The setlists being read and performance mode being switched both happen while the bar is being
+                        // looked at, so the button makes room for itself rather than appearing between two frames, as on
+                        // the songs screen.
+                        AnimatedVisibility(visible = !isPerformanceModeEnabled && setlistsPlaceholder.allowsNewItemMenu) {
+                            NewItemMenu(
+                                viewModel = viewModel,
+                                contentDescription = stringResource(Res.string.setlists_new_setlist),
+                                createLabel = stringResource(Res.string.setlists_create_setlist),
+                                onCreate = { viewModel.showDialog(CampfireViewModel.DialogType.NewSetlist) },
                             )
                         }
-                    }
-                },
-            )
-        },
-    ) {
-        Row {
-            SetlistList(
-                modifier = Modifier.weight(1f).fillMaxSize(),
-                viewModel = viewModel,
-                listState = listState,
-                columnCount = columnCount,
-                isSidePanelVisible = isSidePanelVisible,
-                contentPadding = contentPadding.besideSidePanel(isSidePanelVisible),
-            )
+                    },
+                    actions = {
+                        if (!isSidePanelVisible) {
+                            IconButton(onClick = { viewModel.showDialog(CampfireViewModel.DialogType.SetlistsControls) }) {
+                                Icon(
+                                    painter = painterResource(Res.drawable.ic_tune),
+                                    contentDescription = stringResource(Res.string.setlists_sort_and_filter),
+                                )
+                            }
+                        }
+                    },
+                )
+            }
             ControlsSidePanel(
                 isVisible = isSidePanelVisible,
                 contentPadding = contentPadding,
@@ -199,8 +207,8 @@ private fun SetlistList(
     viewModel: CampfireViewModel,
     listState: LazyGridState,
     columnCount: Int,
-    isSidePanelVisible: Boolean,
     contentPadding: PaddingValues,
+    appBarOverlap: AppBarOverlap,
 ) {
     val setlistsWithSongs by viewModel.setlistsWithSongs.collectAsStateWithLifecycle()
     val userPreferences by viewModel.userPreferences.collectAsStateWithLifecycle()
@@ -209,6 +217,7 @@ private fun SetlistList(
     val isLoading by viewModel.isLoading.collectAsStateWithLifecycle()
     val hasLoadedLibrary = rememberHasLoadedLibrary(isLoading)
     val pushedHeader = pushedSectionHeader(listState, contentType = "setlist_header")
+    val topFade = rememberListTopFade(listState)
     val isPerformanceModeEnabled by viewModel.isPerformanceModeEnabled.collectAsStateWithLifecycle()
     // Read once each, so that the branches below and the placeholders they render can never disagree about them.
     val setlistsPlaceholder = viewModel.setlistsPlaceholder.collectAsStateWithLifecycle().value
@@ -274,14 +283,15 @@ private fun SetlistList(
         contents = setlistsWithSongs,
     )
 
-    // The header paints through the grid's end padding, while cards stop before the scroller's touch column.
+    // The header row reaches through the grid's end padding to the edge the app bar's reach is measured from, while
+    // cards stop before the scroller's touch column.
     val headerEndPadding = FAST_SCROLLER_WIDTH + contentPadding.calculateEndPadding(LocalLayoutDirection.current)
     Box(modifier = modifier) {
         LazyVerticalGrid(
             columns = ListColumns(columnCount),
-            modifier = Modifier.fillMaxSize(),
+            modifier = Modifier.fillMaxSize().listTopFadeViewport(topFade),
             state = listState,
-            contentPadding = contentPadding.only(start = true, end = true, bottom = true, extraEnd = FAST_SCROLLER_WIDTH),
+            contentPadding = contentPadding.only(start = true, end = true, bottom = true, extraEnd = FAST_SCROLLER_WIDTH, extraBottom = 8.dp),
         ) {
             // The setlists are what this screen is about, and they are listed whenever there are any - an empty library
             // included, where they are simply empty and each offers to be filled. The library's own empty state belongs
@@ -312,12 +322,11 @@ private fun SetlistList(
                         key = "setlist_${setlistWithSongs.setlist.fileName}",
                         contentType = "setlist_header",
                     ) { headerIndex ->
-                        val dividerState = sectionHeaderDividerState(listState, headerIndex)
+                        val headerState = sectionHeaderState(listState, headerIndex)
                         SectionHeader(
                             modifier = listItemAnimation(listState, hasLoadedLibrary),
-                            dividerState = dividerState,
+                            state = headerState,
                             endPadding = headerEndPadding,
-                            insetDivider = isSidePanelVisible,
                             text = setlistWithSongs.setlist.title,
                             // A setlist is only ever on this screen archived because the filter was asked to show them,
                             // so the mark is what tells it from the ones still in use.
@@ -325,14 +334,16 @@ private fun SetlistList(
                             iconContentDescription = stringResource(Res.string.setlists_archived),
                             onClick = { coroutineScope.launch { listState.animateScrollToItem(headerIndex) } },
                             action = if (isPerformanceModeEnabled) null else {
-                                {
+                                { actionModifier ->
                                     SetlistActionsMenu(
+                                        modifier = actionModifier,
                                         viewModel = viewModel,
                                         setlist = setlistWithSongs.setlist,
                                     )
                                 }
                             },
-                            opacity = if (dividerState.visibleFraction < 1f) 0f else 1f,
+                            opacity = if (headerState.visibleFraction < 1f) 0f else 1f,
+                            appBarReach = appBarOverlap.reach,
                         )
                     }
                     // Under the header: the row names the setlist, then this is the first thing to read about it.
@@ -343,7 +354,7 @@ private fun SetlistList(
                             contentType = "setlist_description",
                         ) {
                             Text(
-                                modifier = listItemAnimation(listState, hasLoadedLibrary).padding(horizontal = 24.dp, vertical = 8.dp),
+                                modifier = listItemAnimation(listState, hasLoadedLibrary).fadingUnderListTop(topFade).padding(horizontal = 24.dp, vertical = 8.dp),
                                 text = setlistWithSongs.setlist.description,
                                 style = MaterialTheme.typography.bodyMedium,
                                 color = MaterialTheme.colorScheme.onSurfaceVariant,
@@ -359,7 +370,7 @@ private fun SetlistList(
                             contentType = "setlist_action",
                         ) {
                             ActionListItem(
-                                modifier = listItemAnimation(listState, hasLoadedLibrary),
+                                modifier = listItemAnimation(listState, hasLoadedLibrary).fadingUnderListTop(topFade),
                                 title = stringResource(Res.string.setlists_add_songs),
                                 icon = painterResource(Res.drawable.ic_add),
                                 onClick = { viewModel.showDialog(CampfireViewModel.DialogType.SongPicker(setlistWithSongs.setlist)) },
@@ -442,7 +453,7 @@ private fun SetlistList(
                             }
                             when (entry) {
                                 is CampfireViewModel.SetlistWithSongs.Entry.Present -> SongListItem(
-                                    modifier = moveActions.longPressDraggableHandle(enabled = isReorderable, onDragStarted = onDragStarted, onDragStopped = onDragStopped),
+                                    modifier = moveActions.fadingUnderListTop(topFade).longPressDraggableHandle(enabled = isReorderable, onDragStarted = onDragStarted, onDragStopped = onDragStopped),
                                     song = entry.song,
                                     index = row.index,
                                     cardPadding = songCardPadding(rowIndex, columnCount),
@@ -463,7 +474,7 @@ private fun SetlistList(
 
                                 // Nothing to open, but it still takes its place in the order and can be removed.
                                 is CampfireViewModel.SetlistWithSongs.Entry.Missing -> MissingSongListItem(
-                                    modifier = moveActions.longPressDraggableHandle(enabled = isReorderable, onDragStarted = onDragStarted, onDragStopped = onDragStopped),
+                                    modifier = moveActions.fadingUnderListTop(topFade).longPressDraggableHandle(enabled = isReorderable, onDragStarted = onDragStarted, onDragStopped = onDragStopped),
                                     index = row.index,
                                     songFileName = entry.songFileName,
                                     cardPadding = songCardPadding(rowIndex, columnCount),
@@ -477,7 +488,7 @@ private fun SetlistList(
                 }
             }
         }
-        // The visual copy can pass above the grid's clipped viewport and over the app bar as it fades away.
+        // The visual copy can pass above the grid's clipped viewport, under the transparent app bar, as it fades away.
         pushedHeader?.let { pushed ->
             val setlist = setlistsWithSongs.firstOrNull { "setlist_${it.setlist.fileName}" == pushed.key }?.setlist
             if (setlist != null) {
@@ -485,19 +496,21 @@ private fun SetlistList(
                 SectionHeader(
                     modifier = Modifier.offset { pushed.offset }.width(with(density) { pushed.width.toDp() }).clearAndSetSemantics {},
                     text = setlist.title,
-                    dividerState = sectionHeaderDividerState(listState, pushed.index),
+                    // Pinned for as long as it is being pushed away: it keeps the width it had in the bar's place rather than
+                    // widening again as it leaves.
+                    state = SectionHeaderState(visibleFraction = pushed.visibleFraction, pinnedFraction = 1f),
                     endPadding = headerEndPadding,
-                    insetDivider = isSidePanelVisible,
                     icon = if (setlist.isArchived) painterResource(Res.drawable.ic_archive) else null,
                     onClick = null,
                     actionIcon = if (isPerformanceModeEnabled) null else painterResource(Res.drawable.ic_more),
                     contentOpacity = pushed.visibleFraction,
-                    backgroundTopPx = pushed.backgroundTop,
+                    pushedDistancePx = pushed.pushedDistance,
+                    appBarReach = appBarOverlap.reach,
                 )
             }
         }
         FastScroller(
-            modifier = Modifier.align(Alignment.TopEnd).padding(contentPadding.only(top = true, end = true, bottom = true)),
+            modifier = Modifier.align(Alignment.TopEnd).padding(top = appBarOverlap.height).padding(contentPadding.only(top = true, end = true, bottom = true)),
             gridState = listState,
         )
     }

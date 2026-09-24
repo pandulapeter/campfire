@@ -51,7 +51,6 @@ import androidx.compose.material3.LocalContentColor
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
-import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.material3.VerticalDivider
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
@@ -124,7 +123,7 @@ import com.pandulapeter.campfire.presentation.ui.components.CampfireTopAppBar
 import com.pandulapeter.campfire.presentation.ui.components.DelayedLoadingIndicator
 import com.pandulapeter.campfire.presentation.ui.components.EmptyState
 import com.pandulapeter.campfire.presentation.ui.components.EmptyStateAction
-import com.pandulapeter.campfire.presentation.ui.components.KeepTopAppBarInSync
+import com.pandulapeter.campfire.presentation.ui.components.fadingTopEdge
 import com.pandulapeter.campfire.presentation.ui.components.SegmentedChoice
 import com.pandulapeter.campfire.presentation.ui.components.WindowSize
 import com.pandulapeter.campfire.presentation.ui.navigation.CampfireDestination
@@ -290,7 +289,6 @@ private fun LoadedSongEditor(
     val userPreferences by viewModel.userPreferences.collectAsStateWithLifecycle()
     val transpositions by viewModel.transpositions.collectAsStateWithLifecycle()
     val isSaving by viewModel.isSavingSong.collectAsStateWithLifecycle()
-    val scrollBehavior = TopAppBarDefaults.pinnedScrollBehavior()
     // The bar above the text follows the text as it is typed, so retitling a song shows up there right away. It
     // comes from the parser rather than from a regex of this screen's own, so that it is the same title, artist and
     // key the rest of the app will show once the file is written - the fallback to the file name included. One
@@ -331,14 +329,6 @@ private fun LoadedSongEditor(
     // once it is clicked, the preview, a button of the bar.
     val focusRequester = remember { FocusRequester() }
     LaunchedEffect(panes) { focusRequester.requestFocus() }
-    // The bar follows the scroll positions of the panes on screen rather than the nested scroll connection, which
-    // adds the deltas of both panes of a split into one offset. The field also scrolls itself to keep the caret in
-    // view, which the connection never hears about.
-    when (panes) {
-        EditorPanes.EDIT -> KeepTopAppBarInSync(scrollBehavior, fieldScrollState)
-        EditorPanes.PREVIEW -> KeepTopAppBarInSync(scrollBehavior, previewScrollState)
-        EditorPanes.SPLIT -> KeepTopAppBarInSync(scrollBehavior, fieldScrollState, previewScrollState)
-    }
 
     Column(
         modifier = Modifier
@@ -357,7 +347,6 @@ private fun LoadedSongEditor(
             }
     ) {
         CampfireTopAppBar(
-            scrollBehavior = scrollBehavior,
             navigationIcon = {
                 IconButton(onClick = onBack) {
                     Icon(
@@ -636,6 +625,8 @@ private fun ChordProTextField(
             // unbounded width, which is what keeps the text from wrapping, and it still passes the pane's width on as
             // the minimum, so the whole pane stays the field and a press anywhere in it places the caret. The field
             // asks its ancestors to bring the caret into view as it moves, so this follows the typing on its own.
+            // The fade goes outside that container, on the pane itself, so it stays at the pane's top edge.
+            .fadingTopEdge(scrollState)
             .horizontalScroll(horizontalScrollState)
             // The keyboard reaches the field only through the content padding this screen was handed, see CampfireApp,
             // and only the part of it that covers the field is applied, once: applying the whole inset a second time
@@ -697,6 +688,7 @@ private fun SongPreview(
         SongLyrics(
             modifier = Modifier
                 .fillMaxSize()
+                .fadingTopEdge(scrollState)
                 .verticalScroll(scrollState)
                 .padding(
                     start = contentPadding.calculateStartPadding(layoutDirection) + 16.dp,

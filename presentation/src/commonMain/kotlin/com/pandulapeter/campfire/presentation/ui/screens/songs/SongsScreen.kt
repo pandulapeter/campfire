@@ -18,6 +18,7 @@ import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.calculateEndPadding
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.offset
@@ -29,16 +30,16 @@ import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.itemsIndexed
 import androidx.compose.material3.Badge
 import androidx.compose.material3.BadgedBox
-import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.Text
-import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.SideEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalLayoutDirection
@@ -46,12 +47,12 @@ import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.semantics.clearAndSetSemantics
 import androidx.compose.ui.unit.Dp
+import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.pandulapeter.campfire.data.model.domain.UserPreferences
 import com.pandulapeter.campfire.domain.api.models.SongSection
 import com.pandulapeter.campfire.presentation.resources.Res
 import com.pandulapeter.campfire.presentation.resources.ic_tune
-import com.pandulapeter.campfire.presentation.resources.songs
 import com.pandulapeter.campfire.presentation.resources.songs_create_song
 import com.pandulapeter.campfire.presentation.resources.songs_new_song
 import com.pandulapeter.campfire.presentation.resources.songs_search
@@ -60,6 +61,7 @@ import com.pandulapeter.campfire.presentation.resources.songs_sort_and_filter_ac
 import com.pandulapeter.campfire.presentation.resources.songs_unknown_artist
 import com.pandulapeter.campfire.presentation.resources.songs_unsorted_label
 import com.pandulapeter.campfire.presentation.ui.CampfireViewModel
+import com.pandulapeter.campfire.presentation.ui.components.AppBarOverlap
 import com.pandulapeter.campfire.presentation.ui.components.ControlsSidePanel
 import com.pandulapeter.campfire.presentation.ui.components.DismissSheetWhenSidePanelAppears
 import com.pandulapeter.campfire.presentation.ui.components.FastScroller
@@ -72,35 +74,38 @@ import com.pandulapeter.campfire.presentation.ui.components.NewItemMenu
 import com.pandulapeter.campfire.presentation.ui.components.ScrollToTopWhenChanged
 import com.pandulapeter.campfire.presentation.ui.components.SearchableTopAppBar
 import com.pandulapeter.campfire.presentation.ui.components.SectionHeader
+import com.pandulapeter.campfire.presentation.ui.components.SectionHeaderState
 import com.pandulapeter.campfire.presentation.ui.components.SongActionsButton
 import com.pandulapeter.campfire.presentation.ui.components.SongListItem
 import com.pandulapeter.campfire.presentation.ui.components.SongsControls
-import com.pandulapeter.campfire.presentation.ui.components.TopLevelScreenLayout
 import com.pandulapeter.campfire.presentation.ui.components.allowsNewItemMenu
+import com.pandulapeter.campfire.presentation.ui.components.animateAppBarReveal
 import com.pandulapeter.campfire.presentation.ui.components.besideSidePanel
 import com.pandulapeter.campfire.presentation.ui.components.hasRoomForSidePanel
 import com.pandulapeter.campfire.presentation.ui.components.listItemAnimation
+import com.pandulapeter.campfire.presentation.ui.components.rememberListTopFade
+import com.pandulapeter.campfire.presentation.ui.components.listTopFadeViewport
+import com.pandulapeter.campfire.presentation.ui.components.fadingUnderListTop
 import com.pandulapeter.campfire.presentation.ui.components.only
 import com.pandulapeter.campfire.presentation.ui.components.pushedSectionHeader
 import com.pandulapeter.campfire.presentation.ui.components.rememberHasLoadedLibrary
 import com.pandulapeter.campfire.presentation.ui.components.rememberOverflowMenuState
 import com.pandulapeter.campfire.presentation.ui.components.rememberRetainedLazyGridState
-import com.pandulapeter.campfire.presentation.ui.components.sectionHeaderDividerState
+import com.pandulapeter.campfire.presentation.ui.components.sectionHeaderState
 import com.pandulapeter.campfire.presentation.ui.components.songCardPadding
 import com.pandulapeter.campfire.presentation.ui.components.songListColumnCount
+import com.pandulapeter.campfire.presentation.ui.components.underAppBar
 import com.pandulapeter.campfire.presentation.ui.platform.LocalFilePicker
 import com.pandulapeter.campfire.presentation.ui.platform.isDesktopPlatform
 import com.pandulapeter.campfire.presentation.localization.stringResource
 import kotlinx.coroutines.launch
 import org.jetbrains.compose.resources.painterResource
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 internal fun SongsScreen(
     modifier: Modifier = Modifier,
     viewModel: CampfireViewModel,
     settledWidth: Dp,
-    railWidth: Dp,
     contentPadding: PaddingValues,
 ) {
     val isLoading by viewModel.isLoading.collectAsStateWithLifecycle()
@@ -109,7 +114,6 @@ internal fun SongsScreen(
     val isPerformanceModeEnabled by viewModel.isPerformanceModeEnabled.collectAsStateWithLifecycle()
     val visibleDialog by viewModel.visibleDialog.collectAsStateWithLifecycle()
     val isSongFilterActive by viewModel.isSongFilterActive.collectAsStateWithLifecycle()
-    val scrollBehavior = TopAppBarDefaults.pinnedScrollBehavior()
     val listState = rememberRetainedLazyGridState(viewModel.songsScrollPosition)
     val isSidePanelVisible = hasRoomForSidePanel(settledWidth)
     val listContentPadding = contentPadding.besideSidePanel(isSidePanelVisible)
@@ -125,51 +129,58 @@ internal fun SongsScreen(
         isSheetVisible = visibleDialog == CampfireViewModel.DialogType.SongsControls,
         onDismiss = viewModel::dismissDialog,
     )
-    TopLevelScreenLayout(
-        modifier = modifier,
-        railWidth = railWidth,
-        contentOverdrawsAppBar = true,
-        appBar = {
-            SearchableTopAppBar(
-                scrollBehavior = scrollBehavior,
-                scrollElevationEnabled = false,
-                title = stringResource(Res.string.songs),
-                placeholder = stringResource(Res.string.songs_search),
-                searchState = viewModel.songsSearch,
-                actions = {
-                    // The reasons this one comes and goes are the library being read and the mode being switched,
-                    // both of which happen while the bar is being looked at, so it makes room for itself rather than
-                    // appearing between two frames and pushing the action beside it aside as it lands.
-                    AnimatedVisibility(visible = !isPerformanceModeEnabled && placeholder.allowsNewItemMenu) {
-                        NewItemMenu(
-                            viewModel = viewModel,
-                            contentDescription = stringResource(Res.string.songs_new_song),
-                            createLabel = stringResource(Res.string.songs_create_song),
-                            onCreate = { viewModel.showDialog(CampfireViewModel.DialogType.NewSong) },
-                        )
-                    }
-                    if (!isSidePanelVisible) {
-                        SongsControlsAction(
-                            isSongFilterActive = isSongFilterActive,
-                            onClick = { viewModel.showDialog(CampfireViewModel.DialogType.SongsControls) },
-                        )
-                    }
-                },
-            )
-        },
-    ) {
-        ImportProgress(isImporting = isImporting)
+    // The widest the app bar's buttons reach in over the list, which a pinned header keeps clear of - nothing once
+    // the bar has filled in and moved the list down under itself.
+    var appBarReach by remember { mutableStateOf(0.dp) }
+    val appBarReveal = animateAppBarReveal(
+        searchState = viewModel.songsSearch,
+        // The ranked results of a search come in one group with no header, and a placeholder has none either.
+        isShownWithoutSearch = placeholder != null,
+    )
+    Box(modifier = modifier.fillMaxSize()) {
         Row {
-            SongList(
-                modifier = Modifier.weight(1f).fillMaxSize(),
-                viewModel = viewModel,
-                listState = listState,
-                placeholder = placeholder,
-                columnCount = columnCount,
-                isSidePanelVisible = isSidePanelVisible,
-                hasLoadedLibrary = hasLoadedLibrary,
-                contentPadding = listContentPadding,
-            )
+            // The bar spans the list alone rather than the whole screen, so that its buttons and the search stay at the
+            // top of the list they act on instead of standing over the side panel beside it.
+            Box(modifier = Modifier.weight(1f).fillMaxHeight()) {
+                SongList(
+                    modifier = Modifier.fillMaxSize().underAppBar { appBarReveal.value },
+                    viewModel = viewModel,
+                    listState = listState,
+                    placeholder = placeholder,
+                    columnCount = columnCount,
+                    hasLoadedLibrary = hasLoadedLibrary,
+                    contentPadding = listContentPadding,
+                    appBarOverlap = AppBarOverlap.of(reach = appBarReach, appBarReveal = appBarReveal.value),
+                )
+                SearchableTopAppBar(
+                    contentPadding = listContentPadding,
+                    appBarReveal = { appBarReveal.value },
+                    placeholder = stringResource(Res.string.songs_search),
+                    searchState = viewModel.songsSearch,
+                    onReachChanged = { appBarReach = it },
+                    closedSearchActions = {
+                        // The reasons this one comes and goes are the library being read and the mode being switched,
+                        // both of which happen while the bar is being looked at, so it makes room for itself rather than
+                        // appearing between two frames and pushing the action beside it aside as it lands.
+                        AnimatedVisibility(visible = !isPerformanceModeEnabled && placeholder.allowsNewItemMenu) {
+                            NewItemMenu(
+                                viewModel = viewModel,
+                                contentDescription = stringResource(Res.string.songs_new_song),
+                                createLabel = stringResource(Res.string.songs_create_song),
+                                onCreate = { viewModel.showDialog(CampfireViewModel.DialogType.NewSong) },
+                            )
+                        }
+                    },
+                    actions = {
+                        if (!isSidePanelVisible) {
+                            SongsControlsAction(
+                                isSongFilterActive = isSongFilterActive,
+                                onClick = { viewModel.showDialog(CampfireViewModel.DialogType.SongsControls) },
+                            )
+                        }
+                    },
+                )
+            }
             ControlsSidePanel(
                 isVisible = isSidePanelVisible,
                 contentPadding = contentPadding,
@@ -181,6 +192,7 @@ internal fun SongsScreen(
                 )
             }
         }
+        ImportProgress(isImporting = isImporting)
     }
 }
 
@@ -229,9 +241,9 @@ private fun SongList(
     listState: LazyGridState,
     placeholder: CampfireViewModel.Placeholder?,
     columnCount: Int,
-    isSidePanelVisible: Boolean,
     hasLoadedLibrary: Boolean,
     contentPadding: PaddingValues,
+    appBarOverlap: AppBarOverlap,
 ) {
     val songGroups by viewModel.songGroups.collectAsStateWithLifecycle()
     val isSearchOpen by viewModel.songsSearch.isOpen.collectAsStateWithLifecycle()
@@ -258,6 +270,7 @@ private fun SongList(
         }
     }
     val pushedHeader = pushedSectionHeader(listState, contentType = "header")
+    val topFade = rememberListTopFade(listState)
 
     ScrollToTopWhenChanged(
         listState = listState,
@@ -282,14 +295,15 @@ private fun SongList(
         }
     }
 
-    // The header paints through the grid's end padding, while cards stop before the scroller's touch column.
+    // The header row reaches through the grid's end padding to the edge the app bar's reach is measured from, while
+    // cards stop before the scroller's touch column.
     val headerEndPadding = FAST_SCROLLER_WIDTH + contentPadding.calculateEndPadding(LocalLayoutDirection.current)
     Box(modifier = modifier) {
         LazyVerticalGrid(
             columns = ListColumns(columnCount),
-            modifier = Modifier.fillMaxSize(),
+            modifier = Modifier.fillMaxSize().listTopFadeViewport(topFade),
             state = listState,
-            contentPadding = contentPadding.only(start = true, end = true, bottom = true, extraEnd = FAST_SCROLLER_WIDTH),
+            contentPadding = contentPadding.only(start = true, end = true, bottom = true, extraEnd = FAST_SCROLLER_WIDTH, extraBottom = 8.dp),
         ) {
             placeholder?.let {
                 item(
@@ -319,15 +333,15 @@ private fun SongList(
                         key = "header_${header.key}",
                         contentType = "header",
                     ) { headerIndex ->
-                        val dividerState = sectionHeaderDividerState(listState, headerIndex)
+                        val headerState = sectionHeaderState(listState, headerIndex)
                         SectionHeader(
                             modifier = listItemAnimation(listState, hasLoadedLibrary),
-                            dividerState = dividerState,
+                            state = headerState,
                             endPadding = headerEndPadding,
-                            insetDivider = isSidePanelVisible,
                             text = header.displayText(),
                             onClick = { coroutineScope.launch { listState.animateScrollToItem(headerIndex) } },
-                            opacity = if (dividerState.visibleFraction < 1f) 0f else 1f,
+                            opacity = if (headerState.visibleFraction < 1f) 0f else 1f,
+                            appBarReach = appBarOverlap.reach,
                         )
                     }
                 }
@@ -338,7 +352,7 @@ private fun SongList(
                 ) { songIndex, song ->
                     val actionsMenuState = rememberOverflowMenuState()
                     SongListItem(
-                        modifier = listItemAnimation(listState, hasLoadedLibrary),
+                        modifier = listItemAnimation(listState, hasLoadedLibrary).fadingUnderListTop(topFade),
                         song = song,
                         cardPadding = songCardPadding(songIndex, columnCount),
                         // A song opened from the library is transposed in the preferences, so that is the only
@@ -378,8 +392,9 @@ private fun SongList(
                 }
             }
         }
-        // The grid clips at its top edge. Draw the outgoing header here while it is pushed, so its fade can
-        // continue into the app bar rather than ending at that edge.
+        // The grid clips at its top edge. Draw the outgoing header here while it is pushed, so its fade can continue
+        // past that edge under the transparent app bar rather than ending at it; a bar that has filled in is drawn
+        // over it.
         pushedHeader?.let { pushed ->
             val header = songGroups.mapNotNull { it.header }.firstOrNull { "header_${it.key}" == pushed.key }
             if (header != null) {
@@ -387,17 +402,19 @@ private fun SongList(
                 SectionHeader(
                     modifier = Modifier.offset { pushed.offset }.width(with(density) { pushed.width.toDp() }).clearAndSetSemantics {},
                     text = header.displayText(),
-                    dividerState = sectionHeaderDividerState(listState, pushed.index),
+                    // Pinned for as long as it is being pushed away: it keeps the width it had in the bar's place rather than
+                    // widening again as it leaves.
+                    state = SectionHeaderState(visibleFraction = pushed.visibleFraction, pinnedFraction = 1f),
                     endPadding = headerEndPadding,
-                    insetDivider = isSidePanelVisible,
                     onClick = null,
                     contentOpacity = pushed.visibleFraction,
-                    backgroundTopPx = pushed.backgroundTop,
+                    pushedDistancePx = pushed.pushedDistance,
+                    appBarReach = appBarOverlap.reach,
                 )
             }
         }
         FastScroller(
-            modifier = Modifier.align(Alignment.TopEnd).padding(contentPadding.only(top = true, end = true, bottom = true)),
+            modifier = Modifier.align(Alignment.TopEnd).padding(top = appBarOverlap.height).padding(contentPadding.only(top = true, end = true, bottom = true)),
             gridState = listState,
             labelForItem = { sectionLabels.getOrNull(it) },
         )

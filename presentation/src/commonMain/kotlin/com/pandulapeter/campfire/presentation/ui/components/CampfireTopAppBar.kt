@@ -9,158 +9,53 @@
  */
 package com.pandulapeter.campfire.presentation.ui.components
 
-import androidx.compose.animation.core.animateFloatAsState
-import androidx.compose.foundation.gestures.ScrollableState
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ColumnScope
 import androidx.compose.foundation.layout.RowScope
-import androidx.compose.foundation.layout.ExperimentalLayoutApi
-import androidx.compose.foundation.layout.PaddingValues
-import androidx.compose.foundation.layout.consumeWindowInsets
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
-import androidx.compose.material3.TopAppBarScrollBehavior
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.derivedStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.snapshotFlow
-import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.lerp
-import androidx.compose.ui.unit.Dp
-import androidx.compose.ui.unit.dp
-import androidx.compose.ui.zIndex
 
 /**
- * Top app bar that can get a tonal tint and a shadow as content scrolls underneath it. Screens using that behavior
- * hook their scrollable content up with `Modifier.nestedScroll(scrollBehavior.nestedScrollConnection)`; the song and
- * setlist lists leave it off so their bars keep one color and elevation.
+ * The app bar of the song details and the editor: flat, in the screen's background color, whatever is scrolled
+ * under it. What scrolls below it fades out into it instead (see [fadingTopEdge]), the way the list screens' cards
+ * fade out under their pinned headers, rather than the bar tinting and lifting over it. The two list screens have no
+ * bar of this kind, see [SearchableTopAppBar].
  *
  * A screen that needs more than one row of controls puts the rest in [bottomContent], which is drawn inside the same
- * surface and under the same shadow: the editor's toolbar is part of the bar rather than a strip floating under it,
- * so the whole thing tints and lifts together as the text scrolls beneath it.
+ * surface: the editor's toolbar is part of the bar rather than a strip floating under it.
  *
  * The background is drawn by the wrapping [Surface] and the bar itself is transparent, because [TopAppBar] cross
  * fades its own container color with a spring of its own. That spring would chase the color scheme while it is
  * animating between the light and the dark theme, leaving the bar visibly trailing behind the rest of the screen.
- * Only the overlap state is animated here, and the two colors it interpolates follow the theme immediately.
  */
-@OptIn(ExperimentalMaterial3Api::class, ExperimentalMaterial3ExpressiveApi::class)
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 internal fun CampfireTopAppBar(
     modifier: Modifier = Modifier,
-    scrollBehavior: TopAppBarScrollBehavior,
-    scrollElevationEnabled: Boolean = true,
     title: @Composable () -> Unit,
     navigationIcon: @Composable () -> Unit = {},
     actions: @Composable RowScope.() -> Unit = {},
     bottomContent: @Composable ColumnScope.() -> Unit = {},
+) = Surface(
+    modifier = modifier,
+    color = MaterialTheme.colorScheme.background,
 ) {
-    // Derived, because the fraction is worked out from the list's content offset, which changes on every scrolled
-    // pixel, while the answer only changes as the list leaves its top and as it comes back to it.
-    val isOverlapped by remember(scrollBehavior) { derivedStateOf { scrollBehavior.state.overlappedFraction > 0.01f } }
-    val overlapProgress by animateFloatAsState(
-        targetValue = if (scrollElevationEnabled && isOverlapped) 1f else 0f,
-        animationSpec = MaterialTheme.motionScheme.defaultEffectsSpec(),
-    )
-    Surface(
-        modifier = modifier.zIndex(1f), // Draw the shadow over the content that follows in the column.
-        color = lerp(MaterialTheme.colorScheme.surface, MaterialTheme.colorScheme.surfaceContainer, overlapProgress),
-        shadowElevation = OVERLAPPED_ELEVATION * overlapProgress,
-    ) {
-        Column {
-            TopAppBar(
-                title = title,
-                navigationIcon = navigationIcon,
-                actions = actions,
-                colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = Color.Transparent,
-                    scrolledContainerColor = Color.Transparent,
-                ),
-                scrollBehavior = scrollBehavior,
-            )
-            bottomContent()
-        }
+    Column {
+        TopAppBar(
+            title = title,
+            navigationIcon = navigationIcon,
+            actions = actions,
+            colors = TopAppBarDefaults.topAppBarColors(
+                containerColor = Color.Transparent,
+                scrolledContainerColor = Color.Transparent,
+            ),
+        )
+        bottomContent()
     }
 }
-
-/**
- * A top level screen: its app bar across the whole of the window, and everything else under it and next to the
- * navigation rail, which the shell lays out under the screens and starts below the height of this bar.
- *
- * Only the two parts are opaque, and neither covers the rail's column below the bar. The shell draws the rail under
- * the screens, so it stays where it is while they cross fade, and a screen covering its column - even with nothing
- * but a transparent layout - would take every tap meant for the rail.
- *
- * @param railWidth How much of the window the navigation rail takes from the start edge, or zero next to a bar.
- * @param contentOverdrawsAppBar Let an outgoing sticky header cross the content's top edge and fade over the bar.
- * @param content What goes under the app bar, laid out on an opaque surface that blocks touches from reaching the
- *   screen it covers during a transition.
- */
-@OptIn(ExperimentalLayoutApi::class)
-@Composable
-internal fun TopLevelScreenLayout(
-    modifier: Modifier = Modifier,
-    railWidth: Dp,
-    contentOverdrawsAppBar: Boolean = false,
-    appBar: @Composable () -> Unit,
-    content: @Composable ColumnScope.() -> Unit,
-) = Column(
-    modifier = modifier.fillMaxSize(),
-) {
-    appBar()
-    val contentModifier = Modifier
-        .weight(1f)
-        .fillMaxWidth()
-        .padding(start = railWidth)
-        // The rail covers the insets on its own edge, so nothing inside should apply them a second time.
-        .consumeWindowInsets(PaddingValues(start = railWidth))
-    if (contentOverdrawsAppBar) {
-        // A pushed sticky header is painted outside the grid's clipping bounds. Keep the opaque surface as the
-        // content's background, but do not make it the header's ancestor or it would clip the overdraw again.
-        Box(modifier = contentModifier.zIndex(2f)) {
-            Surface(modifier = Modifier.matchParentSize(), color = MaterialTheme.colorScheme.background) {}
-            Column(modifier = Modifier.fillMaxSize(), content = content)
-        }
-    } else {
-        Surface(modifier = contentModifier, color = MaterialTheme.colorScheme.background) {
-            Column(content = content)
-        }
-    }
-}
-
-/**
- * Programmatic scrolls (jumping to the top on a new query, dragging the fast scroller) bypass the nested scroll
- * connection, so the overlap state of the app bar is corrected from the list here.
- *
- * Given several [scrollableStates] - panes side by side under one bar - the bar is overlapped while any of them is
- * away from its top. A screen like that has to leave the nested scroll connection off and let this decide alone: the
- * connection keeps a single content offset that every pane's deltas are added to, so scrolling one pane back up
- * would clear the overlap while the other is still scrolled.
- */
-@OptIn(ExperimentalMaterial3Api::class)
-@Composable
-internal fun KeepTopAppBarInSync(
-    scrollBehavior: TopAppBarScrollBehavior,
-    vararg scrollableStates: ScrollableState,
-) = LaunchedEffect(scrollBehavior, *scrollableStates) {
-    snapshotFlow { scrollableStates.any { it.canScrollBackward } }.collect { canScrollBackward ->
-        if (!canScrollBackward) {
-            scrollBehavior.state.contentOffset = 0f
-        } else if (scrollBehavior.state.contentOffset == 0f) {
-            scrollBehavior.state.contentOffset = scrollBehavior.state.heightOffsetLimit
-        }
-    }
-}
-
-private val OVERLAPPED_ELEVATION = 4.dp

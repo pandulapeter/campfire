@@ -130,8 +130,8 @@ uninstall and nothing else does.
   preference, so it travels through an export, an import or a sync run the way a tag does. The **description** — an
   optional sentence about what a setlist is for, shown under its header and read by the screen's search — lives in
   the file for the same reason.
-- **Both list screens are searched from a button rather than from a field that is always there**: the app bar holds
-  the screen's name until the search is opened, and the one search icon is the one close button (the mark morphs
+- **Both list screens are searched from a button rather than from a field that is always there**: the app bar has
+  no title — the list's pinned section header stands in its place — and the one search icon is the one close button (the mark morphs
   between the two as the button travels from the actions to the start of the bar, with the field after it, see
   `:presentation`). On the desktop and the web Ctrl / Cmd + F opens it, in place of the browser's find bar there.
   The songs are searched by title and artist, ignoring case, accents, spaces and punctuation alike (`ymca` finds

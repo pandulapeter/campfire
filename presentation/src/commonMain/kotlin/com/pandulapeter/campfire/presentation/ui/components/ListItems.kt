@@ -11,6 +11,7 @@ package com.pandulapeter.campfire.presentation.ui.components
 
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.core.FastOutSlowInEasing
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.expandHorizontally
 import androidx.compose.animation.fadeIn
@@ -27,6 +28,7 @@ import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.defaultMinSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
@@ -34,6 +36,7 @@ import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.lazy.grid.LazyGridState
 import androidx.compose.foundation.selection.selectable
 import androidx.compose.foundation.selection.toggleable
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material3.Button
 import androidx.compose.material3.Checkbox
 import androidx.compose.material3.RadioButton
@@ -56,10 +59,8 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
-import androidx.compose.ui.draw.drawWithContent
+import androidx.compose.ui.focus.focusProperties
 import androidx.compose.ui.graphics.graphicsLayer
-import androidx.compose.ui.geometry.Offset
-import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.lerp
 import androidx.compose.ui.graphics.painter.Painter
@@ -113,6 +114,7 @@ import com.pandulapeter.campfire.presentation.resources.songs_no_search_results
 import com.pandulapeter.campfire.presentation.resources.songs_no_search_results_hint
 import com.pandulapeter.campfire.presentation.ui.CampfireViewModel
 import org.jetbrains.compose.resources.painterResource
+import kotlin.math.roundToInt
 
 /**
  * @param index The song's place in the setlist it is listed in, prefixed to its title.
@@ -401,10 +403,13 @@ internal fun DragHandle(
     )
 }
 
-/** The divider's overlap state and the fraction of the outgoing header still visible in the grid. */
-internal data class SectionHeaderDividerState(
-    val isOverlapping: Boolean,
+/**
+ * The fraction of the outgoing header still visible in the grid, and how far into the pinned position at the top of
+ * the grid the header has come - which is where the app bar's buttons are over it.
+ */
+internal data class SectionHeaderState(
     val visibleFraction: Float,
+    val pinnedFraction: Float,
 )
 
 /** The outgoing pinned header's position in the grid, including the part already above its viewport. */
@@ -413,7 +418,7 @@ internal data class PushedSectionHeader(
     val index: Int,
     val offset: IntOffset,
     val width: Int,
-    val backgroundTop: Int,
+    val pushedDistance: Int,
     val visibleFraction: Float,
 )
 
@@ -431,7 +436,7 @@ internal fun pushedSectionHeader(listState: LazyGridState, contentType: String):
                     index = item.index,
                     offset = item.offset,
                     width = item.size.width,
-                    backgroundTop = top - item.offset.y,
+                    pushedDistance = top - item.offset.y,
                     visibleFraction = (item.offset.y + item.size.height - top).toFloat() / item.size.height,
                 )
             }
@@ -440,140 +445,169 @@ internal fun pushedSectionHeader(listState: LazyGridState, contentType: String):
     return pushedHeader
 }
 
-/** The same scroll fraction fades the outgoing header's content and divider as the next header pushes it away. */
+/** The scroll fractions that fade the outgoing header as the next one pushes it away, and narrow a pinned one. */
 @Composable
-internal fun sectionHeaderDividerState(listState: LazyGridState, headerIndex: Int): SectionHeaderDividerState {
-    val dividerState by remember(listState, headerIndex) {
+internal fun sectionHeaderState(listState: LazyGridState, headerIndex: Int): SectionHeaderState {
+    val state by remember(listState, headerIndex) {
         derivedStateOf {
             val layoutInfo = listState.layoutInfo
-            val visibleItems = layoutInfo.visibleItemsInfo
-            val header = visibleItems.firstOrNull { it.index == headerIndex }
-            if (header == null) {
-                SectionHeaderDividerState(isOverlapping = false, visibleFraction = 1f)
+            val header = layoutInfo.visibleItemsInfo.firstOrNull { it.index == headerIndex }
+            if (header == null || header.size.height <= 0) {
+                SectionHeaderState(visibleFraction = 1f, pinnedFraction = 0f)
             } else {
                 val top = layoutInfo.viewportStartOffset
-                val bottom = header.offset.y + header.size.height
-                val visibleFraction = if (header.size.height > 0) {
-                    ((bottom - top).toFloat() / header.size.height).coerceIn(0f, 1f)
-                } else {
-                    1f
-                }
-                val coversContent = visibleItems.any { item ->
-                    item.index > headerIndex && item.offset.y < bottom && item.offset.y + item.size.height > header.offset.y
-                }
-                SectionHeaderDividerState(
-                    isOverlapping = coversContent,
-                    visibleFraction = visibleFraction,
+                SectionHeaderState(
+                    visibleFraction = ((header.offset.y + header.size.height - top).toFloat() / header.size.height).coerceIn(0f, 1f),
+                    pinnedFraction = 1f - ((header.offset.y - top).toFloat() / header.size.height).coerceIn(0f, 1f),
                 )
             }
         }
     }
-    return dividerState
+    return state
 }
 
 /**
- * A full-width sticky section row with a fixed background. The divider appears only when songs pass behind it.
- * The row extends through the grid's end padding, beneath the fast scroller; its content stays before that padding.
- * Next to a side panel, the divider instead stops at the card edges so it does not run under the scroller.
- * A decorative copy can be drawn outside the grid while the row is pushed up. Its background stays opaque within
- * the list, covering the cards, while only its content overdraws the app bar and fades away.
+ * A sticky section row: the section's name, and a setlist's menu, with nothing behind them and no divider under them.
+ * The cards are what makes room for a header rather than a background of its own: they are faded out entirely under
+ * the row of the one pinned at the top of the list and fade back in below it ([ListTopFade]), so the name is always
+ * read against the screen's background, and it and the app bar's pill of buttons next to it are the only things at
+ * the top of the list. Only the header's content takes a touch, laid out as a pill that the press is drawn in; the
+ * rest of the row leaves it to whatever is under it.
+ *
+ * The list screens have no title in their app bar, and the header pinned at the top of the list is what stands in its
+ * place, under the bar's buttons: so the row is as tall as that bar ([LIST_APP_BAR_HEIGHT]) and the pill as tall as the
+ * bar's pill, its text on one line in the style of the settings screen's tab labels. The pill is as wide as the cards,
+ * and narrows only to make room for the bar's buttons ([appBarReach]) as the header comes into the pinned place
+ * ([SectionHeaderState.pinnedFraction], eased), so a pinned header never runs under them - its text cut off sooner,
+ * and a setlist's menu, which ends the pill, carried up to the buttons.
+ *
+ * The row extends through the grid's end padding, beneath the fast scroller, so that [appBarReach] and the pill's end
+ * are measured from the same edge. A decorative copy can be drawn outside the grid while the row is pushed up
+ * ([pushedDistancePx]); its content lags behind the row there and fades with [contentOpacity].
+ *
+ * @param action The button at the end of the pill, handed the modifier that keeps it from taking the focus
+ *   ([unfocusable]).
+ * @param appBarReach How far in from the row's end edge the app bar's buttons reach while this row is pinned under
+ *   them, or zero where nothing of the bar is over the list.
  */
 @Composable
 internal fun SectionHeader(
     modifier: Modifier = Modifier,
     text: String,
-    dividerState: SectionHeaderDividerState,
+    state: SectionHeaderState,
     endPadding: Dp,
-    insetDivider: Boolean,
     icon: Painter? = null,
     iconContentDescription: String? = null,
     onClick: (() -> Unit)?,
-    action: (@Composable () -> Unit)? = null,
+    action: (@Composable (modifier: Modifier) -> Unit)? = null,
     actionIcon: Painter? = null,
     opacity: Float = 1f,
     contentOpacity: Float = 1f,
-    backgroundTopPx: Int? = null,
-) {
-    val overlapProgress by animateFloatAsState(if (dividerState.isOverlapping) 1f else 0f)
-    val dividerColor = MaterialTheme.colorScheme.outlineVariant
-    val backgroundColor = MaterialTheme.colorScheme.background
-    val headerModifier = modifier.extendIntoEndPadding(endPadding).graphicsLayer {
-        alpha = opacity
-        clip = false
-    }.fillMaxWidth().drawWithContent {
-            // The copy passes into the app bar, but its opaque fill belongs only to the list viewport.
-            backgroundTopPx?.let { top ->
-                val visibleTop = top.toFloat().coerceIn(0f, size.height)
-                drawRect(
-                    color = backgroundColor,
-                    topLeft = Offset(0f, visibleTop),
-                    size = Size(size.width, size.height - visibleTop),
-                )
-            }
-            drawContent()
-            val strokeWidth = 1.dp.toPx()
-            val dividerInset = if (insetDivider) SONG_CARD_OUTER_PADDING.toPx() else 0f
-            val dividerEndInset = if (insetDivider) endPadding.toPx() + dividerInset else 0f
-            val dividerParallax = (backgroundTopPx ?: 0) * SECTION_HEADER_DIVIDER_PARALLAX_FRACTION
-            drawLine(
-                color = dividerColor,
-                start = Offset(dividerInset, size.height - strokeWidth / 2 + dividerParallax),
-                end = Offset(size.width - dividerEndInset, size.height - strokeWidth / 2 + dividerParallax),
-                strokeWidth = strokeWidth,
-                alpha = overlapProgress * contentOpacity,
-            )
+    pushedDistancePx: Int = 0,
+    appBarReach: Dp = 0.dp,
+) = Box(
+    modifier = modifier
+        .extendIntoEndPadding(endPadding)
+        .graphicsLayer {
+            alpha = opacity
+            clip = false
         }
-    val headerContent: @Composable () -> Unit = {
+        .fillMaxWidth()
+        .defaultMinSize(minHeight = LIST_APP_BAR_HEIGHT),
+    contentAlignment = Alignment.CenterStart,
+) {
+    val hasAction = action != null || actionIcon != null
+    val pillModifier = Modifier
+        .padding(start = SONG_CARD_OUTER_PADDING)
+        .layout { measurable, constraints ->
+            // The cards end at the scroller's column, and a pinned header ends where the bar's buttons begin.
+            val cardsEndInset = (endPadding + SONG_CARD_OUTER_PADDING).toPx()
+            val pinnedEndInset = maxOf(cardsEndInset, (appBarReach + SECTION_HEADER_APP_BAR_GAP).toPx())
+            // Eased rather than linear, since the fraction is the scroll position itself: the header gives way
+            // gently as it starts coming into the bar's place and settles into the room it has left the same way.
+            val endInset = cardsEndInset + (pinnedEndInset - cardsEndInset) * FastOutSlowInEasing.transform(state.pinnedFraction)
+            val width = (constraints.maxWidth - endInset.roundToInt()).coerceAtLeast(0)
+            val placeable = measurable.measure(constraints.copy(minWidth = width, maxWidth = width))
+            layout(placeable.width, placeable.height) { placeable.placeRelative(0, 0) }
+        }
+        .graphicsLayer {
+            alpha = contentOpacity
+            // The outgoing pill lags the row slightly, then disappears before reaching the bar's controls.
+            translationY = pushedDistancePx * SECTION_HEADER_CONTENT_PARALLAX_FRACTION
+        }
+    val pillContent: @Composable () -> Unit = {
         Row(
-            // The 16dp end inset matches a card's 8dp outer gutter and 8dp inset for its overflow button.
-            modifier = Modifier.defaultMinSize(minHeight = 48.dp).padding(start = SECTION_HEADER_KEYLINE, end = 16.dp + endPadding).graphicsLayer {
-                alpha = contentOpacity
-                clip = false
-                // The outgoing label lags the row slightly, then disappears before reaching the bar's controls.
-                translationY = (backgroundTopPx ?: 0) * SECTION_HEADER_CONTENT_PARALLAX_FRACTION
-            },
+            modifier = Modifier
+                .heightIn(min = SECTION_HEADER_PILL_HEIGHT)
+                .padding(start = SECTION_HEADER_PILL_START_PADDING, end = if (hasAction) SECTION_HEADER_PILL_ACTION_END_PADDING else SECTION_HEADER_PILL_START_PADDING),
+            // The action keeps to the end of the row, however short the name before it.
+            horizontalArrangement = Arrangement.SpaceBetween,
             verticalAlignment = Alignment.CenterVertically,
         ) {
-            // Keep the painter through its exit animation when a setlist is archived from this row's own menu.
-            var lastIcon by remember { mutableStateOf(icon) }
-            icon?.let { lastIcon = it }
-            AnimatedVisibility(
-                visible = icon != null,
-                enter = fadeIn() + expandHorizontally(),
-                exit = fadeOut() + shrinkHorizontally(),
+            Row(
+                modifier = Modifier.weight(1f, fill = false),
+                verticalAlignment = Alignment.CenterVertically,
             ) {
-                lastIcon?.let { painter ->
-                    Icon(
-                        modifier = Modifier.padding(end = 6.dp).size(16.dp),
-                        painter = painter,
-                        contentDescription = iconContentDescription,
-                        tint = MaterialTheme.colorScheme.onSurfaceVariant,
-                    )
+                // Keep the painter through its exit animation when a setlist is archived from this row's own menu.
+                var lastIcon by remember { mutableStateOf(icon) }
+                icon?.let { lastIcon = it }
+                AnimatedVisibility(
+                    visible = icon != null,
+                    enter = fadeIn() + expandHorizontally(),
+                    exit = fadeOut() + shrinkHorizontally(),
+                ) {
+                    lastIcon?.let { painter ->
+                        Icon(
+                            modifier = Modifier.padding(end = 8.dp).size(20.dp),
+                            painter = painter,
+                            contentDescription = iconContentDescription,
+                            tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                        )
+                    }
                 }
+                Text(
+                    modifier = Modifier.weight(1f, fill = false).padding(end = if (hasAction) SECTION_HEADER_TEXT_GAP else 0.dp),
+                    text = text,
+                    // The settings screen's tab labels, the other thing that stands at the top of a top level screen.
+                    style = MaterialTheme.typography.titleSmall,
+                    color = MaterialTheme.colorScheme.primary,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis,
+                )
             }
-            Text(
-                modifier = Modifier.weight(1f).padding(top = 10.dp, bottom = 10.dp, end = 4.dp),
-                text = text,
-                style = MaterialTheme.typography.titleSmall,
-                color = MaterialTheme.colorScheme.primary,
-                maxLines = SECTION_HEADER_MAX_LINES,
-                overflow = TextOverflow.Ellipsis,
-            )
             if (actionIcon != null) {
                 Box(Modifier.size(48.dp), contentAlignment = Alignment.Center) {
                     Icon(painter = actionIcon, contentDescription = null, tint = MaterialTheme.colorScheme.onSurfaceVariant)
                 }
             } else {
-                action?.invoke()
+                action?.invoke(Modifier.unfocusable())
             }
         }
     }
     if (onClick == null) {
-        Surface(modifier = headerModifier, color = if (backgroundTopPx == null) backgroundColor else Color.Transparent) { headerContent() }
+        // The decorative copy takes no touches, so a plain box rather than a surface, which would. It hands its
+        // content the pill's width as a minimum the way a surface does, or the row would wrap the name and pull a
+        // setlist's menu in next to it.
+        Box(modifier = pillModifier, propagateMinConstraints = true) { pillContent() }
     } else {
-        Surface(modifier = headerModifier, onClick = onClick, color = backgroundColor) { headerContent() }
+        // Nothing behind it: the cards under a pinned header are faded out entirely (see ListTopFade), and the pill's
+        // shape is only what the press is drawn in.
+        Surface(
+            modifier = pillModifier.unfocusable(),
+            onClick = onClick,
+            shape = CircleShape,
+            color = Color.Transparent,
+        ) { pillContent() }
     }
 }
+
+/**
+ * Keeps a [SectionHeader]'s pill and its action from taking the focus, which a click hands them on the desktop and the
+ * web: a lazy grid keeps its focused item composed and placed after it has scrolled away, and a header held that way
+ * upsets how the grid pins the ones after it, which are then drawn nowhere once they reach the top. The pill only
+ * scrolls to its section and the action opens a menu, neither of which the keyboard needs a stop in the list for.
+ */
+private fun Modifier.unfocusable() = focusProperties { canFocus = false }
 
 /** Paint the header into the grid's end padding without changing the width the grid assigns its item. */
 private fun Modifier.extendIntoEndPadding(endPadding: Dp) = layout { measurable, constraints ->
@@ -981,11 +1015,23 @@ internal fun songCardPadding(itemIndex: Int, columnCount: Int): PaddingValues {
 private val SONG_CARD_OUTER_PADDING = 8.dp
 private val SONG_CARD_INNER_PADDING = 4.dp
 private val SONG_CARD_VERTICAL_PADDING = 4.dp
-private val SECTION_HEADER_KEYLINE = LIST_ITEM_KEYLINE + SONG_CARD_OUTER_PADDING
 
 /**
  * The most lines the text of a pinned [SectionHeader] runs to before it is cut short.
  */
-private const val SECTION_HEADER_MAX_LINES = 2
-private const val SECTION_HEADER_DIVIDER_PARALLAX_FRACTION = 0.08f
-private const val SECTION_HEADER_CONTENT_PARALLAX_FRACTION = 0.28f
+/** The room a section header's text leaves before its action. */
+private val SECTION_HEADER_TEXT_GAP = 4.dp
+
+/** The room a pinned section header's pill leaves before the app bar's buttons. */
+private val SECTION_HEADER_APP_BAR_GAP = 8.dp
+
+/** As tall as the pill behind the app bar's buttons, which it stands next to once pinned. */
+private val SECTION_HEADER_PILL_HEIGHT = 48.dp
+
+/** Puts a header's text on the cards' keyline, the pill starting at their edge. */
+private val SECTION_HEADER_PILL_START_PADDING = 16.dp
+
+/** What the pill leaves after an action at its end, the same as the app bar's pill leaves after its buttons. */
+private val SECTION_HEADER_PILL_ACTION_END_PADDING = 4.dp
+
+private const val SECTION_HEADER_CONTENT_PARALLAX_FRACTION = 0.5f

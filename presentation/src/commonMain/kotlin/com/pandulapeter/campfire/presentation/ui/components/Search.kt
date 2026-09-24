@@ -18,6 +18,7 @@ import androidx.compose.animation.core.Spring
 import androidx.compose.animation.core.Transition
 import androidx.compose.animation.core.VisibilityThreshold
 import androidx.compose.animation.core.animateFloat
+import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.snap
 import androidx.compose.animation.core.spring
 import androidx.compose.animation.core.updateTransition
@@ -27,12 +28,13 @@ import androidx.compose.animation.fadeOut
 import androidx.compose.animation.scaleIn
 import androidx.compose.animation.scaleOut
 import androidx.compose.animation.shrinkHorizontally
-import androidx.compose.animation.slideInHorizontally
-import androidx.compose.animation.slideOutHorizontally
 import androidx.compose.foundation.gestures.ScrollableState
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.RowScope
+import androidx.compose.foundation.layout.calculateEndPadding
+import androidx.compose.foundation.layout.calculateStartPadding
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.offset
@@ -51,33 +53,43 @@ import androidx.compose.foundation.text.input.selectAll
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.IconButtonDefaults
+import androidx.compose.material3.LocalContentColor
 import androidx.compose.material3.LocalMinimumInteractiveComponentSize
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
-import androidx.compose.material3.TopAppBarScrollBehavior
 import androidx.compose.material3.minimumInteractiveComponentSize
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.State
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.movableContentOf
 import androidx.compose.runtime.mutableIntStateOf
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
+import androidx.compose.ui.geometry.CornerRadius
+import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Rect
+import androidx.compose.ui.geometry.lerp
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.input.pointer.PointerIcon
 import androidx.compose.ui.input.pointer.pointerHoverIcon
+import androidx.compose.ui.layout.LayoutCoordinates
 import androidx.compose.ui.layout.LookaheadScope
 import androidx.compose.ui.layout.layout
+import androidx.compose.ui.layout.onPlaced
 import androidx.compose.ui.layout.onSizeChanged
+import androidx.compose.ui.layout.positionInWindow
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
@@ -86,8 +98,9 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.IntSize
-import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.offset
+import androidx.compose.ui.unit.toSize
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigationevent.NavigationEventInfo
 import androidx.navigationevent.NavigationEventTransitionState
@@ -105,30 +118,35 @@ import com.pandulapeter.campfire.presentation.resources.songs_clear
 import org.jetbrains.compose.resources.painterResource
 
 /**
- * The app bar of a list screen that can be searched: the screen's name with the search action at the head of the
- * [actions] while the search is closed, and the same action at the very start of the bar with the field after it
- * while it is open.
+ * The app bar of a list screen that can be searched. It has no title: the navigation bar or rail already says which
+ * screen this is, and the list's own sticky section header is what stands where a title would, under this bar, which
+ * is drawn over the top of the list rather than above it. So all a closed search leaves here is the actions, the
+ * search action at their head, on a tonal pill that sets them apart from the pinned header under them as the screen's
+ * own - the header keeps its text and its own action clear of them
+ * (see [SectionHeader]'s `appBarReach`). Nothing in the bar but its buttons takes a touch, so the header underneath is
+ * still pressed and dragged anywhere else along its length.
  *
- * The search is an action and a state rather than a field that is always there because the bar of both list screens
- * is otherwise full: the field took the whole title slot, leaving the screen unnamed and the sort, filter and
- * "new" actions crowded against it.
+ * An open search is a bar of its own: the search action stands at the very start of it, where a back button would,
+ * the field reads on from it, and the bar fills in behind the two while the list moves down out of its way by the
+ * same amount - both following [appBarReveal], which the screen animates with [animateAppBarReveal] and also lays the
+ * list out by. A screen whose list has no header to stand in the bar's place (a placeholder, the ranked results of a
+ * search, which come in one headerless group) keeps the bar shown for the same reason.
  *
- * The action moves to the start as the search opens because that is where an open search is left from: it stands
- * where the back button of any other screen does, and the field it opened reads on from it. It is the one button
- * travelling across the bar rather than two buttons swapping places, since its mark is in the middle of turning
- * into the cross as it goes. So it is [movableContentOf] handed from the actions slot to the navigation icon slot
- * and back, which keeps the mark's animation where it was, and [animateBounds] carries it between the two, inside a
+ * The action moves to the start as the search opens because that is where an open search is left from. It is the one
+ * button travelling across the bar rather than two buttons swapping places, since its mark is in the middle of turning
+ * into the cross as it goes. So it is [movableContentOf] handed from the actions slot to the navigation icon slot and
+ * back, which keeps the mark's animation where it was, and [animateBounds] carries it between the two, inside a
  * [LookaheadScope] that is only this bar. Each slot makes room for the button with a placeholder that grows and
- * shrinks on the same spring the button travels on, which is what moves the title and the rest of the actions out
- * of its way instead of snapping them to where they end up.
+ * shrinks on the same spring the button travels on, which is what moves the rest of the actions out of its way
+ * instead of snapping them to where they end up.
  *
  * The field travels the same way, by [animateBounds] on the same spring, rather than being revealed by an animation of
  * its own: its start edge follows the button across the bar, and two different animations only ever arrive together
  * to within their visibility thresholds. A fraction of the field's width stops a hundredth short of the whole, which
  * on a wide window is several pixels for the edge to jump by on the last frame, while a rectangle settles to within a
- * pixel exactly as the button's does. So the field is laid out where it ends up — the whole title slot while the search
- * is open, and no width at all at the button's end edge while it is closed, [CLOSED_FIELD_OFFSET] past the end of the
- * slot — and the two rectangles travel between those places together.
+ * pixel exactly as the button's does. So the field is laid out where it ends up — the whole field slot while the
+ * search is open, and no width at all at the button's end edge while it is closed, [CLOSED_FIELD_OFFSET] past the end
+ * of the slot — and the two rectangles travel between those places together.
  *
  * The bounds only animate while the search is opening or closing: the same modifier would otherwise have the button
  * lag behind every other change of the bar's layout, a window being resized on the desktop among them.
@@ -139,19 +157,25 @@ import org.jetbrains.compose.resources.painterResource
  * the button's layout rather than a translation drawn over it, so that [animateBounds] sees where the gesture left the
  * button and a gesture that closes the search carries it on to the end from there instead of from the start of the bar.
  *
- * @param title The screen's own name, shown whenever the search is closed.
+ * @param contentPadding The screen's insets, of which the bar keeps clear of the start and the end ones.
+ * @param appBarReveal How far the bar is filled in, read while it is drawn.
  * @param placeholder What the field says while it is empty, which also names the search action, see [SearchAction].
- * @param actions The screen's own actions, which follow the search action while the search is closed.
+ * @param onReachChanged Called with how far the closed bar's buttons reach in from the end edge of the screen.
+ * @param closedSearchActions The screen's actions that have nothing to do with a search in progress - making something
+ *   new - which follow the search action while the search is closed and make way for the field while it is open,
+ *   leaving and coming back on the spring the search action travels on so that the field's edge and they move as one.
+ * @param actions The screen's other actions, which stay whether or not the search is open.
  */
 @OptIn(ExperimentalSharedTransitionApi::class)
 @Composable
 internal fun SearchableTopAppBar(
     modifier: Modifier = Modifier,
-    scrollBehavior: TopAppBarScrollBehavior,
-    scrollElevationEnabled: Boolean = true,
-    title: String,
+    contentPadding: PaddingValues,
+    appBarReveal: () -> Float,
     placeholder: String,
     searchState: SearchState,
+    onReachChanged: (Dp) -> Unit,
+    closedSearchActions: @Composable RowScope.() -> Unit = {},
     actions: @Composable RowScope.() -> Unit,
 ) {
     val isOpen by searchState.isOpen.collectAsStateWithLifecycle()
@@ -192,6 +216,13 @@ internal fun SearchableTopAppBar(
             )
         }
     }
+    val layoutDirection = LocalLayoutDirection.current
+    val density = LocalDensity.current
+    val endPadding = contentPadding.calculateEndPadding(layoutDirection) + APP_BAR_HORIZONTAL_PADDING
+    val containerColor = MaterialTheme.colorScheme.background
+    val pillColor = MaterialTheme.colorScheme.surfaceContainerHigh
+    val pill = remember { SearchPill() }
+    val pillProgress = searchTransition.animateFloat(transitionSpec = { searchTravelSpec() }) { if (it) 1f else 0f }
     LookaheadScope {
         val actionModifier = Modifier
             .offset { IntOffset(x = if (searchTransition.targetState) recession.startEdgeTravel else 0, y = 0) }
@@ -212,43 +243,135 @@ internal fun SearchableTopAppBar(
                 lookaheadScope = this,
                 boundsTransform = boundsTransform,
             )
-        CampfireTopAppBar(
-            modifier = modifier,
-            scrollBehavior = scrollBehavior,
-            scrollElevationEnabled = scrollElevationEnabled,
-            navigationIcon = {
-                SearchActionSlot(
-                    searchTransition = searchTransition,
-                    isHoldingAction = { it },
-                ) {
-                    if (isOpen) {
-                        searchAction(actionModifier, placeholder)
-                    }
+        Row(
+            modifier = modifier
+                .fillMaxWidth()
+                .onPlaced { pill.bar = it.positionInWindow() }
+                .drawBehind {
+                    drawRect(color = containerColor, alpha = appBarReveal().coerceIn(0f, 1f))
+                    val bounds = lerp(pill.actions, pill.field, pillProgress.value).translate(-pill.bar)
+                    drawRoundRect(
+                        color = pillColor,
+                        topLeft = bounds.topLeft,
+                        size = bounds.size,
+                        cornerRadius = CornerRadius(bounds.height / 2),
+                        alpha = 1f - recession.progress.value * RECEDED_ALPHA_LOSS,
+                    )
                 }
-            },
-            title = {
-                SearchableTopAppBarTitle(
-                    title = title,
-                    placeholder = placeholder,
-                    searchState = searchState,
-                    searchTransition = searchTransition,
-                    recession = recession,
-                    fieldModifier = fieldModifier,
+                .padding(
+                    start = contentPadding.calculateStartPadding(layoutDirection) + APP_BAR_HORIZONTAL_PADDING,
+                    end = endPadding,
                 )
-            },
-            actions = {
-                SearchActionSlot(
-                    searchTransition = searchTransition,
-                    isHoldingAction = { !it },
-                ) {
-                    if (!isOpen) {
-                        searchAction(actionModifier, placeholder)
-                    }
+                .height(LIST_APP_BAR_HEIGHT),
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            SearchActionSlot(
+                searchTransition = searchTransition,
+                isHoldingAction = { it },
+            ) {
+                if (isOpen) {
+                    searchAction(actionModifier, placeholder)
                 }
-                actions()
-            },
-        )
+            }
+            SearchFieldSlot(
+                modifier = Modifier.weight(1f).padding(end = APP_BAR_HORIZONTAL_PADDING),
+                placeholder = placeholder,
+                searchState = searchState,
+                searchTransition = searchTransition,
+                recession = recession,
+                fieldModifier = fieldModifier.onPlaced { pill.field = it.boundsInWindowUnclipped() },
+            )
+            // The actions of a top app bar are drawn in a quieter color than its content.
+            CompositionLocalProvider(LocalContentColor provides MaterialTheme.colorScheme.onSurfaceVariant) {
+                Row(
+                    // Measured only while the search is closed and settled, since that is the only state in which the
+                    // bar is drawn over a pinned header rather than above the list: the reach is what the header keeps
+                    // clear, and it would otherwise shrink under the headers as the search action leaves the actions.
+                    modifier = Modifier
+                        .onSizeChanged {
+                            if (isClosedAndSettled) onReachChanged(with(density) { it.width.toDp() } + endPadding)
+                        }
+                        .onPlaced { pill.actions = it.boundsInWindowUnclipped() }
+                        .padding(horizontal = ACTIONS_PILL_PADDING),
+                    verticalAlignment = Alignment.CenterVertically,
+                ) {
+                    SearchActionSlot(
+                        searchTransition = searchTransition,
+                        isHoldingAction = { !it },
+                    ) {
+                        if (!isOpen) {
+                            searchAction(actionModifier, placeholder)
+                        }
+                    }
+                    val closedSearchActionsSizeSpec = searchTravelSpec(visibilityThreshold = IntSize.VisibilityThreshold)
+                    val closedSearchActionsFadeSpec = searchTravelSpec<Float>()
+                    searchTransition.AnimatedVisibility(
+                        visible = { !it },
+                        enter = fadeIn(closedSearchActionsFadeSpec) + expandHorizontally(closedSearchActionsSizeSpec),
+                        exit = fadeOut(closedSearchActionsFadeSpec) + shrinkHorizontally(closedSearchActionsSizeSpec),
+                    ) {
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            closedSearchActions()
+                        }
+                    }
+                    actions()
+                }
+            }
+        }
     }
+}
+
+/**
+ * How far the app bar of a list screen is filled in (see [SearchableTopAppBar]): not at all while a closed search leaves
+ * the pinned header of the list to stand in its place, and completely while the search is open or while the list has
+ * no header to stand there. It moves on the spring the search action travels on, since the bar filling in and the
+ * list making room for it are part of the search opening.
+ *
+ * @param isShownWithoutSearch Whether the list has nothing to stand in the bar's place even while the search is closed.
+ */
+@Composable
+internal fun animateAppBarReveal(
+    searchState: SearchState,
+    isShownWithoutSearch: Boolean,
+): State<Float> {
+    val isOpen by searchState.isOpen.collectAsStateWithLifecycle()
+    return animateFloatAsState(
+        targetValue = if (isOpen || isShownWithoutSearch) 1f else 0f,
+        animationSpec = searchTravelSpec(),
+    )
+}
+
+/**
+ * What of a list the app bar's buttons stand over while the bar is not filled in: how far in from the list's end edge
+ * they reach, which a pinned [SectionHeader] keeps its text and its action clear of, and how far down from its top,
+ * which the [FastScroller] starts below so that its thumb is never under a button that would take the press.
+ */
+internal data class AppBarOverlap(
+    val reach: Dp,
+    val height: Dp,
+) {
+
+    companion object {
+
+        /**
+         * @param reach How far the buttons of the closed bar reach in from the end edge of the list.
+         * @param appBarReveal How far the bar is filled in, which moves the list out from under it by as much.
+         */
+        fun of(reach: Dp, appBarReveal: Float): AppBarOverlap {
+            val uncovered = 1f - appBarReveal.coerceIn(0f, 1f)
+            return AppBarOverlap(reach = reach * uncovered, height = LIST_APP_BAR_HEIGHT * uncovered)
+        }
+    }
+}
+
+/**
+ * Lays a list out under the part of the app bar [appBarReveal] says is filled in, reading it while the list is laid
+ * out so that the bar filling in moves the list without recomposing it.
+ */
+internal fun Modifier.underAppBar(appBarReveal: () -> Float) = layout { measurable, constraints ->
+    val top = (LIST_APP_BAR_HEIGHT.toPx() * appBarReveal().coerceIn(0f, 1f)).roundToInt()
+    val placeable = measurable.measure(constraints.offset(vertical = -top))
+    layout(placeable.width, placeable.height + top) { placeable.placeRelative(x = 0, y = top) }
 }
 
 /**
@@ -282,56 +405,27 @@ private fun SearchActionSlot(
 }
 
 /**
- * The title slot of a list screen's app bar: the screen's name, which the search field takes the place of while the
- * search is open. The two pass each other rather than being swapped, since both the search opening and the search
- * closing are things the user asked for and has to be able to see happen.
+ * The part of a list screen's app bar the search field opens into, between the search action at the start of the bar
+ * and the actions at its end.
  *
- * The name is faded rather than moved out of the way: it drifts only a short, fixed distance towards the start edge
- * as it goes and back from there as it comes, while the fade is what actually takes it away. That distance is how far
- * it moves *on screen*, and the slot it is in moves the other way by more than that while it does, since the room
- * opening at the start for the search action pushes the whole title slot towards the end. A slide of just the
- * distance was read as the name drifting towards the end, so the slide also takes back the slot's own movement
- * ([TITLE_SLOT_SHIFT]); both run on the same spring, which is what lets the one cancel the other frame by frame. Both run on the spring the search action travels on, so the name is still readable while the rest of
- * the bar starts moving instead of blinking out on the quick effects spring before anything else has visibly begun.
- * The distance is fixed rather than a fraction of the name's width, so a long name does not travel further than a
- * short one.
- *
- * The field is never taken out of the [Box] the two share, only emptied and laid out with no width at all while the
- * search is closed, since [animateBounds] only animates a rectangle it has already seen: a field composed as the search
- * opened would appear at its full size on the first frame. It keeps the box as tall as the field throughout, so the
- * title is centered in it rather than pinned to the top of a box that grows and shrinks.
+ * The field is never taken out of the [Box], only emptied and laid out with no width at all while the search is
+ * closed, since [animateBounds] only animates a rectangle it has already seen: a field composed as the search opened
+ * would appear at its full size on the first frame.
  *
  * @param fieldModifier Where the field is laid out and how it travels there, see [SearchableTopAppBar].
  */
 @Composable
-private fun SearchableTopAppBarTitle(
+private fun SearchFieldSlot(
     modifier: Modifier = Modifier,
-    title: String,
     placeholder: String,
     searchState: SearchState,
     searchTransition: Transition<Boolean>,
     recession: SearchRecession,
     fieldModifier: Modifier,
 ) = Box(
-    modifier = modifier.fillMaxWidth().onSizeChanged { recession.fieldWidth = it.width },
+    modifier = modifier.onSizeChanged { recession.fieldWidth = it.width },
     contentAlignment = Alignment.CenterStart,
 ) {
-    // Slide offsets are placed as they are rather than mirrored, so the start edge is the left one only left to right.
-    val towardsStartEdge = with(LocalDensity.current) { (TITLE_SLIDE_DISTANCE + TITLE_SLOT_SHIFT).roundToPx() } *
-        if (LocalLayoutDirection.current == LayoutDirection.Ltr) -1 else 1
-    val titleSlideSpec = searchTravelSpec(visibilityThreshold = IntOffset.VisibilityThreshold)
-    val titleFadeSpec = searchTravelSpec<Float>()
-    searchTransition.AnimatedVisibility(
-        visible = { !it },
-        enter = fadeIn(titleFadeSpec) + slideInHorizontally(animationSpec = titleSlideSpec, initialOffsetX = { towardsStartEdge }),
-        exit = fadeOut(titleFadeSpec) + slideOutHorizontally(animationSpec = titleSlideSpec, targetOffsetX = { towardsStartEdge }),
-    ) {
-        Text(
-            text = title,
-            maxLines = 1,
-            overflow = TextOverflow.Ellipsis,
-        )
-    }
     val fieldFadeSpec = MaterialTheme.motionScheme.defaultEffectsSpec<Float>()
     val fieldAlpha = searchTransition.animateFloat(
         transitionSpec = { fieldFadeSpec },
@@ -455,7 +549,9 @@ private fun SearchAction(
 }
 
 /**
- * The field itself: a tonal pill holding one line of text and the button that empties it.
+ * The field itself: one line of text and the button that empties it, on the bar's tonal pill (see [SearchPill]),
+ * which is not drawn here but travels in from behind the buttons as the search opens. The field only clips its
+ * content to the pill's shape.
  *
  * It is laid out here rather than taken from `SearchBarDefaults.InputField`, which is fixed at the 56dp of a search
  * bar standing on its own — inside a 64dp app bar that leaves four pixels of daylight above and below it, so the
@@ -463,10 +559,9 @@ private fun SearchAction(
  * padding that decides it can be passed in. What is wanted here is the height of the actions beside it, which also
  * brings the clear button down to the compact size the header pills use.
  *
- * The pill is what the field never needed while it *was* the title: the bar's own close button now sits a few
- * pixels in front of it, and without it the button that empties the field and the button that leaves the search are
- * two bare crosses on one line with nothing to say which belongs to what. It is also what tells an empty field
- * from a title, now that the two take turns in the same place.
+ * The pill is there because the bar's own close button sits a few pixels in front of the field, and without it the
+ * button that empties the field and the button that leaves the search are two bare crosses on one line with nothing
+ * to say which belongs to what.
  *
  * The field takes the focus as it opens, since it is there because the user asked for it and asking again with a
  * tap is one tap more than the action they already took; on a touch platform that is also what brings the keyboard
@@ -477,7 +572,7 @@ private fun SearchAction(
  * sets out from as the search opens, so the start edge of the pill follows the button across the bar to the start
  * of it, and follows it back into the end as it closes, where a field that slid in would pass under the very button
  * that is turning into the close mark. The pill is only ever as wide as it is seen, see [SearchableTopAppBar], while
- * what it holds is laid out at the full width of the title slot, so the text inside does not reflow as it goes.
+ * what it holds is laid out at the full width of the field slot, so the text inside does not reflow as it goes.
  * That content rides the start edge, carried into the end as the field leaves and out of it as it arrives, and is cut
  * off where it meets the end: text that stayed put, or moved any slower than the edge, is read as standing still while
  * the pill is swept away from under it.
@@ -506,7 +601,7 @@ private fun SearchField(
         .height(FIELD_HEIGHT)
         .graphicsLayer { this.alpha = alpha() * (1f - recession.progress.value * RECEDED_ALPHA_LOSS) },
     shape = CircleShape,
-    color = MaterialTheme.colorScheme.surfaceContainerHigh,
+    color = Color.Transparent,
 ) {
     if (isContentShown) {
         val keyboardController = LocalSoftwareKeyboardController.current
@@ -603,6 +698,31 @@ private object TruncateSearchQuery : InputTransformation {
 }
 
 /**
+ * The one tonal pill of a list screen's app bar, which is the background of the buttons while the search is closed and
+ * the background of the field while it is open, and travels between the two as the search opens and closes rather
+ * than one fading out while the other fades in. Behind the buttons, it is what makes them read as the screen's own
+ * rather than as the pinned header's: sitting on the header's row next to its name, they would otherwise look like
+ * that one section's actions.
+ *
+ * It is drawn by the bar, from where the two things it stands behind are laid out on the frame it is drawn: both are
+ * already moving on the spring the search action travels on (the buttons' row narrowing as the action leaves it, the
+ * field following the action's edge), and the pill goes from the one to the other on that same spring, so it never
+ * lags behind either and settles exactly on whichever it ends up behind. Positions are kept in window coordinates
+ * because the three are laid out by different parents, and the bar's own is taken off again as it draws.
+ */
+private class SearchPill {
+
+    var bar by mutableStateOf(Offset.Zero)
+
+    var actions by mutableStateOf(Rect.Zero)
+
+    var field by mutableStateOf(Rect.Zero)
+}
+
+/** Where a layout is in the window, all of it: the field starts out beyond the bar's end, which a clip would cut off. */
+private fun LayoutCoordinates.boundsInWindowUnclipped() = Rect(offset = positionInWindow(), size = size.toSize())
+
+/**
  * How far a back gesture that would close the search has taken the field towards closing: the gesture's own progress
  * while it is dragged, animated back to nothing when it is let go of without closing the search. It is held by the app
  * bar rather than by the field because the search action follows it too, and the two only move as one if they read
@@ -638,22 +758,26 @@ private const val RECEDED_ALPHA_LOSS = 0.5f
 /** How much of the field's width a back gesture dragged all the way collapses before it is let go of. */
 private const val RECEDED_WIDTH_LOSS = 0.25f
 
-/** How far the screen's name is seen to drift towards the start edge as it fades out, and back from as it fades in. */
-private val TITLE_SLIDE_DISTANCE = 16.dp
-
 /**
- * How far the title slot moves towards the end while the search opens, and back while it closes. `TopAppBar` starts
- * its title 12dp in while there is no navigation icon, and after the icon's slot once that is wider - which the search
- * action's is, a 48dp touch target behind the bar's 4dp padding - so the slot starts 52dp in while the search is open.
- */
-private val TITLE_SLOT_SHIFT = 40.dp
-
-/**
- * How far past the end of the title slot's content the search action ends while the search is closed: the 4dp
- * `TopAppBar` pads its title by, and the touch target the action's slot keeps for it. The closed field is laid out
- * with no width at that edge, so that its start edge sets out from the end of the button rather than from under it.
+ * How far past the end of the field slot the search action ends while the search is closed: the slot's own end
+ * padding, and the touch target the action's slot keeps for it. The closed field is laid out with no width at that
+ * edge, so that its start edge sets out from the end of the button rather than from under it.
  */
 private val CLOSED_FIELD_OFFSET = 52.dp
+
+/**
+ * The height of a list screen's app bar, which is also the height of the list's section headers, since the one pinned
+ * at the top stands in the bar's place with its text level with the bar's buttons. A little lower than a `TopAppBar`:
+ * a header is a row of the list as well, repeated all the way down it, and the 48dp buttons still fit with room to
+ * spare.
+ */
+internal val LIST_APP_BAR_HEIGHT = 56.dp
+
+/** The room the pill behind the closed bar's buttons leaves at either end of them. */
+private val ACTIONS_PILL_PADDING = 4.dp
+
+/** The padding `TopAppBar` keeps at either end of its row, which this bar keeps so its buttons sit where a bar's would. */
+private val APP_BAR_HORIZONTAL_PADDING = 4.dp
 
 private val FIELD_HEIGHT = 40.dp
 private val CLEAR_BUTTON_SIZE = 32.dp

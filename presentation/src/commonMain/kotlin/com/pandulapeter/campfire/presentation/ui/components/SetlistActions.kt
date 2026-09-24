@@ -13,6 +13,7 @@ import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.painter.Painter
 import com.pandulapeter.campfire.data.model.domain.Setlist
 import com.pandulapeter.campfire.presentation.localization.stringResource
@@ -48,11 +49,15 @@ import org.jetbrains.compose.resources.painterResource
  */
 @Composable
 internal fun SetlistActionsMenu(
+    modifier: Modifier = Modifier,
     viewModel: CampfireViewModel,
     setlist: Setlist,
 ) {
     val filePicker = LocalFilePicker.current
-    ActionsMenu(contentDescription = stringResource(Res.string.setlists_actions)) { select ->
+    ActionsMenu(
+        modifier = modifier,
+        contentDescription = stringResource(Res.string.setlists_actions),
+    ) { select ->
         // Each entry acts through `select`, which closes the menu before it acts - so that it is gone by the time the
         // dialog or the picker it opens is on the screen - and only once.
         SetlistActionsMenuItem(

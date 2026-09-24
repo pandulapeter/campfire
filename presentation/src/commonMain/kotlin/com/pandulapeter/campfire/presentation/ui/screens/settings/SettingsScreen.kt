@@ -10,6 +10,7 @@
 package com.pandulapeter.campfire.presentation.ui.screens.settings
 
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.calculateEndPadding
@@ -17,12 +18,10 @@ import androidx.compose.foundation.layout.calculateStartPadding
 import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.foundation.selection.selectableGroup
-import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ListItem
 import androidx.compose.material3.ListItemDefaults
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
-import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.derivedStateOf
@@ -55,7 +54,6 @@ import com.pandulapeter.campfire.presentation.resources.ic_phone
 import com.pandulapeter.campfire.presentation.resources.ic_privacy_policy
 import com.pandulapeter.campfire.presentation.resources.ic_star
 import com.pandulapeter.campfire.presentation.resources.ic_songs
-import com.pandulapeter.campfire.presentation.resources.settings
 import com.pandulapeter.campfire.presentation.resources.settings_about
 import com.pandulapeter.campfire.presentation.resources.settings_accidentals
 import com.pandulapeter.campfire.presentation.resources.settings_accidentals_description
@@ -123,7 +121,6 @@ import com.pandulapeter.campfire.presentation.resources.settings_user_interface_
 import com.pandulapeter.campfire.presentation.resources.settings_version
 import com.pandulapeter.campfire.presentation.ui.CampfireViewModel
 import com.pandulapeter.campfire.presentation.ui.components.ActionListItem
-import com.pandulapeter.campfire.presentation.ui.components.CampfireTopAppBar
 import com.pandulapeter.campfire.presentation.ui.components.ColorChoice
 import com.pandulapeter.campfire.presentation.ui.components.ColorChoiceOption
 import com.pandulapeter.campfire.presentation.ui.components.ImportProgress
@@ -131,7 +128,6 @@ import com.pandulapeter.campfire.presentation.ui.components.LinkListItem
 import com.pandulapeter.campfire.presentation.ui.components.RadioListItem
 import com.pandulapeter.campfire.presentation.ui.components.SegmentedChoice
 import com.pandulapeter.campfire.presentation.ui.components.SwitchListItem
-import com.pandulapeter.campfire.presentation.ui.components.TopLevelScreenLayout
 import com.pandulapeter.campfire.presentation.ui.components.rememberRetainedScrollState
 import com.pandulapeter.campfire.presentation.ui.platform.Distribution
 import com.pandulapeter.campfire.presentation.ui.platform.LibraryLocation
@@ -146,13 +142,13 @@ import kotlinx.coroutines.launch
 import org.jetbrains.compose.resources.painterResource
 
 /**
- * The settings of the app as four tabs, one [SettingsTab] per page of a pager, with the tabs themselves under the app
- * bar so that they stay in reach however far a page is scrolled. Each tab holds a section or two, laid out side by side
- * where the window has room for them (see [SettingsPage]).
+ * The settings of the app as four tabs, one [SettingsTab] per page of a pager, with the tabs themselves at the top of
+ * the screen so that they stay in reach however far a page is scrolled. There is no app bar above them: the screen has
+ * nothing to put in one but its name, which the navigation bar or rail already says. Each tab holds a section or two,
+ * laid out side by side where the window has room for them (see [SettingsPage]).
  *
- * The bar and the tabs lie flat on the screen and never tint or lift as a page scrolls under them, the divider under
- * the tabs being the edge the pages scroll under instead. The bar spans the navigation rail and the tabs only the part
- * of the screen next to it, so a bar that lifted would lift with its tabs as an L around the corner of the rail.
+ * The tabs lie flat on the screen and never tint or lift as a page scrolls under them, the divider under them being
+ * the edge the pages scroll under instead.
  *
  * Every page is composed as the screen is rather than as it is first swiped to, and everything a section draws is a
  * state the view model already holds by then, so the first frame of a tab is the tab as it is rather than a guess that
@@ -162,13 +158,11 @@ import org.jetbrains.compose.resources.painterResource
  * @param settledWidth The width of the screen once the navigation bars have finished animating, which is what the
  *   number of columns is decided from.
  */
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 internal fun SettingsScreen(
     modifier: Modifier = Modifier,
     viewModel: CampfireViewModel,
     settledWidth: Dp,
-    railWidth: Dp,
     contentPadding: PaddingValues,
     urlOpener: (String) -> Unit,
 ) {
@@ -192,17 +186,7 @@ internal fun SettingsScreen(
     LaunchedEffect(pagerState) {
         snapshotFlow { pagerState.settledPage }.collect { viewModel.settingsTab = SettingsTab.entries[it] }
     }
-    TopLevelScreenLayout(
-        modifier = modifier,
-        railWidth = railWidth,
-        appBar = {
-            CampfireTopAppBar(
-                // Never connected to the pages' scrolling, which is what keeps the bar flat, see above.
-                scrollBehavior = TopAppBarDefaults.pinnedScrollBehavior(),
-                title = { Text(stringResource(Res.string.settings)) },
-            )
-        },
-    ) {
+    Column(modifier = modifier.fillMaxSize()) {
         // The tab being headed for rather than the one on screen, so that the indicator sets off the moment a tab is
         // pressed instead of waiting for the pages to pass the halfway point.
         SettingsTabRow(

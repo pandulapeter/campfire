@@ -138,9 +138,9 @@ internal fun songListColumnCount(
 }
 
 /**
- * A screen's controls ([SongsControls], [SetlistsControls]) in a panel under the app bar and next to the list, shown
- * on screens that are wide enough for it, see [hasRoomForSidePanel]. The bar spans it the way it spans the navigation
- * rail at the other end, so that the window reads as one bar over everything the screen holds.
+ * A screen's controls ([SongsControls], [SetlistsControls]) in a panel next to the list, shown on screens that are
+ * wide enough for it, see [hasRoomForSidePanel]. The list screens' app bar spans the list alone (see
+ * [SearchableTopAppBar]), so the panel reaches the top of the screen beside it.
  *
  * @param content The controls themselves, handed the modifier that gives the panel its size and the insets the panel
  *   is responsible for.

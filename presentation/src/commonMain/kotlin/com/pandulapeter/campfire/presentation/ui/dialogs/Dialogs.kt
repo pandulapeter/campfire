@@ -33,6 +33,7 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyListScope
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.foundation.text.KeyboardActions
@@ -40,7 +41,6 @@ import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -154,6 +154,7 @@ import com.pandulapeter.campfire.presentation.ui.components.SetlistsControls
 import com.pandulapeter.campfire.presentation.ui.components.SongsControls
 import com.pandulapeter.campfire.presentation.ui.components.TagFlowRow
 import com.pandulapeter.campfire.presentation.ui.components.TagPill
+import com.pandulapeter.campfire.presentation.ui.components.fadingTopEdge
 import com.pandulapeter.campfire.presentation.ui.components.languageLabel
 import com.pandulapeter.campfire.presentation.ui.components.languageName
 import com.pandulapeter.campfire.presentation.ui.components.pickableLanguages
@@ -1162,9 +1163,6 @@ private fun PickerFilters(
                 )
             }
         }
-        // The rows scroll up under the chips, and without an edge between the two they would fade into the gap
-        // below the chips as if cut off by nothing.
-        HorizontalDivider()
     }
 }
 
@@ -1256,11 +1254,16 @@ private fun ColumnScope.PickerList(
 ) {
     val density = LocalDensity.current
     var tallestHeight by remember { mutableIntStateOf(0) }
+    val listState = rememberLazyListState()
     LazyColumn(
         modifier = Modifier
             .weight(1f, fill = false)
             .heightIn(min = with(density) { tallestHeight.toDp() })
-            .onSizeChanged { tallestHeight = maxOf(tallestHeight, it.height) },
+            .onSizeChanged { tallestHeight = maxOf(tallestHeight, it.height) }
+            // The rows fade out as they scroll up under the search field and the filter chips, which is the edge
+            // between the two everywhere else in the app too.
+            .fadingTopEdge(listState),
+        state = listState,
         // The gap under the search field is the list's own content padding rather than a padding around the list, so
         // that a scrolled row goes under the field itself instead of being cut off a few pixels short of it.
         contentPadding = PaddingValues(

@@ -34,7 +34,7 @@ import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.calculateEndPadding
 import androidx.compose.foundation.layout.calculateStartPadding
 import androidx.compose.foundation.layout.WindowInsets
-import androidx.compose.foundation.layout.add
+import androidx.compose.foundation.layout.WindowInsetsSides
 import androidx.compose.foundation.layout.consumeWindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.size
@@ -42,30 +42,27 @@ import androidx.compose.foundation.layout.ime
 import androidx.compose.foundation.layout.systemBars
 import androidx.compose.foundation.layout.displayCutout
 import androidx.compose.foundation.layout.union
+import androidx.compose.foundation.layout.only
+import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
 import androidx.compose.material3.Icon
-import androidx.compose.material3.LocalContentColor
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.MotionScheme
 import androidx.compose.material3.NavigationBar
 import androidx.compose.material3.NavigationBarItem
 import androidx.compose.material3.NavigationRail
-import androidx.compose.material3.NavigationRailDefaults
 import androidx.compose.material3.NavigationRailItem
 import androidx.compose.material3.Snackbar
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
-import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.material3.WideNavigationRail
-import androidx.compose.material3.WideNavigationRailDefaults
 import androidx.compose.material3.WideNavigationRailItem
 import androidx.compose.material3.WideNavigationRailValue
 import androidx.compose.material3.rememberWideNavigationRailState
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.SideEffect
 import androidx.compose.runtime.Stable
@@ -127,7 +124,6 @@ import com.pandulapeter.campfire.presentation.resources.settings_sync_progress
 import com.pandulapeter.campfire.presentation.resources.songs
 import com.pandulapeter.campfire.presentation.resources.songs_delete_song_partly
 import com.pandulapeter.campfire.presentation.resources.songs_update_file_name_partly
-import com.pandulapeter.campfire.presentation.ui.components.TopLevelScreenLayout
 import com.pandulapeter.campfire.presentation.ui.components.WindowSize
 import com.pandulapeter.campfire.presentation.ui.components.hasRoomForSidePanel
 import com.pandulapeter.campfire.presentation.ui.components.pluralTextResource
@@ -538,13 +534,13 @@ private fun CampfireScreens(
                     ReportNavigationTransition(viewModel, onNavigationTransitionRunningChanged)
                     TopLevelScreenSurface(
                         windowSize = windowSize,
+                        railWidth = railWidth,
                         navigationBarHeight = navigationBarHeight,
                         chrome = screenChrome(destination),
                     ) {
                         SongsScreen(
                             viewModel = viewModel,
                             settledWidth = settledListWidth,
-                            railWidth = railWidth,
                             contentPadding = shellContentPadding,
                         )
                     }
@@ -553,13 +549,13 @@ private fun CampfireScreens(
                     ReportNavigationTransition(viewModel, onNavigationTransitionRunningChanged)
                     TopLevelScreenSurface(
                         windowSize = windowSize,
+                        railWidth = railWidth,
                         navigationBarHeight = navigationBarHeight,
                         chrome = screenChrome(destination),
                     ) {
                         SetlistsScreen(
                             viewModel = viewModel,
                             settledWidth = settledListWidth,
-                            railWidth = railWidth,
                             contentPadding = shellContentPadding,
                         )
                     }
@@ -568,13 +564,13 @@ private fun CampfireScreens(
                     ReportNavigationTransition(viewModel, onNavigationTransitionRunningChanged)
                     TopLevelScreenSurface(
                         windowSize = windowSize,
+                        railWidth = railWidth,
                         navigationBarHeight = navigationBarHeight,
                         chrome = screenChrome(destination),
                     ) {
                         SettingsScreen(
                             viewModel = viewModel,
                             settledWidth = settledListWidth,
-                            railWidth = railWidth,
                             contentPadding = shellContentPadding,
                             urlOpener = urlOpener,
                         )
@@ -778,8 +774,6 @@ private fun NavigationChrome(
         // between either. The state is only ever the expanded one.
         WideNavigationRail(
             state = rememberWideNavigationRailState(initialValue = WideNavigationRailValue.Expanded),
-            // Starts under the app bar for the same reason the collapsed rail does, see below.
-            windowInsets = WideNavigationRailDefaults.windowInsets.add(WindowInsets(top = TopAppBarDefaults.TopAppBarExpandedHeight)),
             // The default leaves room above the items for a header this rail does not have, which would drop them
             // 40dp lower than the collapsed rail's as the window crosses from the one to the other.
             contentPadding = PaddingValues(top = EXPANDED_NAVIGATION_RAIL_TOP_PADDING),
@@ -795,11 +789,7 @@ private fun NavigationChrome(
             }
         }
     } else if (windowSize.usesNavigationRail) {
-        NavigationRail(
-            // The app bar of every top level screen spans the rail's column, so the rail starts under it. The bar is
-            // the pinned, single row one on all three screens, which is what lets its height be known here.
-            windowInsets = NavigationRailDefaults.windowInsets.add(WindowInsets(top = TopAppBarDefaults.TopAppBarExpandedHeight)),
-        ) {
+        NavigationRail {
             CampfireDestination.TopLevel.entries.forEach { destination ->
                 NavigationRailItem(
                     selected = destination == currentTopLevelDestination,
@@ -869,20 +859,18 @@ private fun ScreenSurface(
 }
 
 /**
- * One card of the deck next to the navigation chrome, inset from the navigation bar rather than clipped, so that the
- * bar stays visible under it. Given a [chrome], it draws that under itself where [NavigationChromeScaffold] places the
- * shared one, so that nothing moves as the one hands over to the other.
+ * One card of the deck next to the navigation chrome, inset from the navigation rail or bar rather than clipped, so
+ * that the chrome stays visible beside it. Given a [chrome], it draws that under itself where
+ * [NavigationChromeScaffold] places the shared one, so that nothing moves as the one hands over to the other.
  *
- * It is not inset from the navigation rail, and it is not a surface: the app bar of a top level screen spans the
- * rail's column, so the screen leaves that column open under its bar by itself and paints and blocks only the parts
- * it draws, see [TopLevelScreenLayout]. Not being a surface, it provides the content color one over the background
- * would, or every text and icon on these screens that does not pick a color of its own would be drawn in the
- * default black, which is unreadable in the dark theme.
+ * A [Surface], so that it blocks touches from reaching the screen it covers during a transition, and so that it keeps
+ * its screen below the status bar: none of the three top level screens has a top app bar of its own to do that.
  */
 @OptIn(ExperimentalLayoutApi::class)
 @Composable
 private fun TopLevelScreenSurface(
     windowSize: WindowSize,
+    railWidth: Dp,
     navigationBarHeight: Dp,
     chrome: (@Composable () -> Unit)?,
     content: @Composable () -> Unit,
@@ -896,14 +884,17 @@ private fun TopLevelScreenSurface(
             chrome()
         }
     }
-    Box(
+    Surface(
         modifier = Modifier
             .fillMaxSize()
-            .padding(bottom = navigationBarHeight)
-            // The bar covers the insets on its own edge, so nothing inside should apply them a second time.
-            .consumeWindowInsets(PaddingValues(bottom = navigationBarHeight)),
+            .padding(start = railWidth, bottom = navigationBarHeight)
+            // The chrome covers the insets on its own edge, so nothing inside should apply them a second time.
+            .consumeWindowInsets(PaddingValues(start = railWidth, bottom = navigationBarHeight)),
+        color = MaterialTheme.colorScheme.background,
     ) {
-        CompositionLocalProvider(LocalContentColor provides MaterialTheme.colorScheme.onBackground, content = content)
+        Box(modifier = Modifier.windowInsetsPadding(WindowInsets.contentEdges.only(WindowInsetsSides.Top))) {
+            content()
+        }
     }
 }
 
@@ -916,8 +907,7 @@ private fun TopLevelScreenSurface(
  *
  * Switching between top level destinations is not a deal but a swap of the bottom card, so those fade through in
  * place, next to a navigation bar and a navigation rail alike: nothing about two tabs puts one of them in any
- * direction of the other, and the app bar of a top level screen spans the rail, so a screen sliding along the rail
- * would drag its bar across the rail's items.
+ * direction of the other.
  *
  * The editor is the one screen that is not a card of the deck but a modal put in front of it, so it always comes up
  * from the bottom edge and leaves the same way, in every direction the gesture that dismisses it may have come

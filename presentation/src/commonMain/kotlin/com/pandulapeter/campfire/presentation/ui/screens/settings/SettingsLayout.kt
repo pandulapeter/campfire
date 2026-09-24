@@ -29,7 +29,6 @@ import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Badge
 import androidx.compose.material3.BadgedBox
-import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.PrimaryTabRow
 import androidx.compose.material3.Tab
@@ -44,6 +43,7 @@ import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
+import com.pandulapeter.campfire.presentation.ui.components.fadingTopEdge
 
 /**
  * The tabs of the settings screen, in the order they are read in: what the app looks like and lets its user do, then
@@ -103,7 +103,6 @@ internal fun SettingsTabRow(
             )
         }
     }
-    HorizontalDivider()
 }
 
 /**
@@ -141,6 +140,7 @@ internal fun SettingsPage(
     Row(
         modifier = modifier
             .fillMaxSize()
+            .fadingTopEdge(scrollState)
             .verticalScroll(scrollState)
             .padding(
                 start = contentPadding.calculateStartPadding(layoutDirection),

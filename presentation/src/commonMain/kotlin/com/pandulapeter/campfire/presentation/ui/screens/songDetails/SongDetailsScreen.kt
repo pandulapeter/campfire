@@ -43,7 +43,6 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
-import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.SideEffect
@@ -57,7 +56,6 @@ import androidx.compose.runtime.setValue
 import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.keepScreenOn
 import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.text.style.TextAlign
@@ -90,7 +88,7 @@ import com.pandulapeter.campfire.presentation.ui.components.CampfireTopAppBar
 import com.pandulapeter.campfire.presentation.ui.components.DelayedLoadingIndicator
 import com.pandulapeter.campfire.presentation.ui.components.EmptyState
 import com.pandulapeter.campfire.presentation.ui.components.EmptyStateAction
-import com.pandulapeter.campfire.presentation.ui.components.KeepTopAppBarInSync
+import com.pandulapeter.campfire.presentation.ui.components.fadingTopEdge
 import com.pandulapeter.campfire.presentation.ui.components.SongActionsButton
 import com.pandulapeter.campfire.presentation.ui.components.WindowSize
 import com.pandulapeter.campfire.presentation.ui.navigation.CampfireDestination
@@ -200,7 +198,6 @@ internal fun SongDetailsScreen(
     // app bar only needs one line of it.
     val currentKey = currentSong?.let { viewModel.renderKey(song = it, transposition = currentTransposition, spelling = chordSpelling) }
 
-    val scrollBehavior = TopAppBarDefaults.pinnedScrollBehavior()
     val coroutineScope = rememberCoroutineScope()
     val pageStepper = remember(pagerState, coroutineScope) { PageStepper(pagerState, coroutineScope) }
     // The arrow keys scroll the song the reader is looking at, and the pages each scroll on their own, so the one
@@ -215,18 +212,11 @@ internal fun SongDetailsScreen(
             .filter { it.fileName !in songTexts && it.fileName !in failedSongFileNames }
             .forEach { viewModel.loadSongContent(it.fileName) }
     }
-    // Every page scrolls on its own, so the app bar's notion of "content scrolled underneath" restarts per page.
-    LaunchedEffect(pagerState.currentPage) { scrollBehavior.state.contentOffset = 0f }
-    // The arrow keys and the page turner pedal scroll the page's ScrollState directly (see songKeyboardShortcuts),
-    // which bypasses nested scroll the same way the fast scroller's drag does, so the bar's overlap state is
-    // corrected from the current page's scroll position here instead of waiting for a gesture that never arrives.
-    currentPageScrollState?.let { KeepTopAppBarInSync(scrollBehavior, it) }
 
     Column(
         modifier = modifier
             .fillMaxSize()
             .keepScreenOn()
-            .nestedScroll(scrollBehavior.nestedScrollConnection)
             .songKeyboardShortcuts(
                 onScrollUp = { currentPageScrollState?.let { coroutineScope.launch { it.scrollByKeyStep(-1f) } } },
                 onScrollDown = { currentPageScrollState?.let { coroutineScope.launch { it.scrollByKeyStep(1f) } } },
@@ -245,7 +235,6 @@ internal fun SongDetailsScreen(
             )
     ) {
         CampfireTopAppBar(
-            scrollBehavior = scrollBehavior,
             navigationIcon = {
                 IconButton(onClick = onBack) {
                     Icon(
@@ -570,6 +559,7 @@ private fun SongDetailsPage(
             SongLyrics(
                 modifier = Modifier
                     .fillMaxSize()
+                    .fadingTopEdge(scrollState)
                     .verticalScroll(scrollState)
                     .padding(
                         start = contentPadding.calculateStartPadding(layoutDirection) + 16.dp,

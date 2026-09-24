@@ -51,6 +51,7 @@ Campfire is available for the following platforms:
 - Move Song assignment / Setlist assignment shortcuts to the top-level
 - Make the "Edit" action more specific to the situation
 - Animate layout changes
+- Setlists: the "Add songs" button should always be present at the bottom of the list (unless in performance mode)
 - Delete song should not be an option in Setlist mode
 - Cover art thumbnails: https://musicbrainz.org/doc/Cover_Art_Archive/API
 - Shared element transitions?
