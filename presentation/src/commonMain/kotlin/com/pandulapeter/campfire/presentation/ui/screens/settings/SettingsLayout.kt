@@ -25,11 +25,13 @@ import androidx.compose.foundation.layout.calculateStartPadding
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Badge
 import androidx.compose.material3.BadgedBox
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.NavigationDrawerItem
 import androidx.compose.material3.PrimaryTabRow
 import androidx.compose.material3.Tab
 import androidx.compose.material3.Text
@@ -62,14 +64,12 @@ internal enum class SettingsTab {
 /**
  * The tabs of the settings screen, which stay where they are while a page scrolls under them.
  *
- * The tabs are capped at [MAX_TAB_ROW_WIDTH] and centered over the pages - four tabs spread across a maximized window
- * are four words a hand's width apart - while the divider under them runs the whole width, since it is the edge the
- * pages scroll under rather than a part of the tabs.
+ * The tabs are capped at [MAX_TAB_ROW_WIDTH] and start where every list of the app starts - four tabs spread across a
+ * wide window are four words a hand's width apart.
  *
  * @param badgedTab A tab holding something that waits for an answer, marked with a dot so that it is found from the
  *   others. The dot rather than the tab opening itself, which would be the screen moving under a reader's finger.
- * @param startPadding The window insets on the start edge, so the tabs are centered over the pages rather than over
- *   the cutout.
+ * @param startPadding The window insets on the start edge, so the tabs start after the cutout rather than under it.
  */
 @Composable
 internal fun SettingsTabRow(
@@ -83,7 +83,6 @@ internal fun SettingsTabRow(
 ) = Column(modifier = modifier.fillMaxWidth()) {
     PrimaryTabRow(
         modifier = Modifier
-            .align(Alignment.CenterHorizontally)
             .padding(start = startPadding, end = endPadding)
             .widthIn(max = MAX_TAB_ROW_WIDTH),
         selectedTabIndex = selectedTab.ordinal,
@@ -106,10 +105,38 @@ internal fun SettingsTabRow(
 }
 
 /**
+ * The tabs of the settings screen as a list at the start of the screen, for a window wide enough to hold the selected
+ * page next to it: the way a tab is chosen where a row of tabs would be four words spread across the window. It is
+ * [SETTINGS_CATEGORY_PANE_WIDTH] wide, so that the page beside it can be told how much room it has left.
+ *
+ * @param badgedTab A tab holding something that waits for an answer, marked with a dot the way [SettingsTabRow] does.
+ */
+@Composable
+internal fun SettingsCategoryPane(
+    modifier: Modifier = Modifier,
+    selectedTab: SettingsTab,
+    badgedTab: SettingsTab?,
+    label: @Composable (SettingsTab) -> String,
+    onTabSelected: (SettingsTab) -> Unit,
+) = Column(
+    modifier = modifier.width(SETTINGS_CATEGORY_PANE_WIDTH).padding(horizontal = 12.dp, vertical = PAGE_TOP_PADDING),
+    verticalArrangement = Arrangement.spacedBy(4.dp),
+) {
+    SettingsTab.entries.forEach { tab ->
+        NavigationDrawerItem(
+            label = { Text(text = label(tab), maxLines = 1, overflow = TextOverflow.Ellipsis) },
+            selected = tab == selectedTab,
+            onClick = { onTabSelected(tab) },
+            badge = if (tab == badgedTab) ({ Badge() }) else null,
+        )
+    }
+}
+
+/**
  * The scrolling body of one tab of the settings screen: its [section], and the [secondSection] where it has one, side
  * by side where the window has room for both at [MIN_COLUMN_WIDTH] and stacked in that order where it does not, the
- * block centered once every column has reached [MAX_COLUMN_WIDTH] so that a maximized window does not stretch a switch
- * a meter away from its label.
+ * columns starting at the start edge and stopping at [MAX_COLUMN_WIDTH] so that a maximized window does not stretch a
+ * switch a meter away from its label.
  *
  * A tab holds no more than two sections, so the columns are either all of them or one: a section never moves to
  * another column because the one above it grew, which is what would happen to a staggered grid when the sync section
@@ -148,7 +175,7 @@ internal fun SettingsPage(
                 end = contentPadding.calculateEndPadding(layoutDirection),
                 bottom = contentPadding.calculateBottomPadding() + 16.dp,
             ),
-        horizontalArrangement = Arrangement.spacedBy(SECTION_GAP, Alignment.CenterHorizontally),
+        horizontalArrangement = Arrangement.spacedBy(SECTION_GAP, Alignment.Start),
     ) {
         columns.forEach { column ->
             Column(
@@ -269,6 +296,9 @@ internal fun ColumnScope.AnimatedSettingsRow(
 
 /** What an [AnimatedSettingsRow] draws while it leaves. Not a state, since nothing is ever redrawn because of it. */
 private class LastValue<T>(var value: T?)
+
+/** The width of the [SettingsCategoryPane]. */
+internal val SETTINGS_CATEGORY_PANE_WIDTH = 280.dp
 
 /** Below this a column is too narrow for a switch next to two lines of description, so a tab stacks its sections. */
 private val MIN_COLUMN_WIDTH = 380.dp

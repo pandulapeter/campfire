@@ -211,9 +211,13 @@
     <string name="settings_rate_description">Leave a review on %1$s</string>
     <string name="settings_about">About</string>
     <string name="settings_git_hub">Campfire on GitHub</string>
+    <string name="settings_git_hub_description">Source code and project home page</string>
     <string name="settings_report_issue">Report a problem</string>
+    <string name="settings_report_issue_description">Open an issue on GitHub</string>
     <string name="settings_privacy_policy">Privacy Policy</string>
+    <string name="settings_privacy_policy_description">What the app does with your data</string>
     <string name="settings_support">Buy me a coffee</string>
+    <string name="settings_support_description">Support the development of the app</string>
     <string name="settings_version">Version %1$s</string>
     <string name="settings_created_by">Created by Péter Pandula</string>
 

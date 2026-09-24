@@ -13,10 +13,12 @@ import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.LinearEasing
 import androidx.compose.animation.core.tween
+import androidx.compose.animation.expandHorizontally
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.scaleIn
 import androidx.compose.animation.scaleOut
+import androidx.compose.animation.shrinkHorizontally
 import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.ScrollState
 import androidx.compose.foundation.gestures.animateScrollBy
@@ -266,30 +268,40 @@ internal fun SongDetailsScreen(
                 }
             },
             actions = {
-                if (windowSize.usesInlineSongControls) {
-                    AnimatedVisibility(
-                        visible = !isPerformanceModeEnabled && shouldShowChords && currentSong?.hasChords == true && currentSong.fileName in songTexts,
-                        enter = fadeIn() + scaleIn(),
-                        exit = fadeOut() + scaleOut(),
-                    ) {
-                        TranspositionControls(
+                AnimatedVisibility(
+                    visible = windowSize.usesInlineSongControls,
+                    enter = fadeIn() + expandHorizontally(),
+                    exit = fadeOut() + shrinkHorizontally(),
+                ) {
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        AnimatedVisibility(
+                            visible = !isPerformanceModeEnabled && shouldShowChords && currentSong?.hasChords == true && currentSong.fileName in songTexts,
+                            enter = fadeIn() + scaleIn(),
+                            exit = fadeOut() + scaleOut(),
+                        ) {
+                            TranspositionControls(
+                                modifier = Modifier.padding(end = INLINE_CONTROL_SPACING),
+                                isCompact = true,
+                                transposition = currentTransposition,
+                                key = currentKey,
+                                onStep = { semitones -> currentSong?.let { viewModel.stepTransposition(it.fileName, destination.setlistFileName, semitones) } },
+                                onReset = { currentSong?.let { viewModel.resetTransposition(it.fileName, destination.setlistFileName) } },
+                            )
+                        }
+                        FontScaleControls(
                             modifier = Modifier.padding(end = INLINE_CONTROL_SPACING),
                             isCompact = true,
-                            transposition = currentTransposition,
-                            key = currentKey,
-                            onStep = { semitones -> currentSong?.let { viewModel.stepTransposition(it.fileName, destination.setlistFileName, semitones) } },
-                            onReset = { currentSong?.let { viewModel.resetTransposition(it.fileName, destination.setlistFileName) } },
+                            fontScale = fontScale,
+                            onFontScaleAdjusted = viewModel::adjustFontScale,
+                            onFontScaleReset = { viewModel.setFontScale(CampfireViewModel.DEFAULT_FONT_SCALE) },
                         )
                     }
-                    FontScaleControls(
-                        modifier = Modifier.padding(end = INLINE_CONTROL_SPACING),
-                        isCompact = true,
-                        fontScale = fontScale,
-                        onFontScaleAdjusted = viewModel::adjustFontScale,
-                        onFontScaleReset = { viewModel.setFontScale(CampfireViewModel.DEFAULT_FONT_SCALE) },
-                    )
                 }
-                if (!windowSize.usesInlineSongControls) {
+                AnimatedVisibility(
+                    visible = !windowSize.usesInlineSongControls,
+                    enter = fadeIn() + scaleIn(),
+                    exit = fadeOut() + scaleOut(),
+                ) {
                     IconButton(
                         onClick = {
                             currentSong?.let {

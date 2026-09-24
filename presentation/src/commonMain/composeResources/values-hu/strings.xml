@@ -211,9 +211,13 @@
     <string name="settings_rate_description">Írj véleményt itt: %1$s</string>
     <string name="settings_about">Névjegy</string>
     <string name="settings_git_hub">Campfire a GitHubon</string>
+    <string name="settings_git_hub_description">Forráskód és a projekt honlapja</string>
     <string name="settings_report_issue">Hiba jelentése</string>
+    <string name="settings_report_issue_description">Hibajegy nyitása a GitHubon</string>
     <string name="settings_privacy_policy">Adatvédelmi nyilatkozat</string>
+    <string name="settings_privacy_policy_description">Mit kezel az alkalmazás az adataiddal</string>
     <string name="settings_support">Hívj meg egy kávéra</string>
+    <string name="settings_support_description">Támogasd az alkalmazás fejlesztését</string>
     <string name="settings_version">%1$s verzió</string>
     <string name="settings_created_by">Készítette Pandula Péter</string>
 

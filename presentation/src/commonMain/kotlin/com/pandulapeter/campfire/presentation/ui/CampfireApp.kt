@@ -20,6 +20,7 @@ import androidx.compose.animation.core.LinearEasing
 import androidx.compose.animation.core.LinearOutSlowInEasing
 import androidx.compose.animation.core.SpringSpec
 import androidx.compose.animation.core.VisibilityThreshold
+import androidx.compose.animation.core.animate
 import androidx.compose.animation.core.spring
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
@@ -68,6 +69,8 @@ import androidx.compose.runtime.SideEffect
 import androidx.compose.runtime.Stable
 import androidx.compose.runtime.State
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableFloatStateOf
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberUpdatedState
@@ -79,12 +82,14 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.input.pointer.PointerEventPass
 import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.layout.Placeable
 import androidx.compose.ui.layout.SubcomposeLayout
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.Density
 import androidx.compose.ui.unit.Dp
+import androidx.compose.ui.util.lerp
 import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.LayoutDirection
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -404,22 +409,21 @@ private fun CampfireContent(
         // the same color they are painted in and the fade stays invisible.
         modifier = Modifier.fillMaxSize().background(MaterialTheme.colorScheme.background),
         isChromePlaced = !chromeInScreens,
-        chrome = { windowSize, isNavigationRailExpanded ->
+        chrome = { chromeKind ->
             NavigationChrome(
-                windowSize = windowSize,
-                isNavigationRailExpanded = isNavigationRailExpanded,
+                kind = chromeKind,
                 currentTopLevelDestination = backStack.lastOrNull { it is CampfireDestination.TopLevel } as? CampfireDestination.TopLevel,
                 onDestinationSelected = viewModel::selectTopLevelDestination,
             )
         },
-    ) { windowWidth, windowSize, isNavigationRailExpanded, chromeThickness ->
+    ) { windowWidth, windowSize, chromeKind, chromeSize ->
         CampfireScreens(
             viewModel = viewModel,
             urlOpener = urlOpener,
             windowWidth = windowWidth,
             windowSize = windowSize,
-            isNavigationRailExpanded = isNavigationRailExpanded,
-            chromeThickness = chromeThickness,
+            chromeKind = chromeKind,
+            chromeSize = chromeSize,
             chromeInScreens = chromeInScreens,
             onNavigationTransitionRunningChanged = { isNavigationTransitionRunning = it },
         )
@@ -440,8 +444,8 @@ private fun CampfireScreens(
     urlOpener: (String) -> Unit,
     windowWidth: Dp,
     windowSize: WindowSize,
-    isNavigationRailExpanded: Boolean,
-    chromeThickness: Dp,
+    chromeKind: NavigationChromeKind,
+    chromeSize: NavigationChromeSize,
     chromeInScreens: Boolean,
     onNavigationTransitionRunningChanged: (Boolean) -> Unit,
 ) {
@@ -452,15 +456,17 @@ private fun CampfireScreens(
     // Makes interrupted transitions retarget instead of getting stuck, see CampfireViewModel.navigationGeneration.
     val navigationMetadata = mapOf(NAVIGATION_GENERATION_METADATA_KEY to viewModel.navigationGeneration)
 
-    val railWidth = if (windowSize.usesNavigationRail) chromeThickness else 0.dp
-    val navigationBarHeight = if (windowSize.usesNavigationRail) 0.dp else chromeThickness
+    // What the chrome takes out of the window on this frame, which follows it while it changes shape, and what it will
+    // have taken out once it has settled. The insets are the first and the column counts the second.
+    val railWidth = chromeSize.railWidth
+    val navigationBarHeight = chromeSize.barHeight
 
     // The screens next to the chrome always settle at the width the chrome leaves them, whether or not one of them
     // happens to be covered right now; the song details screen covers the chrome, so it settles at the full width.
     // Anything a screen has to decide once, before it is first drawn, is decided from these rather than from the
     // width it is being measured at: the column counts of the song lists and the lyrics, and whether the lists have
     // room for their filter side panel.
-    val settledListWidth = windowWidth - railWidth
+    val settledListWidth = windowWidth - chromeSize.settledRailWidth
     val settledSongDetailsWidth = windowWidth
 
     // What is left of the system bars and the display cutout once the chrome has covered the edge it sits on. The screens
@@ -501,8 +507,7 @@ private fun CampfireScreens(
         if (chromeInScreens) {
             {
                 NavigationChrome(
-                    windowSize = windowSize,
-                    isNavigationRailExpanded = isNavigationRailExpanded,
+                    kind = chromeKind,
                     currentTopLevelDestination = destination,
                     onDestinationSelected = viewModel::selectTopLevelDestination,
                 )
@@ -684,8 +689,8 @@ private fun Messages(
 }
 
 /**
- * Lays the navigation chrome out and hands [content] the size of the window along with the thickness the chrome
- * takes out of it, all in one pass.
+ * Lays the navigation chrome out and hands [content] the size of the window along with what the chrome takes out of
+ * it, all in one pass.
  *
  * The thickness has to be *measured*: Material keeps the size of the rail and of the bar - and of the insets they
  * cover - to itself. Reporting it back as state from the laid out chrome would report it one layout pass too late,
@@ -702,51 +707,168 @@ private fun Messages(
  * rather than the two of them animating side by side. While the top level screens draw a chrome of their own
  * ([isChromePlaced] off), this one is still measured, for its thickness, but not placed, so it is neither drawn nor
  * touched; it stays composed, so the state of its items carries on once it is placed again.
+ *
+ * A window that crosses from one kind of chrome to another (see [NavigationChromeKind]) does not switch between them
+ * in one frame: the chrome it is leaving fades out towards its edge while the one it is getting fades in from its own,
+ * and the room they take out of the window is worked out between the two on the same spring, so the screens next to
+ * them travel rather than jump. The chrome is still measured for the kind the window has *now*, in the frame the
+ * window changes, so what the screens settle at is known at once ([NavigationChromeSize.settledRailWidth]) while what
+ * they are inset by catches up.
  */
+@OptIn(ExperimentalMaterial3ExpressiveApi::class)
 @Composable
 private fun NavigationChromeScaffold(
     modifier: Modifier = Modifier,
     isChromePlaced: Boolean,
-    chrome: @Composable (windowSize: WindowSize, isNavigationRailExpanded: Boolean) -> Unit,
-    content: @Composable (windowWidth: Dp, windowSize: WindowSize, isNavigationRailExpanded: Boolean, chromeThickness: Dp) -> Unit,
-) = SubcomposeLayout(modifier) { constraints ->
-    val windowWidth = constraints.maxWidth.toDp()
-    val windowSize = WindowSize.fromWidth(windowWidth)
-    val isNavigationRailExpanded = isNavigationRailExpanded(windowWidth)
-    // Loose constraints, so that the rail and the bar each take only the one dimension they want.
-    val chromePlaceable = subcompose(ChromeSlot.CHROME) { chrome(windowSize, isNavigationRailExpanded) }
-        .single()
-        .measure(constraints.copy(minWidth = 0, minHeight = 0))
-    val chromeThickness = if (windowSize.usesNavigationRail) chromePlaceable.width else chromePlaceable.height
-    val contentPlaceable = subcompose(ChromeSlot.CONTENT) { content(windowWidth, windowSize, isNavigationRailExpanded, chromeThickness.toDp()) }
-        .single()
-        .measure(constraints)
-    layout(constraints.maxWidth, constraints.maxHeight) {
-        // Placed relatively, so that the rail sits on the start edge the screens are inset from rather than always
-        // on the left one.
-        if (isChromePlaced) {
-            chromePlaceable.placeRelative(
-                x = 0,
-                y = if (windowSize.usesNavigationRail) 0 else constraints.maxHeight - chromePlaceable.height,
-            )
+    chrome: @Composable (kind: NavigationChromeKind) -> Unit,
+    content: @Composable (windowWidth: Dp, windowSize: WindowSize, kind: NavigationChromeKind, size: NavigationChromeSize) -> Unit,
+) {
+    val transition = remember { NavigationChromeTransition() }
+    val spec = MaterialTheme.motionScheme.defaultEffectsSpec<Float>()
+    LaunchedEffect(transition.generation) {
+        if (transition.generation > 0) {
+            animate(initialValue = 0f, targetValue = 1f, animationSpec = spec) { value, _ -> transition.progress = value }
+            transition.outgoingKind = null
         }
-        contentPlaceable.placeRelative(x = 0, y = 0)
+    }
+    SubcomposeLayout(modifier) { constraints ->
+        val windowWidth = constraints.maxWidth.toDp()
+        val windowSize = WindowSize.fromWidth(windowWidth)
+        val kind = navigationChromeKind(windowWidth)
+        // Loose constraints, so that the rail and the bar each take only the one dimension they want.
+        val looseConstraints = constraints.copy(minWidth = 0, minHeight = 0)
+        val chromePlaceable = subcompose(ChromeSlot.CHROME) { chrome(kind) }.single().measure(looseConstraints)
+        transition.update(kind = kind, railWidth = if (kind.isRail) chromePlaceable.width else 0, barHeight = if (kind.isRail) 0 else chromePlaceable.height)
+        val outgoingKind = transition.outgoingKind
+        val outgoingPlaceable = outgoingKind?.let { subcompose(ChromeSlot.OUTGOING_CHROME) { chrome(it) }.single().measure(looseConstraints) }
+        val progress = transition.progress
+        val chromeSize = NavigationChromeSize(
+            railWidth = lerp(transition.fromRailWidth, transition.toRailWidth, progress).toDp(),
+            barHeight = lerp(transition.fromBarHeight, transition.toBarHeight, progress).toDp(),
+            settledRailWidth = transition.toRailWidth.toDp(),
+        )
+        val contentPlaceable = subcompose(ChromeSlot.CONTENT) { content(windowWidth, windowSize, kind, chromeSize) }
+            .single()
+            .measure(constraints)
+        layout(constraints.maxWidth, constraints.maxHeight) {
+            // Placed relatively, so that the rail sits on the start edge the screens are inset from rather than always
+            // on the left one.
+            if (isChromePlaced) {
+                if (outgoingPlaceable != null && outgoingKind != null) {
+                    placeChrome(outgoingPlaceable, outgoingKind, otherKind = kind, visibility = 1f - progress, windowHeight = constraints.maxHeight)
+                }
+                placeChrome(chromePlaceable, kind, otherKind = outgoingKind, visibility = if (outgoingKind == null) 1f else progress, windowHeight = constraints.maxHeight)
+            }
+            contentPlaceable.placeRelative(x = 0, y = 0)
+        }
     }
 }
 
-private enum class ChromeSlot { CHROME, CONTENT }
+/**
+ * Puts one of the two chromes of [NavigationChromeScaffold] on its edge, [visibility] of the way faded in. A chrome
+ * that is handing over to or from one on the other edge also slides in from that edge as it fades - a bar and a rail
+ * come from different directions - while two rails share an edge and only fade into each other.
+ */
+private fun Placeable.PlacementScope.placeChrome(
+    placeable: Placeable,
+    kind: NavigationChromeKind,
+    otherKind: NavigationChromeKind?,
+    visibility: Float,
+    windowHeight: Int,
+) {
+    val slide = if (otherKind != null && otherKind.isRail != kind.isRail) 1f - visibility else 0f
+    if (kind.isRail) {
+        placeable.placeRelativeWithLayer(x = -(placeable.width * slide).roundToInt(), y = 0) { alpha = visibility }
+    } else {
+        placeable.placeRelativeWithLayer(x = 0, y = windowHeight - placeable.height + (placeable.height * slide).roundToInt()) { alpha = visibility }
+    }
+}
+
+private enum class ChromeSlot { CHROME, OUTGOING_CHROME, CONTENT }
 
 /**
- * Whether a window this wide has the room for the expanded navigation rail, the one with each label beside its icon
- * rather than under it. That rail is well over a hundred dp wider than the collapsed one, and the lists next to it are
- * what pays for it, so it is only used where the list screens still keep their filter side panel beside it. Deciding
- * it from anything else would have the panel come, go and come again as a window is widened past both thresholds.
+ * The three shapes the navigation chrome takes: the bar under 600dp, the rail above, and the expanded rail - the one
+ * with each label beside its icon rather than under it - where the window has the room for it. That rail is well over
+ * a hundred dp wider than the collapsed one, and the lists next to it are what pays for it, so it is only used where
+ * the list screens still keep their filter side panel beside it (see [navigationChromeKind]).
+ */
+private enum class NavigationChromeKind {
+    BAR,
+    RAIL,
+    EXPANDED_RAIL;
+
+    val isRail get() = this != BAR
+}
+
+/**
+ * What the navigation chrome takes out of the window: [railWidth] and [barHeight] as they are on this frame - one of
+ * them nothing, and both something while the chrome changes shape - and [settledRailWidth], what the rail will take
+ * once it has arrived. Anything a screen has to decide once is decided from the settled one, so that the column
+ * counts do not change a dozen times as the chrome moves.
+ */
+private data class NavigationChromeSize(
+    val railWidth: Dp,
+    val barHeight: Dp,
+    val settledRailWidth: Dp,
+)
+
+/**
+ * Whether a window this wide has the room for the expanded navigation rail. Deciding it from anything but the list
+ * screens' own side panel would have the panel come, go and come again as a window is widened past both thresholds.
  *
  * Material decides the expanded rail's width from its items, [EXPANDED_NAVIGATION_RAIL_MIN_WIDTH] being where it
  * starts; the three labels here fit inside that in every language the app speaks.
  */
-private fun isNavigationRailExpanded(windowWidth: Dp) =
-    WindowSize.fromWidth(windowWidth).usesNavigationRail && hasRoomForSidePanel(windowWidth - EXPANDED_NAVIGATION_RAIL_MIN_WIDTH)
+private fun navigationChromeKind(windowWidth: Dp) = when {
+    !WindowSize.fromWidth(windowWidth).usesNavigationRail -> NavigationChromeKind.BAR
+    hasRoomForSidePanel(windowWidth - EXPANDED_NAVIGATION_RAIL_MIN_WIDTH) -> NavigationChromeKind.EXPANDED_RAIL
+    else -> NavigationChromeKind.RAIL
+}
+
+/**
+ * Where [NavigationChromeScaffold] is in handing the window from one [NavigationChromeKind] to another. Plain fields
+ * where only the layout reads them, state where the composition does (the running number that restarts the animation)
+ * or where a change has to lay the scaffold out again (the progress, the chrome on its way out): the scaffold writes
+ * to it from its measure block, since that is where the window's width first becomes known.
+ *
+ * The sizes are in pixels, the chrome being measured there, and [progress] is how far the room the chrome takes has
+ * come from the `from` sizes, what was on screen when the kind changed, to the `to` ones.
+ */
+private class NavigationChromeTransition {
+    private var kind: NavigationChromeKind? = null
+    var fromRailWidth = 0f
+        private set
+    var fromBarHeight = 0f
+        private set
+    var toRailWidth = 0f
+        private set
+    var toBarHeight = 0f
+        private set
+    var progress by mutableFloatStateOf(1f)
+    var outgoingKind by mutableStateOf<NavigationChromeKind?>(null)
+    var generation by mutableIntStateOf(0)
+        private set
+
+    /** Takes the chrome measured for the window on this frame; a change of [kind] starts the handover. */
+    fun update(kind: NavigationChromeKind, railWidth: Int, barHeight: Int) {
+        val previousKind = this.kind
+        if (previousKind != null && previousKind != kind) {
+            // From what is on screen, which an interrupted handover has not finished getting to.
+            fromRailWidth = lerp(fromRailWidth, toRailWidth, progress)
+            fromBarHeight = lerp(fromBarHeight, toBarHeight, progress)
+            progress = 0f
+            outgoingKind = previousKind
+            generation++
+        }
+        this.kind = kind
+        toRailWidth = railWidth.toFloat()
+        toBarHeight = barHeight.toFloat()
+        if (previousKind == null) {
+            fromRailWidth = toRailWidth
+            fromBarHeight = toBarHeight
+        }
+    }
+}
 
 private val EXPANDED_NAVIGATION_RAIL_MIN_WIDTH = 220.dp
 
@@ -763,15 +885,14 @@ private val EXPANDED_NAVIGATION_RAIL_TOP_PADDING = 4.dp
  */
 @Composable
 private fun NavigationChrome(
-    windowSize: WindowSize,
-    isNavigationRailExpanded: Boolean,
+    kind: NavigationChromeKind,
     currentTopLevelDestination: CampfireDestination.TopLevel?,
     onDestinationSelected: (CampfireDestination.TopLevel) -> Unit,
 ) {
-    if (isNavigationRailExpanded) {
+    if (kind == NavigationChromeKind.EXPANDED_RAIL) {
         // The wide rail's own collapsed state is not used: its collapsed form is wider than the plain rail, and the
-        // window size alone decides which of the two a window gets, so there is nothing for the rail to animate
-        // between either. The state is only ever the expanded one.
+        // window width alone decides which of the two a window gets, the scaffold handing one over to the other. The
+        // state is only ever the expanded one.
         WideNavigationRail(
             state = rememberWideNavigationRailState(initialValue = WideNavigationRailValue.Expanded),
             // The default leaves room above the items for a header this rail does not have, which would drop them
@@ -788,7 +909,7 @@ private fun NavigationChrome(
                 )
             }
         }
-    } else if (windowSize.usesNavigationRail) {
+    } else if (kind == NavigationChromeKind.RAIL) {
         NavigationRail {
             CampfireDestination.TopLevel.entries.forEach { destination ->
                 NavigationRailItem(

@@ -12,12 +12,17 @@ package com.pandulapeter.campfire.presentation.ui.screens.settings
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.animation.Crossfade
+import androidx.compose.foundation.ScrollState
 import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.calculateEndPadding
 import androidx.compose.foundation.layout.calculateStartPadding
 import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.foundation.selection.selectableGroup
+import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
 import androidx.compose.material3.ListItem
 import androidx.compose.material3.ListItemDefaults
 import androidx.compose.material3.MaterialTheme
@@ -72,6 +77,7 @@ import com.pandulapeter.campfire.presentation.resources.settings_german_notation
 import com.pandulapeter.campfire.presentation.resources.settings_general
 import com.pandulapeter.campfire.presentation.resources.settings_german_notation_description
 import com.pandulapeter.campfire.presentation.resources.settings_git_hub
+import com.pandulapeter.campfire.presentation.resources.settings_git_hub_description
 import com.pandulapeter.campfire.presentation.resources.settings_horizontal_section_flow
 import com.pandulapeter.campfire.presentation.resources.settings_horizontal_section_flow_description
 import com.pandulapeter.campfire.presentation.resources.settings_import
@@ -93,11 +99,14 @@ import com.pandulapeter.campfire.presentation.resources.settings_lyrics_only_mod
 import com.pandulapeter.campfire.presentation.resources.settings_performance_mode
 import com.pandulapeter.campfire.presentation.resources.settings_performance_mode_description
 import com.pandulapeter.campfire.presentation.resources.settings_privacy_policy
+import com.pandulapeter.campfire.presentation.resources.settings_privacy_policy_description
 import com.pandulapeter.campfire.presentation.resources.settings_rate
 import com.pandulapeter.campfire.presentation.resources.settings_rate_description
 import com.pandulapeter.campfire.presentation.resources.settings_report_issue
+import com.pandulapeter.campfire.presentation.resources.settings_report_issue_description
 import com.pandulapeter.campfire.presentation.resources.settings_songs
 import com.pandulapeter.campfire.presentation.resources.settings_support
+import com.pandulapeter.campfire.presentation.resources.settings_support_description
 import com.pandulapeter.campfire.presentation.resources.settings_sync
 import com.pandulapeter.campfire.presentation.resources.settings_user_interface_language
 import com.pandulapeter.campfire.presentation.resources.settings_user_interface_language_english
@@ -128,6 +137,7 @@ import com.pandulapeter.campfire.presentation.ui.components.LinkListItem
 import com.pandulapeter.campfire.presentation.ui.components.RadioListItem
 import com.pandulapeter.campfire.presentation.ui.components.SegmentedChoice
 import com.pandulapeter.campfire.presentation.ui.components.SwitchListItem
+import com.pandulapeter.campfire.presentation.ui.components.WindowSize
 import com.pandulapeter.campfire.presentation.ui.components.rememberRetainedScrollState
 import com.pandulapeter.campfire.presentation.ui.platform.Distribution
 import com.pandulapeter.campfire.presentation.ui.platform.LibraryLocation
@@ -142,13 +152,16 @@ import kotlinx.coroutines.launch
 import org.jetbrains.compose.resources.painterResource
 
 /**
- * The settings of the app as four tabs, one [SettingsTab] per page of a pager, with the tabs themselves at the top of
- * the screen so that they stay in reach however far a page is scrolled. There is no app bar above them: the screen has
- * nothing to put in one but its name, which the navigation bar or rail already says. Each tab holds a section or two,
- * laid out side by side where the window has room for them (see [SettingsPage]).
+ * The settings of the app as four [SettingsTab]s. Where the window is wide (`WindowSize.EXPANDED`) they are the entries
+ * of a [SettingsCategoryPane] at the start of the screen with the selected page next to it, the way a list and its
+ * detail sit side by side; anywhere narrower they are a row of tabs at the top with one page of a pager under each
+ * (see [SettingsTabPager]), so that they stay in reach however far a page is scrolled. Either way there is no app bar
+ * above them: the screen has nothing to put in one but its name, which the navigation bar or rail already says. Each
+ * tab holds a section or two, laid out side by side where the room next to the pane, or the whole window, has room for
+ * them (see [SettingsPage]).
  *
- * The tabs lie flat on the screen and never tint or lift as a page scrolls under them, the divider under them being
- * the edge the pages scroll under instead.
+ * The tabs lie flat on the screen and never tint or lift as a page scrolls under them, a page scrolled under them
+ * fading out into them instead.
  *
  * Every page is composed as the screen is rather than as it is first swiped to, and everything a section draws is a
  * state the view model already holds by then, so the first frame of a tab is the tab as it is rather than a guess that
@@ -156,8 +169,9 @@ import org.jetbrains.compose.resources.painterResource
  * inside its section by [AnimatedSettingsRow].
  *
  * @param settledWidth The width of the screen once the navigation bars have finished animating, which is what the
- *   number of columns is decided from.
+ *   layout and the number of columns are decided from.
  */
+@OptIn(ExperimentalMaterial3ExpressiveApi::class)
 @Composable
 internal fun SettingsScreen(
     modifier: Modifier = Modifier,
@@ -166,9 +180,7 @@ internal fun SettingsScreen(
     contentPadding: PaddingValues,
     urlOpener: (String) -> Unit,
 ) {
-    val pagerState = rememberPagerState(initialPage = viewModel.settingsTab.ordinal) { SettingsTab.entries.size }
     val scrollStates = SettingsTab.entries.map { rememberRetainedScrollState(viewModel.settingsScrollPositions.getValue(it)) }
-    val coroutineScope = rememberCoroutineScope()
     val isImporting by viewModel.isImporting.collectAsStateWithLifecycle()
     val isPerformanceModeEnabled by viewModel.isPerformanceModeEnabled.collectAsStateWithLifecycle()
     val userPreferences by viewModel.userPreferences.collectAsStateWithLifecycle()
@@ -181,6 +193,91 @@ internal fun SettingsScreen(
     val layoutDirection = LocalLayoutDirection.current
     val startPadding = contentPadding.calculateStartPadding(layoutDirection)
     val endPadding = contentPadding.calculateEndPadding(layoutDirection)
+    val pageWidth = settledWidth - startPadding - endPadding
+    val badgedTab = SettingsTab.LIBRARY.takeIf { isSyncAnswerPending }
+    // Both layouts are drawn through the fade while a window is resized across the line between them, and so are the
+    // pages of the wide one as a category is picked: the pager slides where a finger is dragging it, and everything
+    // else changes in place, which is a change of what is on screen rather than of where.
+    val fadeSpec = MaterialTheme.motionScheme.defaultEffectsSpec<Float>()
+    Crossfade(
+        modifier = modifier.fillMaxSize(),
+        targetState = WindowSize.fromWidth(pageWidth) == WindowSize.EXPANDED,
+        animationSpec = fadeSpec,
+    ) { isWide ->
+        if (isWide) {
+            Column(modifier = Modifier.fillMaxSize()) {
+                ImportProgress(isImporting = isImporting)
+                Row(modifier = Modifier.weight(1f).fillMaxWidth()) {
+                    SettingsCategoryPane(
+                        modifier = Modifier.padding(start = startPadding),
+                        selectedTab = viewModel.settingsTab,
+                        badgedTab = badgedTab,
+                        label = { it.label() },
+                        onTabSelected = { viewModel.settingsTab = it },
+                    )
+                    Crossfade(
+                        modifier = Modifier.weight(1f),
+                        targetState = viewModel.settingsTab,
+                        animationSpec = fadeSpec,
+                    ) { tab ->
+                        SettingsTabPage(
+                            viewModel = viewModel,
+                            tab = tab,
+                            settledWidth = pageWidth - SETTINGS_CATEGORY_PANE_WIDTH,
+                            scrollState = scrollStates[tab.ordinal],
+                            contentPadding = PaddingValues(end = endPadding, bottom = contentPadding.calculateBottomPadding()),
+                            isImporting = isImporting,
+                            isPerformanceModeEnabled = isPerformanceModeEnabled,
+                            userPreferences = userPreferences,
+                            urlOpener = urlOpener,
+                        )
+                    }
+                }
+            }
+        } else {
+            SettingsTabPager(
+                viewModel = viewModel,
+                badgedTab = badgedTab,
+                isImporting = isImporting,
+                startPadding = startPadding,
+                endPadding = endPadding,
+            ) { tab ->
+                SettingsTabPage(
+                    viewModel = viewModel,
+                    tab = tab,
+                    settledWidth = pageWidth,
+                    scrollState = scrollStates[tab.ordinal],
+                    contentPadding = contentPadding,
+                    isImporting = isImporting,
+                    isPerformanceModeEnabled = isPerformanceModeEnabled,
+                    userPreferences = userPreferences,
+                    urlOpener = urlOpener,
+                )
+            }
+        }
+    }
+}
+
+/**
+ * The tabs of the settings screen where the window is too narrow for [SettingsCategoryPane]: a row of tabs with one
+ * page of a pager under each. It keeps its own pager state, so that the tab set by the pane is what it opens on when a
+ * window narrows and the pane's choice is never overwritten by a pager that was left behind.
+ *
+ * Every page is composed with the screen ([HorizontalPager]'s `beyondViewportPageCount` covers them all), so a tab is
+ * never first composed as it is swiped to.
+ */
+@Composable
+private fun SettingsTabPager(
+    modifier: Modifier = Modifier,
+    viewModel: CampfireViewModel,
+    badgedTab: SettingsTab?,
+    isImporting: Boolean,
+    startPadding: Dp,
+    endPadding: Dp,
+    page: @Composable (SettingsTab) -> Unit,
+) {
+    val pagerState = rememberPagerState(initialPage = viewModel.settingsTab.ordinal) { SettingsTab.entries.size }
+    val coroutineScope = rememberCoroutineScope()
     // Every time the pages come to rest rather than once as the screen is left, because the web build's address names
     // the tab that is open. The settled page, so that a swipe is one change of address rather than two.
     LaunchedEffect(pagerState) {
@@ -193,7 +290,7 @@ internal fun SettingsScreen(
             selectedTab = SettingsTab.entries[pagerState.targetPage],
             // The library is not synced until a run that stopped to ask whether its deletions are meant has been
             // answered, and the question is in the sync section, which may be a tab away.
-            badgedTab = SettingsTab.LIBRARY.takeIf { isSyncAnswerPending },
+            badgedTab = badgedTab,
             label = { it.label() },
             startPadding = startPadding,
             endPadding = endPadding,
@@ -205,52 +302,67 @@ internal fun SettingsScreen(
             state = pagerState,
             beyondViewportPageCount = SettingsTab.entries.size - 1,
             key = { SettingsTab.entries[it] },
-        ) { page ->
-            val pageWidth = settledWidth - startPadding - endPadding
-            when (SettingsTab.entries[page]) {
-                SettingsTab.GENERAL -> SettingsPage(
-                    settledWidth = pageWidth,
-                    scrollState = scrollStates[page],
-                    contentPadding = contentPadding,
-                    section = {
-                        GeneralSection(
-                            viewModel = viewModel,
-                            userPreferences = userPreferences,
-                            isPerformanceModeEnabled = isPerformanceModeEnabled,
-                        )
-                    },
-                )
-
-                SettingsTab.SONGS -> SettingsPage(
-                    settledWidth = pageWidth,
-                    scrollState = scrollStates[page],
-                    contentPadding = contentPadding,
-                    section = { SongDisplaySection(viewModel = viewModel, userPreferences = userPreferences) },
-                )
-
-                SettingsTab.LIBRARY -> SettingsPage(
-                    settledWidth = pageWidth,
-                    scrollState = scrollStates[page],
-                    contentPadding = contentPadding,
-                    section = { SyncSection(viewModel = viewModel) },
-                    secondSection = {
-                        LibrarySection(
-                            viewModel = viewModel,
-                            isImporting = isImporting,
-                            isPerformanceModeEnabled = isPerformanceModeEnabled,
-                        )
-                    },
-                )
-
-                SettingsTab.ABOUT -> SettingsPage(
-                    settledWidth = pageWidth,
-                    scrollState = scrollStates[page],
-                    contentPadding = contentPadding,
-                    section = { AboutSection(urlOpener = urlOpener) },
-                )
-            }
-        }
+        ) { page(SettingsTab.entries[it]) }
     }
+}
+
+@Composable
+private fun SettingsTabPage(
+    modifier: Modifier = Modifier,
+    viewModel: CampfireViewModel,
+    tab: SettingsTab,
+    settledWidth: Dp,
+    scrollState: ScrollState,
+    contentPadding: PaddingValues,
+    isImporting: Boolean,
+    isPerformanceModeEnabled: Boolean,
+    userPreferences: UserPreferences?,
+    urlOpener: (String) -> Unit,
+) = when (tab) {
+    SettingsTab.GENERAL -> SettingsPage(
+        modifier = modifier,
+        settledWidth = settledWidth,
+        scrollState = scrollState,
+        contentPadding = contentPadding,
+        section = {
+            GeneralSection(
+                viewModel = viewModel,
+                userPreferences = userPreferences,
+                isPerformanceModeEnabled = isPerformanceModeEnabled,
+            )
+        },
+    )
+
+    SettingsTab.SONGS -> SettingsPage(
+        modifier = modifier,
+        settledWidth = settledWidth,
+        scrollState = scrollState,
+        contentPadding = contentPadding,
+        section = { SongDisplaySection(viewModel = viewModel, userPreferences = userPreferences) },
+    )
+
+    SettingsTab.LIBRARY -> SettingsPage(
+        modifier = modifier,
+        settledWidth = settledWidth,
+        scrollState = scrollState,
+        contentPadding = contentPadding,
+        section = { SyncSection(viewModel = viewModel) },
+        secondSection = {
+            LibrarySection(
+                viewModel = viewModel,
+                isImporting = isImporting,
+                isPerformanceModeEnabled = isPerformanceModeEnabled,
+            )
+        },
+    )
+
+    SettingsTab.ABOUT -> SettingsPage(
+        modifier = modifier,
+        settledWidth = settledWidth,
+        scrollState = scrollState,
+        contentPadding = contentPadding,
+        section = { AboutSection(urlOpener = urlOpener) },
+    )
 }
 
 @Composable
@@ -521,22 +633,6 @@ private fun SyncSection(
 private fun AboutSection(
     urlOpener: (String) -> Unit,
 ) = SettingsSection {
-    LinkListItem(
-        title = stringResource(Res.string.settings_created_by),
-        description = stringResource(Res.string.settings_version, CAMPFIRE_VERSION_NAME),
-        icon = painterResource(Res.drawable.ic_campfire),
-        onClick = { urlOpener("https://pandulapeter.com/") },
-    )
-    LinkListItem(
-        title = stringResource(Res.string.settings_git_hub),
-        icon = painterResource(Res.drawable.ic_git_hub),
-        onClick = { urlOpener(GIT_HUB_URL) },
-    )
-    LinkListItem(
-        title = stringResource(Res.string.settings_report_issue),
-        icon = painterResource(Res.drawable.ic_bug),
-        onClick = { urlOpener("$GIT_HUB_URL/issues") },
-    )
     // The README's "Get Campfire" section, whose anchor GitHub derives from the heading, so renaming that heading
     // means changing it here.
     LinkListItem(
@@ -544,6 +640,18 @@ private fun AboutSection(
         description = stringResource(Res.string.settings_distributions_all_description),
         icon = painterResource(Res.drawable.ic_phone),
         onClick = { urlOpener("$GIT_HUB_URL#get-campfire") },
+    )
+    LinkListItem(
+        title = stringResource(Res.string.settings_git_hub),
+        description = stringResource(Res.string.settings_git_hub_description),
+        icon = painterResource(Res.drawable.ic_git_hub),
+        onClick = { urlOpener(GIT_HUB_URL) },
+    )
+    LinkListItem(
+        title = stringResource(Res.string.settings_report_issue),
+        description = stringResource(Res.string.settings_report_issue_description),
+        icon = painterResource(Res.drawable.ic_bug),
+        onClick = { urlOpener("$GIT_HUB_URL/issues") },
     )
     platformStore?.let { store ->
         store.listingUrl?.let { listingUrl ->
@@ -557,12 +665,20 @@ private fun AboutSection(
     }
     LinkListItem(
         title = stringResource(Res.string.settings_privacy_policy),
+        description = stringResource(Res.string.settings_privacy_policy_description),
         icon = painterResource(Res.drawable.ic_privacy_policy),
         onClick = { urlOpener("https://pandulapeter.com/legal/privacy_policy-campfire.html") },
+    )
+    LinkListItem(
+        title = stringResource(Res.string.settings_created_by),
+        description = stringResource(Res.string.settings_version, CAMPFIRE_VERSION_NAME),
+        icon = painterResource(Res.drawable.ic_campfire),
+        onClick = { urlOpener("https://pandulapeter.com/") },
     )
     if (canAskForDonations) {
         LinkListItem(
             title = stringResource(Res.string.settings_support),
+            description = stringResource(Res.string.settings_support_description),
             icon = painterResource(Res.drawable.ic_coffee),
             onClick = { urlOpener("https://buymeacoffee.com/pandulapeter") },
         )
