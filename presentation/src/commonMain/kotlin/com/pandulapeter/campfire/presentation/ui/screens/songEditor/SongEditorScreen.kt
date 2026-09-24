@@ -85,7 +85,7 @@ import androidx.compose.ui.text.TextRange
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import com.pandulapeter.campfire.chordpro.ChordProParser
+import com.pandulapeter.campfire.chordpro.ChordProSummaryCache
 import com.pandulapeter.campfire.chordpro.ChordProTransposer
 import com.pandulapeter.campfire.chordpro.model.displayTitle
 import com.pandulapeter.campfire.data.model.domain.LibraryFiles
@@ -291,11 +291,10 @@ private fun LoadedSongEditor(
     // comes from the parser rather than from a regex of this screen's own, so that it is the same title, artist and
     // key the rest of the app will show once the file is written - the fallback to the file name included. One
     // summary rather than a parse per field: it also answers whether there is anything left to transpose.
-    val summary by remember(textFieldState) {
-        derivedStateOf { ChordProParser.summarize(text.value) }
-    }
+    val summaryCache = remember(textFieldState) { ChordProSummaryCache() }
+    val summary by remember(textFieldState) { derivedStateOf { summaryCache.summaryOf(text.value) } }
     val hasUnsavedChanges by viewModel.hasUnsavedEditorChanges.collectAsStateWithLifecycle()
-    RevertOnRequest(viewModel = viewModel, fileName = destination.fileName, textFieldState = textFieldState)
+    RevertOnRequest(viewModel = viewModel, fileName = destination.fileName, textFieldState = textFieldState, summaryCache = summaryCache)
     // The one way the file is ever written, reached from the app bar's button and from Ctrl / Cmd + S alike.
     val onSaveRequested = {
         if (hasUnsavedChanges) {
@@ -753,9 +752,13 @@ private fun RevertOnRequest(
     viewModel: CampfireViewModel,
     fileName: String,
     textFieldState: TextFieldState,
+    summaryCache: ChordProSummaryCache,
 ) = LaunchedEffect(textFieldState, fileName) {
     viewModel.editorRevertRequests.collect {
-        viewModel.songTexts.value[fileName]?.let(textFieldState::replaceAll)
+        viewModel.songTexts.value[fileName]?.let { text ->
+            summaryCache.clear()
+            textFieldState.replaceAll(text)
+        }
     }
 }
 
