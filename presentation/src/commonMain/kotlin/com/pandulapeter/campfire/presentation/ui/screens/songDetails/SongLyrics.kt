@@ -990,6 +990,12 @@ private class TabRows(
     // enough of them for the rounding of the total not to matter.
     private val characterWidth = textMeasurer.measure(AnnotatedString(LINE_HEIGHT_SAMPLE.repeat(CHARACTER_WIDTH_SAMPLE_LENGTH)), style).size.width /
             CHARACTER_WIDTH_SAMPLE_LENGTH.toFloat()
+    // The width the widest line takes whole, which is also the minimum intrinsic width of the block. A block given that
+    // much must not wrap: the character width above is an estimate a fraction of a pixel off, and counting characters
+    // with it at exactly this width can come out one short and cut the last bar off onto a staff of its own.
+    private val naturalWidth by lazy(LazyThreadSafetyMode.NONE) {
+        lines.maxOfOrNull { line -> textMeasurer.measure(AnnotatedString(line), style, softWrap = false).size.width } ?: 0
+    }
     private val rowsByWidth = mutableMapOf<Int, List<List<TextLayoutResult>>>()
     private val recentWidths = ArrayDeque<Int>()
 
@@ -998,7 +1004,7 @@ private class TabRows(
         recentWidths.addLast(width)
         if (recentWidths.size > MAX_TAB_WIDTHS) rowsByWidth.remove(recentWidths.removeFirst())
         return rowsByWidth.getOrPut(width) {
-            val maxColumns = if (width == Constraints.Infinity || characterWidth <= 0f) Int.MAX_VALUE else (width / characterWidth).toInt()
+            val maxColumns = if (width >= naturalWidth || characterWidth <= 0f) Int.MAX_VALUE else (width / characterWidth).toInt()
             ChordProTabWrapper.wrap(lines, maxColumns).map { row ->
                 row.map { line -> textMeasurer.measure(AnnotatedString(line), style, softWrap = false) }
             }
@@ -1127,9 +1133,10 @@ private fun TextStyle.scaled(scale: Float) = copy(
  * would go, and consecutive short sections are stacked into the same column of a row as long as the stack is no
  * taller than the tallest section of the row, so that the rows stay compact. A row of several columns is never taller
  * than [maxRowHeight], the whole of the screen, since the reader could not reach the top of its next column without
- * scrolling back past what was just played (see [flowIntoRows]). The rows are told apart by a divider
- * drawn in the gap between them. (A single column reads the same way in both modes, so it is always laid out as a
- * plain column, without dividers.)
+ * scrolling back past what was just played (see [flowIntoRows]). A section with lines that do not wrap - a staff of
+ * tablature longer than a column - may have a row of its own as wide as those lines, where that makes the song shorter.
+ * The rows are told apart by a divider drawn in the gap between them. (A single column reads the same way in both
+ * modes, so it is always laid out as a plain column, without dividers.)
  *
  * The columns are made as wide (and therefore as few) as possible while the whole song still fits into
  * [availableHeight], so that the lyrics wrap as little as they can and the vertical space is actually used: a song
@@ -1185,6 +1192,19 @@ private fun SongSectionsLayout(
     val maxColumnCount = ((settledWidth + columnGapPx) / (minColumnWidth.roundToPx() + columnGapPx)).coerceIn(1, maxOf(1, measurables.size))
     fun columnWidthFor(totalWidth: Int, columnCount: Int) = ((totalWidth - columnGapPx * (columnCount - 1)) / columnCount).coerceIn(0, maxColumnWidthPx)
 
+    // The width of a row of the horizontal flow the section at index has to itself, or null where that would be no
+    // wider than a column: a section can be narrower than its minimum intrinsic width only by breaking the lines that
+    // do not wrap (a staff of tablature, the bars of a grid), while everything else in it wraps as a column's would.
+    fun wideWidthFor(index: Int, totalWidth: Int) = sectionMeasurements.minWidth(index, measurables[index]::minIntrinsicWidth)
+        .takeIf { it > maxColumnWidthPx && totalWidth > maxColumnWidthPx }
+        ?.let { minOf(it, totalWidth) }
+
+    fun SectionGrid.rowWidth(row: Int, totalWidth: Int) = if (wideRows[row]) {
+        wideWidthFor(rows.indexOf(row), totalWidth) ?: columnWidthFor(totalWidth, 1)
+    } else {
+        columnWidthFor(totalWidth, columnCounts[row])
+    }
+
     val gridKey = SectionGridKey(
         settledWidth = settledWidth,
         availableHeight = availableHeightPx,
@@ -1193,11 +1213,13 @@ private fun SongSectionsLayout(
         isHorizontalFlow = isHorizontalFlow,
     )
     val grid = sectionMeasurements.grid(gridKey) {
-        fun heightAt(index: Int, columnCount: Int) = sectionMeasurements.height(
+        fun heightAtWidth(index: Int, width: Int) = sectionMeasurements.height(
             index = index,
-            width = columnWidthFor(settledWidth, columnCount),
+            width = width,
             measure = measurables[index]::maxIntrinsicHeight,
         )
+
+        fun heightAt(index: Int, columnCount: Int) = heightAtWidth(index, columnWidthFor(settledWidth, columnCount))
 
         fun gridFor(columnCount: Int) = when {
             // A single column is every section stacked in its order, however tall each of them is, so it is the one
@@ -1209,6 +1231,7 @@ private fun SongSectionsLayout(
                 sectionCount = measurables.size,
                 maxColumnCount = columnCount,
                 heightAt = ::heightAt,
+                wideHeightAt = { index -> wideWidthFor(index, settledWidth)?.let { heightAtWidth(index, it) } },
                 sectionGap = sectionGapPx,
                 rowGap = rowGapPx,
                 maxRowHeight = maxRowHeightPx,
@@ -1217,7 +1240,7 @@ private fun SongSectionsLayout(
         }
 
         fun SectionGrid.height() = arrange(
-            heights = IntArray(measurables.size) { heightAt(it, columnCounts[rows[it]]) },
+            heights = IntArray(measurables.size) { heightAtWidth(it, rowWidth(rows[it], settledWidth)) },
             sectionGap = sectionGapPx,
             rowGap = rowGapPx,
         ).height
@@ -1240,7 +1263,7 @@ private fun SongSectionsLayout(
         }
     }
 
-    val columnWidths = IntArray(grid.columnCounts.size) { columnWidthFor(width, grid.columnCounts[it]) }
+    val columnWidths = IntArray(grid.columnCounts.size) { grid.rowWidth(it, width) }
     val placeables = measurables.mapIndexed { index, measurable ->
         val columnWidth = columnWidths[grid.rows[index]]
         val heightLimit = maxAnimatedSectionHeight(columnWidth)
@@ -1287,14 +1310,21 @@ private fun SongSectionsLayout(
 private class SectionMeasurements(private val sectionCount: Int) {
 
     private val heightsByWidth = HashMap<Int, IntArray>()
+    private val minWidths = IntArray(sectionCount) { UNMEASURED }
     private var lastGridKey: SectionGridKey? = null
-    private var lastGrid = SectionGrid(rows = IntArray(0), columns = IntArray(0), columnCounts = IntArray(0))
+    private var lastGrid = emptyGrid()
 
     /** The intrinsic height of the section at [index] when it is [width] wide. */
     fun height(index: Int, width: Int, measure: (Int) -> Int): Int {
-        val heights = heightsByWidth.getOrPut(width) { IntArray(sectionCount) { UNMEASURED_HEIGHT } }
-        if (heights[index] == UNMEASURED_HEIGHT) heights[index] = measure(width)
+        val heights = heightsByWidth.getOrPut(width) { IntArray(sectionCount) { UNMEASURED } }
+        if (heights[index] == UNMEASURED) heights[index] = measure(width)
         return heights[index]
+    }
+
+    /** The minimum intrinsic width of the section at [index], which no width changes. */
+    fun minWidth(index: Int, measure: (Int) -> Int): Int {
+        if (minWidths[index] == UNMEASURED) minWidths[index] = measure(Constraints.Infinity)
+        return minWidths[index]
     }
 
     /** The grid decided for [key], which is only searched for again once the key has changed. */
@@ -1359,7 +1389,12 @@ private class SectionGrid(
     val rows: IntArray,
     val columns: IntArray,
     val columnCounts: IntArray,
+    /** The rows of a single section that are as wide as it needs rather than as a column, see [flowIntoRows]. */
+    val wideRows: BooleanArray = BooleanArray(columnCounts.size),
 )
+
+/** The grid of no sections at all. */
+private fun emptyGrid() = SectionGrid(rows = IntArray(0), columns = IntArray(0), columnCounts = IntArray(0))
 
 /** The y position of every section, the total height of the layout and the y positions (centers) of the row gaps. */
 private class SongArrangement(
@@ -1407,7 +1442,7 @@ private fun singleColumnGrid(sectionCount: Int) = SectionGrid(
  * width of the layout.
  */
 private fun List<Int>.balanceIntoColumns(columnCount: Int, sectionGap: Int): SectionGrid {
-    if (isEmpty()) return SectionGrid(rows = IntArray(0), columns = IntArray(0), columnCounts = IntArray(0))
+    if (isEmpty()) return emptyGrid()
     val prefixHeights = IntArray(size + 1)
     forEachIndexed { index, height -> prefixHeights[index + 1] = prefixHeights[index] + height + sectionGap }
     fun heightOf(from: Int, until: Int) = prefixHeights[until] - prefixHeights[from] - sectionGap
@@ -1466,16 +1501,23 @@ private fun List<Int>.balanceIntoColumns(columnCount: Int, sectionGap: Int): Sec
  * length is tried. Every length that still can be feasible, that is: the stacking is carried from one length to the next
  * rather than redone, and a column count is given up for a row once its sections add up to more than that many cells
  * could ever hold. A single section always fits in a row of its own, so there is always a way to pack the song.
+ *
+ * **A section whose lines do not wrap may have a row of its own as wide as it needs**, the whole width at most, where
+ * [wideHeightAt] gives its height in one: a staff of tablature longer than a column is cut into systems there, and
+ * the column beside it grows by as many staves, while in a row of its own it can be read as it was written. It is one
+ * more candidate for the row starting at that section, taken wherever it makes the song shorter, so a tab that fits a
+ * column anyway, or one too long for the window as well, stays where it was.
  */
 private fun flowIntoRows(
     sectionCount: Int,
     maxColumnCount: Int,
     heightAt: (index: Int, columnCount: Int) -> Int,
+    wideHeightAt: (index: Int) -> Int?,
     sectionGap: Int,
     rowGap: Int,
     maxRowHeight: Int,
 ): SectionGrid {
-    if (sectionCount == 0) return SectionGrid(rows = IntArray(0), columns = IntArray(0), columnCounts = IntArray(0))
+    if (sectionCount == 0) return emptyGrid()
     // heights[k - 1][i] is the height of section i in a row of k columns, heightSums[k - 1][i] the total height of
     // the sections before i at that width, and tallestFrom[k - 1][i] the height of the tallest section from i onwards.
     val heights = Array(maxColumnCount) { column -> IntArray(sectionCount) { heightAt(it, column + 1) } }
@@ -1504,11 +1546,12 @@ private fun flowIntoRows(
         }
         return cell + 1
     }
-    // costs[i] is the smallest total height of the sections from i onwards, rowEnds[i] where their first row ends and
-    // rowColumnCounts[i] how many columns that row has.
+    // costs[i] is the smallest total height of the sections from i onwards, rowEnds[i] where their first row ends,
+    // rowColumnCounts[i] how many columns that row has and isRowWide[i] whether it is a wide row of section i alone.
     val costs = LongArray(sectionCount + 1)
     val rowEnds = IntArray(sectionCount + 1)
     val rowColumnCounts = IntArray(sectionCount + 1)
+    val isRowWide = BooleanArray(sectionCount + 1)
     // The first-fit stacking of the candidate row, per column count, carried from one end of the row to the next:
     // stacking every candidate from its start again is what makes a song of many short sections cubic, and the
     // search runs on every frame of a window being resized.
@@ -1576,13 +1619,26 @@ private fun flowIntoRows(
             }
             end++
         }
+        val wideHeight = wideHeightAt(start)
+        if (wideHeight != null) {
+            val cost = wideHeight + if (start + 1 < sectionCount) rowGap + costs[start + 1] else 0L
+            // Only where it is strictly shorter, since a row wider than a column has lines longer than a column's.
+            if (cost < best) {
+                best = cost
+                rowEnds[start] = start + 1
+                rowColumnCounts[start] = 1
+                isRowWide[start] = true
+            }
+        }
         costs[start] = best
     }
     val rows = IntArray(sectionCount)
     val columns = IntArray(sectionCount)
     val columnCounts = mutableListOf<Int>()
+    val wideRows = mutableListOf<Boolean>()
     var start = 0
     while (start < sectionCount) {
+        wideRows += isRowWide[start]
         val end = rowEnds[start]
         val columnCount = rowColumnCounts[start]
         val row = columnCounts.size
@@ -1594,7 +1650,7 @@ private fun flowIntoRows(
         columnCounts += columnCount
         start = end
     }
-    return SectionGrid(rows = rows, columns = columns, columnCounts = columnCounts.toIntArray())
+    return SectionGrid(rows = rows, columns = columns, columnCounts = columnCounts.toIntArray(), wideRows = wideRows.toBooleanArray())
 }
 
 /** The fallback names of the environments that have one. Everything else is named by the file itself. */
@@ -1997,7 +2053,7 @@ private const val LINE_HEIGHT_SAMPLE = "X"
 private const val CHARACTER_WIDTH_SAMPLE_LENGTH = 64
 private const val MAX_TAB_WIDTHS = 8
 private const val MAX_SECTION_WIDTHS = 32
-private const val UNMEASURED_HEIGHT = -1
+private const val UNMEASURED = -1
 private const val MAX_MEASURED_TEXTS = 4096
 private const val MAX_ANIMATED_SECTION_HEIGHT = 1 shl 17
 private const val MAX_ANIMATED_WIDE_SECTION_HEIGHT = 1 shl 15
