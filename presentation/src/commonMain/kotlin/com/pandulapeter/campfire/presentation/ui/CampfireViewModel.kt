@@ -284,6 +284,27 @@ class CampfireViewModel(
         return true
     }
 
+    /**
+     * Whether the song details screen is on top with nothing over it, which is where Ctrl / Cmd + plus, minus and zero
+     * change the text size and where the web page keeps the browser from zooming itself instead. It is asked from the
+     * desktop window and the web page rather than from a key handler on the screen for the reason [openCurrentSearch]
+     * is: the browser acts on a key pressed anywhere but the canvas before Compose hears of it, and a zoomed page is
+     * not something Compose can undo. A dialog, a sheet or an overflow menu keeps the shortcuts from the screen under it.
+     */
+    internal val isSongTextZoomable
+        get() = backStack.lastOrNull() is CampfireDestination.SongDetails && visibleDialog.value == null && !isAnyOverflowMenuOpen
+
+    /**
+     * Answers the zoom shortcuts the way the browser answers them for a page: [steps] of [FONT_SCALE_STEP] in or out,
+     * or back to [DEFAULT_FONT_SCALE] for null. Answers whether it did, so that everywhere but the song details screen
+     * the key is left to whoever else wants it.
+     */
+    internal fun zoomSongText(steps: Int?): Boolean {
+        if (!isSongTextZoomable) return false
+        if (steps == null) setFontScale(DEFAULT_FONT_SCALE) else adjustFontScale(steps)
+        return true
+    }
+
     // Data
     val isLoading = screenData.map { it is DataState.Loading }.asState(true)
 

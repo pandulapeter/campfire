@@ -37,12 +37,15 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.lerp
 import androidx.compose.ui.graphics.painter.Painter
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.rememberTextMeasurer
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
@@ -69,8 +72,8 @@ import kotlin.math.roundToInt
 import org.jetbrains.compose.resources.painterResource
 
 /**
- * The transposition and text size steppers of the song details screen in a bottom sheet, for windows whose app bar
- * has no room for them. In performance mode only the text size is left, which is a way of reading rather than a
+ * The transposition and text size steppers of the song details screen in a bottom sheet, for an app bar that has no
+ * room for them next to the title (see [SongDetailsScreen]). In performance mode only the text size is left, which is a way of reading rather than a
  * change to the song: the sheet is still worth opening, and the action that opens it still belongs in the bar.
  */
 @Composable
@@ -131,8 +134,7 @@ internal fun TranspositionControls(
 ) = Stepper(
     modifier = modifier,
     isCompact = isCompact,
-    value = (if (transposition > 0) "+$transposition" else transposition.toString())
-        .let { if (key.isNullOrBlank()) it else "$it $KEY_SEPARATOR $key" },
+    value = transpositionLabel(transposition, key),
     isDefault = transposition == 0,
     decreaseIcon = painterResource(Res.drawable.ic_subtract),
     decreaseLabel = stringResource(Res.string.song_details_transpose_down),
@@ -184,12 +186,12 @@ internal fun FontScaleControls(
     onFontScaleAdjusted: (steps: Int) -> Unit,
     onFontScaleReset: () -> Unit,
 ) {
-    val percentage = (fontScale * 100).roundToInt()
+    val value = fontScaleLabel(fontScale)
     Stepper(
         modifier = modifier,
         isCompact = isCompact,
-        value = "$percentage%",
-        isDefault = percentage == (CampfireViewModel.DEFAULT_FONT_SCALE * 100).roundToInt(),
+        value = value,
+        isDefault = value == fontScaleLabel(CampfireViewModel.DEFAULT_FONT_SCALE),
         decreaseIcon = painterResource(Res.drawable.ic_text_decrease),
         decreaseLabel = stringResource(Res.string.song_details_text_size_decrease),
         canDecrease = fontScale > CampfireViewModel.MIN_FONT_SCALE,
@@ -204,13 +206,42 @@ internal fun FontScaleControls(
 }
 
 /**
+ * How much of the app bar the compact steppers take, each with [spacing] after it: the transposition one at the widest
+ * of [transpositionLabels] (none where the list is empty) and the text size one at the widest percentage it can show.
+ * It is the widest value rather than the current one that is measured, so that stepping through the values never
+ * moves the line between the bar and the sheet and sends the controls out from under the pointer mid-press.
+ */
+@Composable
+internal fun rememberCompactSteppersWidth(
+    transpositionLabels: List<String>,
+    spacing: Dp,
+): Dp {
+    val textMeasurer = rememberTextMeasurer()
+    val style = MaterialTheme.typography.labelLarge.copy(fontWeight = FontWeight.Bold)
+    val density = LocalDensity.current
+    return remember(transpositionLabels, spacing, textMeasurer, style, density) {
+        fun stepperWidth(values: List<String>) = COMPACT_BUTTON_WIDTH * 2 + maxOf(
+            VALUE_MIN_WIDTH,
+            with(density) { values.maxOf { textMeasurer.measure(text = it, style = style, maxLines = 1).size.width }.toDp() },
+        ) + spacing
+        val fontScaleLabels = listOf(CampfireViewModel.MIN_FONT_SCALE, CampfireViewModel.MAX_FONT_SCALE).map(::fontScaleLabel)
+        stepperWidth(fontScaleLabels) + if (transpositionLabels.isEmpty()) 0.dp else stepperWidth(transpositionLabels)
+    }
+}
+
+/** What the transposition stepper reads for [transposition], with the [key] it takes the song to where there is one. */
+internal fun transpositionLabel(transposition: Int, key: String?) = (if (transposition > 0) "+$transposition" else transposition.toString())
+    .let { if (key.isNullOrBlank()) it else "$it $KEY_SEPARATOR $key" }
+
+private fun fontScaleLabel(fontScale: Float) = "${(fontScale * 100).roundToInt()}%"
+
+/**
  * A decrease button, the current value (highlighted when it differs from the default, tapping it resets it) and an
  * increase button, in a tonal pill that keeps the three of them together: two of these sit next to each other in
  * the app bar of wide windows, where loose icon buttons would blend into one long row of controls.
  *
  * @param isCompact A shorter pill with narrower buttons, for the app bar, where full height buttons make the two groups
- * look oversized: the inline steppers of a window at least 840dp wide, tablets and phones on their side included, and
- * the editor's. On a touch screen the buttons still take a touch 48dp across, since Compose extends a small target's
+ * look oversized: the song details screen's inline steppers and the editor's. On a touch screen the buttons still take a touch 48dp across, since Compose extends a small target's
  * touch area to the minimum touch target size; only their drawn size shrinks. The bottom sheet of a narrower window
  * keeps the full size.
  */

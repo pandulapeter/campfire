@@ -93,7 +93,6 @@ import com.pandulapeter.campfire.presentation.ui.components.EmptyStateAction
 import com.pandulapeter.campfire.presentation.ui.components.fadingTopEdge
 import com.pandulapeter.campfire.presentation.ui.components.SetlistAssignmentsButton
 import com.pandulapeter.campfire.presentation.ui.components.SongActionsButton
-import com.pandulapeter.campfire.presentation.ui.components.WindowSize
 import com.pandulapeter.campfire.presentation.ui.navigation.CampfireDestination
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
@@ -101,9 +100,10 @@ import org.jetbrains.compose.resources.painterResource
 
 /**
  * The lyrics (and chords) of a song, or of a setlist's songs in a pager. The transposition and the text size can be
- * adjusted from the app bar: inline steppers when the window is wide enough, otherwise from a bottom sheet behind
- * a single "display options" action, so that the bar does not get crowded. The text size can also be changed with
- * a pinch or Ctrl / Cmd + scroll on the content itself, see [fontScaleGestures].
+ * adjusted from the app bar: inline steppers wherever they leave the title [MIN_TITLE_WIDTH], otherwise from a bottom
+ * sheet behind a single "display options" action, so that the bar does not get crowded. The text size can also be changed with
+ * a pinch or Ctrl / Cmd + scroll on the content itself, see [fontScaleGestures], and on the desktop and the web with
+ * Ctrl / Cmd + plus, minus and zero, which the window answers ([CampfireViewModel.zoomSongText]).
  *
  * When there is more than one song to page through, or the song is read from a setlist of any length, a
  * [SongPagerControls] bar under the lyrics offers the same paging as the swipe gesture, along with the name of the
@@ -123,7 +123,6 @@ internal fun SongDetailsScreen(
     modifier: Modifier = Modifier,
     viewModel: CampfireViewModel,
     destination: CampfireDestination.SongDetails,
-    windowSize: WindowSize,
     settledWidth: Dp,
     contentPadding: PaddingValues,
     onBack: () -> Unit,
@@ -201,6 +200,36 @@ internal fun SongDetailsScreen(
     // From the key the library scan read rather than from the text: the page renders the whole song already, and the
     // app bar only needs one line of it.
     val currentKey = currentSong?.let { viewModel.renderKey(song = it, transposition = currentTransposition, spelling = chordSpelling) }
+    // The room is reserved for every song of the pager rather than for the current one, so that paging from a song
+    // with chords to one without (or to one in a key with a longer name) does not move the steppers in and out of the bar.
+    val transpositionLabels = remember(songs, isPerformanceModeEnabled, shouldShowChords, chordSpelling) {
+        if (isPerformanceModeEnabled || !shouldShowChords) {
+            emptyList()
+        } else {
+            songs.filter { it.hasChords }.flatMap { song ->
+                (CampfireViewModel.MIN_TRANSPOSITION..CampfireViewModel.MAX_TRANSPOSITION).map { transposition ->
+                    transpositionLabel(transposition, viewModel.renderKey(song = song, transposition = transposition, spelling = chordSpelling))
+                }
+            }.distinct()
+        }
+    }
+    val inlineControlsWidth = rememberCompactSteppersWidth(transpositionLabels = transpositionLabels, spacing = INLINE_CONTROL_SPACING)
+    val layoutDirection = LocalLayoutDirection.current
+    // Whatever else the bar holds: the back button with the bar's own start padding, the bar's end padding, and the
+    // two actions that performance mode takes away (the setlist assignments only for a song read from the library).
+    val otherAppBarContentWidth = APP_BAR_NAVIGATION_WIDTH + APP_BAR_END_PADDING + when {
+        isPerformanceModeEnabled -> 0.dp
+        destination.setlistFileName == null -> APP_BAR_ACTION_WIDTH * 2
+        else -> APP_BAR_ACTION_WIDTH
+    }
+    // Decided from what the controls need rather than from the window's size class, since that is anything from one
+    // stepper in performance mode to two and two more actions in the library. The settled width keeps the decision
+    // from changing while a navigation transition is still running.
+    val usesInlineControls = settledWidth -
+        contentPadding.calculateStartPadding(layoutDirection) -
+        contentPadding.calculateEndPadding(layoutDirection) -
+        otherAppBarContentWidth -
+        inlineControlsWidth >= MIN_TITLE_WIDTH
 
     val coroutineScope = rememberCoroutineScope()
     val pageStepper = remember(pagerState, coroutineScope) { PageStepper(pagerState, coroutineScope) }
@@ -271,7 +300,7 @@ internal fun SongDetailsScreen(
             },
             actions = {
                 AnimatedVisibility(
-                    visible = windowSize.usesInlineSongControls,
+                    visible = usesInlineControls,
                     enter = fadeIn() + expandHorizontally(),
                     exit = fadeOut() + shrinkHorizontally(),
                 ) {
@@ -300,7 +329,7 @@ internal fun SongDetailsScreen(
                     }
                 }
                 AnimatedVisibility(
-                    visible = !windowSize.usesInlineSongControls,
+                    visible = !usesInlineControls,
                     enter = fadeIn() + scaleIn(),
                     exit = fadeOut() + scaleOut(),
                 ) {
@@ -339,7 +368,6 @@ internal fun SongDetailsScreen(
         val currentFontScale by rememberUpdatedState(fontScale)
         // The paging bar sits below the pager and covers the bottom inset for it, so the pages only keep the
         // padding that is still theirs to apply.
-        val layoutDirection = LocalLayoutDirection.current
         val pageContentPadding = if (hasPagerControls) {
             PaddingValues(
                 start = contentPadding.calculateStartPadding(layoutDirection),
@@ -663,5 +691,9 @@ private class SetlistSlots(
 private const val LABEL_SEPARATOR = "·"
 private val PAGER_CONTROLS_HEIGHT = 48.dp
 private val INLINE_CONTROL_SPACING = 8.dp
+private val APP_BAR_NAVIGATION_WIDTH = 52.dp // The 48dp button and the 4dp the bar pads its start by.
+private val APP_BAR_END_PADDING = 4.dp
+private val APP_BAR_ACTION_WIDTH = 48.dp
+private val MIN_TITLE_WIDTH = 160.dp // About fifteen characters of a title, enough to tell one song from the next.
 private const val KEY_SCROLL_STEP_FRACTION = 0.1f // Of the height of the scrolling viewport.
 private const val KEY_SCROLL_STEP_DURATION = 120

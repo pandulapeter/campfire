@@ -22,8 +22,10 @@ import com.pandulapeter.campfire.presentation.ui.platform.LocalFilePicker
 import com.pandulapeter.campfire.presentation.ui.platform.WebFilePicker
 import com.pandulapeter.campfire.presentation.ui.platform.droppedFiles
 import kotlinx.browser.window
+import org.w3c.dom.AddEventListenerOptions
 import org.w3c.dom.events.Event
 import org.w3c.dom.events.KeyboardEvent
+import org.w3c.dom.events.WheelEvent
 import kotlin.js.ExperimentalWasmJsInterop
 import kotlin.js.unsafeCast
 import org.koin.compose.viewmodel.koinViewModel
@@ -33,8 +35,9 @@ import org.koin.compose.viewmodel.koinViewModel
  * browser asks before the page is left with unsaved text in the editor. Escape reaches Compose from a focused text
  * field too ([startForwardingEscapeKey]), Ctrl / Cmd + S is kept from the browser's own "Save page as"
  * ([startSuppressingBrowserSave]), and Ctrl / Cmd + F opens the search of a list screen in place of the browser's
- * find bar ([SearchShortcutEffect]). Every screen has an address of its own, and the browser's history follows the
- * app's back stack ([BrowserHistoryEffect]).
+ * find bar ([SearchShortcutEffect]). The browser's zoom shortcuts change the text size of the song details screen
+ * instead of zooming the page ([SongTextZoomEffect]). Every screen has an address of its own, and the browser's
+ * history follows the app's back stack ([BrowserHistoryEffect]).
  */
 @Composable
 fun CampfireWebApp(
@@ -57,6 +60,7 @@ fun CampfireWebApp(
     remember(viewModel) { viewModel.navigateToBrowserAddress() }
     BrowserHistoryEffect(viewModel)
     SearchShortcutEffect(viewModel)
+    SongTextZoomEffect(viewModel)
     LaunchedEffect(viewModel) {
         viewModel.hasUnsavedEditorChanges.collect { hasUnsavedChanges ->
             if (hasUnsavedChanges) startWarningBeforeUnload() else stopWarningBeforeUnload()
@@ -98,6 +102,47 @@ private fun SearchShortcutEffect(viewModel: CampfireViewModel) = DisposableEffec
     }
     window.addEventListener(EVENT_KEY_DOWN, listener, true)
     onDispose { window.removeEventListener(EVENT_KEY_DOWN, listener, true) }
+}
+
+/**
+ * Turns the browser's zoom shortcuts into the text size of the song details screen while it is on top
+ * ([CampfireViewModel.isSongTextZoomable]): Ctrl / Cmd + plus, minus and zero step it the way the app bar's buttons
+ * do, and a Ctrl + scroll - which is also what Chrome, Edge and Firefox make of a pinch on a trackpad - is kept from
+ * the browser so that the screen's own gesture handler can have it (see fontScaleGestures). A zoomed page is the
+ * whole app grown around a song that stayed the same size, which is not what anybody reading one asked for. Everywhere
+ * else the browser zooms the page as it always does, which is how the rest of the app is made larger on the web.
+ *
+ * Window listeners in the capture phase, for the reasons [SearchShortcutEffect] gives. The wheel listener has to be
+ * declared not passive, since a wheel listener on the window is passive unless it says otherwise and a passive one
+ * cannot prevent anything; it only prevents the default and leaves the event to reach the canvas. Safari zooms on a
+ * pinch through gesture events of its own rather than the wheel, and is left to do so.
+ */
+@Composable
+private fun SongTextZoomEffect(viewModel: CampfireViewModel) = DisposableEffect(viewModel) {
+    val keyListener: (Event) -> Unit = listener@{ event ->
+        val keyEvent = event.unsafeCast<KeyboardEvent>()
+        // key rather than code, as the browser's own zoom goes by it: the plus of a Hungarian layout is Shift + 3.
+        // Alt is left out because AltGr arrives as Ctrl + Alt on Windows, and AltGr with these keys types a character
+        // on some layouts.
+        val steps = when (keyEvent.key) {
+            "+", "=" -> 1
+            "-", "_" -> -1
+            "0" -> null
+            else -> return@listener
+        }
+        if ((keyEvent.ctrlKey || keyEvent.metaKey) && !keyEvent.altKey && viewModel.zoomSongText(steps)) {
+            keyEvent.preventDefault()
+        }
+    }
+    val wheelListener: (Event) -> Unit = { event ->
+        if (event.unsafeCast<WheelEvent>().ctrlKey && viewModel.isSongTextZoomable) event.preventDefault()
+    }
+    window.addEventListener(EVENT_KEY_DOWN, keyListener, true)
+    window.addEventListener(EVENT_WHEEL, wheelListener, AddEventListenerOptions(passive = false, capture = true))
+    onDispose {
+        window.removeEventListener(EVENT_KEY_DOWN, keyListener, true)
+        window.removeEventListener(EVENT_WHEEL, wheelListener, true)
+    }
 }
 
 /**
@@ -257,3 +302,4 @@ private fun stopForwardingEscapeKey() {
 }
 
 private const val EVENT_KEY_DOWN = "keydown"
+private const val EVENT_WHEEL = "wheel"

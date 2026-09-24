@@ -20,9 +20,6 @@ internal enum class WindowSize {
 
     val usesNavigationRail get() = this != COMPACT
 
-    /** Whether the app bar of the song details screen has room for the steppers, or they belong in a bottom sheet. */
-    val usesInlineSongControls get() = this == EXPANDED
-
     companion object {
         fun fromWidth(width: Dp) = when {
             width < 600.dp -> COMPACT

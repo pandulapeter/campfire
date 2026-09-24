@@ -607,7 +607,6 @@ private fun CampfireScreens(
                         SongDetailsScreen(
                             viewModel = viewModel,
                             destination = destination,
-                            windowSize = windowSize,
                             settledWidth = settledSongDetailsWidth,
                             contentPadding = songDetailsContentPadding,
                             onBack = viewModel::navigateBack,

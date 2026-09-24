@@ -102,7 +102,8 @@ fun CampfireDesktopApp(
  * To be wired into the window's key event handler. Returns true if the event was consumed. Ctrl / Cmd + F opens the
  * search of the list screen that is on top ([CampfireViewModel.openCurrentSearch]); it is answered here because this
  * handler hears the keys that nothing focused in the window took, and nothing is focused on a list screen until its
- * search is.
+ * search is. Ctrl / Cmd + plus, minus and zero change the text size of the song details screen
+ * ([CampfireViewModel.zoomSongText]), the shortcuts a browser zooms a page with.
  *
  * @param onExit Closes the application, called when there is nothing left to navigate back from, and only once a save
  *   that is still being written has finished, see [CampfireViewModel.requestExit].
@@ -110,6 +111,17 @@ fun CampfireDesktopApp(
 fun CampfireViewModel.handleKeyEvent(keyEvent: KeyEvent, onExit: () -> Unit): Boolean {
     if (keyEvent.type == KeyEventType.KeyDown && keyEvent.key == Key.F && (keyEvent.isCtrlPressed || keyEvent.isMetaPressed) && !keyEvent.isAltPressed) {
         return openCurrentSearch()
+    }
+    // Alt is left out because AltGr arrives as Ctrl + Alt on Windows, and AltGr with these keys types a character on
+    // some layouts. Shift is not: the plus of a US layout is Shift + equals.
+    if (keyEvent.type == KeyEventType.KeyDown && (keyEvent.isCtrlPressed || keyEvent.isMetaPressed) && !keyEvent.isAltPressed) {
+        val steps = when (keyEvent.key) {
+            Key.Equals, Key.Plus, Key.NumPadAdd -> 1
+            Key.Minus, Key.NumPadSubtract -> -1
+            Key.Zero, Key.NumPad0 -> null
+            else -> return false
+        }
+        return zoomSongText(steps)
     }
     if (keyEvent.type == KeyEventType.KeyDown && keyEvent.key == Key.Escape) {
         // Window key handlers run before Compose turns Escape into a back event, so consuming it here would pop the
