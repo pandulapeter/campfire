@@ -149,6 +149,7 @@ import com.pandulapeter.campfire.presentation.ui.screens.songDetails.SongDetails
 import com.pandulapeter.campfire.presentation.ui.screens.songEditor.SongEditorScreen
 import com.pandulapeter.campfire.presentation.ui.screens.songs.SongsScreen
 import com.pandulapeter.campfire.presentation.ui.theme.ApplyLanguagePreference
+import com.pandulapeter.campfire.presentation.ui.theme.ProvideInterfaceScale
 import com.pandulapeter.campfire.presentation.ui.theme.CampfireTheme
 import org.jetbrains.compose.resources.DrawableResource
 import kotlin.math.roundToInt
@@ -216,13 +217,17 @@ fun CampfireApp(
             // window is already painted in the theme's background, which is the one color the palettes agree on
             // within a light or a dark scheme.
             if (arePreferencesLoaded) {
-                // Inside the theme, so that the one screen it can put in the way of the app is drawn in the colors
-                // the user chose, and above the language preference, so that it is in the language they chose too.
-                AppUpdateGate(viewModel = viewModel) {
-                    CampfireContent(
-                        viewModel = viewModel,
-                        urlOpener = urlOpener,
-                    )
+                // The launch screen is left out of the interface scale: it hands over from the startup screens of the
+                // platforms, which draw the mark at its unscaled size.
+                ProvideInterfaceScale {
+                    // Inside the theme, so that the one screen it can put in the way of the app is drawn in the colors
+                    // the user chose, and above the language preference, so that it is in the language they chose too.
+                    AppUpdateGate(viewModel = viewModel) {
+                        CampfireContent(
+                            viewModel = viewModel,
+                            urlOpener = urlOpener,
+                        )
+                    }
                 }
             }
             // The launch screen covers the app rather than standing in for it, and it fades away once there is
@@ -756,7 +761,7 @@ private fun NavigationChromeScaffold(
             // Placed relatively, so that the rail sits on the start edge the screens are inset from rather than always
             // on the left one.
             if (isChromePlaced) {
-                if (outgoingPlaceable != null && outgoingKind != null) {
+                if (outgoingPlaceable != null) {
                     placeChrome(outgoingPlaceable, outgoingKind, otherKind = kind, visibility = 1f - progress, windowHeight = constraints.maxHeight)
                 }
                 placeChrome(chromePlaceable, kind, otherKind = outgoingKind, visibility = if (outgoingKind == null) 1f else progress, windowHeight = constraints.maxHeight)
@@ -881,7 +886,7 @@ private val EXPANDED_NAVIGATION_RAIL_LABEL_WIDTH = 116.dp
 private val EXPANDED_NAVIGATION_RAIL_TOP_PADDING = 4.dp
 
 /**
- * The navigation bar (under 600dp), navigation rail or expanded navigation rail (see [isNavigationRailExpanded]) that
+ * The navigation bar (under 600dp), navigation rail or expanded navigation rail (see [navigationChromeKind]) that
  * every top level screen shares. It belongs to the bottom of the deck rather than to any one screen: it is laid out
  * once for the window and stays there while the tabs fade through in place next to it. A card dealt over the deck
  * moves the screen under it a little, and the chrome is part of that screen as far as the eye can tell, so for as long

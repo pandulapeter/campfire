@@ -69,4 +69,5 @@ author's. The MPL grants no trademark rights (section 2.3), so a fork has to shi
 
 The web build bundles [JetBrains Mono](https://github.com/JetBrains/JetBrainsMono), copyright The JetBrains Mono
 Project Authors, which is licensed under the [SIL Open Font License 1.1](presentation/src/wasmJsMain/composeResources/files/licenses/jetbrains_mono_ofl.txt)
-rather than the MPL.
+rather than the MPL, and [Inter](https://github.com/rsms/inter), copyright The Inter Project Authors, licensed under the
+[same license](presentation/src/wasmJsMain/composeResources/files/licenses/inter_ofl.txt).

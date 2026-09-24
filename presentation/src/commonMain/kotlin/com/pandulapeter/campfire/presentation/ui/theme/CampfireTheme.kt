@@ -14,6 +14,7 @@ import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.material3.ColorScheme
 import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
 import androidx.compose.material3.MaterialExpressiveTheme
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.MotionScheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
@@ -40,8 +41,9 @@ import com.pandulapeter.campfire.data.model.domain.UserPreferences
  * blinking. It costs nothing when there is nothing to correct: a preference that resolves to the palette already on
  * screen is not a change and does not animate.
  *
- * @param content Told whether the scheme it is drawn in is the final one, which is what holds the launch screen in
- *   front of the app until the colors underneath have stopped moving.
+ * @param content Told whether the scheme it is drawn in is the final one and its typography is in (see
+ *   [interfaceTypography]), which is what holds the launch screen in front of the app until the colors underneath have
+ *   stopped moving and the text will not be laid out again in another font.
  */
 @OptIn(ExperimentalMaterial3ExpressiveApi::class)
 @Composable
@@ -71,16 +73,18 @@ fun CampfireTheme(
         progress.snapTo(0f)
         progress.animateTo(1f, MOTION_SCHEME.defaultEffectsSpec())
     }
+    val typography = interfaceTypography()
     MaterialExpressiveTheme(
         colorScheme = lerp(start, stop, progress.value),
         motionScheme = MOTION_SCHEME,
+        typography = typography ?: MaterialTheme.typography,
     ) {
         CompositionLocalProvider(LocalMonospaceFontFamily provides monospaceFontFamily()) {
-                // The scheme asked for is not the one being shown from the composition the preferences arrive in until
+            // The scheme asked for is not the one being shown from the composition the preferences arrive in until
             // the fade that follows has ended, and the effect above starts that fade one frame after that composition -
             // so the target being reached is read from the schemes rather than from the animation alone, which is not
             // running yet in that one frame.
-            content(targetColorScheme === stop && !progress.isRunning)
+            content(targetColorScheme === stop && !progress.isRunning && typography != null)
         }
     }
 }

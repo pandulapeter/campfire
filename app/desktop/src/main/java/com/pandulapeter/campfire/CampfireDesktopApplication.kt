@@ -34,6 +34,7 @@ import com.pandulapeter.campfire.presentation.ui.handleKeyEvent
 import com.pandulapeter.campfire.presentation.ui.handlePreviewKeyEvent
 import com.pandulapeter.campfire.presentation.ui.resetEscapeKey
 import com.pandulapeter.campfire.presentation.ui.platform.desktopDataDirectory
+import com.pandulapeter.campfire.presentation.ui.theme.interfaceScale
 import com.pandulapeter.campfire.resources.Res
 import com.pandulapeter.campfire.resources.app_icon
 import java.awt.Component
@@ -177,10 +178,12 @@ fun main(args: Array<String>) {
 }
 
 /**
- * Both are in AWT's units, which are the scaled ones Compose's dp map to, so they look the same at any display scaling.
- * The initial size gives the lists room without covering a laptop's screen.
+ * The initial size is in AWT's units, which are the scaled ones the platform's dp map to, so it looks the same at any
+ * display scaling, and it gives the lists room without covering a laptop's screen. The minimum is in the app's own dp
+ * instead - the smallest window its layouts are made for - and the app draws a dp smaller than the platform does
+ * (`interfaceScale`), so the window it takes is smaller by the same amount.
  */
-private val MINIMUM_WINDOW_SIZE = DpSize(480.dp, 480.dp)
+private val MINIMUM_CONTENT_SIZE = DpSize(480.dp, 480.dp)
 private val INITIAL_WINDOW_SIZE = DpSize(800.dp, 600.dp)
 
 /**
@@ -196,8 +199,8 @@ private fun ComposeWindow.fitSizeToScreen(windowState: WindowState) {
     )
     windowState.size = DpSize(min(windowState.size.width, available.width), min(windowState.size.height, available.height))
     minimumSize = Dimension(
-        min(MINIMUM_WINDOW_SIZE.width, available.width).value.toInt(),
-        min(MINIMUM_WINDOW_SIZE.height, available.height).value.toInt(),
+        min(MINIMUM_CONTENT_SIZE.width * interfaceScale, available.width).value.toInt(),
+        min(MINIMUM_CONTENT_SIZE.height * interfaceScale, available.height).value.toInt(),
     )
     scaleNativeMinimumSize()
 }

@@ -47,8 +47,9 @@ direction.
   the preloaded fonts, `campfire.js`, the binaries, the resources Compose fetches later and the storage worker the first
   write starts — would otherwise be resolved against it. A host that serves `index.html` at the deep address itself (a
   single page app fallback) breaks exactly that, since the page can no longer tell where its folder ends.
-- The page also preloads the two monospaced font files `:presentation` bundles for tabs, so they download alongside the
-  binaries rather than after them. The links are `as="fetch"` with `crossorigin`, which is what makes the Compose
+- The page also preloads the font files `:presentation` bundles — Inter in three weights for the interface, which the
+  launch screen waits for, and the two monospaced ones for tabs — so they download alongside the binaries rather than
+  after them. The links are `as="fetch"` with `crossorigin`, which is what makes the Compose
   resource reader's own `fetch()` match them; `as="font"` would be downloaded a second time. They name the files by
   their path in the distribution (`composeResources/<package of Res>/font/…`), so renaming a font means renaming it
   there too.
