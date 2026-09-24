@@ -11,6 +11,7 @@ package com.pandulapeter.campfire.presentation.ui.components
 
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.foundation.gestures.ScrollableState
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ColumnScope
 import androidx.compose.foundation.layout.RowScope
@@ -41,9 +42,9 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.zIndex
 
 /**
- * Top app bar that gets a tonal tint and a shadow as soon as content scrolls underneath it, so that the bar stays
- * visually separated from the list. The screen's scrollable content must be hooked up with
- * `Modifier.nestedScroll(scrollBehavior.nestedScrollConnection)`.
+ * Top app bar that can get a tonal tint and a shadow as content scrolls underneath it. Screens using that behavior
+ * hook their scrollable content up with `Modifier.nestedScroll(scrollBehavior.nestedScrollConnection)`; the song and
+ * setlist lists leave it off so their bars keep one color and elevation.
  *
  * A screen that needs more than one row of controls puts the rest in [bottomContent], which is drawn inside the same
  * surface and under the same shadow: the editor's toolbar is part of the bar rather than a strip floating under it,
@@ -59,6 +60,7 @@ import androidx.compose.ui.zIndex
 internal fun CampfireTopAppBar(
     modifier: Modifier = Modifier,
     scrollBehavior: TopAppBarScrollBehavior,
+    scrollElevationEnabled: Boolean = true,
     title: @Composable () -> Unit,
     navigationIcon: @Composable () -> Unit = {},
     actions: @Composable RowScope.() -> Unit = {},
@@ -68,7 +70,7 @@ internal fun CampfireTopAppBar(
     // pixel, while the answer only changes as the list leaves its top and as it comes back to it.
     val isOverlapped by remember(scrollBehavior) { derivedStateOf { scrollBehavior.state.overlappedFraction > 0.01f } }
     val overlapProgress by animateFloatAsState(
-        targetValue = if (isOverlapped) 1f else 0f,
+        targetValue = if (scrollElevationEnabled && isOverlapped) 1f else 0f,
         animationSpec = MaterialTheme.motionScheme.defaultEffectsSpec(),
     )
     Surface(
@@ -101,6 +103,7 @@ internal fun CampfireTopAppBar(
  * but a transparent layout - would take every tap meant for the rail.
  *
  * @param railWidth How much of the window the navigation rail takes from the start edge, or zero next to a bar.
+ * @param contentOverdrawsAppBar Let an outgoing sticky header cross the content's top edge and fade over the bar.
  * @param content What goes under the app bar, laid out on an opaque surface that blocks touches from reaching the
  *   screen it covers during a transition.
  */
@@ -109,22 +112,30 @@ internal fun CampfireTopAppBar(
 internal fun TopLevelScreenLayout(
     modifier: Modifier = Modifier,
     railWidth: Dp,
+    contentOverdrawsAppBar: Boolean = false,
     appBar: @Composable () -> Unit,
     content: @Composable ColumnScope.() -> Unit,
 ) = Column(
     modifier = modifier.fillMaxSize(),
 ) {
     appBar()
-    Surface(
-        modifier = Modifier
-            .weight(1f)
-            .fillMaxWidth()
-            .padding(start = railWidth)
-            // The rail covers the insets on its own edge, so nothing inside should apply them a second time.
-            .consumeWindowInsets(PaddingValues(start = railWidth)),
-        color = MaterialTheme.colorScheme.background,
-    ) {
-        Column(content = content)
+    val contentModifier = Modifier
+        .weight(1f)
+        .fillMaxWidth()
+        .padding(start = railWidth)
+        // The rail covers the insets on its own edge, so nothing inside should apply them a second time.
+        .consumeWindowInsets(PaddingValues(start = railWidth))
+    if (contentOverdrawsAppBar) {
+        // A pushed sticky header is painted outside the grid's clipping bounds. Keep the opaque surface as the
+        // content's background, but do not make it the header's ancestor or it would clip the overdraw again.
+        Box(modifier = contentModifier.zIndex(2f)) {
+            Surface(modifier = Modifier.matchParentSize(), color = MaterialTheme.colorScheme.background) {}
+            Column(modifier = Modifier.fillMaxSize(), content = content)
+        }
+    } else {
+        Surface(modifier = contentModifier, color = MaterialTheme.colorScheme.background) {
+            Column(content = content)
+        }
     }
 }
 

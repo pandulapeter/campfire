@@ -24,7 +24,6 @@ import com.pandulapeter.campfire.presentation.resources.ic_delete
 import com.pandulapeter.campfire.presentation.resources.ic_duplicate
 import com.pandulapeter.campfire.presentation.resources.ic_edit
 import com.pandulapeter.campfire.presentation.resources.ic_export
-import com.pandulapeter.campfire.presentation.resources.ic_more
 import com.pandulapeter.campfire.presentation.resources.ic_songs
 import com.pandulapeter.campfire.presentation.resources.ic_unarchive
 import com.pandulapeter.campfire.presentation.resources.setlists_actions
@@ -38,8 +37,8 @@ import com.pandulapeter.campfire.presentation.ui.platform.LocalFilePicker
 import org.jetbrains.compose.resources.painterResource
 
 /**
- * Everything that can be done to one setlist, behind the overflow button of its [SectionHeader] pill: there are more
- * of these than a pill has room for, and all but one of them lead somewhere else anyway - a sheet, a dialog, a file
+ * Everything that can be done to one setlist, behind the overflow button of its [SectionHeader]: there are more
+ * of these than a row has room for, and all but one of them lead somewhere else anyway - a sheet, a dialog, a file
  * picker, or the setlist leaving the list it was tapped in. They start the way a song's menu does, with "Edit" and
  * then the assignments, so that the two menus read alike. "Edit" is where a setlist is renamed, and also the one
  * place its description is written, since the two are the whole of what the user gets to say about it.
@@ -53,15 +52,7 @@ internal fun SetlistActionsMenu(
     setlist: Setlist,
 ) {
     val filePicker = LocalFilePicker.current
-    OverflowMenu(
-        button = { open ->
-            SectionHeaderAction(
-                icon = painterResource(Res.drawable.ic_more),
-                contentDescription = stringResource(Res.string.setlists_actions),
-                onClick = open,
-            )
-        },
-    ) { select ->
+    ActionsMenu(contentDescription = stringResource(Res.string.setlists_actions)) { select ->
         // Each entry acts through `select`, which closes the menu before it acts - so that it is gone by the time the
         // dialog or the picker it opens is on the screen - and only once.
         SetlistActionsMenuItem(

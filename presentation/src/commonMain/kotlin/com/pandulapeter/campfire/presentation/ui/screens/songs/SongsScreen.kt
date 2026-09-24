@@ -14,16 +14,19 @@ import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.scaleIn
 import androidx.compose.animation.scaleOut
-import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.calculateEndPadding
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.grid.GridItemSpan
 import androidx.compose.foundation.lazy.grid.LazyGridState
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
-import androidx.compose.foundation.lazy.grid.items
+import androidx.compose.foundation.lazy.grid.itemsIndexed
 import androidx.compose.material3.Badge
 import androidx.compose.material3.BadgedBox
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -36,9 +39,12 @@ import androidx.compose.runtime.SideEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.input.nestedscroll.nestedScroll
+import androidx.compose.ui.platform.LocalLayoutDirection
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
+import androidx.compose.ui.semantics.clearAndSetSemantics
 import androidx.compose.ui.unit.Dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.pandulapeter.campfire.data.model.domain.UserPreferences
@@ -57,15 +63,14 @@ import com.pandulapeter.campfire.presentation.ui.CampfireViewModel
 import com.pandulapeter.campfire.presentation.ui.components.ControlsSidePanel
 import com.pandulapeter.campfire.presentation.ui.components.DismissSheetWhenSidePanelAppears
 import com.pandulapeter.campfire.presentation.ui.components.FastScroller
+import com.pandulapeter.campfire.presentation.ui.components.FAST_SCROLLER_WIDTH
 import com.pandulapeter.campfire.presentation.ui.components.ImportProgress
 import com.pandulapeter.campfire.presentation.ui.components.HideKeyboardWhenScrolledDown
-import com.pandulapeter.campfire.presentation.ui.components.KeepTopAppBarInSync
 import com.pandulapeter.campfire.presentation.ui.components.ListColumns
 import com.pandulapeter.campfire.presentation.ui.components.ListPlaceholder
 import com.pandulapeter.campfire.presentation.ui.components.NewItemMenu
 import com.pandulapeter.campfire.presentation.ui.components.ScrollToTopWhenChanged
 import com.pandulapeter.campfire.presentation.ui.components.SearchableTopAppBar
-import com.pandulapeter.campfire.presentation.ui.components.SECTION_HEADER_GAP
 import com.pandulapeter.campfire.presentation.ui.components.SectionHeader
 import com.pandulapeter.campfire.presentation.ui.components.SongActionsButton
 import com.pandulapeter.campfire.presentation.ui.components.SongListItem
@@ -76,9 +81,12 @@ import com.pandulapeter.campfire.presentation.ui.components.besideSidePanel
 import com.pandulapeter.campfire.presentation.ui.components.hasRoomForSidePanel
 import com.pandulapeter.campfire.presentation.ui.components.listItemAnimation
 import com.pandulapeter.campfire.presentation.ui.components.only
+import com.pandulapeter.campfire.presentation.ui.components.pushedSectionHeader
 import com.pandulapeter.campfire.presentation.ui.components.rememberHasLoadedLibrary
 import com.pandulapeter.campfire.presentation.ui.components.rememberOverflowMenuState
 import com.pandulapeter.campfire.presentation.ui.components.rememberRetainedLazyGridState
+import com.pandulapeter.campfire.presentation.ui.components.sectionHeaderDividerState
+import com.pandulapeter.campfire.presentation.ui.components.songCardPadding
 import com.pandulapeter.campfire.presentation.ui.components.songListColumnCount
 import com.pandulapeter.campfire.presentation.ui.platform.LocalFilePicker
 import com.pandulapeter.campfire.presentation.ui.platform.isDesktopPlatform
@@ -111,7 +119,6 @@ internal fun SongsScreen(
         isSidePanelVisible = isSidePanelVisible,
     )
     val hasLoadedLibrary = rememberHasLoadedLibrary(isLoading)
-    KeepTopAppBarInSync(scrollBehavior, listState)
     HideKeyboardWhenScrolledDown(listState)
     DismissSheetWhenSidePanelAppears(
         isSidePanelVisible = isSidePanelVisible,
@@ -121,9 +128,11 @@ internal fun SongsScreen(
     TopLevelScreenLayout(
         modifier = modifier,
         railWidth = railWidth,
+        contentOverdrawsAppBar = true,
         appBar = {
             SearchableTopAppBar(
                 scrollBehavior = scrollBehavior,
+                scrollElevationEnabled = false,
                 title = stringResource(Res.string.songs),
                 placeholder = stringResource(Res.string.songs_search),
                 searchState = viewModel.songsSearch,
@@ -152,13 +161,12 @@ internal fun SongsScreen(
         ImportProgress(isImporting = isImporting)
         Row {
             SongList(
-                // Only the list tints the bar: the panel next to it scrolls under the same bar, but the bar is kept in
-                // step with the list's own scroll position, and the two would fight over it.
-                modifier = Modifier.weight(1f).fillMaxSize().nestedScroll(scrollBehavior.nestedScrollConnection),
+                modifier = Modifier.weight(1f).fillMaxSize(),
                 viewModel = viewModel,
                 listState = listState,
                 placeholder = placeholder,
                 columnCount = columnCount,
+                isSidePanelVisible = isSidePanelVisible,
                 hasLoadedLibrary = hasLoadedLibrary,
                 contentPadding = listContentPadding,
             )
@@ -221,6 +229,7 @@ private fun SongList(
     listState: LazyGridState,
     placeholder: CampfireViewModel.Placeholder?,
     columnCount: Int,
+    isSidePanelVisible: Boolean,
     hasLoadedLibrary: Boolean,
     contentPadding: PaddingValues,
 ) {
@@ -248,6 +257,7 @@ private fun SongList(
             List(size = group.songs.size + (if (group.header == null) 0 else 1)) { label }
         }
     }
+    val pushedHeader = pushedSectionHeader(listState, contentType = "header")
 
     ScrollToTopWhenChanged(
         listState = listState,
@@ -272,16 +282,14 @@ private fun SongList(
         }
     }
 
-    // The scroller takes the end inset over from the grid, so that it keeps to the edge of the screen beside the list
-    // rather than standing in front of it.
-    Row(
-        modifier = modifier
-    ) {
+    // The header paints through the grid's end padding, while cards stop before the scroller's touch column.
+    val headerEndPadding = FAST_SCROLLER_WIDTH + contentPadding.calculateEndPadding(LocalLayoutDirection.current)
+    Box(modifier = modifier) {
         LazyVerticalGrid(
             columns = ListColumns(columnCount),
-            modifier = Modifier.weight(1f).fillMaxHeight(),
+            modifier = Modifier.fillMaxSize(),
             state = listState,
-            contentPadding = contentPadding.only(start = true, bottom = true, extraTop = SECTION_HEADER_GAP),
+            contentPadding = contentPadding.only(start = true, end = true, bottom = true, extraEnd = FAST_SCROLLER_WIDTH),
         ) {
             placeholder?.let {
                 item(
@@ -311,27 +319,28 @@ private fun SongList(
                         key = "header_${header.key}",
                         contentType = "header",
                     ) { headerIndex ->
+                        val dividerState = sectionHeaderDividerState(listState, headerIndex)
                         SectionHeader(
                             modifier = listItemAnimation(listState, hasLoadedLibrary),
-                            text = when (header) {
-                                // A song can be created without an artist, and an empty pill would look broken.
-                                is SongSection.Header.Artist -> header.name.ifBlank { stringResource(Res.string.songs_unknown_artist) }
-                                is SongSection.Header.Letter -> header.letter.toString()
-                                SongSection.Header.Symbols -> stringResource(Res.string.songs_unsorted_label)
-                            },
+                            dividerState = dividerState,
+                            endPadding = headerEndPadding,
+                            insetDivider = isSidePanelVisible,
+                            text = header.displayText(),
                             onClick = { coroutineScope.launch { listState.animateScrollToItem(headerIndex) } },
+                            opacity = if (dividerState.visibleFraction < 1f) 0f else 1f,
                         )
                     }
                 }
-                items(
+                itemsIndexed(
                     items = group.songs,
-                    key = { "song_${it.fileName}" },
-                    contentType = { "song" },
-                ) { song ->
+                    key = { _, song -> "song_${song.fileName}" },
+                    contentType = { _, _ -> "song" },
+                ) { songIndex, song ->
                     val actionsMenuState = rememberOverflowMenuState()
                     SongListItem(
                         modifier = listItemAnimation(listState, hasLoadedLibrary),
                         song = song,
+                        cardPadding = songCardPadding(songIndex, columnCount),
                         // A song opened from the library is transposed in the preferences, so that is the only
                         // amount this list knows about: the setlists each hold their own.
                         key = viewModel.renderKey(song, transpositions[song.fileName, null], chordSpelling),
@@ -369,8 +378,26 @@ private fun SongList(
                 }
             }
         }
+        // The grid clips at its top edge. Draw the outgoing header here while it is pushed, so its fade can
+        // continue into the app bar rather than ending at that edge.
+        pushedHeader?.let { pushed ->
+            val header = songGroups.mapNotNull { it.header }.firstOrNull { "header_${it.key}" == pushed.key }
+            if (header != null) {
+                val density = LocalDensity.current
+                SectionHeader(
+                    modifier = Modifier.offset { pushed.offset }.width(with(density) { pushed.width.toDp() }).clearAndSetSemantics {},
+                    text = header.displayText(),
+                    dividerState = sectionHeaderDividerState(listState, pushed.index),
+                    endPadding = headerEndPadding,
+                    insetDivider = isSidePanelVisible,
+                    onClick = null,
+                    contentOpacity = pushed.visibleFraction,
+                    backgroundTopPx = pushed.backgroundTop,
+                )
+            }
+        }
         FastScroller(
-            modifier = Modifier.padding(contentPadding.only(top = true, end = true, bottom = true)),
+            modifier = Modifier.align(Alignment.TopEnd).padding(contentPadding.only(top = true, end = true, bottom = true)),
             gridState = listState,
             labelForItem = { sectionLabels.getOrNull(it) },
         )
@@ -386,5 +413,13 @@ private val SongSection.Header.fastScrollerLabel: String
         is SongSection.Header.Letter -> letter.toString()
         SongSection.Header.Symbols -> SYMBOLS_LABEL
     }
+
+@Composable
+private fun SongSection.Header.displayText(): String = when (this) {
+    // A song can be created without an artist, so the section still needs a name.
+    is SongSection.Header.Artist -> name.ifBlank { stringResource(Res.string.songs_unknown_artist) }
+    is SongSection.Header.Letter -> letter.toString()
+    SongSection.Header.Symbols -> stringResource(Res.string.songs_unsorted_label)
+}
 
 private const val SYMBOLS_LABEL = "#"

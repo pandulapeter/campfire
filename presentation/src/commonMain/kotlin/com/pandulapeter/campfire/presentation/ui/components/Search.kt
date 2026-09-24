@@ -148,6 +148,7 @@ import org.jetbrains.compose.resources.painterResource
 internal fun SearchableTopAppBar(
     modifier: Modifier = Modifier,
     scrollBehavior: TopAppBarScrollBehavior,
+    scrollElevationEnabled: Boolean = true,
     title: String,
     placeholder: String,
     searchState: SearchState,
@@ -214,6 +215,7 @@ internal fun SearchableTopAppBar(
         CampfireTopAppBar(
             modifier = modifier,
             scrollBehavior = scrollBehavior,
+            scrollElevationEnabled = scrollElevationEnabled,
             navigationIcon = {
                 SearchActionSlot(
                     searchTransition = searchTransition,

@@ -60,6 +60,9 @@ import org.koin.compose.viewmodel.koinViewModel
  */
 @OptIn(ExperimentalComposeUiApi::class)
 fun main(args: Array<String>) {
+    // A Gradle or IDE run has no Campfire.app bundle, so macOS would use the Java launcher or this main class as
+    // the application name. AWT reads this once when it first starts, for both the menu bar and app switcher.
+    System.setProperty("apple.awt.application.name", "Campfire")
     // Compose's own set-up, which application() would only do later, has to come before anything that starts the
     // AWT toolkit: on Linux it is what puts the display's scale into sun.java2d.uiScale, which the toolkit reads once,
     // when it starts. Behind the same property application() checks, so that this is the same decision made earlier

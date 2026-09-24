@@ -56,6 +56,7 @@ import org.jetbrains.compose.resources.painterResource
 internal fun ActionsMenu(
     modifier: Modifier = Modifier,
     state: OverflowMenuState = rememberOverflowMenuState(),
+    contentDescription: String = stringResource(Res.string.songs_actions),
     content: @Composable (select: (action: () -> Unit) -> Unit) -> Unit,
 ) = OverflowMenu(
     state = state,
@@ -66,7 +67,7 @@ internal fun ActionsMenu(
         ) {
             Icon(
                 painter = painterResource(Res.drawable.ic_more),
-                contentDescription = stringResource(Res.string.songs_actions),
+                contentDescription = contentDescription,
             )
         }
     },

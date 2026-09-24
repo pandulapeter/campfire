@@ -70,12 +70,10 @@ import kotlin.math.roundToInt
  * the end edge, and while it is dragged a bubble next to it shows the label of the section that is currently at the
  * top of the list. The scroller stays visible for as long as the list is scrollable.
  *
- * It is a column of its own, [FAST_SCROLLER_WIDTH] wide, laid out next to the grid rather than over it, and the
- * whole column is its touch target: pressing it anywhere moves the thumb under the finger, and a track fades in
- * behind the thumb while it is pointed at or dragged to show how far that reaches. Sharing no space with the grid is
- * what lets every row keep its controls where a row without a scroller would have them, the ones in the inner columns
- * of a wide grid included, with no touch target of the scroller's reaching over any of them. Only the bubble is drawn
- * out over the list, and nothing about it can be pressed.
+ * Its [FAST_SCROLLER_WIDTH] wide touch column overlays the grid's end padding, so section headers can continue
+ * behind it while song cards and their controls stay clear. Pressing anywhere in the column moves the thumb under
+ * the finger, and a track fades in behind the thumb while it is pointed at or dragged. Only the bubble extends
+ * beyond the column, and nothing about it can be pressed.
  *
  * @param labelForItem Returns the label of the section the item at the given index belongs to, or null if none. A
  *   list whose sections have no single character to go by (the setlists, named by whatever somebody called them)
@@ -156,13 +154,19 @@ internal fun FastScroller(
                     )
                 }
         )
-        // The bubble pops out of the thumb while it is being dragged and keeps its last label while it disappears. It is
-        // wider than the column, so it is measured without the column's width and hangs out of its start edge.
+        // The label stays below and to the start of the finger on the thumb, clamped into the track near its end.
+        // It is wider than the touch column, so measure it without the column's width.
         AnimatedVisibility(
             visible = state.isDragging && label != null,
             modifier = Modifier
                 .align(Alignment.TopEnd)
-                .offset { IntOffset(x = -BUBBLE_END_MARGIN.roundToPx(), y = (state.thumbCenter - BUBBLE_SIZE.toPx() / 2).roundToInt()) }
+                .offset {
+                    val bubbleHeight = BUBBLE_SIZE.roundToPx().toFloat()
+                    IntOffset(
+                        x = -BUBBLE_END_MARGIN.roundToPx(),
+                        y = bubbleTop(state.thumbCenter + BUBBLE_VERTICAL_OFFSET.toPx(), state.trackHeight, bubbleHeight).roundToInt(),
+                    )
+                }
                 .wrapContentWidth(align = Alignment.End, unbounded = true),
             enter = scaleIn(animationSpec = MaterialTheme.motionScheme.fastSpatialSpec(), transformOrigin = BUBBLE_TRANSFORM_ORIGIN) +
                     fadeIn(animationSpec = MaterialTheme.motionScheme.fastEffectsSpec()),
@@ -195,6 +199,9 @@ internal fun FastScroller(
         }
     }
 }
+
+private fun bubbleTop(desiredTop: Float, trackHeight: Int, bubbleHeight: Float): Float =
+    desiredTop.coerceIn(0f, max(0f, trackHeight - bubbleHeight))
 
 /**
  * Drags the thumb for as long as the pointer that pressed this element stays down, wherever it wanders off to. The
@@ -333,8 +340,8 @@ private class ScrollMetrics(
 )
 
 /**
- * The width of the column a [FastScroller] takes up next to its list, all of which is its touch target. It is the
- * smallest width a touch target is still reliably hit at rather than the 48dp of a button, because the column is taken
+ * The width of the column a [FastScroller] takes up over its list's end padding, all of which is its touch target.
+ * It is the smallest width a touch target is still reliably hit at rather than the 48dp of a button, because the column is taken
  * out of the width of the rows for as long as the list is on the screen, scrollable or not - a column that came and
  * went with the scroller would reflow every row whenever the list grew past the height of the screen or shrank below
  * it. The thumb is tall enough that the target is never short of the height it lacks in width.
@@ -347,10 +354,9 @@ private val THUMB_WIDTH = 6.dp
 private val THUMB_END_PADDING = 4.dp
 private val MIN_THUMB_HEIGHT = 48.dp
 private val BUBBLE_SIZE = 48.dp
-
-/** How far the bubble's end edge stays from the screen's, which is far enough for the finger on the thumb to leave it in sight. */
-private val BUBBLE_END_MARGIN = 48.dp
+private val BUBBLE_END_MARGIN = 32.dp
+private val BUBBLE_VERTICAL_OFFSET = 16.dp
 private val BUBBLE_ELEVATION = 2.dp
-private val BUBBLE_TRANSFORM_ORIGIN = TransformOrigin(pivotFractionX = 1f, pivotFractionY = 0.5f)
+private val BUBBLE_TRANSFORM_ORIGIN = TransformOrigin(pivotFractionX = 1f, pivotFractionY = 0f)
 private const val IDLE_THUMB_ALPHA = 0.5f
 private const val TRACK_ALPHA = 0.12f

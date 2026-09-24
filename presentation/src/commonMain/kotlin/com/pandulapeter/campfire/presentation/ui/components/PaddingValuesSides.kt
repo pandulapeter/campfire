@@ -17,7 +17,7 @@ import androidx.compose.ui.unit.dp
 
 /**
  * Some of the sides of [source], each asked of it at the moment it is used rather than when this is made, with
- * [extraTop] added above.
+ * [extraTop] added above and [extraEnd] at the end.
  *
  * The paddings the app hands its screens follow the keyboard (see `CampfireApp`), and they are only cheap for as
  * long as nobody takes them apart while composing: `PaddingValues(bottom = padding.calculateBottomPadding())`
@@ -32,15 +32,18 @@ private data class PaddingValuesSides(
     private val hasEnd: Boolean,
     private val hasBottom: Boolean,
     private val extraTop: Dp,
+    private val extraEnd: Dp,
 ) : PaddingValues {
 
     override fun calculateLeftPadding(layoutDirection: LayoutDirection) =
-        if (if (layoutDirection == LayoutDirection.Ltr) hasStart else hasEnd) source.calculateLeftPadding(layoutDirection) else 0.dp
+        (if (if (layoutDirection == LayoutDirection.Ltr) hasStart else hasEnd) source.calculateLeftPadding(layoutDirection) else 0.dp) +
+            if (layoutDirection == LayoutDirection.Rtl) extraEnd else 0.dp
 
     override fun calculateTopPadding() = (if (hasTop) source.calculateTopPadding() else 0.dp) + extraTop
 
     override fun calculateRightPadding(layoutDirection: LayoutDirection) =
-        if (if (layoutDirection == LayoutDirection.Ltr) hasEnd else hasStart) source.calculateRightPadding(layoutDirection) else 0.dp
+        (if (if (layoutDirection == LayoutDirection.Ltr) hasEnd else hasStart) source.calculateRightPadding(layoutDirection) else 0.dp) +
+            if (layoutDirection == LayoutDirection.Ltr) extraEnd else 0.dp
 
     override fun calculateBottomPadding() = if (hasBottom) source.calculateBottomPadding() else 0.dp
 }
@@ -52,6 +55,7 @@ internal fun PaddingValues.only(
     end: Boolean = false,
     bottom: Boolean = false,
     extraTop: Dp = 0.dp,
+    extraEnd: Dp = 0.dp,
 ): PaddingValues = PaddingValuesSides(
     source = this,
     hasStart = start,
@@ -59,4 +63,5 @@ internal fun PaddingValues.only(
     hasEnd = end,
     hasBottom = bottom,
     extraTop = extraTop,
+    extraEnd = extraEnd,
 )

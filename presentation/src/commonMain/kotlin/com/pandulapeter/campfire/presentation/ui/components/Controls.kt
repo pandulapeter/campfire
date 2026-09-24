@@ -118,7 +118,7 @@ internal fun DismissSheetWhenSidePanelAppears(
  *
  * @param settledWidth The width of the screen once the navigation bars have finished animating.
  * @param contentPadding The insets the screen hands to its list, whose start and end are not part of its width.
- *   Neither is the [FastScroller] beside it.
+ *   The [FastScroller] occupies the grid's end padding, not song card width.
  */
 @Composable
 internal fun songListColumnCount(

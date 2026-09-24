@@ -25,11 +25,13 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.defaultMinSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.widthIn
+import androidx.compose.foundation.lazy.grid.LazyGridState
 import androidx.compose.foundation.selection.selectable
 import androidx.compose.foundation.selection.toggleable
 import androidx.compose.material3.Button
@@ -38,17 +40,15 @@ import androidx.compose.material3.RadioButton
 import androidx.compose.material3.ContainedLoadingIndicator
 import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
 import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
 import androidx.compose.material3.ListItem
 import androidx.compose.material3.ListItemDefaults
-import androidx.compose.material3.LocalMinimumInteractiveComponentSize
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -56,11 +56,15 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
+import androidx.compose.ui.draw.drawWithContent
+import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.lerp
 import androidx.compose.ui.graphics.painter.Painter
+import androidx.compose.ui.layout.Layout
 import androidx.compose.ui.layout.layout
-import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalWindowInfo
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.contentDescription
@@ -69,9 +73,9 @@ import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.Dp
+import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.offset
-import androidx.compose.ui.unit.sp
 import com.pandulapeter.campfire.data.model.domain.Song
 import com.pandulapeter.campfire.presentation.localization.stringResource
 import com.pandulapeter.campfire.presentation.resources.Res
@@ -111,7 +115,7 @@ import com.pandulapeter.campfire.presentation.ui.CampfireViewModel
 import org.jetbrains.compose.resources.painterResource
 
 /**
- * @param index The song's place in the setlist it is listed in, drawn in front of the title by [ListItemHeadline].
+ * @param index The song's place in the setlist it is listed in, prefixed to its title.
  *   Null on the screens where a song is not in an order of anyone's making and a number would only claim it was.
  * @param key The key the song sounds in where it is listed, which is a different key in every setlist that
  *   transposes it (`CampfireViewModel.renderKey`), drawn next to the artist. Null for a file that declares none.
@@ -122,8 +126,8 @@ import org.jetbrains.compose.resources.painterResource
  *   them and a label that is on every row tells the reader nothing about this one.
  * @param onLongClick A shortcut to the row's overflow menu, on the touch platforms where holding a row is a natural
  *   way to ask what can be done to it.
- * @param containerColor What the row is drawn on, which is only ever something else than the surface while the
- *   row is being dragged ([draggedListItemContainerColor]).
+ * @param cardPadding The card's space from the edges of its grid cell, adjusted for inner columns in wide grids.
+ * @param containerColor The card color, raised while the row is dragged ([draggedListItemContainerColor]).
  * @param actions The trailing content of the row, which is the overflow button of the song's actions
  *   ([SongActionsButton]).
  */
@@ -136,7 +140,9 @@ internal fun SongListItem(
     key: String? = null,
     shouldShowChords: Boolean = true,
     labelsOnEverySong: CampfireViewModel.LabelsOnEverySong,
-    containerColor: Color = MaterialTheme.colorScheme.surface,
+    cardPadding: PaddingValues = PaddingValues(horizontal = SONG_CARD_OUTER_PADDING, vertical = SONG_CARD_VERTICAL_PADDING),
+    containerColor: Color = MaterialTheme.colorScheme.surfaceContainerLow,
+    shadowElevation: Dp = 0.dp,
     onClick: () -> Unit,
     onLongClick: (() -> Unit)? = null,
     actions: (@Composable () -> Unit)? = null,
@@ -162,90 +168,91 @@ internal fun SongListItem(
     }
     val languages = song.languages.filterNot { it in labelsOnEverySong.languages }
     val tags = song.tags.filterNot { it.lowercase() in labelsOnEverySong.tags }
-    ListItem(
-        modifier = modifier.combinedClickable(onClick = onClick, onLongClick = onLongClick),
-        colors = ListItemDefaults.colors(containerColor = containerColor),
-        trailingContent = actions?.let { { ListItemActions(content = it) } },
-        headlineContent = {
-            ListItemHeadline(
-                index = index,
-                text = song.title,
-            )
-        },
-        // Songs written in the app need no artist, and an empty second line would just make the row taller. Nothing
-        // here shares the title's line: a title is the longest thing on the row and the one that must never be
-        // pushed out of sight, while the artist is short enough to leave the key room next to it. The languages and
-        // tags go under both, since a row of those is as long as somebody chose to make it.
-        supportingContent = if (song.artist.isBlank() && note == null && languages.isEmpty() && tags.isEmpty()) {
-            null
-        } else {
-            {
-                Column(
-                    modifier = Modifier.listItemIndexIndent(hasIndex = index != null),
-                ) {
-                    if (song.artist.isNotBlank() || note != null) {
-                        Row(
-                            verticalAlignment = Alignment.CenterVertically,
-                        ) {
-                            if (song.artist.isNotBlank()) {
-                                Text(
-                                    modifier = Modifier.weight(1f, fill = false),
-                                    text = song.artist,
-                                    maxLines = 1,
-                                    overflow = TextOverflow.Ellipsis,
-                                )
-                            }
-                            // The note changes under the reader: a transposition renames the key, and lyrics only
-                            // mode takes the place away altogether. So it is crossfaded where it stands and the line
-                            // closes up around it, rather than the row being redrawn around the change. The color is
-                            // resolved inside rather than carried by the state, since the scheme is interpolated on
-                            // every frame of a theme change and each of those frames would start another crossfade.
-                            AnimatedContent(
-                                targetState = note,
-                                transitionSpec = { fadeIn() togetherWith fadeOut() },
-                            ) { currentNote ->
-                                if (currentNote != null) {
-                                    Row(
-                                        verticalAlignment = Alignment.CenterVertically,
-                                    ) {
-                                        // The dot separates the note from the artist, so a song that names no artist
-                                        // starts the line with the note itself rather than with a separator before
-                                        // nothing. Neither it nor the note carries padding of its own: the glyph is a
-                                        // 4dp dot in the middle of a 24dp icon, so the box it sits in is the gap
-                                        // already, and the same gap on both sides of it - anything added here is
-                                        // added to one side only.
-                                        if (song.artist.isNotBlank()) {
-                                            Icon(
-                                                painter = painterResource(Res.drawable.ic_dot),
-                                                contentDescription = null,
+    Surface(
+        modifier = modifier.fillMaxWidth().padding(cardPadding),
+        shape = MaterialTheme.shapes.medium,
+        color = containerColor,
+        shadowElevation = shadowElevation,
+    ) {
+        CenteredSongCardContent(
+            modifier = Modifier.combinedClickable(onClick = onClick, onLongClick = onLongClick),
+            actions = actions,
+            headlineContent = {
+                ListItemHeadline(text = songCardTitle(song.title, index))
+            },
+            // Songs written in the app need no artist, and an empty second line would just make the row taller. Nothing
+            // here shares the title's line: a title is the longest thing on the row and the one that must never be
+            // pushed out of sight, while the artist is short enough to leave the key room next to it. The languages and
+            // tags go under both, since a row of those is as long as somebody chose to make it.
+            supportingContent = if (song.artist.isBlank() && note == null && languages.isEmpty() && tags.isEmpty()) {
+                null
+            } else {
+                {
+                    Column {
+                        if (song.artist.isNotBlank() || note != null) {
+                            Row(
+                                verticalAlignment = Alignment.CenterVertically,
+                            ) {
+                                if (song.artist.isNotBlank()) {
+                                    Text(
+                                        modifier = Modifier.weight(1f, fill = false),
+                                        text = song.artist,
+                                        maxLines = 1,
+                                        overflow = TextOverflow.Ellipsis,
+                                    )
+                                }
+                                // The note changes under the reader: a transposition renames the key, and lyrics only
+                                // mode takes the place away altogether. So it is crossfaded where it stands and the line
+                                // closes up around it, rather than the row being redrawn around the change. The color is
+                                // resolved inside rather than carried by the state, since the scheme is interpolated on
+                                // every frame of a theme change and each of those frames would start another crossfade.
+                                AnimatedContent(
+                                    targetState = note,
+                                    transitionSpec = { fadeIn() togetherWith fadeOut() },
+                                ) { currentNote ->
+                                    if (currentNote != null) {
+                                        Row(
+                                            verticalAlignment = Alignment.CenterVertically,
+                                        ) {
+                                            // The dot separates the note from the artist, so a song that names no artist
+                                            // starts the line with the note itself rather than with a separator before
+                                            // nothing. Neither it nor the note carries padding of its own: the glyph is a
+                                            // 4dp dot in the middle of a 24dp icon, so the box it sits in is the gap
+                                            // already, and the same gap on both sides of it - anything added here is
+                                            // added to one side only.
+                                            if (song.artist.isNotBlank()) {
+                                                Icon(
+                                                    painter = painterResource(Res.drawable.ic_dot),
+                                                    contentDescription = null,
+                                                )
+                                            }
+                                            Text(
+                                                modifier = Modifier.semantics { contentDescription = currentNote.description },
+                                                text = currentNote.text,
+                                                style = MaterialTheme.typography.labelMedium,
+                                                color = if (currentNote.isEmphasized) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant,
                                             )
                                         }
-                                        Text(
-                                            modifier = Modifier.semantics { contentDescription = currentNote.description },
-                                            text = currentNote.text,
-                                            style = MaterialTheme.typography.labelMedium,
-                                            color = if (currentNote.isEmphasized) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant,
-                                        )
                                     }
                                 }
                             }
                         }
-                    }
-                    if (languages.isNotEmpty() || tags.isNotEmpty()) {
-                        SongLabels(
-                            modifier = Modifier.padding(top = if (song.artist.isBlank() && note == null) 0.dp else 4.dp),
-                            languages = languages,
-                            tags = tags,
-                        )
+                        if (languages.isNotEmpty() || tags.isNotEmpty()) {
+                            SongLabels(
+                                modifier = Modifier.padding(top = if (song.artist.isBlank() && note == null) 0.dp else 4.dp),
+                                languages = languages,
+                                tags = tags,
+                            )
+                        }
                     }
                 }
-            }
-        },
-    )
+            },
+        )
+    }
 }
 
 /**
- * The container color of a row that can be dragged: the surface, tinted for as long as the row is off the list.
+ * The container color of a row that can be dragged: the card, tinted for as long as it is off the list.
  *
  * A progress value instead of an animated color, so that the row follows the color scheme immediately while it
  * is animating between the light and the dark theme (a color animation would chase it and trail behind). It is
@@ -260,7 +267,7 @@ internal fun draggedListItemContainerColor(isBeingDragged: Boolean): Color {
         if (isBeingDragged) 1f else 0f,
         MaterialTheme.motionScheme.defaultEffectsSpec(),
     )
-    return lerp(MaterialTheme.colorScheme.surface, MaterialTheme.colorScheme.surfaceContainerHigh, dragProgress)
+    return lerp(MaterialTheme.colorScheme.surfaceContainerLow, MaterialTheme.colorScheme.surfaceContainerHigh, dragProgress)
 }
 
 /**
@@ -287,38 +294,69 @@ internal fun MissingSongListItem(
     modifier: Modifier = Modifier,
     index: Int,
     songFileName: String,
+    cardPadding: PaddingValues = PaddingValues(horizontal = SONG_CARD_OUTER_PADDING, vertical = SONG_CARD_VERTICAL_PADDING),
+    containerColor: Color = MaterialTheme.colorScheme.surfaceContainerLow,
+    shadowElevation: Dp = 0.dp,
     actions: (@Composable () -> Unit)? = null,
-) = ListItem(
-    modifier = modifier.alpha(0.5f),
-    colors = ListItemDefaults.colors(containerColor = MaterialTheme.colorScheme.surface),
-    trailingContent = actions?.let { { ListItemActions(content = it) } },
-    headlineContent = {
-        ListItemHeadline(
-            index = index,
-            text = songFileName,
-        )
-    },
-    supportingContent = {
-        Text(
-            modifier = Modifier.listItemIndexIndent(hasIndex = true),
-            text = stringResource(Res.string.setlists_missing_song),
-            fontStyle = FontStyle.Italic,
-            maxLines = 1,
-            overflow = TextOverflow.Ellipsis,
-        )
-    },
-)
+) = Surface(
+    modifier = modifier.fillMaxWidth().padding(cardPadding).alpha(0.5f),
+    shape = MaterialTheme.shapes.medium,
+    color = containerColor,
+    shadowElevation = shadowElevation,
+) {
+    CenteredSongCardContent(
+        actions = actions,
+        headlineContent = {
+            ListItemHeadline(text = songCardTitle(songFileName, index))
+        },
+        supportingContent = {
+            Text(
+                text = stringResource(Res.string.setlists_missing_song),
+                fontStyle = FontStyle.Italic,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis,
+            )
+        },
+    )
+}
+
+/** Material lays out three-line list items with a top-aligned trailing slot. Song cards center their actions. */
+@Composable
+private fun CenteredSongCardContent(
+    modifier: Modifier = Modifier,
+    actions: (@Composable () -> Unit)?,
+    headlineContent: @Composable () -> Unit,
+    supportingContent: (@Composable () -> Unit)?,
+) = Layout(
+    modifier = modifier.fillMaxWidth(),
+    contents = listOf(
+        { actions?.let { ListItemActions(content = it) } },
+        {
+            ListItem(
+                colors = ListItemDefaults.colors(containerColor = Color.Transparent),
+                headlineContent = headlineContent,
+                supportingContent = supportingContent,
+            )
+        },
+    ),
+) { (actionMeasurables, bodyMeasurables), constraints ->
+    val looseConstraints = constraints.copy(minWidth = 0, minHeight = 0)
+    val actionPlaceable = actionMeasurables.firstOrNull()?.measure(looseConstraints)
+    val actionWidth = actionPlaceable?.width ?: 0
+    val actionReservation = if (actionPlaceable == null) 0 else actionWidth + LIST_ITEM_TRAILING_GAP.roundToPx()
+    val bodyWidth = (constraints.maxWidth - actionReservation).coerceAtLeast(0)
+    val bodyPlaceable = bodyMeasurables.single().measure(looseConstraints.copy(minWidth = bodyWidth, maxWidth = bodyWidth))
+    val height = maxOf(bodyPlaceable.height, actionPlaceable?.height ?: 0)
+        .coerceIn(constraints.minHeight, constraints.maxHeight)
+    layout(constraints.maxWidth, height) {
+        bodyPlaceable.placeRelative(0, (height - bodyPlaceable.height) / 2)
+        actionPlaceable?.placeRelative(constraints.maxWidth - LIST_ITEM_KEYLINE.roundToPx() - actionWidth, (height - actionPlaceable.height) / 2)
+    }
+}
 
 /**
- * Whatever a row carries at its end - the overflow button, and on the setlists screen the drag handle after it.
- * `ListItem` insets its trailing slot further from the edge than `TopAppBar` insets its actions, so the last control
- * of a row and the last control of the bar above it sit on two keylines a few dp apart; this closes that gap, and
- * every row of every list is drawn through here so the one keyline holds down the whole screen. Where a
- * [FastScroller] runs beside the list the rows end where its column starts, so their controls keep that distance
- * from the scroller instead, and from the end of their own column in every inner column of a wide grid alike.
- *
- * An offset rather than a smaller padding: the inset belongs to Material's own layout, and moving what is drawn
- * leaves the width the row reserved for it exactly as it was.
+ * Whatever a card carries at its end: the overflow button, and on the setlists screen the drag handle beside it.
+ * Move the controls slightly toward the card's edge without changing the width reserved for them in the body.
  */
 @Composable
 private fun ListItemActions(
@@ -331,70 +369,15 @@ private fun ListItemActions(
 }
 
 /**
- * The title of a row, with the row's place in its setlist in front of it where it has one. The number is part of
- * the headline rather than the row's leading slot, for two reasons. The headline starts on [LIST_ITEM_KEYLINE],
- * which is where the app bar's title and the text of the setlist's own header pill start, and a number in the
- * leading slot sat between the two on a keyline of its own. And `ListItem` puts its leading slot at the top of a
- * three line row but in the middle of a shorter one, while the title is the first line of either, so the number
- * and the title only ever shared a line by accident; here the two are aligned on their baselines, so the number
- * reads as part of the title's line whatever the row holds under it.
- *
- * @param index Null where the row is not numbered, which leaves the title alone on the keyline.
+ * The title remains one line even when its setlist number has grown to three digits.
  */
 @Composable
 private fun ListItemHeadline(
-    modifier: Modifier = Modifier,
-    index: Int?,
     text: String,
-) = Row(
-    modifier = modifier,
-) {
-    index?.let {
-        ListItemIndex(
-            modifier = Modifier.alignByBaseline(),
-            index = it,
-        )
-    }
-    Text(
-        modifier = Modifier.alignByBaseline(),
-        text = text,
-        maxLines = 1,
-        overflow = TextOverflow.Ellipsis,
-    )
-}
+) = Text(text = text, maxLines = 1, overflow = TextOverflow.Ellipsis)
 
-/**
- * The place of a song inside a setlist, counted from one because it is read by whoever is playing the set rather
- * than by the code that orders it. Laid out over at least [LIST_ITEM_INDEX_KEYLINE] instead of around the
- * number, so that the titles of a setlist stay on a single keyline however far its numbering has run and a drag
- * that renumbers the rows it passes does not shift them sideways underneath the finger.
- */
-@Composable
-private fun ListItemIndex(
-    modifier: Modifier = Modifier,
-    index: Int,
-) = Text(
-    modifier = modifier.widthIn(min = with(LocalDensity.current) { LIST_ITEM_INDEX_KEYLINE.toDp() }),
-    text = (index + 1).toString(),
-    style = MaterialTheme.typography.labelLarge,
-    color = MaterialTheme.colorScheme.onSurfaceVariant,
-    softWrap = false,
-    maxLines = 1,
-)
-
-/**
- * What goes under a [ListItemHeadline] starts where its title starts rather than under the number in front of it,
- * since the number is the row's and not the title's.
- */
-private fun Modifier.listItemIndexIndent(hasIndex: Boolean) = if (hasIndex) {
-    layout { measurable, constraints ->
-        val indent = LIST_ITEM_INDEX_KEYLINE.toDp().roundToPx()
-        val placeable = measurable.measure(constraints.offset(horizontal = -indent))
-        layout(placeable.width + indent, placeable.height) { placeable.placeRelative(indent, 0) }
-    }
-} else {
-    this
-}
+/** A setlist's zero-based position is shown to players as a one-based prefix. */
+private fun songCardTitle(title: String, index: Int?): String = if (index == null) title else "${index + 1} - $title"
 
 /**
  * The grip that says a row can be dragged somewhere else, placed in front of the row's overflow button so that the
@@ -418,104 +401,186 @@ internal fun DragHandle(
     )
 }
 
+/** The divider's overlap state and the fraction of the outgoing header still visible in the grid. */
+internal data class SectionHeaderDividerState(
+    val isOverlapping: Boolean,
+    val visibleFraction: Float,
+)
+
+/** The outgoing pinned header's position in the grid, including the part already above its viewport. */
+internal data class PushedSectionHeader(
+    val key: Any,
+    val index: Int,
+    val offset: IntOffset,
+    val width: Int,
+    val backgroundTop: Int,
+    val visibleFraction: Float,
+)
+
+@Composable
+internal fun pushedSectionHeader(listState: LazyGridState, contentType: String): PushedSectionHeader? {
+    val pushedHeader by remember(listState, contentType) {
+        derivedStateOf {
+            val layoutInfo = listState.layoutInfo
+            val top = layoutInfo.viewportStartOffset
+            layoutInfo.visibleItemsInfo.firstOrNull { item ->
+                item.contentType == contentType && item.size.height > 0 && item.offset.y < top && item.offset.y + item.size.height > top
+            }?.let { item ->
+                PushedSectionHeader(
+                    key = item.key,
+                    index = item.index,
+                    offset = item.offset,
+                    width = item.size.width,
+                    backgroundTop = top - item.offset.y,
+                    visibleFraction = (item.offset.y + item.size.height - top).toFloat() / item.size.height,
+                )
+            }
+        }
+    }
+    return pushedHeader
+}
+
+/** The same scroll fraction fades the outgoing header's content and divider as the next header pushes it away. */
+@Composable
+internal fun sectionHeaderDividerState(listState: LazyGridState, headerIndex: Int): SectionHeaderDividerState {
+    val dividerState by remember(listState, headerIndex) {
+        derivedStateOf {
+            val layoutInfo = listState.layoutInfo
+            val visibleItems = layoutInfo.visibleItemsInfo
+            val header = visibleItems.firstOrNull { it.index == headerIndex }
+            if (header == null) {
+                SectionHeaderDividerState(isOverlapping = false, visibleFraction = 1f)
+            } else {
+                val top = layoutInfo.viewportStartOffset
+                val bottom = header.offset.y + header.size.height
+                val visibleFraction = if (header.size.height > 0) {
+                    ((bottom - top).toFloat() / header.size.height).coerceIn(0f, 1f)
+                } else {
+                    1f
+                }
+                val coversContent = visibleItems.any { item ->
+                    item.index > headerIndex && item.offset.y < bottom && item.offset.y + item.size.height > header.offset.y
+                }
+                SectionHeaderDividerState(
+                    isOverlapping = coversContent,
+                    visibleFraction = visibleFraction,
+                )
+            }
+        }
+    }
+    return dividerState
+}
+
 /**
- * Header of a list section: a raised pill that floats above the items scrolling underneath it, since it is used as a
- * sticky header. Clicking it scrolls the list back to the first item of its own section, which is the header itself:
- * the index the list hands to the content of a sticky header is the global index of that item.
- *
- * The pill hangs into the keyline of the items below it, so that its text and their text start at the same x
- * position (see [LIST_ITEM_KEYLINE]).
- *
- * @param icon Drawn before the text, for a section that is something as well as being named - an archived setlist,
- *   which is on the screen at all only because the user asked for it and has to be recognizable among the rest.
- * @param iconContentDescription What the icon says, since there is nothing else on the pill that says it.
+ * A full-width sticky section row with a fixed background. The divider appears only when songs pass behind it.
+ * The row extends through the grid's end padding, beneath the fast scroller; its content stays before that padding.
+ * Next to a side panel, the divider instead stops at the card edges so it does not run under the scroller.
+ * A decorative copy can be drawn outside the grid while the row is pushed up. Its background stays opaque within
+ * the list, covering the cards, while only its content overdraws the app bar and fades away.
  */
 @Composable
 internal fun SectionHeader(
     modifier: Modifier = Modifier,
     text: String,
+    dividerState: SectionHeaderDividerState,
+    endPadding: Dp,
+    insetDivider: Boolean,
     icon: Painter? = null,
     iconContentDescription: String? = null,
-    onClick: () -> Unit,
+    onClick: (() -> Unit)?,
     action: (@Composable () -> Unit)? = null,
-) = Box(
-    modifier = modifier.fillMaxWidth().padding(horizontal = LIST_ITEM_KEYLINE - SECTION_HEADER_PADDING, vertical = SECTION_HEADER_GAP)
+    actionIcon: Painter? = null,
+    opacity: Float = 1f,
+    contentOpacity: Float = 1f,
+    backgroundTopPx: Int? = null,
 ) {
-    // The pill is a label first and a control second, and the touch target enforcement would grow it (and with it
-    // the gaps around it) to 48dp, so it is laid out at its own size, like the other compact controls of the app.
-    CompositionLocalProvider(LocalMinimumInteractiveComponentSize provides Dp.Unspecified) {
-        Surface(
-            onClick = onClick,
-            shape = MaterialTheme.shapes.large,
-            color = MaterialTheme.colorScheme.surfaceContainerHigh,
-            shadowElevation = 2.dp,
-        ) {
-            Row(
-                modifier = Modifier.padding(start = SECTION_HEADER_PADDING),
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                // The painter is kept after it has been taken away, so that the mark has something to draw while it
-                // fades: a setlist is archived from the menu at the other end of this very pill, and the answer to
-                // that has to be seen happening rather than found already done.
-                var lastIcon by remember { mutableStateOf(icon) }
-                icon?.let { lastIcon = it }
-                AnimatedVisibility(
-                    visible = icon != null,
-                    enter = fadeIn() + expandHorizontally(),
-                    exit = fadeOut() + shrinkHorizontally(),
-                ) {
-                    lastIcon?.let { painter ->
-                        Icon(
-                            modifier = Modifier.padding(end = 6.dp).size(16.dp),
-                            painter = painter,
-                            contentDescription = iconContentDescription,
-                            tint = MaterialTheme.colorScheme.onSurfaceVariant,
-                        )
-                    }
-                }
-                Text(
-                    modifier = Modifier
-                        // Measured after the action rather than before it, so that a title of any length leaves the
-                        // action its room: a weightless title would take the whole pill and lay the menu out with no
-                        // width at all, and for a setlist that menu is the only way to rename it.
-                        .weight(1f, fill = false)
-                        .padding(
-                            end = if (action == null) SECTION_HEADER_PADDING else 4.dp,
-                            top = 6.dp,
-                            bottom = 6.dp,
-                        ),
-                    text = text,
-                    style = MaterialTheme.typography.titleSmall,
-                    color = MaterialTheme.colorScheme.primary,
-                    // A sticky header stays over the rows while its section scrolls under it, and a name of any length
-                    // from an imported file must not be able to cover them.
-                    maxLines = SECTION_HEADER_MAX_LINES,
-                    overflow = TextOverflow.Ellipsis,
+    val overlapProgress by animateFloatAsState(if (dividerState.isOverlapping) 1f else 0f)
+    val dividerColor = MaterialTheme.colorScheme.outlineVariant
+    val backgroundColor = MaterialTheme.colorScheme.background
+    val headerModifier = modifier.extendIntoEndPadding(endPadding).graphicsLayer {
+        alpha = opacity
+        clip = false
+    }.fillMaxWidth().drawWithContent {
+            // The copy passes into the app bar, but its opaque fill belongs only to the list viewport.
+            backgroundTopPx?.let { top ->
+                val visibleTop = top.toFloat().coerceIn(0f, size.height)
+                drawRect(
+                    color = backgroundColor,
+                    topLeft = Offset(0f, visibleTop),
+                    size = Size(size.width, size.height - visibleTop),
                 )
+            }
+            drawContent()
+            val strokeWidth = 1.dp.toPx()
+            val dividerInset = if (insetDivider) SONG_CARD_OUTER_PADDING.toPx() else 0f
+            val dividerEndInset = if (insetDivider) endPadding.toPx() + dividerInset else 0f
+            val dividerParallax = (backgroundTopPx ?: 0) * SECTION_HEADER_DIVIDER_PARALLAX_FRACTION
+            drawLine(
+                color = dividerColor,
+                start = Offset(dividerInset, size.height - strokeWidth / 2 + dividerParallax),
+                end = Offset(size.width - dividerEndInset, size.height - strokeWidth / 2 + dividerParallax),
+                strokeWidth = strokeWidth,
+                alpha = overlapProgress * contentOpacity,
+            )
+        }
+    val headerContent: @Composable () -> Unit = {
+        Row(
+            // The 16dp end inset matches a card's 8dp outer gutter and 8dp inset for its overflow button.
+            modifier = Modifier.defaultMinSize(minHeight = 48.dp).padding(start = SECTION_HEADER_KEYLINE, end = 16.dp + endPadding).graphicsLayer {
+                alpha = contentOpacity
+                clip = false
+                // The outgoing label lags the row slightly, then disappears before reaching the bar's controls.
+                translationY = (backgroundTopPx ?: 0) * SECTION_HEADER_CONTENT_PARALLAX_FRACTION
+            },
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            // Keep the painter through its exit animation when a setlist is archived from this row's own menu.
+            var lastIcon by remember { mutableStateOf(icon) }
+            icon?.let { lastIcon = it }
+            AnimatedVisibility(
+                visible = icon != null,
+                enter = fadeIn() + expandHorizontally(),
+                exit = fadeOut() + shrinkHorizontally(),
+            ) {
+                lastIcon?.let { painter ->
+                    Icon(
+                        modifier = Modifier.padding(end = 6.dp).size(16.dp),
+                        painter = painter,
+                        contentDescription = iconContentDescription,
+                        tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                    )
+                }
+            }
+            Text(
+                modifier = Modifier.weight(1f).padding(top = 10.dp, bottom = 10.dp, end = 4.dp),
+                text = text,
+                style = MaterialTheme.typography.titleSmall,
+                color = MaterialTheme.colorScheme.primary,
+                maxLines = SECTION_HEADER_MAX_LINES,
+                overflow = TextOverflow.Ellipsis,
+            )
+            if (actionIcon != null) {
+                Box(Modifier.size(48.dp), contentAlignment = Alignment.Center) {
+                    Icon(painter = actionIcon, contentDescription = null, tint = MaterialTheme.colorScheme.onSurfaceVariant)
+                }
+            } else {
                 action?.invoke()
             }
         }
     }
+    if (onClick == null) {
+        Surface(modifier = headerModifier, color = if (backgroundTopPx == null) backgroundColor else Color.Transparent) { headerContent() }
+    } else {
+        Surface(modifier = headerModifier, onClick = onClick, color = backgroundColor) { headerContent() }
+    }
 }
 
-/**
- * A compact icon button that fits inside a [SectionHeader] pill.
- */
-@Composable
-internal fun SectionHeaderAction(
-    icon: Painter,
-    contentDescription: String,
-    onClick: () -> Unit,
-) = IconButton(
-    modifier = Modifier.size(32.dp),
-    onClick = onClick,
-) {
-    Icon(
-        modifier = Modifier.size(18.dp),
-        painter = icon,
-        contentDescription = contentDescription,
-        tint = MaterialTheme.colorScheme.onSurfaceVariant,
-    )
+/** Paint the header into the grid's end padding without changing the width the grid assigns its item. */
+private fun Modifier.extendIntoEndPadding(endPadding: Dp) = layout { measurable, constraints ->
+    val extraWidth = endPadding.roundToPx()
+    val width = constraints.maxWidth
+    val placeable = measurable.measure(constraints.copy(minWidth = width + extraWidth, maxWidth = width + extraWidth))
+    layout(width, placeable.height) { placeable.placeRelative(0, 0) }
 }
 
 /**
@@ -882,27 +947,14 @@ private val EMPTY_STATE_ACTION_GAP = 8.dp
 private val EMPTY_STATE_ACTION_WIDTH = 280.dp
 
 /**
- * The x position the text of a [ListItem] starts at, which the pills of the sticky headers line up with, as does the
- * number a [ListItemHeadline] puts in front of a setlist's rows. It is also where a top level screen's app bar
- * starts its title, so the one line runs down from the bar through the pills into the numbers.
+ * The x position the text of a [ListItem] starts at, before the card's own outer inset.
  */
 private val LIST_ITEM_KEYLINE = 16.dp
 
 /**
- * How far a row's trailing controls are moved towards the end edge to reach the keyline the app bar's actions sit
- * on: `ListItem` insets its trailing slot by 16dp (Material's, and not something that can be passed in) and
- * `TopAppBar` its actions by 4dp, and with both controls 48dp wide the difference between the two keylines is the
- * whole of it. See [ListItemActions].
+ * How far a card's trailing controls move toward its edge from the inset `ListItem` gives them.
  */
-private val LIST_ITEM_TRAILING_KEYLINE_ADJUSTMENT = 4.dp
-
-/**
- * How far after the start of a [ListItemIndex] the title of its row starts: two digits and the gap they keep from
- * the title. In sp, because it is measured against the digits and has to grow with them when the font does. A number
- * of three digits takes a little more than this and pushes its own title along, rather than every row of every
- * setlist making room for it.
- */
-private val LIST_ITEM_INDEX_KEYLINE = 24.sp
+private val LIST_ITEM_TRAILING_KEYLINE_ADJUSTMENT = 8.dp
 
 /**
  * The width of a [DragHandle]'s touch target. It is narrower than the `IconButton` after it, and can be, since
@@ -913,21 +965,27 @@ private val DRAG_HANDLE_WIDTH = 32.dp
 
 /** The height of a [DragHandle], which is a full touch target since it is the one thing on the row that is dragged. */
 private val DRAG_HANDLE_HEIGHT = 48.dp
+private val LIST_ITEM_TRAILING_GAP = 16.dp
+
+/** Facing card edges each contribute 4dp, matching the 4dp above and below each card. */
+internal fun songCardPadding(itemIndex: Int, columnCount: Int): PaddingValues {
+    val column = itemIndex % columnCount
+    return PaddingValues(
+        start = if (column == 0) SONG_CARD_OUTER_PADDING else SONG_CARD_INNER_PADDING,
+        end = if (column == columnCount - 1) SONG_CARD_OUTER_PADDING else SONG_CARD_INNER_PADDING,
+        top = SONG_CARD_VERTICAL_PADDING,
+        bottom = SONG_CARD_VERTICAL_PADDING,
+    )
+}
+
+private val SONG_CARD_OUTER_PADDING = 8.dp
+private val SONG_CARD_INNER_PADDING = 4.dp
+private val SONG_CARD_VERTICAL_PADDING = 4.dp
+private val SECTION_HEADER_KEYLINE = LIST_ITEM_KEYLINE + SONG_CARD_OUTER_PADDING
 
 /**
- * The padding between the edge of a [SectionHeader] pill and its text.
- */
-private val SECTION_HEADER_PADDING = 12.dp
-
-/**
- * The most lines the text of a [SectionHeader] pill runs to before it is cut short: enough for a long setlist title to
- * be read, few enough that a pinned pill never grows over the rows of its section.
+ * The most lines the text of a pinned [SectionHeader] runs to before it is cut short.
  */
 private const val SECTION_HEADER_MAX_LINES = 2
-
-/**
- * The gap a [SectionHeader] pill keeps from whatever is above and below it. Lists add the same gap above their first
- * item, so that a pill at the top of a list clears the app bar by twice this; a pinned pill keeps one of the two,
- * since the item it is pinned inside of stops at the top of the list.
- */
-internal val SECTION_HEADER_GAP = 4.dp
+private const val SECTION_HEADER_DIVIDER_PARALLAX_FRACTION = 0.08f
+private const val SECTION_HEADER_CONTENT_PARALLAX_FRACTION = 0.28f

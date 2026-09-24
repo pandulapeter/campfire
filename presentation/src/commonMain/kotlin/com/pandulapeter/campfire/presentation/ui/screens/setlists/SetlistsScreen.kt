@@ -11,21 +11,23 @@ package com.pandulapeter.campfire.presentation.ui.screens.setlists
 
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.animateDpAsState
-import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.calculateEndPadding
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.grid.GridItemSpan
 import androidx.compose.foundation.lazy.grid.LazyGridState
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
-import androidx.compose.foundation.lazy.grid.items
+import androidx.compose.foundation.lazy.grid.itemsIndexed
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
@@ -38,9 +40,11 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
-import androidx.compose.ui.input.nestedscroll.nestedScroll
+import androidx.compose.ui.platform.LocalLayoutDirection
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.semantics.CustomAccessibilityAction
 import androidx.compose.ui.semantics.customActions
+import androidx.compose.ui.semantics.clearAndSetSemantics
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
@@ -51,6 +55,7 @@ import com.pandulapeter.campfire.presentation.resources.ic_add
 import com.pandulapeter.campfire.presentation.resources.ic_archive
 import com.pandulapeter.campfire.presentation.resources.ic_move_down
 import com.pandulapeter.campfire.presentation.resources.ic_move_up
+import com.pandulapeter.campfire.presentation.resources.ic_more
 import com.pandulapeter.campfire.presentation.resources.ic_setlists_remove
 import com.pandulapeter.campfire.presentation.resources.ic_tune
 import com.pandulapeter.campfire.presentation.resources.setlists
@@ -71,14 +76,13 @@ import com.pandulapeter.campfire.presentation.ui.components.ControlsSidePanel
 import com.pandulapeter.campfire.presentation.ui.components.DismissSheetWhenSidePanelAppears
 import com.pandulapeter.campfire.presentation.ui.components.DragHandle
 import com.pandulapeter.campfire.presentation.ui.components.FastScroller
+import com.pandulapeter.campfire.presentation.ui.components.FAST_SCROLLER_WIDTH
 import com.pandulapeter.campfire.presentation.ui.components.ListColumns
 import com.pandulapeter.campfire.presentation.ui.components.ListPlaceholder
 import com.pandulapeter.campfire.presentation.ui.components.NewItemMenu
 import com.pandulapeter.campfire.presentation.ui.components.HideKeyboardWhenScrolledDown
-import com.pandulapeter.campfire.presentation.ui.components.KeepTopAppBarInSync
 import com.pandulapeter.campfire.presentation.ui.components.ScrollToTopWhenChanged
 import com.pandulapeter.campfire.presentation.ui.components.SearchableTopAppBar
-import com.pandulapeter.campfire.presentation.ui.components.SECTION_HEADER_GAP
 import com.pandulapeter.campfire.presentation.ui.components.SectionHeader
 import com.pandulapeter.campfire.presentation.ui.components.SetlistActionsMenu
 import com.pandulapeter.campfire.presentation.ui.components.SetlistsControls
@@ -92,8 +96,11 @@ import com.pandulapeter.campfire.presentation.ui.components.draggedListItemConta
 import com.pandulapeter.campfire.presentation.ui.components.hasRoomForSidePanel
 import com.pandulapeter.campfire.presentation.ui.components.listItemAnimation
 import com.pandulapeter.campfire.presentation.ui.components.only
+import com.pandulapeter.campfire.presentation.ui.components.pushedSectionHeader
 import com.pandulapeter.campfire.presentation.ui.components.rememberHasLoadedLibrary
 import com.pandulapeter.campfire.presentation.ui.components.rememberRetainedLazyGridState
+import com.pandulapeter.campfire.presentation.ui.components.sectionHeaderDividerState
+import com.pandulapeter.campfire.presentation.ui.components.songCardPadding
 import com.pandulapeter.campfire.presentation.ui.components.songListColumnCount
 import com.pandulapeter.campfire.presentation.ui.platform.LocalFilePicker
 import com.pandulapeter.campfire.presentation.localization.stringResource
@@ -122,7 +129,6 @@ internal fun SetlistsScreen(
         contentPadding = contentPadding,
         isSidePanelVisible = isSidePanelVisible,
     )
-    KeepTopAppBarInSync(scrollBehavior, listState)
     HideKeyboardWhenScrolledDown(listState)
     DismissSheetWhenSidePanelAppears(
         isSidePanelVisible = isSidePanelVisible,
@@ -132,9 +138,11 @@ internal fun SetlistsScreen(
     TopLevelScreenLayout(
         modifier = modifier,
         railWidth = railWidth,
+        contentOverdrawsAppBar = true,
         appBar = {
             SearchableTopAppBar(
                 scrollBehavior = scrollBehavior,
+                scrollElevationEnabled = false,
                 title = stringResource(Res.string.setlists),
                 placeholder = stringResource(Res.string.setlists_search),
                 searchState = viewModel.setlistsSearch,
@@ -164,11 +172,11 @@ internal fun SetlistsScreen(
     ) {
         Row {
             SetlistList(
-                // Only the list tints the bar, as on the songs screen.
-                modifier = Modifier.weight(1f).fillMaxSize().nestedScroll(scrollBehavior.nestedScrollConnection),
+                modifier = Modifier.weight(1f).fillMaxSize(),
                 viewModel = viewModel,
                 listState = listState,
                 columnCount = columnCount,
+                isSidePanelVisible = isSidePanelVisible,
                 contentPadding = contentPadding.besideSidePanel(isSidePanelVisible),
             )
             ControlsSidePanel(
@@ -191,6 +199,7 @@ private fun SetlistList(
     viewModel: CampfireViewModel,
     listState: LazyGridState,
     columnCount: Int,
+    isSidePanelVisible: Boolean,
     contentPadding: PaddingValues,
 ) {
     val setlistsWithSongs by viewModel.setlistsWithSongs.collectAsStateWithLifecycle()
@@ -199,6 +208,7 @@ private fun SetlistList(
     val labelsOnEverySong by viewModel.labelsOnEverySong.collectAsStateWithLifecycle()
     val isLoading by viewModel.isLoading.collectAsStateWithLifecycle()
     val hasLoadedLibrary = rememberHasLoadedLibrary(isLoading)
+    val pushedHeader = pushedSectionHeader(listState, contentType = "setlist_header")
     val isPerformanceModeEnabled by viewModel.isPerformanceModeEnabled.collectAsStateWithLifecycle()
     // Read once each, so that the branches below and the placeholders they render can never disagree about them.
     val setlistsPlaceholder = viewModel.setlistsPlaceholder.collectAsStateWithLifecycle().value
@@ -264,16 +274,14 @@ private fun SetlistList(
         contents = setlistsWithSongs,
     )
 
-    // The scroller takes the end inset over from the grid, so that it keeps to the edge of the screen beside the list
-    // rather than standing in front of it.
-    Row(
-        modifier = modifier
-    ) {
+    // The header paints through the grid's end padding, while cards stop before the scroller's touch column.
+    val headerEndPadding = FAST_SCROLLER_WIDTH + contentPadding.calculateEndPadding(LocalLayoutDirection.current)
+    Box(modifier = modifier) {
         LazyVerticalGrid(
             columns = ListColumns(columnCount),
-            modifier = Modifier.weight(1f).fillMaxHeight(),
+            modifier = Modifier.fillMaxSize(),
             state = listState,
-            contentPadding = contentPadding.only(start = true, bottom = true, extraTop = SECTION_HEADER_GAP),
+            contentPadding = contentPadding.only(start = true, end = true, bottom = true, extraEnd = FAST_SCROLLER_WIDTH),
         ) {
             // The setlists are what this screen is about, and they are listed whenever there are any - an empty library
             // included, where they are simply empty and each offers to be filled. The library's own empty state belongs
@@ -304,8 +312,12 @@ private fun SetlistList(
                         key = "setlist_${setlistWithSongs.setlist.fileName}",
                         contentType = "setlist_header",
                     ) { headerIndex ->
+                        val dividerState = sectionHeaderDividerState(listState, headerIndex)
                         SectionHeader(
                             modifier = listItemAnimation(listState, hasLoadedLibrary),
+                            dividerState = dividerState,
+                            endPadding = headerEndPadding,
+                            insetDivider = isSidePanelVisible,
                             text = setlistWithSongs.setlist.title,
                             // A setlist is only ever on this screen archived because the filter was asked to show them,
                             // so the mark is what tells it from the ones still in use.
@@ -320,10 +332,10 @@ private fun SetlistList(
                                     )
                                 }
                             },
+                            opacity = if (dividerState.visibleFraction < 1f) 0f else 1f,
                         )
                     }
-                    // Under the header rather than inside the pill: the pill is the setlist's name and a sentence would
-                    // not fit in it, and this is the first thing to read about a setlist once it has been found.
+                    // Under the header: the row names the setlist, then this is the first thing to read about it.
                     if (setlistWithSongs.setlist.description.isNotBlank()) {
                         item(
                             key = "description_${setlistWithSongs.setlist.fileName}",
@@ -331,7 +343,7 @@ private fun SetlistList(
                             contentType = "setlist_description",
                         ) {
                             Text(
-                                modifier = listItemAnimation(listState, hasLoadedLibrary).padding(horizontal = 16.dp, vertical = 8.dp),
+                                modifier = listItemAnimation(listState, hasLoadedLibrary).padding(horizontal = 24.dp, vertical = 8.dp),
                                 text = setlistWithSongs.setlist.description,
                                 style = MaterialTheme.typography.bodyMedium,
                                 color = MaterialTheme.colorScheme.onSurfaceVariant,
@@ -355,11 +367,11 @@ private fun SetlistList(
                         }
                     }
                     val rows = setlistWithSongs.rows(draggedSetlist)
-                    items(
+                    itemsIndexed(
                         items = rows,
-                        key = { row -> SetlistItemKey(setlistFileName = setlistWithSongs.setlist.fileName, songFileName = row.entry.songFileName).string.orEmpty() },
-                        contentType = { "song" },
-                    ) { row ->
+                        key = { _, row -> SetlistItemKey(setlistFileName = setlistWithSongs.setlist.fileName, songFileName = row.entry.songFileName).string.orEmpty() },
+                        contentType = { _, _ -> "song" },
+                    ) { rowIndex, row ->
                         val entry = row.entry
                         val key = SetlistItemKey(setlistFileName = setlistWithSongs.setlist.fileName, songFileName = entry.songFileName)
                         // A setlist of one song has no order to change, so its row offers no grip and no long press to
@@ -401,70 +413,91 @@ private fun SetlistList(
                             ),
                         ) { isBeingDragged ->
                             val elevation by animateDpAsState(if (isBeingDragged) 8.dp else 0.dp)
-                            Surface(
-                                shadowElevation = elevation
-                            ) {
-                                // The long press that reorders a row is the gesture the drag handle is there to
-                                // advertise, which leaves a touch platform no long press for the actions a song
-                                // list usually hides behind one - so the overflow button is shown on every
-                                // platform here rather than on the pointer driven ones alone.
-                                val actions: (@Composable () -> Unit)? = if (isPerformanceModeEnabled) {
-                                    null
-                                } else {
-                                    {
-                                        Row(
-                                            verticalAlignment = Alignment.CenterVertically,
-                                        ) {
-                                            // The grip goes in front of the overflow button rather than after it, so that
-                                            // the button lands exactly where the songs screen has its own.
-                                            if (isReorderable) {
-                                                DragHandle(modifier = Modifier.draggableHandle(onDragStarted = onDragStarted, onDragStopped = onDragStopped))
-                                            }
-                                            SetlistEntryActions(
-                                                viewModel = viewModel,
-                                                entry = entry,
-                                                setlistFileName = setlistWithSongs.setlist.fileName,
-                                                onMoveUp = onMoveUp,
-                                                onMoveDown = onMoveDown,
-                                            )
+                            val containerColor = draggedListItemContainerColor(isBeingDragged)
+                            // The long press that reorders a row is the gesture the drag handle is there to
+                            // advertise, which leaves a touch platform no long press for the actions a song
+                            // list usually hides behind one - so the overflow button is shown on every
+                            // platform here rather than on the pointer driven ones alone.
+                            val actions: (@Composable () -> Unit)? = if (isPerformanceModeEnabled) {
+                                null
+                            } else {
+                                {
+                                    Row(
+                                        verticalAlignment = Alignment.CenterVertically,
+                                    ) {
+                                        // The grip goes in front of the overflow button rather than after it, so that
+                                        // the button lands exactly where the songs screen has its own.
+                                        if (isReorderable) {
+                                            DragHandle(modifier = Modifier.draggableHandle(onDragStarted = onDragStarted, onDragStopped = onDragStopped))
                                         }
+                                        SetlistEntryActions(
+                                            viewModel = viewModel,
+                                            entry = entry,
+                                            setlistFileName = setlistWithSongs.setlist.fileName,
+                                            onMoveUp = onMoveUp,
+                                            onMoveDown = onMoveDown,
+                                        )
                                     }
                                 }
-                                when (entry) {
-                                    is CampfireViewModel.SetlistWithSongs.Entry.Present -> SongListItem(
-                                        modifier = moveActions.longPressDraggableHandle(enabled = isReorderable, onDragStarted = onDragStarted, onDragStopped = onDragStopped),
+                            }
+                            when (entry) {
+                                is CampfireViewModel.SetlistWithSongs.Entry.Present -> SongListItem(
+                                    modifier = moveActions.longPressDraggableHandle(enabled = isReorderable, onDragStarted = onDragStarted, onDragStopped = onDragStopped),
+                                    song = entry.song,
+                                    index = row.index,
+                                    cardPadding = songCardPadding(rowIndex, columnCount),
+                                    // The setlist's own transposition of this song, which is why the same song
+                                    // can be listed in one key here and in another one two setlists down.
+                                    key = viewModel.renderKey(
                                         song = entry.song,
-                                        index = row.index,
-                                        // The setlist's own transposition of this song, which is why the same song
-                                        // can be listed in one key here and in another one two setlists down.
-                                        key = viewModel.renderKey(
-                                            song = entry.song,
-                                            transposition = transpositions[entry.song.fileName, setlistWithSongs.setlist.fileName],
-                                            spelling = chordSpelling,
-                                        ),
-                                        shouldShowChords = shouldShowChords,
-                                        labelsOnEverySong = labelsOnEverySong,
-                                        containerColor = draggedListItemContainerColor(isBeingDragged),
-                                        onClick = { viewModel.openSongInSetlist(setlistWithSongs, entry.song) },
-                                        actions = actions,
-                                    )
+                                        transposition = transpositions[entry.song.fileName, setlistWithSongs.setlist.fileName],
+                                        spelling = chordSpelling,
+                                    ),
+                                    shouldShowChords = shouldShowChords,
+                                    labelsOnEverySong = labelsOnEverySong,
+                                    containerColor = containerColor,
+                                    shadowElevation = elevation,
+                                    onClick = { viewModel.openSongInSetlist(setlistWithSongs, entry.song) },
+                                    actions = actions,
+                                )
 
-                                    // Nothing to open, but it still takes its place in the order and can be removed.
-                                    is CampfireViewModel.SetlistWithSongs.Entry.Missing -> MissingSongListItem(
-                                        modifier = moveActions.longPressDraggableHandle(enabled = isReorderable, onDragStarted = onDragStarted, onDragStopped = onDragStopped),
-                                        index = row.index,
-                                        songFileName = entry.songFileName,
-                                        actions = actions,
-                                    )
-                                }
+                                // Nothing to open, but it still takes its place in the order and can be removed.
+                                is CampfireViewModel.SetlistWithSongs.Entry.Missing -> MissingSongListItem(
+                                    modifier = moveActions.longPressDraggableHandle(enabled = isReorderable, onDragStarted = onDragStarted, onDragStopped = onDragStopped),
+                                    index = row.index,
+                                    songFileName = entry.songFileName,
+                                    cardPadding = songCardPadding(rowIndex, columnCount),
+                                    containerColor = containerColor,
+                                    shadowElevation = elevation,
+                                    actions = actions,
+                                )
                             }
                         }
                     }
                 }
             }
         }
+        // The visual copy can pass above the grid's clipped viewport and over the app bar as it fades away.
+        pushedHeader?.let { pushed ->
+            val setlist = setlistsWithSongs.firstOrNull { "setlist_${it.setlist.fileName}" == pushed.key }?.setlist
+            if (setlist != null) {
+                val density = LocalDensity.current
+                SectionHeader(
+                    modifier = Modifier.offset { pushed.offset }.width(with(density) { pushed.width.toDp() }).clearAndSetSemantics {},
+                    text = setlist.title,
+                    dividerState = sectionHeaderDividerState(listState, pushed.index),
+                    endPadding = headerEndPadding,
+                    insetDivider = isSidePanelVisible,
+                    icon = if (setlist.isArchived) painterResource(Res.drawable.ic_archive) else null,
+                    onClick = null,
+                    actionIcon = if (isPerformanceModeEnabled) null else painterResource(Res.drawable.ic_more),
+                    contentOpacity = pushed.visibleFraction,
+                    backgroundTopPx = pushed.backgroundTop,
+                )
+            }
+        }
         FastScroller(
-            modifier = Modifier.padding(contentPadding.only(top = true, end = true, bottom = true)),
+            modifier = Modifier.align(Alignment.TopEnd).padding(contentPadding.only(top = true, end = true, bottom = true)),
             gridState = listState,
         )
     }
