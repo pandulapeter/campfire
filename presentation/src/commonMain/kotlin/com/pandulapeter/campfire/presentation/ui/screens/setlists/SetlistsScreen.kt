@@ -250,6 +250,8 @@ private fun SetlistList(
     }
     val filePicker = LocalFilePicker.current
     val coroutineScope = rememberCoroutineScope()
+    val rowsCache = remember { SetlistRowsCache() }
+    rowsCache.retainOnly(setlistsWithSongs)
 
     val isSearchOpen by viewModel.setlistsSearch.isOpen.collectAsStateWithLifecycle()
     ScrollToTopWhenChanged(
@@ -338,7 +340,9 @@ private fun SetlistList(
                             )
                         }
                     }
-                    val rows = setlistWithSongs.rows(draggedSetlist)
+                    val setlistRows = rowsCache.rowsFor(setlistWithSongs, draggedSetlist)
+                    val rows = setlistRows.rows
+                    val songFileNames = setlistRows.songFileNames
                     itemsIndexed(
                         items = rows,
                         key = { _, row -> SetlistItemKey(setlistFileName = setlistWithSongs.setlist.fileName, songFileName = row.entry.songFileName).string.orEmpty() },
@@ -352,13 +356,12 @@ private fun SetlistList(
                         // The drag written as two steps, for whoever cannot drag: a screen reader, a keyboard. Each is the
                         // same single write a finished drag makes, and a row with nowhere to go in a direction is offered
                         // no step that way.
-                        val songFileNames = rows.map { it.entry.songFileName }
-                        val onMoveUp: (() -> Unit)? = songFileNames.movedOnePlace(entry.songFileName, by = -1)?.takeIf { isReorderable }?.let { order ->
-                            { viewModel.reorderSetlist(setlistFileName = setlistWithSongs.setlist.fileName, songFileNames = order) }
-                        }
-                        val onMoveDown: (() -> Unit)? = songFileNames.movedOnePlace(entry.songFileName, by = 1)?.takeIf { isReorderable }?.let { order ->
-                            { viewModel.reorderSetlist(setlistFileName = setlistWithSongs.setlist.fileName, songFileNames = order) }
-                        }
+                        val onMoveUp: (() -> Unit)? = if (isReorderable && rowIndex > 0) {
+                            { viewModel.reorderSetlist(setlistFileName = setlistWithSongs.setlist.fileName, songFileNames = songFileNames.movedOnePlace(rowIndex, by = -1)) }
+                        } else null
+                        val onMoveDown: (() -> Unit)? = if (isReorderable && rowIndex < rows.lastIndex) {
+                            { viewModel.reorderSetlist(setlistFileName = setlistWithSongs.setlist.fileName, songFileNames = songFileNames.movedOnePlace(rowIndex, by = 1)) }
+                        } else null
                         val moveUpLabel = stringResource(Res.string.setlists_move_up)
                         val moveDownLabel = stringResource(Res.string.setlists_move_down)
                         // Merged so that a missing song's row, which has no clickable of its own, is still the one node a
@@ -515,9 +518,8 @@ private fun SetlistList(
  * already occupied, the numbers do not change again when [CampfireViewModel.reorderSetlist] writes the same
  * dealing out to the file.
  */
-private fun CampfireViewModel.SetlistWithSongs.rows(draggedSetlist: DraggedSetlist?): List<SetlistRow> {
-    val songFileNames = draggedSetlist?.takeIf { it.setlistFileName == setlist.fileName }?.songFileNames
-        ?: return entries.map { SetlistRow(entry = it, index = it.index) }
+private fun CampfireViewModel.SetlistWithSongs.rows(dragOrder: List<String>?): List<SetlistRow> {
+    val songFileNames = dragOrder ?: return entries.map { SetlistRow(entry = it, index = it.index) }
     val entriesBySongFileName = entries.associateBy { it.songFileName }
     return songFileNames.mapIndexedNotNull { position, songFileName ->
         entriesBySongFileName[songFileName]?.let { entry ->
@@ -526,12 +528,46 @@ private fun CampfireViewModel.SetlistWithSongs.rows(draggedSetlist: DraggedSetli
     }
 }
 
-/** This order with [songFileName] one place further along it ([by] = 1) or back ([by] = -1), or null where it has no room to go. */
-private fun List<String>.movedOnePlace(songFileName: String, by: Int): List<String>? {
-    val from = indexOf(songFileName)
+/** Swap the row at [from] with its neighbor in the already checked direction. */
+private fun List<String>.movedOnePlace(from: Int, by: Int): List<String> {
+    val result = toMutableList()
     val to = from + by
-    return if (from < 0 || to !in indices) null else toMutableList().apply { add(to, removeAt(from)) }
+    val neighbor = result[to]
+    result[to] = result[from]
+    result[from] = neighbor
+    return result
 }
+
+/** Keeps unchanged setlists' row objects through each drag update. */
+private class SetlistRowsCache {
+    private val cached = mutableMapOf<String, CachedRows>()
+
+    fun retainOnly(setlists: List<CampfireViewModel.SetlistWithSongs>) {
+        cached.keys.retainAll(setlists.mapTo(mutableSetOf()) { it.setlist.fileName })
+    }
+
+    fun rowsFor(setlist: CampfireViewModel.SetlistWithSongs, draggedSetlist: DraggedSetlist?): SetlistRows {
+        val dragOrder = draggedSetlist?.takeIf { it.setlistFileName == setlist.setlist.fileName }?.songFileNames
+        val previous = cached[setlist.setlist.fileName]
+        if (previous != null && previous.setlist === setlist && previous.dragOrder == dragOrder) return previous.rows
+
+        val rows = setlist.rows(dragOrder)
+        val result = SetlistRows(rows = rows, songFileNames = rows.map { it.entry.songFileName })
+        cached[setlist.setlist.fileName] = CachedRows(setlist = setlist, dragOrder = dragOrder, rows = result)
+        return result
+    }
+
+    private class CachedRows(
+        val setlist: CampfireViewModel.SetlistWithSongs,
+        val dragOrder: List<String>?,
+        val rows: SetlistRows,
+    )
+}
+
+private class SetlistRows(
+    val rows: List<SetlistRow>,
+    val songFileNames: List<String>,
+)
 
 /** One row of a setlist as it is drawn: the entry, and the place it sits in right now. */
 private data class SetlistRow(
