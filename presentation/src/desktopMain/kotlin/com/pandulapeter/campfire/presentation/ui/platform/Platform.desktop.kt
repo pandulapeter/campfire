@@ -52,13 +52,22 @@ private val isWindows get() = !isMacOs && operatingSystem.contains("win")
  * Where the desktop build keeps everything it owns: the library, the preferences, and the two files
  * `:app:desktop` uses to keep a second process from opening the same library.
  *
+ * The Microsoft Store build keeps them in its package's own folder, which it is told the name of by the launcher (see
+ * `packageReleaseMsix`): Windows gives a packaged app's writes under `%APPDATA%` to a hidden copy of the folder that
+ * Explorer does not show, so the path the "Location" row opened would not be where the library is.
+ *
  * Derived the same way the storage derives it; the two have to agree, so keep this in step with
  * `FileStorage.desktop.kt` in `:data:source:local:implementation`.
  */
 fun desktopDataDirectory(): File {
     val userHome = File(System.getProperty("user.home").orEmpty())
+    val packageFamilyName = System.getProperty(PACKAGE_FAMILY_NAME_PROPERTY).orEmpty()
     return when {
         isMacOs -> File(userHome, "Library/Application Support/$APPLICATION_NAME")
+        isWindows && packageFamilyName.isNotEmpty() -> System.getenv("LOCALAPPDATA").orEmpty()
+            .let { if (it.isEmpty()) File(userHome, "AppData/Local") else File(it) }
+            .let { File(it, "Packages/$packageFamilyName/LocalState") }
+
         isWindows -> System.getenv("APPDATA").orEmpty()
             .let { if (it.isEmpty()) File(userHome, "AppData/Roaming") else File(it) }
             .let { File(it, APPLICATION_NAME) }
@@ -70,4 +79,5 @@ fun desktopDataDirectory(): File {
 }
 
 private const val APPLICATION_NAME = "Campfire"
+private const val PACKAGE_FAMILY_NAME_PROPERTY = "campfire.packageFamilyName"
 private const val LIBRARY_DIRECTORY = "library"

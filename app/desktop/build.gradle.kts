@@ -360,7 +360,8 @@ abstract class AddLaunchAfterInstallToMsi : DefaultTask() {
 /**
  * Copies the app image, writes the manifest and the logos next to it, indexes the logos with makepri and packs the
  * whole with makeappx. The logos are scaled from the app icon on every run rather than committed, so they cannot fall
- * out of step with it.
+ * out of step with it. The launcher of the copy is also told the package family name, which is what makes the app keep
+ * its library in the package's own folder rather than in AppData (`desktopDataDirectory()` in `:presentation`).
  */
 abstract class PackageMsix : DefaultTask() {
 
@@ -411,6 +412,7 @@ abstract class PackageMsix : DefaultTask() {
         val root = temporaryDir.resolve("package")
         root.deleteRecursively()
         appImage.get().asFile.copyRecursively(root)
+        addPackageFamilyNameToLauncher(root.resolve("app/Campfire.cfg"))
         // The logos are indexed on their own: makepri indexes every file under the folder it is given, and the app
         // image is a few hundred of them that are not resources of any kind.
         val resources = temporaryDir.resolve("resources")
@@ -441,6 +443,31 @@ abstract class PackageMsix : DefaultTask() {
         }
         if (result.exitValue != 0) throw GradleException("makeappx could not pack ${output.name}:\n$log")
         logger.lifecycle("Packed $output")
+    }
+
+    /**
+     * Adds the package family name to the Java options of the jpackage launcher's configuration, as the system property
+     * the app reads it from. Nothing in the process can ask Windows for it without native code, and it names the
+     * folder, `%LOCALAPPDATA%\Packages\<family name>`, that Windows keeps for the package's data and leaves out of the
+     * AppData virtualization.
+     */
+    private fun addPackageFamilyNameToLauncher(configuration: File) {
+        val lines = configuration.takeIf { it.isFile }?.readLines().orEmpty()
+        val section = lines.indexOf("[JavaOptions]")
+        if (section < 0) throw GradleException("There is no [JavaOptions] section in $configuration to add the package family name to.")
+        val option = "java-options=-Dcampfire.packageFamilyName=${identityName.get()}_${publisherId(publisher.get())}"
+        configuration.writeText((lines.take(section + 1) + option + lines.drop(section + 1)).joinToString(System.lineSeparator(), postfix = System.lineSeparator()))
+    }
+
+    /**
+     * The half of the package family name Windows derives from the publisher: the first eight bytes of the SHA-256 of
+     * its UTF-16LE text, as thirteen characters of Crockford's base32. Partner Center shows the result on the Product
+     * identity page, as "Package/Identity/PublisherId" and as the end of the package family name.
+     */
+    private fun publisherId(publisher: String): String {
+        val hash = MessageDigest.getInstance("SHA-256").digest(publisher.toByteArray(Charsets.UTF_16LE)).take(8)
+        val bits = hash.joinToString("") { (it.toInt() and 0xFF).toString(2).padStart(8, '0') } + "0"
+        return bits.chunked(5).map { "0123456789abcdefghjkmnpqrstvwxyz"[it.toInt(2)] }.joinToString("")
     }
 
     /**

@@ -94,6 +94,10 @@ On the PC, with the MSI the release will attach:
   and bring Campfire forward. **Expected:** neither save fails, and Campfire shows Notepad's text.
 - [ ] **RC-19** Double-click a `.cho` file in Explorer while Campfire is running. **Expected:** the running window
   comes forward with the song imported and open; no second window.
+- [ ] **RC-20** Quit it, build `:app:desktop:packageReleaseMsix` on the PC and install the unpacked package the way
+  `app/desktop/CLAUDE.md` says. Start it from the Start menu, add a song, and open the folder in Settings → Location.
+  **Expected:** it starts on the demo library, and Explorer shows a `library` folder under
+  `%LOCALAPPDATA%\Packages\…\LocalState` with the new song in it.
 
 Not covered: real phones and their backups, screen readers, a real macOS logout, Linux packages, the store tracks
 and the release workflows themselves. A release that changes one of those is tested there by hand.

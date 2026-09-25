@@ -13,7 +13,9 @@ import org.koin.core.annotation.Single
 import java.io.File
 
 /**
- * The place each desktop operating system expects an application to keep the data it owns.
+ * The place each desktop operating system expects an application to keep the data it owns. The Microsoft Store build,
+ * which the launcher tells its package family name, uses its package's own folder instead of `%APPDATA%`, where Windows
+ * would put what it writes in a hidden copy of the folder rather than in the one the settings screen shows.
  *
  * The settings screen shows the resulting path, and cannot see this module, so it derives it the same way; keep the
  * two in step (`presentation/src/desktopMain/.../ui/platform/Platform.desktop.kt`).
@@ -24,8 +26,13 @@ internal class DesktopFileStorage : FileStorage by JvmFileStorage(desktopDataDir
 private fun desktopDataDirectory(): File {
     val userHome = File(System.getProperty("user.home").orEmpty())
     val operatingSystem = System.getProperty("os.name").orEmpty().lowercase()
+    val packageFamilyName = System.getProperty(PACKAGE_FAMILY_NAME_PROPERTY).orEmpty()
     return when {
         operatingSystem.contains("mac") || operatingSystem.contains("darwin") -> File(userHome, "Library/Application Support/$APPLICATION_NAME")
+        operatingSystem.contains("win") && packageFamilyName.isNotEmpty() -> System.getenv("LOCALAPPDATA").orEmpty()
+            .let { if (it.isEmpty()) File(userHome, "AppData/Local") else File(it) }
+            .let { File(it, "Packages/$packageFamilyName/LocalState") }
+
         operatingSystem.contains("win") -> System.getenv("APPDATA").orEmpty()
             .let { if (it.isEmpty()) File(userHome, "AppData/Roaming") else File(it) }
             .let { File(it, APPLICATION_NAME) }
@@ -37,3 +44,4 @@ private fun desktopDataDirectory(): File {
 }
 
 private const val APPLICATION_NAME = "Campfire"
+private const val PACKAGE_FAMILY_NAME_PROPERTY = "campfire.packageFamilyName"

@@ -17,10 +17,8 @@
 <Package
     xmlns="http://schemas.microsoft.com/appx/manifest/foundation/windows10"
     xmlns:uap="http://schemas.microsoft.com/appx/manifest/uap/windows10"
-    xmlns:desktop6="http://schemas.microsoft.com/appx/manifest/desktop/windows10/6"
     xmlns:rescap="http://schemas.microsoft.com/appx/manifest/foundation/windows10/restrictedcapabilities"
-    xmlns:virtualization="http://schemas.microsoft.com/appx/manifest/virtualization/windows10"
-    IgnorableNamespaces="uap desktop6 rescap virtualization">
+    IgnorableNamespaces="uap rescap">
 
     <Identity
         Name="@IDENTITY_NAME@"
@@ -32,19 +30,6 @@
         <DisplayName>@DISPLAY_NAME@</DisplayName>
         <PublisherDisplayName>@PUBLISHER_DISPLAY_NAME@</PublisherDisplayName>
         <Logo>assets\StoreLogo.png</Logo>
-        <!--
-         A packaged app's new files under AppData go to a private copy of the folder that only the app can see and that
-         is deleted with it. The library is the user's own work, and the "Location" row in Settings, the rescan when
-         the window regains focus and the .msi build all expect it in %APPDATA%\Campfire, so that folder is written to
-         where it is. Windows 11 honours the one folder named below; Windows 10 only knows the switch for the whole of
-         AppData, which is the next best thing for an app that writes nowhere else. Both need unvirtualizedResources.
-        -->
-        <desktop6:FileSystemWriteVirtualization>disabled</desktop6:FileSystemWriteVirtualization>
-        <virtualization:FileSystemWriteVirtualization>
-            <virtualization:ExcludedDirectories>
-                <virtualization:ExcludedDirectory>$(KnownFolder:RoamingAppData)\Campfire</virtualization:ExcludedDirectory>
-            </virtualization:ExcludedDirectories>
-        </virtualization:FileSystemWriteVirtualization>
     </Properties>
 
     <Dependencies>
@@ -80,8 +65,11 @@
         </Application>
     </Applications>
 
+    <!--
+     Nothing else: the library is kept in the package's own folder (see packageReleaseMsix) rather than in AppData, which
+     Windows virtualizes for a packaged app, since the Store turns down the unvirtualizedResources that would stop it.
+    -->
     <Capabilities>
         <rescap:Capability Name="runFullTrust" />
-        <rescap:Capability Name="unvirtualizedResources" />
     </Capabilities>
 </Package>
