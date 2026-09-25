@@ -303,8 +303,12 @@ internal val SETTINGS_CATEGORY_PANE_WIDTH = 180.dp
 /** Below this a column is too narrow for a switch next to two lines of description, so a tab stacks its sections. */
 private val MIN_COLUMN_WIDTH = 380.dp
 
-/** Above this a row is mostly the distance between its label and its control. */
-private val MAX_COLUMN_WIDTH = 560.dp
+/**
+ * Above this a row is mostly the distance between its label and its control. It is as wide as every theme color disc
+ * in one row - ten, where the system hands out a palette of its own - with their gaps and the row's padding, so that the
+ * color choice does not wrap wherever it has the room.
+ */
+private val MAX_COLUMN_WIDTH = 664.dp
 
 /** The room between two sections, whether they are side by side or one above the other. */
 private val SECTION_GAP = 16.dp
