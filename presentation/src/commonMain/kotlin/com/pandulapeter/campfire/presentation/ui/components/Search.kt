@@ -698,7 +698,9 @@ private fun SearchField(
                 lineLimits = TextFieldLineLimits.SingleLine,
                 textStyle = MaterialTheme.typography.bodyLarge.copy(color = MaterialTheme.colorScheme.onSurface),
                 cursorBrush = SolidColor(MaterialTheme.colorScheme.primary),
-                keyboardOptions = KeyboardOptions(imeAction = ImeAction.Search),
+                // The results follow every keystroke, so a word autocorrect rewrites on the next space is a search the
+                // reader did not type - and what is searched for is mostly names, which it has no dictionary for.
+                keyboardOptions = KeyboardOptions(autoCorrectEnabled = false, imeAction = ImeAction.Search),
                 onKeyboardAction = KeyboardActionHandler { keyboardController?.hide() },
                 decorator = { innerTextField ->
                     Box(

@@ -339,22 +339,23 @@ private fun SongMetadataHeader(
         TagFlowRow(
             modifier = Modifier.padding(bottom = 4.dp)
         ) {
-            // The language comes before the tags because it is the one label of a song that is not the user's own
-            // word for it: it is a single chip however many languages it names, and it is where they are edited.
-            if (metadata.languages.isNotEmpty() || onEditLanguages != null) {
-                TagPill(
-                    text = metadata.languages.map { languageLabel(it) }.joinToString(separator = ", ")
-                        .ifEmpty { stringResource(Res.string.song_details_language) },
-                    onClick = onEditLanguages,
-                    leadingIcon = painterResource(Res.drawable.ic_language),
-                )
-            }
             metadata.tags.forEach { tag ->
                 TagPill(
                     text = tag,
                     trailingIcon = if (onRemoveTag == null) null else painterResource(Res.drawable.ic_clear),
                     trailingIconContentDescription = onRemoveTag?.let { textResource(Res.string.song_details_tag_remove, tag) },
                     onTrailingIconClick = onRemoveTag?.let { { it(tag) } },
+                )
+            }
+            // The languages are a single chip however many there are, since it is where they are edited. It comes
+            // after the tags, as it does in the song lists and the filters, and before "Add tag", which ends the row
+            // there too.
+            if (metadata.languages.isNotEmpty() || onEditLanguages != null) {
+                TagPill(
+                    text = metadata.languages.map { languageLabel(it) }.joinToString(separator = ", ")
+                        .ifEmpty { stringResource(Res.string.song_details_language) },
+                    onClick = onEditLanguages,
+                    leadingIcon = painterResource(Res.drawable.ic_language),
                 )
             }
             onAddTag?.let { onClick ->

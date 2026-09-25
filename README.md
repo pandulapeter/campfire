@@ -46,20 +46,16 @@ Campfire is available for the following platforms:
 - [Sync](documentation/sync.md) - what it sees, how a run decides, and why it needs no backend.
 
 ### To do
-- Set search field input type
 - Haptic effects
 - Auto-scroll
-- Bottom sheet colors
-- Genre tag similar to language tags
-- Nashville chord system support
-- Filter / options bottom sheets are not intuitive
-- Once Microsoft Store, App Store and Mac App Store listings are approved, update included URL-s + this Readme
-- Cover art thumbnails: https://musicbrainz.org/doc/Cover_Art_Archive/API
+- Optional close confirmation dialog on supported platforms
+- Add genre tags, similar to language tags
 - Add ability to add links as metadata items
+- Cover art thumbnails as tags, use https://musicbrainz.org/doc/Cover_Art_Archive/API
+- Add support for the Nashville chord system
+- Once Microsoft Store, App Store and Mac App Store listings are approved, update included URL-s + this Readme
 - Add more automatic sync triggers
 - Add support for external control devices with a focus-by-section feature
-- Improve code coverage
-- Review architecture / code quality
 
 ### License
 

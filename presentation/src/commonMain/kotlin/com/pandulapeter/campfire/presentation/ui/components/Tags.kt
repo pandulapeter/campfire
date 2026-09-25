@@ -19,6 +19,7 @@ import androidx.compose.foundation.layout.FlowRowScope
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material3.Icon
@@ -54,8 +55,8 @@ import org.jetbrains.compose.resources.painterResource
 /**
  * What a song is filed under, under its title in a song list. They stay on one line,
  * so that a row of a list cannot grow taller because somebody filed one song under a dozen labels, and whatever does
- * not fit is scrolled to sideways rather than cut off — which is also why the languages come first, being the ones a
- * reader scanning a mixed library is looking for and the ones that are always in sight.
+ * not fit is scrolled to sideways rather than cut off. The tags come before the languages, in the order the song
+ * details header and the filters list them too, so a label is found in the same place wherever a song is shown.
  *
  * @param onTagClicked Null where the tags are only read. Otherwise a tag is a shortcut to its own chip in the song
  *   filters, and [selectedTags] (compared without regard to case, as the filter compares them) are drawn selected so
@@ -67,8 +68,8 @@ import org.jetbrains.compose.resources.painterResource
 @Composable
 internal fun SongLabels(
     modifier: Modifier = Modifier,
-    languages: List<String>,
     tags: List<String>,
+    languages: List<String>,
     selectedTags: Set<String> = emptySet(),
     selectedLanguages: Set<String> = emptySet(),
     onTagClicked: ((String) -> Unit)? = null,
@@ -82,6 +83,13 @@ internal fun SongLabels(
             .horizontalScroll(scrollState),
         horizontalArrangement = Arrangement.spacedBy(TAG_GAP),
     ) {
+        tags.forEach { tag ->
+            TagPill(
+                text = tag,
+                isSelected = onTagClicked != null && selectedTags.any { it.equals(tag, ignoreCase = true) },
+                onClick = onTagClicked?.let { { it(tag) } },
+            )
+        }
         // A language carries the mark the song details header gives it, since it is the one label here that is not the
         // user's own word for the song: without it a pill reading "Magyar" is a tag somebody typed, and there is no
         // telling the two apart in a list.
@@ -91,13 +99,6 @@ internal fun SongLabels(
                 isSelected = onLanguageClicked != null && code in selectedLanguages,
                 onClick = onLanguageClicked?.let { { it(code) } },
                 leadingIcon = painterResource(Res.drawable.ic_language),
-            )
-        }
-        tags.forEach { tag ->
-            TagPill(
-                text = tag,
-                isSelected = onTagClicked != null && selectedTags.any { it.equals(tag, ignoreCase = true) },
-                onClick = onTagClicked?.let { { it(tag) } },
             )
         }
         onAddTag?.let { onClick ->
@@ -192,7 +193,10 @@ internal fun TagPill(
     val containerColor = if (isSelected) MaterialTheme.colorScheme.secondaryContainer else MaterialTheme.colorScheme.surfaceContainerHighest
     val content = @Composable {
         Row(
-            modifier = Modifier.padding(
+            // The tag dialog caps what is typed, but a tag that arrives in a file (written in the editor, imported or
+            // synced) is as long as its author made it, and in the sideways scrolling row of a song list nothing else
+            // would stop one from being wider than the screen.
+            modifier = Modifier.widthIn(max = TAG_MAX_WIDTH).padding(
                 start = if (leadingIcon == null) TAG_PADDING else TAG_ICON_INSET,
                 end = if (trailingIcon == null) TAG_PADDING else TAG_ICON_INSET,
             ),
@@ -206,11 +210,10 @@ internal fun TagPill(
                 )
             }
             Text(
-                // Weighted so that the remove button is measured first: a tag as long as the row is ellipsized rather
-                // than pushing it out of the pill. Only then, because a weight is worked out of the width the pill is
-                // given, and in the sideways scrolling row of a song list (SongLabels) that is unbounded, which leaves
-                // a weighted text no width at all. A leading icon comes before the text anyway, so it needs no weight.
-                modifier = (if (trailingIcon == null) Modifier else Modifier.weight(1f, fill = false)).padding(vertical = TAG_TEXT_PADDING),
+                // Weighted so that the remove button is measured first: a tag as long as the pill allows is ellipsized
+                // rather than pushing it out. The pill's own maximum width is what gives the weight something to be
+                // worked out of in the sideways scrolling row of a song list (SongLabels), whose width is unbounded.
+                modifier = Modifier.weight(1f, fill = false).padding(vertical = TAG_TEXT_PADDING),
                 text = text,
                 style = MaterialTheme.typography.labelMedium,
                 maxLines = 1,
@@ -268,3 +271,6 @@ private val TAG_TEXT_PADDING = 4.dp
 private val TAG_ICON_INSET = 6.dp
 private val TAG_ICON_SIZE = 14.dp
 private val TAG_TRAILING_ICON_SIZE = 22.dp
+
+/** Wide enough for the longest tag the tag dialog lets through to be shown whole in most scripts, ellipsized past it. */
+private val TAG_MAX_WIDTH = 240.dp

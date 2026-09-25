@@ -39,6 +39,7 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.BottomSheetDefaults
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -65,6 +66,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.FocusRequester
+import androidx.compose.ui.graphics.luminance
 import androidx.compose.ui.text.TextRange
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.text.input.TextFieldValue
@@ -73,6 +75,7 @@ import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.text.input.ImeAction
+import androidx.compose.ui.text.input.KeyboardCapitalization
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.pandulapeter.campfire.presentation.resources.Res
@@ -659,7 +662,7 @@ private fun SetlistDetailsDialog(
                     },
                     label = { Text(stringResource(Res.string.setlists_new_setlist_title)) },
                     singleLine = true,
-                    keyboardOptions = KeyboardOptions(imeAction = ImeAction.Next),
+                    keyboardOptions = KeyboardOptions(capitalization = KeyboardCapitalization.Sentences, imeAction = ImeAction.Next),
                 )
                 Spacer(modifier = Modifier.height(8.dp))
                 // Several lines rather than one, and no Done action on the keyboard: this is a sentence somebody
@@ -669,6 +672,7 @@ private fun SetlistDetailsDialog(
                     value = description,
                     onValueChange = { description = it.take(MAX_DESCRIPTION_LENGTH) },
                     label = { Text(stringResource(Res.string.setlists_description)) },
+                    keyboardOptions = KeyboardOptions(capitalization = KeyboardCapitalization.Sentences),
                     minLines = DESCRIPTION_LINES,
                     maxLines = DESCRIPTION_LINES,
                 )
@@ -712,7 +716,9 @@ private fun NewSongDialog(
                     onValueChange = { title = it.asSingleLine().take(MAX_TITLE_LENGTH) },
                     label = { Text(stringResource(Res.string.songs_new_song_title)) },
                     singleLine = true,
-                    keyboardOptions = KeyboardOptions(imeAction = ImeAction.Next),
+                    // Sentences rather than words for the title: only English capitalizes every word of one, and a
+                    // letter the keyboard raised is one more to correct in every other language. An artist is a name.
+                    keyboardOptions = KeyboardOptions(capitalization = KeyboardCapitalization.Sentences, imeAction = ImeAction.Next),
                 )
                 Spacer(modifier = Modifier.height(8.dp))
                 OutlinedTextField(
@@ -721,7 +727,7 @@ private fun NewSongDialog(
                     onValueChange = { artist = it.asSingleLine().take(MAX_TITLE_LENGTH) },
                     label = { Text(stringResource(Res.string.songs_new_song_artist)) },
                     singleLine = true,
-                    keyboardOptions = KeyboardOptions(imeAction = ImeAction.Done),
+                    keyboardOptions = KeyboardOptions(capitalization = KeyboardCapitalization.Words, imeAction = ImeAction.Done),
                     keyboardActions = KeyboardActions(onDone = { create() }),
                 )
             }
@@ -868,6 +874,7 @@ private fun SongLanguagesDialog(
         declared.mapNotNull { code -> pickable.firstOrNull { it.code == code } } + pickable.filterNot { it.code in declared }
     }
     val focusRequester = rememberFirstFieldFocusRequester()
+    val keyboardController = LocalSoftwareKeyboardController.current
     val matches = remember(languages, query) {
         val normalizedQuery = viewModel.normalize(query)
         // What was typed may be a code, and not the one the library files the language under: `HUN`, `hu-HU` and
@@ -890,7 +897,9 @@ private fun SongLanguagesDialog(
                     onValueChange = { query = it.replace("\n", "").take(MAX_SEARCH_QUERY_LENGTH) },
                     label = { Text(stringResource(Res.string.song_details_language_search)) },
                     singleLine = true,
-                    keyboardOptions = KeyboardOptions(imeAction = ImeAction.Search),
+                    // What is typed here is as often a code as a name, and autocorrect would make a word of either.
+                    keyboardOptions = KeyboardOptions(autoCorrectEnabled = false, imeAction = ImeAction.Search),
+                    keyboardActions = KeyboardActions(onSearch = { keyboardController?.hide() }),
                 )
                 if (matches.isEmpty()) {
                     Text(
@@ -1324,7 +1333,8 @@ private fun PickerSearchField(
             }
         },
         singleLine = true,
-        keyboardOptions = KeyboardOptions(imeAction = ImeAction.Search),
+        // Autocorrect is off for the reason it is off in the list screens' search, see SearchableTopAppBar.
+        keyboardOptions = KeyboardOptions(autoCorrectEnabled = false, imeAction = ImeAction.Search),
         keyboardActions = KeyboardActions(onSearch = { keyboardController?.hide() }),
     )
 }
@@ -1411,8 +1421,13 @@ private fun CampfireBottomSheet(
     ModalBottomSheet(
         onDismissRequest = onDismiss,
         sheetState = sheetState,
-        // The screens' own background rather than Material's surface container, so a sheet reads as part of the app.
-        containerColor = MaterialTheme.colorScheme.background,
+        // In the light theme the screens' own background rather than Material's surface container, so a sheet reads as
+        // part of the app. In the dark one that background is too close to the scrim to tell the sheet from the screen
+        // it covers, so the sheet keeps Material's lighter container there. The scheme on screen is asked rather than the
+        // preference, so the sheet follows the theme's fade like everything else.
+        containerColor = MaterialTheme.colorScheme.background.let { background ->
+            if (background.luminance() < 0.5f) BottomSheetDefaults.ContainerColor else background
+        },
         dragHandle = null,
         contentWindowInsets = { WindowInsets.safeDrawing.only(WindowInsetsSides.Top) },
     ) {
@@ -1488,7 +1503,8 @@ private fun SheetHeader(
 private val SHEET_BOTTOM_PADDING = 16.dp
 private val PICKER_LIST_TOP_PADDING = 8.dp
 private const val MAX_TITLE_LENGTH = 60
-private const val MAX_TAG_LENGTH = 40
+/** A tag is a label to filter by, a word or two, and it sits in a pill next to others under a song's title. */
+private const val MAX_TAG_LENGTH = 30
 private const val MAX_DESCRIPTION_LENGTH = 300
 private const val DESCRIPTION_LINES = 3
 private val MAX_SUGGESTIONS_HEIGHT = 160.dp

@@ -259,8 +259,8 @@ internal fun SongListItem(
                         if (languages.isNotEmpty() || tags.isNotEmpty() || onAddTag != null) {
                             SongLabels(
                                 modifier = Modifier.padding(top = if (song.artist.isBlank() && note == null) 0.dp else 4.dp),
-                                languages = languages,
                                 tags = tags,
+                                languages = languages,
                                 selectedTags = songFilter.selectedTags,
                                 selectedLanguages = songFilter.selectedLanguages,
                                 onTagClicked = onTagClicked,
