@@ -165,6 +165,14 @@ uninstall and nothing else does.
   a deleted one comes back by being asked for rather than on its own. Each file is named exactly as the library would
   name the song inside it, which is what lets one list both read the resources and answer whether they are already
   there.
+- **The app icon follows the theme color** wherever the platform lets an app change it: the launcher entry on Android
+  (one `activity-alias` per color, see `app/android`), an alternate icon on iOS, the favicon on the web, and the
+  window, taskbar and Dock icons of a running desktop app — unless the user turned that off
+  (`UserPreferences.isAppIconThemed`, a switch under the colors named after the platform's icon), which keeps the
+  gray. **The app's own color is gray** — the "Campfire" palette is the orange one taken to gray — because the icons
+  no theme color can reach (the installed app, the Start menu, a store's page) have to go with whichever the user
+  picks; the orange is a color like the rest. Every icon, the packaged ones included, is the hand-drawn orange one in
+  `app/icons` recolored by `app/generate_theme_icons.py`, and the files it writes are committed.
 - **The app says nothing about the other builds but where to find them.** Settings → About is one section on every
   platform, and the row that names no platform — "Every version of Campfire" — leads to the README's "Get Campfire"
   section, which is a page that can be kept up to date without a release and the one place a store has nothing to
@@ -275,7 +283,14 @@ uninstall and nothing else does.
   `java.util.Properties` reads one as an escape. The file is read as UTF-8, so a value outside ASCII survives as well.
 - The `campfire-library` convention plugin sets each module's `archivesName` from its Gradle path, because a klib
   carries the name of the artifact it is built into and half the modules here are called `api` or `implementation`.
-- `./gradlew :app:android:assembleDebug` — Android APK
+- `./gradlew :app:android:assembleDebug` — Android APK; from Android Studio, the shared "Android" run configuration,
+  never "Default Activity" (see `app/android`)
+- **`.run/` holds the four shared run configurations** — Android, Desktop, Web and iOS — and the IDE writes them itself,
+  which is why they carry no license header: one would be gone on the next save. Desktop and Web are the Gradle tasks
+  below. iOS is the Kotlin Multiplatform plugin's own kind, which an IDE without it (any on Windows or Linux) lists as
+  one it cannot run and otherwise leaves alone; it finds the Xcode project through `.idea/xcode.xml`, the one file of
+  `.idea` that is checked in, and makes a shared Xcode scheme of the configuration on every Mac, which is ignored (see
+  `app/ios`).
 - `./gradlew :app:desktop:run` — desktop app; `:app:desktop:packageDistributionForCurrentOS` for installers
 - `./gradlew :app:ios:linkDebugFrameworkIosSimulatorArm64` — compile/link check of the iOS framework; run the app from
   Xcode (`app/ios/iosApp/iosApp.xcodeproj`) or with

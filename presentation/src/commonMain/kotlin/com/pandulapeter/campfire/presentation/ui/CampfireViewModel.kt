@@ -2083,6 +2083,8 @@ class CampfireViewModel(
 
     fun setThemeColor(value: UserPreferences.ThemeColor) = updateUserPreferences { copy(themeColor = value) }
 
+    fun setAppIconThemed(value: Boolean) = updateUserPreferences { copy(isAppIconThemed = value) }
+
     fun setLanguage(value: UserPreferences.Language) = updateUserPreferences { copy(language = value) }
 
     fun setAccidentals(value: UserPreferences.Accidentals) = updateUserPreferences { copy(chordSpelling = chordSpelling.copy(accidentals = value)) }

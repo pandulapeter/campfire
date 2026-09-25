@@ -22,7 +22,7 @@ import androidx.compose.ui.graphics.Color
  * is a seed run through Material's tonal mapping rather than forty hand-picked ones, and nothing in here is worth
  * editing on its own - a role that looks wrong is a seed that was chosen wrong.
  *
- * The seeds are spread around the hue circle with the Campfire orange counted as one of them, which is what keeps
+ * The seeds are spread around the hue circle with the orange counted as one of them, which is what keeps
  * two of the swatches in the settings screen from reading as the same color.
  */
 internal object MaterialColorSchemes {

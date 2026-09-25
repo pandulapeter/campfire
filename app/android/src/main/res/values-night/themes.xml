@@ -8,14 +8,19 @@
  If a copy of the MPL was not distributed with this file, You can obtain one at
  https://mozilla.org/MPL/2.0/.
 -->
-<resources>
+<resources xmlns:tools="http://schemas.android.com/tools">
 
     <style name="Campfire" parent="Theme.Material3.DayNight.NoActionBar">
-        <item name="colorPrimary">@color/campfire_orange</item>
+        <item name="colorPrimary">@color/campfire_gray</item>
         <item name="android:statusBarColor">@android:color/transparent</item>
         <item name="android:navigationBarColor">@android:color/transparent</item>
         <item name="android:windowLightStatusBar">false</item>
         <item name="android:windowLightNavigationBar">false</item>
+        <!-- Android 12's splash screen draws only the foreground of an adaptive icon, dropping its circle, when the
+             icon's background is grayscale or too close to the window's (the gray one anywhere, the yellow one on the
+             light window). Naming any icon background color turns that guess off; for an adaptive icon the system
+             never draws this color itself, it draws the whole icon, the background of its alias's own color included. -->
+        <item name="android:windowSplashScreenIconBackgroundColor" tools:targetApi="s">@color/campfire_gray</item>
     </style>
 
 </resources>

@@ -26,8 +26,8 @@ internal data class ColorSchemePair(
 
 /**
  * Every color the app can be painted in, in the order the settings screen offers them, which is the order the
- * preference itself declares - the app's own first, then the system's where there is one, then the rest around the
- * hue circle.
+ * preference itself declares - the app's own first, then the rest around the hue circle, and the system's last where
+ * there is one, since it is the one that is not a color of its own.
  *
  * [UserPreferences.ThemeColor.SYSTEM] is the only entry that is not a constant, since it is whatever the operating
  * system derived from the wallpaper, and the only one that can be absent: where nothing hands out such a palette it
@@ -43,6 +43,7 @@ internal fun themeColorOptions(): List<Pair<UserPreferences.ThemeColor, ColorSch
                 UserPreferences.ThemeColor.CAMPFIRE -> CampfireColorScheme
                 UserPreferences.ThemeColor.SYSTEM -> systemColorSchemePair
                 UserPreferences.ThemeColor.RED -> MaterialColorSchemes.Red
+                UserPreferences.ThemeColor.ORANGE -> OrangeColorScheme
                 UserPreferences.ThemeColor.YELLOW -> MaterialColorSchemes.Yellow
                 UserPreferences.ThemeColor.GREEN -> MaterialColorSchemes.Green
                 UserPreferences.ThemeColor.TEAL -> MaterialColorSchemes.Teal
@@ -55,7 +56,7 @@ internal fun themeColorOptions(): List<Pair<UserPreferences.ThemeColor, ColorSch
 }
 
 /**
- * The palette a stored preference stands for, falling back to the app's own orange for one this device cannot
+ * The palette a stored preference stands for, falling back to the app's own gray for one this device cannot
  * honor - a preferences file restored onto a device whose system hands out no colors of its own, rather than a
  * choice being ignored, since the settings screen only ever offers what [themeColorOptions] has.
  */

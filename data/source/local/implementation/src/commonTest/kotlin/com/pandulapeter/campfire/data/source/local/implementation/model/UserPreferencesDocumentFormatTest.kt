@@ -32,6 +32,7 @@ internal class UserPreferencesDocumentFormatTest {
             setlistSortingMode = "by_title",
             uiMode = "dark",
             themeColor = "forest",
+            isAppIconThemed = false,
             language = "hu",
             accidentals = "flats",
             isGermanNotationEnabled = true,

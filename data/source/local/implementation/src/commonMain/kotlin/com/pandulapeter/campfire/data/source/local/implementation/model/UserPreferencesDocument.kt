@@ -30,6 +30,7 @@ internal data class UserPreferencesDocument(
     val setlistSortingMode: String = "",
     val uiMode: String = "",
     val themeColor: String = "",
+    val isAppIconThemed: Boolean = true,
     val language: String = "",
     val accidentals: String = "",
     val isGermanNotationEnabled: Boolean = false,

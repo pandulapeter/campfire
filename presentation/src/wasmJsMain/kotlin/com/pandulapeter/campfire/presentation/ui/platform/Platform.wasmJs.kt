@@ -28,6 +28,8 @@ internal actual val libraryLocation: LibraryLocation? = null
 
 // The page runs on every operating system and knows none of them well enough to pick a store, and it is served by
 // the project itself, with no store's rules to follow.
+internal actual val appIconSurface = AppIconSurface.BROWSER_TAB
+
 internal actual val platformStore: Distribution? = null
 
 internal actual fun PointerEvent.verticalWheelNotches(): Float {

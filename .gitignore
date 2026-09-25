@@ -17,13 +17,19 @@ build/
 /gradle/gradle-daemon-jvm.properties
 
 # IDE
-/.idea/
+/.idea/*
+# Where the Xcode project is, which the shared iOS run configuration in .run/ needs and a fresh clone would otherwise
+# have to be told by hand. It names the project relative to the checkout, and the other IDEs leave it alone.
+!/.idea/xcode.xml
 *.iml
 /captures
 *.hprof
 
 # Xcode
 **/xcuserdata/
+# The schemes the IDE makes out of the shared iOS run configuration in .run/, again on every Mac. None is checked in:
+# a project with a shared scheme gets no automatic one, and the release build asks xcodebuild for the automatic iosApp.
+/app/ios/iosApp/iosApp.xcodeproj/xcshareddata/
 
 # macOS
 .DS_Store

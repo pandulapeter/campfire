@@ -21,6 +21,9 @@ import platform.UIKit.UIUserInterfaceStyle
 import platform.UIKit.UIViewController
 import platform.UIKit.UIWindow
 import platform.UIKit.UIWindowScene
+import platform.UIKit.alternateIconName
+import platform.UIKit.setAlternateIconName
+import platform.UIKit.supportsAlternateIcons
 import org.koin.mp.KoinPlatform
 
 private val koinApplication by lazy { startCampfireDependencyGraph() }
@@ -52,6 +55,7 @@ fun CampfireViewController(): UIViewController {
             filesToImport = filesToImport,
             syncNotifier = syncNotifier,
             onUiModeChanged = ::applyInterfaceStyle,
+            onAppIconChanged = ::applyAppIcon,
         )
     }.also { controller = it }
 }
@@ -73,6 +77,21 @@ private fun applyInterfaceStyle(uiMode: UserPreferences.UiMode?) {
         .flatMap { it.windows }
         .filterIsInstance<UIWindow>()
         .forEach { it.overrideUserInterfaceStyle = style }
+}
+
+/**
+ * Switches the home screen icon to the alternate icon of [themeColor] (`AppIcon-Red`…, in the asset catalog and named
+ * by `ASSETCATALOG_COMPILER_ALTERNATE_APPICON_NAMES`), or back to the primary one for the app's own color. Each icon
+ * set has a dark and a tinted appearance as well, and which of the three is shown is the home screen's own setting:
+ * the app decides the color only. Nothing is asked of iOS when the icon already matches, because every switch it
+ * carries out is announced with an alert.
+ */
+private fun applyAppIcon(themeColor: UserPreferences.ThemeColor) {
+    val application = UIApplication.sharedApplication
+    val iconName = if (themeColor == UserPreferences.ThemeColor.CAMPFIRE) null else "AppIcon-" + themeColor.id.replaceFirstChar { it.uppercase() }
+    if (application.supportsAlternateIcons && application.alternateIconName != iconName) {
+        application.setAlternateIconName(iconName, completionHandler = null)
+    }
 }
 
 private fun openUrl(url: String) {

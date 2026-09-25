@@ -35,8 +35,6 @@ import com.pandulapeter.campfire.presentation.ui.handlePreviewKeyEvent
 import com.pandulapeter.campfire.presentation.ui.resetEscapeKey
 import com.pandulapeter.campfire.presentation.ui.platform.desktopDataDirectory
 import com.pandulapeter.campfire.presentation.ui.theme.interfaceScale
-import com.pandulapeter.campfire.resources.Res
-import com.pandulapeter.campfire.resources.app_icon
 import java.awt.Component
 import java.awt.Desktop
 import java.awt.Dimension
@@ -51,7 +49,6 @@ import javax.swing.SwingUtilities
 import kotlin.math.ceil
 import kotlin.system.exitProcess
 import kotlinx.coroutines.channels.Channel
-import org.jetbrains.compose.resources.painterResource
 import org.koin.compose.viewmodel.koinViewModel
 
 /**
@@ -128,7 +125,7 @@ fun main(args: Array<String>) {
             state = windowState,
             title = "Campfire",
             onCloseRequest = requestExit,
-            icon = painterResource(Res.drawable.app_icon),
+            icon = appIcon(viewModel.value),
             onPreviewKeyEvent = ::handlePreviewKeyEvent,
             onKeyEvent = { keyEvent -> viewModel.value?.handleKeyEvent(keyEvent, onExit = exit) == true },
         ) {

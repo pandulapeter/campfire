@@ -41,7 +41,7 @@ import org.jetbrains.compose.resources.painterResource
 /**
  * A single choice between colors, offered as the colors themselves: a disc for each, the selected one ringed. Their
  * names are only in the semantics, since a label under every disc would say less than the disc does - except for the
- * one or two whose point is not the color they show, which carry an icon that says what they are.
+ * one whose point is not the color it shows, which carries an icon that says what it is.
  *
  * They wrap rather than scroll, because a row of colors that has to be scrolled hides some of the options behind a
  * gesture while there is no order along which one could be looked for.
@@ -69,7 +69,7 @@ internal fun <T> ColorChoice(
 /**
  * One disc of a [ColorChoice], inside the ring that marks it as the selected one.
  *
- * The ring is what says "this is the one in use", and the check inside only seconds it: with an icon on some of the
+ * The ring is what says "this is the one in use", and the check inside only seconds it: with an icon on one of the
  * discs, a mark in the middle is first read as *what this color is* rather than as a selection, so the selection has
  * to be somewhere an icon can never be. It is drawn in the option's own color, matching the disc it surrounds.
  *

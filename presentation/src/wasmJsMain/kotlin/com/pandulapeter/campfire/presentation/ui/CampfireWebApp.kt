@@ -23,6 +23,8 @@ import com.pandulapeter.campfire.presentation.ui.navigation.BrowserHistoryEffect
 import com.pandulapeter.campfire.presentation.ui.navigation.navigateToBrowserAddress
 import com.pandulapeter.campfire.presentation.ui.platform.LocalFilePicker
 import com.pandulapeter.campfire.presentation.ui.platform.WebFilePicker
+import com.pandulapeter.campfire.presentation.ui.platform.appIconColor
+import com.pandulapeter.campfire.presentation.ui.platform.appIconThemeColor
 import com.pandulapeter.campfire.presentation.ui.platform.droppedFiles
 import com.pandulapeter.campfire.presentation.ui.theme.colorSchemePair
 import com.pandulapeter.campfire.presentation.ui.theme.isDarkTheme
@@ -43,7 +45,7 @@ import org.koin.compose.viewmodel.koinViewModel
  * find bar ([SearchShortcutEffect]). The browser's zoom shortcuts change the text size of the song details screen
  * instead of zooming the page ([SongTextZoomEffect]). Every screen has an address of its own, and the browser's
  * history follows the app's back stack ([BrowserHistoryEffect]). The browser's own toolbar is painted in the palette
- * the user chose ([BrowserThemeColorEffect]).
+ * the user chose ([BrowserThemeColorEffect]), and the favicon is the icon of that palette ([FaviconEffect]).
  */
 @Composable
 fun CampfireWebApp(
@@ -68,6 +70,7 @@ fun CampfireWebApp(
     SearchShortcutEffect(viewModel)
     SongTextZoomEffect(viewModel)
     BrowserThemeColorEffect(viewModel)
+    FaviconEffect(viewModel)
     LaunchedEffect(viewModel) {
         viewModel.hasUnsavedEditorChanges.collect { hasUnsavedChanges ->
             if (hasUnsavedChanges) startWarningBeforeUnload() else stopWarningBeforeUnload()
@@ -113,7 +116,7 @@ private fun SearchShortcutEffect(viewModel: CampfireViewModel) = DisposableEffec
 
 /**
  * Keeps the `theme-color` of the page - what Chrome on Android and the browsers built on it paint their toolbar and the
- * status bar in - on the palette the app is drawn in. index.html can only name the app's own orange, in the system's
+ * status bar in - on the palette the app is drawn in. index.html can only name the app's own gray, in the system's
  * light or dark half, since the preferences are in OPFS and nothing reads them before the app does.
  *
  * A light scheme hands over its `surfaceContainerHigh`, the tone of the search pill, rather than its background:
@@ -147,6 +150,42 @@ private fun setBrowserThemeColor(color: String) {
         """document.querySelectorAll('meta[name="theme-color"]').forEach(function (meta) {
             meta.setAttribute('content', color);
         })"""
+    )
+}
+
+/**
+ * Shows the app icon the preferences ask for (`appIconThemeColor`) as the page's favicon: one of the recolored
+ * `icon-192-<color>.png` files, the app's own gray one included, since a browser keeps a favicon by its address and an
+ * icon that changed under the same name would go on showing as it was. The name is also left in the browser's local
+ * storage, where index.html looks for it before anything else is fetched, so that the tab and the loading screen of the
+ * next visit are in that color from the start rather than turning into it once the preferences have been read, sixteen
+ * megabytes later.
+ */
+@Composable
+private fun FaviconEffect(viewModel: CampfireViewModel) {
+    val userPreferences by viewModel.userPreferences.collectAsStateWithLifecycle()
+    val appIconColor = userPreferences.appIconThemeColor.appIconColor
+    if (userPreferences != null) {
+        LaunchedEffect(appIconColor) {
+            setFavicon("icon-192-${appIconColor.id}.png")
+        }
+    }
+}
+
+/**
+ * Points the page's icon at [fileName], a file next to index.html, and remembers it for index.html. Storage that
+ * cannot be written - blocked for the site, or a private window out of space - costs the next visit its first frames
+ * in gray and nothing else.
+ */
+private fun setFavicon(fileName: String) {
+    js(
+        """{
+            document.querySelector('link[rel="icon"]').setAttribute('href', fileName);
+            try {
+                window.localStorage.setItem('campfire-icon', fileName);
+            } catch (e) {
+            }
+        }"""
     )
 }
 

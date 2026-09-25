@@ -22,7 +22,7 @@ import android.os.IBinder
 import androidx.annotation.RequiresApi
 import androidx.core.app.NotificationCompat
 import androidx.core.app.ServiceCompat
-import com.pandulapeter.campfire.CampfireActivity
+import com.pandulapeter.campfire.CampfireMainActivity
 import com.pandulapeter.campfire.R
 import com.pandulapeter.campfire.data.model.domain.SyncState
 import com.pandulapeter.campfire.domain.api.useCases.CancelSynchronizationUseCase
@@ -227,7 +227,7 @@ class CampfireSyncService : Service() {
                 PendingIntent.getActivity(
                     this,
                     0,
-                    Intent(this, CampfireActivity::class.java).addFlags(Intent.FLAG_ACTIVITY_SINGLE_TOP),
+                    Intent(this, CampfireMainActivity::class.java).addFlags(Intent.FLAG_ACTIVITY_SINGLE_TOP),
                     PendingIntent.FLAG_IMMUTABLE,
                 )
             )

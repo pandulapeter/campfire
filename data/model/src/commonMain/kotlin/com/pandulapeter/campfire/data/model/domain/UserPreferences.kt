@@ -33,6 +33,11 @@ data class UserPreferences(
     val setlistSortingMode: SetlistSortingMode,
     val uiMode: UiMode,
     val themeColor: ThemeColor,
+    /**
+     * Whether the app icon is in [themeColor] wherever the platform lets the app change it, rather than in the gray of
+     * [ThemeColor.CAMPFIRE] whatever the theme is.
+     */
+    val isAppIconThemed: Boolean,
     val language: Language,
     val chordSpelling: ChordSpelling, // How the chords of a song are written when it is displayed.
     /** Song file name to semitones, for songs opened from the library rather than from a setlist. */
@@ -97,18 +102,20 @@ data class UserPreferences(
      *
      * [SYSTEM] is the scheme the operating system derives from the user's wallpaper and only exists on Android 12 and
      * above, so it is stored like any other value but offered only where it can be honored; anywhere else it falls
-     * back to [CAMPFIRE], the app's own orange.
+     * back to [CAMPFIRE], the app's own gray. [ORANGE] is the color the app icon is drawn in by hand, and every other
+     * icon is generated from.
      */
     enum class ThemeColor(val id: String) {
         CAMPFIRE("campfire"),
-        SYSTEM("system"),
         RED("red"),
+        ORANGE("orange"),
         YELLOW("yellow"),
         GREEN("green"),
         TEAL("teal"),
         BLUE("blue"),
         PURPLE("purple"),
         PINK("pink"),
+        SYSTEM("system"),
     }
 
     /**

@@ -65,6 +65,18 @@ import com.pandulapeter.campfire.presentation.resources.settings_accidentals_des
 import com.pandulapeter.campfire.presentation.resources.settings_accidentals_flats
 import com.pandulapeter.campfire.presentation.resources.settings_accidentals_original
 import com.pandulapeter.campfire.presentation.resources.settings_accidentals_sharps
+import com.pandulapeter.campfire.presentation.resources.settings_app_icon_browser_tab
+import com.pandulapeter.campfire.presentation.resources.settings_app_icon_browser_tab_description
+import com.pandulapeter.campfire.presentation.resources.settings_app_icon_dock
+import com.pandulapeter.campfire.presentation.resources.settings_app_icon_dock_description
+import com.pandulapeter.campfire.presentation.resources.settings_app_icon_home_screen
+import com.pandulapeter.campfire.presentation.resources.settings_app_icon_home_screen_description
+import com.pandulapeter.campfire.presentation.resources.settings_app_icon_launcher
+import com.pandulapeter.campfire.presentation.resources.settings_app_icon_launcher_description
+import com.pandulapeter.campfire.presentation.resources.settings_app_icon_taskbar
+import com.pandulapeter.campfire.presentation.resources.settings_app_icon_taskbar_description
+import com.pandulapeter.campfire.presentation.resources.settings_app_icon_window
+import com.pandulapeter.campfire.presentation.resources.settings_app_icon_window_description
 import com.pandulapeter.campfire.presentation.resources.settings_created_by
 import com.pandulapeter.campfire.presentation.resources.settings_distribution_app_store
 import com.pandulapeter.campfire.presentation.resources.settings_distribution_mac_app_store
@@ -119,6 +131,7 @@ import com.pandulapeter.campfire.presentation.resources.settings_user_interface_
 import com.pandulapeter.campfire.presentation.resources.settings_user_interface_theme_color_blue
 import com.pandulapeter.campfire.presentation.resources.settings_user_interface_theme_color_campfire
 import com.pandulapeter.campfire.presentation.resources.settings_user_interface_theme_color_green
+import com.pandulapeter.campfire.presentation.resources.settings_user_interface_theme_color_orange
 import com.pandulapeter.campfire.presentation.resources.settings_user_interface_theme_color_pink
 import com.pandulapeter.campfire.presentation.resources.settings_user_interface_theme_color_purple
 import com.pandulapeter.campfire.presentation.resources.settings_user_interface_theme_color_red
@@ -140,13 +153,17 @@ import com.pandulapeter.campfire.presentation.ui.components.RadioListItem
 import com.pandulapeter.campfire.presentation.ui.components.SegmentedChoice
 import com.pandulapeter.campfire.presentation.ui.components.SwitchListItem
 import com.pandulapeter.campfire.presentation.ui.components.rememberRetainedScrollState
+import com.pandulapeter.campfire.presentation.ui.platform.AppIconSurface
 import com.pandulapeter.campfire.presentation.ui.platform.Distribution
 import com.pandulapeter.campfire.presentation.ui.platform.LibraryLocation
 import com.pandulapeter.campfire.presentation.ui.platform.LibraryPersistence
 import com.pandulapeter.campfire.presentation.ui.platform.LocalFilePicker
+import com.pandulapeter.campfire.presentation.ui.platform.appIconSurface
 import com.pandulapeter.campfire.presentation.ui.platform.canAskForDonations
 import com.pandulapeter.campfire.presentation.ui.platform.libraryLocation
 import com.pandulapeter.campfire.presentation.ui.platform.platformStore
+import com.pandulapeter.campfire.presentation.ui.theme.CampfireColorScheme
+import com.pandulapeter.campfire.presentation.ui.theme.colorSchemePair
 import com.pandulapeter.campfire.presentation.ui.theme.isDarkTheme
 import com.pandulapeter.campfire.presentation.ui.theme.themeColorOptions
 import kotlinx.coroutines.launch
@@ -480,6 +497,21 @@ private fun GeneralSection(
             onSelected = viewModel::setThemeColor,
         )
     }
+    // Named after the icon it colors, which is a different one on every platform, and described with what that
+    // platform lets it do: the one thing all of them share is that a color picked here reaches the icon at all. It is
+    // disabled wherever the theme is drawn in the app's own palette - the gray itself, or the System color on a device
+    // that hands out none - since the icon is the gray one then whichever way it is set. The System color where it is
+    // honored is a color like the rest, whose launcher icon the wallpaper tints. Disabled, it shows as on, since the
+    // gray icon is then the icon of the color picked rather than the icon kept instead of it; the preference itself is
+    // left as the user set it, for the next color that can reach the icon.
+    val canColorAppIcon = colorSchemePair(userPreferences?.themeColor) !== CampfireColorScheme
+    SwitchListItem(
+        title = appIconSurface.title(),
+        description = appIconSurface.description(),
+        isChecked = !canColorAppIcon || userPreferences?.isAppIconThemed == true,
+        isEnabled = canColorAppIcon,
+        onCheckedChange = viewModel::setAppIconThemed,
+    )
     // A list rather than a segmented control, since it is the one choice here that grows with every translation,
     // and a row of segments runs out of width after the third. Every language the app is not set to also carries its
     // name in itself, read out of its own string table, so that somebody who ended up in one they cannot read can
@@ -728,6 +760,32 @@ private val Distribution.storeName
         Distribution.MICROSOFT_STORE -> Res.string.settings_distribution_microsoft_store
     }
 
+/** What the icon the theme color can reach is called on this platform. */
+@Composable
+private fun AppIconSurface.title() = stringResource(
+    when (this) {
+        AppIconSurface.LAUNCHER -> Res.string.settings_app_icon_launcher
+        AppIconSurface.HOME_SCREEN -> Res.string.settings_app_icon_home_screen
+        AppIconSurface.DOCK -> Res.string.settings_app_icon_dock
+        AppIconSurface.TASKBAR -> Res.string.settings_app_icon_taskbar
+        AppIconSurface.WINDOW -> Res.string.settings_app_icon_window
+        AppIconSurface.BROWSER_TAB -> Res.string.settings_app_icon_browser_tab
+    }
+)
+
+/** What coloring that icon does here, and where it stops. */
+@Composable
+private fun AppIconSurface.description() = stringResource(
+    when (this) {
+        AppIconSurface.LAUNCHER -> Res.string.settings_app_icon_launcher_description
+        AppIconSurface.HOME_SCREEN -> Res.string.settings_app_icon_home_screen_description
+        AppIconSurface.DOCK -> Res.string.settings_app_icon_dock_description
+        AppIconSurface.TASKBAR -> Res.string.settings_app_icon_taskbar_description
+        AppIconSurface.WINDOW -> Res.string.settings_app_icon_window_description
+        AppIconSurface.BROWSER_TAB -> Res.string.settings_app_icon_browser_tab_description
+    }
+)
+
 /**
  * What a color offered by the theme is called. It is only ever read out by an accessibility service, since the
  * settings screen shows each color as itself.
@@ -738,6 +796,7 @@ private fun UserPreferences.ThemeColor.label() = stringResource(
         UserPreferences.ThemeColor.CAMPFIRE -> Res.string.settings_user_interface_theme_color_campfire
         UserPreferences.ThemeColor.SYSTEM -> Res.string.settings_user_interface_theme_color_system
         UserPreferences.ThemeColor.RED -> Res.string.settings_user_interface_theme_color_red
+        UserPreferences.ThemeColor.ORANGE -> Res.string.settings_user_interface_theme_color_orange
         UserPreferences.ThemeColor.YELLOW -> Res.string.settings_user_interface_theme_color_yellow
         UserPreferences.ThemeColor.GREEN -> Res.string.settings_user_interface_theme_color_green
         UserPreferences.ThemeColor.TEAL -> Res.string.settings_user_interface_theme_color_teal
@@ -748,13 +807,12 @@ private fun UserPreferences.ThemeColor.label() = stringResource(
 )
 
 /**
- * The icon a color offered by the theme carries while it is not selected, for the two whose color is not what picks
- * them out: the app's own palette, and the one the operating system hands over. The rest are only a color, and a
- * glyph on each of them would say nothing the disc does not.
+ * The icon a color offered by the theme carries while it is not selected, for the one whose color is not what picks it
+ * out: the palette the operating system hands over, which is whatever the wallpaper made it. The rest are only a
+ * color - the app's own gray included - and a glyph on each of them would say nothing the disc does not.
  */
 @Composable
 private fun UserPreferences.ThemeColor.icon(): Painter? = when (this) {
-    UserPreferences.ThemeColor.CAMPFIRE -> painterResource(Res.drawable.ic_campfire)
     UserPreferences.ThemeColor.SYSTEM -> painterResource(Res.drawable.ic_phone)
     else -> null
 }

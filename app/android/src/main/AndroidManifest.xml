@@ -48,15 +48,18 @@
         tools:ignore="UnusedAttribute"
         tools:targetApi="s">
 
+        <!--
+          The activity itself is never an entry in the launcher: the aliases below are, and exactly one of them is
+          enabled at a time (see AppIconSwitcher), which is how the launcher icon follows the theme. The first one is
+          the entry of an installation that never switched, and keeps the name this activity had before there were
+          aliases, because a home screen icon and a restored backup of a launcher's layout point at a component by
+          name, and that name has to go on being a launcher entry after an update. The rest are one per theme color,
+          the app's own gray included, and are disabled until chosen.
+        -->
         <activity
-            android:name=".CampfireActivity"
+            android:name=".CampfireMainActivity"
             android:exported="true"
             android:launchMode="singleTask">
-
-            <intent-filter>
-                <action android:name="android.intent.action.MAIN" />
-                <category android:name="android.intent.category.LAUNCHER" />
-            </intent-filter>
 
             <!--
               Opening a ChordPro file with Campfire. The pattern has to carry a MIME type to match a content URI at
@@ -174,6 +177,171 @@
 
         </activity>
 
+        <activity-alias
+            android:name=".CampfireActivity"
+            android:enabled="true"
+            android:exported="true"
+            android:icon="@mipmap/ic_launcher"
+            android:roundIcon="@mipmap/ic_launcher"
+            android:targetActivity=".CampfireMainActivity">
+
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+
+        </activity-alias>
+
+        <activity-alias
+            android:name=".CampfireActivityCampfire"
+            android:enabled="false"
+            android:exported="true"
+            android:icon="@mipmap/ic_launcher"
+            android:roundIcon="@mipmap/ic_launcher"
+            android:targetActivity=".CampfireMainActivity">
+
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+
+        </activity-alias>
+
+        <activity-alias
+            android:name=".CampfireActivityRed"
+            android:enabled="false"
+            android:exported="true"
+            android:icon="@mipmap/ic_launcher_red"
+            android:roundIcon="@mipmap/ic_launcher_red"
+            android:targetActivity=".CampfireMainActivity">
+
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+
+        </activity-alias>
+
+        <activity-alias
+            android:name=".CampfireActivityOrange"
+            android:enabled="false"
+            android:exported="true"
+            android:icon="@mipmap/ic_launcher_orange"
+            android:roundIcon="@mipmap/ic_launcher_orange"
+            android:targetActivity=".CampfireMainActivity">
+
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+
+        </activity-alias>
+
+        <activity-alias
+            android:name=".CampfireActivityYellow"
+            android:enabled="false"
+            android:exported="true"
+            android:icon="@mipmap/ic_launcher_yellow"
+            android:roundIcon="@mipmap/ic_launcher_yellow"
+            android:targetActivity=".CampfireMainActivity">
+
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+
+        </activity-alias>
+
+        <activity-alias
+            android:name=".CampfireActivityGreen"
+            android:enabled="false"
+            android:exported="true"
+            android:icon="@mipmap/ic_launcher_green"
+            android:roundIcon="@mipmap/ic_launcher_green"
+            android:targetActivity=".CampfireMainActivity">
+
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+
+        </activity-alias>
+
+        <activity-alias
+            android:name=".CampfireActivityTeal"
+            android:enabled="false"
+            android:exported="true"
+            android:icon="@mipmap/ic_launcher_teal"
+            android:roundIcon="@mipmap/ic_launcher_teal"
+            android:targetActivity=".CampfireMainActivity">
+
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+
+        </activity-alias>
+
+        <activity-alias
+            android:name=".CampfireActivityBlue"
+            android:enabled="false"
+            android:exported="true"
+            android:icon="@mipmap/ic_launcher_blue"
+            android:roundIcon="@mipmap/ic_launcher_blue"
+            android:targetActivity=".CampfireMainActivity">
+
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+
+        </activity-alias>
+
+        <activity-alias
+            android:name=".CampfireActivityPurple"
+            android:enabled="false"
+            android:exported="true"
+            android:icon="@mipmap/ic_launcher_purple"
+            android:roundIcon="@mipmap/ic_launcher_purple"
+            android:targetActivity=".CampfireMainActivity">
+
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+
+        </activity-alias>
+
+        <activity-alias
+            android:name=".CampfireActivityPink"
+            android:enabled="false"
+            android:exported="true"
+            android:icon="@mipmap/ic_launcher_pink"
+            android:roundIcon="@mipmap/ic_launcher_pink"
+            android:targetActivity=".CampfireMainActivity">
+
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+
+        </activity-alias>
+
+        <activity-alias
+            android:name=".CampfireActivitySystem"
+            android:enabled="false"
+            android:exported="true"
+            android:icon="@mipmap/ic_launcher_system"
+            android:roundIcon="@mipmap/ic_launcher_system"
+            android:targetActivity=".CampfireMainActivity">
+
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+
+        </activity-alias>
+
         <!--
           Keeps the process alive for as long as a sync run lasts, and shows the run. It does no syncing of its own,
           see CampfireSyncService.
@@ -188,7 +356,7 @@
             android:foregroundServiceType="dataSync"
             android:stopWithTask="false" />
 
-        <!-- Lets a shared song leave the app's private storage as a content URI, see CampfireActivity.shareFile. -->
+        <!-- Lets a shared song leave the app's private storage as a content URI, see AndroidFilePicker.shareFile in :presentation. -->
         <provider
             android:name="androidx.core.content.FileProvider"
             android:authorities="${applicationId}.files"

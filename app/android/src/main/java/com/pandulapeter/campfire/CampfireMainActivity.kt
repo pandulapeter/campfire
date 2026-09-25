@@ -9,6 +9,7 @@
  */
 package com.pandulapeter.campfire
 
+import android.app.ActivityManager
 import android.content.ActivityNotFoundException
 import android.content.Intent
 import android.net.Uri
@@ -22,15 +23,19 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.browser.customtabs.CustomTabsIntent
 import androidx.core.content.ContextCompat
 import androidx.core.net.toUri
+import com.pandulapeter.campfire.data.model.domain.UserPreferences
 import com.pandulapeter.campfire.data.source.remote.implementation.auth.isSyncRedirect
 import com.pandulapeter.campfire.data.source.remote.implementation.auth.onSyncRedirectReceived
 import com.pandulapeter.campfire.presentation.ui.CampfireAndroidApp
 import com.pandulapeter.campfire.presentation.ui.platform.SyncNotifier
 import com.pandulapeter.campfire.sync.CampfireSyncService
 
-class CampfireActivity : AppCompatActivity() {
+class CampfireMainActivity : AppCompatActivity() {
 
     private var isAppReady = false
+
+    /** The theme color the launcher icon is to be in, known once the preferences have been read. */
+    private var appIconColor: UserPreferences.ThemeColor? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -54,6 +59,10 @@ class CampfireActivity : AppCompatActivity() {
                 filesToImport = filesToImport,
                 syncNotifier = ::onSyncNotificationChanged,
                 onAppReady = { isAppReady = true },
+                onAppIconChanged = { themeColor ->
+                    appIconColor = themeColor
+                    AppIconSwitcher.apply(context = this, themeColor = themeColor, isLeaving = false)
+                },
             )
         }
     }
@@ -76,6 +85,24 @@ class CampfireActivity : AppCompatActivity() {
                 return true
             }
         })
+    }
+
+    /**
+     * Where the first switch of the launcher icon is made (see [AppIconSwitcher]), the one that closes the task: as the
+     * user leaves. A stop that only recreates the activity is not leaving, and neither is one caused by another app's
+     * screen coming up inside this task - the document picker, the share sheet, the consent page of sync - which the
+     * switch would close along with it. Every later switch is made as the color is picked.
+     */
+    override fun onStop() {
+        super.onStop()
+        val appIconColor = appIconColor
+        if (appIconColor != null && !isChangingConfigurations && !isCoveredWithinTask()) {
+            AppIconSwitcher.apply(context = this, themeColor = appIconColor, isLeaving = true)
+        }
+    }
+
+    private fun isCoveredWithinTask() = getSystemService(ActivityManager::class.java).appTasks.any { task ->
+        task.taskInfo?.topActivity?.packageName.let { it != null && it != packageName }
     }
 
     /**

@@ -25,6 +25,12 @@ internal actual val isLaunchScreenWholeStartup = true
  */
 internal actual val libraryLocation: LibraryLocation? = LibraryLocation.Folder(File(desktopDataDirectory(), LIBRARY_DIRECTORY).absolutePath)
 
+internal actual val appIconSurface = when {
+    isMacOs -> AppIconSurface.DOCK
+    isWindows -> AppIconSurface.TASKBAR
+    else -> AppIconSurface.WINDOW
+}
+
 // The store of the machine, not of the build: a Mac build made by hand answers to the Mac App Store's rules and sends
 // a review there like the one the store hands out. Linux has no store.
 internal actual val platformStore: Distribution? = when {

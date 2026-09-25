@@ -61,7 +61,7 @@ fun CampfireTheme(
     // The preferences rather than the scheme itself, which has no equality of its own to key an animation on.
     LaunchedEffect(isDarkTheme to themeColor) {
         // Two preferences can ask for the same palette - an unread one and the app's own color, a color the device
-        // cannot honor and the orange it falls back to - and arriving at the scheme that is already on screen is
+        // cannot honor and the gray it falls back to - and arriving at the scheme that is already on screen is
         // not a change to animate. The schemes are the constants of ColorSchemes.kt, so this is identity.
         if (targetColorScheme === stop) return@LaunchedEffect
         // The fade starts from the scheme being shown and not from the one the last change aimed at, so a second

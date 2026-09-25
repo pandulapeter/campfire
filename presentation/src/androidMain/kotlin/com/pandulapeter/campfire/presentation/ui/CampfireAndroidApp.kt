@@ -22,10 +22,12 @@ import androidx.compose.runtime.remember
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.pandulapeter.campfire.data.model.domain.ImportedFile
 import com.pandulapeter.campfire.data.model.domain.SyncState
+import com.pandulapeter.campfire.data.model.domain.UserPreferences
 import com.pandulapeter.campfire.presentation.ui.platform.LocalFilePicker
 import com.pandulapeter.campfire.presentation.ui.platform.LocalSyncNotifier
 import com.pandulapeter.campfire.presentation.ui.platform.SyncNotificationPermissionEffect
 import com.pandulapeter.campfire.presentation.ui.platform.SyncNotifier
+import com.pandulapeter.campfire.presentation.ui.platform.appIconThemeColor
 import com.pandulapeter.campfire.presentation.ui.platform.rememberAndroidFilePicker
 import com.pandulapeter.campfire.presentation.ui.theme.isDarkTheme
 import kotlinx.coroutines.flow.Flow
@@ -44,6 +46,8 @@ import org.koin.compose.viewmodel.koinViewModel
  *   module because that is where the manifest is.
  * @param onAppReady Released when the app itself is on screen, which is what the activity holds the system splash
  *   screen until: the frame that would otherwise take it away is the launch screen rather than the app.
+ * @param onAppIconChanged Told the theme color the launcher icon is to be in (`appIconThemeColor`), once the
+ *   preferences have been read and whenever it changes, for the activity to switch the launcher entry to.
  */
 @Composable
 fun CampfireAndroidApp(
@@ -52,9 +56,12 @@ fun CampfireAndroidApp(
     filesToImport: Flow<List<ImportedFile>> = emptyFlow(),
     syncNotifier: SyncNotifier = SyncNotifier { },
     onAppReady: () -> Unit = {},
+    onAppIconChanged: (UserPreferences.ThemeColor) -> Unit = {},
 ) {
     val userPreferences by viewModel.userPreferences.collectAsStateWithLifecycle()
     val isDarkTheme = userPreferences?.uiMode.isDarkTheme()
+    val appIconThemeColor = userPreferences?.appIconThemeColor
+    LaunchedEffect(appIconThemeColor) { appIconThemeColor?.let(onAppIconChanged) }
     // The permission the foreground service's notification needs, asked for here because the shell is what knows
     // that this platform has one to ask for at all.
     val syncState by viewModel.syncState.collectAsStateWithLifecycle()

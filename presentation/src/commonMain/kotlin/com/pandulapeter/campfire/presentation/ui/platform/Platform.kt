@@ -34,6 +34,9 @@ internal expect val isLaunchScreenWholeStartup: Boolean
  */
 internal expect val libraryLocation: LibraryLocation?
 
+/** Which of the app's icons follows the theme color here (see [AppIconSurface]). */
+internal expect val appIconSurface: AppIconSurface
+
 /**
  * The app store of the platform the app is **running on**, which is the one official way to get Campfire there: every
  * platform has exactly one, and a build made by hand is still a build of that platform. The settings screen's rating

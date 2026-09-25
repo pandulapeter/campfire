@@ -291,6 +291,7 @@ class GetScreenDataUseCaseImplTest {
             setlistSortingMode = UserPreferences.SetlistSortingMode.NEWEST_FIRST,
             uiMode = UserPreferences.UiMode.SYSTEM_DEFAULT,
             themeColor = UserPreferences.ThemeColor.CAMPFIRE,
+            isAppIconThemed = true,
             language = UserPreferences.Language.SYSTEM_DEFAULT,
             chordSpelling = UserPreferences.ChordSpelling.Default,
             transpositions = emptyMap(),

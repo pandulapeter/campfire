@@ -19,6 +19,8 @@ internal actual val isLaunchScreenWholeStartup = false
 // library lives in shows up under "On My iPhone".
 internal actual val libraryLocation: LibraryLocation? = LibraryLocation.FilesApp
 
+internal actual val appIconSurface = AppIconSurface.HOME_SCREEN
+
 internal actual val platformStore: Distribution? = Distribution.APP_STORE
 
 internal actual fun PointerEvent.verticalWheelNotches() = changes.fold(0f) { total, change -> total + change.scrollDelta.y }

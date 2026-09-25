@@ -18,6 +18,8 @@ internal actual val isLaunchScreenWholeStartup = false
 // The files live in the app's private storage, which no file manager will show.
 internal actual val libraryLocation: LibraryLocation? = null
 
+internal actual val appIconSurface = AppIconSurface.LAUNCHER
+
 internal actual val platformStore: Distribution? = Distribution.PLAY_STORE
 
 internal actual fun PointerEvent.verticalWheelNotches() = changes.fold(0f) { total, change -> total + change.scrollDelta.y }

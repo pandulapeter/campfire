@@ -44,11 +44,26 @@
     <!-- The two schemes of the app's own color: the dark background, and the light surfaceContainerHigh, since Chrome
          ignores a theme-color as light as the light background. Once the preferences are read the app writes the
          palette it is drawn in over both (see BrowserThemeColorEffect in CampfireWebApp.kt). -->
-    <meta name="theme-color" content="#F4E5DB" media="(prefers-color-scheme: light)">
-    <meta name="theme-color" content="#19120D" media="(prefers-color-scheme: dark)">
+    <meta name="theme-color" content="#E8E8E8" media="(prefers-color-scheme: light)">
+    <meta name="theme-color" content="#141414" media="(prefers-color-scheme: dark)">
     <meta name="description" content="Song lyrics and chords, in a library of plain ChordPro files that stays yours.">
     <title>Campfire</title>
-    <link rel="icon" type="image/png" sizes="192x192" href="icon-192.png">
+    <link rel="icon" type="image/png" sizes="192x192" href="icon-192-campfire.png">
+    <!-- The icon of the theme color the user chose, which the app leaves in local storage whenever it shows one (see
+         FaviconEffect in CampfireWebApp.kt), so that the tab and the loading screen are in that color before the app
+         that knows it has been downloaded. Only a name the app writes is taken: this is a URL on the page. -->
+    <script type="application/javascript">
+        (function () {
+            try {
+                var icon = window.localStorage.getItem('campfire-icon');
+                if (/^icon-192-[a-z]+\.png$/.test(icon || '')) {
+                    document.querySelector('link[rel="icon"]').setAttribute('href', icon);
+                    document.documentElement.style.setProperty('--splash-icon', 'url("' + icon + '")');
+                }
+            } catch (e) {
+            }
+        })();
+    </script>
     <!-- The fonts the interface (see InterfaceTypography.wasmJs.kt) and the tabs (see MonospaceFontFamily.wasmJs.kt) are
          set in, fetched alongside the binaries rather than after them, so they are in by the time the app asks for them.
          "fetch" and "crossorigin" are what make the Compose resource reader's own fetch() the request this answers;
@@ -63,18 +78,18 @@
            composed frame paint the same background and the handover is invisible. */
         :root {
             color-scheme: light dark;
-            --background: #FFF8F5;
-            --on-background: #211A15;
-            --track: #F4DFD1;
-            --indicator: #8B5000;
+            --background: #FAFAFA;
+            --on-background: #1C1C1C;
+            --track: #E3E3E3;
+            --indicator: #606060;
         }
 
         @media (prefers-color-scheme: dark) {
             :root {
-                --background: #19120D;
-                --on-background: #EFE0D7;
-                --track: #52443B;
-                --indicator: #FFB77C;
+                --background: #141414;
+                --on-background: #E3E3E3;
+                --track: #474747;
+                --indicator: #C9C9C9;
             }
         }
 
@@ -118,7 +133,7 @@
         #splash-icon {
             width: 96px;
             height: 96px;
-            background-image: url("icon-192.png");
+            background-image: var(--splash-icon, url("icon-192-campfire.png"));
             background-size: contain;
             background-repeat: no-repeat;
         }

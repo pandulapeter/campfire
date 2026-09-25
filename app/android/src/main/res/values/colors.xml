@@ -11,6 +11,20 @@
 <resources>
 
     <!-- General -->
+    <color name="campfire_gray">#707070</color>
+
+    <!-- The launcher icons of the other theme colors, the seeds of their palettes (see MaterialColorSchemes.kt). -->
+    <color name="campfire_red">#D32F2F</color>
     <color name="campfire_orange">#F57C00</color>
+    <color name="campfire_yellow">#FBC02D</color>
+    <color name="campfire_green">#43A047</color>
+    <color name="campfire_teal">#00796B</color>
+    <color name="campfire_blue">#1976D2</color>
+    <color name="campfire_purple">#7B1FA2</color>
+    <color name="campfire_pink">#E91EAF</color>
+
+    <!-- The System theme color's icon, which is the wallpaper's accent from Android 12 on (see values-v31); the
+         option is only offered there, so the gray is never shown. -->
+    <color name="campfire_system">@color/campfire_gray</color>
 
 </resources>

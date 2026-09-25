@@ -57,7 +57,8 @@ permissions:
 
 env:
   XCODE_PROJECT: app/ios/iosApp/iosApp.xcodeproj
-  # No scheme is checked in; xcodebuild creates this one for the target of the same name when it finds none.
+  # No scheme is checked in (the one the IDE makes of the shared run configuration is ignored), so xcodebuild creates
+  # this one for the target of the same name.
   XCODE_SCHEME: iosApp
 
 jobs:

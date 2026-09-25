@@ -47,9 +47,13 @@ Campfire is available for the following platforms:
 
 ### To do
 - Set search field input type
-- Change app icon color
+- FTUX welcome screen?
 - Haptic effects
+- Auto-scroll
 - Bottom sheet colors
+- Genre tag similar to language tags
+- Nashville chord system support
+- Filter / options bottom sheets are not intuitive
 - Once Microsoft Store, App Store and Mac App Store listings are approved, update included URL-s + this Readme
 - Cover art thumbnails: https://musicbrainz.org/doc/Cover_Art_Archive/API
 - Add ability to add links as metadata items
