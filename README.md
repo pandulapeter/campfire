@@ -48,6 +48,7 @@ Campfire is available for the following platforms:
 ### To do
 - Fix virtualization issues on Windows and Mac. Allow the users to pick a location for the library, implement migration from a reasonable default location
 - Implement proper deep linking in sandboxed environments instead of the current client-server trick
+- Could we close the browser window after the Dropbox redirect?
 - Sort and Filter UI should be improved
 - Haptic effects
 - Auto-scroll

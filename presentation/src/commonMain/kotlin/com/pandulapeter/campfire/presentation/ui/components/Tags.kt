@@ -160,11 +160,12 @@ private fun Modifier.horizontalFadingEdges(scrollState: ScrollState) = graphicsL
 internal fun TagFlowRow(
     modifier: Modifier = Modifier,
     maxLines: Int = Int.MAX_VALUE,
+    shouldUseDoublePadding: Boolean = false,
     content: @Composable FlowRowScope.() -> Unit,
 ) = FlowRow(
     modifier = modifier,
-    horizontalArrangement = Arrangement.spacedBy(TAG_GAP),
-    verticalArrangement = Arrangement.spacedBy(TAG_GAP),
+    horizontalArrangement = Arrangement.spacedBy(if (shouldUseDoublePadding) TAG_GAP * 2 else TAG_GAP),
+    verticalArrangement = Arrangement.spacedBy(if (shouldUseDoublePadding) TAG_GAP * 2 else TAG_GAP),
     maxLines = maxLines,
     content = content,
 )

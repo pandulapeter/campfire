@@ -358,7 +358,10 @@ private fun WelcomeDialog(
     BoxWithConstraints(
         modifier = Modifier.fillMaxSize(),
     ) {
-        val isSmallScreen = maxWidth < 600.dp || maxHeight < 600.dp
+        var isSmallScreen by remember { mutableStateOf(maxWidth < 500.dp || maxHeight < 500.dp) }
+        LaunchedEffect(maxWidth, maxHeight) {
+            isSmallScreen = maxWidth < 500.dp || maxHeight < 500.dp
+        }
         if (isSmallScreen) {
             CampfireBottomSheet(
                 title = stringResource(Res.string.welcome_title),
@@ -377,7 +380,7 @@ private fun WelcomeDialog(
             }
         } else {
             AlertDialog(
-                modifier = Modifier.widthIn(max = 360.dp),
+                modifier = Modifier.widthIn(max = 366.dp),
                 onDismissRequest = viewModel::dismissDialog,
                 title = { Text(stringResource(Res.string.welcome_title)) },
                 text = {

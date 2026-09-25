@@ -11,6 +11,7 @@ package com.pandulapeter.campfire.presentation.ui.components
 
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.Crossfade
+import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.expandHorizontally
 import androidx.compose.animation.expandVertically
 import androidx.compose.animation.fadeIn
@@ -21,6 +22,7 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.indication
 import androidx.compose.foundation.interaction.MutableInteractionSource
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
@@ -36,13 +38,13 @@ import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.selection.selectable
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.FilterChipDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.LocalMinimumInteractiveComponentSize
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
-import androidx.compose.material3.minimumInteractiveComponentSize
 import androidx.compose.material3.ripple
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
@@ -182,7 +184,8 @@ internal fun SongFilters(
         modifier = modifier
             .fillMaxWidth()
             .verticalScroll(rememberScrollState())
-            .padding(contentPadding)
+            .padding(contentPadding),
+        verticalArrangement = Arrangement.spacedBy(8.dp),
     ) {
         // A library nobody has tagged has nothing to offer here, and a section title above an empty row would only
         // ask a question the songs cannot answer yet.
@@ -255,7 +258,10 @@ private fun TagFilters(
         onClearClicked = onClear,
     )
     TagFlowRow(
-        modifier = Modifier.padding(horizontal = CONTROLS_PADDING)
+        modifier = Modifier
+            .padding(horizontal = CONTROLS_PADDING)
+            .padding(bottom = 8.dp),
+        shouldUseDoublePadding = true,
     ) {
         visibleTags.forEach { tag ->
             CountedFilterChip(
@@ -316,7 +322,10 @@ private fun LanguageFilters(
         onClearClicked = onClear,
     )
     TagFlowRow(
-        modifier = Modifier.padding(horizontal = CONTROLS_PADDING)
+        modifier = Modifier
+            .padding(horizontal = CONTROLS_PADDING)
+            .padding(bottom = 8.dp),
+        shouldUseDoublePadding = true,
     ) {
         languages.forEach { language ->
             CountedFilterChip(
@@ -357,7 +366,10 @@ private fun MatchModeChoice(
     exit = shrinkVertically() + fadeOut(),
 ) {
     Column {
-        SettingsSectionTitle(text = title)
+        SettingsSectionTitle(
+            text = title,
+            shouldUseSmallPadding = true,
+        )
         SegmentedChoice(
             options = listOf(
                 UserPreferences.MatchMode.ANY to anyText,
@@ -413,6 +425,7 @@ private fun FilterSectionTitle(
             TextButton(
                 modifier = Modifier.height(SECTION_ACTION_HEIGHT),
                 onClick = onClearClicked,
+                colors = ButtonDefaults.textButtonColors(contentColor = MaterialTheme.colorScheme.onSurfaceVariant),
                 contentPadding = PaddingValues(horizontal = BUTTON_INSET),
             ) {
                 Text(text = clearText)
@@ -455,15 +468,16 @@ internal fun CountedFilterChip(
 ) {
     val isEnabled = songCount > 0 || isSelected
     val colors = FilterChipDefaults.filterChipColors()
-    val contentColor = when {
-        !isEnabled -> colors.disabledLabelColor
-        isSelected -> colors.selectedLabelColor
-        else -> colors.labelColor
-    }
+    val contentColor = animateColorAsState(
+        when {
+            !isEnabled -> colors.disabledLabelColor
+            isSelected -> colors.selectedLabelColor
+            else -> colors.labelColor
+        }
+    ).value
     val interactionSource = remember { MutableInteractionSource() }
     Row(
         modifier = modifier
-            .minimumInteractiveComponentSize()
             .clip(FilterChipDefaults.shape)
             .background(if (isSelected) colors.selectedContainerColor else colors.containerColor)
             .border(FilterChipDefaults.filterChipBorder(enabled = isEnabled, selected = isSelected), FilterChipDefaults.shape)
@@ -486,11 +500,13 @@ internal fun CountedFilterChip(
                     modifier = Modifier.padding(end = CHIP_ICON_GAP).size(FilterChipDefaults.IconSize),
                     painter = leadingIcon,
                     contentDescription = null,
-                    tint = when {
-                        !isEnabled -> colors.disabledLeadingIconColor
-                        isChecked -> colors.selectedLeadingIconColor
-                        else -> colors.leadingIconColor
-                    },
+                    tint = animateColorAsState(
+                        when {
+                            !isEnabled -> colors.disabledLeadingIconColor
+                            isChecked -> colors.selectedLeadingIconColor
+                            else -> colors.leadingIconColor
+                        }
+                    ).value,
                 )
             }
         }
@@ -530,8 +546,8 @@ private val CHIP_ICON_GAP = 8.dp
  * and 8dp of padding, less the 6dp the content box grows past the line of text it would otherwise be.
  */
 private val SECTION_ACTION_HEIGHT = 32.dp
-private val SECTION_TITLE_TOP_PADDING = 18.dp
-private val SECTION_TITLE_BOTTOM_PADDING = 2.dp
+private val SECTION_TITLE_TOP_PADDING = 0.dp
+private val SECTION_TITLE_BOTTOM_PADDING = 4.dp
 
 /** The padding a text button keeps inside its own bounds, taken off so that its label lines up with the titles. */
 private val BUTTON_INSET = 12.dp
