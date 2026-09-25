@@ -9,16 +9,17 @@
  */
 package com.pandulapeter.campfire.presentation.ui.screens.settings
 
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.animation.Crossfade
+import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.foundation.ScrollState
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.calculateEndPadding
 import androidx.compose.foundation.layout.calculateStartPadding
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.foundation.selection.selectableGroup
@@ -56,8 +57,8 @@ import com.pandulapeter.campfire.presentation.resources.ic_git_hub
 import com.pandulapeter.campfire.presentation.resources.ic_import
 import com.pandulapeter.campfire.presentation.resources.ic_phone
 import com.pandulapeter.campfire.presentation.resources.ic_privacy_policy
-import com.pandulapeter.campfire.presentation.resources.ic_star
 import com.pandulapeter.campfire.presentation.resources.ic_songs
+import com.pandulapeter.campfire.presentation.resources.ic_star
 import com.pandulapeter.campfire.presentation.resources.settings_about
 import com.pandulapeter.campfire.presentation.resources.settings_accidentals
 import com.pandulapeter.campfire.presentation.resources.settings_accidentals_description
@@ -84,8 +85,8 @@ import com.pandulapeter.campfire.presentation.resources.settings_distribution_pl
 import com.pandulapeter.campfire.presentation.resources.settings_distributions_all
 import com.pandulapeter.campfire.presentation.resources.settings_distributions_all_description
 import com.pandulapeter.campfire.presentation.resources.settings_export_all
-import com.pandulapeter.campfire.presentation.resources.settings_german_notation
 import com.pandulapeter.campfire.presentation.resources.settings_general
+import com.pandulapeter.campfire.presentation.resources.settings_german_notation
 import com.pandulapeter.campfire.presentation.resources.settings_german_notation_description
 import com.pandulapeter.campfire.presentation.resources.settings_git_hub
 import com.pandulapeter.campfire.presentation.resources.settings_git_hub_description
@@ -129,16 +130,17 @@ import com.pandulapeter.campfire.presentation.resources.settings_user_interface_
 import com.pandulapeter.campfire.presentation.resources.settings_user_interface_theme_color
 import com.pandulapeter.campfire.presentation.resources.settings_version
 import com.pandulapeter.campfire.presentation.ui.CampfireViewModel
-import com.pandulapeter.campfire.presentation.ui.navigation.CampfireDestination
 import com.pandulapeter.campfire.presentation.ui.components.ActionListItem
 import com.pandulapeter.campfire.presentation.ui.components.ImportProgress
 import com.pandulapeter.campfire.presentation.ui.components.LinkListItem
 import com.pandulapeter.campfire.presentation.ui.components.RadioListItem
 import com.pandulapeter.campfire.presentation.ui.components.SegmentedChoice
+import com.pandulapeter.campfire.presentation.ui.components.SwitchListItem
 import com.pandulapeter.campfire.presentation.ui.components.ThemeColorChoice
 import com.pandulapeter.campfire.presentation.ui.components.UiModeChoice
-import com.pandulapeter.campfire.presentation.ui.components.SwitchListItem
+import com.pandulapeter.campfire.presentation.ui.components.fadingLeftEdge
 import com.pandulapeter.campfire.presentation.ui.components.rememberRetainedScrollState
+import com.pandulapeter.campfire.presentation.ui.navigation.CampfireDestination
 import com.pandulapeter.campfire.presentation.ui.platform.AppIconSurface
 import com.pandulapeter.campfire.presentation.ui.platform.Distribution
 import com.pandulapeter.campfire.presentation.ui.platform.LibraryLocation
@@ -180,6 +182,7 @@ internal fun SettingsScreen(
     viewModel: CampfireViewModel,
     settledWidth: Dp,
     contentPadding: PaddingValues,
+    isNavigationRailVisible: Boolean,
     urlOpener: (String) -> Unit,
 ) {
     val scrollStates = SettingsTab.entries.map { rememberRetainedScrollState(viewModel.settingsScrollPositions.getValue(it)) }
@@ -253,6 +256,7 @@ internal fun SettingsScreen(
                 isImporting = isImporting,
                 startPadding = startPadding,
                 endPadding = endPadding,
+                isNavigationRailVisible = isNavigationRailVisible,
                 onSelectedTabPressed = scrollTabToTop,
             ) { tab ->
                 SettingsTabPage(
@@ -287,6 +291,7 @@ private fun SettingsTabPager(
     isImporting: Boolean,
     startPadding: Dp,
     endPadding: Dp,
+    isNavigationRailVisible: Boolean,
     onSelectedTabPressed: (SettingsTab) -> Unit,
     page: @Composable (SettingsTab) -> Unit,
 ) {
@@ -320,8 +325,14 @@ private fun SettingsTabPager(
             },
         )
         ImportProgress(isImporting = isImporting)
+        val fadeAlpha = animateFloatAsState(
+            if (isNavigationRailVisible && (pagerState.isScrollInProgress || pagerState.currentPageOffsetFraction != 0f)) 1f else 0f
+        )
         HorizontalPager(
-            modifier = Modifier.weight(1f).fillMaxWidth(),
+            modifier = Modifier
+                .weight(1f)
+                .fillMaxWidth()
+                .fadingLeftEdge(fadeAlpha.value),
             state = pagerState,
             beyondViewportPageCount = SettingsTab.entries.size - 1,
             key = { SettingsTab.entries[it] },

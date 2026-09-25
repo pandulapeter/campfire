@@ -25,28 +25,28 @@ import androidx.compose.animation.core.spring
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.asPaddingValues
 import androidx.compose.foundation.background
 import androidx.compose.foundation.gestures.awaitEachGesture
 import androidx.compose.foundation.gestures.awaitFirstDown
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.ExperimentalLayoutApi
 import androidx.compose.foundation.layout.PaddingValues
-import androidx.compose.foundation.layout.calculateEndPadding
-import androidx.compose.foundation.layout.calculateStartPadding
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.WindowInsetsSides
+import androidx.compose.foundation.layout.asPaddingValues
+import androidx.compose.foundation.layout.calculateEndPadding
+import androidx.compose.foundation.layout.calculateStartPadding
 import androidx.compose.foundation.layout.consumeWindowInsets
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.layout.ime
-import androidx.compose.foundation.layout.systemBars
 import androidx.compose.foundation.layout.displayCutout
-import androidx.compose.foundation.layout.union
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.ime
 import androidx.compose.foundation.layout.only
-import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.systemBars
+import androidx.compose.foundation.layout.union
+import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
@@ -78,8 +78,8 @@ import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.setValue
 import androidx.compose.runtime.snapshotFlow
 import androidx.compose.runtime.withFrameNanos
-import androidx.compose.ui.Modifier
 import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.input.pointer.PointerEventPass
 import androidx.compose.ui.input.pointer.pointerInput
@@ -88,39 +88,37 @@ import androidx.compose.ui.layout.SubcomposeLayout
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.text.style.TextOverflow
-import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.Density
 import androidx.compose.ui.unit.Dp
-import androidx.compose.ui.util.lerp
 import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.LayoutDirection
+import androidx.compose.ui.unit.dp
+import androidx.compose.ui.util.lerp
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.compose.LifecycleEventEffect
+import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation3.runtime.entryProvider
 import androidx.navigation3.scene.Scene
 import androidx.navigation3.ui.LocalNavAnimatedContentScope
 import androidx.navigation3.ui.NavDisplay
-import androidx.lifecycle.Lifecycle
-import androidx.lifecycle.compose.LifecycleEventEffect
-import androidx.lifecycle.compose.LocalLifecycleOwner
 import com.pandulapeter.campfire.data.model.domain.ImportedFile
 import com.pandulapeter.campfire.data.model.domain.SyncState
+import com.pandulapeter.campfire.presentation.localization.pluralStringResource
+import com.pandulapeter.campfire.presentation.localization.stringResource
 import com.pandulapeter.campfire.presentation.resources.Res
 import com.pandulapeter.campfire.presentation.resources.error_link_not_opened
 import com.pandulapeter.campfire.presentation.resources.error_operation_failed
 import com.pandulapeter.campfire.presentation.resources.export_failed
 import com.pandulapeter.campfire.presentation.resources.export_skipped_files
 import com.pandulapeter.campfire.presentation.resources.export_too_large_to_import
-import com.pandulapeter.campfire.presentation.resources.import_failed
-import com.pandulapeter.campfire.presentation.resources.import_oversized
-import com.pandulapeter.campfire.presentation.resources.import_result
-import com.pandulapeter.campfire.presentation.resources.song_editor_draft_lost
-import com.pandulapeter.campfire.presentation.resources.song_editor_draft_restored
-import com.pandulapeter.campfire.presentation.resources.song_editor_file_gone
-import com.pandulapeter.campfire.presentation.resources.song_editor_save_failed
 import com.pandulapeter.campfire.presentation.resources.ic_campfire
 import com.pandulapeter.campfire.presentation.resources.ic_setlists
 import com.pandulapeter.campfire.presentation.resources.ic_settings
 import com.pandulapeter.campfire.presentation.resources.ic_songs
+import com.pandulapeter.campfire.presentation.resources.import_failed
+import com.pandulapeter.campfire.presentation.resources.import_oversized
+import com.pandulapeter.campfire.presentation.resources.import_result
 import com.pandulapeter.campfire.presentation.resources.setlists
 import com.pandulapeter.campfire.presentation.resources.settings
 import com.pandulapeter.campfire.presentation.resources.settings_sync_cancel
@@ -128,6 +126,10 @@ import com.pandulapeter.campfire.presentation.resources.settings_sync_notificati
 import com.pandulapeter.campfire.presentation.resources.settings_sync_notification_title
 import com.pandulapeter.campfire.presentation.resources.settings_sync_preparing
 import com.pandulapeter.campfire.presentation.resources.settings_sync_progress
+import com.pandulapeter.campfire.presentation.resources.song_editor_draft_lost
+import com.pandulapeter.campfire.presentation.resources.song_editor_draft_restored
+import com.pandulapeter.campfire.presentation.resources.song_editor_file_gone
+import com.pandulapeter.campfire.presentation.resources.song_editor_save_failed
 import com.pandulapeter.campfire.presentation.resources.songs
 import com.pandulapeter.campfire.presentation.resources.songs_delete_song_partly
 import com.pandulapeter.campfire.presentation.resources.songs_update_file_name_partly
@@ -135,32 +137,30 @@ import com.pandulapeter.campfire.presentation.ui.components.WindowSize
 import com.pandulapeter.campfire.presentation.ui.components.hasRoomForSidePanel
 import com.pandulapeter.campfire.presentation.ui.components.pluralTextResource
 import com.pandulapeter.campfire.presentation.ui.components.textResource
+import com.pandulapeter.campfire.presentation.ui.dialogs.CampfireDialogs
+import com.pandulapeter.campfire.presentation.ui.navigation.CampfireDestination
 import com.pandulapeter.campfire.presentation.ui.platform.LocalSyncNotifier
-import com.pandulapeter.campfire.presentation.ui.platform.withSyncCounts
 import com.pandulapeter.campfire.presentation.ui.platform.SyncNotification
 import com.pandulapeter.campfire.presentation.ui.platform.areDrawablesLoaded
 import com.pandulapeter.campfire.presentation.ui.platform.isLaunchScreenWholeStartup
 import com.pandulapeter.campfire.presentation.ui.platform.libraryLocation
-import com.pandulapeter.campfire.presentation.ui.dialogs.CampfireDialogs
-import com.pandulapeter.campfire.presentation.ui.navigation.CampfireDestination
+import com.pandulapeter.campfire.presentation.ui.platform.withSyncCounts
 import com.pandulapeter.campfire.presentation.ui.screens.setlists.SetlistsScreen
 import com.pandulapeter.campfire.presentation.ui.screens.settings.SettingsScreen
 import com.pandulapeter.campfire.presentation.ui.screens.songDetails.SongDetailsScreen
 import com.pandulapeter.campfire.presentation.ui.screens.songEditor.SongEditorScreen
 import com.pandulapeter.campfire.presentation.ui.screens.songs.SongsScreen
 import com.pandulapeter.campfire.presentation.ui.theme.ApplyLanguagePreference
-import com.pandulapeter.campfire.presentation.ui.theme.ProvideInterfaceScale
 import com.pandulapeter.campfire.presentation.ui.theme.CampfireTheme
-import org.jetbrains.compose.resources.DrawableResource
-import kotlin.math.roundToInt
-import org.jetbrains.compose.resources.StringResource
-import org.jetbrains.compose.resources.painterResource
-import com.pandulapeter.campfire.presentation.localization.pluralStringResource
-import com.pandulapeter.campfire.presentation.localization.stringResource
+import com.pandulapeter.campfire.presentation.ui.theme.ProvideInterfaceScale
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.emptyFlow
 import kotlinx.coroutines.flow.first
+import org.jetbrains.compose.resources.DrawableResource
+import org.jetbrains.compose.resources.StringResource
+import org.jetbrains.compose.resources.painterResource
 import org.koin.compose.viewmodel.koinViewModel
+import kotlin.math.roundToInt
 
 /**
  * The root of the shared Compose UI: theme, adaptive navigation chrome, the Navigation 3 display and the dialogs.
@@ -538,7 +538,12 @@ private fun CampfireScreens(
             // address, Settings after a consent page) is put on the stack behind it, and a screen still sliding in as
             // the launch screen fades would be the app arriving twice.
             transitionSpec = { if (viewModel.hasShownApp) navigationTransition(motionScheme) else ContentTransform(EnterTransition.None, ExitTransition.None) },
-            popTransitionSpec = { if (viewModel.hasShownApp) navigationTransition(motionScheme) else ContentTransform(EnterTransition.None, ExitTransition.None) },
+            popTransitionSpec = {
+                if (viewModel.hasShownApp) navigationTransition(motionScheme) else ContentTransform(
+                    EnterTransition.None,
+                    ExitTransition.None
+                )
+            },
             predictivePopTransitionSpec = { predictivePopTransition() },
             // Stable string content keys, so that the transitions can recognize the top level destinations.
             entryProvider = entryProvider {
@@ -584,6 +589,7 @@ private fun CampfireScreens(
                             viewModel = viewModel,
                             settledWidth = settledListWidth,
                             contentPadding = shellContentPadding,
+                            isNavigationRailVisible = windowSize.usesNavigationRail,
                             urlOpener = urlOpener,
                         )
                     }
@@ -670,6 +676,7 @@ private fun Messages(
             current.fileNames.size.toString(),
             current.fileNames.take(MAXIMUM_NAMED_FILES).joinToString(),
         )
+
         CampfireViewModel.Message.SaveFailed -> stringResource(Res.string.song_editor_save_failed)
         CampfireViewModel.Message.EditorDraftLost -> stringResource(Res.string.song_editor_draft_lost)
         CampfireViewModel.Message.EditorDraftRestored -> stringResource(Res.string.song_editor_draft_restored)
@@ -763,7 +770,13 @@ private fun NavigationChromeScaffold(
                 if (outgoingPlaceable != null) {
                     placeChrome(outgoingPlaceable, outgoingKind, otherKind = kind, visibility = 1f - progress, windowHeight = constraints.maxHeight)
                 }
-                placeChrome(chromePlaceable, kind, otherKind = outgoingKind, visibility = if (outgoingKind == null) 1f else progress, windowHeight = constraints.maxHeight)
+                placeChrome(
+                    chromePlaceable,
+                    kind,
+                    otherKind = outgoingKind,
+                    visibility = if (outgoingKind == null) 1f else progress,
+                    windowHeight = constraints.maxHeight
+                )
             }
             contentPlaceable.placeRelative(x = 0, y = 0)
         }

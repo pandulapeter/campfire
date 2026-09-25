@@ -22,6 +22,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.drawWithContent
+import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.BlendMode
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
@@ -77,7 +78,7 @@ internal fun rememberListTopFade(listState: LazyGridState): ListTopFade {
             ListTopFade(
                 listState = listState,
                 coveredHeightPx = LIST_APP_BAR_HEIGHT.toPx(),
-                fadeHeightPx = TOP_EDGE_FADE_HEIGHT.toPx(),
+                fadeHeightPx = EDGE_FADE_SIZE.toPx(),
             )
         }
     }
@@ -141,7 +142,7 @@ internal fun Modifier.fadingTopEdge(scrolled: () -> Int) = this
     }
     .drawWithContent {
         drawContent()
-        val height = TOP_EDGE_FADE_HEIGHT.toPx()
+        val height = EDGE_FADE_SIZE.toPx()
         val strength = (scrolled() / height).coerceIn(0f, 1f)
         if (strength > 0f) {
             drawRect(
@@ -163,5 +164,30 @@ internal fun Modifier.fadingTopEdge(listState: LazyListState) = fadingTopEdge {
     if (listState.firstVisibleItemIndex > 0) Int.MAX_VALUE else listState.firstVisibleItemScrollOffset
 }
 
+/**
+ * Fades what scrolls in this container out towards its left edge during horizontal slide animation.
+ */
+internal fun Modifier.fadingLeftEdge(
+    alpha: Float,
+) = this
+    .graphicsLayer {
+        compositingStrategy = if (alpha > 0) CompositingStrategy.Offscreen else CompositingStrategy.Auto
+    }
+    .drawWithContent {
+        drawContent()
+        val width = EDGE_FADE_SIZE.toPx()
+        if (alpha > 0) {
+            drawRect(
+                brush = Brush.horizontalGradient(
+                    colors = listOf(Color.Black.copy(alpha = 1f - alpha), Color.Black),
+                    startX = 0f,
+                    endX = width,
+                ),
+                size = Size(width, size.height),
+                blendMode = BlendMode.DstIn,
+            )
+        }
+    }
+
 /** How far content fades in over below whatever it scrolls under, and how far it is scrolled before it fades fully. */
-private val TOP_EDGE_FADE_HEIGHT = 24.dp
+private val EDGE_FADE_SIZE = 24.dp
