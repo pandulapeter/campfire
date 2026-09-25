@@ -253,6 +253,8 @@ private fun readFileBytes(handle: JsAny): Promise<Int8Array?> = js(
  *
  * Where there is no `createWritable()` (Safari before 26), the write is handed to `opfs-writer.js`, a dedicated worker,
  * since `createSyncAccessHandle()` exists nowhere else; it is given the directory by its path and the content as bytes.
+ * Its address carries the version of the page's build (see `index.html` in `:app:web`), because a worker the browser
+ * still had from another release would be handed requests in a shape it may not understand.
  */
 private fun writeFile(parent: JsAny, path: String, name: String, data: JsAny): Promise<JsAny?> = js(
     """(async function () {
@@ -266,7 +268,7 @@ private fun writeFile(parent: JsAny, path: String, name: String, data: JsAny): P
                 try { await writable.write(data); await writable.close(); }
                 catch (error) { try { await writable.abort(); } catch (ignored) { } throw error; }
             } else {
-                var worker = new Worker('opfs-writer.js');
+                var worker = new Worker(window.campfireVersioned('opfs-writer.js'));
                 await new Promise(function (resolve, reject) {
                     worker.onmessage = function (event) { worker.terminate(); event.data.error ? reject(Object.assign(new Error(event.data.message), { name: event.data.error })) : resolve(); };
                     worker.onerror = function (event) { worker.terminate(); reject(event.error || new Error(event.message)); };

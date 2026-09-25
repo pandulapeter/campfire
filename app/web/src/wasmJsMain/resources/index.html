@@ -64,15 +64,63 @@
             }
         })();
     </script>
-    <!-- The fonts the interface (see InterfaceTypography.wasmJs.kt) and the tabs (see MonospaceFontFamily.wasmJs.kt) are
-         set in, fetched alongside the binaries rather than after them, so they are in by the time the app asks for them.
+    <!-- Every file of a distribution is asked for with its build's version in the query string, this page aside, which
+         is the one address that has to stay put. The host lets a browser keep any file for ten minutes by its address
+         and a deployment replaces the files one address at a time, so without it a page could start with a campfire.js
+         whose binaries were already deleted, or a binary with the resources of another release. With it every release
+         is a set of addresses of its own, which only the page that belongs to it knows, while a release is still
+         cached as long as it ever was. The version is written by the build together with the rest of the manifest (see
+         build.gradle.kts): a hash of the files, so a build of the same sources asks for the same addresses.
+
+         Everything the app fetches goes through fetch(), which is wrapped here for good, before campfire.js is loaded;
+         campfire.js itself and the storage worker are asked for by name through campfireVersioned. Only addresses inside
+         this page's folder are touched, so a request to the sync service is not. On the development server there is no
+         manifest and nothing is changed.
+
+         The fonts the interface (see InterfaceTypography.wasmJs.kt) and the tabs (see MonospaceFontFamily.wasmJs.kt) are
+         set in are preloaded from here as well, since the address a preload answers has to be the versioned one: they
+         are fetched alongside the binaries rather than after them, so they are in by the time the app asks for them.
          "fetch" and "crossorigin" are what make the Compose resource reader's own fetch() the request this answers;
          as="font" would be downloaded twice. -->
-    <link rel="preload" as="fetch" crossorigin href="composeResources/com.pandulapeter.campfire.presentation.resources/font/inter_regular.ttf">
-    <link rel="preload" as="fetch" crossorigin href="composeResources/com.pandulapeter.campfire.presentation.resources/font/inter_medium.ttf">
-    <link rel="preload" as="fetch" crossorigin href="composeResources/com.pandulapeter.campfire.presentation.resources/font/inter_bold.ttf">
-    <link rel="preload" as="fetch" crossorigin href="composeResources/com.pandulapeter.campfire.presentation.resources/font/jetbrains_mono_regular.ttf">
-    <link rel="preload" as="fetch" crossorigin href="composeResources/com.pandulapeter.campfire.presentation.resources/font/jetbrains_mono_bold.ttf">
+    <script type="application/javascript">
+        (function () {
+            var build = /*{{BUILD}}*/null;
+            var folder = new URL('.', document.baseURI).href;
+
+            function versioned(url) {
+                var resolved = new URL(url, document.baseURI);
+                if (!build || resolved.href.indexOf(folder) !== 0) {
+                    return url;
+                }
+                resolved.searchParams.set('v', build.version);
+                return resolved.href;
+            }
+
+            window.campfireBuild = build;
+            window.campfireVersioned = versioned;
+            if (build) {
+                var nativeFetch = window.fetch;
+                window.fetch = function (input, init) {
+                    var isAddress = typeof input === 'string' || input instanceof URL;
+                    return nativeFetch.call(window, isAddress ? versioned(String(input)) : input, init);
+                };
+            }
+            [
+                'inter_regular',
+                'inter_medium',
+                'inter_bold',
+                'jetbrains_mono_regular',
+                'jetbrains_mono_bold'
+            ].forEach(function (font) {
+                var link = document.createElement('link');
+                link.rel = 'preload';
+                link.as = 'fetch';
+                link.crossOrigin = 'anonymous';
+                link.href = versioned('composeResources/com.pandulapeter.campfire.presentation.resources/font/' + font + '.ttf');
+                document.head.appendChild(link);
+            });
+        })();
+    </script>
     <style>
         /* The palette is the one CampfireColorSchemes generates, so the splash screen and the first
            composed frame paint the same background and the handover is invisible. */
@@ -208,14 +256,15 @@
     (function () {
         'use strict';
 
-        // Written by the build (see build.gradle.kts): how many .wasm binaries this distribution has
-        // and what they weigh together, uncompressed. They are the only part of a cold start worth
-        // measuring - about 96% of it - and the only part that arrives through fetch(), which is what
-        // can be watched from here; campfire.js is loaded by a <script> tag, which reports nothing.
+        // Written by the build (see build.gradle.kts and the head of this page): how many .wasm binaries
+        // this distribution has and what they weigh together, uncompressed. They are the only part of a
+        // cold start worth measuring - about 96% of it - and the only part that arrives through fetch(),
+        // which is what can be watched from here; campfire.js is loaded by a <script> tag, which reports
+        // nothing.
         //
         // It stays null on the development server, where there is no distribution to describe, and the
         // bar falls back to the sizes the server advertises.
-        var BUILD = /*{{BUILD}}*/null;
+        var BUILD = window.campfireBuild;
 
         var splash = document.getElementById('splash');
         var track = document.getElementById('splash-track');
@@ -386,10 +435,11 @@
 
         window.addEventListener('error', onError);
         window.addEventListener('unhandledrejection', onError);
-        var nativeFetch = window.fetch;
+        // The versioning fetch() of the head of the page, which this one is put over and which stays.
+        var versionedFetch = window.fetch;
         window.fetch = function (input, init) {
             var url = typeof input === 'string' ? input : (input && input.url) || '';
-            var response = nativeFetch.apply(this, arguments);
+            var response = versionedFetch.apply(this, arguments);
             if (!/\.wasm([?#]|$)/.test(url)) {
                 return response;
             }
@@ -444,7 +494,7 @@
          * screen is already painted by then, so the fade reveals the app rather than an empty page.
          */
         window.campfireReady = function () {
-            window.fetch = nativeFetch;
+            window.fetch = versionedFetch;
             // The app's own errors are the app's business from here on, not the loading screen's. An error
             // that was taken for a failed start is taken back too, since the app did start after all.
             window.removeEventListener('error', onError);
@@ -470,7 +520,7 @@
             retry.hidden = true;
             track.hidden = false;
             var script = document.createElement('script');
-            script.src = 'campfire.js';
+            script.src = window.campfireVersioned('campfire.js');
             // A script that fails to download reports it to its own tag only, never to the window.
             script.onerror = showFailure;
             document.body.appendChild(script);

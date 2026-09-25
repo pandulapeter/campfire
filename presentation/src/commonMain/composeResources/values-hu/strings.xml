@@ -380,7 +380,7 @@
     <string name="settings_sync_redirect_page_message">Bezárhatod ezt a lapot, és visszatérhetsz az alkalmazásba.</string>
 
     <!-- Welcome sheet, shown once on the first run -->
-    <string name="welcome_title">Üdv a Campfire-ben</string>
+    <string name="welcome_title">Üdv a Campfire-ben!</string>
     <string name="welcome_message">Kezdésnek válassz egy neked tetsző megjelenést, később bármikor módosíthatod.</string>
     <string name="welcome_settings_hint">Minden mást a Beállításokban találsz.</string>
     <string name="welcome_settings_hint_sync">Szeretnéd ugyanazokat a dalokat minden eszközödön? Csatlakoztasd a Dropboxot a Beállításokban, ahol minden mást is megtalálsz.</string>

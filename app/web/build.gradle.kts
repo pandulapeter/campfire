@@ -13,6 +13,7 @@ import org.jetbrains.kotlin.gradle.targets.js.webpack.KotlinWebpack
 import java.io.File
 import java.io.IOException
 import java.io.OutputStream
+import java.security.MessageDigest
 import java.util.zip.Deflater
 import java.util.zip.GZIPOutputStream
 
@@ -68,9 +69,13 @@ val shouldPrecompress = project.property("campfire.web.precompress").toString().
 
 /**
  * Tells index.html what its progress bar is about to download - it can only measure the binaries
- * against a total it knows before the first byte arrives - and then, with `campfire.web.precompress`
- * on, writes a precompressed copy of everything worth compressing next to it, for hosts that serve
- * those.
+ * against a total it knows before the first byte arrives - and which version the distribution is,
+ * which the page asks for every other file with, and then, with `campfire.web.precompress` on, writes
+ * a precompressed copy of everything worth compressing next to it, for hosts that serve those.
+ *
+ * The version is a hash of every file but the page, names included, rather than the version name: a
+ * distribution built again from other sources under the same name must not be taken for the one a
+ * browser still holds, and one built again from the same sources can go on being served from it.
  *
  * The page is written from its source rather than edited in place, so running this over the same
  * distribution twice produces the same distribution.
@@ -87,16 +92,25 @@ val finishWebDistribution = tasks.register("finishWebDistribution") {
         val directory = root.get().asFile
         val page = "index.html"
 
-        val binaries = directory.walkTopDown().filter { it.isFile && it.name.endsWith(".wasm") }.toList()
-        val manifest = "{\"binaryCount\":${binaries.size},\"binaryBytes\":${binaries.sumOf { it.length() }}}"
-        val template = templates.file(page).asFile.readText()
-        check(template.contains(placeholder)) { "$page has no $placeholder for the build manifest" }
-        File(directory, page).writeText(template.replace(placeholder, manifest))
-
         val deployed = directory.walkTopDown()
             .filter { it.isFile && transport.none(it.name::endsWith) }
             .toList()
-        logger.lifecycle("Web distribution: ${deployed.size} files, ${deployed.sumOf { it.length() } / 1024} KiB")
+        val digest = MessageDigest.getInstance("SHA-256")
+        deployed.map { it.relativeTo(directory).invariantSeparatorsPath to it }
+            .filter { (path, _) -> path != page }
+            .sortedBy { (path, _) -> path }
+            .forEach { (path, file) ->
+                digest.update("$path\u0000".toByteArray())
+                digest.update(file.readBytes())
+            }
+        val version = digest.digest().take(8).joinToString("") { "%02x".format(it) }
+
+        val binaries = deployed.filter { it.name.endsWith(".wasm") }
+        val manifest = "{\"binaryCount\":${binaries.size},\"binaryBytes\":${binaries.sumOf { it.length() }},\"version\":\"$version\"}"
+        val template = templates.file(page).asFile.readText()
+        check(template.contains(placeholder)) { "$page has no $placeholder for the build manifest" }
+        File(directory, page).writeText(template.replace(placeholder, manifest))
+        logger.lifecycle("Web distribution $version: ${deployed.size} files, ${deployed.sumOf { it.length() } / 1024} KiB")
 
         if (precompress) {
             var isBrotliMissing = false
