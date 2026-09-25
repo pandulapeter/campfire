@@ -46,10 +46,8 @@ Campfire is available for the following platforms:
 - [Sync](documentation/sync.md) - what it sees, how a run decides, and why it needs no backend.
 
 ### To do
-- Fix virtualization issues on Windows and Mac. Allow the users to pick a location for the library, implement migration from a reasonable default location
-- Implement proper deep linking in sandboxed environments instead of the current client-server trick
-- Could we close the browser window after the Dropbox redirect?
-- Sort and Filter UI should be improved
+- Can we close the browser window after the Dropbox redirect?
+- Sort and Filter UI should be improved (better animations)
 - Haptic effects
 - Auto-scroll
 - Optional close confirmation dialog on supported platforms
