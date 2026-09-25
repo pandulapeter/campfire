@@ -50,6 +50,7 @@ import androidx.compose.foundation.text.input.TextFieldLineLimits
 import androidx.compose.foundation.text.input.clearText
 import androidx.compose.foundation.text.input.placeCursorAtEnd
 import androidx.compose.foundation.text.input.selectAll
+import androidx.compose.material3.DividerDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.IconButtonDefaults
@@ -844,6 +845,14 @@ private val CLOSED_SEARCH_ACTIONS_DIVIDER_HEIGHT = 24.dp
 
 /** The padding `TopAppBar` keeps at either end of its row, which this bar keeps so its buttons sit where a bar's would. */
 private val APP_BAR_HORIZONTAL_PADDING = 4.dp
+
+/**
+ * How far in from the end edge of a list the middle of the closed bar's [ClosedSearchActionsDivider] stands, past the
+ * list's own end inset: the bar's end padding, the pill's, the one 48dp button the list's new item menu is and the gap
+ * before the line. The [FastScroller] centers its bubble on it, so that the two read as one column down the list.
+ */
+internal val CLOSED_SEARCH_ACTIONS_DIVIDER_END_INSET =
+    APP_BAR_HORIZONTAL_PADDING + ACTIONS_PILL_PADDING + 48.dp + CLOSED_SEARCH_ACTIONS_DIVIDER_GAP + DividerDefaults.Thickness / 2
 
 private val FIELD_HEIGHT = 40.dp
 private val CLEAR_BUTTON_SIZE = 32.dp

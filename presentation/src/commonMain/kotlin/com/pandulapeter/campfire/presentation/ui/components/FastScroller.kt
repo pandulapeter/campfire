@@ -70,10 +70,11 @@ import kotlin.math.roundToInt
  * the end edge, and while it is dragged a bubble next to it shows the label of the section that is currently at the
  * top of the list. The scroller stays visible for as long as the list is scrollable.
  *
- * Its [FAST_SCROLLER_WIDTH] wide touch column overlays the grid's end padding, so section headers can continue
- * behind it while song cards and their controls stay clear. Pressing anywhere in the column moves the thumb under
- * the finger, and a track fades in behind the thumb while it is pointed at or dragged. Only the bubble extends
- * beyond the column, and nothing about it can be pressed.
+ * Its touch column overlays the grid's end padding, so section headers can continue behind it while song cards and
+ * their controls stay clear, and it reaches on over the cards' own outer margin up to their edge: nothing in that
+ * margin can be pressed, so the scroller takes every press that misses the cards. Pressing anywhere in the column
+ * moves the thumb under the finger, and a track fades in behind the thumb while it is pointed at or dragged. Only
+ * the bubble extends beyond the column, and nothing about it can be pressed.
  *
  * @param labelForItem Returns the label of the section the item at the given index belongs to, or null if none. A
  *   list whose sections have no single character to go by (the setlists, named by whatever somebody called them)
@@ -125,7 +126,8 @@ internal fun FastScroller(
     Box(
         modifier = modifier
             .fillMaxHeight()
-            .width(FAST_SCROLLER_WIDTH)
+            // Only the touch target is widened: everything drawn is placed from the end edge, where it was.
+            .width(FAST_SCROLLER_WIDTH + SONG_CARD_OUTER_PADDING)
             .padding(vertical = TRACK_VERTICAL_PADDING)
             .onSizeChanged { state.trackHeight = it.height }
     ) {
@@ -154,8 +156,9 @@ internal fun FastScroller(
                     )
                 }
         )
-        // The label is centered on the thumb, at the same height as the finger on it, clamped into the track near its end.
-        // It is wider than the touch column, so measure it without the column's width.
+        // The label is level with the thumb, at the same height as the finger on it, clamped into the track near its end,
+        // and centered under the divider of the app bar's buttons. It is wider than the touch column, so measure it
+        // without the column's width.
         AnimatedVisibility(
             visible = state.isDragging && label != null,
             modifier = Modifier
@@ -163,7 +166,7 @@ internal fun FastScroller(
                 .offset {
                     val bubbleHeight = BUBBLE_SIZE.roundToPx().toFloat()
                     IntOffset(
-                        x = -BUBBLE_END_MARGIN.roundToPx(),
+                        x = (BUBBLE_SIZE / 2 - CLOSED_SEARCH_ACTIONS_DIVIDER_END_INSET).roundToPx(),
                         y = bubbleTop(state.thumbCenter - bubbleHeight / 2, state.trackHeight, bubbleHeight).roundToInt(),
                     )
                 }
@@ -340,7 +343,8 @@ private class ScrollMetrics(
 )
 
 /**
- * The width of the column a [FastScroller] takes up over its list's end padding, all of which is its touch target.
+ * The width of the column a [FastScroller] takes up over its list's end padding, all of which is its touch target (and
+ * the cards' outer margin next to it as well).
  * It is the smallest width a touch target is still reliably hit at rather than the 48dp of a button, because the column is taken
  * out of the width of the rows for as long as the list is on the screen, scrollable or not - a column that came and
  * went with the scroller would reflow every row whenever the list grew past the height of the screen or shrank below
@@ -354,7 +358,6 @@ private val THUMB_WIDTH = 6.dp
 private val THUMB_END_PADDING = 4.dp
 private val MIN_THUMB_HEIGHT = 48.dp
 private val BUBBLE_SIZE = 48.dp
-private val BUBBLE_END_MARGIN = 32.dp
 private val BUBBLE_ELEVATION = 2.dp
 private val BUBBLE_TRANSFORM_ORIGIN = TransformOrigin(pivotFractionX = 1f, pivotFractionY = 0.5f)
 private const val IDLE_THUMB_ALPHA = 0.5f

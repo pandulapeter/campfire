@@ -46,6 +46,10 @@ Campfire is available for the following platforms:
 - [Sync](documentation/sync.md) - what it sees, how a run decides, and why it needs no backend.
 
 ### To do
+- Set search field input type
+- Change app icon color
+- Haptic effects
+- Bottom sheet colors
 - Once Microsoft Store, App Store and Mac App Store listings are approved, update included URL-s + this Readme
 - Cover art thumbnails: https://musicbrainz.org/doc/Cover_Art_Archive/API
 - Add ability to add links as metadata items

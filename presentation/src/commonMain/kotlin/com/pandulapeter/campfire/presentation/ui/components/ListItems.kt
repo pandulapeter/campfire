@@ -1040,9 +1040,10 @@ private val EMPTY_STATE_ACTION_WIDTH = 280.dp
 private val LIST_ITEM_KEYLINE = 16.dp
 
 /**
- * How far a card's trailing controls move toward its edge from the inset `ListItem` gives them.
+ * How far a card's trailing controls move toward its edge from the inset `ListItem` gives them: far enough that the
+ * icon of the last one stands as far in from the card's end edge as the text does from its start.
  */
-private val LIST_ITEM_TRAILING_KEYLINE_ADJUSTMENT = 8.dp
+private val LIST_ITEM_TRAILING_KEYLINE_ADJUSTMENT = 12.dp
 
 /**
  * The width of a [DragHandle]'s touch target. It is narrower than the `IconButton` after it, and can be, since
@@ -1071,7 +1072,8 @@ private val SONG_CARD_ONE_LINE_MIN_HEIGHT = 56.dp
 private val SONG_CARD_TWO_LINE_MIN_HEIGHT = 72.dp
 private val SONG_CARD_VERTICAL_CONTENT_PADDING = 10.dp
 
-private val SONG_CARD_OUTER_PADDING = 8.dp
+/** The room between a card and the edge of the list, or the [FastScroller]'s column, on its outer side. */
+internal val SONG_CARD_OUTER_PADDING = 8.dp
 private val SONG_CARD_INNER_PADDING = 4.dp
 private val SONG_CARD_VERTICAL_PADDING = 4.dp
 
@@ -1092,8 +1094,8 @@ private val SECTION_HEADER_PILL_START_PADDING = 16.dp
 
 /**
  * What the pill leaves after an action at its end. The pill ends at the cards' edge and a card's overflow button stops
- * [LIST_ITEM_TRAILING_KEYLINE_ADJUSTMENT] short of it, so the two menus stand on one keyline.
+ * where [LIST_ITEM_TRAILING_KEYLINE_ADJUSTMENT] moves it from [LIST_ITEM_KEYLINE], so the two menus stand on one keyline.
  */
-private val SECTION_HEADER_PILL_ACTION_END_PADDING = LIST_ITEM_TRAILING_KEYLINE_ADJUSTMENT
+private val SECTION_HEADER_PILL_ACTION_END_PADDING = LIST_ITEM_KEYLINE - LIST_ITEM_TRAILING_KEYLINE_ADJUSTMENT
 
 private const val SECTION_HEADER_CONTENT_PARALLAX_FRACTION = 0.5f
