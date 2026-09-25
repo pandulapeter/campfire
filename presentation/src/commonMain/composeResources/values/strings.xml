@@ -379,6 +379,14 @@
     <string name="settings_sync_redirect_page_title">Campfire is connected</string>
     <string name="settings_sync_redirect_page_message">You can close this tab and go back to the app.</string>
 
+    <!-- Welcome sheet, shown once on the first run -->
+    <string name="welcome_title">Welcome to Campfire</string>
+    <string name="welcome_message">Pick a look you like to begin with, you can always change it later.</string>
+    <string name="welcome_settings_hint">You will find everything else in Settings.</string>
+    <string name="welcome_settings_hint_sync">Want the same songs on every device? Connect Dropbox in Settings, where you will find everything else too.</string>
+    <string name="welcome_open_settings">Open Settings</string>
+    <string name="welcome_get_started">Get started</string>
+
     <!-- In-app updates, which only the Play build ever has anything to show -->
     <string name="app_update_available">Update available</string>
     <string name="app_update_available_hint">A newer version of Campfire is ready to download. It arrives in the background, so you can carry on in the meantime.</string>

@@ -32,7 +32,8 @@ account is used.
 ## 2. Every build starts on an empty library
 
 Each one: a clean install or data folder, launched once. **Expected:** the two demo songs and the demo setlist are
-in its library within a few seconds, the process is still running after 20 seconds, and its log names no exception.
+in its library within a few seconds, the welcome sheet is over it where the screen can be looked at, the process is
+still running after 20 seconds, and its log names no exception.
 
 - [ ] **RC-03** Desktop, the ProGuard'd release image, with `user.home` pointing at an empty folder.
 - [ ] **RC-04** Android, the release APK on the emulator after `adb uninstall`: no `FATAL` in `adb logcat`. The
@@ -57,7 +58,7 @@ Files are handed to the running app as arguments (`…/Campfire <file>`), which 
 - [ ] **RC-08** Import the same three again. **Expected:** nothing new in the library — identical files are
   disregarded, never numbered or overwritten.
 - [ ] **RC-09** Quit, and start again. **Expected:** the library is exactly as it was, the preferences are kept, and
-  the demo songs are not planted a second time.
+  neither the demo songs nor the welcome sheet come a second time.
 
 ## 4. Sync (two desktop installations, one Dropbox folder)
 

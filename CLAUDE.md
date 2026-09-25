@@ -162,7 +162,9 @@ uninstall and nothing else does.
   the inside, and is why a library somebody has been using is never touched. That first run writes the preferences
   whether it planted anything or not, so an installation that started with an import of its own and was emptied
   later is not taken for a fresh one. Settings offers to add them for as long as the library is missing any of them, so
-  a deleted one comes back by being asked for rather than on its own. Each file is named exactly as the library would
+  a deleted one comes back by being asked for rather than on its own. That first run is also the only one that opens
+  with the **welcome sheet** over the library: a line about the app, the theme and the color, and the way to Settings,
+  naming Dropbox sync where the build has it — short on purpose, since the demo songs behind it say the rest. Each file is named exactly as the library would
   name the song inside it, which is what lets one list both read the resources and answer whether they are already
   there.
 - **The app icon follows the theme color** wherever the platform lets an app change it: the launcher entry on Android

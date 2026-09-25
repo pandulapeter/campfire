@@ -377,6 +377,13 @@ class CampfireViewModel(
      * started again gets a new view model, which is the start the launch screen is for.
      */
     internal var hasShownApp = false
+        set(value) {
+            field = value
+            if (value) isAppOnScreen.value = true
+        }
+
+    /** [hasShownApp] as something to wait for, which the welcome sheet does, see [showWelcomeOnFirstRun]. */
+    private val isAppOnScreen = MutableStateFlow(false)
 
     /**
      * Read straight from its own repository rather than out of [screenData], which only has anything once every
@@ -838,6 +845,7 @@ class CampfireViewModel(
     init {
         viewModelScope.launch { loadScreenData(false) }
         viewModelScope.launch { plantDemoLibraryOnFirstRun() }
+        viewModelScope.launch { showWelcomeOnFirstRun() }
         // Picks a connected account back up, finishes a consent the app was closed in the middle of, and runs a
         // first sync. Its own coroutine, so that a slow network never holds up the library appearing on screen.
         viewModelScope.launch {
@@ -1721,6 +1729,32 @@ class CampfireViewModel(
     }
 
     /**
+     * Puts [DialogType.Welcome] over the app on the first run, once the launch screen has gone: the sheet is a window of
+     * its own on Android and would otherwise slide up over the mark rather than over the library it introduces, which
+     * is also what lets the colors picked in it be seen taking hold of the app behind it. Only onto a screen with no
+     * other dialog on it - on a first run that is a question about a file the app was opened with - since a welcome
+     * that replaced a question would leave it unanswered, and one that waited for the answer would arrive in the middle
+     * of whatever the user went on to do next. Showing it is the only time it is shown: the first run's preferences
+     * are written as the demo library is settled, before this, so a process that ends with the sheet still up starts
+     * the next time without it.
+     */
+    private suspend fun showWelcomeOnFirstRun() {
+        if (!isFirstLaunch.await()) return
+        isAppOnScreen.first { it }
+        _visibleDialog.compareAndSet(null, DialogType.Welcome)
+    }
+
+    /**
+     * The welcome sheet's way on to the rest of the settings, on the tab holding sync where this build has any: that
+     * is the one thing the sheet points at that nothing else in the app would lead a new user to. The sheet closes
+     * itself, since only it can do that with the animation it closes with everywhere else.
+     */
+    fun openSettingsFromWelcome() {
+        if (backStack.lastOrNull() != CampfireDestination.Settings) selectTopLevelDestination(CampfireDestination.Settings)
+        settingsTab = if (syncProviders.isEmpty()) SettingsTab.GENERAL else SettingsTab.LIBRARY
+    }
+
+    /**
      * Null where the bundled files could not be read, which each caller then says as much about as it should. On the
      * web they are requests to the site, and one that neither answers nor fails would otherwise hold whatever waits for
      * it for good - on a first run, the launch screen, which only goes once the demo has been planted or given up on.
@@ -2502,6 +2536,9 @@ class CampfireViewModel(
         data class ImportConflicts(val summary: ImportPlan.Summary) : DialogType
         /** Asked before the editor throws away everything typed since the last save, see [revertEditorChanges]. */
         data object RevertChanges : DialogType
+
+        /** Shown once, over the first run of an installation, see [showWelcomeOnFirstRun]. */
+        data object Welcome : DialogType
     }
 
     companion object {

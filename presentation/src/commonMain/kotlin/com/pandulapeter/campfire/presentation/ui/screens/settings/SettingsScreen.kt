@@ -36,7 +36,6 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.painter.Painter
 import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.unit.Dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -128,29 +127,16 @@ import com.pandulapeter.campfire.presentation.resources.settings_user_interface_
 import com.pandulapeter.campfire.presentation.resources.settings_user_interface_language_with_own_name
 import com.pandulapeter.campfire.presentation.resources.settings_user_interface_theme
 import com.pandulapeter.campfire.presentation.resources.settings_user_interface_theme_color
-import com.pandulapeter.campfire.presentation.resources.settings_user_interface_theme_color_blue
-import com.pandulapeter.campfire.presentation.resources.settings_user_interface_theme_color_campfire
-import com.pandulapeter.campfire.presentation.resources.settings_user_interface_theme_color_green
-import com.pandulapeter.campfire.presentation.resources.settings_user_interface_theme_color_orange
-import com.pandulapeter.campfire.presentation.resources.settings_user_interface_theme_color_pink
-import com.pandulapeter.campfire.presentation.resources.settings_user_interface_theme_color_purple
-import com.pandulapeter.campfire.presentation.resources.settings_user_interface_theme_color_red
-import com.pandulapeter.campfire.presentation.resources.settings_user_interface_theme_color_system
-import com.pandulapeter.campfire.presentation.resources.settings_user_interface_theme_color_teal
-import com.pandulapeter.campfire.presentation.resources.settings_user_interface_theme_color_yellow
-import com.pandulapeter.campfire.presentation.resources.settings_user_interface_theme_dark
-import com.pandulapeter.campfire.presentation.resources.settings_user_interface_theme_light
-import com.pandulapeter.campfire.presentation.resources.settings_user_interface_theme_system_default
 import com.pandulapeter.campfire.presentation.resources.settings_version
 import com.pandulapeter.campfire.presentation.ui.CampfireViewModel
 import com.pandulapeter.campfire.presentation.ui.navigation.CampfireDestination
 import com.pandulapeter.campfire.presentation.ui.components.ActionListItem
-import com.pandulapeter.campfire.presentation.ui.components.ColorChoice
-import com.pandulapeter.campfire.presentation.ui.components.ColorChoiceOption
 import com.pandulapeter.campfire.presentation.ui.components.ImportProgress
 import com.pandulapeter.campfire.presentation.ui.components.LinkListItem
 import com.pandulapeter.campfire.presentation.ui.components.RadioListItem
 import com.pandulapeter.campfire.presentation.ui.components.SegmentedChoice
+import com.pandulapeter.campfire.presentation.ui.components.ThemeColorChoice
+import com.pandulapeter.campfire.presentation.ui.components.UiModeChoice
 import com.pandulapeter.campfire.presentation.ui.components.SwitchListItem
 import com.pandulapeter.campfire.presentation.ui.components.rememberRetainedScrollState
 import com.pandulapeter.campfire.presentation.ui.platform.AppIconSurface
@@ -164,8 +150,6 @@ import com.pandulapeter.campfire.presentation.ui.platform.libraryLocation
 import com.pandulapeter.campfire.presentation.ui.platform.platformStore
 import com.pandulapeter.campfire.presentation.ui.theme.CampfireColorScheme
 import com.pandulapeter.campfire.presentation.ui.theme.colorSchemePair
-import com.pandulapeter.campfire.presentation.ui.theme.isDarkTheme
-import com.pandulapeter.campfire.presentation.ui.theme.themeColorOptions
 import kotlinx.coroutines.launch
 import org.jetbrains.compose.resources.painterResource
 
@@ -468,31 +452,14 @@ private fun GeneralSection(
         onCheckedChange = viewModel::setPerformanceModeEnabled,
     )
     SettingsSubsection(title = stringResource(Res.string.settings_user_interface_theme)) {
-        SegmentedChoice(
-            options = listOf(
-                UserPreferences.UiMode.SYSTEM_DEFAULT to stringResource(Res.string.settings_user_interface_theme_system_default),
-                UserPreferences.UiMode.LIGHT to stringResource(Res.string.settings_user_interface_theme_light),
-                UserPreferences.UiMode.DARK to stringResource(Res.string.settings_user_interface_theme_dark),
-            ),
+        UiModeChoice(
             selected = userPreferences?.uiMode,
             onSelected = viewModel::setUiMode,
         )
     }
     SettingsSubsection(title = stringResource(Res.string.settings_user_interface_theme_color)) {
-        // Use the opposite half of each palette for the discs: brighter colors in light mode and deeper colors in
-        // dark mode. Keep each disc's onPrimary from the same half so its icon stays legible.
-        val isDarkTheme = userPreferences?.uiMode.isDarkTheme()
-        ColorChoice(
-            options = themeColorOptions().map { (themeColor, colorSchemePair) ->
-                val colorScheme = if (isDarkTheme) colorSchemePair.light else colorSchemePair.dark
-                ColorChoiceOption(
-                    value = themeColor,
-                    color = colorScheme.primary,
-                    contentColor = colorScheme.onPrimary,
-                    label = themeColor.label(),
-                    icon = themeColor.icon(),
-                )
-            },
+        ThemeColorChoice(
+            uiMode = userPreferences?.uiMode,
             selected = userPreferences?.themeColor,
             onSelected = viewModel::setThemeColor,
         )
@@ -785,36 +752,5 @@ private fun AppIconSurface.description() = stringResource(
         AppIconSurface.BROWSER_TAB -> Res.string.settings_app_icon_browser_tab_description
     }
 )
-
-/**
- * What a color offered by the theme is called. It is only ever read out by an accessibility service, since the
- * settings screen shows each color as itself.
- */
-@Composable
-private fun UserPreferences.ThemeColor.label() = stringResource(
-    when (this) {
-        UserPreferences.ThemeColor.CAMPFIRE -> Res.string.settings_user_interface_theme_color_campfire
-        UserPreferences.ThemeColor.SYSTEM -> Res.string.settings_user_interface_theme_color_system
-        UserPreferences.ThemeColor.RED -> Res.string.settings_user_interface_theme_color_red
-        UserPreferences.ThemeColor.ORANGE -> Res.string.settings_user_interface_theme_color_orange
-        UserPreferences.ThemeColor.YELLOW -> Res.string.settings_user_interface_theme_color_yellow
-        UserPreferences.ThemeColor.GREEN -> Res.string.settings_user_interface_theme_color_green
-        UserPreferences.ThemeColor.TEAL -> Res.string.settings_user_interface_theme_color_teal
-        UserPreferences.ThemeColor.BLUE -> Res.string.settings_user_interface_theme_color_blue
-        UserPreferences.ThemeColor.PURPLE -> Res.string.settings_user_interface_theme_color_purple
-        UserPreferences.ThemeColor.PINK -> Res.string.settings_user_interface_theme_color_pink
-    }
-)
-
-/**
- * The icon a color offered by the theme carries while it is not selected, for the one whose color is not what picks it
- * out: the palette the operating system hands over, which is whatever the wallpaper made it. The rest are only a
- * color - the app's own gray included - and a glyph on each of them would say nothing the disc does not.
- */
-@Composable
-private fun UserPreferences.ThemeColor.icon(): Painter? = when (this) {
-    UserPreferences.ThemeColor.SYSTEM -> painterResource(Res.drawable.ic_phone)
-    else -> null
-}
 
 private const val GIT_HUB_URL = "https://github.com/pandulapeter/campfire"

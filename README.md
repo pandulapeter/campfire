@@ -47,7 +47,6 @@ Campfire is available for the following platforms:
 
 ### To do
 - Set search field input type
-- FTUX welcome screen?
 - Haptic effects
 - Auto-scroll
 - Bottom sheet colors

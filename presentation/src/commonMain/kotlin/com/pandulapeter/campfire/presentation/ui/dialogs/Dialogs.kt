@@ -39,12 +39,14 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalBottomSheet
+import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.SheetValue
 import androidx.compose.material3.Text
@@ -136,6 +138,14 @@ import com.pandulapeter.campfire.presentation.resources.songs_empty_title
 import com.pandulapeter.campfire.presentation.resources.songs_no_search_results
 import com.pandulapeter.campfire.presentation.resources.songs_search
 import com.pandulapeter.campfire.presentation.resources.songs_filter
+import com.pandulapeter.campfire.presentation.resources.settings_user_interface_theme
+import com.pandulapeter.campfire.presentation.resources.settings_user_interface_theme_color
+import com.pandulapeter.campfire.presentation.resources.welcome_get_started
+import com.pandulapeter.campfire.presentation.resources.welcome_message
+import com.pandulapeter.campfire.presentation.resources.welcome_open_settings
+import com.pandulapeter.campfire.presentation.resources.welcome_settings_hint
+import com.pandulapeter.campfire.presentation.resources.welcome_settings_hint_sync
+import com.pandulapeter.campfire.presentation.resources.welcome_title
 import com.pandulapeter.campfire.data.model.domain.ImportConflictResolution
 import com.pandulapeter.campfire.data.model.domain.ImportPlan
 import com.pandulapeter.campfire.data.model.domain.Song
@@ -149,6 +159,9 @@ import com.pandulapeter.campfire.presentation.ui.components.MAX_SEARCH_QUERY_LEN
 import com.pandulapeter.campfire.presentation.ui.components.PickableLanguage
 import com.pandulapeter.campfire.presentation.ui.components.RadioListItem
 import com.pandulapeter.campfire.presentation.ui.components.SettingsSectionTitle
+import com.pandulapeter.campfire.presentation.ui.components.ThemeColorChoice
+import com.pandulapeter.campfire.presentation.ui.components.UiModeChoice
+import com.pandulapeter.campfire.presentation.ui.screens.settings.SettingsSubsection
 import com.pandulapeter.campfire.presentation.ui.components.SongFilters
 import com.pandulapeter.campfire.presentation.ui.components.TagFlowRow
 import com.pandulapeter.campfire.presentation.ui.components.TagPill
@@ -315,7 +328,76 @@ internal fun CampfireDialogs(
             onSave = viewModel::saveEditorChangesAndLeave,
         )
 
+        CampfireViewModel.DialogType.Welcome -> CampfireBottomSheet(
+            title = stringResource(Res.string.welcome_title),
+            onDismiss = { viewModel.dismissSheet(CampfireViewModel.DialogType.Welcome) },
+        ) { contentPadding ->
+            WelcomeContent(
+                viewModel = viewModel,
+                contentPadding = contentPadding,
+                onGetStarted = { close() },
+                onOpenSettings = {
+                    // Behind the sheet as it goes down rather than after it, so the two move together.
+                    viewModel.openSettingsFromWelcome()
+                    close()
+                },
+            )
+        }
+
         null -> Unit
+    }
+}
+
+/**
+ * The first run's one screen of its own: a line about what the app is, the two choices that decide how all of it
+ * looks, and where everything else is. It is kept to exactly that on purpose - the library behind it already holds
+ * the demo songs, which say more about the app than a tour could, and a first run that opened on a series of pages
+ * would stand between somebody and the songbook they came for. The colors are the settings screen's own controls,
+ * and the sheet is drawn over the app in the app's theme, so every tap on them shows its answer on the songs behind.
+ *
+ * Sync is the one setting it names, and only where this build has any: it is the only thing in the app a new user
+ * cannot find by using it, since it stays off and silent until somebody goes to Settings to connect it.
+ */
+@Composable
+private fun ColumnScope.WelcomeContent(
+    viewModel: CampfireViewModel,
+    contentPadding: PaddingValues,
+    onGetStarted: () -> Unit,
+    onOpenSettings: () -> Unit,
+) = Column(
+    modifier = Modifier.weight(1f, fill = false).verticalScroll(rememberScrollState()).padding(contentPadding),
+) {
+    val userPreferences by viewModel.userPreferences.collectAsStateWithLifecycle()
+    Text(
+        modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp),
+        text = stringResource(Res.string.welcome_message),
+        style = MaterialTheme.typography.bodyLarge,
+    )
+    SettingsSubsection(title = stringResource(Res.string.settings_user_interface_theme)) {
+        UiModeChoice(
+            selected = userPreferences?.uiMode,
+            onSelected = viewModel::setUiMode,
+        )
+    }
+    SettingsSubsection(title = stringResource(Res.string.settings_user_interface_theme_color)) {
+        ThemeColorChoice(
+            uiMode = userPreferences?.uiMode,
+            selected = userPreferences?.themeColor,
+            onSelected = viewModel::setThemeColor,
+        )
+    }
+    Text(
+        modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp),
+        text = stringResource(if (viewModel.syncProviders.isEmpty()) Res.string.welcome_settings_hint else Res.string.welcome_settings_hint_sync),
+        style = MaterialTheme.typography.bodyMedium,
+        color = MaterialTheme.colorScheme.onSurfaceVariant,
+    )
+    Row(
+        modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 8.dp),
+        horizontalArrangement = Arrangement.spacedBy(8.dp, Alignment.End),
+    ) {
+        OutlinedButton(onClick = onOpenSettings) { Text(stringResource(Res.string.welcome_open_settings)) }
+        Button(onClick = onGetStarted) { Text(stringResource(Res.string.welcome_get_started)) }
     }
 }
 
@@ -1309,6 +1391,8 @@ private fun ColumnScope.PickerList(
  * @param subtitle A line under [title], left out when blank.
  * @param onDismiss Has to dismiss this sheet's own dialog and nothing else (`CampfireViewModel.dismissSheet`): it is
  *   called from the end of a hide animation, by which time another dialog may have taken the sheet's place.
+ * @param content Can close the sheet the way its close button does ([BottomSheetContentScope.close]), for a sheet
+ *   with a button of its own that is done with it.
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -1316,7 +1400,7 @@ private fun CampfireBottomSheet(
     title: String,
     subtitle: String = "",
     onDismiss: () -> Unit,
-    content: @Composable ColumnScope.(contentPadding: PaddingValues) -> Unit,
+    content: @Composable BottomSheetContentScope.(contentPadding: PaddingValues) -> Unit,
 ) {
     // No partially expanded state: these sheets are short, and they open at their full height.
     val sheetState = rememberBottomSheetState(
@@ -1332,20 +1416,29 @@ private fun CampfireBottomSheet(
         dragHandle = null,
         contentWindowInsets = { WindowInsets.safeDrawing.only(WindowInsetsSides.Top) },
     ) {
+        // Hiding the sheet by hand does not count as dismissing it, so the dialog state is cleared once it is gone: left
+        // as it was, the invisible sheet's modal layer would stay over the screen, swallowing the next tap. Only a hide
+        // that ran to its end counts: one cut short by a finger taking hold of the sheet leaves the sheet where Material
+        // settles it, and one cut short by another dialog replacing the sheet has nothing left to dismiss.
+        val close = { coroutineScope.launch { sheetState.hide() }.invokeOnCompletion { cause -> if (cause == null) onDismiss() }; Unit }
         SheetHeader(
             title = title,
             subtitle = subtitle,
-            // Hiding the sheet by hand does not count as dismissing it, so the dialog state is cleared once it is
-            // gone: left as it was, the invisible sheet's modal layer would stay over the screen, swallowing the next
-            // tap. Only a hide that ran to its end counts: one cut short by a finger taking hold of the sheet leaves the
-            // sheet where Material settles it, and one cut short by another dialog replacing the sheet has nothing left
-            // to dismiss.
-            onClose = { coroutineScope.launch { sheetState.hide() }.invokeOnCompletion { cause -> if (cause == null) onDismiss() } },
+            onClose = close,
         )
         // Read inside the sheet, which is a window of its own on Android and gets the insets of that window.
         val bottomInset = WindowInsets.safeDrawing.only(WindowInsetsSides.Bottom).asPaddingValues().calculateBottomPadding()
-        content(PaddingValues(bottom = bottomInset + SHEET_BOTTOM_PADDING))
+        BottomSheetContentScope(columnScope = this, close = close).content(PaddingValues(bottom = bottomInset + SHEET_BOTTOM_PADDING))
     }
+}
+
+/** The column of a [CampfireBottomSheet], which its content can also close the sheet from. */
+private class BottomSheetContentScope(
+    columnScope: ColumnScope,
+    private val close: () -> Unit,
+) : ColumnScope by columnScope {
+
+    fun close() = close.invoke()
 }
 
 /**
