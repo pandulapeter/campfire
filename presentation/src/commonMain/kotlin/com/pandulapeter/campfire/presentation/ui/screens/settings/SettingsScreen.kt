@@ -213,7 +213,7 @@ internal fun SettingsScreen(
     val fadeSpec = MaterialTheme.motionScheme.defaultEffectsSpec<Float>()
     Crossfade(
         modifier = modifier.fillMaxSize(),
-        targetState = pageWidth > SETTINGS_TAB_ROW_MAX_WIDTH,
+        targetState = pageWidth > (SETTINGS_TAB_ROW_MAX_WIDTH + SETTINGS_CATEGORY_PANE_WIDTH),
         animationSpec = fadeSpec,
     ) { isWide ->
         if (isWide) {

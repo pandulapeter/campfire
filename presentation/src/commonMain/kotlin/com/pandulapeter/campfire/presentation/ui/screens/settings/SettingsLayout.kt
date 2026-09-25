@@ -297,7 +297,7 @@ internal fun ColumnScope.AnimatedSettingsRow(
 /** What an [AnimatedSettingsRow] draws while it leaves. Not a state, since nothing is ever redrawn because of it. */
 private class LastValue<T>(var value: T?)
 
-/** Leaves a full [MIN_COLUMN_WIDTH] for a page as soon as the tab row reaches its width cap. */
+/** Leaves a full [MAX_COLUMN_WIDTH] for a page as soon as the tab row reaches its width cap. */
 internal val SETTINGS_CATEGORY_PANE_WIDTH = 180.dp
 
 /** Below this a column is too narrow for a switch next to two lines of description, so a tab stacks its sections. */
@@ -320,7 +320,7 @@ private val PAGE_TOP_PADDING = 8.dp
 private val SECTION_TITLE_PADDING = 8.dp
 
 /** Above this four tabs are four words spread apart rather than a row of tabs. */
-internal val SETTINGS_TAB_ROW_MAX_WIDTH = 560.dp
+internal val SETTINGS_TAB_ROW_MAX_WIDTH = MAX_COLUMN_WIDTH
 
 /** The room a [SettingsSubsection] keeps above and below itself, which is what a list item pads itself by. */
 private val SUBSECTION_PADDING = 12.dp
