@@ -573,7 +573,17 @@ class CampfireViewModel(
         tags.any { it.name.lowercase() in selectedTags } || (languages.size > 1 && languages.any { it.code in filter.selectedLanguages })
     }.asState(false)
 
-    /** One library emission supplies both song-search views and the matching section order. */
+    /**
+     * The library as the song list shows it and as the search reads it, taken from one [screenData] value: the sections
+     * as the domain layer cut them, the filtered songs with their title, artist and tags normalized for searching, and
+     * the whole library by file name, which is what the setlists and the song details screen read - a setlist names its
+     * songs whatever the song filters hide. Built from one value so that a library change can never pair a new filtered
+     * list with an old lookup, and normalized once per library rather than once per keystroke, a song whose searchable
+     * text did not change keeping what it was folded to.
+     *
+     * Distinct, because [screenData] also emits for every write to a setlist with the songs exactly as they were, and
+     * each of those would otherwise have the whole library indexed again for nothing.
+     */
     private val songSearchIndex = SongSearchIndex { normalizeSearchText(it) }
     private val indexedSongs = screenData.map { state ->
         IndexedSongInput(
@@ -673,7 +683,7 @@ class CampfireViewModel(
      *
      * Kept apart from the search below so that the placeholder can tell a setlist list emptied by the archive filter
      * from one emptied by the search, the way the song list tells its own two empty states apart - and a state
-     * rather than a plain flow because several consumers read it.
+     * rather than a plain flow because both the placeholder and the search below read it.
      */
     private val visibleSetlists = combine(setlists, indexedSongs, shouldShowArchivedSetlists) { setlists, indexed, shouldShowArchivedSetlists ->
         val songsByFileName = indexed.search.byFileName
@@ -697,26 +707,12 @@ class CampfireViewModel(
      * A setlist that answers is shown **whole**. The search finds setlists rather than songs inside them: a setlist
      * is the list somebody wrote down, and three of its twelve songs is not that list.
      */
-    private val setlistSearchIndex = SearchableSetlistIndex { normalizeSearchText(it) }
-    private val searchableSetlists = setlists.map { setlistSearchIndex.update(it) }.asState(emptyMap())
-
-    val setlistsWithSongs = combine(visibleSetlists, indexedSongs, searchableSetlists, setlistsSearch.activeQuery) { setlists, indexed, searchableSetlists, query ->
+    val setlistsWithSongs = combine(visibleSetlists, indexedSongs, setlistsSearch.activeQuery) { setlists, indexed, query ->
         if (query.isBlank()) {
             setlists
         } else {
             val normalizedQuery = normalizeSearchText(query)
-            setlists.filter { setlist ->
-                val indexedSetlist = searchableSetlists[setlist.setlist.fileName]
-                val matchesOwnText = if (indexedSetlist?.title == setlist.setlist.title && indexedSetlist.description == setlist.setlist.description) {
-                    indexedSetlist.matches(normalizedQuery)
-                } else {
-                    // The visible list and its text index are separate states and can arrive one emission apart.
-                    normalizeSearchText(setlist.setlist.title).contains(normalizedQuery) ||
-                        normalizeSearchText(setlist.setlist.description).contains(normalizedQuery)
-                }
-                matchesOwnText ||
-                    setlist.setlist.entries.any { entry -> indexed.search.byFileName[entry.songFileName]?.matches(normalizedQuery) == true }
-            }
+            setlists.filter { it.setlist.matchesSearch(normalizedQuery = normalizedQuery, songs = indexed.search.byFileName) }
         }
     }.asState(emptyList())
 
@@ -2249,6 +2245,19 @@ class CampfireViewModel(
         started = SharingStarted.Eagerly,
         initialValue = initialValue,
     )
+
+    /**
+     * Whether a setlist answers the setlists screen's search. The songs are looked up in the library that was
+     * normalized once ([indexedSongs]) rather than normalized here, since this runs over every setlist on every
+     * character typed; the setlist's own two lines are short enough to fold on the spot.
+     *
+     * A song whose file has gone missing can only be matched by the name in the entry, which is not what the user
+     * searched for, so it matches nothing.
+     */
+    private fun Setlist.matchesSearch(normalizedQuery: String, songs: Map<String, SearchableSong>): Boolean =
+        normalizeSearchText(title).contains(normalizedQuery) ||
+            normalizeSearchText(description).contains(normalizedQuery) ||
+            entries.any { entry -> songs[entry.songFileName]?.matches(normalizedQuery) == true }
 
     /**
      * One batch in [importQueue].

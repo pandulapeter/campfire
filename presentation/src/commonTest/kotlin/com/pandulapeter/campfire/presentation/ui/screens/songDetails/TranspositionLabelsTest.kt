@@ -37,7 +37,7 @@ class TranspositionLabelsTest {
             if (song.key == "B" && spelling.isGermanNotationEnabled) "H${song.transpose + transposition}"
             else song.key?.let { "$it${song.transpose + transposition}" }
         }
-        val actual = transpositionLabelsForSongs(songs, spelling, render)
+        val actual = transpositionLabelsForSongs(songs, render)
         val distinctInputs = songs.filter { it.hasChords }.distinctBy { it.key to it.transpose }.size
         assertEquals(distinctInputs * (CampfireViewModel.MAX_TRANSPOSITION - CampfireViewModel.MIN_TRANSPOSITION + 1), calls)
 

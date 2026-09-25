@@ -9,8 +9,10 @@
  */
 package com.pandulapeter.campfire.chordpro
 
+import kotlin.random.Random
 import kotlin.test.Test
 import kotlin.test.assertEquals
+import kotlin.test.assertTrue
 
 class ChordProSummaryCacheTest {
 
@@ -72,5 +74,42 @@ class ChordProSummaryCacheTest {
         )
         lines.forEach { text -> assertEquals(ChordProParser.summarize(text), cache.summaryOf(text), text) }
         assertEquals(4, scans)
+    }
+
+    @Test
+    fun `random typing anywhere in a song always matches a full scan`() {
+        val random = Random(seed = 2026)
+        val letters = "abcdefgHh    "
+        val syntax = "[G]{}#|-/:\r"
+        var scans = 0
+        var edits = 0
+        repeat(20) {
+            val cache = ChordProSummaryCache { text ->
+                scans++
+                ChordProParser.summarize(text)
+            }
+            var text = "{title: Song}\n{key: Am}\nFirst line of the verse\nSecond line of the verse\nThird line of the verse\n" +
+                "{start_of_tab}\ne|---|\n{end_of_tab}\nFirst line of the chorus\nSecond line of the chorus\n{transpose: 2}\nEnd"
+            var cursor = text.length
+            repeat(300) {
+                // Typing the way a person does: mostly on from where the last keystroke was, now and then somewhere else.
+                if (random.nextInt(30) == 0) cursor = random.nextInt(text.length + 1)
+                if (cursor > 0 && random.nextInt(4) == 0) {
+                    text = text.removeRange(cursor - 1, cursor)
+                    cursor--
+                } else {
+                    text = text.substring(0, cursor) + when (random.nextInt(40)) {
+                        0 -> '\n'
+                        1 -> syntax.random(random)
+                        else -> letters.random(random)
+                    } + text.substring(cursor)
+                    cursor++
+                }
+                edits++
+                assertEquals(ChordProParser.summarize(text), cache.summaryOf(text), text)
+            }
+        }
+        // Not a measure of anything, only a check that the test reaches the path it is about.
+        assertTrue(scans < edits * 3 / 4, "$scans scans for $edits edits")
     }
 }

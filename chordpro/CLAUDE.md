@@ -61,7 +61,9 @@ in `:domain:*`. `:data:source:local:implementation` uses it directly for the met
   non-breaking spaces.
 - `ChordProParser` — `parse` (the whole song), `summarize` (the directives plus "does it have chords", from one walk,
   which is what the library scan calls for every file at startup; a tab with a staff or a row of chord names in it
-  counts, since the transposition moves those) and `parseMetadata` (directive lines only, for a
+  counts, since the transposition moves those; `ChordProSummaryCache` is `summarize` for the editor, which returns the
+  summary it had for a keystroke that stays inside a line of plain lyrics and parses again for anything else) and
+  `parseMetadata` (directive lines only, for a
   caller with no interest in the body). Total: it never throws and never rejects a document, because the
   file on disk is the user's and half of it may be under the caret. Unknown directives are ignored; a directive with a
   selector suffix (`{title-guitar}`) is dropped, since there is nothing to match it against, and one with a negated

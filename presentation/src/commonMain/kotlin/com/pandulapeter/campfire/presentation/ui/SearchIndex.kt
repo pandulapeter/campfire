@@ -9,9 +9,9 @@
  */
 package com.pandulapeter.campfire.presentation.ui
 
-import com.pandulapeter.campfire.data.model.domain.Setlist
 import com.pandulapeter.campfire.data.model.domain.Song
 
+/** A song with the title, artist and tags the search compares, normalized for searching. */
 internal data class SearchableSong(
     val song: Song,
     val title: String,
@@ -21,6 +21,10 @@ internal data class SearchableSong(
     fun matches(query: String) = title.contains(query) || artist.contains(query) || tags.any { it.contains(query) }
 }
 
+/**
+ * One library as the search reads it: [filtered] in the order the song list shows it, and the whole library by file
+ * name, both as searched ([byFileName]) and as the screens that resolve a song by its name need it ([songsByFileName]).
+ */
 internal data class SongSearchSnapshot(
     val filtered: List<SearchableSong>,
     val byFileName: Map<String, SearchableSong>,
@@ -31,7 +35,11 @@ internal data class SongSearchSnapshot(
     }
 }
 
-/** Reuses normalized fields while replacing each entry's Song with the latest library model. */
+/**
+ * Builds a [SongSearchSnapshot] from each library value, folding again only the songs whose title, artist or tags
+ * changed. Every entry still carries the latest [Song], since a save that changed only the size or the key is a new
+ * model the rows and the details screen have to show; a song that is gone, or renamed, is gone from the index too.
+ */
 internal class SongSearchIndex(private val normalize: (String) -> String) {
     private var previous = emptyMap<String, SearchableSong>()
 
@@ -65,7 +73,15 @@ internal class SongSearchIndex(private val normalize: (String) -> String) {
     }
 }
 
-/** The three Boolean ranking keys have only eight values; each bucket preserves source order. */
+/**
+ * The songs that answer [query], best first: a title that starts with it, then an artist that does, then any other
+ * title or artist match, and last a song found by one of its tags alone - a tag is shared by a whole shelf of songs, so
+ * a query that names one song and also happens to be part of a tag would otherwise have that song buried somewhere in
+ * the shelf. Ties keep the order of the list.
+ *
+ * Runs on every keystroke over the whole library. The three ranking keys have only eight combinations, so each match is
+ * dropped into its bucket as it is found instead of the matches being sorted afterwards.
+ */
 internal fun rankSongs(songs: List<SearchableSong>, query: String): List<Song> {
     val buckets = Array(8) { mutableListOf<Song>() }
     for (song in songs) {
@@ -78,36 +94,4 @@ internal fun rankSongs(songs: List<SearchableSong>, query: String): List<Song> {
         buckets[rank] += song.song
     }
     return buildList { for (rank in buckets.indices.reversed()) addAll(buckets[rank]) }
-}
-
-internal class SearchableSetlistIndex(private val normalize: (String) -> String) {
-    private var cached = emptyMap<String, SearchableSetlist>()
-
-    fun update(setlists: List<Setlist>): Map<String, SearchableSetlist> {
-        val next = LinkedHashMap<String, SearchableSetlist>(setlists.size)
-        for (setlist in setlists) {
-            val previous = cached[setlist.fileName]
-            next[setlist.fileName] = if (previous != null && previous.title == setlist.title && previous.description == setlist.description) {
-                previous
-            } else {
-                SearchableSetlist(
-                    title = setlist.title,
-                    description = setlist.description,
-                    normalizedTitle = normalize(setlist.title),
-                    normalizedDescription = normalize(setlist.description),
-                )
-            }
-        }
-        cached = next
-        return next
-    }
-}
-
-internal data class SearchableSetlist(
-    val title: String,
-    val description: String,
-    val normalizedTitle: String,
-    val normalizedDescription: String,
-) {
-    fun matches(query: String) = normalizedTitle.contains(query) || normalizedDescription.contains(query)
 }

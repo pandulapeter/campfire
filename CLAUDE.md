@@ -229,11 +229,13 @@ uninstall and nothing else does.
   puts that file back, leaving both.
 - Only pure logic is tested: `commonTest` unit tests in `:chordpro`, `:domain:implementation` (`ImportPlanner`),
   `:data:source:local:implementation` (zip and the JVM file storage), `:data:source:remote:*` (hashing, encoders,
-  the OAuth authorization URL) and
-  `:data:repository:implementation` (`SyncPlanner`, which decides what happens to every file in a sync run), run on
-  the desktop target with
-  `./gradlew :chordpro:desktopTest :domain:implementation:desktopTest :data:source:local:implementation:desktopTest :data:source:remote:api:desktopTest :data:source:remote:implementation:desktopTest :data:repository:implementation:desktopTest`.
-  The UI is untested by code. Before a release, `documentation/testing/release-check.md` is run on a Mac (its
+  the OAuth authorization URL),
+  `:data:repository:implementation` (`SyncPlanner`, which decides what happens to every file in a sync run) and
+  `:presentation` (the pure helpers behind its screens: the search index and ranking, the fast scroller's section
+  index, the setlist slots and stepper labels of the details screen, the editor's token cache), run on the desktop
+  target with
+  `./gradlew :chordpro:desktopTest :domain:implementation:desktopTest :data:source:local:implementation:desktopTest :data:source:remote:api:desktopTest :data:source:remote:implementation:desktopTest :data:repository:implementation:desktopTest :presentation:desktopTest`.
+  The UI itself is untested by code. Before a release, `documentation/testing/release-check.md` is run on a Mac (its
   `README.md` says how): half an hour of the checks whose failure would block one. A change to what it exercises —
   the first run, importing, sync, the packaged builds — updates it in the same change.
 

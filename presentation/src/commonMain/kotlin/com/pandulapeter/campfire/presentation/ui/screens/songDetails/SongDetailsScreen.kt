@@ -201,7 +201,7 @@ internal fun SongDetailsScreen(
         if (isPerformanceModeEnabled || !shouldShowChords) {
             emptyList()
         } else {
-            transpositionLabelsForSongs(songs, chordSpelling) { song, transposition ->
+            transpositionLabelsForSongs(songs) { song, transposition ->
                 viewModel.renderKey(song = song, transposition = transposition, spelling = chordSpelling)
             }
         }
@@ -698,14 +698,17 @@ internal fun buildSetlistSlots(entries: List<Setlist.Entry>, songFileNames: List
     return SetlistSlots(slotByPage = slotByPage, entryCount = entries.size)
 }
 
-/** One representative per key and file transposition can cover every possible stepper label. */
+/**
+ * Every label the transposition stepper can read for any song of [songs] with chords, each once. A rendered key
+ * depends on nothing of a song but its key and the transposition its file declares, so songs that share both are
+ * rendered once: a long setlist is mostly a handful of keys, and rendering one is a transposition of its own.
+ */
 internal fun transpositionLabelsForSongs(
     songs: List<Song>,
-    spelling: UserPreferences.ChordSpelling,
     renderKey: (Song, Int) -> String?,
 ): List<String> = songs.asSequence()
     .filter { it.hasChords }
-    .distinctBy { Triple(it.key, it.transpose, spelling) }
+    .distinctBy { it.key to it.transpose }
     .flatMap { song ->
         (CampfireViewModel.MIN_TRANSPOSITION..CampfireViewModel.MAX_TRANSPOSITION).asSequence().map { transposition ->
             transpositionLabel(transposition, renderKey(song, transposition))

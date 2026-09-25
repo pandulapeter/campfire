@@ -135,10 +135,11 @@ wrong or undo it".
 
 - Only pure logic is tested, in `commonTest`, run on the desktop target: `:chordpro`, `:domain:implementation`
   (`ImportPlanner`), `:data:source:local:implementation` (zip, file storage), `:data:source:remote:*` (hashing, encoders,
-  the authorization URL) and `:data:repository:implementation` (`SyncPlanner`). The UI is untested.
+  the authorization URL), `:data:repository:implementation` (`SyncPlanner`) and `:presentation` (pure helpers pulled
+  out of the screens and the view model, never a Composable). The UI itself is untested.
 - **When you change any of those, add or update the tests in the same change**, and run:
   ```bash
-  ./gradlew :chordpro:desktopTest :domain:implementation:desktopTest :data:source:local:implementation:desktopTest :data:source:remote:api:desktopTest :data:source:remote:implementation:desktopTest :data:repository:implementation:desktopTest
+  ./gradlew :chordpro:desktopTest :domain:implementation:desktopTest :data:source:local:implementation:desktopTest :data:source:remote:api:desktopTest :data:source:remote:implementation:desktopTest :data:repository:implementation:desktopTest :presentation:desktopTest
   ```
 - Don't add a test module or a UI test framework for a change that doesn't warrant one.
 
