@@ -67,9 +67,17 @@ internal object AppIconSwitcher {
         }
     }
 
-    /** The manifest names its components in this package, which a debug build's application id adds a suffix to. */
-    private fun component(context: Context, name: String) =
-        ComponentName(context.packageName, "${AppIconSwitcher::class.java.`package`!!.name}.$name")
+    /**
+     * The manifest's relative names resolve against the namespace, while the package the component is looked up in is
+     * the application id, which a debug build adds a suffix to.
+     */
+    private fun component(context: Context, name: String) = ComponentName(context.packageName, "$NAMESPACE.$name")
+
+    /**
+     * Spelled out rather than read from a class: R8 moves the classes of a release build into packages of its own
+     * naming, so no class's package is this one there, and none is anything at all once it has been moved to the top.
+     */
+    private const val NAMESPACE = "com.pandulapeter.campfire"
 
     private const val INITIAL_ENTRY = "CampfireActivity"
 
