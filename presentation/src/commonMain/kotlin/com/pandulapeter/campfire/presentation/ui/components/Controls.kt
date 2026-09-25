@@ -67,7 +67,6 @@ import com.pandulapeter.campfire.data.model.domain.Tag
 import com.pandulapeter.campfire.data.model.domain.UserPreferences
 import com.pandulapeter.campfire.presentation.localization.stringResource
 import com.pandulapeter.campfire.presentation.resources.Res
-import com.pandulapeter.campfire.presentation.resources.ic_check
 import com.pandulapeter.campfire.presentation.resources.songs_languages
 import com.pandulapeter.campfire.presentation.resources.songs_languages_clear
 import com.pandulapeter.campfire.presentation.resources.songs_languages_match_mode
@@ -81,7 +80,6 @@ import com.pandulapeter.campfire.presentation.resources.songs_tags_match_mode_an
 import com.pandulapeter.campfire.presentation.resources.songs_tags_show_all
 import com.pandulapeter.campfire.presentation.resources.songs_tags_show_less
 import com.pandulapeter.campfire.presentation.ui.CampfireViewModel
-import org.jetbrains.compose.resources.painterResource
 
 /**
  * Whether the [ControlsSidePanel] fits into a screen of the given width: the list comes first, so the panel only gets
@@ -482,26 +480,11 @@ internal fun CountedFilterChip(
             .padding(horizontal = CHIP_PADDING),
         verticalAlignment = Alignment.CenterVertically,
     ) {
-        if (leadingIcon == null) {
-            // The check grows into the chip the way the Material one does, so that turning a filter on is a movement
-            // rather than a chip that changes width between two frames.
-            AnimatedVisibility(
-                visible = isSelected,
-                enter = expandHorizontally() + fadeIn(),
-                exit = shrinkHorizontally() + fadeOut(),
-            ) {
-                Icon(
-                    modifier = Modifier.padding(end = CHIP_ICON_GAP).size(FilterChipDefaults.IconSize),
-                    painter = painterResource(Res.drawable.ic_check),
-                    contentDescription = null,
-                    tint = if (isSelected) colors.selectedLeadingIconColor else colors.leadingIconColor,
-                )
-            }
-        } else {
+        if (leadingIcon != null) {
             Crossfade(targetState = isSelected) { isChecked ->
                 Icon(
                     modifier = Modifier.padding(end = CHIP_ICON_GAP).size(FilterChipDefaults.IconSize),
-                    painter = if (isChecked) painterResource(Res.drawable.ic_check) else leadingIcon,
+                    painter = leadingIcon,
                     contentDescription = null,
                     tint = when {
                         !isEnabled -> colors.disabledLeadingIconColor
