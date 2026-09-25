@@ -38,6 +38,7 @@ import org.jetbrains.compose.resources.painterResource
 internal fun UiModeChoice(
     modifier: Modifier = Modifier,
     selected: UserPreferences.UiMode?,
+    shouldApplyPadding: Boolean = true,
     onSelected: (UserPreferences.UiMode) -> Unit,
 ) = SegmentedChoice(
     modifier = modifier,
@@ -46,6 +47,7 @@ internal fun UiModeChoice(
         UserPreferences.UiMode.LIGHT to stringResource(Res.string.settings_user_interface_theme_light),
         UserPreferences.UiMode.DARK to stringResource(Res.string.settings_user_interface_theme_dark),
     ),
+    shouldApplyPadding = shouldApplyPadding,
     selected = selected,
     onSelected = onSelected,
 )
@@ -59,6 +61,7 @@ internal fun UiModeChoice(
 internal fun ThemeColorChoice(
     modifier: Modifier = Modifier,
     uiMode: UserPreferences.UiMode?,
+    shouldApplyPadding: Boolean = true,
     selected: UserPreferences.ThemeColor?,
     onSelected: (UserPreferences.ThemeColor) -> Unit,
 ) {
@@ -77,6 +80,7 @@ internal fun ThemeColorChoice(
                 icon = themeColor.icon(),
             )
         },
+        shouldApplyPadding = shouldApplyPadding,
         selected = selected,
         onSelected = onSelected,
     )

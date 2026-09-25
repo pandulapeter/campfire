@@ -15,6 +15,7 @@ import androidx.compose.animation.fadeOut
 import androidx.compose.animation.scaleIn
 import androidx.compose.animation.scaleOut
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ColumnScope
 import androidx.compose.foundation.layout.PaddingValues
@@ -23,21 +24,23 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.WindowInsetsSides
 import androidx.compose.foundation.layout.asPaddingValues
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.only
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.safeDrawing
+import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyListScope
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.verticalScroll
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.BottomSheetDefaults
 import androidx.compose.material3.Button
@@ -66,18 +69,27 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.FocusRequester
-import androidx.compose.ui.graphics.luminance
-import androidx.compose.ui.text.TextRange
-import androidx.compose.ui.text.style.TextOverflow
-import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.focus.focusRequester
+import androidx.compose.ui.graphics.luminance
 import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
+import androidx.compose.ui.text.TextRange
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardCapitalization
+import androidx.compose.ui.text.input.TextFieldValue
+import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.pandulapeter.campfire.data.model.domain.ImportConflictResolution
+import com.pandulapeter.campfire.data.model.domain.ImportPlan
+import com.pandulapeter.campfire.data.model.domain.Song
+import com.pandulapeter.campfire.data.model.domain.SongLanguage
+import com.pandulapeter.campfire.data.model.domain.Tag
+import com.pandulapeter.campfire.presentation.localization.currentLanguage
+import com.pandulapeter.campfire.presentation.localization.pluralStringResource
+import com.pandulapeter.campfire.presentation.localization.stringResource
 import com.pandulapeter.campfire.presentation.resources.Res
 import com.pandulapeter.campfire.presentation.resources.cancel
 import com.pandulapeter.campfire.presentation.resources.close
@@ -106,10 +118,10 @@ import com.pandulapeter.campfire.presentation.resources.import_conflicts_summary
 import com.pandulapeter.campfire.presentation.resources.import_oversized
 import com.pandulapeter.campfire.presentation.resources.save
 import com.pandulapeter.campfire.presentation.resources.setlists_delete_setlist
-import com.pandulapeter.campfire.presentation.resources.setlists_duplicate
-import com.pandulapeter.campfire.presentation.resources.setlists_duplicate_title
 import com.pandulapeter.campfire.presentation.resources.setlists_delete_setlist_confirmation
 import com.pandulapeter.campfire.presentation.resources.setlists_description
+import com.pandulapeter.campfire.presentation.resources.setlists_duplicate
+import com.pandulapeter.campfire.presentation.resources.setlists_duplicate_title
 import com.pandulapeter.campfire.presentation.resources.setlists_edit_setlist
 import com.pandulapeter.campfire.presentation.resources.setlists_new_setlist
 import com.pandulapeter.campfire.presentation.resources.setlists_new_setlist_title
@@ -118,7 +130,6 @@ import com.pandulapeter.campfire.presentation.resources.setlists_search
 import com.pandulapeter.campfire.presentation.resources.setlists_song_assignments
 import com.pandulapeter.campfire.presentation.resources.settings_sync_disconnect
 import com.pandulapeter.campfire.presentation.resources.settings_sync_disconnect_confirmation
-import com.pandulapeter.campfire.presentation.resources.songs_setlist_assignments
 import com.pandulapeter.campfire.presentation.resources.song_details_display_options
 import com.pandulapeter.campfire.presentation.resources.song_details_language
 import com.pandulapeter.campfire.presentation.resources.song_details_language_no_search_results
@@ -131,54 +142,44 @@ import com.pandulapeter.campfire.presentation.resources.song_editor_revert
 import com.pandulapeter.campfire.presentation.resources.song_editor_revert_confirmation
 import com.pandulapeter.campfire.presentation.resources.song_editor_unsaved_changes
 import com.pandulapeter.campfire.presentation.resources.song_editor_unsaved_changes_confirmation
+import com.pandulapeter.campfire.presentation.resources.songs_clear
 import com.pandulapeter.campfire.presentation.resources.songs_delete_song
 import com.pandulapeter.campfire.presentation.resources.songs_delete_song_confirmation
+import com.pandulapeter.campfire.presentation.resources.songs_empty_title
+import com.pandulapeter.campfire.presentation.resources.songs_filter
 import com.pandulapeter.campfire.presentation.resources.songs_new_song
 import com.pandulapeter.campfire.presentation.resources.songs_new_song_artist
 import com.pandulapeter.campfire.presentation.resources.songs_new_song_title
-import com.pandulapeter.campfire.presentation.resources.songs_clear
-import com.pandulapeter.campfire.presentation.resources.songs_empty_title
 import com.pandulapeter.campfire.presentation.resources.songs_no_search_results
 import com.pandulapeter.campfire.presentation.resources.songs_search
-import com.pandulapeter.campfire.presentation.resources.songs_filter
-import com.pandulapeter.campfire.presentation.resources.settings_user_interface_theme
-import com.pandulapeter.campfire.presentation.resources.settings_user_interface_theme_color
+import com.pandulapeter.campfire.presentation.resources.songs_setlist_assignments
 import com.pandulapeter.campfire.presentation.resources.welcome_get_started
 import com.pandulapeter.campfire.presentation.resources.welcome_message
 import com.pandulapeter.campfire.presentation.resources.welcome_open_settings
 import com.pandulapeter.campfire.presentation.resources.welcome_settings_hint
 import com.pandulapeter.campfire.presentation.resources.welcome_settings_hint_sync
 import com.pandulapeter.campfire.presentation.resources.welcome_title
-import com.pandulapeter.campfire.data.model.domain.ImportConflictResolution
-import com.pandulapeter.campfire.data.model.domain.ImportPlan
-import com.pandulapeter.campfire.data.model.domain.Song
-import com.pandulapeter.campfire.data.model.domain.SongLanguage
-import com.pandulapeter.campfire.data.model.domain.Tag
 import com.pandulapeter.campfire.presentation.ui.CampfireViewModel
 import com.pandulapeter.campfire.presentation.ui.components.ActionListItem
 import com.pandulapeter.campfire.presentation.ui.components.CheckboxListItem
 import com.pandulapeter.campfire.presentation.ui.components.CountedFilterChip
 import com.pandulapeter.campfire.presentation.ui.components.MAX_SEARCH_QUERY_LENGTH
-import com.pandulapeter.campfire.presentation.ui.components.PickableLanguage
 import com.pandulapeter.campfire.presentation.ui.components.RadioListItem
 import com.pandulapeter.campfire.presentation.ui.components.SettingsSectionTitle
-import com.pandulapeter.campfire.presentation.ui.components.ThemeColorChoice
-import com.pandulapeter.campfire.presentation.ui.components.UiModeChoice
-import com.pandulapeter.campfire.presentation.ui.screens.settings.SettingsSubsection
 import com.pandulapeter.campfire.presentation.ui.components.SongFilters
 import com.pandulapeter.campfire.presentation.ui.components.TagFlowRow
 import com.pandulapeter.campfire.presentation.ui.components.TagPill
+import com.pandulapeter.campfire.presentation.ui.components.ThemeColorChoice
+import com.pandulapeter.campfire.presentation.ui.components.UiModeChoice
 import com.pandulapeter.campfire.presentation.ui.components.fadingTopEdge
 import com.pandulapeter.campfire.presentation.ui.components.languageLabel
 import com.pandulapeter.campfire.presentation.ui.components.languageName
 import com.pandulapeter.campfire.presentation.ui.components.pickableLanguages
 import com.pandulapeter.campfire.presentation.ui.components.textResource
+import com.pandulapeter.campfire.presentation.ui.screens.settings.SettingsSubsection
 import com.pandulapeter.campfire.presentation.ui.screens.songDetails.SongDisplayControls
 import kotlinx.coroutines.launch
 import org.jetbrains.compose.resources.painterResource
-import com.pandulapeter.campfire.presentation.localization.currentLanguage
-import com.pandulapeter.campfire.presentation.localization.pluralStringResource
-import com.pandulapeter.campfire.presentation.localization.stringResource
 
 /**
  * Hosts whichever dialog or bottom sheet the view model asks for.
@@ -331,23 +332,106 @@ internal fun CampfireDialogs(
             onSave = viewModel::saveEditorChangesAndLeave,
         )
 
-        CampfireViewModel.DialogType.Welcome -> CampfireBottomSheet(
-            title = stringResource(Res.string.welcome_title),
-            onDismiss = { viewModel.dismissSheet(CampfireViewModel.DialogType.Welcome) },
-        ) { contentPadding ->
-            WelcomeContent(
-                viewModel = viewModel,
-                contentPadding = contentPadding,
-                onGetStarted = { close() },
-                onOpenSettings = {
-                    // Behind the sheet as it goes down rather than after it, so the two move together.
-                    viewModel.openSettingsFromWelcome()
-                    close()
+        CampfireViewModel.DialogType.Welcome -> WelcomeDialog(
+            viewModel = viewModel,
+        )
+
+        null -> Unit
+    }
+}
+
+/**
+ * The first run's one screen of its own: a line about what the app is, the two choices that decide how all of it
+ * looks, and where everything else is. It is kept to exactly that on purpose - the library behind it already holds
+ * the demo songs, which say more about the app than a tour could, and a first run that opened on a series of pages
+ * would stand between somebody and the songbook they came for. The colors are the settings screen's own controls,
+ * and the dialog is drawn over the app in the app's theme, so every tap on them shows its answer on the songs behind.
+ *
+ * Sync is the one setting it names, and only where this build has any: it is the only thing in the app a new user
+ * cannot find by using it, since it stays off and silent until somebody goes to Settings to connect it.
+ */
+@Composable
+private fun WelcomeDialog(
+    viewModel: CampfireViewModel,
+) {
+    val userPreferences by viewModel.userPreferences.collectAsStateWithLifecycle()
+    BoxWithConstraints(
+        modifier = Modifier.fillMaxSize(),
+    ) {
+        val isSmallScreen = maxWidth < 600.dp || maxHeight < 600.dp
+        if (isSmallScreen) {
+            CampfireBottomSheet(
+                title = stringResource(Res.string.welcome_title),
+                sheetMaxWidth = 680.dp,
+                onDismiss = { viewModel.dismissSheet(CampfireViewModel.DialogType.Welcome) },
+            ) { contentPadding ->
+                WelcomeContent(
+                    viewModel = viewModel,
+                    contentPadding = contentPadding,
+                    onGetStarted = { close() },
+                    onOpenSettings = {
+                        viewModel.openSettingsFromWelcome()
+                        close()
+                    },
+                )
+            }
+        } else {
+            AlertDialog(
+                modifier = Modifier.widthIn(max = 360.dp),
+                onDismissRequest = viewModel::dismissDialog,
+                title = { Text(stringResource(Res.string.welcome_title)) },
+                text = {
+                    Column(
+                        modifier = Modifier.verticalScroll(rememberScrollState()),
+                    ) {
+                        Text(
+                            text = stringResource(Res.string.welcome_message),
+                            style = MaterialTheme.typography.bodyLarge,
+                        )
+                        Spacer(modifier = Modifier.height(4.dp))
+                        SettingsSubsection(
+                            shouldApplyPadding = false,
+                        ) {
+                            UiModeChoice(
+                                shouldApplyPadding = false,
+                                selected = userPreferences?.uiMode,
+                                onSelected = viewModel::setUiMode,
+                            )
+                        }
+                        Spacer(modifier = Modifier.height(4.dp))
+                        SettingsSubsection(
+                            shouldApplyPadding = false,
+                        ) {
+                            ThemeColorChoice(
+                                shouldApplyPadding = false,
+                                uiMode = userPreferences?.uiMode,
+                                selected = userPreferences?.themeColor,
+                                onSelected = viewModel::setThemeColor,
+                            )
+                        }
+                        Spacer(modifier = Modifier.height(16.dp))
+                        Text(
+                            text = stringResource(if (viewModel.syncProviders.isEmpty()) Res.string.welcome_settings_hint else Res.string.welcome_settings_hint_sync),
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        )
+                    }
+                },
+                confirmButton = {
+                    Button(
+                        onClick = viewModel::dismissDialog,
+                    ) { Text(stringResource(Res.string.welcome_get_started)) }
+                },
+                dismissButton = {
+                    OutlinedButton(
+                        onClick = {
+                            viewModel.openSettingsFromWelcome()
+                            viewModel.dismissDialog()
+                        },
+                    ) { Text(stringResource(Res.string.welcome_open_settings)) }
                 },
             )
         }
-
-        null -> Unit
     }
 }
 
@@ -376,13 +460,20 @@ private fun ColumnScope.WelcomeContent(
         text = stringResource(Res.string.welcome_message),
         style = MaterialTheme.typography.bodyLarge,
     )
-    SettingsSubsection(title = stringResource(Res.string.settings_user_interface_theme)) {
+    SettingsSubsection(
+        shouldApplyPadding = false,
+    ) {
         UiModeChoice(
             selected = userPreferences?.uiMode,
             onSelected = viewModel::setUiMode,
         )
     }
-    SettingsSubsection(title = stringResource(Res.string.settings_user_interface_theme_color)) {
+    Spacer(
+        modifier = Modifier.height(8.dp),
+    )
+    SettingsSubsection(
+        shouldApplyPadding = false,
+    ) {
         ThemeColorChoice(
             uiMode = userPreferences?.uiMode,
             selected = userPreferences?.themeColor,
@@ -1090,8 +1181,8 @@ private fun SongPicker(
         val pickableByFileName = pickable.associateBy { it.song.fileName }
         val initial = initialSongFileNames.toSet()
         initialSongFileNames.mapNotNull { pickableByFileName[it] } +
-            pickable.filterNot { it.song.fileName in initial }
-                .sortedWith(compareBy({ viewModel.normalize(it.song.title) }, { viewModel.normalize(it.song.artist) }, { it.song.fileName }))
+                pickable.filterNot { it.song.fileName in initial }
+                    .sortedWith(compareBy({ viewModel.normalize(it.song.title) }, { viewModel.normalize(it.song.artist) }, { it.song.fileName }))
     }
     val filters = remember(songs) { songs.toPickerFilters() }
     // Only what the chips still offer narrows the list: a tag that left the library while the sheet was open would
@@ -1109,9 +1200,9 @@ private fun SongPicker(
         val normalizedQuery = viewModel.normalizeForSearch(query)
         pickableSongs.filter { pickableSong ->
             (normalizedQuery in pickableSong.title || normalizedQuery in pickableSong.artist ||
-                pickableSong.searchableTags.any { normalizedQuery in it }) &&
-                (activeTags.isEmpty() || activeTags.any { it in pickableSong.tags }) &&
-                (activeLanguages.isEmpty() || activeLanguages.any { it in pickableSong.languages })
+                    pickableSong.searchableTags.any { normalizedQuery in it }) &&
+                    (activeTags.isEmpty() || activeTags.any { it in pickableSong.tags }) &&
+                    (activeLanguages.isEmpty() || activeLanguages.any { it in pickableSong.languages })
         }
     }
     CampfireBottomSheet(
@@ -1409,6 +1500,7 @@ private fun ColumnScope.PickerList(
 private fun CampfireBottomSheet(
     title: String,
     subtitle: String = "",
+    sheetMaxWidth: Dp = BottomSheetDefaults.SheetMaxWidth,
     onDismiss: () -> Unit,
     content: @Composable BottomSheetContentScope.(contentPadding: PaddingValues) -> Unit,
 ) {
@@ -1421,6 +1513,7 @@ private fun CampfireBottomSheet(
     ModalBottomSheet(
         onDismissRequest = onDismiss,
         sheetState = sheetState,
+        sheetMaxWidth = sheetMaxWidth,
         // In the light theme the screens' own background rather than Material's surface container, so a sheet reads as
         // part of the app. In the dark one that background is too close to the scrim to tell the sheet from the screen
         // it covers, so the sheet keeps Material's lighter container there. The scheme on screen is asked rather than the
@@ -1503,6 +1596,7 @@ private fun SheetHeader(
 private val SHEET_BOTTOM_PADDING = 16.dp
 private val PICKER_LIST_TOP_PADDING = 8.dp
 private const val MAX_TITLE_LENGTH = 60
+
 /** A tag is a label to filter by, a word or two, and it sits in a pill next to others under a song's title. */
 private const val MAX_TAG_LENGTH = 30
 private const val MAX_DESCRIPTION_LENGTH = 300

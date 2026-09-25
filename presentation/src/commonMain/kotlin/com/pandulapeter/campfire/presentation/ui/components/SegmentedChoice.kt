@@ -35,11 +35,12 @@ internal fun <T> SegmentedChoice(
     modifier: Modifier = Modifier,
     options: List<Pair<T, String>>,
     selected: T?,
+    shouldApplyPadding: Boolean = true,
     isEnabled: Boolean = true,
     isInline: Boolean = false,
     onSelected: (T) -> Unit,
 ) = SingleChoiceSegmentedButtonRow(
-    modifier = modifier.fillMaxWidth().padding(horizontal = if (isInline) 8.dp else 16.dp)
+    modifier = modifier.fillMaxWidth().padding(horizontal = if (shouldApplyPadding) if (isInline) 8.dp else 16.dp else 0.dp)
 ) {
     options.forEachIndexed { index, (value, label) ->
         SegmentedButton(

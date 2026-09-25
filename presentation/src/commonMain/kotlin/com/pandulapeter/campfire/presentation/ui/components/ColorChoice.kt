@@ -50,10 +50,11 @@ import org.jetbrains.compose.resources.painterResource
 internal fun <T> ColorChoice(
     modifier: Modifier = Modifier,
     options: List<ColorChoiceOption<T>>,
+    shouldApplyPadding: Boolean = true,
     selected: T?,
     onSelected: (T) -> Unit,
 ) = FlowRow(
-    modifier = modifier.fillMaxWidth().padding(horizontal = 16.dp),
+    modifier = modifier.fillMaxWidth().padding(horizontal = if (shouldApplyPadding) 16.dp else 0.dp),
     horizontalArrangement = Arrangement.spacedBy(SWATCH_GAP),
     verticalArrangement = Arrangement.spacedBy(SWATCH_GAP),
 ) {

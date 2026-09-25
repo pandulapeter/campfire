@@ -240,18 +240,21 @@ internal fun SettingsMessage(
 @Composable
 internal fun SettingsSubsection(
     modifier: Modifier = Modifier,
-    title: String,
+    title: String? = null,
     description: String? = null,
     isEnabled: Boolean = true,
+    shouldApplyPadding: Boolean = true,
     content: @Composable () -> Unit,
-) = Column(modifier = modifier.padding(vertical = SUBSECTION_PADDING)) {
+) = Column(modifier = modifier.padding(vertical = if (shouldApplyPadding) SUBSECTION_PADDING else 0.dp)) {
     val labelAlpha = if (isEnabled) 1f else 0.5f
-    Text(
-        modifier = Modifier.alpha(labelAlpha).padding(horizontal = 16.dp),
-        text = title,
-        style = MaterialTheme.typography.bodyLarge,
-        color = MaterialTheme.colorScheme.onSurface,
-    )
+    title?.let {
+        Text(
+            modifier = Modifier.alpha(labelAlpha).padding(horizontal = 16.dp),
+            text = title,
+            style = MaterialTheme.typography.bodyLarge,
+            color = MaterialTheme.colorScheme.onSurface,
+        )
+    }
     description?.let {
         Text(
             modifier = Modifier.alpha(labelAlpha).padding(horizontal = 16.dp),
