@@ -10,68 +10,34 @@
 # Campfire
 *Your songbook, on every screen you own.*
 
-Campfire keeps your lyrics and chords in plain [ChordPro](https://www.chordpro.org) files and shows them the way you
-want to read them while playing: chords above the syllables they belong to, as few and as wide columns as the screen
-allows, and the text as large as you need it.
+Campfire is a chord sheet viewer and editor built around the plain-text [ChordPro](https://www.chordpro.org/chordpro/chordpro-introduction/) format.
+It runs natively on Android, iOS, macOS, Windows, Linux and the web. 
 
 <img src="documentation/screenshots/01.png" width="32%" /> <img src="documentation/screenshots/02.png" width="32%" /> <img src="documentation/screenshots/03.png" width="32%" />
 
-Write songs in the built-in editor, transpose them into your key, put
-them into setlists, and read them on your phone, your tablet, your laptop or in a browser.
+The interface is designed around practical use, whether you’re organizing a song library, building setlists, or playing a gig.
+Songs automatically adapt with multi-column layouts and customizable section ordering to make reading easier on stage.
+It also includes on-the-fly transposition, adjustable font sizing, a lyrics-only view for singers, customizable themes, and a Performance mode to lock the app against accidental edits.
 
 <img src="documentation/screenshots/04.png" width="32%" /> <img src="documentation/screenshots/05.png" width="32%" /> <img src="documentation/screenshots/06.png" width="32%" />
 
-Campfire works offline, there is no account to make, and there is no server of mine anywhere: songs are synced across your
-devices using your Dropbox account. The app is completely free, open-source, and there are no ads.
+The app works offline, requires no account, and doesn't rely on a central server. Syncing the library across devices is handled directly through your own Dropbox storage.
+Campfire is free, open-source, and has no ads or tracking. Check out the [Privacy Policy](https://pandulapeter.com/legal/privacy_policy-campfire.html) for more information.
 
 <!-- Settings links to this heading's anchor (#get-campfire); renaming it means changing SettingsScreen.kt too. -->
 ## Get Campfire
 
-Campfire is available for the following platforms:
+Campfire is currently available for the following platforms:
 
 <a href="https://play.google.com/store/apps/details?id=com.pandulapeter.campfire"><img src="documentation/images/badge_android.png" alt="Campfire for Android" height="32px" /></a>
 <a href="https://github.com/pandulapeter/campfire/releases/latest"><img src="documentation/images/badge_linux.png" alt="Campfire for Linux" height="32px" /></a>
 <a href="https://pandulapeter.com/campfire"><img src="documentation/images/badge_web.png" alt="Campfire in the browser" height="32px" /></a>
 
-Coming soon (under review):
+Other platforms coming really soon (under final review):
 
 <a href="https://github.com/pandulapeter/campfire/releases/latest"><img src="documentation/images/badge_ios.png" alt="Campfire for iOS" height="32px" /></a>
 <a href="https://github.com/pandulapeter/campfire/releases/latest"><img src="documentation/images/badge_macos.png" alt="Campfire for macOS" height="32px" /></a>
 <a href="https://github.com/pandulapeter/campfire/releases/latest"><img src="documentation/images/badge_windows.png" alt="Campfire for Windows" height="32px" /></a>
-
-## Documentation
-
-- [Features](documentation/features.md) - everything the app does, at length, and what it does with your data.
-- [File format](documentation/file-format.md) - the ChordPro directives Campfire understands, the setlist JSON, and how files are named.
-- [Sync](documentation/sync.md) - what it sees, how a run decides, and why it needs no backend.
-
-## To do
-- Android dynamic theme detection on Samsung is not working
-- Update badge assets in the readme
-- .cho file association doesn't work on Samsung devices
-- Fast scroll touch target conflicts with back gesture
-- Avoid duplicating information on detail screen modals. On other modals make song title / artist appearance consistent
-- Song assignments bottom sheet: tag vertical spacing should be incremented
-- "Add tag" dialog should be a bottom sheet could be a bottom sheet
-- "Language picker" dialog could also be a bottom sheet
-- "Song assignments" bottom sheet: open keyboard automatically, hide it on downwards scroll
-- Downwards scroll dismissing the keyboard should work on every modal list
-- Review icon color saturation
-- Back navigation on Settings should pop back to the General tab first
-- Tapping on the Song details screen app bar title should scroll to the top
-- Song details screen scroll should snap to rows
-- Can we close the browser window after the Dropbox redirect?
-- Sort and Filter UI should be improved (better animations)
-- Haptic effects
-- Auto-scroll
-- Optional close confirmation dialog on supported platforms
-- Add genre tags, similar to language tags
-- Add ability to add links as metadata items
-- Cover art thumbnails as tags, use https://musicbrainz.org/doc/Cover_Art_Archive/API
-- Add support for the Nashville chord system
-- Once Microsoft Store, App Store and Mac App Store listings are approved, update included URL-s + this Readme
-- Add more automatic sync triggers
-- Add support for external control devices with a focus-by-section feature
 
 ## License
 
