@@ -25,7 +25,7 @@ Campfire works offline, there is no account to make, and there is no server of m
 devices using your Dropbox account. The app is completely free, open-source, and there are no ads.
 
 <!-- Settings links to this heading's anchor (#get-campfire); renaming it means changing SettingsScreen.kt too. -->
-### Get Campfire
+## Get Campfire
 
 Campfire is available for the following platforms:
 
@@ -33,19 +33,33 @@ Campfire is available for the following platforms:
 <a href="https://github.com/pandulapeter/campfire/releases/latest"><img src="documentation/images/badge_linux.png" alt="Campfire for Linux" height="32px" /></a>
 <a href="https://pandulapeter.com/campfire"><img src="documentation/images/badge_web.png" alt="Campfire in the browser" height="32px" /></a>
 
-**Coming soon** to the App Store, the Mac App Store and the Microsoft Store:
+Coming soon (under review):
 
 <a href="https://github.com/pandulapeter/campfire/releases/latest"><img src="documentation/images/badge_ios.png" alt="Campfire for iOS" height="32px" /></a>
 <a href="https://github.com/pandulapeter/campfire/releases/latest"><img src="documentation/images/badge_macos.png" alt="Campfire for macOS" height="32px" /></a>
 <a href="https://github.com/pandulapeter/campfire/releases/latest"><img src="documentation/images/badge_windows.png" alt="Campfire for Windows" height="32px" /></a>
 
-### Documentation
+## Documentation
 
 - [Features](documentation/features.md) - everything the app does, at length, and what it does with your data.
 - [File format](documentation/file-format.md) - the ChordPro directives Campfire understands, the setlist JSON, and how files are named.
 - [Sync](documentation/sync.md) - what it sees, how a run decides, and why it needs no backend.
 
-### To do
+## To do
+- Android dynamic theme detection on Samsung is not working
+- Update badge assets in the readme
+- .cho file association doesn't work on Samsung devices
+- Fast scroll touch target conflicts with back gesture
+- Avoid duplicating information on detail screen modals. On other modals make song title / artist appearance consistent
+- Song assignments bottom sheet: tag vertical spacing should be incremented
+- "Add tag" dialog should be a bottom sheet could be a bottom sheet
+- "Language picker" dialog could also be a bottom sheet
+- "Song assignments" bottom sheet: open keyboard automatically, hide it on downwards scroll
+- Downwards scroll dismissing the keyboard should work on every modal list
+- Review icon color saturation
+- Back navigation on Settings should pop back to the General tab first
+- Tapping on the Song details screen app bar title should scroll to the top
+- Song details screen scroll should snap to rows
 - Can we close the browser window after the Dropbox redirect?
 - Sort and Filter UI should be improved (better animations)
 - Haptic effects
@@ -59,7 +73,7 @@ Campfire is available for the following platforms:
 - Add more automatic sync triggers
 - Add support for external control devices with a focus-by-section feature
 
-### License
+## License
 
 Copyright (c) Pandula Péter 2017-2026. This software is licensed under the
 [Mozilla Public License 2.0](LICENSE).
