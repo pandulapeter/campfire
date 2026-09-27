@@ -21,6 +21,7 @@ import com.pandulapeter.campfire.data.source.local.implementation.model.SetlistD
 import com.pandulapeter.campfire.data.source.local.implementation.isNamed
 import com.pandulapeter.campfire.data.source.local.implementation.setlistFileName
 import com.pandulapeter.campfire.data.source.local.implementation.uniqueName
+import com.pandulapeter.campfire.data.source.local.implementation.storage.file.BatchRead
 import com.pandulapeter.campfire.data.source.local.implementation.storage.file.FileStorage
 import com.pandulapeter.campfire.data.source.local.implementation.storage.file.StorageDirectory
 import kotlinx.coroutines.CancellationException
@@ -35,27 +36,31 @@ internal class SetlistLocalSourceImpl(
 ) : SetlistLocalSource {
 
     override suspend fun loadSetlists(): List<Setlist> = withContext(Dispatchers.Default) {
-        fileStorage.list(StorageDirectory.SETLISTS)
+        val files = fileStorage.list(StorageDirectory.SETLISTS)
             .filter { LibraryFiles.isSetlistFileName(it.name) }
-            .mapNotNull { file ->
-                try {
-                    if (file.size > ImportLimits.MAX_TEXT_FILE_SIZE) {
-                        // Nothing the app writes is that large, so it was put there from outside, and reading it whole
-                        // is what would take the app down.
-                        println("Skipped the setlist \"${file.name}\": ${file.size} bytes is more than a setlist can hold.")
-                        null
-                    } else {
-                        fileStorage.readText(StorageDirectory.SETLISTS, file.name)
-                            ?.let { SetlistDocumentFormat.decode(it).toModel(file.name, size = file.size) }
-                    }
-                } catch (exception: CancellationException) {
-                    throw exception
-                } catch (exception: Exception) {
-                    // Left on disk rather than deleted: a setlist the user hand-edited into invalid JSON is theirs to fix.
-                    println("Could not read the setlist \"${file.name}\": ${exception.message}")
-                    null
+            .filter { file ->
+                (file.size <= ImportLimits.MAX_TEXT_FILE_SIZE).also { isReadable ->
+                    // Nothing the app writes is that large, so it was put there from outside, and reading it whole is
+                    // what would take the app down.
+                    if (!isReadable) println("Skipped the setlist \"${file.name}\": ${file.size} bytes is more than a setlist can hold.")
                 }
             }
+        // Setlists are few, so they are read in one batch rather than in the song scan's bounded ones.
+        files.zip(fileStorage.readTexts(StorageDirectory.SETLISTS, files.map { it.name })).mapNotNull { (file, answer) ->
+            try {
+                when (answer) {
+                    is BatchRead.Text -> SetlistDocumentFormat.decode(answer.text).toModel(file.name, size = file.size)
+                    BatchRead.Missing -> null
+                    is BatchRead.Failed -> throw answer.cause
+                }
+            } catch (exception: CancellationException) {
+                throw exception
+            } catch (exception: Exception) {
+                // Left on disk rather than deleted: a setlist the user hand-edited into invalid JSON is theirs to fix.
+                println("Could not read the setlist \"${file.name}\": ${exception.message}")
+                null
+            }
+        }
     }
 
     override suspend fun loadSetlist(fileName: String): Setlist? = withContext(Dispatchers.Default) {

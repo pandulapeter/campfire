@@ -76,10 +76,57 @@ internal class OpfsFileStorage : FileStorage {
         fileHandle(directory, name) != null
     }
 
-    override suspend fun readText(directory: StorageDirectory, name: String) = withContext(Dispatchers.Default) {
-        failingAsStorage(name) {
-            fileHandle(directory, name)?.let { handle -> readFileText(handle).await<JsString?>()?.toString() }
-        }?.let { answer -> libraryText(directory, name, answer) }
+    override suspend fun readText(directory: StorageDirectory, name: String) = when (val answer = readTexts(directory, listOf(name)).single()) {
+        is BatchRead.Text -> answer.text
+        BatchRead.Missing -> null
+        is BatchRead.Failed -> throw answer.cause
+    }
+
+    /**
+     * The whole batch is one `js(...)` call and one promise, rather than a handle, a file and a buffer awaited in turn for
+     * every name. Valid UTF-8 without a NUL is decoded by the browser, which gives exactly what `decodeLibraryText`
+     * would, a single byte order mark aside, which `TextDecoder` strips and the rest of the leading ones are stripped
+     * here. Anything else, the code-page files and UTF-16, is read again as bytes and goes through `decodeLibraryText`,
+     * since only it knows those rules - a NUL anywhere is a file that may be UTF-16 without a byte order mark, which the
+     * browser would have read as valid UTF-8.
+     */
+    override suspend fun readTexts(directory: StorageDirectory, names: List<String>): List<BatchRead> = withContext(Dispatchers.Default) {
+        val validNames = names.filter(::isValidFileName)
+        val answers = try {
+            if (validNames.isEmpty()) {
+                emptyList()
+            } else {
+                failingAsStorage(directory.displayName) {
+                    readFileTexts(directoryHandle(directory), validNames.joinToString(ENTRY_SEPARATOR)).await<JsArray<JsString?>>()
+                }.let { array -> List(array.length) { array[it]?.toString() } }
+            }
+        } catch (exception: CancellationException) {
+            throw exception
+        } catch (exception: Exception) {
+            return@withContext names.map { BatchRead.Failed(exception) }
+        }
+        val remainingAnswers = answers.iterator()
+        names.map { name ->
+            if (!isValidFileName(name)) {
+                BatchRead.Failed(IllegalArgumentException("Invalid file name: \"$name\"."))
+            } else {
+                val answer = remainingAnswers.next()
+                when {
+                    answer == null -> BatchRead.Missing
+                    answer.startsWith(DECODED_TEXT) -> BatchRead.Text(answer.substring(1).trimStart(BYTE_ORDER_MARK))
+                    answer.startsWith(READ_FAILED) -> BatchRead.Failed(
+                        LibraryStorageException("Could not access \"$name\".", Exception(answer.substring(1))),
+                    )
+                    else -> try {
+                        readBytes(directory, name)?.decodeLibraryText()?.let(BatchRead::Text) ?: BatchRead.Missing
+                    } catch (exception: CancellationException) {
+                        throw exception
+                    } catch (exception: Exception) {
+                        BatchRead.Failed(exception)
+                    }
+                }
+            }
+        }
     }
 
     override suspend fun readBytes(directory: StorageDirectory, name: String) = withContext(Dispatchers.Default) {
@@ -105,16 +152,6 @@ internal class OpfsFileStorage : FileStorage {
         }
         Unit
     }
-
-    /**
-     * What `readFileText` answered, as the text of the file. Valid UTF-8 without a NUL was decoded by the browser, which
-     * gives exactly what `decodeLibraryText` would, a single byte order mark aside, which `TextDecoder` strips and the
-     * rest of the leading ones are stripped here. Anything else, the code-page files and UTF-16, is read again as bytes
-     * and goes through `decodeLibraryText`, since only it knows those rules - a NUL anywhere is a file that may be UTF-16
-     * without a byte order mark, which the browser would have read as valid UTF-8.
-     */
-    private suspend fun libraryText(directory: StorageDirectory, name: String, answer: String): String? =
-        if (answer.startsWith(DECODED_TEXT)) answer.substring(1).trimStart(BYTE_ORDER_MARK) else readBytes(directory, name)?.decodeLibraryText()
 
     /**
      * A rejected promise surfaces from `await` as a plain `Exception` whose message names the JavaScript error (the
@@ -172,6 +209,7 @@ internal class OpfsFileStorage : FileStorage {
         const val FIELD_COUNT = 3
         const val BYTE_ORDER_MARK = '\uFEFF'
         const val DECODED_TEXT = '\u0000'
+        const val READ_FAILED = '\u0002'
 
         // Control characters, because they are the only thing a file name is guaranteed not to contain.
         val ENTRY_SEPARATOR = Char(ENTRY_SEPARATOR_CODE).toString()
@@ -209,15 +247,13 @@ private fun getFileHandle(parent: JsAny, name: String): Promise<JsAny?> = js(
 private fun listEntries(directory: JsAny): Promise<JsString?> = js(
     """(async function () {
         var field = String.fromCharCode(0);
+        var handles = [];
+        for await (var entry of directory.entries()) if (entry[1].kind === 'file') handles.push(entry);
+        var files = await Promise.all(handles.map(function (entry) {
+            return entry[1].getFile().catch(function (error) { if (error && error.name === 'NotFoundError') return null; throw error; });
+        }));
         var entries = [];
-        for await (var entry of directory.entries()) {
-            if (entry[1].kind === 'file') {
-                var file;
-                try { file = await entry[1].getFile(); }
-                catch (error) { if (error && error.name === 'NotFoundError') continue; throw error; }
-                entries.push(entry[0] + field + file.size + field + file.lastModified);
-            }
-        }
+        for (var i = 0; i < handles.length; i++) if (files[i]) entries.push(handles[i][0] + field + files[i].size + field + files[i].lastModified);
         return entries.join(String.fromCharCode(1));
     })()"""
 )
@@ -244,25 +280,30 @@ private fun fileInfo(handle: JsAny): Promise<JsString?> = js(
 )
 
 /**
- * The file's text as `TextDecoder` reads it, marked with a leading NUL, or a lone SOH where the file has to be decoded
- * by `decodeLibraryText` instead (not valid UTF-8, or a NUL in it), or `null` for a file removed between its handle and
- * the read: a `NotFoundError` there is a file no longer in the directory, which is what the callers call missing, the
- * same way `fileInfo` does. The text crosses into Kotlin as one string, where the bytes would cross one call per byte.
+ * The text of every file of [names] (separated by the same control character `listEntries` uses), all of them asked
+ * for at once, one answer each and in order: the text as `TextDecoder` reads it behind a leading NUL, a lone SOH where
+ * the file has to be decoded by `decodeLibraryText` instead (not valid UTF-8, or a NUL in it), `null` for a file that
+ * is not there, and STX with the error's name and message for one that is there and could not be read. A failure is its
+ * own answer rather than the batch's, and the texts cross into Kotlin as strings, where bytes would cross one call each.
  */
-private fun readFileText(handle: JsAny): Promise<JsString?> = js(
-    """handle.getFile().then(function (file) { return file.arrayBuffer(); }).then(function (buffer) {
-        var text;
-        try { text = new TextDecoder('utf-8', { fatal: true }).decode(buffer); }
-        catch (error) { return String.fromCharCode(1); }
-        return text.indexOf(String.fromCharCode(0)) >= 0 ? String.fromCharCode(1) : String.fromCharCode(0) + text;
-    }).catch(function (error) {
-        if (error && error.name === 'NotFoundError') return null;
-        throw error;
-    })"""
+private fun readFileTexts(directory: JsAny, names: String): Promise<JsArray<JsString?>> = js(
+    """Promise.all((names.length === 0 ? [] : names.split(String.fromCharCode(1))).map(function (name) {
+        return directory.getFileHandle(name).then(function (handle) { return handle.getFile(); }).then(function (file) {
+            return file.arrayBuffer();
+        }).then(function (buffer) {
+            var text;
+            try { text = new TextDecoder('utf-8', { fatal: true }).decode(buffer); }
+            catch (error) { return String.fromCharCode(1); }
+            return text.indexOf(String.fromCharCode(0)) >= 0 ? String.fromCharCode(1) : String.fromCharCode(0) + text;
+        }).catch(function (error) {
+            if (error && error.name === 'NotFoundError') return null;
+            return String.fromCharCode(2) + ((error && error.name) || 'Error') + ': ' + ((error && error.message) || String(error));
+        });
+    }))"""
 )
 
 /**
- * The file's bytes as a string of one character per byte, or `null` the way `readFileText` answers it. A string is the
+ * The file's bytes as a string of one character per byte, or `null` for a file that is not there. A string is the
  * one thing that crosses the Kotlin/Wasm boundary in bulk; an `Int8Array` is read one call per element. It is built a
  * chunk at a time, since `fromCharCode` takes its bytes as arguments and an argument list has a limit.
  */

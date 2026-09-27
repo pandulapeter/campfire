@@ -11,6 +11,10 @@ package com.pandulapeter.campfire.data.source.local.implementation.storage.file
 
 import com.pandulapeter.campfire.data.model.domain.decodeLibraryText
 import com.pandulapeter.campfire.data.source.local.api.LibraryStorageException
+import kotlinx.coroutines.CancellationException
+import kotlinx.coroutines.async
+import kotlinx.coroutines.awaitAll
+import kotlinx.coroutines.coroutineScope
 
 /** The folders the app keeps its data in. Each maps to one platform directory, created on first use. */
 enum class StorageDirectory {
@@ -26,6 +30,18 @@ data class StoredFileInfo(
     /** Milliseconds since the epoch, 0 if the platform cannot tell. */
     val lastModified: Long,
 )
+
+/** What [FileStorage.readTexts] answers about one file. */
+sealed interface BatchRead {
+
+    data class Text(val text: String) : BatchRead
+
+    /** The file is not there, which is what [FileStorage.readText]'s null says. */
+    data object Missing : BatchRead
+
+    /** The file is there and could not be read; the exception is what [FileStorage.readText] would have thrown. */
+    class Failed(val cause: Exception) : BatchRead
+}
 
 /**
  * Flat file access inside the app-private data directory. No sub-directories, no paths: every operation is
@@ -61,6 +77,26 @@ interface FileStorage {
      * [decodeLibraryText], so a file that is not UTF-8 still reads.
      */
     suspend fun readText(directory: StorageDirectory, name: String): String?
+
+    /**
+     * [readText] for every one of [names] at once, one answer per name and in the same order. A file that fails is its
+     * own answer, never the batch's, so that one unreadable song does not take the rest of a scan with it. The web
+     * overrides it to read the whole batch in one call into the browser, where each file read one at a time costs
+     * several round trips to its storage; everywhere else the reads simply run in parallel.
+     */
+    suspend fun readTexts(directory: StorageDirectory, names: List<String>): List<BatchRead> = coroutineScope {
+        names.map { name ->
+            async {
+                try {
+                    readText(directory, name)?.let(BatchRead::Text) ?: BatchRead.Missing
+                } catch (exception: CancellationException) {
+                    throw exception
+                } catch (exception: Exception) {
+                    BatchRead.Failed(exception)
+                }
+            }
+        }.awaitAll()
+    }
 
     /** Null if the file does not exist; one that exists and cannot be read throws [LibraryStorageException]. */
     suspend fun readBytes(directory: StorageDirectory, name: String): ByteArray?

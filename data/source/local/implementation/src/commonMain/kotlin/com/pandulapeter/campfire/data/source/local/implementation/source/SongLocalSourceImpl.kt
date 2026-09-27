@@ -22,6 +22,7 @@ import com.pandulapeter.campfire.data.source.local.implementation.knownExtension
 import com.pandulapeter.campfire.data.source.local.implementation.moveFile
 import com.pandulapeter.campfire.data.source.local.implementation.songFileName
 import com.pandulapeter.campfire.data.source.local.implementation.uniqueName
+import com.pandulapeter.campfire.data.source.local.implementation.storage.file.BatchRead
 import com.pandulapeter.campfire.data.source.local.implementation.storage.file.FileStorage
 import com.pandulapeter.campfire.data.source.local.implementation.storage.file.StorageDirectory
 import com.pandulapeter.campfire.data.source.local.implementation.storage.file.StoredFileInfo
@@ -29,6 +30,7 @@ import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
+import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.withContext
 import org.koin.core.annotation.Single
 
@@ -59,7 +61,7 @@ internal class SongLocalSourceImpl(
         val batches = fileStorage.list(StorageDirectory.SONGS).filter { LibraryFiles.isSongFileName(it.name) }.chunked(BATCH_SIZE)
         var publishedCount = 0
         batches.forEachIndexed { index, batch ->
-            songs += batch.map { async { it.readSong() } }.awaitAll().filterNotNull()
+            songs += readSongs(batch)
             // The last batch is what the return value already says, and publishing it would only have everything
             // downstream sort and group the same list a second time.
             if (index < batches.lastIndex && songs.size >= publishedCount * 2) {
@@ -128,6 +130,34 @@ internal class SongLocalSourceImpl(
     override suspend fun deleteSong(fileName: String) = fileStorage.delete(StorageDirectory.SONGS, fileName)
 
     override suspend fun exists(fileName: String) = fileStorage.exists(StorageDirectory.SONGS, fileName)
+
+    /**
+     * One [FileStorage.readTexts] call for the whole batch, which on the web is one call into the browser rather than
+     * several per file. A file that fails to read or to parse is skipped with a log line, as [readSong] skips it.
+     */
+    private suspend fun readSongs(batch: List<StoredFileInfo>): List<Song> = coroutineScope {
+        val readable = batch.filter { file ->
+            (file.size <= ImportLimits.MAX_TEXT_FILE_SIZE).also { isReadable ->
+                if (!isReadable) println("Skipped the song \"${file.name}\": ${file.size} bytes is more than a song file can hold.")
+            }
+        }
+        readable.zip(fileStorage.readTexts(StorageDirectory.SONGS, readable.map { it.name })).map { (file, answer) ->
+            async {
+                try {
+                    when (answer) {
+                        is BatchRead.Text -> file.toSong(ChordProParser.summarize(answer.text))
+                        BatchRead.Missing -> null
+                        is BatchRead.Failed -> throw answer.cause
+                    }
+                } catch (exception: CancellationException) {
+                    throw exception
+                } catch (exception: Exception) {
+                    println("Could not read the song \"${file.name}\": ${exception.message}")
+                    null
+                }
+            }
+        }.awaitAll().filterNotNull()
+    }
 
     private suspend fun StoredFileInfo.readSong(): Song? = try {
         if (size > ImportLimits.MAX_TEXT_FILE_SIZE) {
