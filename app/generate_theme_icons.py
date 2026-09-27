@@ -18,7 +18,9 @@ icon's light, dark and tinted appearance, `appIcon.icns` and `appIcon.ico` the p
 those with its orange moved to the seed of a palette (see MaterialColorSchemes.kt, whose seeds SEEDS repeats), in
 Oklab so that the move keeps what the eye reads as the same lightness and saturation. A pixel is moved in proportion to
 how much orange it has, so the white of the mark, the shadows and the dark icon's near-black stay what they are while
-the fills, gradients and glows follow the color.
+the fills, gradients and glows follow the color. No icon ends up more saturated than the orange one, though, whatever
+its seed: the seeds are chosen for their palettes rather than their icons, and the loudest of them would be louder
+than the rest of the set.
 
 The app's own icon, and so every packaged one, is the promotional material's purple to orange gradient: its orange is
 moved to the color the gradient has at that pixel's place along the diagonal, which is read off the background of
@@ -38,7 +40,8 @@ What is written, for every color:
 And, in the app's own colors alone, the packaged icons: `appIcon.icns` and `appIcon.ico`. Android's icons are not
 written here: the app's own launcher icon and its Play listing icon (`app/android/appIcon.png`) are drawn as they are,
 and the launcher icons of the theme colors are an adaptive icon over each seed - see `res/mipmap-anydpi` - so the seeds
-below are repeated in `res/values/colors.xml` rather than written there.
+below are repeated in `res/values/colors.xml` rather than written there, those this script brings down to the orange's
+saturation already brought down.
 """
 
 import os
@@ -92,6 +95,9 @@ SEEDS = {
 
 DOCK_ICON_SIZE = 512
 
+GAMUT_TOLERANCE = 1e-4
+GAMUT_MAPPING_STEPS = 20
+
 # The sizes Windows asks an icon file for, up to the largest one the format has room for.
 ICO_SIZES = [(16, 16), (24, 24), (32, 32), (48, 48), (64, 64), (128, 128), (256, 256)]
 
@@ -117,16 +123,42 @@ def to_oklab(rgb):
     ], -1)
 
 
-def from_oklab(lab):
+def oklab_to_linear(lab):
     lightness, a, b = lab[..., 0], lab[..., 1], lab[..., 2]
     l = (lightness + 0.3963377774 * a + 0.2158037573 * b) ** 3
     m = (lightness - 0.1055613458 * a - 0.0638541728 * b) ** 3
     s = (lightness - 0.0894841775 * a - 1.2914855480 * b) ** 3
     return np.stack([
-        linear_to_srgb(4.0767416621 * l - 3.3077115913 * m + 0.2309699292 * s),
-        linear_to_srgb(-1.2684380046 * l + 2.6097574011 * m - 0.3413193965 * s),
-        linear_to_srgb(-0.0041960863 * l - 0.7034186147 * m + 1.7076147010 * s),
+        4.0767416621 * l - 3.3077115913 * m + 0.2309699292 * s,
+        -1.2684380046 * l + 2.6097574011 * m - 0.3413193965 * s,
+        -0.0041960863 * l - 0.7034186147 * m + 1.7076147010 * s,
     ], -1)
+
+
+def from_oklab(lab):
+    return linear_to_srgb(oklab_to_linear(lab))
+
+
+def oklch_to_linear(lightness, chroma, hue):
+    return oklab_to_linear(np.stack([lightness, chroma * np.cos(hue), chroma * np.sin(hue)], -1))
+
+
+def in_srgb_gamut(lightness, chroma, hue):
+    linear = oklch_to_linear(lightness, chroma, hue)
+    return ((linear >= -GAMUT_TOLERANCE) & (linear <= 1 + GAMUT_TOLERANCE)).all(-1)
+
+
+def gamut_mapped_chroma(lightness, chroma, hue):
+    """The chroma a color can keep with its lightness and hue unchanged and still be one sRGB can show, found by
+    bisection. Clipping every channel on its own instead, which is what converting an out of gamut color does, moves
+    the hue and saturates the color further, and a pixel pushed past the edge turns neon rather than as strong as the
+    screen allows."""
+    low, high = np.zeros_like(chroma), chroma
+    for _ in range(GAMUT_MAPPING_STEPS):
+        middle = (low + high) / 2
+        fits = in_srgb_gamut(lightness, middle, hue)
+        low, high = np.where(fits, middle, low), np.where(fits, high, middle)
+    return np.where(in_srgb_gamut(lightness, chroma, hue), chroma, low)
 
 
 def oklch(hex_color):
@@ -162,6 +194,10 @@ def recolor(image, seed):
         target_lightness, target_chroma, target_hue = gradient_oklch(image.width, image.height)
     else:
         target_lightness, target_chroma, target_hue = oklch(seed)
+        # A seed is chosen for the palette it spans, and some are far more saturated than the orange the icons were
+        # drawn in (the pink by nearly half again). An icon moved to one of those in proportion would be louder than
+        # the orange one, and mostly outside what sRGB can show, so no icon is let past the orange's saturation.
+        target_chroma = min(target_chroma, source_chroma)
     # How much of the orange a pixel carries: the white mark and a gray shadow carry none and keep their lightness,
     # which moving every pixel by the same amount would turn into a tinted mark on a light color.
     weight = np.clip(chroma / source_chroma, 0, 1)
@@ -173,6 +209,7 @@ def recolor(image, seed):
         lightness = lightness + (target_lightness - source_lightness) * weight
         chroma = chroma * target_chroma / source_chroma
         hue = hue + target_hue - source_hue
+    chroma = gamut_mapped_chroma(lightness, chroma, hue)
     rgb = from_oklab(np.stack([lightness, chroma * np.cos(hue), chroma * np.sin(hue)], -1))
     result = np.concatenate([rgb, pixels[..., 3:]], -1)
     return Image.fromarray((result * 255 + 0.5).astype(np.uint8), 'RGBA')

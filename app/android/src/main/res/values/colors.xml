@@ -14,16 +14,19 @@
          gradient drawn as it is (mipmap-*/ic_launcher_background) rather than a color. -->
     <color name="campfire">#5A49CA</color>
 
-    <!-- The launcher icons of the other theme colors, the seeds of their palettes (see MaterialColorSchemes.kt). -->
+    <!-- The launcher icons of the other theme colors, the seeds of their palettes (see MaterialColorSchemes.kt), with
+         those more saturated than the orange brought down to its saturation the way generate_theme_icons.py brings
+         down every other platform's icon: the red, the purple and the pink, whose seeds are #D32F2F, #7B1FA2 and
+         #E91EAF. -->
     <color name="campfire_gray">#707070</color>
-    <color name="campfire_red">#D32F2F</color>
+    <color name="campfire_red">#CB3D39</color>
     <color name="campfire_orange">#F57C00</color>
     <color name="campfire_yellow">#FBC02D</color>
     <color name="campfire_green">#43A047</color>
     <color name="campfire_teal">#00796B</color>
     <color name="campfire_blue">#1976D2</color>
-    <color name="campfire_purple">#7B1FA2</color>
-    <color name="campfire_pink">#E91EAF</color>
+    <color name="campfire_purple">#782A9B</color>
+    <color name="campfire_pink">#D054A4</color>
 
     <!-- The System theme color's icon, which is the wallpaper's accent from Android 12 on (see values-v31); the
          option is only offered there, so the gray is never shown. -->
