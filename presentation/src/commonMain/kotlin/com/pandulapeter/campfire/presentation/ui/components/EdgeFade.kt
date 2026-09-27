@@ -93,22 +93,27 @@ internal fun Modifier.listTopFadeViewport(fade: ListTopFade) = onPlaced { fade.v
 internal fun Modifier.fadingUnderListTop(fade: ListTopFade): Modifier {
     val position = remember { CardPosition() }
     return this
-        .onPlaced { position.top = it.positionInWindow().y - fade.viewportTop }
+        // Clamped to where the fade ends, so that a card below it writes the same value on every frame of a scroll and
+        // its drawing is left alone: only the one or two cards under the fade are drawn again as the list moves.
+        .onPlaced { position.top = minOf(it.positionInWindow().y - fade.viewportTop, fade.heightPx) }
+        // The card's own position is read first, so that only a card under the fade reads the scroll offset at all.
         .graphicsLayer {
-            compositingStrategy = if (fade.strength > 0f && position.top < fade.heightPx) CompositingStrategy.Offscreen else CompositingStrategy.Auto
+            compositingStrategy = if (position.top < fade.heightPx && fade.strength > 0f) CompositingStrategy.Offscreen else CompositingStrategy.Auto
         }
         .drawWithContent {
             drawContent()
-            val strength = fade.strength
-            if (strength > 0f && position.top < fade.heightPx) {
-                drawRect(
-                    brush = Brush.verticalGradient(
-                        colors = listOf(Color.Black.copy(alpha = 1f - strength), Color.Black),
-                        startY = fade.coveredHeightPx - position.top,
-                        endY = fade.heightPx - position.top,
-                    ),
-                    blendMode = BlendMode.DstIn,
-                )
+            if (position.top < fade.heightPx) {
+                val strength = fade.strength
+                if (strength > 0f) {
+                    drawRect(
+                        brush = Brush.verticalGradient(
+                            colors = listOf(Color.Black.copy(alpha = 1f - strength), Color.Black),
+                            startY = fade.coveredHeightPx - position.top,
+                            endY = fade.heightPx - position.top,
+                        ),
+                        blendMode = BlendMode.DstIn,
+                    )
+                }
             }
         }
         .pointerInput(fade) {
@@ -117,6 +122,8 @@ internal fun Modifier.fadingUnderListTop(fade: ListTopFade): Modifier {
                 // list's own scrolling does not ask whether the press was consumed, so a drag started there still
                 // scrolls it.
                 val down = awaitFirstDown(requireUnconsumed = false, pass = PointerEventPass.Initial)
+                // A card below the fade holds the fade's own height as its top, which no press inside it adds up to
+                // less than, so the clamp leaves the answer as it would be with the card's real position.
                 if (fade.strength > 0f && position.top + down.position.y < fade.heightPx) {
                     down.consume()
                 }
@@ -124,7 +131,10 @@ internal fun Modifier.fadingUnderListTop(fade: ListTopFade): Modifier {
         }
 }
 
-/** Where one card is relative to the top of its list, written as it is placed and read as it is drawn. */
+/**
+ * Where one card is relative to the top of its list, written as it is placed and read as it is drawn. It is no further
+ * down than the fade reaches, since below that the exact position makes no difference to how the card is drawn.
+ */
 private class CardPosition {
 
     var top by mutableFloatStateOf(0f)
