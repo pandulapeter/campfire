@@ -38,3 +38,7 @@
 -keepclassmembers class com.pandulapeter.campfire.SingleInstanceKt {
     private static java.nio.channels.FileLock heldLock;
 }
+
+# The JetBrains Runtime API finds its implementation in the runtime by the names of its own interfaces and their
+# methods, so they have to reach the release build as they are written, or every service reads as unsupported.
+-keep class com.jetbrains.** { *; }
