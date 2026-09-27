@@ -338,8 +338,8 @@ private fun ByteArray.toLatin1JsString() = CharArray(size) { (this[it].toInt() a
  *
  * Where there is no `createWritable()` (Safari before 26), the write is handed to `opfs-writer.js`, a dedicated worker,
  * since `createSyncAccessHandle()` exists nowhere else; it is given the directory by its path and the content as bytes.
- * Its address carries the version of the page's build (see `index.html` in `:app:web`), because a worker the browser
- * still had from another release would be handed requests in a shape it may not understand.
+ * Its address carries a version of the script's own content (see `index.html` in `:app:web`), because a worker the
+ * browser still had from another release would be handed requests in a shape it may not understand.
  *
  * One worker serves the page, started by the first write that needs it, and its replies are matched to the writes by
  * their id: starting one per write fetched, parsed and started the script again for every song of an import. The worker
