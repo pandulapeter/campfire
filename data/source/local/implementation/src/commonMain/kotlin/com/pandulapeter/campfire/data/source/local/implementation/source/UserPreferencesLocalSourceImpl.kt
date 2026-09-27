@@ -18,6 +18,8 @@ import com.pandulapeter.campfire.data.source.local.implementation.model.UserPref
 import com.pandulapeter.campfire.data.source.local.implementation.storage.file.FileStorage
 import com.pandulapeter.campfire.data.source.local.implementation.storage.file.StorageDirectory
 import kotlinx.coroutines.CancellationException
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
 import org.koin.core.annotation.Single
 
 @Single
@@ -30,18 +32,22 @@ internal class UserPreferencesLocalSourceImpl(
      * repository reports a failed read and tries again, rather than handing out defaults the next save would write
      * over a file that may be perfectly good. One that can be read and does not decode as it is gives up only the
      * fields that are wrong, and is copied aside first, since the next save is the end of whatever was in them.
+     *
+     * The JSON is decoded and encoded on [Dispatchers.Default], for the reason the songs are parsed there (see
+     * [SongLocalSourceImpl]): the callers are on the main thread, and the document grows with every song that has a
+     * transposition or a folded section saved, and is written again on every tap of a transpose button.
      */
     override suspend fun loadUserPreferences(): UserPreferences {
         val text = fileStorage.readText(StorageDirectory.PREFERENCES, FILE_NAME) ?: return UserPreferencesDocument().toModel()
-        val decoded = UserPreferencesDocumentFormat.decode(text)
+        val decoded = withContext(Dispatchers.Default) { UserPreferencesDocumentFormat.decode(text) }
         if (!decoded.isIntact && text.isNotBlank()) keepUnreadableDocument()
-        return decoded.document.toModel()
+        return withContext(Dispatchers.Default) { decoded.document.toModel() }
     }
 
     override suspend fun saveUserPreferences(userPreferences: UserPreferences) = fileStorage.writeText(
         directory = StorageDirectory.PREFERENCES,
         name = FILE_NAME,
-        text = UserPreferencesDocumentFormat.encode(userPreferences.toDocument()),
+        text = withContext(Dispatchers.Default) { UserPreferencesDocumentFormat.encode(userPreferences.toDocument()) },
     )
 
     override suspend fun hasStoredUserPreferences() = fileStorage.exists(StorageDirectory.PREFERENCES, FILE_NAME)
