@@ -49,9 +49,16 @@ val isMacAppStoreBuild = gradle.startParameter.taskNames.any { it.substringAfter
 /** Empty for an unsigned store build, which on Apple silicon still gets the ad hoc signature it needs to start at all. */
 val macSigningIdentity = project.property("campfire.mac.signingIdentity").toString()
 
-/** The JDK the app is compiled with, and the one whose runtime image, `jpackage` and `java` the packaging uses. */
+/**
+ * The JDK whose runtime image, `jpackage` and `java` the packaging and `run` use. It is the JetBrains Runtime rather
+ * than whichever JDK of that version is installed, because only it lets a window follow the app's own light or dark
+ * theme on macOS (`apple.awt.windowAppearance`): with the content laid out under the title bar, a window drawn in the
+ * other appearance shows a rim of the wrong shade and traffic light buttons that disappear into the background.
+ * Gradle downloads it where it is missing.
+ */
 val toolchainLauncher = javaToolchains.launcherFor {
     languageVersion = JavaLanguageVersion.of(libs.versions.jvmTarget.get().toInt())
+    vendor = JvmVendorSpec.JETBRAINS
 }
 
 compose.desktop {

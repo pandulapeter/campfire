@@ -9,21 +9,29 @@
  */
 package com.pandulapeter.campfire
 
+import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.SideEffect
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.ui.ExperimentalComposeUiApi
+import androidx.compose.ui.InternalComposeUiApi
 import androidx.compose.ui.awt.ComposeWindow
+import androidx.compose.ui.awt.SwingWindow
 import androidx.compose.ui.configureSwingGlobalsForCompose
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalLayoutDirection
+import androidx.compose.ui.platform.LocalPlatformWindowInsets
+import androidx.compose.ui.platform.PlatformInsets
+import androidx.compose.ui.platform.PlatformWindowInsets
 import androidx.compose.ui.unit.DpSize
 import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.min
-import androidx.compose.ui.window.Window
+import androidx.compose.ui.window.WindowPlacement
 import androidx.compose.ui.window.WindowState
 import androidx.compose.ui.window.application
 import androidx.compose.ui.window.rememberWindowState
@@ -35,6 +43,7 @@ import com.pandulapeter.campfire.presentation.ui.handlePreviewKeyEvent
 import com.pandulapeter.campfire.presentation.ui.resetEscapeKey
 import com.pandulapeter.campfire.presentation.ui.platform.desktopDataDirectory
 import com.pandulapeter.campfire.presentation.ui.theme.interfaceScale
+import com.pandulapeter.campfire.presentation.ui.theme.isDarkTheme
 import java.awt.Component
 import java.awt.Desktop
 import java.awt.Dimension
@@ -61,6 +70,10 @@ fun main(args: Array<String>) {
     // A Gradle or IDE run has no Campfire.app bundle, so macOS would use the Java launcher or this main class as
     // the application name. AWT reads this once when it first starts, for both the menu bar and app switcher.
     System.setProperty("apple.awt.application.name", "Campfire")
+    // The JDK gives the application the light Aqua appearance whatever the system's is. The window follows the app's
+    // own theme (MacWindowAppearance), but only once the preferences are read; until then the system's is the better
+    // guess, and it is read once, like the name.
+    System.setProperty("apple.awt.application.appearance", "system")
     // Compose's own set-up, which application() would only do later, has to come before anything that starts the
     // AWT toolkit: on Linux it is what puts the display's scale into sun.java2d.uiScale, which the toolkit reads once,
     // when it starts. Behind the same property application() checks, so that this is the same decision made earlier
@@ -121,13 +134,16 @@ fun main(args: Array<String>) {
             }
             onDispose { desktop?.setQuitHandler(null) }
         }
-        Window(
+        // Window itself, with a hook for the window before it is shown: the title bar has to be laid out under from
+        // the start, since the JDK only lays the content out again for it on the next resize.
+        SwingWindow(
             state = windowState,
             title = "Campfire",
             onCloseRequest = requestExit,
             icon = appIcon(viewModel.value),
             onPreviewKeyEvent = ::handlePreviewKeyEvent,
             onKeyEvent = { keyEvent -> viewModel.value?.handleKeyEvent(keyEvent, onExit = exit) == true },
+            init = { window -> if (isMacOs) window.extendContentIntoTitleBar() },
         ) {
             DisposableEffect(window) {
                 window.fitSizeToScreen(windowState)
@@ -163,12 +179,15 @@ fun main(args: Array<String>) {
             CompositionLocalProvider(
                 LocalLayoutDirection.providesDefault(LayoutDirection.Ltr)
             ) {
-                val currentViewModel = koinViewModel<CampfireViewModel>()
-                SideEffect { viewModel.value = currentViewModel }
-                CampfireDesktopApp(
-                    viewModel = currentViewModel,
-                    filesToImport = OpenedFiles.files,
-                )
+                MacTitleBarInsets(isTitleBarShown = isMacOs && windowState.placement != WindowPlacement.Fullscreen) {
+                    val currentViewModel = koinViewModel<CampfireViewModel>()
+                    SideEffect { viewModel.value = currentViewModel }
+                    if (isMacOs) MacWindowAppearance(window = window, viewModel = currentViewModel)
+                    CampfireDesktopApp(
+                        viewModel = currentViewModel,
+                        filesToImport = OpenedFiles.files,
+                    )
+                }
             }
         }
     }
@@ -226,6 +245,73 @@ private fun ComposeWindow.scaleNativeMinimumSize() {
                 ceil(minimumSize.height * transform.scaleY).toInt(),
             )
     }
+}
+
+private val isMacOs = System.getProperty("os.name").orEmpty().lowercase().contains("mac")
+
+/**
+ * The height of a macOS title bar without a toolbar, in points, which is what a dp is at the window's own density.
+ */
+private val MAC_TITLE_BAR_HEIGHT = 28.dp
+
+/**
+ * The title bar macOS draws for a Java window is Aqua's light gray whatever the app looks like, so on macOS the window's
+ * content is laid out under a transparent title bar instead, leaving only the traffic light buttons of it: the app's
+ * own surface is then the title bar, in every theme and color. The title is not drawn, since the app bar is where the
+ * screens say where the user is. The strip still drags the window, because the system handles the mouse there before
+ * the content sees it.
+ */
+private fun ComposeWindow.extendContentIntoTitleBar() {
+    rootPane.putClientProperty("apple.awt.fullWindowContent", true)
+    rootPane.putClientProperty("apple.awt.transparentTitleBar", true)
+    rootPane.putClientProperty("apple.awt.windowTitleVisible", false)
+}
+
+/**
+ * Draws what is left of the title bar - the traffic light buttons and the rim along the window's top edge - in the
+ * appearance of the theme the app is in rather than the system's, since with the content laid out under it
+ * ([extendContentIntoTitleBar]) the app's background is theirs: a dark rim and dark mode buttons on a light theme are
+ * all but invisible. It is a property of the JetBrains Runtime, which the build packages for that reason; any other
+ * JDK ignores it and keeps the system's appearance.
+ */
+@Composable
+private fun MacWindowAppearance(
+    window: ComposeWindow,
+    viewModel: CampfireViewModel,
+) {
+    val isDarkTheme = viewModel.userPreferences.collectAsState().value?.uiMode.isDarkTheme()
+    SideEffect {
+        window.rootPane.putClientProperty("apple.awt.windowAppearance", if (isDarkTheme) "NSAppearanceNameDarkAqua" else "NSAppearanceNameAqua")
+    }
+}
+
+/**
+ * Tells the shared UI about the title bar [extendContentIntoTitleBar] lays the content under, as the system bar inset
+ * at the top that Android's status bar and iOS's are, so that every screen already keeps its content clear of the
+ * traffic light buttons while its background reaches under them. A full screen window has no title bar until the
+ * pointer reaches the top of the screen, and then the system draws it over the content, so it gets none.
+ *
+ * Compose Desktop has no public way to set the insets; this is the composition local its own `WindowInsets` read.
+ */
+@OptIn(InternalComposeUiApi::class)
+@Composable
+private fun MacTitleBarInsets(
+    isTitleBarShown: Boolean,
+    content: @Composable () -> Unit,
+) {
+    if (!isTitleBarShown) return content()
+    val platformInsets = LocalPlatformWindowInsets.current
+    val titleBarHeight = with(LocalDensity.current) { MAC_TITLE_BAR_HEIGHT.roundToPx() }
+    val insets = remember(platformInsets, titleBarHeight) {
+        object : PlatformWindowInsets by platformInsets {
+            override val captionBar = PlatformInsets(top = titleBarHeight)
+            override val systemBars = PlatformInsets(top = titleBarHeight)
+
+            // A dialog or a popup asks for the insets without the ones it has already kept clear of.
+            override fun excluding(safeInsets: Boolean, ime: Boolean) = if (safeInsets) platformInsets.excluding(safeInsets, ime) else this
+        }
+    }
+    CompositionLocalProvider(LocalPlatformWindowInsets provides insets, content = content)
 }
 
 /**
