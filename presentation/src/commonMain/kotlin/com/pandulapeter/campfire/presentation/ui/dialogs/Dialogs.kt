@@ -161,6 +161,7 @@ import com.pandulapeter.campfire.presentation.resources.welcome_settings_hint
 import com.pandulapeter.campfire.presentation.resources.welcome_settings_hint_sync
 import com.pandulapeter.campfire.presentation.resources.welcome_title
 import com.pandulapeter.campfire.presentation.ui.CampfireViewModel
+import com.pandulapeter.campfire.presentation.ui.SearchableSong
 import com.pandulapeter.campfire.presentation.ui.components.ActionListItem
 import com.pandulapeter.campfire.presentation.ui.components.CheckboxListItem
 import com.pandulapeter.campfire.presentation.ui.components.CHIP_GAP
@@ -1090,7 +1091,9 @@ private fun SetlistPicker(
     val pickableSetlists = remember(setlists, dialog.song.fileName) {
         setlists
             .filter { setlist -> !setlist.isArchived || setlist.entries.any { it.songFileName == dialog.song.fileName } }
-            .sortedWith(compareBy({ viewModel.normalize(it.title) }, { it.fileName }))
+            .map { it to viewModel.normalize(it.title) }
+            .sortedWith(compareBy({ it.second }, { it.first.fileName }))
+            .map { it.first }
     }
     // Answered by the title or the description, the way the setlists screen's own search answers, but not by the
     // songs inside: the song this sheet is about is the only one that matters here.
@@ -1195,24 +1198,14 @@ private fun SongPicker(
     var query by rememberSaveable { mutableStateOf("") }
     var selectedTags by rememberSaveable { mutableStateOf(emptyList<String>()) }
     var selectedLanguages by rememberSaveable { mutableStateOf(emptyList<String>()) }
-    // Normalized once per library rather than once per keystroke, since the search runs over every song on every
-    // character typed.
-    val pickableSongs = remember(songs, initialSongFileNames) {
-        val pickable = songs.map { song ->
-            PickableSong(
-                song = song,
-                title = viewModel.normalizeForSearch(song.title),
-                artist = viewModel.normalizeForSearch(song.artist),
-                tags = song.tags.mapTo(mutableSetOf()) { it.lowercase() },
-                searchableTags = song.tags.map { viewModel.normalizeForSearch(it) },
-                languages = song.languages.ifEmpty { listOf(SongLanguage.UNKNOWN) }.toSet(),
-            )
-        }
-        val pickableByFileName = pickable.associateBy { it.song.fileName }
+    // Sorted and normalized for the search by the view model, once per library rather than as the sheet opens or on
+    // every keystroke, since the search runs over every song on every character typed.
+    val alphabeticalSongs by viewModel.alphabeticalSongs.collectAsStateWithLifecycle()
+    val pickableSongs = remember(alphabeticalSongs, initialSongFileNames) {
+        val byFileName = alphabeticalSongs.associateBy { it.song.fileName }
         val initial = initialSongFileNames.toSet()
-        initialSongFileNames.mapNotNull { pickableByFileName[it] } +
-                pickable.filterNot { it.song.fileName in initial }
-                    .sortedWith(compareBy({ viewModel.normalize(it.song.title) }, { viewModel.normalize(it.song.artist) }, { it.song.fileName }))
+        (initialSongFileNames.mapNotNull { byFileName[it] } + alphabeticalSongs.filterNot { it.song.fileName in initial })
+            .map { it.toPickableSong() }
     }
     val filters = remember(songs) { songs.toPickerFilters() }
     // Only what the chips still offer narrows the list: a tag that left the library while the sheet was open would
@@ -1292,6 +1285,16 @@ private class PickableSong(
     val tags: Set<String>,
     val searchableTags: List<String>,
     val languages: Set<String>,
+)
+
+/** The [PickableSong] of a song as the library's search index already folded it, see [CampfireViewModel.alphabeticalSongs]. */
+private fun SearchableSong.toPickableSong() = PickableSong(
+    song = song,
+    title = title,
+    artist = artist,
+    tags = song.tags.mapTo(mutableSetOf()) { it.lowercase() },
+    searchableTags = tags,
+    languages = song.languages.ifEmpty { listOf(SongLanguage.UNKNOWN) }.toSet(),
 )
 
 /**

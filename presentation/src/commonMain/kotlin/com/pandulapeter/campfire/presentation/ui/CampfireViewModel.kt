@@ -624,6 +624,21 @@ class CampfireViewModel(
     val songsByFileName = indexedSongs.map { it.search.songsByFileName }.asState(emptyMap())
 
     /**
+     * Every song of the library alphabetically, with its search keys, as the song picker lists and searches it. Sorted
+     * here rather than as the sheet opens, where the first frame of the sheet would wait for a whole library to be
+     * sorted, and by keys folded once per song rather than on both sides of every comparison.
+     */
+    internal val alphabeticalSongs = indexedSongs
+        .map { indexed ->
+            indexed.search.byFileName.values
+                .map { song -> Triple(song, normalizeText(song.song.title), normalizeText(song.song.artist)) }
+                .sortedWith(compareBy({ it.second }, { it.third }, { it.first.song.fileName }))
+                .map { it.first }
+        }
+        .flowOn(Dispatchers.Default)
+        .asState(emptyList())
+
+    /**
      * Null until the library has actually been read, so that the settings screen never flashes a count of zero. The size
      * is added up from what the scan read off every file, so it costs no listing of its own and arrives in the same value
      * as the counts.
