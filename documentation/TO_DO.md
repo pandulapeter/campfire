@@ -10,7 +10,6 @@
 # To do
 - Downwards scroll dismissing the keyboard should work on every modal list
 - "Song assignments" bottom sheet: open keyboard automatically, hide it on downwards scroll
-- Review icon color saturation
 - Back navigation on Settings should pop back to the General tab first
 - Tapping on the Song details screen app bar title should scroll to the top
 - Song details screen scroll should snap to rows

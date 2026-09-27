@@ -10,7 +10,6 @@
 package com.pandulapeter.campfire.presentation.ui.theme
 
 import androidx.compose.animation.core.Animatable
-import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.material3.ColorScheme
 import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
 import androidx.compose.material3.MaterialExpressiveTheme
@@ -116,7 +115,7 @@ internal val LocalSecondAccentColor = staticCompositionLocalOf { Color.Unspecifi
 fun UserPreferences.UiMode?.isDarkTheme() = when (this) {
     UserPreferences.UiMode.LIGHT -> false
     UserPreferences.UiMode.DARK -> true
-    UserPreferences.UiMode.SYSTEM_DEFAULT, null -> isSystemInDarkTheme()
+    UserPreferences.UiMode.SYSTEM_DEFAULT, null -> isSystemInDarkThemeLive()
 }
 
 /**
