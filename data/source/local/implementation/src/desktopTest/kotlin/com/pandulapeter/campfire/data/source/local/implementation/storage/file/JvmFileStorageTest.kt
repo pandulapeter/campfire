@@ -172,6 +172,27 @@ class JvmFileStorageTest {
     }
 
     @Test
+    fun `answers a directory deleted under it as empty and recreates it on the next write`() = runBlocking {
+        fileStorage.writeText(StorageDirectory.SONGS, "a.cho", "content")
+        root.resolve("library/songs").deleteRecursively()
+
+        assertEquals(emptyList(), fileStorage.list(StorageDirectory.SONGS))
+        assertNull(fileStorage.readText(StorageDirectory.SONGS, "a.cho"))
+        fileStorage.writeText(StorageDirectory.SONGS, "b.cho", "content")
+
+        assertEquals(listOf("b.cho"), fileStorage.list(StorageDirectory.SONGS).map { it.name })
+    }
+
+    @Test
+    fun `reads a directory under a file's name as missing`() = runBlocking {
+        root.resolve("library/songs/a.cho").mkdirs()
+
+        assertNull(fileStorage.readText(StorageDirectory.SONGS, "a.cho"))
+        assertNull(fileStorage.readBytes(StorageDirectory.SONGS, "a.cho"))
+        assertEquals(emptyList(), fileStorage.list(StorageDirectory.SONGS))
+    }
+
+    @Test
     fun `reports a file it cannot read as a failure rather than as missing`() = runBlocking {
         fileStorage.writeText(StorageDirectory.SONGS, "a.cho", "content")
         val file = root.walk().first { it.name == "a.cho" }

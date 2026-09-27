@@ -24,6 +24,7 @@ import java.nio.file.Files
 import java.nio.file.NoSuchFileException
 import java.nio.file.StandardCopyOption
 import java.nio.file.StandardOpenOption
+import java.nio.file.attribute.BasicFileAttributes
 import java.util.concurrent.ConcurrentHashMap
 
 /**
@@ -41,17 +42,47 @@ internal class JvmFileStorage(
     private val isWindows: Boolean = System.getProperty("os.name").orEmpty().startsWith("windows", ignoreCase = true),
 ) : FileStorage {
 
+    /**
+     * Each directory resolved once. It is only created by a write ([writeAtomically]): a read or a listing of one that
+     * is not there answers what it answers for a file that is not there, and a folder deleted under the running app is
+     * recreated by the next save, as it would be by the first one.
+     */
+    private val directoryFiles = ConcurrentHashMap<StorageDirectory, File>()
     private val sweptDirectories = ConcurrentHashMap.newKeySet<StorageDirectory>()
 
+    /**
+     * One attribute read per entry, which answers whether it is a file, its size and its date at once, where asking
+     * [File] for the three is three calls into the file system each.
+     */
     override suspend fun list(directory: StorageDirectory) = withContext(Dispatchers.IO) {
         val directoryFile = directoryFile(directory)
-        // A directory that could not be created is not there yet, which is the same as being empty. One that is
-        // there but cannot be listed is a failure and has to be reported as one: passing it off as an empty library
-        // would invite the user to create songs in a folder the app cannot read.
-        val files = directoryFile.listFiles()
-            ?: if (directoryFile.isDirectory) throw LibraryStorageException("Could not read \"${directoryFile.absolutePath}\".") else emptyArray()
-        files.filter { it.isFile && !it.name.endsWith(TEMPORARY_FILE_SUFFIX) }
-            .map { StoredFileInfo(name = it.name.toLibraryName(), size = it.length(), lastModified = it.lastModified()) }
+        // A directory that is not there yet is the same as an empty one. One that is there but cannot be listed is a
+        // failure and has to be reported as one: passing it off as an empty library would invite the user to create
+        // songs in a folder the app cannot read.
+        val paths = try {
+            Files.newDirectoryStream(directoryFile.toPath()).use { it.toList() }
+        } catch (_: NoSuchFileException) {
+            emptyList()
+        } catch (exception: IOException) {
+            throw LibraryStorageException("Could not read \"${directoryFile.absolutePath}\".", exception)
+        }
+        paths.filterNot { it.fileName.toString().endsWith(TEMPORARY_FILE_SUFFIX) }
+            .mapNotNull { path ->
+                // Gone since the listing, or not something the attributes can be read of: left out, as File.isFile
+                // leaves it out.
+                val attributes = try {
+                    Files.readAttributes(path, BasicFileAttributes::class.java)
+                } catch (_: IOException) {
+                    null
+                }
+                attributes?.takeIf { it.isRegularFile }?.let {
+                    StoredFileInfo(
+                        name = path.fileName.toString().toLibraryName(),
+                        size = it.size(),
+                        lastModified = it.lastModifiedTime().toMillis(),
+                    )
+                }
+            }
             .sortedBy { it.name }
     }
 
@@ -69,11 +100,11 @@ internal class JvmFileStorage(
     }
 
     override suspend fun readText(directory: StorageDirectory, name: String) = withContext(Dispatchers.IO) {
-        file(directory, name).let { if (it.isFile) readingAsStorage(name) { it.readAllBytes() }?.decodeLibraryText() else null }
+        file(directory, name).readIfFile(name)?.decodeLibraryText()
     }
 
     override suspend fun readBytes(directory: StorageDirectory, name: String) = withContext(Dispatchers.IO) {
-        file(directory, name).let { if (it.isFile) readingAsStorage(name) { it.readAllBytes() } else null }
+        file(directory, name).readIfFile(name)
     }
 
     override suspend fun writeText(directory: StorageDirectory, name: String, text: String) = withContext(Dispatchers.IO) {
@@ -131,7 +162,19 @@ internal class JvmFileStorage(
      */
     private fun File.readAllBytes(): ByteArray = Files.readAllBytes(toPath())
 
+    /**
+     * Read without asking first whether it is a file, which is a call into the file system per read: a file that is
+     * not there answers [NoSuchFileException] (see [readingAsStorage]), and a directory under the name, which is not a
+     * file either, is only asked about once the read has failed.
+     */
+    private fun File.readIfFile(name: String): ByteArray? = try {
+        readingAsStorage(name) { readAllBytes() }
+    } catch (exception: LibraryStorageException) {
+        if (isDirectory) null else throw exception
+    }
+
     private suspend fun writeAtomically(directory: StorageDirectory, name: String, write: (File) -> Unit) {
+        directoryFile(directory).mkdirs()
         val target = file(directory, name).toPath()
         // A name of its own per write, so two writes of one file cannot share a temporary file.
         val temporary = Files.createTempFile(target.parent, TEMPORARY_FILE_PREFIX, TEMPORARY_FILE_SUFFIX)
@@ -161,8 +204,8 @@ internal class JvmFileStorage(
     }
 
     /**
-     * [failingAsStorage] for a read, which has one more answer: a file removed between the [File.isFile] check and
-     * the read is not there, and null is what the contract says about a file that is not there. Anything else is a
+     * [failingAsStorage] for a read, which has one more answer: a file that is not there, or was removed just before
+     * the read, is not there, and null is what the contract says about a file that is not there. Anything else is a
      * file that is there and could not be read. Internal so that the test can hand it the exception.
      */
     internal inline fun <T : Any> readingAsStorage(name: String, read: () -> T): T? = try {
@@ -178,12 +221,9 @@ internal class JvmFileStorage(
         return File(directoryFile(directory), name.toStoredName())
     }
 
-    private fun directoryFile(directory: StorageDirectory) = directory.pathSegments
-        .fold(root) { parent, segment -> File(parent, segment) }
-        .also {
-            it.mkdirs()
-            if (sweptDirectories.add(directory)) removeLeftovers(it)
-        }
+    private fun directoryFile(directory: StorageDirectory) = directoryFiles
+        .getOrPut(directory) { directory.pathSegments.fold(root) { parent, segment -> File(parent, segment) } }
+        .also { if (sweptDirectories.add(directory)) removeLeftovers(it) }
 
     private fun removeLeftovers(directoryFile: File) {
         val newestLeftover = System.currentTimeMillis() - LEFTOVER_AGE_MILLIS
