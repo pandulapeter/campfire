@@ -7,16 +7,21 @@
 # https://mozilla.org/MPL/2.0/.
 
 """
-Signing identities that last one workflow run.
+Signing identities that last one workflow run, and until the next one where that run uploaded a build.
 
 Apple's distribution certificates expire after a year, and a certificate kept in a repository secret is a release that
 fails on the day it does. The App Store Connect API key does not expire, and an Admin key may create certificates and
 provisioning profiles - so a run makes its own: a private key that never leaves the runner, a certificate for it,
-the profiles that name that certificate, and revokes all of them once App Store Connect has processed the build - not
-as soon as it is uploaded, since processing is where the signature is checked, and a certificate revoked by then gets
-the build refused as an invalid binary. Revoking a distribution certificate does not touch what has already been
-processed into the App Store or TestFlight, which Apple signs again, so nothing but the run that made it ever depended
-on it. Never use this for a Developer ID certificate: an app signed outside
+the profiles that name that certificate. A build has to stay signed by a valid certificate until App Review has
+approved it, not only until it is uploaded or processed: one whose certificate is revoked in the meantime is refused as
+an invalid binary (ITMS-90238, CSSMERR_TP_CERT_REVOKED), even after it has been attached and submitted. So a run that
+uploaded a build keeps its identities, and the workflow hands the state file on as an artifact, which the next run of
+the same workflow revokes before it makes its own (`cleanup-earlier`); a run that uploaded nothing revokes its own at
+the end. Revoking a distribution certificate does not touch what Apple has already approved, which it signs again, so
+nothing but the build still waiting for review ever depends on it - and the next upload of the platform is the build
+that replaces that one. Apple tells certificates made here and certificates made by hand apart in no way the API
+shows, so what a run made is known only from its state file: an artifact that expires before the next run leaves its
+certificates to expire on their own after a year. Never use this for a Developer ID certificate: an app signed outside
 the store is checked against it on every Mac that opens it, and revoking it breaks every copy already downloaded.
 
 Everything this creates is written into a state file first, and `cleanup` removes exactly that and nothing else, so an
@@ -25,11 +30,14 @@ identity somebody made by hand is never touched. It only needs the Python standa
     app_store_signing.py certificate <certificateType> <keychain>
     app_store_signing.py profile <profileType> <bundle identifier> <certificateType> <output file>
     app_store_signing.py cleanup
+    app_store_signing.py cleanup-earlier <artifact name>
 
-Reads ASC_KEY_ID, ASC_ISSUER_ID and ASC_KEY_PATH (the .p8 file), and APP_STORE_SIGNING_STATE, the state file.
+Reads ASC_KEY_ID, ASC_ISSUER_ID and ASC_KEY_PATH (the .p8 file), and APP_STORE_SIGNING_STATE, the state file;
+`cleanup-earlier` also GITHUB_REPOSITORY and GH_TOKEN, for the gh command line tool, with the actions: write permission.
 """
 
 import base64
+import glob
 import json
 import os
 import subprocess
@@ -73,7 +81,7 @@ def token():
     return (message + b"." + encode(signature)).decode()
 
 
-def request(method, path, body=None):
+def request(method, path, body=None, missing_ok=False):
     data = json.dumps(body).encode() if body is not None else None
     headers = {"Authorization": f"Bearer {token()}", "Content-Type": "application/json"}
     try:
@@ -81,6 +89,8 @@ def request(method, path, body=None):
             content = response.read()
             return json.loads(content) if content else None
     except urllib.error.HTTPError as error:
+        if missing_ok and error.code == 404:
+            return None
         details = error.read().decode()
         try:
             details = "; ".join(item.get("detail") or item.get("title", "") for item in json.loads(details)["errors"])
@@ -165,16 +175,40 @@ def create_profile(profile_type, bundle_identifier, certificate_type, output):
     print(f"Created {profile_type} profile {created['id']} ({name}) for {bundle_identifier}")
 
 
-def cleanup():
-    """Deletes the profiles and revokes the certificates this run created, and nothing else."""
-    state = read_state()
+def remove(state):
+    """Deletes the profiles and revokes the certificates of a state file; one that is gone already is not an error."""
     for profile in state["profiles"]:
-        request("DELETE", f"/profiles/{profile}")
+        request("DELETE", f"/profiles/{profile}", missing_ok=True)
         print(f"Deleted profile {profile}")
     for certificate_type, certificate in state["certificates"].items():
-        request("DELETE", f"/certificates/{certificate}")
+        request("DELETE", f"/certificates/{certificate}", missing_ok=True)
         print(f"Revoked {certificate_type} certificate {certificate}")
+
+
+def cleanup():
+    """Deletes the profiles and revokes the certificates this run created, and nothing else."""
+    remove(read_state())
     write_state({"certificates": {}, "profiles": []})
+
+
+def gh(*arguments):
+    return subprocess.run(["gh", *arguments], check=True, capture_output=True, text=True).stdout
+
+
+def cleanup_earlier(artifact_name):
+    """Revokes what earlier runs kept for their builds under review, and deletes each artifact once it has done so."""
+    repository = os.environ["GITHUB_REPOSITORY"]
+    artifacts = json.loads(gh("api", f"repos/{repository}/actions/artifacts?name={artifact_name}&per_page=100"))["artifacts"]
+    for artifact in artifacts:
+        if artifact["expired"]:
+            continue
+        with tempfile.TemporaryDirectory() as directory:
+            gh("run", "download", str(artifact["workflow_run"]["id"]), "--repo", repository, "--name", artifact_name, "--dir", directory)
+            for path in glob.glob(os.path.join(directory, "*.json")):
+                with open(path) as file:
+                    remove(json.load(file))
+        gh("api", "--method", "DELETE", f"repos/{repository}/actions/artifacts/{artifact['id']}")
+        print(f"Removed what run {artifact['workflow_run']['id']} kept for its build.")
 
 
 if __name__ == "__main__":
@@ -185,5 +219,7 @@ if __name__ == "__main__":
         create_profile(*arguments)
     elif command == "cleanup" and not arguments:
         cleanup()
+    elif command == "cleanup-earlier" and len(arguments) == 1:
+        cleanup_earlier(*arguments)
     else:
         fail(__doc__.strip().split("\n\n")[3])

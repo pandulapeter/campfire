@@ -13,8 +13,10 @@
 #
 # Nothing it signs with is stored anywhere, so nothing of it can expire: the run creates an Apple Distribution
 # certificate for a key made on the runner through the App Store Connect API (.github/scripts/app_store_signing.py),
-# xcodebuild creates the App Store provisioning profile for it with the same key, and the certificate is revoked at the
-# end. That takes an API key with the Admin role.
+# xcodebuild creates the App Store provisioning profile for it with the same key, and the certificate is revoked by the
+# next run, since the build it signed is refused if it is revoked before App Review approves it (or at the end of this
+# one, if it uploaded nothing). That takes an API key with the Admin role, and actions: write for the artifact that
+# carries the certificate's id from one run to the next.
 #
 # Called by release.yml for every release; dispatched by hand to upload a release again, which App Store Connect only
 # accepts under a build number it has not seen yet — hence the override, which leaves gradle.properties as it was.
@@ -54,6 +56,8 @@ on:
 
 permissions:
   contents: read
+  # To find, read and delete the signing identities an earlier run kept for its build (app_store_signing.py).
+  actions: write
 
 env:
   XCODE_PROJECT: app/ios/iosApp/iosApp.xcodeproj
@@ -141,6 +145,7 @@ jobs:
           ASC_KEY_ID: ${{ secrets.APP_STORE_CONNECT_KEY_ID }}
           ASC_ISSUER_ID: ${{ secrets.APP_STORE_CONNECT_ISSUER_ID }}
           ASC_PRIVATE_KEY: ${{ secrets.APP_STORE_CONNECT_PRIVATE_KEY }}
+          GH_TOKEN: ${{ github.token }}
         run: |
           # altool looks for the key by its name in this directory; xcodebuild and the signing script are given the path.
           ASC_KEY_PATH="$HOME/.appstoreconnect/private_keys/AuthKey_$ASC_KEY_ID.p8"
@@ -149,6 +154,8 @@ jobs:
           chmod 600 "$ASC_KEY_PATH"
           echo "ASC_KEY_PATH=$ASC_KEY_PATH" >> "$GITHUB_ENV"
           export ASC_KEY_PATH
+          # What the last run kept for the build it uploaded, revoked before this one makes its own.
+          python3 .github/scripts/app_store_signing.py cleanup-earlier app-store-signing-ios
           KEYCHAIN_PATH="$RUNNER_TEMP/signing.keychain-db"
           KEYCHAIN_PASSWORD=$(uuidgen)
           echo "KEYCHAIN_PATH=$KEYCHAIN_PATH" >> "$GITHUB_ENV"
@@ -228,6 +235,7 @@ jobs:
             -authenticationKeyID "$ASC_KEY_ID" \
             -authenticationKeyIssuerID "$ASC_ISSUER_ID"
       - name: Upload to App Store Connect
+        id: upload
         env:
           ASC_KEY_ID: ${{ secrets.APP_STORE_CONNECT_KEY_ID }}
           ASC_ISSUER_ID: ${{ secrets.APP_STORE_CONNECT_ISSUER_ID }}
@@ -239,16 +247,6 @@ jobs:
           fi
           xcrun altool --upload-app --type ios --file "$IPA" --apiKey "$ASC_KEY_ID" --apiIssuer "$ASC_ISSUER_ID"
           echo "Uploaded ${{ steps.version.outputs.name }} (${{ steps.version.outputs.build }}). It appears in TestFlight once App Store Connect has processed it."
-      # App Store Connect checks the signature while it processes the build, so the certificate may only be revoked once
-      # that is over; submitting waits for it anyway.
-      - name: Wait for the build to be processed
-        if: ${{ !inputs.submit_for_review }}
-        env:
-          ASC_KEY_ID: ${{ secrets.APP_STORE_CONNECT_KEY_ID }}
-          ASC_ISSUER_ID: ${{ secrets.APP_STORE_CONNECT_ISSUER_ID }}
-        run: |
-          python3 .github/scripts/app_store_submission.py com.pandulapeter.campfire IOS \
-            "${{ steps.version.outputs.name }}" "${{ steps.version.outputs.build }}"
       # Waits for App Store Connect to process the build, which can take half an hour, and submits it with the release's
       # notes as its "What's New", to be released as soon as it is approved (.github/scripts/app_store_submission.py).
       - name: Submit for review
@@ -267,10 +265,19 @@ jobs:
           fi
           python3 .github/scripts/app_store_submission.py com.pandulapeter.campfire IOS \
             "${{ steps.version.outputs.name }}" "${{ steps.version.outputs.build }}" "$RUNNER_TEMP/release-notes.txt"
-      # Whatever the run got as far as creating, and nothing else, whether or not the build went through. The profile
-      # xcodebuild made for the certificate is left to it: the next run's xcodebuild makes a new one.
+      # A build has to stay signed by a valid certificate until it is approved, so a run that uploaded one leaves what it
+      # created to the next run of this workflow, which revokes it before it makes its own.
+      - name: Keep the signing certificate for the build under review
+        if: always() && steps.upload.outcome == 'success'
+        uses: actions/upload-artifact@v4
+        with:
+          name: app-store-signing-ios
+          path: ${{ runner.temp }}/app-store-signing.json
+          retention-days: 90
+      # Whatever the run got as far as creating, and nothing else, when the build did not get as far as App Store
+      # Connect. The profile xcodebuild made for the certificate is left to it: the next run's xcodebuild makes a new one.
       - name: Revoke the signing certificate
-        if: always()
+        if: always() && steps.upload.outcome != 'success'
         env:
           ASC_KEY_ID: ${{ secrets.APP_STORE_CONNECT_KEY_ID }}
           ASC_ISSUER_ID: ${{ secrets.APP_STORE_CONNECT_ISSUER_ID }}

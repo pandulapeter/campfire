@@ -165,6 +165,11 @@ jobs:
     name: iOS
     needs: prepare
     uses: ./.github/workflows/publish-ios.yml
+    # The signing identities of the last upload are kept in an artifact until this run revokes them (see
+    # app_store_signing.py).
+    permissions:
+      contents: read
+      actions: write
     with:
       release_tag: ${{ github.event.release.tag_name }}
       release_notes: ${{ needs.prepare.outputs.release_notes }}
@@ -175,6 +180,11 @@ jobs:
     name: macOS
     needs: prepare
     uses: ./.github/workflows/publish-macos.yml
+    # The signing identities of the last upload are kept in an artifact until this run revokes them (see
+    # app_store_signing.py).
+    permissions:
+      contents: read
+      actions: write
     with:
       release_tag: ${{ github.event.release.tag_name }}
       release_notes: ${{ needs.prepare.outputs.release_notes }}

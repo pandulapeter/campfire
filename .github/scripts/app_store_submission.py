@@ -9,7 +9,7 @@
 """
 Submits an uploaded build for App Review, which is everything a release used to need App Store Connect open for.
 
-    app_store_submission.py <bundle identifier> <IOS | MAC_OS> <version> <build number> [<release notes file>]
+    app_store_submission.py <bundle identifier> <IOS | MAC_OS> <version> <build number> <release notes file>
 
 It waits for App Store Connect to finish processing the build (processing is also where a build is refused, with the
 reason mailed; this fails with the state instead of waiting forever), takes the platform's version for the release -
@@ -18,10 +18,6 @@ be released as soon as it is approved, attaches the build, writes the release no
 it. A version that is already waiting for review or further along with this very build is left as it is, so a run
 that is repeated does not fail on its own success; one that is there with another build is an error, since only one
 version of a platform can be in review at a time.
-
-Without the release notes file it only waits for the processing, which is what a run that uploads without submitting
-does before it revokes the certificate the build was signed with: App Store Connect checks the signature while it
-processes the build, and refuses one whose certificate is revoked by then.
 
 Uses the App Store Connect API the way app_store_signing.py does, and the same environment.
 """
@@ -149,10 +145,7 @@ def submit(app_id, platform, version):
     }})
 
 
-def main(bundle_identifier, platform, version, build_number, notes_file=None):
-    if notes_file is None:
-        wait_for_build(find_app(bundle_identifier)["id"], platform, version, build_number)
-        return
+def main(bundle_identifier, platform, version, build_number, notes_file):
     with open(notes_file) as file:
         notes = file.read().strip()
     if len(notes) > WHATS_NEW_LIMIT:
@@ -181,6 +174,6 @@ def main(bundle_identifier, platform, version, build_number, notes_file=None):
 
 
 if __name__ == "__main__":
-    if len(sys.argv) not in {5, 6} or sys.argv[2] not in {"IOS", "MAC_OS"}:
+    if len(sys.argv) != 6 or sys.argv[2] not in {"IOS", "MAC_OS"}:
         fail(__doc__.strip().split("\n\n")[1].strip())
     main(*sys.argv[1:])

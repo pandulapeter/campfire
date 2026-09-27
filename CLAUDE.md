@@ -379,12 +379,15 @@ uninstall and nothing else does.
     Connect API key (`APP_STORE_CONNECT_KEY_ID`, `_ISSUER_ID` and `_PRIVATE_KEY`, the last one the `.p8` file's text
     rather than base64, an Admin key shared with Kubriko) does not. So the two Apple workflows make their own
     identities with `.github/scripts/app_store_signing.py`: a key generated on the runner, a certificate for it and the
-    profiles that name it, created through the API into a keychain of the run's own, and revoked and deleted in an
-    `always()` step at the end — exactly what the run created, recorded in a state file, and never anything made by
-    hand. The end is after App Store Connect has processed the build, which every run waits for whether or not it
-    submits: processing is where the signature is checked, and a certificate revoked before that gets the build
-    refused as an invalid binary (ITMS-90238). Revoking it afterwards does not touch builds already in TestFlight or on
-    the store, which Apple signs again. It must never be used for a Developer ID certificate, whose revocation breaks every copy of an app
+    profiles that name it, created through the API into a keychain of the run's own, and revoked and deleted by the next
+    run — exactly what a run created, recorded in a state file, and never anything made by hand. **Not at the end of
+    the run that made it**: a build whose certificate is revoked before App Review approves it is refused as an
+    invalid binary (ITMS-90238), even after it was processed, attached and submitted. So a run that uploaded a build
+    keeps its state file as an artifact (`app-store-signing-ios` / `-macos`, 90 days), and the next run of the same
+    workflow revokes what it names before making its own; a run that uploaded nothing revokes its own in an `always()`
+    step. The API shows nothing that tells these certificates from ones made by hand, so an artifact that expires
+    leaves its certificates to expire on their own. Revoking after approval does not touch builds on the store, which
+    Apple signs again. It must never be used for a Developer ID certificate, whose revocation breaks every copy of an app
     already downloaded.
   - `publish-android.yml` writes the keystore out of `ANDROID_KEYSTORE_BASE64`, builds `assembleRelease` signed with
     the other three `ANDROID_*` secrets and uploads it and its mapping file to the production track with
