@@ -249,8 +249,8 @@ fun CampfireApp(
             // there to take instead of it.
             //
             // Read once: the composition that took the launch screen away is not always the one drawing the app
-            // (Android recreates its activity on every configuration change), and one that starts after it has
-            // nothing to cover.
+            // (Android recreates its activity on the configuration changes it does not handle itself, see the
+            // manifest, and when the system reclaims it), and one that starts after it has nothing to cover.
             val hasShownAppBefore = remember { viewModel.hasShownApp }
             var isAppReady by remember { mutableStateOf(hasShownAppBefore) }
             if (hasShownAppBefore) {

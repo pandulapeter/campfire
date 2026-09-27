@@ -56,8 +56,17 @@
           name, and that name has to go on being a launcher entry after an update. The rest are one per theme color,
           the app's own included, and are disabled until chosen.
         -->
+        <!--
+          A rotation, a fold, a resize of the window, a keyboard and a change of the display or font size are handled
+          in place: Compose follows the new configuration on its own, and recreating the activity would build the whole
+          app again, on every step of a window being dragged to a new size. The language and the dark mode are left to
+          recreation. The in-app language's "System" reads the JVM's default locale, which is not composition state and
+          would stay in the old language, and the window background and the splash screen come from the values-night
+          theme, which the window reads only as it is created.
+        -->
         <activity
             android:name=".CampfireMainActivity"
+            android:configChanges="orientation|screenSize|screenLayout|smallestScreenSize|density|fontScale|keyboard|keyboardHidden|navigation"
             android:exported="true"
             android:launchMode="singleTask">
 

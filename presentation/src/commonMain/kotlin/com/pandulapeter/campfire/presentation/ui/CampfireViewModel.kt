@@ -378,10 +378,11 @@ class CampfireViewModel(
 
     /**
      * Whether the launch screen has already been taken away once. A plain flag rather than a state, since it is only
-     * read as the root composition starts: Android recreates its activity, and with it the whole composition, on every
-     * rotation, and a composition that started from nothing would put the launch screen back over an app the user is
-     * already using. Worse, it would hold the new activity's first frame back until that screen had faded, which is
-     * a frozen window and a few hundred milliseconds of lost taps on every configuration change. A process that is
+     * read as the root composition starts: Android recreates its activity, and with it the whole composition, on the
+     * configuration changes it does not handle itself (the language and the dark mode, see the manifest) and when the
+     * system reclaims it, and a composition that started from nothing would put the launch screen back over an app the
+     * user is already using. Worse, it would hold the new activity's first frame back until that screen had faded,
+     * which is a frozen window and a few hundred milliseconds of lost taps on every recreation. A process that is
      * started again gets a new view model, which is the start the launch screen is for.
      */
     internal var hasShownApp = false
@@ -812,8 +813,8 @@ class CampfireViewModel(
     /**
      * Messages waiting for the snackbar, oldest first, each with a number of its own so that two identical results in
      * a row are still two messages. Held here rather than by the screen that shows them: Android recreates that screen
-     * on every rotation, and a message it had already taken would go with it unshown. A message leaves the queue once
-     * it has been shown, see [onMessageShown].
+     * whenever it recreates its activity, and a message it had already taken would go with it unshown. A message
+     * leaves the queue once it has been shown, see [onMessageShown].
      */
     private val _messageQueue = MutableStateFlow(emptyList<IndexedValue<Message>>())
     val messageQueue: StateFlow<List<IndexedValue<Message>>> = _messageQueue.asStateFlow()
