@@ -35,6 +35,9 @@ holds the `@Module @ComponentScan object DataLocalSourceModule`, and every local
     Windows-1252 for everything else (a UTF-8 file with a few stray bytes keeps its UTF-8 and reads only those through
     the code page, see `:data:model`), and a byte order mark stripped, because editors on Windows write one. A file read
     through the fallback is written back as UTF-8 on its first save, which keeps its accents rather than replacing them.
+    The web decodes valid UTF-8 without a NUL in the browser (`TextDecoder`, which gives the same string) and falls
+    back to `decodeLibraryText` otherwise; bytes cross the Kotlin/Wasm boundary as a string of one character per byte,
+    since the typed arrays of `kotlinx-browser` are copied one call per byte.
   - Writes are atomic on the three platforms that can be (a `.campfire-<number>.tmp` temporary file of its own per write,
     named without the target so a name at the file-system limit still saves, flushed to the device
     and moved over the target on the JVM, `atomically` on iOS), so a crash in the middle of a save cannot truncate a

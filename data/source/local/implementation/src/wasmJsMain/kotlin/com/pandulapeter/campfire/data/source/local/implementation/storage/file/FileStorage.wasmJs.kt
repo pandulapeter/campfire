@@ -19,9 +19,6 @@ import kotlinx.coroutines.await
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 import kotlinx.coroutines.withContext
-import org.khronos.webgl.Int8Array
-import org.khronos.webgl.toByteArray
-import org.khronos.webgl.toInt8Array
 import org.koin.core.annotation.Single
 import kotlin.js.ExperimentalWasmJsInterop
 import kotlin.js.Promise
@@ -81,13 +78,13 @@ internal class OpfsFileStorage : FileStorage {
 
     override suspend fun readText(directory: StorageDirectory, name: String) = withContext(Dispatchers.Default) {
         failingAsStorage(name) {
-            fileHandle(directory, name)?.let { readFileBytes(it).await()?.toByteArray()?.decodeLibraryText() }
-        }
+            fileHandle(directory, name)?.let { handle -> readFileText(handle).await<JsString?>()?.toString() }
+        }?.let { answer -> libraryText(directory, name, answer) }
     }
 
     override suspend fun readBytes(directory: StorageDirectory, name: String) = withContext(Dispatchers.Default) {
         failingAsStorage(name) {
-            fileHandle(directory, name)?.let { readFileBytes(it).await()?.toByteArray() }
+            fileHandle(directory, name)?.let { handle -> readFileLatin1(handle).await<JsString?>()?.toString()?.latin1Bytes() }
         }
     }
 
@@ -97,7 +94,7 @@ internal class OpfsFileStorage : FileStorage {
     }
 
     override suspend fun writeBytes(directory: StorageDirectory, name: String, bytes: ByteArray) = withContext(Dispatchers.Default) {
-        failingAsStorage(name) { writeFile(directoryHandle(directory), directory.pathSegments.joinToString("/"), name, bytes.toInt8Array()).await() }
+        failingAsStorage(name) { writeFile(directoryHandle(directory), directory.pathSegments.joinToString("/"), name, latin1ToBytes(bytes.toLatin1JsString())).await() }
         Unit
     }
 
@@ -108,6 +105,16 @@ internal class OpfsFileStorage : FileStorage {
         }
         Unit
     }
+
+    /**
+     * What `readFileText` answered, as the text of the file. Valid UTF-8 without a NUL was decoded by the browser, which
+     * gives exactly what `decodeLibraryText` would, a single byte order mark aside, which `TextDecoder` strips and the
+     * rest of the leading ones are stripped here. Anything else, the code-page files and UTF-16, is read again as bytes
+     * and goes through `decodeLibraryText`, since only it knows those rules - a NUL anywhere is a file that may be UTF-16
+     * without a byte order mark, which the browser would have read as valid UTF-8.
+     */
+    private suspend fun libraryText(directory: StorageDirectory, name: String, answer: String): String? =
+        if (answer.startsWith(DECODED_TEXT)) answer.substring(1).trimStart(BYTE_ORDER_MARK) else readBytes(directory, name)?.decodeLibraryText()
 
     /**
      * A rejected promise surfaces from `await` as a plain `Exception` whose message names the JavaScript error (the
@@ -163,6 +170,8 @@ internal class OpfsFileStorage : FileStorage {
 
         const val OPFS_UNAVAILABLE = "OPFS unavailable"
         const val FIELD_COUNT = 3
+        const val BYTE_ORDER_MARK = '\uFEFF'
+        const val DECODED_TEXT = '\u0000'
 
         // Control characters, because they are the only thing a file name is guaranteed not to contain.
         val ENTRY_SEPARATOR = Char(ENTRY_SEPARATOR_CODE).toString()
@@ -235,17 +244,52 @@ private fun fileInfo(handle: JsAny): Promise<JsString?> = js(
 )
 
 /**
- * The file's bytes, or `null` for a file removed between its handle and the read: a `NotFoundError` there is a file
- * no longer in the directory, which is what `readFileBytes`' callers call missing, the same way `fileInfo` does.
+ * The file's text as `TextDecoder` reads it, marked with a leading NUL, or a lone SOH where the file has to be decoded
+ * by `decodeLibraryText` instead (not valid UTF-8, or a NUL in it), or `null` for a file removed between its handle and
+ * the read: a `NotFoundError` there is a file no longer in the directory, which is what the callers call missing, the
+ * same way `fileInfo` does. The text crosses into Kotlin as one string, where the bytes would cross one call per byte.
  */
-private fun readFileBytes(handle: JsAny): Promise<Int8Array?> = js(
+private fun readFileText(handle: JsAny): Promise<JsString?> = js(
     """handle.getFile().then(function (file) { return file.arrayBuffer(); }).then(function (buffer) {
-        return new Int8Array(buffer);
+        var text;
+        try { text = new TextDecoder('utf-8', { fatal: true }).decode(buffer); }
+        catch (error) { return String.fromCharCode(1); }
+        return text.indexOf(String.fromCharCode(0)) >= 0 ? String.fromCharCode(1) : String.fromCharCode(0) + text;
     }).catch(function (error) {
         if (error && error.name === 'NotFoundError') return null;
         throw error;
     })"""
 )
+
+/**
+ * The file's bytes as a string of one character per byte, or `null` the way `readFileText` answers it. A string is the
+ * one thing that crosses the Kotlin/Wasm boundary in bulk; an `Int8Array` is read one call per element. It is built a
+ * chunk at a time, since `fromCharCode` takes its bytes as arguments and an argument list has a limit.
+ */
+private fun readFileLatin1(handle: JsAny): Promise<JsString?> = js(
+    """handle.getFile().then(function (file) { return file.arrayBuffer(); }).then(function (buffer) {
+        var bytes = new Uint8Array(buffer);
+        var parts = [];
+        for (var i = 0; i < bytes.length; i += 0x8000) parts.push(String.fromCharCode.apply(null, bytes.subarray(i, i + 0x8000)));
+        return parts.join('');
+    }).catch(function (error) {
+        if (error && error.name === 'NotFoundError') return null;
+        throw error;
+    })"""
+)
+
+/** The bytes `toLatin1JsString` carried across, for `writeFile`, which writes a string as UTF-8. */
+private fun latin1ToBytes(text: JsString): JsAny = js(
+    """(function () {
+        var bytes = new Uint8Array(text.length);
+        for (var i = 0; i < text.length; i++) bytes[i] = text.charCodeAt(i);
+        return bytes;
+    })()"""
+)
+
+private fun String.latin1Bytes() = ByteArray(length) { this[it].code.toByte() }
+
+private fun ByteArray.toLatin1JsString() = CharArray(size) { (this[it].toInt() and 0xFF).toChar() }.concatToString().toJsString()
 
 /**
  * A writable holds a lock on its file until it is closed or aborted, so one whose write fails is aborted before the
