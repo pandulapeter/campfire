@@ -119,12 +119,14 @@ internal fun SongLabels(
  * and shrinks away with the scroll itself instead of switching on as the row leaves its end. The scroll position is
  * only read while drawing, so scrolling redraws the row without recomposing or measuring it again. The mask is drawn
  * with [BlendMode.DstIn] over the row's own pixels, which needs the offscreen layer: drawn straight into the card, it
- * would erase the card behind the row as well, and the fade would be to a hole instead of to the card's color.
+ * would erase the card behind the row as well, and the fade would be to a hole instead of to the card's color. The layer
+ * is only taken while the row overflows, since a row that fits draws no fade, and a layer per row of a list is memory
+ * and a pass of its own for every one of them.
  * It has to be applied outside [horizontalScroll], so that it masks the visible part of the row rather than the
  * ends of the content.
  */
 private fun Modifier.horizontalFadingEdges(scrollState: ScrollState) = graphicsLayer {
-    compositingStrategy = CompositingStrategy.Offscreen
+    compositingStrategy = if (scrollState.maxValue > 0) CompositingStrategy.Offscreen else CompositingStrategy.Auto
 }.drawWithContent {
     drawContent()
     val fadeWidth = HORIZONTAL_FADE_WIDTH.toPx()
