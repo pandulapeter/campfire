@@ -479,8 +479,9 @@ class CampfireViewModel(
         .asState(emptySet())
 
     /**
-     * The text of the songs opened so far, by file name, read one file at a time as they are opened. Kept in step with
-     * the files by [GetSongContentInvalidationsUseCase], see the collector in `init`.
+     * The text of the songs the back stack can reach, by file name, read one file at a time as they are opened. Kept in
+     * step with the files by [GetSongContentInvalidationsUseCase], see the collector in `init`, and left with only what
+     * the screens on the back stack name once a navigation transition has ended, see [pruneSongTexts].
      */
     private val _songTexts = MutableStateFlow(emptyMap<String, String>())
     val songTexts: StateFlow<Map<String, String>> = _songTexts.asStateFlow()
@@ -923,17 +924,7 @@ class CampfireViewModel(
         // file is gone included, where the draft is all there is.
         viewModelScope.launch {
             getSongContentInvalidations().collect { fileName ->
-                val affected = _songTexts.value.keys.filter { fileName == null || it == fileName }
-                affected.forEach { name ->
-                    val content = getSongContent(name)
-                    _songTexts.update { if (content == null) it - name else it + (name to content.text) }
-                    // The editor keeps what it has, and with no text to compare it to that now counts as unsaved. It
-                    // is said out loud because saving is what puts the file back, which the user would otherwise have
-                    // no reason to do.
-                    if (content == null && _editorDraft.value?.fileName == name) {
-                        sendMessage(Message.EditedSongFileGone)
-                    }
-                }
+                rereadSongTexts(fileNames = fileName?.let(::setOf))
             }
         }
         viewModelScope.launch {
@@ -993,7 +984,60 @@ class CampfireViewModel(
 
     /** Reported by the UI whenever the state of the navigation transition changes, see [navigationGeneration]. */
     fun setNavigationTransitionRunning(isRunning: Boolean) {
+        val hasTransitionEnded = isNavigationTransitionRunning && !isRunning
         isNavigationTransitionRunning = isRunning
+        if (hasTransitionEnded) pruneSongTexts()
+    }
+
+    /**
+     * Lets go of the texts no screen on the back stack names, which would otherwise pile up for as long as the process
+     * lives - one per page of every setlist paged through - and be read again by every rescan and sync run. Kept: every
+     * file a song details screen names (the pages of a setlist next to the current one are read ahead), the editor's
+     * file and the draft's, since [hasUnsavedEditorChanges] compares against them and a missing one reads as unsaved.
+     *
+     * Once the transition has ended rather than as the back stack changes, because a screen that has been popped is
+     * still composed while it slides away, and its page losing its text would put a loading indicator in its place
+     * halfway out.
+     */
+    private fun pruneSongTexts() {
+        val reachable = buildSet {
+            backStack.forEach { destination ->
+                when (destination) {
+                    is CampfireDestination.SongDetails -> addAll(destination.songFileNames)
+                    is CampfireDestination.SongEditor -> add(destination.fileName)
+                    else -> Unit
+                }
+            }
+            _editorDraft.value?.fileName?.let(::add)
+        }
+        _songTexts.update { texts -> if (texts.keys.all { it in reachable }) texts else texts.filterKeys { it in reachable } }
+    }
+
+    /**
+     * Reads the held texts of [fileNames] - every held one for null - back from the files, and applies them in one
+     * update, so that the screens reading [songTexts] recompose once rather than once per file. Only to texts that are
+     * still held when the reads are done, so that one pruned meanwhile is not brought back.
+     */
+    private suspend fun rereadSongTexts(fileNames: Set<String>?) {
+        val affected = _songTexts.value.keys.filter { fileNames == null || it in fileNames }
+        if (affected.isEmpty()) return
+        val results = affected.map { name -> name to getSongContent(name)?.text }
+        _songTexts.update { texts ->
+            results.fold(texts) { updated, (name, text) ->
+                when {
+                    name !in updated -> updated
+                    text == null -> updated - name
+                    else -> updated + (name to text)
+                }
+            }
+        }
+        // The editor keeps what it has, and with no text to compare it to that now counts as unsaved. It is said out
+        // loud because saving is what puts the file back, which the user would otherwise have no reason to do.
+        results.forEach { (name, text) ->
+            if (text == null && _editorDraft.value?.fileName == name) {
+                sendMessage(Message.EditedSongFileGone)
+            }
+        }
     }
 
     private fun updateBackStack(update: SnapshotStateList<CampfireDestination>.() -> Unit) {
