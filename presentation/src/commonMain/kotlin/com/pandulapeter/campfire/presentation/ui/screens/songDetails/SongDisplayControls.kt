@@ -86,7 +86,6 @@ internal fun SongDisplayControls(
     val userPreferences by viewModel.userPreferences.collectAsStateWithLifecycle()
     val isPerformanceModeEnabled by viewModel.isPerformanceModeEnabled.collectAsStateWithLifecycle()
     val transpositions by viewModel.transpositions.collectAsStateWithLifecycle()
-    val fontScale by viewModel.fontScale.collectAsStateWithLifecycle()
     val song = allSongs.firstOrNull { it.fileName == dialog.songFileName }
     val songTransposition = song?.let { transpositions[it.fileName, dialog.setlistFileName] } ?: 0
     val chordSpelling = userPreferences?.chordSpelling ?: UserPreferences.ChordSpelling.Default
@@ -113,7 +112,7 @@ internal fun SongDisplayControls(
             headlineContent = { Text(stringResource(Res.string.song_details_text_size)) },
             trailingContent = {
                 FontScaleControls(
-                    fontScale = fontScale,
+                    fontScale = viewModel.fontScale,
                     onFontScaleAdjusted = viewModel::adjustFontScale,
                     onFontScaleReset = { viewModel.setFontScale(CampfireViewModel.DEFAULT_FONT_SCALE) },
                 )

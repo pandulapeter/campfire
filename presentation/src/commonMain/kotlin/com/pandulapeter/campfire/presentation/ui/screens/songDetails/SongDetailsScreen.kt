@@ -140,7 +140,6 @@ internal fun SongDetailsScreen(
     val transpositions by viewModel.transpositions.collectAsStateWithLifecycle()
     val userPreferences by viewModel.userPreferences.collectAsStateWithLifecycle()
     val isPerformanceModeEnabled by viewModel.isPerformanceModeEnabled.collectAsStateWithLifecycle()
-    val fontScale by viewModel.fontScale.collectAsStateWithLifecycle()
     val songsBeingRenamed by viewModel.songsBeingRenamed.collectAsStateWithLifecycle()
     val songFileNamesInSetlists by viewModel.songFileNamesInSetlists.collectAsStateWithLifecycle()
     val songs = remember(destination, songsByFileName, songsBeingRenamed) {
@@ -322,12 +321,9 @@ internal fun SongDetailsScreen(
                                 onReset = { currentSong?.let { viewModel.resetTransposition(it.fileName, destination.setlistFileName) } },
                             )
                         }
-                        FontScaleControls(
+                        LiveFontScaleControls(
                             modifier = Modifier.padding(end = INLINE_CONTROL_SPACING),
-                            isCompact = true,
-                            fontScale = fontScale,
-                            onFontScaleAdjusted = viewModel::adjustFontScale,
-                            onFontScaleReset = { viewModel.setFontScale(CampfireViewModel.DEFAULT_FONT_SCALE) },
+                            viewModel = viewModel,
                         )
                     }
                 }
@@ -368,7 +364,6 @@ internal fun SongDetailsScreen(
                 }
             },
         )
-        val currentFontScale by rememberUpdatedState(fontScale)
         // The paging bar sits below the pager and covers the bottom inset for it, so the pages only keep the
         // padding that is still theirs to apply.
         val pageContentPadding = if (hasPagerControls) {
@@ -394,7 +389,7 @@ internal fun SongDetailsScreen(
                     .weight(1f)
                     .fillMaxWidth()
                     .fontScaleGestures(
-                        fontScale = { currentFontScale },
+                        fontScale = { viewModel.fontScale },
                         onFontScaleChanged = viewModel::setFontScale,
                     ),
                 state = pagerState,
@@ -411,7 +406,7 @@ internal fun SongDetailsScreen(
                     hasFailed = song.fileName in failedSongFileNames,
                     transposition = transpositions[song.fileName, destination.setlistFileName],
                     shouldShowChords = shouldShowChords,
-                    fontScale = fontScale,
+                    fontScale = { viewModel.fontScale },
                     isHorizontalFlow = isHorizontalFlow,
                     // One set per song, wherever it is opened from: folding is how this reader reads it, not how the
                     // setlist has the band play it.
@@ -550,6 +545,8 @@ private fun SongPagerControls(
  *   that has nothing left to wait for.
  * @param scrollState Owned by the pager rather than by the page, so that the arrow keys can reach the scroll of the
  *   song being read, and so that a page keeps where it was left while its text is loaded again.
+ * @param fontScale Read where the lyrics are built rather than passed as a value: a pinch changes it on every frame,
+ *   and read here it invalidates only this page's content rather than the screen and the pager around it.
  */
 @Composable
 private fun SongDetailsPage(
@@ -559,7 +556,7 @@ private fun SongDetailsPage(
     hasFailed: Boolean,
     transposition: Int,
     shouldShowChords: Boolean,
-    fontScale: Float,
+    fontScale: () -> Float,
     isHorizontalFlow: Boolean,
     foldedSections: Set<String>,
     onFoldToggled: (key: String) -> Unit,
@@ -635,7 +632,7 @@ private fun SongDetailsPage(
                 // The pages fill the screen, so whatever the screen is still missing this layout is missing too.
                 extraWidth = (settledWidth - maxWidth).coerceAtLeast(0.dp),
                 shouldShowChords = shouldShowChords,
-                fontScale = fontScale,
+                fontScale = fontScale(),
                 isHorizontalFlow = isHorizontalFlow,
                 foldedSections = foldedSections,
                 onFoldToggled = onFoldToggled,
@@ -649,6 +646,22 @@ private fun SongDetailsPage(
         }
     }
 }
+
+/**
+ * The inline text size stepper, reading the live font scale in a scope of its own so that a pinch recomposes the
+ * stepper rather than the app bar around it.
+ */
+@Composable
+private fun LiveFontScaleControls(
+    modifier: Modifier,
+    viewModel: CampfireViewModel,
+) = FontScaleControls(
+    modifier = modifier,
+    isCompact = true,
+    fontScale = viewModel.fontScale,
+    onFontScaleAdjusted = viewModel::adjustFontScale,
+    onFontScaleReset = { viewModel.setFontScale(CampfireViewModel.DEFAULT_FONT_SCALE) },
+)
 
 /**
  * One press of an arrow key, in the direction it was pressed (-1 for up, 1 for down). The step is a fraction of what

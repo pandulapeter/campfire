@@ -11,6 +11,7 @@ package com.pandulapeter.campfire.presentation.ui
 
 import androidx.compose.foundation.text.input.TextFieldState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateMapOf
@@ -797,10 +798,19 @@ class CampfireViewModel(
      * The text size multiplier of the song details screen. A pinch gesture changes it on every frame, so the latest
      * value is kept here and only written to the user preferences once the changes have settled.
      */
-    private val pendingFontScale = MutableStateFlow<Float?>(null)
-    val fontScale = combine(userPreferences, pendingFontScale) { userPreferences, pendingFontScale ->
-        pendingFontScale ?: userPreferences?.fontScale ?: DEFAULT_FONT_SCALE
-    }.asState(DEFAULT_FONT_SCALE)
+    private val liveFontScale = mutableFloatStateOf(DEFAULT_FONT_SCALE)
+
+    /**
+     * Snapshot state rather than a flow, so that it is read where the text is laid out: a pinch changes it on every
+     * frame, and a flow collected at the root of the screen would recompose the whole screen every time, a frame late.
+     */
+    val fontScale: Float get() = liveFontScale.floatValue
+
+    /**
+     * The value set on this device and not yet written to the preferences. For as long as there is one it wins over
+     * the stored value; once it is saved, whatever the preferences hold wins again.
+     */
+    private val unsavedFontScale = MutableStateFlow<Float?>(null)
 
     /**
      * The import that has been worked out but not carried out, waiting for the user to answer
@@ -974,8 +984,17 @@ class CampfireViewModel(
             }
         }
         viewModelScope.launch {
-            pendingFontScale.filterNotNull().debounce(FONT_SCALE_SAVE_DELAY_MILLIS).collect { fontScale ->
+            unsavedFontScale.filterNotNull().debounce(FONT_SCALE_SAVE_DELAY_MILLIS).collect { fontScale ->
                 userPreferences.value?.let { saveUserPreferences(it.copy(fontScale = fontScale)) }
+                // Only if nothing newer arrived while this one was being saved, or that one would never be.
+                unsavedFontScale.compareAndSet(fontScale, null)
+            }
+        }
+        viewModelScope.launch {
+            // The first read at launch, a read again, a restore, a sync run: whatever wrote the preference wins
+            // whenever nothing set here is still waiting to be saved. The echo of our own save equals the live value.
+            userPreferences.filterNotNull().map { it.fontScale }.distinctUntilChanged().collect { stored ->
+                if (unsavedFontScale.value == null) liveFontScale.floatValue = stored
             }
         }
     }
@@ -2162,7 +2181,12 @@ class CampfireViewModel(
         copy(foldedSections = if (folded.isEmpty()) foldedSections - songFileName else foldedSections + (songFileName to folded))
     }
 
-    fun setFontScale(value: Float) = pendingFontScale.update { value.coerceIn(MIN_FONT_SCALE, MAX_FONT_SCALE) }
+    fun setFontScale(value: Float) {
+        val clamped = value.coerceIn(MIN_FONT_SCALE, MAX_FONT_SCALE)
+        if (clamped == liveFontScale.floatValue) return
+        liveFontScale.floatValue = clamped
+        unsavedFontScale.value = clamped
+    }
 
     /**
      * Moves the font scale by the given number of [FONT_SCALE_STEP]s. A value set by a gesture is first snapped to the
@@ -2170,7 +2194,7 @@ class CampfireViewModel(
      * 120% or 130%, never past them).
      */
     fun adjustFontScale(steps: Int) {
-        val currentSteps = fontScale.value / FONT_SCALE_STEP
+        val currentSteps = liveFontScale.floatValue / FONT_SCALE_STEP
         val snappedSteps = if (steps > 0) floor(currentSteps + FONT_SCALE_STEP_TOLERANCE) else ceil(currentSteps - FONT_SCALE_STEP_TOLERANCE)
         setFontScale((snappedSteps + steps) * FONT_SCALE_STEP)
     }
