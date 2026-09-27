@@ -40,6 +40,8 @@ import com.pandulapeter.campfire.presentation.ui.resetEscapeKey
 import com.pandulapeter.campfire.presentation.ui.platform.desktopDataDirectory
 import com.pandulapeter.campfire.presentation.ui.theme.interfaceScale
 import java.awt.Color
+import java.awt.Component
+import java.awt.Container
 import java.awt.Desktop
 import java.awt.Dimension
 import java.awt.Toolkit
@@ -65,6 +67,11 @@ fun main(args: Array<String>) {
     // own theme (TitleBarAppearance), but only once the preferences are read; until then the system's is the better
     // guess, and it is read once, like the name.
     System.setProperty("apple.awt.application.appearance", "system")
+    // Skiko turns off the background erase of the surface the app is rendered into, which keeps a frame from being
+    // wiped before it is drawn, but leaves the edge a resize uncovers on Windows unpainted - white - until the next
+    // frame. This erases it during a resize alone, in the surface's background (setUndrawnAreaColor). Read when the
+    // surface is created.
+    System.setProperty("sun.awt.erasebackgroundonresize", "true")
     // Compose's own set-up, which application() would only do later, has to come before anything that starts the
     // AWT toolkit: on Linux it is what puts the display's scale into sun.java2d.uiScale, which the toolkit reads once,
     // when it starts. Behind the same property application() checks, so that this is the same decision made earlier
@@ -170,9 +177,7 @@ fun main(args: Array<String>) {
                     CampfireDesktopApp(
                         viewModel = currentViewModel,
                         filesToImport = OpenedFiles.files,
-                        // What the window shows wherever the app has not been drawn yet - the edge a fast resize
-                        // uncovers before the next frame fills it - which is white unless it is told otherwise.
-                        onBackgroundColorChanged = { color -> window.background = Color(color.toArgb()) },
+                        onBackgroundColorChanged = { color -> window.setUndrawnAreaColor(Color(color.toArgb())) },
                     )
                 }
             }
@@ -188,6 +193,22 @@ fun main(args: Array<String>) {
  */
 private val MINIMUM_CONTENT_SIZE = DpSize(480.dp, 480.dp)
 private val INITIAL_WINDOW_SIZE = DpSize(800.dp, 600.dp)
+
+/**
+ * What the window shows wherever the app has not been drawn yet - the edge a fast resize uncovers before the next frame
+ * fills it - which is white unless it is told otherwise. On macOS that is the window's own background. On Windows it is
+ * the background of the native surface the app is rendered into, erased with during a resize
+ * (`sun.awt.erasebackgroundonresize`), a heavyweight component of its own that takes its color when it is created
+ * rather than following its ancestors', so it is given the color directly as well.
+ */
+private fun ComposeWindow.setUndrawnAreaColor(color: Color) {
+    background = color
+    fun Component.paintHeavyweights() {
+        if (!isLightweight) background = color
+        (this as? Container)?.components?.forEach { it.paintHeavyweights() }
+    }
+    contentPane.paintHeavyweights()
+}
 
 /**
  * A window smaller than its minimum is grown to it, past the edge of the screen if need be, so on a display with less
