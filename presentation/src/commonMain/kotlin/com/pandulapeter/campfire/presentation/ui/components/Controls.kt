@@ -152,6 +152,7 @@ internal fun ControlsSidePanel(
         Modifier.width(SIDE_PANEL_WIDTH + endPadding).fillMaxHeight(),
         PaddingValues(
             end = endPadding,
+            top = SIDE_PANEL_TOP_PADDING,
             bottom = contentPadding.calculateBottomPadding() + SIDE_PANEL_BOTTOM_PADDING,
         ),
     )
@@ -258,10 +259,8 @@ private fun TagFilters(
         onClearClicked = onClear,
     )
     TagFlowRow(
-        modifier = Modifier
-            .padding(horizontal = CONTROLS_PADDING)
-            .padding(bottom = 8.dp),
-        shouldUseDoublePadding = true,
+        modifier = Modifier.padding(start = CONTROLS_PADDING, end = CONTROLS_PADDING, bottom = CHIP_GAP),
+        gap = CHIP_GAP,
     ) {
         visibleTags.forEach { tag ->
             CountedFilterChip(
@@ -322,10 +321,8 @@ private fun LanguageFilters(
         onClearClicked = onClear,
     )
     TagFlowRow(
-        modifier = Modifier
-            .padding(horizontal = CONTROLS_PADDING)
-            .padding(bottom = 8.dp),
-        shouldUseDoublePadding = true,
+        modifier = Modifier.padding(start = CONTROLS_PADDING, end = CONTROLS_PADDING, bottom = CHIP_GAP),
+        gap = CHIP_GAP,
     ) {
         languages.forEach { language ->
             CountedFilterChip(
@@ -368,7 +365,7 @@ private fun MatchModeChoice(
     Column {
         SettingsSectionTitle(
             text = title,
-            shouldUseSmallPadding = true,
+            contentPadding = PaddingValues(horizontal = CONTROLS_PADDING, vertical = CHIP_GAP),
         )
         SegmentedChoice(
             options = listOf(
@@ -386,9 +383,8 @@ private fun MatchModeChoice(
  *
  * It is up here rather than under the chips because it comes and goes with the selection, and a button of its own
  * would grow and shrink everything below it - in a bottom sheet, the sheet itself - every time a filter was turned on
- * or off. The row is laid out so that it cannot: it keeps the height a plain [SettingsSectionTitle] has, the title's
- * own padding split around a content box tall enough to hold the action ([SECTION_ACTION_HEIGHT]), so the title reads
- * exactly where it would have and the action never decides anything.
+ * or off. The row is laid out so that it cannot: it is always as tall as the action ([SECTION_ACTION_HEIGHT]), whether
+ * the action is showing or not, so the title reads in the same place either way and the action never decides anything.
  */
 @Composable
 private fun FilterSectionTitle(
@@ -403,7 +399,6 @@ private fun FilterSectionTitle(
         .padding(
             start = CONTROLS_PADDING,
             end = CONTROLS_PADDING - BUTTON_INSET,
-            top = SECTION_TITLE_TOP_PADDING,
             bottom = SECTION_TITLE_BOTTOM_PADDING,
         )
         .height(SECTION_ACTION_HEIGHT),
@@ -531,6 +526,7 @@ internal fun CountedFilterChip(
 }
 
 private val SIDE_PANEL_WIDTH = 320.dp
+private val SIDE_PANEL_TOP_PADDING = 16.dp
 private val SIDE_PANEL_BOTTOM_PADDING = 16.dp
 private const val SIDE_PANEL_MIN_COLUMN_COUNT = 2
 private const val MAX_COLLAPSED_TAG_COUNT = 12
@@ -541,12 +537,11 @@ private val CONTROLS_PADDING = 16.dp
 private val CHIP_PADDING = 16.dp
 private val CHIP_ICON_GAP = 8.dp
 
-/**
- * The three that make a [FilterSectionTitle] exactly as tall as the [SettingsSectionTitle] it stands in for: its 24dp
- * and 8dp of padding, less the 6dp the content box grows past the line of text it would otherwise be.
- */
+/** Between two [CountedFilterChip]s, the same across a row and between rows, wherever a group of them is laid out. */
+internal val CHIP_GAP = 8.dp
+
+/** The height of a [FilterSectionTitle], which is its action's with no touch target around it, and the gap under it. */
 private val SECTION_ACTION_HEIGHT = 32.dp
-private val SECTION_TITLE_TOP_PADDING = 0.dp
 private val SECTION_TITLE_BOTTOM_PADDING = 4.dp
 
 /** The padding a text button keeps inside its own bounds, taken off so that its label lines up with the titles. */

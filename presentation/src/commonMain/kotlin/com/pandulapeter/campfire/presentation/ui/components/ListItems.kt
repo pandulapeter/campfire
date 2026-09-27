@@ -675,8 +675,7 @@ private fun Modifier.extendIntoEndPadding(endPadding: Dp) = layout { measurable,
 internal fun SettingsSectionTitle(
     modifier: Modifier = Modifier,
     text: String,
-    shouldUseSmallPadding: Boolean = false,
-    contentPadding: PaddingValues = PaddingValues(start = LIST_ITEM_KEYLINE, end = LIST_ITEM_KEYLINE, top = if (shouldUseSmallPadding) 8.dp else 24.dp, bottom = 8.dp),
+    contentPadding: PaddingValues = PaddingValues(start = LIST_ITEM_KEYLINE, end = LIST_ITEM_KEYLINE, top = 24.dp, bottom = 8.dp),
 ) = Text(
     modifier = modifier.fillMaxWidth().padding(contentPadding),
     text = text,

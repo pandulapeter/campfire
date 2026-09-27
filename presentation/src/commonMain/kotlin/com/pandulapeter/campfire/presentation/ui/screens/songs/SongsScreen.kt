@@ -202,7 +202,7 @@ internal fun SongsScreen(
                 contentPadding = contentPadding,
             ) { panelModifier, panelContentPadding ->
                 SongFilters(
-                    modifier = panelModifier.padding(top = 16.dp),
+                    modifier = panelModifier,
                     viewModel = viewModel,
                     contentPadding = panelContentPadding,
                 )
@@ -399,7 +399,7 @@ private fun SongList(
                         onAddTag = if (isPerformanceModeEnabled) null else {
                             {
                                 keyboardController?.hide()
-                                viewModel.showDialog(CampfireViewModel.DialogType.AddSongTag(song = song, shouldNameSong = true))
+                                viewModel.showDialog(CampfireViewModel.DialogType.AddSongTag(song = song))
                             }
                         },
                         onClick = {

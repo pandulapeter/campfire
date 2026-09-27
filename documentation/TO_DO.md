@@ -9,12 +9,9 @@
 -->
 # To do
 - Android dynamic theme detection on Samsung is not working
-- Update badge assets in the readme
+- New default Campfire theme
 - .cho file association doesn't work on Samsung devices
-- Fast scroll touch target conflicts with back gesture
-- Avoid duplicating information on detail screen modals. On other modals make song title / artist appearance consistent
 - Song assignments bottom sheet: tag vertical spacing should be incremented
-- "Add tag" dialog should be a bottom sheet could be a bottom sheet
 - "Language picker" dialog could also be a bottom sheet
 - "Song assignments" bottom sheet: open keyboard automatically, hide it on downwards scroll
 - Downwards scroll dismissing the keyboard should work on every modal list

@@ -53,6 +53,9 @@ import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.TransformOrigin
 import androidx.compose.ui.graphics.lerp
+import androidx.compose.ui.input.pointer.AwaitPointerEventScope
+import androidx.compose.ui.input.pointer.PointerInputChange
+import androidx.compose.ui.input.pointer.PointerType
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.input.pointer.positionChange
 import androidx.compose.ui.layout.onSizeChanged
@@ -62,6 +65,8 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.util.lerp
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withTimeoutOrNull
+import kotlin.math.abs
 import kotlin.math.max
 import kotlin.math.roundToInt
 
@@ -73,8 +78,9 @@ import kotlin.math.roundToInt
  * Its touch column overlays the grid's end padding, so section headers can continue behind it while song cards and
  * their controls stay clear, and it reaches on over the cards' own outer margin up to their edge: nothing in that
  * margin can be pressed, so the scroller takes every press that misses the cards. Pressing anywhere in the column
- * moves the thumb under the finger, and a track fades in behind the thumb while it is pointed at or dragged. Only
- * the bubble extends beyond the column, and nothing about it can be pressed.
+ * with a mouse moves the thumb under the pointer, and so does a finger tapped, held or swiped vertically there - a
+ * horizontal swipe is left to the system's back gesture. A track fades in behind the thumb while it is pointed at or
+ * dragged. Only the bubble extends beyond the column, and nothing about it can be pressed.
  *
  * @param labelForItem Returns the label of the section the item at the given index belongs to, or null if none. A
  *   list whose sections have no single character to go by (the setlists, named by whatever somebody called them)
@@ -209,6 +215,10 @@ private fun bubbleTop(desiredTop: Float, trackHeight: Int, bubbleHeight: Float):
 /**
  * Drags the thumb for as long as the pointer that pressed this element stays down, wherever it wanders off to. The
  * element is laid out over the whole track, so a press on it is already in the thumb's coordinates.
+ *
+ * A mouse takes the thumb as it presses, but a touch only once it is known to be meant for it ([awaitThumbPress]): the
+ * column runs down the edge Android's back gesture starts from, and the system only takes a swipe over once it has
+ * seen it travel, so a thumb that jumped to the finger on the press moved the list under every back gesture made there.
  */
 private fun Modifier.thumbDragGestures(
     state: FastScrollerState,
@@ -216,6 +226,8 @@ private fun Modifier.thumbDragGestures(
 ) = pointerInput(state) {
     awaitEachGesture {
         val down = awaitFirstDown()
+        val press = if (down.type == PointerType.Mouse) ThumbPress.GRAB else awaitThumbPress(down)
+        if (press == ThumbPress.NONE) return@awaitEachGesture
         down.consume()
         // Ended in a finally: the element this runs on is taken away the moment the list stops being scrollable,
         // which cancels the gesture in the middle of a drag - the keyboard going down under a search results list is
@@ -224,16 +236,57 @@ private fun Modifier.thumbDragGestures(
             state.startDrag(pressY = down.position.y)?.let { fraction ->
                 coroutineScope.launch { state.scrollToFraction(fraction) }
             }
-            drag(down.id) { change ->
-                // The delta has to be read before consuming the change, as consumed changes report none.
-                val fraction = state.dragBy(change.positionChange().y)
-                change.consume()
-                coroutineScope.launch { state.scrollToFraction(fraction) }
+            if (press == ThumbPress.GRAB) {
+                // The finger may have travelled up to the touch slop while the gesture was being told apart. Only a
+                // move that happened is followed, since grabbing the thumb must not scroll the list by itself.
+                currentEvent.changes.firstOrNull { it.id == down.id && it.position.y != down.position.y }?.let { change ->
+                    val fraction = state.dragBy(change.position.y - down.position.y)
+                    change.consume()
+                    coroutineScope.launch { state.scrollToFraction(fraction) }
+                }
+                drag(down.id) { change ->
+                    // The delta has to be read before consuming the change, as consumed changes report none.
+                    val fraction = state.dragBy(change.positionChange().y)
+                    change.consume()
+                    coroutineScope.launch { state.scrollToFraction(fraction) }
+                }
             }
         } finally {
             state.endDrag()
         }
     }
+}
+
+/**
+ * Waits for a touch on the track to say what it is for: a finger held still for as long as a long press takes, or one
+ * that sets off more vertically than horizontally past the touch slop, takes the thumb, and one lifted before either
+ * happened is a tap, which jumps it. One that sets off sideways is left alone, and so is one the system took over for
+ * its back gesture before it got that far, which reaches here as a lift that is already consumed: a back gesture
+ * started over the column never moves the list.
+ */
+private suspend fun AwaitPointerEventScope.awaitThumbPress(down: PointerInputChange): ThumbPress {
+    val touchSlop = viewConfiguration.touchSlop
+    return withTimeoutOrNull(viewConfiguration.longPressTimeoutMillis) {
+        var press: ThumbPress? = null
+        while (press == null) {
+            val change = awaitPointerEvent().changes.firstOrNull { it.id == down.id }
+            val distance = change?.let { it.position - down.position }
+            press = when {
+                change == null || change.isConsumed -> ThumbPress.NONE
+                !change.pressed -> ThumbPress.TAP
+                distance != null && distance.getDistance() > touchSlop ->
+                    if (abs(distance.y) > abs(distance.x)) ThumbPress.GRAB else ThumbPress.NONE
+                else -> null
+            }
+        }
+        press
+    } ?: ThumbPress.GRAB
+}
+
+private enum class ThumbPress {
+    GRAB,
+    TAP,
+    NONE,
 }
 
 private class FastScrollerState(

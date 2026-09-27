@@ -22,6 +22,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.drawWithContent
+import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.BlendMode
 import androidx.compose.ui.graphics.Brush
@@ -136,33 +137,86 @@ private class CardPosition {
  *
  * @param scrolled How far the content has been scrolled from its start, read while it is drawn.
  */
-internal fun Modifier.fadingTopEdge(scrolled: () -> Int) = this
-    .graphicsLayer {
-        compositingStrategy = if (scrolled() > 0) CompositingStrategy.Offscreen else CompositingStrategy.Auto
-    }
-    .drawWithContent {
-        drawContent()
-        val height = EDGE_FADE_SIZE.toPx()
-        val strength = (scrolled() / height).coerceIn(0f, 1f)
-        if (strength > 0f) {
-            drawRect(
-                brush = Brush.verticalGradient(
-                    colors = listOf(Color.Black.copy(alpha = 1f - strength), Color.Black),
-                    startY = 0f,
-                    endY = height,
-                ),
-                blendMode = BlendMode.DstIn,
-            )
-        }
-    }
+internal fun Modifier.fadingTopEdge(scrolled: () -> Int) = fadingVerticalEdges(
+    scrolledFromTop = scrolled,
+    scrolledFromBottom = { 0 },
+)
 
 /** [fadingTopEdge] for a container scrolled by [scrollState]. */
 internal fun Modifier.fadingTopEdge(scrollState: ScrollState) = fadingTopEdge { scrollState.value }
 
 /** [fadingTopEdge] for a lazy list, which only knows how far it is scrolled into its first item. */
-internal fun Modifier.fadingTopEdge(listState: LazyListState) = fadingTopEdge {
-    if (listState.firstVisibleItemIndex > 0) Int.MAX_VALUE else listState.firstVisibleItemScrollOffset
-}
+internal fun Modifier.fadingTopEdge(listState: LazyListState) = fadingTopEdge { listState.scrolledFromTop() }
+
+/**
+ * [fadingTopEdge] at both ends, for a container with nothing around it that would say there is more of it: a list in
+ * the middle of a dialog, whose bottom edge is a row of buttons rather than the edge of the screen. Each edge fades as
+ * far as there is content left past it, so a list that is not scrolled at all is drawn whole.
+ *
+ * @param scrolledFromTop How far the content has been scrolled from its start, read while it is drawn.
+ * @param scrolledFromBottom How far it still can be scrolled towards its end, read while it is drawn.
+ */
+internal fun Modifier.fadingVerticalEdges(
+    scrolledFromTop: () -> Int,
+    scrolledFromBottom: () -> Int,
+) = this
+    .graphicsLayer {
+        compositingStrategy = if (scrolledFromTop() > 0 || scrolledFromBottom() > 0) CompositingStrategy.Offscreen else CompositingStrategy.Auto
+    }
+    .drawWithContent {
+        drawContent()
+        val height = EDGE_FADE_SIZE.toPx()
+        val topStrength = (scrolledFromTop() / height).coerceIn(0f, 1f)
+        if (topStrength > 0f) {
+            drawRect(
+                brush = Brush.verticalGradient(
+                    colors = listOf(Color.Black.copy(alpha = 1f - topStrength), Color.Black),
+                    startY = 0f,
+                    endY = height,
+                ),
+                size = Size(size.width, height),
+                blendMode = BlendMode.DstIn,
+            )
+        }
+        val bottomStrength = (scrolledFromBottom() / height).coerceIn(0f, 1f)
+        if (bottomStrength > 0f) {
+            drawRect(
+                brush = Brush.verticalGradient(
+                    colors = listOf(Color.Black, Color.Black.copy(alpha = 1f - bottomStrength)),
+                    startY = size.height - height,
+                    endY = size.height,
+                ),
+                topLeft = Offset(0f, size.height - height),
+                size = Size(size.width, height),
+                blendMode = BlendMode.DstIn,
+            )
+        }
+    }
+
+/** [fadingVerticalEdges] for a container scrolled by [scrollState]. */
+internal fun Modifier.fadingVerticalEdges(scrollState: ScrollState) = fadingVerticalEdges(
+    scrolledFromTop = { scrollState.value },
+    scrolledFromBottom = { scrollState.maxValue - scrollState.value },
+)
+
+/**
+ * [fadingVerticalEdges] for a lazy list, which only knows how far it is scrolled into its first item, and how far its
+ * last one reaches past the viewport once that one has been laid out.
+ */
+internal fun Modifier.fadingVerticalEdges(listState: LazyListState) = fadingVerticalEdges(
+    scrolledFromTop = { listState.scrolledFromTop() },
+    scrolledFromBottom = {
+        val layoutInfo = listState.layoutInfo
+        val lastItem = layoutInfo.visibleItemsInfo.lastOrNull()
+        when {
+            lastItem == null -> 0
+            lastItem.index < layoutInfo.totalItemsCount - 1 -> Int.MAX_VALUE
+            else -> (lastItem.offset + lastItem.size + layoutInfo.afterContentPadding - layoutInfo.viewportEndOffset).coerceAtLeast(0)
+        }
+    },
+)
+
+private fun LazyListState.scrolledFromTop() = if (firstVisibleItemIndex > 0) Int.MAX_VALUE else firstVisibleItemScrollOffset
 
 /**
  * Fades what scrolls in this container out towards its left edge during horizontal slide animation.

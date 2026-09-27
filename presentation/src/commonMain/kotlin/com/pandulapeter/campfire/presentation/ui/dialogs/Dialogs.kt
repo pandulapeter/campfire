@@ -142,6 +142,7 @@ import com.pandulapeter.campfire.presentation.resources.song_editor_revert
 import com.pandulapeter.campfire.presentation.resources.song_editor_revert_confirmation
 import com.pandulapeter.campfire.presentation.resources.song_editor_unsaved_changes
 import com.pandulapeter.campfire.presentation.resources.song_editor_unsaved_changes_confirmation
+import com.pandulapeter.campfire.presentation.resources.songs_artist_and_title
 import com.pandulapeter.campfire.presentation.resources.songs_clear
 import com.pandulapeter.campfire.presentation.resources.songs_delete_song
 import com.pandulapeter.campfire.presentation.resources.songs_delete_song_confirmation
@@ -162,16 +163,17 @@ import com.pandulapeter.campfire.presentation.resources.welcome_title
 import com.pandulapeter.campfire.presentation.ui.CampfireViewModel
 import com.pandulapeter.campfire.presentation.ui.components.ActionListItem
 import com.pandulapeter.campfire.presentation.ui.components.CheckboxListItem
+import com.pandulapeter.campfire.presentation.ui.components.CHIP_GAP
 import com.pandulapeter.campfire.presentation.ui.components.CountedFilterChip
 import com.pandulapeter.campfire.presentation.ui.components.MAX_SEARCH_QUERY_LENGTH
 import com.pandulapeter.campfire.presentation.ui.components.RadioListItem
-import com.pandulapeter.campfire.presentation.ui.components.SettingsSectionTitle
 import com.pandulapeter.campfire.presentation.ui.components.SongFilters
 import com.pandulapeter.campfire.presentation.ui.components.TagFlowRow
 import com.pandulapeter.campfire.presentation.ui.components.TagPill
 import com.pandulapeter.campfire.presentation.ui.components.ThemeColorChoice
 import com.pandulapeter.campfire.presentation.ui.components.UiModeChoice
 import com.pandulapeter.campfire.presentation.ui.components.fadingTopEdge
+import com.pandulapeter.campfire.presentation.ui.components.fadingVerticalEdges
 import com.pandulapeter.campfire.presentation.ui.components.languageLabel
 import com.pandulapeter.campfire.presentation.ui.components.languageName
 import com.pandulapeter.campfire.presentation.ui.components.pickableLanguages
@@ -843,9 +845,9 @@ private fun NewSongDialog(
  * narrowed by whatever has been typed so far, because a library where the same idea is filed under "christmas",
  * "Christmas" and "xmas" is a library whose tags filter nothing.
  *
- * Opened from a row of the song list, it names the song it tags, the way the picker sheets do: a tag put on the row
- * next to the one that was meant is a file quietly rewritten. Over the song details screen it does not, since the
- * screen behind it is that song.
+ * It names the song it tags under its title ([SongDialogTitle]) wherever it was opened from: a tag put on the row next
+ * to the one that was meant is a file quietly rewritten, and saying it over the song details screen as well keeps the
+ * dialog reading the same from both places.
  */
 @Composable
 private fun AddSongTagDialog(
@@ -868,29 +870,16 @@ private fun AddSongTagDialog(
     }
     AlertDialog(
         onDismissRequest = viewModel::dismissDialog,
-        title = { Text(stringResource(Res.string.song_details_tag_add)) },
+        title = {
+            SongDialogTitle(
+                title = stringResource(Res.string.song_details_tag_add),
+                song = dialog.song,
+            )
+        },
         text = {
             Column {
-                if (dialog.shouldNameSong) {
-                    Text(
-                        text = dialog.song.title,
-                        style = MaterialTheme.typography.bodyLarge,
-                        maxLines = 1,
-                        overflow = TextOverflow.Ellipsis,
-                    )
-                    // Nothing requires an artist, and an empty line would only push the field down.
-                    if (dialog.song.artist.isNotBlank()) {
-                        Text(
-                            text = dialog.song.artist,
-                            style = MaterialTheme.typography.bodyMedium,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant,
-                            maxLines = 1,
-                            overflow = TextOverflow.Ellipsis,
-                        )
-                    }
-                }
                 OutlinedTextField(
-                    modifier = Modifier.padding(top = if (dialog.shouldNameSong) 16.dp else 0.dp).fillMaxWidth().focusRequester(focusRequester),
+                    modifier = Modifier.fillMaxWidth().focusRequester(focusRequester),
                     value = value,
                     onValueChange = { value = it.asSingleLine().take(MAX_TAG_LENGTH) },
                     label = { Text(stringResource(Res.string.song_details_tag_name)) },
@@ -907,8 +896,12 @@ private fun AddSongTagDialog(
                         style = MaterialTheme.typography.labelLarge,
                         color = MaterialTheme.colorScheme.primary,
                     )
+                    val scrollState = rememberScrollState()
                     TagFlowRow(
-                        modifier = Modifier.heightIn(max = MAX_SUGGESTIONS_HEIGHT).verticalScroll(rememberScrollState())
+                        modifier = Modifier
+                            .heightIn(max = MAX_SUGGESTIONS_HEIGHT)
+                            .fadingVerticalEdges(scrollState)
+                            .verticalScroll(scrollState),
                     ) {
                         suggestions.forEach { tag ->
                             TagPill(
@@ -929,6 +922,25 @@ private fun AddSongTagDialog(
         dismissButton = {
             TextButton(onClick = viewModel::dismissDialog) { Text(stringResource(Res.string.cancel)) }
         },
+    )
+}
+
+/**
+ * The title of a dialog about one song, with the song named under it the way a sheet's [SheetHeader] names it, wherever
+ * the dialog was opened from: one opened from a row of the song list would otherwise not say which row it is about.
+ */
+@Composable
+private fun SongDialogTitle(
+    title: String,
+    song: Song,
+) = Column {
+    Text(title)
+    Text(
+        text = songLabel(song),
+        style = MaterialTheme.typography.bodyMedium,
+        color = MaterialTheme.colorScheme.onSurfaceVariant,
+        maxLines = 1,
+        overflow = TextOverflow.Ellipsis,
     )
 }
 
@@ -982,7 +994,12 @@ private fun SongLanguagesDialog(
     }
     AlertDialog(
         onDismissRequest = viewModel::dismissDialog,
-        title = { Text(stringResource(Res.string.song_details_language)) },
+        title = {
+            SongDialogTitle(
+                title = stringResource(Res.string.song_details_language),
+                song = dialog.song,
+            )
+        },
         text = {
             Column {
                 OutlinedTextField(
@@ -1003,8 +1020,13 @@ private fun SongLanguagesDialog(
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                     )
                 } else {
+                    val listState = rememberLazyListState()
                     LazyColumn(
-                        modifier = Modifier.padding(top = 8.dp).heightIn(max = MAX_LANGUAGES_HEIGHT)
+                        modifier = Modifier
+                            .padding(top = 8.dp)
+                            .heightIn(max = MAX_LANGUAGES_HEIGHT)
+                            .fadingVerticalEdges(listState),
+                        state = listState,
                     ) {
                         items(
                             items = matches,
@@ -1077,11 +1099,10 @@ private fun SetlistPicker(
     val closeNamingDialog = { if (isCreatingFirstSetlist) viewModel.dismissDialog() else isNamingNewSetlist = false }
     if (!isCreatingFirstSetlist) {
         CampfireBottomSheet(
-            title = dialog.song.title,
-            subtitle = dialog.song.artist,
+            title = stringResource(Res.string.songs_setlist_assignments),
+            subtitle = songLabel(dialog.song),
             onDismiss = { viewModel.dismissSheet(dialog) },
         ) { contentPadding ->
-            SheetSectionTitle(text = stringResource(Res.string.songs_setlist_assignments))
             PickerSearchField(
                 query = query,
                 placeholder = stringResource(Res.string.setlists_search),
@@ -1209,11 +1230,10 @@ private fun SongPicker(
         }
     }
     CampfireBottomSheet(
-        title = setlist.title,
-        subtitle = setlist.description,
+        title = stringResource(Res.string.setlists_song_assignments),
+        subtitle = setlist.title,
         onDismiss = { viewModel.dismissSheet(dialog) },
     ) { contentPadding ->
-        SheetSectionTitle(text = stringResource(Res.string.setlists_song_assignments))
         PickerSearchField(
             query = query,
             placeholder = stringResource(Res.string.songs_search),
@@ -1313,8 +1333,8 @@ private fun List<Song>.toPickerFilters(): PickerFilterOptions {
  * wrapping block of chips would push off the screen. The languages carry their mark the way they do under a song in
  * the lists, since neither row has a section title to name it.
  *
- * A divider closes them off from the list, whose rows scroll up to it. A library with nothing to filter by gets
- * neither the rows nor the divider, and its list starts right under the search field as it always has.
+ * The list's rows fade out under them as they scroll up. A library with nothing to filter by gets neither row, and its
+ * list starts right under the search field.
  *
  * Selected chips stay where they are rather than moving to the front, for the reason the picker's rows do: a chip that
  * jumped away from under the finger that had just tapped it would have to be found again to be turned off.
@@ -1330,7 +1350,8 @@ private fun PickerFilters(
 ) {
     if (filters.languages.isEmpty() && filters.tags.isEmpty()) return
     Column(
-        modifier = modifier.fillMaxWidth().padding(top = 8.dp),
+        modifier = modifier.fillMaxWidth().padding(top = CHIP_GAP),
+        verticalArrangement = Arrangement.spacedBy(CHIP_GAP),
     ) {
         if (filters.tags.isNotEmpty()) {
             PickerFilterRow(
@@ -1373,19 +1394,13 @@ private fun <T : Any> PickerFilterRow(
 ) = LazyRow(
     modifier = modifier.fillMaxWidth(),
     contentPadding = PaddingValues(horizontal = 16.dp),
-    horizontalArrangement = Arrangement.spacedBy(8.dp),
+    horizontalArrangement = Arrangement.spacedBy(CHIP_GAP),
 ) {
     items(
         items = items,
         key = key,
     ) { item -> chip(item) }
 }
-
-@Composable
-private fun SheetSectionTitle(text: String) = SettingsSectionTitle(
-    text = text,
-    contentPadding = PaddingValues(start = 16.dp, end = 16.dp, top = 16.dp, bottom = 8.dp),
-)
 
 /**
  * The search field of a picker sheet. Unlike the field of a dialog it is not focused as the sheet opens: the list
@@ -1400,7 +1415,7 @@ private fun PickerSearchField(
 ) {
     val keyboardController = LocalSoftwareKeyboardController.current
     OutlinedTextField(
-        modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp),
+        modifier = Modifier.fillMaxWidth().padding(start = 16.dp, end = 16.dp, top = 8.dp),
         value = query,
         onValueChange = { onQueryChange(it.replace("\n", "").take(MAX_SEARCH_QUERY_LENGTH)) },
         placeholder = { Text(placeholder) },
@@ -1492,7 +1507,7 @@ private fun ColumnScope.PickerList(
  * The top inset stays with the sheet, which only pads by it once it has been dragged up against the status bar.
  *
  * @param title What the sheet is about, named in its [SheetHeader].
- * @param subtitle A line under [title], left out when blank.
+ * @param subtitle What the sheet acts on, under [title]: the song or the setlist it was opened for. Left out when blank.
  * @param onDismiss Has to dismiss this sheet's own dialog and nothing else (`CampfireViewModel.dismissSheet`): it is
  *   called from the end of a hide animation, by which time another dialog may have taken the sheet's place.
  * @param content Can close the sheet the way its close button does ([BottomSheetContentScope.close]), for a sheet
@@ -1556,8 +1571,9 @@ private class BottomSheetContentScope(
  * The top of every sheet: what it is about, and a close button. A sheet whose list grows past the screen covers the
  * whole of it once it is dragged up, and a sheet that fills the screen has no scrim left to tap and no edge that looks
  * like it could be dragged back down, so the button is on the short sheets too, where the next one opened may not be
- * short. A picker sheet names its song and artist, or its setlist and description, here: it is opened from rows of
- * other lists as readily as from the thing itself, and without this it would never say what the boxes are about.
+ * short. A sheet about one song or one setlist names it in the subtitle ([songLabel], or the setlist's title), even
+ * where the screen behind it is that very song: it is opened from rows of other lists as readily as from the thing
+ * itself, and one that named what its boxes are about only some of the time would read as two different sheets.
  */
 @Composable
 private fun SheetHeader(
@@ -1583,7 +1599,6 @@ private fun SheetHeader(
             maxLines = 1,
             overflow = TextOverflow.Ellipsis,
         )
-        // Neither an artist nor a description is required, and an empty line would only make the header taller.
         if (subtitle.isNotBlank()) {
             Text(
                 text = subtitle,
@@ -1606,6 +1621,13 @@ private const val MAX_DESCRIPTION_LENGTH = 300
 private const val DESCRIPTION_LINES = 3
 private val MAX_SUGGESTIONS_HEIGHT = 160.dp
 private val MAX_LANGUAGES_HEIGHT = 320.dp
+
+/**
+ * How a dialog or a sheet about one song names it under its title: the artist and the title, or the title alone for a
+ * song that names no artist.
+ */
+@Composable
+private fun songLabel(song: Song) = if (song.artist.isBlank()) song.title else textResource(Res.string.songs_artist_and_title, song.artist, song.title)
 
 /** A field whose value becomes one line of a song file: a pasted line break is the space between two words. */
 private fun String.asSingleLine() = replace(lineBreakRegex, " ")
