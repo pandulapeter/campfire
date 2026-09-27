@@ -19,6 +19,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.Stable
+import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -28,6 +29,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.lerp
 import com.pandulapeter.campfire.data.model.domain.UserPreferences
 import com.pandulapeter.campfire.presentation.ui.platform.isStartupScreenHeldUntilAppReady
+import kotlin.math.roundToInt
 
 /**
  * Material 3 Expressive theme of the app. The two preferences behind it are independent - [themeColor] picks the
@@ -36,7 +38,9 @@ import com.pandulapeter.campfire.presentation.ui.platform.isStartupScreenHeldUnt
  * The schemes are cross faded with a single progress value rather than by animating the color roles one by one:
  * a spring reaches its visibility threshold sooner the shorter the distance it has to cover, so the roles that
  * barely differ between the two schemes would snap over immediately while the rest were still on their way, and the
- * screen would appear to change in pieces.
+ * screen would appear to change in pieces. That value moves in [THEME_FADE_STEPS] steps rather than on every frame:
+ * the scheme and the second accent are static composition locals, so each new value recomposes the whole app with
+ * skipping off, and a handful of steps over the short spring still reads as a fade.
  *
  * The very first change is the app correcting the guess it opened on - the system's setting, until the stored
  * preferences have been read - and there the app itself snaps: it is covered by the launch screen at that point, and a
@@ -64,6 +68,9 @@ fun CampfireTheme(
     val targetColorScheme = if (isDarkTheme) colorSchemePair.dark else colorSchemePair.light
     val targetSecondAccentColor = if (isDarkTheme) colorSchemePair.darkSecondAccent else colorSchemePair.lightSecondAccent
     val progress = remember { Animatable(1f) }
+    val steppedProgress by remember {
+        derivedStateOf { (progress.value * THEME_FADE_STEPS).roundToInt() / THEME_FADE_STEPS.toFloat() }
+    }
     var start by remember { mutableStateOf(targetColorScheme) }
     var stop by remember { mutableStateOf(targetColorScheme) }
     var secondAccentStart by remember { mutableStateOf(targetSecondAccentColor) }
@@ -131,22 +138,22 @@ fun CampfireTheme(
         // change made while the first is still running continues from what the eye can see instead of jumping back
         // to where that one began - a switch away from the system palette right after switching to it, or a tap on
         // the dark theme while the color is still arriving.
-        start = lerp(start, stop, progress.value)
+        start = lerp(start, stop, steppedProgress)
         stop = targetColorScheme
-        secondAccentStart = lerp(secondAccentStart, secondAccentStop, progress.value)
+        secondAccentStart = lerp(secondAccentStart, secondAccentStop, steppedProgress)
         secondAccentStop = targetSecondAccentColor
         progress.snapTo(0f)
         progress.animateTo(1f, MOTION_SCHEME.defaultEffectsSpec())
     }
     val typography = interfaceTypography()
     MaterialExpressiveTheme(
-        colorScheme = lerp(start, stop, progress.value),
+        colorScheme = lerp(start, stop, steppedProgress),
         motionScheme = MOTION_SCHEME,
         typography = typography ?: MaterialTheme.typography,
     ) {
         CompositionLocalProvider(
             LocalMonospaceFontFamily provides monospaceFontFamily(),
-            LocalSecondAccentColor provides lerp(secondAccentStart, secondAccentStop, progress.value),
+            LocalSecondAccentColor provides lerp(secondAccentStart, secondAccentStop, steppedProgress),
         ) {
             // The scheme asked for is not the one being shown from the composition the preferences arrive in until
             // the fade that follows has ended, and the effect above starts that fade one frame after that composition -
@@ -248,6 +255,9 @@ private fun lerp(start: ColorScheme, stop: ColorScheme, fraction: Float) = when 
         onTertiaryFixedVariant = lerp(start.onTertiaryFixedVariant, stop.onTertiaryFixedVariant, fraction),
     )
 }
+
+/** How many distinct schemes a change of theme is shown in on its way, the last one being the target itself. */
+private const val THEME_FADE_STEPS = 5
 
 @OptIn(ExperimentalMaterial3ExpressiveApi::class)
 private val MOTION_SCHEME = MotionScheme.expressive()
