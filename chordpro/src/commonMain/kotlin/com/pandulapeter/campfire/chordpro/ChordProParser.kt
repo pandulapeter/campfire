@@ -186,7 +186,7 @@ object ChordProParser {
             // Before the early return below, which skips lines once the chords are found: the body has begun either way.
             if (trimmedLine.isNotEmpty()) transposition.startBody()
             val isLookingForChords = shouldDetectChords && !hasChords
-            val isLookingForNotation = !isGermanNotated && (GERMAN_LETTER in rawLine || GERMAN_LETTER.lowercaseChar() in rawLine)
+            val isLookingForNotation = !isGermanNotated && mayHoldGermanName(rawLine, environment)
             if (!isLookingForChords && !isLookingForNotation) return@forEach
             val names = writtenChordNames(rawLine, trimmedLine, environment)
             if (isLookingForChords) {
@@ -207,6 +207,19 @@ object ChordProParser {
             hasChords = hasChords,
         )
     }
+
+    /**
+     * Whether a chord name on [rawLine] could be German-notated, judged by where [writtenChordNames] reads its names
+     * from. A German name always holds an `H` or an `h`, and an English lyric line nearly always holds one outside its
+     * brackets, so looking at the whole line would parse almost every line of the body for names that cannot be there.
+     */
+    private fun mayHoldGermanName(rawLine: String, environment: String?) = when (environment) {
+        TAB, GRID -> rawLine.hasGermanLetter()
+        in ChordProSyntax.delegateEnvironments -> false
+        else -> ChordProSyntax.hasBrackets(rawLine) && ChordProSyntax.brackets(rawLine).any { it.content.hasGermanLetter() }
+    }
+
+    private fun String.hasGermanLetter() = GERMAN_LETTER in this || GERMAN_LETTER.lowercaseChar() in this
 
     /** The names one line of the body hands to a chord rewrite, by the environment it stands in. */
     private fun writtenChordNames(rawLine: String, trimmedLine: String, environment: String?) = when (environment) {

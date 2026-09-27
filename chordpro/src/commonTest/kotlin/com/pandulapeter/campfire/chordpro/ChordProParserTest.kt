@@ -14,6 +14,7 @@ import com.pandulapeter.campfire.chordpro.model.ChordProLine
 import com.pandulapeter.campfire.chordpro.model.CommentStyle
 import com.pandulapeter.campfire.chordpro.model.GridToken
 import com.pandulapeter.campfire.chordpro.model.SectionType
+import kotlin.random.Random
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFalse
@@ -824,7 +825,48 @@ class ChordProParserTest {
         assertEquals(ChordProLine.Tab("e|-5-|", continuesEnvironment = true), (tab[2] as ChordProBlock.Section).lines.single())
     }
 
+    @Test
+    fun `summarize and parse agree about the key of generated songs`() {
+        // The full parse finds German notation by walking its own model, independently of the summary's probe, so a
+        // probe that missed a place where a chord name can stand would make the two disagree about the key.
+        val random = Random(14)
+        repeat(20_000) {
+            val text = (1..random.nextInt(1, 6)).joinToString("\n") { GERMAN_PROBE_PIECES.random(random) }
+            val key = ChordProParser.parse(text).metadata.key
+            assertEquals(key, ChordProParser.summarize(text).metadata.key, text)
+            assertEquals(key, ChordProParser.parseMetadata(text).key, text)
+        }
+    }
+
+    @Test
+    fun `German notation is looked for only where chord names are written`() {
+        assertEquals("B", ChordProParser.summarize("{key: B}\nthe house [Am]x").metadata.key)
+        assertEquals("Bb", ChordProParser.summarize("{key: B}\n[Hm7]x").metadata.key)
+        assertEquals("Bb", ChordProParser.summarize("{key: B}\n{start_of_grid}\n| H . |\n{end_of_grid}").metadata.key)
+        assertEquals("B", ChordProParser.summarize("{key: B}\n{start_of_abc}\n[H] abc\n{end_of_abc}").metadata.key)
+    }
+
     private companion object {
+        val GERMAN_PROBE_PIECES = listOf(
+            "{key: H}", "{key: B}", "{key: Bb}", "{key: h}", "{key: Hm}",
+            "The house [H]here",
+            "[h]oh [B]yes",
+            "the [Am]hill",
+            "[C/h]low, [C/H]low",
+            "{start_of_grid}\n| H . B . |\n{end_of_grid}",
+            "{start_of_grid}\nH | C . |\n{end_of_grid}",
+            "{start_of_tab}\n H   B\ne|--1h2--|\n{end_of_tab}",
+            "{start_of_abc}\n[H] abc\n{end_of_abc}",
+            "{comment: [H] here}",
+            "# [H] comment",
+            "[*Hush] quiet",
+            "[ H ]spaced",
+            "[Hmaj7]x",
+            "[Bb]x",
+            "[Hello] word",
+            "{start_of_verse}\n[H]verse\n{end_of_verse}",
+            "plain the line",
+        )
         const val KEY_CHANGE = "{title: Key Change}\n{start_of_verse}\n[C]one [G]two\n{end_of_verse}\n\n{transpose: 2}\n{start_of_chorus}\n[C]three [G]four\n{end_of_chorus}"
     }
 }
