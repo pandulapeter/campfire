@@ -112,7 +112,7 @@ import com.pandulapeter.campfire.presentation.ui.components.TagPill
 import com.pandulapeter.campfire.presentation.ui.components.languageLabel
 import com.pandulapeter.campfire.presentation.ui.components.textResource
 import com.pandulapeter.campfire.presentation.ui.theme.LocalMonospaceFontFamily
-import com.pandulapeter.campfire.presentation.ui.theme.LocalPlayedColor
+import com.pandulapeter.campfire.presentation.ui.theme.LocalSecondAccentColor
 import com.pandulapeter.campfire.presentation.localization.stringResource
 import org.jetbrains.compose.resources.painterResource
 import kotlin.math.ceil
@@ -377,7 +377,7 @@ private fun SongMetadataHeader(
             metadata.time?.takeIf { it.isNotBlank() }?.let { textResource(Res.string.song_details_time, it) },
         ),
         style = MaterialTheme.typography.labelLarge.scaled(fontScale),
-        color = LocalPlayedColor.current,
+        color = LocalSecondAccentColor.current,
     )
     MetadataLine(
         values = listOfNotNull(
@@ -422,7 +422,7 @@ private fun SongComment(
     val style = MaterialTheme.typography.bodyMedium.scaled(fontScale).let {
         if (comment.style == CommentStyle.ITALIC) it.copy(fontStyle = FontStyle.Italic) else it
     }
-    val chordColor = LocalPlayedColor.current
+    val chordColor = LocalSecondAccentColor.current
     // The transposition moves the brackets of a comment as it moves those of the lyrics, so they are drawn as chords.
     val annotatedText = remember(comment.text, chordColor) {
         buildAnnotatedString {
@@ -1082,7 +1082,7 @@ private fun SongGridLine(
             bar.forEach { token ->
                 val (text, style, color) = when (token) {
                     is GridToken.Bar -> Triple(token.text, lyricsStyle, MaterialTheme.colorScheme.outline)
-                    is GridToken.Chord -> Triple(token.name, chordStyle, LocalPlayedColor.current)
+                    is GridToken.Chord -> Triple(token.name, chordStyle, LocalSecondAccentColor.current)
                     GridToken.Beat -> Triple(BEAT_SYMBOL, lyricsStyle, MaterialTheme.colorScheme.onSurfaceVariant)
                     is GridToken.Repeat -> Triple(token.text, lyricsStyle, MaterialTheme.colorScheme.onSurfaceVariant)
                     is GridToken.Text -> Triple(token.text, lyricsStyle, Color.Unspecified)
@@ -1651,7 +1651,7 @@ private fun SongLineWithChords(
     textMeasurements: SongTextMeasurements,
 ) {
     val density = LocalDensity.current
-    val chordColor = LocalPlayedColor.current
+    val chordColor = LocalSecondAccentColor.current
     val annotationColor = MaterialTheme.colorScheme.onSurfaceVariant
     val chordLayouts = remember(line, textMeasurements) { line.chords.map(textMeasurements::chordLayout) }
     val paddedLine = remember(line, textMeasurements, density) {

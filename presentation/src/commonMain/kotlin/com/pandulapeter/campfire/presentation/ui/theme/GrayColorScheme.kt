@@ -16,8 +16,7 @@ import androidx.compose.ui.graphics.Color
 /**
  * The gray palette: [OrangeColorScheme] with every color taken to the gray of the same lightness (in Oklab, the way
  * `app/generate_theme_icons.py` makes the gray icons), so that each role keeps the contrast it has against every other,
- * and only the error roles keep their red. It is also what [CampfireColorScheme], the app's own, is built on: the same
- * neutral surfaces, with the two colors of the app icon on top of them.
+ * and only the error roles keep their red.
  *
  * The one role moved further is `secondaryContainer`, what Material marks a selected thing with (a tag in the song
  * list, a filter chip, the tab the navigation is on). In the orange it is as light as the surfaces it is drawn on and

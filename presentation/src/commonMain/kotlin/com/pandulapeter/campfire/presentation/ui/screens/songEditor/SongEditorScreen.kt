@@ -128,7 +128,7 @@ import com.pandulapeter.campfire.presentation.ui.navigation.CampfireDestination
 import com.pandulapeter.campfire.presentation.ui.screens.songDetails.SongLyrics
 import com.pandulapeter.campfire.presentation.ui.screens.songDetails.TextTranspositionControls
 import com.pandulapeter.campfire.presentation.ui.theme.LocalMonospaceFontFamily
-import com.pandulapeter.campfire.presentation.ui.theme.LocalPlayedColor
+import com.pandulapeter.campfire.presentation.ui.theme.LocalSecondAccentColor
 import kotlinx.coroutines.FlowPreview
 import kotlinx.coroutines.flow.debounce
 import kotlinx.coroutines.flow.distinctUntilChanged
@@ -582,13 +582,13 @@ private fun ChordProTextField(
     contentPadding: PaddingValues,
 ) {
     val colorScheme = MaterialTheme.colorScheme
-    val playedColor = LocalPlayedColor.current
+    val secondAccentColor = LocalSecondAccentColor.current
     val tokenCache = remember { ChordProTokenCache() }
-    val outputTransformation = remember(colorScheme, playedColor, tokenCache) {
+    val outputTransformation = remember(colorScheme, secondAccentColor, tokenCache) {
         ChordProOutputTransformation.of(
             tokenCache = tokenCache,
             primaryColor = colorScheme.primary,
-            chordColor = playedColor,
+            chordColor = secondAccentColor,
             secondaryColor = colorScheme.onSurfaceVariant,
             outlineColor = colorScheme.outline,
         )

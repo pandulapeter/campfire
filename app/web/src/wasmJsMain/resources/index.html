@@ -44,8 +44,8 @@
     <!-- The two schemes of the app's own color: the dark background, and the light surfaceContainerHigh, since Chrome
          ignores a theme-color as light as the light background. Once the preferences are read the app writes the
          palette it is drawn in over both (see BrowserThemeColorEffect in CampfireWebApp.kt). -->
-    <meta name="theme-color" content="#E8E8E8" media="(prefers-color-scheme: light)">
-    <meta name="theme-color" content="#141414" media="(prefers-color-scheme: dark)">
+    <meta name="theme-color" content="#E9E7F0" media="(prefers-color-scheme: light)">
+    <meta name="theme-color" content="#15121C" media="(prefers-color-scheme: dark)">
     <meta name="description" content="Song lyrics and chords, in a library of plain ChordPro files that stays yours.">
     <title>Campfire</title>
     <link rel="icon" type="image/png" sizes="192x192" href="favicon-campfire.png">
@@ -122,22 +122,22 @@
         })();
     </script>
     <style>
-        /* The palette is the one CampfireColorSchemes generates, so the splash screen and the first
+        /* The palette is CampfireColorScheme's, so the splash screen and the first
            composed frame paint the same background and the handover is invisible. */
         :root {
             color-scheme: light dark;
-            --background: #FAFAFA;
-            --on-background: #1C1C1C;
-            --track: #E3E3E3;
+            --background: #FAF8FE;
+            --on-background: #1D1A23;
+            --track: #E5DFF5;
             --indicator: #5A49CA;
         }
 
         @media (prefers-color-scheme: dark) {
             :root {
-                --background: #141414;
-                --on-background: #E3E3E3;
-                --track: #474747;
-                --indicator: #C1C3FF;
+                --background: #15121C;
+                --on-background: #E3E1EA;
+                --track: #494456;
+                --indicator: #D0BCFF;
             }
         }
 

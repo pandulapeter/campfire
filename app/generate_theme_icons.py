@@ -79,7 +79,6 @@ SAME_LIGHTNESS_GRAY = 'same-lightness-gray'
 # back to the app's own.
 SEEDS = {
     'campfire': (GRADIENT, GRADIENT_GLOW),
-    'gray': ('#707070', SAME_LIGHTNESS_GRAY),
     'red': ('#D32F2F', '#D32F2F'),
     'orange': (SOURCE_SEED, SOURCE_SEED),
     'yellow': ('#FBC02D', '#FBC02D'),
@@ -88,6 +87,7 @@ SEEDS = {
     'blue': ('#1976D2', '#1976D2'),
     'purple': ('#7B1FA2', '#7B1FA2'),
     'pink': ('#E91EAF', '#E91EAF'),
+    'gray': ('#707070', SAME_LIGHTNESS_GRAY),
 }
 
 DOCK_ICON_SIZE = 512

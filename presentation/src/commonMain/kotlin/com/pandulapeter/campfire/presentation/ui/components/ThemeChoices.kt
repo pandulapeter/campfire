@@ -15,6 +15,7 @@ import androidx.compose.ui.graphics.painter.Painter
 import com.pandulapeter.campfire.data.model.domain.UserPreferences
 import com.pandulapeter.campfire.presentation.localization.stringResource
 import com.pandulapeter.campfire.presentation.resources.Res
+import com.pandulapeter.campfire.presentation.resources.ic_campfire
 import com.pandulapeter.campfire.presentation.resources.ic_phone
 import com.pandulapeter.campfire.presentation.resources.settings_user_interface_theme_color_blue
 import com.pandulapeter.campfire.presentation.resources.settings_user_interface_theme_color_campfire
@@ -83,7 +84,7 @@ internal fun ThemeColorChoice(
             ColorChoiceOption(
                 value = themeColor,
                 color = colorScheme.primary,
-                playedColor = if (isDarkTheme) colorSchemePair.lightPlayed else colorSchemePair.darkPlayed,
+                secondColor = if (isDarkTheme) colorSchemePair.lightSecondAccent else colorSchemePair.darkSecondAccent,
                 contentColor = colorScheme.onPrimary,
                 label = themeColor.label(),
                 icon = themeColor.icon(),
@@ -103,7 +104,6 @@ internal fun ThemeColorChoice(
 private fun UserPreferences.ThemeColor.label() = stringResource(
     when (this) {
         UserPreferences.ThemeColor.CAMPFIRE -> Res.string.settings_user_interface_theme_color_campfire
-        UserPreferences.ThemeColor.GRAY -> Res.string.settings_user_interface_theme_color_gray
         UserPreferences.ThemeColor.SYSTEM -> Res.string.settings_user_interface_theme_color_system
         UserPreferences.ThemeColor.RED -> Res.string.settings_user_interface_theme_color_red
         UserPreferences.ThemeColor.ORANGE -> Res.string.settings_user_interface_theme_color_orange
@@ -113,16 +113,19 @@ private fun UserPreferences.ThemeColor.label() = stringResource(
         UserPreferences.ThemeColor.BLUE -> Res.string.settings_user_interface_theme_color_blue
         UserPreferences.ThemeColor.PURPLE -> Res.string.settings_user_interface_theme_color_purple
         UserPreferences.ThemeColor.PINK -> Res.string.settings_user_interface_theme_color_pink
+        UserPreferences.ThemeColor.GRAY -> Res.string.settings_user_interface_theme_color_gray
     }
 )
 
 /**
- * The icon a color offered by the theme carries while it is not selected, for the one whose color is not what picks it
- * out: the palette the operating system hands over, which is whatever the wallpaper made it. The rest are only a
- * color - the app's own two included - and a glyph on each of them would say nothing the disc does not.
+ * The icon a color offered by the theme carries while it is not selected, for the ones whose color is not the whole of
+ * what picks them out: the app's own, which is the one palette drawn in two colors and is marked with the app's mark
+ * rather than shown as one of them, and the palette the operating system hands over, which is whatever the wallpaper
+ * made it. The rest are only a color, and a glyph on each of them would say nothing the disc does not.
  */
 @Composable
 private fun UserPreferences.ThemeColor.icon(): Painter? = when (this) {
+    UserPreferences.ThemeColor.CAMPFIRE -> painterResource(Res.drawable.ic_campfire)
     UserPreferences.ThemeColor.SYSTEM -> painterResource(Res.drawable.ic_phone)
     else -> null
 }

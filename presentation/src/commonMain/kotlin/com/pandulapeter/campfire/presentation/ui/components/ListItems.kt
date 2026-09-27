@@ -117,7 +117,7 @@ import com.pandulapeter.campfire.presentation.resources.songs_lyrics_only
 import com.pandulapeter.campfire.presentation.resources.songs_no_search_results
 import com.pandulapeter.campfire.presentation.resources.songs_no_search_results_hint
 import com.pandulapeter.campfire.presentation.ui.CampfireViewModel
-import com.pandulapeter.campfire.presentation.ui.theme.LocalPlayedColor
+import com.pandulapeter.campfire.presentation.ui.theme.LocalSecondAccentColor
 import org.jetbrains.compose.resources.painterResource
 import kotlin.math.roundToInt
 
@@ -250,7 +250,7 @@ internal fun SongListItem(
                                                 modifier = Modifier.semantics { contentDescription = currentNote.description },
                                                 text = currentNote.text,
                                                 style = MaterialTheme.typography.labelMedium,
-                                                color = if (currentNote.isEmphasized) LocalPlayedColor.current else MaterialTheme.colorScheme.onSurfaceVariant,
+                                                color = if (currentNote.isEmphasized) LocalSecondAccentColor.current else MaterialTheme.colorScheme.onSurfaceVariant,
                                             )
                                         }
                                     }
@@ -618,7 +618,9 @@ internal fun SectionHeader(
                     text = text,
                     // The settings screen's tab labels, the other thing that stands at the top of a top level screen.
                     style = MaterialTheme.typography.titleSmall,
-                    color = MaterialTheme.colorScheme.primary,
+                    // The palette's second accent, which is the primary color in every palette but the app's own: the
+                    // headers the list is filed under stand apart from the titles of everything around the list.
+                    color = LocalSecondAccentColor.current,
                     maxLines = 1,
                     overflow = TextOverflow.Ellipsis,
                 )

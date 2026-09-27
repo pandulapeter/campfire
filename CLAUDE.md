@@ -173,9 +173,11 @@ uninstall and nothing else does.
   (`UserPreferences.isAppIconThemed`, a switch under the colors named after the platform's icon), which keeps the
   app's own. **The app's own colors are the promotional material's purple and orange** (#5A49CA and #F57C00): its icon,
   and so every packaged one (the installed app, the Start menu, a store's page), is their diagonal gradient, and the
-  "Campfire" palette is the gray one with the purple as the interface's accent and the orange as the color of what is
-  played — the chords, the key, the capo (`LocalPlayedColor`, which is the primary color in every other palette). The
-  gray is the second option, a color like the rest; it was the app's own before, under the id the new palette took, so
+  "Campfire" palette is dusk around a fire: Material tones of the purple, tinting the neutrals too (a lavender paper by
+  day, a violet night sky in the dark theme), with the orange as the tertiary and the second accent — the chords,
+  the key, the capo and the lists' sticky headers (`LocalSecondAccentColor`, which is the primary color in every other
+  palette); the one place the two meet in the interface is its color disc in Settings, which is the icon's gradient.
+  The gray is the last option, a color like the rest; it was the app's own before, under the id the new palette took, so
   nobody was left on it. Android's own launcher icon and its Play icon are drawn as they are; every other icon, the
   packaged ones included, is the hand-drawn orange one in `app/icons` recolored by `app/generate_theme_icons.py` — the
   app's own onto the gradient read off the Android icon's background — and the files it writes are committed.

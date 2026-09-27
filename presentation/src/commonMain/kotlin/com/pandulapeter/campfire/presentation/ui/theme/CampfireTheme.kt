@@ -57,12 +57,12 @@ fun CampfireTheme(
     val isDarkTheme = uiMode.isDarkTheme()
     val colorSchemePair = colorSchemePair(themeColor)
     val targetColorScheme = if (isDarkTheme) colorSchemePair.dark else colorSchemePair.light
-    val targetPlayedColor = if (isDarkTheme) colorSchemePair.darkPlayed else colorSchemePair.lightPlayed
+    val targetSecondAccentColor = if (isDarkTheme) colorSchemePair.darkSecondAccent else colorSchemePair.lightSecondAccent
     val progress = remember { Animatable(1f) }
     var start by remember { mutableStateOf(targetColorScheme) }
     var stop by remember { mutableStateOf(targetColorScheme) }
-    var playedStart by remember { mutableStateOf(targetPlayedColor) }
-    var playedStop by remember { mutableStateOf(targetPlayedColor) }
+    var secondAccentStart by remember { mutableStateOf(targetSecondAccentColor) }
+    var secondAccentStop by remember { mutableStateOf(targetSecondAccentColor) }
     // The preferences rather than the scheme itself, which has no equality of its own to key an animation on.
     LaunchedEffect(isDarkTheme to themeColor) {
         // Two preferences can ask for the same palette - an unread one and the app's own color, a color the device
@@ -75,8 +75,8 @@ fun CampfireTheme(
         // the dark theme while the color is still arriving.
         start = lerp(start, stop, progress.value)
         stop = targetColorScheme
-        playedStart = lerp(playedStart, playedStop, progress.value)
-        playedStop = targetPlayedColor
+        secondAccentStart = lerp(secondAccentStart, secondAccentStop, progress.value)
+        secondAccentStop = targetSecondAccentColor
         progress.snapTo(0f)
         progress.animateTo(1f, MOTION_SCHEME.defaultEffectsSpec())
     }
@@ -88,7 +88,7 @@ fun CampfireTheme(
     ) {
         CompositionLocalProvider(
             LocalMonospaceFontFamily provides monospaceFontFamily(),
-            LocalPlayedColor provides lerp(playedStart, playedStop, progress.value),
+            LocalSecondAccentColor provides lerp(secondAccentStart, secondAccentStop, progress.value),
         ) {
             // The scheme asked for is not the one being shown from the composition the preferences arrive in until
             // the fade that follows has ended, and the effect above starts that fade one frame after that composition -
@@ -100,12 +100,14 @@ fun CampfireTheme(
 }
 
 /**
- * The color of what is played rather than read on a song's page: the chords, the key, the capo - which Material has no
- * role for, and which is the primary color everywhere but in the app's own palette (see [ColorSchemePair.lightPlayed]).
- * It is provided by [CampfireTheme] and cross faded with the rest of the scheme; static, since it only ever changes
- * together with the scheme, which recomposes everything that reads a color anyway.
+ * The palette's second accent, which Material has no role for: what is played rather than read on a song's page (the
+ * chords, the key, the capo) and the sticky headers the lists are filed under, set apart from the primary color every
+ * other title and control is drawn in. It is the primary color itself everywhere but in the app's own palette (see
+ * [ColorSchemePair.lightSecondAccent]), so reading it changes nothing in any other. It is provided by [CampfireTheme]
+ * and cross faded with the rest of the scheme; static, since it only ever changes together with the scheme, which
+ * recomposes everything that reads a color anyway.
  */
-internal val LocalPlayedColor = staticCompositionLocalOf { Color.Unspecified }
+internal val LocalSecondAccentColor = staticCompositionLocalOf { Color.Unspecified }
 
 /**
  * Resolves whether the given user preference results in a dark theme, falling back to the system setting.

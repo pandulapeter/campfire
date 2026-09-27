@@ -45,7 +45,7 @@ import org.jetbrains.compose.resources.painterResource
 /**
  * A single choice between colors, offered as the colors themselves: a disc for each, the selected one ringed. Their
  * names are only in the semantics, since a label under every disc would say less than the disc does - except for the
- * one whose point is not the color it shows, which carries an icon that says what it is.
+ * ones whose point is not only the color they show, which carry an icon that says what they are.
  *
  * They wrap rather than scroll, because a row of colors that has to be scrolled hides some of the options behind a
  * gesture while there is no order along which one could be looked for.
@@ -74,7 +74,7 @@ internal fun <T> ColorChoice(
 /**
  * One disc of a [ColorChoice], inside the ring that marks it as the selected one.
  *
- * The ring is what says "this is the one in use", and the check inside only seconds it: with an icon on one of the
+ * The ring is what says "this is the one in use", and the check inside only seconds it: with an icon on some of the
  * discs, a mark in the middle is first read as *what this color is* rather than as a selection, so the selection has
  * to be somewhere an icon can never be. It is drawn in the option's own color, matching the disc it surrounds.
  *
@@ -93,7 +93,11 @@ private fun <T> ColorChoiceSwatch(
     Box(
         modifier = modifier
             .size(SWATCH_SIZE + (SWATCH_RING_GAP + SWATCH_RING_WIDTH) * 2)
-            .border(SWATCH_RING_WIDTH, option.color.copy(alpha = ringAlpha), CircleShape),
+            .border(
+                width = SWATCH_RING_WIDTH,
+                brush = Brush.linearGradient(listOf(option.color.copy(alpha = ringAlpha), option.secondColor.copy(alpha = ringAlpha))),
+                shape = CircleShape,
+            ),
         contentAlignment = Alignment.Center,
     ) {
         Surface(
@@ -105,10 +109,10 @@ private fun <T> ColorChoiceSwatch(
             contentColor = option.contentColor,
         ) {
             Box(
-                modifier = if (option.playedColor == option.color) {
+                modifier = if (option.secondColor == option.color) {
                     Modifier
                 } else {
-                    Modifier.fillMaxSize().background(Brush.linearGradient(listOf(option.color, option.playedColor)))
+                    Modifier.fillMaxSize().background(Brush.linearGradient(listOf(option.color, option.secondColor)))
                 },
                 contentAlignment = Alignment.Center,
             ) {
@@ -146,8 +150,8 @@ private fun <T> ColorChoiceSwatch(
  *
  * @param color What the disc is filled with, and [contentColor] what the check on it is drawn in - the two roles of
  *   the same palette, so that the check stays legible on every color.
- * @param playedColor Where it differs from [color], the disc runs from one to the other along its diagonal, the way
- *   the app icon's gradient does: the palette that draws its interface and its music in two colors is shown as both.
+ * @param secondColor Where it differs from [color], the disc and its ring run from one to the other along their
+ *   diagonal, the way the app icon's gradient does: the palette drawn in two colors is shown as both.
  * @param label What this color is called, which is only ever read out rather than shown.
  * @param icon Drawn on the disc while the option is not selected, for an option whose color is not the whole story.
  *   Null for the colors that are only themselves, which is most of them.
@@ -155,7 +159,7 @@ private fun <T> ColorChoiceSwatch(
 internal data class ColorChoiceOption<T>(
     val value: T,
     val color: Color,
-    val playedColor: Color = color,
+    val secondColor: Color = color,
     val contentColor: Color,
     val label: String,
     val icon: Painter? = null,

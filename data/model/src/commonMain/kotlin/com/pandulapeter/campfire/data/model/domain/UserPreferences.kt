@@ -100,7 +100,7 @@ data class UserPreferences(
      * Which set of colors the app is painted in, which is a separate question from [UiMode]: every one of these has a
      * light and a dark scheme, and the two choices are combined rather than ranked.
      *
-     * [CAMPFIRE] is the app's own, the purple and orange of its icon on gray, and [GRAY] the gray it is built on. Every
+     * [CAMPFIRE] is the app's own, the purple and orange of its icon, and [GRAY] the plainest of the rest. Every
      * stored `campfire` is read as the app's own, including one written while that id stood for the gray - a
      * preference left at the default and one that chose the gray cannot be told apart - so the gray has an id of its
      * own and that one must not be given back to it.
@@ -112,7 +112,7 @@ data class UserPreferences(
      */
     enum class ThemeColor(val id: String) {
         CAMPFIRE("campfire"),
-        GRAY("gray"),
+        SYSTEM("system"),
         RED("red"),
         ORANGE("orange"),
         YELLOW("yellow"),
@@ -121,7 +121,7 @@ data class UserPreferences(
         BLUE("blue"),
         PURPLE("purple"),
         PINK("pink"),
-        SYSTEM("system"),
+        GRAY("gray"),
     }
 
     /**

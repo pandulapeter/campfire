@@ -20,22 +20,22 @@ import com.pandulapeter.campfire.data.model.domain.UserPreferences
  * between two palettes but one palette seen two ways: whichever color the user picked has to answer both, and the
  * theme cross fades from one to the other.
  *
- * @param lightPlayed The color of what is played - the chords, the key, the capo - in the light half, which Material
- *   has no role for (see [LocalPlayedColor]). It is the primary color in every palette but the app's own, which draws
- *   the interface and the music in the two colors of its icon.
- * @param darkPlayed The same in the dark half.
+ * @param lightSecondAccent The palette's second accent in the light half, which Material has no role for (see
+ *   [LocalSecondAccentColor]). It is the primary color in every palette but the app's own, which is drawn in the two
+ *   colors of its icon.
+ * @param darkSecondAccent The same in the dark half.
  */
 internal data class ColorSchemePair(
     val light: ColorScheme,
     val dark: ColorScheme,
-    val lightPlayed: Color = light.primary,
-    val darkPlayed: Color = dark.primary,
+    val lightSecondAccent: Color = light.primary,
+    val darkSecondAccent: Color = dark.primary,
 )
 
 /**
  * Every color the app can be painted in, in the order the settings screen offers them, which is the order the
- * preference itself declares - the app's own first, the gray it is built on next to it, then the rest around the hue
- * circle, and the system's last where there is one, since it is the one that is not a color of its own.
+ * preference itself declares - the app's own first, then the system's where there is one, the other choice that is not
+ * a color picked for its own sake, then the rest around the hue circle, and the gray last, as the plainest of them.
  *
  * [UserPreferences.ThemeColor.SYSTEM] is the only entry that is not a constant, since it is whatever the operating
  * system derived from the wallpaper, and the only one that can be absent: where nothing hands out such a palette it
@@ -49,7 +49,6 @@ internal fun themeColorOptions(): List<Pair<UserPreferences.ThemeColor, ColorSch
         UserPreferences.ThemeColor.entries.mapNotNull { themeColor ->
             when (themeColor) {
                 UserPreferences.ThemeColor.CAMPFIRE -> CampfireColorScheme
-                UserPreferences.ThemeColor.GRAY -> GrayColorScheme
                 UserPreferences.ThemeColor.SYSTEM -> systemColorSchemePair
                 UserPreferences.ThemeColor.RED -> MaterialColorSchemes.Red
                 UserPreferences.ThemeColor.ORANGE -> OrangeColorScheme
@@ -59,6 +58,7 @@ internal fun themeColorOptions(): List<Pair<UserPreferences.ThemeColor, ColorSch
                 UserPreferences.ThemeColor.BLUE -> MaterialColorSchemes.Blue
                 UserPreferences.ThemeColor.PURPLE -> MaterialColorSchemes.Purple
                 UserPreferences.ThemeColor.PINK -> MaterialColorSchemes.Pink
+                UserPreferences.ThemeColor.GRAY -> GrayColorScheme
             }?.let { themeColor to it }
         }
     }
