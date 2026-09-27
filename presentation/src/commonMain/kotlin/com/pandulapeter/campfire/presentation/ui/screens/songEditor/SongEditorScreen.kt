@@ -705,6 +705,9 @@ private fun SongPreview(
             shouldShowChords = true,
             fontScale = fontScale,
             isHorizontalFlow = isHorizontalFlow,
+            // The preview shows what is being typed rather than narrating it: every edit that changes a section's
+            // height would otherwise start a spring on every section below it.
+            animatesSections = false,
         )
     }
 }

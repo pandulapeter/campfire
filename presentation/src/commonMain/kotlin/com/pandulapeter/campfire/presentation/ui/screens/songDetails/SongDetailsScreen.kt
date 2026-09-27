@@ -101,6 +101,7 @@ import com.pandulapeter.campfire.presentation.ui.components.SetlistAssignmentsBu
 import com.pandulapeter.campfire.presentation.ui.components.SongActionsButton
 import com.pandulapeter.campfire.presentation.ui.navigation.CampfireDestination
 import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import org.jetbrains.compose.resources.painterResource
 
@@ -619,6 +620,10 @@ private fun SongDetailsPage(
         BoxWithConstraints(
             modifier = Modifier.fillMaxSize()
         ) {
+            val currentFontScale = fontScale()
+            // A single change - a window maximised, a stepper tapped - still animates the sections to their new place;
+            // a burst of them, from a pinch or a window edge being dragged, makes them follow without springing.
+            val isChangingContinuously = rememberContinuousChange(maxWidth, currentFontScale)
             SongLyrics(
                 modifier = Modifier
                     .fillMaxSize()
@@ -634,8 +639,9 @@ private fun SongDetailsPage(
                 availableHeight = maxHeight - topPadding - bottomPadding,
                 // The pages fill the screen, so whatever the screen is still missing this layout is missing too.
                 extraWidth = (settledWidth - maxWidth).coerceAtLeast(0.dp),
+                animatesSections = !isChangingContinuously,
                 shouldShowChords = shouldShowChords,
-                fontScale = fontScale(),
+                fontScale = currentFontScale,
                 isHorizontalFlow = isHorizontalFlow,
                 foldedSections = foldedSections,
                 onFoldToggled = onFoldToggled,
@@ -648,6 +654,37 @@ private fun SongDetailsPage(
             )
         }
     }
+}
+
+/**
+ * True while [values] keep changing: from their second change within [CONTINUOUS_CHANGE_MILLIS] of the one before it
+ * until they have held still for that long. The first change of a burst is indistinguishable from a single one, so it
+ * still counts as discrete.
+ */
+@Composable
+private fun rememberContinuousChange(vararg values: Any): Boolean {
+    var isContinuous by remember { mutableStateOf(false) }
+    val tracker = remember { ContinuousChangeTracker() }
+    LaunchedEffect(*values) {
+        if (tracker.isFirst) {
+            tracker.isFirst = false
+            return@LaunchedEffect
+        }
+        // A change that arrives while the delay of the one before it was still running, which this restart cancelled,
+        // is the second of a burst.
+        if (tracker.isRecent) isContinuous = true
+        tracker.isRecent = true
+        delay(CONTINUOUS_CHANGE_MILLIS)
+        tracker.isRecent = false
+        isContinuous = false
+    }
+    return isContinuous
+}
+
+/** What [rememberContinuousChange] remembers between changes. Not state, since only its effect reads it. */
+private class ContinuousChangeTracker {
+    var isFirst = true
+    var isRecent = false
 }
 
 /**
@@ -791,3 +828,4 @@ private val TITLE_TOUCH_HORIZONTAL_OUTSET = 4.dp // The padding the bar puts aro
 private val TITLE_TOUCH_VERTICAL_OUTSET = 12.dp // From the two lines of title, 40dp, to the bar's 64dp.
 private const val KEY_SCROLL_STEP_FRACTION = 0.1f // Of the height of the scrolling viewport.
 private const val KEY_SCROLL_STEP_DURATION = 120
+private const val CONTINUOUS_CHANGE_MILLIS = 200L

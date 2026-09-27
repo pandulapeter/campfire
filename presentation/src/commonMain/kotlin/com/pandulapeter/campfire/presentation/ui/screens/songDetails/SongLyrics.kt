@@ -138,6 +138,11 @@ import kotlin.math.roundToInt
  * sections do not flow into a different number of columns for the duration of a navigation transition and then jump
  * back. While it is not zero the sections also stop animating to their new place: the layout is following a width
  * that changes on every frame, and springing after each of those only makes it lag behind.
+ * @param animatesSections False while the width or the text size keeps changing (a pinch, a window being dragged) and
+ * in the editor's preview, which follows every edit: the sections then snap to their new place instead of springing
+ * after it, for the reason [extraWidth] gives. `animateBounds` also measures each section at its animated size and at
+ * its target size in every frame, and a line of text keeps only one of those layouts, so it is laid out twice a frame
+ * for as long as the spring runs.
  * @param fontScale Multiplier applied to the text sizes (and to the column widths, so that larger text does not get
  * squeezed into narrow columns).
  * @param isHorizontalFlow Whether the sections should be read across the columns and then downwards (see
@@ -157,6 +162,7 @@ internal fun SongLyrics(
     song: ChordProSong,
     availableHeight: Dp = Dp.Unspecified,
     extraWidth: Dp = 0.dp,
+    animatesSections: Boolean = true,
     shouldShowChords: Boolean = true,
     fontScale: Float = 1f,
     isHorizontalFlow: Boolean = false,
@@ -259,7 +265,7 @@ internal fun SongLyrics(
                     // Each section is read as a whole and in the order the song declares, whatever column it was put in:
                     // the reading order is otherwise worked out from the geometry, line by line across the page, which
                     // with two columns reads the first line of each, then the second line of each.
-                    val sectionModifier = if (extraWidth > 0.dp || sectionAnimations[index].isTooTallToAnimate) {
+                    val sectionModifier = if (!animatesSections || extraWidth > 0.dp || sectionAnimations[index].isTooTallToAnimate) {
                         Modifier
                     } else {
                         Modifier.animateBounds(this@LookaheadScope).layoutId(AnimatedSectionLayoutId)
