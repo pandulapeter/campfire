@@ -68,4 +68,24 @@ internal class SongContentRepositoryImpl(
         _invalidations.tryEmit(fileName)
         Unit
     }
+
+    /**
+     * An event per name would fill the flow's buffer on a large batch, and [MutableSharedFlow.tryEmit] drops what does
+     * not fit: a collector would then keep a copy that nobody told it to drop. Above [MAXIMUM_NAMED_INVALIDATIONS] it is
+     * told about every song instead.
+     */
+    override suspend fun invalidate(fileNames: Set<String>) = mutex.withLock {
+        generation++
+        fileNames.forEach(cache::remove)
+        if (fileNames.size > MAXIMUM_NAMED_INVALIDATIONS) {
+            _invalidations.tryEmit(null)
+        } else {
+            fileNames.forEach(_invalidations::tryEmit)
+        }
+        Unit
+    }
+
+    private companion object {
+        const val MAXIMUM_NAMED_INVALIDATIONS = 32
+    }
 }

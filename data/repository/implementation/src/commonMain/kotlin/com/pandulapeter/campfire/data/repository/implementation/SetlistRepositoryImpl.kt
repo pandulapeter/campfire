@@ -15,6 +15,7 @@ import com.pandulapeter.campfire.data.repository.implementation.base.BaseLocalDa
 import com.pandulapeter.campfire.data.source.local.api.SetlistLocalSource
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.NonCancellable
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 import kotlinx.coroutines.withContext
@@ -64,6 +65,22 @@ internal class SetlistRepositoryImpl(
 
     override suspend fun rescan() {
         reloadData()
+    }
+
+    override suspend fun refresh(fileNames: Set<String>) {
+        if (fileNames.isEmpty()) return
+        if (setlists.first().data == null) return rescan()
+        val reloaded = fileNames.mapNotNull { fileName ->
+            try {
+                setlistLocalSource.loadSetlist(fileName)
+            } catch (exception: CancellationException) {
+                throw exception
+            } catch (exception: Exception) {
+                println("Could not read the setlist \"$fileName\": ${exception.message}")
+                null
+            }
+        }
+        updateData { current -> current.orEmpty().filterNot { it.fileName in fileNames } + reloaded }
     }
 
     override suspend fun createSetlist(title: String, description: String, priority: Int): Setlist = writing {

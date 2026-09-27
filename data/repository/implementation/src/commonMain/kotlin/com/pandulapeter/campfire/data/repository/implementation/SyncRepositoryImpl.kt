@@ -12,6 +12,7 @@
 package com.pandulapeter.campfire.data.repository.implementation
 
 import com.pandulapeter.campfire.data.model.DataState
+import com.pandulapeter.campfire.data.model.domain.LibraryFileKind
 import com.pandulapeter.campfire.data.model.domain.SyncDeletionPolicy
 import com.pandulapeter.campfire.data.model.domain.SyncFailureReason
 import com.pandulapeter.campfire.data.model.domain.SyncOutcome
@@ -23,6 +24,7 @@ import com.pandulapeter.campfire.data.repository.api.SongRepository
 import com.pandulapeter.campfire.data.repository.api.SyncRepository
 import com.pandulapeter.campfire.data.repository.implementation.sync.SyncEngine
 import com.pandulapeter.campfire.data.repository.implementation.sync.SyncIndexDocument
+import com.pandulapeter.campfire.data.repository.implementation.sync.SyncKey
 import com.pandulapeter.campfire.data.repository.implementation.sync.indexKey
 import com.pandulapeter.campfire.data.source.local.api.LibraryFileLocalSource
 import com.pandulapeter.campfire.data.source.local.api.LibraryStorageException
@@ -120,9 +122,13 @@ internal class SyncRepositoryImpl(
      */
     private val restoreMutex = Mutex()
 
-    private var liveRescanJob: Job? = null
+    private var liveRefreshJob: Job? = null
 
-    /** When the last live rescan ended and how long the next one has to wait for, see [scheduleLiveRescan]. */
+    /** The library files the running run has changed and the repositories have not read again yet. */
+    private val changedFiles = mutableSetOf<SyncKey>()
+    private val changedFilesMutex = Mutex()
+
+    /** When the last live refresh ended and how long the next one has to wait for, see [scheduleLiveRefresh]. */
     @Volatile
     private var lastLiveRescanEnd: TimeMark? = null
 
@@ -429,13 +435,14 @@ internal class SyncRepositoryImpl(
                     accountId = connected.account.indexKey(),
                     onProgress = { progress ->
                         updateConnected { it.copy(progress = progress) }
-                        scheduleLiveRescan()
+                        scheduleLiveRefresh()
                     },
                     onIndexChanged = { snapshot ->
                         latestIndex = snapshot
                         hasFinishedOperations = true
                         scheduleIndexWrite(snapshot)
                     },
+                    onLocalFileChanged = { key -> changedFilesMutex.withLock { changedFiles += key } },
                     deletionPolicy = deletionPolicy,
                 )
                 indexWriteJob?.join()
@@ -445,9 +452,7 @@ internal class SyncRepositoryImpl(
                         // can find the folder emptied after the first one had already brought files in, and those
                         // are on disk whether or not the question is answered.
                         latestIndex?.let { saveIndexQuietly(it().copy(isRunInProgress = false)) }
-                        if (hasFinishedOperations) {
-                            rescanLibraryAfterRun()
-                        }
+                        refreshLibraryAfterRun()
                         updateConnected {
                             it.copy(
                                 progress = null,
@@ -470,11 +475,8 @@ internal class SyncRepositoryImpl(
                             result.index.lastSyncedAt
                         }
                         saveIndex(result.index.copy(lastSyncedAt = syncedAt))
-                        // Only when something actually moved: most runs find nothing to do, and re-reading the whole
-                        // library every time the app is opened would cost more than the sync itself.
-                        if (result.summary.hasChanges) {
-                            rescanLibraryAfterRun()
-                        }
+                        // Reads only what the run changed, which for most runs is nothing.
+                        refreshLibraryAfterRun()
                         updateConnected {
                             it.copy(
                                 progress = null,
@@ -486,12 +488,12 @@ internal class SyncRepositoryImpl(
                 }
             } catch (exception: CancellationException) {
                 // Stopped rather than broken: nothing is wrong and nothing needs fixing, so this is its own outcome.
-                withContext(NonCancellable) { finishRunCutShort(latestIndex, hasFinishedOperations) }
+                withContext(NonCancellable) { finishRunCutShort(latestIndex) }
                 updateConnected { it.copy(progress = null, lastOutcome = SyncOutcome.Interrupted) }
                 throw exception
             } catch (exception: Exception) {
                 println("The sync run failed: ${exception.message}")
-                withContext(NonCancellable) { finishRunCutShort(latestIndex, hasFinishedOperations) }
+                withContext(NonCancellable) { finishRunCutShort(latestIndex) }
                 updateConnected {
                     if (exception is SyncAuthorizationException) {
                         // Refused after a renewal was tried, so only a new authorization can answer it, and that
@@ -508,7 +510,12 @@ internal class SyncRepositoryImpl(
                 // The run still owes everything a failed one owes, or the marker stays on disk and the lists keep the
                 // old library. Not thrown on, since the scope's handler would only log it again.
                 println("The sync run failed: $throwable")
-                withContext(NonCancellable) { finishRunCutShort(latestIndex, hasFinishedOperations) }
+                withContext(NonCancellable) {
+                    finishRunCutShort(latestIndex)
+                    // Thrown from anywhere, a write included, so what the engine reported is not necessarily all it
+                    // changed: the whole library is read again.
+                    if (hasFinishedOperations) rescanLibrary()
+                }
                 updateConnected { it.copy(progress = null, lastOutcome = SyncOutcome.Failure(SyncFailureReason.UNKNOWN)) }
             } finally {
                 // The one thing that has to be true on every way out, including any added later: no progress means
@@ -521,17 +528,16 @@ internal class SyncRepositoryImpl(
     /**
      * Keeps the library counts moving while a run is going.
      *
-     * Sync writes files behind the two repositories' backs, so nothing reads them again until something says to -
-     * and until this, that was only the rescan at the end of a run, which left the counters still until it finished.
-     * Throttled by what the last one cost, see [liveRescanPauseAfter]: there is no per file way into the cache, so one
-     * per file would re-read everything a few thousand times over a single run. The exact numbers still come from the
-     * run's own rescan when it ends; this only keeps them moving on the way there.
+     * Sync writes files behind the two repositories' backs, so nothing reads them again until something says to: this
+     * hands them the files the run has changed so far, which they read again one by one. Throttled by what the last one
+     * cost, see [liveRescanPauseAfter], since a first sync changes files several times a second and every refresh
+     * rebuilds the lists downstream. Whatever is still waiting when the run ends is refreshed then.
      */
-    private fun scheduleLiveRescan() {
-        if (liveRescanJob?.isActive == true) return
+    private fun scheduleLiveRefresh() {
+        if (liveRefreshJob?.isActive == true) return
         if (lastLiveRescanEnd?.let { it.elapsedNow() < liveRescanPause } == true) return
-        liveRescanJob = scope.launch {
-            val duration = measureTime { rescanLibrary() }
+        liveRefreshJob = scope.launch {
+            val duration = measureTime { refreshChangedFiles() }
             liveRescanPause = liveRescanPauseAfter(duration)
             lastLiveRescanEnd = TimeSource.Monotonic.markNow()
         }
@@ -540,7 +546,7 @@ internal class SyncRepositoryImpl(
     /**
      * Keeps `sync-index.json` close behind the run, so that an app that is killed rather than stopped - which gets no
      * chance to write anything on its way out - still loses no more than the last couple of seconds of transfers.
-     * Throttled the same way as [scheduleLiveRescan], since the index is rewritten whole and a run finishes a file
+     * Throttled the same way as [scheduleLiveRefresh], since the index is rewritten whole and a run finishes a file
      * several times a second. Whatever this skips, the write at the end of the run covers.
      */
     private fun scheduleIndexWrite(snapshot: () -> SyncIndexDocument) {
@@ -595,13 +601,31 @@ internal class SyncRepositoryImpl(
     }
 
     /**
-     * The rescan a run ends with. A live one still reading is stopped first: it started before the last files moved,
-     * so this one has to follow it anyway, and would only wait for it. A cancelled read leaves the cached data as it
-     * was (see `BaseLocalDataRepository`).
+     * Hands the files changed since the last refresh to the two repositories. They are taken out of [changedFiles]
+     * before they are read, so a file the run changes again meanwhile waits for the next refresh, and put back when
+     * this one is stopped before it got to them.
      */
-    private suspend fun rescanLibraryAfterRun() {
-        liveRescanJob?.cancelAndJoin()
-        rescanLibrary()
+    private suspend fun refreshChangedFiles() {
+        val keys = changedFilesMutex.withLock { changedFiles.toSet().also { changedFiles.clear() } }
+        if (keys.isEmpty()) return
+        try {
+            songRepository.refresh(keys.namesOf(LibraryFileKind.SONG))
+            setlistRepository.refresh(keys.namesOf(LibraryFileKind.SETLIST))
+        } catch (exception: CancellationException) {
+            withContext(NonCancellable) { changedFilesMutex.withLock { changedFiles += keys } }
+            throw exception
+        }
+    }
+
+    private fun Set<SyncKey>.namesOf(kind: LibraryFileKind) = filter { it.kind == kind }.mapTo(mutableSetOf()) { it.name }
+
+    /**
+     * The refresh a run ends with. A live one still reading is stopped first, which puts back what it had not got to,
+     * and everything still waiting is read here.
+     */
+    private suspend fun refreshLibraryAfterRun() {
+        liveRefreshJob?.cancelAndJoin()
+        refreshChangedFiles()
     }
 
     /**
@@ -616,14 +640,10 @@ internal class SyncRepositoryImpl(
      * provider's exception can win over the cancellation that caused it - and in a cancelled coroutine the first
      * suspending call here would throw and skip the rest.
      */
-    private suspend fun finishRunCutShort(latestIndex: (() -> SyncIndexDocument)?, hasFinishedOperations: Boolean) {
+    private suspend fun finishRunCutShort(latestIndex: (() -> SyncIndexDocument)?) {
         indexWriteJob?.join()
         latestIndex?.let { saveIndexQuietly(it().copy(isRunInProgress = false)) }
-        // Only when an operation got as far as finishing: a run that fails on its listing - every launch without a
-        // network - has moved nothing, and reading a whole library again for it would cost more than the run did.
-        if (hasFinishedOperations) {
-            rescanLibraryAfterRun()
-        }
+        refreshLibraryAfterRun()
     }
 
     /**
@@ -809,15 +829,15 @@ internal class SyncRepositoryImpl(
 }
 
 /**
- * How long the counters wait after a live rescan that took [duration]. A rescan reads the whole library, so on a
- * large one it is the expensive part of keeping them moving: waiting a multiple of what it cost caps the share of a
- * run that goes into re-reading what it has already written, however large the library gets, while a small library
- * keeps the interval that makes the numbers visibly move.
+ * How long the counters wait after a live refresh that took [duration]. A refresh reads every file changed since the
+ * last one, which on a first sync of a large library is a lot of them, and each one rebuilds the lists downstream:
+ * waiting a multiple of what it cost caps the share of a run that goes into re-reading what it has already written,
+ * while a small run keeps the interval that makes the numbers visibly move.
  */
 internal fun liveRescanPauseAfter(duration: Duration) = maxOf(LIVE_RESCAN_INTERVAL, duration * LIVE_RESCAN_PAUSE_FACTOR)
 
 /** Often enough that the counters visibly move, where the reading costs next to nothing. */
 internal val LIVE_RESCAN_INTERVAL = 1.seconds
 
-/** One part reading to five parts not: a live rescan never takes more than about a sixth of a run. */
+/** One part reading to five parts not: a live refresh never takes more than about a sixth of a run. */
 private const val LIVE_RESCAN_PAUSE_FACTOR = 5

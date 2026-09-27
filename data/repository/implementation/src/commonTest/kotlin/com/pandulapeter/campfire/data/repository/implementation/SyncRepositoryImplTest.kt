@@ -136,9 +136,27 @@ class SyncRepositoryImplTest {
     }
 
     @Test
-    fun `a run that fails after moving files reads the library again`() = runTest {
+    fun `a completed run reads again only the file it downloaded`() = runTest {
+        val songRepository = RecordingSongRepository()
+        val repository = repository(
+            provider = FakeSyncProvider(files = mapOf(song(1) to "One".encodeToByteArray()), account = ACCOUNT),
+            libraryFileLocalSource = FakeLibraryFileLocalSource(files = mapOf(song(2) to "Two".encodeToByteArray())),
+            songRepository = songRepository,
+        )
+
+        repository.restore()
+        repository.synchronize(SyncDeletionPolicy.ASK)
+        val state = repository.awaitOutcome()
+
+        assertIs<SyncOutcome.Success>(state.lastOutcome)
+        assertEquals(listOf(song(1).name), songRepository.refreshed)
+        assertEquals(0, songRepository.rescanCount)
+    }
+
+    @Test
+    fun `a run that fails after moving files reads them again`() = runTest {
         val local = FakeLibraryFileLocalSource(files = mapOf(song(2) to "Two".encodeToByteArray()))
-        val snapshots = mutableListOf<Set<SyncKey>>()
+        val songRepository = RecordingSongRepository()
         val repository = repository(
             provider = FakeSyncProvider(
                 files = mapOf(song(1) to "One".encodeToByteArray()),
@@ -146,7 +164,7 @@ class SyncRepositoryImplTest {
                 account = ACCOUNT,
             ),
             libraryFileLocalSource = local,
-            songRepository = RecordingSongRepository(onRescan = { snapshots += local.files.keys.toSet() }),
+            songRepository = songRepository,
         )
 
         repository.restore()
@@ -154,11 +172,13 @@ class SyncRepositoryImplTest {
         val state = repository.awaitOutcome()
 
         assertEquals(SyncOutcome.Failure(SyncFailureReason.NETWORK), state.lastOutcome)
-        assertTrue(song(1) in snapshots.last())
+        assertTrue(song(1) in local.files)
+        assertTrue(song(1).name in songRepository.refreshed)
+        assertEquals(0, songRepository.rescanCount)
     }
 
     @Test
-    fun `a run stopped by the question on its second pass reads the library again`() = runTest {
+    fun `a run stopped by the question on its second pass reads again what it brought in`() = runTest {
         val json = Json {
             prettyPrint = true
             encodeDefaults = true
@@ -190,12 +210,12 @@ class SyncRepositoryImplTest {
                 provider.files[song(11)] = "Other".encodeToByteArray() to "r9"
             }
         }
-        val snapshots = mutableListOf<Set<SyncKey>>()
+        val songRepository = RecordingSongRepository()
         val repository = repository(
             provider = provider,
             stateLocalSource = stateLocalSource,
             libraryFileLocalSource = local,
-            songRepository = RecordingSongRepository(onRescan = { snapshots += local.files.keys.toSet() }),
+            songRepository = songRepository,
         )
 
         repository.restore()
@@ -203,7 +223,8 @@ class SyncRepositoryImplTest {
         val state = repository.awaitOutcome()
 
         assertIs<SyncOutcome.DeletionsNeedConfirmation>(state.lastOutcome)
-        assertTrue(song(12) in snapshots.last())
+        assertTrue(song(12) in local.files)
+        assertTrue(song(12).name in songRepository.refreshed)
     }
 
     @Test

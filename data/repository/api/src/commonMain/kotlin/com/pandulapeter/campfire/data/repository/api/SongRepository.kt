@@ -28,6 +28,14 @@ interface SongRepository {
     suspend fun rescan()
 
     /**
+     * Reads these files again, and only these, after something outside the repository changed them (a sync run): a file
+     * that is there is put in the list in place of its old entry, and one that is gone or no longer reads drops out, as
+     * a rescan would drop it. Their cached texts are invalidated. Before the library has been read at all this is a
+     * [rescan], since there is no list yet to put them into.
+     */
+    suspend fun refresh(fileNames: Set<String>)
+
+    /**
      * Writes the file and updates that one entry of the cached list, without rescanning the library.
      *
      * @param expectedText The text the change was built on, for a change that edits the file rather than replaces it.

@@ -38,4 +38,10 @@ interface SongContentRepository {
 
     /** Drops the cached text of one song, or of every song when [fileName] is null. */
     suspend fun invalidate(fileName: String? = null)
+
+    /**
+     * Drops the cached texts of these songs in one step. [invalidations] names each of them, or says null for every song
+     * where there are too many to name without overflowing a collector that is behind.
+     */
+    suspend fun invalidate(fileNames: Set<String>)
 }

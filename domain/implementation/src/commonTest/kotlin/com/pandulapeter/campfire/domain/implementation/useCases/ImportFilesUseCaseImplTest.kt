@@ -115,6 +115,7 @@ class ImportFilesUseCaseImplTest {
         override suspend fun loadSongsIfNeeded() = files.keys.map(::song)
         override suspend fun loadSongFileSizes() = files.mapValues { it.value.length.toLong() }
         override suspend fun rescan() = Unit
+        override suspend fun refresh(fileNames: Set<String>) = Unit
         override suspend fun saveSong(content: SongContent, expectedText: String?) = throw UnsupportedOperationException()
         override suspend fun createSong(title: String, artist: String, text: String) = throw UnsupportedOperationException()
         override fun importFileName(fallbackTitle: String, text: String) = throw UnsupportedOperationException()
@@ -135,6 +136,7 @@ class ImportFilesUseCaseImplTest {
         override suspend fun loadSetlistsIfNeeded() = files.values.toList()
         override suspend fun loadSetlistFileNamesNaming(songFileName: String) = throw UnsupportedOperationException()
         override suspend fun rescan() = Unit
+        override suspend fun refresh(fileNames: Set<String>) = Unit
         override suspend fun createSetlist(title: String, description: String, priority: Int) = throw UnsupportedOperationException()
         override suspend fun saveSetlist(setlist: Setlist) = throw UnsupportedOperationException()
         override suspend fun updateSetlist(fileName: String, transform: (Setlist) -> Setlist) = throw UnsupportedOperationException()

@@ -15,7 +15,12 @@ import com.pandulapeter.campfire.data.repository.api.SongContentRepository
 import com.pandulapeter.campfire.data.repository.api.SongRepository
 import com.pandulapeter.campfire.data.repository.implementation.base.BaseLocalDataRepository
 import com.pandulapeter.campfire.data.source.local.api.SongLocalSource
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.NonCancellable
+import kotlinx.coroutines.async
+import kotlinx.coroutines.awaitAll
+import kotlinx.coroutines.coroutineScope
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 import kotlinx.coroutines.withContext
@@ -47,6 +52,25 @@ internal class SongRepositoryImpl(
     override suspend fun rescan() {
         songContentRepository.invalidate()
         reloadData()
+    }
+
+    override suspend fun refresh(fileNames: Set<String>) {
+        if (fileNames.isEmpty()) return
+        if (songs.first().data == null) return rescan()
+        val reloaded = fileNames.chunked(REFRESH_BATCH_SIZE).flatMap { batch ->
+            coroutineScope { batch.map { fileName -> async { loadSongOrNull(fileName) } }.awaitAll() }
+        }.filterNotNull()
+        songContentRepository.invalidate(fileNames)
+        updateData { current -> current.orEmpty().filterNot { it.fileName in fileNames } + reloaded }
+    }
+
+    private suspend fun loadSongOrNull(fileName: String) = try {
+        songLocalSource.loadSong(fileName)
+    } catch (exception: CancellationException) {
+        throw exception
+    } catch (exception: Exception) {
+        println("Could not read the song \"$fileName\": ${exception.message}")
+        null
     }
 
     /**
@@ -115,5 +139,10 @@ internal class SongRepositoryImpl(
      */
     private suspend fun <T> naming(block: suspend () -> T): T = nameMutex.withLock {
         libraryFileLock.withLock { withContext(NonCancellable) { block() } }
+    }
+
+    private companion object {
+        /** The scan's batch size, for the same reason: a first sync can hand over thousands of files at once. */
+        const val REFRESH_BATCH_SIZE = 64
     }
 }

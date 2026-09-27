@@ -34,6 +34,13 @@ interface SetlistRepository {
     /** Reads the setlists directory again, which is what a rescan and an import need. */
     suspend fun rescan()
 
+    /**
+     * Reads these files again, and only these, after something outside the repository changed them (a sync run): a file
+     * that is there is put in the list in place of its old entry, and one that is gone or no longer decodes drops out,
+     * as a rescan would drop it. Before the library has been read at all this is a [rescan].
+     */
+    suspend fun refresh(fileNames: Set<String>)
+
     /** Writes a new, empty setlist under a free file name and returns it. */
     suspend fun createSetlist(title: String, description: String, priority: Int): Setlist
 

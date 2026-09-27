@@ -71,6 +71,7 @@ class ExportSongsUseCaseImplTest {
         override suspend fun loadSongsIfNeeded() = throw UnsupportedOperationException()
         override suspend fun loadSongFileSizes() = throw UnsupportedOperationException()
         override suspend fun rescan() = throw UnsupportedOperationException()
+        override suspend fun refresh(fileNames: Set<String>) = throw UnsupportedOperationException()
         override suspend fun saveSong(content: SongContent, expectedText: String?) = throw UnsupportedOperationException()
         override suspend fun createSong(title: String, artist: String, text: String) = throw UnsupportedOperationException()
         override fun importFileName(fallbackTitle: String, text: String): String {
@@ -89,6 +90,8 @@ class ExportSongsUseCaseImplTest {
             files[fileName]?.let { SongContent(fileName = fileName, text = it) }
 
         override suspend fun invalidate(fileName: String?) = throw UnsupportedOperationException()
+
+        override suspend fun invalidate(fileNames: Set<String>) = throw UnsupportedOperationException()
     }
 
     private class FakeArchiveRepository : ArchiveRepository {

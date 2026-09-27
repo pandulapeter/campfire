@@ -54,6 +54,7 @@ class ExportSetlistUseCaseImplTest {
         override suspend fun loadSetlistsIfNeeded() = listOf(setlist)
         override suspend fun loadSetlistFileNamesNaming(songFileName: String) = throw UnsupportedOperationException()
         override suspend fun rescan() = throw UnsupportedOperationException()
+        override suspend fun refresh(fileNames: Set<String>) = throw UnsupportedOperationException()
         override suspend fun createSetlist(title: String, description: String, priority: Int) = throw UnsupportedOperationException()
         override suspend fun saveSetlist(setlist: Setlist) = throw UnsupportedOperationException()
         override suspend fun updateSetlist(fileName: String, transform: (Setlist) -> Setlist) = throw UnsupportedOperationException()
@@ -68,6 +69,7 @@ class ExportSetlistUseCaseImplTest {
         override val invalidations: Flow<String?> = emptyFlow()
         override suspend fun loadSongContent(fileName: String, shouldCache: Boolean): SongContent? = null
         override suspend fun invalidate(fileName: String?) = throw UnsupportedOperationException()
+        override suspend fun invalidate(fileNames: Set<String>) = throw UnsupportedOperationException()
     }
 
     private class FakeArchiveRepository : ArchiveRepository {

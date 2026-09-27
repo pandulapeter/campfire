@@ -127,9 +127,10 @@ internal class FakePendingAuthorizationStore : PendingAuthorizationStore {
 }
 
 /**
- * Stands in for the song list that sync tells to read the library again, and counts how often it was told. [onRescan]
- * runs on every rescan, which is where a test sees what the library held at that moment. The list has been read unless
- * a test says otherwise through [songs], and [onLoadIfNeeded] is where it finishes a read it left going.
+ * Stands in for the song list that sync tells to read the library again, and records what it was told: how many whole
+ * rescans, and which files it was asked to refresh. [onRescan] runs on every rescan, which is where a test sees what the
+ * library held at that moment. The list has been read unless a test says otherwise through [songs], and
+ * [onLoadIfNeeded] is where it finishes a read it left going.
  */
 internal class RecordingSongRepository(
     private val onRescan: () -> Unit = {},
@@ -138,6 +139,7 @@ internal class RecordingSongRepository(
 ) : SongRepository {
 
     var rescanCount = 0
+    val refreshed = mutableListOf<String>()
 
     override suspend fun loadSongsIfNeeded(): List<Song>? {
         onLoadIfNeeded()
@@ -149,6 +151,10 @@ internal class RecordingSongRepository(
     override suspend fun rescan() {
         rescanCount++
         onRescan()
+    }
+
+    override suspend fun refresh(fileNames: Set<String>) {
+        refreshed += fileNames
     }
 
     override suspend fun saveSong(content: SongContent, expectedText: String?): Boolean = throw UnsupportedOperationException()
@@ -179,6 +185,8 @@ internal class RecordingSetlistRepository : SetlistRepository {
     override suspend fun rescan() {
         rescanCount++
     }
+
+    override suspend fun refresh(fileNames: Set<String>) = Unit
 
     override suspend fun createSetlist(title: String, description: String, priority: Int): Setlist =
         throw UnsupportedOperationException()

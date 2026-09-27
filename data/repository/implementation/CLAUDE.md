@@ -48,13 +48,15 @@ last change is the last thing on disk and a burst of changes ends in one write. 
 nothing more, and one that failed turns the state into a `Failure` only while its data is still the data on show.
 `commonTest` covers this too. A cancelled read is not a failed one: it is rethrown and leaves the cache with what it
 held before, plus any change that landed while it ran. A `rescan()` — the refresh action, and the last step of every
-import — is the only thing that walks the directory again.
+import — is the only thing that walks the directory again. `refresh(fileNames)` reads the named files alone, for a
+sync run that changed them: each is put in the list in place of its old entry or drops out, as a rescan would drop it,
+and a repository that has not been read yet rescans instead, since there is no list to put them into.
 
 - `SetlistRepositoryImpl` makes every write to a setlist file — `updateSetlist`, `renameSetlist`, `saveSetlist`,
   `deleteSetlist` — under one lock, held from reading the setlist out of its **file** to having the write back in the
   cache (and `LibraryFileLock` inside it for the same span), so a second change reads what the first one wrote, and a
   move or a deletion cannot cross a change that is halfway through. The file and not the cache, because sync writes setlist files behind this repository's back and the
-  cache only catches up at the next rescan: a change built on it in between would put the version from before the run
+  cache only catches up at the run's next refresh: a change built on it in between would put the version from before the run
   back, and the next run would upload that over the other device's edit. A file that is gone drops the setlist from
   the cache and changes nothing; one that cannot be decoded is changed as the cache has it. The cache is the one place that is current straight after a write; anything observing
   `setlists` catches up a few hops later. Creating and importing a setlist take it as well, from the storage finding
@@ -78,7 +80,8 @@ import — is the only thing that walks the directory again.
   lock only guards the map, never a read: a read that started before an invalidation is told so by a generation
   counter and does not put the text it read back into the cache. Every invalidation is also emitted on
   `invalidations`, which is how the ViewModel's own copies of the open texts learn that a sync run or a rescan has
-  replaced the files under them.
+  replaced the files under them. A refresh drops its files' texts in one step, named one event each up to 32 and as
+  "every song" above that, since the flow drops what does not fit its buffer.
 - `SongRepositoryImpl.saveSong` takes an optional `expectedText`, the text an edit (a tag, a language) was built on:
   the file is only written while it still holds exactly that, and otherwise the save writes nothing, drops the cached
   text and returns false, so the caller rebuilds the edit on the file as it is now. The editor's explicit save passes
@@ -135,8 +138,9 @@ import — is the only thing that walks the directory again.
   launched there has anyone to throw to, and a run that ends in a throwable that is not an `Exception` (a synchronous
   `js(...)` failure on the web, a real `Error`) is finished and reported like a failed one rather than left to it. An interrupted run therefore keeps what it transferred, and only a completed
   one with no failed files moves `lastSyncedAt`.
-  The library counts are kept moving during a run by a live rescan that waits five times what the previous one took
-  (`liveRescanPauseAfter`), so that re-reading a large library never becomes most of what a run does.
+  The engine reports every library file it changes (`onLocalFileChanged`), once the change is on disk, and the library
+  counts are kept moving during a run by a live refresh of those files that waits five times what the previous one
+  took (`liveRescanPauseAfter`), so that re-reading what a run wrote never becomes most of what it does.
   A run the app never came back from is found by the index's `isRunInProgress` marker at `restore`, reported as
   interrupted next time, and that run is left for the user to start: `RestoreResult.wasInterrupted` keeps
   `RestoreSyncUseCase` from starting one on launch, which would replace the message before it could be read.
@@ -150,8 +154,8 @@ import — is the only thing that walks the directory again.
   that would delete anything remotely while the local listing is empty and the index is not — a library folder that
   went missing lists as empty on every platform, however small the library was. The engine returns
   `Result.DeletionsNeedConfirmation` with the `SyncDeletionDirection` before those deletions move, asking about this
-  device first, and the repository reports it as the run's outcome, rescanning only when an earlier pass of the same
-  run had already moved files. `DELETE_LOCALLY` and `DELETE_REMOTELY` apply such a plan as it is;
+  device first, and the repository reports it as the run's outcome, refreshing whatever an earlier pass of the same
+  run had already moved. `DELETE_LOCALLY` and `DELETE_REMOTELY` apply such a plan as it is;
   `KEEP_AND_UPLOAD` first drops the index entries of every file that is here and not there, which the planner then
   reads as new local files, and `KEEP_AND_DOWNLOAD` those of every file that is there and not here, which it reads as
   new remote ones. An answer waives the guard of its own direction only, so a run told to delete here still stops if it
@@ -166,10 +170,11 @@ import — is the only thing that walks the directory again.
   a large deletion spends as little time as possible half done, which is what another device's guard would see. On
   Dropbox that is still about seven files a second, so a device that syncs during a large approved deletion can
   still see less than half of it gone and follow that part without asking; its next run asks about the rest. `SyncRepositoryImpl` owns an application-lifetime scope, so a run outlives the screen and
-  (on Android) the activity that started it, and it is what tells the song and setlist repositories to rescan
-  afterwards — after a completed run that changed something, and after a stopped or failed one in which any
-  operation had finished (`finishRunCutShort`, always under `NonCancellable`), since files that moved before the run
-  ended are on disk whichever way it ended. The use case cannot, now that it returns before the run does. A run
+  (on Android) the activity that started it, and it is what tells the song and setlist repositories to read the files
+  it changed again (`refresh`, never a whole rescan) — after a completed run, and after a stopped or failed one
+  (`finishRunCutShort`, always under `NonCancellable`), since files that moved before the run ended are on disk
+  whichever way it ended. A live refresh that is stopped puts back what it had not read. Only a run that ends in a
+  throwable that is not an `Exception`, which may have come from the middle of a write, rescans the whole library. The use case cannot, now that it returns before the run does. A run
   waits for a first read of the library that is still going before it reads any local file, so that a connected
   launch does not read every file twice at once; a repository that has been read, or has failed, is not waited for.
   Disconnecting cancels a run that is still going and waits for it; once it has begun to take the connection apart it

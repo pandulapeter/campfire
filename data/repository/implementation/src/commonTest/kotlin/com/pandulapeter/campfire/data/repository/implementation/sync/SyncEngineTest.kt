@@ -60,6 +60,7 @@ class SyncEngineTest {
                 accountId = ACCOUNT_ID,
                 onProgress = {},
                 onIndexChanged = { snapshots += it },
+                onLocalFileChanged = {},
                 deletionPolicy = SyncDeletionPolicy.ASK,
             )
         }
@@ -86,6 +87,7 @@ class SyncEngineTest {
                 accountId = ACCOUNT_ID,
                 onProgress = {},
                 onIndexChanged = { snapshots += it },
+                onLocalFileChanged = {},
                 deletionPolicy = SyncDeletionPolicy.ASK,
             )
         }
@@ -111,6 +113,7 @@ class SyncEngineTest {
             accountId = ACCOUNT_ID,
             onProgress = {},
             onIndexChanged = {},
+            onLocalFileChanged = {},
             deletionPolicy = SyncDeletionPolicy.ASK,
         )
 
@@ -133,6 +136,7 @@ class SyncEngineTest {
             accountId = ACCOUNT_ID,
             onProgress = {},
             onIndexChanged = {},
+            onLocalFileChanged = {},
             deletionPolicy = SyncDeletionPolicy.ASK,
         )
 
@@ -163,6 +167,7 @@ class SyncEngineTest {
             accountId = ACCOUNT_ID,
             onProgress = {},
             onIndexChanged = {},
+            onLocalFileChanged = {},
             deletionPolicy = SyncDeletionPolicy.ASK,
         )
 
@@ -185,6 +190,7 @@ class SyncEngineTest {
             accountId = ACCOUNT_ID,
             onProgress = {},
             onIndexChanged = {},
+            onLocalFileChanged = {},
             deletionPolicy = SyncDeletionPolicy.ASK,
         )
 
@@ -208,6 +214,7 @@ class SyncEngineTest {
             accountId = ACCOUNT_ID,
             onProgress = {},
             onIndexChanged = {},
+            onLocalFileChanged = {},
             deletionPolicy = SyncDeletionPolicy.ASK,
         )
 
@@ -238,6 +245,7 @@ class SyncEngineTest {
             accountId = ACCOUNT_ID,
             onProgress = {},
             onIndexChanged = {},
+            onLocalFileChanged = {},
             deletionPolicy = SyncDeletionPolicy.ASK,
         )
         save?.join()
@@ -266,6 +274,7 @@ class SyncEngineTest {
             accountId = ACCOUNT_ID,
             onProgress = {},
             onIndexChanged = {},
+            onLocalFileChanged = {},
             deletionPolicy = SyncDeletionPolicy.ASK,
         )
         save?.join()
@@ -286,6 +295,7 @@ class SyncEngineTest {
             accountId = ACCOUNT_ID,
             onProgress = {},
             onIndexChanged = {},
+            onLocalFileChanged = {},
             deletionPolicy = SyncDeletionPolicy.ASK,
         )
 
@@ -305,6 +315,7 @@ class SyncEngineTest {
             accountId = ACCOUNT_ID,
             onProgress = {},
             onIndexChanged = {},
+            onLocalFileChanged = {},
             deletionPolicy = SyncDeletionPolicy.ASK,
         )
 
@@ -328,6 +339,7 @@ class SyncEngineTest {
             accountId = ACCOUNT_ID,
             onProgress = {},
             onIndexChanged = {},
+            onLocalFileChanged = {},
             deletionPolicy = SyncDeletionPolicy.ASK,
         )
 
@@ -358,6 +370,7 @@ class SyncEngineTest {
             accountId = ACCOUNT_ID,
             onProgress = {},
             onIndexChanged = {},
+            onLocalFileChanged = {},
             deletionPolicy = SyncDeletionPolicy.ASK,
         )
 
@@ -379,6 +392,7 @@ class SyncEngineTest {
             accountId = ACCOUNT_ID,
             onProgress = {},
             onIndexChanged = {},
+            onLocalFileChanged = {},
             deletionPolicy = SyncDeletionPolicy.ASK,
         )
 
@@ -407,6 +421,7 @@ class SyncEngineTest {
             accountId = ACCOUNT_ID,
             onProgress = {},
             onIndexChanged = {},
+            onLocalFileChanged = {},
             deletionPolicy = SyncDeletionPolicy.ASK,
         )
 
@@ -429,6 +444,7 @@ class SyncEngineTest {
             accountId = ACCOUNT_ID,
             onProgress = {},
             onIndexChanged = {},
+            onLocalFileChanged = {},
             deletionPolicy = SyncDeletionPolicy.ASK,
         )
 
@@ -450,6 +466,7 @@ class SyncEngineTest {
                 accountId = ACCOUNT_ID,
                 onProgress = {},
                 onIndexChanged = {},
+                onLocalFileChanged = {},
                 deletionPolicy = SyncDeletionPolicy.ASK,
             )
         }
@@ -468,6 +485,7 @@ class SyncEngineTest {
             accountId = ACCOUNT_ID,
             onProgress = {},
             onIndexChanged = {},
+            onLocalFileChanged = {},
             deletionPolicy = SyncDeletionPolicy.ASK,
         )
 
@@ -499,6 +517,7 @@ class SyncEngineTest {
             accountId = ACCOUNT_ID,
             onProgress = {},
             onIndexChanged = {},
+            onLocalFileChanged = {},
             deletionPolicy = SyncDeletionPolicy.ASK,
         )
 
@@ -522,6 +541,7 @@ class SyncEngineTest {
             accountId = ACCOUNT_ID,
             onProgress = {},
             onIndexChanged = {},
+            onLocalFileChanged = {},
             deletionPolicy = SyncDeletionPolicy.ASK,
         )
 
@@ -543,6 +563,7 @@ class SyncEngineTest {
                 accountId = ACCOUNT_ID,
                 onProgress = {},
                 onIndexChanged = {},
+                onLocalFileChanged = {},
                 deletionPolicy = SyncDeletionPolicy.ASK,
             )
         }
@@ -566,6 +587,7 @@ class SyncEngineTest {
             accountId = ACCOUNT_ID,
             onProgress = {},
             onIndexChanged = {},
+            onLocalFileChanged = {},
             deletionPolicy = SyncDeletionPolicy.ASK,
         )
 
@@ -585,6 +607,7 @@ class SyncEngineTest {
             accountId = ACCOUNT_ID,
             onProgress = {},
             onIndexChanged = {},
+            onLocalFileChanged = {},
             deletionPolicy = SyncDeletionPolicy.ASK,
         )
 
@@ -605,6 +628,7 @@ class SyncEngineTest {
             accountId = ACCOUNT_ID,
             onProgress = {},
             onIndexChanged = {},
+            onLocalFileChanged = {},
             // The one song is the whole library, which an ordinary run asks about before emptying the folder.
             deletionPolicy = SyncDeletionPolicy.DELETE_REMOTELY,
         )
@@ -624,6 +648,7 @@ class SyncEngineTest {
             accountId = ACCOUNT_ID,
             onProgress = {},
             onIndexChanged = {},
+            onLocalFileChanged = {},
             deletionPolicy = SyncDeletionPolicy.ASK,
         )
 
@@ -662,6 +687,7 @@ class SyncEngineTest {
             accountId = ACCOUNT_ID,
             onProgress = {},
             onIndexChanged = {},
+            onLocalFileChanged = {},
             deletionPolicy = SyncDeletionPolicy.ASK,
         )
 
@@ -681,6 +707,7 @@ class SyncEngineTest {
             accountId = account.indexKey(),
             onProgress = {},
             onIndexChanged = {},
+            onLocalFileChanged = {},
             deletionPolicy = SyncDeletionPolicy.DELETE_LOCALLY,
         )
 
@@ -699,6 +726,7 @@ class SyncEngineTest {
             accountId = ACCOUNT_ID,
             onProgress = {},
             onIndexChanged = {},
+            onLocalFileChanged = {},
             deletionPolicy = SyncDeletionPolicy.ASK,
         )
 
@@ -751,6 +779,7 @@ class SyncEngineTest {
             accountId = ACCOUNT_ID,
             onProgress = {},
             onIndexChanged = {},
+            onLocalFileChanged = {},
             deletionPolicy = SyncDeletionPolicy.ASK,
         )
 
@@ -769,6 +798,7 @@ class SyncEngineTest {
             accountId = ACCOUNT_ID,
             onProgress = {},
             onIndexChanged = {},
+            onLocalFileChanged = {},
             deletionPolicy = SyncDeletionPolicy.ASK,
         )
 
@@ -790,6 +820,7 @@ class SyncEngineTest {
             accountId = ACCOUNT_ID,
             onProgress = {},
             onIndexChanged = {},
+            onLocalFileChanged = {},
             deletionPolicy = SyncDeletionPolicy.ASK,
         )
 
@@ -809,6 +840,7 @@ class SyncEngineTest {
             accountId = ACCOUNT_ID,
             onProgress = {},
             onIndexChanged = {},
+            onLocalFileChanged = {},
             deletionPolicy = SyncDeletionPolicy.ASK,
         )
 
@@ -829,6 +861,7 @@ class SyncEngineTest {
             accountId = ACCOUNT_ID,
             onProgress = {},
             onIndexChanged = {},
+            onLocalFileChanged = {},
             deletionPolicy = SyncDeletionPolicy.ASK,
         )
 
@@ -847,6 +880,7 @@ class SyncEngineTest {
             accountId = ACCOUNT_ID,
             onProgress = {},
             onIndexChanged = {},
+            onLocalFileChanged = {},
             deletionPolicy = SyncDeletionPolicy.ASK,
         )
 
@@ -866,6 +900,7 @@ class SyncEngineTest {
             accountId = ACCOUNT_ID,
             onProgress = {},
             onIndexChanged = {},
+            onLocalFileChanged = {},
             deletionPolicy = SyncDeletionPolicy.ASK,
         )
 
@@ -887,6 +922,7 @@ class SyncEngineTest {
             accountId = ACCOUNT_ID,
             onProgress = {},
             onIndexChanged = {},
+            onLocalFileChanged = {},
             deletionPolicy = SyncDeletionPolicy.ASK,
         )
 
@@ -909,6 +945,7 @@ class SyncEngineTest {
             accountId = ACCOUNT_ID,
             onProgress = {},
             onIndexChanged = {},
+            onLocalFileChanged = {},
             deletionPolicy = SyncDeletionPolicy.KEEP_AND_UPLOAD,
         )
 
@@ -928,6 +965,7 @@ class SyncEngineTest {
             accountId = ACCOUNT_ID,
             onProgress = {},
             onIndexChanged = {},
+            onLocalFileChanged = {},
             deletionPolicy = SyncDeletionPolicy.DELETE_LOCALLY,
         )
 
@@ -946,6 +984,7 @@ class SyncEngineTest {
             accountId = ACCOUNT_ID,
             onProgress = {},
             onIndexChanged = {},
+            onLocalFileChanged = {},
             deletionPolicy = SyncDeletionPolicy.ASK,
         )
 
@@ -969,6 +1008,7 @@ class SyncEngineTest {
             accountId = ACCOUNT_ID,
             onProgress = {},
             onIndexChanged = {},
+            onLocalFileChanged = {},
             deletionPolicy = SyncDeletionPolicy.ASK,
         )
 
@@ -990,6 +1030,7 @@ class SyncEngineTest {
             accountId = ACCOUNT_ID,
             onProgress = {},
             onIndexChanged = {},
+            onLocalFileChanged = {},
             deletionPolicy = SyncDeletionPolicy.DELETE_REMOTELY,
         )
 
@@ -1010,6 +1051,7 @@ class SyncEngineTest {
             accountId = ACCOUNT_ID,
             onProgress = {},
             onIndexChanged = {},
+            onLocalFileChanged = {},
             deletionPolicy = SyncDeletionPolicy.DELETE_REMOTELY,
         )
 
@@ -1032,6 +1074,7 @@ class SyncEngineTest {
             accountId = ACCOUNT_ID,
             onProgress = {},
             onIndexChanged = {},
+            onLocalFileChanged = {},
             deletionPolicy = SyncDeletionPolicy.KEEP_AND_DOWNLOAD,
         )
 
@@ -1051,6 +1094,7 @@ class SyncEngineTest {
             accountId = ACCOUNT_ID,
             onProgress = {},
             onIndexChanged = {},
+            onLocalFileChanged = {},
             deletionPolicy = SyncDeletionPolicy.DELETE_LOCALLY,
         )
 
@@ -1069,6 +1113,7 @@ class SyncEngineTest {
             accountId = ACCOUNT_ID,
             onProgress = {},
             onIndexChanged = {},
+            onLocalFileChanged = {},
             deletionPolicy = SyncDeletionPolicy.DELETE_REMOTELY,
         )
 
@@ -1084,6 +1129,7 @@ class SyncEngineTest {
             accountId = ACCOUNT_ID,
             onProgress = {},
             onIndexChanged = {},
+            onLocalFileChanged = {},
             deletionPolicy = SyncDeletionPolicy.ASK,
         )
 
@@ -1105,6 +1151,7 @@ class SyncEngineTest {
             accountId = ACCOUNT_ID,
             onProgress = {},
             onIndexChanged = {},
+            onLocalFileChanged = {},
             deletionPolicy = SyncDeletionPolicy.ASK,
         )
 
@@ -1227,6 +1274,7 @@ class SyncEngineTest {
             accountId = ACCOUNT_ID,
             onProgress = {},
             onIndexChanged = {},
+            onLocalFileChanged = {},
             deletionPolicy = SyncDeletionPolicy.ASK,
         )
 
@@ -1251,6 +1299,7 @@ class SyncEngineTest {
             accountId = ACCOUNT_ID,
             onProgress = {},
             onIndexChanged = {},
+            onLocalFileChanged = {},
             deletionPolicy = SyncDeletionPolicy.ASK,
         )
 
@@ -1275,6 +1324,7 @@ class SyncEngineTest {
             accountId = ACCOUNT_ID,
             onProgress = {},
             onIndexChanged = {},
+            onLocalFileChanged = {},
             deletionPolicy = SyncDeletionPolicy.ASK,
         )
 
@@ -1298,6 +1348,7 @@ class SyncEngineTest {
             accountId = ACCOUNT_ID,
             onProgress = {},
             onIndexChanged = {},
+            onLocalFileChanged = {},
             deletionPolicy = SyncDeletionPolicy.ASK,
         )
 
@@ -1323,6 +1374,7 @@ class SyncEngineTest {
             accountId = ACCOUNT_ID,
             onProgress = {},
             onIndexChanged = {},
+            onLocalFileChanged = {},
             deletionPolicy = SyncDeletionPolicy.ASK,
         )
 
@@ -1349,6 +1401,7 @@ class SyncEngineTest {
             accountId = ACCOUNT_ID,
             onProgress = {},
             onIndexChanged = {},
+            onLocalFileChanged = {},
             deletionPolicy = SyncDeletionPolicy.ASK,
         )
 
@@ -1357,6 +1410,87 @@ class SyncEngineTest {
         assertEquals(0, completed.summary.deletedLocally)
         assertEquals(document.entries, completed.index.entries)
     }
+
+    @Test
+    fun `a download reports the file it wrote`() = runTest {
+        val changed = mutableSetOf<SyncKey>()
+
+        reportingSynchronize(
+            local = FakeLibraryFileLocalSource(),
+            provider = FakeSyncProvider(files = mapOf(song(1) to THERE)),
+            document = SyncIndexDocument(),
+            changed = changed,
+        )
+
+        assertEquals(setOf(song(1)), changed)
+    }
+
+    @Test
+    fun `a local deletion reports the file it deleted`() = runTest {
+        val changed = mutableSetOf<SyncKey>()
+
+        reportingSynchronize(
+            local = FakeLibraryFileLocalSource(files = mapOf(song(1) to ORIGINAL)),
+            provider = FakeSyncProvider(),
+            document = indexOf(song(1) to ORIGINAL),
+            changed = changed,
+            deletionPolicy = SyncDeletionPolicy.DELETE_LOCALLY,
+        )
+
+        assertEquals(setOf(song(1)), changed)
+    }
+
+    @Test
+    fun `a conflict reports the copy it wrote`() = runTest {
+        val changed = mutableSetOf<SyncKey>()
+
+        reportingSynchronize(
+            local = FakeLibraryFileLocalSource(files = mapOf(song(1) to HERE)),
+            provider = FakeSyncProvider(files = mapOf(song(1) to THERE)),
+            document = indexOf(song(1) to ORIGINAL),
+            changed = changed,
+        )
+
+        assertEquals(setOf(SyncKey(kind = LibraryFileKind.SONG, name = "song_1 (2).cho")), changed)
+    }
+
+    @Test
+    fun `a copy taken back is reported`() = runTest {
+        val local = FakeLibraryFileLocalSource(files = mapOf(song(1) to HERE))
+        val provider = FakeSyncProvider(files = mapOf(song(1) to THERE))
+        provider.onUpload = { key -> if (key == song(1)) throw IllegalStateException("Refused") }
+        val changed = mutableListOf<SyncKey>()
+
+        SyncEngine(local, LibraryFileLock()).synchronize(
+            provider = provider,
+            document = indexOf(song(1) to ORIGINAL),
+            accountId = ACCOUNT_ID,
+            onProgress = {},
+            onIndexChanged = {},
+            onLocalFileChanged = { changed += it },
+            deletionPolicy = SyncDeletionPolicy.ASK,
+        )
+
+        val copy = SyncKey(kind = LibraryFileKind.SONG, name = "song_1 (2).cho")
+        assertEquals(listOf(copy, copy), changed)
+        assertEquals(setOf(song(1)), local.files.keys)
+    }
+
+    private suspend fun reportingSynchronize(
+        local: FakeLibraryFileLocalSource,
+        provider: FakeSyncProvider,
+        document: SyncIndexDocument,
+        changed: MutableSet<SyncKey>,
+        deletionPolicy: SyncDeletionPolicy = SyncDeletionPolicy.ASK,
+    ) = SyncEngine(local, LibraryFileLock()).synchronize(
+        provider = provider,
+        document = document,
+        accountId = ACCOUNT_ID,
+        onProgress = {},
+        onIndexChanged = {},
+        onLocalFileChanged = { changed += it },
+        deletionPolicy = deletionPolicy,
+    )
 
     private suspend fun synchronize(
         local: FakeLibraryFileLocalSource,
@@ -1368,6 +1502,7 @@ class SyncEngineTest {
         accountId = ACCOUNT_ID,
         onProgress = {},
         onIndexChanged = {},
+        onLocalFileChanged = {},
         deletionPolicy = SyncDeletionPolicy.ASK,
     )
 
