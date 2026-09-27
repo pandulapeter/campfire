@@ -187,8 +187,13 @@ internal fun SongListItem(
 
         else -> null
     }
-    val languages = if (shouldShowLabels) song.languages.filterNot { it in labelsOnEverySong.languages } else emptyList()
-    val tags = if (shouldShowLabels) song.tags.filterNot { it.lowercase() in labelsOnEverySong.tags } else emptyList()
+    // Remembered, so that a row composed again with the same song hands the same lists on and the labels under it skip.
+    val languages = remember(song.languages, labelsOnEverySong, shouldShowLabels) {
+        if (shouldShowLabels) song.languages.filterNot { it in labelsOnEverySong.languages } else emptyList()
+    }
+    val tags = remember(song.tags, labelsOnEverySong, shouldShowLabels) {
+        if (shouldShowLabels) song.tags.filterNot { it.lowercase() in labelsOnEverySong.tags } else emptyList()
+    }
     Surface(
         modifier = modifier.fillMaxWidth().padding(cardPadding),
         shape = MaterialTheme.shapes.medium,

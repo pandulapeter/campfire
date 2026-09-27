@@ -389,64 +389,73 @@ private fun SongList(
                     contentType = { _, _ -> "song" },
                 ) { songIndex, song ->
                     val actionsMenuState = rememberOverflowMenuState()
-                    SongListItem(
-                        modifier = listItemAnimation(listState, hasLoadedLibrary).fadingUnderListTop(topFade),
-                        song = song,
-                        cardPadding = songCardPadding(songIndex, columnCount),
-                        // A song opened from the library is transposed in the preferences, so that is the only
-                        // amount this list knows about: the setlists each hold their own.
-                        key = viewModel.renderKey(song, transpositions[song.fileName, null], chordSpelling),
-                        shouldShowChords = shouldShowChords,
-                        labelsOnEverySong = labelsOnEverySong,
-                        songFilter = songFilter,
-                        onTagClicked = viewModel::toggleTagFilter,
-                        onLanguageClicked = viewModel::toggleLanguageFilter,
-                        // Tagging writes the song's own file, which performance mode keeps out of reach.
-                        onAddTag = if (isPerformanceModeEnabled) null else {
-                            {
-                                keyboardController?.hide()
-                                viewModel.showDialog(CampfireViewModel.DialogType.AddSongTag(song = song))
-                            }
-                        },
-                        onClick = {
-                            keyboardController?.hide()
-                            viewModel.openSong(song)
-                        },
-                        // A shortcut to the row's own overflow menu, where holding a row is a natural way to ask for
-                        // it: the same menu, hanging from the same button, since the same entries shown two different
-                        // ways would read as two different things. In performance mode there is nothing to open
-                        // either way, so a row does nothing but open a song.
-                        onLongClick = if (isDesktopPlatform || isPerformanceModeEnabled) {
-                            null
-                        } else {
-                            {
-                                keyboardController?.hide()
-                                actionsMenuState.open()
-                            }
-                        },
-                        actions = if (isPerformanceModeEnabled) {
-                            null
-                        } else {
-                            {
-                                Row(
-                                    horizontalArrangement = Arrangement.spacedBy(-SETLIST_ASSIGNMENTS_BUTTON_OVERLAP),
-                                    verticalAlignment = Alignment.CenterVertically,
-                                ) {
-                                    SetlistAssignmentsButton(
-                                        viewModel = viewModel,
-                                        song = song,
-                                        isInSetlist = song.fileName in songFileNamesInSetlists,
-                                    )
-                                    SongActionsButton(
-                                        state = actionsMenuState,
-                                        viewModel = viewModel,
-                                        song = song,
-                                        isDeletable = true,
-                                    )
+                    // A song opened from the library is transposed in the preferences, so that is the only amount this
+                    // list knows about: the setlists each hold their own. Remembered, since the row is composed again as
+                    // every scroll starts and ends, and the key is a whole transposition to work out again.
+                    val transposition = transpositions[song.fileName, null]
+                    val key = remember(song.key, song.transpose, transposition, chordSpelling) {
+                        viewModel.renderKey(song, transposition, chordSpelling)
+                    }
+                    // The placement animation changes as a scroll starts and ends, so it goes on a box of its own: on
+                    // the row, it would be a new modifier each time, and the whole row would be composed again with it.
+                    Box(modifier = listItemAnimation(listState, hasLoadedLibrary)) {
+                        SongListItem(
+                            modifier = Modifier.fadingUnderListTop(topFade),
+                            song = song,
+                            cardPadding = songCardPadding(songIndex, columnCount),
+                            key = key,
+                            shouldShowChords = shouldShowChords,
+                            labelsOnEverySong = labelsOnEverySong,
+                            songFilter = songFilter,
+                            onTagClicked = viewModel::toggleTagFilter,
+                            onLanguageClicked = viewModel::toggleLanguageFilter,
+                            // Tagging writes the song's own file, which performance mode keeps out of reach.
+                            onAddTag = if (isPerformanceModeEnabled) null else {
+                                {
+                                    keyboardController?.hide()
+                                    viewModel.showDialog(CampfireViewModel.DialogType.AddSongTag(song = song))
                                 }
-                            }
-                        },
-                    )
+                            },
+                            onClick = {
+                                keyboardController?.hide()
+                                viewModel.openSong(song)
+                            },
+                            // A shortcut to the row's own overflow menu, where holding a row is a natural way to ask for
+                            // it: the same menu, hanging from the same button, since the same entries shown two different
+                            // ways would read as two different things. In performance mode there is nothing to open
+                            // either way, so a row does nothing but open a song.
+                            onLongClick = if (isDesktopPlatform || isPerformanceModeEnabled) {
+                                null
+                            } else {
+                                {
+                                    keyboardController?.hide()
+                                    actionsMenuState.open()
+                                }
+                            },
+                            actions = if (isPerformanceModeEnabled) {
+                                null
+                            } else {
+                                {
+                                    Row(
+                                        horizontalArrangement = Arrangement.spacedBy(-SETLIST_ASSIGNMENTS_BUTTON_OVERLAP),
+                                        verticalAlignment = Alignment.CenterVertically,
+                                    ) {
+                                        SetlistAssignmentsButton(
+                                            viewModel = viewModel,
+                                            song = song,
+                                            isInSetlist = song.fileName in songFileNamesInSetlists,
+                                        )
+                                        SongActionsButton(
+                                            state = actionsMenuState,
+                                            viewModel = viewModel,
+                                            song = song,
+                                            isDeletable = true,
+                                        )
+                                    }
+                                }
+                            },
+                        )
+                    }
                 }
             }
         }
