@@ -145,6 +145,7 @@ import com.pandulapeter.campfire.presentation.ui.platform.SyncNotification
 import com.pandulapeter.campfire.presentation.ui.platform.areDrawablesLoaded
 import com.pandulapeter.campfire.presentation.ui.platform.isLaunchScreenWholeStartup
 import com.pandulapeter.campfire.presentation.ui.platform.isLibraryEditableOutsideApp
+import com.pandulapeter.campfire.presentation.ui.platform.isStartupScreenHeldUntilAppReady
 import com.pandulapeter.campfire.presentation.ui.platform.withSyncCounts
 import com.pandulapeter.campfire.presentation.ui.screens.setlists.SetlistsScreen
 import com.pandulapeter.campfire.presentation.ui.screens.settings.SettingsScreen
@@ -257,6 +258,15 @@ fun CampfireApp(
                 // The shell still holds a startup screen of its own until it is told, the Android activity's pre-draw
                 // gate.
                 LaunchedEffect(Unit) { onAppReady() }
+            } else if (isAppReady && isStartupScreenHeldUntilAppReady) {
+                // Outside the launch screen's own block, which leaves the composition - and cancels its effects - the
+                // moment the app is uncovered. The two frames are there for the reason given below: the composition
+                // without the launch screen has to be the one being drawn when the shell lets go, or Android's first
+                // frame would be the mark after all.
+                LaunchedEffect(Unit) {
+                    repeat(2) { withFrameNanos { } }
+                    onAppReady()
+                }
             }
             if (!isAppReady) {
                 val opacity = remember { Animatable(1f) }
@@ -265,8 +275,9 @@ fun CampfireApp(
                 // the whole of the startup - the first frame the window paints and the last one before the app - so it
                 // is worth leaving by opening into the app rather than by merely thinning out. The other three
                 // open on a startup screen of their own and never watch this one go: Android's splash and the web's
-                // loading page cover the fade entirely, and on iOS the mark is already the second thing shown - so
-                // there it stays the plain, quicker dissolve, and the extra frames are not spent.
+                // loading page are still over it when it goes, so there it does not fade at all, and on iOS the mark
+                // is already the second thing shown - so there it stays the plain, quicker dissolve, and the extra
+                // frames are not spent.
                 val markGrowth = if (isLaunchScreenWholeStartup) LAUNCH_MARK_EXIT_GROWTH else 0f
                 LaunchScreen(
                     modifier = Modifier.graphicsLayer { alpha = opacity.value.coerceIn(0f, 1f) },
@@ -282,15 +293,22 @@ fun CampfireApp(
                 val areDrawablesLoaded = areDrawablesLoaded()
                 LaunchedEffect(arePreferencesLoaded, hasLibraryToShow, isThemeSettled, areDrawablesLoaded) {
                     if (arePreferencesLoaded && hasLibraryToShow && isThemeSettled && areDrawablesLoaded) {
-                        // Two frames rather than one, because withFrameNanos resumes while the frame it belongs to
-                        // is still being assembled: the frame after it is the first one that is certainly drawn.
-                        repeat(2) { withFrameNanos { } }
-                        opacity.animateTo(0f, fadeSpec)
-                        isAppReady = true
-                        viewModel.hasShownApp = true
-                        // Only now, so that the shells holding a startup screen of their own hand over to the app
-                        // itself rather than to the last frames of a mark fading off it.
-                        onAppReady()
+                        if (isStartupScreenHeldUntilAppReady) {
+                            // Nothing under the shell's own startup screen is seen, so the fade would only hold the
+                            // app back: the app is uncovered at once, and the effect below lets the shell go.
+                            isAppReady = true
+                            viewModel.hasShownApp = true
+                        } else {
+                            // Two frames rather than one, because withFrameNanos resumes while the frame it belongs
+                            // to is still being assembled: the frame after it is the first one that is certainly drawn.
+                            repeat(2) { withFrameNanos { } }
+                            opacity.animateTo(0f, fadeSpec)
+                            isAppReady = true
+                            viewModel.hasShownApp = true
+                            // Only now, so that the shells holding a startup screen of their own hand over to the app
+                            // itself rather than to the last frames of a mark fading off it.
+                            onAppReady()
+                        }
                     }
                 }
             }

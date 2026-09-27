@@ -27,6 +27,14 @@ internal expect val isDesktopPlatform: Boolean
  */
 internal expect val isLaunchScreenWholeStartup: Boolean
 
+/**
+ * Whether a startup screen of the platform's own stays over the app until `onAppReady` - the Android activity's
+ * pre-draw gate, the web page's loading screen - so that nothing the launch screen does is ever seen. False on iOS,
+ * whose storyboard the system removes at the first frame, and on the desktop, where the launch screen is the whole
+ * startup.
+ */
+internal expect val isStartupScreenHeldUntilAppReady: Boolean
+
 /** Whether the library is a folder the user can reach from outside the app, and so edit behind its back. */
 internal expect val isLibraryEditableOutsideApp: Boolean
 

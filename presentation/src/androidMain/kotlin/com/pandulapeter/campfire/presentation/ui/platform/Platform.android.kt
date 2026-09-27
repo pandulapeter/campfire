@@ -15,6 +15,8 @@ internal actual val isDesktopPlatform = false
 
 internal actual val isLaunchScreenWholeStartup = false
 
+internal actual val isStartupScreenHeldUntilAppReady = true
+
 // The files live in the app's private storage, which no file manager will show.
 internal actual val isLibraryEditableOutsideApp = false
 

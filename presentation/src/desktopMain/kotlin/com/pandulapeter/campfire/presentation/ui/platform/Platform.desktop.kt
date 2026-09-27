@@ -16,6 +16,8 @@ internal actual val isDesktopPlatform = true
 
 internal actual val isLaunchScreenWholeStartup = true
 
+internal actual val isStartupScreenHeldUntilAppReady = false
+
 // The library is in the platform's application data folder, which the user can open and edit files in.
 internal actual val isLibraryEditableOutsideApp = true
 
