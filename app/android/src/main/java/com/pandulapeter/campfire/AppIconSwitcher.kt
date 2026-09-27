@@ -33,23 +33,40 @@ import com.pandulapeter.campfire.presentation.ui.platform.appIconColor
  *
  * The System color is the one [appIconColor] has no file for everywhere else, and has a launcher icon of its own here:
  * its background is the wallpaper's accent color (`values-v31`), from the same Android version that offers the option.
+ *
+ * The switch is asked for on every composition and every stop, so the color this process last applied in full is
+ * remembered and asks the package manager nothing; the first call of a process still reads the real state once.
  */
 internal object AppIconSwitcher {
+
+    /**
+     * The color whose launcher entry this process has already made the only enabled one, so that the switch asked for
+     * on every composition and every stop costs nothing when the icon is already right. Only ever written after the whole
+     * switch has been carried out (or found to be unnecessary for the app's own icon), never on the early return that
+     * leaves the first switch for the user's way out.
+     */
+    private var appliedTarget: UserPreferences.ThemeColor? = null
 
     /**
      * @param isLeaving Whether the user is on the way out of the app. Only the first switch waits for that, since it
      *   is the one that closes the task the user is in.
      */
     fun apply(context: Context, themeColor: UserPreferences.ThemeColor, isLeaving: Boolean) {
-        val packageManager = context.packageManager
         val target = if (themeColor == UserPreferences.ThemeColor.SYSTEM && Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
             themeColor
         } else {
             themeColor.appIconColor
         }
+        if (target == appliedTarget) return
+        val packageManager = context.packageManager
         val initialEntry = component(context, INITIAL_ENTRY)
         val hasNeverSwitched = packageManager.getComponentEnabledSetting(initialEntry) == PackageManager.COMPONENT_ENABLED_STATE_DEFAULT
-        if (hasNeverSwitched && (target == UserPreferences.ThemeColor.CAMPFIRE || !isLeaving)) return
+        if (hasNeverSwitched && target == UserPreferences.ThemeColor.CAMPFIRE) {
+            // The manifest's own entry is already the one of the app's own color.
+            appliedTarget = target
+            return
+        }
+        if (hasNeverSwitched && !isLeaving) return
         // The new entry is enabled before anything is disabled, so that there is never a moment in which the app has no
         // launcher entry at all - a launcher that looks then would take the app for one that cannot be opened.
         ENTRIES.entries.sortedByDescending { (color, _) -> color == target }.forEach { (color, name) ->
@@ -59,6 +76,7 @@ internal object AppIconSwitcher {
             )
         }
         packageManager.setState(component = initialEntry, state = PackageManager.COMPONENT_ENABLED_STATE_DISABLED)
+        appliedTarget = target
     }
 
     private fun PackageManager.setState(component: ComponentName, state: Int) {
