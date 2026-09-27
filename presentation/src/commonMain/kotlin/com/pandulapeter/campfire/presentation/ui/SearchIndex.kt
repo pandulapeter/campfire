@@ -59,12 +59,11 @@ internal class SongSearchIndex(private val normalize: (String) -> String) {
         return SongSearchSnapshot(filtered, byFileName, songsByFileName)
     }
 
-    private fun index(song: Song, previous: SearchableSong?): SearchableSong = if (
-        previous != null && previous.song.title == song.title && previous.song.artist == song.artist && previous.song.tags == song.tags
-    ) {
-        previous.copy(song = song)
-    } else {
-        SearchableSong(
+    private fun index(song: Song, previous: SearchableSong?): SearchableSong = when {
+        previous?.song === song -> previous
+        previous != null && previous.song.title == song.title && previous.song.artist == song.artist && previous.song.tags == song.tags ->
+            previous.copy(song = song)
+        else -> SearchableSong(
             song = song,
             title = normalize(song.title),
             artist = normalize(song.artist),

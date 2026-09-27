@@ -94,6 +94,7 @@ import com.pandulapeter.campfire.presentation.ui.platform.requestLibraryPersiste
 import com.pandulapeter.campfire.presentation.ui.screens.settings.SettingsTab
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CompletableDeferred
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.FlowPreview
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.NonCancellable
@@ -113,6 +114,7 @@ import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.filterNotNull
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.flow
+import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.runningFold
 import kotlinx.coroutines.flow.stateIn
@@ -553,11 +555,17 @@ class CampfireViewModel(
      * to lowercase the way the filters count them, so two spellings of one word are one tag here too.
      */
     val labelsOnEverySong = allSongs.map { songs ->
-        LabelsOnEverySong(
-            tags = songs.map { song -> song.tags.map { it.lowercase() }.toSet() }.reduceOrNull { a, b -> a intersect b }.orEmpty(),
-            languages = songs.map { it.languages.toSet() }.reduceOrNull { a, b -> a intersect b }.orEmpty(),
-        )
-    }.asState(LabelsOnEverySong())
+        // Folded one song at a time, stopping at the first song that leaves both empty, which in most libraries is the
+        // second one.
+        var tags: Set<String>? = null
+        var languages: Set<String>? = null
+        for (song in songs) {
+            if (tags?.isEmpty() != true) song.tags.mapTo(HashSet()) { it.lowercase() }.let { tags = tags?.intersect(it) ?: it }
+            if (languages?.isEmpty() != true) song.languages.toSet().let { languages = languages?.intersect(it) ?: it }
+            if (tags?.isEmpty() == true && languages?.isEmpty() == true) break
+        }
+        LabelsOnEverySong(tags = tags.orEmpty(), languages = languages.orEmpty())
+    }.flowOn(Dispatchers.Default).asState(LabelsOnEverySong())
 
     /**
      * Every tag the library uses, most used first, as both the filter controls and the suggestions of the tag
@@ -598,7 +606,8 @@ class CampfireViewModel(
      * text did not change keeping what it was folded to.
      *
      * Distinct, because [screenData] also emits for every write to a setlist with the songs exactly as they were, and
-     * each of those would otherwise have the whole library indexed again for nothing.
+     * each of those would otherwise have the whole library indexed again for nothing. Built on [Dispatchers.Default],
+     * as the domain layer builds [screenData], since a whole library is too much to fold between two frames.
      */
     private val songSearchIndex = SongSearchIndex { normalizeSearchText(it) }
     private val indexedSongs = screenData.map { state ->
@@ -609,7 +618,7 @@ class CampfireViewModel(
         )
     }.distinctUntilChanged().map { input ->
         IndexedSongs(input.sections, songSearchIndex.update(input.all, input.filtered))
-    }.asState(IndexedSongs(emptyList(), SongSearchSnapshot.Empty))
+    }.flowOn(Dispatchers.Default).asState(IndexedSongs(emptyList(), SongSearchSnapshot.Empty))
 
     /** Shared file-name lookup for screens that resolve songs from a destination or a setlist. */
     val songsByFileName = indexedSongs.map { it.search.songsByFileName }.asState(emptyMap())
@@ -642,7 +651,7 @@ class CampfireViewModel(
             // look empty to whoever decides between the list and a placeholder, not like a list with one section.
             rankSongs(indexed.search.filtered, normalizeSearchText(query)).takeIf { it.isNotEmpty() }?.let { listOf(SongGroup(header = null, songs = it)) }.orEmpty()
         }
-    }.asState(emptyList())
+    }.flowOn(Dispatchers.Default).asState(emptyList())
 
     /** True while an import is running, which the screens that can start one show as a progress bar. */
     private val _isImporting = MutableStateFlow(false)
@@ -714,7 +723,7 @@ class CampfireViewModel(
                 },
             )
         }
-    }.asState(emptyList())
+    }.flowOn(Dispatchers.Default).asState(emptyList())
 
     /**
      * The setlists as the screen lists them, narrowed by its search: a setlist answers it by what it says about
@@ -730,7 +739,7 @@ class CampfireViewModel(
             val normalizedQuery = normalizeSearchText(query)
             setlists.filter { it.setlist.matchesSearch(normalizedQuery = normalizedQuery, songs = indexed.search.byFileName) }
         }
-    }.asState(emptyList())
+    }.flowOn(Dispatchers.Default).asState(emptyList())
 
     /**
      * What the setlists screen shows instead of setlists, null while it has some. Same reasoning as
@@ -2286,7 +2295,8 @@ class CampfireViewModel(
      *
      * What it costs is that the states doing real work - normalizing every title, artist and tag, grouping the song list,
      * matching the setlists against the library - also do it for changes to the library made while their screen is not
-     * showing, which is work those screens would otherwise do the moment they were opened.
+     * showing, which is work those screens would otherwise do the moment they were opened. Those states do it on
+     * [Dispatchers.Default] (a `flowOn` before this), since [viewModelScope] would otherwise run it on the main thread.
      */
     private fun <T> Flow<T>.asState(initialValue: T) = distinctUntilChanged().stateIn(
         scope = viewModelScope,

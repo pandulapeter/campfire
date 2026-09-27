@@ -40,6 +40,13 @@ class SearchIndexTest {
         assertEquals(5, calls)
         assertEquals(listOf(second, first), initial.filtered.map { it.song })
 
+        val unchanged = index.update(listOf(first, second), listOf(second, first))
+        assertEquals(5, calls)
+        assertSame(initial.byFileName.getValue("first.cho"), unchanged.byFileName.getValue("first.cho"))
+        assertSame(initial.byFileName.getValue("second.cho"), unchanged.byFileName.getValue("second.cho"))
+        assertSame(initial.filtered[0], unchanged.filtered[0])
+        assertSame(initial.filtered[1], unchanged.filtered[1])
+
         val metadataEdit = first.copy(size = 100L, key = "C")
         val reused = index.update(listOf(metadataEdit, second), listOf(metadataEdit))
         assertEquals(5, calls)
