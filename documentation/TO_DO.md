@@ -8,8 +8,6 @@
  * https://mozilla.org/MPL/2.0/.
 -->
 # To do
-- Song details screen scroll should snap to rows
-- .cho file association doesn't work on Samsung devices
 - Sort and Filter UI should be improved (better animations)
 - Haptic effects
 - Optional close confirmation dialog on supported platforms

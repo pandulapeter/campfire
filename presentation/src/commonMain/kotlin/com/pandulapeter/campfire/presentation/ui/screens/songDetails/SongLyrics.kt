@@ -146,6 +146,9 @@ import kotlin.math.roundToInt
  * [SongSectionContent]), which are saved per song, and [onFoldToggled] is handed each key a fold toggles to save it.
  * Null where nothing folds, which is the editor's preview: it is there to show what is being written, and a section
  * folded on the details screen would hide the lines being typed into it.
+ * @param onDividersPlaced Handed the y position of every divider between the rows of the horizontal flow, measured
+ * from the top of this composable's content, every time they are placed. The song details screen snaps its scroll to
+ * them.
  */
 @OptIn(ExperimentalSharedTransitionApi::class)
 @Composable
@@ -162,6 +165,7 @@ internal fun SongLyrics(
     onAddTag: (() -> Unit)? = null,
     onRemoveTag: ((String) -> Unit)? = null,
     onEditLanguages: (() -> Unit)? = null,
+    onDividersPlaced: ((dividerTops: List<Int>) -> Unit)? = null,
 ) {
     // The fallback labels of the environments that have one; everything else is named by the file itself.
     val defaultLabels = DefaultSectionLabels(
@@ -248,6 +252,7 @@ internal fun SongLyrics(
                 isHorizontalFlow = isHorizontalFlow,
                 sectionAnimations = sectionAnimations,
                 sectionMeasurements = sectionMeasurements,
+                onDividersPlaced = { dividerTops -> onDividersPlaced?.invoke(dividerTops.map { headerHeight + it }) },
             ) {
                 sections.forEachIndexed { index, section ->
                     // A section the layout found too tall is measured in full only once this is off it: see maxAnimatedSectionHeight.
@@ -1160,6 +1165,8 @@ private fun TextStyle.scaled(scale: Float) = copy(
  * The layout is measured on every frame of a navigation transition and of a window being resized, so what the search
  * finds is kept in [sectionMeasurements]: the intrinsic height of every section at every width it was asked about,
  * and the grid decided for the last settled width, which is the same on every frame of a transition.
+ *
+ * [onDividersPlaced] is handed the y positions of the dividers between the rows every time the layout is measured.
  */
 @Composable
 private fun SongSectionsLayout(
@@ -1176,6 +1183,7 @@ private fun SongSectionsLayout(
     isHorizontalFlow: Boolean,
     sectionAnimations: List<SectionAnimation>,
     sectionMeasurements: SectionMeasurements,
+    onDividersPlaced: (dividerTops: List<Int>) -> Unit,
     content: @Composable () -> Unit,
 ) = Layout(
     modifier = modifier,
@@ -1290,6 +1298,7 @@ private fun SongSectionsLayout(
     // above and below it instead of floating in the middle of the screen. A song of nothing but single columns has no
     // other rows to line up with, and is centered as a whole.
     val rowStarts = IntArray(columnWidths.size) { row -> if (grid.columnCounts[row] == 1) contentStart else centeredRowStarts[row] }
+    onDividersPlaced(arrangement.dividerTops)
     val dividers = arrangement.dividerTops.take(dividerMeasurables.size).mapIndexed { index, top ->
         val placeable = dividerMeasurables[index].measure(Constraints(minWidth = contentWidth, maxWidth = contentWidth))
         placeable to IntOffset(x = contentStart, y = top - placeable.height / 2)

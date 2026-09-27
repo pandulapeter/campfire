@@ -61,6 +61,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.keepScreenOn
 import androidx.compose.ui.layout.layout
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
@@ -610,6 +611,8 @@ private fun SongDetailsPage(
             return@AnimatedContent
         }
         val topPadding = 8.dp
+        val topPaddingPx = with(LocalDensity.current) { topPadding.roundToPx() }
+        val flingBehavior = rememberRowSnapFlingBehavior(scrollState)
         val bottomPadding = contentPadding.calculateBottomPadding() + 32.dp
         // The lyrics scroll, so they need to be told from the outside how much room there is for them without
         // scrolling: that is what decides how many columns they are flowed into.
@@ -620,7 +623,7 @@ private fun SongDetailsPage(
                 modifier = Modifier
                     .fillMaxSize()
                     .fadingTopEdge(scrollState)
-                    .verticalScroll(scrollState)
+                    .verticalScroll(state = scrollState, flingBehavior = flingBehavior)
                     .padding(
                         start = contentPadding.calculateStartPadding(layoutDirection) + 16.dp,
                         end = contentPadding.calculateEndPadding(layoutDirection) + 16.dp,
@@ -639,6 +642,9 @@ private fun SongDetailsPage(
                 onAddTag = onAddTag,
                 onRemoveTag = onRemoveTag,
                 onEditLanguages = onEditLanguages,
+                // The padding is inside the scroll, so a divider is at the top of the viewport once the song is
+                // scrolled by its position plus the padding above it.
+                onDividersPlaced = { dividerTops -> flingBehavior.dividerOffsets = dividerTops.map { it + topPaddingPx } },
             )
         }
     }
