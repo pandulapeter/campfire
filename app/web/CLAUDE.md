@@ -18,11 +18,13 @@ direction.
   icon, the name and a **determinate** progress bar, on the same background the first composed frame paints (the
   `CampfireColorSchemes` palettes, picked by `prefers-color-scheme`), because the binaries are sixteen megabytes and
   an empty page for that long looks broken. The bar is real: an inline script wraps `fetch` before `campfire.js`
-  runs and reads the `.wasm` bodies through a counting stream, against the total the build wrote into the page (see
-  the build manifest below). The headers are carried over to the replacement response, so it still says
-  `application/wasm` and `WebAssembly.instantiateStreaming` keeps compiling as it downloads. The download owns the
-  first 92% and the rest is a decay that only ends when Kotlin calls `window.campfireReady()`; `campfire.js` itself
-  is loaded by a script the page adds once it holds the `campfire-library` Web Lock, which can report no progress,
+  runs and counts the `.wasm` bodies on a clone of each response, against the total the build wrote into the page
+  (see the build manifest below). The response itself goes back untouched, since its URL and its HTTP cache entry
+  are what let `WebAssembly.instantiateStreaming` keep compiling as it downloads and let Chromium keep the compiled
+  code for the next visit — a response built around a stream has neither, so both binaries would be compiled
+  from scratch on every visit. The download owns the first 92% and the rest is a decay that only ends when Kotlin
+  calls `window.campfireReady()`; `campfire.js` itself is loaded by a script the page adds once it holds the
+  `campfire-library` Web Lock, which can report no progress,
   but it is 3% of a cold start. The lock is held by a promise that never settles, so one tab owns the library; a
   second gets a localized "already open" page with a Retry button that asks again in place, preserving an OAuth
   answer in the address bar. A page restored from the back/forward cache reclaims the lock in `pageshow`, and the

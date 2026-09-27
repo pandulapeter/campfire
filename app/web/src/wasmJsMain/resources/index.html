@@ -378,9 +378,10 @@
         }
 
         /**
-         * Counts the bytes of the .wasm downloads by handing their body back as a stream that is read
-         * through. The headers are carried over to the replacement response, so it still says
-         * application/wasm and WebAssembly.instantiateStreaming keeps compiling as it downloads.
+         * Counts the bytes of the .wasm downloads by reading a clone of each response. The response
+         * itself is handed back untouched, with its URL and its place in the HTTP cache: that is what
+         * lets WebAssembly.instantiateStreaming compile as it downloads, and what lets the browser keep
+         * the compiled code for the next visit.
          */
         /**
          * Stops the bar where it is and says so. A download that failed, or a script that threw before
@@ -457,31 +458,26 @@
                     // hence the clamp in target().
                     expected += parseInt(result.headers.get('content-length'), 10) || 0;
                 }
-                var reader = result.body.getReader();
-                var stream = new ReadableStream({
-                    pull: function (controller) {
-                        return reader.read().then(function (chunk) {
-                            if (chunk.done) {
-                                pending--;
-                                completed++;
-                                controller.close();
-                            } else {
-                                received += chunk.value.byteLength;
-                                controller.enqueue(chunk.value);
-                            }
-                            schedule();
-                        });
-                    },
-                    cancel: function (reason) {
+                // Counted on a copy: the response itself goes to instantiateStreaming as the network handed it
+                // over, with its URL and its place in the HTTP cache, which is what lets the browser keep the
+                // compiled code for next time.
+                var reader = result.clone().body.getReader();
+                (function pump() {
+                    reader.read().then(function (chunk) {
+                        if (chunk.done) {
+                            pending--;
+                            completed++;
+                        } else {
+                            received += chunk.value.byteLength;
+                            pump();
+                        }
+                        schedule();
+                    }, function () {
                         pending--;
-                        return reader.cancel(reason);
-                    }
-                });
-                return new Response(stream, {
-                    status: result.status,
-                    statusText: result.statusText,
-                    headers: result.headers
-                });
+                        schedule();
+                    });
+                })();
+                return result;
             }, function (error) {
                 pending--;
                 showFailure();
