@@ -396,6 +396,9 @@ private fun SongList(
                     val key = remember(song.key, song.transpose, transposition, chordSpelling) {
                         viewModel.renderKey(song, transposition, chordSpelling)
                     }
+                    // Worked out here rather than inside the row's actions, so that they capture what changes for this row
+                    // alone rather than the set that is new on every write to any setlist.
+                    val isInSetlist = song.fileName in songFileNamesInSetlists
                     // The placement animation changes as a scroll starts and ends, so it goes on a box of its own: on
                     // the row, it would be a new modifier each time, and the whole row would be composed again with it.
                     Box(modifier = listItemAnimation(listState, hasLoadedLibrary)) {
@@ -443,7 +446,7 @@ private fun SongList(
                                         SetlistAssignmentsButton(
                                             viewModel = viewModel,
                                             song = song,
-                                            isInSetlist = song.fileName in songFileNamesInSetlists,
+                                            isInSetlist = isInSetlist,
                                         )
                                         SongActionsButton(
                                             state = actionsMenuState,
