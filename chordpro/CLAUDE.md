@@ -118,7 +118,9 @@ in `:domain:*`. `:data:source:local:implementation` uses it directly for the met
   of what the file says about itself; `insert` answers with the one offset it belongs at instead, the line to write
   there and where the caret then goes, so that nothing already written is moved or reformatted. `declaredMetadata`
   is the other half of that: what the song already declares, counted by directive and not by value, so that a
-  `{title: }` waiting to be typed into is a title. `repeatableMetadata` is the pair a song may say twice — its tags
+  `{title: }` waiting to be typed into is a title, and `DeclaredMetadataCache` is its incremental form, which an editor
+  calls on every keystroke: it counts again only when the edit changes what a line declares, and is always equal to
+  `declaredMetadata`. `repeatableMetadata` is the pair a song may say twice — its tags
   and its languages — and everything else is a thing a song can only be one of, which is what lets an editor stop
   offering it.
 - `ChordProSplitter` — splits a file that holds several songs at `{new_song}` / `{ns}`, trimming the blank lines around

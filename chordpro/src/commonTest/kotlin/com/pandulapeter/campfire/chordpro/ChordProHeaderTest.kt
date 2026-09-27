@@ -9,6 +9,7 @@
  */
 package com.pandulapeter.campfire.chordpro
 
+import kotlin.random.Random
 import kotlin.test.Test
 import kotlin.test.assertEquals
 
@@ -141,6 +142,48 @@ class ChordProHeaderTest {
     @Test
     fun `the tags and the languages of a song are the repeatable directives`() {
         assertEquals(setOf("tag", "language"), ChordProHeader.repeatableMetadata)
+    }
+
+    @Test
+    fun `random typing always matches the declared metadata of the whole text`() {
+        val random = Random(seed = 13)
+        val alphabet = "{}:  titleyarkgbx"
+        repeat(20) {
+            val cache = ChordProHeader.DeclaredMetadataCache()
+            var text = "{title: Song}\n{artist: Singer}\n{key: Am}\n\n[Am]First line of the [C]verse\nSecond line\n{tag: Folk}\nEnd"
+            var cursor = text.length
+            repeat(300) {
+                if (random.nextInt(20) == 0) cursor = random.nextInt(text.length + 1)
+                if (cursor > 0 && random.nextInt(4) == 0) {
+                    text = text.removeRange(cursor - 1, cursor)
+                    cursor--
+                } else {
+                    text = text.substring(0, cursor) + when (random.nextInt(30)) {
+                        0 -> '\n'
+                        1 -> '\r'
+                        else -> alphabet.random(random)
+                    } + text.substring(cursor)
+                    cursor++
+                }
+                assertEquals(ChordProHeader.declaredMetadata(text), cache.declaredMetadataOf(text), text)
+            }
+        }
+    }
+
+    @Test
+    fun `an edit between the two halves of a CRLF matches the declared metadata of the whole text`() {
+        val cache = ChordProHeader.DeclaredMetadataCache()
+        listOf("{title: T}\r\n{year: 1}", "{title: T}\rx\n{year: 1}", "{title: T}\r\n{year: 1}").forEach { text ->
+            assertEquals(ChordProHeader.declaredMetadata(text), cache.declaredMetadataOf(text), text)
+        }
+    }
+
+    @Test
+    fun `completing and breaking a directive changes the declared metadata`() {
+        val cache = ChordProHeader.DeclaredMetadataCache()
+        assertEquals(setOf("title"), cache.declaredMetadataOf("{title: T}\n{year: 1970"))
+        assertEquals(setOf("title", "year"), cache.declaredMetadataOf("{title: T}\n{year: 1970}"))
+        assertEquals(setOf("title"), cache.declaredMetadataOf("{title: T}\nyear: 1970}"))
     }
 
     private fun String.insert(name: String, prefix: String = "{$name: ", suffix: String = "}"): String {

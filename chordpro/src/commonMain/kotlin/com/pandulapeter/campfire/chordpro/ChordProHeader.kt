@@ -43,6 +43,54 @@ object ChordProHeader {
         .mapNotNullTo(mutableSetOf()) { line -> ChordProSyntax.matchDirective(line.trim())?.let(ChordProSyntax::metadataKind) }
 
     /**
+     * [declaredMetadata] for a text that is edited one keystroke at a time, which is how the editor's toolbar keeps a
+     * directive typed by hand from being offered again; the answer is always equal to [declaredMetadata]'s.
+     *
+     * An edit that adds or removes no line break, and does not split or join a CRLF pair, changes the text of exactly
+     * one line, and the set can only change if that line's kind does: a keystroke in a lyric line or in a directive's
+     * value leaves it as it was, and returns the set it had. Anything else is counted again over the whole text, the
+     * keystroke that completes or breaks a directive included.
+     *
+     * One instance follows one text; it is not safe to share between threads.
+     */
+    class DeclaredMetadataCache {
+        private var previousText: String? = null
+        private var previous: Set<String> = emptySet()
+
+        /** The metadata directives [text] declares, equal to what [declaredMetadata] returns for it. */
+        fun declaredMetadataOf(text: String): Set<String> {
+            val oldText = previousText
+            if (oldText != null) {
+                if (text === oldText || text == oldText) return previous
+                val change = ChordProTextChange.between(oldText, text)
+                if (isWithinOneLine(oldText, text, change) && kindOfLineAt(oldText, change.oldStart) == kindOfLineAt(text, change.oldStart)) {
+                    previousText = text
+                    return previous
+                }
+            }
+            previous = declaredMetadata(text)
+            previousText = text
+            return previous
+        }
+
+        /** Neither side of [change] holds a line break, and it does not sit between the two halves of a CRLF. */
+        private fun isWithinOneLine(old: String, new: String, change: ChordProTextChange): Boolean {
+            for (offset in change.oldStart until change.oldEnd) if (old[offset] == '\r' || old[offset] == '\n') return false
+            for (offset in change.oldStart until change.newEnd) if (new[offset] == '\r' || new[offset] == '\n') return false
+            return !(change.oldStart > 0 && old[change.oldStart - 1] == '\r' && old.getOrNull(change.oldEnd) == '\n')
+        }
+
+        /** The metadata kind of the line around [offset], by the same rule [declaredMetadata] applies to every line. */
+        private fun kindOfLineAt(text: String, offset: Int): String? {
+            var start = offset
+            while (start > 0 && text[start - 1] != '\n' && text[start - 1] != '\r') start--
+            var end = offset
+            while (end < text.length && text[end] != '\n' && text[end] != '\r') end++
+            return ChordProSyntax.matchDirective(text.substring(start, end).trim())?.let(ChordProSyntax::metadataKind)
+        }
+    }
+
+    /**
      * Where a directive of kind [name] goes in [text], and what has to be written there: [prefix] and [suffix] are
      * the two halves of the directive as the caller spells it (`{title: ` and `}`), which is also what decides
      * where between them the caret ends up.

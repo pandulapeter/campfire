@@ -101,10 +101,12 @@ internal fun EditorToolbar(
     contentPadding: PaddingValues,
 ) {
     // What the song already says about itself follows the text rather than being read once, so that a directive
-    // typed by hand takes its button out of reach exactly as one inserted from the toolbar does. The derived state
-    // is what keeps that off the keystroke path: the set only changes when a directive is added or removed.
+    // typed by hand takes its button out of reach exactly as one inserted from the toolbar does. The cache is what
+    // keeps that off the keystroke path: only an edit that changes what a line declares counts the whole text again,
+    // and the derived state recomposes the toolbar only when the set itself changes.
+    val declaredMetadataCache = remember(text) { ChordProHeader.DeclaredMetadataCache() }
     val declaredMetadata by remember(text) {
-        derivedStateOf { ChordProHeader.declaredMetadata(text.value) }
+        derivedStateOf { declaredMetadataCache.declaredMetadataOf(text.value) }
     }
     Column(
         modifier = modifier.padding(bottom = TOOLBAR_PADDING),
