@@ -20,9 +20,7 @@ dependencies {
     implementation(project(":domain:api"))
     implementation(project(":presentation"))
     implementation(libs.androidx.activity.compose)
-    implementation(libs.androidx.appCompat)
     implementation(libs.androidx.browser)
-    implementation(libs.google.material)
     implementation(libs.koin.android)
 }
 

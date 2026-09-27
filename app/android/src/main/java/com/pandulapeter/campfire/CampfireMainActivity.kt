@@ -17,9 +17,9 @@ import android.os.Bundle
 import android.view.View
 import android.view.ViewTreeObserver
 import android.widget.Toast
+import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
-import androidx.appcompat.app.AppCompatActivity
 import androidx.browser.customtabs.CustomTabsIntent
 import androidx.core.content.ContextCompat
 import androidx.core.net.toUri
@@ -30,7 +30,7 @@ import com.pandulapeter.campfire.presentation.ui.CampfireAndroidApp
 import com.pandulapeter.campfire.presentation.ui.platform.SyncNotifier
 import com.pandulapeter.campfire.sync.CampfireSyncService
 
-class CampfireMainActivity : AppCompatActivity() {
+class CampfireMainActivity : ComponentActivity() {
 
     private var isAppReady = false
 

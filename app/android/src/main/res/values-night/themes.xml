@@ -10,8 +10,12 @@
 -->
 <resources xmlns:tools="http://schemas.android.com/tools">
 
-    <style name="Campfire" parent="Theme.Material3.DayNight.NoActionBar">
-        <item name="colorPrimary">@color/campfire</item>
+    <style name="Campfire" parent="android:Theme.Material.NoActionBar">
+        <item name="android:colorPrimary">@color/campfire</item>
+        <!-- The color of the starting window, of the splash screen behind the icon and of the frame drawn before the
+             preferences are read: the Material 3 background, spelled out, since the platform theme's own is a gray. -->
+        <item name="android:windowBackground">@color/campfire_window_background</item>
+        <item name="android:colorBackground">@color/campfire_window_background</item>
         <item name="android:statusBarColor">@android:color/transparent</item>
         <item name="android:navigationBarColor">@android:color/transparent</item>
         <item name="android:windowLightStatusBar">false</item>

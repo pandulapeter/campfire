@@ -10,12 +10,10 @@
 android-compileSdk = "37" # https://developer.android.com/tools/releases/platforms
 android-minSdk = "28"
 androidx-activity = "1.13.0" # https://developer.android.com/jetpack/androidx/releases/activity
-androidx-appCompat = "1.8.0" # https://developer.android.com/jetpack/androidx/releases/appcompat
 androidx-browser = "1.10.0" # https://developer.android.com/jetpack/androidx/releases/browser
 androidx-lifecycle = "2.11.0" # https://github.com/JetBrains/compose-multiplatform-core/releases (org.jetbrains.androidx.lifecycle)
 androidx-navigation3 = "1.1.1" # https://github.com/JetBrains/compose-multiplatform-core/releases (org.jetbrains.androidx.navigation3)
 compose-reorderable = "3.1.0" # https://github.com/Calvin-LL/Reorderable/releases
-google-material = "1.14.0" # https://github.com/material-components/material-components-android/releases
 google-playAppUpdate = "2.1.0" # https://developer.android.com/guide/playcore/in-app-updates
 gradle = "9.4.1" # https://developer.android.com/studio/releases/gradle-plugin
 hyperether-localization = "2.0.1" # https://github.com/hyperether/compose-multiplatform-localize/releases
@@ -34,7 +32,6 @@ ktor = "3.5.2" # https://github.com/ktorio/ktor/releases
 
 [libraries]
 androidx-activity-compose = { module = "androidx.activity:activity-compose", version.ref = "androidx-activity" }
-androidx-appCompat = { module = "androidx.appcompat:appcompat", version.ref = "androidx-appCompat" }
 androidx-browser = { module = "androidx.browser:browser", version.ref = "androidx-browser" }
 androidx-lifecycle-runtime-compose = { module = "org.jetbrains.androidx.lifecycle:lifecycle-runtime-compose", version.ref = "androidx-lifecycle" }
 androidx-lifecycle-viewmodel-compose = { module = "org.jetbrains.androidx.lifecycle:lifecycle-viewmodel-compose", version.ref = "androidx-lifecycle" }
@@ -47,7 +44,6 @@ compose-reorderable = { module = "sh.calvin.reorderable:reorderable", version.re
 compose-runtime = { module = "org.jetbrains.compose.runtime:runtime", version.ref = "jetbrains-compose" }
 compose-ui = { module = "org.jetbrains.compose.ui:ui", version.ref = "jetbrains-compose" }
 compose-ui-backhandler = { module = "org.jetbrains.compose.ui:ui-backhandler", version.ref = "jetbrains-compose" }
-google-material = { module = "com.google.android.material:material", version.ref = "google-material" }
 google-playAppUpdate = { module = "com.google.android.play:app-update", version.ref = "google-playAppUpdate" }
 gradle = { module = "com.android.tools.build:gradle", version.ref = "gradle" }
 jbr-api = { module = "org.jetbrains.runtime:jbr-api", version.ref = "jbr-api" }
