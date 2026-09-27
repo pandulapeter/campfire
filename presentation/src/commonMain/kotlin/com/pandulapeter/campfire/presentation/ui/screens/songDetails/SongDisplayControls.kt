@@ -190,6 +190,9 @@ internal fun FontScaleControls(
         modifier = modifier,
         isCompact = isCompact,
         value = value,
+        // The step the value is nearest to, so that a tap, a shortcut or a reset still cross-fades while a pinch, which
+        // changes the percentage on almost every frame, counts it up in place and cross-fades once per step at most.
+        valueKey = (fontScale / CampfireViewModel.FONT_SCALE_STEP).roundToInt(),
         isDefault = value == fontScaleLabel(CampfireViewModel.DEFAULT_FONT_SCALE),
         decreaseIcon = painterResource(Res.drawable.ic_text_decrease),
         decreaseLabel = stringResource(Res.string.song_details_text_size_decrease),
@@ -243,12 +246,15 @@ private fun fontScaleLabel(fontScale: Float) = "${(fontScale * 100).roundToInt()
  * look oversized: the song details screen's inline steppers and the editor's. On a touch screen the buttons still take a touch 48dp across, since Compose extends a small target's
  * touch area to the minimum touch target size; only their drawn size shrinks. The bottom sheet of a narrower window
  * keeps the full size.
+ * @param valueKey What decides whether a new [value] cross-fades in or replaces the old one in place: only a change
+ * of the key is animated.
  */
 @Composable
 private fun Stepper(
     modifier: Modifier = Modifier,
     isCompact: Boolean,
     value: String,
+    valueKey: Any = value,
     isDefault: Boolean,
     decreaseIcon: Painter,
     decreaseLabel: String,
@@ -284,6 +290,7 @@ private fun Stepper(
                 )
                 StepperValue(
                     value = value,
+                    valueKey = valueKey,
                     isDefault = isDefault,
                     resetLabel = resetLabel,
                     onReset = onReset,
@@ -327,6 +334,7 @@ private fun StepperButton(
 @Composable
 private fun StepperValue(
     value: String,
+    valueKey: Any,
     isDefault: Boolean,
     resetLabel: String?,
     onReset: (() -> Unit)?,
@@ -340,16 +348,17 @@ private fun StepperValue(
     val color = lerp(MaterialTheme.colorScheme.onSurface, MaterialTheme.colorScheme.primary, changedProgress)
     AnimatedContent(
         modifier = Modifier.fillMaxHeight(),
-        targetState = value,
+        targetState = StepperLabel(value = value, key = valueKey),
         transitionSpec = { fadeIn() togetherWith fadeOut() },
-    ) { currentValue ->
+        contentKey = { it.key },
+    ) { label ->
         Text(
             modifier = Modifier
                 .fillMaxHeight()
                 .clickable(enabled = !isDefault && onReset != null, onClickLabel = resetLabel) { onReset?.invoke() }
                 .widthIn(min = VALUE_MIN_WIDTH)
                 .wrapContentHeight(),
-            text = currentValue,
+            text = label.value,
             style = MaterialTheme.typography.labelLarge,
             textAlign = TextAlign.Center,
             fontWeight = FontWeight.Bold,
@@ -357,6 +366,12 @@ private fun StepperValue(
         )
     }
 }
+
+/** A stepper's value with the key that decides whether a change of it is animated, see [Stepper]. */
+private data class StepperLabel(
+    val value: String,
+    val key: Any,
+)
 
 private val DEFAULT_HEIGHT = 48.dp
 private val DEFAULT_BUTTON_WIDTH = 48.dp
