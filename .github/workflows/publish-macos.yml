@@ -252,6 +252,16 @@ jobs:
           fi
           xcrun altool --upload-app --type macos --file "$PACKAGE" --apiKey "$ASC_KEY_ID" --apiIssuer "$ASC_ISSUER_ID"
           echo "Uploaded ${{ steps.version.outputs.name }} (${{ steps.version.outputs.build }}). It appears in TestFlight once App Store Connect has processed it."
+      # App Store Connect checks the signature while it processes the build, so the certificate may only be revoked once
+      # that is over; submitting waits for it anyway.
+      - name: Wait for the build to be processed
+        if: ${{ !inputs.submit_for_review }}
+        env:
+          ASC_KEY_ID: ${{ secrets.APP_STORE_CONNECT_KEY_ID }}
+          ASC_ISSUER_ID: ${{ secrets.APP_STORE_CONNECT_ISSUER_ID }}
+        run: |
+          python3 .github/scripts/app_store_submission.py com.pandulapeter.campfire MAC_OS \
+            "${{ steps.version.outputs.name }}" "${{ steps.version.outputs.build }}"
       # Waits for App Store Connect to process the build, which can take half an hour, and submits it with the release's
       # notes as its "What's New", to be released as soon as it is approved (.github/scripts/app_store_submission.py).
       - name: Submit for review

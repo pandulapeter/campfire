@@ -381,8 +381,10 @@ uninstall and nothing else does.
     identities with `.github/scripts/app_store_signing.py`: a key generated on the runner, a certificate for it and the
     profiles that name it, created through the API into a keychain of the run's own, and revoked and deleted in an
     `always()` step at the end — exactly what the run created, recorded in a state file, and never anything made by
-    hand. Revoking a distribution certificate does not touch builds already in TestFlight or on the store, which Apple
-    signs again. It must never be used for a Developer ID certificate, whose revocation breaks every copy of an app
+    hand. The end is after App Store Connect has processed the build, which every run waits for whether or not it
+    submits: processing is where the signature is checked, and a certificate revoked before that gets the build
+    refused as an invalid binary (ITMS-90238). Revoking it afterwards does not touch builds already in TestFlight or on
+    the store, which Apple signs again. It must never be used for a Developer ID certificate, whose revocation breaks every copy of an app
     already downloaded.
   - `publish-android.yml` writes the keystore out of `ANDROID_KEYSTORE_BASE64`, builds `assembleRelease` signed with
     the other three `ANDROID_*` secrets and uploads it and its mapping file to the production track with

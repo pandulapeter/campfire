@@ -12,9 +12,11 @@ Signing identities that last one workflow run.
 Apple's distribution certificates expire after a year, and a certificate kept in a repository secret is a release that
 fails on the day it does. The App Store Connect API key does not expire, and an Admin key may create certificates and
 provisioning profiles - so a run makes its own: a private key that never leaves the runner, a certificate for it,
-the profiles that name that certificate, and revokes all of them once the build is uploaded. Revoking a distribution
-certificate does not touch what has already reached the App Store or TestFlight, which Apple signs again, so nothing
-but the run that made it ever depended on it. Never use this for a Developer ID certificate: an app signed outside
+the profiles that name that certificate, and revokes all of them once App Store Connect has processed the build - not
+as soon as it is uploaded, since processing is where the signature is checked, and a certificate revoked by then gets
+the build refused as an invalid binary. Revoking a distribution certificate does not touch what has already been
+processed into the App Store or TestFlight, which Apple signs again, so nothing but the run that made it ever depended
+on it. Never use this for a Developer ID certificate: an app signed outside
 the store is checked against it on every Mac that opens it, and revoking it breaks every copy already downloaded.
 
 Everything this creates is written into a state file first, and `cleanup` removes exactly that and nothing else, so an
