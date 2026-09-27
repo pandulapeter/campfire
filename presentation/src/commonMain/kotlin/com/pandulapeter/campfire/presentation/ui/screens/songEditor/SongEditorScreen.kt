@@ -848,10 +848,10 @@ private class EditorField(
  * background. The field's own saver also writes the undo history, in which every rewrite of the whole document (a
  * transposition, a revert) is the whole text twice, so a dozen taps on a long song add up to that megabyte.
  *
- * What this gives up is only ever wanted after a configuration change - a rotation restores through here as well -
- * and the view model lives through those, so the field itself is handed to it ([retain]) and taken back as it is,
- * undo history included and however long. A new process gets the text and the caret, or for a long document the
- * file.
+ * What this gives up is only ever wanted after a configuration change - a change of language or dark mode restores
+ * through here as well - and the view model lives through those, so the field itself is handed to it ([retain]) and
+ * taken back as it is, undo history included and however long. A new process gets the text and the caret, or for a
+ * long document the file.
  */
 private class EditorFieldSaver(
     private val retain: (TextFieldState) -> Unit,
