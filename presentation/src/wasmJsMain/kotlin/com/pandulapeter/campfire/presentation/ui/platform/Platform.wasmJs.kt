@@ -24,7 +24,7 @@ internal actual val isDesktopPlatform = !hasTouchScreen()
 internal actual val isLaunchScreenWholeStartup = false
 
 // The Origin Private File System is not reachable from outside the page.
-internal actual val libraryLocation: LibraryLocation? = null
+internal actual val isLibraryEditableOutsideApp = false
 
 // The page runs on every operating system and knows none of them well enough to pick a store, and it is served by
 // the project itself, with no store's rules to follow.

@@ -27,12 +27,8 @@ internal expect val isDesktopPlatform: Boolean
  */
 internal expect val isLaunchScreenWholeStartup: Boolean
 
-/**
- * Where the library's files can be found, or null where there is nothing the user could go and look at. It is a
- * value rather than a string so that the wording that needs translating stays in the string resources, while a path
- * (which does not) can be handed over as it is.
- */
-internal expect val libraryLocation: LibraryLocation?
+/** Whether the library is a folder the user can reach from outside the app, and so edit behind its back. */
+internal expect val isLibraryEditableOutsideApp: Boolean
 
 /** Which of the app's icons follows the theme color here (see [AppIconSurface]). */
 internal expect val appIconSurface: AppIconSurface
@@ -65,15 +61,6 @@ internal val canAskForDonations get() = platformStore?.isApple != true
  * pixels there - about a hundred for a notch - or in lines.
  */
 internal expect fun PointerEvent.verticalWheelNotches(): Float
-
-internal sealed interface LibraryLocation {
-
-    /** An absolute path, shown as it is. */
-    data class Folder(val path: String) : LibraryLocation
-
-    /** Somewhere only a sentence can describe, which the settings screen translates. */
-    data object FilesApp : LibraryLocation
-}
 
 /**
  * The app stores Campfire is published on.

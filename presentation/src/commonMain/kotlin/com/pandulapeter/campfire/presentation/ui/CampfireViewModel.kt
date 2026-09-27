@@ -240,6 +240,14 @@ class CampfireViewModel(
     internal var settingsTab by mutableStateOf(SettingsTab.GENERAL)
 
     /**
+     * Whether a way back out of the settings screen goes to its General tab rather than leaving it: the tabs are the
+     * first thing on the screen, and General is the one it opens on, so a Back from any other one is taken as a step back
+     * through them before it is a step back to the songs.
+     */
+    internal val isSettingsBackToGeneral
+        get() = backStack.lastOrNull() == CampfireDestination.Settings && settingsTab != SettingsTab.GENERAL
+
+    /**
      * The song each song details screen on the back stack has settled on, by [CampfireDestination.SongDetails.id]: the
      * pager is the screen's own, and its page is the one thing about where the user is that the destination does not
      * say. Reported by the screen, see [onSongDetailsPageSettled], and read by [navigationState].
@@ -1144,13 +1152,16 @@ class CampfireViewModel(
     /**
      * Every way out of a screen ends up here - the app bar's button, the system's back gesture and the desktop
      * window's Escape key - which is why this is where the editor's unsaved text is caught: nothing the user typed
-     * is thrown away without being asked about it first.
+     * is thrown away without being asked about it first, and why a settings tab other than General goes back to that
+     * one before the screen is left ([isSettingsBackToGeneral]).
      */
     fun navigateBack() {
-        if (hasUnsavedEditorChanges.value && backStack.lastOrNull() is CampfireDestination.SongEditor) {
-            showDialog(DialogType.UnsavedChanges)
-        } else {
-            popBackStack()
+        when {
+            hasUnsavedEditorChanges.value && backStack.lastOrNull() is CampfireDestination.SongEditor -> {
+                showDialog(DialogType.UnsavedChanges)
+            }
+            isSettingsBackToGeneral -> settingsTab = SettingsTab.GENERAL
+            else -> popBackStack()
         }
     }
 

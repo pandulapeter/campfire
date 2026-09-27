@@ -8,10 +8,6 @@
  * https://mozilla.org/MPL/2.0/.
 -->
 # To do
-- Downwards scroll dismissing the keyboard should work on every modal list
-- "Song assignments" bottom sheet: open keyboard automatically, hide it on downwards scroll
-- Back navigation on Settings should pop back to the General tab first
-- Tapping on the Song details screen app bar title should scroll to the top
 - Song details screen scroll should snap to rows
 - .cho file association doesn't work on Samsung devices
 - Sort and Filter UI should be improved (better animations)

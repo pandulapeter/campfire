@@ -16,14 +16,8 @@ internal actual val isDesktopPlatform = true
 
 internal actual val isLaunchScreenWholeStartup = true
 
-/**
- * The folder the songs and setlists are in, which on desktop is a folder the user can open and edit files in.
- *
- * The path is derived the same way the storage itself derives it; the two have to agree, so keep this in step with
- * `FileStorage.desktop.kt` in `:data:source:local:implementation` (`:presentation` cannot see that module, which
- * only the `:app:*` modules depend on).
- */
-internal actual val libraryLocation: LibraryLocation? = LibraryLocation.Folder(File(desktopDataDirectory(), LIBRARY_DIRECTORY).absolutePath)
+// The library is in the platform's application data folder, which the user can open and edit files in.
+internal actual val isLibraryEditableOutsideApp = true
 
 internal actual val appIconSurface = when {
     isMacOs -> AppIconSurface.DOCK
@@ -80,4 +74,3 @@ fun desktopDataDirectory(): File {
 
 private const val APPLICATION_NAME = "Campfire"
 private const val PACKAGE_FAMILY_NAME_PROPERTY = "campfire.packageFamilyName"
-private const val LIBRARY_DIRECTORY = "library"

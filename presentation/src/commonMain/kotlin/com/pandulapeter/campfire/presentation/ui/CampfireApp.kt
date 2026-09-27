@@ -143,7 +143,7 @@ import com.pandulapeter.campfire.presentation.ui.platform.LocalSyncNotifier
 import com.pandulapeter.campfire.presentation.ui.platform.SyncNotification
 import com.pandulapeter.campfire.presentation.ui.platform.areDrawablesLoaded
 import com.pandulapeter.campfire.presentation.ui.platform.isLaunchScreenWholeStartup
-import com.pandulapeter.campfire.presentation.ui.platform.libraryLocation
+import com.pandulapeter.campfire.presentation.ui.platform.isLibraryEditableOutsideApp
 import com.pandulapeter.campfire.presentation.ui.platform.withSyncCounts
 import com.pandulapeter.campfire.presentation.ui.screens.setlists.SetlistsScreen
 import com.pandulapeter.campfire.presentation.ui.screens.settings.SettingsScreen
@@ -189,7 +189,7 @@ fun CampfireApp(
     // and re-reading every song on each window focus would be cost with nothing to show for it.
     //
     // The first resume is the one that follows the initial load, and is skipped.
-    if (libraryLocation != null) {
+    if (isLibraryEditableOutsideApp) {
         var hasResumedBefore by remember { mutableStateOf(false) }
         LifecycleEventEffect(Lifecycle.Event.ON_RESUME) {
             if (hasResumedBefore) viewModel.refresh() else hasResumedBefore = true

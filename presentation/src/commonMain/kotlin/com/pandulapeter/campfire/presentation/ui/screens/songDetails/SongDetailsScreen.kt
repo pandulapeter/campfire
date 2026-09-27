@@ -21,6 +21,7 @@ import androidx.compose.animation.scaleOut
 import androidx.compose.animation.shrinkHorizontally
 import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.ScrollState
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.gestures.animateScrollBy
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -59,11 +60,13 @@ import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.keepScreenOn
+import androidx.compose.ui.layout.layout
 import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.offset
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.pandulapeter.campfire.chordpro.model.ChordProSong
 import com.pandulapeter.campfire.data.model.domain.Song
@@ -85,6 +88,7 @@ import com.pandulapeter.campfire.presentation.resources.song_details_empty
 import com.pandulapeter.campfire.presentation.resources.song_details_no_data
 import com.pandulapeter.campfire.presentation.resources.song_details_no_data_hint
 import com.pandulapeter.campfire.presentation.resources.song_details_previous_song
+import com.pandulapeter.campfire.presentation.resources.song_details_scroll_to_top
 import com.pandulapeter.campfire.presentation.resources.song_details_song_position
 import com.pandulapeter.campfire.presentation.ui.CampfireViewModel
 import com.pandulapeter.campfire.presentation.ui.components.CampfireTopAppBar
@@ -271,6 +275,11 @@ internal fun SongDetailsScreen(
             },
             title = {
                 AnimatedContent(
+                    modifier = Modifier.titleTouchTarget(
+                        isEnabled = currentSong != null,
+                        onClickLabel = stringResource(Res.string.song_details_scroll_to_top),
+                        onClick = { currentPageScrollState?.let { coroutineScope.launch { it.animateScrollTo(0) } } },
+                    ),
                     targetState = currentSong,
                     transitionSpec = { fadeIn() togetherWith fadeOut() },
                 ) { song ->
@@ -648,6 +657,38 @@ private suspend fun ScrollState.scrollByKeyStep(direction: Float) = animateScrol
 )
 
 /**
+ * The app bar's title as the touch target that scrolls the song back to its top, the way tapping the bar does on a
+ * phone. It is the whole of the bar that nothing else takes: as wide as the room the bar leaves the title and as tall
+ * as the bar, so that a tap anywhere on its empty part scrolls. The bar pads that room by [TITLE_TOUCH_HORIZONTAL_OUTSET]
+ * at either end and centers the title in its height, and the target reaches out over both while reporting only the room
+ * itself, so the bar lays out the back button, the title and the actions exactly as it would without it. The outset
+ * stops where the touch targets of the back button and the actions begin: the bar places the title after the back
+ * button, so a target reaching any further would take its presses from it. It draws no indication, since a press
+ * lighting up most of the bar reads as the bar itself reacting rather than as a button.
+ */
+private fun Modifier.titleTouchTarget(
+    isEnabled: Boolean,
+    onClickLabel: String,
+    onClick: () -> Unit,
+) = layout { measurable, constraints ->
+    val horizontalOutset = TITLE_TOUCH_HORIZONTAL_OUTSET.roundToPx()
+    val verticalOutset = TITLE_TOUCH_VERTICAL_OUTSET.roundToPx()
+    val placeable = measurable.measure(constraints.offset(horizontal = horizontalOutset * 2, vertical = verticalOutset * 2))
+    layout(placeable.width - horizontalOutset * 2, placeable.height - verticalOutset * 2) {
+        placeable.placeRelative(-horizontalOutset, -verticalOutset)
+    }
+}
+    .clickable(
+        interactionSource = null,
+        indication = null,
+        enabled = isEnabled,
+        onClickLabel = onClickLabel,
+        onClick = onClick,
+    )
+    .padding(horizontal = TITLE_TOUCH_HORIZONTAL_OUTSET, vertical = TITLE_TOUCH_VERTICAL_OUTSET)
+    .fillMaxWidth()
+
+/**
  * Previous and Next as steps from the page the last of them asked for, rather than from the page on screen:
  * `PagerState.currentPage` only moves once an animation is past halfway, and even `PagerState.targetPage` only once the
  * launched animation has started, so presses that come quicker than that would each ask for the same page. A request
@@ -724,5 +765,7 @@ private val APP_BAR_NAVIGATION_WIDTH = 52.dp // The 48dp button and the 4dp the 
 private val APP_BAR_END_PADDING = 4.dp
 private val APP_BAR_ACTION_WIDTH = 48.dp
 private val MIN_TITLE_WIDTH = 160.dp // About fifteen characters of a title, enough to tell one song from the next.
+private val TITLE_TOUCH_HORIZONTAL_OUTSET = 4.dp // The padding the bar puts around its title.
+private val TITLE_TOUCH_VERTICAL_OUTSET = 12.dp // From the two lines of title, 40dp, to the bar's 64dp.
 private const val KEY_SCROLL_STEP_FRACTION = 0.1f // Of the height of the scrolling viewport.
 private const val KEY_SCROLL_STEP_DURATION = 120

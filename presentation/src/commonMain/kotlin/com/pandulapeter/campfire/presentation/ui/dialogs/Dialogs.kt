@@ -165,6 +165,7 @@ import com.pandulapeter.campfire.presentation.ui.components.ActionListItem
 import com.pandulapeter.campfire.presentation.ui.components.CheckboxListItem
 import com.pandulapeter.campfire.presentation.ui.components.CHIP_GAP
 import com.pandulapeter.campfire.presentation.ui.components.CountedFilterChip
+import com.pandulapeter.campfire.presentation.ui.components.HideKeyboardWhenScrolledDown
 import com.pandulapeter.campfire.presentation.ui.components.MAX_SEARCH_QUERY_LENGTH
 import com.pandulapeter.campfire.presentation.ui.components.RadioListItem
 import com.pandulapeter.campfire.presentation.ui.components.SongFilters
@@ -683,7 +684,7 @@ private fun ConfirmationDialog(
  * The [FocusRequester] of the field a dialog opens onto. A dialog that is there to be typed into puts the caret in
  * its first field rather than asking for one more tap, which on a touch platform is also what brings the keyboard
  * up with it - and every dialog here that holds a text field holds it as the first thing under the title, so there
- * is only ever the one field to open on.
+ * is only ever the one field to open on. The song picker's sheet opens onto its search field the same way.
  */
 @Composable
 private fun rememberFirstFieldFocusRequester(): FocusRequester {
@@ -900,6 +901,7 @@ private fun AddSongTagDialog(
                         color = MaterialTheme.colorScheme.primary,
                     )
                     val scrollState = rememberScrollState()
+                    HideKeyboardWhenScrolledDown(scrollState)
                     TagFlowRow(
                         modifier = Modifier
                             .heightIn(max = MAX_SUGGESTIONS_HEIGHT)
@@ -1024,6 +1026,7 @@ private fun SongLanguagesDialog(
                     )
                 } else {
                     val listState = rememberLazyListState()
+                    HideKeyboardWhenScrolledDown(listState)
                     LazyColumn(
                         modifier = Modifier
                             .padding(top = 8.dp)
@@ -1238,6 +1241,7 @@ private fun SongPicker(
         onDismiss = { viewModel.dismissSheet(dialog) },
     ) { contentPadding ->
         PickerSearchField(
+            modifier = Modifier.focusRequester(rememberFirstFieldFocusRequester()),
             query = query,
             placeholder = stringResource(Res.string.songs_search),
             onQueryChange = { query = it },
@@ -1406,19 +1410,21 @@ private fun <T : Any> PickerFilterRow(
 }
 
 /**
- * The search field of a picker sheet. Unlike the field of a dialog it is not focused as the sheet opens: the list
- * under it is what the sheet is opened for, and on a touch platform the keyboard would cover half of that list
- * before anybody had decided to search it.
+ * The search field of a picker sheet. The setlist picker leaves it unfocused as the sheet opens, since the handful of
+ * setlists under it is what that sheet is opened for and is ticked by sight. The song picker opens with the caret in
+ * it, since a song is looked for in a library of hundreds by typing its name; the keyboard that comes up with it goes
+ * away again as soon as the list is scrolled down ([HideKeyboardWhenScrolledDown] in [PickerList]).
  */
 @Composable
 private fun PickerSearchField(
+    modifier: Modifier = Modifier,
     query: String,
     placeholder: String,
     onQueryChange: (String) -> Unit,
 ) {
     val keyboardController = LocalSoftwareKeyboardController.current
     OutlinedTextField(
-        modifier = Modifier.fillMaxWidth().padding(start = 16.dp, end = 16.dp, top = 8.dp),
+        modifier = modifier.fillMaxWidth().padding(start = 16.dp, end = 16.dp, top = 8.dp),
         value = query,
         onValueChange = { onQueryChange(it.replace("\n", "").take(MAX_SEARCH_QUERY_LENGTH)) },
         placeholder = { Text(placeholder) },
@@ -1471,6 +1477,7 @@ private fun ColumnScope.PickerList(
     val density = LocalDensity.current
     var tallestHeight by remember { mutableIntStateOf(0) }
     val listState = rememberLazyListState()
+    HideKeyboardWhenScrolledDown(listState)
     LazyColumn(
         modifier = Modifier
             .weight(1f, fill = false)

@@ -40,6 +40,9 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.unit.Dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.navigationevent.NavigationEventInfo
+import androidx.navigationevent.compose.NavigationBackHandler
+import androidx.navigationevent.compose.rememberNavigationEventState
 import com.pandulapeter.campfire.data.model.domain.SyncOutcome
 import com.pandulapeter.campfire.data.model.domain.SyncState
 import com.pandulapeter.campfire.data.model.domain.UserPreferences
@@ -94,8 +97,6 @@ import com.pandulapeter.campfire.presentation.resources.settings_horizontal_sect
 import com.pandulapeter.campfire.presentation.resources.settings_horizontal_section_flow_description
 import com.pandulapeter.campfire.presentation.resources.settings_import
 import com.pandulapeter.campfire.presentation.resources.settings_library
-import com.pandulapeter.campfire.presentation.resources.settings_library_location
-import com.pandulapeter.campfire.presentation.resources.settings_library_location_files_app
 import com.pandulapeter.campfire.presentation.resources.settings_library_size
 import com.pandulapeter.campfire.presentation.resources.settings_library_size_bytes
 import com.pandulapeter.campfire.presentation.resources.settings_library_size_decimal_separator
@@ -143,12 +144,10 @@ import com.pandulapeter.campfire.presentation.ui.components.rememberRetainedScro
 import com.pandulapeter.campfire.presentation.ui.navigation.CampfireDestination
 import com.pandulapeter.campfire.presentation.ui.platform.AppIconSurface
 import com.pandulapeter.campfire.presentation.ui.platform.Distribution
-import com.pandulapeter.campfire.presentation.ui.platform.LibraryLocation
 import com.pandulapeter.campfire.presentation.ui.platform.LibraryPersistence
 import com.pandulapeter.campfire.presentation.ui.platform.LocalFilePicker
 import com.pandulapeter.campfire.presentation.ui.platform.appIconSurface
 import com.pandulapeter.campfire.presentation.ui.platform.canAskForDonations
-import com.pandulapeter.campfire.presentation.ui.platform.libraryLocation
 import com.pandulapeter.campfire.presentation.ui.platform.platformStore
 import com.pandulapeter.campfire.presentation.ui.theme.CampfireColorScheme
 import com.pandulapeter.campfire.presentation.ui.theme.colorSchemePair
@@ -196,6 +195,14 @@ internal fun SettingsScreen(
             }
         }
     }
+    // Claims the gesture rather than leaving it to the back stack's handler, which would preview the screen giving way to
+    // the songs while the finger is still down and then only change the tab once it lifts. Registered whether or not
+    // it is enabled, since a handler that comes and goes changes the order the dispatcher picks between handlers in.
+    NavigationBackHandler(
+        state = rememberNavigationEventState(currentInfo = NavigationEventInfo.None),
+        isBackEnabled = viewModel.isSettingsBackToGeneral,
+        onBackCompleted = viewModel::navigateBack,
+    )
     val isImporting by viewModel.isImporting.collectAsStateWithLifecycle()
     val isPerformanceModeEnabled by viewModel.isPerformanceModeEnabled.collectAsStateWithLifecycle()
     val userPreferences by viewModel.userPreferences.collectAsStateWithLifecycle()
@@ -548,22 +555,8 @@ private fun LibrarySection(
             supportingContent = { Text(stringResource(Res.string.settings_library_size, formattedSize(summary.size))) },
         )
     }
-    libraryLocation?.let { location ->
-        ListItem(
-            colors = ListItemDefaults.colors(containerColor = Color.Transparent),
-            headlineContent = { Text(stringResource(Res.string.settings_library_location)) },
-            supportingContent = {
-                Text(
-                    when (location) {
-                        is LibraryLocation.Folder -> location.path
-                        LibraryLocation.FilesApp -> stringResource(Res.string.settings_library_location_files_app)
-                    }
-                )
-            },
-        )
-    }
     // Only where the answer is not a foregone conclusion, which is the web: the other three platforms keep the
-    // library in a file system of their own and have the location row above instead.
+    // library in a file system of their own.
     AnimatedSettingsRow(value = libraryPersistence.takeIf { it != LibraryPersistence.GUARANTEED }) { persistence ->
         ListItem(
             colors = ListItemDefaults.colors(containerColor = Color.Transparent),
