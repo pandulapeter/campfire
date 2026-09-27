@@ -48,7 +48,8 @@ holds the `@Module @ComponentScan object DataLocalSourceModule`, and every local
     song. OPFS has no such primitive. Where the browser has no `createWritable()` (Safari before 26, every browser on
     iOS 18), a write is handed to `app/web`'s `opfs-writer.js`, a dedicated worker, since `createSyncAccessHandle()`
     exists nowhere else: it is given the directory by its path segments and the content as bytes, text encoded as
-    UTF-8 on the way. Without `createWritable()`'s swap file a write is in place, so the worker keeps the previous
+    UTF-8 on the way. One worker serves the page, started by the first write that needs it, with its replies matched
+    to the writes by id; one that fails as a whole fails the writes waiting on it, and the next write starts another. Without `createWritable()`'s swap file a write is in place, so the worker keeps the previous
     content and puts it back when a write fails part of the way (see `app/web`). The OPFS storage
     resolves the three directory handles once and keeps them: walking down from the root is three promises, and
     nothing outside the page can remove a directory from the origin private file system.

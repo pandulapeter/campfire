@@ -83,7 +83,8 @@ direction.
   file to the new length first (a quota refusal then comes before anything is overwritten), writes until every byte is
   in, since `write()` may write fewer than it was given, and when a write still fails it puts the previous content back
   and fails the save; only if that fails too is the file left damaged, and the error says so. Not preloaded and not part
-  of the loading screen's byte count: it is only fetched by the first write that needs it.
+  of the loading screen's byte count: it is only fetched by the first write that needs it. One worker serves the page
+  for as long as it is open, answering each request with its `id`, which is what the page matches the replies by.
 
 The library lives in the **Origin Private File System**, so it is per-origin and per-browser: a user's songs do not
 follow them to another browser, and clearing site data deletes them. OPFS needs a secure context, which means `https`

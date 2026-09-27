@@ -340,6 +340,11 @@ private fun ByteArray.toLatin1JsString() = CharArray(size) { (this[it].toInt() a
  * since `createSyncAccessHandle()` exists nowhere else; it is given the directory by its path and the content as bytes.
  * Its address carries the version of the page's build (see `index.html` in `:app:web`), because a worker the browser
  * still had from another release would be handed requests in a shape it may not understand.
+ *
+ * One worker serves the page, started by the first write that needs it, and its replies are matched to the writes by
+ * their id: starting one per write fetched, parsed and started the script again for every song of an import. The worker
+ * queues the requests itself. One that fails as a whole fails every write waiting on it and is dropped, so that the
+ * next write starts a new one; being a global of the page, it never outlives the version that started it.
  */
 private fun writeFile(parent: JsAny, path: String, name: String, data: JsAny): Promise<JsAny?> = js(
     """(async function () {
@@ -353,12 +358,28 @@ private fun writeFile(parent: JsAny, path: String, name: String, data: JsAny): P
                 try { await writable.write(data); await writable.close(); }
                 catch (error) { try { await writable.abort(); } catch (ignored) { } throw error; }
             } else {
-                var worker = new Worker(window.campfireVersioned('opfs-writer.js'));
+                var writer = window.__campfireOpfsWriter;
+                if (!writer) {
+                    writer = window.__campfireOpfsWriter = { worker: new Worker(window.campfireVersioned('opfs-writer.js')), next: 1, pending: new Map() };
+                    writer.worker.onmessage = function (event) {
+                        var entry = writer.pending.get(event.data.id);
+                        if (!entry) return;
+                        writer.pending.delete(event.data.id);
+                        event.data.error ? entry.reject(Object.assign(new Error(event.data.message), { name: event.data.error })) : entry.resolve();
+                    };
+                    writer.worker.onerror = function (event) {
+                        var error = event.error || new Error(event.message);
+                        writer.pending.forEach(function (entry) { entry.reject(error); });
+                        writer.pending.clear();
+                        writer.worker.terminate();
+                        if (window.__campfireOpfsWriter === writer) window.__campfireOpfsWriter = null;
+                    };
+                }
+                var id = writer.next++;
                 await new Promise(function (resolve, reject) {
-                    worker.onmessage = function (event) { worker.terminate(); event.data.error ? reject(Object.assign(new Error(event.data.message), { name: event.data.error })) : resolve(); };
-                    worker.onerror = function (event) { worker.terminate(); reject(event.error || new Error(event.message)); };
+                    writer.pending.set(id, { resolve: resolve, reject: reject });
                     var bytes = typeof data === 'string' ? new TextEncoder().encode(data) : data;
-                    worker.postMessage({ id: 1, path: path.split('/'), name: name, data: bytes });
+                    writer.worker.postMessage({ id: id, path: path.split('/'), name: name, data: bytes });
                 });
             }
         } catch (error) { if (!existed) try { await parent.removeEntry(name); } catch (ignored) { } throw error; }
