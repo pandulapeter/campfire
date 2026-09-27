@@ -19,8 +19,11 @@ import com.pandulapeter.campfire.data.repository.api.ArchiveRepository
 import com.pandulapeter.campfire.data.repository.api.SetlistRepository
 import com.pandulapeter.campfire.data.repository.api.SongContentRepository
 import com.pandulapeter.campfire.data.repository.api.SongRepository
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.emptyFlow
+import kotlinx.coroutines.sync.Mutex
+import kotlinx.coroutines.sync.withLock
 import kotlinx.coroutines.test.runTest
 import kotlin.test.Test
 import kotlin.test.assertEquals
@@ -123,6 +126,18 @@ class ExportLibraryUseCaseImplTest {
         assertEquals(setOf("songs/a.cho", "setlists/x.setlist.json"), archive.packed.keys)
     }
 
+    @Test
+    fun `keeps the sorted order whichever song is read first`() = runTest {
+        val names = listOf("a", "b", "c", "d")
+        songContents.delays = names.withIndex().associate { (index, name) -> "$name.cho" to (names.size - index) * 100L }
+
+        val result = useCase(songs = names.map(::song), unreadable = setOf("a.cho", "c.cho")).invoke()
+
+        assertEquals(listOf("a.cho", "c.cho"), assertNotNull(result).skippedFileNames)
+        assertEquals(listOf("songs/b.cho", "songs/d.cho"), archive.packed.keys.toList())
+        assertEquals(listOf("d.cho", "c.cho", "b.cho", "a.cho"), songContents.reads)
+    }
+
     private fun useCase(
         songs: List<Song>?,
         setlists: List<Setlist>? = emptyList(),
@@ -153,12 +168,16 @@ class ExportLibraryUseCaseImplTest {
         override suspend fun deleteSong(fileName: String) = throw UnsupportedOperationException()
     }
 
+    /** Read from several threads at once, since the export reads its songs in parallel on `Dispatchers.Default`. */
     private class FakeSongContentRepository : SongContentRepository {
         var unreadable = emptySet<String>()
+        var delays = emptyMap<String, Long>()
         val reads = mutableListOf<String>()
+        private val readsMutex = Mutex()
         override val invalidations: Flow<String?> = emptyFlow()
         override suspend fun loadSongContent(fileName: String, shouldCache: Boolean): SongContent? {
-            reads += fileName
+            delays[fileName]?.let { delay(it) }
+            readsMutex.withLock { reads += fileName }
             return if (fileName in unreadable) null else SongContent(fileName = fileName, text = "{title: $fileName}")
         }
 

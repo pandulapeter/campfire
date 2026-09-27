@@ -16,6 +16,11 @@ import com.pandulapeter.campfire.data.repository.api.SetlistRepository
 import com.pandulapeter.campfire.data.repository.api.SongContentRepository
 import com.pandulapeter.campfire.data.repository.api.SongRepository
 import com.pandulapeter.campfire.domain.api.useCases.ExportLibraryUseCase
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.async
+import kotlinx.coroutines.awaitAll
+import kotlinx.coroutines.coroutineScope
+import kotlinx.coroutines.withContext
 import org.koin.core.annotation.Factory
 
 @Factory
@@ -34,23 +39,35 @@ class ExportLibraryUseCaseImpl internal constructor(
      * that has not rescanned yet, or put into the folder by hand) or one it could not read then is not in the song
      * list, and the folder is the only place that says it exists. Every one of them that is not too large to be a song
      * is read, so the archive holds every song file there is, and names the ones it could not read or would not open.
+     *
+     * The songs are read [READ_BATCH_SIZE] at a time rather than one after another, and all of it runs on
+     * [Dispatchers.Default] rather than on the caller's main thread. The archive and the list of skipped files keep the
+     * sorted order all the same, since the batches are put together in the order they were asked for.
      */
-    override suspend operator fun invoke(): ExportLibraryUseCase.Result? {
+    override suspend operator fun invoke(): ExportLibraryUseCase.Result? = withContext(Dispatchers.Default) {
         // A scan that failed is not an empty library. Exporting what it managed to read would hand the user an archive
         // they will file away as a backup and find out about years later.
-        songRepository.loadSongsIfNeeded() ?: return null
-        val setlists = setlistRepository.loadSetlistsIfNeeded() ?: return null
+        songRepository.loadSongsIfNeeded() ?: return@withContext null
+        val setlists = setlistRepository.loadSetlistsIfNeeded() ?: return@withContext null
         val songFileSizes = songRepository.loadSongFileSizes()
+        val contents = songFileSizes.keys.sorted().chunked(READ_BATCH_SIZE).flatMap { batch ->
+            coroutineScope {
+                batch.map { fileName ->
+                    async {
+                        // Not opened at all when it is larger than a song can be, which the scan skips for the same reason.
+                        fileName to if (songFileSizes.getValue(fileName) > ImportLimits.MAX_TEXT_FILE_SIZE) {
+                            null
+                        } else {
+                            // Not cached: this walks the whole library, and keeping all of it in memory afterwards is no use.
+                            songContentRepository.loadSongContent(fileName, shouldCache = false)
+                        }
+                    }
+                }.awaitAll()
+            }
+        }
         val skipped = mutableListOf<String>()
         val files = buildMap {
-            songFileSizes.keys.sorted().forEach { fileName ->
-                // Not opened at all when it is larger than a song can be, which the scan skips for the same reason.
-                val content = if (songFileSizes.getValue(fileName) > ImportLimits.MAX_TEXT_FILE_SIZE) {
-                    null
-                } else {
-                    // Not cached: this walks the whole library, and keeping all of it in memory afterwards is no use.
-                    songContentRepository.loadSongContent(fileName, shouldCache = false)
-                }
+            contents.forEach { (fileName, content) ->
                 if (content == null) skipped += fileName else put("$SONGS_DIRECTORY/$fileName", content.text.encodeToByteArray())
             }
             setlists.forEach { setlist ->
@@ -58,8 +75,8 @@ class ExportLibraryUseCaseImpl internal constructor(
                 if (document == null) skipped += setlist.fileName else put("$SETLISTS_DIRECTORY/${setlist.fileName}", document.encodeToByteArray())
             }
         }
-        if (files.isEmpty()) return null
-        return ExportLibraryUseCase.Result(
+        if (files.isEmpty()) return@withContext null
+        ExportLibraryUseCase.Result(
             file = ExportedFile(name = ARCHIVE_NAME, mimeType = ExportedFile.ZIP_MIME_TYPE, bytes = archiveRepository.pack(files)),
             skippedFileNames = skipped,
         )
@@ -69,5 +86,8 @@ class ExportLibraryUseCaseImpl internal constructor(
         const val ARCHIVE_NAME = "campfire_library.zip"
         const val SONGS_DIRECTORY = "songs"
         const val SETLISTS_DIRECTORY = "setlists"
+
+        /** The batch the song scan and the sync preparation read in, for the same reason: bounded concurrency. */
+        const val READ_BATCH_SIZE = 64
     }
 }
