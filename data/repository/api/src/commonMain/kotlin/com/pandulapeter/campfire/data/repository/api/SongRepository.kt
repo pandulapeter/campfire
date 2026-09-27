@@ -55,9 +55,16 @@ interface SongRepository {
     /**
      * Writes an imported song under [fileName] and returns it, suffixing the name until it is free unless
      * [shouldReplace] says otherwise. The cached list is left alone: an import writes many files at once and ends
-     * with a single [rescan].
+     * with a single [adoptImported].
      */
     suspend fun importSong(fileName: String, text: String, shouldReplace: Boolean): Song
+
+    /**
+     * Puts the songs an import wrote into the list, in place of any of the same name, in one change, and drops the
+     * cached texts of those names, since a replaced file may have had one. Before the library has been read at all this
+     * is a [rescan], since there is no list yet to put them into.
+     */
+    suspend fun adoptImported(songs: Collection<Song>)
 
     /**
      * See `SongLocalSource.renameSong`: moves the file to the name the song's own metadata gives it and returns it

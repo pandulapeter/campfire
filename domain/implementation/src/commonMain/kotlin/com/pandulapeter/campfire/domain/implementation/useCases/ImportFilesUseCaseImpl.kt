@@ -12,6 +12,8 @@ package com.pandulapeter.campfire.domain.implementation.useCases
 import com.pandulapeter.campfire.data.model.domain.ImportConflictResolution
 import com.pandulapeter.campfire.data.model.domain.ImportPlan
 import com.pandulapeter.campfire.data.model.domain.ImportResult
+import com.pandulapeter.campfire.data.model.domain.Setlist
+import com.pandulapeter.campfire.data.model.domain.Song
 import com.pandulapeter.campfire.data.repository.api.SetlistRepository
 import com.pandulapeter.campfire.data.repository.api.SongRepository
 import com.pandulapeter.campfire.domain.api.useCases.ImportFilesUseCase
@@ -32,13 +34,13 @@ class ImportFilesUseCaseImpl internal constructor(
      * avoid a collision has to be followed to its new name before the setlist next to it in the archive is written.
      */
     override suspend operator fun invoke(plan: ImportPlan, resolution: ImportConflictResolution): ImportResult {
-        val importedSongFileNames = mutableListOf<String>()
+        val importedSongs = mutableListOf<Song>()
         val duplicateFileNames = mutableListOf<String>()
         // Where each imported file ended up, for the setlists below. Only files that held exactly one song are in
         // here: a file that held several has no single name a setlist could have been pointing at.
         val storedSongFileNames = mutableMapOf<String, String>()
 
-        val importedSetlistFileNames = mutableListOf<String>()
+        val importedSetlists = mutableListOf<Setlist>()
         try {
             // Where each song of the plan ended up, by its place in the plan: a repeat of an earlier song of the batch
             // is wherever that one went, which was not known when the plan was made.
@@ -61,7 +63,7 @@ class ImportFilesUseCaseImpl internal constructor(
                             fileName = if (shouldReplace) replacedFileName else entry.fileName,
                             text = entry.text,
                             shouldReplace = shouldReplace,
-                        ).fileName.also { importedSongFileNames += it }
+                        ).also { importedSongs += it }.fileName
                     }
 
                     // Already in the library, or already written by this import, so the name it arrived under points there.
@@ -91,33 +93,29 @@ class ImportFilesUseCaseImpl internal constructor(
                     entry.action(resolution)
                 }
                 when (action) {
-                    Action.WRITE, Action.REPLACE -> importedSetlistFileNames += setlistRepository.importSetlist(
+                    Action.WRITE, Action.REPLACE -> importedSetlists += setlistRepository.importSetlist(
                         setlist = entry.setlist.withSongFileNames(storedSongFileNames).copy(priority = priority++),
                         shouldReplace = action == Action.REPLACE && entry.fileName !in keptSetlistFileNames &&
                             replacedSetlistFileNames.add(entry.fileName),
-                    ).fileName
+                    )
 
                     Action.DISREGARD -> duplicateFileNames += entry.fileName
                     Action.LEAVE_ALONE -> Unit
                 }
             }
         } finally {
-            // One read of the directory at the end rather than one cache update per file, which for a big archive
-            // would cost more than the import itself. It runs even when a write failed or the import was cancelled
-            // halfway, since the files written before that are on disk and would otherwise be missing from the lists
-            // until something else rescanned them.
+            // One change to each list at the end rather than one per file, each of which would rebuild the lists
+            // downstream, and no read of the directory at all: every file written is in hand as what it became. It runs
+            // even when a write failed or the import was cancelled halfway, since the files written before that are on
+            // disk and would otherwise be missing from the lists until something else rescanned them.
             withContext(NonCancellable) {
-                if (importedSongFileNames.isNotEmpty()) {
-                    songRepository.rescan()
-                }
-                if (importedSetlistFileNames.isNotEmpty()) {
-                    setlistRepository.rescan()
-                }
+                songRepository.adoptImported(importedSongs)
+                setlistRepository.adoptImported(importedSetlists)
             }
         }
         return ImportResult(
-            importedSongFileNames = importedSongFileNames,
-            importedSetlistFileNames = importedSetlistFileNames,
+            importedSongFileNames = importedSongs.map { it.fileName },
+            importedSetlistFileNames = importedSetlists.map { it.fileName },
             skippedFileNames = plan.skippedFileNames,
             duplicateFileNames = duplicateFileNames,
             oversizedFileNames = plan.oversizedFileNames,

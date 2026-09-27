@@ -157,6 +157,8 @@ internal class RecordingSongRepository(
         refreshed += fileNames
     }
 
+    override suspend fun adoptImported(songs: Collection<Song>) = throw UnsupportedOperationException()
+
     override suspend fun saveSong(content: SongContent, expectedText: String?): Boolean = throw UnsupportedOperationException()
 
     override suspend fun createSong(title: String, artist: String, text: String): Song = throw UnsupportedOperationException()
@@ -187,6 +189,8 @@ internal class RecordingSetlistRepository : SetlistRepository {
     }
 
     override suspend fun refresh(fileNames: Set<String>) = Unit
+
+    override suspend fun adoptImported(setlists: Collection<Setlist>) = throw UnsupportedOperationException()
 
     override suspend fun createSetlist(title: String, description: String, priority: Int): Setlist =
         throw UnsupportedOperationException()

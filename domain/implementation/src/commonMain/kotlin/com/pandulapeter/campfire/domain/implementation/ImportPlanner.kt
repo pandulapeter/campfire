@@ -14,6 +14,9 @@ import com.pandulapeter.campfire.data.model.domain.ImportPlan
 import com.pandulapeter.campfire.data.model.domain.LibraryFiles
 import com.pandulapeter.campfire.data.model.domain.Setlist
 import com.pandulapeter.campfire.data.model.domain.normalizedToNfc
+import kotlinx.coroutines.async
+import kotlinx.coroutines.awaitAll
+import kotlinx.coroutines.coroutineScope
 
 /**
  * What an import does with each song and setlist of a batch, as a function of the batch and of what the library
@@ -59,12 +62,21 @@ internal object ImportPlanner {
         val libraryFileNameSet = libraryFileNames.toHashSet()
         val families = mutableMapOf<String, SongFamily>()
         val songs = incoming.inArrivingOrder(LibraryFiles.SONG_EXTENSIONS, { it.fileName }, { it.sourceFileName })
+        val familyMembers = songs.map { it.fileName }.distinct().associateWith { desired ->
+            desired.familyKeys(LibraryFiles.SONG_EXTENSIONS).firstOrNull()?.let(libraryFamilies::get).orEmpty()
+        }
+        // Every family's library files read up front and in parallel, rather than one file after another as each family
+        // comes up: a backup imported back into a large library has a family for every song of it.
+        val libraryTexts = readAll(
+            fileNames = familyMembers.flatMap { (desired, members) -> familyCandidates(desired, members) }.distinct(),
+            readLibraryText = readLibraryText,
+        )
         val libraryMatches = songs.map { song ->
             val family = families.getOrPut(song.fileName) {
-                readSongFamily(
+                songFamilyOf(
                     desired = song.fileName,
-                    members = song.fileName.familyKeys(LibraryFiles.SONG_EXTENSIONS).firstOrNull()?.let(libraryFamilies::get).orEmpty(),
-                    readLibraryText = readLibraryText,
+                    members = familyMembers.getValue(song.fileName),
+                    libraryTexts = libraryTexts,
                 )
             }
             // The library file the song arrived under, where that is not its own name. An export hands its songs out under
@@ -220,11 +232,25 @@ internal object ImportPlanner {
         replacesFileName = replacesFileName,
     )
 
-    /** Reads a family once per import, however many incoming songs share its desired name. */
-    private suspend fun readSongFamily(
+    private suspend fun readAll(
+        fileNames: List<String>,
+        readLibraryText: suspend (fileName: String) -> String?,
+    ): Map<String, String?> = fileNames.chunked(READ_BATCH_SIZE).flatMap { batch ->
+        coroutineScope { batch.map { fileName -> async { fileName to readLibraryText(fileName) } }.awaitAll() }
+    }.toMap()
+
+    /**
+     * The library files [songFamilyOf] looks at: the name itself first and the rest by their number, so that where the
+     * library holds the same text twice an incoming copy of it is always said to be the same one of them.
+     */
+    private fun familyCandidates(desired: String, members: List<String>) =
+        (members + desired).distinct().sortedWith(compareBy<String>({ it != desired }, { it.length }, { it }))
+
+    /** Builds a family once per import, however many incoming songs share its desired name, from [libraryTexts]. */
+    private fun songFamilyOf(
         desired: String,
         members: List<String>,
-        readLibraryText: suspend (fileName: String) -> String?,
+        libraryTexts: Map<String, String?>,
     ): SongFamily {
         val libraryFileNames = mutableMapOf<String, String>()
         // The spelling the library lists the desired name under. Every name recorded here is what the setlists of the
@@ -233,13 +259,10 @@ internal object ImportPlanner {
         // derived name with the file listed under another spelling of it.
         val listedDesired = members.firstOrNull { it == desired } ?: members.firstOrNull { it.isSpellingOf(desired) }
         var takenFileName: String? = null
-        // The name itself first and the rest by their number, so that where the library holds the same text twice
-        // an incoming copy of it is always said to be the same one of them.
-        val candidates = (members + desired).distinct().sortedWith(compareBy<String>({ it != desired }, { it.length }, { it }))
-        candidates.forEach { fileName ->
+        familyCandidates(desired, members).forEach { fileName ->
             // Already read, through the derived name the file system answered with it.
             if (fileName != desired && fileName == takenFileName) return@forEach
-            val text = readLibraryText(fileName) ?: return@forEach
+            val text = libraryTexts[fileName] ?: return@forEach
             // Only a read of the derived name itself says whether a replacement would have a file to write over. Where
             // the listing does not hold that name, the file that answered is the one it lists under another spelling;
             // with nothing listed under any spelling of it, it is a file written since the scan, under its own name.
@@ -321,4 +344,7 @@ internal object ImportPlanner {
     }
 
     private val SETLIST_EXTENSIONS = listOf(LibraryFiles.SETLIST_EXTENSION)
+
+    /** How many library files are read at once, bounded for the reason the song scan is. */
+    private const val READ_BATCH_SIZE = 64
 }

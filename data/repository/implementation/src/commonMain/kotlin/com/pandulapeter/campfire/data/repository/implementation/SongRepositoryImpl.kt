@@ -116,6 +116,15 @@ internal class SongRepositoryImpl(
         libraryFileLock.withLock { songLocalSource.importSong(fileName = fileName, text = text, shouldReplace = shouldReplace) }
     }
 
+    override suspend fun adoptImported(songs: Collection<Song>) {
+        if (songs.isEmpty()) return
+        if (this.songs.first().data == null) return rescan()
+        val fileNames = songs.mapTo(hashSetOf()) { it.fileName }
+        songContentRepository.invalidate(fileNames)
+        // The last write of a name is the file, should an import ever write one twice.
+        updateData { current -> current.orEmpty().filterNot { it.fileName in fileNames } + songs.associateBy { it.fileName }.values }
+    }
+
     override suspend fun renameSong(song: Song): Song? = naming {
         val renamed = songLocalSource.renameSong(song) ?: return@naming null
         songContentRepository.invalidate(song.fileName)

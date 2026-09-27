@@ -72,6 +72,7 @@ class ExportSongsUseCaseImplTest {
         override suspend fun loadSongFileSizes() = throw UnsupportedOperationException()
         override suspend fun rescan() = throw UnsupportedOperationException()
         override suspend fun refresh(fileNames: Set<String>) = throw UnsupportedOperationException()
+        override suspend fun adoptImported(songs: Collection<Song>) = throw UnsupportedOperationException()
         override suspend fun saveSong(content: SongContent, expectedText: String?) = throw UnsupportedOperationException()
         override suspend fun createSong(title: String, artist: String, text: String) = throw UnsupportedOperationException()
         override fun importFileName(fallbackTitle: String, text: String): String {

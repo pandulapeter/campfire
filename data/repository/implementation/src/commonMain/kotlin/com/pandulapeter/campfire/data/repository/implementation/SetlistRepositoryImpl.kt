@@ -113,6 +113,14 @@ internal class SetlistRepositoryImpl(
         setlistLocalSource.importSetlist(setlist, shouldReplace)
     }
 
+    override suspend fun adoptImported(setlists: Collection<Setlist>) {
+        if (setlists.isEmpty()) return
+        if (this.setlists.first().data == null) return rescan()
+        val fileNames = setlists.mapTo(hashSetOf()) { it.fileName }
+        // The last write of a name is the file, should an import ever write one twice.
+        updateData { current -> current.orEmpty().filterNot { it.fileName in fileNames } + setlists.associateBy { it.fileName }.values }
+    }
+
     override suspend fun loadSetlistDocument(fileName: String) = setlistLocalSource.loadSetlistDocument(fileName)
 
     override suspend fun deleteSetlist(fileName: String) = writing {

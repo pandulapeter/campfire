@@ -47,8 +47,9 @@ lock of their own one at a time, each writing what is published by then rather t
 last change is the last thing on disk and a burst of changes ends in one write. A write that succeeded publishes
 nothing more, and one that failed turns the state into a `Failure` only while its data is still the data on show.
 `commonTest` covers this too. A cancelled read is not a failed one: it is rethrown and leaves the cache with what it
-held before, plus any change that landed while it ran. A `rescan()` — the refresh action, and the last step of every
-import — is the only thing that walks the directory again. `refresh(fileNames)` reads the named files alone, for a
+held before, plus any change that landed while it ran. A `rescan()` — the refresh action — is the only thing that walks the
+directory again; an import ends with `adoptImported`, which puts the songs and setlists it wrote into the list in one
+change, dropping the cached texts of the songs among them. `refresh(fileNames)` reads the named files alone, for a
 sync run that changed them: each is put in the list in place of its old entry or drops out, as a rescan would drop it,
 and a repository that has not been read yet rescans instead, since there is no list to put them into.
 

@@ -63,8 +63,9 @@ interface SongLocalSource {
     fun importFileName(fallbackTitle: String, text: String): String
 
     /**
-     * Writes [text] under [fileName] and returns the song it became. The name is suffixed until it is free unless
-     * [shouldReplace] says otherwise, which is the one way an import ever overwrites a file the library already has.
+     * Writes [text] under [fileName] and returns the song it became, built from [text] rather than read back from the
+     * file. The name is suffixed until it is free unless [shouldReplace] says otherwise, which is the one way an import
+     * ever overwrites a file the library already has.
      */
     suspend fun importSong(fileName: String, text: String, shouldReplace: Boolean): Song
 

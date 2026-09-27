@@ -23,6 +23,7 @@ import kotlinx.coroutines.flow.emptyFlow
 import kotlinx.coroutines.test.runTest
 import kotlin.test.Test
 import kotlin.test.assertEquals
+import kotlin.test.assertFailsWith
 import kotlin.test.assertFalse
 
 /**
@@ -101,6 +102,46 @@ class ImportFilesUseCaseImplTest {
         }
     }
 
+    @Test
+    fun `an import puts what it wrote into the lists without rescanning them`() = runTest {
+        val songs = FakeSongRepository(files = mutableMapOf("foo.cho" to A))
+        val setlists = FakeSetlistRepository()
+        val plan = ImportPlan(
+            songs = listOf(
+                ImportPlan.SongEntry(fileName = "foo.cho", text = B, status = ImportPlan.Status.CONFLICTING, sourceFileName = null),
+                ImportPlan.SongEntry(fileName = "bar.cho", text = A, status = ImportPlan.Status.NEW, sourceFileName = null),
+            ),
+            setlists = ImportPlanner.planSetlists(
+                incoming = listOf(ImportPlanner.IncomingSetlist(setlist(entries = listOf("bar.cho")), "set.setlist.json")),
+                librarySetlists = emptyList(),
+                songFileNames = mapOf("bar.cho" to "bar.cho"),
+            ),
+        )
+
+        ImportFilesUseCaseImpl(songRepository = songs, setlistRepository = setlists).invoke(plan, ImportConflictResolution.REPLACE)
+
+        assertEquals(listOf("foo.cho", "bar.cho"), songs.adopted)
+        assertEquals(listOf("set.setlist.json"), setlists.adopted)
+        assertEquals(0, songs.rescanCount)
+    }
+
+    @Test
+    fun `an import that fails halfway still puts what it wrote into the list`() = runTest {
+        val songs = FakeSongRepository(files = mutableMapOf(), failingImport = 2)
+        val plan = ImportPlan(
+            songs = listOf("one.cho", "two.cho", "three.cho").map {
+                ImportPlan.SongEntry(fileName = it, text = A, status = ImportPlan.Status.NEW, sourceFileName = null)
+            },
+        )
+
+        assertFailsWith<IllegalStateException> {
+            ImportFilesUseCaseImpl(songRepository = songs, setlistRepository = FakeSetlistRepository()).invoke(plan, ImportConflictResolution.KEEP_BOTH)
+        }
+
+        assertEquals(listOf("one.cho", "two.cho"), songs.adopted)
+        assertEquals(0, songs.rescanCount)
+    }
+
     /** Numbers a taken name the way the storage layer does, `x_2`, `x_3`…, unless told to replace it. */
     private fun MutableMap<String, *>.freeName(fileName: String, extension: String): String {
         val name = fileName.removeSuffix(extension)
@@ -109,21 +150,34 @@ class ImportFilesUseCaseImplTest {
             .first { it !in this }
     }
 
-    private inner class FakeSongRepository(val files: MutableMap<String, String>) : SongRepository {
+    private inner class FakeSongRepository(
+        val files: MutableMap<String, String>,
+        private val failingImport: Int? = null,
+    ) : SongRepository {
         val importCalls = mutableListOf<Pair<String, Boolean>>()
+        val adopted = mutableListOf<String>()
+        var rescanCount = 0
         override val songs: Flow<DataState<List<Song>>> = emptyFlow()
         override suspend fun loadSongsIfNeeded() = files.keys.map(::song)
         override suspend fun loadSongFileSizes() = files.mapValues { it.value.length.toLong() }
-        override suspend fun rescan() = Unit
+        override suspend fun rescan() {
+            rescanCount++
+        }
+
         override suspend fun refresh(fileNames: Set<String>) = Unit
         override suspend fun saveSong(content: SongContent, expectedText: String?) = throw UnsupportedOperationException()
         override suspend fun createSong(title: String, artist: String, text: String) = throw UnsupportedOperationException()
         override fun importFileName(fallbackTitle: String, text: String) = throw UnsupportedOperationException()
         override suspend fun importSong(fileName: String, text: String, shouldReplace: Boolean): Song {
+            if (importCalls.size == failingImport) throw IllegalStateException("Full")
             importCalls += fileName to shouldReplace
             val storedName = if (shouldReplace) fileName else files.freeName(fileName, ".cho")
             files[storedName] = text
             return song(storedName)
+        }
+
+        override suspend fun adoptImported(songs: Collection<Song>) {
+            adopted += songs.map { it.fileName }
         }
 
         override suspend fun renameSong(song: Song) = throw UnsupportedOperationException()
@@ -133,9 +187,10 @@ class ImportFilesUseCaseImplTest {
     private inner class FakeSetlistRepository : SetlistRepository {
         val files = mutableMapOf<String, Setlist>()
         override val setlists: Flow<DataState<List<Setlist>>> = emptyFlow()
+        val adopted = mutableListOf<String>()
         override suspend fun loadSetlistsIfNeeded() = files.values.toList()
         override suspend fun loadSetlistFileNamesNaming(songFileName: String) = throw UnsupportedOperationException()
-        override suspend fun rescan() = Unit
+        override suspend fun rescan() = throw UnsupportedOperationException()
         override suspend fun refresh(fileNames: Set<String>) = Unit
         override suspend fun createSetlist(title: String, description: String, priority: Int) = throw UnsupportedOperationException()
         override suspend fun saveSetlist(setlist: Setlist) = throw UnsupportedOperationException()
@@ -145,6 +200,10 @@ class ImportFilesUseCaseImplTest {
         override suspend fun importSetlist(setlist: Setlist, shouldReplace: Boolean): Setlist {
             val storedName = if (shouldReplace) setlist.fileName else files.freeName(setlist.fileName, ".setlist.json")
             return setlist.copy(fileName = storedName).also { files[storedName] = it }
+        }
+
+        override suspend fun adoptImported(setlists: Collection<Setlist>) {
+            adopted += setlists.map { it.fileName }
         }
 
         override suspend fun loadSetlistDocument(fileName: String) = throw UnsupportedOperationException()

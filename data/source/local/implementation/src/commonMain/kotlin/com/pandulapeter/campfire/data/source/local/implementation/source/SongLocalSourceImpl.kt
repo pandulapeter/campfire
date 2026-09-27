@@ -7,6 +7,8 @@
  * If a copy of the MPL was not distributed with this file, You can obtain one at
  * https://mozilla.org/MPL/2.0/.
  */
+@file:OptIn(ExperimentalTime::class)
+
 package com.pandulapeter.campfire.data.source.local.implementation.source
 
 import com.pandulapeter.campfire.chordpro.ChordProParser
@@ -33,6 +35,8 @@ import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.withContext
 import org.koin.core.annotation.Single
+import kotlin.time.Clock
+import kotlin.time.ExperimentalTime
 
 /**
  * Loading runs on [Dispatchers.Default] rather than on the caller's dispatcher: the file storage moves its reads off
@@ -100,7 +104,14 @@ internal class SongLocalSourceImpl(
     override suspend fun importSong(fileName: String, text: String, shouldReplace: Boolean): Song {
         val name = if (shouldReplace) fileName else fileStorage.uniqueName(StorageDirectory.SONGS, fileName)
         fileStorage.writeText(StorageDirectory.SONGS, name, text)
-        return loadSong(name) ?: throw IllegalStateException("The song \"$name\" disappeared right after it was written.")
+        // What was just written, without asking the storage for it back: the text is the file, and its size is the text's
+        // length in UTF-8. Read back, a large import paid a stat, a read and a parse per song on top of the write.
+        val file = StoredFileInfo(
+            name = name,
+            size = text.encodeToByteArray().size.toLong(),
+            lastModified = Clock.System.now().toEpochMilliseconds(),
+        )
+        return withContext(Dispatchers.Default) { file.toSong(ChordProParser.summarize(text)) }
     }
 
     override suspend fun renameSong(song: Song): Song? {

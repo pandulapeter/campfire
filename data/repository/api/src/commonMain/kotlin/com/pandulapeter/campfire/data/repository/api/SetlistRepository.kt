@@ -72,9 +72,15 @@ interface SetlistRepository {
 
     /**
      * Writes an imported setlist under the file name it carries, suffixed until it is free unless [shouldReplace]
-     * says otherwise, and returns it. The cached list is left alone, like an imported song's.
+     * says otherwise, and returns it. The cached list is left alone, like an imported song's, until [adoptImported].
      */
     suspend fun importSetlist(setlist: Setlist, shouldReplace: Boolean): Setlist
+
+    /**
+     * Puts the setlists an import wrote into the list, in place of any of the same name, in one change. Before the
+     * library has been read at all this is a [rescan].
+     */
+    suspend fun adoptImported(setlists: Collection<Setlist>)
 
     /** The stored document of one setlist, for exporting it unchanged. Null if it is missing. */
     suspend fun loadSetlistDocument(fileName: String): String?
