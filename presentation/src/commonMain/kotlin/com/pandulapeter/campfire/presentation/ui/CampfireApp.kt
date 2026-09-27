@@ -149,7 +149,6 @@ import com.pandulapeter.campfire.presentation.ui.platform.isDesktopPlatform
 import com.pandulapeter.campfire.presentation.ui.platform.isLaunchScreenWholeStartup
 import com.pandulapeter.campfire.presentation.ui.platform.isLibraryEditableOutsideApp
 import com.pandulapeter.campfire.presentation.ui.platform.isStartupScreenHeldUntilAppReady
-import com.pandulapeter.campfire.presentation.ui.platform.withSyncCounts
 import com.pandulapeter.campfire.presentation.ui.screens.setlists.SetlistsScreen
 import com.pandulapeter.campfire.presentation.ui.screens.settings.SettingsScreen
 import com.pandulapeter.campfire.presentation.ui.screens.songDetails.SongDetailsScreen
@@ -160,8 +159,10 @@ import com.pandulapeter.campfire.presentation.ui.theme.CampfireTheme
 import com.pandulapeter.campfire.presentation.ui.theme.LaunchScreenColors
 import com.pandulapeter.campfire.presentation.ui.theme.ProvideInterfaceScale
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.emptyFlow
 import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.flow.map
 import org.jetbrains.compose.resources.DrawableResource
 import org.jetbrains.compose.resources.StringResource
 import org.jetbrains.compose.resources.painterResource
@@ -1291,40 +1292,41 @@ private const val MAXIMUM_NAMED_FILES = 3
 @Composable
 private fun SyncNotificationEffect(viewModel: CampfireViewModel) {
     val syncNotifier = LocalSyncNotifier.current
-    val syncState by viewModel.syncState.collectAsStateWithLifecycle()
-    val progress = (syncState as? SyncState.Connected)?.progress
+    // Whether a run is going rather than how far it has got: the shells keep the count moving on their own (see
+    // SyncNotification), so a notification handed over for every file a run moves would be work on the main thread
+    // for nothing. The count of the moment is read as the notification is handed over, which is what the Android
+    // service starts with.
+    val isRunning by remember(viewModel) {
+        viewModel.syncState.map { it.progress != null }.distinctUntilChanged()
+    }.collectAsStateWithLifecycle(viewModel.syncState.value.progress != null)
     val channelName = stringResource(Res.string.settings_sync_notification_channel)
     val title = stringResource(Res.string.settings_sync_notification_title)
     val stopLabel = stringResource(Res.string.settings_sync_cancel)
     val preparing = stringResource(Res.string.settings_sync_preparing)
     val progressBodyFormat = stringResource(Res.string.settings_sync_progress)
-    val body = if (progress == null || progress.isPreparing) {
-        preparing
-    } else {
-        progressBodyFormat.withSyncCounts(progress.completed, progress.total)
-    }
-    val notification = progress?.let {
-        SyncNotification(
-            channelName = channelName,
-            title = title,
-            body = body,
-            preparingBody = preparing,
-            progressBodyFormat = progressBodyFormat,
-            stopLabel = stopLabel,
-            progress = it,
-        )
-    }
     // "Nothing to show" is only ever said after something was shown from here. Said on the first frame of every
     // composition, it would reach the Android shell as "stop the service" whenever the app was opened onto a run
     // that was already going in the background, and the service takes that as the user's request to stop the run.
     var hasShownNotification by remember { mutableStateOf(false) }
-    LaunchedEffect(notification) {
-        if (notification != null) {
+    LaunchedEffect(isRunning, channelName, title, stopLabel, preparing, progressBodyFormat) {
+        val progress = viewModel.syncState.value.progress
+        if (isRunning && progress != null) {
             hasShownNotification = true
-            syncNotifier.onSyncNotificationChanged(notification)
+            syncNotifier.onSyncNotificationChanged(
+                SyncNotification(
+                    channelName = channelName,
+                    title = title,
+                    preparingBody = preparing,
+                    progressBodyFormat = progressBodyFormat,
+                    stopLabel = stopLabel,
+                    progress = progress,
+                ),
+            )
         } else if (hasShownNotification) {
             hasShownNotification = false
             syncNotifier.onSyncNotificationChanged(null)
         }
     }
 }
+
+private val SyncState.progress get() = (this as? SyncState.Connected)?.progress

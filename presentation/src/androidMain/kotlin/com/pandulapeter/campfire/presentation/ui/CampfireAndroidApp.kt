@@ -31,7 +31,9 @@ import com.pandulapeter.campfire.presentation.ui.platform.appIconThemeColor
 import com.pandulapeter.campfire.presentation.ui.platform.rememberAndroidFilePicker
 import com.pandulapeter.campfire.presentation.ui.theme.isDarkTheme
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.emptyFlow
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.merge
 import org.koin.compose.viewmodel.koinViewModel
 
@@ -63,9 +65,13 @@ fun CampfireAndroidApp(
     val appIconThemeColor = userPreferences?.appIconThemeColor
     LaunchedEffect(appIconThemeColor) { appIconThemeColor?.let(onAppIconChanged) }
     // The permission the foreground service's notification needs, asked for here because the shell is what knows
-    // that this platform has one to ask for at all.
-    val syncState by viewModel.syncState.collectAsStateWithLifecycle()
-    SyncNotificationPermissionEffect(isSyncConnected = syncState is SyncState.Connected)
+    // that this platform has one to ask for at all. Only whether sync is connected is collected, since the state
+    // changes with every file a run moves and the shell's root would otherwise recompose with it; it starts from the
+    // state of the moment, so that a composition starting in the middle of a run does not ask a frame late.
+    val isSyncConnected by remember(viewModel) {
+        viewModel.syncState.map { it is SyncState.Connected }.distinctUntilChanged()
+    }.collectAsStateWithLifecycle(viewModel.syncState.value is SyncState.Connected)
+    SyncNotificationPermissionEffect(isSyncConnected = isSyncConnected)
     val activity = LocalActivity.current as? ComponentActivity
     LaunchedEffect(activity, isDarkTheme) {
         activity?.enableEdgeToEdge(

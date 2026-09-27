@@ -25,7 +25,11 @@ import com.pandulapeter.campfire.data.model.domain.SyncProgress
  */
 fun interface SyncNotifier {
 
-    /** Called with what to show while a run is going, and with null the moment there is nothing to show. */
+    /**
+     * Called with what to show once a run starts (and again should the words change, the language chosen in the app
+     * with them), and with null the moment there is nothing to show. Not once per file the run moves: the count is
+     * the shell's to keep moving, see [SyncNotification].
+     */
     fun onSyncNotificationChanged(notification: SyncNotification?)
 }
 
@@ -34,22 +38,21 @@ fun interface SyncNotifier {
  * the user picked is only visible to the UI - a notification built from Android resources would follow the system's
  * language instead, and would be in the wrong one for anybody who changed it in the app.
  *
- * [body] is what to show right now and is enough on its own for a platform that only ever shows what it is handed.
- * [preparingBody] and [progressBodyFormat] are the same sentence taken apart, for a platform whose notification
- * outlives the UI that resolved these strings: on Android the run and its notification carry on after the app is
- * swiped away, and on iOS the composition stops as soon as the app is in the background, so from that point there is
- * nothing left to send a new [body] as the count goes up. Handing the shell the pieces lets it keep the text moving on
- * its own, still in the language chosen in the app.
+ * The words are handed over as the sentence taken apart - [preparingBody] and [progressBodyFormat] - rather than as the
+ * text to show right now, because the notification outlives the UI that resolved them: on Android the run and its
+ * notification carry on after the app is swiped away, and on iOS the composition stops as soon as the app is in the
+ * background, so from that point there is nothing left to send a new text as the count goes up. Handing the shell the
+ * pieces lets it keep the text moving on its own, still in the language chosen in the app.
  *
- * @param body What the run is doing right now, which changes as it goes.
  * @param preparingBody What to say before there is anything to count.
  * @param progressBodyFormat The sentence to put the two counts into, filled in with [withSyncCounts].
  * @param stopLabel The label of the action that stops it, where the platform can offer one.
+ * @param progress How far the run had got when this was handed over, which is what a platform that starts showing it
+ *   at that moment starts from.
  */
 data class SyncNotification(
     val channelName: String,
     val title: String,
-    val body: String,
     val preparingBody: String,
     val progressBodyFormat: String,
     val stopLabel: String,
