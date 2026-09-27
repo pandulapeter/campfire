@@ -428,6 +428,13 @@ internal fun Modifier.underAppBar(appBarReveal: () -> Float) = layout { measurab
     layout(placeable.width, placeable.height + top) { placeable.placeRelative(x = 0, y = top) }
 }
 
+/** Lays a list's overlay out below the part of the app bar the list is still under, read while laying out. */
+internal fun Modifier.belowAppBarOverlap(appBarOverlap: () -> AppBarOverlap) = layout { measurable, constraints ->
+    val top = appBarOverlap().height.roundToPx()
+    val placeable = measurable.measure(constraints.offset(vertical = -top))
+    layout(placeable.width, placeable.height + top) { placeable.placeRelative(x = 0, y = top) }
+}
+
 /**
  * The room one end of the bar keeps for the search action while the action is there, and gives up gradually as it
  * leaves. It stays as large as a touch target for as long as it is shown, whether or not the button is still in it,

@@ -531,7 +531,8 @@ internal fun sectionHeaderState(listState: LazyGridState, headerIndex: Int): Sec
  * @param action The button at the end of the pill, handed the modifier that keeps it from taking the focus
  *   ([unfocusable]).
  * @param appBarOverlap How far in from the row's end edge the app bar's buttons reach while this row is pinned under
- *   them, and how much of the pinned place they still cover.
+ *   them, and how much of the pinned place they still cover, read while the row is laid out so that the bar filling in
+ *   and emptying moves the header without recomposing the list around it.
  */
 @Composable
 internal fun SectionHeader(
@@ -547,7 +548,7 @@ internal fun SectionHeader(
     opacity: Float = 1f,
     contentOpacity: Float = 1f,
     pushedDistancePx: Int = 0,
-    appBarOverlap: AppBarOverlap,
+    appBarOverlap: () -> AppBarOverlap,
 ) = Box(
     modifier = modifier
         .extendIntoEndPadding(endPadding)
@@ -564,15 +565,16 @@ internal fun SectionHeader(
         .padding(start = SONG_CARD_OUTER_PADDING)
         .layout { measurable, constraints ->
             // The cards end at the scroller's column, and a pinned header ends where the bar's buttons begin.
+            val overlap = appBarOverlap()
             val cardsEndInset = (endPadding + SONG_CARD_OUTER_PADDING).toPx()
-            val pinnedEndInset = maxOf(cardsEndInset, (appBarOverlap.reach + SECTION_HEADER_APP_BAR_GAP).toPx())
+            val pinnedEndInset = maxOf(cardsEndInset, (overlap.reach + SECTION_HEADER_APP_BAR_GAP).toPx())
             // Eased rather than linear, since the fraction is the scroll position itself: the header gives way
             // gently as it starts coming into the bar's place and settles into the room it has left the same way.
             // The list moving down under an opening search takes a pinned header out of that place, so the same
             // curve is run on how much of it the buttons still cover, and a pinned one widens and narrows along
             // the path it narrowed along as it was scrolled up.
             val coveredFraction = FastOutSlowInEasing.transform(state.pinnedFraction) *
-                FastOutSlowInEasing.transform(appBarOverlap.coverage)
+                FastOutSlowInEasing.transform(overlap.coverage)
             val endInset = cardsEndInset + (pinnedEndInset - cardsEndInset) * coveredFraction
             val width = (constraints.maxWidth - endInset.roundToInt()).coerceAtLeast(0)
             val placeable = measurable.measure(constraints.copy(minWidth = width, maxWidth = width))

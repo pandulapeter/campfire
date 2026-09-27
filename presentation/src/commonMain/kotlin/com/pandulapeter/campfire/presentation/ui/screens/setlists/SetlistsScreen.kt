@@ -89,6 +89,7 @@ import com.pandulapeter.campfire.presentation.ui.components.SongActionsButton
 import com.pandulapeter.campfire.presentation.ui.components.SortMenu
 import com.pandulapeter.campfire.presentation.ui.components.allowsNewItemMenu
 import com.pandulapeter.campfire.presentation.ui.components.animateAppBarReveal
+import com.pandulapeter.campfire.presentation.ui.components.belowAppBarOverlap
 import com.pandulapeter.campfire.presentation.ui.components.draggedListItemContainerColor
 import com.pandulapeter.campfire.presentation.ui.components.listItemAnimation
 import com.pandulapeter.campfire.presentation.ui.components.rememberListTopFade
@@ -134,6 +135,11 @@ internal fun SetlistsScreen(
         searchState = viewModel.setlistsSearch,
         isShownWithoutSearch = setlistsPlaceholder != null,
     )
+    // Built lazily and read only while the lists lay out, so that the bar's spring moves the headers and the scroller
+    // without recomposing the list on every one of its frames.
+    val appBarOverlap: () -> AppBarOverlap = remember(appBarReveal) {
+        { AppBarOverlap.of(reach = appBarReach, appBarReveal = appBarReveal.value) }
+    }
     Box(modifier = modifier.fillMaxSize()) {
         SetlistList(
             modifier = Modifier.fillMaxSize().underAppBar { appBarReveal.value },
@@ -141,7 +147,7 @@ internal fun SetlistsScreen(
             listState = listState,
             columnCount = columnCount,
             contentPadding = contentPadding,
-            appBarOverlap = AppBarOverlap.of(reach = appBarReach, appBarReveal = appBarReveal.value),
+            appBarOverlap = appBarOverlap,
         )
         SearchableTopAppBar(
             contentPadding = contentPadding,
@@ -184,7 +190,7 @@ private fun SetlistList(
     listState: LazyGridState,
     columnCount: Int,
     contentPadding: PaddingValues,
-    appBarOverlap: AppBarOverlap,
+    appBarOverlap: () -> AppBarOverlap,
 ) {
     val setlistsWithSongs by viewModel.setlistsWithSongs.collectAsStateWithLifecycle()
     val setlists by viewModel.setlists.collectAsStateWithLifecycle()
@@ -505,7 +511,7 @@ private fun SetlistList(
             }
         }
         FastScroller(
-            modifier = Modifier.align(Alignment.TopEnd).padding(top = appBarOverlap.height).padding(contentPadding.only(top = true, end = true, bottom = true)),
+            modifier = Modifier.align(Alignment.TopEnd).belowAppBarOverlap(appBarOverlap).padding(contentPadding.only(top = true, end = true, bottom = true)),
             gridState = listState,
         )
     }

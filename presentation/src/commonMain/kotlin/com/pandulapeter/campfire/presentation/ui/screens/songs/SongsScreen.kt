@@ -90,6 +90,7 @@ import com.pandulapeter.campfire.presentation.ui.components.SongListItem
 import com.pandulapeter.campfire.presentation.ui.components.SortMenu
 import com.pandulapeter.campfire.presentation.ui.components.allowsNewItemMenu
 import com.pandulapeter.campfire.presentation.ui.components.animateAppBarReveal
+import com.pandulapeter.campfire.presentation.ui.components.belowAppBarOverlap
 import com.pandulapeter.campfire.presentation.ui.components.besideSidePanel
 import com.pandulapeter.campfire.presentation.ui.components.fadingUnderListTop
 import com.pandulapeter.campfire.presentation.ui.components.hasRoomForSidePanel
@@ -155,6 +156,11 @@ internal fun SongsScreen(
         // The ranked results of a search come in one group with no header, and a placeholder has none either.
         isShownWithoutSearch = placeholder != null,
     )
+    // Built lazily and read only while the lists lay out, so that the bar's spring moves the headers and the scroller
+    // without recomposing the list on every one of its frames.
+    val appBarOverlap: () -> AppBarOverlap = remember(appBarReveal) {
+        { AppBarOverlap.of(reach = appBarReach, appBarReveal = appBarReveal.value) }
+    }
     Box(modifier = modifier.fillMaxSize()) {
         Row {
             // The bar spans the list alone rather than the whole screen, so that its buttons and the search stay at the
@@ -168,7 +174,7 @@ internal fun SongsScreen(
                     columnCount = columnCount,
                     hasLoadedLibrary = hasLoadedLibrary,
                     contentPadding = listContentPadding,
-                    appBarOverlap = AppBarOverlap.of(reach = appBarReach, appBarReveal = appBarReveal.value),
+                    appBarOverlap = appBarOverlap,
                 )
                 SearchableTopAppBar(
                     contentPadding = listContentPadding,
@@ -277,7 +283,7 @@ private fun SongList(
     columnCount: Int,
     hasLoadedLibrary: Boolean,
     contentPadding: PaddingValues,
-    appBarOverlap: AppBarOverlap,
+    appBarOverlap: () -> AppBarOverlap,
 ) {
     val songGroups by viewModel.songGroups.collectAsStateWithLifecycle()
     val isSearchOpen by viewModel.songsSearch.isOpen.collectAsStateWithLifecycle()
@@ -466,7 +472,7 @@ private fun SongList(
             }
         }
         FastScroller(
-            modifier = Modifier.align(Alignment.TopEnd).padding(top = appBarOverlap.height).padding(contentPadding.only(top = true, end = true, bottom = true)),
+            modifier = Modifier.align(Alignment.TopEnd).belowAppBarOverlap(appBarOverlap).padding(contentPadding.only(top = true, end = true, bottom = true)),
             gridState = listState,
             labelForItem = sectionIndex::labelForItem,
         )
