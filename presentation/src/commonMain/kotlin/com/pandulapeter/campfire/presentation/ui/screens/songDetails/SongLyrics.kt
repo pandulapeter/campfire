@@ -34,6 +34,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.key
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.graphicsLayer
@@ -201,8 +202,6 @@ internal fun SongLyrics(
             },
         )
     }
-    // Everything the height of a section depends on apart from the width it is measured at, the folded runs included.
-    val sectionMeasurements = remember(sections, fontScale, density, foldedSections) { SectionMeasurements(sectionCount = sections.size) }
     // The styles the lines are measured with carry no color, which is given where the text is drawn instead: every
     // line of the song is measured again whenever a key of its measurement changes, and the color scheme changes on
     // every frame of a theme cross-fade while the size of the text does not.
@@ -216,6 +215,21 @@ internal fun SongLyrics(
     val chordStyle = lyricsStyle.copy(fontWeight = FontWeight.Bold)
     // Annotations ([*text]) sit in the chord row but are not chords, so they are drawn in the lyrics' colour.
     val annotationStyle = lyricsStyle.copy(fontStyle = FontStyle.Italic)
+    // Everything the height of a section depends on apart from its own content and the width it is measured at, the
+    // folded runs included. Within one of these the sizes of a section are reused by content, so an edit or a
+    // transposition only measures the sections it changed.
+    val sectionSizesPool = remember(fontScale, density, foldedSections, lyricsStyle, headerStyle, defaultLabels) { SectionSizesPool<RenderSection>() }
+    val sectionMeasurements = remember(sections, sectionSizesPool) { SectionMeasurements(sectionSizesPool.sizesFor(sections)) }
+    // Each section is emitted under a key of its content, so a section inserted above the others does not hand each of
+    // their nodes the section that used to be its neighbour. Equal sections are told apart by the order they come in.
+    val sectionKeys = remember(sections) {
+        val occurrences = HashMap<RenderSection, Int>()
+        sections.map { section ->
+            val occurrence = (occurrences[section] ?: 0) + 1
+            occurrences[section] = occurrence
+            SectionKey(hash = section.hashCode(), occurrence = occurrence)
+        }
+    }
     // One measurer for the whole page. Everything measured through it is kept by whoever asked for it (see
     // [SongTextMeasurements] and [TabRows]), so a cache of its own would only hold every layout a second time.
     val textMeasurer = rememberTextMeasurer(cacheSize = 0)
@@ -267,35 +281,52 @@ internal fun SongLyrics(
                 onDividersPlaced = { dividerTops -> onDividersPlaced?.invoke(dividerTops.map { headerHeight + it }) },
             ) {
                 sections.forEachIndexed { index, section ->
-                    // A section the layout found too tall is measured in full only once this is off it: see maxAnimatedSectionHeight.
-                    // Each section is read as a whole and in the order the song declares, whatever column it was put in:
-                    // the reading order is otherwise worked out from the geometry, line by line across the page, which
-                    // with two columns reads the first line of each, then the second line of each.
-                    val sectionModifier = if (!animatesSections || extraWidth > 0.dp || sectionAnimations[index].isTooTallToAnimate) {
-                        Modifier
-                    } else {
-                        Modifier.animateBounds(this@LookaheadScope).layoutId(AnimatedSectionLayoutId)
-                    }.semantics {
-                        isTraversalGroup = true
-                        traversalIndex = index.toFloat()
-                    }
-                    when (section) {
-                        is RenderSection.Comment -> SongComment(
-                            modifier = sectionModifier.padding(horizontal = CARD_PADDING),
-                            comment = section,
-                            fontScale = fontScale,
-                        )
+                    key(sectionKeys[index]) {
+                        // A section the layout found too tall is measured in full only once this is off it: see maxAnimatedSectionHeight.
+                        // Each section is read as a whole and in the order the song declares, whatever column it was put in:
+                        // the reading order is otherwise worked out from the geometry, line by line across the page, which
+                        // with two columns reads the first line of each, then the second line of each.
+                        val sectionModifier = if (!animatesSections || extraWidth > 0.dp || sectionAnimations[index].isTooTallToAnimate) {
+                            Modifier
+                        } else {
+                            Modifier.animateBounds(this@LookaheadScope).layoutId(AnimatedSectionLayoutId)
+                        }.semantics {
+                            isTraversalGroup = true
+                            traversalIndex = index.toFloat()
+                        }
+                        when (section) {
+                            is RenderSection.Comment -> SongComment(
+                                modifier = sectionModifier.padding(horizontal = CARD_PADDING),
+                                comment = section,
+                                fontScale = fontScale,
+                            )
 
-                        is RenderSection.Lines -> if (section.isOnCard) {
-                            Surface(
-                                modifier = sectionModifier,
-                                shape = MaterialTheme.shapes.large,
-                                color = MaterialTheme.colorScheme.surfaceContainerHigh,
-                                shadowElevation = CARD_ELEVATION,
-                            ) {
+                            is RenderSection.Lines -> if (section.isOnCard) {
+                                Surface(
+                                    modifier = sectionModifier,
+                                    shape = MaterialTheme.shapes.large,
+                                    color = MaterialTheme.colorScheme.surfaceContainerHigh,
+                                    shadowElevation = CARD_ELEVATION,
+                                ) {
+                                    SongSectionContent(
+                                        section = section,
+                                        isOnCard = true,
+                                        headerStyle = headerStyle,
+                                        lyricsStyle = lyricsStyle,
+                                        chordStyle = chordStyle,
+                                        textMeasurements = textMeasurements,
+                                        foldedRuns = foldedRuns,
+                                        defaultLabels = defaultLabels,
+                                        fontScale = fontScale,
+                                    )
+                                }
+                            } else {
+                                // The same horizontal padding as inside a card, so that every section's text starts at the
+                                // same x position whether it is carded or not.
                                 SongSectionContent(
+                                    modifier = sectionModifier.padding(horizontal = CARD_PADDING),
                                     section = section,
-                                    isOnCard = true,
+                                    isOnCard = false,
                                     headerStyle = headerStyle,
                                     lyricsStyle = lyricsStyle,
                                     chordStyle = chordStyle,
@@ -305,21 +336,6 @@ internal fun SongLyrics(
                                     fontScale = fontScale,
                                 )
                             }
-                        } else {
-                            // The same horizontal padding as inside a card, so that every section's text starts at the
-                            // same x position whether it is carded or not.
-                            SongSectionContent(
-                                modifier = sectionModifier.padding(horizontal = CARD_PADDING),
-                                section = section,
-                                isOnCard = false,
-                                headerStyle = headerStyle,
-                                lyricsStyle = lyricsStyle,
-                                chordStyle = chordStyle,
-                                textMeasurements = textMeasurements,
-                                foldedRuns = foldedRuns,
-                                defaultLabels = defaultLabels,
-                                fontScale = fontScale,
-                            )
                         }
                     }
                 }
@@ -1326,29 +1342,24 @@ private fun SongSectionsLayout(
 }
 
 /**
- * What [SongSectionsLayout] has already worked out about one set of sections, remembered for as long as nothing the
- * sections' heights depend on has changed. Neither of the two is state: they are read and written by the measurement
- * alone, and a change to them never has anything to redraw. The heights are kept per width and only for the widths of
- * the last few searches.
+ * What [SongSectionsLayout] has already worked out about one set of sections: the [sizes] of each, which outlive it for
+ * the sections a change leaves as they were (see [SectionSizesPool]), and the grid last decided for them. None of it
+ * is state: it is read and written by the measurement alone, and a change to it never has anything to redraw. The
+ * heights are kept per width and only for the widths of the last few searches.
  */
-private class SectionMeasurements(private val sectionCount: Int) {
+private class SectionMeasurements(private val sizes: List<SectionSizes>) {
 
-    private val heightsByWidth = HashMap<Int, IntArray>()
-    private val minWidths = IntArray(sectionCount) { UNMEASURED }
     private var lastGridKey: SectionGridKey? = null
     private var lastGrid = emptyGrid()
 
     /** The intrinsic height of the section at [index] when it is [width] wide. */
-    fun height(index: Int, width: Int, measure: (Int) -> Int): Int {
-        val heights = heightsByWidth.getOrPut(width) { IntArray(sectionCount) { UNMEASURED } }
-        if (heights[index] == UNMEASURED) heights[index] = measure(width)
-        return heights[index]
-    }
+    fun height(index: Int, width: Int, measure: (Int) -> Int): Int = sizes[index].heightsByWidth.getOrPut(width) { measure(width) }
 
     /** The minimum intrinsic width of the section at [index], which no width changes. */
     fun minWidth(index: Int, measure: (Int) -> Int): Int {
-        if (minWidths[index] == UNMEASURED) minWidths[index] = measure(Constraints.Infinity)
-        return minWidths[index]
+        val sectionSizes = sizes[index]
+        if (sectionSizes.minWidth == UNMEASURED) sectionSizes.minWidth = measure(Constraints.Infinity)
+        return sectionSizes.minWidth
     }
 
     /** The grid decided for [key], which is only searched for again once the key has changed. */
@@ -1357,13 +1368,46 @@ private class SectionMeasurements(private val sectionCount: Int) {
             // A window being resized searches at a new width on every frame and none of those comes back, so
             // the widths are only kept until there are more of them than a few searches ask about. They are let
             // go of between two searches and never during one, which asks about the same few over and over.
-            if (heightsByWidth.size > MAX_SECTION_WIDTHS) heightsByWidth.clear()
+            sizes.forEach { if (it.heightsByWidth.size > MAX_SECTION_WIDTHS) it.heightsByWidth.clear() }
             lastGrid = search()
             lastGridKey = key
         }
         return lastGrid
     }
 }
+
+/** What one section measures, kept for as long as a section equal to it is on the page. */
+internal class SectionSizes {
+
+    val heightsByWidth = HashMap<Int, Int>()
+    var minWidth = UNMEASURED
+}
+
+/**
+ * Hands out the [SectionSizes] of a list of sections, reusing those of the sections the previous list held by content:
+ * a section equal to one before measures the same at every width, since nothing outside the section decides its size
+ * that the pool is not remembered by. Equal sections take the sizes in the order they come in; a section that is new
+ * starts with nothing measured.
+ */
+internal class SectionSizesPool<T> {
+
+    private var sizesBySection = HashMap<T, ArrayDeque<SectionSizes>>()
+
+    fun sizesFor(sections: List<T>): List<SectionSizes> {
+        val next = HashMap<T, ArrayDeque<SectionSizes>>()
+        val sizes = sections.map { section ->
+            (sizesBySection[section]?.removeFirstOrNull() ?: SectionSizes()).also { next.getOrPut(section) { ArrayDeque() }.addLast(it) }
+        }
+        sizesBySection = next
+        return sizes
+    }
+}
+
+/** The key a section is emitted under in [SongLyrics]: its content's hash, and which of the sections equal to it it is. */
+private data class SectionKey(
+    val hash: Int,
+    val occurrence: Int,
+)
 
 /** Everything the [SectionGrid] depends on, apart from the heights of the sections. */
 private data class SectionGridKey(
