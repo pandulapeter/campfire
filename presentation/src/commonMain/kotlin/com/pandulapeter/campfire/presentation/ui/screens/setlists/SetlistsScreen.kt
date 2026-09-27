@@ -16,9 +16,7 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.calculateEndPadding
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.grid.GridItemSpan
 import androidx.compose.foundation.lazy.grid.LazyGridState
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
@@ -27,6 +25,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -36,7 +35,6 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.platform.LocalLayoutDirection
-import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.semantics.CustomAccessibilityAction
 import androidx.compose.ui.semantics.customActions
 import androidx.compose.ui.semantics.clearAndSetSemantics
@@ -97,9 +95,10 @@ import com.pandulapeter.campfire.presentation.ui.components.listTopFadeViewport
 import com.pandulapeter.campfire.presentation.ui.components.fadingUnderListTop
 import com.pandulapeter.campfire.presentation.ui.components.only
 import com.pandulapeter.campfire.presentation.ui.components.pushedSectionHeader
+import com.pandulapeter.campfire.presentation.ui.components.pushedSectionHeaderPlacement
 import com.pandulapeter.campfire.presentation.ui.components.rememberHasLoadedLibrary
 import com.pandulapeter.campfire.presentation.ui.components.rememberRetainedLazyGridState
-import com.pandulapeter.campfire.presentation.ui.components.sectionHeaderState
+import com.pandulapeter.campfire.presentation.ui.components.rememberSectionHeaderState
 import com.pandulapeter.campfire.presentation.ui.components.songCardPadding
 import com.pandulapeter.campfire.presentation.ui.components.songListColumnCount
 import com.pandulapeter.campfire.presentation.ui.components.underAppBar
@@ -199,8 +198,9 @@ private fun SetlistList(
     val labelsOnEverySong by viewModel.labelsOnEverySong.collectAsStateWithLifecycle()
     val isLoading by viewModel.isLoading.collectAsStateWithLifecycle()
     val hasLoadedLibrary = rememberHasLoadedLibrary(isLoading)
-    val pushedHeader = pushedSectionHeader(listState, contentType = "setlist_header")
     val topFade = rememberListTopFade(listState)
+    // Remembered, since a new modifier every time the list recomposes would recompose the grid with it.
+    val gridModifier = remember(topFade) { Modifier.fillMaxSize().listTopFadeViewport(topFade) }
     val isPerformanceModeEnabled by viewModel.isPerformanceModeEnabled.collectAsStateWithLifecycle()
     // Read once each, so that the branches below and the placeholders they render can never disagree about them.
     val setlistsPlaceholder = viewModel.setlistsPlaceholder.collectAsStateWithLifecycle().value
@@ -274,7 +274,7 @@ private fun SetlistList(
     Box(modifier = modifier) {
         LazyVerticalGrid(
             columns = ListColumns(columnCount),
-            modifier = Modifier.fillMaxSize().listTopFadeViewport(topFade),
+            modifier = gridModifier,
             state = listState,
             contentPadding = contentPadding.only(start = true, end = true, bottom = true, extraEnd = FAST_SCROLLER_WIDTH, extraBottom = 8.dp),
         ) {
@@ -307,10 +307,10 @@ private fun SetlistList(
                         key = "setlist_${setlistWithSongs.setlist.fileName}",
                         contentType = "setlist_header",
                     ) { headerIndex ->
-                        val headerState = sectionHeaderState(listState, headerIndex)
+                        val headerState = rememberSectionHeaderState(listState, headerIndex)
                         SectionHeader(
                             modifier = listItemAnimation(listState, hasLoadedLibrary),
-                            state = headerState,
+                            state = { headerState.value },
                             endPadding = headerEndPadding,
                             text = setlistWithSongs.setlist.title,
                             // A setlist is only ever on this screen archived because the filter was asked to show them,
@@ -327,7 +327,7 @@ private fun SetlistList(
                                     )
                                 }
                             },
-                            opacity = if (headerState.visibleFraction < 1f) 0f else 1f,
+                            opacity = { if (headerState.value.visibleFraction < 1f) 0f else 1f },
                             appBarOverlap = appBarOverlap,
                         )
                     }
@@ -490,31 +490,50 @@ private fun SetlistList(
             }
         }
         // The visual copy can pass above the grid's clipped viewport, under the transparent app bar, as it fades away.
-        pushedHeader?.let { pushed ->
-            val setlist = setlistsWithSongs.firstOrNull { "setlist_${it.setlist.fileName}" == pushed.key }?.setlist
-            if (setlist != null) {
-                val density = LocalDensity.current
-                SectionHeader(
-                    modifier = Modifier.offset { pushed.offset }.width(with(density) { pushed.width.toDp() }).clearAndSetSemantics {},
-                    text = setlist.title,
-                    // Pinned for as long as it is being pushed away: it keeps the width it had in the bar's place rather than
-                    // widening again as it leaves.
-                    state = SectionHeaderState(visibleFraction = pushed.visibleFraction, pinnedFraction = 1f),
-                    endPadding = headerEndPadding,
-                    icon = if (setlist.isArchived) painterResource(Res.drawable.ic_archive) else null,
-                    onClick = null,
-                    actionIcon = if (isPerformanceModeEnabled) null else painterResource(Res.drawable.ic_more),
-                    contentOpacity = pushed.visibleFraction,
-                    pushedDistancePx = pushed.pushedDistance,
-                    appBarOverlap = appBarOverlap,
-                )
-            }
-        }
+        PushedSetlistHeader(
+            listState = listState,
+            setlistsWithSongs = setlistsWithSongs,
+            endPadding = headerEndPadding,
+            isPerformanceModeEnabled = isPerformanceModeEnabled,
+            appBarOverlap = appBarOverlap,
+        )
         FastScroller(
             modifier = Modifier.align(Alignment.TopEnd).belowAppBarOverlap(appBarOverlap).padding(contentPadding.only(top = true, end = true, bottom = true)),
             gridState = listState,
         )
     }
+}
+
+/**
+ * The outgoing setlist header, drawn over the grid while the next one pushes it up. A composable of its own for the
+ * reason the songs screen's is: the push restarts nothing but it, and it only once per setlist.
+ */
+@Composable
+private fun PushedSetlistHeader(
+    listState: LazyGridState,
+    setlistsWithSongs: List<CampfireViewModel.SetlistWithSongs>,
+    endPadding: Dp,
+    isPerformanceModeEnabled: Boolean,
+    appBarOverlap: () -> AppBarOverlap,
+) {
+    val pushed = pushedSectionHeader(listState, contentType = "setlist_header")
+    val key by remember(pushed) { derivedStateOf { pushed.value?.key } }
+    val setlistsByKey = remember(setlistsWithSongs) { setlistsWithSongs.associateBy { "setlist_${it.setlist.fileName}" } }
+    val setlist = key?.let { setlistsByKey[it] }?.setlist ?: return
+    SectionHeader(
+        modifier = Modifier.pushedSectionHeaderPlacement(pushed).clearAndSetSemantics {},
+        text = setlist.title,
+        // Pinned for as long as it is being pushed away: it keeps the width it had in the bar's place rather than
+        // widening again as it leaves.
+        state = { SectionHeaderState(visibleFraction = pushed.value?.visibleFraction ?: 0f, pinnedFraction = 1f) },
+        endPadding = endPadding,
+        icon = if (setlist.isArchived) painterResource(Res.drawable.ic_archive) else null,
+        onClick = null,
+        actionIcon = if (isPerformanceModeEnabled) null else painterResource(Res.drawable.ic_more),
+        contentOpacity = { pushed.value?.visibleFraction ?: 0f },
+        pushedDistancePx = { pushed.value?.pushedDistance ?: 0 },
+        appBarOverlap = appBarOverlap,
+    )
 }
 
 /**

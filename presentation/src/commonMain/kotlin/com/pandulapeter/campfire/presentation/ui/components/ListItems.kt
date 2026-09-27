@@ -54,6 +54,7 @@ import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.runtime.State
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -463,9 +464,15 @@ internal data class PushedSectionHeader(
     val visibleFraction: Float,
 )
 
+/**
+ * The header of [contentType] that the next one is pushing up out of the grid, null while none is. A state rather than
+ * its value, since the value changes on every frame of a push and whoever reads it is recomposed with it: only the copy
+ * drawn over the grid should be, and only once per section, by reading the rest while it is laid out and drawn
+ * ([pushedSectionHeaderPlacement]).
+ */
 @Composable
-internal fun pushedSectionHeader(listState: LazyGridState, contentType: String): PushedSectionHeader? {
-    val pushedHeader by remember(listState, contentType) {
+internal fun pushedSectionHeader(listState: LazyGridState, contentType: String): State<PushedSectionHeader?> =
+    remember(listState, contentType) {
         derivedStateOf {
             val layoutInfo = listState.layoutInfo
             val top = layoutInfo.viewportStartOffset
@@ -483,13 +490,26 @@ internal fun pushedSectionHeader(listState: LazyGridState, contentType: String):
             }
         }
     }
-    return pushedHeader
+
+/**
+ * Puts the copy of a [pushed] header where the header is in the grid and makes it as wide, reading both while it is
+ * laid out, so that the push moves it without recomposing it. Nothing is laid out once there is no header to follow.
+ */
+internal fun Modifier.pushedSectionHeaderPlacement(pushed: State<PushedSectionHeader?>) = layout { measurable, constraints ->
+    val header = pushed.value ?: return@layout layout(0, 0) {}
+    val width = header.width.coerceIn(constraints.minWidth, constraints.maxWidth)
+    val placeable = measurable.measure(constraints.copy(minWidth = width, maxWidth = width))
+    layout(placeable.width, placeable.height) { placeable.placeRelativeWithLayer(header.offset) }
 }
 
-/** The scroll fractions that fade the outgoing header as the next one pushes it away, and narrow a pinned one. */
+/**
+ * The scroll fractions that fade the outgoing header as the next one pushes it away, and narrow a pinned one. A state
+ * rather than its value for the reason [pushedSectionHeader] is: [SectionHeader] reads it while it is laid out and
+ * drawn, and the header item is not recomposed on every frame of a push.
+ */
 @Composable
-internal fun sectionHeaderState(listState: LazyGridState, headerIndex: Int): SectionHeaderState {
-    val state by remember(listState, headerIndex) {
+internal fun rememberSectionHeaderState(listState: LazyGridState, headerIndex: Int): State<SectionHeaderState> =
+    remember(listState, headerIndex) {
         derivedStateOf {
             val layoutInfo = listState.layoutInfo
             val header = layoutInfo.visibleItemsInfo.firstOrNull { it.index == headerIndex }
@@ -504,8 +524,6 @@ internal fun sectionHeaderState(listState: LazyGridState, headerIndex: Int): Sec
             }
         }
     }
-    return state
-}
 
 /**
  * A sticky section row: the section's name, and a setlist's menu, with nothing behind them and no divider under them.
@@ -528,6 +546,9 @@ internal fun sectionHeaderState(listState: LazyGridState, headerIndex: Int): Sec
  * measured from the same edge. A decorative copy can be drawn outside the grid while the row is pushed up
  * ([pushedDistancePx]); its content lags behind the row there and fades with [contentOpacity].
  *
+ * Everything that follows the scroll position is handed over as a function and read only while the row is laid out
+ * ([state]) or drawn ([opacity], [contentOpacity], [pushedDistancePx]), so that a scroll moving it recomposes nothing.
+ *
  * @param action The button at the end of the pill, handed the modifier that keeps it from taking the focus
  *   ([unfocusable]).
  * @param appBarOverlap How far in from the row's end edge the app bar's buttons reach while this row is pinned under
@@ -538,22 +559,22 @@ internal fun sectionHeaderState(listState: LazyGridState, headerIndex: Int): Sec
 internal fun SectionHeader(
     modifier: Modifier = Modifier,
     text: String,
-    state: SectionHeaderState,
+    state: () -> SectionHeaderState,
     endPadding: Dp,
     icon: Painter? = null,
     iconContentDescription: String? = null,
     onClick: (() -> Unit)?,
     action: (@Composable (modifier: Modifier) -> Unit)? = null,
     actionIcon: Painter? = null,
-    opacity: Float = 1f,
-    contentOpacity: Float = 1f,
-    pushedDistancePx: Int = 0,
+    opacity: () -> Float = { 1f },
+    contentOpacity: () -> Float = { 1f },
+    pushedDistancePx: () -> Int = { 0 },
     appBarOverlap: () -> AppBarOverlap,
 ) = Box(
     modifier = modifier
         .extendIntoEndPadding(endPadding)
         .graphicsLayer {
-            alpha = opacity
+            alpha = opacity()
             clip = false
         }
         .fillMaxWidth()
@@ -573,7 +594,7 @@ internal fun SectionHeader(
             // The list moving down under an opening search takes a pinned header out of that place, so the same
             // curve is run on how much of it the buttons still cover, and a pinned one widens and narrows along
             // the path it narrowed along as it was scrolled up.
-            val coveredFraction = FastOutSlowInEasing.transform(state.pinnedFraction) *
+            val coveredFraction = FastOutSlowInEasing.transform(state().pinnedFraction) *
                 FastOutSlowInEasing.transform(overlap.coverage)
             val endInset = cardsEndInset + (pinnedEndInset - cardsEndInset) * coveredFraction
             val width = (constraints.maxWidth - endInset.roundToInt()).coerceAtLeast(0)
@@ -581,9 +602,9 @@ internal fun SectionHeader(
             layout(placeable.width, placeable.height) { placeable.placeRelative(0, 0) }
         }
         .graphicsLayer {
-            alpha = contentOpacity
+            alpha = contentOpacity()
             // The outgoing pill lags the row slightly, then disappears before reaching the bar's controls.
-            translationY = pushedDistancePx * SECTION_HEADER_CONTENT_PARALLAX_FRACTION
+            translationY = pushedDistancePx() * SECTION_HEADER_CONTENT_PARALLAX_FRACTION
         }
     val pillContent: @Composable () -> Unit = {
         Row(
