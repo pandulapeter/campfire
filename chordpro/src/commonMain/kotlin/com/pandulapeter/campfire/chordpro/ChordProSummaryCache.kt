@@ -13,10 +13,12 @@ import com.pandulapeter.campfire.chordpro.model.ChordProSummary
 
 /**
  * [ChordProParser.summarize] for a text that is edited one keystroke at a time, which is how the editor keeps its title,
- * artist and key current as they are typed. Most keystrokes are lyrics, and a line of plain lyrics - no directive, no
- * chord, no comment, nothing that reads as a tab or a grid, outside any environment that reads its lines differently -
- * cannot change the summary, so an edit that stays inside one such line returns the summary it had. Anything the cache
- * cannot prove to be that is summarized again from scratch: the answer is always exactly what a full parse would give.
+ * artist and key current as they are typed. Most keystrokes are lyrics, and the only things a lyric line - not a
+ * directive, not a comment, outside any tab, grid or environment that reads its lines differently - hands the summary
+ * are the chord names in its brackets and whether it is blank. So an edit that stays inside one such line, outside its
+ * brackets, adds or removes no syntax and leaves the line a non-blank lyric line returns the summary it had, chords on
+ * the line or not. Anything the cache cannot prove to be that is summarized again from scratch: the answer is always
+ * exactly what a full parse would give.
  *
  * One instance follows one text; it is not safe to share between threads.
  */
@@ -43,10 +45,10 @@ class ChordProSummaryCache internal constructor(
         val oldSummary = previousSummary
         if (oldText != null && oldSummary != null) {
             if (text === oldText || text == oldText) return oldSummary
-            val change = changedSpan(oldText, text)
+            val change = ChordProTextChange.between(oldText, text)
             val line = safeLine
-            if (line != null && change.oldStart >= line.first && change.oldEnd <= line.last &&
-                change.newEnd >= line.first && isPlainLyricLine(text, line.first, line.last + text.length - oldText.length)
+            if (line != null && change.oldStart >= line.first && change.oldEnd <= line.last && change.newEnd >= line.first &&
+                isHarmlessEdit(oldText, text, change, line.first) && isLyricLine(text, line.first, line.last + text.length - oldText.length)
             ) {
                 previousText = text
                 safeLine = line.first..(line.last + text.length - oldText.length)
@@ -65,21 +67,6 @@ class ChordProSummaryCache internal constructor(
         return summary
     }
 
-    /** The part of the old text an edit replaced, and where its replacement ends in the new one; the ends are exclusive. */
-    private data class ChangedSpan(val oldStart: Int, val oldEnd: Int, val newEnd: Int)
-
-    private fun changedSpan(old: String, new: String): ChangedSpan {
-        var start = 0
-        while (start < old.length && start < new.length && old[start] == new[start]) start++
-        var oldEnd = old.length
-        var newEnd = new.length
-        while (oldEnd > start && newEnd > start && old[oldEnd - 1] == new[newEnd - 1]) {
-            oldEnd--
-            newEnd--
-        }
-        return ChangedSpan(start, oldEnd, newEnd)
-    }
-
     /**
      * The line around [cursor] as a range whose end is exclusive, where editing that line cannot change the summary, or
      * null. The environment the line stands in is worked out the way [ChordProParser.summarize] works it out, and has to
@@ -91,7 +78,7 @@ class ChordProSummaryCache internal constructor(
         while (start > 0 && text[start - 1] != '\n' && text[start - 1] != '\r') start--
         var end = position
         while (end < text.length && text[end] != '\n' && text[end] != '\r') end++
-        if (!isPlainLyricLine(text, start, end)) return null
+        if (!isLyricLine(text, start, end)) return null
         var environment: String? = null
         var offset = 0
         while (offset < start) {
@@ -116,17 +103,32 @@ class ChordProSummaryCache internal constructor(
     }
 
     /**
-     * Stricter than it has to be: a hyphen or a slash in a lyric line changes nothing either, but they are how tabs and
-     * grids are written, and a line holding one is simply parsed again.
+     * Non-blank, not a directive and not a `#` comment, which is what makes the summary read it as lyrics; chords are
+     * allowed, since only the edit itself is checked for syntax. A line starting with a `{` that is not a directive is
+     * lyrics to the parser too, and is simply parsed again.
      */
-    private fun isPlainLyricLine(text: String, start: Int, end: Int): Boolean {
+    private fun isLyricLine(text: String, start: Int, end: Int): Boolean {
         if (start < 0 || end > text.length || start >= end) return false
-        var hasVisibleCharacter = false
-        for (offset in start until end) {
-            val character = text[offset]
-            if (character in "{}[]#|/\\-\r\n") return false
-            if (!character.isWhitespace()) hasVisibleCharacter = true
-        }
-        return hasVisibleCharacter
+        var first = start
+        while (first < end && text[first].isWhitespace()) first++
+        return first < end && text[first] != '{' && text[first] != '#' && (start until end).none { text[it] == '\r' || text[it] == '\n' }
+    }
+
+    /**
+     * Whether [change] neither removes nor inserts any syntax and starts outside every closed bracket pair of the line
+     * that begins at [lineStart], which leaves every bracket pair and its content as it was. Stricter than it has to be:
+     * a hyphen or a slash in a lyric line changes nothing either, but they are how tabs and grids are written, and an
+     * edit holding one is simply parsed again.
+     */
+    private fun isHarmlessEdit(old: String, new: String, change: ChordProTextChange, lineStart: Int): Boolean {
+        for (offset in change.oldStart until change.oldEnd) if (old[offset] in EDIT_SENSITIVE) return false
+        for (offset in change.oldStart until change.newEnd) if (new[offset] in EDIT_SENSITIVE) return false
+        // The text before the edit is the same on both sides, so the bracket the edit follows is read from either.
+        val open = new.lastIndexOf('[', change.oldStart - 1).takeIf { it >= lineStart } ?: return true
+        return new.lastIndexOf(']', change.oldStart - 1) > open
+    }
+
+    private companion object {
+        const val EDIT_SENSITIVE = "{}[]#|/\\-\r\n"
     }
 }
