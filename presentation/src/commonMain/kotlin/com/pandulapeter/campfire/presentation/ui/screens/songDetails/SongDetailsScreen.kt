@@ -399,6 +399,9 @@ internal fun SongDetailsScreen(
                 val song = songs[page]
                 val scrollState = rememberScrollState()
                 if (page == pagerState.currentPage) SideEffect { currentPageScrollState = scrollState }
+                // Only the song being read follows a pinch frame by frame; the pages beside it are composed and laid out
+                // too, and take the scale once it has settled. A swipe makes its page the target, which follows at once.
+                val isFollowingGesture = page == pagerState.currentPage || page == pagerState.targetPage
                 SongDetailsPage(
                     song = song,
                     scrollState = scrollState,
@@ -406,7 +409,7 @@ internal fun SongDetailsScreen(
                     hasFailed = song.fileName in failedSongFileNames,
                     transposition = transpositions[song.fileName, destination.setlistFileName],
                     shouldShowChords = shouldShowChords,
-                    fontScale = { viewModel.fontScale },
+                    fontScale = if (isFollowingGesture) ({ viewModel.fontScale }) else ({ viewModel.settledFontScale }),
                     isHorizontalFlow = isHorizontalFlow,
                     // One set per song, wherever it is opened from: folding is how this reader reads it, not how the
                     // setlist has the band play it.

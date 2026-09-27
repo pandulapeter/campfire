@@ -130,6 +130,7 @@ import kotlinx.serialization.SerializationException
 import kotlinx.serialization.json.Json
 import kotlin.math.ceil
 import kotlin.math.floor
+import kotlin.math.roundToInt
 import kotlin.time.Duration.Companion.seconds
 import kotlin.time.TimeMark
 import kotlin.time.TimeSource
@@ -315,7 +316,12 @@ class CampfireViewModel(
      */
     internal fun zoomSongText(steps: Int?): Boolean {
         if (!isSongTextZoomable) return false
-        if (steps == null) setFontScale(DEFAULT_FONT_SCALE) else adjustFontScale(steps)
+        if (steps == null) {
+            setFontScale(DEFAULT_FONT_SCALE)
+            settleFontScale()
+        } else {
+            adjustFontScale(steps)
+        }
         return true
     }
 
@@ -812,6 +818,15 @@ class CampfireViewModel(
      */
     private val unsavedFontScale = MutableStateFlow<Float?>(null)
 
+    private val settledFontScaleState = mutableFloatStateOf(DEFAULT_FONT_SCALE)
+
+    /**
+     * [fontScale] once it has held still for a moment: what the songs that are not on screen are laid out at, so that a
+     * pinch lays out the one song being read rather than the pages beside it as well. A step of the stepper or of a
+     * shortcut is not a continuous change, so it reaches them at once.
+     */
+    val settledFontScale: Float get() = settledFontScaleState.floatValue
+
     /**
      * The import that has been worked out but not carried out, waiting for the user to answer
      * [DialogType.ImportConflicts]. Not part of the dialog itself, which holds only what it draws: this is the work,
@@ -994,8 +1009,14 @@ class CampfireViewModel(
             // The first read at launch, a read again, a restore, a sync run: whatever wrote the preference wins
             // whenever nothing set here is still waiting to be saved. The echo of our own save equals the live value.
             userPreferences.filterNotNull().map { it.fontScale }.distinctUntilChanged().collect { stored ->
-                if (unsavedFontScale.value == null) liveFontScale.floatValue = stored
+                if (unsavedFontScale.value == null) {
+                    liveFontScale.floatValue = stored
+                    settleFontScale()
+                }
             }
+        }
+        viewModelScope.launch {
+            snapshotFlow { fontScale }.debounce(FONT_SCALE_SETTLE_MILLIS).collect { settledFontScaleState.floatValue = it }
         }
     }
 
@@ -2181,8 +2202,12 @@ class CampfireViewModel(
         copy(foldedSections = if (folded.isEmpty()) foldedSections - songFileName else foldedSections + (songFileName to folded))
     }
 
+    /**
+     * Kept in whole percent, which is all the stepper's label shows: a slow pinch moves less than that on most frames,
+     * and an equal value is one the snapshot state ignores, so those frames lay nothing out again.
+     */
     fun setFontScale(value: Float) {
-        val clamped = value.coerceIn(MIN_FONT_SCALE, MAX_FONT_SCALE)
+        val clamped = (value.coerceIn(MIN_FONT_SCALE, MAX_FONT_SCALE) * 100).roundToInt() / 100f
         if (clamped == liveFontScale.floatValue) return
         liveFontScale.floatValue = clamped
         unsavedFontScale.value = clamped
@@ -2197,6 +2222,11 @@ class CampfireViewModel(
         val currentSteps = liveFontScale.floatValue / FONT_SCALE_STEP
         val snappedSteps = if (steps > 0) floor(currentSteps + FONT_SCALE_STEP_TOLERANCE) else ceil(currentSteps - FONT_SCALE_STEP_TOLERANCE)
         setFontScale((snappedSteps + steps) * FONT_SCALE_STEP)
+        settleFontScale()
+    }
+
+    private fun settleFontScale() {
+        settledFontScaleState.floatValue = liveFontScale.floatValue
     }
 
     fun setSortingMode(value: UserPreferences.SortingMode) = updateUserPreferences { copy(sortingMode = value) }
@@ -2690,6 +2720,7 @@ class CampfireViewModel(
         const val FONT_SCALE_STEP = 0.1f
         private const val FONT_SCALE_STEP_TOLERANCE = 0.01f // Floating point slack, so that 1.1000001 still counts as step 11.
         private const val FONT_SCALE_SAVE_DELAY_MILLIS = 500L
+        private const val FONT_SCALE_SETTLE_MILLIS = 200L
         private const val SONG_EDIT_ATTEMPTS = 2
         private const val BACK_STACK_KEY = "backStack"
         private const val DEMO_LIBRARY_READ_TIMEOUT_MILLIS = 10_000L // Past the drawables' five seconds: it cuts short a first impression, not a frame.
