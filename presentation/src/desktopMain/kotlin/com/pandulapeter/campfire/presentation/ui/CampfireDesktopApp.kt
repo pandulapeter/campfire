@@ -21,6 +21,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draganddrop.DragAndDropEvent
 import androidx.compose.ui.draganddrop.DragAndDropTarget
 import androidx.compose.ui.draganddrop.awtTransferable
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.input.key.Key
 import androidx.compose.ui.input.key.KeyEvent
 import androidx.compose.ui.input.key.KeyEventType
@@ -50,12 +51,15 @@ import java.io.File
  * whatever is open on top of the app - a dialog, a bottom sheet or an overflow menu - pops the back stack when there
  * is none, clears the Songs search query on the root screen if it's not already empty, and closes the application
  * otherwise.
+ *
+ * @param onBackgroundColorChanged See [CampfireApp].
  */
 @OptIn(ExperimentalComposeUiApi::class)
 @Composable
 fun CampfireDesktopApp(
     viewModel: CampfireViewModel = koinViewModel(),
     filesToImport: Flow<List<ImportedFile>> = emptyFlow(),
+    onBackgroundColorChanged: (Color) -> Unit = {},
 ) = CompositionLocalProvider(
     LocalFilePicker provides DesktopFilePicker
 ) {
@@ -93,6 +97,7 @@ fun CampfireDesktopApp(
             viewModel = viewModel,
             urlOpener = { url -> if (!openUrl(url)) viewModel.onLinkNotOpened(url) },
             filesToImport = filesToImport,
+            onBackgroundColorChanged = onBackgroundColorChanged,
         )
     }
 }

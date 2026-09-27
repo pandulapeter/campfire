@@ -21,6 +21,7 @@ import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.awt.ComposeWindow
 import androidx.compose.ui.awt.SwingWindow
 import androidx.compose.ui.configureSwingGlobalsForCompose
+import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.unit.DpSize
 import androidx.compose.ui.unit.LayoutDirection
@@ -38,6 +39,7 @@ import com.pandulapeter.campfire.presentation.ui.handlePreviewKeyEvent
 import com.pandulapeter.campfire.presentation.ui.resetEscapeKey
 import com.pandulapeter.campfire.presentation.ui.platform.desktopDataDirectory
 import com.pandulapeter.campfire.presentation.ui.theme.interfaceScale
+import java.awt.Color
 import java.awt.Desktop
 import java.awt.Dimension
 import java.awt.Toolkit
@@ -168,6 +170,9 @@ fun main(args: Array<String>) {
                     CampfireDesktopApp(
                         viewModel = currentViewModel,
                         filesToImport = OpenedFiles.files,
+                        // What the window shows wherever the app has not been drawn yet - the edge a fast resize
+                        // uncovers before the next frame fills it - which is white unless it is told otherwise.
+                        onBackgroundColorChanged = { color -> window.background = Color(color.toArgb()) },
                     )
                 }
             }

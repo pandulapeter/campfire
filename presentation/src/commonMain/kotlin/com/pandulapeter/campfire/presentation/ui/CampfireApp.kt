@@ -80,6 +80,7 @@ import androidx.compose.runtime.snapshotFlow
 import androidx.compose.runtime.withFrameNanos
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.input.pointer.PointerEventPass
 import androidx.compose.ui.input.pointer.pointerInput
@@ -172,6 +173,9 @@ import kotlin.math.roundToInt
  *   loading screen of the web build. Every one of those is otherwise taken away by the first frame the app draws,
  *   and that frame is [LaunchScreen] rather than the app - so without this they would hand over to it and the user
  *   would watch two startup screens in a row.
+ * @param onBackgroundColorChanged Called with the theme's background color whenever it changes, every frame of a
+ *   cross fade included, for the shells whose window shows a color of its own where the app has not drawn yet: the
+ *   desktop's, when it is resized faster than the app is laid out again.
  */
 @OptIn(ExperimentalMaterial3ExpressiveApi::class)
 @Composable
@@ -180,6 +184,7 @@ fun CampfireApp(
     urlOpener: (String) -> Unit,
     filesToImport: Flow<List<ImportedFile>> = emptyFlow(),
     onAppReady: () -> Unit = {},
+    onBackgroundColorChanged: (Color) -> Unit = {},
 ) {
     LaunchedEffect(filesToImport) { filesToImport.collect(viewModel::importFiles) }
     SyncNotificationEffect(viewModel)
@@ -207,6 +212,8 @@ fun CampfireApp(
         uiMode = userPreferences?.uiMode,
         themeColor = userPreferences?.themeColor,
     ) { isThemeSettled ->
+        val backgroundColor = MaterialTheme.colorScheme.background
+        SideEffect { onBackgroundColorChanged(backgroundColor) }
         Box(
             modifier = Modifier.fillMaxSize()
         ) {
