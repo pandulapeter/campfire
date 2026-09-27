@@ -403,10 +403,18 @@ internal fun SongDetailsScreen(
                 // Only the song being read follows a pinch frame by frame; the pages beside it are composed and laid out
                 // too, and take the scale once it has settled. A swipe makes its page the target, which follows at once.
                 val isFollowingGesture = page == pagerState.currentPage || page == pagerState.targetPage
+                val text = songTexts[song.fileName]
+                // The first swap of a page from loading to its lyrics lays the whole song out in one frame, so a page
+                // that is neither on screen nor being swiped to is held back from it until the pager has come to rest,
+                // or it would land in the middle of the settle animation. A page shows its lyrics once and keeps them,
+                // a newer text included; only that first swap waits.
+                var hasShownLyrics by remember { mutableStateOf(text != null) }
+                val shownText = if (!hasShownLyrics && !isFollowingGesture && pagerState.isScrollInProgress) null else text
+                if (shownText != null && !hasShownLyrics) SideEffect { hasShownLyrics = true }
                 SongDetailsPage(
                     song = song,
                     scrollState = scrollState,
-                    text = songTexts[song.fileName],
+                    text = shownText,
                     hasFailed = song.fileName in failedSongFileNames,
                     transposition = transpositions[song.fileName, destination.setlistFileName],
                     shouldShowChords = shouldShowChords,
