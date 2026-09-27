@@ -41,6 +41,7 @@ import androidx.compose.ui.semantics.Role
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.layout.Layout
@@ -187,13 +188,16 @@ internal fun SongLyrics(
     // Kept across a new song text rather than keyed on it, since a transposition or a tag put on rewrites the song and
     // must not make what was just unfolded fade in a second time.
     var toggledFolds by remember { mutableStateOf(emptySet<String>()) }
-    val foldedRuns = onFoldToggled?.let {
+    // Remembered rather than built on every composition, since every section's content is handed it and compares it
+    // by identity: it is rebuilt exactly when what it answers changes, and the sections skip on everything else.
+    val latestOnFoldToggled by rememberUpdatedState(onFoldToggled)
+    val foldedRuns = if (onFoldToggled == null) null else remember(foldedSections, toggledFolds) {
         FoldedRuns(
             collapsed = foldedSections,
             toggled = toggledFolds,
             onToggled = { key ->
                 toggledFolds += key
-                onFoldToggled(key)
+                latestOnFoldToggled?.invoke(key)
             },
         )
     }
@@ -223,9 +227,10 @@ internal fun SongLyrics(
             annotationStyle = annotationStyle,
         )
     }
-    // The metadata header scrolls with the song, so the columns below it have that much less room to fit into.
+    // The metadata header scrolls with the song, so the columns below it have that much less room to fit into. It is
+    // only ever read while the layout is measured, after the header above it in the same pass, so a page is composed
+    // once when it opens and its first grid already knows about the header.
     var headerHeight by remember { mutableIntStateOf(0) }
-    val headerHeightDp = with(density) { headerHeight.toDp() }
     Column(modifier = modifier) {
         SongMetadataHeader(
             modifier = Modifier
@@ -250,7 +255,8 @@ internal fun SongLyrics(
                 columnGap = COLUMN_GAP,
                 sectionGap = SECTION_GAP,
                 rowGap = ROW_GAP,
-                availableHeight = if (availableHeight.isSpecified) (availableHeight - headerHeightDp).coerceAtLeast(0.dp) else availableHeight,
+                availableHeight = availableHeight,
+                headerHeight = { headerHeight },
                 // A row is read once the header has scrolled away, so it has the whole of the screen to fit into.
                 maxRowHeight = availableHeight,
                 extraWidth = extraWidth,
@@ -1152,7 +1158,7 @@ private fun TextStyle.scaled(scale: Float) = copy(
  * single column reads the same way in both modes, so it is always laid out as a plain column, without dividers.)
  *
  * The columns are made as wide (and therefore as few) as possible while the whole song still fits into
- * [availableHeight], so that the lyrics wrap as little as they can and the vertical space is actually used: a song
+ * [availableHeight] less the [headerHeight] above them, so that the lyrics wrap as little as they can and the vertical space is actually used: a song
  * that needs three columns is not squeezed into five just because the window is wide enough for five. Songs that do
  * not fit no matter what get as many columns as the width allows (in the horizontal flow: at most as many in each
  * row). Column widths stay between [minColumnWidth] and [maxColumnWidth] and the whole block is centered, so a short
@@ -1183,6 +1189,7 @@ private fun SongSectionsLayout(
     sectionGap: Dp,
     rowGap: Dp,
     availableHeight: Dp,
+    headerHeight: () -> Int,
     maxRowHeight: Dp,
     extraWidth: Dp,
     sectionCount: Int,
@@ -1203,7 +1210,7 @@ private fun SongSectionsLayout(
     val sectionGapPx = sectionGap.roundToPx()
     val rowGapPx = rowGap.roundToPx()
     val maxColumnWidthPx = maxColumnWidth.roundToPx()
-    val availableHeightPx = if (availableHeight.isSpecified) availableHeight.roundToPx() else 0
+    val availableHeightPx = if (availableHeight.isSpecified) (availableHeight.roundToPx() - headerHeight()).coerceAtLeast(0) else 0
     val maxRowHeightPx = if (maxRowHeight.isSpecified && maxRowHeight > 0.dp) maxRowHeight.roundToPx() else Int.MAX_VALUE
     val maxColumnCount = ((settledWidth + columnGapPx) / (minColumnWidth.roundToPx() + columnGapPx)).coerceIn(1, maxOf(1, measurables.size))
     fun columnWidthFor(totalWidth: Int, columnCount: Int) = ((totalWidth - columnGapPx * (columnCount - 1)) / columnCount).coerceIn(0, maxColumnWidthPx)
