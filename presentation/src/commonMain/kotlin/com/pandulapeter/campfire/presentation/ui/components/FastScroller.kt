@@ -36,14 +36,16 @@ import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
+import androidx.compose.runtime.snapshotFlow
+import androidx.compose.runtime.withFrameNanos
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.drawBehind
@@ -63,8 +65,8 @@ import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.util.lerp
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.launch
+import kotlinx.coroutines.flow.collectLatest
+import kotlinx.coroutines.flow.filter
 import kotlinx.coroutines.withTimeoutOrNull
 import kotlin.math.abs
 import kotlin.math.max
@@ -93,7 +95,6 @@ internal fun FastScroller(
     gridState: LazyGridState,
     labelForItem: (index: Int) -> String? = { null },
 ) {
-    val coroutineScope = rememberCoroutineScope()
     val density = LocalDensity.current
     val state = remember(gridState, density) {
         FastScrollerState(
@@ -101,6 +102,20 @@ internal fun FastScroller(
             minThumbHeight = with(density) { MIN_THUMB_HEIGHT.toPx() },
             touchSlack = with(density) { TOUCH_SLACK.toPx() },
         )
+    }
+    // The gesture only says where the list should go, and the list goes there once a frame: every jump lays out a
+    // screen of rows nobody has seen yet, and a mouse on the desktop reports several moves between two frames, each of
+    // which would otherwise lay out rows that are never drawn. A fraction that arrives before the frame replaces the
+    // one waiting for it, and the last one of a drag is still applied after the drag has ended.
+    LaunchedEffect(state) {
+        snapshotFlow { state.pendingFraction }
+            .filter { it != NO_PENDING_SCROLL }
+            .collectLatest { fraction ->
+                withFrameNanos { }
+                state.scrollToFraction(fraction)
+                // Cleared, so that a later change of the list does not replay the jump.
+                if (state.pendingFraction == fraction) state.pendingFraction = NO_PENDING_SCROLL
+            }
     }
     val interactionSource = remember { MutableInteractionSource() }
     val isHovered by interactionSource.collectIsHoveredAsState()
@@ -203,7 +218,7 @@ internal fun FastScroller(
                 modifier = Modifier
                     .fillMaxSize()
                     .hoverable(interactionSource)
-                    .thumbDragGestures(state = state, coroutineScope = coroutineScope)
+                    .thumbDragGestures(state = state)
             )
         }
     }
@@ -222,7 +237,6 @@ private fun bubbleTop(desiredTop: Float, trackHeight: Int, bubbleHeight: Float):
  */
 private fun Modifier.thumbDragGestures(
     state: FastScrollerState,
-    coroutineScope: CoroutineScope,
 ) = pointerInput(state) {
     awaitEachGesture {
         val down = awaitFirstDown()
@@ -234,7 +248,7 @@ private fun Modifier.thumbDragGestures(
         // enough - and a drag that never ends leaves the bubble up and the thumb frozen the next time it comes back.
         try {
             state.startDrag(pressY = down.position.y)?.let { fraction ->
-                coroutineScope.launch { state.scrollToFraction(fraction) }
+                state.pendingFraction = fraction
             }
             if (press == ThumbPress.GRAB) {
                 // The finger may have travelled up to the touch slop while the gesture was being told apart. Only a
@@ -242,13 +256,13 @@ private fun Modifier.thumbDragGestures(
                 currentEvent.changes.firstOrNull { it.id == down.id && it.position.y != down.position.y }?.let { change ->
                     val fraction = state.dragBy(change.position.y - down.position.y)
                     change.consume()
-                    coroutineScope.launch { state.scrollToFraction(fraction) }
+                    state.pendingFraction = fraction
                 }
                 drag(down.id) { change ->
                     // The delta has to be read before consuming the change, as consumed changes report none.
                     val fraction = state.dragBy(change.positionChange().y)
                     change.consume()
-                    coroutineScope.launch { state.scrollToFraction(fraction) }
+                    state.pendingFraction = fraction
                 }
             }
         } finally {
@@ -298,6 +312,9 @@ private class FastScrollerState(
     var isDragging by mutableStateOf(false)
         private set
     private var draggedThumbTop by mutableFloatStateOf(0f)
+
+    /** The scroll fraction the list is to be moved to on the next frame, [NO_PENDING_SCROLL] while there is none. */
+    var pendingFraction by mutableFloatStateOf(NO_PENDING_SCROLL)
 
     /**
      * Worked out once per change of the list's layout rather than once per reader: a single frame of a scroll asks for
@@ -414,4 +431,5 @@ private val BUBBLE_SIZE = 48.dp
 private val BUBBLE_ELEVATION = 2.dp
 private val BUBBLE_TRANSFORM_ORIGIN = TransformOrigin(pivotFractionX = 1f, pivotFractionY = 0.5f)
 private const val IDLE_THUMB_ALPHA = 0.5f
+private const val NO_PENDING_SCROLL = -1f
 private const val TRACK_ALPHA = 0.12f
