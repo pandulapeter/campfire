@@ -169,7 +169,9 @@ import — is the only thing that walks the directory again.
   (on Android) the activity that started it, and it is what tells the song and setlist repositories to rescan
   afterwards — after a completed run that changed something, and after a stopped or failed one in which any
   operation had finished (`finishRunCutShort`, always under `NonCancellable`), since files that moved before the run
-  ended are on disk whichever way it ended. The use case cannot, now that it returns before the run does.
+  ended are on disk whichever way it ended. The use case cannot, now that it returns before the run does. A run
+  waits for a first read of the library that is still going before it reads any local file, so that a connected
+  launch does not read every file twice at once; a repository that has been read, or has failed, is not waited for.
   Disconnecting cancels a run that is still going and waits for it; once it has begun to take the connection apart it
   is carried to the end whoever cancels its caller, and a run that finds the state `Connected` but no provider
   connected turns it into `ConnectionFailed` rather than doing nothing, so an account whose credentials are gone never

@@ -9,7 +9,9 @@
  */
 package com.pandulapeter.campfire.data.repository.implementation
 
+import com.pandulapeter.campfire.data.model.DataState
 import com.pandulapeter.campfire.data.model.domain.LibraryFileKind
+import com.pandulapeter.campfire.data.model.domain.Song
 import com.pandulapeter.campfire.data.model.domain.SyncAccount
 import com.pandulapeter.campfire.data.model.domain.SyncDeletionDirection
 import com.pandulapeter.campfire.data.model.domain.SyncDeletionPolicy
@@ -43,6 +45,7 @@ import kotlinx.coroutines.awaitCancellation
 import kotlinx.coroutines.cancelAndJoin
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.runCurrent
@@ -99,6 +102,37 @@ class SyncRepositoryImplTest {
         val index = stateLocalSource.index.orEmpty()
         assertTrue(song(1).name in index)
         assertFalse("\"isRunInProgress\": true" in index)
+    }
+
+    @Test
+    fun `a run reads no file before the first read of the library is done`() = runTest {
+        val reads = mutableListOf<SyncKey>()
+        val local = FakeLibraryFileLocalSource(files = mapOf(song(1) to "One".encodeToByteArray()), onRead = { reads += it })
+        val isWaiting = CompletableDeferred<Unit>()
+        val release = CompletableDeferred<Unit>()
+        val songs = MutableStateFlow<DataState<List<Song>>>(DataState.Loading(null))
+        val repository = repository(
+            provider = FakeSyncProvider(account = ACCOUNT),
+            libraryFileLocalSource = local,
+            songRepository = RecordingSongRepository(
+                songs = songs,
+                onLoadIfNeeded = {
+                    isWaiting.complete(Unit)
+                    release.await()
+                    songs.value = DataState.Idle(emptyList())
+                },
+            ),
+        )
+
+        repository.restore()
+        repository.synchronize(SyncDeletionPolicy.ASK)
+        isWaiting.await()
+        assertTrue(reads.isEmpty())
+        release.complete(Unit)
+        val state = repository.awaitOutcome()
+
+        assertIs<SyncOutcome.Success>(state.lastOutcome)
+        assertTrue(song(1) in reads)
     }
 
     @Test

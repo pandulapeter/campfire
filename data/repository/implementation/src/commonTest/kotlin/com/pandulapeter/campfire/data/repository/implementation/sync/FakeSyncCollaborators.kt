@@ -25,7 +25,7 @@ import com.pandulapeter.campfire.data.source.remote.api.model.RemoteAuthorizatio
 import kotlinx.coroutines.currentCoroutineContext
 import kotlinx.coroutines.ensureActive
 import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.emptyFlow
+import kotlinx.coroutines.flow.MutableStateFlow
 
 /**
  * The two documents sync keeps between runs, held in memory. [onSaveIndex] runs before a write of the index is
@@ -128,17 +128,21 @@ internal class FakePendingAuthorizationStore : PendingAuthorizationStore {
 
 /**
  * Stands in for the song list that sync tells to read the library again, and counts how often it was told. [onRescan]
- * runs on every rescan, which is where a test sees what the library held at that moment.
+ * runs on every rescan, which is where a test sees what the library held at that moment. The list has been read unless
+ * a test says otherwise through [songs], and [onLoadIfNeeded] is where it finishes a read it left going.
  */
 internal class RecordingSongRepository(
     private val onRescan: () -> Unit = {},
+    override val songs: MutableStateFlow<DataState<List<Song>>> = MutableStateFlow(DataState.Idle(emptyList())),
+    private val onLoadIfNeeded: suspend () -> Unit = {},
 ) : SongRepository {
 
     var rescanCount = 0
 
-    override val songs: Flow<DataState<List<Song>>> = emptyFlow()
-
-    override suspend fun loadSongsIfNeeded(): List<Song>? = throw UnsupportedOperationException()
+    override suspend fun loadSongsIfNeeded(): List<Song>? {
+        onLoadIfNeeded()
+        return songs.value.data
+    }
 
     override suspend fun loadSongFileSizes(): Map<String, Long> = throw UnsupportedOperationException()
 
@@ -166,7 +170,7 @@ internal class RecordingSetlistRepository : SetlistRepository {
 
     var rescanCount = 0
 
-    override val setlists: Flow<DataState<List<Setlist>>> = emptyFlow()
+    override val setlists: Flow<DataState<List<Setlist>>> = MutableStateFlow(DataState.Idle(emptyList()))
 
     override suspend fun loadSetlistsIfNeeded(): List<Setlist>? = throw UnsupportedOperationException()
 

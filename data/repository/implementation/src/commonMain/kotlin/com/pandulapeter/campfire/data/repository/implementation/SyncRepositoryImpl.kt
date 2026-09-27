@@ -11,6 +11,7 @@
 
 package com.pandulapeter.campfire.data.repository.implementation
 
+import com.pandulapeter.campfire.data.model.DataState
 import com.pandulapeter.campfire.data.model.domain.SyncDeletionPolicy
 import com.pandulapeter.campfire.data.model.domain.SyncFailureReason
 import com.pandulapeter.campfire.data.model.domain.SyncOutcome
@@ -55,6 +56,7 @@ import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
@@ -409,6 +411,11 @@ internal class SyncRepositoryImpl(
             var latestIndex: (() -> SyncIndexDocument)? = null
             var hasFinishedOperations = false
             try {
+                // A launch starts a run beside the first scan of the library, and both read every file, so the screen's
+                // read goes first. Waited for rather than started again: a repository that is not Loading has been read,
+                // or has failed, which a second read here would only repeat.
+                if (songRepository.songs.first() is DataState.Loading) songRepository.loadSongsIfNeeded()
+                if (setlistRepository.setlists.first() is DataState.Loading) setlistRepository.loadSetlistsIfNeeded()
                 // Taken over before the marker is written, so that an index filed under the key an earlier version used
                 // is under the current one from the first write of this run, however the run ends.
                 val document = loadIndex().adoptedBy(connected.account)
