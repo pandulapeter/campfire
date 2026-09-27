@@ -8,7 +8,6 @@
  * https://mozilla.org/MPL/2.0/.
 -->
 # To do
-- Android dynamic theme detection on Samsung is not working
 - New default Campfire theme
 - .cho file association doesn't work on Samsung devices
 - Song assignments bottom sheet: tag vertical spacing should be incremented
