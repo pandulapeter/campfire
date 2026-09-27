@@ -17,7 +17,12 @@ editing a plugin does not invalidate the whole main build, and `gradle/settings.
 - `campfire-library` (`LibraryPlugin`) — Kotlin Multiplatform plus the **new** Android KMP target
   (`com.android.kotlin.multiplatform.library`, not `com.android.library`), then `configureKotlinMultiplatform`.
 - `campfire-compose-library` (`ComposeLibraryPlugin`) — the same, plus the Compose and Compose compiler plugins, and
-  `androidResources.enable = true`, which the KMP Android target leaves off by default.
+  `androidResources.enable = true`, which the KMP Android target leaves off by default. It also hands the Compose
+  compiler `gradle/compose-stability.conf`, which names the classes of the `:chordpro` model as stable: that module is
+  not compiled with the Compose compiler, so without it every parameter typed with the model would be compared by
+  instance and a new parse would recompose every line of a song. The file names each class on its own, never a
+  wildcard, and leaves `kotlin.collections` out. Reaching the typed extension is why `compose-compiler-gradle-plugin`
+  (`kotlin-composeCompiler`, versioned with Kotlin) is on this build's classpath.
 
 `extensions/KotlinMultiplatform.kt` is where the shared configuration lives, and where a new target or a new
 platform-wide compiler setting belongs — never in a module's own `build.gradle.kts`:

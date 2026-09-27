@@ -16,6 +16,7 @@ import com.pandulapeter.campfire.buildLogic.extensions.pluginId
 import org.gradle.api.Plugin
 import org.gradle.api.Project
 import org.gradle.kotlin.dsl.configure
+import org.jetbrains.kotlin.compose.compiler.gradle.ComposeCompilerGradlePluginExtension
 import org.jetbrains.kotlin.gradle.dsl.KotlinMultiplatformExtension
 
 class ComposeLibraryPlugin : Plugin<Project> {
@@ -34,6 +35,11 @@ class ComposeLibraryPlugin : Plugin<Project> {
                     enable = true
                 }
             }
+        }
+        // Read by the compiler of the module that uses the classes it names, which is why it is set here rather than
+        // in :chordpro, whose model it vouches for.
+        extensions.configure<ComposeCompilerGradlePluginExtension> {
+            stabilityConfigurationFiles.add(rootProject.layout.projectDirectory.file("gradle/compose-stability.conf"))
         }
     }
 }

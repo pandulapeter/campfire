@@ -28,6 +28,7 @@ tasks.withType<KotlinCompile>().configureEach {
 dependencies {
     implementation(libs.gradle)
     implementation(libs.kotlin)
+    implementation(libs.kotlin.composeCompiler)
 }
 
 gradlePlugin {

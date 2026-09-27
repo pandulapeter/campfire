@@ -31,6 +31,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.Immutable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -1507,10 +1508,18 @@ internal data class DefaultSectionLabels(
     val grid: String,
 )
 
-/** One unit the column layout places. Sections are never split, so this is also the granularity of the balancing. */
+/**
+ * One unit the column layout places. Sections are never split, so this is also the granularity of the balancing.
+ *
+ * Immutable, and marked so on every class rather than on the interface alone, since the compiler would infer the lists
+ * they hold as unstable: they are built fresh by [toRenderSections] and never changed, which is what lets a section
+ * whose content did not change skip recomposition.
+ */
+@Immutable
 internal sealed interface RenderSection {
 
     /** A titled block of lines: an environment, an implicit paragraph, or a repeated chorus. */
+    @Immutable
     data class Lines(
         val header: String?,
         /** What the section is folded away by, see [FoldedRuns]. */
@@ -1528,6 +1537,7 @@ internal sealed interface RenderSection {
     }
 
     /** A comment between two sections, or one inside a section as one of its [SectionPart]s. */
+    @Immutable
     data class Comment(
         val text: String,
         val style: CommentStyle,
@@ -1535,8 +1545,10 @@ internal sealed interface RenderSection {
 }
 
 /** A piece of a [RenderSection.Lines]: a run of its lines, or a comment standing between two of them. */
+@Immutable
 internal sealed interface SectionPart {
 
+    @Immutable
     data class Lines(val lines: List<ChordProLine>) : SectionPart {
         /** Run boundaries depend on the lines alone, including their environment labels. */
         val runs = lines.groupIntoRuns()

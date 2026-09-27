@@ -46,6 +46,8 @@ in `:domain:*`. `:data:source:local:implementation` uses it directly for the met
   like any other block. The two halves of a tab are runs of their own, so the text transposition moves them as two fingerboards as
   well. A grid line keeps what comes before its first bar and after its last one as text, the margins ChordPro puts
   labels and comments in, and a cell may hold several chords joined with `~`, each transposed on its own.
+  The model is immutable, and the Compose compiler is told so (`gradle/compose-stability.conf`): never hand it a
+  collection that is mutated afterwards, and add a new model class to that file only once that holds for it.
 - `ChordProSyntax` — the shared low-level rules (the directive and chord regexes, long/short directive names, a value
   separated from a known directive name by a colon or by whitespace alone (the spec allows both, and a line in braces whose name the app
   does not know stays the lyrics it has always been shown as), the `start_of_` / `end_of_` prefixes, `label`
