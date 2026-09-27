@@ -751,13 +751,16 @@ internal class SyncRepositoryImpl(
      */
     private suspend fun loadIndex(): SyncIndexDocument {
         val text = syncStateLocalSource.loadSyncIndex() ?: return SyncIndexDocument()
-        return try {
-            json.decodeFromString<SyncIndexDocument>(text)
-        } catch (exception: CancellationException) {
-            throw exception
-        } catch (exception: Exception) {
-            println("Could not decode the sync index: ${exception.message}")
-            SyncIndexDocument()
+        // Off the caller's thread, which for restore() is the main one: the index has an entry per library file.
+        return withContext(Dispatchers.Default) {
+            try {
+                json.decodeFromString<SyncIndexDocument>(text)
+            } catch (exception: CancellationException) {
+                throw exception
+            } catch (exception: Exception) {
+                println("Could not decode the sync index: ${exception.message}")
+                SyncIndexDocument()
+            }
         }
     }
 
@@ -771,7 +774,8 @@ internal class SyncRepositoryImpl(
         null
     }
 
-    private suspend fun saveIndex(document: SyncIndexDocument) = syncStateLocalSource.saveSyncIndex(json.encodeToString(document))
+    private suspend fun saveIndex(document: SyncIndexDocument) =
+        syncStateLocalSource.saveSyncIndex(withContext(Dispatchers.Default) { json.encodeToString(document) })
 
     /**
      * For the writes nobody is waiting on the result of - the periodic one and the ones made on the way out of a run.
