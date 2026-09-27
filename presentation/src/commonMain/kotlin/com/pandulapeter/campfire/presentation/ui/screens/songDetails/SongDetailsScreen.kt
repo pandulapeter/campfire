@@ -596,9 +596,23 @@ private fun SongDetailsPage(
         }
     } else {
         val layoutDirection = LocalLayoutDirection.current
-        // Keyed on everything that changes the result, so a long song is not parsed again on every recomposition.
-        val renderedSong = remember(songText, transposition, chordSpelling) { renderSong(songText, transposition, chordSpelling) }
-        if (renderedSong.blocks.isEmpty()) {
+        val labels = rememberDefaultSectionLabels()
+        val model = rememberSongLyricsModel(
+            inputs = SongLyricsInputs(
+                text = songText,
+                transposition = transposition,
+                spelling = chordSpelling,
+                shouldShowChords = shouldShowChords,
+                labels = labels,
+            ),
+        ) { inputs ->
+            prepareSongLyrics(
+                song = renderSong(inputs.text, inputs.transposition, inputs.spelling),
+                shouldShowChords = inputs.shouldShowChords,
+                labels = inputs.labels,
+            )
+        }
+        if (model.song.blocks.isEmpty()) {
             // The file exists and could be read, it just has nothing in it yet - a newly created song, typically.
             Box(
                 modifier = Modifier.fillMaxSize().padding(contentPadding),
@@ -635,12 +649,11 @@ private fun SongDetailsPage(
                         top = topPadding,
                         bottom = bottomPadding,
                     ),
-                song = renderedSong,
+                model = model,
                 availableHeight = maxHeight - topPadding - bottomPadding,
                 // The pages fill the screen, so whatever the screen is still missing this layout is missing too.
                 extraWidth = (settledWidth - maxWidth).coerceAtLeast(0.dp),
                 animatesSections = !isChangingContinuously,
-                shouldShowChords = shouldShowChords,
                 fontScale = currentFontScale,
                 isHorizontalFlow = isHorizontalFlow,
                 foldedSections = foldedSections,

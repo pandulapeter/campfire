@@ -126,14 +126,22 @@ import com.pandulapeter.campfire.presentation.ui.components.SegmentedChoice
 import com.pandulapeter.campfire.presentation.ui.components.WindowSize
 import com.pandulapeter.campfire.presentation.ui.navigation.CampfireDestination
 import com.pandulapeter.campfire.presentation.ui.screens.songDetails.SongLyrics
+import com.pandulapeter.campfire.presentation.ui.screens.songDetails.SongLyricsInputs
 import com.pandulapeter.campfire.presentation.ui.screens.songDetails.TextTranspositionControls
+import com.pandulapeter.campfire.presentation.ui.screens.songDetails.prepareSongLyrics
+import com.pandulapeter.campfire.presentation.ui.screens.songDetails.rememberDefaultSectionLabels
 import com.pandulapeter.campfire.presentation.ui.theme.LocalMonospaceFontFamily
 import com.pandulapeter.campfire.presentation.ui.theme.LocalSecondAccentColor
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.FlowPreview
 import kotlinx.coroutines.flow.debounce
 import kotlinx.coroutines.flow.distinctUntilChanged
+import kotlinx.coroutines.flow.filter
 import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.flow.mapLatest
 import kotlinx.coroutines.flow.mapNotNull
+import kotlinx.coroutines.withContext
 import org.jetbrains.compose.resources.painterResource
 
 /**
@@ -658,11 +666,12 @@ private fun ChordProTextField(
 }
 
 /**
- * The rendered song, kept a beat behind the text so that typing does not re-parse on every keystroke.
+ * The rendered song, kept a beat behind the text so that typing does not re-parse on every keystroke, and parsed away
+ * from the main thread.
  *
  * @param scrollState Where the preview is scrolled to, hoisted so that it survives the pane being composed again.
  */
-@OptIn(FlowPreview::class)
+@OptIn(FlowPreview::class, ExperimentalCoroutinesApi::class)
 @Composable
 private fun SongPreview(
     modifier: Modifier = Modifier,
@@ -675,14 +684,35 @@ private fun SongPreview(
     chordSpelling: UserPreferences.ChordSpelling,
     contentPadding: PaddingValues,
 ) {
-    var previewedText by remember(text) { mutableStateOf(text.value) }
-    LaunchedEffect(text) {
-        snapshotFlow { text.value }
+    val labels = rememberDefaultSectionLabels()
+    val latestTransposition by rememberUpdatedState(transposition)
+    val latestChordSpelling by rememberUpdatedState(chordSpelling)
+    // Lyrics only mode is about how a song is read, and this preview is here to show what is being written: chords
+    // typed into the field opposite it have to appear, or the editor would answer an edit with nothing.
+    fun inputsOf(text: String, transposition: Int, spelling: UserPreferences.ChordSpelling) = SongLyricsInputs(
+        text = text,
+        transposition = transposition,
+        spelling = spelling,
+        shouldShowChords = true,
+        labels = labels,
+    )
+    fun prepare(inputs: SongLyricsInputs) = prepareSongLyrics(
+        song = viewModel.renderSong(inputs.text, inputs.transposition, inputs.spelling),
+        shouldShowChords = inputs.shouldShowChords,
+        labels = inputs.labels,
+    )
+    // The first rendering is built right here, so the preview never opens on an empty frame. Every later one is built
+    // away from the main thread once the typing pauses, which is exactly when the next key is likely to come, and
+    // the one before it stays on screen until it is ready.
+    var preview by remember(text) { mutableStateOf(inputsOf(text.value, transposition, chordSpelling).let { it to prepare(it) }) }
+    LaunchedEffect(text, labels) {
+        snapshotFlow { inputsOf(text.value, latestTransposition, latestChordSpelling) }
             .distinctUntilChanged()
             .debounce(PREVIEW_DELAY_MILLIS)
-            .collect { previewedText = it }
+            .filter { it != preview.first }
+            .mapLatest { inputs -> inputs to withContext(Dispatchers.Default) { prepare(inputs) } }
+            .collect { preview = it }
     }
-    val song = remember(previewedText, transposition, chordSpelling) { viewModel.renderSong(previewedText, transposition, chordSpelling) }
     val layoutDirection = LocalLayoutDirection.current
     val topPadding = 8.dp
     val bottomPadding = contentPadding.calculateBottomPadding() + 32.dp
@@ -698,11 +728,8 @@ private fun SongPreview(
                     top = topPadding,
                     bottom = bottomPadding,
                 ),
-            song = song,
+            model = preview.second,
             availableHeight = maxHeight - topPadding - bottomPadding,
-            // Lyrics only mode is about how a song is read, and this preview is here to show what is being written:
-            // chords typed into the field opposite it have to appear, or the editor would answer an edit with nothing.
-            shouldShowChords = true,
             fontScale = fontScale,
             isHorizontalFlow = isHorizontalFlow,
             // The preview shows what is being typed rather than narrating it: every edit that changes a section's

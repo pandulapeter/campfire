@@ -83,6 +83,7 @@ import com.pandulapeter.campfire.chordpro.model.ChordProSong
 import com.pandulapeter.campfire.chordpro.model.CommentStyle
 import com.pandulapeter.campfire.chordpro.model.GridToken
 import com.pandulapeter.campfire.chordpro.model.SectionType
+import com.pandulapeter.campfire.data.model.domain.UserPreferences
 import com.pandulapeter.campfire.presentation.resources.Res
 import com.pandulapeter.campfire.presentation.resources.ic_add
 import com.pandulapeter.campfire.presentation.resources.ic_clear
@@ -116,6 +117,8 @@ import com.pandulapeter.campfire.presentation.ui.components.textResource
 import com.pandulapeter.campfire.presentation.ui.theme.LocalMonospaceFontFamily
 import com.pandulapeter.campfire.presentation.ui.theme.LocalSecondAccentColor
 import com.pandulapeter.campfire.presentation.localization.stringResource
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
 import org.jetbrains.compose.resources.painterResource
 import kotlin.math.ceil
 import kotlin.math.max
@@ -123,9 +126,9 @@ import kotlin.math.min
 import kotlin.math.roundToInt
 
 /**
- * Renders the raw song data with the chords displayed above the lyrics, aligned to the syllable they belong to.
- * When [shouldShowChords] is false, only the lyrics are rendered: the chords are dropped and lines that consisted of
- * nothing but chords (e.g. an intro) are skipped entirely.
+ * Renders the song [model] with the chords displayed above the lyrics, aligned to the syllable they belong to. A model
+ * prepared without chords (see [prepareSongLyrics]) renders only the lyrics: the chords are dropped and lines that
+ * consisted of nothing but chords (e.g. an intro) are skipped entirely.
  *
  * The song is split into sections (verse, chorus, ...) which are flowed into columns by [SongSectionsLayout], either
  * top to bottom or, when [isHorizontalFlow] is set, in rows across the columns. Choruses are drawn on a raised card
@@ -133,6 +136,7 @@ import kotlin.math.roundToInt
  * sections animate to their new place when the column count changes (e.g. when a window is resized) - except one that
  * is too tall for `animateBounds` to measure, which simply appears there.
  *
+ * @param model The song and its sections, built away from the main thread by [rememberSongLyricsModel].
  * @param availableHeight The height the song can occupy without scrolling; the column count is picked so that it
  * fits into this if it can.
  * @param extraWidth How much wider this layout is going to be once the animation that is currently resizing it has
@@ -161,11 +165,10 @@ import kotlin.math.roundToInt
 @Composable
 internal fun SongLyrics(
     modifier: Modifier = Modifier,
-    song: ChordProSong,
+    model: SongLyricsModel,
     availableHeight: Dp = Dp.Unspecified,
     extraWidth: Dp = 0.dp,
     animatesSections: Boolean = true,
-    shouldShowChords: Boolean = true,
     fontScale: Float = 1f,
     isHorizontalFlow: Boolean = false,
     foldedSections: Set<String> = emptySet(),
@@ -175,14 +178,9 @@ internal fun SongLyrics(
     onEditLanguages: (() -> Unit)? = null,
     onDividersPlaced: ((dividerTops: List<Int>) -> Unit)? = null,
 ) {
-    // The fallback labels of the environments that have one; everything else is named by the file itself.
-    val defaultLabels = DefaultSectionLabels(
-        chorus = stringResource(Res.string.song_details_section_chorus),
-        bridge = stringResource(Res.string.song_details_section_bridge),
-        tab = stringResource(Res.string.song_details_section_tab),
-        grid = stringResource(Res.string.song_details_section_grid),
-    )
-    val sections = remember(song, shouldShowChords, defaultLabels) { song.toRenderSections(shouldShowChords, defaultLabels) }
+    // The fold toggles of the runs inside a section are named by these too, where the file names them nothing.
+    val defaultLabels = rememberDefaultSectionLabels()
+    val sections = model.sections
     // Whether each section is too tall to be animated, which only the layout finds out.
     val sectionAnimations = remember(sections) { List(sections.size) { SectionAnimation() } }
     val density = LocalDensity.current
@@ -255,7 +253,7 @@ internal fun SongLyrics(
                     if (placeable.height != headerHeight) headerHeight = placeable.height
                     layout(placeable.width, placeable.height) { placeable.place(0, 0) }
                 },
-            song = song,
+            song = model.song,
             fontScale = fontScale,
             onAddTag = onAddTag,
             onRemoveTag = onRemoveTag,
@@ -797,7 +795,7 @@ private fun SongTabRun(
 }
 
 /** The two ways of writing lines down that can be folded away: neither says anything to somebody who only sings. */
-private enum class FoldableKind {
+internal enum class FoldableKind {
     TAB,
     GRID,
 }
@@ -1445,8 +1443,64 @@ private object AnimatedSectionLayoutId
 private fun maxAnimatedSectionHeight(columnWidth: Int) =
     if (columnWidth < WIDE_SECTION_WIDTH) MAX_ANIMATED_SECTION_HEIGHT else MAX_ANIMATED_WIDE_SECTION_HEIGHT
 
+/** A song ready to be laid out: what [SongLyrics] draws, which can be built on any thread (see [prepareSongLyrics]). */
+internal class SongLyricsModel(
+    val song: ChordProSong,
+    val sections: List<RenderSection>,
+)
+
+/**
+ * Builds the sections of [song] the way [SongLyrics] lays them out. It touches nothing but its arguments, so it is
+ * run away from the main thread: it is a pass over the whole song that would otherwise land on the frame being waited
+ * for, after a transposition or a pause in typing.
+ *
+ * @param shouldShowChords False for lyrics-only mode, which drops the chords and the sections that are nothing else.
+ */
+internal fun prepareSongLyrics(
+    song: ChordProSong,
+    shouldShowChords: Boolean,
+    labels: DefaultSectionLabels,
+) = SongLyricsModel(song = song, sections = song.toRenderSections(shouldShowChords, labels))
+
+/** Everything a [SongLyricsModel] is built from, see [rememberSongLyricsModel]. */
+internal data class SongLyricsInputs(
+    val text: String,
+    val transposition: Int,
+    val spelling: UserPreferences.ChordSpelling,
+    val shouldShowChords: Boolean,
+    val labels: DefaultSectionLabels,
+)
+
+/**
+ * The model [prepare] builds of [inputs]. The first one is built right here, so that a page never opens on an empty
+ * frame; every later one is built on [Dispatchers.Default], with the one before it staying on screen until it is
+ * ready. A change that arrives meanwhile cancels the wait, although not the parse itself, which is not cooperative:
+ * that one finishes in the background and its result is dropped.
+ */
+@Composable
+internal fun rememberSongLyricsModel(
+    inputs: SongLyricsInputs,
+    prepare: (SongLyricsInputs) -> SongLyricsModel,
+): SongLyricsModel {
+    val latestPrepare by rememberUpdatedState(prepare)
+    val state = remember { mutableStateOf(inputs to prepare(inputs)) }
+    LaunchedEffect(inputs) {
+        if (state.value.first != inputs) state.value = inputs to withContext(Dispatchers.Default) { latestPrepare(inputs) }
+    }
+    return state.value.second
+}
+
+/** The fallback labels of the environments that have one, read here since they are string resources. */
+@Composable
+internal fun rememberDefaultSectionLabels() = DefaultSectionLabels(
+    chorus = stringResource(Res.string.song_details_section_chorus),
+    bridge = stringResource(Res.string.song_details_section_bridge),
+    tab = stringResource(Res.string.song_details_section_tab),
+    grid = stringResource(Res.string.song_details_section_grid),
+)
+
 /** The fallback names of the environments that have one. Everything else is named by the file itself. */
-private data class DefaultSectionLabels(
+internal data class DefaultSectionLabels(
     val chorus: String,
     val bridge: String,
     val tab: String,
@@ -1454,7 +1508,7 @@ private data class DefaultSectionLabels(
 )
 
 /** One unit the column layout places. Sections are never split, so this is also the granularity of the balancing. */
-private sealed interface RenderSection {
+internal sealed interface RenderSection {
 
     /** A titled block of lines: an environment, an implicit paragraph, or a repeated chorus. */
     data class Lines(
@@ -1481,7 +1535,7 @@ private sealed interface RenderSection {
 }
 
 /** A piece of a [RenderSection.Lines]: a run of its lines, or a comment standing between two of them. */
-private sealed interface SectionPart {
+internal sealed interface SectionPart {
 
     data class Lines(val lines: List<ChordProLine>) : SectionPart {
         /** Run boundaries depend on the lines alone, including their environment labels. */

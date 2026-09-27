@@ -1651,8 +1651,10 @@ class CampfireViewModel(
 
     /**
      * Parses a song file and applies the file's own `{transpose}` — the one it opens with and the ones further down
-     * it — the transposition the user picked and the spelling they prefer, which is what the viewer renders. Call it
-     * from a `remember` keyed on all three: parsing a long song on every recomposition would be wasteful.
+     * it — the transposition the user picked and the spelling they prefer, which is what the viewer renders. Build it
+     * once for each set of the three rather than on every recomposition, which for a long song would be wasteful. It
+     * touches nothing but its arguments and stateless use cases, so it may run on a background thread, and it does:
+     * see `rememberSongLyricsModel`.
      */
     fun renderSong(text: String, transposition: Int, spelling: UserPreferences.ChordSpelling): ChordProSong {
         val parsed = parseChordPro(text)
