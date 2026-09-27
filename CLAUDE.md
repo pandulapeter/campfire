@@ -30,6 +30,7 @@ depends on `api` modules and gets wiring via Koin.
 ```
 app:android / app:desktop / app:ios / app:web   entry points, platform chrome, "open with" and share intents (app:ios
                                              also holds the Xcode project, app:web the index.html)
+  app:baselineprofile                        the Baseline Profile generator for app:android, run by hand on an emulator
   app:di                                     the Koin application: the one place every module is named, and the
                                              function the four entry points start Koin with
   presentation                               CampfireViewModel, Navigation 3 back stack, Material 3 theme + every screen
@@ -102,8 +103,9 @@ uninstall and nothing else does.
   is a `<plurals>` with `one` and `other` items, read with `pluralStringResource`, rather than a second key.
 - The UI is Material 3 Expressive (`org.jetbrains.compose.material3:material3`, versioned separately from Compose
   Multiplatform in `jetbrains-compose-material3`); don't add `androidx.compose.material` (M2) back.
-- `:app:android` is a plain Android module, `:app:desktop` a plain JVM one, `:app:ios` Kotlin/Native-only and `:app:web`
-  Kotlin/Wasm-only; every other module (`:presentation` and `:chordpro` included) is a multiplatform library.
+- `:app:android` and `:app:baselineprofile` are plain Android modules, `:app:desktop` a plain JVM one, `:app:ios`
+  Kotlin/Native-only and `:app:web` Kotlin/Wasm-only; every other module (`:presentation` and `:chordpro` included) is
+  a multiplatform library.
 - **Koin is wired with Koin Annotations through the Koin compiler plugin** (`io.insert-koin.compiler.plugin`, applied
   by every module that declares a definition). A class declares itself: `@Single` on repositories, local sources,
   the platform storage and the authenticators, `@Factory` on use cases, `@KoinViewModel` on `CampfireViewModel`.
@@ -251,7 +253,8 @@ uninstall and nothing else does.
   index, the setlist slots, stepper labels, section grid, row snapping and section measurements of the details screen, the editor's token cache), run on
   the desktop target with
   `./gradlew :chordpro:desktopTest :domain:implementation:desktopTest :data:source:local:implementation:desktopTest :data:source:remote:api:desktopTest :data:source:remote:implementation:desktopTest :data:repository:implementation:desktopTest :presentation:desktopTest`.
-  The UI itself is untested by code. Before a release, `documentation/testing/release-check.md` is run on a Mac (its
+  The UI itself is untested by code: `:app:baselineprofile` drives it, but only to record a profile, asserts nothing
+  and is never run by CI. Before a release, `documentation/testing/release-check.md` is run on a Mac (its
   `README.md` says how): half an hour of the checks whose failure would block one. A change to what it exercises —
   the first run, importing, sync, the packaged builds — updates it in the same change.
 
@@ -293,6 +296,10 @@ uninstall and nothing else does.
   carries the name of the artifact it is built into and half the modules here are called `api` or `implementation`.
 - `./gradlew :app:android:assembleDebug` — Android APK; from Android Studio, the shared "Android" run configuration,
   never "Default Activity" (see `app/android`)
+- `./gradlew :app:android:generateBaselineProfile` — records the Android app's Baseline Profile and startup profile on
+  the connected emulator into `app/android/src/main/generated/baselineProfiles`, which is committed; a release build,
+  CI's included, only packages those files and needs no device (see `app/baselineprofile`). Regenerate it when the
+  startup path or the main screens change noticeably; a stale profile is only less useful, never wrong.
 - **`.run/` holds the four shared run configurations** — Android, Desktop, Web and iOS — and the IDE writes them itself,
   which is why they carry no license header: one would be gone on the next save. Desktop and Web are the Gradle tasks
   below. iOS is the Kotlin Multiplatform plugin's own kind, which an IDE without it (any on Windows or Linux) lists as

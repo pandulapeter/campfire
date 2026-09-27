@@ -86,6 +86,7 @@ gradle.beforeProject {
 rootProject.name = "Campfire"
 include(
     ":app:android",
+    ":app:baselineprofile",
     ":app:desktop",
     ":app:di",
     ":app:ios",

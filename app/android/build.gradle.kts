@@ -11,6 +11,7 @@
 
 plugins {
     alias(libs.plugins.android.application)
+    alias(libs.plugins.androidx.baselineprofile)
     alias(libs.plugins.compose.compiler)
 }
 
@@ -21,7 +22,9 @@ dependencies {
     implementation(project(":presentation"))
     implementation(libs.androidx.activity.compose)
     implementation(libs.androidx.browser)
+    implementation(libs.androidx.profileinstaller)
     implementation(libs.koin.android)
+    baselineProfile(project(":app:baselineprofile"))
 }
 
 android {
@@ -74,6 +77,14 @@ android {
             signingConfig = signingConfigs.getByName(releaseSigningConfig)
         }
     }
+}
+
+baselineProfile {
+    // Recorded by hand on an emulator and committed; a release build, CI's included, only reads the files.
+    automaticGenerationDuringBuild = false
+    saveInSrc = true
+    mergeIntoMain = true
+    dexLayoutOptimization = true
 }
 
 kotlin {
