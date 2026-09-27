@@ -44,18 +44,13 @@ import com.pandulapeter.campfire.presentation.ui.resetEscapeKey
 import com.pandulapeter.campfire.presentation.ui.platform.desktopDataDirectory
 import com.pandulapeter.campfire.presentation.ui.theme.interfaceScale
 import com.pandulapeter.campfire.presentation.ui.theme.isDarkTheme
-import java.awt.Component
 import java.awt.Desktop
 import java.awt.Dimension
 import java.awt.Toolkit
-import java.awt.Window
-import java.awt.event.WindowAdapter
 import java.awt.event.WindowEvent
 import java.awt.event.WindowFocusListener
-import java.beans.PropertyChangeListener
 import java.io.File
 import javax.swing.SwingUtilities
-import kotlin.math.ceil
 import kotlin.system.exitProcess
 import kotlinx.coroutines.channels.Channel
 import org.koin.compose.viewmodel.koinViewModel
@@ -147,18 +142,7 @@ fun main(args: Array<String>) {
         ) {
             DisposableEffect(window) {
                 window.fitSizeToScreen(windowState)
-                // Showing the window hands the unscaled minimum to Windows again, and moving it to a display of another
-                // scale changes what the scaled one is.
-                val openedListener = object : WindowAdapter() {
-                    override fun windowOpened(event: WindowEvent) = window.scaleNativeMinimumSize()
-                }
-                val displayListener = PropertyChangeListener { window.scaleNativeMinimumSize() }
-                window.addWindowListener(openedListener)
-                window.addPropertyChangeListener("graphicsConfiguration", displayListener)
-                onDispose {
-                    window.removeWindowListener(openedListener)
-                    window.removePropertyChangeListener("graphicsConfiguration", displayListener)
-                }
+                onDispose { }
             }
             DisposableEffect(window) {
                 val focusListener = object : WindowFocusListener {
@@ -218,33 +202,6 @@ private fun ComposeWindow.fitSizeToScreen(windowState: WindowState) {
         min(MINIMUM_CONTENT_SIZE.width * interfaceScale, available.width).value.toInt(),
         min(MINIMUM_CONTENT_SIZE.height * interfaceScale, available.height).value.toInt(),
     )
-    scaleNativeMinimumSize()
-}
-
-/**
- * OpenJDK on Windows hands the minimum size to the system in the units it was given, which Windows takes for physical
- * pixels, while AWT sizes the window itself in scaled ones: at 200% the window could be dragged down to half the
- * minimum. Scaling [Window.setMinimumSize]'s own value up is no way around it, since AWT would then grow the window to
- * that. So the scaled value goes to the peer's private setter directly, which is what the `--add-opens` of the Windows
- * build are for (see build.gradle.kts). The JetBrains Runtime scales it by itself, and anything that goes wrong here
- * leaves the unscaled minimum, which is too small rather than harmful.
- */
-private fun ComposeWindow.scaleNativeMinimumSize() {
-    if (!System.getProperty("os.name").orEmpty().lowercase().contains("windows")) return
-    if (System.getProperty("java.vendor").orEmpty().contains("JetBrains")) return
-    if (!isMinimumSizeSet) return
-    runCatching {
-        val peer = Component::class.java.getDeclaredField("peer").apply { isAccessible = true }.get(this) ?: return
-        val transform = graphicsConfiguration.defaultTransform
-        Class.forName("sun.awt.windows.WWindowPeer")
-            .getDeclaredMethod("setMinSize", Int::class.javaPrimitiveType, Int::class.javaPrimitiveType)
-            .apply { isAccessible = true }
-            .invoke(
-                peer,
-                ceil(minimumSize.width * transform.scaleX).toInt(),
-                ceil(minimumSize.height * transform.scaleY).toInt(),
-            )
-    }
 }
 
 private val isMacOs = System.getProperty("os.name").orEmpty().lowercase().contains("mac")
