@@ -80,7 +80,9 @@ import androidx.compose.runtime.snapshotFlow
 import androidx.compose.runtime.withFrameNanos
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.input.pointer.PointerEventPass
 import androidx.compose.ui.input.pointer.pointerInput
@@ -154,6 +156,7 @@ import com.pandulapeter.campfire.presentation.ui.screens.songEditor.SongEditorSc
 import com.pandulapeter.campfire.presentation.ui.screens.songs.SongsScreen
 import com.pandulapeter.campfire.presentation.ui.theme.ApplyLanguagePreference
 import com.pandulapeter.campfire.presentation.ui.theme.CampfireTheme
+import com.pandulapeter.campfire.presentation.ui.theme.LaunchScreenColors
 import com.pandulapeter.campfire.presentation.ui.theme.ProvideInterfaceScale
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.emptyFlow
@@ -212,7 +215,7 @@ fun CampfireApp(
     CampfireTheme(
         uiMode = userPreferences?.uiMode,
         themeColor = userPreferences?.themeColor,
-    ) { isThemeSettled ->
+    ) { isThemeSettled, launchScreenColors ->
         val backgroundColor = MaterialTheme.colorScheme.background
         SideEffect { onBackgroundColorChanged(backgroundColor) }
         Box(
@@ -245,9 +248,9 @@ fun CampfireApp(
             // indicator for, and a startup screen handing over to a spinner is two startup screens in a row - the
             // very thing onAppReady exists to keep the other shells from doing.
             //
-            // The colors have to have stopped moving as well, or the app would be uncovered halfway through the
-            // cross fade that corrects the theme the window opened on, which is the one thing the launch screen is
-            // there to take instead of it.
+            // The colors have to have stopped moving as well, or the launch screen would be taken away halfway
+            // through its own cross fade from the theme the window opened on to the stored one (the app underneath
+            // snaps to it at once, see CampfireTheme).
             //
             // Read once: the composition that took the launch screen away is not always the one drawing the app
             // (Android recreates its activity on the configuration changes it does not handle itself, see the
@@ -281,6 +284,7 @@ fun CampfireApp(
                 val markGrowth = if (isLaunchScreenWholeStartup) LAUNCH_MARK_EXIT_GROWTH else 0f
                 LaunchScreen(
                     modifier = Modifier.graphicsLayer { alpha = opacity.value.coerceIn(0f, 1f) },
+                    colors = launchScreenColors,
                     markScale = { 1f + (1f - opacity.value.coerceIn(0f, 1f)) * markGrowth },
                 )
                 val motionScheme = MaterialTheme.motionScheme
@@ -326,7 +330,9 @@ fun CampfireApp(
  *
  * A [Surface] rather than a plain box, because the app is composed and drawn underneath it: without one, a click
  * landing on the mark would reach whatever of the app happens to be under that point - which stays true while it is
- * fading, when the app can already be seen through it but is still nobody's to touch.
+ * fading, when the app can already be seen through it but is still nobody's to touch. The surface itself is
+ * transparent, and the background and the mark are painted while drawing from [colors], so that their fade from the
+ * guessed palette to the stored one recomposes nothing.
  *
  * @param markScale How large the mark is drawn, read in the layer rather than in the composition so that animating
  *   it is a redraw instead of a recomposition of the whole screen.
@@ -334,25 +340,27 @@ fun CampfireApp(
 @Composable
 private fun LaunchScreen(
     modifier: Modifier = Modifier,
+    colors: LaunchScreenColors,
     markScale: () -> Float = { 1f },
 ) = Surface(
-    modifier = modifier.fillMaxSize(),
-    color = MaterialTheme.colorScheme.background,
+    modifier = modifier
+        .fillMaxSize()
+        .drawBehind { drawRect(colors.background()) },
+    color = Color.Transparent,
 ) {
     Box(
         modifier = Modifier.fillMaxSize(),
         contentAlignment = Alignment.Center,
     ) {
-        Icon(
+        val painter = painterResource(Res.drawable.ic_campfire)
+        Box(
             modifier = Modifier
                 .size(LAUNCH_MARK_SIZE)
                 .graphicsLayer {
                     scaleX = markScale()
                     scaleY = markScale()
-                },
-            painter = painterResource(Res.drawable.ic_campfire),
-            contentDescription = null,
-            tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                }
+                .drawBehind { with(painter) { draw(size = size, colorFilter = ColorFilter.tint(colors.mark())) } },
         )
     }
 }

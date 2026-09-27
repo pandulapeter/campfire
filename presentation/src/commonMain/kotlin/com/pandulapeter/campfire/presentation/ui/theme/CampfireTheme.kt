@@ -18,6 +18,7 @@ import androidx.compose.material3.MotionScheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.Stable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -26,6 +27,7 @@ import androidx.compose.runtime.staticCompositionLocalOf
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.lerp
 import com.pandulapeter.campfire.data.model.domain.UserPreferences
+import com.pandulapeter.campfire.presentation.ui.platform.isStartupScreenHeldUntilAppReady
 
 /**
  * Material 3 Expressive theme of the app. The two preferences behind it are independent - [themeColor] picks the
@@ -37,21 +39,25 @@ import com.pandulapeter.campfire.data.model.domain.UserPreferences
  * screen would appear to change in pieces.
  *
  * The very first change is the app correcting the guess it opened on - the system's setting, until the stored
- * preferences have been read - and it is cross faded like any other, because on a launch screen that is nothing but
- * a mark on the background, every color in the window flipping at once between two frames is the whole picture
- * blinking. It costs nothing when there is nothing to correct: a preference that resolves to the palette already on
- * screen is not a change and does not animate.
+ * preferences have been read - and there the app itself snaps: it is covered by the launch screen at that point, and a
+ * cross fade of the whole theme would recompose all of it, skipping nothing, on every frame of the busiest stretch of
+ * the start for a picture nobody sees. Only the launch screen's own two colors fade, handed to it as
+ * [LaunchScreenColors] and read while drawing, because on a launch screen that is nothing but a mark on the background,
+ * every color in the window flipping at once between two frames is the whole picture blinking. Where the platform's own
+ * startup screen is still over it (`isStartupScreenHeldUntilAppReady`) even that fade is unseen, and snaps too. It
+ * costs nothing when there is nothing to correct: a preference that resolves to the palette already on screen is not a
+ * change and does not animate.
  *
  * @param content Told whether the scheme it is drawn in is the final one and its typography is in (see
  *   [interfaceTypography]), which is what holds the launch screen in front of the app until the colors underneath have
- *   stopped moving and the text will not be laid out again in another font.
+ *   stopped moving and the text will not be laid out again in another font, and given the launch screen's colors.
  */
 @OptIn(ExperimentalMaterial3ExpressiveApi::class)
 @Composable
 fun CampfireTheme(
     uiMode: UserPreferences.UiMode?,
     themeColor: UserPreferences.ThemeColor?,
-    content: @Composable (isThemeSettled: Boolean) -> Unit,
+    content: @Composable (isThemeSettled: Boolean, launchScreenColors: LaunchScreenColors) -> Unit,
 ) {
     val isDarkTheme = uiMode.isDarkTheme()
     val colorSchemePair = colorSchemePair(themeColor)
@@ -62,12 +68,65 @@ fun CampfireTheme(
     var stop by remember { mutableStateOf(targetColorScheme) }
     var secondAccentStart by remember { mutableStateOf(targetSecondAccentColor) }
     var secondAccentStop by remember { mutableStateOf(targetSecondAccentColor) }
+    // UserPreferences has no null fields, so both of these being null means the preferences have not been read yet.
+    val isResolved = uiMode != null || themeColor != null
+    var hasResolved by remember { mutableStateOf(isResolved) }
+    val launchProgress = remember { Animatable(1f) }
+    var launchStart by remember { mutableStateOf(targetColorScheme) }
+    var launchStop by remember { mutableStateOf(targetColorScheme) }
+    val launchScreenColors = remember {
+        // Once the launch screen's own fade is over it follows the app's scheme, which a later change - the system
+        // flipping its dark mode while the library is still being read - fades on its own.
+        LaunchScreenColors(
+            background = {
+                if (launchProgress.value < 1f) lerp(launchStart.background, launchStop.background, launchProgress.value)
+                else lerp(start.background, stop.background, progress.value)
+            },
+            mark = {
+                if (launchProgress.value < 1f) lerp(launchStart.onSurfaceVariant, launchStop.onSurfaceVariant, launchProgress.value)
+                else lerp(start.onSurfaceVariant, stop.onSurfaceVariant, progress.value)
+            },
+        )
+    }
     // The preferences rather than the scheme itself, which has no equality of its own to key an animation on.
     LaunchedEffect(isDarkTheme to themeColor) {
+        // Noted before the identity check below, so that a stored theme equal to the guess still counts as the first
+        // resolution and a later change is not taken for it.
+        val isFirstResolution = isResolved && !hasResolved
+        if (isFirstResolution) {
+            hasResolved = true
+        }
         // Two preferences can ask for the same palette - an unread one and the app's own color, a color the device
         // cannot honor and the app's own it falls back to - and arriving at the scheme that is already on screen is
         // not a change to animate. The schemes are the constants of ColorSchemes.kt, so this is identity.
-        if (targetColorScheme === stop) return@LaunchedEffect
+        if (targetColorScheme === stop) {
+            // A change of the preferences that leaves the scheme where it is has still cancelled the launch screen's
+            // own fade, if it was running, and that fade carries on from where it stopped.
+            if (launchProgress.value < 1f) launchProgress.animateTo(1f, MOTION_SCHEME.defaultEffectsSpec())
+            return@LaunchedEffect
+        }
+        if (isFirstResolution) {
+            launchStart = lerp(start, stop, progress.value)
+            launchStop = targetColorScheme
+            start = targetColorScheme
+            stop = targetColorScheme
+            secondAccentStart = targetSecondAccentColor
+            secondAccentStop = targetSecondAccentColor
+            progress.snapTo(1f)
+            if (isStartupScreenHeldUntilAppReady) {
+                launchProgress.snapTo(1f)
+            } else {
+                launchProgress.snapTo(0f)
+                launchProgress.animateTo(1f, MOTION_SCHEME.defaultEffectsSpec())
+            }
+            return@LaunchedEffect
+        }
+        // A change that arrives while the launch screen's own fade is running cancels it, so that fade is folded into
+        // this one: it continues from the colors the launch screen shows, and the app it covers jumps to them unseen.
+        if (launchProgress.value < 1f) {
+            stop = lerp(launchStart, launchStop, launchProgress.value)
+            launchProgress.snapTo(1f)
+        }
         // The fade starts from the scheme being shown and not from the one the last change aimed at, so a second
         // change made while the first is still running continues from what the eye can see instead of jumping back
         // to where that one began - a switch away from the system palette right after switching to it, or a tap on
@@ -93,10 +152,23 @@ fun CampfireTheme(
             // the fade that follows has ended, and the effect above starts that fade one frame after that composition -
             // so the target being reached is read from the schemes rather than from the animation alone, which is not
             // running yet in that one frame.
-            content(targetColorScheme === stop && !progress.isRunning && typography != null)
+            content(
+                targetColorScheme === stop && !progress.isRunning && !launchProgress.isRunning && typography != null,
+                launchScreenColors,
+            )
         }
     }
 }
+
+/**
+ * The launch screen's background and mark colors, read while drawing rather than in the composition, so that their
+ * fade after the preferences arrive redraws the launch screen alone instead of recomposing it.
+ */
+@Stable
+class LaunchScreenColors internal constructor(
+    internal val background: () -> Color,
+    internal val mark: () -> Color,
+)
 
 /**
  * The palette's second accent, which Material has no role for: what is played rather than read on a song's page (the
