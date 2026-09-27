@@ -171,15 +171,14 @@ import org.jetbrains.compose.resources.painterResource
  * the next frame corrects - and what does change afterwards (a sync run starting, the demo songs arriving) is animated
  * inside its section by [AnimatedSettingsRow].
  *
- * @param settledWidth The width of the screen once the navigation bars have finished animating, which is what the
- *   layout and the number of columns are decided from.
+ * @param layout What the width the screen settles at decides: the layout and the number of columns.
  */
 @OptIn(ExperimentalMaterial3ExpressiveApi::class)
 @Composable
 internal fun SettingsScreen(
     modifier: Modifier = Modifier,
     viewModel: CampfireViewModel,
-    settledWidth: Dp,
+    layout: SettingsWidthLayout,
     contentPadding: PaddingValues,
     isNavigationRailVisible: Boolean,
     urlOpener: (String) -> Unit,
@@ -215,7 +214,6 @@ internal fun SettingsScreen(
     val layoutDirection = LocalLayoutDirection.current
     val startPadding = contentPadding.calculateStartPadding(layoutDirection)
     val endPadding = contentPadding.calculateEndPadding(layoutDirection)
-    val pageWidth = settledWidth - startPadding - endPadding
     val badgedTab = SettingsTab.LIBRARY.takeIf { isSyncAnswerPending }
     // Both layouts are drawn through the fade while a window is resized across the line between them, and so are the
     // pages of the wide one as a category is picked: the pager slides where a finger is dragging it, and everything
@@ -223,7 +221,7 @@ internal fun SettingsScreen(
     val fadeSpec = MaterialTheme.motionScheme.defaultEffectsSpec<Float>()
     Crossfade(
         modifier = modifier.fillMaxSize(),
-        targetState = pageWidth > (SETTINGS_TAB_ROW_MAX_WIDTH + SETTINGS_CATEGORY_PANE_WIDTH),
+        targetState = layout.isWide,
         animationSpec = fadeSpec,
     ) { isWide ->
         if (isWide) {
@@ -245,7 +243,7 @@ internal fun SettingsScreen(
                         SettingsTabPage(
                             viewModel = viewModel,
                             tab = tab,
-                            settledWidth = pageWidth - SETTINGS_CATEGORY_PANE_WIDTH,
+                            sectionColumns = layout.sectionColumnsBesidePane,
                             scrollState = scrollStates[tab.ordinal],
                             contentPadding = PaddingValues(end = endPadding, bottom = contentPadding.calculateBottomPadding()),
                             isImporting = isImporting,
@@ -269,7 +267,7 @@ internal fun SettingsScreen(
                 SettingsTabPage(
                     viewModel = viewModel,
                     tab = tab,
-                    settledWidth = pageWidth,
+                    sectionColumns = layout.sectionColumns,
                     scrollState = scrollStates[tab.ordinal],
                     contentPadding = contentPadding,
                     isImporting = isImporting,
@@ -352,7 +350,7 @@ private fun SettingsTabPage(
     modifier: Modifier = Modifier,
     viewModel: CampfireViewModel,
     tab: SettingsTab,
-    settledWidth: Dp,
+    sectionColumns: Int,
     scrollState: ScrollState,
     contentPadding: PaddingValues,
     isImporting: Boolean,
@@ -362,7 +360,7 @@ private fun SettingsTabPage(
 ) = when (tab) {
     SettingsTab.GENERAL -> SettingsPage(
         modifier = modifier,
-        settledWidth = settledWidth,
+        sectionColumns = sectionColumns,
         scrollState = scrollState,
         contentPadding = contentPadding,
         section = {
@@ -376,7 +374,7 @@ private fun SettingsTabPage(
 
     SettingsTab.SONGS -> SettingsPage(
         modifier = modifier,
-        settledWidth = settledWidth,
+        sectionColumns = sectionColumns,
         scrollState = scrollState,
         contentPadding = contentPadding,
         section = { SongDisplaySection(viewModel = viewModel, userPreferences = userPreferences) },
@@ -384,7 +382,7 @@ private fun SettingsTabPage(
 
     SettingsTab.LIBRARY -> SettingsPage(
         modifier = modifier,
-        settledWidth = settledWidth,
+        sectionColumns = sectionColumns,
         scrollState = scrollState,
         contentPadding = contentPadding,
         section = { SyncSection(viewModel = viewModel) },
@@ -399,7 +397,7 @@ private fun SettingsTabPage(
 
     SettingsTab.ABOUT -> SettingsPage(
         modifier = modifier,
-        settledWidth = settledWidth,
+        sectionColumns = sectionColumns,
         scrollState = scrollState,
         contentPadding = contentPadding,
         section = { AboutSection(urlOpener = urlOpener) },

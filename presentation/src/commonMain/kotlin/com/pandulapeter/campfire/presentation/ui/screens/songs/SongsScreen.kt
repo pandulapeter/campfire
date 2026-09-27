@@ -73,6 +73,7 @@ import com.pandulapeter.campfire.presentation.ui.components.DismissSheetWhenSide
 import com.pandulapeter.campfire.presentation.ui.components.FAST_SCROLLER_WIDTH
 import com.pandulapeter.campfire.presentation.ui.components.FastScroller
 import com.pandulapeter.campfire.presentation.ui.components.HideKeyboardWhenScrolledDown
+import com.pandulapeter.campfire.presentation.ui.components.ListLayout
 import com.pandulapeter.campfire.presentation.ui.components.ImportProgress
 import com.pandulapeter.campfire.presentation.ui.components.ListColumns
 import com.pandulapeter.campfire.presentation.ui.components.ListPlaceholder
@@ -91,7 +92,6 @@ import com.pandulapeter.campfire.presentation.ui.components.animateAppBarReveal
 import com.pandulapeter.campfire.presentation.ui.components.belowAppBarOverlap
 import com.pandulapeter.campfire.presentation.ui.components.besideSidePanel
 import com.pandulapeter.campfire.presentation.ui.components.fadingUnderListTop
-import com.pandulapeter.campfire.presentation.ui.components.hasRoomForSidePanel
 import com.pandulapeter.campfire.presentation.ui.components.listItemAnimation
 import com.pandulapeter.campfire.presentation.ui.components.listTopFadeViewport
 import com.pandulapeter.campfire.presentation.ui.components.only
@@ -103,7 +103,6 @@ import com.pandulapeter.campfire.presentation.ui.components.rememberOverflowMenu
 import com.pandulapeter.campfire.presentation.ui.components.rememberRetainedLazyGridState
 import com.pandulapeter.campfire.presentation.ui.components.rememberSectionHeaderState
 import com.pandulapeter.campfire.presentation.ui.components.songCardPadding
-import com.pandulapeter.campfire.presentation.ui.components.songListColumnCount
 import com.pandulapeter.campfire.presentation.ui.components.underAppBar
 import com.pandulapeter.campfire.presentation.ui.navigation.CampfireDestination
 import com.pandulapeter.campfire.presentation.ui.platform.LocalFilePicker
@@ -115,7 +114,7 @@ import org.jetbrains.compose.resources.painterResource
 internal fun SongsScreen(
     modifier: Modifier = Modifier,
     viewModel: CampfireViewModel,
-    settledWidth: Dp,
+    layout: ListLayout,
     contentPadding: PaddingValues,
 ) {
     val isLoading by viewModel.isLoading.collectAsStateWithLifecycle()
@@ -126,13 +125,9 @@ internal fun SongsScreen(
     val isSongFilterActive by viewModel.isSongFilterActive.collectAsStateWithLifecycle()
     val hasSongFilters by viewModel.hasSongFilters.collectAsStateWithLifecycle()
     val listState = rememberRetainedLazyGridState(viewModel.songsScrollPosition)
-    val isSidePanelVisible = hasSongFilters && hasRoomForSidePanel(settledWidth)
+    val isSidePanelVisible = hasSongFilters && layout.hasRoomForSidePanel
     val listContentPadding = contentPadding.besideSidePanel(isSidePanelVisible)
-    val columnCount = songListColumnCount(
-        settledWidth = settledWidth,
-        contentPadding = contentPadding,
-        isSidePanelVisible = isSidePanelVisible,
-    )
+    val columnCount = if (isSidePanelVisible) layout.columnCountBesideSidePanel else layout.columnCount
     val hasLoadedLibrary = rememberHasLoadedLibrary(isLoading)
     HideKeyboardWhenScrolledDown(listState)
     LaunchedEffect(viewModel, listState) {

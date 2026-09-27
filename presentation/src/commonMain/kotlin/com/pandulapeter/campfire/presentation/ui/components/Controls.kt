@@ -48,6 +48,7 @@ import androidx.compose.material3.TextButton
 import androidx.compose.material3.ripple
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.runtime.Immutable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -62,6 +63,7 @@ import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.Dp
+import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.pandulapeter.campfire.data.model.domain.SongLanguage
@@ -107,20 +109,42 @@ internal fun DismissSheetWhenSidePanelAppears(
 }
 
 /**
- * The number of columns the song lists lay their items out in, measured from the width the screen settles at rather
- * than from the width the grid currently has, see [ListColumns].
- *
- * @param settledWidth The width of the screen once the navigation bars have finished animating.
- * @param contentPadding The insets the screen hands to its list, whose start and end are not part of its width.
- *   The [FastScroller] occupies the grid's end padding, not song card width.
+ * What a list screen decides from the width it settles at: whether its filter side panel fits, and how many columns
+ * its list lays out with and without that panel next to it. The app's `CampfireScreens` works it out and hands it down
+ * in place of the width itself, so that a window being resized, whose width changes on every frame, recomposes the
+ * screens only in the frames one of these decisions changes in: the value is equal everywhere between two breakpoints.
  */
-@Composable
+@Immutable
+internal data class ListLayout(
+    val hasRoomForSidePanel: Boolean,
+    val columnCount: Int,
+    val columnCountBesideSidePanel: Int,
+) {
+    companion object {
+
+        /**
+         * @param settledWidth The width of the screen once the navigation bars have finished animating.
+         * @param contentPadding The insets the screen hands to its list, whose start and end are not part of its width.
+         */
+        fun of(settledWidth: Dp, contentPadding: PaddingValues, layoutDirection: LayoutDirection) = ListLayout(
+            hasRoomForSidePanel = hasRoomForSidePanel(settledWidth),
+            columnCount = songListColumnCount(settledWidth, contentPadding, layoutDirection, isSidePanelVisible = false),
+            columnCountBesideSidePanel = songListColumnCount(settledWidth, contentPadding, layoutDirection, isSidePanelVisible = true),
+        )
+    }
+}
+
+/**
+ * The number of columns the song lists lay their items out in, measured from the width the screen settles at rather
+ * than from the width the grid currently has, see [ListColumns]. The [FastScroller] occupies the grid's end padding,
+ * not song card width.
+ */
 internal fun songListColumnCount(
     settledWidth: Dp,
     contentPadding: PaddingValues,
+    layoutDirection: LayoutDirection,
     isSidePanelVisible: Boolean,
 ): Int {
-    val layoutDirection = LocalLayoutDirection.current
     // The panel covers the end inset while it is visible (see besideSidePanel), so either way the same width goes.
     val sidePanelWidth = if (isSidePanelVisible) SIDE_PANEL_WIDTH else 0.dp
     return columnCountForWidth(

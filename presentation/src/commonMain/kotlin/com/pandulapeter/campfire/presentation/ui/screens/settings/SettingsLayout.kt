@@ -36,6 +36,7 @@ import androidx.compose.material3.PrimaryTabRow
 import androidx.compose.material3.Tab
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.Immutable
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -44,6 +45,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.Dp
+import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.dp
 import com.pandulapeter.campfire.presentation.ui.components.THEME_COLOR_CHOICE_WIDTH
 import com.pandulapeter.campfire.presentation.ui.components.fadingTopEdge
@@ -134,6 +136,36 @@ internal fun SettingsCategoryPane(
 }
 
 /**
+ * What the settings screen decides from the width it settles at without its insets, rather than the one it is being
+ * measured at, which follows the navigation chrome while that animates: whether the tabs are a [SettingsCategoryPane]
+ * or a row, and how many [MIN_COLUMN_WIDTH] wide columns a [SettingsPage] has room for, across the whole width and
+ * beside the pane. The app's `CampfireScreens` works it out and hands it down in place of the width itself, so that a
+ * window being resized recomposes the screen only in the frames one of these changes in.
+ */
+@Immutable
+internal data class SettingsWidthLayout(
+    val isWide: Boolean,
+    val sectionColumns: Int,
+    val sectionColumnsBesidePane: Int,
+) {
+    companion object {
+
+        /**
+         * @param settledWidth The width of the screen once the navigation bars have finished animating.
+         * @param contentPadding The insets the screen is laid out inside, whose start and end are not part of its width.
+         */
+        fun of(settledWidth: Dp, contentPadding: PaddingValues, layoutDirection: LayoutDirection): SettingsWidthLayout {
+            val pageWidth = settledWidth - contentPadding.calculateStartPadding(layoutDirection) - contentPadding.calculateEndPadding(layoutDirection)
+            return SettingsWidthLayout(
+                isWide = pageWidth > SETTINGS_TAB_ROW_MAX_WIDTH + SETTINGS_CATEGORY_PANE_WIDTH,
+                sectionColumns = (pageWidth / MIN_COLUMN_WIDTH).toInt(),
+                sectionColumnsBesidePane = ((pageWidth - SETTINGS_CATEGORY_PANE_WIDTH) / MIN_COLUMN_WIDTH).toInt(),
+            )
+        }
+    }
+}
+
+/**
  * The scrolling body of one tab of the settings screen: its [section], and the [secondSection] where it has one, side
  * by side where the window has room for both at [MIN_COLUMN_WIDTH] and stacked in that order where it does not, the
  * columns starting at the start edge and stopping at [MAX_COLUMN_WIDTH] so that a maximized window does not stretch a
@@ -148,15 +180,14 @@ internal fun SettingsCategoryPane(
  * ([AnimatedSettingsRow]) are first composed in the state they are in - where an item added to a lazy list a frame
  * late is animated in, which is a screen rearranging itself while it is still arriving.
  *
- * @param settledWidth The width the screen settles at without its insets, rather than the one it is being measured at,
- *   which follows the navigation chrome while that animates. It is what the number of columns is decided from.
+ * @param sectionColumns How many [MIN_COLUMN_WIDTH] wide columns the page has room for, see [SettingsWidthLayout].
  * @param contentPadding The window insets left to the screen, applied inside the scroll so the rows pass under the
  *   system bars instead of stopping short of them.
  */
 @Composable
 internal fun SettingsPage(
     modifier: Modifier = Modifier,
-    settledWidth: Dp,
+    sectionColumns: Int,
     scrollState: ScrollState,
     contentPadding: PaddingValues,
     section: @Composable () -> Unit,
@@ -164,7 +195,7 @@ internal fun SettingsPage(
 ) {
     val layoutDirection = LocalLayoutDirection.current
     val sections = listOfNotNull(section, secondSection)
-    val columns = if ((settledWidth / MIN_COLUMN_WIDTH).toInt() >= sections.size) sections.map { listOf(it) } else listOf(sections)
+    val columns = if (sectionColumns >= sections.size) sections.map { listOf(it) } else listOf(sections)
     Row(
         modifier = modifier
             .fillMaxSize()

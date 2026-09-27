@@ -76,6 +76,7 @@ import com.pandulapeter.campfire.presentation.ui.components.ListColumns
 import com.pandulapeter.campfire.presentation.ui.components.ListPlaceholder
 import com.pandulapeter.campfire.presentation.ui.components.NewItemMenu
 import com.pandulapeter.campfire.presentation.ui.components.HideKeyboardWhenScrolledDown
+import com.pandulapeter.campfire.presentation.ui.components.ListLayout
 import com.pandulapeter.campfire.presentation.ui.components.ScrollToTopWhenChanged
 import com.pandulapeter.campfire.presentation.ui.components.SearchableTopAppBar
 import com.pandulapeter.campfire.presentation.ui.components.SectionHeader
@@ -100,7 +101,6 @@ import com.pandulapeter.campfire.presentation.ui.components.rememberHasLoadedLib
 import com.pandulapeter.campfire.presentation.ui.components.rememberRetainedLazyGridState
 import com.pandulapeter.campfire.presentation.ui.components.rememberSectionHeaderState
 import com.pandulapeter.campfire.presentation.ui.components.songCardPadding
-import com.pandulapeter.campfire.presentation.ui.components.songListColumnCount
 import com.pandulapeter.campfire.presentation.ui.components.underAppBar
 import com.pandulapeter.campfire.presentation.ui.platform.LocalFilePicker
 import com.pandulapeter.campfire.presentation.localization.stringResource
@@ -113,17 +113,13 @@ import sh.calvin.reorderable.rememberReorderableLazyGridState
 internal fun SetlistsScreen(
     modifier: Modifier = Modifier,
     viewModel: CampfireViewModel,
-    settledWidth: Dp,
+    layout: ListLayout,
     contentPadding: PaddingValues,
 ) {
     val listState = rememberRetainedLazyGridState(viewModel.setlistsScrollPosition)
     val isPerformanceModeEnabled by viewModel.isPerformanceModeEnabled.collectAsStateWithLifecycle()
     val setlistsPlaceholder by viewModel.setlistsPlaceholder.collectAsStateWithLifecycle()
-    val columnCount = songListColumnCount(
-        settledWidth = settledWidth,
-        contentPadding = contentPadding,
-        isSidePanelVisible = false,
-    )
+    val columnCount = layout.columnCount
     HideKeyboardWhenScrolledDown(listState)
     LaunchedEffect(viewModel, listState) {
         viewModel.scrollToTopRequests.collect { if (it == CampfireDestination.Setlists) listState.animateScrollToItem(0) }

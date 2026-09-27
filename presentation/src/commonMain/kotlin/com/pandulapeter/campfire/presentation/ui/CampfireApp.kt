@@ -136,6 +136,7 @@ import com.pandulapeter.campfire.presentation.resources.song_editor_save_failed
 import com.pandulapeter.campfire.presentation.resources.songs
 import com.pandulapeter.campfire.presentation.resources.songs_delete_song_partly
 import com.pandulapeter.campfire.presentation.resources.songs_update_file_name_partly
+import com.pandulapeter.campfire.presentation.ui.components.ListLayout
 import com.pandulapeter.campfire.presentation.ui.components.WindowSize
 import com.pandulapeter.campfire.presentation.ui.components.hasRoomForSidePanel
 import com.pandulapeter.campfire.presentation.ui.components.pluralTextResource
@@ -151,6 +152,7 @@ import com.pandulapeter.campfire.presentation.ui.platform.isLibraryEditableOutsi
 import com.pandulapeter.campfire.presentation.ui.platform.isStartupScreenHeldUntilAppReady
 import com.pandulapeter.campfire.presentation.ui.screens.setlists.SetlistsScreen
 import com.pandulapeter.campfire.presentation.ui.screens.settings.SettingsScreen
+import com.pandulapeter.campfire.presentation.ui.screens.settings.SettingsWidthLayout
 import com.pandulapeter.campfire.presentation.ui.screens.songDetails.SongDetailsScreen
 import com.pandulapeter.campfire.presentation.ui.screens.songEditor.SongEditorScreen
 import com.pandulapeter.campfire.presentation.ui.screens.songs.SongsScreen
@@ -557,6 +559,12 @@ private fun CampfireScreens(
         ime = ime,
         density = density,
     )
+    // The width changes on every frame of a window being resized, so the top level screens are handed only what they
+    // decide from it, which stays equal between two breakpoints and lets them skip those frames. The song details
+    // screen keeps the width itself: its lyrics use the difference between the settled width and the one they are
+    // measured at inside their layout, which no discrete decision stands in for.
+    val listLayout = ListLayout.of(settledWidth = settledListWidth, contentPadding = shellContentPadding, layoutDirection = layoutDirection)
+    val settingsLayout = SettingsWidthLayout.of(settledWidth = settledListWidth, contentPadding = shellContentPadding, layoutDirection = layoutDirection)
     val screenChrome: (CampfireDestination.TopLevel) -> (@Composable () -> Unit)? = { destination ->
         if (chromeInScreens) {
             {
@@ -604,7 +612,7 @@ private fun CampfireScreens(
                     ) {
                         SongsScreen(
                             viewModel = viewModel,
-                            settledWidth = settledListWidth,
+                            layout = listLayout,
                             contentPadding = shellContentPadding,
                         )
                     }
@@ -619,7 +627,7 @@ private fun CampfireScreens(
                     ) {
                         SetlistsScreen(
                             viewModel = viewModel,
-                            settledWidth = settledListWidth,
+                            layout = listLayout,
                             contentPadding = shellContentPadding,
                         )
                     }
@@ -634,7 +642,7 @@ private fun CampfireScreens(
                     ) {
                         SettingsScreen(
                             viewModel = viewModel,
-                            settledWidth = settledListWidth,
+                            layout = settingsLayout,
                             contentPadding = shellContentPadding,
                             isNavigationRailVisible = windowSize.usesNavigationRail,
                             urlOpener = urlOpener,
