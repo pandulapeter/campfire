@@ -64,13 +64,14 @@
             }
         })();
     </script>
-    <!-- Every file of a distribution is asked for with its build's version in the query string, this page aside, which
+    <!-- Every file of a distribution is asked for with its own version in the query string, this page aside, which
          is the one address that has to stay put. The host lets a browser keep any file for ten minutes by its address
          and a deployment replaces the files one address at a time, so without it a page could start with a campfire.js
          whose binaries were already deleted, or a binary with the resources of another release. With it every release
-         is a set of addresses of its own, which only the page that belongs to it knows, while a release is still
-         cached as long as it ever was. The version is written by the build together with the rest of the manifest (see
-         build.gradle.kts): a hash of the files, so a build of the same sources asks for the same addresses.
+         is a set of addresses of its own, which only the page that belongs to it knows, while a file a release left as
+         it was keeps its address and stays cached. The versions are written by the build together with the rest of
+         the manifest (see build.gradle.kts): a hash of each file's content, so a build of the same sources asks for the
+         same addresses. A file the manifest does not name is asked for as it is.
 
          Everything the app fetches goes through fetch(), which is wrapped here for good, before campfire.js is loaded;
          campfire.js itself and the storage worker are asked for by name through campfireVersioned. Only addresses inside
@@ -92,7 +93,12 @@
                 if (!build || resolved.href.indexOf(folder) !== 0) {
                     return url;
                 }
-                resolved.searchParams.set('v', build.version);
+                var path = decodeURIComponent(resolved.pathname.substring(new URL(folder).pathname.length));
+                var hash = build.files[path];
+                if (!hash) {
+                    return url;
+                }
+                resolved.searchParams.set('v', hash);
                 return resolved.href;
             }
 

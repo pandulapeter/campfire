@@ -69,13 +69,14 @@ val shouldPrecompress = project.property("campfire.web.precompress").toString().
 
 /**
  * Tells index.html what its progress bar is about to download - it can only measure the binaries
- * against a total it knows before the first byte arrives - and which version the distribution is,
- * which the page asks for every other file with, and then, with `campfire.web.precompress` on, writes
- * a precompressed copy of everything worth compressing next to it, for hosts that serve those.
+ * against a total it knows before the first byte arrives - and the version of every other file, which
+ * the page asks for that file with, and then, with `campfire.web.precompress` on, writes a
+ * precompressed copy of everything worth compressing next to it, for hosts that serve those.
  *
- * The version is a hash of every file but the page, names included, rather than the version name: a
- * distribution built again from other sources under the same name must not be taken for the one a
- * browser still holds, and one built again from the same sources can go on being served from it.
+ * Each file's version is a hash of its own content rather than the version name, or one hash of the
+ * whole distribution: a file built again from other sources must not be taken for the one a browser
+ * still holds, while one that a release left as it was - skiko's binary, the fonts, the drawables -
+ * can go on being served from it.
  *
  * The page is written from its source rather than edited in place, so running this over the same
  * distribution twice produces the same distribution.
@@ -95,22 +96,20 @@ val finishWebDistribution = tasks.register("finishWebDistribution") {
         val deployed = directory.walkTopDown()
             .filter { it.isFile && transport.none(it.name::endsWith) }
             .toList()
-        val digest = MessageDigest.getInstance("SHA-256")
-        deployed.map { it.relativeTo(directory).invariantSeparatorsPath to it }
+        val versions = deployed.map { it.relativeTo(directory).invariantSeparatorsPath to it }
             .filter { (path, _) -> path != page }
             .sortedBy { (path, _) -> path }
-            .forEach { (path, file) ->
-                digest.update("$path\u0000".toByteArray())
-                digest.update(file.readBytes())
+            .associate { (path, file) ->
+                path to MessageDigest.getInstance("SHA-256").digest(file.readBytes()).take(8).joinToString("") { "%02x".format(it) }
             }
-        val version = digest.digest().take(8).joinToString("") { "%02x".format(it) }
 
         val binaries = deployed.filter { it.name.endsWith(".wasm") }
-        val manifest = "{\"binaryCount\":${binaries.size},\"binaryBytes\":${binaries.sumOf { it.length() }},\"version\":\"$version\"}"
+        val files = versions.entries.joinToString(",") { (path, version) -> "${path.toJsonString()}:${version.toJsonString()}" }
+        val manifest = "{\"binaryCount\":${binaries.size},\"binaryBytes\":${binaries.sumOf { it.length() }},\"files\":{$files}}"
         val template = templates.file(page).asFile.readText()
         check(template.contains(placeholder)) { "$page has no $placeholder for the build manifest" }
         File(directory, page).writeText(template.replace(placeholder, manifest))
-        logger.lifecycle("Web distribution $version: ${deployed.size} files, ${deployed.sumOf { it.length() } / 1024} KiB")
+        logger.lifecycle("Web distribution: ${deployed.size} files, ${versions.size} of them versioned, ${deployed.sumOf { it.length() } / 1024} KiB")
 
         if (precompress) {
             var isBrotliMissing = false
@@ -128,6 +127,22 @@ val finishWebDistribution = tasks.register("finishWebDistribution") {
 
 tasks.named("wasmJsBrowserDistribution") {
     finalizedBy(finishWebDistribution)
+}
+
+/**
+ * A JSON string literal: the paths come from the Compose resources, which are plain today, but nothing guarantees a
+ * name without a quote or a backslash in it.
+ */
+fun String.toJsonString() = buildString {
+    append('"')
+    this@toJsonString.forEach { character ->
+        when {
+            character == '"' || character == '\\' -> append('\\').append(character)
+            character < ' ' -> append("\\u%04x".format(character.code))
+            else -> append(character)
+        }
+    }
+    append('"')
 }
 
 /** Deflate at the highest level: this runs once per deployment and the result is served for months. */
