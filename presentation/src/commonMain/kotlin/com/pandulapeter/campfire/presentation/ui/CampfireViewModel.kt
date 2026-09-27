@@ -129,6 +129,9 @@ import kotlinx.serialization.SerializationException
 import kotlinx.serialization.json.Json
 import kotlin.math.ceil
 import kotlin.math.floor
+import kotlin.time.Duration.Companion.seconds
+import kotlin.time.TimeMark
+import kotlin.time.TimeSource
 import org.koin.core.annotation.KoinViewModel
 
 @OptIn(FlowPreview::class)
@@ -316,7 +319,19 @@ class CampfireViewModel(
     }
 
     // Data
-    val isLoading = screenData.map { it is DataState.Loading }.asState(true)
+    /**
+     * True while the library is being read for the first time, its partial batches included. A rescan of a library
+     * that has been read once is not a loading state: it publishes no partial data, so what is on screen meanwhile is
+     * the previous, complete library, and flipping this would only recompose every screen twice for nothing. A first
+     * read that failed has not been read, so the retry after it still shows loading.
+     */
+    val isLoading = screenData
+        .runningFold(LoadingLatch(isLoading = true, hasBeenRead = false)) { latch, state ->
+            val hasBeenRead = latch.hasBeenRead || state is DataState.Idle
+            LoadingLatch(isLoading = state is DataState.Loading && !hasBeenRead, hasBeenRead = hasBeenRead)
+        }
+        .map { it.isLoading }
+        .asState(true)
 
     /**
      * True until the app has settled whether it is planting the demo library, and until it has finished if it is,
@@ -1226,8 +1241,25 @@ class CampfireViewModel(
 
     // Songs
 
+    /** When the last rescan started or, once it has finished, finished; see [refreshIfStale]. */
+    private var lastRescanAt: TimeMark? = null
+
     fun refresh() = viewModelScope.launch {
+        // Marked as it starts as well, so that the focus that follows a start, which comes right behind it on the
+        // desktop, does not ask for a second rescan while the first is still running.
+        lastRescanAt = TimeSource.Monotonic.markNow()
         loadScreenData(true)
+        lastRescanAt = TimeSource.Monotonic.markNow()
+    }
+
+    /**
+     * [refresh], unless the library has been read again within the last [MIN_RESCAN_INTERVAL]: for the desktop
+     * window regaining the focus, which a user editing a song in another window next to it does often, and each time
+     * of which re-reading the whole library would be a cost with nothing new to show for it.
+     */
+    fun refreshIfStale() {
+        if (lastRescanAt?.let { it.elapsedNow() < MIN_RESCAN_INTERVAL } == true) return
+        refresh()
     }
 
     /** Creates the file and opens it in the editor, which is the only useful thing to do with an empty song. */
@@ -2347,6 +2379,12 @@ class CampfireViewModel(
         val settled: CompletableDeferred<Unit> = CompletableDeferred(),
     )
 
+    /** The state [isLoading] is folded from. */
+    private data class LoadingLatch(
+        val isLoading: Boolean,
+        val hasBeenRead: Boolean,
+    )
+
     /** An import waiting for the answer to [DialogType.ImportConflicts], see [pendingImport]. */
     private class PendingImport(
         val plan: ImportPlan,
@@ -2591,5 +2629,6 @@ class CampfireViewModel(
         private const val SONG_FILTER_KEY = "songFilter"
         private const val SONGS_SEARCH_KEY = "songsSearch"
         private const val SETLISTS_SEARCH_KEY = "setlistsSearch"
+        private val MIN_RESCAN_INTERVAL = 10.seconds
     }
 }

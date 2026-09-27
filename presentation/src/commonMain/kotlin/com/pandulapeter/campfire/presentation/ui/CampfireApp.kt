@@ -145,6 +145,7 @@ import com.pandulapeter.campfire.presentation.ui.navigation.CampfireDestination
 import com.pandulapeter.campfire.presentation.ui.platform.LocalSyncNotifier
 import com.pandulapeter.campfire.presentation.ui.platform.SyncNotification
 import com.pandulapeter.campfire.presentation.ui.platform.areDrawablesLoaded
+import com.pandulapeter.campfire.presentation.ui.platform.isDesktopPlatform
 import com.pandulapeter.campfire.presentation.ui.platform.isLaunchScreenWholeStartup
 import com.pandulapeter.campfire.presentation.ui.platform.isLibraryEditableOutsideApp
 import com.pandulapeter.campfire.presentation.ui.platform.isStartupScreenHeldUntilAppReady
@@ -193,15 +194,27 @@ fun CampfireApp(
     LaunchedEffect(filesToImport) { filesToImport.collect(viewModel::importFiles) }
     SyncNotificationEffect(viewModel)
     // A library the user can reach from outside the app (the desktop folder, the iOS Files app) can also change
-    // while the app is away, so it is read again whenever Campfire comes back to the front. One only the app can
-    // see - Android's private storage, the browser's origin private file system - cannot change behind its back,
-    // and re-reading every song on each window focus would be cost with nothing to show for it.
+    // while the app is away, so it is read again whenever Campfire comes back to the front: ON_START, which is iOS
+    // entering the foreground and the desktop window being restored, and not ON_RESUME, which iOS also sends after
+    // Control Center, a notification or a system alert. One only the app can see - Android's private storage, the
+    // browser's origin private file system - cannot change behind its back, and re-reading every song on each window
+    // focus would be cost with nothing to show for it.
     //
-    // The first resume is the one that follows the initial load, and is skipped.
+    // The desktop window also answers to its focus, since a song edited in another window next to it is brought back
+    // with a click rather than a restore - but only once the last rescan is old enough, so that switching between
+    // two windows does not re-read the library every time.
+    //
+    // The first start and the first resume are the ones that follow the initial load, and are skipped.
     if (isLibraryEditableOutsideApp) {
-        var hasResumedBefore by remember { mutableStateOf(false) }
-        LifecycleEventEffect(Lifecycle.Event.ON_RESUME) {
-            if (hasResumedBefore) viewModel.refresh() else hasResumedBefore = true
+        var hasStartedBefore by remember { mutableStateOf(false) }
+        LifecycleEventEffect(Lifecycle.Event.ON_START) {
+            if (hasStartedBefore) viewModel.refresh() else hasStartedBefore = true
+        }
+        if (isDesktopPlatform) {
+            var hasResumedBefore by remember { mutableStateOf(false) }
+            LifecycleEventEffect(Lifecycle.Event.ON_RESUME) {
+                if (hasResumedBefore) viewModel.refreshIfStale() else hasResumedBefore = true
+            }
         }
     }
     // The editor's unsaved text goes to disk whenever the app stops being the one in front, see
