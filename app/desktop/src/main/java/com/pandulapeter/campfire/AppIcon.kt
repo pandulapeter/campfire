@@ -20,6 +20,7 @@ import com.pandulapeter.campfire.presentation.ui.platform.appIconThemeColor
 import com.pandulapeter.campfire.resources.Res
 import com.pandulapeter.campfire.resources.app_icon
 import com.pandulapeter.campfire.resources.app_icon_blue
+import com.pandulapeter.campfire.resources.app_icon_gray
 import com.pandulapeter.campfire.resources.app_icon_green
 import com.pandulapeter.campfire.resources.app_icon_orange
 import com.pandulapeter.campfire.resources.app_icon_pink
@@ -29,6 +30,7 @@ import com.pandulapeter.campfire.resources.app_icon_teal
 import com.pandulapeter.campfire.resources.app_icon_yellow
 import com.pandulapeter.campfire.resources.dock_icon_blue
 import com.pandulapeter.campfire.resources.dock_icon_campfire
+import com.pandulapeter.campfire.resources.dock_icon_gray
 import com.pandulapeter.campfire.resources.dock_icon_green
 import com.pandulapeter.campfire.resources.dock_icon_orange
 import com.pandulapeter.campfire.resources.dock_icon_pink
@@ -48,7 +50,7 @@ import org.jetbrains.compose.resources.painterResource
 /**
  * The app icon in the theme the user chose, for as long as the app runs: the icons of the packages (`appIcon.icns`,
  * `appIcon.ico`, the Store's logos and the Linux `.desktop` entry's) are files the system reads while the app is not
- * running, and stay the gray ones of the app's own color.
+ * running, and stay the ones of the app's own color.
  *
  * What is returned is the window icon, which Windows puts on the title bar and the taskbar button and Linux on
  * whatever its window manager draws for a window - the round icon, in the chosen color. On macOS a window has no icon,
@@ -79,6 +81,7 @@ private val isDockIconSupported by lazy { Taskbar.isTaskbarSupported() && Taskba
 
 private val WINDOW_ICONS: Map<UserPreferences.ThemeColor, DrawableResource> = mapOf(
     UserPreferences.ThemeColor.CAMPFIRE to Res.drawable.app_icon,
+    UserPreferences.ThemeColor.GRAY to Res.drawable.app_icon_gray,
     UserPreferences.ThemeColor.RED to Res.drawable.app_icon_red,
     UserPreferences.ThemeColor.ORANGE to Res.drawable.app_icon_orange,
     UserPreferences.ThemeColor.YELLOW to Res.drawable.app_icon_yellow,
@@ -91,6 +94,7 @@ private val WINDOW_ICONS: Map<UserPreferences.ThemeColor, DrawableResource> = ma
 
 private val DOCK_ICONS: Map<UserPreferences.ThemeColor, DrawableResource> = mapOf(
     UserPreferences.ThemeColor.CAMPFIRE to Res.drawable.dock_icon_campfire,
+    UserPreferences.ThemeColor.GRAY to Res.drawable.dock_icon_gray,
     UserPreferences.ThemeColor.RED to Res.drawable.dock_icon_red,
     UserPreferences.ThemeColor.ORANGE to Res.drawable.dock_icon_orange,
     UserPreferences.ThemeColor.YELLOW to Res.drawable.dock_icon_yellow,

@@ -200,6 +200,7 @@
     <string name="settings_app_icon_browser_tab">Színes lapikon</string>
     <string name="settings_app_icon_browser_tab_description">A böngészőlap ikonja felveszi a fenti színt</string>
     <string name="settings_user_interface_theme_color_campfire">Campfire</string>
+    <string name="settings_user_interface_theme_color_gray">Szürke</string>
     <string name="settings_user_interface_theme_color_system">Rendszer</string>
     <string name="settings_user_interface_theme_color_red">Piros</string>
     <string name="settings_user_interface_theme_color_orange">Narancs</string>

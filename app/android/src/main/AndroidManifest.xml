@@ -54,7 +54,7 @@
           the entry of an installation that never switched, and keeps the name this activity had before there were
           aliases, because a home screen icon and a restored backup of a launcher's layout point at a component by
           name, and that name has to go on being a launcher entry after an update. The rest are one per theme color,
-          the app's own gray included, and are disabled until chosen.
+          the app's own included, and are disabled until chosen.
         -->
         <activity
             android:name=".CampfireMainActivity"
@@ -198,6 +198,21 @@
             android:exported="true"
             android:icon="@mipmap/ic_launcher"
             android:roundIcon="@mipmap/ic_launcher"
+            android:targetActivity=".CampfireMainActivity">
+
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+
+        </activity-alias>
+
+        <activity-alias
+            android:name=".CampfireActivityGray"
+            android:enabled="false"
+            android:exported="true"
+            android:icon="@mipmap/ic_launcher_gray"
+            android:roundIcon="@mipmap/ic_launcher_gray"
             android:targetActivity=".CampfireMainActivity">
 
             <intent-filter>

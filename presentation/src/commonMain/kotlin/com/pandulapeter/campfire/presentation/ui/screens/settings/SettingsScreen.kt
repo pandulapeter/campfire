@@ -477,11 +477,11 @@ private fun GeneralSection(
     }
     // Named after the icon it colors, which is a different one on every platform, and described with what that
     // platform lets it do: the one thing all of them share is that a color picked here reaches the icon at all. It is
-    // disabled wherever the theme is drawn in the app's own palette - the gray itself, or the System color on a device
-    // that hands out none - since the icon is the gray one then whichever way it is set. The System color where it is
-    // honored is a color like the rest, whose launcher icon the wallpaper tints. Disabled, it shows as on, since the
-    // gray icon is then the icon of the color picked rather than the icon kept instead of it; the preference itself is
-    // left as the user set it, for the next color that can reach the icon.
+    // disabled wherever the theme is drawn in the app's own palette - that color itself, or the System color on a
+    // device that hands out none - since the icon is the app's own then whichever way it is set. The System color where
+    // it is honored is a color like the rest, whose launcher icon the wallpaper tints. Disabled, it shows as on, since
+    // the app's own icon is then the icon of the color picked rather than the icon kept instead of it; the preference
+    // itself is left as the user set it, for the next color that can reach the icon.
     val canColorAppIcon = colorSchemePair(userPreferences?.themeColor) !== CampfireColorScheme
     SwitchListItem(
         title = appIconSurface.title(),

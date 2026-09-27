@@ -117,6 +117,7 @@ import com.pandulapeter.campfire.presentation.resources.songs_lyrics_only
 import com.pandulapeter.campfire.presentation.resources.songs_no_search_results
 import com.pandulapeter.campfire.presentation.resources.songs_no_search_results_hint
 import com.pandulapeter.campfire.presentation.ui.CampfireViewModel
+import com.pandulapeter.campfire.presentation.ui.theme.LocalPlayedColor
 import org.jetbrains.compose.resources.painterResource
 import kotlin.math.roundToInt
 
@@ -249,7 +250,7 @@ internal fun SongListItem(
                                                 modifier = Modifier.semantics { contentDescription = currentNote.description },
                                                 text = currentNote.text,
                                                 style = MaterialTheme.typography.labelMedium,
-                                                color = if (currentNote.isEmphasized) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant,
+                                                color = if (currentNote.isEmphasized) LocalPlayedColor.current else MaterialTheme.colorScheme.onSurfaceVariant,
                                             )
                                         }
                                     }

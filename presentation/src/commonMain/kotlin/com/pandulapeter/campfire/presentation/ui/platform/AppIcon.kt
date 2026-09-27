@@ -12,8 +12,8 @@ package com.pandulapeter.campfire.presentation.ui.platform
 import com.pandulapeter.campfire.data.model.domain.UserPreferences
 
 /**
- * The theme color the app icon is to be in: the one the user chose, unless they asked to keep the app's own gray icon
- * whatever the theme ([UserPreferences.isAppIconThemed]). Preferences that have not been read yet ask for the gray,
+ * The theme color the app icon is to be in: the one the user chose, unless they asked to keep the app's own icon
+ * whatever the theme ([UserPreferences.isAppIconThemed]). Preferences that have not been read yet ask for the app's own,
  * which is what every platform shows until then anyway.
  */
 val UserPreferences?.appIconThemeColor
@@ -24,7 +24,7 @@ val UserPreferences?.appIconThemeColor
  * [UserPreferences.ThemeColor.id]). Every color the app offers has an icon of its own, generated from the hand-drawn orange ones
  * by `app/generate_theme_icons.py`, except [UserPreferences.ThemeColor.SYSTEM]: only Android honors it, and has an icon
  * the system colors for it (see `AppIconSwitcher` in `:app:android`), and everywhere else the theme falls back to the
- * app's own gray, so the icon does too. So does a preference that has not been read yet.
+ * app's own palette, so the icon does too. So does a preference that has not been read yet.
  *
  * A new theme color needs an icon on every platform: a seed in that script, an alternate icon name in the Xcode
  * project, a launcher alias in the Android manifest, and an entry in the desktop's `AppIcon.kt` and Android's switcher.

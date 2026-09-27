@@ -18,6 +18,7 @@ import com.pandulapeter.campfire.presentation.resources.Res
 import com.pandulapeter.campfire.presentation.resources.ic_phone
 import com.pandulapeter.campfire.presentation.resources.settings_user_interface_theme_color_blue
 import com.pandulapeter.campfire.presentation.resources.settings_user_interface_theme_color_campfire
+import com.pandulapeter.campfire.presentation.resources.settings_user_interface_theme_color_gray
 import com.pandulapeter.campfire.presentation.resources.settings_user_interface_theme_color_green
 import com.pandulapeter.campfire.presentation.resources.settings_user_interface_theme_color_orange
 import com.pandulapeter.campfire.presentation.resources.settings_user_interface_theme_color_pink
@@ -53,6 +54,13 @@ internal fun UiModeChoice(
 )
 
 /**
+ * How wide the [ThemeColorChoice] is with every color the preference has in one row, the system's included, which is
+ * what the settings screen's columns and the welcome sheet leave it, so that the colors do not wrap wherever there is
+ * the room for them.
+ */
+internal val THEME_COLOR_CHOICE_WIDTH = colorChoiceWidth(UserPreferences.ThemeColor.entries.size)
+
+/**
  * Every color the theme can be painted in, as the settings screen and the welcome sheet both offer it.
  *
  * @param uiMode The mode the app is drawn in, which decides the half of each palette the discs are filled with.
@@ -75,6 +83,7 @@ internal fun ThemeColorChoice(
             ColorChoiceOption(
                 value = themeColor,
                 color = colorScheme.primary,
+                playedColor = if (isDarkTheme) colorSchemePair.lightPlayed else colorSchemePair.darkPlayed,
                 contentColor = colorScheme.onPrimary,
                 label = themeColor.label(),
                 icon = themeColor.icon(),
@@ -94,6 +103,7 @@ internal fun ThemeColorChoice(
 private fun UserPreferences.ThemeColor.label() = stringResource(
     when (this) {
         UserPreferences.ThemeColor.CAMPFIRE -> Res.string.settings_user_interface_theme_color_campfire
+        UserPreferences.ThemeColor.GRAY -> Res.string.settings_user_interface_theme_color_gray
         UserPreferences.ThemeColor.SYSTEM -> Res.string.settings_user_interface_theme_color_system
         UserPreferences.ThemeColor.RED -> Res.string.settings_user_interface_theme_color_red
         UserPreferences.ThemeColor.ORANGE -> Res.string.settings_user_interface_theme_color_orange
@@ -109,7 +119,7 @@ private fun UserPreferences.ThemeColor.label() = stringResource(
 /**
  * The icon a color offered by the theme carries while it is not selected, for the one whose color is not what picks it
  * out: the palette the operating system hands over, which is whatever the wallpaper made it. The rest are only a
- * color - the app's own gray included - and a glyph on each of them would say nothing the disc does not.
+ * color - the app's own two included - and a glyph on each of them would say nothing the disc does not.
  */
 @Composable
 private fun UserPreferences.ThemeColor.icon(): Painter? = when (this) {

@@ -171,10 +171,14 @@ uninstall and nothing else does.
   (one `activity-alias` per color, see `app/android`), an alternate icon on iOS, the favicon on the web, and the
   window, taskbar and Dock icons of a running desktop app — unless the user turned that off
   (`UserPreferences.isAppIconThemed`, a switch under the colors named after the platform's icon), which keeps the
-  gray. **The app's own color is gray** — the "Campfire" palette is the orange one taken to gray — because the icons
-  no theme color can reach (the installed app, the Start menu, a store's page) have to go with whichever the user
-  picks; the orange is a color like the rest. Every icon, the packaged ones included, is the hand-drawn orange one in
-  `app/icons` recolored by `app/generate_theme_icons.py`, and the files it writes are committed.
+  app's own. **The app's own colors are the promotional material's purple and orange** (#5A49CA and #F57C00): its icon,
+  and so every packaged one (the installed app, the Start menu, a store's page), is their diagonal gradient, and the
+  "Campfire" palette is the gray one with the purple as the interface's accent and the orange as the color of what is
+  played — the chords, the key, the capo (`LocalPlayedColor`, which is the primary color in every other palette). The
+  gray is the second option, a color like the rest; it was the app's own before, under the id the new palette took, so
+  nobody was left on it. Android's own launcher icon and its Play icon are drawn as they are; every other icon, the
+  packaged ones included, is the hand-drawn orange one in `app/icons` recolored by `app/generate_theme_icons.py` — the
+  app's own onto the gradient read off the Android icon's background — and the files it writes are committed.
 - **The app says nothing about the other builds but where to find them.** Settings → About is one section on every
   platform, and the row that names no platform — "Every version of Campfire" — leads to the README's "Get Campfire"
   section, which is a page that can be kept up to date without a release and the one place a store has nothing to

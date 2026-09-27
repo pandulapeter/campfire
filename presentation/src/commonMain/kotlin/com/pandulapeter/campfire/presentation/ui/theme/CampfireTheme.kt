@@ -23,6 +23,8 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.compose.runtime.staticCompositionLocalOf
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.lerp
 import com.pandulapeter.campfire.data.model.domain.UserPreferences
 
@@ -55,13 +57,16 @@ fun CampfireTheme(
     val isDarkTheme = uiMode.isDarkTheme()
     val colorSchemePair = colorSchemePair(themeColor)
     val targetColorScheme = if (isDarkTheme) colorSchemePair.dark else colorSchemePair.light
+    val targetPlayedColor = if (isDarkTheme) colorSchemePair.darkPlayed else colorSchemePair.lightPlayed
     val progress = remember { Animatable(1f) }
     var start by remember { mutableStateOf(targetColorScheme) }
     var stop by remember { mutableStateOf(targetColorScheme) }
+    var playedStart by remember { mutableStateOf(targetPlayedColor) }
+    var playedStop by remember { mutableStateOf(targetPlayedColor) }
     // The preferences rather than the scheme itself, which has no equality of its own to key an animation on.
     LaunchedEffect(isDarkTheme to themeColor) {
         // Two preferences can ask for the same palette - an unread one and the app's own color, a color the device
-        // cannot honor and the gray it falls back to - and arriving at the scheme that is already on screen is
+        // cannot honor and the app's own it falls back to - and arriving at the scheme that is already on screen is
         // not a change to animate. The schemes are the constants of ColorSchemes.kt, so this is identity.
         if (targetColorScheme === stop) return@LaunchedEffect
         // The fade starts from the scheme being shown and not from the one the last change aimed at, so a second
@@ -70,6 +75,8 @@ fun CampfireTheme(
         // the dark theme while the color is still arriving.
         start = lerp(start, stop, progress.value)
         stop = targetColorScheme
+        playedStart = lerp(playedStart, playedStop, progress.value)
+        playedStop = targetPlayedColor
         progress.snapTo(0f)
         progress.animateTo(1f, MOTION_SCHEME.defaultEffectsSpec())
     }
@@ -79,7 +86,10 @@ fun CampfireTheme(
         motionScheme = MOTION_SCHEME,
         typography = typography ?: MaterialTheme.typography,
     ) {
-        CompositionLocalProvider(LocalMonospaceFontFamily provides monospaceFontFamily()) {
+        CompositionLocalProvider(
+            LocalMonospaceFontFamily provides monospaceFontFamily(),
+            LocalPlayedColor provides lerp(playedStart, playedStop, progress.value),
+        ) {
             // The scheme asked for is not the one being shown from the composition the preferences arrive in until
             // the fade that follows has ended, and the effect above starts that fade one frame after that composition -
             // so the target being reached is read from the schemes rather than from the animation alone, which is not
@@ -88,6 +98,14 @@ fun CampfireTheme(
         }
     }
 }
+
+/**
+ * The color of what is played rather than read on a song's page: the chords, the key, the capo - which Material has no
+ * role for, and which is the primary color everywhere but in the app's own palette (see [ColorSchemePair.lightPlayed]).
+ * It is provided by [CampfireTheme] and cross faded with the rest of the scheme; static, since it only ever changes
+ * together with the scheme, which recomposes everything that reads a color anyway.
+ */
+internal val LocalPlayedColor = staticCompositionLocalOf { Color.Unspecified }
 
 /**
  * Resolves whether the given user preference results in a dark theme, falling back to the system setting.

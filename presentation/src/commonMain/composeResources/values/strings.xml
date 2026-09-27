@@ -200,6 +200,7 @@
     <string name="settings_app_icon_browser_tab">Colored tab icon</string>
     <string name="settings_app_icon_browser_tab_description">The browser tab\'s icon takes the color above</string>
     <string name="settings_user_interface_theme_color_campfire">Campfire</string>
+    <string name="settings_user_interface_theme_color_gray">Gray</string>
     <string name="settings_user_interface_theme_color_system">System</string>
     <string name="settings_user_interface_theme_color_red">Red</string>
     <string name="settings_user_interface_theme_color_orange">Orange</string>

@@ -8,20 +8,15 @@
  * https://mozilla.org/MPL/2.0/.
 -->
 # To do
-- New default Campfire theme
-- .cho file association doesn't work on Samsung devices
-- Song assignments bottom sheet: tag vertical spacing should be incremented
-- "Language picker" dialog could also be a bottom sheet
-- "Song assignments" bottom sheet: open keyboard automatically, hide it on downwards scroll
 - Downwards scroll dismissing the keyboard should work on every modal list
+- "Song assignments" bottom sheet: open keyboard automatically, hide it on downwards scroll
 - Review icon color saturation
 - Back navigation on Settings should pop back to the General tab first
 - Tapping on the Song details screen app bar title should scroll to the top
 - Song details screen scroll should snap to rows
-- Can we close the browser window after the Dropbox redirect?
+- .cho file association doesn't work on Samsung devices
 - Sort and Filter UI should be improved (better animations)
 - Haptic effects
-- Auto-scroll
 - Optional close confirmation dialog on supported platforms
 - Add genre tags, similar to language tags
 - Add ability to add links as metadata items
@@ -30,3 +25,4 @@
 - Once Microsoft Store, App Store and Mac App Store listings are approved, update included URL-s + this Readme
 - Add more automatic sync triggers
 - Add support for external control devices with a focus-by-section feature
+- Each top-level Composable should be defined in a separate file

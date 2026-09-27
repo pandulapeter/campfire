@@ -23,7 +23,7 @@ import com.pandulapeter.campfire.presentation.ui.platform.appIconColor
  * icon over to the new entry, while a launcher that does not may take it off the home screen. So the switch is only
  * made when the color has changed.
  *
- * Every color's entry, the gray one of the app's own color included, is disabled in the manifest and switched between that and enabled
+ * Every color's entry, the one of the app's own color included, is disabled in the manifest and switched between that and enabled
  * alone. The one entry that is enabled in the manifest, `CampfireActivity`, is what an installation that never
  * switched opens from, and it is disabled - explicitly, since nothing else takes it out of the launcher - at the
  * first switch and never enabled again. The difference matters because Android closes every task that was started from
@@ -84,6 +84,7 @@ internal object AppIconSwitcher {
     private val ENTRIES = mapOf(
         UserPreferences.ThemeColor.CAMPFIRE to "CampfireActivityCampfire",
         UserPreferences.ThemeColor.SYSTEM to "CampfireActivitySystem",
+        UserPreferences.ThemeColor.GRAY to "CampfireActivityGray",
         UserPreferences.ThemeColor.RED to "CampfireActivityRed",
         UserPreferences.ThemeColor.ORANGE to "CampfireActivityOrange",
         UserPreferences.ThemeColor.YELLOW to "CampfireActivityYellow",

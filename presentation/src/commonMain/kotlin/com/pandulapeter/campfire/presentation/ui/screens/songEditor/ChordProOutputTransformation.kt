@@ -57,13 +57,14 @@ internal class ChordProOutputTransformation(
         fun of(
             tokenCache: ChordProTokenCache,
             primaryColor: Color,
+            chordColor: Color,
             secondaryColor: Color,
             outlineColor: Color,
         ) = ChordProOutputTransformation(
             tokenCache = tokenCache,
             directiveName = SpanStyle(color = primaryColor, fontWeight = FontWeight.Bold),
             directiveValue = SpanStyle(color = secondaryColor),
-            chord = SpanStyle(color = primaryColor, fontWeight = FontWeight.Bold),
+            chord = SpanStyle(color = chordColor, fontWeight = FontWeight.Bold),
             annotation = SpanStyle(fontStyle = FontStyle.Italic),
             comment = SpanStyle(color = outlineColor, fontStyle = FontStyle.Italic),
         )

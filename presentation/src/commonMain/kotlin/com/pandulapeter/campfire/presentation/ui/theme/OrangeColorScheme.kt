@@ -17,7 +17,7 @@ import androidx.compose.ui.graphics.Color
  * The orange of the hand-drawn app icon: Material's tonal mapping of the #F57C00 seed color, with the primary roles
  * carrying more of the seed's chroma than that mapping would leave them - an app named after a fire is worth an orange
  * rather than the brown the tones alone come out as. It is the one palette that is designed rather than generated, and
- * the gray [CampfireColorScheme] is made from it.
+ * [GrayColorScheme] is made from it.
  */
 internal val OrangeColorScheme = ColorSchemePair(
     light = lightColorScheme(

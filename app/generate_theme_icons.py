@@ -14,15 +14,16 @@ Writes every app icon Campfire ships, in every theme color the app offers, out o
 Run from anywhere, with Pillow and NumPy installed (and on a Mac, for `iconutil`), after any of the sources in
 `app/icons` has changed; the output is committed. The sources are the only icons that are drawn: `ios/` is the iOS
 icon's light, dark and tinted appearance, `appIcon.icns` and `appIcon.ico` the packaged macOS and Windows icons,
-`app_icon.png` the round one of the desktop windows and Linux, `icon-192.png` the web's, and `play_icon.png` the
-512 pixel one a store listing asks for. Every other icon is one of those with its orange moved to the seed of a palette
-(see MaterialColorSchemes.kt, whose seeds SEEDS repeats), in Oklab so that the move keeps what the eye reads as the
-same lightness and saturation. A pixel is moved in proportion to how much orange it has, so the white of the mark, the
-shadows and the dark icon's near-black stay what they are while the fills, gradients and glows follow the color.
+`app_icon.png` the round one of the desktop windows and Linux, and `icon-192.png` the web's. Every other icon is one of
+those with its orange moved to the seed of a palette (see MaterialColorSchemes.kt, whose seeds SEEDS repeats), in
+Oklab so that the move keeps what the eye reads as the same lightness and saturation. A pixel is moved in proportion to
+how much orange it has, so the white of the mark, the shadows and the dark icon's near-black stay what they are while
+the fills, gradients and glows follow the color.
 
-The app's own color, and so every packaged icon, is gray: the icons the system shows while the app is not running -
-the installed app, the Start menu, a store's page - are the ones no theme color can reach, and gray is the one color
-that goes with all of them. The orange is a theme color like the rest, whose icons are the sources as they are.
+The app's own icon, and so every packaged one, is the promotional material's purple to orange gradient: its orange is
+moved to the color the gradient has at that pixel's place along the diagonal, which is read off the background of
+Android's launcher icon (see GRADIENT_SOURCE), so that every platform's icon is the same gradient to the pixel. The
+orange is a theme color like the rest, whose icons are the sources as they are.
 
 What is written, for every color:
 
@@ -34,8 +35,9 @@ What is written, for every color:
 - The desktop: `app_icon.png` and `app_icon_<color>.png`, the window icon of Windows and Linux, and the macOS Dock icon
   `dock_icon_<color>.png`, set while the app runs.
 
-And, in the app's own color alone, the packaged icons: `appIcon.icns`, `appIcon.ico` and Android's `appIcon.png`.
-Android's launcher icons are not images - an adaptive icon over each seed, see `res/mipmap-anydpi` - so the seeds
+And, in the app's own colors alone, the packaged icons: `appIcon.icns` and `appIcon.ico`. Android's icons are not
+written here: the app's own launcher icon and its Play listing icon (`app/android/appIcon.png`) are drawn as they are,
+and the launcher icons of the theme colors are an adaptive icon over each seed - see `res/mipmap-anydpi` - so the seeds
 below are repeated in `res/values/colors.xml` rather than written there.
 """
 
@@ -53,18 +55,31 @@ IOS_ASSETS = os.path.join(ROOT, 'app/ios/iosApp/iosApp/Assets.xcassets')
 WEB_RESOURCES = os.path.join(ROOT, 'app/web/src/wasmJsMain/resources')
 DESKTOP_DRAWABLES = os.path.join(ROOT, 'app/desktop/src/main/composeResources/drawable')
 DESKTOP_RESOURCES = os.path.join(ROOT, 'app/desktop/src/main/resources')
-ANDROID = os.path.join(ROOT, 'app/android')
+
+# The background of Android's launcher icon, which the gradient of the app's own icons everywhere else is read from.
+GRADIENT_SOURCE = os.path.join(ROOT, 'app/android/src/main/res/mipmap-xxxhdpi/ic_launcher_background.webp')
 
 SOURCE_SEED = '#F57C00'
+
+# The seed of the app's own icons, which is not one color but the gradient read from GRADIENT_SOURCE. The orange is
+# replaced by it outright rather than moved, since the sources shade their orange - lighter at the top, a long shadow
+# under the mark - and that shading on top of a gradient that already runs from dark to light washes its purple out
+# and makes it another icon than the flat one Android's is.
+GRADIENT = 'gradient'
+
+# The gradient for the dark iOS icon, whose orange is moved like any other seed's: that icon is a glow on near-black,
+# and replacing the dim orange of the glow outright would light up its whole background.
+GRADIENT_GLOW = 'gradient-glow'
 
 # A gray as light as the orange, for the dark iOS icon: its mark is a glow on near-black, which any darker gray dims.
 SAME_LIGHTNESS_GRAY = 'same-lightness-gray'
 
 # UserPreferences.ThemeColor ids, in the order the preference declares them, with the light and the dark seed of each.
 # SYSTEM has no icon of its own: where it is offered the operating system draws the icon, and everywhere else it falls
-# back to the app's own color.
+# back to the app's own.
 SEEDS = {
-    'campfire': ('#707070', SAME_LIGHTNESS_GRAY),
+    'campfire': (GRADIENT, GRADIENT_GLOW),
+    'gray': ('#707070', SAME_LIGHTNESS_GRAY),
     'red': ('#D32F2F', '#D32F2F'),
     'orange': (SOURCE_SEED, SOURCE_SEED),
     'yellow': ('#FBC02D', '#FBC02D'),
@@ -120,6 +135,20 @@ def oklch(hex_color):
     return lightness, np.hypot(a, b), np.arctan2(b, a)
 
 
+def gradient_oklch(width, height):
+    """The lightness, chroma and hue GRADIENT_SOURCE has at every pixel of an image of this size, by the pixel's place
+    along the diagonal from the top left corner to the bottom right one. The source is sampled along its own diagonal
+    rather than interpolated between its two ends, because its middle is not the midpoint of either in any color
+    space."""
+    source = np.asarray(Image.open(GRADIENT_SOURCE).convert('RGB')).astype(float) / 255
+    steps = min(source.shape[0], source.shape[1])
+    lab = to_oklab(source[np.arange(steps), np.arange(steps)])
+    y, x = np.mgrid[0:height, 0:width]
+    position = (x / max(width - 1, 1) + y / max(height - 1, 1)) / 2
+    lab = lab[np.rint(position * (steps - 1)).astype(int)]
+    return lab[..., 0], np.hypot(lab[..., 1], lab[..., 2]), np.arctan2(lab[..., 2], lab[..., 1])
+
+
 def recolor(image, seed):
     if seed == SOURCE_SEED:
         return image.convert('RGBA')
@@ -129,14 +158,21 @@ def recolor(image, seed):
     source_lightness, source_chroma, source_hue = oklch(SOURCE_SEED)
     if seed == SAME_LIGHTNESS_GRAY:
         target_lightness, target_chroma, target_hue = source_lightness, 0, source_hue
+    elif seed in (GRADIENT, GRADIENT_GLOW):
+        target_lightness, target_chroma, target_hue = gradient_oklch(image.width, image.height)
     else:
         target_lightness, target_chroma, target_hue = oklch(seed)
     # How much of the orange a pixel carries: the white mark and a gray shadow carry none and keep their lightness,
     # which moving every pixel by the same amount would turn into a tinted mark on a light color.
     weight = np.clip(chroma / source_chroma, 0, 1)
-    lightness = lightness + (target_lightness - source_lightness) * weight
-    chroma = chroma * target_chroma / source_chroma
-    hue = hue + target_hue - source_hue
+    if seed == GRADIENT:
+        lightness = lightness + (target_lightness - lightness) * weight
+        chroma = chroma + (target_chroma - chroma) * weight
+        hue = target_hue
+    else:
+        lightness = lightness + (target_lightness - source_lightness) * weight
+        chroma = chroma * target_chroma / source_chroma
+        hue = hue + target_hue - source_hue
     rgb = from_oklab(np.stack([lightness, chroma * np.cos(hue), chroma * np.sin(hue)], -1))
     result = np.concatenate([rgb, pixels[..., 3:]], -1)
     return Image.fromarray((result * 255 + 0.5).astype(np.uint8), 'RGBA')
@@ -172,7 +208,6 @@ def write_packaged_icons(seed):
         subprocess.run(['iconutil', '-c', 'icns', source, '-o', os.path.join(DESKTOP_RESOURCES, 'appIcon.icns')], check=True)
     ico = recolor(Image.open(os.path.join(SOURCES, 'appIcon.ico')), seed)
     ico.save(os.path.join(DESKTOP_RESOURCES, 'appIcon.ico'), format='ICO', sizes=ICO_SIZES)
-    save(recolor(Image.open(os.path.join(SOURCES, 'play_icon.png')), seed), os.path.join(ANDROID, 'appIcon.png'))
 
 
 def main():
@@ -192,7 +227,7 @@ def main():
             dark=recolor(ios_dark, dark_seed),
             tinted=ios_tinted,
         )
-        save(recolor(web_icon, seed), os.path.join(WEB_RESOURCES, f'icon-192-{color}.png'))
+        save(recolor(web_icon, seed), os.path.join(WEB_RESOURCES, f'favicon-{color}.png'))
         save(recolor(window_icon, seed), os.path.join(DESKTOP_DRAWABLES, 'app_icon.png' if is_own else f'app_icon_{color}.png'))
         save(recolor(dock_icon, seed), os.path.join(DESKTOP_DRAWABLES, f'dock_icon_{color}.png'))
         if is_own:

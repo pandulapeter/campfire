@@ -11,7 +11,7 @@
 <resources xmlns:tools="http://schemas.android.com/tools">
 
     <style name="Campfire" parent="Theme.Material3.DayNight.NoActionBar">
-        <item name="colorPrimary">@color/campfire_gray</item>
+        <item name="colorPrimary">@color/campfire</item>
         <item name="android:statusBarColor">@android:color/transparent</item>
         <item name="android:navigationBarColor">@android:color/transparent</item>
         <item name="android:windowLightStatusBar">false</item>

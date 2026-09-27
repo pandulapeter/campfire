@@ -34,8 +34,8 @@ data class UserPreferences(
     val uiMode: UiMode,
     val themeColor: ThemeColor,
     /**
-     * Whether the app icon is in [themeColor] wherever the platform lets the app change it, rather than in the gray of
-     * [ThemeColor.CAMPFIRE] whatever the theme is.
+     * Whether the app icon is in [themeColor] wherever the platform lets the app change it, rather than the app's own
+     * icon of [ThemeColor.CAMPFIRE] whatever the theme is.
      */
     val isAppIconThemed: Boolean,
     val language: Language,
@@ -100,13 +100,19 @@ data class UserPreferences(
      * Which set of colors the app is painted in, which is a separate question from [UiMode]: every one of these has a
      * light and a dark scheme, and the two choices are combined rather than ranked.
      *
+     * [CAMPFIRE] is the app's own, the purple and orange of its icon on gray, and [GRAY] the gray it is built on. Every
+     * stored `campfire` is read as the app's own, including one written while that id stood for the gray - a
+     * preference left at the default and one that chose the gray cannot be told apart - so the gray has an id of its
+     * own and that one must not be given back to it.
+     *
      * [SYSTEM] is the scheme the operating system derives from the user's wallpaper and only exists on Android 12 and
      * above, so it is stored like any other value but offered only where it can be honored; anywhere else it falls
-     * back to [CAMPFIRE], the app's own gray. [ORANGE] is the color the app icon is drawn in by hand, and every other
-     * icon is generated from.
+     * back to [CAMPFIRE]. [ORANGE] is the color the app icon is drawn in by hand, and every other icon is generated
+     * from.
      */
     enum class ThemeColor(val id: String) {
         CAMPFIRE("campfire"),
+        GRAY("gray"),
         RED("red"),
         ORANGE("orange"),
         YELLOW("yellow"),

@@ -15,10 +15,12 @@ import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.scaleIn
 import androidx.compose.animation.scaleOut
+import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.FlowRow
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
@@ -29,10 +31,12 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.painter.Painter
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import com.pandulapeter.campfire.presentation.resources.Res
 import com.pandulapeter.campfire.presentation.resources.ic_check
@@ -54,7 +58,7 @@ internal fun <T> ColorChoice(
     selected: T?,
     onSelected: (T) -> Unit,
 ) = FlowRow(
-    modifier = modifier.fillMaxWidth().padding(horizontal = if (shouldApplyPadding) 16.dp else 0.dp),
+    modifier = modifier.fillMaxWidth().padding(horizontal = if (shouldApplyPadding) COLOR_CHOICE_PADDING else 0.dp),
     horizontalArrangement = Arrangement.spacedBy(SWATCH_GAP),
     verticalArrangement = Arrangement.spacedBy(SWATCH_GAP),
 ) {
@@ -101,7 +105,12 @@ private fun <T> ColorChoiceSwatch(
             contentColor = option.contentColor,
         ) {
             Box(
-                contentAlignment = Alignment.Center
+                modifier = if (option.playedColor == option.color) {
+                    Modifier
+                } else {
+                    Modifier.fillMaxSize().background(Brush.linearGradient(listOf(option.color, option.playedColor)))
+                },
+                contentAlignment = Alignment.Center,
             ) {
                 AnimatedVisibility(
                     visible = isSelected,
@@ -137,6 +146,8 @@ private fun <T> ColorChoiceSwatch(
  *
  * @param color What the disc is filled with, and [contentColor] what the check on it is drawn in - the two roles of
  *   the same palette, so that the check stays legible on every color.
+ * @param playedColor Where it differs from [color], the disc runs from one to the other along its diagonal, the way
+ *   the app icon's gradient does: the palette that draws its interface and its music in two colors is shown as both.
  * @param label What this color is called, which is only ever read out rather than shown.
  * @param icon Drawn on the disc while the option is not selected, for an option whose color is not the whole story.
  *   Null for the colors that are only themselves, which is most of them.
@@ -144,10 +155,18 @@ private fun <T> ColorChoiceSwatch(
 internal data class ColorChoiceOption<T>(
     val value: T,
     val color: Color,
+    val playedColor: Color = color,
     val contentColor: Color,
     val label: String,
     val icon: Painter? = null,
 )
+
+/**
+ * How wide a [ColorChoice] of [count] options is with its padding applied, when they are all in one row: what a
+ * container has to leave it so that it does not wrap.
+ */
+internal fun colorChoiceWidth(count: Int): Dp =
+    (SWATCH_SIZE + (SWATCH_RING_GAP + SWATCH_RING_WIDTH) * 2) * count + SWATCH_GAP * (count - 1) + COLOR_CHOICE_PADDING * 2
 
 /** Large enough to be the whole touch target, so the discs need no padding of their own to be tappable. */
 private val SWATCH_SIZE = 48.dp
@@ -158,3 +177,5 @@ private val SWATCH_RING_WIDTH = 2.dp
 private val SWATCH_RING_GAP = 2.dp
 
 private val SWATCH_GAP = 8.dp
+
+private val COLOR_CHOICE_PADDING = 16.dp

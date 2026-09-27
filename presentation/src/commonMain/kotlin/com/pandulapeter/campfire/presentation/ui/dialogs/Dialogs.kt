@@ -170,6 +170,7 @@ import com.pandulapeter.campfire.presentation.ui.components.RadioListItem
 import com.pandulapeter.campfire.presentation.ui.components.SongFilters
 import com.pandulapeter.campfire.presentation.ui.components.TagFlowRow
 import com.pandulapeter.campfire.presentation.ui.components.TagPill
+import com.pandulapeter.campfire.presentation.ui.components.THEME_COLOR_CHOICE_WIDTH
 import com.pandulapeter.campfire.presentation.ui.components.ThemeColorChoice
 import com.pandulapeter.campfire.presentation.ui.components.UiModeChoice
 import com.pandulapeter.campfire.presentation.ui.components.fadingTopEdge
@@ -367,7 +368,9 @@ private fun WelcomeDialog(
         if (isSmallScreen) {
             CampfireBottomSheet(
                 title = stringResource(Res.string.welcome_title),
-                sheetMaxWidth = 680.dp,
+                // Every color in one row, which is as wide as the sheet is ever worth being: the other rows are a line
+                // of text and a choice of three.
+                sheetMaxWidth = THEME_COLOR_CHOICE_WIDTH,
                 onDismiss = { viewModel.dismissSheet(CampfireViewModel.DialogType.Welcome) },
             ) { contentPadding ->
                 WelcomeContent(

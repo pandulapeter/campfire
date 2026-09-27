@@ -10,10 +10,12 @@
 -->
 <resources>
 
-    <!-- General -->
-    <color name="campfire_gray">#707070</color>
+    <!-- General: the purple of the app's own palette (see CampfireColorScheme.kt), whose launcher icon is a
+         gradient drawn as it is (mipmap-*/ic_launcher_background) rather than a color. -->
+    <color name="campfire">#5A49CA</color>
 
     <!-- The launcher icons of the other theme colors, the seeds of their palettes (see MaterialColorSchemes.kt). -->
+    <color name="campfire_gray">#707070</color>
     <color name="campfire_red">#D32F2F</color>
     <color name="campfire_orange">#F57C00</color>
     <color name="campfire_yellow">#FBC02D</color>

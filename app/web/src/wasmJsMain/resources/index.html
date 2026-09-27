@@ -48,7 +48,7 @@
     <meta name="theme-color" content="#141414" media="(prefers-color-scheme: dark)">
     <meta name="description" content="Song lyrics and chords, in a library of plain ChordPro files that stays yours.">
     <title>Campfire</title>
-    <link rel="icon" type="image/png" sizes="192x192" href="icon-192-campfire.png">
+    <link rel="icon" type="image/png" sizes="192x192" href="favicon-campfire.png">
     <!-- The icon of the theme color the user chose, which the app leaves in local storage whenever it shows one (see
          FaviconEffect in CampfireWebApp.kt), so that the tab and the loading screen are in that color before the app
          that knows it has been downloaded. Only a name the app writes is taken: this is a URL on the page. -->
@@ -56,7 +56,7 @@
         (function () {
             try {
                 var icon = window.localStorage.getItem('campfire-icon');
-                if (/^icon-192-[a-z]+\.png$/.test(icon || '')) {
+                if (/^favicon-[a-z]+\.png$/.test(icon || '')) {
                     document.querySelector('link[rel="icon"]').setAttribute('href', icon);
                     document.documentElement.style.setProperty('--splash-icon', 'url("' + icon + '")');
                 }
@@ -129,7 +129,7 @@
             --background: #FAFAFA;
             --on-background: #1C1C1C;
             --track: #E3E3E3;
-            --indicator: #606060;
+            --indicator: #5A49CA;
         }
 
         @media (prefers-color-scheme: dark) {
@@ -137,7 +137,7 @@
                 --background: #141414;
                 --on-background: #E3E3E3;
                 --track: #474747;
-                --indicator: #C9C9C9;
+                --indicator: #C1C3FF;
             }
         }
 
@@ -181,7 +181,7 @@
         #splash-icon {
             width: 96px;
             height: 96px;
-            background-image: var(--splash-icon, url("icon-192-campfire.png"));
+            background-image: var(--splash-icon, url("favicon-campfire.png"));
             background-size: contain;
             background-repeat: no-repeat;
         }
