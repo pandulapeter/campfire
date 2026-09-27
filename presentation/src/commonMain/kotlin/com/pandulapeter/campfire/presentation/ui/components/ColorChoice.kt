@@ -16,7 +16,6 @@ import androidx.compose.animation.fadeOut
 import androidx.compose.animation.scaleIn
 import androidx.compose.animation.scaleOut
 import androidx.compose.foundation.background
-import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.FlowRow
@@ -28,11 +27,12 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Surface
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.drawWithCache
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.painter.Painter
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
@@ -89,15 +89,27 @@ private fun <T> ColorChoiceSwatch(
     onClick: () -> Unit,
 ) {
     // Faded in and out rather than grown, and always laid out, so that the discs never move as the selection does.
-    val ringAlpha by animateFloatAsState(targetValue = if (isSelected) 1f else 0f)
+    // The fade is read while drawing, so that it redraws the ring rather than recomposing the swatch on every frame.
+    // The stroke is inset by half its width, which is where a border puts it.
+    val ringAlpha = animateFloatAsState(targetValue = if (isSelected) 1f else 0f)
     Box(
         modifier = modifier
             .size(SWATCH_SIZE + (SWATCH_RING_GAP + SWATCH_RING_WIDTH) * 2)
-            .border(
-                width = SWATCH_RING_WIDTH,
-                brush = Brush.linearGradient(listOf(option.color.copy(alpha = ringAlpha), option.secondColor.copy(alpha = ringAlpha))),
-                shape = CircleShape,
-            ),
+            .drawWithCache {
+                val strokeWidth = SWATCH_RING_WIDTH.toPx()
+                val brush = Brush.linearGradient(listOf(option.color, option.secondColor))
+                onDrawBehind {
+                    val alpha = ringAlpha.value
+                    if (alpha > 0f) {
+                        drawCircle(
+                            brush = brush,
+                            radius = (size.minDimension - strokeWidth) / 2f,
+                            style = Stroke(width = strokeWidth),
+                            alpha = alpha,
+                        )
+                    }
+                }
+            },
         contentAlignment = Alignment.Center,
     ) {
         Surface(
