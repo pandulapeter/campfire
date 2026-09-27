@@ -1675,9 +1675,16 @@ class CampfireViewModel(
      * library a second time to fill in one line of each row. Both use cases rewrite the key of whatever song they
      * are handed, so what they are handed here is a song that is nothing but that key.
      */
-    fun renderKey(song: Song, transposition: Int, spelling: UserPreferences.ChordSpelling) = song.key?.let { key ->
-        val keyOnly = ChordProSong(metadata = ChordProMetadata(key = key), blocks = emptyList())
-        convertChordProNotation(transposeChordPro(keyOnly, song.transpose + transposition, spelling.accidentals), spelling).metadata.key
+    fun renderKey(song: Song, transposition: Int, spelling: UserPreferences.ChordSpelling) =
+        renderKey(key = song.key, transpose = song.transpose, transposition = transposition, spelling = spelling)
+
+    /**
+     * [renderKey] for a song known only by the two things it depends on: the [key] its file declares and the
+     * [transpose] it opens with.
+     */
+    fun renderKey(key: String?, transpose: Int, transposition: Int, spelling: UserPreferences.ChordSpelling) = key?.let {
+        val keyOnly = ChordProSong(metadata = ChordProMetadata(key = it), blocks = emptyList())
+        convertChordProNotation(transposeChordPro(keyOnly, transpose + transposition, spelling.accidentals), spelling).metadata.key
     }
 
     /**

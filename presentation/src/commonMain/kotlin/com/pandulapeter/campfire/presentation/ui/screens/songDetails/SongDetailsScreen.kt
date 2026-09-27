@@ -202,12 +202,15 @@ internal fun SongDetailsScreen(
     val currentKey = currentSong?.let { viewModel.renderKey(song = it, transposition = currentTransposition, spelling = chordSpelling) }
     // The room is reserved for every song of the pager rather than for the current one, so that paging from a song
     // with chords to one without (or to one in a key with a longer name) does not move the steppers in and out of the bar.
-    val transpositionLabels = remember(songs, isPerformanceModeEnabled, shouldShowChords, chordSpelling) {
+    // Keyed on the keys the songs are in rather than on the songs, which are rebuilt on every change to the library
+    // (a sync run, a tag written) while the labels, and the measurement of them, stay the same.
+    val keyedTranspositions = songs.filter { it.hasChords }.map { it.key to it.transpose }.distinct()
+    val transpositionLabels = remember(keyedTranspositions, isPerformanceModeEnabled, shouldShowChords, chordSpelling) {
         if (isPerformanceModeEnabled || !shouldShowChords) {
             emptyList()
         } else {
-            transpositionLabelsForSongs(songs) { song, transposition ->
-                viewModel.renderKey(song = song, transposition = transposition, spelling = chordSpelling)
+            transpositionLabelsForKeys(keyedTranspositions) { key, transpose, transposition ->
+                viewModel.renderKey(key = key, transpose = transpose, transposition = transposition, spelling = chordSpelling)
             }
         }
     }
@@ -820,19 +823,18 @@ internal fun buildSetlistSlots(entries: List<Setlist.Entry>, songFileNames: List
 }
 
 /**
- * Every label the transposition stepper can read for any song of [songs] with chords, each once. A rendered key
- * depends on nothing of a song but its key and the transposition its file declares, so songs that share both are
- * rendered once: a long setlist is mostly a handful of keys, and rendering one is a transposition of its own.
+ * Every label the transposition stepper can read for a song in any of [keys], each once: the key a song's file
+ * declares and the transposition it opens with, which is all a rendered key depends on. A long setlist is mostly a
+ * handful of keys, and rendering one is a transposition of its own.
  */
-internal fun transpositionLabelsForSongs(
-    songs: List<Song>,
-    renderKey: (Song, Int) -> String?,
-): List<String> = songs.asSequence()
-    .filter { it.hasChords }
-    .distinctBy { it.key to it.transpose }
-    .flatMap { song ->
+internal fun transpositionLabelsForKeys(
+    keys: List<Pair<String?, Int>>,
+    renderKey: (key: String?, transpose: Int, transposition: Int) -> String?,
+): List<String> = keys.asSequence()
+    .distinct()
+    .flatMap { (key, transpose) ->
         (CampfireViewModel.MIN_TRANSPOSITION..CampfireViewModel.MAX_TRANSPOSITION).asSequence().map { transposition ->
-            transpositionLabel(transposition, renderKey(song, transposition))
+            transpositionLabel(transposition, renderKey(key, transpose, transposition))
         }
     }
     .distinct()
