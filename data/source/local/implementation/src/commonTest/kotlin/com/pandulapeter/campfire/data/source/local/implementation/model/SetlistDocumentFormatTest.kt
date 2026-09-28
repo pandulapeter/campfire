@@ -66,4 +66,18 @@ internal class SetlistDocumentFormatTest {
         assertTrue(document.unknownFields.isEmpty())
         assertFalse("priority" in SetlistDocumentFormat.encode(document.toModel("summer.setlist.json", size = 0).toDocument()))
     }
+
+    @Test
+    fun aDateThatIsNotTextLosesOnlyItself() {
+        listOf("20260928", "{}").forEach { date ->
+            val document = SetlistDocumentFormat.decode("""{"title":"S","date":$date,"songs":[{"file":"a.cho"}]}""")
+
+            assertNull(document.date)
+            assertEquals("S", document.title)
+            assertEquals(listOf("a.cho"), document.songs.map { it.file })
+        }
+    }
+
+    @Test
+    fun aDateThatIsTextIsKept() = assertEquals("2026-09-28", SetlistDocumentFormat.decode("""{"title":"S","date":"2026-09-28"}""").date)
 }
