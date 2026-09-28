@@ -88,7 +88,6 @@ import com.pandulapeter.campfire.data.model.domain.ImportConflictResolution
 import com.pandulapeter.campfire.data.model.domain.ImportPlan
 import com.pandulapeter.campfire.data.model.domain.Song
 import com.pandulapeter.campfire.data.model.domain.SongLanguage
-import com.pandulapeter.campfire.data.model.domain.Tag
 import com.pandulapeter.campfire.presentation.localization.currentLanguage
 import com.pandulapeter.campfire.presentation.localization.pluralStringResource
 import com.pandulapeter.campfire.presentation.localization.stringResource
@@ -166,7 +165,7 @@ import com.pandulapeter.campfire.presentation.resources.welcome_settings_hint
 import com.pandulapeter.campfire.presentation.resources.welcome_settings_hint_sync
 import com.pandulapeter.campfire.presentation.resources.welcome_title
 import com.pandulapeter.campfire.presentation.ui.CampfireViewModel
-import com.pandulapeter.campfire.presentation.ui.SearchableSong
+import com.pandulapeter.campfire.presentation.ui.PickerFilterOptions
 import com.pandulapeter.campfire.presentation.ui.components.ActionListItem
 import com.pandulapeter.campfire.presentation.ui.components.CheckboxListItem
 import com.pandulapeter.campfire.presentation.ui.components.CHIP_GAP
@@ -1263,16 +1262,15 @@ private fun SongPicker(
     var query by rememberSaveable { mutableStateOf("") }
     var selectedTags by rememberSaveable { mutableStateOf(emptyList<String>()) }
     var selectedLanguages by rememberSaveable { mutableStateOf(emptyList<String>()) }
-    // Sorted and normalized for the search by the view model, once per library rather than as the sheet opens or on
-    // every keystroke, since the search runs over every song on every character typed.
+    // Sorted, normalized for the search and counted for the chips by the view model, once per library rather than as
+    // the sheet opens or on every keystroke, since the search runs over every song on every character typed and the
+    // sheet's first frames are its slide up.
     val alphabeticalSongs by viewModel.alphabeticalSongs.collectAsStateWithLifecycle()
     val pickableSongs = remember(alphabeticalSongs, initialSongFileNames) {
-        val byFileName = alphabeticalSongs.associateBy { it.song.fileName }
         val initial = initialSongFileNames.toSet()
-        (initialSongFileNames.mapNotNull { byFileName[it] } + alphabeticalSongs.filterNot { it.song.fileName in initial })
-            .map { it.toPickableSong() }
+        initialSongFileNames.mapNotNull { alphabeticalSongs.byFileName[it] } + alphabeticalSongs.list.filterNot { it.song.fileName in initial }
     }
-    val filters = remember(songs) { songs.toPickerFilters() }
+    val filters by viewModel.songPickerFilters.collectAsStateWithLifecycle()
     // Only what the chips still offer narrows the list: a tag that left the library while the sheet was open would
     // otherwise keep hiding every song with no chip left to turn it off.
     val activeTags = remember(filters, selectedTags) {
@@ -1337,68 +1335,6 @@ private fun SongPicker(
             }
         }
     }
-}
-
-/**
- * A song of the [SongPicker] with the title and the artist its search compares, normalized, and the tags (in lower
- * case) and languages ([SongLanguage.UNKNOWN] for none) its filters compare.
- */
-private class PickableSong(
-    val song: Song,
-    val title: String,
-    val artist: String,
-    val tags: Set<String>,
-    val searchableTags: List<String>,
-    val languages: Set<String>,
-)
-
-/** The [PickableSong] of a song as the library's search index already folded it, see [CampfireViewModel.alphabeticalSongs]. */
-private fun SearchableSong.toPickableSong() = PickableSong(
-    song = song,
-    title = title,
-    artist = artist,
-    tags = song.tags.mapTo(mutableSetOf()) { it.lowercase() },
-    searchableTags = tags,
-    languages = song.languages.ifEmpty { listOf(SongLanguage.UNKNOWN) }.toSet(),
-)
-
-/**
- * What the [SongPicker] can be narrowed by: every language and tag of the library, counted over the whole of it.
- * [languages] is empty for a library that sings in one language, which has nothing to choose between.
- */
-private class PickerFilterOptions(
-    val languages: List<SongLanguage>,
-    val tags: List<Tag>,
-)
-
-/**
- * The languages and tags of the library, counted and ordered the way the songs screen's filters order them: most
- * used first, the songs that declare no language after the rest, and a tag spelled the way the song that comes first
- * by file name spells it, so that the chip does not change its capitals as the library is written to.
- */
-private fun List<Song>.toPickerFilters(): PickerFilterOptions {
-    val languageCounts = mutableMapOf<String, Int>()
-    val tagCounts = mutableMapOf<String, Int>()
-    val tagSpellings = mutableMapOf<String, String>()
-    sortedBy { it.fileName }.forEach { song ->
-        song.languages.ifEmpty { listOf(SongLanguage.UNKNOWN) }.toSet().forEach { languageCounts[it] = (languageCounts[it] ?: 0) + 1 }
-        song.tags.associateBy { it.lowercase() }.forEach { (key, tag) ->
-            tagCounts[key] = (tagCounts[key] ?: 0) + 1
-            tagSpellings.getOrPut(key) { tag }
-        }
-    }
-    return PickerFilterOptions(
-        languages = if (languageCounts.size > 1) {
-            languageCounts
-                .map { (code, songCount) -> SongLanguage(code = code, songCount = songCount) }
-                .sortedWith(compareBy<SongLanguage> { it.code == SongLanguage.UNKNOWN }.thenByDescending { it.songCount }.thenBy { it.code })
-        } else {
-            emptyList()
-        },
-        tags = tagCounts
-            .map { (key, songCount) -> Tag(name = tagSpellings.getValue(key), songCount = songCount) }
-            .sortedWith(compareByDescending<Tag> { it.songCount }.thenBy { it.name.lowercase() }),
-    )
 }
 
 /**

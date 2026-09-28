@@ -657,19 +657,26 @@ class CampfireViewModel(
     val songsByFileName = indexedSongs.map { it.search.songsByFileName }.asState(emptyMap())
 
     /**
-     * Every song of the library alphabetically, with its search keys, as the song picker lists and searches it. Sorted
-     * here rather than as the sheet opens, where the first frame of the sheet would wait for a whole library to be
-     * sorted, and by keys folded once per song rather than on both sides of every comparison.
+     * Every song of the library alphabetically, with its search and filter keys, as the song picker lists and searches
+     * it. Built here rather than as the sheet opens, where the first frame of the sheet would wait for a whole library
+     * to be sorted and folded, and sorted by keys folded once per song rather than on both sides of every comparison.
      */
     internal val alphabeticalSongs = indexedSongs
         .map { indexed ->
-            indexed.search.byFileName.values
+            val list = indexed.search.byFileName.values
                 .map { song -> Triple(song, normalizeText(song.song.title), normalizeText(song.song.artist)) }
                 .sortedWith(compareBy({ it.second }, { it.third }, { it.first.song.fileName }))
-                .map { it.first }
+                .map { it.first.toPickableSong() }
+            AlphabeticalSongs(list = list, byFileName = list.associateBy { it.song.fileName })
         }
         .flowOn(Dispatchers.Default)
-        .asState(emptyList())
+        .asState(AlphabeticalSongs.Empty)
+
+    /** The song picker's filter chips, counted over the whole library for the same reason [alphabeticalSongs] is sorted here. */
+    internal val songPickerFilters = allSongs
+        .map(::pickerFilterOptions)
+        .flowOn(Dispatchers.Default)
+        .asState(PickerFilterOptions.Empty)
 
     /**
      * Null until the library has actually been read, so that the settings screen never flashes a count of zero. The size
