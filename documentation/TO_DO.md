@@ -8,6 +8,8 @@
  * https://mozilla.org/MPL/2.0/.
 -->
 # To do
+- First time user experience tutorial
+- Overflow menus should expand if there is enough space
 - Regenerate the baseline profile
 - Sort and Filter UI should be improved (better animations)
 - Predictive back in Settings
@@ -22,3 +24,5 @@
 - Once Microsoft Store and Mac App Store listings are approved, update included URL-s + this Readme
 - Add support for external control devices with a focus-by-section feature
 - Each top-level Composable should be defined in a separate file
+- Improve test coverage
+- Streaming zip writer on all platforms
