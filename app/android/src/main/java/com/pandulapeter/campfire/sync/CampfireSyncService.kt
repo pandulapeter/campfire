@@ -60,6 +60,7 @@ class CampfireSyncService : Service() {
     private var completed = 0
     private var total = 0
     private var notificationUpdateJob: Job? = null
+    private var stopJob: Job? = null
 
     /** The translated words of one run, kept for as long as it lasts. See the note on the class. */
     private data class Words(
@@ -81,17 +82,28 @@ class CampfireSyncService : Service() {
         super.onCreate()
         scope.launch {
             KoinPlatform.getKoin().get<GetSyncStateUseCase>().invoke().collect { state ->
+                val hadRun = latestSyncState.progress != null
                 latestSyncState = state
-                val wasPreparing = total == 0
-                (state as? SyncState.Connected)?.progress?.let { progress ->
-                    completed = progress.completed
-                    total = progress.total
+                val progress = state.progress
+                if (progress == null) {
+                    scheduleStop()
+                    return@collect
                 }
+                stopJob?.cancel()
+                stopJob = null
+                // A run chained right behind the one this notification was showing: it starts from preparing rather
+                // than from the numbers the last one ended on.
+                val isChainedRun = isInForeground && !hadRun
+                if (isChainedRun) {
+                    completed = 0
+                    total = 0
+                }
+                val wasPreparing = total == 0
+                completed = progress.completed
+                total = progress.total
                 // The counts are this service's own business: the activity hands them over only when it starts the
                 // service, and once it is gone this is the only thing still talking.
-                if (!stopIfNothingIsRunning()) {
-                    scheduleNotificationUpdate(isCountingStarted = wasPreparing && total != 0)
-                }
+                scheduleNotificationUpdate(isCountingStarted = isChainedRun || (wasPreparing && total != 0))
             }
         }
     }
@@ -122,7 +134,7 @@ class CampfireSyncService : Service() {
                 isInForeground = true
                 isRunning = true
                 // The run may have ended between the intent being sent and its arrival here.
-                stopIfNothingIsRunning()
+                if (latestSyncState.progress == null) scheduleStop()
             }
         }
         // Not sticky: a run that the system killed the process of is over, and restarting the service without the
@@ -149,15 +161,24 @@ class CampfireSyncService : Service() {
     }
 
     /**
+     * Stops the service once no run has been going for [RUN_HANDOVER_GRACE_MILLIS]. A run asked for while another one
+     * was going starts within milliseconds of that one ending, and by then the app is often in the background: a
+     * service that let go the moment the first run ended could not be started again from there (Android 12 refuses a
+     * foreground service started from the background), and the run carrying the user's latest change would go on in a
+     * process nothing keeps alive. A run that starts within the grace cancels it.
+     *
      * Only once the service is in the foreground: stopping before then would leave the system waiting for the
      * `startForeground` that `startForegroundService` promised it, which it treats as a crash of the app.
      */
-    private fun stopIfNothingIsRunning(): Boolean {
-        if (isInForeground && (latestSyncState as? SyncState.Connected)?.progress == null) {
-            stop()
-            return true
+    private fun scheduleStop() {
+        if (!isInForeground || stopJob?.isActive == true) return
+        stopJob = scope.launch {
+            delay(RUN_HANDOVER_GRACE_MILLIS)
+            if (latestSyncState.progress == null) {
+                stopJob = null
+                stop()
+            }
         }
-        return false
     }
 
     /**
@@ -194,11 +215,15 @@ class CampfireSyncService : Service() {
     private fun stop() {
         isInForeground = false
         isRunning = false
+        stopJob?.cancel()
+        stopJob = null
         notificationUpdateJob?.cancel()
         notificationUpdateJob = null
         ServiceCompat.stopForeground(this, ServiceCompat.STOP_FOREGROUND_REMOVE)
         stopSelf()
     }
+
+    private val SyncState.progress get() = (this as? SyncState.Connected)?.progress
 
     private fun Intent.toWords() = Words(
         channelName = getStringExtra(EXTRA_CHANNEL_NAME).orEmpty(),
@@ -267,6 +292,9 @@ class CampfireSyncService : Service() {
             private set
 
         private const val NOTIFICATION_UPDATE_INTERVAL_MILLIS = 500L
+
+        /** How long the service outlives a run, for the one chained behind it to start in, see [scheduleStop]. */
+        private const val RUN_HANDOVER_GRACE_MILLIS = 2_000L
         private const val CHANNEL_ID = "sync"
         private const val NOTIFICATION_ID = 1
         private const val ACTION_STOP = "com.pandulapeter.campfire.action.STOP_SYNC"

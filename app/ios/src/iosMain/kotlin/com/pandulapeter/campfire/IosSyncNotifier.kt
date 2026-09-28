@@ -69,6 +69,7 @@ class IosSyncNotifier(
     private var progress: SyncProgress? = null
     private var isInBackground = false
     private var notificationUpdateJob: Job? = null
+    private var backgroundTaskEndJob: Job? = null
 
     /**
      * Takes down whatever the last launch left behind.
@@ -129,8 +130,10 @@ class IosSyncNotifier(
         if (newProgress == null) {
             cancelNotificationUpdate()
             removeNotification()
-            endBackgroundTask()
+            scheduleBackgroundTaskEnd()
         } else {
+            backgroundTaskEndJob?.cancel()
+            backgroundTaskEndJob = null
             // From the state rather than from a frame, so the time is asked for even when the app leaves before the run
             // has been drawn once.
             beginBackgroundTask()
@@ -153,6 +156,20 @@ class IosSyncNotifier(
             // reports a network failure; stopped, it writes its index and says it was interrupted, which is what it was.
             onBackgroundTimeExpired()
             endBackgroundTask()
+        }
+    }
+
+    /**
+     * Gives the background task back [RUN_HANDOVER_GRACE] after a run ends rather than at once. A run asked for while
+     * another one was going starts within milliseconds of that one ending, and an app in the background whose task
+     * had just been ended would be suspended before its progress reached this notifier - the run carrying the user's
+     * latest change frozen in its first request. A run that starts within the grace cancels it, and keeps the task.
+     */
+    private fun scheduleBackgroundTaskEnd() {
+        if (backgroundTask == UIBackgroundTaskInvalid || backgroundTaskEndJob?.isActive == true) return
+        backgroundTaskEndJob = scope.launch {
+            delay(RUN_HANDOVER_GRACE)
+            if (progress == null) endBackgroundTask()
         }
     }
 
@@ -223,5 +240,8 @@ class IosSyncNotifier(
         const val NOTIFICATION_ID = "sync"
 
         val NOTIFICATION_UPDATE_INTERVAL = 1.seconds
+
+        /** How long the background task outlives a run, for the one chained behind it to start in. */
+        val RUN_HANDOVER_GRACE = 2.seconds
     }
 }
