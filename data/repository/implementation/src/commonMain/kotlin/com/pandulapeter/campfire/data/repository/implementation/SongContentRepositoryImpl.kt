@@ -41,9 +41,9 @@ internal class SongContentRepositoryImpl(
      * The file is read outside the lock: the lock only guards the map, so one slow file does not hold up the pages
      * next to it in a setlist, and an export walking the library does not block the song being opened meanwhile.
      */
-    override suspend fun loadSongContent(fileName: String, shouldCache: Boolean): SongContent? {
+    override suspend fun loadSongContent(fileName: String, useCache: Boolean): SongContent? {
         val generationBeforeRead = mutex.withLock {
-            cache[fileName]?.let { return it }
+            if (useCache) cache[fileName]?.let { return it }
             generation
         }
         val content = try {
@@ -54,7 +54,7 @@ internal class SongContentRepositoryImpl(
             println("Could not read the song \"$fileName\": ${exception.message}")
             null
         } ?: return null
-        if (shouldCache) {
+        if (useCache) {
             mutex.withLock {
                 if (generation == generationBeforeRead) cache[fileName] = content
             }

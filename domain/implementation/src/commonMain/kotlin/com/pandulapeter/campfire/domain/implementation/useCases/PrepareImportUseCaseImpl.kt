@@ -123,8 +123,9 @@ class PrepareImportUseCaseImpl internal constructor(
             // The names come from the scan the app already made, so finding numbered siblings needs no directory
             // listing — on the web a listing opens every file — and only those siblings are read.
             libraryFileNames = songRepository.loadSongsIfNeeded().orEmpty().map { it.fileName },
-            // Not cached: an import walks files the library has no other reason to hold on to.
-            readLibraryText = { fileName -> songContentRepository.loadSongContent(fileName, shouldCache = false)?.text },
+            // Past the cache: what matters is the file as it is now, and an import walks files the library has no
+            // other reason to hold on to.
+            readLibraryText = { fileName -> songContentRepository.loadSongContent(fileName, useCache = false)?.text },
         )
     }
 

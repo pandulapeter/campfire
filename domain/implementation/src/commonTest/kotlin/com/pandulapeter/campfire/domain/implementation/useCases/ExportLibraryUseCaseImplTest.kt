@@ -175,7 +175,7 @@ class ExportLibraryUseCaseImplTest {
         val reads = mutableListOf<String>()
         private val readsMutex = Mutex()
         override val invalidations: Flow<String?> = emptyFlow()
-        override suspend fun loadSongContent(fileName: String, shouldCache: Boolean): SongContent? {
+        override suspend fun loadSongContent(fileName: String, useCache: Boolean): SongContent? {
             delays[fileName]?.let { delay(it) }
             readsMutex.withLock { reads += fileName }
             return if (fileName in unreadable) null else SongContent(fileName = fileName, text = "{title: $fileName}")

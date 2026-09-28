@@ -31,10 +31,12 @@ interface SongContentRepository {
     /**
      * Null if the file does not exist or could not be read.
      *
-     * @param shouldCache False for a bulk read such as an export, which walks the whole library once and would
-     *   otherwise leave all of it in memory.
+     * @param useCache False reads the file itself, neither answering from the cache nor adding to it: for a read that
+     *   has to see what is on disk right now and walks much of the library, such as an export or the import's check for
+     *   a song that is already there. Answered from the cache, it could hand out a version the file has left behind
+     *   since, when changed by something that does not invalidate (a file edited in the library folder by hand).
      */
-    suspend fun loadSongContent(fileName: String, shouldCache: Boolean = true): SongContent?
+    suspend fun loadSongContent(fileName: String, useCache: Boolean = true): SongContent?
 
     /** Drops the cached text of one song, or of every song when [fileName] is null. */
     suspend fun invalidate(fileName: String? = null)

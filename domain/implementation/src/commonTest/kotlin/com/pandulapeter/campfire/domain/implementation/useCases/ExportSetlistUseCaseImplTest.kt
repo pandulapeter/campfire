@@ -68,7 +68,7 @@ class ExportSetlistUseCaseImplTest {
 
     private class FakeSongContentRepository : SongContentRepository {
         override val invalidations: Flow<String?> = emptyFlow()
-        override suspend fun loadSongContent(fileName: String, shouldCache: Boolean): SongContent? = null
+        override suspend fun loadSongContent(fileName: String, useCache: Boolean): SongContent? = null
         override suspend fun invalidate(fileName: String?) = throw UnsupportedOperationException()
         override suspend fun invalidate(fileNames: Set<String>) = throw UnsupportedOperationException()
     }

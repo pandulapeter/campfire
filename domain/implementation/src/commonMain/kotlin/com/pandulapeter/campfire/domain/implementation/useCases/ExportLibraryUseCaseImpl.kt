@@ -58,8 +58,9 @@ class ExportLibraryUseCaseImpl internal constructor(
                         fileName to if (songFileSizes.getValue(fileName) > ImportLimits.MAX_TEXT_FILE_SIZE) {
                             null
                         } else {
-                            // Not cached: this walks the whole library, and keeping all of it in memory afterwards is no use.
-                            songContentRepository.loadSongContent(fileName, shouldCache = false)
+                            // Past the cache: an export has to hold what is on disk, and keeping the whole library in
+                            // memory afterwards would be no use.
+                            songContentRepository.loadSongContent(fileName, useCache = false)
                         }
                     }
                 }.awaitAll()

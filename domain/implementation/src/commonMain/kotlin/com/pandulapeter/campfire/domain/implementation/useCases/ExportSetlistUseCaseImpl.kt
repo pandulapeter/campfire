@@ -38,7 +38,7 @@ class ExportSetlistUseCaseImpl internal constructor(
         val files = buildMap {
             put(setlistFileName, document.encodeToByteArray())
             setlist.entries.forEach { entry ->
-                songContentRepository.loadSongContent(entry.songFileName, shouldCache = false)
+                songContentRepository.loadSongContent(entry.songFileName, useCache = false)
                     ?.let { put(it.fileName, it.text.encodeToByteArray()) }
             }
         }

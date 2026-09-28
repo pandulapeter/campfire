@@ -25,7 +25,8 @@ class ExportSongsUseCaseImpl internal constructor(
 ) : ExportSongsUseCase {
 
     override suspend operator fun invoke(fileNames: List<String>): ExportedFile? {
-        val contents = fileNames.mapNotNull { songContentRepository.loadSongContent(it) }
+        // Read from the files rather than from the cache, which may hold a version a file has left behind since.
+        val contents = fileNames.mapNotNull { songContentRepository.loadSongContent(it, useCache = false) }
         return when (contents.size) {
             0 -> null
             // One song leaves as itself, named by its own header: a zip around a single text file would only be
