@@ -149,6 +149,32 @@ class ImportFilesUseCaseImplTest {
     }
 
     @Test
+    fun `an undated setlist that replaces a library one keeps its date and one kept next to it is dated today`() = runTest {
+        val planned = LocalDate(2026, 1, 10)
+        val today = Clock.System.todayIn(TimeZone.currentSystemDefault())
+        val library = setlist(entries = listOf("a.cho")).copy(fileName = "gig.setlist.json", title = "Gig", date = planned)
+        fun incoming(vararg entries: List<String>) = entries.map {
+            ImportPlanner.IncomingSetlist(setlist = library.copy(date = null, entries = it.map(Setlist::Entry)), sourceFileName = library.fileName)
+        }
+        suspend fun importing(incoming: List<ImportPlanner.IncomingSetlist>, resolution: ImportConflictResolution) = FakeSetlistRepository().also { setlists ->
+            setlists.files[library.fileName] = library
+            val plan = ImportPlan(
+                setlists = ImportPlanner.planSetlists(incoming = incoming, librarySetlists = listOf(library), songFileNames = emptyMap()),
+            )
+            ImportFilesUseCaseImpl(songRepository = FakeSongRepository(files = mutableMapOf()), setlistRepository = setlists).invoke(plan, resolution)
+        }
+
+        assertEquals(planned, importing(incoming(listOf("b.cho")), ImportConflictResolution.REPLACE).files.getValue("gig.setlist.json").date)
+        assertEquals(today, importing(incoming(listOf("b.cho")), ImportConflictResolution.KEEP_BOTH).files.getValue("gig_2.setlist.json").date)
+        importing(incoming(listOf("b.cho"), listOf("c.cho")), ImportConflictResolution.REPLACE).files.let { files ->
+            assertEquals(listOf(Setlist.Entry("b.cho")), files.getValue("gig.setlist.json").entries)
+            assertEquals(planned, files.getValue("gig.setlist.json").date)
+            assertEquals(listOf(Setlist.Entry("c.cho")), files.getValue("gig_2.setlist.json").entries)
+            assertEquals(today, files.getValue("gig_2.setlist.json").date)
+        }
+    }
+
+    @Test
     fun `an import that fails halfway still puts what it wrote into the list`() = runTest {
         val songs = FakeSongRepository(files = mutableMapOf(), failingImport = 2)
         val plan = ImportPlan(

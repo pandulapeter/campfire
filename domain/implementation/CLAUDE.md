@@ -65,7 +65,8 @@ The ones that carry real logic:
   occupy the view model's main thread, and yields between songs so the web can paint and cancellation can stop it.
   its text and a setlist by its fields, never by the stored document, and never by a date the incoming setlist does
   not carry, since the import dates such a setlist itself with the day it is imported on (which is how the demo
-  setlist gets its date, and why asking for it again finds it unchanged) — and the entries as they will be written, each pointing where its song lands, so a setlist that
+  setlist gets its date, and why asking for it again finds it unchanged), or, where it replaces a library setlist,
+  with the day that one had — and the entries as they will be written, each pointing where its song lands, so a setlist that
   names an incoming song is only the library's one when the song ends up where the library's points. `ImportPlanner` is
   covered by `commonTest`. Applying turns each entry plus the
   `ImportConflictResolution` into write / replace / disregard / leave alone, and only `REPLACE` ever overwrites.
