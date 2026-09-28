@@ -68,6 +68,21 @@ class ChordProLinksTest {
         assertEquals(null, ChordProLinks.usableUrl("hello"))
         assertEquals(null, ChordProLinks.usableUrl("ftp://example.com"))
         assertEquals(null, ChordProLinks.usableUrl("example.com/a b"))
+        assertEquals("https://example.com:8080/x", ChordProLinks.usableUrl("example.com:8080/x"))
+        assertEquals("https://www.example.com", ChordProLinks.usableUrl("www.example.com"))
+        assertEquals("https://hu.wikipedia.org/wiki/Tükör", ChordProLinks.usableUrl("hu.wikipedia.org/wiki/Tükör"))
+    }
+
+    @Test
+    fun `text that does not start with a host is not taken as an https address`() {
+        assertEquals(null, ChordProLinks.usableUrl("https:/example.com"))
+        assertEquals(null, ChordProLinks.usableUrl("https//example.com"))
+        assertEquals(null, ChordProLinks.usableUrl("mailto:me@example.com"))
+        assertEquals(null, ChordProLinks.usableUrl("me@example.com"))
+        assertEquals(null, ChordProLinks.usableUrl("javascript:alert(document.title)"))
+        assertEquals(null, ChordProLinks.usableUrl(".example.com"))
+        assertEquals(null, ChordProLinks.usableUrl("example.com."))
+        assertEquals(null, ChordProLinks.usableUrl("example.com:/x"))
     }
 
     @Test

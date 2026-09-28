@@ -126,7 +126,9 @@ in `:domain:*`. `:data:source:local:implementation` uses it directly for the met
   cover. `addLink` writes a line after the last link, or into the header after the languages where there is none
   (the last of the three repeatable kinds in `metadataOrder`), and `removeLink` drops every line naming the address,
   both editing the text for the reason `ChordProTags` does. `usableUrl` is what the dialog checks a typed address
-  against, and takes one typed without its scheme as `https`, the way a browser's address bar shows most of them.
+  against, and takes one typed without its scheme as `https`, the way a browser's address bar shows most of them —
+  but only where it starts with a host (and perhaps a port), so `mailto:…`, `me@…` or a mistyped `https:/…` is refused
+  rather than saved as an `https` address naming nothing.
 - `ChordProHeader` — the block of directives a song opens with, for the editor, which writes into it while the caret
   is somewhere else entirely. ChordPro reads a `{title}` as the title from anywhere in the file, so a directive
   inserted at the caret is valid in the middle of a verse, invisible in the rendered song and nowhere near the rest
