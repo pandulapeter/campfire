@@ -1,3 +1,55 @@
+# Final-patch audit continuation — 2026-09-28 (`b8cc0bc2`)
+
+Seven additional issue plans follow the original six below. This continuation is a code audit with focused JVM
+reproductions, not a repeat of the earlier live desktop stress run. No application fixes have been applied.
+Each issue has its own Problem / Evidence / Fix / Verification / Conflicts plan.
+
+## Additional findings
+
+| # | Priority | Finding | Evidence |
+|---|---|---|---|
+| [07](07-preference-edits-overwrite-newer-preferences.md) | P2 | Rapid preference edits can overwrite one another | Real repository + matching state-flow projections reproduce a lost field |
+| [08](08-song-invalidations-can-be-dropped.md) | P2 | A busy invalidation collector can leave open lyrics stale | Blocked collector loses both a named event and a full-refresh event |
+| [09](09-song-text-cache-grows-for-the-whole-session.md) | P2 | Browsing retains every visited song text for the session | 1,000 visited entries all remain cached; no eviction exists |
+| [10](10-library-export-silently-omits-unscanned-setlists.md) | P1 | Library backup silently omits setlists absent from the parsed cache | Readable unscanned document omitted with an empty skipped list |
+| [11](11-export-can-use-stale-cached-song-text.md) | P2 | Export can contain an older song than the file on disk | Freshness probe returns cached old text with `shouldCache = false` |
+| [12](12-first-lyrics-preparation-blocks-navigation.md) | P2 | First lyrics preparation runs synchronously during composition | Actual parse/preparation timing: 42.8 ms for 3,000 lines before layout |
+| [13](13-library-export-has-unbounded-peak-memory.md) | P1 | Export holds whole-library inputs plus full archive buffers | Allocation-path review; small-heap device stress test still owed |
+
+## Patch order and launch recommendation
+
+Resolve the existing high-severity plans **01 / 06** and the new **10 / 13** before the broad campaign. Backup
+completeness and avoiding a memory failure while making that backup deserve the same attention as sync and song
+rendering. Include **11** with the export work so the backup is current as well as complete.
+
+The rest are concrete final-patch fixes, not speculative refactoring. Group **08 / 09 / 11** around the song-content
+repository; they share a file but solve different problems (delivery, retention, freshness). Group **06 / 12**
+around rendering, covering both details and editor preview. **07** needs a repository-level preference transform
+before migrating the UI and reference-maintenance callers. **10 / 13** share the exporter and its file listings.
+Keep the existing plans 02–05 in the queue; this review did not implement them or independently revalidate every
+platform-specific claim they contain.
+
+## Validation and limits of this continuation
+
+- Inspected preference persistence, song-content caches/invalidations, setlist reads, export and archive creation,
+  viewer/editor preparation, list/search work, sync planning and guards, cover caching/downloads, and platform
+  import boundaries. This was a targeted code audit, not exhaustive certification of every platform.
+- Five new behavior probes reproduced the reported preference, invalidation, retention, setlist-export, and stale
+  export-read behaviors. A sixth probe measured lyrics preparation. They assert the current unfavorable behavior
+  deliberately; their passing results do **not** mean those issues are fixed. Temporary probes were removed after
+  validation, leaving the implementation and existing tests unchanged.
+- The documented seven-module desktop suite completed successfully in 27 seconds: reports contain **932 tests,
+  zero failures/errors/skips**. Repository, domain, and presentation tests ran again; chordpro, local source,
+  remote API, and remote implementation tests were up to date. Mobile UI, browser responsiveness, and release-device
+  memory/latency still need the manual checks in the individual plans; preparation timings are local JVM
+  measurements, not a measured phone frame budget.
+- Historical notes below describe the earlier review. In particular, the current `ImportLimits.MAX_IMPORT_SIZE`
+  is **24 MiB**, not 200 MB; export already warns when its completed archive exceeds that re-import limit.
+  The new export-memory issue concerns allocations **before** that warning. Initial lyrics preparation is
+  synchronous; only subsequent preparations currently use `Dispatchers.Default`.
+
+---
+
 # Pre-launch review of 2026-09-28 (at `cf588adf`)
 
 The last sweep before the marketing campaign, made while the stores review 4.5.0. The angle was what a large

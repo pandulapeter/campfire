@@ -26,6 +26,11 @@ For comparison, the other pathological files were fine: one 20 000-character lin
 0-byte song and a 500-song setlist in under 20 ms, and the 3000-song list itself in 2 s from process start.
 
 ## Fix
+
+**Continuation note (`b8cc0bc2`):** [Plan 12](12-first-lyrics-preparation-blocks-navigation.md) verifies that the
+first preparation actually runs synchronously during composition; only subsequent inputs use `Dispatchers.Default`.
+Apply this render budget to both details and editor preview, and coordinate the initial preparation change with 12.
+
 Bound what the details screen lays out, rather than making the sheet layout lazy (which would undo the column
 fitting and the pager that the screen is built around):
 
