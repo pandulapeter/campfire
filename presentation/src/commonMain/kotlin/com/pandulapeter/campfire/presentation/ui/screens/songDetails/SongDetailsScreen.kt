@@ -198,6 +198,10 @@ internal fun SongDetailsScreen(
     val isCoverArtEnabled = userPreferences?.isCoverArtEnabled == true
     val chordSpelling = userPreferences?.chordSpelling ?: UserPreferences.ChordSpelling.Default
     val layoutDirection = LocalLayoutDirection.current
+    val appBarWidth = settledWidth - contentPadding.calculateStartPadding(layoutDirection) - contentPadding.calculateEndPadding(layoutDirection)
+    // Decided from the settled width and for every song of the pager at once, like the song actions below, so that the
+    // cover does not come and go during a navigation transition or a page change.
+    val showsCoverInBar = isCoverArtEnabled && (!isPerformanceModeEnabled || showsCoverInPerformanceMode(appBarWidth))
     // Whatever else the bar holds: the back button with the bar's own start padding, the bar's end padding, the cover
     // in front of the title (reserved for every song of the pager, so that paging to a song without one does not move
     // the actions in and out of their menu), and the song's two buttons (the setlist assignments only for a song read
@@ -205,8 +209,7 @@ internal fun SongDetailsScreen(
     val otherAppBarContentWidth = APP_BAR_NAVIGATION_WIDTH + APP_BAR_END_PADDING + when {
         destination.setlistFileName == null -> APP_BAR_ACTION_WIDTH * 2
         else -> APP_BAR_ACTION_WIDTH
-    } + if (isCoverArtEnabled && songs.any { it.coverArtUrl != null }) APP_BAR_COVER_SIZE + APP_BAR_COVER_GAP else 0.dp
-    val appBarWidth = settledWidth - contentPadding.calculateStartPadding(layoutDirection) - contentPadding.calculateEndPadding(layoutDirection)
+    } + if (showsCoverInBar && songs.any { it.coverArtUrl != null }) APP_BAR_COVER_SIZE + APP_BAR_COVER_GAP else 0.dp
     // The song's own actions come out of their menu only as far as they leave the title
     // MIN_TITLE_WIDTH_BESIDE_SONG_ACTIONS: every one of them is a click further away in the menu, and they are several -
     // a title cut to its first words to make room for Export is a bar that has stopped saying which song it is. Worked
@@ -273,7 +276,7 @@ internal fun SongDetailsScreen(
                     Row(
                         verticalAlignment = Alignment.CenterVertically,
                     ) {
-                        song?.coverArtUrl?.takeIf { isCoverArtEnabled }?.let { url ->
+                        song?.coverArtUrl?.takeIf { showsCoverInBar }?.let { url ->
                             CoverArtImage(
                                 modifier = Modifier.padding(end = APP_BAR_COVER_GAP).size(APP_BAR_COVER_SIZE),
                                 url = url,
@@ -815,6 +818,14 @@ internal fun buildSetlistSlots(entries: List<Setlist.Entry>, songFileNames: List
     return SetlistSlots(slotByPage = slotByPage, entryCount = entries.size)
 }
 
+/**
+ * Whether the app bar of a screen [appBarWidth] wide still has room for the cover in performance mode, where it holds
+ * the text size stepper and nothing else. The cover is decoration there, while the title is what tells the player
+ * which song is up, so the cover is the one to leave where the title would be left less than [MIN_TITLE_WIDTH].
+ */
+internal fun showsCoverInPerformanceMode(appBarWidth: Dp) = appBarWidth - APP_BAR_NAVIGATION_WIDTH - APP_BAR_END_PADDING -
+    STEPPER_WIDTH - APP_BAR_STEPPER_END_PADDING - APP_BAR_COVER_SIZE - APP_BAR_COVER_GAP >= MIN_TITLE_WIDTH
+
 private const val LABEL_SEPARATOR = "·"
 private val PAGER_CONTROLS_HEIGHT = 48.dp
 private val APP_BAR_STEPPER_END_PADDING = 8.dp
@@ -826,6 +837,7 @@ private val APP_BAR_ACTION_WIDTH = 48.dp
 internal val APP_BAR_COVER_SIZE = 40.dp
 internal val APP_BAR_COVER_GAP = 12.dp
 private val MIN_TITLE_WIDTH_BESIDE_SONG_ACTIONS = 280.dp // About thirty characters, most titles whole.
+private val MIN_TITLE_WIDTH = 160.dp // Enough of a title to tell which song is up.
 private val TITLE_TOUCH_HORIZONTAL_OUTSET = 4.dp // The padding the bar puts around its title.
 private val TITLE_TOUCH_VERTICAL_OUTSET = 12.dp // From the two lines of title, 40dp, to the bar's 64dp.
 private const val KEY_SCROLL_STEP_FRACTION = 0.1f // Of the height of the scrolling viewport.

@@ -330,6 +330,9 @@ private data class StepperLabel(
 private val HEIGHT = 40.dp
 private val BUTTON_WIDTH = 36.dp
 private val VALUE_MIN_WIDTH = 44.dp
+
+/** How wide a stepper is drawn, at least, for the app bar that has to leave its title room beside one. */
+internal val STEPPER_WIDTH = BUTTON_WIDTH * 2 + VALUE_MIN_WIDTH
 private val ICON_SIZE = 20.dp
 private val STACKED_STEPPER_SPACING = 8.dp
 
