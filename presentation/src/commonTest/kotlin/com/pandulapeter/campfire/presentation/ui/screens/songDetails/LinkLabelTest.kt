@@ -23,6 +23,12 @@ class LinkLabelTest {
     }
 
     @Test
+    fun `a backslash ends the host the way a browser ends it`() {
+        assertEquals("evil.example", linkLabel("https://evil.example\\@youtube.com/watch"))
+        assertEquals("example.com", linkLabel("https://example.com\\path"))
+    }
+
+    @Test
     fun `a link with no host to speak of is named by its address`() {
         assertEquals("https://", linkLabel("https://"))
     }

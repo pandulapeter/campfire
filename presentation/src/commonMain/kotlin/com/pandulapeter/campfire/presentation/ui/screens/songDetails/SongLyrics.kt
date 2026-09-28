@@ -462,12 +462,14 @@ private fun SongMetadataHeader(
 /**
  * What a link is called in the header: the host it points at, without the `www.` most sites answer under as well, or
  * the address itself where it has no host to speak of.
+ *
+ * The authority ends where a browser ends it, which for an `http` or `https` address includes a backslash: every
+ * browser reads `\` there as `/`, so `https://evil.example\@youtube.com` opens `evil.example`, and a label that took
+ * what follows the `@` would name a site the link does not open.
  */
 internal fun linkLabel(url: String): String = url
     .substringAfter("://")
-    .substringBefore('/')
-    .substringBefore('?')
-    .substringBefore('#')
+    .takeWhile { it != '/' && it != '\\' && it != '?' && it != '#' }
     .substringAfterLast('@')
     .substringBefore(':')
     .lowercase()
