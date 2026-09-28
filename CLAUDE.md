@@ -471,7 +471,8 @@ the only possible one. The per-module `CLAUDE.md` files carry the detail; the sh
   a run is carried out after it. Every run that starts at once — the launch's, Sync now, and the first run after
   connecting — takes the place of one that is waiting; Stop drops the waiting one too. The
   app leaving the front starts a waiting run at once, since a phone only keeps alive a run it was told about while the
-  app was still in front. The files a run writes go around the repositories that announce changes, so a run never
+  app was still in front, and a desktop quit hides the window and lets the run finish (for up to fifteen seconds, then
+  stops it) before the process ends. The files a run writes go around the repositories that announce changes, so a run never
   schedules the next one.
 - The index carries an "a run was going" marker, written before anything moves and cleared when it finishes, so a
   run the app never came back from — killed, swiped away, suspended by iOS — is reported as interrupted next time

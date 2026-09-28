@@ -52,6 +52,7 @@ import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.runCurrent
 import kotlinx.coroutines.test.runTest
 import kotlinx.coroutines.withContext
+import kotlinx.coroutines.withTimeout
 import kotlinx.serialization.json.Json
 import kotlin.test.Test
 import kotlin.test.assertEquals
@@ -111,6 +112,35 @@ class SyncRepositoryImplTest {
         assertNotNull(progress)
         assertNotNull((repository.syncState.value as SyncState.Connected).progress)
         gate.complete(Unit)
+        assertIs<SyncOutcome.Success>(repository.awaitOutcome().lastOutcome)
+    }
+
+    @Test
+    fun `an automatic run asked for during a run follows it at once when the app leaves`() = runTest {
+        val gate = CompletableDeferred<Unit>()
+        val automaticRunStarted = CompletableDeferred<Unit>()
+        val stateLocalSource = FakeSyncStateLocalSource(
+            onSaveIndex = { if (it != null && "\"isAutomaticRunInProgress\": true" in it) automaticRunStarted.complete(Unit) },
+        )
+        val repository = repository(
+            provider = FakeSyncProvider(
+                files = mapOf(song(1) to "One".encodeToByteArray()),
+                onDownload = { gate.await() },
+                account = ACCOUNT,
+            ),
+            stateLocalSource = stateLocalSource,
+        )
+
+        repository.restore()
+        repository.synchronize(SyncDeletionPolicy.ASK)
+        repository.syncState.first { (it as? SyncState.Connected)?.progress?.total == 1 }
+        repository.scheduleSynchronization()
+        val progress = repository.startScheduledSynchronization()
+        gate.complete(Unit)
+
+        assertEquals(1, progress?.total)
+        // Well inside the ten seconds an automatic run would otherwise wait for.
+        withContext(Dispatchers.Default) { withTimeout(5_000) { automaticRunStarted.await() } }
         assertIs<SyncOutcome.Success>(repository.awaitOutcome().lastOutcome)
     }
 

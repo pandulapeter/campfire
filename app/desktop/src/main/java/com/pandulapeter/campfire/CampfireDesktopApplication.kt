@@ -16,6 +16,7 @@ import androidx.compose.runtime.SideEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.awt.ComposeWindow
@@ -51,6 +52,7 @@ import java.io.File
 import javax.swing.SwingUtilities
 import kotlin.system.exitProcess
 import kotlinx.coroutines.channels.Channel
+import kotlinx.coroutines.launch
 import org.koin.compose.viewmodel.koinViewModel
 
 /**
@@ -94,13 +96,24 @@ fun main(args: Array<String>) {
         val windowState = rememberWindowState(size = INITIAL_WINDOW_SIZE)
         // The view model is created inside the window (which owns the ViewModelStore), but the key handler needs it here.
         val viewModel = remember { mutableStateOf<CampfireViewModel?>(null) }
-        // From the moment the app decides to go, another process's files are not accepted any more: this one would only
-        // acknowledge them and exit. The lock stays until the process is gone, so a newcomer waits for it
-        // (claimSingleInstance).
-        val exit = {
-            stopListeningForOtherInstances()
-            exitApplication()
+        val scope = rememberCoroutineScope()
+        var isLeaving by remember { mutableStateOf(false) }
+        // Every way out ends here, once the editor's unsaved text has been dealt with. The window goes at once, and the
+        // process a little later: the sync run an edit made just before asked for, or one that is going, is let finish
+        // first (CampfireViewModel.settleSynchronizationBeforeExit, bounded). From the moment the app decides to go,
+        // another process's files are not accepted any more: this one would only acknowledge them and exit. The lock
+        // stays until the process is gone, so a newcomer waits for it (claimSingleInstance).
+        val leave = { end: () -> Unit ->
+            if (!isLeaving) {
+                isLeaving = true
+                stopListeningForOtherInstances()
+                scope.launch {
+                    viewModel.value?.settleSynchronizationBeforeExit()
+                    end()
+                }
+            }
         }
+        val exit = { leave(::exitApplication) }
         // Closing the window leaves the editor as surely as Escape does, so it asks about unsaved text the same way,
         // and it waits for a save that is still being written, since exitApplication ends the process.
         val requestExit = { viewModel.value?.requestExit(exit) ?: exit() }
@@ -116,12 +129,9 @@ fun main(args: Array<String>) {
                 // The handler returns before anything is decided: what follows waits for a save, and may put a
                 // dialog on screen.
                 SwingUtilities.invokeLater {
-                    // The process ends with the system's reply rather than with exitApplication, so the listener
-                    // for other instances is closed here the way `exit` closes it.
-                    val performQuit = {
-                        stopListeningForOtherInstances()
-                        response.performQuit()
-                    }
+                    // The process ends with the system's reply rather than with exitApplication, after the same wait
+                    // for sync as `exit`. A logout or shut down that asked tolerates the few seconds.
+                    val performQuit = { leave(response::performQuit) }
                     viewModel.value?.requestExit(onExit = performQuit, onCancelled = response::cancelQuit) ?: performQuit()
                 }
             }
@@ -132,6 +142,7 @@ fun main(args: Array<String>) {
         // Window itself, with a hook for the window before it is shown.
         SwingWindow(
             state = windowState,
+            visible = !isLeaving,
             title = "Campfire",
             onCloseRequest = requestExit,
             icon = appIcon(viewModel.value),

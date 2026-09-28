@@ -148,7 +148,7 @@ import org.koin.core.annotation.KoinViewModel
 class CampfireViewModel(
     private val getScreenData: GetScreenDataUseCase,
     getUserPreferences: GetUserPreferencesUseCase,
-    getSyncState: GetSyncStateUseCase,
+    private val getSyncState: GetSyncStateUseCase,
     getSyncProviders: GetSyncProvidersUseCase,
     private val loadScreenData: LoadScreenDataUseCase,
     private val isFirstRun: IsFirstRunUseCase,
@@ -1331,6 +1331,30 @@ class CampfireViewModel(
             } else {
                 onExit()
             }
+        }
+    }
+
+    /**
+     * Lets the sync runs the library still owes the cloud folder happen before a desktop process ends, which is where
+     * a quit leads once [requestExit] has let it through - the shell hides the window first, so the quit looks as
+     * immediate as it is. The automatic run that is waiting for the library to settle is started now: dropped, the
+     * change made just before quitting would reach the other devices only the next time this computer opens Campfire.
+     * A run that is going is waited for, and so is one chained behind it. Past [EXIT_SYNC_GRACE] the run is stopped
+     * instead and its winding down waited for, briefly, since a stopped run writes its index and clears the marker
+     * that would otherwise have the next launch report it as interrupted and start no run of its own.
+     */
+    suspend fun settleSynchronizationBeforeExit() {
+        val isSyncing = { state: SyncState -> state is SyncState.Connected && state.isSyncing }
+        val hasSettled = withTimeoutOrNull(EXIT_SYNC_GRACE) {
+            // The state is the repository's own rather than syncState, which only follows it a hop to the main thread
+            // later and would still say nothing is going for a run that has just been started.
+            while (startScheduledSynchronization() != null) {
+                getSyncState().first { !isSyncing(it) }
+            }
+        } != null
+        if (!hasSettled) {
+            cancelSynchronization()
+            withTimeoutOrNull(EXIT_SYNC_STOP_GRACE) { getSyncState().first { !isSyncing(it) } }
         }
     }
 
@@ -2842,5 +2866,7 @@ class CampfireViewModel(
         private const val SONGS_SEARCH_KEY = "songsSearch"
         private const val SETLISTS_SEARCH_KEY = "setlistsSearch"
         private val MIN_RESCAN_INTERVAL = 10.seconds
+        private val EXIT_SYNC_GRACE = 15.seconds // Long enough for the run an edit asks for, short enough to never look hung.
+        private val EXIT_SYNC_STOP_GRACE = 2.seconds
     }
 }
