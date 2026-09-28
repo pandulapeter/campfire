@@ -15,6 +15,7 @@ import androidx.compose.animation.core.Animatable
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.horizontalScroll
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.PaddingValues
@@ -170,6 +171,7 @@ import kotlin.math.roundToInt
  * @param onDividersPlaced Handed the y position of every divider between the rows of the horizontal flow, measured
  * from the top of this composable's content, every time they are placed, where they settle rather than where an
  * animation has got them to. The song details screen snaps its scroll to them.
+ * @param displayControls Drawn at the end of the header, see [SongMetadataHeader].
  * @param onOpenEditor Offered under a song too long to be laid out whole, see [LayoutBudget]; null where the editor is
  * already open or may not be opened (performance mode).
  */
@@ -192,6 +194,7 @@ internal fun SongLyrics(
     onAddLink: (() -> Unit)? = null,
     onRemoveLink: ((String) -> Unit)? = null,
     onEditCoverArt: (() -> Unit)? = null,
+    displayControls: (@Composable () -> Unit)? = null,
     onDividersPlaced: ((dividerTops: List<Int>) -> Unit)? = null,
     onOpenEditor: (() -> Unit)? = null,
 ) {
@@ -279,6 +282,7 @@ internal fun SongLyrics(
             onAddLink = onAddLink,
             onRemoveLink = onRemoveLink,
             onEditCoverArt = onEditCoverArt,
+            displayControls = displayControls,
         )
         LookaheadScope {
             SongSectionsLayout(
@@ -290,7 +294,8 @@ internal fun SongLyrics(
                 rowGap = ROW_GAP,
                 availableHeight = availableHeight,
                 headerHeight = { headerHeight },
-                // A row is read once the header has scrolled away, so it has the whole of the screen to fit into.
+                // A row is read once the header has scrolled away, so it has the whole of the screen to fit into -
+                // except the first, which the scroll comes to rest on with the header still above it.
                 maxRowHeight = availableHeight,
                 extraWidth = extraWidth,
                 sectionCount = sections.size,
@@ -407,10 +412,14 @@ private fun CutSongNotice(
  * @param onOpenLink Null where a link is only shown, not followed: the editor's preview, where a tap is meant for the
  *   text rather than for a browser.
  * @param onAddLink Null wherever [onAddTag] is, and for the same reason; so is [onRemoveLink].
- * @param onEditCoverArt Opens the cover search, on a chip of its own above the tags, reading "Set" or "Change" by
- *   whether the file names a cover. A row of its own rather than one more chip among the tags, since a cover is one
- *   thing about the song rather than one of a list of them. Null wherever [onAddTag] is, and also while covers are
- *   turned off.
+ * @param onEditCoverArt Opens the cover search, on a chip above the tags reading "Set" or "Change" by whether the file
+ *   names a cover. It shares its row with the languages rather than being one more chip among the tags, since a cover
+ *   is one thing about the song rather than one of a list of them. Null wherever [onAddTag] is, and also while covers
+ *   are turned off.
+ * @param displayControls The song details screen's transposition and text size steppers ([SongDisplayControls]), at
+ *   the end of the chip rows, which wrap before them; the metadata lines under both have the whole width. Null in the
+ *   editor's preview, which has a transposition of its own, and in performance mode, which keeps the one stepper it
+ *   has in the app bar.
  */
 @Composable
 private fun SongMetadataHeader(
@@ -424,71 +433,27 @@ private fun SongMetadataHeader(
     onAddLink: (() -> Unit)?,
     onRemoveLink: ((String) -> Unit)?,
     onEditCoverArt: (() -> Unit)?,
+    displayControls: (@Composable () -> Unit)?,
 ) = Column(modifier = modifier.padding(bottom = SECTION_GAP)) {
+    // The chips take the start of the row and wrap before the steppers, while the lines under them have the whole width,
+    // since a long line of credits would otherwise be broken into a narrow column beside two small controls.
+    Row {
+        SongChips(
+            modifier = Modifier.weight(1f),
+            song = song,
+            onAddTag = onAddTag,
+            onRemoveTag = onRemoveTag,
+            onEditLanguages = onEditLanguages,
+            onOpenLink = onOpenLink,
+            onAddLink = onAddLink,
+            onRemoveLink = onRemoveLink,
+            onEditCoverArt = onEditCoverArt,
+        )
+        displayControls?.let { controls ->
+            Box(modifier = Modifier.padding(start = DISPLAY_CONTROLS_GAP)) { controls() }
+        }
+    }
     val metadata = song.metadata
-    onEditCoverArt?.let { onClick ->
-        TagFlowRow(
-            modifier = Modifier.padding(bottom = 4.dp),
-        ) {
-            TagPill(
-                text = stringResource(if (metadata.coverArt == null) Res.string.song_details_set_cover_art else Res.string.song_details_change_cover_art),
-                onClick = onClick,
-                leadingIcon = painterResource(Res.drawable.ic_album),
-            )
-        }
-    }
-    if (metadata.tags.isNotEmpty() || metadata.languages.isNotEmpty() || metadata.links.isNotEmpty() || onAddTag != null || onAddLink != null) {
-        TagFlowRow(
-            modifier = Modifier.padding(bottom = 4.dp)
-        ) {
-            metadata.tags.forEach { tag ->
-                TagPill(
-                    text = tag,
-                    trailingIcon = if (onRemoveTag == null) null else painterResource(Res.drawable.ic_clear),
-                    trailingIconContentDescription = onRemoveTag?.let { textResource(Res.string.song_details_tag_remove, tag) },
-                    onTrailingIconClick = onRemoveTag?.let { { it(tag) } },
-                )
-            }
-            onAddTag?.let { onClick ->
-                TagPill(
-                    text = stringResource(Res.string.song_details_tag_add),
-                    onClick = onClick,
-                    leadingIcon = painterResource(Res.drawable.ic_add),
-                )
-            }
-            // The languages are a single chip however many there are, since it is where they are edited. Each kind
-            // of chip is followed by the one that adds to it, so that the row reads as groups rather than as a list
-            // with every way of editing it piled up at the end.
-            if (metadata.languages.isNotEmpty() || onEditLanguages != null) {
-                TagPill(
-                    text = metadata.languages.map { languageLabel(it) }.joinToString(separator = ", ")
-                        .ifEmpty { stringResource(Res.string.song_details_language) },
-                    onClick = onEditLanguages,
-                    leadingIcon = painterResource(Res.drawable.ic_language),
-                )
-            }
-            // A link is named by the site it is on, which is what tells a video from a tab at a glance; the whole
-            // address is the file's business and the browser's.
-            metadata.links.forEach { url ->
-                val label = linkLabel(url)
-                TagPill(
-                    text = label,
-                    onClick = onOpenLink?.let { { it(url) } },
-                    leadingIcon = painterResource(Res.drawable.ic_link),
-                    trailingIcon = if (onRemoveLink == null) null else painterResource(Res.drawable.ic_clear),
-                    trailingIconContentDescription = onRemoveLink?.let { textResource(Res.string.song_details_link_remove, label) },
-                    onTrailingIconClick = onRemoveLink?.let { { it(url) } },
-                )
-            }
-            onAddLink?.let { onClick ->
-                TagPill(
-                    text = stringResource(Res.string.song_details_link_add),
-                    onClick = onClick,
-                    leadingIcon = painterResource(Res.drawable.ic_add),
-                )
-            }
-        }
-    }
     // What is played, in the accent colour, above who wrote it: one is read off the page while playing and the
     // other is only ever looked up.
     MetadataLine(
@@ -511,6 +476,95 @@ private fun SongMetadataHeader(
         style = MaterialTheme.typography.bodyMedium.scaled(fontScale),
         color = MaterialTheme.colorScheme.onSurfaceVariant,
     )
+}
+
+/** The chip rows of [SongMetadataHeader], see its parameters. */
+@Composable
+private fun SongChips(
+    modifier: Modifier = Modifier,
+    song: ChordProSong,
+    onAddTag: (() -> Unit)?,
+    onRemoveTag: ((String) -> Unit)?,
+    onEditLanguages: (() -> Unit)?,
+    onOpenLink: ((String) -> Unit)?,
+    onAddLink: (() -> Unit)?,
+    onRemoveLink: ((String) -> Unit)?,
+    onEditCoverArt: (() -> Unit)?,
+) = Column(modifier = modifier) {
+    val metadata = song.metadata
+    // The cover and the languages share the first row, since each is one thing about the song however many values it
+    // holds, and the languages are a single chip for the same reason: it is where they are edited. The tags and the
+    // links are lists that grow, so each has a row of its own ending in the chip that adds to it, rather than the two
+    // being one list with every way of editing it piled up at the end.
+    val hasLanguageChip = metadata.languages.isNotEmpty() || onEditLanguages != null
+    if (onEditCoverArt != null || hasLanguageChip) {
+        TagFlowRow(
+            modifier = Modifier.padding(bottom = 4.dp),
+        ) {
+            onEditCoverArt?.let { onClick ->
+                TagPill(
+                    text = stringResource(if (metadata.coverArt == null) Res.string.song_details_set_cover_art else Res.string.song_details_change_cover_art),
+                    onClick = onClick,
+                    leadingIcon = painterResource(Res.drawable.ic_album),
+                )
+            }
+            if (hasLanguageChip) {
+                TagPill(
+                    text = metadata.languages.map { languageLabel(it) }.joinToString(separator = ", ")
+                        .ifEmpty { stringResource(Res.string.song_details_language) },
+                    onClick = onEditLanguages,
+                    leadingIcon = painterResource(Res.drawable.ic_language),
+                )
+            }
+        }
+    }
+    if (metadata.tags.isNotEmpty() || onAddTag != null) {
+        TagFlowRow(
+            modifier = Modifier.padding(bottom = 4.dp),
+        ) {
+            metadata.tags.forEach { tag ->
+                TagPill(
+                    text = tag,
+                    trailingIcon = if (onRemoveTag == null) null else painterResource(Res.drawable.ic_clear),
+                    trailingIconContentDescription = onRemoveTag?.let { textResource(Res.string.song_details_tag_remove, tag) },
+                    onTrailingIconClick = onRemoveTag?.let { { it(tag) } },
+                )
+            }
+            onAddTag?.let { onClick ->
+                TagPill(
+                    text = stringResource(Res.string.song_details_tag_add),
+                    onClick = onClick,
+                    leadingIcon = painterResource(Res.drawable.ic_add),
+                )
+            }
+        }
+    }
+    if (metadata.links.isNotEmpty() || onAddLink != null) {
+        TagFlowRow(
+            modifier = Modifier.padding(bottom = 4.dp),
+        ) {
+            // A link is named by the site it is on, which is what tells a video from a tab at a glance; the whole
+            // address is the file's business and the browser's.
+            metadata.links.forEach { url ->
+                val label = linkLabel(url)
+                TagPill(
+                    text = label,
+                    onClick = onOpenLink?.let { { it(url) } },
+                    leadingIcon = painterResource(Res.drawable.ic_link),
+                    trailingIcon = if (onRemoveLink == null) null else painterResource(Res.drawable.ic_clear),
+                    trailingIconContentDescription = onRemoveLink?.let { textResource(Res.string.song_details_link_remove, label) },
+                    onTrailingIconClick = onRemoveLink?.let { { it(url) } },
+                )
+            }
+            onAddLink?.let { onClick ->
+                TagPill(
+                    text = stringResource(Res.string.song_details_link_add),
+                    onClick = onClick,
+                    leadingIcon = painterResource(Res.drawable.ic_add),
+                )
+            }
+        }
+    }
 }
 
 /**
@@ -1272,7 +1326,9 @@ private fun TextStyle.scaled(scale: Float) = copy(
  * sections fill, so a row of two sections is split in two wider columns rather than leaving a hole where a third one
  * would go, and the rows are chosen to make the song as short as possible. A row of several columns is never taller
  * than [maxRowHeight], the whole of the screen, since the reader could not reach the top of its next column without
- * scrolling back past what was just played, but up to that its columns are as tall as they need, so a song that fits
+ * scrolling back past what was just played - and the first row is never taller than what the [headerHeight] above it
+ * leaves of the screen, since the scroll comes to rest on the top of the song rather than on the top of that row - but
+ * up to that its columns are as tall as they need, so a song that fits
  * the screen in columns is laid out exactly as it would be read top to bottom (see [flowIntoRows]). A section with
  * lines that do not wrap - a staff of tablature longer than a column - may have a row of its own as wide as those
  * lines, where that makes the song shorter. The rows are told apart by a divider drawn in the gap between them. (A
@@ -1334,6 +1390,7 @@ private fun SongSectionsLayout(
     val maxColumnWidthPx = maxColumnWidth.roundToPx()
     val availableHeightPx = if (availableHeight.isSpecified) (availableHeight.roundToPx() - headerHeight()).coerceAtLeast(0) else 0
     val maxRowHeightPx = if (maxRowHeight.isSpecified && maxRowHeight > 0.dp) maxRowHeight.roundToPx() else Int.MAX_VALUE
+    val maxFirstRowHeightPx = if (maxRowHeightPx == Int.MAX_VALUE) maxRowHeightPx else (maxRowHeightPx - headerHeight()).coerceAtLeast(0)
     val maxColumnCount = ((settledWidth + columnGapPx) / (minColumnWidth.roundToPx() + columnGapPx)).coerceIn(1, maxOf(1, measurables.size))
     fun columnWidthFor(totalWidth: Int, columnCount: Int) = ((totalWidth - columnGapPx * (columnCount - 1)) / columnCount).coerceIn(0, maxColumnWidthPx)
 
@@ -1354,6 +1411,7 @@ private fun SongSectionsLayout(
         settledWidth = settledWidth,
         availableHeight = availableHeightPx,
         maxRowHeight = maxRowHeightPx,
+        maxFirstRowHeight = maxFirstRowHeightPx,
         maxColumnCount = maxColumnCount,
         isHorizontalFlow = isHorizontalFlow,
     )
@@ -1380,6 +1438,7 @@ private fun SongSectionsLayout(
                 sectionGap = sectionGapPx,
                 rowGap = rowGapPx,
                 maxRowHeight = maxRowHeightPx,
+                maxFirstRowHeight = maxFirstRowHeightPx,
             )
             else -> List(measurables.size) { heightAt(it, columnCount) }.balanceIntoColumns(columnCount, sectionGapPx)
         }
@@ -1522,6 +1581,7 @@ private data class SectionGridKey(
     val settledWidth: Int,
     val availableHeight: Int,
     val maxRowHeight: Int,
+    val maxFirstRowHeight: Int,
     val maxColumnCount: Int,
     val isHorizontalFlow: Boolean,
 )
@@ -2027,6 +2087,7 @@ private val MIN_COLUMN_WIDTH = 384.dp
 private val MAX_COLUMN_WIDTH = 560.dp
 private val COLUMN_GAP = 32.dp
 private val SECTION_GAP = 20.dp
+private val DISPLAY_CONTROLS_GAP = 12.dp
 private val ROW_GAP = 40.dp
 private const val LINE_HEIGHT_SAMPLE = "X"
 private const val CHARACTER_WIDTH_SAMPLE_LENGTH = 64

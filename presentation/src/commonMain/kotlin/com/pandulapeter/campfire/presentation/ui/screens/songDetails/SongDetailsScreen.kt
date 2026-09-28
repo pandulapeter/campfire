@@ -10,15 +10,10 @@
 package com.pandulapeter.campfire.presentation.ui.screens.songDetails
 
 import androidx.compose.animation.AnimatedContent
-import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.LinearEasing
 import androidx.compose.animation.core.tween
-import androidx.compose.animation.expandHorizontally
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
-import androidx.compose.animation.scaleIn
-import androidx.compose.animation.scaleOut
-import androidx.compose.animation.shrinkHorizontally
 import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.ScrollState
 import androidx.compose.foundation.clickable
@@ -84,9 +79,7 @@ import com.pandulapeter.campfire.presentation.resources.ic_error
 import com.pandulapeter.campfire.presentation.resources.ic_songs
 import com.pandulapeter.campfire.presentation.resources.ic_next
 import com.pandulapeter.campfire.presentation.resources.ic_previous
-import com.pandulapeter.campfire.presentation.resources.ic_tune
 import com.pandulapeter.campfire.presentation.resources.retry
-import com.pandulapeter.campfire.presentation.resources.song_details_display_options
 import com.pandulapeter.campfire.presentation.resources.song_details_next_song
 import com.pandulapeter.campfire.presentation.resources.song_details_empty
 import com.pandulapeter.campfire.presentation.resources.song_details_no_data
@@ -112,11 +105,11 @@ import kotlinx.coroutines.launch
 import org.jetbrains.compose.resources.painterResource
 
 /**
- * The lyrics (and chords) of a song, or of a setlist's songs in a pager. The transposition and the text size can be
- * adjusted from the app bar: inline steppers wherever they leave the title [MIN_TITLE_WIDTH], otherwise from a bottom
- * sheet behind a single "display options" action, so that the bar does not get crowded. The text size can also be changed with
- * a pinch or Ctrl / Cmd + scroll on the content itself, see [fontScaleGestures], and on the desktop and the web with
- * Ctrl / Cmd + plus, minus and zero, which the window answers ([CampfireViewModel.zoomSongText]).
+ * The lyrics (and chords) of a song, or of a setlist's songs in a pager. The transposition and the text size are
+ * adjusted with the steppers at the end of each song's header ([SongDisplayControls]), or, in performance mode, where
+ * only the text size is left and the app bar has nothing else to hold, with a stepper in the bar. The text size can
+ * also be changed with a pinch or Ctrl / Cmd + scroll on the content itself, see [fontScaleGestures], and on the
+ * desktop and the web with Ctrl / Cmd + plus, minus and zero, which the window answers ([CampfireViewModel.zoomSongText]).
  *
  * When there is more than one song to page through, or the song is read from a setlist of any length, a
  * [SongPagerControls] bar under the lyrics offers the same paging as the swipe gesture, along with the name of the
@@ -204,52 +197,23 @@ internal fun SongDetailsScreen(
     val isHorizontalFlow = userPreferences?.isHorizontalSectionFlowEnabled == true
     val isCoverArtEnabled = userPreferences?.isCoverArtEnabled == true
     val chordSpelling = userPreferences?.chordSpelling ?: UserPreferences.ChordSpelling.Default
-    val currentTransposition = currentSong?.let { transpositions[it.fileName, destination.setlistFileName] } ?: 0
-    // From the key the library scan read rather than from the text: the page renders the whole song already, and the
-    // app bar only needs one line of it.
-    val currentKey = currentSong?.let { viewModel.renderKey(song = it, transposition = currentTransposition, spelling = chordSpelling) }
-    // The room is reserved for every song of the pager rather than for the current one, so that paging from a song
-    // with chords to one without (or to one in a key with a longer name) does not move the steppers in and out of the bar.
-    // Keyed on the keys the songs are in rather than on the songs, which are rebuilt on every change to the library
-    // (a sync run, a tag written) while the labels, and the measurement of them, stay the same.
-    val keyedTranspositions = songs.filter { it.hasChords }.map { it.key to it.transpose }.distinct()
-    val transpositionLabels = remember(keyedTranspositions, isPerformanceModeEnabled, shouldShowChords, chordSpelling) {
-        if (isPerformanceModeEnabled || !shouldShowChords) {
-            emptyList()
-        } else {
-            transpositionLabelsForKeys(keyedTranspositions) { key, transpose, transposition ->
-                viewModel.renderKey(key = key, transpose = transpose, transposition = transposition, spelling = chordSpelling)
-            }
-        }
-    }
-    val inlineControlsWidth = rememberCompactSteppersWidth(transpositionLabels = transpositionLabels, spacing = INLINE_CONTROL_SPACING)
     val layoutDirection = LocalLayoutDirection.current
     // Whatever else the bar holds: the back button with the bar's own start padding, the bar's end padding, the cover
-    // in front of the title (reserved for every song of the pager, like the steppers' labels, so that paging to a song
-    // without one does not bring the steppers back into the bar), and the two actions that performance mode takes away
-    // (the setlist assignments only for a song read from the library).
+    // in front of the title (reserved for every song of the pager, so that paging to a song without one does not move
+    // the actions in and out of their menu), and the song's two buttons (the setlist assignments only for a song read
+    // from the library).
     val otherAppBarContentWidth = APP_BAR_NAVIGATION_WIDTH + APP_BAR_END_PADDING + when {
-        isPerformanceModeEnabled -> 0.dp
         destination.setlistFileName == null -> APP_BAR_ACTION_WIDTH * 2
         else -> APP_BAR_ACTION_WIDTH
     } + if (isCoverArtEnabled && songs.any { it.coverArtUrl != null }) APP_BAR_COVER_SIZE + APP_BAR_COVER_GAP else 0.dp
-    // Decided from what the controls need rather than from the window's size class, since that is anything from one
-    // stepper in performance mode to two and two more actions in the library. The settled width keeps the decision
-    // from changing while a navigation transition is still running.
     val appBarWidth = settledWidth - contentPadding.calculateStartPadding(layoutDirection) - contentPadding.calculateEndPadding(layoutDirection)
-    val usesInlineControls = appBarWidth - otherAppBarContentWidth - inlineControlsWidth >= MIN_TITLE_WIDTH
-    // The song's own actions come out of their menu only after the steppers have come into the bar, and only as far
-    // as they leave the title MIN_TITLE_WIDTH_BESIDE_SONG_ACTIONS: the steppers are what a song is read with, while
-    // every one of these is a click further away in the menu, and they are several - a title cut to its first words to
-    // make room for Export is a bar that has stopped saying which song it is. Worked out from the settled width like
-    // the steppers, so that the buttons do not come and go while a navigation transition runs.
-    val songActionsMaxWidth = (
-        appBarWidth -
-            otherAppBarContentWidth +
-            APP_BAR_ACTION_WIDTH -
-            (if (usesInlineControls) inlineControlsWidth else APP_BAR_ACTION_WIDTH) -
-            MIN_TITLE_WIDTH_BESIDE_SONG_ACTIONS
-        ).coerceAtLeast(APP_BAR_ACTION_WIDTH)
+    // The song's own actions come out of their menu only as far as they leave the title
+    // MIN_TITLE_WIDTH_BESIDE_SONG_ACTIONS: every one of them is a click further away in the menu, and they are several -
+    // a title cut to its first words to make room for Export is a bar that has stopped saying which song it is. Worked
+    // out from the settled width, so that the buttons do not come and go while a navigation transition runs. The
+    // overflow button is counted among the other content above, and is what SongActions is handed the room for too.
+    val songActionsMaxWidth = (appBarWidth - otherAppBarContentWidth + APP_BAR_ACTION_WIDTH - MIN_TITLE_WIDTH_BESIDE_SONG_ACTIONS)
+        .coerceAtLeast(APP_BAR_ACTION_WIDTH)
 
     val coroutineScope = rememberCoroutineScope()
     val pageStepper = remember(pagerState, coroutineScope) { PageStepper(pagerState, coroutineScope) }
@@ -310,14 +274,9 @@ internal fun SongDetailsScreen(
                         verticalAlignment = Alignment.CenterVertically,
                     ) {
                         song?.coverArtUrl?.takeIf { isCoverArtEnabled }?.let { url ->
-                            // A tap on it is a shortcut to the header's cover chip, which performance mode takes away
-                            // too; there it is part of the title and scrolls to the top like it.
                             CoverArtImage(
                                 modifier = Modifier.padding(end = APP_BAR_COVER_GAP).size(APP_BAR_COVER_SIZE),
                                 url = url,
-                                onClick = if (isPerformanceModeEnabled) null else {
-                                    { viewModel.showDialog(CampfireViewModel.DialogType.CoverArtSearch(song)) }
-                                },
                             )
                         }
                         Column {
@@ -339,49 +298,13 @@ internal fun SongDetailsScreen(
                 }
             },
             actions = {
-                AnimatedVisibility(
-                    visible = usesInlineControls,
-                    enter = fadeIn() + expandHorizontally(),
-                    exit = fadeOut() + shrinkHorizontally(),
-                ) {
-                    Row(verticalAlignment = Alignment.CenterVertically) {
-                        AnimatedVisibility(
-                            visible = !isPerformanceModeEnabled && shouldShowChords && currentSong?.hasChords == true && currentSong.fileName in songTexts,
-                            enter = fadeIn() + scaleIn(),
-                            exit = fadeOut() + scaleOut(),
-                        ) {
-                            TranspositionControls(
-                                modifier = Modifier.padding(end = INLINE_CONTROL_SPACING),
-                                isCompact = true,
-                                transposition = currentTransposition,
-                                key = currentKey,
-                                onStep = { semitones -> currentSong?.let { viewModel.stepTransposition(it.fileName, destination.setlistFileName, semitones) } },
-                                onReset = { currentSong?.let { viewModel.resetTransposition(it.fileName, destination.setlistFileName) } },
-                            )
-                        }
-                        LiveFontScaleControls(
-                            modifier = Modifier.padding(end = INLINE_CONTROL_SPACING),
-                            viewModel = viewModel,
-                        )
-                    }
-                }
-                AnimatedVisibility(
-                    visible = !usesInlineControls,
-                    enter = fadeIn() + scaleIn(),
-                    exit = fadeOut() + scaleOut(),
-                ) {
-                    IconButton(
-                        onClick = {
-                            currentSong?.let {
-                                viewModel.showDialog(CampfireViewModel.DialogType.SongDisplayControls(songFileName = it.fileName, setlistFileName = destination.setlistFileName))
-                            }
-                        }
-                    ) {
-                        Icon(
-                            painter = painterResource(Res.drawable.ic_tune),
-                            contentDescription = stringResource(Res.string.song_details_display_options),
-                        )
-                    }
+                // Performance mode leaves the bar with nothing else in it, and the text size is the one setting left
+                // to it, so it stays in reach at the top of the screen rather than scrolling away with the header.
+                if (isPerformanceModeEnabled) {
+                    LiveFontScaleControls(
+                        modifier = Modifier.padding(end = APP_BAR_STEPPER_END_PADDING),
+                        viewModel = viewModel,
+                    )
                 }
                 currentSong?.takeIf { !isPerformanceModeEnabled }?.let { song ->
                     // Only a song read from the library gets the button: one read from a setlist is already filed, and
@@ -491,6 +414,18 @@ internal fun SongDetailsScreen(
                     },
                     onEditCoverArt = if (isPerformanceModeEnabled || !isCoverArtEnabled) null else {
                         { viewModel.showDialog(CampfireViewModel.DialogType.CoverArtSearch(song)) }
+                    },
+                    displayControls = if (isPerformanceModeEnabled) null else {
+                        {
+                            SongDisplayControls(
+                                viewModel = viewModel,
+                                song = song,
+                                setlistFileName = destination.setlistFileName,
+                                transposition = transpositions[song.fileName, destination.setlistFileName],
+                                isTranspositionShown = shouldShowChords && song.hasChords,
+                                chordSpelling = chordSpelling,
+                            )
+                        }
                     },
                     // Performance mode takes every way into the editor out of the app, this one included.
                     onOpenEditor = if (isPerformanceModeEnabled) null else {
@@ -640,6 +575,7 @@ private fun SongDetailsPage(
     onAddLink: (() -> Unit)?,
     onRemoveLink: ((String) -> Unit)?,
     onEditCoverArt: (() -> Unit)?,
+    displayControls: (@Composable () -> Unit)?,
     onOpenEditor: (() -> Unit)?,
 ) = AnimatedContent(
     modifier = Modifier.fillMaxSize(),
@@ -743,6 +679,7 @@ private fun SongDetailsPage(
                 onAddLink = onAddLink,
                 onRemoveLink = onRemoveLink,
                 onEditCoverArt = onEditCoverArt,
+                displayControls = displayControls,
                 onOpenEditor = onOpenEditor,
                 // The padding is inside the scroll, so a divider is at the top of the viewport once the song is
                 // scrolled by its position plus the padding above it.
@@ -782,22 +719,6 @@ private class ContinuousChangeTracker {
     var isFirst = true
     var isRecent = false
 }
-
-/**
- * The inline text size stepper, reading the live font scale in a scope of its own so that a pinch recomposes the
- * stepper rather than the app bar around it.
- */
-@Composable
-private fun LiveFontScaleControls(
-    modifier: Modifier,
-    viewModel: CampfireViewModel,
-) = FontScaleControls(
-    modifier = modifier,
-    isCompact = true,
-    fontScale = viewModel.fontScale,
-    onFontScaleAdjusted = viewModel::adjustFontScale,
-    onFontScaleReset = { viewModel.setFontScale(CampfireViewModel.DEFAULT_FONT_SCALE) },
-)
 
 /**
  * One press of an arrow key, in the direction it was pressed (-1 for up, 1 for down). The step is a fraction of what
@@ -894,27 +815,9 @@ internal fun buildSetlistSlots(entries: List<Setlist.Entry>, songFileNames: List
     return SetlistSlots(slotByPage = slotByPage, entryCount = entries.size)
 }
 
-/**
- * Every label the transposition stepper can read for a song in any of [keys], each once: the key a song's file
- * declares and the transposition it opens with, which is all a rendered key depends on. A long setlist is mostly a
- * handful of keys, and rendering one is a transposition of its own.
- */
-internal fun transpositionLabelsForKeys(
-    keys: List<Pair<String?, Int>>,
-    renderKey: (key: String?, transpose: Int, transposition: Int) -> String?,
-): List<String> = keys.asSequence()
-    .distinct()
-    .flatMap { (key, transpose) ->
-        (CampfireViewModel.MIN_TRANSPOSITION..CampfireViewModel.MAX_TRANSPOSITION).asSequence().map { transposition ->
-            transpositionLabel(transposition, renderKey(key, transpose, transposition))
-        }
-    }
-    .distinct()
-    .toList()
-
 private const val LABEL_SEPARATOR = "·"
 private val PAGER_CONTROLS_HEIGHT = 48.dp
-private val INLINE_CONTROL_SPACING = 8.dp
+private val APP_BAR_STEPPER_END_PADDING = 8.dp
 private val APP_BAR_NAVIGATION_WIDTH = 52.dp // The 48dp button and the 4dp the bar pads its start by.
 private val APP_BAR_END_PADDING = 4.dp
 private val APP_BAR_ACTION_WIDTH = 48.dp
@@ -922,7 +825,6 @@ private val APP_BAR_ACTION_WIDTH = 48.dp
 /** As tall as the title and the artist next to it: a titleMedium and a bodySmall line. The editor's bar shares it. */
 internal val APP_BAR_COVER_SIZE = 40.dp
 internal val APP_BAR_COVER_GAP = 12.dp
-private val MIN_TITLE_WIDTH = 160.dp // About fifteen characters of a title, enough to tell one song from the next.
 private val MIN_TITLE_WIDTH_BESIDE_SONG_ACTIONS = 280.dp // About thirty characters, most titles whole.
 private val TITLE_TOUCH_HORIZONTAL_OUTSET = 4.dp // The padding the bar puts around its title.
 private val TITLE_TOUCH_VERTICAL_OUTSET = 12.dp // From the two lines of title, 40dp, to the bar's 64dp.

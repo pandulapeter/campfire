@@ -170,7 +170,7 @@ internal class AndroidFilePicker(@Provided private val context: Context) : FileP
     override val canShare = true
 
     /**
-     * The song is copied into the cache directory first: the library lives in the app's private storage, which no
+     * The file is copied into the cache directory first: the library lives in the app's private storage, which no
      * other app can read, and the provider declared in the manifest only exposes that one directory.
      */
     override suspend fun shareFile(file: ExportedFile): Boolean {

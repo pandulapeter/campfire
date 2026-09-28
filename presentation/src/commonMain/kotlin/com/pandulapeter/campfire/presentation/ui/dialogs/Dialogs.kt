@@ -140,7 +140,6 @@ import com.pandulapeter.campfire.presentation.resources.setlists_search
 import com.pandulapeter.campfire.presentation.resources.setlists_song_assignments
 import com.pandulapeter.campfire.presentation.resources.settings_sync_disconnect
 import com.pandulapeter.campfire.presentation.resources.settings_sync_disconnect_confirmation
-import com.pandulapeter.campfire.presentation.resources.song_details_display_options
 import com.pandulapeter.campfire.presentation.resources.song_details_language
 import com.pandulapeter.campfire.presentation.resources.song_details_language_no_search_results
 import com.pandulapeter.campfire.presentation.resources.song_details_language_search
@@ -195,7 +194,6 @@ import com.pandulapeter.campfire.presentation.ui.components.languageName
 import com.pandulapeter.campfire.presentation.ui.components.pickableLanguages
 import com.pandulapeter.campfire.presentation.ui.components.textResource
 import com.pandulapeter.campfire.presentation.ui.screens.settings.SettingsSubsection
-import com.pandulapeter.campfire.presentation.ui.screens.songDetails.SongDisplayControls
 import kotlinx.coroutines.launch
 import kotlinx.datetime.LocalDate
 import kotlinx.datetime.TimeZone
@@ -283,17 +281,6 @@ internal fun CampfireDialogs(
             viewModel = viewModel,
             dialog = dialog,
         )
-
-        is CampfireViewModel.DialogType.SongDisplayControls -> CampfireBottomSheet(
-            title = stringResource(Res.string.song_details_display_options),
-            onDismiss = { viewModel.dismissSheet(dialog) },
-        ) { contentPadding ->
-            SongDisplayControls(
-                viewModel = viewModel,
-                dialog = dialog,
-                contentPadding = contentPadding,
-            )
-        }
 
         is CampfireViewModel.DialogType.DeleteSong -> ConfirmationDialog(
             title = stringResource(Res.string.songs_delete_song),

@@ -45,6 +45,18 @@ class SectionGridTest {
     }
 
     @Test
+    fun firstRowLeavesRoomForTheHeader() {
+        // Three columns of three hold the song on a screen of 900, but not under a header that takes 300 of it.
+        val heights = List(9) { 280 }
+        val grid = flow(heights, maxColumnCount = 3, maxRowHeight = 900, maxFirstRowHeight = 600)
+        val firstRow = heights.indices.filter { grid.rows[it] == 0 }
+        assertTrue(firstRow.size > 1)
+        val firstRowHeight = SectionGrid(IntArray(firstRow.size), IntArray(firstRow.size) { grid.columns[firstRow[it]] }, intArrayOf(grid.columnCounts[0]))
+            .height(firstRow.map { heights[it] })
+        assertTrue(firstRowHeight <= 600, "The first row is $firstRowHeight tall, more than 600")
+    }
+
+    @Test
     fun balancedColumnsStayEven() {
         val grid = List(7) { 100 }.balanceIntoColumns(3, SECTION_GAP)
         assertEquals(listOf(2, 2, 3), grid.columns.toList().groupingBy { it }.eachCount().values.sorted())
@@ -56,8 +68,9 @@ class SectionGridTest {
         repeat(500) {
             val heights = List(random.nextInt(1, 25)) { random.nextInt(40, 500) }
             val maxRowHeight = random.nextInt(300, 1200)
+            val maxFirstRowHeight = maxRowHeight - random.nextInt(0, 300)
             val maxColumnCount = random.nextInt(1, 5).coerceAtMost(heights.size)
-            val grid = flow(heights, maxColumnCount = maxColumnCount, maxRowHeight = maxRowHeight)
+            val grid = flow(heights, maxColumnCount = maxColumnCount, maxRowHeight = maxRowHeight, maxFirstRowHeight = maxFirstRowHeight)
             grid.columnCounts.forEachIndexed { row, columnCount ->
                 val sections = heights.indices.filter { grid.rows[it] == row }
                 // No row has a hole where a column should be.
@@ -65,15 +78,16 @@ class SectionGridTest {
                 if (sections.size > 1) {
                     val rowHeight = SectionGrid(IntArray(sections.size), IntArray(sections.size) { grid.columns[sections[it]] }, intArrayOf(columnCount))
                         .height(sections.map { heights[it] })
-                    assertTrue(rowHeight <= maxRowHeight, "A row of $columnCount columns is $rowHeight tall, more than $maxRowHeight")
+                    val limit = if (row == 0) maxFirstRowHeight else maxRowHeight
+                    assertTrue(rowHeight <= limit, "Row $row of $columnCount columns is $rowHeight tall, more than $limit")
                 }
             }
             val columns = heights.balanceIntoColumns(maxColumnCount, SECTION_GAP)
-            if (columns.height(heights) <= maxRowHeight) assertTrue(grid.height(heights) <= columns.height(heights))
+            if (columns.height(heights) <= maxFirstRowHeight) assertTrue(grid.height(heights) <= columns.height(heights))
         }
     }
 
-    private fun flow(heights: List<Int>, maxColumnCount: Int, maxRowHeight: Int) = flowIntoRows(
+    private fun flow(heights: List<Int>, maxColumnCount: Int, maxRowHeight: Int, maxFirstRowHeight: Int = maxRowHeight) = flowIntoRows(
         sectionCount = heights.size,
         maxColumnCount = maxColumnCount,
         heightAt = { index, _ -> heights[index] },
@@ -81,6 +95,7 @@ class SectionGridTest {
         sectionGap = SECTION_GAP,
         rowGap = ROW_GAP,
         maxRowHeight = maxRowHeight,
+        maxFirstRowHeight = maxFirstRowHeight,
     )
 
     private fun SectionGrid.height(heights: List<Int>) = arrange(heights.toIntArray(), SECTION_GAP, ROW_GAP).height

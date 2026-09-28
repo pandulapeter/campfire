@@ -138,7 +138,9 @@ private fun IntArray.balanceIntoCells(from: Int, until: Int, cellCount: Int, sec
  *
  * **A row of more than one column is never taller than [maxRowHeight]**, the height of the screen: its columns are
  * read one after the other, and a column that runs past the bottom of the screen sends the reader back up to the top
- * of the next one, which is the very thing the rows exist to avoid. Up to that height a row is free to be as tall as
+ * of the next one, which is the very thing the rows exist to avoid. The first row is held to [maxFirstRowHeight]
+ * instead, what the song's header leaves of the screen: it is read with the header above it, since the top of the song
+ * is where a scroll comes to rest before the first divider. Up to that height a row is free to be as tall as
  * its columns need, so a song that fits the screen in columns is a single row of them, exactly the layout the columns
  * read top to bottom would give it, since nothing is scrolled past there to be sent back to. A section taller than
  * that gets a row of its own, which is read from top to bottom like any other scrolling text, and so does a stack in a
@@ -169,6 +171,7 @@ internal fun flowIntoRows(
     sectionGap: Int,
     rowGap: Int,
     maxRowHeight: Int,
+    maxFirstRowHeight: Int,
 ): SectionGrid {
     if (sectionCount == 0) return emptyGrid()
     // heights[k - 1][i] is the height of section i in a row of k columns, heightSums[k - 1][i] the total height of
@@ -195,12 +198,12 @@ internal fun flowIntoRows(
     }
 
     // The height of the lowest row of columnCount columns that holds the sections in [start, end), at least atLeast
-    // (which is no lower than the tallest of them), or null where not even the screen is tall enough for one.
-    fun rowHeight(columnCount: Int, start: Int, end: Int, atLeast: Int): Int? {
+    // (which is no lower than the tallest of them), or null where not even maxHeight is tall enough for one.
+    fun rowHeight(columnCount: Int, start: Int, end: Int, atLeast: Int, maxHeight: Int): Int? {
         val sectionHeights = heights[columnCount - 1]
         if (cellCount(sectionHeights, start, end, atLeast) <= columnCount) return atLeast
         val stackedHeight = heightSums[columnCount - 1][end] - heightSums[columnCount - 1][start] + sectionGap.toLong() * (end - start - 1)
-        val highest = minOf(maxRowHeight.toLong(), stackedHeight).toInt()
+        val highest = minOf(maxHeight.toLong(), stackedHeight).toInt()
         if (highest <= atLeast || cellCount(sectionHeights, start, end, highest) > columnCount) return null
         var tooLow = atLeast
         var enough = highest
@@ -226,6 +229,7 @@ internal fun flowIntoRows(
     val lowestHeights = IntArray(maxColumnCount)
     val isExhausted = BooleanArray(maxColumnCount)
     for (start in sectionCount - 1 downTo 0) {
+        val maxHeight = if (start == 0) maxFirstRowHeight else maxRowHeight
         var best = Long.MAX_VALUE
         tallest.fill(0)
         lowestHeights.fill(0)
@@ -244,7 +248,7 @@ internal fun flowIntoRows(
                 } else {
                     // Every longer row holds this section too, and no longer row fits a screen that this one does
                     // not, so none of them can have this many columns either.
-                    val height = if (tallest[column] > maxRowHeight) null else rowHeight(columnCount, start, end, max(lowestHeights[column], tallest[column]))
+                    val height = if (tallest[column] > maxHeight) null else rowHeight(columnCount, start, end, max(lowestHeights[column], tallest[column]), maxHeight)
                     if (height == null) {
                         isExhausted[column] = true
                         exhaustedCount++

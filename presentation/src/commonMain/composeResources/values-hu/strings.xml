@@ -17,7 +17,6 @@
     <string name="delete">Törlés</string>
     <string name="create">Létrehozás</string>
     <string name="save">Mentés</string>
-    <string name="share">Megosztás</string>
     <string name="retry">Újra</string>
     <string name="add_demo_songs">Bemutató dalok hozzáadása</string>
 
@@ -91,6 +90,7 @@
     <string name="songs_update_file_name_partly">A fájl új nevet kapott, de egy lista vagy a mentett transzponálás még a régi névre hivatkozik</string>
     <string name="songs_delete_song_partly">A dal törlődött, de egy lista vagy a mentett transzponálás még hivatkozik rá</string>
     <string name="songs_delete_song">Dal törlése</string>
+    <string name="songs_share_song">Dal megosztása</string>
     <string name="songs_export_song">Dal exportálása</string>
     <string name="songs_delete_song_confirmation">Törlöd a(z) „%1$s” dalt? A fájl törlődik a könyvtárból és minden listából.</string>
     <string name="songs_all_hidden">Minden dal rejtve van</string>
@@ -125,7 +125,7 @@
     <string name="setlists_move_up">Mozgatás feljebb</string>
     <string name="setlists_move_down">Mozgatás lejjebb</string>
     <string name="setlists_actions">Műveletek</string>
-    <string name="setlists_edit_details">Cím, leírás és dátum szerkesztése</string>
+    <string name="setlists_edit_details">Meta-adatok szerkesztése</string>
     <string name="setlists_song_assignments">Dalok hozzárendelése</string>
     <string name="setlists_add_songs">Dalok hozzáadása</string>
     <string name="setlists_edit_setlist">Lista szerkesztése</string>
@@ -139,6 +139,7 @@
     <string name="setlists_archive">Lista archiválása</string>
     <string name="setlists_unarchive">Lista kivétele az archívumból</string>
     <string name="setlists_archived">Archivált</string>
+    <string name="setlists_share">Lista megosztása</string>
     <string name="setlists_export">Lista exportálása</string>
     <string name="setlists_missing_song">A fájl nem található</string>
     <string name="setlists_delete_setlist">Lista törlése</string>
@@ -298,10 +299,7 @@
     <string name="song_details_transpose_up">Transzponálás felfelé</string>
     <string name="song_details_transpose_down">Transzponálás lefelé</string>
     <string name="song_details_transpose_reset">Transzponálás visszaállítása</string>
-    <string name="song_details_display_options">Megjelenítési beállítások</string>
     <string name="song_details_scroll_to_top">Görgetés az elejére</string>
-    <string name="song_details_transposition">Transzponálás</string>
-    <string name="song_details_text_size">Szövegméret</string>
     <string name="song_details_text_size_increase">Szöveg nagyítása</string>
     <string name="song_details_text_size_decrease">Szöveg kicsinyítése</string>
     <string name="song_details_text_size_reset">Szövegméret visszaállítása</string>

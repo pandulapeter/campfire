@@ -2134,6 +2134,10 @@ class CampfireViewModel(
         save(filePicker) { exportSetlist.invoke(setlistFileName) }
     }
 
+    fun shareSetlist(filePicker: FilePicker, setlistFileName: String) = launchFileTransfer {
+        save(filePicker, isShare = true) { exportSetlist.invoke(setlistFileName) }
+    }
+
     fun exportLibrary(filePicker: FilePicker) = launchFileTransfer {
         var skippedFileNames = emptyList<String>()
         save(
@@ -2513,7 +2517,6 @@ class CampfireViewModel(
     private val DialogType.songFileName: String?
         get() = when (this) {
             is DialogType.SetlistPicker -> song.fileName
-            is DialogType.SongDisplayControls -> songFileName
             is DialogType.DeleteSong -> song.fileName
             is DialogType.AddSongTag -> song.fileName
             is DialogType.AddSongLink -> song.fileName
@@ -2822,7 +2825,6 @@ class CampfireViewModel(
          * may not have.
          */
         data class SongPicker(val setlist: Setlist) : DialogType
-        data class SongDisplayControls(val songFileName: String, val setlistFileName: String?) : DialogType
         data class DeleteSetlist(val setlist: Setlist) : DialogType
         data class EditSetlist(val setlist: Setlist) : DialogType
         data class DuplicateSetlist(val setlist: Setlist) : DialogType

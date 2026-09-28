@@ -10,14 +10,16 @@
 package com.pandulapeter.campfire.presentation.ui.screens.songDetails
 
 import androidx.compose.animation.AnimatedContent
+import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.expandVertically
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
+import androidx.compose.animation.shrinkVertically
 import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
@@ -28,8 +30,6 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
-import androidx.compose.material3.ListItem
-import androidx.compose.material3.ListItemDefaults
 import androidx.compose.material3.LocalMinimumInteractiveComponentSize
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
@@ -37,19 +37,14 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.lerp
 import androidx.compose.ui.graphics.painter.Painter
-import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.rememberTextMeasurer
 import androidx.compose.ui.text.style.TextAlign
-import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
-import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.pandulapeter.campfire.data.model.domain.Song
 import com.pandulapeter.campfire.data.model.domain.UserPreferences
 import com.pandulapeter.campfire.presentation.localization.stringResource
 import com.pandulapeter.campfire.presentation.resources.Res
@@ -57,14 +52,12 @@ import com.pandulapeter.campfire.presentation.resources.ic_add
 import com.pandulapeter.campfire.presentation.resources.ic_subtract
 import com.pandulapeter.campfire.presentation.resources.ic_text_decrease
 import com.pandulapeter.campfire.presentation.resources.ic_text_increase
-import com.pandulapeter.campfire.presentation.resources.song_details_text_size
 import com.pandulapeter.campfire.presentation.resources.song_details_text_size_decrease
 import com.pandulapeter.campfire.presentation.resources.song_details_text_size_increase
 import com.pandulapeter.campfire.presentation.resources.song_details_text_size_reset
 import com.pandulapeter.campfire.presentation.resources.song_details_transpose_down
 import com.pandulapeter.campfire.presentation.resources.song_details_transpose_reset
 import com.pandulapeter.campfire.presentation.resources.song_details_transpose_up
-import com.pandulapeter.campfire.presentation.resources.song_details_transposition
 import com.pandulapeter.campfire.presentation.resources.song_editor_transpose_text_down
 import com.pandulapeter.campfire.presentation.resources.song_editor_transpose_text_up
 import com.pandulapeter.campfire.presentation.ui.CampfireViewModel
@@ -72,59 +65,61 @@ import kotlin.math.roundToInt
 import org.jetbrains.compose.resources.painterResource
 
 /**
- * The transposition and text size steppers of the song details screen in a bottom sheet, for an app bar that has no
- * room for them next to the title (see [SongDetailsScreen]). In performance mode only the text size is left, which is a way of reading rather than a
- * change to the song: the sheet is still worth opening, and the action that opens it still belongs in the bar.
+ * The transposition and text size steppers of the song details screen, one under the other at the end of the song's
+ * header (see [SongLyrics]), where they scroll with the song. The header always has the room for them, which the app
+ * bar did not beside a long title and a row of actions. Performance mode leaves only the text size, and that goes into
+ * the app bar instead, which it has emptied of everything else.
+ *
+ * @param isTranspositionShown False for a song with no chords and in lyrics only mode, where there is nothing for a
+ *   transposition to move.
  */
 @Composable
 internal fun SongDisplayControls(
+    modifier: Modifier = Modifier,
     viewModel: CampfireViewModel,
-    dialog: CampfireViewModel.DialogType.SongDisplayControls,
-    contentPadding: PaddingValues,
+    song: Song,
+    setlistFileName: String?,
+    transposition: Int,
+    isTranspositionShown: Boolean,
+    chordSpelling: UserPreferences.ChordSpelling,
+) = Column(
+    modifier = modifier,
+    horizontalAlignment = Alignment.End,
 ) {
-    val allSongs by viewModel.allSongs.collectAsStateWithLifecycle()
-    val userPreferences by viewModel.userPreferences.collectAsStateWithLifecycle()
-    val isPerformanceModeEnabled by viewModel.isPerformanceModeEnabled.collectAsStateWithLifecycle()
-    val transpositions by viewModel.transpositions.collectAsStateWithLifecycle()
-    val song = allSongs.firstOrNull { it.fileName == dialog.songFileName }
-    val songTransposition = song?.let { transpositions[it.fileName, dialog.setlistFileName] } ?: 0
-    val chordSpelling = userPreferences?.chordSpelling ?: UserPreferences.ChordSpelling.Default
-    val transposedKey = song?.let { viewModel.renderKey(song = it, transposition = songTransposition, spelling = chordSpelling) }
-    Column(
-        modifier = Modifier.padding(contentPadding)
+    AnimatedVisibility(
+        visible = isTranspositionShown,
+        enter = fadeIn() + expandVertically(),
+        exit = fadeOut() + shrinkVertically(),
     ) {
-        if (song?.hasChords == true && userPreferences?.isLyricsOnlyModeEnabled != true && !isPerformanceModeEnabled) {
-            ListItem(
-                colors = ListItemDefaults.colors(containerColor = Color.Transparent),
-                headlineContent = { Text(stringResource(Res.string.song_details_transposition)) },
-                trailingContent = {
-                    TranspositionControls(
-                        transposition = songTransposition,
-                        key = transposedKey,
-                        onStep = { viewModel.stepTransposition(song.fileName, dialog.setlistFileName, it) },
-                        onReset = { viewModel.resetTransposition(song.fileName, dialog.setlistFileName) },
-                    )
-                },
-            )
-        }
-        ListItem(
-            colors = ListItemDefaults.colors(containerColor = Color.Transparent),
-            headlineContent = { Text(stringResource(Res.string.song_details_text_size)) },
-            trailingContent = {
-                FontScaleControls(
-                    fontScale = viewModel.fontScale,
-                    onFontScaleAdjusted = viewModel::adjustFontScale,
-                    onFontScaleReset = { viewModel.setFontScale(CampfireViewModel.DEFAULT_FONT_SCALE) },
-                )
-            },
+        TranspositionControls(
+            modifier = Modifier.padding(bottom = STACKED_STEPPER_SPACING),
+            transposition = transposition,
+            key = viewModel.renderKey(song = song, transposition = transposition, spelling = chordSpelling),
+            onStep = { viewModel.stepTransposition(song.fileName, setlistFileName, it) },
+            onReset = { viewModel.resetTransposition(song.fileName, setlistFileName) },
         )
     }
+    LiveFontScaleControls(viewModel = viewModel)
 }
+
+/**
+ * The text size stepper, reading the live font scale in a scope of its own so that a pinch recomposes the
+ * stepper rather than whatever holds it.
+ */
+@Composable
+internal fun LiveFontScaleControls(
+    modifier: Modifier = Modifier,
+    viewModel: CampfireViewModel,
+) = FontScaleControls(
+    modifier = modifier,
+    fontScale = viewModel.fontScale,
+    onFontScaleAdjusted = viewModel::adjustFontScale,
+    onFontScaleReset = { viewModel.setFontScale(CampfireViewModel.DEFAULT_FONT_SCALE) },
+)
 
 @Composable
 internal fun TranspositionControls(
     modifier: Modifier = Modifier,
-    isCompact: Boolean = false,
     transposition: Int,
     /** The key the song sounds in after transposing, shown next to the amount when the file declares one. */
     key: String? = null,
@@ -132,7 +127,6 @@ internal fun TranspositionControls(
     onReset: () -> Unit,
 ) = Stepper(
     modifier = modifier,
-    isCompact = isCompact,
     value = transpositionLabel(transposition, key),
     isDefault = transposition == 0,
     decreaseIcon = painterResource(Res.drawable.ic_subtract),
@@ -162,7 +156,6 @@ internal fun TextTranspositionControls(
     onTransposed: (semitones: Int) -> Unit,
 ) = Stepper(
     modifier = modifier,
-    isCompact = true,
     value = key?.takeIf { it.isNotBlank() } ?: UNKNOWN_KEY,
     isDefault = true,
     decreaseIcon = painterResource(Res.drawable.ic_subtract),
@@ -180,7 +173,6 @@ internal fun TextTranspositionControls(
 @Composable
 internal fun FontScaleControls(
     modifier: Modifier = Modifier,
-    isCompact: Boolean = false,
     fontScale: Float,
     onFontScaleAdjusted: (steps: Int) -> Unit,
     onFontScaleReset: () -> Unit,
@@ -188,7 +180,6 @@ internal fun FontScaleControls(
     val value = fontScaleLabel(fontScale)
     Stepper(
         modifier = modifier,
-        isCompact = isCompact,
         value = value,
         // The step the value is nearest to, so that a tap, a shortcut or a reset still cross-fades while a pinch, which
         // changes the percentage on almost every frame, counts it up in place and cross-fades once per step at most.
@@ -207,30 +198,6 @@ internal fun FontScaleControls(
     )
 }
 
-/**
- * How much of the app bar the compact steppers take, each with [spacing] after it: the transposition one at the widest
- * of [transpositionLabels] (none where the list is empty) and the text size one at the widest percentage it can show.
- * It is the widest value rather than the current one that is measured, so that stepping through the values never
- * moves the line between the bar and the sheet and sends the controls out from under the pointer mid-press.
- */
-@Composable
-internal fun rememberCompactSteppersWidth(
-    transpositionLabels: List<String>,
-    spacing: Dp,
-): Dp {
-    val textMeasurer = rememberTextMeasurer()
-    val style = MaterialTheme.typography.labelLarge.copy(fontWeight = FontWeight.Bold)
-    val density = LocalDensity.current
-    return remember(transpositionLabels, spacing, textMeasurer, style, density) {
-        fun stepperWidth(values: List<String>) = COMPACT_BUTTON_WIDTH * 2 + maxOf(
-            VALUE_MIN_WIDTH,
-            with(density) { values.maxOf { textMeasurer.measure(text = it, style = style, maxLines = 1).size.width }.toDp() },
-        ) + spacing
-        val fontScaleLabels = listOf(CampfireViewModel.MIN_FONT_SCALE, CampfireViewModel.MAX_FONT_SCALE).map(::fontScaleLabel)
-        stepperWidth(fontScaleLabels) + if (transpositionLabels.isEmpty()) 0.dp else stepperWidth(transpositionLabels)
-    }
-}
-
 /** What the transposition stepper reads for [transposition], with the [key] it takes the song to where there is one. */
 internal fun transpositionLabel(transposition: Int, key: String?) = (if (transposition > 0) "+$transposition" else transposition.toString())
     .let { if (key.isNullOrBlank()) it else "$it $KEY_SEPARATOR $key" }
@@ -242,17 +209,17 @@ private fun fontScaleLabel(fontScale: Float) = "${(fontScale * 100).roundToInt()
  * increase button, in a tonal pill that keeps the three of them together: two of these sit next to each other in
  * the app bar of wide windows, where loose icon buttons would blend into one long row of controls.
  *
- * @param isCompact A shorter pill with narrower buttons, for the app bar, where full height buttons make the two groups
- * look oversized: the song details screen's inline steppers and the editor's. On a touch screen the buttons still take a touch 48dp across, since Compose extends a small target's
- * touch area to the minimum touch target size; only their drawn size shrinks. The bottom sheet of a narrower window
- * keeps the full size.
+ * The pill is shorter and its buttons narrower than Material's, since full height buttons make two of them look
+ * oversized next to the chips of the song details header and in the app bars. On a touch screen the buttons still take
+ * a touch 48dp across, since Compose extends a small target's touch area to the minimum touch target size; only their
+ * drawn size shrinks.
+ *
  * @param valueKey What decides whether a new [value] cross-fades in or replaces the old one in place: only a change
  * of the key is animated.
  */
 @Composable
 private fun Stepper(
     modifier: Modifier = Modifier,
-    isCompact: Boolean,
     value: String,
     valueKey: Any = value,
     isDefault: Boolean,
@@ -266,65 +233,51 @@ private fun Stepper(
     onIncrease: () -> Unit,
     resetLabel: String?,
     onReset: (() -> Unit)?,
+) = Surface(
+    modifier = modifier.height(HEIGHT),
+    shape = CircleShape,
+    color = MaterialTheme.colorScheme.surfaceContainerHighest,
 ) {
-    val height = if (isCompact) COMPACT_HEIGHT else DEFAULT_HEIGHT
-    val buttonWidth = if (isCompact) COMPACT_BUTTON_WIDTH else DEFAULT_BUTTON_WIDTH
-    val iconSize = if (isCompact) COMPACT_ICON_SIZE else DEFAULT_ICON_SIZE
-    Surface(
-        modifier = modifier.height(height),
-        shape = CircleShape,
-        color = MaterialTheme.colorScheme.surfaceContainerHighest,
-    ) {
-        // The buttons are laid out at the size of the pill, so the touch target enforcement of the icon buttons has
-        // to be lowered to match, or it would grow them back to 48dp and the pill would no longer fit them.
-        CompositionLocalProvider(LocalMinimumInteractiveComponentSize provides minOf(height, buttonWidth)) {
-            Row(verticalAlignment = Alignment.CenterVertically) {
-                StepperButton(
-                    width = buttonWidth,
-                    height = height,
-                    iconSize = iconSize,
-                    icon = decreaseIcon,
-                    label = decreaseLabel,
-                    isEnabled = canDecrease,
-                    onClick = onDecrease,
-                )
-                StepperValue(
-                    value = value,
-                    valueKey = valueKey,
-                    isDefault = isDefault,
-                    resetLabel = resetLabel,
-                    onReset = onReset,
-                )
-                StepperButton(
-                    width = buttonWidth,
-                    height = height,
-                    iconSize = iconSize,
-                    icon = increaseIcon,
-                    label = increaseLabel,
-                    isEnabled = canIncrease,
-                    onClick = onIncrease,
-                )
-            }
+    // The buttons are laid out at the size of the pill, so the touch target enforcement of the icon buttons has
+    // to be lowered to match, or it would grow them back to 48dp and the pill would no longer fit them.
+    CompositionLocalProvider(LocalMinimumInteractiveComponentSize provides minOf(HEIGHT, BUTTON_WIDTH)) {
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            StepperButton(
+                icon = decreaseIcon,
+                label = decreaseLabel,
+                isEnabled = canDecrease,
+                onClick = onDecrease,
+            )
+            StepperValue(
+                value = value,
+                valueKey = valueKey,
+                isDefault = isDefault,
+                resetLabel = resetLabel,
+                onReset = onReset,
+            )
+            StepperButton(
+                icon = increaseIcon,
+                label = increaseLabel,
+                isEnabled = canIncrease,
+                onClick = onIncrease,
+            )
         }
     }
 }
 
 @Composable
 private fun StepperButton(
-    width: Dp,
-    height: Dp,
-    iconSize: Dp,
     icon: Painter,
     label: String,
     isEnabled: Boolean,
     onClick: () -> Unit,
 ) = IconButton(
-    modifier = Modifier.size(width = width, height = height),
+    modifier = Modifier.size(width = BUTTON_WIDTH, height = HEIGHT),
     enabled = isEnabled,
     onClick = onClick,
 ) {
     Icon(
-        modifier = Modifier.size(iconSize),
+        modifier = Modifier.size(ICON_SIZE),
         painter = icon,
         contentDescription = label,
     )
@@ -373,13 +326,11 @@ private data class StepperLabel(
     val key: Any,
 )
 
-private val DEFAULT_HEIGHT = 48.dp
-private val DEFAULT_BUTTON_WIDTH = 48.dp
-private val COMPACT_HEIGHT = 40.dp
-private val COMPACT_BUTTON_WIDTH = 36.dp
+private val HEIGHT = 40.dp
+private val BUTTON_WIDTH = 36.dp
 private val VALUE_MIN_WIDTH = 44.dp
-private val DEFAULT_ICON_SIZE = 24.dp
-private val COMPACT_ICON_SIZE = 20.dp
+private val ICON_SIZE = 20.dp
+private val STACKED_STEPPER_SPACING = 8.dp
 
 private const val KEY_SEPARATOR = "\u00B7"
 

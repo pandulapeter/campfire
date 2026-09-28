@@ -10,7 +10,6 @@
 package com.pandulapeter.campfire.presentation.ui.components
 
 import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material3.Icon
@@ -21,7 +20,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.layout.ContentScale
-import androidx.compose.ui.semantics.Role
 import coil3.ImageLoader
 import coil3.PlatformContext
 import coil3.compose.AsyncImage
@@ -99,19 +97,16 @@ private class CoverArtUnavailableException(url: String) : Exception("No cover ar
  * from the first frame rather than once the image has arrived, so that nothing around a cover moves when it does —
  * in a list that is being scrolled, images arrive all the time, and every one of them would otherwise push the text
  * next to it aside. The image crossfades in over the placeholder, and one that is already in memory is simply there.
- * [onClick], where there is one, makes the cover a button, pressed inside its rounded corners.
  */
 @Composable
 internal fun CoverArtImage(
     modifier: Modifier = Modifier,
     url: String,
     shape: Shape = MaterialTheme.shapes.medium,
-    onClick: (() -> Unit)? = null,
 ) = Box(
     modifier = modifier
         .clip(shape)
-        .background(MaterialTheme.colorScheme.surfaceContainerHighest)
-        .then(if (onClick == null) Modifier else Modifier.clickable(role = Role.Button, onClick = onClick)),
+        .background(MaterialTheme.colorScheme.surfaceContainerHighest),
     contentAlignment = Alignment.Center,
 ) {
     Icon(

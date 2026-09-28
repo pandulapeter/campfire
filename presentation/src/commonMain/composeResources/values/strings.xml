@@ -17,7 +17,6 @@
     <string name="delete">Delete</string>
     <string name="create">Create</string>
     <string name="save">Save</string>
-    <string name="share">Share</string>
     <string name="retry">Retry</string>
     <string name="add_demo_songs">Add the demo songs</string>
 
@@ -91,6 +90,7 @@
     <string name="songs_update_file_name_partly">The file was renamed, but a setlist or the saved transposition still points at the old name</string>
     <string name="songs_delete_song_partly">The song was deleted, but a setlist or the saved transposition still names it</string>
     <string name="songs_delete_song">Delete song</string>
+    <string name="songs_share_song">Share song</string>
     <string name="songs_export_song">Export song</string>
     <string name="songs_delete_song_confirmation">Delete \"%1$s\"? The file is removed from the library and from every setlist.</string>
     <string name="songs_all_hidden">Every song is hidden</string>
@@ -125,7 +125,7 @@
     <string name="setlists_move_up">Move up</string>
     <string name="setlists_move_down">Move down</string>
     <string name="setlists_actions">Setlist actions</string>
-    <string name="setlists_edit_details">Edit title, description and date</string>
+    <string name="setlists_edit_details">Edit metadata</string>
     <string name="setlists_song_assignments">Song assignments</string>
     <string name="setlists_add_songs">Add songs</string>
     <string name="setlists_edit_setlist">Edit setlist</string>
@@ -139,6 +139,7 @@
     <string name="setlists_archive">Archive setlist</string>
     <string name="setlists_unarchive">Unarchive setlist</string>
     <string name="setlists_archived">Archived</string>
+    <string name="setlists_share">Share setlist</string>
     <string name="setlists_export">Export setlist</string>
     <string name="setlists_missing_song">File not found</string>
     <string name="setlists_delete_setlist">Delete setlist</string>
@@ -298,10 +299,7 @@
     <string name="song_details_transpose_up">Transpose up</string>
     <string name="song_details_transpose_down">Transpose down</string>
     <string name="song_details_transpose_reset">Reset transposition</string>
-    <string name="song_details_display_options">Display options</string>
     <string name="song_details_scroll_to_top">Scroll to the top</string>
-    <string name="song_details_transposition">Transposition</string>
-    <string name="song_details_text_size">Text size</string>
     <string name="song_details_text_size_increase">Increase text size</string>
     <string name="song_details_text_size_decrease">Decrease text size</string>
     <string name="song_details_text_size_reset">Reset text size</string>

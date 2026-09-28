@@ -19,6 +19,7 @@ import com.pandulapeter.campfire.presentation.resources.ic_delete
 import com.pandulapeter.campfire.presentation.resources.ic_duplicate
 import com.pandulapeter.campfire.presentation.resources.ic_edit
 import com.pandulapeter.campfire.presentation.resources.ic_export
+import com.pandulapeter.campfire.presentation.resources.ic_share
 import com.pandulapeter.campfire.presentation.resources.ic_songs
 import com.pandulapeter.campfire.presentation.resources.ic_unarchive
 import com.pandulapeter.campfire.presentation.resources.setlists_actions
@@ -27,6 +28,7 @@ import com.pandulapeter.campfire.presentation.resources.setlists_delete_setlist
 import com.pandulapeter.campfire.presentation.resources.setlists_duplicate_setlist
 import com.pandulapeter.campfire.presentation.resources.setlists_edit_details
 import com.pandulapeter.campfire.presentation.resources.setlists_export
+import com.pandulapeter.campfire.presentation.resources.setlists_share
 import com.pandulapeter.campfire.presentation.resources.setlists_song_assignments
 import com.pandulapeter.campfire.presentation.resources.setlists_unarchive
 import com.pandulapeter.campfire.presentation.ui.CampfireViewModel
@@ -36,7 +38,7 @@ import org.jetbrains.compose.resources.painterResource
 /**
  * Everything that can be done to one setlist, at the end of its [SectionHeader]: "Edit" and "Song assignments" as
  * buttons where the header has the room for them, and the rest behind its overflow button ([ActionsMenu]) whatever the
- * room - duplicating, archiving and exporting are rarely wanted, and deleting is not to be ended up in by accident. They
+ * room - duplicating, archiving, sharing and exporting are rarely wanted, and deleting is not to be ended up in by accident. They
  * start the way a song's actions do, with "Edit" and then the assignments, so that the two read alike. "Edit" is where
  * a setlist is renamed, and also the one place its description is written, since the two are the whole of what the
  * user gets to say about it.
@@ -62,7 +64,7 @@ internal fun SetlistActions(
         buttonModifier = buttonModifier,
         contentDescription = stringResource(Res.string.setlists_actions),
         isDecorative = isDecorative,
-        items = listOf(
+        items = listOfNotNull(
             ActionsMenuItem(
                 title = stringResource(Res.string.setlists_edit_details),
                 icon = painterResource(Res.drawable.ic_edit),
@@ -85,6 +87,17 @@ internal fun SetlistActions(
                 isAlwaysInMenu = true,
                 onClick = { viewModel.setSetlistArchived(setlist = setlist, isArchived = !setlist.isArchived) },
             ),
+            // Only where sending a file is a different thing from saving one, which on desktop and the web it is not.
+            if (filePicker.canShare) {
+                ActionsMenuItem(
+                    title = stringResource(Res.string.setlists_share),
+                    icon = painterResource(Res.drawable.ic_share),
+                    isAlwaysInMenu = true,
+                    onClick = { viewModel.shareSetlist(filePicker, setlist.fileName) },
+                )
+            } else {
+                null
+            },
             ActionsMenuItem(
                 title = stringResource(Res.string.setlists_export),
                 icon = painterResource(Res.drawable.ic_export),

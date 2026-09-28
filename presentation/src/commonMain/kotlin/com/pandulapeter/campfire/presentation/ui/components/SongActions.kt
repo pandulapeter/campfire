@@ -54,11 +54,11 @@ import com.pandulapeter.campfire.presentation.resources.ic_rename
 import com.pandulapeter.campfire.presentation.resources.ic_setlists
 import com.pandulapeter.campfire.presentation.resources.ic_setlists_outline
 import com.pandulapeter.campfire.presentation.resources.ic_share
-import com.pandulapeter.campfire.presentation.resources.share
 import com.pandulapeter.campfire.presentation.resources.songs_actions
 import com.pandulapeter.campfire.presentation.resources.songs_delete_song
 import com.pandulapeter.campfire.presentation.resources.songs_edit_song
 import com.pandulapeter.campfire.presentation.resources.songs_export_song
+import com.pandulapeter.campfire.presentation.resources.songs_share_song
 import com.pandulapeter.campfire.presentation.resources.songs_setlist_assignments
 import com.pandulapeter.campfire.presentation.resources.songs_update_file_name
 import com.pandulapeter.campfire.presentation.ui.CampfireViewModel
@@ -127,7 +127,7 @@ internal fun ActionsMenu(
     ) {
         items.forEach { item ->
             // Keyed by what the action is rather than by its place, since an action that comes and goes (Update file
-            // name, Share) moves every one after it along.
+            // name, Share song) moves every one after it along.
             key(item.title) {
                 AnimatedVisibility(
                     visible = item in buttonItems,
@@ -190,7 +190,7 @@ internal fun ActionsMenu(
  * wherever there is not, so its [title] is both the entry's text and the button's content description.
  *
  * @param isAlwaysInMenu Keeps the action in the menu however much room there is: one that deletes or throws something
- *   away, and one that is rarely wanted (archiving, duplicating, exporting), which a button would only advertise.
+ *   away, and one that is rarely wanted (archiving, duplicating, sharing, exporting), which a button would only advertise.
  */
 @Immutable
 internal class ActionsMenuItem(
@@ -297,22 +297,23 @@ internal fun SongActions(
             } else {
                 null
             },
+            // Only where sending a file is a different thing from saving one, which on desktop and the web it is not.
+            if (filePicker.canShare) {
+                ActionsMenuItem(
+                    title = stringResource(Res.string.songs_share_song),
+                    icon = painterResource(Res.drawable.ic_share),
+                    isAlwaysInMenu = true,
+                    onClick = { viewModel.shareSong(filePicker, song.fileName) },
+                )
+            } else {
+                null
+            },
             ActionsMenuItem(
                 title = stringResource(Res.string.songs_export_song),
                 icon = painterResource(Res.drawable.ic_export),
                 isAlwaysInMenu = true,
                 onClick = { viewModel.exportSong(filePicker, song.fileName) },
             ),
-            // Only where sending a file is a different thing from saving one, which on desktop and the web it is not.
-            if (filePicker.canShare) {
-                ActionsMenuItem(
-                    title = stringResource(Res.string.share),
-                    icon = painterResource(Res.drawable.ic_share),
-                    onClick = { viewModel.shareSong(filePicker, song.fileName) },
-                )
-            } else {
-                null
-            },
             if (isDeletable) {
                 ActionsMenuItem(
                     title = stringResource(Res.string.songs_delete_song),

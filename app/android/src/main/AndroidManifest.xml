@@ -380,7 +380,7 @@
             android:foregroundServiceType="dataSync"
             android:stopWithTask="false" />
 
-        <!-- Lets a shared song leave the app's private storage as a content URI, see AndroidFilePicker.shareFile in :presentation. -->
+        <!-- Lets a shared song or setlist leave the app's private storage as a content URI, see AndroidFilePicker.shareFile in :presentation. -->
         <provider
             android:name="androidx.core.content.FileProvider"
             android:authorities="${applicationId}.files"
