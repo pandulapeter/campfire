@@ -182,7 +182,7 @@ internal class OpfsFileStorage : FileStorage {
     }
 
     /**
-     * The three directory handles, resolved once. Walking down from the root is three promises, and doing that for
+     * The directory handles, resolved once. Walking down from the root is three promises, and doing that for
      * every one of the reads of a library scan (which already run in parallel) tripled the number of calls into
      * OPFS. Nothing outside the page can remove a directory from the origin private file system, so a handle that
      * was resolved once stays valid.

@@ -30,6 +30,7 @@ import androidx.compose.ui.graphics.painter.Painter
 import com.pandulapeter.campfire.data.model.domain.Song
 import com.pandulapeter.campfire.presentation.localization.stringResource
 import com.pandulapeter.campfire.presentation.resources.Res
+import com.pandulapeter.campfire.presentation.resources.ic_album
 import com.pandulapeter.campfire.presentation.resources.ic_delete
 import com.pandulapeter.campfire.presentation.resources.ic_edit
 import com.pandulapeter.campfire.presentation.resources.ic_export
@@ -39,6 +40,8 @@ import com.pandulapeter.campfire.presentation.resources.ic_setlists
 import com.pandulapeter.campfire.presentation.resources.ic_setlists_outline
 import com.pandulapeter.campfire.presentation.resources.ic_share
 import com.pandulapeter.campfire.presentation.resources.share
+import com.pandulapeter.campfire.presentation.resources.song_details_change_cover_art
+import com.pandulapeter.campfire.presentation.resources.song_details_find_cover_art
 import com.pandulapeter.campfire.presentation.resources.songs_actions
 import com.pandulapeter.campfire.presentation.resources.songs_delete_song
 import com.pandulapeter.campfire.presentation.resources.songs_edit_song
@@ -118,6 +121,9 @@ internal fun ActionsMenuItem(
  *   of it rather than removed from every setlist and the library at once.
  * @param leadingItems Entries that belong to the row rather than to the song, put before the song's own: moving a row
  *   of a setlist up or down, and taking it out of the setlist.
+ * @param onFindCoverArt Opens the cover search, which only the song details screen offers: it is where the cover is
+ *   seen large enough to be worth choosing, and the one place a song is looked at on its own. Null leaves the entry out,
+ *   which is also what the screen does while covers are turned off.
  */
 @Composable
 internal fun SongActionsButton(
@@ -127,6 +133,7 @@ internal fun SongActionsButton(
     song: Song,
     isDeletable: Boolean,
     leadingItems: @Composable (select: (action: () -> Unit) -> Unit) -> Unit = {},
+    onFindCoverArt: (() -> Unit)? = null,
 ) {
     val filePicker = LocalFilePicker.current
     ActionsMenu(
@@ -148,6 +155,13 @@ internal fun SongActionsButton(
                 title = stringResource(Res.string.songs_update_file_name),
                 icon = painterResource(Res.drawable.ic_rename),
                 onClick = { select { viewModel.updateSongFileName(song) } },
+            )
+        }
+        onFindCoverArt?.let { onClick ->
+            ActionsMenuItem(
+                title = stringResource(if (song.coverArtUrl == null) Res.string.song_details_find_cover_art else Res.string.song_details_change_cover_art),
+                icon = painterResource(Res.drawable.ic_album),
+                onClick = { select(onClick) },
             )
         }
         ActionsMenuItem(

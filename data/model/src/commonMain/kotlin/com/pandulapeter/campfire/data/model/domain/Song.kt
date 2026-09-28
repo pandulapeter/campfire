@@ -38,6 +38,12 @@ data class Song(
      * `ChordProMetadata.languages`. Empty for a file that says nothing about its language.
      */
     val languages: List<String>,
+    /**
+     * The address of the song's cover image, from its `{meta: cover …}` directive, see `ChordProMetadata.coverArt`.
+     * Null for a song that names none. Only ever an `http` or `https` URL, which the app fetches and keeps a copy of
+     * outside the library, so the file itself carries nothing but the address.
+     */
+    val coverArtUrl: String?,
     val hasChords: Boolean,
     /**
      * Whether the file is named something other than what its own metadata would name it, which is what puts the

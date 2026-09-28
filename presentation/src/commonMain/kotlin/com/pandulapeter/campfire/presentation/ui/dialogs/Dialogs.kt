@@ -294,6 +294,11 @@ internal fun CampfireDialogs(
             dialog = dialog,
         )
 
+        is CampfireViewModel.DialogType.CoverArtSearch -> CoverArtSearchSheet(
+            viewModel = viewModel,
+            dialog = dialog,
+        )
+
         is CampfireViewModel.DialogType.DeleteSetlist -> ConfirmationDialog(
             title = stringResource(Res.string.setlists_delete_setlist),
             text = textResource(Res.string.setlists_delete_setlist_confirmation, dialog.setlist.title),
@@ -1528,7 +1533,7 @@ private fun ColumnScope.PickerList(
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-private fun CampfireBottomSheet(
+internal fun CampfireBottomSheet(
     title: String,
     subtitle: String = "",
     sheetMaxWidth: Dp = BottomSheetDefaults.SheetMaxWidth,
@@ -1572,7 +1577,7 @@ private fun CampfireBottomSheet(
 }
 
 /** The column of a [CampfireBottomSheet], which its content can also close the sheet from. */
-private class BottomSheetContentScope(
+internal class BottomSheetContentScope(
     columnScope: ColumnScope,
     private val close: () -> Unit,
 ) : ColumnScope by columnScope {
@@ -1640,7 +1645,7 @@ private val MAX_LANGUAGES_HEIGHT = 320.dp
  * song that names no artist.
  */
 @Composable
-private fun songLabel(song: Song) = if (song.artist.isBlank()) song.title else textResource(Res.string.songs_artist_and_title, song.artist, song.title)
+internal fun songLabel(song: Song) = if (song.artist.isBlank()) song.title else textResource(Res.string.songs_artist_and_title, song.artist, song.title)
 
 /** A field whose value becomes one line of a song file: a pasted line break is the space between two words. */
 private fun String.asSingleLine() = replace(lineBreakRegex, " ")

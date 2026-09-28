@@ -23,10 +23,12 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.BoxScope
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.defaultMinSize
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.offset
@@ -144,6 +146,9 @@ import kotlin.math.roundToInt
  *   way to ask what can be done to it.
  * @param cardPadding The card's space from the edges of its grid cell, adjusted for inner columns in wide grids.
  * @param containerColor The card color, raised while the row is dragged ([draggedListItemContainerColor]).
+ * @param coverArtUrl The song's cover, drawn at the end of the card behind everything on it and faded out towards its
+ *   start, so that a row is told apart at a glance without the image taking any room from the text. Null where the
+ *   song names none or covers are turned off.
  * @param actions The trailing content of the row, which is the overflow button of the song's actions
  *   ([SongActionsButton]).
  */
@@ -164,6 +169,7 @@ internal fun SongListItem(
     cardPadding: PaddingValues = PaddingValues(horizontal = SONG_CARD_OUTER_PADDING, vertical = SONG_CARD_VERTICAL_PADDING),
     containerColor: Color = MaterialTheme.colorScheme.surfaceContainerLow,
     shadowElevation: Dp = 0.dp,
+    coverArtUrl: String? = null,
     onClick: () -> Unit,
     onLongClick: (() -> Unit)? = null,
     actions: (@Composable () -> Unit)? = null,
@@ -200,86 +206,112 @@ internal fun SongListItem(
         color = containerColor,
         shadowElevation = shadowElevation,
     ) {
-        CenteredSongCardContent(
-            modifier = Modifier.combinedClickable(onClick = onClick, onLongClick = onLongClick),
-            actions = actions,
-            headlineContent = {
-                ListItemHeadline(text = songCardTitle(song.title, index))
-            },
-            // Songs written in the app need no artist, and an empty second line would just make the row taller. Nothing
-            // here shares the title's line: a title is the longest thing on the row and the one that must never be
-            // pushed out of sight, while the artist is short enough to leave the key room next to it. The languages and
-            // tags go under both, since a row of those is as long as somebody chose to make it.
-            supportingContent = if (song.artist.isBlank() && note == null && languages.isEmpty() && tags.isEmpty() && onAddTag == null) {
-                null
-            } else {
-                {
-                    Column {
-                        if (song.artist.isNotBlank() || note != null) {
-                            Row(
-                                verticalAlignment = Alignment.CenterVertically,
-                            ) {
-                                if (song.artist.isNotBlank()) {
-                                    Text(
-                                        modifier = Modifier.weight(1f, fill = false),
-                                        text = song.artist,
-                                        maxLines = 1,
-                                        overflow = TextOverflow.Ellipsis,
-                                    )
-                                }
-                                // The note changes under the reader: a transposition renames the key, and lyrics only
-                                // mode takes the place away altogether. So it is crossfaded where it stands and the line
-                                // closes up around it, rather than the row being redrawn around the change. The color is
-                                // resolved inside rather than carried by the state, since the scheme is interpolated on
-                                // every frame of a theme change and each of those frames would start another crossfade.
-                                AnimatedContent(
-                                    targetState = note,
-                                    transitionSpec = { fadeIn() togetherWith fadeOut() },
-                                ) { currentNote ->
-                                    if (currentNote != null) {
-                                        Row(
-                                            verticalAlignment = Alignment.CenterVertically,
-                                        ) {
-                                            // The dot separates the note from the artist, so a song that names no artist
-                                            // starts the line with the note itself rather than with a separator before
-                                            // nothing. Neither it nor the note carries padding of its own: the glyph is a
-                                            // 4dp dot in the middle of a 24dp icon, so the box it sits in is the gap
-                                            // already, and the same gap on both sides of it - anything added here is
-                                            // added to one side only.
-                                            if (song.artist.isNotBlank()) {
-                                                Icon(
-                                                    painter = painterResource(Res.drawable.ic_dot),
-                                                    contentDescription = null,
+        Box {
+            if (coverArtUrl != null) {
+                SongCardCover(url = coverArtUrl)
+            }
+            CenteredSongCardContent(
+                modifier = Modifier.combinedClickable(onClick = onClick, onLongClick = onLongClick),
+                actions = actions,
+                headlineContent = {
+                    ListItemHeadline(text = songCardTitle(song.title, index))
+                },
+                // Songs written in the app need no artist, and an empty second line would just make the row taller. Nothing
+                // here shares the title's line: a title is the longest thing on the row and the one that must never be
+                // pushed out of sight, while the artist is short enough to leave the key room next to it. The languages and
+                // tags go under both, since a row of those is as long as somebody chose to make it.
+                supportingContent = if (song.artist.isBlank() && note == null && languages.isEmpty() && tags.isEmpty() && onAddTag == null) {
+                    null
+                } else {
+                    {
+                        Column {
+                            if (song.artist.isNotBlank() || note != null) {
+                                Row(
+                                    verticalAlignment = Alignment.CenterVertically,
+                                ) {
+                                    if (song.artist.isNotBlank()) {
+                                        Text(
+                                            modifier = Modifier.weight(1f, fill = false),
+                                            text = song.artist,
+                                            maxLines = 1,
+                                            overflow = TextOverflow.Ellipsis,
+                                        )
+                                    }
+                                    // The note changes under the reader: a transposition renames the key, and lyrics only
+                                    // mode takes the place away altogether. So it is crossfaded where it stands and the line
+                                    // closes up around it, rather than the row being redrawn around the change. The color is
+                                    // resolved inside rather than carried by the state, since the scheme is interpolated on
+                                    // every frame of a theme change and each of those frames would start another crossfade.
+                                    AnimatedContent(
+                                        targetState = note,
+                                        transitionSpec = { fadeIn() togetherWith fadeOut() },
+                                    ) { currentNote ->
+                                        if (currentNote != null) {
+                                            Row(
+                                                verticalAlignment = Alignment.CenterVertically,
+                                            ) {
+                                                // The dot separates the note from the artist, so a song that names no artist
+                                                // starts the line with the note itself rather than with a separator before
+                                                // nothing. Neither it nor the note carries padding of its own: the glyph is a
+                                                // 4dp dot in the middle of a 24dp icon, so the box it sits in is the gap
+                                                // already, and the same gap on both sides of it - anything added here is
+                                                // added to one side only.
+                                                if (song.artist.isNotBlank()) {
+                                                    Icon(
+                                                        painter = painterResource(Res.drawable.ic_dot),
+                                                        contentDescription = null,
+                                                    )
+                                                }
+                                                Text(
+                                                    modifier = Modifier.semantics { contentDescription = currentNote.description },
+                                                    text = currentNote.text,
+                                                    style = MaterialTheme.typography.labelMedium,
+                                                    color = if (currentNote.isEmphasized) LocalSecondAccentColor.current else MaterialTheme.colorScheme.onSurfaceVariant,
                                                 )
                                             }
-                                            Text(
-                                                modifier = Modifier.semantics { contentDescription = currentNote.description },
-                                                text = currentNote.text,
-                                                style = MaterialTheme.typography.labelMedium,
-                                                color = if (currentNote.isEmphasized) LocalSecondAccentColor.current else MaterialTheme.colorScheme.onSurfaceVariant,
-                                            )
                                         }
                                     }
                                 }
                             }
-                        }
-                        if (languages.isNotEmpty() || tags.isNotEmpty() || onAddTag != null) {
-                            SongLabels(
-                                modifier = Modifier.padding(top = if (song.artist.isBlank() && note == null) 0.dp else 4.dp),
-                                tags = tags,
-                                languages = languages,
-                                selectedTags = songFilter.selectedTags,
-                                selectedLanguages = songFilter.selectedLanguages,
-                                onTagClicked = onTagClicked,
-                                onLanguageClicked = onLanguageClicked,
-                                onAddTag = onAddTag,
-                            )
+                            if (languages.isNotEmpty() || tags.isNotEmpty() || onAddTag != null) {
+                                SongLabels(
+                                    modifier = Modifier.padding(top = if (song.artist.isBlank() && note == null) 0.dp else 4.dp),
+                                    tags = tags,
+                                    languages = languages,
+                                    selectedTags = songFilter.selectedTags,
+                                    selectedLanguages = songFilter.selectedLanguages,
+                                    onTagClicked = onTagClicked,
+                                    onLanguageClicked = onLanguageClicked,
+                                    onAddTag = onAddTag,
+                                )
+                            }
                         }
                     }
-                }
-            },
-        )
+                },
+            )
+        }
     }
+}
+
+/**
+ * A song card's cover: the end half of the card, as tall as the card and cropped to it, under the actions and fading in
+ * gradually from the middle of the card, so that the title and the artist are written over nothing but its faintest
+ * part. It is laid out at the size the card already has ([matchParentSize]) rather than being given one of its own,
+ * since a card is as tall as its text, and an image must never be what decides that.
+ */
+@Composable
+private fun BoxScope.SongCardCover(
+    modifier: Modifier = Modifier,
+    url: String,
+) = Box(
+    modifier = modifier.matchParentSize(),
+    contentAlignment = Alignment.CenterEnd,
+) {
+    FadedCoverArt(
+        modifier = Modifier.fillMaxHeight().fillMaxWidth(SONG_CARD_COVER_WIDTH_FRACTION),
+        url = url,
+        alpha = SONG_CARD_COVER_ALPHA,
+    )
 }
 
 /**
@@ -1100,6 +1132,12 @@ internal fun songCardPadding(itemIndex: Int, columnCount: Int): PaddingValues {
 
 /** The height of a card that is only a title, and of one with anything under it, as Material's list items have them. */
 private val SONG_CARD_ONE_LINE_MIN_HEIGHT = 56.dp
+
+/** How strongly a card's cover shows through at its end, where it is not faded at all: a backdrop, never a picture to read. */
+private const val SONG_CARD_COVER_ALPHA = 0.6f
+
+/** How much of a card's width its cover takes, from the end. */
+private const val SONG_CARD_COVER_WIDTH_FRACTION = 0.5f
 private val SONG_CARD_TWO_LINE_MIN_HEIGHT = 72.dp
 private val SONG_CARD_VERTICAL_CONTENT_PADDING = 10.dp
 

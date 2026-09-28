@@ -194,6 +194,7 @@ class SongRepositoryImplTest {
             transpose = 0,
             tags = emptyList(),
             languages = emptyList(),
+            coverArtUrl = null,
             hasChords = false,
             canUpdateFileName = false,
             lastModified = 0L,

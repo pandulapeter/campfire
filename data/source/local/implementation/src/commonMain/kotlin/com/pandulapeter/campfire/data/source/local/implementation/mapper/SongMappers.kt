@@ -36,6 +36,7 @@ internal fun StoredFileInfo.toSong(summary: ChordProSummary): Song {
         // the two forms look the same and every comparison above this is by case only. See normalizedToNfc.
         tags = summary.metadata.tags.map { it.normalizedToNfc() }.distinctBy { it.lowercase() },
         languages = summary.metadata.languages,
+        coverArtUrl = summary.metadata.coverArt,
         hasChords = summary.hasChords,
         // A file that names no title of its own is titled by its file name, so there is nothing better to rename it
         // to: deriving a name from the name would only fold the user's own spelling of it.

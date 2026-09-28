@@ -25,6 +25,8 @@ import androidx.lifecycle.viewModelScope
 import com.pandulapeter.campfire.chordpro.model.ChordProMetadata
 import com.pandulapeter.campfire.chordpro.model.ChordProSong
 import com.pandulapeter.campfire.data.model.DataState
+import com.pandulapeter.campfire.data.model.domain.CoverArtCandidate
+import com.pandulapeter.campfire.data.model.domain.CoverArtQuery
 import com.pandulapeter.campfire.data.model.domain.ExportedFile
 import com.pandulapeter.campfire.data.model.domain.ImportConflictResolution
 import com.pandulapeter.campfire.data.model.domain.ImportLimits
@@ -78,6 +80,8 @@ import com.pandulapeter.campfire.domain.api.useCases.SaveEditorDraftUseCase
 import com.pandulapeter.campfire.domain.api.useCases.SaveSetlistUseCase
 import com.pandulapeter.campfire.domain.api.useCases.SaveSongContentUseCase
 import com.pandulapeter.campfire.domain.api.useCases.SaveUserPreferencesUseCase
+import com.pandulapeter.campfire.domain.api.useCases.SearchCoverArtUseCase
+import com.pandulapeter.campfire.domain.api.useCases.SetChordProCoverArtUseCase
 import com.pandulapeter.campfire.domain.api.useCases.SetChordProLanguagesUseCase
 import com.pandulapeter.campfire.domain.api.useCases.SetChordProTagUseCase
 import com.pandulapeter.campfire.domain.api.useCases.SynchronizeLibraryUseCase
@@ -164,6 +168,7 @@ class CampfireViewModel(
     private val deleteSetlist: DeleteSetlistUseCase,
     private val saveSongContent: SaveSongContentUseCase,
     private val saveUserPreferences: SaveUserPreferencesUseCase,
+    private val setChordProCoverArt: SetChordProCoverArtUseCase,
     private val setChordProLanguages: SetChordProLanguagesUseCase,
     private val setChordProTag: SetChordProTagUseCase,
     private val connectSyncProvider: ConnectSyncProviderUseCase,
@@ -177,6 +182,7 @@ class CampfireViewModel(
     private val normalizeText: NormalizeTextUseCase,
     private val normalizeSearchText: NormalizeSearchTextUseCase,
     private val parseChordPro: ParseChordProUseCase,
+    private val searchCoverArt: SearchCoverArtUseCase,
     private val transposeChordPro: TransposeChordProUseCase,
     private val transposeChordProText: TransposeChordProTextUseCase,
     private val convertChordProNotation: ConvertChordProNotationUseCase,
@@ -450,7 +456,6 @@ class CampfireViewModel(
      * bar in the app has something it takes away.
      */
     val isPerformanceModeEnabled = userPreferences.map { it?.isPerformanceModeEnabled == true }.asState(false)
-
     /**
      * Read straight from its own repository, like the preferences and for the same reason: sync runs on its own
      * schedule, and a settings screen must not wait for a scan of the library to say whether an account is on.
@@ -894,6 +899,16 @@ class CampfireViewModel(
     fun onMessageShown(message: IndexedValue<Message>) = _messageQueue.update { queue -> queue.filterNot { it.index == message.index } }
 
     // Dialogs
+
+    /**
+     * The state of the cover search sheet ([DialogType.CoverArtSearch]). Held here rather than by the sheet so that a
+     * search survives the Android activity being recreated under it, and cleared with its search cancelled whenever
+     * the sheet stops being the dialog on screen, see [setVisibleDialog].
+     */
+    private val _coverArtSearch = MutableStateFlow<CoverArtSearchState>(CoverArtSearchState.Idle)
+    val coverArtSearch = _coverArtSearch.asStateFlow()
+    private var coverArtSearchJob: Job? = null
+
     private val _visibleDialog = MutableStateFlow<DialogType?>(null)
     val visibleDialog: StateFlow<DialogType?> = _visibleDialog.asStateFlow()
 
@@ -1429,6 +1444,48 @@ class CampfireViewModel(
      */
     fun setSongLanguages(fileName: String, codes: List<String>) = launchLibraryChange {
         editSongText(fileName) { text -> setChordProLanguages(text = text, codes = codes) }
+    }
+
+    /**
+     * Makes [url] the song's cover, or takes the cover off for null, from the cover search sheet. Written into the
+     * file like a tag is, so that the cover travels with the song wherever it goes.
+     */
+    fun setSongCoverArt(fileName: String, url: String?) = launchLibraryChange {
+        editSongText(fileName) { text -> setChordProCoverArt(text = text, url = url) }
+    }
+
+    /**
+     * What the cover search sheet is prefilled with for [song]: its artist, album and title as the file writes them,
+     * read from the text the details screen holds, and from the library's entry where that is not at hand, which has
+     * no album and a title with the subtitle after it.
+     */
+    fun coverArtQueryOf(song: Song) = songTexts.value[song.fileName]?.let { text ->
+        val metadata = parseChordPro(text).metadata
+        CoverArtQuery(
+            artist = metadata.artist.orEmpty(),
+            album = metadata.album.orEmpty(),
+            title = metadata.title ?: song.title,
+        )
+    } ?: CoverArtQuery(artist = song.artist, album = "", title = song.title)
+
+    /** Searches for [query], cancelling the search still running: only the question asked last is still being asked. */
+    fun searchCoverArt(query: CoverArtQuery) {
+        coverArtSearchJob?.cancel()
+        if (!query.isSearchable) {
+            _coverArtSearch.value = CoverArtSearchState.Idle
+            return
+        }
+        coverArtSearchJob = viewModelScope.launch {
+            _coverArtSearch.value = CoverArtSearchState.Loading(query = query)
+            val candidates = searchCoverArt(query = query, onBusy = { _coverArtSearch.value = CoverArtSearchState.Busy(query = query) })
+            _coverArtSearch.value = if (candidates == null) CoverArtSearchState.Failed(query = query) else CoverArtSearchState.Results(query = query, candidates = candidates)
+        }
+    }
+
+    private fun clearCoverArtSearch() {
+        coverArtSearchJob?.cancel()
+        coverArtSearchJob = null
+        _coverArtSearch.value = CoverArtSearchState.Idle
     }
 
     /**
@@ -2294,6 +2351,8 @@ class CampfireViewModel(
 
     fun setAppIconThemed(value: Boolean) = updateUserPreferences { copy(isAppIconThemed = value) }
 
+    fun setCoverArtEnabled(value: Boolean) = updateUserPreferences { copy(isCoverArtEnabled = value) }
+
     fun setLanguage(value: UserPreferences.Language) = updateUserPreferences { copy(language = value) }
 
     fun setAccidentals(value: UserPreferences.Accidentals) = updateUserPreferences { copy(chordSpelling = chordSpelling.copy(accidentals = value)) }
@@ -2368,6 +2427,9 @@ class CampfireViewModel(
         // An exit the question was asked for and that is not being run is an exit that was cancelled: its caller
         // may be waiting to hear so (the macOS quit request is).
         if (dialogType != DialogType.UnsavedChanges) takePendingExit()?.onCancelled?.invoke()
+        // Nothing but the sheet reads it, and a search nobody is waiting for any more still counts against the
+        // service's one request a second.
+        if (dialogType !is DialogType.CoverArtSearch) clearCoverArtSearch()
         _visibleDialog.update { dialogType }
     }
 
@@ -2395,6 +2457,7 @@ class CampfireViewModel(
             is DialogType.DeleteSong -> song.fileName
             is DialogType.AddSongTag -> song.fileName
             is DialogType.SongLanguages -> song.fileName
+            is DialogType.CoverArtSearch -> song.fileName
             else -> null
         }
 
@@ -2513,6 +2576,24 @@ class CampfireViewModel(
     )
 
     /** Something that has happened and is worth one line of text at the bottom of the screen. */
+    /** What the cover search sheet shows under its fields, see [coverArtSearch]. */
+    sealed interface CoverArtSearchState {
+
+        /** Nothing has been asked yet, or there is nothing to ask by. */
+        data object Idle : CoverArtSearchState
+
+        data class Loading(val query: CoverArtQuery) : CoverArtSearchState
+
+        /** The service asked to be given a moment, and the search waits before asking again. */
+        data class Busy(val query: CoverArtQuery) : CoverArtSearchState
+
+        /** What the search found, which may be nothing. */
+        data class Results(val query: CoverArtQuery, val candidates: List<CoverArtCandidate>) : CoverArtSearchState
+
+        /** No network, or the service kept refusing; the sheet offers to ask again. */
+        data class Failed(val query: CoverArtQuery) : CoverArtSearchState
+    }
+
     sealed interface Message {
         data class ImportFinished(val result: ImportResult) : Message
 
@@ -2700,6 +2781,8 @@ class CampfireViewModel(
         data class AddSongTag(val song: Song) : DialogType
         /** Opened from the same header, and asking about every language at once rather than one at a time. */
         data class SongLanguages(val song: Song) : DialogType
+        /** The records the song may have come out on, whose front cover can be made the song's, see [searchCoverArt]. */
+        data class CoverArtSearch(val song: Song) : DialogType
         /**
          * Asked before the connected account is forgotten. Nothing is deleted either way, but reconnecting means
          * going through the consent page again, which is not something to end up in by mistapping a list row.

@@ -9,8 +9,8 @@
 -->
 # :data:source:remote:api
 
-The sync contracts, and nothing else. Consumed by `:data:repository:implementation` (the engine) and implemented by
-`:data:source:remote:implementation` (the providers). Depends only on `:data:model`.
+The sync contracts and the two cover art ones. Consumed by `:data:repository:implementation` (the engine and the cover
+repository) and implemented by `:data:source:remote:implementation`. Depends only on `:data:model`.
 
 Everything here is shaped so that a second provider is one new class rather than a change to the engine — the rules,
 and why each of them is load bearing, are spelled out in the KDoc of `SyncProvider`.
@@ -46,6 +46,14 @@ and why each of them is load bearing, are spelled out in the KDoc of `SyncProvid
   browser with a page of its own, which is the only Campfire text rendered outside the app — so its two strings are
   handed down from the UI, which is the only layer that knows the translations and the chosen language. The other
   three platforms ignore it, because their browser closes itself.
+- `CoverArtRemoteSource` — downloads the image a song's `{meta: cover …}` names, from whatever host that is. It never
+  throws for anything but a cancellation: what comes back is a `CoverArtDownload` — the image, `Missing` (the address
+  answered with something that is not a cover, which asking again will not change) or `Unreachable` (no answer, which
+  may be different a minute later) — so the caller can decide how long to remember a failure.
+- `CoverArtSearchRemoteSource` — the records a song may have come out on, each with the address of its front cover.
+  The contract is shaped by MusicBrainz's rules: an implementation keeps its own pace and waits out a refusal by
+  itself, reporting each wait through `onBusy` so the sheet can say why it is taking a while, and throws
+  `CoverArtSearchException` only once it has given up.
 - `SyncAuthorizationException` / `SyncNetworkException` / `SyncRemoteStorageFullException` — the three failures the
   engine treats as reasons to stop a run; the last one only ever comes from `upload`, since every upload after it
   would be refused the same way. Everything else is one file's problem and must not keep the other four hundred from

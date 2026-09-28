@@ -293,6 +293,7 @@ private fun SongList(
     val songFileNamesInSetlists by viewModel.songFileNamesInSetlists.collectAsStateWithLifecycle()
     // Lyrics only mode takes the chords out of the viewer, and the key is the shortest way of writing them down.
     val shouldShowChords = userPreferences?.isLyricsOnlyModeEnabled != true
+    val isCoverArtEnabled = userPreferences?.isCoverArtEnabled == true
     val chordSpelling = userPreferences?.chordSpelling ?: UserPreferences.ChordSpelling.Default
     val filePicker = LocalFilePicker.current
     val keyboardController = LocalSoftwareKeyboardController.current
@@ -403,6 +404,7 @@ private fun SongList(
                             cardPadding = songCardPadding(songIndex, columnCount),
                             key = key,
                             shouldShowChords = shouldShowChords,
+                            coverArtUrl = song.coverArtUrl?.takeIf { isCoverArtEnabled },
                             labelsOnEverySong = labelsOnEverySong,
                             songFilter = songFilter,
                             onTagClicked = viewModel::toggleTagFilter,

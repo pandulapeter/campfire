@@ -10,8 +10,8 @@
 # :data:source:remote:implementation
 
 Implements `:data:source:remote:api`. Koin wiring: `Module.kt` holds the `@Module @ComponentScan object
-DataRemoteSourceModule`, whose two `@Single` functions build what is not simply constructed — the HTTP client and the
-list of providers — while the stores and the four platform authenticators (`AndroidSyncAuthenticator`, …, each a
+DataRemoteSourceModule`, whose three `@Single` functions build what is not simply constructed — the HTTP client, the
+list of providers and the cover search, whose clock is what its tests replace — while the stores and the four platform authenticators (`AndroidSyncAuthenticator`, …, each a
 `@Single` in its own source set) declare themselves. The only module in the project that makes a network call, and
 the only one that sees Ktor.
 
@@ -19,7 +19,9 @@ Providers are registered as one `SyncProviders` holding the list (never as a bar
 compiler plugin injects as `getAll<SyncProvider>()` and so as an empty list), and **a provider the build has no credentials for is left out of
 that list entirely** rather than offered and then failing — the settings screen shows what is in it, so a build
 without a key says so instead of inviting the user to press a button that cannot work. The key goes in
-`local.properties` as `campfire.dropbox.appKey` (see the Build section of the root `CLAUDE.md`).
+`local.properties` as `campfire.dropbox.appKey` (see the Build section of the root `CLAUDE.md`). It reaches the code as
+`DROPBOX_APP_KEY` in the `RemoteConfiguration.kt` that `generateRemoteConfiguration` writes, next to
+`CAMPFIRE_VERSION`, taken from `campfire.versionName` for the `User-Agent`.
 
 Getting one means registering a *scoped access* app with the **App folder** permission at
 https://www.dropbox.com/developers/apps, ticking `files.content.read`, `files.content.write` and `account_info.read`
@@ -93,15 +95,35 @@ redirect URIs character for character, which is why the desktop port is fixed.
   - **Web** navigates away and reads the answer out of the query string at the next start, taking it out of the
     address bar as it does so, so a reload cannot replay a spent code. Cancelling on the service's page comes back
     as `error=access_denied`, which is handled like any other refusal.
+- `coverArt/CoverArtRemoteSourceImpl` — a GET of whatever address a song names, redirects followed. What comes back is
+  trusted no further than its headers: an answer that is not `image/*` or is over 5 MB (read one byte past the limit
+  where no length is declared) is `Missing` and never read to its end; a 408, a 429, a 5xx or a transport failure is
+  `Unreachable`; any other refusal is `Missing`.
+- `musicBrainz/` — the cover search. `MusicBrainzSearch` is the pure part, and tested: with an album, the release
+  groups of that name (`/ws/2/release-group`, one release group standing for every edition of a record, which is what
+  a cover is picked for); with only a title, the recordings, and the release groups their releases belong to, each
+  once, dated by its earliest release and in the order the recordings are ranked; either narrowed by the artist. The
+  values are Lucene phrases, so only a quote and a backslash are escaped. The search results carry nothing about
+  covers, so every candidate's address is the Cover Art Archive's `front-250` of its release group, and a group with
+  no cover is found out by its thumbnail's 404. `CoverArtSearchRemoteSourceImpl` spaces its requests through
+  `MusicBrainzRateLimiter` — one for the whole app, a `Mutex` and the start of the last request, 1.1 s apart, since
+  MusicBrainz refuses every request for as long as a client averages more than one a second — and waits out a 503 or
+  a 429 for its `Retry-After`, or for 2 s doubling to 32 s where it names none, over at most five retries, calling
+  `onBusy` before each. `MusicBrainzModels` are defaulted and read with unknown keys ignored, like the Dropbox ones.
 - `crypto/` — `Pkce` (verifier, S256 challenge, state) and `dropboxContentHash` (SHA-256 of each 4 MB block,
   concatenated, hashed again), both on the `Sha256` in `:data:source:remote:api`.
-- `network/` — the `HttpClient` factory, one engine per target (OkHttp, CIO, Darwin, `fetch`), and `Json.kt`:
+- `network/` — the `HttpClient` factory, one engine per target (OkHttp, CIO, Darwin, `fetch`), `UserAgent.kt` — the
+  `Campfire/<version> ( https://github.com/pandulapeter/campfire )` every request names the app with, which MusicBrainz
+  asks of every client and throttles hardest without, sent on every request since it names the app and nothing about
+  the user; not in the browser, where a script cannot set it and where a header the host does not expect would turn
+  a plain GET into a CORS preflight that an image host may refuse — and `Json.kt`:
   `toAsciiJsonString` exists because Dropbox takes upload and download arguments in an HTTP header, which may only
   carry ASCII, and Campfire's files are named after song titles. The browser engine reports a failed `fetch` as a
   `kotlin.Error` rather than an `Exception`, so the provider's `transport` takes any `Throwable` that is not a
   cancellation as the service not being reached.
 
-Tested in `commonTest`, run on the desktop target: the hashing, the encoders, and the authorization URL — get a
+Tested in `commonTest`, run on the desktop target: the hashing, the encoders, the cover search's queries and parsing,
+its `User-Agent`, its pace and its retries in virtual time, the cover download's refusals, and the authorization URL — get a
 parameter wrong there and the user meets an error page on the service's own site with nothing in the app to say why —
 and, against a Ktor `MockEngine` in virtual time, how requests answer being told to slow down, and being cancelled or
 timing out, and the credentials store's cache (a cancelled read is not an answer, a failed write is not

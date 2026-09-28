@@ -172,6 +172,8 @@
     <string name="settings_lyrics_only_mode_description">Az akkordok elrejtése, hogy csak a szöveg maradjon</string>
     <string name="settings_horizontal_section_flow">Olvasás az oszlopokon át</string>
     <string name="settings_horizontal_section_flow_description">Ahol egy dal több oszlopban is kifér, a szakaszok jobbra folytatódnak és nem lefelé, így görgetés közben sosem kell visszalapozni</string>
+    <string name="settings_cover_art">Borítóképek</string>
+    <string name="settings_cover_art_description">A dalokban megadott albumborítók megjelenítése, amelyeket az alkalmazás egyszer letölt, majd ezen az eszközön tárol</string>
     <string name="settings_german_notation">Német hangjelölés</string>
     <string name="settings_german_notation_description">A B hangot H-ként, a Bb-t pedig B-ként írja, ahogy a közép-európai és skandináv akkordfüzetekben szokás. Csak a megjelenítés változik: a dalok fájljai a saját írásmódjukat tartják meg.</string>
     <string name="settings_accidentals">Módosítójelek</string>
@@ -264,6 +266,7 @@
     <string name="song_editor_insert_composer">Zeneszerző</string>
     <string name="song_editor_insert_lyricist">Szövegíró</string>
     <string name="song_editor_insert_album">Album</string>
+    <string name="song_editor_insert_cover_art">Borítókép</string>
     <string name="song_editor_insert_year">Év</string>
     <string name="song_editor_insert_key">Hangnem</string>
     <string name="song_editor_insert_capo">Capo</string>
@@ -315,6 +318,17 @@
     <string name="song_details_language">Nyelv</string>
     <string name="song_details_language_search">Nyelv keresése</string>
     <string name="song_details_language_no_search_results">Egyetlen nyelv sem felel meg a keresésnek. A két- vagy hárombetűs kódjával akkor is megtalálod, ha nincs neve.</string>
+    <string name="song_details_find_cover_art">Borítókép keresése</string>
+    <string name="song_details_change_cover_art">Borítókép cseréje</string>
+    <string name="cover_art_search_title">Borítókép</string>
+    <string name="cover_art_search">Keresés</string>
+    <string name="cover_art_search_hint">Add meg az albumot, vagy csak a dalt, és megjelennek a kiadványok, amelyeken szerepelt</string>
+    <string name="cover_art_search_loading">Keresés a MusicBrainzen…</string>
+    <string name="cover_art_search_busy">A MusicBrainz most túlterhelt, hamarosan újra próbálkozunk…</string>
+    <string name="cover_art_search_no_results">Nincs borítóval rendelkező találat. Próbáld az album címével, vagy kevesebb szóval.</string>
+    <string name="cover_art_search_failed">A MusicBrainz nem érhető el.</string>
+    <string name="cover_art_search_remove">Borító eltávolítása</string>
+    <string name="cover_art_search_attribution">Kiadványok a MusicBrainzről, borítók a Cover Art Archive-ból</string>
     <string name="song_details_capo">Capo %1$d</string>
     <string name="song_details_tempo">%1$s BPM</string>
     <string name="song_details_time">%1$s</string>

@@ -39,6 +39,9 @@ internal object ChordProSyntax {
 
     /** The `{meta}` key a song's language is written under, since ChordPro defines no directive of its own for it. */
     const val LANGUAGE_NAME = "language"
+
+    /** The `{meta}` key a song's cover image is written under, which ChordPro has no directive of its own for either. */
+    const val COVER_NAME = "cover"
     private const val LANGUAGE_SHORT_NAME = "lang"
     private const val META = "meta"
     private const val SOURCE_COMMENT = "#"
@@ -319,15 +322,38 @@ internal object ChordProSyntax {
     private fun isTagMeta(directive: Directive) = directive.name == META &&
             directive.value?.trim()?.substringBefore(' ')?.trim()?.equals(TAG_NAME, ignoreCase = true) == true
 
+    /**
+     * The cover image a directive names, or null if it is not a `{meta: cover …}` one or names nothing the app can load.
+     * Any `http` or `https` URL is taken: the library is the user's, and so are the addresses written into it.
+     */
+    fun cover(directive: Directive): String? = directive.takeIf(::isCoverMeta)
+        ?.value
+        ?.trim()
+        ?.substringAfter(' ', missingDelimiterValue = "")
+        ?.let(::coverUrl)
+
+    /**
+     * [value] as the address of a cover image, or null where it is not one: trimmed, and taken only when it is an
+     * `http` or `https` URL with no whitespace inside it, since nothing else is a picture the app can ask for.
+     */
+    fun coverUrl(value: String): String? = value.trim().takeIf { url ->
+        (url.startsWith("https://", ignoreCase = true) || url.startsWith("http://", ignoreCase = true)) &&
+                url.substringAfter("//").isNotEmpty() && url.none { it.isWhitespace() }
+    }
+
+    /** True for a `{meta}` directive whose key names the cover image, whatever its value then turns out to be worth. */
+    fun isCoverMeta(directive: Directive) = directive.name == META &&
+            directive.value?.trim()?.substringBefore(' ')?.trim()?.equals(COVER_NAME, ignoreCase = true) == true
+
     private val String.isLanguageKey get() = equals(LANGUAGE_NAME, ignoreCase = true) || equals(LANGUAGE_SHORT_NAME, ignoreCase = true)
 
     /**
      * The directives a song describes itself with, in the order a header reads best in: what the song is called, who
-     * made it, what record it came on, and how it is played, with the two repeatable ones at the end. It is what
+     * made it, what record it came on and what its sleeve looks like, and how it is played, with the two repeatable ones at the end. It is what
      * decides where a directive added to a file lands, see [metadataInsertionIndex].
      */
     private val metadataOrder = listOf(
-        "title", "subtitle", "artist", "composer", "lyricist", "album", "year", "key", "capo", "tempo", "time",
+        "title", "subtitle", "artist", "composer", "lyricist", "album", COVER_NAME, "year", "key", "capo", "tempo", "time",
         "duration", TAG_NAME, LANGUAGE_NAME,
     )
 
@@ -340,6 +366,7 @@ internal object ChordProSyntax {
     fun metadataKind(directive: Directive): String? = when {
         isTagMeta(directive) -> TAG_NAME
         isLanguageMeta(directive) -> LANGUAGE_NAME
+        isCoverMeta(directive) -> COVER_NAME
         else -> {
             val name = standardMeta(directive)?.name ?: directive.name
             (metadataAliases[name] ?: name).takeIf { it in metadataOrder }

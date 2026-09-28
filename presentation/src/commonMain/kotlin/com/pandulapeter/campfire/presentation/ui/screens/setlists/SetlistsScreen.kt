@@ -202,6 +202,7 @@ private fun SetlistList(
     val setlistsPlaceholder = viewModel.setlistsPlaceholder.collectAsStateWithLifecycle().value
     // Lyrics only mode takes the chords out of the viewer, and the key is the shortest way of writing them down.
     val shouldShowChords = userPreferences?.isLyricsOnlyModeEnabled != true
+    val isCoverArtEnabled = userPreferences?.isCoverArtEnabled == true
     val chordSpelling = userPreferences?.chordSpelling ?: UserPreferences.ChordSpelling.Default
     // The order the rows are drawn in while a drag is in flight, before any of it has been written down. The
     // reorderable state has to see every move answered in the frame it reports it, and the library is several frames
@@ -431,6 +432,7 @@ private fun SetlistList(
                                         spelling = chordSpelling,
                                     ),
                                     shouldShowChords = shouldShowChords,
+                                    coverArtUrl = entry.song.coverArtUrl?.takeIf { isCoverArtEnabled },
                                     labelsOnEverySong = labelsOnEverySong,
                                     shouldShowLabels = false,
                                     containerColor = containerColor,

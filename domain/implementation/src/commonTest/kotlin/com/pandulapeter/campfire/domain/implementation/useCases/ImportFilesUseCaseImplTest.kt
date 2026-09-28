@@ -222,6 +222,7 @@ class ImportFilesUseCaseImplTest {
             transpose = 0,
             tags = emptyList(),
             languages = emptyList(),
+            coverArtUrl = null,
             hasChords = true,
             canUpdateFileName = false,
             lastModified = 0L,

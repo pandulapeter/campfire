@@ -62,6 +62,7 @@ object ChordProSerializer {
         metadata.composer?.let { add("{composer: $it}") }
         metadata.lyricist?.let { add("{lyricist: $it}") }
         metadata.album?.let { add("{album: $it}") }
+        metadata.coverArt?.let { add("{meta: ${ChordProSyntax.COVER_NAME} $it}") }
         metadata.year?.let { add("{year: $it}") }
         metadata.key?.let { add("{key: $it}") }
         metadata.capo?.let { add("{capo: $it}") }

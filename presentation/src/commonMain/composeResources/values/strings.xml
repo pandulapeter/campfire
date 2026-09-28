@@ -172,6 +172,8 @@
     <string name="settings_lyrics_only_mode_description">Hide every chord and show the words on their own</string>
     <string name="settings_horizontal_section_flow">Read across the columns</string>
     <string name="settings_horizontal_section_flow_description">Where a song is wide enough for several columns, the sections carry on to the right instead of downwards, so scrolling never goes back up</string>
+    <string name="settings_cover_art">Cover art</string>
+    <string name="settings_cover_art_description">Show the album cover a song names next to it, downloading it once and keeping a copy on this device</string>
     <string name="settings_german_notation">German notation</string>
     <string name="settings_german_notation_description">Writes the note called B as H, and the one called Bb as B, the way chord charts do in Central Europe and Scandinavia. Only what you read changes: the song files keep their own spelling.</string>
     <string name="settings_accidentals">Accidentals</string>
@@ -264,6 +266,7 @@
     <string name="song_editor_insert_composer">Composer</string>
     <string name="song_editor_insert_lyricist">Lyricist</string>
     <string name="song_editor_insert_album">Album</string>
+    <string name="song_editor_insert_cover_art">Cover art</string>
     <string name="song_editor_insert_year">Year</string>
     <string name="song_editor_insert_key">Key</string>
     <string name="song_editor_insert_capo">Capo</string>
@@ -315,6 +318,17 @@
     <string name="song_details_language">Language</string>
     <string name="song_details_language_search">Search for a language</string>
     <string name="song_details_language_no_search_results">No language matches this search. Its two or three letter code will find it even where there is no name for it.</string>
+    <string name="song_details_find_cover_art">Find cover art</string>
+    <string name="song_details_change_cover_art">Change cover art</string>
+    <string name="cover_art_search_title">Cover art</string>
+    <string name="cover_art_search">Search</string>
+    <string name="cover_art_search_hint">Name the album, or the song on its own, to find the records it came out on</string>
+    <string name="cover_art_search_loading">Searching MusicBrainz…</string>
+    <string name="cover_art_search_busy">MusicBrainz is busy, trying again in a moment…</string>
+    <string name="cover_art_search_no_results">No record with a cover was found. Try the album's name, or fewer words.</string>
+    <string name="cover_art_search_failed">MusicBrainz could not be reached.</string>
+    <string name="cover_art_search_remove">Remove cover</string>
+    <string name="cover_art_search_attribution">Records from MusicBrainz, covers from the Cover Art Archive</string>
     <string name="song_details_capo">Capo %1$d</string>
     <string name="song_details_tempo">%1$s BPM</string>
     <string name="song_details_time">%1$s</string>

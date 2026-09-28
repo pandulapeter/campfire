@@ -158,6 +158,11 @@ internal fun Modifier.fadingTopEdge(scrollState: ScrollState) = fadingTopEdge { 
 /** [fadingTopEdge] for a lazy list, which only knows how far it is scrolled into its first item. */
 internal fun Modifier.fadingTopEdge(listState: LazyListState) = fadingTopEdge { listState.scrolledFromTop() }
 
+/** [fadingTopEdge] for a lazy grid, which knows as little as a lazy list does. */
+internal fun Modifier.fadingTopEdge(gridState: LazyGridState) = fadingTopEdge {
+    if (gridState.firstVisibleItemIndex > 0) Int.MAX_VALUE else gridState.firstVisibleItemScrollOffset
+}
+
 /**
  * [fadingTopEdge] at both ends, for a container with nothing around it that would say there is more of it: a list in
  * the middle of a dialog, whose bottom edge is a row of buttons rather than the edge of the screen. Each edge fades as

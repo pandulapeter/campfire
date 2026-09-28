@@ -21,6 +21,12 @@ enum class StorageDirectory {
     SONGS,
     SETLISTS,
     PREFERENCES,
+
+    /**
+     * The copies of the cover images the songs name. Outside the library, so that nothing that can be downloaded again
+     * is exported or synced — the address travels in the song file — and kept out of every device backup.
+     */
+    COVERS,
 }
 
 data class StoredFileInfo(
@@ -134,6 +140,7 @@ internal val StorageDirectory.pathSegments: List<String>
         StorageDirectory.SONGS -> listOf(LIBRARY_DIRECTORY, "songs")
         StorageDirectory.SETLISTS -> listOf(LIBRARY_DIRECTORY, "setlists")
         StorageDirectory.PREFERENCES -> listOf("preferences")
+        StorageDirectory.COVERS -> listOf("covers")
     }
 
 /** Whether [name] is a name rather than a path or nothing: what every storage can be asked about at all. */

@@ -70,6 +70,7 @@ class TranspositionLabelsTest {
         transpose = transpose,
         tags = emptyList(),
         languages = emptyList(),
+        coverArtUrl = null,
         hasChords = hasChords,
         canUpdateFileName = false,
         lastModified = 0L,

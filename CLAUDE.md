@@ -12,9 +12,11 @@
 Kotlin Multiplatform app (Android + iOS + JVM desktop + wasmJs web) for viewing and editing song lyrics and chords.
 Compose UI is shared between all platforms. The app owns a library folder of plain
 [ChordPro](https://www.chordpro.org) files on every platform, which the user fills by writing songs in the built-in
-editor or by importing files and zip archives. **The only thing that ever reaches the network is sync**, which is off
-until the user connects a cloud folder of their own in Settings, and which still involves no server of Campfire's own
-— see the Sync section below. (The Android build also asks Play whether a newer version of itself exists, but that
+editor or by importing files and zip archives. **The only things that ever reach the network are sync, and the cover
+images and the cover search the user asks for.** Sync is off until the user connects a cloud folder of their own in
+Settings, and still involves no server of Campfire's own — see the Sync section below. A cover is fetched from the
+address a song's own file names, once, and kept on the device; the search asks MusicBrainz, and only from the sheet the
+user opens for it; Settings' "Cover art" switch turns both off — see Cover art below. (The Android build also asks Play whether a newer version of itself exists, but that
 question is answered over IPC by the Play Store app; Campfire's own process makes no request — see Updates below.
 On Android and iOS the system's own device backup also carries the library and the settings — to the user's Google or
 iCloud backup, or straight to their next phone — but that is the operating system copying the app's files on the
@@ -41,8 +43,9 @@ app:android / app:desktop / app:ios / app:web   entry points, platform chrome, "
     data:repository:api / :implementation
       data:source:local:api  -> :implementation   files on Android/desktop/iOS, OPFS on web (see Web below);
                                                   also holds the pure-Kotlin zip reader/writer
-      data:source:remote:api -> :implementation   the sync contracts and the Dropbox provider; the only module in
-                                                  the project that makes a network call (see Sync below)
+      data:source:remote:api -> :implementation   the sync contracts and the Dropbox provider, the cover download
+                                                  and the MusicBrainz search; the only module in the project that
+                                                  makes a network call (see Sync and Cover art below)
         data:model                           domain models, shared by everything
   chordpro                                   dependency-free ChordPro model, parser, serializer, transposer, tab
                                              wrapper, tag editor and highlighter. Depends on nothing; used by
@@ -70,14 +73,16 @@ preferences/sync-credentials-forget-pending   a previous installation's credenti
 preferences/editor-draft.json        the editor's unsaved text as the app last left the front, so that the system
                                      ending it in the background does not end the text too; gone once it is saved or
                                      discarded
+covers/<sha256 of the address>      the copies of the cover images the songs name; outside library/, so never exported
+                                     or synced, and deleted once no song names them
 instance.lock / instance.endpoint    desktop only: what keeps a second process off the library (see app/desktop)
 ```
 
 On Android and iOS `library/` and `preferences/preferences.json` are in the system backup and the transfer to a new
-device; the sync credentials, `sync-index.json` and `editor-draft.json` are not, so a restored installation starts
-disconnected and its first sync run compares by content. Android does it with an allow-list of paths in
-`:app:android`, iOS with a Keychain item bound to the device and `FileStorage.keepOutOfDeviceBackup` on the index and
-the draft. A reinstall starts disconnected too: a
+device; the sync credentials, `sync-index.json`, `editor-draft.json` and `covers/` are not, so a restored installation starts
+disconnected, its first sync run compares by content and its covers are downloaded again. Android does it with an allow-list of paths in
+`:app:android`, iOS with a Keychain item bound to the device and `FileStorage.keepOutOfDeviceBackup` on the index, the
+draft and every cover. A reinstall starts disconnected too: a
 launch that finds no preferences document forgets any credentials it finds, since the iOS Keychain outlives an
 uninstall and nothing else does.
 
@@ -154,6 +159,11 @@ uninstall and nothing else does.
   carries a list of codes and nothing else, and asks the platform what each is called in the language the app is set
   to (`java.util.Locale`, `NSLocale`, `Intl.DisplayNames` behind `:presentation`'s `languageDisplayName`), falling
   back to the code in capitals where it cannot say.
+- **The cover of a song is carried the same way too**: a `{meta: cover https://…}` directive, read into
+  `Song.coverArtUrl` as the first one holding an `http` or `https` address. The file carries the address and nothing
+  else, so the cover travels through an export, an import or a sync run as a tag does, and the image is fetched where
+  the song is read. Any address is taken — the library and the addresses in it are the user's — and MusicBrainz is only
+  ever what recommends one. See Cover art below.
 - **The app is shipped with two songs and one setlist**, in
   `presentation/src/commonMain/composeResources/files/demo`: public domain campfire standards, bundled as the plain
   ChordPro and setlist files they are and reaching the library through the ordinary import, so they collide, are
@@ -247,8 +257,9 @@ uninstall and nothing else does.
   puts that file back, leaving both.
 - Only pure logic is tested: `commonTest` unit tests in `:chordpro`, `:domain:implementation` (`ImportPlanner`),
   `:data:source:local:implementation` (zip and the JVM file storage), `:data:source:remote:*` (hashing, encoders,
-  the OAuth authorization URL),
-  `:data:repository:implementation` (`SyncPlanner`, which decides what happens to every file in a sync run) and
+  the OAuth authorization URL, the cover search's queries, its `User-Agent` and its pace, the cover download),
+  `:data:repository:implementation` (`SyncPlanner`, which decides what happens to every file in a sync run, and the
+  cover cache) and
   `:presentation` (the pure helpers behind its screens: the search index and ranking, the fast scroller's section
   index, the setlist slots, stepper labels, section grid, row snapping and section measurements of the details screen, the editor's token cache), run on
   the desktop target with
@@ -459,6 +470,33 @@ the only possible one. The per-module `CLAUDE.md` files carry the detail; the sh
   than with the underscore a name the app derived itself collides with (`_2`).
 - Authorization is OAuth 2.0 with PKCE and no client secret, which is what lets this work with no backend. The four
   platforms get back from the consent page in four different ways, all behind `SyncAuthenticator`.
+
+## Cover art
+
+A song names its cover in its own file (`{meta: cover …}`, see Conventions); the app shows it faded into the end of
+the song cards, on the Songs and the Setlists screen alike, and whole at the start of the song details header, and keeps a copy
+of every one it has shown. The module `CLAUDE.md` files carry the detail; the short version:
+
+- **Every request is in `:data:source:remote`**, through the one Ktor client sync uses: `CoverArtRemoteSource`
+  downloads an image, following redirects (the Cover Art Archive answers with two), and takes nothing that is not an
+  `image/*` or is larger than 5 MB. Coil draws what `GetCoverArtUseCase` hands it and has no network artifact of its
+  own.
+- **The copy is the offline cache on all four platforms**: `covers/<sha256 of the address>`, outside `library/`, kept
+  out of every device backup and deleted after a library read that leaves no song naming it (`CoverArtRepository`).
+  Requests for one address share one download, and an address that failed is not asked again for the rest of the
+  session (an answer that is not a cover) or for a minute (no answer at all).
+- **The search is MusicBrainz**, from a sheet the song details menu opens (`Find cover art…`): the release groups of an
+  album, or those a song's recordings came out on where the album is empty, each with the Cover Art Archive's
+  `front-250` of its release group, which is the address written into the song. MusicBrainz allows one request a
+  second from the whole app, so one limiter spaces them 1.1 s apart and a 503 is waited out, the sheet saying so. Every
+  request names the app in its `User-Agent` (`Campfire/<campfire.versionName> ( https://github.com/pandulapeter/campfire )`),
+  which MusicBrainz asks of every client — except in the browser, where a script cannot set one, and MusicBrainz
+  documents no other way for a page to name itself; the web build's requests carry the browser's agent and the
+  page's `Origin`.
+- **Settings' "Cover art" switch** (`UserPreferences.isCoverArtEnabled`, on by default) turns all of it off: no cover
+  is fetched or drawn and the search is not offered.
+- What a platform will not load is simply not shown: the web build only reaches hosts that send CORS headers, and
+  plain `http://` is refused by Android's and iOS' defaults and by the browser as mixed content.
 
 ## Updates
 

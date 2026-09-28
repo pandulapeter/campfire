@@ -205,6 +205,7 @@ class SongReferencesTest {
             uiMode = UserPreferences.UiMode.SYSTEM_DEFAULT,
             themeColor = UserPreferences.ThemeColor.CAMPFIRE,
             isAppIconThemed = true,
+            isCoverArtEnabled = true,
             language = UserPreferences.Language.SYSTEM_DEFAULT,
             chordSpelling = UserPreferences.ChordSpelling.Default,
             transpositions = emptyMap(),

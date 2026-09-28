@@ -71,7 +71,7 @@ class SearchIndexTest {
 
     private fun song(name: String) = Song(
         fileName = "$name.cho", title = name, artist = "", key = null, transpose = 0,
-        tags = emptyList(), languages = emptyList(), hasChords = false,
+        tags = emptyList(), languages = emptyList(), coverArtUrl = null, hasChords = false,
         canUpdateFileName = false, lastModified = 0L, size = 0L,
     )
 }

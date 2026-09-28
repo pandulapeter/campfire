@@ -48,6 +48,9 @@ kotlin {
                 implementation(libs.androidx.lifecycle.runtime.compose)
                 implementation(libs.androidx.lifecycle.viewmodel.compose)
                 implementation(libs.androidx.navigation3.ui)
+                // The cover images: decoding, the memory cache and the crossfade. It is given no network artifact, since
+                // the bytes come from GetCoverArtUseCase, which is where the offline copy and the one HTTP client are.
+                implementation(libs.coil.compose)
                 implementation(libs.compose.animation)
                 implementation(libs.compose.components.resources)
                 implementation(libs.compose.foundation)

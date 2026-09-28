@@ -51,7 +51,7 @@ in `:domain:*`. `:data:source:local:implementation` uses it directly for the met
 - `ChordProSyntax` — the shared low-level rules (the directive and chord regexes, long/short directive names, a value
   separated from a known directive name by a colon or by whitespace alone (the spec allows both, and a line in braces whose name the app
   does not know stays the lyrics it has always been shown as), the `start_of_` / `end_of_` prefixes, `label`
-  attributes in either quotes, and no label at all for a value made of other attributes, what counts as a tag or a language directive, `metadataKind` for the one name a
+  attributes in either quotes, and no label at all for a value made of other attributes, what counts as a tag, a language or a cover directive, `metadataKind` for the one name a
   directive is known by whichever of its spellings a file uses, `isStaffLine` for "is this line of a tab environment
   the staff or something written above it", `words` for the words of a line and their ranges, and where a new one
   goes in a file the user wrote).
@@ -114,6 +114,13 @@ in `:domain:*`. `:data:source:local:implementation` uses it directly for the met
   kept stays on the line and in the spelling it was written in. `code` is that same normalization offered on its own,
   for a caller holding a piece of text rather than a file — the picker's search field, where somebody may well type
   `HUN` or `en-US` and has to find the row the library files that language under.
+- `ChordProCoverArt` — the cover of a song, which ChordPro has no directive for either: `{meta: cover https://…}`,
+  read into `ChordProMetadata.coverArt` as the first such line whose value is an `http` or `https` address with no
+  whitespace in it (`ChordProSyntax.coverUrl`), anything else being no cover rather than a custom item. `set` rewrites
+  the first cover line where it stands and drops the rest, writes one into the header after the album where the file
+  has none (the cover sits between `album` and `year` in `metadataOrder`), or removes them all for null, editing the
+  text for the reason `ChordProTags` does; a line that already names the address is left as it is written. It counts
+  as declared metadata under `cover`, and a song has one, so the editor stops offering it once the file carries one.
 - `ChordProHeader` — the block of directives a song opens with, for the editor, which writes into it while the caret
   is somewhere else entirely. ChordPro reads a `{title}` as the title from anywhere in the file, so a directive
   inserted at the caret is valid in the middle of a verse, invisible in the rendered song and nowhere near the rest

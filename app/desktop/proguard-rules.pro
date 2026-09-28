@@ -42,3 +42,13 @@
 # The JetBrains Runtime API finds its implementation in the runtime by the names of its own interfaces and their
 # methods, so they have to reach the release build as they are written, or every service reads as unsupported.
 -keep class com.jetbrains.** { *; }
+
+# Coil's own rules, which it ships inside its jar for R8 and which ProGuard does not read from there: the components it
+# finds through a ServiceLoader are looked up by the names of these interfaces. The app registers its one fetcher by hand
+# and bundles no artifact that is found that way today, so these keep what would otherwise break silently the day one is.
+-keep class coil3.util.DecoderServiceLoaderTarget { *; }
+-keep class coil3.util.FetcherServiceLoaderTarget { *; }
+-keep class coil3.util.ServiceLoaderComponentRegistry { *; }
+-keep class * implements coil3.util.DecoderServiceLoaderTarget { *; }
+-keep class * implements coil3.util.FetcherServiceLoaderTarget { *; }
+-dontwarn coil3.PlatformContext

@@ -25,13 +25,14 @@ holds the `@Module @ComponentScan object DataLocalSourceModule`, and every local
   `desktopMain`, one copy each because they are separate source sets), `IosFileStorage` over `NSFileManager` and
   `OpfsFileStorage` over the browser's Origin Private File System. The Android one takes the `Context` the app shell
   hands to Koin, marked `@Provided` since no shared module declares it. Everything above this line is `commonMain`.
-  - The directories are `library/songs`, `library/setlists` and `preferences` — songs and setlists sit next to each
-    other so that the library exports as one archive, and the preferences sit outside it so that they do not.
+  - The directories are `library/songs`, `library/setlists`, `preferences` and `covers` — songs and setlists sit next
+    to each other so that the library exports as one archive, and the preferences and the covers sit outside it so
+    that they do not.
     Android's backup rules in `:app:android` name `library/` and `preferences/preferences.json` by path, so moving a
     directory or renaming the preferences file means changing those two XML files as well. iOS backs up both of its
     directories whole, so what must stay behind says so itself: `SyncStateLocalSourceImpl` calls
     `keepOutOfDeviceBackup` after every write of `sync-index.json` and of the forget-pending note, and
-    `EditorDraftLocalSourceImpl` after every write of `editor-draft.json`, which `IosFileStorage` answers by setting
+    `EditorDraftLocalSourceImpl` after every write of `editor-draft.json` and `CoverArtLocalSourceImpl` after every cover, which `IosFileStorage` answers by setting
     `NSURLIsExcludedFromBackupKey` again — it is an attribute of the file, and the atomic write replaces the file.
     Everywhere else it does nothing.
   - Text is written as UTF-8 and read through `:data:model`'s `decodeLibraryText`, the same rule the import uses: UTF-8
@@ -51,7 +52,7 @@ holds the `@Module @ComponentScan object DataLocalSourceModule`, and every local
     UTF-8 on the way. One worker serves the page, started by the first write that needs it, with its replies matched
     to the writes by id; one that fails as a whole fails the writes waiting on it, and the next write starts another. Without `createWritable()`'s swap file a write is in place, so the worker keeps the previous
     content and puts it back when a write fails part of the way (see `app/web`). The OPFS storage
-    resolves the three directory handles once and keeps them: walking down from the root is three promises, and
+    resolves the directory handles once and keeps them: walking down from the root is three promises, and
     nothing outside the page can remove a directory from the origin private file system.
   - Every `catch (Exception)` around a read rethrows `CancellationException` first: a scan that was cancelled is not
     a library of unreadable songs.
@@ -71,7 +72,7 @@ holds the `@Module @ComponentScan object DataLocalSourceModule`, and every local
     `java.nio.file.NoSuchFileException` (not Kotlin's class of the same name), iOS asks `fileExistsAtPath` again when
     the read comes back nil, and OPFS folds a `NotFoundError` from `getFile()` into null, as `fileInfo` already did.
   - iOS splits the two: the library goes to the documents directory, where the Files app can reach it, and the
-    preferences to application support, where it cannot.
+    preferences and the covers to application support, where it cannot.
   - The JVM storage removes its own temporary files older than an hour on first touching each directory. On Windows
     (`isWindows`, which also decides the retry below) it stores device names such as `con.cho` with a leading
     underscore and reports the ordinary library name back. A name that is a path or nothing (`/`, `\`, `.`, `..`) is
@@ -117,7 +118,8 @@ holds the `@Module @ComponentScan object DataLocalSourceModule`, and every local
   moved through a temporary name, since writing it there is writing the old file and the deletion after would remove
   the only copy. The two functions decide it with one predicate: a name one of them took for another file and the
   other for this one would be exactly that deletion.
-- **`source/`** — the four local sources. `SongLocalSourceImpl` reads the whole ChordPro family
+- **`source/`** — the local sources. `CoverArtLocalSourceImpl` is the plainest of them: bytes in `covers/` under the
+  key it is handed, every failure logged and answered with nothing. `SongLocalSourceImpl` reads the whole ChordPro family
   (`LibraryFiles.SONG_EXTENSIONS`) — hidden files left out, by `LibraryFiles.isSongFileName`, the rule every listing
   of the folder shares — but writes only `.cho` — `importFileName` included, so a `.crd` that is imported
   is stored as the `.cho` it is written back as — and gets a song's title, artist, key, the `{transpose}` it opens with (which

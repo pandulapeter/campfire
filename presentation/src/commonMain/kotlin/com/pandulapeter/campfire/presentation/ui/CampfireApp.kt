@@ -137,6 +137,7 @@ import com.pandulapeter.campfire.presentation.resources.songs
 import com.pandulapeter.campfire.presentation.resources.songs_delete_song_partly
 import com.pandulapeter.campfire.presentation.resources.songs_update_file_name_partly
 import com.pandulapeter.campfire.presentation.ui.components.ListLayout
+import com.pandulapeter.campfire.presentation.ui.components.ProvideCoverArtImageLoader
 import com.pandulapeter.campfire.presentation.ui.components.WindowSize
 import com.pandulapeter.campfire.presentation.ui.components.hasRoomForSidePanel
 import com.pandulapeter.campfire.presentation.ui.components.pluralTextResource
@@ -196,6 +197,7 @@ fun CampfireApp(
 ) {
     LaunchedEffect(filesToImport) { filesToImport.collect(viewModel::importFiles) }
     SyncNotificationEffect(viewModel)
+    ProvideCoverArtImageLoader()
     // A library the user can reach from outside the app (the desktop folder, the iOS Files app) can also change
     // while the app is away, so it is read again whenever Campfire comes back to the front: ON_START, which is iOS
     // entering the foreground and the desktop window being restored, and not ON_RESUME, which iOS also sends after

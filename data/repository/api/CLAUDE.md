@@ -24,6 +24,8 @@ Repository interfaces only. Consumed by `:domain:implementation`; implemented by
 - `UserPreferencesRepository` — one document, read once and written whole. `hasStoredUserPreferences` is the one
   thing here that is not about what is in it: the demo library asks it to tell a fresh installation from a device
   Campfire has been used on, and it is deliberately uncached, since the very first save makes it false.
+- `CoverArtRepository` — the cover images and the search that recommends one. `getCoverArt` answers bytes or nothing,
+  never a failure; `searchCoverArt` throws what the search source throws, which the use case turns into nothing.
 - `SyncRepository` — the state machine around sync: `syncState: Flow<SyncState>`, the providers the build has, and
   `restore` / `connect` / `cancelConnection` / `disconnect` / `forgetStoredConnection` / `synchronize` /
   `cancelSynchronization`; `forgetStoredConnection` is the local-only wipe a first launch does, with no request — retried by

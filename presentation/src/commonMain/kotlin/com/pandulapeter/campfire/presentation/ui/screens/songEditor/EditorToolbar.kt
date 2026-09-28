@@ -55,6 +55,7 @@ import com.pandulapeter.campfire.presentation.resources.song_editor_insert_comme
 import com.pandulapeter.campfire.presentation.resources.song_editor_insert_comment_box
 import com.pandulapeter.campfire.presentation.resources.song_editor_insert_comment_italic
 import com.pandulapeter.campfire.presentation.resources.song_editor_insert_composer
+import com.pandulapeter.campfire.presentation.resources.song_editor_insert_cover_art
 import com.pandulapeter.campfire.presentation.resources.song_editor_insert_duration
 import com.pandulapeter.campfire.presentation.resources.song_editor_insert_key
 import com.pandulapeter.campfire.presentation.resources.song_editor_insert_language
@@ -226,6 +227,7 @@ private fun metadataInsertions(): List<List<EditorInsertion>> = listOf(
         EditorInsertion.metadata(stringResource(Res.string.song_editor_insert_composer), name = "composer"),
         EditorInsertion.metadata(stringResource(Res.string.song_editor_insert_lyricist), name = "lyricist"),
         EditorInsertion.metadata(stringResource(Res.string.song_editor_insert_album), name = "album"),
+        EditorInsertion.meta(stringResource(Res.string.song_editor_insert_cover_art), key = "cover"),
         EditorInsertion.metadata(stringResource(Res.string.song_editor_insert_year), name = "year"),
         EditorInsertion.metadata(stringResource(Res.string.song_editor_insert_key), name = "key"),
         EditorInsertion.metadata(stringResource(Res.string.song_editor_insert_capo), name = "capo"),
@@ -285,8 +287,8 @@ private data class EditorInsertion(
 
         /**
          * A custom metadata item, which is how ChordPro carries what it has no directive of its own for — the
-         * language of a song being the one Campfire reads, see `ChordProSyntax.language`. Part of the header like
-         * every other [metadata] item, whatever it is spelled as.
+         * language of a song and its cover being the two Campfire reads, see `ChordProSyntax.language` and
+         * `ChordProSyntax.cover`. Part of the header like every other [metadata] item, whatever it is spelled as.
          */
         fun meta(label: String, key: String) = EditorInsertion(
             label = label,

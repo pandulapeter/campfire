@@ -80,6 +80,8 @@ import com.pandulapeter.campfire.presentation.resources.settings_app_icon_taskba
 import com.pandulapeter.campfire.presentation.resources.settings_app_icon_taskbar_description
 import com.pandulapeter.campfire.presentation.resources.settings_app_icon_window
 import com.pandulapeter.campfire.presentation.resources.settings_app_icon_window_description
+import com.pandulapeter.campfire.presentation.resources.settings_cover_art
+import com.pandulapeter.campfire.presentation.resources.settings_cover_art_description
 import com.pandulapeter.campfire.presentation.resources.settings_created_by
 import com.pandulapeter.campfire.presentation.resources.settings_distribution_app_store
 import com.pandulapeter.campfire.presentation.resources.settings_distribution_mac_app_store
@@ -420,6 +422,14 @@ private fun SongDisplaySection(
         description = stringResource(Res.string.settings_horizontal_section_flow_description),
         isChecked = userPreferences?.isHorizontalSectionFlowEnabled == true,
         onCheckedChange = viewModel::setHorizontalSectionFlowEnabled,
+    )
+    // The one switch here that decides whether the app reaches the network on its own: off, no cover is fetched from
+    // anywhere, which is what somebody who does not want a song file to make the app contact a host turns it off for.
+    SwitchListItem(
+        title = stringResource(Res.string.settings_cover_art),
+        description = stringResource(Res.string.settings_cover_art_description),
+        isChecked = userPreferences?.isCoverArtEnabled == true,
+        onCheckedChange = viewModel::setCoverArtEnabled,
     )
     // Both of these only decide how a chord is written, so lyrics only mode leaves them with nothing to say. They
     // stay in the section rather than disappearing from it: what they are set to is still what the chords will look

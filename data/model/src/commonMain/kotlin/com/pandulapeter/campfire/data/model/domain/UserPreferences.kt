@@ -38,6 +38,11 @@ data class UserPreferences(
      * icon of [ThemeColor.CAMPFIRE] whatever the theme is.
      */
     val isAppIconThemed: Boolean,
+    /**
+     * Whether the songs' cover images are shown. Off, nothing is fetched or drawn, which is also what keeps the app from
+     * asking any host a song's `{meta: cover …}` names for anything.
+     */
+    val isCoverArtEnabled: Boolean,
     val language: Language,
     val chordSpelling: ChordSpelling, // How the chords of a song are written when it is displayed.
     /** Song file name to semitones, for songs opened from the library rather than from a setlist. */

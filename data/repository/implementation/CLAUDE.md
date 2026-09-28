@@ -9,7 +9,7 @@
 -->
 # :data:repository:implementation
 
-Implements `:data:repository:api` on top of `:data:source:local:api` and — for sync alone —
+Implements `:data:repository:api` on top of `:data:source:local:api` and — for sync and the covers alone —
 `:data:source:remote:api`. Koin wiring: `Module.kt` holds the `@Module @ComponentScan object DataRepositoryModule`, and every
 repository is a `@Single`.
 
@@ -75,6 +75,15 @@ and a repository that has not been read yet rescans instead, since there is no l
 - `EditorDraftRepositoryImpl` is not a `BaseLocalDataRepository` either, and holds no cache: the draft is read once
   per start and written on every pause, under a lock so that a pause's write and the deletion that follows a save
   land in the order they were asked for.
+- `CoverArtRepositoryImpl` is not a `BaseLocalDataRepository` either: a cover is read from the device's copy (named by
+  the SHA-256 of its address) and otherwise downloaded and written, in a scope of the repository's own rather than the
+  caller's, so that a row scrolled out of view, which cancels its request, does not throw away a download another row
+  is waiting for. Callers asking for one address at once share one download. An address that answered with something
+  that is not a cover is not asked again for the session, and one that could not be reached not for a minute, so a
+  dead address costs one request rather than one per scroll. It watches `SongRepository.songs` and, whenever a
+  library read has finished (`Idle`, never the `Loading` batches of a scan, which would prune the covers of the songs
+  not read yet) with a different set of addresses, deletes every copy no song names — a search result's thumbnail,
+  which is fetched the same way, included. `commonTest` covers the sharing, the failures and the pruning.
 - `SongContentRepositoryImpl` is not a `BaseLocalDataRepository`: it is a keyed in-memory cache of song *texts*, so
   paging through a setlist re-reads nothing. Bulk readers (the library export) pass `shouldCache = false` so that
   walking the whole library does not leave all of it in memory. The editor invalidates one entry after a save. The

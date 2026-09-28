@@ -21,6 +21,12 @@ data class ChordProMetadata(
     val lyricist: String? = null,
     val album: String? = null,
     val year: String? = null,
+    /**
+     * The address of the song's cover image, from the first `{meta: cover https://…}` directive that holds an `http`
+     * or `https` URL. ChordPro has no directive for it, so it is a custom metadata item, which any other ChordPro
+     * program keeps and ignores.
+     */
+    val coverArt: String? = null,
     val key: String? = null, // {key}, kept as written, e.g. "Am" or "Bb"
     val capo: Int? = null,
     val tempo: String? = null, // {tempo}

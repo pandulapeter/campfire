@@ -190,14 +190,16 @@ internal class IosFileStorage : FileStorage {
     private fun directoryPath(directory: StorageDirectory) = directoryPaths.getValue(directory)
 
     private fun rootPath(directory: StorageDirectory): String {
-        val isPreferences = directory == StorageDirectory.PREFERENCES
+        // The covers are the app's own copies of something that can be downloaded again, so they are no more the
+        // Files app's business than the preferences are.
+        val isApplicationSupport = directory == StorageDirectory.PREFERENCES || directory == StorageDirectory.COVERS
         return requireNotNull(
             fileManager.URLForDirectory(
-                directory = if (isPreferences) NSApplicationSupportDirectory else NSDocumentDirectory,
+                directory = if (isApplicationSupport) NSApplicationSupportDirectory else NSDocumentDirectory,
                 inDomain = NSUserDomainMask,
                 appropriateForURL = null,
                 // Unlike the documents directory, application support doesn't exist until something creates it.
-                create = isPreferences,
+                create = isApplicationSupport,
                 error = null,
             )?.path
         ) { "Could not resolve the data directory." }

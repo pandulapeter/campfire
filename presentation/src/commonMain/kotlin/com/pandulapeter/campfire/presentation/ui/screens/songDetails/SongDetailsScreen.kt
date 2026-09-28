@@ -195,6 +195,7 @@ internal fun SongDetailsScreen(
     val setlistSlots = remember(setlist, songs) { setlist?.let { buildSetlistSlots(it.entries, songs.map { song -> song.fileName }) } }
     val shouldShowChords = userPreferences?.isLyricsOnlyModeEnabled != true
     val isHorizontalFlow = userPreferences?.isHorizontalSectionFlowEnabled == true
+    val isCoverArtEnabled = userPreferences?.isCoverArtEnabled == true
     val chordSpelling = userPreferences?.chordSpelling ?: UserPreferences.ChordSpelling.Default
     val currentTransposition = currentSong?.let { transpositions[it.fileName, destination.setlistFileName] } ?: 0
     // From the key the library scan read rather than from the text: the page renders the whole song already, and the
@@ -364,6 +365,11 @@ internal fun SongDetailsScreen(
                         viewModel = viewModel,
                         song = song,
                         isDeletable = isReadFromLibrary,
+                        onFindCoverArt = if (isCoverArtEnabled) {
+                            { viewModel.showDialog(CampfireViewModel.DialogType.CoverArtSearch(song)) }
+                        } else {
+                            null
+                        },
                     )
                 }
             },
@@ -423,6 +429,7 @@ internal fun SongDetailsScreen(
                     shouldShowChords = shouldShowChords,
                     fontScale = if (isFollowingGesture) ({ viewModel.fontScale }) else ({ viewModel.settledFontScale }),
                     isHorizontalFlow = isHorizontalFlow,
+                    isCoverArtEnabled = isCoverArtEnabled,
                     // One set per song, wherever it is opened from: folding is how this reader reads it, not how the
                     // setlist has the band play it.
                     foldedSections = userPreferences?.foldedSections?.get(song.fileName).orEmpty(),
@@ -573,6 +580,7 @@ private fun SongDetailsPage(
     shouldShowChords: Boolean,
     fontScale: () -> Float,
     isHorizontalFlow: Boolean,
+    isCoverArtEnabled: Boolean,
     foldedSections: Set<String>,
     onFoldToggled: (key: String) -> Unit,
     chordSpelling: UserPreferences.ChordSpelling,
@@ -668,6 +676,7 @@ private fun SongDetailsPage(
                 fontScale = currentFontScale,
                 isHorizontalFlow = isHorizontalFlow,
                 foldedSections = foldedSections,
+                isCoverArtEnabled = isCoverArtEnabled,
                 onFoldToggled = onFoldToggled,
                 onAddTag = onAddTag,
                 onRemoveTag = onRemoveTag,

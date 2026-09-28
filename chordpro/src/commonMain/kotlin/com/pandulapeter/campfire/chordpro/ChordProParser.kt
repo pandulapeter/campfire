@@ -512,6 +512,7 @@ object ChordProParser {
         private var lyricist: String? = null
         private var album: String? = null
         private var year: String? = null
+        private var coverArt: String? = null
         private var key: String? = null
         private var capo: Int? = null
         private var tempo: String? = null
@@ -555,6 +556,8 @@ object ChordProParser {
                         // not carried twice; an unusable value drops out here instead of coming back as a filter
                         // group nothing can be named.
                         ChordProSyntax.isLanguageMeta(directive) -> ChordProSyntax.language(directive)?.let(::addLanguage)
+                        // The same goes for the cover, the first usable one of which is the song's.
+                        ChordProSyntax.isCoverMeta(directive) -> if (coverArt == null) coverArt = ChordProSyntax.cover(directive)
                         name.isNotEmpty() -> custom.getOrPut(name) { mutableListOf() } += value.substringAfter(' ', missingDelimiterValue = "").trim()
                     }
                 }
@@ -583,6 +586,7 @@ object ChordProParser {
             lyricist = lyricist,
             album = album,
             year = year,
+            coverArt = coverArt,
             key = key,
             capo = capo,
             tempo = tempo,
