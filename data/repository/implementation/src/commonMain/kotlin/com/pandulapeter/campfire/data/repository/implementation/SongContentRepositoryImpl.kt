@@ -13,8 +13,8 @@ import com.pandulapeter.campfire.data.model.domain.SongContent
 import com.pandulapeter.campfire.data.repository.api.SongContentRepository
 import com.pandulapeter.campfire.data.source.local.api.SongLocalSource
 import kotlinx.coroutines.CancellationException
-import kotlinx.coroutines.flow.MutableSharedFlow
-import kotlinx.coroutines.flow.asSharedFlow
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 import org.koin.core.annotation.Single
@@ -40,9 +40,9 @@ internal class SongContentRepositoryImpl(
      */
     private var generation = 0L
 
-    /** Emitted with [MutableSharedFlow.tryEmit] from inside the lock, so a slow collector can never hold up a write. */
-    private val _invalidations = MutableSharedFlow<String?>(extraBufferCapacity = 64)
-    override val invalidations = _invalidations.asSharedFlow()
+    /** Set from inside the lock, which a state never suspends for, so a slow collector can never hold up a write. */
+    private val _invalidations = MutableStateFlow(generation)
+    override val invalidations = _invalidations.asStateFlow()
 
     /**
      * The file is read outside the lock: the lock only guards the map, so one slow file does not hold up the pages
@@ -73,31 +73,18 @@ internal class SongContentRepositoryImpl(
     }
 
     override suspend fun invalidate(fileName: String?) = mutex.withLock {
-        generation++
         if (fileName == null) {
             cache.clear()
             cachedCharacters = 0
         } else {
             remove(fileName)
         }
-        _invalidations.tryEmit(fileName)
-        Unit
+        _invalidations.value = ++generation
     }
 
-    /**
-     * An event per name would fill the flow's buffer on a large batch, and [MutableSharedFlow.tryEmit] drops what does
-     * not fit: a collector would then keep a copy that nobody told it to drop. Above [MAXIMUM_NAMED_INVALIDATIONS] it is
-     * told about every song instead.
-     */
     override suspend fun invalidate(fileNames: Set<String>) = mutex.withLock {
-        generation++
         fileNames.forEach(::remove)
-        if (fileNames.size > MAXIMUM_NAMED_INVALIDATIONS) {
-            _invalidations.tryEmit(null)
-        } else {
-            fileNames.forEach(_invalidations::tryEmit)
-        }
-        Unit
+        _invalidations.value = ++generation
     }
 
     /** A text larger than the whole budget is handed out without being kept, rather than emptying the cache for it. */
@@ -116,7 +103,6 @@ internal class SongContentRepositoryImpl(
     }
 
     private companion object {
-        const val MAXIMUM_NAMED_INVALIDATIONS = 32
         const val MAXIMUM_CACHED_SONGS = 32
         const val MAXIMUM_CACHED_CHARACTERS = 1L shl 20
     }

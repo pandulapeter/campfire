@@ -13,6 +13,7 @@ import com.pandulapeter.campfire.data.model.domain.Song
 import com.pandulapeter.campfire.data.model.domain.SongContent
 import com.pandulapeter.campfire.data.source.local.api.SongLocalSource
 import kotlinx.coroutines.CompletableDeferred
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.test.runTest
 import kotlin.test.Test
@@ -22,6 +23,28 @@ class SongContentRepositoryImplTest {
 
     private val localSource = FakeSongLocalSource()
     private val repository = SongContentRepositoryImpl(localSource)
+
+    @Test
+    fun `a collector busy reading still learns of every invalidation that arrived meanwhile`() = runTest {
+        val isReading = CompletableDeferred<Unit>()
+        val canContinue = CompletableDeferred<Unit>()
+        val seen = mutableListOf<Long>()
+        backgroundScope.launch(Dispatchers.Unconfined) {
+            repository.invalidations.collect { revision ->
+                seen += revision
+                if (seen.size == 1) {
+                    isReading.complete(Unit)
+                    canContinue.await()
+                }
+            }
+        }
+        isReading.await()
+        repeat(100) { repository.invalidate(setOf("$it.cho")) }
+        repository.invalidate("open.cho")
+        canContinue.complete(Unit)
+
+        assertEquals(101L, seen.last())
+    }
 
     @Test
     fun `a cached text is answered without reading the file again`() = runTest {

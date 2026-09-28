@@ -86,7 +86,7 @@ class ExportSongsUseCaseImplTest {
     }
 
     private class FakeSongContentRepository(private val files: Map<String, String>) : SongContentRepository {
-        override val invalidations: Flow<String?> = emptyFlow()
+        override val invalidations: Flow<Long> = emptyFlow()
         override suspend fun loadSongContent(fileName: String, useCache: Boolean) =
             files[fileName]?.let { SongContent(fileName = fileName, text = it) }
 

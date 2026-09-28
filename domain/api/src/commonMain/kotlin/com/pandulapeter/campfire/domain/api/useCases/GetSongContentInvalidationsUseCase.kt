@@ -14,9 +14,10 @@ import kotlinx.coroutines.flow.Flow
 interface GetSongContentInvalidationsUseCase {
 
     /**
-     * The file name of every song whose text may have changed on disk since it was read, or null for every song (a
-     * rescan, which is also how a sync run ends). Whoever keeps a copy of a text read through [GetSongContentUseCase]
-     * re-reads it, or it goes on showing - and building writes on - a version of the file that is not there any more.
+     * Changes whenever the text of a song may have changed on disk since it was read - a save, a rescan, a sync run.
+     * Whoever keeps copies of texts read through [GetSongContentUseCase] re-reads all of them, or they go on showing -
+     * and building writes on - versions of files that are not there any more. It names no file and may skip values in
+     * between, see `SongContentRepository.invalidations`.
      */
-    operator fun invoke(): Flow<String?>
+    operator fun invoke(): Flow<Long>
 }

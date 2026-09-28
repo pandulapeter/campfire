@@ -119,6 +119,7 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.debounce
 import kotlinx.coroutines.flow.distinctUntilChanged
+import kotlinx.coroutines.flow.drop
 import kotlinx.coroutines.flow.filterNotNull
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.flow
@@ -970,10 +971,11 @@ class CampfireViewModel(
         // the editor's FollowFileWhileUntouched); one with text of its own now has unsaved changes, which is what asks
         // the user before their draft replaces the new version — an editor whose file is gone included, where the
         // draft is all there is.
+        // Every text held here is read again, not only the one that was named: the invalidations are a state, so that
+        // none of them can be lost while this is busy reading, and that state names no file. The texts are few (the
+        // screens on the back stack), and those that did not change come out of the repository's cache.
         viewModelScope.launch {
-            getSongContentInvalidations().collect { fileName ->
-                rereadSongTexts(fileNames = fileName?.let(::setOf))
-            }
+            getSongContentInvalidations().drop(1).collect { rereadSongTexts() }
         }
         viewModelScope.launch {
             demoLibraryDecision.await()
@@ -1081,8 +1083,8 @@ class CampfireViewModel(
      * update, so that the screens reading [songTexts] recompose once rather than once per file. Only to texts that are
      * still held when the reads are done, so that one pruned meanwhile is not brought back.
      */
-    private suspend fun rereadSongTexts(fileNames: Set<String>?) {
-        val affected = _songTexts.value.keys.filter { fileNames == null || it in fileNames }
+    private suspend fun rereadSongTexts() {
+        val affected = _songTexts.value.keys
         if (affected.isEmpty()) return
         val results = affected.map { name -> name to getSongContent(name)?.text }
         _songTexts.update { texts ->

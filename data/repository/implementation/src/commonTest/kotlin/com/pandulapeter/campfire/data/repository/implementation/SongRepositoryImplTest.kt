@@ -51,13 +51,13 @@ class SongRepositoryImplTest {
         val repository = SongRepositoryImpl(localSource, songContentRepository, LibraryFileLock(), LibraryChanges())
         songContentRepository.loadSongContent(FILE_NAME)
         localSource.files[FILE_NAME] = "synced"
-        val invalidations = mutableListOf<String?>()
+        val invalidations = mutableListOf<Long>()
         backgroundScope.launch(Dispatchers.Unconfined) { songContentRepository.invalidations.collect { invalidations += it } }
 
         repository.saveSong(SongContent(FILE_NAME, "opened with a tag"), expectedText = "opened")
 
         assertEquals("synced", songContentRepository.loadSongContent(FILE_NAME)?.text)
-        assertEquals(listOf<String?>(FILE_NAME), invalidations)
+        assertEquals(2, invalidations.size)
     }
 
     @Test

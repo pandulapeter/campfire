@@ -174,7 +174,7 @@ class ExportLibraryUseCaseImplTest {
         var delays = emptyMap<String, Long>()
         val reads = mutableListOf<String>()
         private val readsMutex = Mutex()
-        override val invalidations: Flow<String?> = emptyFlow()
+        override val invalidations: Flow<Long> = emptyFlow()
         override suspend fun loadSongContent(fileName: String, useCache: Boolean): SongContent? {
             delays[fileName]?.let { delay(it) }
             readsMutex.withLock { reads += fileName }

@@ -20,14 +20,16 @@ import kotlinx.coroutines.flow.Flow
 interface SongContentRepository {
 
     /**
-     * Every [invalidate], as the file name it named, or null for every song. Whoever holds a copy of a text outside
-     * this cache drops or re-reads it: the invalidation means the file may have changed underneath that copy, and a
-     * write built on it would put back what somebody else (a sync run, another device) has just replaced.
+     * A number that grows with every [invalidate], replayed to a collector as it starts. Whoever holds a copy of a text
+     * outside this cache re-reads every copy it holds when it changes: the file may have changed underneath that copy,
+     * and a write built on it would put back what somebody else (a sync run, another device) has just replaced.
      *
-     * A notification rather than a queue: nothing is replayed to a late collector, and a collector that falls far
-     * behind may miss some, so it must not be used to count writes.
+     * A state rather than a stream of names, so that a collector busy reading when a burst of invalidations arrives
+     * can lose none of them: the values in between may be skipped, but the latest one always arrives, and it covers
+     * everything before it. That is also why it names no file - a name that was skipped would be a copy nobody
+     * re-reads - and why it must not be used to count writes.
      */
-    val invalidations: Flow<String?>
+    val invalidations: Flow<Long>
 
     /**
      * Null if the file does not exist or could not be read.
@@ -42,9 +44,6 @@ interface SongContentRepository {
     /** Drops the cached text of one song, or of every song when [fileName] is null. */
     suspend fun invalidate(fileName: String? = null)
 
-    /**
-     * Drops the cached texts of these songs in one step. [invalidations] names each of them, or says null for every song
-     * where there are too many to name without overflowing a collector that is behind.
-     */
+    /** Drops the cached texts of these songs in one step, which is one new value of [invalidations]. */
     suspend fun invalidate(fileNames: Set<String>)
 }
