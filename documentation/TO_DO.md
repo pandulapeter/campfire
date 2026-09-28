@@ -8,15 +8,13 @@
  * https://mozilla.org/MPL/2.0/.
 -->
 # To do
-- First time user experience tutorial
-- Overflow menus should expand if there is enough space
+- Add an editable date field for setlists, rename the sorting option. Should default to creation date (for demo setlist too)
 - Regenerate the baseline profile
-- Sort and Filter UI should be improved (better animations)
-- Predictive back in Settings
-- Library screen could display image cache size
-- Song details snap should snap again when a section is expanded / collapsed
 - Song details chord cards should wrap content
 - Pixel 10 Pro XL Landscape: Román lány layout could be optimized
+- First time user experience tutorial
+- Sort and Filter UI should be improved (better animations)
+- Settings -> Library screen could display image cache size
 - Haptic effects
 - Chord diagrams
 - Optional close confirmation dialog on supported platforms

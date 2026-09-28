@@ -10,7 +10,10 @@
 package com.pandulapeter.campfire.presentation.ui.screens.settings
 
 import androidx.compose.animation.Crossfade
+import androidx.compose.animation.ExperimentalAnimationApi
+import androidx.compose.animation.core.SeekableTransitionState
 import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.core.rememberTransition
 import androidx.compose.foundation.ScrollState
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
@@ -41,6 +44,7 @@ import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.unit.Dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigationevent.NavigationEventInfo
+import androidx.navigationevent.NavigationEventTransitionState
 import androidx.navigationevent.compose.NavigationBackHandler
 import androidx.navigationevent.compose.rememberNavigationEventState
 import com.pandulapeter.campfire.data.model.domain.SyncOutcome
@@ -153,6 +157,8 @@ import com.pandulapeter.campfire.presentation.ui.platform.canAskForDonations
 import com.pandulapeter.campfire.presentation.ui.platform.platformStore
 import com.pandulapeter.campfire.presentation.ui.theme.CampfireColorScheme
 import com.pandulapeter.campfire.presentation.ui.theme.colorSchemePair
+import kotlinx.coroutines.flow.collectLatest
+import kotlinx.coroutines.flow.filterNotNull
 import kotlinx.coroutines.launch
 import org.jetbrains.compose.resources.painterResource
 
@@ -175,7 +181,7 @@ import org.jetbrains.compose.resources.painterResource
  *
  * @param layout What the width the screen settles at decides: the layout and the number of columns.
  */
-@OptIn(ExperimentalMaterial3ExpressiveApi::class)
+@OptIn(ExperimentalAnimationApi::class, ExperimentalMaterial3ExpressiveApi::class)
 @Composable
 internal fun SettingsScreen(
     modifier: Modifier = Modifier,
@@ -199,11 +205,23 @@ internal fun SettingsScreen(
     // Claims the gesture rather than leaving it to the back stack's handler, which would preview the screen giving way to
     // the songs while the finger is still down and then only change the tab once it lifts. Registered whether or not
     // it is enabled, since a handler that comes and goes changes the order the dispatcher picks between handlers in.
+    val backGesture = rememberNavigationEventState(currentInfo = NavigationEventInfo.None)
     NavigationBackHandler(
-        state = rememberNavigationEventState(currentInfo = NavigationEventInfo.None),
+        state = backGesture,
         isBackEnabled = viewModel.isSettingsBackToGeneral,
         onBackCompleted = viewModel::navigateBack,
     )
+    // How far a predictive back gesture towards General has come, or null while there is none: both layouts preview
+    // the step with it, so that the drag says what letting go will do, and the animation that follows a release picks
+    // up from wherever the drag left the pages.
+    val backProgress = remember(backGesture) {
+        {
+            (backGesture.transitionState as? NavigationEventTransitionState.InProgress)
+                ?.takeIf { it.direction == NavigationEventTransitionState.TRANSITIONING_BACK }
+                ?.latestEvent
+                ?.progress
+        }
+    }
     val isImporting by viewModel.isImporting.collectAsStateWithLifecycle()
     val isPerformanceModeEnabled by viewModel.isPerformanceModeEnabled.collectAsStateWithLifecycle()
     val userPreferences by viewModel.userPreferences.collectAsStateWithLifecycle()
@@ -237,9 +255,20 @@ internal fun SettingsScreen(
                         label = { it.label() },
                         onTabSelected = { if (it == viewModel.settingsTab) scrollTabToTop(it) else viewModel.settingsTab = it },
                     )
-                    Crossfade(
+                    // Seekable, so that a back gesture can hold the fade to General at the fraction the finger has
+                    // reached; letting go carries it on to General, and a cancelled gesture fades back from there.
+                    val pageTransition = remember { SeekableTransitionState(viewModel.settingsTab) }
+                    LaunchedEffect(pageTransition) {
+                        snapshotFlow { viewModel.settingsTab to backProgress() }.collectLatest { (tab, progress) ->
+                            if (progress != null && tab != SettingsTab.GENERAL) {
+                                pageTransition.seekTo(fraction = progress, targetState = SettingsTab.GENERAL)
+                            } else {
+                                pageTransition.animateTo(tab)
+                            }
+                        }
+                    }
+                    rememberTransition(pageTransition).Crossfade(
                         modifier = Modifier.weight(1f),
-                        targetState = viewModel.settingsTab,
                         animationSpec = fadeSpec,
                     ) { tab ->
                         SettingsTabPage(
@@ -264,6 +293,7 @@ internal fun SettingsScreen(
                 startPadding = startPadding,
                 endPadding = endPadding,
                 isNavigationRailVisible = isNavigationRailVisible,
+                backProgress = backProgress,
                 onSelectedTabPressed = scrollTabToTop,
             ) { tab ->
                 SettingsTabPage(
@@ -289,6 +319,10 @@ internal fun SettingsScreen(
  *
  * Every page is composed with the screen ([HorizontalPager]'s `beyondViewportPageCount` covers them all), so a tab is
  * never first composed as it is swiped to.
+ *
+ * @param backProgress How far a predictive back gesture towards General has come, or null while there is none. The
+ *   pages follow it the whole way from the open tab to General, the tabs between them passing by the way a press on
+ *   General's tab passes them.
  */
 @Composable
 private fun SettingsTabPager(
@@ -299,6 +333,7 @@ private fun SettingsTabPager(
     startPadding: Dp,
     endPadding: Dp,
     isNavigationRailVisible: Boolean,
+    backProgress: () -> Float?,
     onSelectedTabPressed: (SettingsTab) -> Unit,
     page: @Composable (SettingsTab) -> Unit,
 ) {
@@ -314,6 +349,27 @@ private fun SettingsTabPager(
     LaunchedEffect(pagerState) {
         snapshotFlow { viewModel.settingsTab }.collect {
             if (it.ordinal != pagerState.targetPage) pagerState.animateScrollToPage(it.ordinal)
+        }
+    }
+    // The gesture scrolls the pages inside one scroll that lasts as long as it does, rather than snapping them frame by
+    // frame, since the settled page only stays put while a scroll is in progress and would otherwise write every tab
+    // passed on the way into settingsTab - General among them, which would end the gesture's handler halfway through.
+    // Letting go ends that scroll wherever the pages are, and they animate on from there: to General, which the handler
+    // has just made the tab, or back to the tab the gesture started on when it was cancelled.
+    LaunchedEffect(pagerState) {
+        snapshotFlow { backProgress() != null }.collectLatest { isGestureInProgress ->
+            val tabPage = viewModel.settingsTab.ordinal
+            if (isGestureInProgress) {
+                pagerState.scroll {
+                    snapshotFlow { backProgress() }.filterNotNull().collect { progress ->
+                        val pageWidth = pagerState.layoutInfo.pageSize + pagerState.layoutInfo.pageSpacing
+                        val position = pagerState.currentPage + pagerState.currentPageOffsetFraction
+                        scrollBy((tabPage * (1f - progress) - position) * pageWidth)
+                    }
+                }
+            } else if (pagerState.currentPage != tabPage || pagerState.currentPageOffsetFraction != 0f) {
+                pagerState.animateScrollToPage(tabPage)
+            }
         }
     }
     Column(modifier = modifier.fillMaxSize()) {

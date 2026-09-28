@@ -103,6 +103,13 @@ internal class RowSnapFlingBehavior(
         }
         return 0f
     }
+
+    /**
+     * Brings the song to rest where a fling that set off from where it is with no velocity would, which is how it is
+     * put back on a divider after the rows moved under it: a fold toggled opens or closes a section, and every divider
+     * after it moves while the scroll stays where it was.
+     */
+    suspend fun settle() = scrollState.scroll { performFling(0f) }
 }
 
 /** The [RowSnapFlingBehavior] of a song page scrolled by [scrollState]. */

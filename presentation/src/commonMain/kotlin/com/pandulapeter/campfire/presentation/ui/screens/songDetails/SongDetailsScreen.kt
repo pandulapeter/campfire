@@ -36,6 +36,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.PagerState
 import androidx.compose.foundation.pager.rememberPagerState
@@ -58,6 +59,7 @@ import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.runtime.snapshotFlow
+import androidx.compose.runtime.withFrameNanos
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.keepScreenOn
@@ -100,10 +102,12 @@ import com.pandulapeter.campfire.presentation.ui.components.EmptyState
 import com.pandulapeter.campfire.presentation.ui.components.EmptyStateAction
 import com.pandulapeter.campfire.presentation.ui.components.fadingTopEdge
 import com.pandulapeter.campfire.presentation.ui.components.SetlistAssignmentsButton
-import com.pandulapeter.campfire.presentation.ui.components.SongActionsButton
+import com.pandulapeter.campfire.presentation.ui.components.SongActions
 import com.pandulapeter.campfire.presentation.ui.navigation.CampfireDestination
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.flow.collectLatest
+import kotlinx.coroutines.flow.drop
 import kotlinx.coroutines.launch
 import org.jetbrains.compose.resources.painterResource
 
@@ -232,11 +236,20 @@ internal fun SongDetailsScreen(
     // Decided from what the controls need rather than from the window's size class, since that is anything from one
     // stepper in performance mode to two and two more actions in the library. The settled width keeps the decision
     // from changing while a navigation transition is still running.
-    val usesInlineControls = settledWidth -
-        contentPadding.calculateStartPadding(layoutDirection) -
-        contentPadding.calculateEndPadding(layoutDirection) -
-        otherAppBarContentWidth -
-        inlineControlsWidth >= MIN_TITLE_WIDTH
+    val appBarWidth = settledWidth - contentPadding.calculateStartPadding(layoutDirection) - contentPadding.calculateEndPadding(layoutDirection)
+    val usesInlineControls = appBarWidth - otherAppBarContentWidth - inlineControlsWidth >= MIN_TITLE_WIDTH
+    // The song's own actions come out of their menu only after the steppers have come into the bar, and only as far
+    // as they leave the title MIN_TITLE_WIDTH_BESIDE_SONG_ACTIONS: the steppers are what a song is read with, while
+    // every one of these is a click further away in the menu, and they are several - a title cut to its first words to
+    // make room for Export is a bar that has stopped saying which song it is. Worked out from the settled width like
+    // the steppers, so that the buttons do not come and go while a navigation transition runs.
+    val songActionsMaxWidth = (
+        appBarWidth -
+            otherAppBarContentWidth +
+            APP_BAR_ACTION_WIDTH -
+            (if (usesInlineControls) inlineControlsWidth else APP_BAR_ACTION_WIDTH) -
+            MIN_TITLE_WIDTH_BESIDE_SONG_ACTIONS
+        ).coerceAtLeast(APP_BAR_ACTION_WIDTH)
 
     val coroutineScope = rememberCoroutineScope()
     val pageStepper = remember(pagerState, coroutineScope) { PageStepper(pagerState, coroutineScope) }
@@ -297,8 +310,8 @@ internal fun SongDetailsScreen(
                         verticalAlignment = Alignment.CenterVertically,
                     ) {
                         song?.coverArtUrl?.takeIf { isCoverArtEnabled }?.let { url ->
-                            // A tap on it is a shortcut to the menu's "Find cover art", which performance mode takes out
-                            // of the menu too; there it is part of the title and scrolls to the top like it.
+                            // A tap on it is a shortcut to the header's cover chip, which performance mode takes away
+                            // too; there it is part of the title and scrolls to the top like it.
                             CoverArtImage(
                                 modifier = Modifier.padding(end = APP_BAR_COVER_GAP).size(APP_BAR_COVER_SIZE),
                                 url = url,
@@ -381,15 +394,13 @@ internal fun SongDetailsScreen(
                             isInSetlist = song.fileName in songFileNamesInSetlists,
                         )
                     }
-                    SongActionsButton(
+                    SongActions(
+                        modifier = Modifier.widthIn(max = songActionsMaxWidth),
                         viewModel = viewModel,
                         song = song,
+                        isExpandable = true,
+                        isEditAlwaysInMenu = !isReadFromLibrary,
                         isDeletable = isReadFromLibrary,
-                        onFindCoverArt = if (isCoverArtEnabled) {
-                            { viewModel.showDialog(CampfireViewModel.DialogType.CoverArtSearch(song)) }
-                        } else {
-                            null
-                        },
                     )
                 }
             },
@@ -477,6 +488,9 @@ internal fun SongDetailsScreen(
                     },
                     onRemoveLink = if (isPerformanceModeEnabled) null else {
                         { url -> viewModel.setSongLink(fileName = song.fileName, url = url, isAdded = false) }
+                    },
+                    onEditCoverArt = if (isPerformanceModeEnabled || !isCoverArtEnabled) null else {
+                        { viewModel.showDialog(CampfireViewModel.DialogType.CoverArtSearch(song)) }
                     },
                     // Performance mode takes every way into the editor out of the app, this one included.
                     onOpenEditor = if (isPerformanceModeEnabled) null else {
@@ -625,6 +639,7 @@ private fun SongDetailsPage(
     onOpenLink: (String) -> Unit,
     onAddLink: (() -> Unit)?,
     onRemoveLink: ((String) -> Unit)?,
+    onEditCoverArt: (() -> Unit)?,
     onOpenEditor: (() -> Unit)?,
 ) = AnimatedContent(
     modifier = Modifier.fillMaxSize(),
@@ -682,6 +697,15 @@ private fun SongDetailsPage(
         val topPadding = 8.dp
         val topPaddingPx = with(LocalDensity.current) { topPadding.roundToPx() }
         val flingBehavior = rememberRowSnapFlingBehavior(scrollState)
+        // A section folded or unfolded moves every divider after it while the scroll stays where it was, so the song
+        // is put back on one. The frame waited for is the one that lays the rows out where the fold leaves them.
+        val latestFoldedSections by rememberUpdatedState(foldedSections)
+        LaunchedEffect(flingBehavior) {
+            snapshotFlow { latestFoldedSections }.drop(1).collectLatest {
+                withFrameNanos {}
+                flingBehavior.settle()
+            }
+        }
         val bottomPadding = contentPadding.calculateBottomPadding() + 32.dp
         // The lyrics scroll, so they need to be told from the outside how much room there is for them without
         // scrolling: that is what decides how many columns they are flowed into.
@@ -718,6 +742,7 @@ private fun SongDetailsPage(
                 onOpenLink = onOpenLink,
                 onAddLink = onAddLink,
                 onRemoveLink = onRemoveLink,
+                onEditCoverArt = onEditCoverArt,
                 onOpenEditor = onOpenEditor,
                 // The padding is inside the scroll, so a divider is at the top of the viewport once the song is
                 // scrolled by its position plus the padding above it.
@@ -898,6 +923,7 @@ private val APP_BAR_ACTION_WIDTH = 48.dp
 internal val APP_BAR_COVER_SIZE = 40.dp
 internal val APP_BAR_COVER_GAP = 12.dp
 private val MIN_TITLE_WIDTH = 160.dp // About fifteen characters of a title, enough to tell one song from the next.
+private val MIN_TITLE_WIDTH_BESIDE_SONG_ACTIONS = 280.dp // About thirty characters, most titles whole.
 private val TITLE_TOUCH_HORIZONTAL_OUTSET = 4.dp // The padding the bar puts around its title.
 private val TITLE_TOUCH_VERTICAL_OUTSET = 12.dp // From the two lines of title, 40dp, to the bar's 64dp.
 private const val KEY_SCROLL_STEP_FRACTION = 0.1f // Of the height of the scrolling viewport.

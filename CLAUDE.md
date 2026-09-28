@@ -504,8 +504,8 @@ the short version:
   Requests for one address share one download, only a few are made at a time, one nobody is waiting for any more by
   its turn is not made at all, and an address that failed is not asked again for the rest of the
   session (an answer that is not a cover) or for a minute (no answer at all).
-- **The search is MusicBrainz and the iTunes Search API side by side**, from a sheet the song details menu opens
-  (`Find cover art…`), each catalogue's records joining the grid as it answers and one that fails leaving the other's
+- **The search is MusicBrainz and the iTunes Search API side by side**, from a sheet a chip in the song details header
+  opens (`Set cover art` / `Change cover art`, above the tags), each catalogue's records joining the grid as it answers and one that fails leaving the other's
   there. On MusicBrainz, the release groups of an album, or those a song's recordings came out on where the album is
   empty, each with the Cover Art Archive's `front-250` of its release group; on iTunes, the albums the songs matching
   the artist and the album (or title) are on, each with Apple's artwork at 250 px. That address is what is written

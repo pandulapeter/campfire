@@ -814,21 +814,25 @@ private fun SongPreview(
 
 /**
  * The one action of the editor that is neither writing the file nor undoing a keystroke, behind the same overflow
- * button the song details screen uses. It is a menu of one rather than a button of its own, because throwing away
- * everything typed since the last save is not something to end up in by mistapping the button next to Save.
+ * button the song details screen uses. It is a menu of one rather than a button of its own, however much room the bar
+ * has ([ActionsMenuItem.isAlwaysInMenu]), because throwing away everything typed since the last save is not something
+ * to end up in by mistapping the button next to Save.
  */
 @Composable
 private fun EditorMenu(
     canRevert: Boolean,
     onRevert: () -> Unit,
-) = ActionsMenu { select ->
-    ActionsMenuItem(
-        title = stringResource(Res.string.song_editor_revert),
-        icon = painterResource(Res.drawable.ic_refresh),
-        isEnabled = canRevert,
-        onClick = { select { onRevert() } },
-    )
-}
+) = ActionsMenu(
+    items = listOf(
+        ActionsMenuItem(
+            title = stringResource(Res.string.song_editor_revert),
+            icon = painterResource(Res.drawable.ic_refresh),
+            isEnabled = canRevert,
+            isAlwaysInMenu = true,
+            onClick = onRevert,
+        ),
+    ),
+)
 
 /**
  * Keeps the view model's copy of the text in step with the field, without writing any of it. It is what tells the

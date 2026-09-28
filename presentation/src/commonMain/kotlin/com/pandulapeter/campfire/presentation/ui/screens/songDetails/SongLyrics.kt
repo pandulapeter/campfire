@@ -88,6 +88,7 @@ import com.pandulapeter.campfire.chordpro.model.SectionType
 import com.pandulapeter.campfire.data.model.domain.UserPreferences
 import com.pandulapeter.campfire.presentation.resources.Res
 import com.pandulapeter.campfire.presentation.resources.ic_add
+import com.pandulapeter.campfire.presentation.resources.ic_album
 import com.pandulapeter.campfire.presentation.resources.ic_clear
 import com.pandulapeter.campfire.presentation.resources.ic_language
 import com.pandulapeter.campfire.presentation.resources.ic_link
@@ -108,7 +109,9 @@ import com.pandulapeter.campfire.presentation.resources.song_details_section_gri
 import com.pandulapeter.campfire.presentation.resources.song_details_section_tab
 import com.pandulapeter.campfire.presentation.resources.song_details_tab_collapse
 import com.pandulapeter.campfire.presentation.resources.song_details_tab_expand
+import com.pandulapeter.campfire.presentation.resources.song_details_change_cover_art
 import com.pandulapeter.campfire.presentation.resources.song_details_link_add
+import com.pandulapeter.campfire.presentation.resources.song_details_set_cover_art
 import com.pandulapeter.campfire.presentation.resources.song_details_link_remove
 import com.pandulapeter.campfire.presentation.resources.song_details_tag_add
 import com.pandulapeter.campfire.presentation.resources.song_details_tag_remove
@@ -165,8 +168,9 @@ import kotlin.math.roundToInt
  * Null where nothing folds, which is the editor's preview: it is there to show what is being written, and a section
  * folded on the details screen would hide the lines being typed into it.
  * @param onDividersPlaced Handed the y position of every divider between the rows of the horizontal flow, measured
- * from the top of this composable's content, every time they are placed. The song details screen snaps its scroll to
- * them. * @param onOpenEditor Offered under a song too long to be laid out whole, see [LayoutBudget]; null where the editor is
+ * from the top of this composable's content, every time they are placed, where they settle rather than where an
+ * animation has got them to. The song details screen snaps its scroll to them.
+ * @param onOpenEditor Offered under a song too long to be laid out whole, see [LayoutBudget]; null where the editor is
  * already open or may not be opened (performance mode).
  */
 @OptIn(ExperimentalSharedTransitionApi::class)
@@ -187,6 +191,7 @@ internal fun SongLyrics(
     onOpenLink: ((String) -> Unit)? = null,
     onAddLink: (() -> Unit)? = null,
     onRemoveLink: ((String) -> Unit)? = null,
+    onEditCoverArt: (() -> Unit)? = null,
     onDividersPlaced: ((dividerTops: List<Int>) -> Unit)? = null,
     onOpenEditor: (() -> Unit)? = null,
 ) {
@@ -273,6 +278,7 @@ internal fun SongLyrics(
             onOpenLink = onOpenLink,
             onAddLink = onAddLink,
             onRemoveLink = onRemoveLink,
+            onEditCoverArt = onEditCoverArt,
         )
         LookaheadScope {
             SongSectionsLayout(
@@ -401,6 +407,10 @@ private fun CutSongNotice(
  * @param onOpenLink Null where a link is only shown, not followed: the editor's preview, where a tap is meant for the
  *   text rather than for a browser.
  * @param onAddLink Null wherever [onAddTag] is, and for the same reason; so is [onRemoveLink].
+ * @param onEditCoverArt Opens the cover search, on a chip of its own above the tags, reading "Set" or "Change" by
+ *   whether the file names a cover. A row of its own rather than one more chip among the tags, since a cover is one
+ *   thing about the song rather than one of a list of them. Null wherever [onAddTag] is, and also while covers are
+ *   turned off.
  */
 @Composable
 private fun SongMetadataHeader(
@@ -413,8 +423,20 @@ private fun SongMetadataHeader(
     onOpenLink: ((String) -> Unit)?,
     onAddLink: (() -> Unit)?,
     onRemoveLink: ((String) -> Unit)?,
+    onEditCoverArt: (() -> Unit)?,
 ) = Column(modifier = modifier.padding(bottom = SECTION_GAP)) {
     val metadata = song.metadata
+    onEditCoverArt?.let { onClick ->
+        TagFlowRow(
+            modifier = Modifier.padding(bottom = 4.dp),
+        ) {
+            TagPill(
+                text = stringResource(if (metadata.coverArt == null) Res.string.song_details_set_cover_art else Res.string.song_details_change_cover_art),
+                onClick = onClick,
+                leadingIcon = painterResource(Res.drawable.ic_album),
+            )
+        }
+    }
     if (metadata.tags.isNotEmpty() || metadata.languages.isNotEmpty() || metadata.links.isNotEmpty() || onAddTag != null || onAddLink != null) {
         TagFlowRow(
             modifier = Modifier.padding(bottom = 4.dp)
@@ -1277,7 +1299,8 @@ private fun TextStyle.scaled(scale: Float) = copy(
  * finds is kept in [sectionMeasurements]: the intrinsic height of every section at every width it was asked about,
  * and the grid decided for the last settled width, which is the same on every frame of a transition.
  *
- * [onDividersPlaced] is handed the y positions of the dividers between the rows every time the layout is measured.
+ * [onDividersPlaced] is handed the y positions the dividers between the rows settle at every time the layout is measured
+ * ahead, which is before any of them is animated to its place.
  */
 @Composable
 private fun SongSectionsLayout(
@@ -1410,7 +1433,9 @@ private fun SongSectionsLayout(
     // above and below it instead of floating in the middle of the screen. A song of nothing but single columns has no
     // other rows to line up with, and is centered as a whole.
     val rowStarts = IntArray(columnWidths.size) { row -> if (grid.columnCounts[row] == 1) contentStart else centeredRowStarts[row] }
-    onDividersPlaced(arrangement.dividerTops)
+    // The approach pass places the rows where their sections' animations have got to, which is not where a scroll
+    // comes to rest: a fold toggled a moment before a fling would otherwise have it snap to a divider still moving.
+    if (isLookingAhead) onDividersPlaced(arrangement.dividerTops)
     val dividers = arrangement.dividerTops.take(dividerMeasurables.size).mapIndexed { index, top ->
         val placeable = dividerMeasurables[index].measure(Constraints(minWidth = contentWidth, maxWidth = contentWidth))
         placeable to IntOffset(x = contentStart, y = top - placeable.height / 2)

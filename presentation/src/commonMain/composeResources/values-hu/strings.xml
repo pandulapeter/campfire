@@ -323,7 +323,7 @@
     <string name="song_details_language">Nyelv</string>
     <string name="song_details_language_search">Nyelv keresése</string>
     <string name="song_details_language_no_search_results">Egyetlen nyelv sem felel meg a keresésnek. A két- vagy hárombetűs kódjával akkor is megtalálod, ha nincs neve.</string>
-    <string name="song_details_find_cover_art">Borítókép keresése</string>
+    <string name="song_details_set_cover_art">Borítókép beállítása</string>
     <string name="song_details_change_cover_art">Borítókép cseréje</string>
     <string name="cover_art_search_title">Borítókép</string>
     <string name="cover_art_search">Keresés</string>

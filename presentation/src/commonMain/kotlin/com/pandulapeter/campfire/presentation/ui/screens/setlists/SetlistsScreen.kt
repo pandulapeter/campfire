@@ -48,7 +48,6 @@ import com.pandulapeter.campfire.presentation.resources.ic_add
 import com.pandulapeter.campfire.presentation.resources.ic_archive
 import com.pandulapeter.campfire.presentation.resources.ic_move_down
 import com.pandulapeter.campfire.presentation.resources.ic_move_up
-import com.pandulapeter.campfire.presentation.resources.ic_more
 import com.pandulapeter.campfire.presentation.resources.ic_setlists_remove
 import com.pandulapeter.campfire.presentation.resources.setlists_add_songs
 import com.pandulapeter.campfire.presentation.resources.setlists_archived
@@ -81,10 +80,10 @@ import com.pandulapeter.campfire.presentation.ui.components.ScrollToTopWhenChang
 import com.pandulapeter.campfire.presentation.ui.components.SearchableTopAppBar
 import com.pandulapeter.campfire.presentation.ui.components.SectionHeader
 import com.pandulapeter.campfire.presentation.ui.components.SectionHeaderState
-import com.pandulapeter.campfire.presentation.ui.components.SetlistActionsMenu
+import com.pandulapeter.campfire.presentation.ui.components.SetlistActions
 import com.pandulapeter.campfire.presentation.ui.components.MissingSongListItem
 import com.pandulapeter.campfire.presentation.ui.components.SongListItem
-import com.pandulapeter.campfire.presentation.ui.components.SongActionsButton
+import com.pandulapeter.campfire.presentation.ui.components.SongActions
 import com.pandulapeter.campfire.presentation.ui.components.SortMenu
 import com.pandulapeter.campfire.presentation.ui.components.allowsNewItemMenu
 import com.pandulapeter.campfire.presentation.ui.components.animateAppBarReveal
@@ -319,9 +318,10 @@ private fun SetlistList(
                             iconContentDescription = stringResource(Res.string.setlists_archived),
                             onClick = { coroutineScope.launch { listState.animateScrollToItem(headerIndex) } },
                             action = if (isPerformanceModeEnabled) null else {
-                                { actionModifier ->
-                                    SetlistActionsMenu(
+                                { actionModifier, buttonModifier ->
+                                    SetlistActions(
                                         modifier = actionModifier,
+                                        buttonModifier = buttonModifier,
                                         viewModel = viewModel,
                                         setlist = setlistWithSongs.setlist,
                                     )
@@ -492,6 +492,7 @@ private fun SetlistList(
         }
         // The visual copy can pass above the grid's clipped viewport, under the transparent app bar, as it fades away.
         PushedSetlistHeader(
+            viewModel = viewModel,
             listState = listState,
             setlistsWithSongs = setlistsWithSongs,
             endPadding = headerEndPadding,
@@ -511,6 +512,7 @@ private fun SetlistList(
  */
 @Composable
 private fun PushedSetlistHeader(
+    viewModel: CampfireViewModel,
     listState: LazyGridState,
     setlistsWithSongs: List<CampfireViewModel.SetlistWithSongs>,
     endPadding: Dp,
@@ -530,7 +532,16 @@ private fun PushedSetlistHeader(
         endPadding = endPadding,
         icon = if (setlist.isArchived) painterResource(Res.drawable.ic_archive) else null,
         onClick = null,
-        actionIcon = if (isPerformanceModeEnabled) null else painterResource(Res.drawable.ic_more),
+        action = if (isPerformanceModeEnabled) null else {
+            { actionModifier, _ ->
+                SetlistActions(
+                    modifier = actionModifier,
+                    viewModel = viewModel,
+                    setlist = setlist,
+                    isDecorative = true,
+                )
+            }
+        },
         contentOpacity = { pushed.value?.visibleFraction ?: 0f },
         pushedDistancePx = { pushed.value?.pushedDistance ?: 0 },
         appBarOverlap = appBarOverlap,
@@ -625,52 +636,53 @@ private fun SetlistEntryActions(
 ) {
     val onRemove: () -> Unit = { viewModel.removeSongFromSetlist(songFileName = entry.songFileName, setlistFileName = setlistFileName) }
     when (entry) {
-        is CampfireViewModel.SetlistWithSongs.Entry.Present -> SongActionsButton(
+        is CampfireViewModel.SetlistWithSongs.Entry.Present -> SongActions(
             viewModel = viewModel,
             song = entry.song,
+            isExpandable = false,
             isDeletable = false,
-            leadingItems = { select -> SetlistRowMenuItems(select, onMoveUp, onMoveDown, onRemove) },
+            leadingItems = setlistRowActions(onMoveUp, onMoveDown, onRemove),
         )
 
-        is CampfireViewModel.SetlistWithSongs.Entry.Missing -> ActionsMenu { select ->
-            SetlistRowMenuItems(select, onMoveUp, onMoveDown, onRemove)
-        }
+        is CampfireViewModel.SetlistWithSongs.Entry.Missing -> ActionsMenu(
+            isExpandable = false,
+            items = setlistRowActions(onMoveUp, onMoveDown, onRemove),
+        )
     }
 }
 
 /**
- * The entries of a setlist row's menu that are about the row rather than the song in it: the two steps it can be
+ * The actions of a setlist row that are about the row rather than the song in it: the two steps it can be
  * moved by without a drag, for as far as it can go each way, and taking it out of the setlist. The last one carries
  * the setlists tab's list with a minus rather than the bin, since the song stays in the library and every other
  * setlist, and a menu that also offers Delete elsewhere in the app must not have the two read alike.
  */
 @Composable
-private fun SetlistRowMenuItems(
-    select: (action: () -> Unit) -> Unit,
+private fun setlistRowActions(
     onMoveUp: (() -> Unit)?,
     onMoveDown: (() -> Unit)?,
     onRemove: () -> Unit,
-) {
+) = listOfNotNull(
     onMoveUp?.let { onClick ->
         ActionsMenuItem(
             title = stringResource(Res.string.setlists_move_up),
             icon = painterResource(Res.drawable.ic_move_up),
-            onClick = { select(onClick) },
+            onClick = onClick,
         )
-    }
+    },
     onMoveDown?.let { onClick ->
         ActionsMenuItem(
             title = stringResource(Res.string.setlists_move_down),
             icon = painterResource(Res.drawable.ic_move_down),
-            onClick = { select(onClick) },
+            onClick = onClick,
         )
-    }
+    },
     ActionsMenuItem(
         title = stringResource(Res.string.setlists_remove_song),
         icon = painterResource(Res.drawable.ic_setlists_remove),
-        onClick = { select(onRemove) },
-    )
-}
+        onClick = onRemove,
+    ),
+)
 
 /**
  * The lazy list key of a song inside a setlist, encoded as a string so that the list can save it.

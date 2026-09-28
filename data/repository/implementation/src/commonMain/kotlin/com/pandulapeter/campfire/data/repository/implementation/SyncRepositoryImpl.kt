@@ -538,8 +538,8 @@ internal class SyncRepositoryImpl(
                     is SyncEngine.Result.DeletionsNeedConfirmation -> {
                         // Asked before the deletions moved, but not necessarily before anything did: a second pass
                         // can find the folder emptied after the first one had already brought files in, and those
-                        // are on disk whether or not the question is answered.
-                        latestIndex?.let { saveIndexQuietly(it().markedAsFinished()) }
+                        // are on disk whether the question is answered.
+                        saveIndexQuietly(latestIndex().markedAsFinished())
                         refreshLibraryAfterRun()
                         updateConnected {
                             it.copy(

@@ -36,7 +36,6 @@ import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.lazy.grid.LazyGridState
 import androidx.compose.foundation.selection.selectable
 import androidx.compose.foundation.selection.toggleable
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material3.Button
 import androidx.compose.material3.Checkbox
 import androidx.compose.material3.RadioButton
@@ -77,6 +76,7 @@ import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.unit.Density
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
@@ -148,7 +148,7 @@ import kotlin.math.roundToInt
  *   behind it, so that a row is told apart at a glance without anything being written over the image. Null where the
  *   song names none or covers are turned off.
  * @param actions The trailing content of the row, which is the overflow button of the song's actions
- *   ([SongActionsButton]).
+ *   ([SongActions]).
  */
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
@@ -577,7 +577,7 @@ internal fun rememberSectionHeaderState(listState: LazyGridState, headerIndex: I
  * The cards are what makes room for a header rather than a background of its own: they are faded out entirely under
  * the row of the one pinned at the top of the list and fade back in below it ([ListTopFade]), so the name is always
  * read against the screen's background, and it and the app bar's pill of buttons next to it are the only things at
- * the top of the list. Only the header's content takes a touch, laid out as a pill that the press is drawn in; the
+ * the top of the list. Only the header's content takes a touch, laid out as a pill with no press drawn in it; the
  * rest of the row leaves it to whatever is under it.
  *
  * The list screens have no title in their app bar, and the header pinned at the top of the list is what stands in its
@@ -596,8 +596,10 @@ internal fun rememberSectionHeaderState(listState: LazyGridState, headerIndex: I
  * Everything that follows the scroll position is handed over as a function and read only while the row is laid out
  * ([state]) or drawn ([opacity], [contentOpacity], [pushedDistancePx]), so that a scroll moving it recomposes nothing.
  *
- * @param action The button at the end of the pill, handed the modifier that keeps it from taking the focus
- *   ([unfocusable]).
+ * @param action The buttons at the end of the pill, a setlist's [SetlistActions]: handed the modifier that decides how
+ *   much of the pill they may take, and the one that keeps each of them from taking the focus ([unfocusable]). The room
+ *   is counted at the width the pill narrows to once pinned, whatever it is now, so that a header does not trade its
+ *   buttons for a menu as it is scrolled into the bar's place, and the name keeps [SECTION_HEADER_MIN_TEXT_WIDTH].
  * @param appBarOverlap How far in from the row's end edge the app bar's buttons reach while this row is pinned under
  *   them, and how much of the pinned place they still cover, read while the row is laid out so that the bar filling in
  *   and emptying moves the header without recomposing the list around it.
@@ -611,8 +613,7 @@ internal fun SectionHeader(
     icon: Painter? = null,
     iconContentDescription: String? = null,
     onClick: (() -> Unit)?,
-    action: (@Composable (modifier: Modifier) -> Unit)? = null,
-    actionIcon: Painter? = null,
+    action: (@Composable (modifier: Modifier, buttonModifier: Modifier) -> Unit)? = null,
     opacity: () -> Float = { 1f },
     contentOpacity: () -> Float = { 1f },
     pushedDistancePx: () -> Int = { 0 },
@@ -628,23 +629,11 @@ internal fun SectionHeader(
         .defaultMinSize(minHeight = LIST_APP_BAR_HEIGHT),
     contentAlignment = Alignment.CenterStart,
 ) {
-    val hasAction = action != null || actionIcon != null
+    val hasAction = action != null
     val pillModifier = Modifier
         .padding(start = SONG_CARD_OUTER_PADDING)
         .layout { measurable, constraints ->
-            // The cards end at the scroller's column, and a pinned header ends where the bar's buttons begin.
-            val overlap = appBarOverlap()
-            val cardsEndInset = (endPadding + SONG_CARD_OUTER_PADDING).toPx()
-            val pinnedEndInset = maxOf(cardsEndInset, (overlap.reach + SECTION_HEADER_APP_BAR_GAP).toPx())
-            // Eased rather than linear, since the fraction is the scroll position itself: the header gives way
-            // gently as it starts coming into the bar's place and settles into the room it has left the same way.
-            // The list moving down under an opening search takes a pinned header out of that place, so the same
-            // curve is run on how much of it the buttons still cover, and a pinned one widens and narrows along
-            // the path it narrowed along as it was scrolled up.
-            val coveredFraction = FastOutSlowInEasing.transform(state().pinnedFraction) *
-                FastOutSlowInEasing.transform(overlap.coverage)
-            val endInset = cardsEndInset + (pinnedEndInset - cardsEndInset) * coveredFraction
-            val width = (constraints.maxWidth - endInset.roundToInt()).coerceAtLeast(0)
+            val width = (constraints.maxWidth - sectionHeaderEndInsets(state(), appBarOverlap(), endPadding).current).coerceAtLeast(0)
             val placeable = measurable.measure(constraints.copy(minWidth = width, maxWidth = width))
             layout(placeable.width, placeable.height) { placeable.placeRelative(0, 0) }
         }
@@ -695,34 +684,66 @@ internal fun SectionHeader(
                     overflow = TextOverflow.Ellipsis,
                 )
             }
-            if (actionIcon != null) {
-                Box(Modifier.size(48.dp), contentAlignment = Alignment.Center) {
-                    Icon(painter = actionIcon, contentDescription = null, tint = MaterialTheme.colorScheme.onSurfaceVariant)
-                }
-            } else {
-                action?.invoke(Modifier.unfocusable())
-            }
+            action?.invoke(
+                Modifier.layout { measurable, constraints ->
+                    // What the pill is narrower by once pinned is taken off what it holds now; both insets are
+                    // rounded the way the pill rounds its own, so the room does not flicker by a pixel as it narrows.
+                    val insets = sectionHeaderEndInsets(state(), appBarOverlap(), endPadding)
+                    val maxWidth = (constraints.maxWidth + insets.current - insets.pinned - (SECTION_HEADER_MIN_TEXT_WIDTH + SECTION_HEADER_TEXT_GAP).roundToPx())
+                        .coerceAtLeast(SECTION_HEADER_PILL_HEIGHT.roundToPx())
+                        .coerceAtMost(constraints.maxWidth)
+                    val placeable = measurable.measure(constraints.copy(minWidth = 0, maxWidth = maxWidth))
+                    layout(placeable.width, placeable.height) { placeable.placeRelative(0, 0) }
+                },
+                Modifier.unfocusable(),
+            )
         }
     }
-    if (onClick == null) {
-        // The decorative copy takes no touches, so a plain box rather than a surface, which would. It hands its
-        // content the pill's width as a minimum the way a surface does, or the row would wrap the name and pull a
-        // setlist's menu in next to it.
-        Box(modifier = pillModifier, propagateMinConstraints = true) { pillContent() }
-    } else {
-        // Nothing behind it: the cards under a pinned header are faded out entirely (see ListTopFade), and the pill's
-        // shape is only what the press is drawn in.
-        Surface(
-            modifier = pillModifier.unfocusable(),
-            onClick = onClick,
-            shape = CircleShape,
-            color = Color.Transparent,
-        ) { pillContent() }
-    }
+    // The pill's width is handed to its content as a minimum, or the row would wrap the name and pull a setlist's menu
+    // in next to it, and the touch would end with the name. Nothing is drawn for the press: the header has nothing behind it to draw one in, and a ripple across the
+    // width of the list would promise more than a scroll to the section.
+    Box(
+        modifier = if (onClick == null) {
+            pillModifier
+        } else {
+            pillModifier
+                .unfocusable()
+                .clickable(interactionSource = null, indication = null, role = Role.Button, onClick = onClick)
+        },
+        propagateMinConstraints = true,
+    ) { pillContent() }
 }
 
 /**
- * Keeps a [SectionHeader]'s pill and its action from taking the focus, which a click hands them on the desktop and the
+ * How far a [SectionHeader]'s pill ends from the end of its row, in whole pixels: [current]ly, and once pinned under
+ * the app bar's buttons.
+ */
+private class SectionHeaderEndInsets(
+    val current: Int,
+    val pinned: Int,
+)
+
+private fun Density.sectionHeaderEndInsets(
+    state: SectionHeaderState,
+    overlap: AppBarOverlap,
+    endPadding: Dp,
+): SectionHeaderEndInsets {
+    // The cards end at the scroller's column, and a pinned header ends where the bar's buttons begin.
+    val cardsEndInset = (endPadding + SONG_CARD_OUTER_PADDING).toPx()
+    val pinnedEndInset = maxOf(cardsEndInset, (overlap.reach + SECTION_HEADER_APP_BAR_GAP).toPx())
+    // Eased rather than linear, since the fraction is the scroll position itself: the header gives way gently as it
+    // starts coming into the bar's place and settles into the room it has left the same way. The list moving down
+    // under an opening search takes a pinned header out of that place, so the same curve is run on how much of it the
+    // buttons still cover, and a pinned one widens and narrows along the path it narrowed along as it was scrolled up.
+    val coveredFraction = FastOutSlowInEasing.transform(state.pinnedFraction) * FastOutSlowInEasing.transform(overlap.coverage)
+    return SectionHeaderEndInsets(
+        current = (cardsEndInset + (pinnedEndInset - cardsEndInset) * coveredFraction).roundToInt(),
+        pinned = pinnedEndInset.roundToInt(),
+    )
+}
+
+/**
+ * Keeps a [SectionHeader]'s pill and its actions from taking the focus, which a click hands them on the desktop and the
  * web: a lazy grid keeps its focused item composed and placed after it has scrolled away, and a header held that way
  * upsets how the grid pins the ones after it, which are then drawn nowhere once they reach the top. The pill only
  * scrolls to its section and the action opens a menu, neither of which the keyboard needs a stop in the list for.
@@ -1165,6 +1186,9 @@ private val SONG_CARD_VERTICAL_PADDING = 4.dp
 /**
  * The most lines the text of a pinned [SectionHeader] runs to before it is cut short.
  */
+/** The least of a setlist's name a [SectionHeader] keeps next to its actions before one of them goes into the menu. */
+private val SECTION_HEADER_MIN_TEXT_WIDTH = 160.dp
+
 /** The room a section header's text leaves before its action. */
 private val SECTION_HEADER_TEXT_GAP = 4.dp
 

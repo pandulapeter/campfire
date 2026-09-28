@@ -83,7 +83,7 @@ import com.pandulapeter.campfire.presentation.ui.components.SearchableTopAppBar
 import com.pandulapeter.campfire.presentation.ui.components.SectionHeader
 import com.pandulapeter.campfire.presentation.ui.components.SectionHeaderState
 import com.pandulapeter.campfire.presentation.ui.components.SetlistAssignmentsButton
-import com.pandulapeter.campfire.presentation.ui.components.SongActionsButton
+import com.pandulapeter.campfire.presentation.ui.components.SongActions
 import com.pandulapeter.campfire.presentation.ui.components.SongFilters
 import com.pandulapeter.campfire.presentation.ui.components.SongListItem
 import com.pandulapeter.campfire.presentation.ui.components.SortMenu
@@ -448,10 +448,11 @@ private fun SongList(
                                             song = song,
                                             isInSetlist = isInSetlist,
                                         )
-                                        SongActionsButton(
+                                        SongActions(
                                             state = actionsMenuState,
                                             viewModel = viewModel,
                                             song = song,
+                                            isExpandable = false,
                                             isDeletable = true,
                                         )
                                     }
