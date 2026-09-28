@@ -11,20 +11,24 @@ package com.pandulapeter.campfire.data.repository.implementation
 
 import com.pandulapeter.campfire.data.model.DataState
 import com.pandulapeter.campfire.data.model.domain.CoverArtQuery
+import com.pandulapeter.campfire.data.model.domain.CoverArtSearchResults
 import com.pandulapeter.campfire.data.model.domain.Song
 import com.pandulapeter.campfire.data.repository.api.CoverArtRepository
 import com.pandulapeter.campfire.data.repository.api.SongRepository
 import com.pandulapeter.campfire.data.source.local.api.CoverArtLocalSource
 import com.pandulapeter.campfire.data.source.remote.api.CoverArtRemoteSource
-import com.pandulapeter.campfire.data.source.remote.api.CoverArtSearchRemoteSource
+import com.pandulapeter.campfire.data.source.remote.api.CoverArtSearchRemoteSources
 import com.pandulapeter.campfire.data.source.remote.api.hashing.Sha256
 import com.pandulapeter.campfire.data.source.remote.api.model.CoverArtDownload
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineExceptionHandler
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Deferred
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.async
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.channelFlow
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.filterIsInstance
 import kotlinx.coroutines.flow.map
@@ -43,12 +47,15 @@ import kotlin.time.TimeSource
  * A download runs in the repository's own scope rather than in the caller's, so that the list scrolling a row out of
  * view — which cancels the request that row made — does not throw away a download another row, or the same row a
  * moment later, is waiting for.
+ *
+ * A search asks every source side by side, each in a coroutine of the collector's own, so that closing the sheet stops
+ * all of them, and one that fails is recorded as failed rather than ending the others.
  */
 @Single
 internal class CoverArtRepositoryImpl(
     private val coverArtLocalSource: CoverArtLocalSource,
     private val coverArtRemoteSource: CoverArtRemoteSource,
-    private val coverArtSearchRemoteSource: CoverArtSearchRemoteSource,
+    private val coverArtSearchRemoteSources: CoverArtSearchRemoteSources,
     songRepository: SongRepository,
 ) : CoverArtRepository {
 
@@ -88,7 +95,47 @@ internal class CoverArtRepositoryImpl(
         return download.await()
     }
 
-    override suspend fun searchCoverArt(query: CoverArtQuery, onBusy: () -> Unit) = coverArtSearchRemoteSource.searchCoverArt(query, onBusy)
+    override fun searchCoverArt(query: CoverArtQuery): Flow<CoverArtSearchResults> = channelFlow {
+        val resultsMutex = Mutex()
+        var results = CoverArtSearchResults(
+            candidates = emptyList(),
+            pending = coverArtSearchRemoteSources.all.mapTo(mutableSetOf()) { it.service },
+            busy = emptySet(),
+            failed = emptySet(),
+        )
+        val update: suspend (CoverArtSearchResults.() -> CoverArtSearchResults) -> Unit = { transform ->
+            resultsMutex.withLock {
+                results = results.transform()
+                send(results)
+            }
+        }
+        send(results)
+        coverArtSearchRemoteSources.all.forEach { source ->
+            val service = source.service
+            launch {
+                val candidates = try {
+                    source.searchCoverArt(
+                        query = query,
+                        // A wait reported by a source that has answered since is not one anybody is still waiting on.
+                        onBusy = { launch { update { if (service in pending) copy(busy = busy + service) else this } } },
+                    )
+                } catch (exception: CancellationException) {
+                    throw exception
+                } catch (exception: Exception) {
+                    println("The cover search on $service failed: ${exception::class.simpleName}")
+                    null
+                }
+                update {
+                    copy(
+                        candidates = this.candidates + candidates.orEmpty(),
+                        pending = pending - service,
+                        busy = busy - service,
+                        failed = if (candidates == null) failed + service else failed,
+                    )
+                }
+            }
+        }
+    }
 
     private suspend fun load(url: String): ByteArray? = try {
         val key = keyOf(url)

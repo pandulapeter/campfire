@@ -181,6 +181,7 @@ internal fun SongLyrics(
     onAddTag: (() -> Unit)? = null,
     onRemoveTag: ((String) -> Unit)? = null,
     onEditLanguages: (() -> Unit)? = null,
+    onCoverArtClicked: (() -> Unit)? = null,
     onDividersPlaced: ((dividerTops: List<Int>) -> Unit)? = null,
 ) {
     // The fold toggles of the runs inside a section are named by these too, where the file names them nothing.
@@ -264,6 +265,7 @@ internal fun SongLyrics(
             onAddTag = onAddTag,
             onRemoveTag = onRemoveTag,
             onEditLanguages = onEditLanguages,
+            onCoverArtClicked = onCoverArtClicked,
         )
         LookaheadScope {
             SongSectionsLayout(
@@ -366,6 +368,8 @@ internal fun SongLyrics(
  *   the caret, and a chip writing into it from the side would be editing the text the editor has not saved yet.
  * @param onEditLanguages Null wherever [onAddTag] is, and for the same reason. The chip is then shown only by a song
  *   that declares a language, since there is nothing to say about one that does not and nothing to tap to change it.
+ * @param onCoverArtClicked Opens the cover search for the song, the way its menu entry does; null leaves the cover an
+ *   image that takes no tap (the editor's preview, and performance mode, which has no cover search either).
  */
 @Composable
 private fun SongMetadataHeader(
@@ -376,12 +380,14 @@ private fun SongMetadataHeader(
     onAddTag: (() -> Unit)?,
     onRemoveTag: ((String) -> Unit)?,
     onEditLanguages: (() -> Unit)?,
+    onCoverArtClicked: (() -> Unit)?,
 ) = Row(modifier = modifier.padding(bottom = SECTION_GAP)) {
     if (coverArtUrl != null) {
         // The gap goes with the image, so that a cover that never arrives leaves the metadata where it always is.
         CoverArtImage(
             modifier = Modifier.padding(end = HEADER_COVER_GAP).size(HEADER_COVER_SIZE),
             url = coverArtUrl,
+            onClick = onCoverArtClicked,
         )
     }
     SongMetadataHeaderContent(

@@ -9,15 +9,17 @@
  */
 package com.pandulapeter.campfire.domain.api.useCases
 
-import com.pandulapeter.campfire.data.model.domain.CoverArtCandidate
 import com.pandulapeter.campfire.data.model.domain.CoverArtQuery
+import com.pandulapeter.campfire.data.model.domain.CoverArtSearchResults
+import kotlinx.coroutines.flow.Flow
 
 interface SearchCoverArtUseCase {
 
     /**
-     * The records [query] may name, each with the address of its front cover, most relevant first; null when the
-     * search could not be answered at all. [onBusy] is called every time the service asks to be given a moment and the
-     * search waits before asking again, which can add up to a while.
+     * Asks every cover search service about [query] at once, emitting where the search is each time one of them has
+     * to wait or answers — the records found so far, each with the address of its front cover, and which services are
+     * still being waited for or could not be reached — and completing once they all have. Nothing is thrown for a
+     * service that fails; collecting the flow runs the search and cancelling it stops the search.
      */
-    suspend operator fun invoke(query: CoverArtQuery, onBusy: () -> Unit): List<CoverArtCandidate>?
+    operator fun invoke(query: CoverArtQuery): Flow<CoverArtSearchResults>
 }

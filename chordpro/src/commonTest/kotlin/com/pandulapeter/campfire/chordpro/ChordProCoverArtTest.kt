@@ -25,6 +25,14 @@ class ChordProCoverArtTest {
     }
 
     @Test
+    fun `a typed address is usable only where the file would keep it`() {
+        assertEquals(url, ChordProCoverArt.usableUrl("  $url \n"))
+        assertEquals(null, ChordProCoverArt.usableUrl("coverartarchive.org/release-group/abc/front-250"))
+        assertEquals(null, ChordProCoverArt.usableUrl("https://example.com/a b.jpg"))
+        assertEquals(null, ChordProCoverArt.usableUrl("https://"))
+    }
+
+    @Test
     fun `the key of a cover is matched ignoring case`() {
         assertEquals(url, ChordProParser.parseMetadata("{meta: Cover $url}").coverArt)
     }

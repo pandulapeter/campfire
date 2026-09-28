@@ -22,8 +22,9 @@ Tags have no store of their own: they live in the songs' own text as ChordPro di
 
 The cover of a song is carried the same way (`{meta: cover https://…}`, read into `Song.coverArtUrl`): the address only,
 never the image. `CoverArtQuery` is what the cover search is asked — an album, or a title where there is no album,
-narrowed by an artist — and `CoverArtCandidate` one record it found, with the address that is written into the song
-when it is picked.
+narrowed by an artist — `CoverArtCandidate` one record it found in one `CoverArtService` (MusicBrainz, iTunes), with
+the address that is written into the song when it is picked, and `CoverArtSearchResults` where a search of all of them
+stands.
 
 `SongLanguage` is the same thing for the languages a song is sung in (`{meta: language en}`, read into `Song.languages` as lowercase ISO codes — two letters wherever the standard has them, three for the languages ISO 639-1 left out), with one addition: the code `SongLanguage.UNKNOWN` — `und`, which `:chordpro` reads as *no* language, so no song can ever carry it — stands for the songs that declare none, which is how the filter offers them as a group. What a code is *called* is not here: that is whatever the platform says in the language the app is set to, see `:presentation`.
 

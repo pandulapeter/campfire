@@ -9,11 +9,12 @@
  */
 package com.pandulapeter.campfire.data.source.remote.implementation
 
-import com.pandulapeter.campfire.data.source.remote.api.CoverArtSearchRemoteSource
+import com.pandulapeter.campfire.data.source.remote.api.CoverArtSearchRemoteSources
 import com.pandulapeter.campfire.data.source.remote.api.SyncProviders
 import com.pandulapeter.campfire.data.source.remote.implementation.auth.SyncCredentialsStore
 import com.pandulapeter.campfire.data.source.remote.implementation.dropbox.DropboxSyncProvider
-import com.pandulapeter.campfire.data.source.remote.implementation.musicBrainz.CoverArtSearchRemoteSourceImpl
+import com.pandulapeter.campfire.data.source.remote.implementation.iTunes.ITunesCoverArtSearchRemoteSource
+import com.pandulapeter.campfire.data.source.remote.implementation.musicBrainz.MusicBrainzCoverArtSearchRemoteSource
 import com.pandulapeter.campfire.data.source.remote.implementation.musicBrainz.MusicBrainzRateLimiter
 import com.pandulapeter.campfire.data.source.remote.implementation.network.createHttpClient
 import io.ktor.client.HttpClient
@@ -51,14 +52,20 @@ object DataRemoteSourceModule {
     )
 
     /**
-     * Built here rather than declared on the class, since what it is built with — the clock its requests are spaced
-     * by — is the one thing its tests replace. 1.1 s rather than the 1 s MusicBrainz allows, to stay under the
-     * average it counts however the two clocks disagree.
+     * Built here rather than declared on the classes, since what the MusicBrainz source is built with — the clock its
+     * requests are spaced by — is the one thing its tests replace. 1.1 s rather than the 1 s MusicBrainz allows, to stay
+     * under the average it counts however the two clocks disagree. MusicBrainz comes first, since where both answer
+     * at once its release groups, one for every edition of a record, are the tidier list to start with.
      */
     @Single
-    internal fun coverArtSearchRemoteSource(httpClient: HttpClient): CoverArtSearchRemoteSource = CoverArtSearchRemoteSourceImpl(
-        httpClient = httpClient,
-        rateLimiter = MusicBrainzRateLimiter(timeSource = TimeSource.Monotonic, interval = MUSIC_BRAINZ_REQUEST_INTERVAL),
+    internal fun coverArtSearchRemoteSources(httpClient: HttpClient): CoverArtSearchRemoteSources = CoverArtSearchRemoteSources(
+        all = listOf(
+            MusicBrainzCoverArtSearchRemoteSource(
+                httpClient = httpClient,
+                rateLimiter = MusicBrainzRateLimiter(timeSource = TimeSource.Monotonic, interval = MUSIC_BRAINZ_REQUEST_INTERVAL),
+            ),
+            ITunesCoverArtSearchRemoteSource(httpClient = httpClient),
+        ),
     )
 
     private val MUSIC_BRAINZ_REQUEST_INTERVAL = 1_100.milliseconds

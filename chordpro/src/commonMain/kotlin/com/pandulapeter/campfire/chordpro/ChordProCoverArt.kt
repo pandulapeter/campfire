@@ -45,6 +45,13 @@ object ChordProCoverArt {
         return if (kept == lines) text else ChordProSyntax.joinLines(kept, text)
     }
 
+    /**
+     * [value] as the address [set] would write, or null where it would take the cover off instead: trimmed, and only an
+     * `http` or `https` address with no whitespace in it. What a field the user types an address into checks against,
+     * so that it never offers to save something the file would not keep.
+     */
+    fun usableUrl(value: String): String? = ChordProSyntax.coverUrl(value)
+
     /** Whether the line is a `{meta: cover …}` directive, usable or not. */
     private fun String.isCover() = ChordProSyntax.matchDirective(trim())?.let(ChordProSyntax::isCoverMeta) == true
 }

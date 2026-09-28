@@ -15,8 +15,8 @@ Compose UI is shared between all platforms. The app owns a library folder of pla
 editor or by importing files and zip archives. **The only things that ever reach the network are sync, and the cover
 images and the cover search the user asks for.** Sync is off until the user connects a cloud folder of their own in
 Settings, and still involves no server of Campfire's own — see the Sync section below. A cover is fetched from the
-address a song's own file names, once, and kept on the device; the search asks MusicBrainz, and only from the sheet the
-user opens for it; Settings' "Cover art" switch turns both off — see Cover art below. (The Android build also asks Play whether a newer version of itself exists, but that
+address a song's own file names, once, and kept on the device; the search asks MusicBrainz and the iTunes Search API,
+and only from the sheet the user opens for it; Settings' "Cover art" switch turns both off — see Cover art below. (The Android build also asks Play whether a newer version of itself exists, but that
 question is answered over IPC by the Play Store app; Campfire's own process makes no request — see Updates below.
 On Android and iOS the system's own device backup also carries the library and the settings — to the user's Google or
 iCloud backup, or straight to their next phone — but that is the operating system copying the app's files on the
@@ -44,7 +44,7 @@ app:android / app:desktop / app:ios / app:web   entry points, platform chrome, "
       data:source:local:api  -> :implementation   files on Android/desktop/iOS, OPFS on web (see Web below);
                                                   also holds the pure-Kotlin zip reader/writer
       data:source:remote:api -> :implementation   the sync contracts and the Dropbox provider, the cover download
-                                                  and the MusicBrainz search; the only module in the project that
+                                                  and the MusicBrainz and iTunes searches; the only module in the project that
                                                   makes a network call (see Sync and Cover art below)
         data:model                           domain models, shared by everything
   chordpro                                   dependency-free ChordPro model, parser, serializer, transposer, tab
@@ -162,7 +162,7 @@ uninstall and nothing else does.
 - **The cover of a song is carried the same way too**: a `{meta: cover https://…}` directive, read into
   `Song.coverArtUrl` as the first one holding an `http` or `https` address. The file carries the address and nothing
   else, so the cover travels through an export, an import or a sync run as a tag does, and the image is fetched where
-  the song is read. Any address is taken — the library and the addresses in it are the user's — and MusicBrainz is only
+  the song is read. Any address is taken — the library and the addresses in it are the user's — and the search is only
   ever what recommends one. See Cover art below.
 - **The app is shipped with two songs and one setlist**, in
   `presentation/src/commonMain/composeResources/files/demo`: public domain campfire standards, bundled as the plain
@@ -474,8 +474,10 @@ the only possible one. The per-module `CLAUDE.md` files carry the detail; the sh
 ## Cover art
 
 A song names its cover in its own file (`{meta: cover …}`, see Conventions); the app shows it faded into the end of
-the song cards, on the Songs and the Setlists screen alike, and whole at the start of the song details header, and keeps a copy
-of every one it has shown. The module `CLAUDE.md` files carry the detail; the short version:
+the song cards, on the Songs and the Setlists screen alike, and whole at the start of the song details header, where a
+tap opens the cover search (not in performance mode), and keeps a copy of every one it has shown. Over a card the actions sit
+on a pill in the card's own color, so they stay legible over the image. The module `CLAUDE.md` files carry the detail;
+the short version:
 
 - **Every request is in `:data:source:remote`**, through the one Ktor client sync uses: `CoverArtRemoteSource`
   downloads an image, following redirects (the Cover Art Archive answers with two), and takes nothing that is not an
@@ -485,9 +487,13 @@ of every one it has shown. The module `CLAUDE.md` files carry the detail; the sh
   out of every device backup and deleted after a library read that leaves no song naming it (`CoverArtRepository`).
   Requests for one address share one download, and an address that failed is not asked again for the rest of the
   session (an answer that is not a cover) or for a minute (no answer at all).
-- **The search is MusicBrainz**, from a sheet the song details menu opens (`Find cover art…`): the release groups of an
-  album, or those a song's recordings came out on where the album is empty, each with the Cover Art Archive's
-  `front-250` of its release group, which is the address written into the song. MusicBrainz allows one request a
+- **The search is MusicBrainz and the iTunes Search API side by side**, from a sheet the song details menu opens
+  (`Find cover art…`), each catalogue's records joining the grid as it answers and one that fails leaving the other's
+  there. On MusicBrainz, the release groups of an album, or those a song's recordings came out on where the album is
+  empty, each with the Cover Art Archive's `front-250` of its release group; on iTunes, the albums the songs matching
+  the artist and the album (or title) are on, each with Apple's artwork at 250 px. That address is what is written
+  into the song. The sheet's other tab takes an address typed in, previewed before it is saved, for a cover neither
+  has. iTunes needs no key and sends CORS headers, so the web build uses it as it is. MusicBrainz allows one request a
   second from the whole app, so one limiter spaces them 1.1 s apart and a 503 is waited out, the sheet saying so. Every
   request names the app in its `User-Agent` (`Campfire/<campfire.versionName> ( https://github.com/pandulapeter/campfire )`),
   which MusicBrainz asks of every client — except in the browser, where a script cannot set one, and MusicBrainz

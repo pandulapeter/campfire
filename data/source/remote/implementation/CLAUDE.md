@@ -11,7 +11,8 @@
 
 Implements `:data:source:remote:api`. Koin wiring: `Module.kt` holds the `@Module @ComponentScan object
 DataRemoteSourceModule`, whose three `@Single` functions build what is not simply constructed — the HTTP client, the
-list of providers and the cover search, whose clock is what its tests replace — while the stores and the four platform authenticators (`AndroidSyncAuthenticator`, …, each a
+list of providers and the list of cover searches (MusicBrainz first, then iTunes), the first built with the clock its
+tests replace — while the stores and the four platform authenticators (`AndroidSyncAuthenticator`, …, each a
 `@Single` in its own source set) declare themselves. The only module in the project that makes a network call, and
 the only one that sees Ktor.
 
@@ -99,17 +100,27 @@ redirect URIs character for character, which is why the desktop port is fixed.
   trusted no further than its headers: an answer that is not `image/*` or is over 5 MB (read one byte past the limit
   where no length is declared) is `Missing` and never read to its end; a 408, a 429, a 5xx or a transport failure is
   `Unreachable`; any other refusal is `Missing`.
-- `musicBrainz/` — the cover search. `MusicBrainzSearch` is the pure part, and tested: with an album, the release
+- `coverArt/CoverArtSearchTransport.kt` — what the two cover searches share: any `Throwable` of the transport turned
+  into a `CoverArtSearchException`, and the answer decoded on `Dispatchers.Default`, since a recording search lists
+  every release of every recording and decoding it on the main thread lands on the frames of the sheet opening.
+- `musicBrainz/` — the MusicBrainz cover search. `MusicBrainzSearch` is the pure part, and tested: with an album, the release
   groups of that name (`/ws/2/release-group`, one release group standing for every edition of a record, which is what
   a cover is picked for); with only a title, the recordings, and the release groups their releases belong to, each
   once, dated by its earliest release and in the order the recordings are ranked; either narrowed by the artist. The
   values are Lucene phrases, so only a quote and a backslash are escaped. The search results carry nothing about
   covers, so every candidate's address is the Cover Art Archive's `front-250` of its release group, and a group with
-  no cover is found out by its thumbnail's 404. `CoverArtSearchRemoteSourceImpl` spaces its requests through
+  no cover is found out by its thumbnail's 404. `MusicBrainzCoverArtSearchRemoteSource` spaces its requests through
   `MusicBrainzRateLimiter` — one for the whole app, a `Mutex` and the start of the last request, 1.1 s apart, since
   MusicBrainz refuses every request for as long as a client averages more than one a second — and waits out a 503 or
   a 429 for its `Retry-After`, or for 2 s doubling to 32 s where it names none, over at most five retries, calling
   `onBusy` before each. `MusicBrainzModels` are defaulted and read with unknown keys ignored, like the Dropbox ones.
+- `iTunes/` — the iTunes Search API's cover search, which needs no key and sends CORS headers on the search and the
+  artwork alike. `ITunesSearch` is the pure part, and tested: the *songs* are searched with the artist and the album
+  (or the title) as one term — the API's album search matches the album's name alone, so an artist in the term finds
+  nothing — and the albums they are on are the candidates, each once, in the songs' order, a ` - Single` or ` - EP`
+  suffix becoming the type. The artwork is the answer's 100 px address rewritten to `250x250bb.jpg`, which Apple's
+  image server renders at any size; an address in any other form is not guessed at and the record is left out. It
+  allows about twenty requests a minute, so it is asked without a pace of its own and a refusal is a failure.
 - `crypto/` — `Pkce` (verifier, S256 challenge, state) and `dropboxContentHash` (SHA-256 of each 4 MB block,
   concatenated, hashed again), both on the `Sha256` in `:data:source:remote:api`.
 - `network/` — the `HttpClient` factory, one engine per target (OkHttp, CIO, Darwin, `fetch`), `UserAgent.kt` — the
@@ -122,7 +133,7 @@ redirect URIs character for character, which is why the desktop port is fixed.
   `kotlin.Error` rather than an `Exception`, so the provider's `transport` takes any `Throwable` that is not a
   cancellation as the service not being reached.
 
-Tested in `commonTest`, run on the desktop target: the hashing, the encoders, the cover search's queries and parsing,
+Tested in `commonTest`, run on the desktop target: the hashing, the encoders, both cover searches' queries and parsing,
 its `User-Agent`, its pace and its retries in virtual time, the cover download's refusals, and the authorization URL — get a
 parameter wrong there and the user meets an error page on the service's own site with nothing in the app to say why —
 and, against a Ktor `MockEngine` in virtual time, how requests answer being told to slow down, and being cancelled or

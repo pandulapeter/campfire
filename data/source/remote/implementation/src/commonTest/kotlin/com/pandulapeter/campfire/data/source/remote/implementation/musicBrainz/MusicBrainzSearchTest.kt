@@ -11,6 +11,7 @@ package com.pandulapeter.campfire.data.source.remote.implementation.musicBrainz
 
 import com.pandulapeter.campfire.data.model.domain.CoverArtCandidate
 import com.pandulapeter.campfire.data.model.domain.CoverArtQuery
+import com.pandulapeter.campfire.data.model.domain.CoverArtService
 import com.pandulapeter.campfire.data.source.remote.implementation.musicBrainz.MusicBrainzSearch.quoted
 import io.ktor.http.Url
 import kotlin.test.Test
@@ -73,6 +74,7 @@ class MusicBrainzSearchTest {
         assertEquals(
             listOf(
                 CoverArtCandidate(
+                    service = CoverArtService.MUSIC_BRAINZ,
                     id = "rg1",
                     title = "Dookie",
                     artist = "Green Day",
@@ -81,6 +83,7 @@ class MusicBrainzSearchTest {
                     coverArtUrl = "https://coverartarchive.org/release-group/rg1/front-250",
                 ),
                 CoverArtCandidate(
+                    service = CoverArtService.MUSIC_BRAINZ,
                     id = "rg2",
                     title = "Dookie",
                     artist = "A feat. B",

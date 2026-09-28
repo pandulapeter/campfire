@@ -158,11 +158,6 @@ internal fun Modifier.fadingTopEdge(scrollState: ScrollState) = fadingTopEdge { 
 /** [fadingTopEdge] for a lazy list, which only knows how far it is scrolled into its first item. */
 internal fun Modifier.fadingTopEdge(listState: LazyListState) = fadingTopEdge { listState.scrolledFromTop() }
 
-/** [fadingTopEdge] for a lazy grid, which knows as little as a lazy list does. */
-internal fun Modifier.fadingTopEdge(gridState: LazyGridState) = fadingTopEdge {
-    if (gridState.firstVisibleItemIndex > 0) Int.MAX_VALUE else gridState.firstVisibleItemScrollOffset
-}
-
 /**
  * [fadingTopEdge] at both ends, for a container with nothing around it that would say there is more of it: a list in
  * the middle of a dialog, whose bottom edge is a row of buttons rather than the edge of the screen. Each edge fades as
@@ -227,6 +222,23 @@ internal fun Modifier.fadingVerticalEdges(listState: LazyListState) = fadingVert
             lastItem == null -> 0
             lastItem.index < layoutInfo.totalItemsCount - 1 -> Int.MAX_VALUE
             else -> (lastItem.offset + lastItem.size + layoutInfo.afterContentPadding - layoutInfo.viewportEndOffset).coerceAtLeast(0)
+        }
+    },
+)
+
+/**
+ * [fadingVerticalEdges] for a lazy grid, which knows as little as a lazy list does: how far it is scrolled into its
+ * first item, and how far its last row — whichever of its items reaches lowest — reaches past the viewport.
+ */
+internal fun Modifier.fadingVerticalEdges(gridState: LazyGridState) = fadingVerticalEdges(
+    scrolledFromTop = { if (gridState.firstVisibleItemIndex > 0) Int.MAX_VALUE else gridState.firstVisibleItemScrollOffset },
+    scrolledFromBottom = {
+        val layoutInfo = gridState.layoutInfo
+        val visibleItems = layoutInfo.visibleItemsInfo
+        when {
+            visibleItems.isEmpty() -> 0
+            visibleItems.last().index < layoutInfo.totalItemsCount - 1 -> Int.MAX_VALUE
+            else -> (visibleItems.maxOf { it.offset.y + it.size.height } + layoutInfo.afterContentPadding - layoutInfo.viewportEndOffset).coerceAtLeast(0)
         }
     },
 )

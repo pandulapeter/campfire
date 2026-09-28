@@ -83,7 +83,10 @@ and a repository that has not been read yet rescans instead, since there is no l
   dead address costs one request rather than one per scroll. It watches `SongRepository.songs` and, whenever a
   library read has finished (`Idle`, never the `Loading` batches of a scan, which would prune the covers of the songs
   not read yet) with a different set of addresses, deletes every copy no song names — a search result's thumbnail,
-  which is fetched the same way, included. `commonTest` covers the sharing, the failures and the pruning.
+  which is fetched the same way, included. The search runs every `CoverArtSearchRemoteSource` side by side in a
+  `channelFlow`, so cancelling the collection stops them all, and appends each one's candidates in the order they
+  answer — the grid grows at its end rather than shifting under the user. `commonTest` covers the sharing, the
+  failures, the pruning and the search's order of emissions.
 - `SongContentRepositoryImpl` is not a `BaseLocalDataRepository`: it is a keyed in-memory cache of song *texts*, so
   paging through a setlist re-reads nothing. Bulk readers (the library export) pass `shouldCache = false` so that
   walking the whole library does not leave all of it in memory. The editor invalidates one entry after a save. The

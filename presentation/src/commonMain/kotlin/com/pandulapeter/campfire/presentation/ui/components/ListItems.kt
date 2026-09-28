@@ -65,6 +65,10 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
+import androidx.compose.ui.draw.drawBehind
+import androidx.compose.ui.geometry.CornerRadius
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.focus.focusProperties
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.graphics.Color
@@ -213,6 +217,7 @@ internal fun SongListItem(
             CenteredSongCardContent(
                 modifier = Modifier.combinedClickable(onClick = onClick, onLongClick = onLongClick),
                 actions = actions,
+                actionsBackdropColor = if (coverArtUrl == null) null else containerColor.copy(alpha = SONG_CARD_ACTIONS_BACKDROP_ALPHA),
                 headlineContent = {
                     ListItemHeadline(text = songCardTitle(song.title, index))
                 },
@@ -388,17 +393,21 @@ internal fun MissingSongListItem(
  * of a three-line item to its top and grows it to 88dp, so a card whose labels made it three lines left a band of
  * empty card under them, and the actions, which Material top-aligns there too, would have been measured against a
  * body they did not share a center with. The paddings, the minimum heights and the text styles are the list item's.
+ *
+ * @param actionsBackdropColor The pill drawn behind the actions where the card has a cover under them, see
+ *   [ListItemActions].
  */
 @Composable
 private fun CenteredSongCardContent(
     modifier: Modifier = Modifier,
     actions: (@Composable () -> Unit)?,
+    actionsBackdropColor: Color? = null,
     headlineContent: @Composable () -> Unit,
     supportingContent: (@Composable () -> Unit)?,
 ) = Layout(
     modifier = modifier.fillMaxWidth(),
     contents = listOf(
-        { actions?.let { ListItemActions(content = it) } },
+        { actions?.let { ListItemActions(backdropColor = actionsBackdropColor, content = it) } },
         {
             Box(
                 modifier = Modifier
@@ -438,13 +447,33 @@ private fun CenteredSongCardContent(
  * Whatever a card carries at its end: the overflow button, with the setlist assignments button beside it on the songs
  * screen and the drag handle on the setlists screen.
  * Move the controls slightly toward the card's edge without changing the width reserved for them in the body.
+ *
+ * Where the card has a cover, the controls sit on a pill of [backdropColor] — the card's own color, mostly opaque —
+ * since the cover is at its strongest exactly there and a grey icon over a busy picture can hardly be seen. Being the
+ * card's own color, the pill is invisible for as long as the cover has not loaded, or where it never does, so it
+ * needs no state of its own to follow the image, and a dragged card's tint reaches it too. It is drawn behind the
+ * controls rather than as a surface around them, so it takes no room and no touch of its own.
  */
 @Composable
 private fun ListItemActions(
     modifier: Modifier = Modifier,
+    backdropColor: Color?,
     content: @Composable () -> Unit,
 ) = Box(
-    modifier = modifier.offset(x = LIST_ITEM_TRAILING_KEYLINE_ADJUSTMENT),
+    modifier = modifier
+        .offset(x = LIST_ITEM_TRAILING_KEYLINE_ADJUSTMENT)
+        .then(
+            if (backdropColor == null) Modifier else Modifier.drawBehind {
+                val inset = SONG_CARD_ACTIONS_BACKDROP_INSET.toPx()
+                val height = size.height - 2 * inset
+                drawRoundRect(
+                    color = backdropColor,
+                    topLeft = Offset(0f, inset),
+                    size = Size(size.width, height),
+                    cornerRadius = CornerRadius(height / 2),
+                )
+            },
+        ),
 ) {
     content()
 }
@@ -1135,6 +1164,12 @@ private val SONG_CARD_ONE_LINE_MIN_HEIGHT = 56.dp
 
 /** How strongly a card's cover shows through at its end, where it is not faded at all: a backdrop, never a picture to read. */
 private const val SONG_CARD_COVER_ALPHA = 0.6f
+
+/** How much of the cover the pill behind a card's actions still lets through. */
+private const val SONG_CARD_ACTIONS_BACKDROP_ALPHA = 0.85f
+
+/** How far the pill behind a card's actions stays inside their touch targets, top and bottom, to sit around the icons. */
+private val SONG_CARD_ACTIONS_BACKDROP_INSET = 4.dp
 
 /** How much of a card's width its cover takes, from the end. */
 private const val SONG_CARD_COVER_WIDTH_FRACTION = 0.5f

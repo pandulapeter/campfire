@@ -11,19 +11,18 @@ package com.pandulapeter.campfire.data.source.remote.implementation.musicBrainz
 
 import com.pandulapeter.campfire.data.model.domain.CoverArtCandidate
 import com.pandulapeter.campfire.data.model.domain.CoverArtQuery
+import com.pandulapeter.campfire.data.model.domain.CoverArtService
 import com.pandulapeter.campfire.data.source.remote.api.CoverArtSearchException
 import com.pandulapeter.campfire.data.source.remote.api.CoverArtSearchRemoteSource
+import com.pandulapeter.campfire.data.source.remote.implementation.coverArt.coverArtSearchTransport
+import com.pandulapeter.campfire.data.source.remote.implementation.coverArt.parseCoverArtSearchAnswer
 import io.ktor.client.HttpClient
 import io.ktor.client.request.get
 import io.ktor.client.statement.bodyAsText
 import io.ktor.http.HttpHeaders
 import io.ktor.http.HttpStatusCode
 import io.ktor.http.isSuccess
-import kotlinx.coroutines.CancellationException
-import kotlinx.coroutines.currentCoroutineContext
 import kotlinx.coroutines.delay
-import kotlinx.coroutines.ensureActive
-import kotlinx.serialization.SerializationException
 import kotlin.math.min
 
 /**
@@ -33,27 +32,23 @@ import kotlin.math.min
  * [MAXIMUM_RETRIES] attempts, the way the Dropbox provider sits out being rate limited. The caller hears of every such
  * wait through `onBusy`, since a search that takes ten seconds without saying why looks broken.
  */
-internal class CoverArtSearchRemoteSourceImpl(
+internal class MusicBrainzCoverArtSearchRemoteSource(
     private val httpClient: HttpClient,
     private val rateLimiter: MusicBrainzRateLimiter,
 ) : CoverArtSearchRemoteSource {
 
+    override val service = CoverArtService.MUSIC_BRAINZ
+
     override suspend fun searchCoverArt(query: CoverArtQuery, onBusy: () -> Unit): List<CoverArtCandidate> {
         val request = MusicBrainzSearch.request(query) ?: return emptyList()
         val body = fetch(request.url, onBusy)
-        return try {
-            MusicBrainzSearch.candidates(request, body)
-        } catch (exception: SerializationException) {
-            throw CoverArtSearchException("MusicBrainz answered with something that is not a search result.", exception)
-        } catch (exception: IllegalArgumentException) {
-            throw CoverArtSearchException("MusicBrainz answered with something that is not a search result.", exception)
-        }
+        return parseCoverArtSearchAnswer(SERVICE_NAME) { MusicBrainzSearch.candidates(request, body) }
     }
 
     private suspend fun fetch(url: String, onBusy: () -> Unit): String {
         var attempt = 0
         while (true) {
-            val (status, retryAfterSeconds, body) = transport {
+            val (status, retryAfterSeconds, body) = coverArtSearchTransport(SERVICE_NAME) {
                 rateLimiter.awaitTurn()
                 val response = httpClient.get(url)
                 Triple(response.status, response.headers[HttpHeaders.RetryAfter]?.trim()?.toLongOrNull(), response.bodyAsText())
@@ -61,32 +56,19 @@ internal class CoverArtSearchRemoteSourceImpl(
             when {
                 status.isSuccess() -> return body
                 status == HttpStatusCode.ServiceUnavailable || status == HttpStatusCode.TooManyRequests -> {
-                    if (attempt >= MAXIMUM_RETRIES) throw CoverArtSearchException("MusicBrainz is busy.")
+                    if (attempt >= MAXIMUM_RETRIES) throw CoverArtSearchException("$SERVICE_NAME is busy.")
                     onBusy()
                     delay((retryAfterSeconds ?: min(DEFAULT_RETRY_SECONDS shl attempt, MAXIMUM_RETRY_SECONDS)) * 1000L)
                     attempt++
                 }
 
-                else -> throw CoverArtSearchException("MusicBrainz answered ${status.value}.")
+                else -> throw CoverArtSearchException("$SERVICE_NAME answered ${status.value}.")
             }
         }
     }
 
-    /**
-     * Anything the transport throws is the service not being reached, the way the Dropbox provider reads it: the
-     * browser engine reports a failed `fetch` as a `kotlin.Error`, so every `Throwable` that is not a cancellation of
-     * this coroutine counts.
-     */
-    private suspend fun <T> transport(block: suspend () -> T): T = try {
-        block()
-    } catch (exception: CancellationException) {
-        currentCoroutineContext().ensureActive()
-        throw CoverArtSearchException(exception.message ?: "MusicBrainz could not be reached.", exception)
-    } catch (throwable: Throwable) {
-        throw CoverArtSearchException(throwable.message ?: "MusicBrainz could not be reached.", throwable)
-    }
-
     private companion object {
+        const val SERVICE_NAME = "MusicBrainz"
         const val MAXIMUM_RETRIES = 5
         const val DEFAULT_RETRY_SECONDS = 2L
         const val MAXIMUM_RETRY_SECONDS = 32L

@@ -15,6 +15,7 @@ import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.shrinkHorizontally
 import androidx.compose.foundation.Image
+import androidx.compose.foundation.clickable
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
@@ -29,6 +30,7 @@ import androidx.compose.ui.graphics.CompositingStrategy
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.draw.drawWithContent
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.unit.LayoutDirection
 import coil3.ImageLoader
 import coil3.PlatformContext
@@ -141,12 +143,14 @@ private val FADE_STOPS = listOf(0f, 0.2f, 0.4f, 0.6f, 0.8f, 1f).map { offset ->
 /**
  * A cover image on its own, drawn whole and at full strength, which only takes its room once there is an image to
  * show: an address that answers with nothing leaves no empty square behind. It grows into its place as it arrives, and
- * one that is already in memory is simply there from the first frame.
+ * one that is already in memory is simply there from the first frame. [onClick], where there is one, makes the image
+ * a button, pressed inside its rounded corners.
  */
 @Composable
 internal fun CoverArtImage(
     modifier: Modifier = Modifier,
     url: String,
+    onClick: (() -> Unit)? = null,
 ) {
     val painter = rememberAsyncImagePainter(model = CoverArt(url), contentScale = ContentScale.Crop)
     val state by painter.state.collectAsState()
@@ -156,7 +160,9 @@ internal fun CoverArtImage(
         exit = fadeOut() + shrinkHorizontally(shrinkTowards = Alignment.Start),
     ) {
         Image(
-            modifier = modifier.clip(MaterialTheme.shapes.medium),
+            modifier = modifier
+                .clip(MaterialTheme.shapes.medium)
+                .then(if (onClick == null) Modifier else Modifier.clickable(role = Role.Button, onClick = onClick)),
             painter = painter,
             contentDescription = null,
             contentScale = ContentScale.Crop,

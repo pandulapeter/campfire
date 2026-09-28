@@ -11,6 +11,7 @@ package com.pandulapeter.campfire.data.source.remote.implementation.musicBrainz
 
 import com.pandulapeter.campfire.data.model.domain.CoverArtCandidate
 import com.pandulapeter.campfire.data.model.domain.CoverArtQuery
+import com.pandulapeter.campfire.data.model.domain.CoverArtService
 import com.pandulapeter.campfire.data.source.remote.implementation.network.urlEncode
 import kotlinx.serialization.json.Json
 
@@ -75,6 +76,7 @@ internal object MusicBrainzSearch {
     private fun MusicBrainzReleaseGroup.toCandidate(artistCredit: List<MusicBrainzArtistCredit>, year: String?) =
         id.takeIf { it.isNotBlank() }?.let {
             CoverArtCandidate(
+                service = CoverArtService.MUSIC_BRAINZ,
                 id = id,
                 title = title,
                 artist = artistCredit.joinToString("") { credit -> credit.name + credit.joinPhrase }.trim(),

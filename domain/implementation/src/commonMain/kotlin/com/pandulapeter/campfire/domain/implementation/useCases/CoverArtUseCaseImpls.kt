@@ -15,7 +15,6 @@ import com.pandulapeter.campfire.data.repository.api.CoverArtRepository
 import com.pandulapeter.campfire.domain.api.useCases.GetCoverArtUseCase
 import com.pandulapeter.campfire.domain.api.useCases.SearchCoverArtUseCase
 import com.pandulapeter.campfire.domain.api.useCases.SetChordProCoverArtUseCase
-import kotlinx.coroutines.CancellationException
 import org.koin.core.annotation.Factory
 
 @Factory
@@ -37,12 +36,5 @@ class SearchCoverArtUseCaseImpl internal constructor(
     private val coverArtRepository: CoverArtRepository,
 ) : SearchCoverArtUseCase {
 
-    override suspend operator fun invoke(query: CoverArtQuery, onBusy: () -> Unit) = try {
-        coverArtRepository.searchCoverArt(query, onBusy)
-    } catch (exception: CancellationException) {
-        throw exception
-    } catch (exception: Exception) {
-        println("The cover search failed: ${exception::class.simpleName}")
-        null
-    }
+    override operator fun invoke(query: CoverArtQuery) = coverArtRepository.searchCoverArt(query)
 }

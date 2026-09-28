@@ -37,7 +37,7 @@ import kotlin.time.Duration.Companion.milliseconds
  * How the cover search keeps to MusicBrainz's pace. The service is a [MockEngine] and the waiting happens in virtual
  * time, so the spacing and the back-off are measured exactly.
  */
-class CoverArtSearchRemoteSourceTest {
+class MusicBrainzCoverArtSearchRemoteSourceTest {
 
     @Test
     fun `the user agent names the app, its version and where to reach its maintainers`() {
@@ -143,7 +143,7 @@ class CoverArtSearchRemoteSourceTest {
         assertEquals(0, requestCount)
     }
 
-    private fun TestScope.source(handler: suspend MockRequestHandleScope.(HttpRequestData) -> HttpResponseData) = CoverArtSearchRemoteSourceImpl(
+    private fun TestScope.source(handler: suspend MockRequestHandleScope.(HttpRequestData) -> HttpResponseData) = MusicBrainzCoverArtSearchRemoteSource(
         httpClient = HttpClient(MockEngine(handler)) {
             expectSuccess = false
             install(UserAgent) { agent = USER_AGENT }

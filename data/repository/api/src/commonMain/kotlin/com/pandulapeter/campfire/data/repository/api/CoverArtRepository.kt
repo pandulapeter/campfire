@@ -9,8 +9,9 @@
  */
 package com.pandulapeter.campfire.data.repository.api
 
-import com.pandulapeter.campfire.data.model.domain.CoverArtCandidate
 import com.pandulapeter.campfire.data.model.domain.CoverArtQuery
+import com.pandulapeter.campfire.data.model.domain.CoverArtSearchResults
+import kotlinx.coroutines.flow.Flow
 
 /**
  * The cover images the songs name, and the search that recommends one.
@@ -29,6 +30,11 @@ interface CoverArtRepository {
      */
     suspend fun getCoverArt(url: String): ByteArray?
 
-    /** See `CoverArtSearchRemoteSource.searchCoverArt`, whose failures are thrown as they are. */
-    suspend fun searchCoverArt(query: CoverArtQuery, onBusy: () -> Unit): List<CoverArtCandidate>
+    /**
+     * Asks every cover search service about [query] at once, and emits where the search is: first with every service
+     * pending, then again whenever one of them has to wait or answers. A service that fails is reported in
+     * [CoverArtSearchResults.failed] rather than thrown, so the flow only ever completes, once the last one has
+     * answered; collecting it is what runs the search, and cancelling the collection stops it.
+     */
+    fun searchCoverArt(query: CoverArtQuery): Flow<CoverArtSearchResults>
 }

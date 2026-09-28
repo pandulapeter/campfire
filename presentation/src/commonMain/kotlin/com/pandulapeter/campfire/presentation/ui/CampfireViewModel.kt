@@ -25,8 +25,8 @@ import androidx.lifecycle.viewModelScope
 import com.pandulapeter.campfire.chordpro.model.ChordProMetadata
 import com.pandulapeter.campfire.chordpro.model.ChordProSong
 import com.pandulapeter.campfire.data.model.DataState
-import com.pandulapeter.campfire.data.model.domain.CoverArtCandidate
 import com.pandulapeter.campfire.data.model.domain.CoverArtQuery
+import com.pandulapeter.campfire.data.model.domain.CoverArtSearchResults
 import com.pandulapeter.campfire.data.model.domain.ExportedFile
 import com.pandulapeter.campfire.data.model.domain.ImportConflictResolution
 import com.pandulapeter.campfire.data.model.domain.ImportLimits
@@ -1476,9 +1476,9 @@ class CampfireViewModel(
             return
         }
         coverArtSearchJob = viewModelScope.launch {
-            _coverArtSearch.value = CoverArtSearchState.Loading(query = query)
-            val candidates = searchCoverArt(query = query, onBusy = { _coverArtSearch.value = CoverArtSearchState.Busy(query = query) })
-            _coverArtSearch.value = if (candidates == null) CoverArtSearchState.Failed(query = query) else CoverArtSearchState.Results(query = query, candidates = candidates)
+            searchCoverArt.invoke(query = query).collect { results ->
+                _coverArtSearch.value = CoverArtSearchState.Active(query = query, results = results)
+            }
         }
     }
 
@@ -2430,7 +2430,11 @@ class CampfireViewModel(
         // Nothing but the sheet reads it, and a search nobody is waiting for any more still counts against the
         // service's one request a second.
         if (dialogType !is DialogType.CoverArtSearch) clearCoverArtSearch()
+        val previousDialog = _visibleDialog.value
         _visibleDialog.update { dialogType }
+        // Asked as the sheet is put up rather than by the sheet once it is composed, so that its first frame already
+        // says that the search is running instead of crossfading from the hint to it while it slides up.
+        if (dialogType is DialogType.CoverArtSearch && previousDialog !is DialogType.CoverArtSearch) searchCoverArt(coverArtQueryOf(dialogType.song))
     }
 
     fun showDialog(dialogType: DialogType) = setVisibleDialog(dialogType)
@@ -2582,16 +2586,8 @@ class CampfireViewModel(
         /** Nothing has been asked yet, or there is nothing to ask by. */
         data object Idle : CoverArtSearchState
 
-        data class Loading(val query: CoverArtQuery) : CoverArtSearchState
-
-        /** The service asked to be given a moment, and the search waits before asking again. */
-        data class Busy(val query: CoverArtQuery) : CoverArtSearchState
-
-        /** What the search found, which may be nothing. */
-        data class Results(val query: CoverArtQuery, val candidates: List<CoverArtCandidate>) : CoverArtSearchState
-
-        /** No network, or the service kept refusing; the sheet offers to ask again. */
-        data class Failed(val query: CoverArtQuery) : CoverArtSearchState
+        /** A search that was asked, running or answered, see [CoverArtSearchResults]. */
+        data class Active(val query: CoverArtQuery, val results: CoverArtSearchResults) : CoverArtSearchState
     }
 
     sealed interface Message {

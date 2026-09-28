@@ -13,26 +13,30 @@ import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.togetherWith
+import androidx.compose.foundation.Image
+import androidx.compose.foundation.ScrollState
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.ColumnScope
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.aspectRatio
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.grid.GridCells
+import androidx.compose.foundation.lazy.grid.GridItemSpan
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.foundation.lazy.grid.rememberLazyGridState
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.selection.selectable
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Button
 import androidx.compose.material3.ContainedLoadingIndicator
 import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
@@ -45,30 +49,37 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.layout.ContentScale
-import androidx.compose.ui.layout.onSizeChanged
-import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.text.input.ImeAction
+import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import coil3.compose.AsyncImage
+import coil3.compose.AsyncImagePainter
+import coil3.compose.rememberAsyncImagePainter
+import com.pandulapeter.campfire.chordpro.ChordProCoverArt
 import com.pandulapeter.campfire.data.model.domain.CoverArtCandidate
 import com.pandulapeter.campfire.data.model.domain.CoverArtQuery
 import com.pandulapeter.campfire.presentation.localization.stringResource
 import com.pandulapeter.campfire.presentation.resources.Res
+import com.pandulapeter.campfire.presentation.resources.cover_art_address
+import com.pandulapeter.campfire.presentation.resources.cover_art_address_failed
+import com.pandulapeter.campfire.presentation.resources.cover_art_address_hint
+import com.pandulapeter.campfire.presentation.resources.cover_art_address_mode
 import com.pandulapeter.campfire.presentation.resources.cover_art_search
 import com.pandulapeter.campfire.presentation.resources.cover_art_search_attribution
 import com.pandulapeter.campfire.presentation.resources.cover_art_search_busy
@@ -87,17 +98,25 @@ import com.pandulapeter.campfire.presentation.resources.songs_new_song_title
 import com.pandulapeter.campfire.presentation.ui.CampfireViewModel
 import com.pandulapeter.campfire.presentation.ui.components.CoverArt
 import com.pandulapeter.campfire.presentation.ui.components.MAX_SEARCH_QUERY_LENGTH
-import com.pandulapeter.campfire.presentation.ui.components.fadingTopEdge
+import com.pandulapeter.campfire.presentation.ui.components.SegmentedChoice
+import com.pandulapeter.campfire.presentation.ui.components.fadingVerticalEdges
+import kotlin.time.Duration.Companion.milliseconds
+import kotlinx.coroutines.delay
 import org.jetbrains.compose.resources.painterResource
 
 /**
- * The cover search: the song's artist, album and title as fields, and under them the records MusicBrainz knows by
- * those, each with its front cover from the Cover Art Archive, one of which is made the song's cover by Save.
+ * The cover search: the song's artist, album and title as fields, and under them the records MusicBrainz and iTunes
+ * know by those, each with its front cover, one of which is made the song's cover by Save. The other tab takes the
+ * address of an image instead, for a cover neither catalogue has.
  *
- * The search is asked on opening, with the fields as the file fills them, and after that only when it is asked for —
- * the keyboard's search key or the button — never per keystroke, since the service allows one request a second from
- * the whole app. Its state is the view model's ([CampfireViewModel.coverArtSearch]), so that it outlives the Android
- * activity being recreated, and goes with the sheet.
+ * The search is asked by the view model as the sheet is put up, with the fields as the file fills them, and after that
+ * only when it is asked for — the keyboard's search key or the button — never per keystroke, since MusicBrainz allows
+ * one request a second from the whole app. Its state is the view model's ([CampfireViewModel.coverArtSearch]), so that
+ * it outlives the Android activity being recreated, and goes with the sheet.
+ *
+ * The sheet opens at its full height whatever it holds, since what it holds changes after it has opened: a sheet that
+ * grew from a line saying the search is running to a grid of covers moved while it was still sliding up, and again
+ * with every catalogue that answered.
  *
  * A record whose thumbnail does not load is taken off the grid rather than left as an empty square: the archive only
  * says that a record has no cover by answering its address with nothing, and a cover that cannot be seen cannot be
@@ -110,11 +129,13 @@ internal fun CoverArtSearchSheet(
 ) {
     val searchState by viewModel.coverArtSearch.collectAsStateWithLifecycle()
     val initialQuery = remember(dialog.song.fileName) { viewModel.coverArtQueryOf(dialog.song) }
+    var mode by rememberSaveable { mutableStateOf(CoverArtSheetMode.SEARCH) }
     var artist by rememberSaveable { mutableStateOf(initialQuery.artist) }
     var album by rememberSaveable { mutableStateOf(initialQuery.album) }
     var title by rememberSaveable { mutableStateOf(initialQuery.title) }
+    var address by rememberSaveable { mutableStateOf(dialog.song.coverArtUrl.orEmpty()) }
     var selectedUrl by rememberSaveable { mutableStateOf<String?>(null) }
-    var unavailableIds by rememberSaveable { mutableStateOf(emptySet<String>()) }
+    var unavailableKeys by rememberSaveable { mutableStateOf(emptySet<String>()) }
     val keyboardController = LocalSoftwareKeyboardController.current
     val query = CoverArtQuery(artist = artist, album = album, title = title)
     val search = {
@@ -122,48 +143,92 @@ internal fun CoverArtSearchSheet(
         selectedUrl = null
         viewModel.searchCoverArt(query)
     }
-    // A search that is already running or done belongs to this sheet, which a recreated activity composes again.
-    LaunchedEffect(Unit) {
-        if (searchState == CampfireViewModel.CoverArtSearchState.Idle) viewModel.searchCoverArt(query)
-    }
+    val usableAddress = ChordProCoverArt.usableUrl(address)
     CampfireBottomSheet(
         title = stringResource(Res.string.cover_art_search_title),
         subtitle = songLabel(dialog.song),
         sheetMaxWidth = SHEET_MAX_WIDTH,
         onDismiss = { viewModel.dismissSheet(dialog) },
     ) { contentPadding ->
-        CoverArtQueryFields(
-            artist = artist,
-            album = album,
-            title = title,
-            onArtistChange = { artist = it },
-            onAlbumChange = { album = it },
-            onTitleChange = { title = it },
-            canSearch = query.isSearchable,
-            onSearch = search,
+        SegmentedChoice(
+            modifier = Modifier.padding(top = 8.dp),
+            options = listOf(
+                CoverArtSheetMode.SEARCH to stringResource(Res.string.cover_art_search),
+                CoverArtSheetMode.ADDRESS to stringResource(Res.string.cover_art_address_mode),
+            ),
+            selected = mode,
+            onSelected = {
+                keyboardController?.hide()
+                mode = it
+            },
         )
-        CoverArtResults(
-            state = searchState,
-            unavailableIds = unavailableIds,
-            selectedUrl = selectedUrl,
-            onSelected = { selectedUrl = it.coverArtUrl.takeUnless { url -> url == selectedUrl } },
-            onUnavailable = { unavailableIds += it.id },
-            onRetry = search,
-        )
+        AnimatedContent(
+            modifier = Modifier.weight(1f),
+            targetState = mode,
+            transitionSpec = { fadeIn() togetherWith fadeOut() },
+        ) { currentMode ->
+            when (currentMode) {
+                CoverArtSheetMode.SEARCH -> Column(modifier = Modifier.fillMaxSize()) {
+                    CoverArtQueryFields(
+                        artist = artist,
+                        album = album,
+                        title = title,
+                        onArtistChange = { artist = it },
+                        onAlbumChange = { album = it },
+                        onTitleChange = { title = it },
+                        canSearch = query.isSearchable,
+                        onSearch = search,
+                    )
+                    CoverArtResults(
+                        modifier = Modifier.weight(1f),
+                        state = searchState,
+                        unavailableKeys = unavailableKeys,
+                        selectedUrl = selectedUrl,
+                        onSelected = { selectedUrl = it.coverArtUrl.takeUnless { url -> url == selectedUrl } },
+                        onUnavailable = { unavailableKeys += it.key },
+                        onRetry = search,
+                    )
+                }
+
+                CoverArtSheetMode.ADDRESS -> CoverArtAddress(
+                    modifier = Modifier.fillMaxSize(),
+                    address = address,
+                    usableAddress = usableAddress,
+                    onAddressChange = { address = it },
+                    onDone = { keyboardController?.hide() },
+                )
+            }
+        }
         CoverArtSearchActions(
             contentPadding = contentPadding,
             canRemove = dialog.song.coverArtUrl != null,
-            canSave = selectedUrl != null,
+            canSave = when (mode) {
+                CoverArtSheetMode.SEARCH -> selectedUrl != null
+                CoverArtSheetMode.ADDRESS -> usableAddress != null && usableAddress != dialog.song.coverArtUrl
+            },
+            shouldShowAttribution = mode == CoverArtSheetMode.SEARCH,
             onRemove = {
                 viewModel.setSongCoverArt(fileName = dialog.song.fileName, url = null)
                 close()
             },
             onSave = {
-                viewModel.setSongCoverArt(fileName = dialog.song.fileName, url = selectedUrl)
+                viewModel.setSongCoverArt(
+                    fileName = dialog.song.fileName,
+                    url = when (mode) {
+                        CoverArtSheetMode.SEARCH -> selectedUrl
+                        CoverArtSheetMode.ADDRESS -> usableAddress
+                    },
+                )
                 close()
             },
         )
     }
+}
+
+/** The two ways the sheet finds a cover: picking one of the records a search found, or typing the address of one. */
+private enum class CoverArtSheetMode {
+    SEARCH,
+    ADDRESS,
 }
 
 /**
@@ -241,34 +306,32 @@ private fun CoverArtQueryField(
 
 /**
  * The grid of what was found, or what stands in its place: why there is nothing to show yet, that the search is
- * running or waiting for the service, that it failed, or that it found nothing worth showing. It takes what height the
- * sheet has left and never gets shorter while the sheet is open, for the reason the pickers' lists do not.
+ * running or waiting for the service, that it failed, or that it found nothing worth showing. The catalogues answer
+ * one after the other, so the grid is shown as soon as either has found something, the other's records joining it at
+ * the end, with an indicator closing the grid for as long as one of them is still being waited for.
  */
 @OptIn(ExperimentalMaterial3ExpressiveApi::class)
 @Composable
-private fun ColumnScope.CoverArtResults(
+private fun CoverArtResults(
+    modifier: Modifier = Modifier,
     state: CampfireViewModel.CoverArtSearchState,
-    unavailableIds: Set<String>,
+    unavailableKeys: Set<String>,
     selectedUrl: String?,
     onSelected: (CoverArtCandidate) -> Unit,
     onUnavailable: (CoverArtCandidate) -> Unit,
     onRetry: () -> Unit,
 ) {
-    val density = LocalDensity.current
-    var tallestHeight by remember { mutableIntStateOf(0) }
-    val candidates = (state as? CampfireViewModel.CoverArtSearchState.Results)?.candidates?.filterNot { it.id in unavailableIds }
+    val results = (state as? CampfireViewModel.CoverArtSearchState.Active)?.results
+    val candidates = remember(results, unavailableKeys) { results?.candidates?.filterNot { it.key in unavailableKeys }.orEmpty() }
     AnimatedContent(
-        modifier = Modifier
-            .weight(1f, fill = false)
-            .heightIn(min = with(density) { tallestHeight.toDp() })
-            .onSizeChanged { tallestHeight = maxOf(tallestHeight, it.height) },
+        modifier = modifier,
         targetState = when {
-            state is CampfireViewModel.CoverArtSearchState.Results && candidates.isNullOrEmpty() -> ResultsContent.NO_RESULTS
-            state is CampfireViewModel.CoverArtSearchState.Results -> ResultsContent.GRID
-            state is CampfireViewModel.CoverArtSearchState.Loading -> ResultsContent.LOADING
-            state is CampfireViewModel.CoverArtSearchState.Busy -> ResultsContent.BUSY
-            state is CampfireViewModel.CoverArtSearchState.Failed -> ResultsContent.FAILED
-            else -> ResultsContent.HINT
+            results == null -> ResultsContent.HINT
+            candidates.isNotEmpty() -> ResultsContent.GRID
+            // Only MusicBrainz ever asks to be waited for, so the line saying so is only true once nothing else is left.
+            !results.isComplete -> if (results.busy.containsAll(results.pending)) ResultsContent.BUSY else ResultsContent.LOADING
+            results.failed.isNotEmpty() -> ResultsContent.FAILED
+            else -> ResultsContent.NO_RESULTS
         },
         transitionSpec = { fadeIn() togetherWith fadeOut() },
         contentAlignment = Alignment.TopCenter,
@@ -277,7 +340,7 @@ private fun ColumnScope.CoverArtResults(
             ResultsContent.GRID -> {
                 val gridState = rememberLazyGridState()
                 LazyVerticalGrid(
-                    modifier = Modifier.fadingTopEdge(gridState),
+                    modifier = Modifier.fillMaxSize().fadingVerticalEdges(gridState),
                     state = gridState,
                     columns = GridCells.Adaptive(TILE_MIN_WIDTH),
                     contentPadding = PaddingValues(16.dp),
@@ -285,8 +348,8 @@ private fun ColumnScope.CoverArtResults(
                     verticalArrangement = Arrangement.spacedBy(12.dp),
                 ) {
                     items(
-                        items = candidates.orEmpty(),
-                        key = { it.id },
+                        items = candidates,
+                        key = { it.key },
                     ) { candidate ->
                         CoverArtTile(
                             modifier = Modifier.animateItem(),
@@ -295,6 +358,19 @@ private fun ColumnScope.CoverArtResults(
                             onClick = { onSelected(candidate) },
                             onUnavailable = { onUnavailable(candidate) },
                         )
+                    }
+                    if (results?.isComplete == false) {
+                        item(
+                            key = LOADING_ITEM_KEY,
+                            span = { GridItemSpan(maxLineSpan) },
+                        ) {
+                            Box(
+                                modifier = Modifier.animateItem().fillMaxWidth().padding(vertical = 8.dp),
+                                contentAlignment = Alignment.Center,
+                            ) {
+                                ContainedLoadingIndicator()
+                            }
+                        }
                     }
                 }
             }
@@ -327,6 +403,98 @@ private enum class ResultsContent {
     FAILED,
     NO_RESULTS,
     GRID,
+}
+
+/**
+ * The address of a cover typed in, and under it the image it names, so that a typo is seen before it is saved. The
+ * image is asked for only once the typing has paused ([ADDRESS_PREVIEW_DELAY]), since every half-typed address that
+ * happens to be a valid one would otherwise be a request of its own. One that does not load can still be saved: a
+ * host may refuse the web build what it gives the other three, and the file is read on all of them.
+ */
+@Composable
+private fun CoverArtAddress(
+    modifier: Modifier = Modifier,
+    address: String,
+    usableAddress: String?,
+    onAddressChange: (String) -> Unit,
+    onDone: () -> Unit,
+    scrollState: ScrollState = rememberScrollState(),
+) = Column(
+    modifier = modifier.fadingVerticalEdges(scrollState).verticalScroll(scrollState).padding(16.dp),
+    horizontalAlignment = Alignment.CenterHorizontally,
+    verticalArrangement = Arrangement.spacedBy(16.dp),
+) {
+    OutlinedTextField(
+        modifier = Modifier.fillMaxWidth(),
+        value = address,
+        onValueChange = { onAddressChange(it.replace("\n", "").take(MAX_ADDRESS_LENGTH)) },
+        label = { Text(stringResource(Res.string.cover_art_address)) },
+        singleLine = true,
+        keyboardOptions = KeyboardOptions(autoCorrectEnabled = false, keyboardType = KeyboardType.Uri, imeAction = ImeAction.Done),
+        keyboardActions = KeyboardActions(onDone = { onDone() }),
+    )
+    var previewUrl by remember { mutableStateOf(usableAddress) }
+    LaunchedEffect(usableAddress) {
+        if (usableAddress != null) delay(ADDRESS_PREVIEW_DELAY)
+        previewUrl = usableAddress
+    }
+    CoverArtAddressPreview(url = previewUrl)
+}
+
+/** The image [url] names, the indicator while it loads, or a line saying why there is none. */
+@OptIn(ExperimentalMaterial3ExpressiveApi::class)
+@Composable
+private fun CoverArtAddressPreview(
+    url: String?,
+) = Surface(
+    modifier = Modifier.size(ADDRESS_PREVIEW_SIZE),
+    shape = MaterialTheme.shapes.medium,
+    color = MaterialTheme.colorScheme.surfaceContainerHighest,
+) {
+    val painter = rememberAsyncImagePainter(model = url?.let(::CoverArt), contentScale = ContentScale.Crop)
+    val painterState by painter.state.collectAsState()
+    AnimatedContent(
+        targetState = when {
+            url == null -> AddressPreviewContent.HINT
+            painterState is AsyncImagePainter.State.Success -> AddressPreviewContent.IMAGE
+            painterState is AsyncImagePainter.State.Error -> AddressPreviewContent.FAILED
+            else -> AddressPreviewContent.LOADING
+        },
+        transitionSpec = { fadeIn() togetherWith fadeOut() },
+        contentAlignment = Alignment.Center,
+    ) { content ->
+        when (content) {
+            AddressPreviewContent.IMAGE -> Image(
+                modifier = Modifier.fillMaxSize(),
+                painter = painter,
+                contentDescription = null,
+                contentScale = ContentScale.Crop,
+            )
+
+            AddressPreviewContent.LOADING -> Box(contentAlignment = Alignment.Center) {
+                ContainedLoadingIndicator()
+            }
+
+            AddressPreviewContent.HINT, AddressPreviewContent.FAILED -> Box(
+                modifier = Modifier.padding(16.dp),
+                contentAlignment = Alignment.Center,
+            ) {
+                Text(
+                    text = stringResource(if (content == AddressPreviewContent.HINT) Res.string.cover_art_address_hint else Res.string.cover_art_address_failed),
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    textAlign = TextAlign.Center,
+                )
+            }
+        }
+    }
+}
+
+private enum class AddressPreviewContent {
+    HINT,
+    LOADING,
+    FAILED,
+    IMAGE,
 }
 
 @Composable
@@ -416,14 +584,16 @@ private fun CoverArtTile(
 }
 
 /**
- * Save and, where the song has a cover to take off, Remove, with the credit to the two services under them: the
- * records and the covers are theirs, and naming them is what both ask of an app that shows them.
+ * Save and, where the song has a cover to take off, Remove, with the credit to the services under them while their
+ * records are on screen: the records and the covers are theirs, and naming them is what they ask of an app that shows
+ * them.
  */
 @Composable
 private fun CoverArtSearchActions(
     contentPadding: PaddingValues,
     canRemove: Boolean,
     canSave: Boolean,
+    shouldShowAttribution: Boolean,
     onRemove: () -> Unit,
     onSave: () -> Unit,
 ) = Column(
@@ -445,8 +615,9 @@ private fun CoverArtSearchActions(
             Text(stringResource(Res.string.save))
         }
     }
+    // Kept in the layout on the address tab, only unseen, so that switching tabs does not move the buttons above it.
     Text(
-        modifier = Modifier.padding(top = 8.dp),
+        modifier = Modifier.padding(top = 8.dp).alpha(if (shouldShowAttribution) 1f else 0f),
         text = stringResource(Res.string.cover_art_search_attribution),
         style = MaterialTheme.typography.labelSmall,
         color = MaterialTheme.colorScheme.onSurfaceVariant,
@@ -456,3 +627,9 @@ private fun CoverArtSearchActions(
 /** Wide enough for four or five covers side by side on a tablet or a desktop window, where a sheet is otherwise 640dp. */
 private val SHEET_MAX_WIDTH = 840.dp
 private val TILE_MIN_WIDTH = 128.dp
+private val ADDRESS_PREVIEW_SIZE = 200.dp
+private val ADDRESS_PREVIEW_DELAY = 500.milliseconds
+
+/** Longer than any address a cover is found at, and short enough that the field's saved state stays small. */
+private const val MAX_ADDRESS_LENGTH = 2048
+private const val LOADING_ITEM_KEY = "loading"

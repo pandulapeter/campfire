@@ -450,6 +450,10 @@ internal fun SongDetailsScreen(
                     onEditLanguages = if (isPerformanceModeEnabled) null else {
                         { viewModel.showDialog(CampfireViewModel.DialogType.SongLanguages(song)) }
                     },
+                    // A shortcut to the menu's "Find cover art", which performance mode takes out of the menu too.
+                    onCoverArtClicked = if (isPerformanceModeEnabled) null else {
+                        { viewModel.showDialog(CampfireViewModel.DialogType.CoverArtSearch(song)) }
+                    },
                 )
             }
         }
@@ -591,6 +595,7 @@ private fun SongDetailsPage(
     onAddTag: (() -> Unit)?,
     onRemoveTag: ((String) -> Unit)?,
     onEditLanguages: (() -> Unit)?,
+    onCoverArtClicked: (() -> Unit)?,
 ) = AnimatedContent(
     modifier = Modifier.fillMaxSize(),
     targetState = text,
@@ -681,6 +686,7 @@ private fun SongDetailsPage(
                 onAddTag = onAddTag,
                 onRemoveTag = onRemoveTag,
                 onEditLanguages = onEditLanguages,
+                onCoverArtClicked = onCoverArtClicked,
                 // The padding is inside the scroll, so a divider is at the top of the viewport once the song is
                 // scrolled by its position plus the padding above it.
                 onDividersPlaced = { dividerTops -> flingBehavior.dividerOffsets = dividerTops.map { it + topPaddingPx } },

@@ -58,8 +58,9 @@ paths, `Is*` for a question with a yes or no answer (`IsFirstRun`), or a verb fo
 - `SetChordProCoverArtUseCase` is the same for the cover, a song having one: it rewrites the cover line in place,
   writes one after the album, or takes it off for null.
 - `GetCoverArtUseCase` and `SearchCoverArtUseCase` are the covers themselves: the bytes of one, from the device's copy
-  or downloaded, or nothing to show; and the records a query may name, or null where the search could not be answered
-  at all, which is what the sheet offers a retry for. Both reach the network through `:data:source:remote`, the only
+  or downloaded, or nothing to show; and a flow of where the search of every catalogue is — the records found so far,
+  the catalogues still pending, waiting or failed — which is what the sheet builds its grid, its indicators and its
+  retry from. Both reach the network through `:data:source:remote`, the only
   things besides sync that do.
 - `IsFirstRunUseCase` is the only one that asks about the installation rather than about the library: whether
   Campfire has ever written its preferences, which is the first thing it writes about itself and therefore the one
