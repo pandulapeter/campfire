@@ -87,7 +87,15 @@ direction.
   `createWritable()`; a request is `{ id, path: [directory segments], name, data: bytes }`. It writes in place, so it grows the
   file to the new length first (a quota refusal then comes before anything is overwritten), writes until every byte is
   in, since `write()` may write fewer than it was given, and when a write still fails it puts the previous content back
-  and fails the save; only if that fails too is the file left damaged, and the error says so. Not preloaded and not part
+  and fails the save. A worker terminated part of the way through cannot put anything back, so every write is
+  journaled: the new content goes to a fresh `<name>.campfire-tmp` first, an empty `<name>.campfire-commit` marks it
+  complete, and only then is the file written in place and the two removed, marker first. A marker found later is
+  played back over the file; a temporary file without one is discarded. `{ id, path, recover: true }` plays back a
+  whole directory, which `OpfsFileStorage` asks for before it first reads one, and a file that cannot be recovered is
+  only logged, since failing it would lock the user out of the whole library. `node --test app/web/tests/opfs-writer.test.cjs`
+  runs the journal against an in-memory directory, checking that the worker killed at every step it takes, and killed
+  again during the recovery, always leaves the old song or the new one; nothing runs it but a person changing the
+  worker. Not preloaded and not part
   of the loading screen's byte count: it is only fetched by the first write that needs it. One worker serves the page
   for as long as it is open, answering each request with its `id`, which is what the page matches the replies by.
 

@@ -269,6 +269,7 @@ uninstall and nothing else does.
   index, the setlist slots, stepper labels, section grid, row snapping and section measurements of the details screen, the editor's token cache), run on
   the desktop target with
   `./gradlew :chordpro:desktopTest :domain:implementation:desktopTest :data:source:local:implementation:desktopTest :data:source:remote:api:desktopTest :data:source:remote:implementation:desktopTest :data:repository:implementation:desktopTest :presentation:desktopTest`.
+  The web build's storage worker, which is JavaScript, has a Node test of its own, run by hand (see `app/web`).
   The UI itself is untested by code: `:app:baselineprofile` drives it, but only to record a profile, asserts nothing
   and is never run by CI. Before a release, `documentation/testing/release-check.md` is run on a Mac (its
   `README.md` says how): half an hour of the checks whose failure would block one. A change to what it exercises —

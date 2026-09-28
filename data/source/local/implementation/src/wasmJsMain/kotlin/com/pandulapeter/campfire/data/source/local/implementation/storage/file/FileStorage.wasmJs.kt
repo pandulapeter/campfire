@@ -136,13 +136,25 @@ internal class OpfsFileStorage : FileStorage {
     }
 
     override suspend fun writeText(directory: StorageDirectory, name: String, text: String) = withContext(Dispatchers.Default) {
-        failingAsStorage(name) { writeFile(directoryHandle(directory), directory.pathSegments.joinToString("/"), name, text.toJsString()).await() }
-        Unit
+        write(directory, name) { handle -> writeFile(handle, directory.displayName, name, text.toJsString()) }
     }
 
     override suspend fun writeBytes(directory: StorageDirectory, name: String, bytes: ByteArray) = withContext(Dispatchers.Default) {
-        failingAsStorage(name) { writeFile(directoryHandle(directory), directory.pathSegments.joinToString("/"), name, latin1ToBytes(bytes.toLatin1JsString())).await() }
-        Unit
+        write(directory, name) { handle -> writeFile(handle, directory.displayName, name, latin1ToBytes(bytes.toLatin1JsString())) }
+    }
+
+    /**
+     * A write the worker could neither finish nor undo leaves its journal behind (see `opfs-writer.js`), and the file
+     * damaged until that journal is played back. Forgetting the directory's handle is what makes the next access to
+     * the directory play it back, rather than the next start of the app.
+     */
+    private suspend fun write(directory: StorageDirectory, name: String, write: (directoryHandle: JsAny) -> Promise<JsAny?>) {
+        try {
+            failingAsStorage(name) { write(directoryHandle(directory)).await() }
+        } catch (exception: LibraryStorageException) {
+            directoryHandlesMutex.withLock { directoryHandles.remove(directory) }
+            throw exception
+        }
     }
 
     override suspend fun delete(directory: StorageDirectory, name: String) = withContext(Dispatchers.Default) {
@@ -186,6 +198,10 @@ internal class OpfsFileStorage : FileStorage {
      * every one of the reads of a library scan (which already run in parallel) tripled the number of calls into
      * OPFS. Nothing outside the page can remove a directory from the origin private file system, so a handle that
      * was resolved once stays valid.
+     *
+     * A handle is only handed out once the journal of an interrupted worker write in its directory has been played
+     * back (see `opfs-writer.js`), so nothing is ever read from a file the worker left half written. That happens under
+     * the same lock, once per directory: a directory with nothing to recover costs one walk over its names.
      */
     private val directoryHandles = mutableMapOf<StorageDirectory, JsAny>()
     private val directoryHandlesMutex = Mutex()
@@ -195,10 +211,12 @@ internal class OpfsFileStorage : FileStorage {
             if (!isOpfsAvailable()) {
                 throw IllegalStateException(OPFS_UNAVAILABLE)
             }
+            installOpfsWriter()
             var handle = opfsRoot().await() ?: throw IllegalStateException(OPFS_UNAVAILABLE)
             directory.pathSegments.forEach { segment ->
                 handle = getDirectoryHandle(handle, segment).await() ?: throw IllegalStateException(OPFS_UNAVAILABLE)
             }
+            failingAsStorage(directory.displayName) { recoverInterruptedWrites(handle, directory.displayName).await() }
             handle
         }
     }
@@ -248,7 +266,7 @@ private fun listEntries(directory: JsAny): Promise<JsString?> = js(
     """(async function () {
         var field = String.fromCharCode(0);
         var handles = [];
-        for await (var entry of directory.entries()) if (entry[1].kind === 'file') handles.push(entry);
+        for await (var entry of directory.entries()) if (entry[1].kind === 'file' && !entry[0].endsWith('.campfire-tmp') && !entry[0].endsWith('.campfire-commit')) handles.push(entry);
         var files = await Promise.all(handles.map(function (entry) {
             return entry[1].getFile().catch(function (error) { if (error && error.name === 'NotFoundError') return null; throw error; });
         }));
@@ -261,7 +279,7 @@ private fun listEntries(directory: JsAny): Promise<JsString?> = js(
 private fun listEntryNames(directory: JsAny): Promise<JsString?> = js(
     """(async function () {
         var names = [];
-        for await (var name of directory.keys()) names.push(name);
+        for await (var name of directory.keys()) if (!name.endsWith('.campfire-tmp') && !name.endsWith('.campfire-commit')) names.push(name);
         return names.join(String.fromCharCode(1));
     })()"""
 )
@@ -333,18 +351,71 @@ private fun String.latin1Bytes() = ByteArray(length) { this[it].code.toByte() }
 private fun ByteArray.toLatin1JsString() = CharArray(size) { (this[it].toInt() and 0xFF).toChar() }.concatToString().toJsString()
 
 /**
+ * The page's one `opfs-writer.js` worker, started by the first request that needs it, with its replies matched to the
+ * requests by their id: starting one per write fetched, parsed and started the script again for every song of an
+ * import. The worker queues the requests itself. One that fails as a whole fails every request waiting on it and is
+ * dropped, so that the next request starts a new one; being a global of the page, it never outlives the version that
+ * started it. Its address carries a version of the script's own content (see `index.html` in `:app:web`), because a
+ * worker the browser still had from another release would be handed requests in a shape it may not understand.
+ *
+ * A global function rather than a `js(...)` block of its own, since both the writes and the recovery send requests
+ * and a `js(...)` block cannot call another.
+ */
+private fun installOpfsWriter(): Unit = js(
+    """{
+        if (window.__campfireSendToOpfsWriter) return;
+        window.__campfireSendToOpfsWriter = function (request) {
+            var writer = window.__campfireOpfsWriter;
+            if (!writer) {
+                writer = window.__campfireOpfsWriter = { worker: new Worker(window.campfireVersioned('opfs-writer.js')), next: 1, pending: new Map() };
+                writer.worker.onmessage = function (event) {
+                    var entry = writer.pending.get(event.data.id);
+                    if (!entry) return;
+                    writer.pending.delete(event.data.id);
+                    event.data.error ? entry.reject(Object.assign(new Error(event.data.message), { name: event.data.error })) : entry.resolve();
+                };
+                writer.worker.onerror = function (event) {
+                    var error = event.error || new Error(event.message);
+                    writer.pending.forEach(function (entry) { entry.reject(error); });
+                    writer.pending.clear();
+                    writer.worker.terminate();
+                    if (window.__campfireOpfsWriter === writer) window.__campfireOpfsWriter = null;
+                };
+            }
+            return new Promise(function (resolve, reject) {
+                request.id = writer.next++;
+                writer.pending.set(request.id, { resolve: resolve, reject: reject });
+                try { writer.worker.postMessage(request); }
+                catch (error) { writer.pending.delete(request.id); reject(error); }
+            });
+        };
+    }"""
+)
+
+/**
+ * Asks the worker to play back the journal of every write in this directory that did not finish, see
+ * `opfs-writer.js`. The journal files only ever exist where the worker writes, so a browser with `createWritable()`
+ * never finds any and never starts the worker for this.
+ */
+private fun recoverInterruptedWrites(directory: JsAny, path: String): Promise<JsAny?> = js(
+    """(async function () {
+        for await (var name of directory.keys()) {
+            if (name.endsWith('.campfire-tmp') || name.endsWith('.campfire-commit')) {
+                await window.__campfireSendToOpfsWriter({ path: path.split('/'), recover: true });
+                break;
+            }
+        }
+        return null;
+    })()"""
+)
+
+/**
  * A writable holds a lock on its file until it is closed or aborted, so one whose write fails is aborted before the
  * failure is passed on: left open, it would make every later write and the deletion of that file fail as well.
  *
- * Where there is no `createWritable()` (Safari before 26), the write is handed to `opfs-writer.js`, a dedicated worker,
- * since `createSyncAccessHandle()` exists nowhere else; it is given the directory by its path and the content as bytes.
- * Its address carries a version of the script's own content (see `index.html` in `:app:web`), because a worker the
- * browser still had from another release would be handed requests in a shape it may not understand.
- *
- * One worker serves the page, started by the first write that needs it, and its replies are matched to the writes by
- * their id: starting one per write fetched, parsed and started the script again for every song of an import. The worker
- * queues the requests itself. One that fails as a whole fails every write waiting on it and is dropped, so that the
- * next write starts a new one; being a global of the page, it never outlives the version that started it.
+ * Where there is no `createWritable()` (Safari before 26), the write is handed to `opfs-writer.js`, a dedicated worker
+ * (see [installOpfsWriter]), since `createSyncAccessHandle()` exists nowhere else; it is given the directory by its
+ * path and the content as bytes.
  */
 private fun writeFile(parent: JsAny, path: String, name: String, data: JsAny): Promise<JsAny?> = js(
     """(async function () {
@@ -358,29 +429,8 @@ private fun writeFile(parent: JsAny, path: String, name: String, data: JsAny): P
                 try { await writable.write(data); await writable.close(); }
                 catch (error) { try { await writable.abort(); } catch (ignored) { } throw error; }
             } else {
-                var writer = window.__campfireOpfsWriter;
-                if (!writer) {
-                    writer = window.__campfireOpfsWriter = { worker: new Worker(window.campfireVersioned('opfs-writer.js')), next: 1, pending: new Map() };
-                    writer.worker.onmessage = function (event) {
-                        var entry = writer.pending.get(event.data.id);
-                        if (!entry) return;
-                        writer.pending.delete(event.data.id);
-                        event.data.error ? entry.reject(Object.assign(new Error(event.data.message), { name: event.data.error })) : entry.resolve();
-                    };
-                    writer.worker.onerror = function (event) {
-                        var error = event.error || new Error(event.message);
-                        writer.pending.forEach(function (entry) { entry.reject(error); });
-                        writer.pending.clear();
-                        writer.worker.terminate();
-                        if (window.__campfireOpfsWriter === writer) window.__campfireOpfsWriter = null;
-                    };
-                }
-                var id = writer.next++;
-                await new Promise(function (resolve, reject) {
-                    writer.pending.set(id, { resolve: resolve, reject: reject });
-                    var bytes = typeof data === 'string' ? new TextEncoder().encode(data) : data;
-                    writer.worker.postMessage({ id: id, path: path.split('/'), name: name, data: bytes });
-                });
+                var bytes = typeof data === 'string' ? new TextEncoder().encode(data) : data;
+                await window.__campfireSendToOpfsWriter({ path: path.split('/'), name: name, data: bytes });
             }
         } catch (error) { if (!existed) try { await parent.removeEntry(name); } catch (ignored) { } throw error; }
         return null;
