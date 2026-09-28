@@ -487,7 +487,6 @@ private fun LoadedSongEditor(
                 transposition = transpositions[destination.fileName, null],
                 fontScale = fontScale,
                 isHorizontalFlow = userPreferences?.isHorizontalSectionFlowEnabled == true,
-                isCoverArtEnabled = userPreferences?.isCoverArtEnabled == true,
                 chordSpelling = chordSpelling,
                 contentPadding = PaddingValues(
                     start = if (hasSideBySidePreview) 0.dp else contentPadding.calculateStartPadding(layoutDirection),
@@ -682,7 +681,6 @@ private fun SongPreview(
     transposition: Int,
     fontScale: Float,
     isHorizontalFlow: Boolean,
-    isCoverArtEnabled: Boolean,
     chordSpelling: UserPreferences.ChordSpelling,
     contentPadding: PaddingValues,
 ) {
@@ -734,7 +732,6 @@ private fun SongPreview(
             availableHeight = maxHeight - topPadding - bottomPadding,
             fontScale = fontScale,
             isHorizontalFlow = isHorizontalFlow,
-            isCoverArtEnabled = isCoverArtEnabled,
             // The preview shows what is being typed rather than narrating it: every edit that changes a section's
             // height would otherwise start a spring on every section below it.
             animatesSections = false,

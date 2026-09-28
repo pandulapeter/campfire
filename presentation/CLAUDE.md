@@ -58,20 +58,18 @@ Everything else is `commonMain`:
   `:data:source:remote`). `ProvideCoverArtImageLoader`, called once by `CampfireApp`, sets the singleton loader up with
   a fetcher and a keyer for `CoverArt(url)` and no disk cache of Coil's own, since the use case's copy is that on all
   four platforms; Coil keeps what it decoded in memory for scrolling, and crossfades only what did not come from there.
-  `FadedCoverArt` is how a cover is drawn behind a song card (`SongListItem`'s `coverArtUrl`, on the Songs and the
-  Setlists screen alike, never on a missing entry's row): the end half of the card, cropped to its height, under the
-  actions, at a reduced alpha and faded in from its start along a smoothstep (a `DstIn` gradient on an offscreen layer,
-  so it fades into the card rather than into a color), laid out at the card's size (`matchParentSize`) so the image
-  never decides how tall a card is. The card's actions then sit on a pill of the card's own color, mostly opaque
-  (`ListItemActions`' backdrop, drawn behind them and taking no room), since the cover is strongest exactly under
-  them; being the card's color it is invisible until the image has loaded, so it follows nothing. `CoverArtImage` is a
-  cover on its own, whole and unfaded, which takes its room only
-  once there is an image and grows into it as it arrives: the song details header (`SongMetadataHeader`) puts it at
-  112dp at its start with the chips and the metadata lines next to it, which counts it in the height the section grid
-  is told to leave room for; a tap on it there opens the cover search sheet, a shortcut to the menu's "Change cover
-  art…", except in performance mode and the editor's preview, which have no cover search. Both follow `UserPreferences.isCoverArtEnabled`, the Songs tab's "Cover art" switch, which leaves
-  every cover unfetched and undrawn when it is off. The editor's preview draws the header's too, and performance mode
-  keeps them, since a cover changes nothing.
+  `CoverArtImage` is a cover on its own, whole, over a placeholder of its own size (a tinted square with the album
+  icon), which is what shows while it loads and where it never does: the room is taken from the first frame, so an
+  image arriving in a list being scrolled moves nothing around it, and the image crossfades in over the placeholder. A
+  song card (`SongListItem`'s `coverArtUrl`, on the Songs and the Setlists screen alike, never on a missing entry's
+  row) puts it at 44dp with small corners at the start of its body, 12dp before the text, next to the title and the
+  artist line only and as tall as the two, while the labels under them start from the keyline beneath it, 8dp under
+  the cover (`CenteredSongCardContent`'s `labelsContent`). The song details screen puts it at 40dp in its app bar, in front of the title and the artist of
+  the song on screen, and counts it in the width the inline steppers are measured against whenever any song of the
+  pager has one; a tap on it there opens the cover search sheet, a shortcut to the menu's "Change cover art…", except
+  in performance mode, which has no cover search. The lyrics' header and the editor's preview draw none. Both follow
+  `UserPreferences.isCoverArtEnabled`, the Songs tab's "Cover art" switch, which leaves every cover unfetched and
+  undrawn when it is off; performance mode keeps them, since a cover changes nothing.
 - `ui/dialogs/CoverArtSearchSheet.kt` — the cover search, opened from "Find cover art…" (or "Change cover art…") in
   the song details screen's `SongActionsButton` menu only (`onFindCoverArt`), which performance mode and a turned-off
   switch leave out. Two tabs. **Search**: artist, album and title fields prefilled from the file

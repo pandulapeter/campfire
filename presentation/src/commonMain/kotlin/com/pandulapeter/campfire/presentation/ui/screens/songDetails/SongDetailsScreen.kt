@@ -35,6 +35,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.PagerState
 import androidx.compose.foundation.pager.rememberPagerState
@@ -93,6 +94,7 @@ import com.pandulapeter.campfire.presentation.resources.song_details_scroll_to_t
 import com.pandulapeter.campfire.presentation.resources.song_details_song_position
 import com.pandulapeter.campfire.presentation.ui.CampfireViewModel
 import com.pandulapeter.campfire.presentation.ui.components.CampfireTopAppBar
+import com.pandulapeter.campfire.presentation.ui.components.CoverArtImage
 import com.pandulapeter.campfire.presentation.ui.components.DelayedLoadingIndicator
 import com.pandulapeter.campfire.presentation.ui.components.EmptyState
 import com.pandulapeter.campfire.presentation.ui.components.EmptyStateAction
@@ -217,13 +219,15 @@ internal fun SongDetailsScreen(
     }
     val inlineControlsWidth = rememberCompactSteppersWidth(transpositionLabels = transpositionLabels, spacing = INLINE_CONTROL_SPACING)
     val layoutDirection = LocalLayoutDirection.current
-    // Whatever else the bar holds: the back button with the bar's own start padding, the bar's end padding, and the
-    // two actions that performance mode takes away (the setlist assignments only for a song read from the library).
+    // Whatever else the bar holds: the back button with the bar's own start padding, the bar's end padding, the cover
+    // in front of the title (reserved for every song of the pager, like the steppers' labels, so that paging to a song
+    // without one does not bring the steppers back into the bar), and the two actions that performance mode takes away
+    // (the setlist assignments only for a song read from the library).
     val otherAppBarContentWidth = APP_BAR_NAVIGATION_WIDTH + APP_BAR_END_PADDING + when {
         isPerformanceModeEnabled -> 0.dp
         destination.setlistFileName == null -> APP_BAR_ACTION_WIDTH * 2
         else -> APP_BAR_ACTION_WIDTH
-    }
+    } + if (isCoverArtEnabled && songs.any { it.coverArtUrl != null }) APP_BAR_COVER_SIZE + APP_BAR_COVER_GAP else 0.dp
     // Decided from what the controls need rather than from the window's size class, since that is anything from one
     // stepper in performance mode to two and two more actions in the library. The settled width keeps the decision
     // from changing while a navigation transition is still running.
@@ -288,20 +292,35 @@ internal fun SongDetailsScreen(
                     targetState = currentSong,
                     transitionSpec = { fadeIn() togetherWith fadeOut() },
                 ) { song ->
-                    Column {
-                        Text(
-                            text = song?.title.orEmpty(),
-                            style = MaterialTheme.typography.titleMedium,
-                            maxLines = 1,
-                            overflow = TextOverflow.Ellipsis,
-                        )
-                        Text(
-                            text = song?.artist.orEmpty(),
-                            style = MaterialTheme.typography.bodySmall,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant,
-                            maxLines = 1,
-                            overflow = TextOverflow.Ellipsis,
-                        )
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                    ) {
+                        song?.coverArtUrl?.takeIf { isCoverArtEnabled }?.let { url ->
+                            // A tap on it is a shortcut to the menu's "Find cover art", which performance mode takes out
+                            // of the menu too; there it is part of the title and scrolls to the top like it.
+                            CoverArtImage(
+                                modifier = Modifier.padding(end = APP_BAR_COVER_GAP).size(APP_BAR_COVER_SIZE),
+                                url = url,
+                                onClick = if (isPerformanceModeEnabled) null else {
+                                    { viewModel.showDialog(CampfireViewModel.DialogType.CoverArtSearch(song)) }
+                                },
+                            )
+                        }
+                        Column {
+                            Text(
+                                text = song?.title.orEmpty(),
+                                style = MaterialTheme.typography.titleMedium,
+                                maxLines = 1,
+                                overflow = TextOverflow.Ellipsis,
+                            )
+                            Text(
+                                text = song?.artist.orEmpty(),
+                                style = MaterialTheme.typography.bodySmall,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                maxLines = 1,
+                                overflow = TextOverflow.Ellipsis,
+                            )
+                        }
                     }
                 }
             },
@@ -429,7 +448,6 @@ internal fun SongDetailsScreen(
                     shouldShowChords = shouldShowChords,
                     fontScale = if (isFollowingGesture) ({ viewModel.fontScale }) else ({ viewModel.settledFontScale }),
                     isHorizontalFlow = isHorizontalFlow,
-                    isCoverArtEnabled = isCoverArtEnabled,
                     // One set per song, wherever it is opened from: folding is how this reader reads it, not how the
                     // setlist has the band play it.
                     foldedSections = userPreferences?.foldedSections?.get(song.fileName).orEmpty(),
@@ -449,10 +467,6 @@ internal fun SongDetailsScreen(
                     },
                     onEditLanguages = if (isPerformanceModeEnabled) null else {
                         { viewModel.showDialog(CampfireViewModel.DialogType.SongLanguages(song)) }
-                    },
-                    // A shortcut to the menu's "Find cover art", which performance mode takes out of the menu too.
-                    onCoverArtClicked = if (isPerformanceModeEnabled) null else {
-                        { viewModel.showDialog(CampfireViewModel.DialogType.CoverArtSearch(song)) }
                     },
                 )
             }
@@ -584,7 +598,6 @@ private fun SongDetailsPage(
     shouldShowChords: Boolean,
     fontScale: () -> Float,
     isHorizontalFlow: Boolean,
-    isCoverArtEnabled: Boolean,
     foldedSections: Set<String>,
     onFoldToggled: (key: String) -> Unit,
     chordSpelling: UserPreferences.ChordSpelling,
@@ -595,7 +608,6 @@ private fun SongDetailsPage(
     onAddTag: (() -> Unit)?,
     onRemoveTag: ((String) -> Unit)?,
     onEditLanguages: (() -> Unit)?,
-    onCoverArtClicked: (() -> Unit)?,
 ) = AnimatedContent(
     modifier = Modifier.fillMaxSize(),
     targetState = text,
@@ -681,12 +693,10 @@ private fun SongDetailsPage(
                 fontScale = currentFontScale,
                 isHorizontalFlow = isHorizontalFlow,
                 foldedSections = foldedSections,
-                isCoverArtEnabled = isCoverArtEnabled,
                 onFoldToggled = onFoldToggled,
                 onAddTag = onAddTag,
                 onRemoveTag = onRemoveTag,
                 onEditLanguages = onEditLanguages,
-                onCoverArtClicked = onCoverArtClicked,
                 // The padding is inside the scroll, so a divider is at the top of the viewport once the song is
                 // scrolled by its position plus the padding above it.
                 onDividersPlaced = { dividerTops -> flingBehavior.dividerOffsets = dividerTops.map { it + topPaddingPx } },
@@ -861,6 +871,10 @@ private val INLINE_CONTROL_SPACING = 8.dp
 private val APP_BAR_NAVIGATION_WIDTH = 52.dp // The 48dp button and the 4dp the bar pads its start by.
 private val APP_BAR_END_PADDING = 4.dp
 private val APP_BAR_ACTION_WIDTH = 48.dp
+
+/** As tall as the title and the artist next to it: a titleMedium and a bodySmall line. */
+private val APP_BAR_COVER_SIZE = 40.dp
+private val APP_BAR_COVER_GAP = 12.dp
 private val MIN_TITLE_WIDTH = 160.dp // About fifteen characters of a title, enough to tell one song from the next.
 private val TITLE_TOUCH_HORIZONTAL_OUTSET = 4.dp // The padding the bar puts around its title.
 private val TITLE_TOUCH_VERTICAL_OUTSET = 12.dp // From the two lines of title, 40dp, to the bar's 64dp.

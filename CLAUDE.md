@@ -473,10 +473,9 @@ the only possible one. The per-module `CLAUDE.md` files carry the detail; the sh
 
 ## Cover art
 
-A song names its cover in its own file (`{meta: cover …}`, see Conventions); the app shows it faded into the end of
-the song cards, on the Songs and the Setlists screen alike, and whole at the start of the song details header, where a
-tap opens the cover search (not in performance mode), and keeps a copy of every one it has shown. Over a card the actions sit
-on a pill in the card's own color, so they stay legible over the image. The module `CLAUDE.md` files carry the detail;
+A song names its cover in its own file (`{meta: cover …}`, see Conventions); the app shows it as a thumbnail at the start of
+the song cards, on the Songs and the Setlists screen alike, and in the song details app bar before the title, where a
+tap opens the cover search (not in performance mode), and keeps a copy of every one it has shown. The module `CLAUDE.md` files carry the detail;
 the short version:
 
 - **Every request is in `:data:source:remote`**, through the one Ktor client sync uses: `CoverArtRemoteSource`

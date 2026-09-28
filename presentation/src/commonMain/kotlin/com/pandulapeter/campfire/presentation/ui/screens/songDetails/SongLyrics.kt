@@ -110,7 +110,6 @@ import com.pandulapeter.campfire.presentation.resources.song_details_tag_remove
 import com.pandulapeter.campfire.presentation.resources.song_details_tempo
 import com.pandulapeter.campfire.presentation.resources.song_details_time
 import com.pandulapeter.campfire.presentation.resources.song_details_year
-import com.pandulapeter.campfire.presentation.ui.components.CoverArtImage
 import com.pandulapeter.campfire.presentation.ui.components.ExpandChevron
 import com.pandulapeter.campfire.presentation.ui.components.TagFlowRow
 import com.pandulapeter.campfire.presentation.ui.components.TagPill
@@ -159,8 +158,6 @@ import kotlin.math.roundToInt
  * [SongSectionContent]), which are saved per song, and [onFoldToggled] is handed each key a fold toggles to save it.
  * Null where nothing folds, which is the editor's preview: it is there to show what is being written, and a section
  * folded on the details screen would hide the lines being typed into it.
- * @param isCoverArtEnabled Whether the song's `{meta: cover …}` image is drawn at the end of the header, which is also
- * what decides whether it is fetched at all.
  * @param onDividersPlaced Handed the y position of every divider between the rows of the horizontal flow, measured
  * from the top of this composable's content, every time they are placed. The song details screen snaps its scroll to
  * them.
@@ -176,12 +173,10 @@ internal fun SongLyrics(
     fontScale: Float = 1f,
     isHorizontalFlow: Boolean = false,
     foldedSections: Set<String> = emptySet(),
-    isCoverArtEnabled: Boolean = false,
     onFoldToggled: ((key: String) -> Unit)? = null,
     onAddTag: (() -> Unit)? = null,
     onRemoveTag: ((String) -> Unit)? = null,
     onEditLanguages: (() -> Unit)? = null,
-    onCoverArtClicked: (() -> Unit)? = null,
     onDividersPlaced: ((dividerTops: List<Int>) -> Unit)? = null,
 ) {
     // The fold toggles of the runs inside a section are named by these too, where the file names them nothing.
@@ -261,11 +256,9 @@ internal fun SongLyrics(
                 },
             song = model.song,
             fontScale = fontScale,
-            coverArtUrl = model.song.metadata.coverArt?.takeIf { isCoverArtEnabled },
             onAddTag = onAddTag,
             onRemoveTag = onRemoveTag,
             onEditLanguages = onEditLanguages,
-            onCoverArtClicked = onCoverArtClicked,
         )
         LookaheadScope {
             SongSectionsLayout(
@@ -360,56 +353,20 @@ internal fun SongLyrics(
  * that is drawn in parentheses after it, the artist, and the key, which lives inside the transposition control that
  * is the only reason to look at it.
  *
- * @param coverArtUrl The song's cover, drawn whole at the start of the header with the chips and the lines next to it,
- *   the way a record's sleeve heads its track list. It is too small an image to be stretched across the width of a
- *   tablet, which is why it is not a banner. It is part of the header, so the height the section grid is told to leave
- *   room for counts it.
  * @param onAddTag Null where the tags are only read, which is the editor's preview: there the file itself is under
  *   the caret, and a chip writing into it from the side would be editing the text the editor has not saved yet.
  * @param onEditLanguages Null wherever [onAddTag] is, and for the same reason. The chip is then shown only by a song
  *   that declares a language, since there is nothing to say about one that does not and nothing to tap to change it.
- * @param onCoverArtClicked Opens the cover search for the song, the way its menu entry does; null leaves the cover an
- *   image that takes no tap (the editor's preview, and performance mode, which has no cover search either).
  */
 @Composable
 private fun SongMetadataHeader(
     modifier: Modifier = Modifier,
     song: ChordProSong,
     fontScale: Float,
-    coverArtUrl: String?,
     onAddTag: (() -> Unit)?,
     onRemoveTag: ((String) -> Unit)?,
     onEditLanguages: (() -> Unit)?,
-    onCoverArtClicked: (() -> Unit)?,
-) = Row(modifier = modifier.padding(bottom = SECTION_GAP)) {
-    if (coverArtUrl != null) {
-        // The gap goes with the image, so that a cover that never arrives leaves the metadata where it always is.
-        CoverArtImage(
-            modifier = Modifier.padding(end = HEADER_COVER_GAP).size(HEADER_COVER_SIZE),
-            url = coverArtUrl,
-            onClick = onCoverArtClicked,
-        )
-    }
-    SongMetadataHeaderContent(
-        modifier = Modifier.weight(1f),
-        song = song,
-        fontScale = fontScale,
-        onAddTag = onAddTag,
-        onRemoveTag = onRemoveTag,
-        onEditLanguages = onEditLanguages,
-    )
-}
-
-/** The chips and the lines of [SongMetadataHeader], next to its cover. */
-@Composable
-private fun SongMetadataHeaderContent(
-    modifier: Modifier = Modifier,
-    song: ChordProSong,
-    fontScale: Float,
-    onAddTag: (() -> Unit)?,
-    onRemoveTag: ((String) -> Unit)?,
-    onEditLanguages: (() -> Unit)?,
-) = Column(modifier = modifier.fillMaxWidth()) {
+) = Column(modifier = modifier.padding(bottom = SECTION_GAP)) {
     val metadata = song.metadata
     if (metadata.tags.isNotEmpty() || metadata.languages.isNotEmpty() || onAddTag != null) {
         TagFlowRow(
@@ -1954,10 +1911,6 @@ private val MIN_COLUMN_WIDTH = 384.dp
 private val MAX_COLUMN_WIDTH = 560.dp
 private val COLUMN_GAP = 32.dp
 private val SECTION_GAP = 20.dp
-
-/** The side of the header's cover: `front-250` drawn at no more than about its own size on a phone's density. */
-private val HEADER_COVER_SIZE = 112.dp
-private val HEADER_COVER_GAP = 16.dp
 private val ROW_GAP = 40.dp
 private const val LINE_HEIGHT_SAMPLE = "X"
 private const val CHARACTER_WIDTH_SAMPLE_LENGTH = 64

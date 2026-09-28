@@ -9,34 +9,22 @@
  */
 package com.pandulapeter.campfire.presentation.ui.components
 
-import androidx.compose.animation.AnimatedVisibility
-import androidx.compose.animation.expandHorizontally
-import androidx.compose.animation.fadeIn
-import androidx.compose.animation.fadeOut
-import androidx.compose.animation.shrinkHorizontally
-import androidx.compose.foundation.Image
+import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.collectAsState
-import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.BlendMode
-import androidx.compose.ui.graphics.Brush
-import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.CompositingStrategy
-import androidx.compose.ui.graphics.graphicsLayer
-import androidx.compose.ui.draw.drawWithContent
+import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.semantics.Role
-import androidx.compose.ui.unit.LayoutDirection
 import coil3.ImageLoader
 import coil3.PlatformContext
 import coil3.compose.AsyncImage
-import coil3.compose.AsyncImagePainter
-import coil3.compose.rememberAsyncImagePainter
 import coil3.compose.setSingletonImageLoaderFactory
 import coil3.decode.DataSource
 import coil3.decode.ImageSource
@@ -47,7 +35,10 @@ import coil3.key.Keyer
 import coil3.request.Options
 import coil3.request.crossfade
 import com.pandulapeter.campfire.domain.api.useCases.GetCoverArtUseCase
+import com.pandulapeter.campfire.presentation.resources.Res
+import com.pandulapeter.campfire.presentation.resources.ic_album
 import okio.Buffer
+import org.jetbrains.compose.resources.painterResource
 import org.koin.mp.KoinPlatform
 
 /** What a cover image is asked of Coil by: the address a song names, fetched through [GetCoverArtUseCase]. */
@@ -103,69 +94,39 @@ private class CoverArtFetcher(
 private class CoverArtUnavailableException(url: String) : Exception("No cover art at $url.")
 
 /**
- * A cover image that fades out towards the start of the layout, drawn at [alpha] so that it sits behind what is written
- * over it rather than competing with it. Nothing is drawn while it loads or where there is no image to show.
- *
- * The fade is a `DstIn` mask over an offscreen layer, so that it fades the image into whatever is behind it rather than
- * into a color of its own, and it eases in over the whole width ([FADE_STOPS]) rather than running linearly, which
- * would leave a visible edge where the image starts.
- */
-@Composable
-internal fun FadedCoverArt(
-    modifier: Modifier = Modifier,
-    url: String,
-    alpha: Float,
-) = AsyncImage(
-    modifier = modifier
-        .graphicsLayer {
-            compositingStrategy = CompositingStrategy.Offscreen
-            this.alpha = alpha
-        }
-        .drawWithContent {
-            drawContent()
-            val stops = if (layoutDirection == LayoutDirection.Rtl) FADE_STOPS.map { (offset, color) -> 1f - offset to color }.reversed() else FADE_STOPS
-            drawRect(brush = Brush.horizontalGradient(*stops.toTypedArray()), blendMode = BlendMode.DstIn)
-        },
-    model = CoverArt(url),
-    contentDescription = null,
-    contentScale = ContentScale.Crop,
-)
-
-/**
- * The mask of [FadedCoverArt] from its start to its end: a smoothstep sampled at a few points, which starts and ends
- * flat, so that neither the start of the image nor the point where it is shown in full can be told from its
- * surroundings.
- */
-private val FADE_STOPS = listOf(0f, 0.2f, 0.4f, 0.6f, 0.8f, 1f).map { offset ->
-    offset to Color.Black.copy(alpha = offset * offset * (3f - 2f * offset))
-}
-
-/**
- * A cover image on its own, drawn whole and at full strength, which only takes its room once there is an image to
- * show: an address that answers with nothing leaves no empty square behind. It grows into its place as it arrives, and
- * one that is already in memory is simply there from the first frame. [onClick], where there is one, makes the image
- * a button, pressed inside its rounded corners.
+ * A cover image on its own, drawn whole at the size it is given, over a placeholder of the same size: a tinted square
+ * with the album icon in it, which is what shows while the image loads and where it never does. The room is taken
+ * from the first frame rather than once the image has arrived, so that nothing around a cover moves when it does —
+ * in a list that is being scrolled, images arrive all the time, and every one of them would otherwise push the text
+ * next to it aside. The image crossfades in over the placeholder, and one that is already in memory is simply there.
+ * [onClick], where there is one, makes the cover a button, pressed inside its rounded corners.
  */
 @Composable
 internal fun CoverArtImage(
     modifier: Modifier = Modifier,
     url: String,
+    shape: Shape = MaterialTheme.shapes.medium,
     onClick: (() -> Unit)? = null,
+) = Box(
+    modifier = modifier
+        .clip(shape)
+        .background(MaterialTheme.colorScheme.surfaceContainerHighest)
+        .then(if (onClick == null) Modifier else Modifier.clickable(role = Role.Button, onClick = onClick)),
+    contentAlignment = Alignment.Center,
 ) {
-    val painter = rememberAsyncImagePainter(model = CoverArt(url), contentScale = ContentScale.Crop)
-    val state by painter.state.collectAsState()
-    AnimatedVisibility(
-        visible = state is AsyncImagePainter.State.Success,
-        enter = fadeIn() + expandHorizontally(expandFrom = Alignment.Start),
-        exit = fadeOut() + shrinkHorizontally(shrinkTowards = Alignment.Start),
-    ) {
-        Image(
-            modifier = modifier
-                .clip(MaterialTheme.shapes.medium)
-                .then(if (onClick == null) Modifier else Modifier.clickable(role = Role.Button, onClick = onClick)),
-            painter = painter,
-            contentDescription = null,
-            contentScale = ContentScale.Crop,
-        )
-    }
+    Icon(
+        modifier = Modifier.fillMaxSize(COVER_ART_PLACEHOLDER_ICON_FRACTION),
+        painter = painterResource(Res.drawable.ic_album),
+        contentDescription = null,
+        tint = MaterialTheme.colorScheme.onSurfaceVariant,
+    )
+    AsyncImage(
+        modifier = Modifier.matchParentSize(),
+        model = CoverArt(url),
+        contentDescription = null,
+        contentScale = ContentScale.Crop,
+    )
 }
+
+/** How much of the placeholder's side its album icon takes up. */
+private const val COVER_ART_PLACEHOLDER_ICON_FRACTION = 0.5f

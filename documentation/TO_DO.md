@@ -10,6 +10,7 @@
 # To do
 - Sort and Filter UI should be improved (better animations)
 - Haptic effects
+- Toolbar double-tap to maximize
 - Chord diagrams
 - Optional close confirmation dialog on supported platforms
 - Add genre tags, similar to language tags
