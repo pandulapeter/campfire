@@ -48,7 +48,9 @@ import androidx.compose.material3.BottomSheetDefaults
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.DatePicker
+import androidx.compose.material3.DatePickerDefaults
 import androidx.compose.material3.DatePickerDialog
+import androidx.compose.material3.DatePickerState
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -60,7 +62,6 @@ import androidx.compose.material3.SheetValue
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.rememberBottomSheetState
-import androidx.compose.material3.rememberDatePickerState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -71,6 +72,7 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.saveable.listSaver
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
+import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.FocusRequester
@@ -79,6 +81,8 @@ import androidx.compose.ui.graphics.luminance
 import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.TextRange
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardCapitalization
@@ -193,6 +197,7 @@ import com.pandulapeter.campfire.presentation.ui.components.languageLabel
 import com.pandulapeter.campfire.presentation.ui.components.languageName
 import com.pandulapeter.campfire.presentation.ui.components.pickableLanguages
 import com.pandulapeter.campfire.presentation.ui.components.textResource
+import com.pandulapeter.campfire.presentation.ui.platform.calendarLocale
 import com.pandulapeter.campfire.presentation.ui.screens.settings.SettingsSubsection
 import kotlinx.coroutines.launch
 import kotlinx.datetime.LocalDate
@@ -861,7 +866,15 @@ private fun SetlistDateField(
     if (isPickerVisible) {
         // The picker counts in milliseconds of UTC midnights, whatever the device's time zone, so the day goes in and
         // comes out through UTC rather than through the local zone, which would move it by a day on one side of it.
-        val state = rememberDatePickerState(initialSelectedDateMillis = date.atStartOfDayIn(TimeZone.UTC).toEpochMilliseconds())
+        var selectedMillis by rememberSaveable { mutableStateOf(date.atStartOfDayIn(TimeZone.UTC).toEpochMilliseconds()) }
+        // The calendar is given the app's language rather than the system's, which is what rememberDatePickerState
+        // would take. The state built here is not saveable, so the day picked but not yet confirmed is carried
+        // through a rotation by selectedMillis instead.
+        val languageCode = currentLanguage.value.code
+        val locale = remember(languageCode) { calendarLocale(languageCode) }
+        val state = remember(locale) { DatePickerState(locale = locale, initialSelectedDateMillis = selectedMillis) }
+        LaunchedEffect(state) { snapshotFlow { state.selectedDateMillis }.collect { it?.let { millis -> selectedMillis = millis } } }
+        val dateFormatter = remember { DatePickerDefaults.dateFormatter() }
         val dismiss = { isPickerVisible = false }
         DatePickerDialog(
             onDismissRequest = dismiss,
@@ -878,7 +891,30 @@ private fun SetlistDateField(
                 TextButton(onClick = dismiss) { Text(stringResource(Res.string.cancel)) }
             },
         ) {
-            DatePicker(state = state)
+            DatePicker(
+                state = state,
+                dateFormatter = dateFormatter,
+                title = {
+                    Text(
+                        modifier = Modifier.padding(PaddingValues(start = 24.dp, end = 12.dp, top = 16.dp)),
+                        text = stringResource(Res.string.setlists_pick_date),
+                    )
+                },
+                // Material's own headline formats the day in the system's locale whatever the state's is, so it is
+                // drawn here in the calendar's, with the paddings and the color Material gives it.
+                headline = {
+                    val pickDate = stringResource(Res.string.setlists_pick_date)
+                    val description = dateFormatter.formatDate(state.selectedDateMillis, locale, forContentDescription = true) ?: pickDate
+                    Text(
+                        modifier = Modifier
+                            .padding(PaddingValues(start = 24.dp, end = 12.dp, bottom = 12.dp))
+                            .semantics { contentDescription = description },
+                        text = dateFormatter.formatDate(state.selectedDateMillis, locale, forContentDescription = false) ?: pickDate,
+                        color = DatePickerDefaults.colors().headlineContentColor,
+                        maxLines = 1,
+                    )
+                },
+            )
         }
     }
 }
