@@ -94,6 +94,53 @@ class SyncRepositoryImplTest {
     }
 
     @Test
+    fun `an automatic run started as the app leaves shows as going before the call returns`() = runTest {
+        val gate = CompletableDeferred<Unit>()
+        val repository = repository(
+            provider = FakeSyncProvider(
+                files = mapOf(song(1) to "One".encodeToByteArray()),
+                onDownload = { gate.await() },
+                account = ACCOUNT,
+            ),
+        )
+
+        repository.restore()
+        repository.scheduleSynchronization()
+        val progress = repository.startScheduledSynchronization()
+
+        assertNotNull(progress)
+        assertNotNull((repository.syncState.value as SyncState.Connected).progress)
+        gate.complete(Unit)
+        assertIs<SyncOutcome.Success>(repository.awaitOutcome().lastOutcome)
+    }
+
+    @Test
+    fun `leaving the app with no automatic run waiting starts nothing`() = runTest {
+        val provider = FakeSyncProvider(account = ACCOUNT)
+        val repository = repository(provider = provider)
+
+        repository.restore()
+        val progress = repository.startScheduledSynchronization()
+        withContext(Dispatchers.Default) { delay(200) }
+
+        assertNull(progress)
+        assertNull((repository.syncState.value as SyncState.Connected).progress)
+        assertEquals(0, provider.listCount)
+    }
+
+    @Test
+    fun `a run stopped before it got going shows no progress`() = runTest {
+        val repository = repository(provider = FakeSyncProvider(account = ACCOUNT))
+
+        repository.restore()
+        repository.synchronize(SyncDeletionPolicy.ASK)
+        repository.cancelSynchronization()
+        val state = repository.syncState.first { (it as? SyncState.Connected)?.progress == null }
+
+        assertNull((state as SyncState.Connected).progress)
+    }
+
+    @Test
     fun `stopping sync drops the automatic run that is waiting`() = runTest {
         val provider = FakeSyncProvider(account = ACCOUNT)
         val repository = repository(provider = provider)

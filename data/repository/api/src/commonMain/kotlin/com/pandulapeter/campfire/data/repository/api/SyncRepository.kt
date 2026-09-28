@@ -11,6 +11,7 @@ package com.pandulapeter.campfire.data.repository.api
 
 import com.pandulapeter.campfire.data.model.domain.SyncDeletionPolicy
 import com.pandulapeter.campfire.data.model.domain.SyncOutcome
+import com.pandulapeter.campfire.data.model.domain.SyncProgress
 import com.pandulapeter.campfire.data.model.domain.SyncProviderId
 import com.pandulapeter.campfire.data.model.domain.SyncState
 import com.pandulapeter.campfire.data.source.remote.api.model.AuthorizationCompletionPage
@@ -128,8 +129,13 @@ interface SyncRepository {
      * none is. For the moment the app stops being the one in front: a phone keeps a run alive in the background only
      * once the app has told the platform about it, which it can only do while it is still in front, and on iOS a
      * suspended app would not get to start it at all.
+     *
+     * The run is started before this returns, and so is [syncState]'s progress, which is also what it returns: the
+     * progress of the run that is going once it has returned, whether it started now or was already going, and null
+     * when none is. A caller on its way out of the front has no frame left to wait for the state to arrive in - the
+     * platform has to be told there and then. A run asked for while another one is going still follows that one.
      */
-    fun startScheduledSynchronization()
+    fun startScheduledSynchronization(): SyncProgress?
 
     /** Stops a run where it is. What has already moved stays moved, and the next run picks up from there. */
     fun cancelSynchronization()

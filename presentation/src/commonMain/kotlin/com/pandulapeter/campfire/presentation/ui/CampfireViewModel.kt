@@ -37,6 +37,7 @@ import com.pandulapeter.campfire.data.model.domain.Setlist
 import com.pandulapeter.campfire.data.model.domain.SongContent
 import com.pandulapeter.campfire.data.model.domain.Song
 import com.pandulapeter.campfire.data.model.domain.SyncDeletionPolicy
+import com.pandulapeter.campfire.data.model.domain.SyncProgress
 import com.pandulapeter.campfire.data.model.domain.SyncProviderId
 import com.pandulapeter.campfire.data.source.remote.api.model.AuthorizationCompletionPage
 import com.pandulapeter.campfire.data.model.domain.SyncState
@@ -1566,14 +1567,18 @@ class CampfireViewModel(
      * is none. Nothing before the draft a previous run left has been read, or it would be written over.
      *
      * An automatic sync run that is still waiting for the library to settle starts now as well: the phones keep a run
-     * alive in the background only once the app has told them about it, which it does from the composition, and that
-     * stops soon after this.
+     * alive in the background only once the app has told them about it, which it has to do before this callback is
+     * over - the composition may not get another frame. So the progress of the run that is going is returned for the
+     * caller to hand over there and then, rather than left to arrive through [syncState], which it would only do
+     * after a hop to the main thread this callback is holding.
      */
-    fun onAppPaused() {
-        startScheduledSynchronization()
-        if (_isEditorDraftRecoveryPending.value) return
-        val draft = _editorDraft.value?.takeIf { hasUnsavedEditorText() }
-        viewModelScope.launch { storeEditorDraft(draft) }
+    fun onAppPaused(): SyncProgress? {
+        val syncProgress = startScheduledSynchronization()
+        if (!_isEditorDraftRecoveryPending.value) {
+            val draft = _editorDraft.value?.takeIf { hasUnsavedEditorText() }
+            viewModelScope.launch { storeEditorDraft(draft) }
+        }
+        return syncProgress
     }
 
     /** Not cancellable once started: a pause is often the last thing the process does. A write that fails is only a copy lost. */

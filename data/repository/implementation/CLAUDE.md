@@ -171,7 +171,10 @@ and a repository that has not been read yet rescans instead, since there is no l
   before the change. The files a run writes itself go around the repositories, so no run schedules the next one.
   `synchronize` — the button, a new connection and a launch — takes the place of a waiting run, `cancelSynchronization` drops it with the run it
   stops, `disconnect` drops it too, and `startScheduledSynchronization` starts it at once, which the app asks for as
-  it leaves the front, the last moment a phone lets it start a run that survives the background. The run slot is an
+  it leaves the front, the last moment a phone lets it start a run that survives the background. It starts the run
+  on the caller's thread rather than leaving it to the debounce, and answers the progress: `startRun` puts
+  `SyncProgress()` in the state before it returns — and a completion handler takes it down again for a run cancelled
+  before its body could — so the app can hand the run to the platform's keep-alive inside the same callback. The run slot is an
   `AtomicReference` swapped with `compareAndSet`, since the buttons start runs from the main thread and the debounce
   from the repository's own scope.
   `restore` is asked once per ViewModel — on Android once per activity — so a call that finds the state already

@@ -419,8 +419,21 @@ internal class SyncRepositoryImpl(
         scheduledRunDueAt.value = TimeSource.Monotonic.markNow() + AUTOMATIC_RUN_DELAY
     }
 
-    override fun startScheduledSynchronization() {
-        scheduledRunDueAt.update { dueAt -> dueAt?.let { TimeSource.Monotonic.markNow() } }
+    override fun startScheduledSynchronization(): SyncProgress? {
+        val dueAt = scheduledRunDueAt.value
+        when {
+            dueAt == null -> Unit
+            // The debounce chains the waiting run right behind the one that is going, as it would have in ten seconds.
+            syncJob.load()?.isActive == true -> scheduledRunDueAt.compareAndSet(dueAt, TimeSource.Monotonic.markNow())
+            // Started here rather than left to the debounce, which would start it on another thread a moment later:
+            // the caller is the app leaving the front, and it can only hand a run to the platform's keep-alive while
+            // it still is in front - which is what the progress this returns is for.
+            scheduledRunDueAt.compareAndSet(dueAt, null) -> if (!startRun(SyncDeletionPolicy.ASK, isAutomatic = true)) {
+                // A run started on another thread in between, and the one asked for now follows it.
+                scheduledRunDueAt.compareAndSet(null, TimeSource.Monotonic.markNow())
+            }
+        }
+        return (_syncState.value as? SyncState.Connected)?.progress
     }
 
     /** Stops a run where it is. What has already moved stays moved, and the next run picks up from there. */
@@ -443,6 +456,18 @@ internal class SyncRepositoryImpl(
         if (!syncJob.compareAndSet(current, run)) {
             run.cancel()
             return false
+        }
+        // Shown before the run gets to the thread it runs on, so that the state says a run is going by the time this
+        // returns: see startScheduledSynchronization for the caller that depends on it. The run puts the same value
+        // there again once it holds the lock, and clears it on every way out of its body - and the handler clears it
+        // for a run that is cancelled before its body clears anything, waiting for the lock or not started yet.
+        updateConnected { it.copy(progress = SyncProgress(), lastOutcome = null) }
+        run.invokeOnCompletion { cause ->
+            if (cause == null) return@invokeOnCompletion
+            val current = syncJob.load()
+            if (current == null || current === run || !current.isActive) {
+                updateConnected { if (it.progress == null) it else it.copy(progress = null) }
+            }
         }
         run.start()
         return true
