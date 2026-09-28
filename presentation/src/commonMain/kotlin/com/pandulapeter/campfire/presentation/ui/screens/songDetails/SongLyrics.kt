@@ -30,6 +30,7 @@ import androidx.compose.material3.LocalTextStyle
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.Immutable
 import androidx.compose.runtime.CompositionLocalProvider
@@ -93,6 +94,7 @@ import com.pandulapeter.campfire.presentation.resources.ic_link
 import com.pandulapeter.campfire.presentation.resources.song_details_album
 import com.pandulapeter.campfire.presentation.resources.song_details_capo
 import com.pandulapeter.campfire.presentation.resources.song_details_composer
+import com.pandulapeter.campfire.presentation.resources.song_details_cut
 import com.pandulapeter.campfire.presentation.resources.song_details_duration
 import com.pandulapeter.campfire.presentation.resources.song_details_grid_collapse
 import com.pandulapeter.campfire.presentation.resources.song_details_grid_expand
@@ -113,6 +115,7 @@ import com.pandulapeter.campfire.presentation.resources.song_details_tag_remove
 import com.pandulapeter.campfire.presentation.resources.song_details_tempo
 import com.pandulapeter.campfire.presentation.resources.song_details_time
 import com.pandulapeter.campfire.presentation.resources.song_details_year
+import com.pandulapeter.campfire.presentation.resources.songs_edit_song
 import com.pandulapeter.campfire.presentation.ui.components.ExpandChevron
 import com.pandulapeter.campfire.presentation.ui.components.TagFlowRow
 import com.pandulapeter.campfire.presentation.ui.components.TagPill
@@ -163,7 +166,8 @@ import kotlin.math.roundToInt
  * folded on the details screen would hide the lines being typed into it.
  * @param onDividersPlaced Handed the y position of every divider between the rows of the horizontal flow, measured
  * from the top of this composable's content, every time they are placed. The song details screen snaps its scroll to
- * them.
+ * them. * @param onOpenEditor Offered under a song too long to be laid out whole, see [LayoutBudget]; null where the editor is
+ * already open or may not be opened (performance mode).
  */
 @OptIn(ExperimentalSharedTransitionApi::class)
 @Composable
@@ -184,6 +188,7 @@ internal fun SongLyrics(
     onAddLink: (() -> Unit)? = null,
     onRemoveLink: ((String) -> Unit)? = null,
     onDividersPlaced: ((dividerTops: List<Int>) -> Unit)? = null,
+    onOpenEditor: (() -> Unit)? = null,
 ) {
     // The fold toggles of the runs inside a section are named by these too, where the file names them nothing.
     val defaultLabels = rememberDefaultSectionLabels()
@@ -351,6 +356,33 @@ internal fun SongLyrics(
                 // ever placed, the rest stay unmeasured.
                 repeat((sections.size - 1).coerceAtLeast(0)) { HorizontalDivider() }
             }
+        }
+        if (model.isCut) {
+            CutSongNotice(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = CARD_PADDING)
+                    .padding(top = 16.dp),
+                onOpenEditor = onOpenEditor,
+            )
+        }
+    }
+}
+
+/** Where a song too long to be laid out whole stops, see [LayoutBudget]: the file is whole, and the editor shows it all. */
+@Composable
+private fun CutSongNotice(
+    modifier: Modifier = Modifier,
+    onOpenEditor: (() -> Unit)?,
+) = Column(modifier = modifier) {
+    Text(
+        text = stringResource(Res.string.song_details_cut),
+        style = MaterialTheme.typography.bodyMedium,
+        color = MaterialTheme.colorScheme.onSurfaceVariant,
+    )
+    if (onOpenEditor != null) {
+        TextButton(onClick = onOpenEditor) {
+            Text(text = stringResource(Res.string.songs_edit_song))
         }
     }
 }
@@ -1496,10 +1528,15 @@ private object AnimatedSectionLayoutId
 private fun maxAnimatedSectionHeight(columnWidth: Int) =
     if (columnWidth < WIDE_SECTION_WIDTH) MAX_ANIMATED_SECTION_HEIGHT else MAX_ANIMATED_WIDE_SECTION_HEIGHT
 
-/** A song ready to be laid out: what [SongLyrics] draws, which can be built on any thread (see [prepareSongLyrics]). */
+/**
+ * A song ready to be laid out: what [SongLyrics] draws, which can be built on any thread (see [prepareSongLyrics]).
+ *
+ * @param isCut Whether [sections] stop short of the end of [song], see [LayoutBudget].
+ */
 internal class SongLyricsModel(
     val song: ChordProSong,
     val sections: List<RenderSection>,
+    val isCut: Boolean,
 )
 
 /**
@@ -1513,7 +1550,9 @@ internal fun prepareSongLyrics(
     song: ChordProSong,
     shouldShowChords: Boolean,
     labels: DefaultSectionLabels,
-) = SongLyricsModel(song = song, sections = song.toRenderSections(shouldShowChords, labels))
+) = LayoutBudget.fit(song.toRenderSections(shouldShowChords, labels)).let { (sections, isCut) ->
+    SongLyricsModel(song = song, sections = sections, isCut = isCut)
+}
 
 /** Everything a [SongLyricsModel] is built from, see [rememberSongLyricsModel]. */
 internal data class SongLyricsInputs(

@@ -347,6 +347,7 @@
     <string name="song_details_year">Year: %1$s</string>
     <string name="song_details_duration">Duration: %1$s</string>
     <string name="song_details_empty">This file has no content yet.</string>
+    <string name="song_details_cut">This song is too long to be shown whole here, so it stops at this point. The file itself is complete, and the editor shows all of it.</string>
     <string name="song_details_no_data">This song could not be loaded</string>
     <string name="song_details_no_data_hint">The file could not be read.</string>
 

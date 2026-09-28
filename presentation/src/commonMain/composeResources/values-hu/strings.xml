@@ -347,6 +347,7 @@
     <string name="song_details_year">Év: %1$s</string>
     <string name="song_details_duration">Hossz: %1$s</string>
     <string name="song_details_empty">Ez a fájl még üres.</string>
+    <string name="song_details_cut">Ez a dal túl hosszú ahhoz, hogy itt egészében megjelenjen, ezért ezen a ponton véget ér. Maga a fájl teljes, és a szerkesztő az egészet mutatja.</string>
     <string name="song_details_no_data">Ezt a dalt nem sikerült betölteni</string>
     <string name="song_details_no_data_hint">A fájlt nem sikerült beolvasni.</string>
 

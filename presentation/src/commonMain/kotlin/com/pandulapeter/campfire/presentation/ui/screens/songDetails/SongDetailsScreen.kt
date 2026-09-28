@@ -478,6 +478,10 @@ internal fun SongDetailsScreen(
                     onRemoveLink = if (isPerformanceModeEnabled) null else {
                         { url -> viewModel.setSongLink(fileName = song.fileName, url = url, isAdded = false) }
                     },
+                    // Performance mode takes every way into the editor out of the app, this one included.
+                    onOpenEditor = if (isPerformanceModeEnabled) null else {
+                        { viewModel.openEditor(song.fileName) }
+                    },
                 )
             }
         }
@@ -621,6 +625,7 @@ private fun SongDetailsPage(
     onOpenLink: (String) -> Unit,
     onAddLink: (() -> Unit)?,
     onRemoveLink: ((String) -> Unit)?,
+    onOpenEditor: (() -> Unit)?,
 ) = AnimatedContent(
     modifier = Modifier.fillMaxSize(),
     targetState = text,
@@ -713,6 +718,7 @@ private fun SongDetailsPage(
                 onOpenLink = onOpenLink,
                 onAddLink = onAddLink,
                 onRemoveLink = onRemoveLink,
+                onOpenEditor = onOpenEditor,
                 // The padding is inside the scroll, so a divider is at the top of the viewport once the song is
                 // scrolled by its position plus the padding above it.
                 onDividersPlaced = { dividerTops -> flingBehavior.dividerOffsets = dividerTops.map { it + topPaddingPx } },
