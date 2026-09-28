@@ -124,6 +124,8 @@ internal class SetlistRepositoryImpl(
         updateData { current -> current.orEmpty().filterNot { it.fileName in fileNames } + setlists.associateBy { it.fileName }.values }
     }
 
+    override suspend fun loadSetlistFileSizes() = setlistLocalSource.loadSetlistFileSizes()
+
     override suspend fun loadSetlistDocument(fileName: String) = setlistLocalSource.loadSetlistDocument(fileName)
 
     override suspend fun deleteSetlist(fileName: String) = writing {

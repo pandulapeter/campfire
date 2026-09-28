@@ -119,6 +119,30 @@ class ExportLibraryUseCaseImplTest {
     }
 
     @Test
+    fun `exports a setlist in the folder that the scan could not decode, as it is stored`() = runTest {
+        val result = useCase(
+            songs = listOf(song("a")),
+            setlists = emptyList(),
+            setlistFolder = mapOf("broken.setlist.json" to 7L),
+            setlistDocument = "{broken",
+        ).invoke()
+
+        assertEquals(emptyList(), assertNotNull(result).skippedFileNames)
+        assertEquals("{broken", archive.packed.getValue("setlists/broken.setlist.json").decodeToString())
+    }
+
+    @Test
+    fun `names a setlist in the folder that is too large to be a setlist`() = runTest {
+        val result = useCase(
+            songs = listOf(song("a")),
+            setlistFolder = mapOf("x.setlist.json" to 2L, "huge.setlist.json" to ImportLimits.MAX_TEXT_FILE_SIZE + 1),
+        ).invoke()
+
+        assertEquals(listOf("huge.setlist.json"), assertNotNull(result).skippedFileNames)
+        assertEquals(setOf("songs/a.cho", "setlists/x.setlist.json"), archive.packed.keys)
+    }
+
+    @Test
     fun `keeps the archive layout`() = runTest {
         val result = useCase(songs = listOf(song("a")), setlists = listOf(setlist("x"))).invoke()
 
@@ -143,10 +167,17 @@ class ExportLibraryUseCaseImplTest {
         setlists: List<Setlist>? = emptyList(),
         folder: Map<String, Long> = songs.orEmpty().associate { it.fileName to 10L },
         unreadable: Set<String> = emptySet(),
+        setlistFolder: Map<String, Long> = setlists.orEmpty().associate { it.fileName to 2L },
+        setlistDocument: String = "{}",
     ) = ExportLibraryUseCaseImpl(
         songRepository = FakeSongRepository(scanned = songs, folder = folder),
         songContentRepository = songContents.also { it.unreadable = unreadable },
-        setlistRepository = FakeSetlistRepository(scanned = setlists, unreadable = unreadable),
+        setlistRepository = FakeSetlistRepository(
+            scanned = setlists,
+            folder = setlistFolder,
+            document = setlistDocument,
+            unreadable = unreadable,
+        ),
         archiveRepository = archive,
     )
 
@@ -188,6 +219,8 @@ class ExportLibraryUseCaseImplTest {
 
     private class FakeSetlistRepository(
         private val scanned: List<Setlist>?,
+        private val folder: Map<String, Long>,
+        private val document: String,
         private val unreadable: Set<String>,
     ) : SetlistRepository {
         override val setlists: Flow<DataState<List<Setlist>>> = emptyFlow()
@@ -202,7 +235,8 @@ class ExportLibraryUseCaseImplTest {
         override suspend fun renameSetlist(fileName: String, title: String, description: String) = throw UnsupportedOperationException()
         override suspend fun parseSetlist(document: String) = throw UnsupportedOperationException()
         override suspend fun importSetlist(setlist: Setlist, shouldReplace: Boolean) = throw UnsupportedOperationException()
-        override suspend fun loadSetlistDocument(fileName: String) = if (fileName in unreadable) null else "{}"
+        override suspend fun loadSetlistFileSizes() = folder
+        override suspend fun loadSetlistDocument(fileName: String) = if (fileName in unreadable) null else document
         override suspend fun deleteSetlist(fileName: String) = throw UnsupportedOperationException()
     }
 

@@ -62,6 +62,7 @@ class ExportSetlistUseCaseImplTest {
         override suspend fun renameSetlist(fileName: String, title: String, description: String) = throw UnsupportedOperationException()
         override suspend fun parseSetlist(document: String) = throw UnsupportedOperationException()
         override suspend fun importSetlist(setlist: Setlist, shouldReplace: Boolean) = throw UnsupportedOperationException()
+        override suspend fun loadSetlistFileSizes(): Map<String, Long> = throw UnsupportedOperationException()
         override suspend fun loadSetlistDocument(fileName: String) = if (fileName == setlist.fileName) "{}" else null
         override suspend fun deleteSetlist(fileName: String) = throw UnsupportedOperationException()
     }

@@ -88,8 +88,11 @@ The ones that carry real logic:
   setlist points at its songs by file name and the import follows those names. A library export whose song or setlist
   scan failed is a failed export (null), never an archive of what happened to be read; the songs are taken from the folder
   (`SongRepository.loadSongFileSizes`) rather than from the scan, so that a song written since the scan is in the
-  archive and one the scan skipped is read again; what cannot be read, or is larger than a song can be (and so is
-  never opened), is named beside the archive. The view model says so after the save.
+  archive and one the scan skipped is read again. The setlists are taken from the folder the same way
+  (`SetlistRepository.loadSetlistFileSizes`) and go in as they are stored, so that one hand-edited into JSON that no
+  longer decodes — which the scan skips and leaves on disk as the user's to fix — is kept by the backup. What cannot
+  be read, or is larger than a song or a setlist can be (and so is never opened), is named beside the archive. The
+  view model says so after the save.
 - `CreateSongUseCaseImpl` — writes the new-song template (`{title}`, `{artist}`, `{key}` and an empty verse).
 - `TransposeChordProUseCaseImpl` / `TransposeChordProTextUseCaseImpl` / `ParseChordProUseCaseImpl` /
   `ConvertChordProNotationUseCaseImpl` — thin wrappers over `:chordpro`, so the presentation layer never calls the

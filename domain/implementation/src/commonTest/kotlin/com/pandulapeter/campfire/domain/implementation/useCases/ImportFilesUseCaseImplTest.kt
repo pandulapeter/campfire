@@ -206,6 +206,7 @@ class ImportFilesUseCaseImplTest {
             adopted += setlists.map { it.fileName }
         }
 
+        override suspend fun loadSetlistFileSizes(): Map<String, Long> = throw UnsupportedOperationException()
         override suspend fun loadSetlistDocument(fileName: String) = throw UnsupportedOperationException()
         override suspend fun deleteSetlist(fileName: String) = throw UnsupportedOperationException()
     }

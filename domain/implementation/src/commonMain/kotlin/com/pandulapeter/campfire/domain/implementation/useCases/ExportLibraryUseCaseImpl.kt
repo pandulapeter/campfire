@@ -39,6 +39,9 @@ class ExportLibraryUseCaseImpl internal constructor(
      * that has not rescanned yet, or put into the folder by hand) or one it could not read then is not in the song
      * list, and the folder is the only place that says it exists. Every one of them that is not too large to be a song
      * is read, so the archive holds every song file there is, and names the ones it could not read or would not open.
+     * The setlists are taken from the folder too, and exported as they are stored rather than as the scan decoded
+     * them: a setlist hand-edited into JSON that no longer decodes is skipped by the scan and left on disk as the
+     * user's to fix, and a backup is exactly where it should be kept.
      *
      * The songs are read [READ_BATCH_SIZE] at a time rather than one after another, and all of it runs on
      * [Dispatchers.Default] rather than on the caller's main thread. The archive and the list of skipped files keep the
@@ -48,8 +51,9 @@ class ExportLibraryUseCaseImpl internal constructor(
         // A scan that failed is not an empty library. Exporting what it managed to read would hand the user an archive
         // they will file away as a backup and find out about years later.
         songRepository.loadSongsIfNeeded() ?: return@withContext null
-        val setlists = setlistRepository.loadSetlistsIfNeeded() ?: return@withContext null
+        setlistRepository.loadSetlistsIfNeeded() ?: return@withContext null
         val songFileSizes = songRepository.loadSongFileSizes()
+        val setlistFileSizes = setlistRepository.loadSetlistFileSizes()
         val contents = songFileSizes.keys.sorted().chunked(READ_BATCH_SIZE).flatMap { batch ->
             coroutineScope {
                 batch.map { fileName ->
@@ -71,9 +75,13 @@ class ExportLibraryUseCaseImpl internal constructor(
             contents.forEach { (fileName, content) ->
                 if (content == null) skipped += fileName else put("$SONGS_DIRECTORY/$fileName", content.text.encodeToByteArray())
             }
-            setlists.forEach { setlist ->
-                val document = setlistRepository.loadSetlistDocument(setlist.fileName)
-                if (document == null) skipped += setlist.fileName else put("$SETLISTS_DIRECTORY/${setlist.fileName}", document.encodeToByteArray())
+            setlistFileSizes.keys.sorted().forEach { fileName ->
+                val document = if (setlistFileSizes.getValue(fileName) > ImportLimits.MAX_TEXT_FILE_SIZE) {
+                    null
+                } else {
+                    setlistRepository.loadSetlistDocument(fileName)
+                }
+                if (document == null) skipped += fileName else put("$SETLISTS_DIRECTORY/$fileName", document.encodeToByteArray())
             }
         }
         if (files.isEmpty()) return@withContext null

@@ -82,7 +82,10 @@ interface SetlistRepository {
      */
     suspend fun adoptImported(setlists: Collection<Setlist>)
 
-    /** The stored document of one setlist, for exporting it unchanged. Null if it is missing. */
+    /** See `SetlistLocalSource.loadSetlistFileSizes`: every setlist file in the folder with its size, read or not. Never cached. */
+    suspend fun loadSetlistFileSizes(): Map<String, Long>
+
+    /** The stored document of one setlist, for exporting it unchanged, whether it decodes or not. Null if it is missing. */
     suspend fun loadSetlistDocument(fileName: String): String?
 
     /** Waits for a change to the setlist that is being written, which would otherwise put the file back. */

@@ -139,6 +139,10 @@ internal class SetlistLocalSourceImpl(
         )
         .let { saveSetlist(it) }
 
+    override suspend fun loadSetlistFileSizes() = fileStorage.list(StorageDirectory.SETLISTS)
+        .filter { LibraryFiles.isSetlistFileName(it.name) }
+        .associate { it.name to it.size }
+
     override suspend fun loadSetlistDocument(fileName: String) = fileStorage.readText(StorageDirectory.SETLISTS, fileName)
 
     override suspend fun deleteSetlist(fileName: String) = fileStorage.delete(StorageDirectory.SETLISTS, fileName)

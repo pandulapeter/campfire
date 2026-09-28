@@ -56,7 +56,18 @@ interface SetlistLocalSource {
      */
     suspend fun importSetlist(setlist: Setlist, shouldReplace: Boolean): Setlist
 
-    /** The setlist file exactly as it is stored, so that exporting it changes nothing. Null if it is missing. */
+    /**
+     * Every setlist file in the library folder with its size in bytes, whether [loadSetlists] could read it or not,
+     * without opening any of them. What an export works from, for the same reason as `SongLocalSource.loadSongFileSizes`:
+     * a setlist the scan skipped - one written since, or one hand-edited into JSON that no longer decodes, which is left
+     * on disk as the user's to fix - would otherwise be missing from a backup without a word.
+     */
+    suspend fun loadSetlistFileSizes(): Map<String, Long>
+
+    /**
+     * The setlist file exactly as it is stored, so that exporting it changes nothing, whether it decodes or not. Null
+     * if it is missing.
+     */
     suspend fun loadSetlistDocument(fileName: String): String?
 
     suspend fun deleteSetlist(fileName: String)

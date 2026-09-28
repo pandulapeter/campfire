@@ -207,6 +207,8 @@ internal class RecordingSetlistRepository : SetlistRepository {
 
     override suspend fun importSetlist(setlist: Setlist, shouldReplace: Boolean): Setlist = throw UnsupportedOperationException()
 
+    override suspend fun loadSetlistFileSizes(): Map<String, Long> = throw UnsupportedOperationException()
+
     override suspend fun loadSetlistDocument(fileName: String): String? = throw UnsupportedOperationException()
 
     override suspend fun deleteSetlist(fileName: String): Unit = throw UnsupportedOperationException()
