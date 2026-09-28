@@ -27,7 +27,7 @@ import com.pandulapeter.campfire.data.model.domain.UserPreferences
 import com.pandulapeter.campfire.data.source.remote.implementation.auth.isSyncRedirect
 import com.pandulapeter.campfire.data.source.remote.implementation.auth.onSyncRedirectReceived
 import com.pandulapeter.campfire.presentation.ui.CampfireAndroidApp
-import com.pandulapeter.campfire.presentation.ui.platform.SyncNotifier
+import com.pandulapeter.campfire.presentation.ui.platform.SyncNotification
 import com.pandulapeter.campfire.sync.CampfireSyncService
 
 class CampfireMainActivity : ComponentActivity() {
@@ -128,49 +128,113 @@ class CampfireMainActivity : ComponentActivity() {
     }
 
     /**
+     * The run the composition last said is going, or null when none is. Kept rather than acted on while the app is in
+     * front, see [onSyncNotificationChanged].
+     */
+    private var syncNotification: SyncNotification? = null
+
+    /**
      * The words the service was last started with. The counts need no forwarding - the service renders them from the
      * sync state itself - so a run's progress starts it again only when it is not running (it stops itself when it
      * sees a run end, which the activity may not have been watching) or when the words changed (a language switch).
      */
     private var lastSyncServiceWords: List<String>? = null
 
+    /** Between a pause that was the user leaving - not a rotation - and the next resume. */
+    private var isLeaving = false
+
     /**
-     * Starts and stops the service that keeps a sync run alive once the user has left the app. Building the
-     * notification is the service's job; what arrives here is only whether there is one and what it should say.
+     * Whether the service has been asked to start since the app was last left. [CampfireSyncService.isRunning] only
+     * turns true once the service has got the intent, and the same run may be handed over again before that.
      */
-    private fun onSyncNotificationChanged(notification: com.pandulapeter.campfire.presentation.ui.platform.SyncNotification?) {
+    private var hasStartedSyncServiceSinceLeaving = false
+
+    /**
+     * The service is only started once the app is being left: in front, the activity keeps the process alive anyway,
+     * and a foreground service shows its notification - Stop button and all - at once, which for the run every edit
+     * starts ten seconds later would be a notification after nearly every change the user makes. What arrives while the
+     * app is in front is kept for [onPause]; what arrives after it starts the service there and then.
+     */
+    private fun onSyncNotificationChanged(notification: SyncNotification?) {
+        syncNotification = notification
+        if (notification == null) {
+            dismissSyncService()
+        } else if (isLeaving) {
+            startSyncService(notification)
+        }
+    }
+
+    /**
+     * The last moment the service may be started - Android 12 refuses a foreground service started from the
+     * background, and the activity is still visible here. A run that leaving the app has just started is already in
+     * [syncNotification]: the composition hands it over from its own ON_PAUSE observer, which is told before this.
+     * A pause on the way to a rotation is not leaving, and the activity that follows takes over.
+     */
+    override fun onPause() {
+        super.onPause()
+        if (isChangingConfigurations) return
+        isLeaving = true
+        syncNotification?.let(::startSyncService)
+    }
+
+    /**
+     * Back in front, a run that is still going shows on the settings screen, and its notification goes; the service is
+     * started again should the user leave before it ends.
+     */
+    override fun onResume() {
+        super.onResume()
+        isLeaving = false
+        hasStartedSyncServiceSinceLeaving = false
+        dismissSyncService()
+    }
+
+    /**
+     * Starts the service that keeps a sync run alive once the user has left the app. Building the notification is the
+     * service's job; what arrives here is only what it should say.
+     */
+    private fun startSyncService(notification: SyncNotification) {
+        val words = listOf(
+            notification.channelName,
+            notification.title,
+            notification.preparingBody,
+            notification.progressBodyFormat,
+            notification.stopLabel,
+        )
+        if (words == lastSyncServiceWords && (CampfireSyncService.isRunning || hasStartedSyncServiceSinceLeaving)) return
         try {
-            if (notification == null) {
-                lastSyncServiceWords = null
-                startService(CampfireSyncService.dismissIntent(this))
-            } else {
-                val words = listOf(
-                    notification.channelName,
-                    notification.title,
-                    notification.preparingBody,
-                    notification.progressBodyFormat,
-                    notification.stopLabel,
-                )
-                if (CampfireSyncService.isRunning && words == lastSyncServiceWords) return
-                lastSyncServiceWords = words
-                ContextCompat.startForegroundService(
-                    this,
-                    CampfireSyncService.intent(
-                        context = this,
-                        channelName = notification.channelName,
-                        title = notification.title,
-                        preparingBody = notification.preparingBody,
-                        progressBodyFormat = notification.progressBodyFormat,
-                        stopLabel = notification.stopLabel,
-                        completed = notification.progress.completed,
-                        total = notification.progress.total,
-                    ),
-                )
-            }
+            ContextCompat.startForegroundService(
+                this,
+                CampfireSyncService.intent(
+                    context = this,
+                    channelName = notification.channelName,
+                    title = notification.title,
+                    preparingBody = notification.preparingBody,
+                    progressBodyFormat = notification.progressBodyFormat,
+                    stopLabel = notification.stopLabel,
+                    completed = notification.progress.completed,
+                    total = notification.progress.total,
+                ),
+            )
+            lastSyncServiceWords = words
+            hasStartedSyncServiceSinceLeaving = true
         } catch (exception: Exception) {
             // A notification that cannot be shown must never take the sync down with it: the run carries on, it
             // just stops surviving the app being left.
-            println("Could not update the sync service: ${exception.message}")
+            println("Could not start the sync service: ${exception.message}")
+        }
+    }
+
+    /**
+     * Takes the service down, if this activity or an earlier one in the process started it. Never stops the run:
+     * see [CampfireSyncService.dismissIntent].
+     */
+    private fun dismissSyncService() {
+        if (lastSyncServiceWords == null && !CampfireSyncService.isRunning) return
+        lastSyncServiceWords = null
+        try {
+            startService(CampfireSyncService.dismissIntent(this))
+        } catch (exception: Exception) {
+            println("Could not stop the sync service: ${exception.message}")
         }
     }
 
