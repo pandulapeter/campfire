@@ -207,7 +207,8 @@ private fun fontScaleLabel(fontScale: Float) = "${(fontScale * 100).roundToInt()
 /**
  * A decrease button, the current value (highlighted when it differs from the default, tapping it resets it) and an
  * increase button, in a tonal pill that keeps the three of them together: two of these sit next to each other in
- * the app bar of wide windows, where loose icon buttons would blend into one long row of controls.
+ * the song's header, and the text size one sits alone in the app bar in performance mode, where loose icon buttons
+ * would blend into the row of controls around them.
  *
  * The pill is shorter and its buttons narrower than Material's, since full height buttons make two of them look
  * oversized next to the chips of the song details header and in the app bars. On a touch screen the buttons still take
@@ -332,7 +333,7 @@ private val VALUE_MIN_WIDTH = 44.dp
 private val ICON_SIZE = 20.dp
 private val STACKED_STEPPER_SPACING = 8.dp
 
-private const val KEY_SEPARATOR = "\u00B7"
+internal const val KEY_SEPARATOR = "\u00B7"
 
 /** What the editor's stepper shows for a song whose file names no key. */
 private const val UNKNOWN_KEY = "?"
