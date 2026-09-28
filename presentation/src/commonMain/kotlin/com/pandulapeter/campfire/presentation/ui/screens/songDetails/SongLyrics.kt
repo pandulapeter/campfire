@@ -1326,8 +1326,9 @@ private fun TextStyle.scaled(scale: Float) = copy(
  * sections fill, so a row of two sections is split in two wider columns rather than leaving a hole where a third one
  * would go, and the rows are chosen to make the song as short as possible. A row of several columns is never taller
  * than [maxRowHeight], the whole of the screen, since the reader could not reach the top of its next column without
- * scrolling back past what was just played - and the first row is never taller than what the [headerHeight] above it
- * leaves of the screen, since the scroll comes to rest on the top of the song rather than on the top of that row - but
+ * scrolling back past what was just played - and while the [headerHeight] above it leaves at least half the screen,
+ * the first row is never taller than what it leaves, since the scroll comes to rest on the top of the song rather than
+ * on the top of that row (a header taller than that is scrolled away first, see [firstRowHeightCap]) - but
  * up to that its columns are as tall as they need, so a song that fits
  * the screen in columns is laid out exactly as it would be read top to bottom (see [flowIntoRows]). A section with
  * lines that do not wrap - a staff of tablature longer than a column - may have a row of its own as wide as those
@@ -1390,7 +1391,7 @@ private fun SongSectionsLayout(
     val maxColumnWidthPx = maxColumnWidth.roundToPx()
     val availableHeightPx = if (availableHeight.isSpecified) (availableHeight.roundToPx() - headerHeight()).coerceAtLeast(0) else 0
     val maxRowHeightPx = if (maxRowHeight.isSpecified && maxRowHeight > 0.dp) maxRowHeight.roundToPx() else Int.MAX_VALUE
-    val maxFirstRowHeightPx = if (maxRowHeightPx == Int.MAX_VALUE) maxRowHeightPx else (maxRowHeightPx - headerHeight()).coerceAtLeast(0)
+    val maxFirstRowHeightPx = firstRowHeightCap(maxRowHeight = maxRowHeightPx, headerHeight = headerHeight())
     val maxColumnCount = ((settledWidth + columnGapPx) / (minColumnWidth.roundToPx() + columnGapPx)).coerceIn(1, maxOf(1, measurables.size))
     fun columnWidthFor(totalWidth: Int, columnCount: Int) = ((totalWidth - columnGapPx * (columnCount - 1)) / columnCount).coerceIn(0, maxColumnWidthPx)
 

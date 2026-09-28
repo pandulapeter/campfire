@@ -57,6 +57,22 @@ class SectionGridTest {
     }
 
     @Test
+    fun firstRowIsHeldToWhatTheHeaderLeavesOnlyWhileThatIsHalfTheScreen() {
+        assertEquals(Int.MAX_VALUE, firstRowHeightCap(maxRowHeight = Int.MAX_VALUE, headerHeight = 300))
+        assertEquals(600, firstRowHeightCap(maxRowHeight = 900, headerHeight = 300))
+        assertEquals(450, firstRowHeightCap(maxRowHeight = 900, headerHeight = 450))
+        assertEquals(900, firstRowHeightCap(maxRowHeight = 900, headerHeight = 500))
+        assertEquals(900, firstRowHeightCap(maxRowHeight = 900, headerHeight = 1200))
+    }
+
+    @Test
+    fun firstRowUnderATallHeaderHasColumns() {
+        val heights = List(9) { 280 }
+        val grid = flow(heights, maxColumnCount = 3, maxRowHeight = 900, maxFirstRowHeight = firstRowHeightCap(maxRowHeight = 900, headerHeight = 600))
+        assertTrue(grid.columnCounts[0] > 1)
+    }
+
+    @Test
     fun balancedColumnsStayEven() {
         val grid = List(7) { 100 }.balanceIntoColumns(3, SECTION_GAP)
         assertEquals(listOf(2, 2, 3), grid.columns.toList().groupingBy { it }.eachCount().values.sorted())

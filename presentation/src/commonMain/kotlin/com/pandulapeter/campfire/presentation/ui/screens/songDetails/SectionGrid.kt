@@ -130,6 +130,19 @@ private fun IntArray.balanceIntoCells(from: Int, until: Int, cellCount: Int, sec
 }
 
 /**
+ * The height the first row of [flowIntoRows] is held to, under a header [headerHeight] tall on a screen of
+ * [maxRowHeight]: what the header leaves of the screen, as long as that is at least half of it. A header that takes
+ * more than half the screen is scrolled away before the first row is read, so that row is held to the screen like the
+ * others rather than to the sliver the header leaves, which only one section would fit in, alone in a row of one
+ * column at the top of the song.
+ */
+internal fun firstRowHeightCap(maxRowHeight: Int, headerHeight: Int) = when {
+    maxRowHeight == Int.MAX_VALUE -> maxRowHeight
+    maxRowHeight - headerHeight < maxRowHeight / 2 -> maxRowHeight
+    else -> maxRowHeight - headerHeight
+}
+
+/**
  * Packs [sectionCount] sections into rows that are read across, then downwards, each row having between one and
  * [maxColumnCount] columns: [heightAt] tells how tall a section is in a row of a given number of columns, since fewer
  * columns are wider ones. Within a row the sections fill its columns top to bottom, stacked [sectionGap] apart, and
@@ -140,7 +153,8 @@ private fun IntArray.balanceIntoCells(from: Int, until: Int, cellCount: Int, sec
  * read one after the other, and a column that runs past the bottom of the screen sends the reader back up to the top
  * of the next one, which is the very thing the rows exist to avoid. The first row is held to [maxFirstRowHeight]
  * instead, what the song's header leaves of the screen: it is read with the header above it, since the top of the song
- * is where a scroll comes to rest before the first divider. Up to that height a row is free to be as tall as
+ * is where a scroll comes to rest before the first divider. Where the header leaves less than half the screen the
+ * caller passes the whole of it here too (see [firstRowHeightCap]). Up to that height a row is free to be as tall as
  * its columns need, so a song that fits the screen in columns is a single row of them, exactly the layout the columns
  * read top to bottom would give it, since nothing is scrolled past there to be sent back to. A section taller than
  * that gets a row of its own, which is read from top to bottom like any other scrolling text, and so does a stack in a
