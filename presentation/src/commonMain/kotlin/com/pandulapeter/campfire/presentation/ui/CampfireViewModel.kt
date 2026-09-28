@@ -964,9 +964,10 @@ class CampfireViewModel(
         // A sync run, a rescan or a save replaces files underneath the texts held here, and the details header builds
         // its writes on them: without this, toggling a tag would write the text that was open over the version sync
         // had just brought in. The texts are read again rather than only dropped, so a song that is on screen changes
-        // in place instead of flashing a loading indicator, and an editor whose file changed underneath it now has
-        // unsaved changes, which is what asks the user before their draft replaces the new version — an editor whose
-        // file is gone included, where the draft is all there is.
+        // in place instead of flashing a loading indicator. An editor with nothing typed in it follows its file (see
+        // the editor's FollowFileWhileUntouched); one with text of its own now has unsaved changes, which is what asks
+        // the user before their draft replaces the new version — an editor whose file is gone included, where the
+        // draft is all there is.
         viewModelScope.launch {
             getSongContentInvalidations().collect { fileName ->
                 rereadSongTexts(fileNames = fileName?.let(::setOf))
