@@ -25,6 +25,7 @@ import kotlinx.coroutines.CoroutineExceptionHandler
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Deferred
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.NonCancellable
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.async
 import kotlinx.coroutines.flow.Flow
@@ -34,7 +35,10 @@ import kotlinx.coroutines.flow.filterIsInstance
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.sync.Mutex
+import kotlinx.coroutines.sync.Semaphore
 import kotlinx.coroutines.sync.withLock
+import kotlinx.coroutines.sync.withPermit
+import kotlinx.coroutines.withContext
 import org.koin.core.annotation.Single
 import kotlin.time.ComparableTimeMark
 import kotlin.time.Duration.Companion.minutes
@@ -47,6 +51,12 @@ import kotlin.time.TimeSource
  * A download runs in the repository's own scope rather than in the caller's, so that the list scrolling a row out of
  * view — which cancels the request that row made — does not throw away a download another row, or the same row a
  * moment later, is waiting for.
+ *
+ * At most [MAX_CONCURRENT_DOWNLOADS] of them reach the network at a time, and one whose every asker has gone by the time
+ * it gets its turn is not made at all. A list flung past a few hundred rows whose covers are not on the device yet would
+ * otherwise queue a request for every one of them in the HTTP client, and the rows it stops on would wait behind all
+ * of them — long enough for the client's timeout, which counts the time spent queued, to fail them and put their
+ * addresses in the failure memory for a minute. One that has started is carried to its end whoever is still waiting.
  *
  * A search asks every source side by side, each in a coroutine of the collector's own, so that closing the sheet stops
  * all of them, and one that fails is recorded as failed rather than ending the others.
@@ -66,7 +76,8 @@ internal class CoverArtRepositoryImpl(
         },
     )
     private val mutex = Mutex()
-    private val downloads = mutableMapOf<String, Deferred<ByteArray?>>()
+    private val downloads = mutableMapOf<String, Download>()
+    private val downloadSlots = Semaphore(MAX_CONCURRENT_DOWNLOADS)
 
     /** When each address that failed may be asked again, null for never in this session. */
     private val failures = mutableMapOf<String, ComparableTimeMark?>()
@@ -90,9 +101,17 @@ internal class CoverArtRepositoryImpl(
                 if (retryAt == null || retryAt.hasNotPassedNow()) return null
                 failures.remove(url)
             }
-            downloads.getOrPut(url) { scope.async { load(url) } }
+            downloads.getOrPut(url) {
+                Download().also { download -> download.deferred = scope.async { load(url, download) } }
+            }.also { it.waiters++ }
         }
-        return download.await()
+        return try {
+            download.deferred.await()
+        } finally {
+            // The caller is usually being cancelled here, and a count left one too high would make the download of an
+            // address nobody waits for any more look wanted.
+            withContext(NonCancellable) { mutex.withLock { download.waiters-- } }
+        }
     }
 
     override fun searchCoverArt(query: CoverArtQuery): Flow<CoverArtSearchResults> = channelFlow {
@@ -137,20 +156,37 @@ internal class CoverArtRepositoryImpl(
         }
     }
 
-    private suspend fun load(url: String): ByteArray? = try {
+    private suspend fun load(url: String, download: Download): ByteArray? = try {
         val key = keyOf(url)
-        coverArtLocalSource.loadCoverArt(key) ?: when (val download = coverArtRemoteSource.downloadCoverArt(url)) {
-            is CoverArtDownload.Image -> download.bytes.also { coverArtLocalSource.saveCoverArt(key, it) }
-            CoverArtDownload.Missing -> null.also { mutex.withLock { failures[url] = null } }
-            CoverArtDownload.Unreachable -> null.also { mutex.withLock { failures[url] = TimeSource.Monotonic.markNow() + UNREACHABLE_RETRY_DELAY } }
+        coverArtLocalSource.loadCoverArt(key) ?: downloadSlots.withPermit {
+            // An abandoned download records no failure, so that the next asker starts afresh; it leaves the map at
+            // once, under the same lock, so that nobody joins it in the moment before it answers null.
+            val isAbandoned = mutex.withLock {
+                (download.waiters == 0).also { isAbandoned -> if (isAbandoned) downloads.remove(url) }
+            }
+            if (isAbandoned) null else fetch(url, key)
         }
     } finally {
-        mutex.withLock { downloads.remove(url) }
+        mutex.withLock { if (downloads[url] === download) downloads.remove(url) }
+    }
+
+    private suspend fun fetch(url: String, key: String) = when (val download = coverArtRemoteSource.downloadCoverArt(url)) {
+        is CoverArtDownload.Image -> download.bytes.also { coverArtLocalSource.saveCoverArt(key, it) }
+        CoverArtDownload.Missing -> null.also { mutex.withLock { failures[url] = null } }
+        CoverArtDownload.Unreachable -> null.also { mutex.withLock { failures[url] = TimeSource.Monotonic.markNow() + UNREACHABLE_RETRY_DELAY } }
     }
 
     private fun keyOf(url: String) = Sha256.hashToHex(url.encodeToByteArray())
 
-    private companion object {
-        val UNREACHABLE_RETRY_DELAY = 1.minutes
+    /** One address's download and how many callers are waiting for it, both guarded by [mutex]. */
+    private class Download {
+        lateinit var deferred: Deferred<ByteArray?>
+        var waiters = 0
+    }
+
+    companion object {
+        /** Low enough that the covers a list stops on are not kept waiting behind a queue of the ones it went past. */
+        const val MAX_CONCURRENT_DOWNLOADS = 4
+        private val UNREACHABLE_RETRY_DELAY = 1.minutes
     }
 }

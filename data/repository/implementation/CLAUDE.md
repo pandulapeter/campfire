@@ -81,7 +81,10 @@ and a repository that has not been read yet rescans instead, since there is no l
 - `CoverArtRepositoryImpl` is not a `BaseLocalDataRepository` either: a cover is read from the device's copy (named by
   the SHA-256 of its address) and otherwise downloaded and written, in a scope of the repository's own rather than the
   caller's, so that a row scrolled out of view, which cancels its request, does not throw away a download another row
-  is waiting for. Callers asking for one address at once share one download. An address that answered with something
+  is waiting for. Callers asking for one address at once share one download. At most `MAX_CONCURRENT_DOWNLOADS` (4)
+  reach the network at a time, and one whose every caller has gone before it gets its turn is not made and records no
+  failure: a fling through a library whose covers are not on the device yet would otherwise queue a request per row in
+  the HTTP client, whose timeout counts the queueing, and the rows it stops on would come last. An address that answered with something
   that is not a cover is not asked again for the session, and one that could not be reached not for a minute, so a
   dead address costs one request rather than one per scroll. It watches `SongRepository.songs` and, whenever a
   library read has finished (`Idle`, never the `Loading` batches of a scan, which would prune the covers of the songs
@@ -89,7 +92,7 @@ and a repository that has not been read yet rescans instead, since there is no l
   which is fetched the same way, included. The search runs every `CoverArtSearchRemoteSource` side by side in a
   `channelFlow`, so cancelling the collection stops them all, and appends each one's candidates in the order they
   answer — the grid grows at its end rather than shifting under the user. `commonTest` covers the sharing, the
-  failures, the pruning and the search's order of emissions.
+  bound and the downloads it skips, the failures, the pruning and the search's order of emissions.
 - `SongContentRepositoryImpl` is not a `BaseLocalDataRepository`: it is a keyed in-memory cache of song *texts*, so
   paging through a setlist re-reads nothing. Bulk readers (the library export) pass `shouldCache = false` so that
   walking the whole library does not leave all of it in memory. The editor invalidates one entry after a save. The

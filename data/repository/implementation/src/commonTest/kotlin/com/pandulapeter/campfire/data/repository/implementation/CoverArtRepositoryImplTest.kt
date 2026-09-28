@@ -28,8 +28,11 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.joinAll
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.toList
+import kotlinx.coroutines.sync.Mutex
+import kotlinx.coroutines.sync.withLock
 import kotlinx.coroutines.test.runTest
 import kotlinx.coroutines.withContext
 import kotlinx.coroutines.withTimeout
@@ -72,6 +75,60 @@ class CoverArtRepositoryImplTest {
 
         results.forEach { assertContentEquals(IMAGE, it) }
         assertEquals(1, remote.requestCount)
+    }
+
+    @Test
+    fun `only a few downloads reach the network at a time`() = runTest {
+        val gate = CompletableDeferred<Unit>()
+        val remote = FakeCoverArtRemoteSource {
+            gate.await()
+            CoverArtDownload.Image(IMAGE)
+        }
+        val repository = repository(remote = remote)
+        val urls = List(CoverArtRepositoryImpl.MAX_CONCURRENT_DOWNLOADS + 3) { "https://example.com/$it" }
+
+        val results = withContext(Dispatchers.Default) {
+            val callers = urls.map { url -> async { repository.getCoverArt(url) } }
+            withTimeout(5_000) { while (remote.requestCount < CoverArtRepositoryImpl.MAX_CONCURRENT_DOWNLOADS) delay(1) }
+            delay(50)
+            assertEquals(CoverArtRepositoryImpl.MAX_CONCURRENT_DOWNLOADS, remote.requestCount)
+            gate.complete(Unit)
+            callers.awaitAll()
+        }
+
+        results.forEach { assertContentEquals(IMAGE, it) }
+        assertEquals(urls.toSet(), remote.requestedUrls.toSet())
+    }
+
+    @Test
+    fun `a download every caller has left before its turn is not made, and not remembered as failed`() = runTest {
+        val gate = CompletableDeferred<Unit>()
+        val remote = FakeCoverArtRemoteSource {
+            gate.await()
+            CoverArtDownload.Image(IMAGE)
+        }
+        val local = FakeCoverArtLocalSource()
+        val repository = repository(local = local, remote = remote)
+        val inFlight = List(CoverArtRepositoryImpl.MAX_CONCURRENT_DOWNLOADS) { "https://example.com/$it" }
+        val queued = List(3) { "https://example.com/queued/$it" }
+
+        withContext(Dispatchers.Default) {
+            val inFlightCallers = inFlight.map { url -> async { repository.getCoverArt(url) } }
+            withTimeout(5_000) { while (remote.requestCount < inFlight.size) delay(1) }
+            val queuedCallers = queued.map { url -> async { repository.getCoverArt(url) } }
+            delay(50)
+            (inFlightCallers + queuedCallers).forEach { it.cancel() }
+            (inFlightCallers + queuedCallers).joinAll()
+            gate.complete(Unit)
+            // The downloads that had started carry on without anybody waiting for them, and their copies are kept.
+            withTimeout(5_000) { while (local.copies.size < inFlight.size) delay(1) }
+            delay(50)
+        }
+
+        assertEquals(inFlight.toSet(), remote.requestedUrls.toSet())
+        assertEquals(inFlight.map(::keyOf).toSet(), local.copies.keys)
+        assertContentEquals(IMAGE, repository.getCoverArt(queued.first()))
+        assertTrue(queued.first() in remote.requestedUrls)
     }
 
     @Test
@@ -182,8 +239,10 @@ class CoverArtRepositoryImplTest {
 
         override suspend fun loadCoverArt(key: String) = copies[key]
 
+        private val mutex = Mutex()
+
         override suspend fun saveCoverArt(key: String, bytes: ByteArray) {
-            copies[key] = bytes
+            mutex.withLock { copies[key] = bytes }
         }
 
         override suspend fun keepOnlyCoverArt(keys: Set<String>) {
@@ -192,10 +251,13 @@ class CoverArtRepositoryImplTest {
     }
 
     private class FakeCoverArtRemoteSource(private val answer: suspend () -> CoverArtDownload) : CoverArtRemoteSource {
-        var requestCount = 0
+        val requestedUrls = mutableListOf<String>()
+        val requestCount get() = requestedUrls.size
+
+        private val mutex = Mutex()
 
         override suspend fun downloadCoverArt(url: String): CoverArtDownload {
-            requestCount++
+            mutex.withLock { requestedUrls += url }
             return answer()
         }
     }

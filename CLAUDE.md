@@ -499,7 +499,8 @@ the short version:
   own.
 - **The copy is the offline cache on all four platforms**: `covers/<sha256 of the address>`, outside `library/`, kept
   out of every device backup and deleted after a library read that leaves no song naming it (`CoverArtRepository`).
-  Requests for one address share one download, and an address that failed is not asked again for the rest of the
+  Requests for one address share one download, only a few are made at a time, one nobody is waiting for any more by
+  its turn is not made at all, and an address that failed is not asked again for the rest of the
   session (an answer that is not a cover) or for a minute (no answer at all).
 - **The search is MusicBrainz and the iTunes Search API side by side**, from a sheet the song details menu opens
   (`Find cover art…`), each catalogue's records joining the grid as it answers and one that fails leaving the other's
