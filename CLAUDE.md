@@ -76,6 +76,7 @@ preferences/editor-draft.json        the editor's unsaved text as the app last l
 covers/<sha256 of the address>      the copies of the cover images the songs name; outside library/, so never exported
                                      or synced, and deleted once no song names them
 instance.lock / instance.endpoint    desktop only: what keeps a second process off the library (see app/desktop)
+campfire.log / campfire.log.1        desktop only: everything the process printed, bounded (see app/desktop)
 ```
 
 On Android and iOS `library/` and `preferences/preferences.json` are in the system backup and the transfer to a new

@@ -89,6 +89,7 @@ fun main(args: Array<String>) {
     // Nothing has been started yet, so there is nothing to wind down - and Koin must not be, since its singletons
     // are what would read the library a second time.
     if (!isFirstInstance) exitProcess(0)
+    DesktopLog.install(desktopDataDirectory())
     OpenedFiles.listenForSystemRequests()
     OpenedFiles.open(args.toList())
     startCampfireDependencyGraph()
