@@ -120,7 +120,9 @@ import org.jetbrains.compose.resources.painterResource
  *
  * A record whose thumbnail does not load is taken off the grid rather than left as an empty square: the archive only
  * says that a record has no cover by answering its address with nothing, and a cover that cannot be seen cannot be
- * chosen either.
+ * chosen either — so one that was selected while it was still loading is let go of as it leaves, or Save would write an
+ * address that answers nothing. A new search gives every record back its place, since a thumbnail may have failed only
+ * for the moment.
  */
 @Composable
 internal fun CoverArtSearchSheet(
@@ -141,6 +143,9 @@ internal fun CoverArtSearchSheet(
     val search = {
         keyboardController?.hide()
         selectedUrl = null
+        // A record that is really without a cover is answered at once from the repository's memory of the failure and
+        // drops out again, while one that only failed for the moment — a timeout, a busy archive — gets another chance.
+        unavailableKeys = emptySet()
         viewModel.searchCoverArt(query)
     }
     val usableAddress = ChordProCoverArt.usableUrl(address)
@@ -185,7 +190,12 @@ internal fun CoverArtSearchSheet(
                         unavailableKeys = unavailableKeys,
                         selectedUrl = selectedUrl,
                         onSelected = { selectedUrl = it.coverArtUrl.takeUnless { url -> url == selectedUrl } },
-                        onUnavailable = { unavailableKeys += it.key },
+                        onUnavailable = { candidate ->
+                            unavailableKeys += candidate.key
+                            if (candidate.coverArtUrl == selectedUrl) {
+                                selectedUrl = null
+                            }
+                        },
                         onRetry = search,
                     )
                 }

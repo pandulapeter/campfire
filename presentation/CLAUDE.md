@@ -85,7 +85,8 @@ Everything else is `commonMain`:
   preview of it, asked for once the typing has paused for 500 ms; one that does not load can still be saved, since a
   host may refuse only the web build. Save writes the pick or the address into the song (`setSongCoverArt`, through
   `SetChordProCoverArtUseCase`, the path a tag takes); Remove takes a cover off. A tile whose thumbnail does not load is
-  dropped from the grid, which is how a release group without a cover is found out. **The sheet opens at its full
+  dropped from the grid, which is how a release group without a cover is found out, and takes the selection with it if it
+  had it; a new search puts every dropped tile back, since a thumbnail may have failed only for the moment. **The sheet opens at its full
   height** whatever it holds, since what it holds grows after it has opened and a sheet resizing while it slid up was
   what made it stutter. The search is the view model's (`coverArtSearch`, one `Active` state per query carrying the
   `CoverArtSearchResults`), so that it outlives an Android activity being recreated, and `setVisibleDialog` cancels and
