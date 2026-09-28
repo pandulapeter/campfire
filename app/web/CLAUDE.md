@@ -49,6 +49,11 @@ direction.
   the preloaded fonts, `campfire.js`, the binaries, the resources Compose fetches later and the storage worker the first
   write starts — would otherwise be resolved against it. A host that serves `index.html` at the deep address itself (a
   single page app fallback) breaks exactly that, since the page can no longer tell where its folder ends.
+- **Links open with `noopener,noreferrer`** (`openInNewTab` in `:presentation`'s `CampfireWebApp.kt`): a song's
+  `{meta: link …}` is an address somebody else may have written, and `window.open` — unlike a `target="_blank"` link —
+  hands the opened page a `window.opener` it could replace this tab through, while GitHub Pages sends no
+  `Cross-Origin-Opener-Policy` that would sever it. `noreferrer` keeps the app's address, which names the song file,
+  out of the linked site's `Referer`.
 - The page also preloads the font files `:presentation` bundles — Inter in three weights for the interface, which the
   launch screen waits for, and the two monospaced ones for tabs — so they download alongside the binaries rather than
   after them. The links are `as="fetch"` with `crossorigin`, which is what makes the Compose

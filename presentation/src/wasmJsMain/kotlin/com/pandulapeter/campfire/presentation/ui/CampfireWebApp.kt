@@ -81,10 +81,20 @@ fun CampfireWebApp(
     }
     CampfireApp(
         viewModel = viewModel,
-        urlOpener = { url -> window.open(url, "_blank") },
+        urlOpener = ::openInNewTab,
         filesToImport = remember { droppedFiles() },
         onAppReady = ::dismissLoadingScreen,
     )
+}
+
+/**
+ * Opens [url] in a new tab that holds no reference back to this one. A song's links come from files other people wrote,
+ * and unlike a link with `target="_blank"`, `window.open` hands the opened page a live `window.opener` unless it is
+ * told not to, which would let that page replace the Campfire tab with a look-alike of it. `noreferrer` also keeps the
+ * app's address, which names the song file, out of the linked site's `Referer`.
+ */
+private fun openInNewTab(url: String) {
+    window.open(url, "_blank", "noopener,noreferrer")
 }
 
 /**
