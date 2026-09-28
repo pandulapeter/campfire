@@ -77,8 +77,9 @@ The ones that carry real logic:
   the question, so it is written numbered whatever the answer was. Every song and setlist written is kept as what it
   became — a song built from its text, not read back from the file — and put into the lists in one change at the end
   (`adoptImported`, which also runs after a failure or a cancellation halfway, for what was written by then), rather
-  than rescanning the library. Planning reads the library files of every family the batch touches up front, 64 at a
-  time in parallel, rather than one after another as each family comes up. Preparing owns the import's size budget: every archive unpacks into what the ones before it
+  than rescanning the library. Planning reads the library files of every family the batch touches — and every library
+  file a song arrived under, where that is not the name its header gives it — up front, 64 at a time in parallel,
+  rather than one after another as each family comes up. Preparing owns the import's size budget: every archive unpacks into what the ones before it
   left, and a file over its limit goes to `ImportPlan.oversizedFileNames`, which the UI reports on its own line.
 - `ExportLibraryUseCaseImpl` / `ExportSongsUseCaseImpl` / `ExportSetlistUseCaseImpl` — decide what leaves as what: a
   single song is the `.cho` file as it is on disk, everything else is a zip. The user's transposition is never baked in.

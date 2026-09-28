@@ -65,13 +65,22 @@ internal object ImportPlanner {
         val familyMembers = songs.map { it.fileName }.distinct().associateWith { desired ->
             desired.familyKeys(LibraryFiles.SONG_EXTENSIONS).firstOrNull()?.let(libraryFamilies::get).orEmpty()
         }
+        // The library file each song arrived under, where that is not its own name. An export hands its songs out under
+        // their library names while the import names each one by its header, and a library file named before the rule it
+        // would be named by today (a letter the table did not know yet, or a file nobody ever renamed) is still the same
+        // song when it holds the same text.
+        val arrivedAsNames = songs.map { song -> song.sourceFileName?.takeIf { it != song.fileName && it in libraryFileNameSet } }
         // Every family's library files read up front and in parallel, rather than one file after another as each family
-        // comes up: a backup imported back into a large library has a family for every song of it.
+        // comes up: a backup imported back into a large library has a family for every song of it - and where that
+        // library was named by an older rule, an arrived-as file for every song of it too.
         val libraryTexts = readAll(
-            fileNames = familyMembers.flatMap { (desired, members) -> familyCandidates(desired, members) }.distinct(),
+            fileNames = familyMembers.flatMap { (desired, members) -> familyCandidates(desired, members) }
+                .plus(arrivedAsNames.filterNotNull())
+                .distinct(),
             readLibraryText = readLibraryText,
         )
-        val libraryMatches = songs.map { song ->
+        val arrivedAsComparables = mutableMapOf<String, String?>()
+        val libraryMatches = songs.mapIndexed { index, song ->
             val family = families.getOrPut(song.fileName) {
                 songFamilyOf(
                     desired = song.fileName,
@@ -79,16 +88,16 @@ internal object ImportPlanner {
                     libraryTexts = libraryTexts,
                 )
             }
-            // The library file the song arrived under, where that is not its own name. An export hands its songs out under
-            // their library names while the import names each one by its header, and a library file named before the rule it
-            // would be named by today (a letter the table did not know yet, or a file nobody ever renamed) is still the same
-            // song when it holds the same text.
-            val arrivedAs = song.sourceFileName?.takeIf { it != song.fileName && it in libraryFileNameSet }
+            val arrivedAs = arrivedAsNames[index]
             // Most songs of most imports are the only one of their name, and folding the text of every one of them
             // for a comparison nothing asks for would copy the whole batch once more.
             val comparable = if (!family.hasLibraryTexts && arrivedAs == null) null else ChordProSplitter.comparable(song.text)
             val libraryFileName = comparable?.let(family::libraryFileNameOf)
-                ?: arrivedAs?.takeIf { readLibraryText(it)?.let(ChordProSplitter::comparable) == comparable }
+                ?: arrivedAs?.takeIf { fileName ->
+                    arrivedAsComparables.getOrPut(fileName) {
+                        (if (fileName in libraryTexts) libraryTexts[fileName] else readLibraryText(fileName))?.let(ChordProSplitter::comparable)
+                    } == comparable
+                }
             LibraryMatch(family = family, comparable = comparable, libraryFileName = libraryFileName)
         }
         val keptLibraryFileNames = libraryMatches.mapNotNullTo(hashSetOf()) { it.libraryFileName }

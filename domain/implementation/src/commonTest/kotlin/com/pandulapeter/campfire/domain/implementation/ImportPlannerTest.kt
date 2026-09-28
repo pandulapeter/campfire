@@ -14,6 +14,7 @@ import com.pandulapeter.campfire.data.model.domain.Setlist
 import com.pandulapeter.campfire.data.model.domain.normalizedToNfc
 import com.pandulapeter.campfire.domain.implementation.ImportPlanner.withSongFileNames
 import kotlinx.coroutines.test.runTest
+import kotlinx.coroutines.yield
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFalse
@@ -61,6 +62,35 @@ internal class ImportPlannerTest {
 
         assertEquals(listOf("x.cho", "x_2.cho"), plan.map { it.fileName })
         assertEquals(setOf("x.cho", "x_2.cho"), reads.toSet())
+    }
+
+    @Test
+    fun songsArrivingAsOlderNamedLibraryFilesReadEachFileOnceAndInParallel() = runTest {
+        val library = (1..200).associate { "Artist - Title $it.cho" to "{title: Title $it}\n" }
+        val reads = mutableListOf<String>()
+        var running = 0
+        var maximumRunning = 0
+        val plan = ImportPlanner.planSongs(
+            incoming = library.map { (fileName, text) ->
+                ImportPlanner.IncomingSong(fileName = "title_${fileName.filter(Char::isDigit)}.cho", text = text, sourceFileName = fileName)
+            },
+            libraryFileNames = library.keys,
+            readLibraryText = { fileName ->
+                reads += fileName
+                // Only the library files are counted: the names the headers give are prefetched in parallel either way.
+                val isLibraryFile = fileName in library
+                if (isLibraryFile) maximumRunning = maxOf(maximumRunning, ++running)
+                yield()
+                if (isLibraryFile) running--
+                library[fileName]
+            },
+        )
+
+        assertTrue(plan.all { it.status == ImportPlan.Status.IDENTICAL })
+        assertEquals(library.keys.toList(), plan.map { it.fileName })
+        // The names the headers give are read too, as the family of each; the library files are what must be read once.
+        assertEquals(library.keys.sorted(), reads.filter { it in library }.sorted())
+        assertTrue(maximumRunning > 1)
     }
 
     @Test
