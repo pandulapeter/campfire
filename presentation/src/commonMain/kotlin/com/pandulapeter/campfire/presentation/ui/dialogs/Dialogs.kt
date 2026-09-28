@@ -77,11 +77,13 @@ import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.text.TextRange
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardCapitalization
+import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.pandulapeter.campfire.chordpro.ChordProLinks
 import com.pandulapeter.campfire.data.model.domain.ImportConflictResolution
 import com.pandulapeter.campfire.data.model.domain.ImportPlan
 import com.pandulapeter.campfire.data.model.domain.Song
@@ -134,6 +136,9 @@ import com.pandulapeter.campfire.presentation.resources.song_details_display_opt
 import com.pandulapeter.campfire.presentation.resources.song_details_language
 import com.pandulapeter.campfire.presentation.resources.song_details_language_no_search_results
 import com.pandulapeter.campfire.presentation.resources.song_details_language_search
+import com.pandulapeter.campfire.presentation.resources.song_details_link_add
+import com.pandulapeter.campfire.presentation.resources.song_details_link_address
+import com.pandulapeter.campfire.presentation.resources.song_details_link_address_hint
 import com.pandulapeter.campfire.presentation.resources.song_details_tag_add
 import com.pandulapeter.campfire.presentation.resources.song_details_tag_name
 import com.pandulapeter.campfire.presentation.resources.song_details_tag_suggestions
@@ -285,6 +290,11 @@ internal fun CampfireDialogs(
         )
 
         is CampfireViewModel.DialogType.AddSongTag -> AddSongTagDialog(
+            viewModel = viewModel,
+            dialog = dialog,
+        )
+
+        is CampfireViewModel.DialogType.AddSongLink -> AddSongLinkDialog(
             viewModel = viewModel,
             dialog = dialog,
         )
@@ -929,6 +939,56 @@ private fun AddSongTagDialog(
                 enabled = isValid,
                 onClick = { addTag(value) },
             ) { Text(stringResource(Res.string.song_details_tag_add)) }
+        },
+        dismissButton = {
+            TextButton(onClick = viewModel::dismissDialog) { Text(stringResource(Res.string.cancel)) }
+        },
+    )
+}
+
+/**
+ * One link to put on a song, typed or pasted: any page on the web, whatever site it is on. What can be saved is what the
+ * file keeps ([ChordProLinks.usableUrl]), so an address typed without its `https://` is taken as it is typed, the way a
+ * browser's address bar takes it.
+ */
+@Composable
+private fun AddSongLinkDialog(
+    viewModel: CampfireViewModel,
+    dialog: CampfireViewModel.DialogType.AddSongLink,
+) {
+    var value by rememberSaveable { mutableStateOf("") }
+    val usableUrl = ChordProLinks.usableUrl(value)
+    val focusRequester = rememberFirstFieldFocusRequester()
+    val addLink = { url: String ->
+        viewModel.setSongLink(fileName = dialog.song.fileName, url = url, isAdded = true)
+        viewModel.dismissDialog()
+    }
+    AlertDialog(
+        onDismissRequest = viewModel::dismissDialog,
+        title = {
+            SongDialogTitle(
+                title = stringResource(Res.string.song_details_link_add),
+                song = dialog.song,
+            )
+        },
+        text = {
+            OutlinedTextField(
+                modifier = Modifier.fillMaxWidth().focusRequester(focusRequester),
+                value = value,
+                // An address has no spaces in it, so the line breaks a pasted one may carry are simply dropped.
+                onValueChange = { value = it.replace(lineBreakRegex, "") },
+                label = { Text(stringResource(Res.string.song_details_link_address)) },
+                supportingText = { Text(stringResource(Res.string.song_details_link_address_hint)) },
+                singleLine = true,
+                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Uri, imeAction = ImeAction.Done),
+                keyboardActions = KeyboardActions(onDone = { usableUrl?.let(addLink) }),
+            )
+        },
+        confirmButton = {
+            TextButton(
+                enabled = usableUrl != null,
+                onClick = { usableUrl?.let(addLink) },
+            ) { Text(stringResource(Res.string.song_details_link_add)) }
         },
         dismissButton = {
             TextButton(onClick = viewModel::dismissDialog) { Text(stringResource(Res.string.cancel)) }

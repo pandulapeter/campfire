@@ -42,6 +42,9 @@ internal object ChordProSyntax {
 
     /** The `{meta}` key a song's cover image is written under, which ChordPro has no directive of its own for either. */
     const val COVER_NAME = "cover"
+
+    /** The `{meta}` key a link about the song is written under, one directive per link. */
+    const val LINK_NAME = "link"
     private const val LANGUAGE_SHORT_NAME = "lang"
     private const val META = "meta"
     private const val SOURCE_COMMENT = "#"
@@ -330,13 +333,13 @@ internal object ChordProSyntax {
         ?.value
         ?.trim()
         ?.substringAfter(' ', missingDelimiterValue = "")
-        ?.let(::coverUrl)
+        ?.let(::webUrl)
 
     /**
-     * [value] as the address of a cover image, or null where it is not one: trimmed, and taken only when it is an
-     * `http` or `https` URL with no whitespace inside it, since nothing else is a picture the app can ask for.
+     * [value] as a web address, or null where it is not one: trimmed, and taken only when it is an `http` or `https`
+     * URL with no whitespace inside it, since nothing else is a picture the app can ask for or a page a browser opens.
      */
-    fun coverUrl(value: String): String? = value.trim().takeIf { url ->
+    fun webUrl(value: String): String? = value.trim().takeIf { url ->
         (url.startsWith("https://", ignoreCase = true) || url.startsWith("http://", ignoreCase = true)) &&
                 url.substringAfter("//").isNotEmpty() && url.none { it.isWhitespace() }
     }
@@ -345,16 +348,30 @@ internal object ChordProSyntax {
     fun isCoverMeta(directive: Directive) = directive.name == META &&
             directive.value?.trim()?.substringBefore(' ')?.trim()?.equals(COVER_NAME, ignoreCase = true) == true
 
+    /**
+     * The address a `{meta: link …}` directive names, or null if it is not one or names nothing a browser opens. Any
+     * `http` or `https` URL is taken, for the same reason as a cover's.
+     */
+    fun link(directive: Directive): String? = directive.takeIf(::isLinkMeta)
+        ?.value
+        ?.trim()
+        ?.substringAfter(' ', missingDelimiterValue = "")
+        ?.let(::webUrl)
+
+    /** True for a `{meta}` directive whose key names a link, whatever its value then turns out to be worth. */
+    fun isLinkMeta(directive: Directive) = directive.name == META &&
+            directive.value?.trim()?.substringBefore(' ')?.trim()?.equals(LINK_NAME, ignoreCase = true) == true
+
     private val String.isLanguageKey get() = equals(LANGUAGE_NAME, ignoreCase = true) || equals(LANGUAGE_SHORT_NAME, ignoreCase = true)
 
     /**
      * The directives a song describes itself with, in the order a header reads best in: what the song is called, who
-     * made it, what record it came on and what its sleeve looks like, and how it is played, with the two repeatable ones at the end. It is what
+     * made it, what record it came on and what its sleeve looks like, and how it is played, with the three repeatable ones at the end. It is what
      * decides where a directive added to a file lands, see [metadataInsertionIndex].
      */
     private val metadataOrder = listOf(
         "title", "subtitle", "artist", "composer", "lyricist", "album", COVER_NAME, "year", "key", "capo", "tempo", "time",
-        "duration", TAG_NAME, LANGUAGE_NAME,
+        "duration", TAG_NAME, LANGUAGE_NAME, LINK_NAME,
     )
 
     /**
@@ -367,6 +384,7 @@ internal object ChordProSyntax {
         isTagMeta(directive) -> TAG_NAME
         isLanguageMeta(directive) -> LANGUAGE_NAME
         isCoverMeta(directive) -> COVER_NAME
+        isLinkMeta(directive) -> LINK_NAME
         else -> {
             val name = standardMeta(directive)?.name ?: directive.name
             (metadataAliases[name] ?: name).takeIf { it in metadataOrder }

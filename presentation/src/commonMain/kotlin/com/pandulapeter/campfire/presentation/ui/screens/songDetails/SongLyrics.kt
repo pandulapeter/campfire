@@ -89,6 +89,7 @@ import com.pandulapeter.campfire.presentation.resources.Res
 import com.pandulapeter.campfire.presentation.resources.ic_add
 import com.pandulapeter.campfire.presentation.resources.ic_clear
 import com.pandulapeter.campfire.presentation.resources.ic_language
+import com.pandulapeter.campfire.presentation.resources.ic_link
 import com.pandulapeter.campfire.presentation.resources.song_details_album
 import com.pandulapeter.campfire.presentation.resources.song_details_capo
 import com.pandulapeter.campfire.presentation.resources.song_details_composer
@@ -105,6 +106,8 @@ import com.pandulapeter.campfire.presentation.resources.song_details_section_gri
 import com.pandulapeter.campfire.presentation.resources.song_details_section_tab
 import com.pandulapeter.campfire.presentation.resources.song_details_tab_collapse
 import com.pandulapeter.campfire.presentation.resources.song_details_tab_expand
+import com.pandulapeter.campfire.presentation.resources.song_details_link_add
+import com.pandulapeter.campfire.presentation.resources.song_details_link_remove
 import com.pandulapeter.campfire.presentation.resources.song_details_tag_add
 import com.pandulapeter.campfire.presentation.resources.song_details_tag_remove
 import com.pandulapeter.campfire.presentation.resources.song_details_tempo
@@ -177,6 +180,9 @@ internal fun SongLyrics(
     onAddTag: (() -> Unit)? = null,
     onRemoveTag: ((String) -> Unit)? = null,
     onEditLanguages: (() -> Unit)? = null,
+    onOpenLink: ((String) -> Unit)? = null,
+    onAddLink: (() -> Unit)? = null,
+    onRemoveLink: ((String) -> Unit)? = null,
     onDividersPlaced: ((dividerTops: List<Int>) -> Unit)? = null,
 ) {
     // The fold toggles of the runs inside a section are named by these too, where the file names them nothing.
@@ -259,6 +265,9 @@ internal fun SongLyrics(
             onAddTag = onAddTag,
             onRemoveTag = onRemoveTag,
             onEditLanguages = onEditLanguages,
+            onOpenLink = onOpenLink,
+            onAddLink = onAddLink,
+            onRemoveLink = onRemoveLink,
         )
         LookaheadScope {
             SongSectionsLayout(
@@ -357,6 +366,9 @@ internal fun SongLyrics(
  *   the caret, and a chip writing into it from the side would be editing the text the editor has not saved yet.
  * @param onEditLanguages Null wherever [onAddTag] is, and for the same reason. The chip is then shown only by a song
  *   that declares a language, since there is nothing to say about one that does not and nothing to tap to change it.
+ * @param onOpenLink Null where a link is only shown, not followed: the editor's preview, where a tap is meant for the
+ *   text rather than for a browser.
+ * @param onAddLink Null wherever [onAddTag] is, and for the same reason; so is [onRemoveLink].
  */
 @Composable
 private fun SongMetadataHeader(
@@ -366,9 +378,12 @@ private fun SongMetadataHeader(
     onAddTag: (() -> Unit)?,
     onRemoveTag: ((String) -> Unit)?,
     onEditLanguages: (() -> Unit)?,
+    onOpenLink: ((String) -> Unit)?,
+    onAddLink: (() -> Unit)?,
+    onRemoveLink: ((String) -> Unit)?,
 ) = Column(modifier = modifier.padding(bottom = SECTION_GAP)) {
     val metadata = song.metadata
-    if (metadata.tags.isNotEmpty() || metadata.languages.isNotEmpty() || onAddTag != null) {
+    if (metadata.tags.isNotEmpty() || metadata.languages.isNotEmpty() || metadata.links.isNotEmpty() || onAddTag != null || onAddLink != null) {
         TagFlowRow(
             modifier = Modifier.padding(bottom = 4.dp)
         ) {
@@ -380,9 +395,16 @@ private fun SongMetadataHeader(
                     onTrailingIconClick = onRemoveTag?.let { { it(tag) } },
                 )
             }
-            // The languages are a single chip however many there are, since it is where they are edited. It comes
-            // after the tags, as it does in the song lists and the filters, and before "Add tag", which ends the row
-            // there too.
+            onAddTag?.let { onClick ->
+                TagPill(
+                    text = stringResource(Res.string.song_details_tag_add),
+                    onClick = onClick,
+                    leadingIcon = painterResource(Res.drawable.ic_add),
+                )
+            }
+            // The languages are a single chip however many there are, since it is where they are edited. Each kind
+            // of chip is followed by the one that adds to it, so that the row reads as groups rather than as a list
+            // with every way of editing it piled up at the end.
             if (metadata.languages.isNotEmpty() || onEditLanguages != null) {
                 TagPill(
                     text = metadata.languages.map { languageLabel(it) }.joinToString(separator = ", ")
@@ -391,9 +413,22 @@ private fun SongMetadataHeader(
                     leadingIcon = painterResource(Res.drawable.ic_language),
                 )
             }
-            onAddTag?.let { onClick ->
+            // A link is named by the site it is on, which is what tells a video from a tab at a glance; the whole
+            // address is the file's business and the browser's.
+            metadata.links.forEach { url ->
+                val label = linkLabel(url)
                 TagPill(
-                    text = stringResource(Res.string.song_details_tag_add),
+                    text = label,
+                    onClick = onOpenLink?.let { { it(url) } },
+                    leadingIcon = painterResource(Res.drawable.ic_link),
+                    trailingIcon = if (onRemoveLink == null) null else painterResource(Res.drawable.ic_clear),
+                    trailingIconContentDescription = onRemoveLink?.let { textResource(Res.string.song_details_link_remove, label) },
+                    onTrailingIconClick = onRemoveLink?.let { { it(url) } },
+                )
+            }
+            onAddLink?.let { onClick ->
+                TagPill(
+                    text = stringResource(Res.string.song_details_link_add),
                     onClick = onClick,
                     leadingIcon = painterResource(Res.drawable.ic_add),
                 )
@@ -423,6 +458,21 @@ private fun SongMetadataHeader(
         color = MaterialTheme.colorScheme.onSurfaceVariant,
     )
 }
+
+/**
+ * What a link is called in the header: the host it points at, without the `www.` most sites answer under as well, or
+ * the address itself where it has no host to speak of.
+ */
+internal fun linkLabel(url: String): String = url
+    .substringAfter("://")
+    .substringBefore('/')
+    .substringBefore('?')
+    .substringBefore('#')
+    .substringAfterLast('@')
+    .substringBefore(':')
+    .lowercase()
+    .removePrefix("www.")
+    .ifEmpty { url }
 
 /** One line of the header's metadata, or nothing at all where the song declares none of it. */
 @Composable

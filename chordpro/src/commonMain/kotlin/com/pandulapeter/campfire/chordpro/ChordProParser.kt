@@ -522,6 +522,7 @@ object ChordProParser {
         private val tagKeys = mutableSetOf<String>()
         private val languages = mutableListOf<String>()
         private val languageSet = mutableSetOf<String>()
+        private val links = mutableListOf<String>()
         private val custom = mutableMapOf<String, MutableList<String>>()
 
         fun consume(directive: ChordProSyntax.Directive) {
@@ -558,6 +559,8 @@ object ChordProParser {
                         ChordProSyntax.isLanguageMeta(directive) -> ChordProSyntax.language(directive)?.let(::addLanguage)
                         // The same goes for the cover, the first usable one of which is the song's.
                         ChordProSyntax.isCoverMeta(directive) -> if (coverArt == null) coverArt = ChordProSyntax.cover(directive)
+                        // And for the links, every usable one of which is kept, once each.
+                        ChordProSyntax.isLinkMeta(directive) -> ChordProSyntax.link(directive)?.let { if (it !in links) links += it }
                         name.isNotEmpty() -> custom.getOrPut(name) { mutableListOf() } += value.substringAfter(' ', missingDelimiterValue = "").trim()
                     }
                 }
@@ -595,6 +598,7 @@ object ChordProParser {
             transpose = transpose,
             tags = tags.toList(),
             languages = languages.toList(),
+            links = links.toList(),
             custom = custom.mapValues { it.value.toList() },
         )
     }

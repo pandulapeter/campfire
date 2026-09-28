@@ -134,6 +134,7 @@ internal fun SongDetailsScreen(
     destination: CampfireDestination.SongDetails,
     settledWidth: Dp,
     contentPadding: PaddingValues,
+    urlOpener: (String) -> Unit,
     onBack: () -> Unit,
 ) {
     val songsByFileName by viewModel.songsByFileName.collectAsStateWithLifecycle()
@@ -468,6 +469,15 @@ internal fun SongDetailsScreen(
                     onEditLanguages = if (isPerformanceModeEnabled) null else {
                         { viewModel.showDialog(CampfireViewModel.DialogType.SongLanguages(song)) }
                     },
+                    // Following a link reads the file rather than writing it, so it is the one chip that still acts in
+                    // performance mode.
+                    onOpenLink = urlOpener,
+                    onAddLink = if (isPerformanceModeEnabled) null else {
+                        { viewModel.showDialog(CampfireViewModel.DialogType.AddSongLink(song = song)) }
+                    },
+                    onRemoveLink = if (isPerformanceModeEnabled) null else {
+                        { url -> viewModel.setSongLink(fileName = song.fileName, url = url, isAdded = false) }
+                    },
                 )
             }
         }
@@ -608,6 +618,9 @@ private fun SongDetailsPage(
     onAddTag: (() -> Unit)?,
     onRemoveTag: ((String) -> Unit)?,
     onEditLanguages: (() -> Unit)?,
+    onOpenLink: (String) -> Unit,
+    onAddLink: (() -> Unit)?,
+    onRemoveLink: ((String) -> Unit)?,
 ) = AnimatedContent(
     modifier = Modifier.fillMaxSize(),
     targetState = text,
@@ -697,6 +710,9 @@ private fun SongDetailsPage(
                 onAddTag = onAddTag,
                 onRemoveTag = onRemoveTag,
                 onEditLanguages = onEditLanguages,
+                onOpenLink = onOpenLink,
+                onAddLink = onAddLink,
+                onRemoveLink = onRemoveLink,
                 // The padding is inside the scroll, so a divider is at the top of the viewport once the song is
                 // scrolled by its position plus the padding above it.
                 onDividersPlaced = { dividerTops -> flingBehavior.dividerOffsets = dividerTops.map { it + topPaddingPx } },

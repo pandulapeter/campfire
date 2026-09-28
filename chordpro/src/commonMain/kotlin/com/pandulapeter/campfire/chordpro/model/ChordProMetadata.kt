@@ -45,6 +45,12 @@ data class ChordProMetadata(
      * that says nothing about its language, which is most of them.
      */
     val languages: List<String> = emptyList(),
+    /**
+     * Pages about the song — a recording, a video, a tab somebody else wrote — one per `{meta: link https://…}`
+     * directive that holds an `http` or `https` URL, in the order the file lists them and each once. ChordPro has no
+     * directive for them either, so they are custom metadata items like [coverArt].
+     */
+    val links: List<String> = emptyList(),
     val custom: Map<String, List<String>> = emptyMap(), // {meta: name value} and unknown x_* directives, in order
 )
 

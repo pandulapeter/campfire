@@ -164,6 +164,10 @@ uninstall and nothing else does.
   else, so the cover travels through an export, an import or a sync run as a tag does, and the image is fetched where
   the song is read. Any address is taken — the library and the addresses in it are the user's — and the search is only
   ever what recommends one. See Cover art below.
+- **Links about a song are carried the same way**: a `{meta: link https://…}` directive per link, read into
+  `ChordProMetadata.links`. Any page is taken, whatever site it is on, and nothing is ever fetched from one: the
+  song details header shows each as a chip named by its host, which opens the page in the browser, and adding one is
+  typing or pasting its address. Opening a link is the user's browser making the request, not Campfire.
 - **The app is shipped with two songs and one setlist**, in
   `presentation/src/commonMain/composeResources/files/demo`: public domain campfire standards, bundled as the plain
   ChordPro and setlist files they are and reaching the library through the ordinary import, so they collide, are

@@ -275,6 +275,7 @@
     <string name="song_editor_insert_duration">Hossz</string>
     <string name="song_editor_insert_tag">Címke</string>
     <string name="song_editor_insert_language">Nyelv</string>
+    <string name="song_editor_insert_link">Hivatkozás</string>
     <string name="song_editor_transpose_text_up">Szöveg transzponálása fel</string>
     <string name="song_editor_transpose_text_down">Szöveg transzponálása le</string>
     <string name="song_editor_revert">Visszaállítás</string>
@@ -315,6 +316,10 @@
     <string name="song_details_tag_remove">A(z) „%1$s” címke eltávolítása</string>
     <string name="song_details_tag_name">Címke</string>
     <string name="song_details_tag_suggestions">Már szerepel a könyvtáradban</string>
+    <string name="song_details_link_add">Hivatkozás hozzáadása</string>
+    <string name="song_details_link_remove">A(z) %1$s oldalra mutató hivatkozás eltávolítása</string>
+    <string name="song_details_link_address">Webcím</string>
+    <string name="song_details_link_address_hint">Egy videó, felvétel, tabulatúra vagy bármilyen más oldal a dalról</string>
     <string name="song_details_language">Nyelv</string>
     <string name="song_details_language_search">Nyelv keresése</string>
     <string name="song_details_language_no_search_results">Egyetlen nyelv sem felel meg a keresésnek. A két- vagy hárombetűs kódjával akkor is megtalálod, ha nincs neve.</string>

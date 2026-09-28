@@ -25,7 +25,7 @@ object ChordProCoverArt {
      * unchanged.
      */
     fun set(text: String, url: String?): String {
-        val cover = url?.let(ChordProSyntax::coverUrl)
+        val cover = url?.let(ChordProSyntax::webUrl)
         val lines = ChordProSyntax.splitLines(text)
         val newLine = cover?.let { "{meta: ${ChordProSyntax.COVER_NAME} $it}" }
         val kept = mutableListOf<String>()
@@ -50,7 +50,7 @@ object ChordProCoverArt {
      * `http` or `https` address with no whitespace in it. What a field the user types an address into checks against,
      * so that it never offers to save something the file would not keep.
      */
-    fun usableUrl(value: String): String? = ChordProSyntax.coverUrl(value)
+    fun usableUrl(value: String): String? = ChordProSyntax.webUrl(value)
 
     /** Whether the line is a `{meta: cover …}` directive, usable or not. */
     private fun String.isCover() = ChordProSyntax.matchDirective(trim())?.let(ChordProSyntax::isCoverMeta) == true

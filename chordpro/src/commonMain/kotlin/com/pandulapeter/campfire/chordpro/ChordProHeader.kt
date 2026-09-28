@@ -26,11 +26,11 @@ object ChordProHeader {
 
     /**
      * The metadata directives a song may declare more than once, and so the ones an editor keeps offering after the
-     * file already carries one: a song has as many tags as it was filed under, and is sung in as many languages as
-     * it has words for. Every other directive in [declaredMetadata] says one thing about the song, and a file that
+     * file already carries one: a song has as many tags as it was filed under, is sung in as many languages as it has
+     * words for, and has as many pages about it as somebody linked. Every other directive in [declaredMetadata] says one thing about the song, and a file that
      * says it twice is a file with a contradiction in it rather than a richer one.
      */
-    val repeatableMetadata = setOf(ChordProSyntax.TAG_NAME, ChordProSyntax.LANGUAGE_NAME)
+    val repeatableMetadata = setOf(ChordProSyntax.TAG_NAME, ChordProSyntax.LANGUAGE_NAME, ChordProSyntax.LINK_NAME)
 
     /**
      * The metadata directives [text] already declares, each under the one name the app knows it by (`{t}` and

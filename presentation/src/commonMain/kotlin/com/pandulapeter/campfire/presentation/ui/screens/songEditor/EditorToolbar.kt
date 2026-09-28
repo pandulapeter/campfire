@@ -59,6 +59,7 @@ import com.pandulapeter.campfire.presentation.resources.song_editor_insert_cover
 import com.pandulapeter.campfire.presentation.resources.song_editor_insert_duration
 import com.pandulapeter.campfire.presentation.resources.song_editor_insert_key
 import com.pandulapeter.campfire.presentation.resources.song_editor_insert_language
+import com.pandulapeter.campfire.presentation.resources.song_editor_insert_link
 import com.pandulapeter.campfire.presentation.resources.song_editor_insert_lyricist
 import com.pandulapeter.campfire.presentation.resources.song_editor_insert_subtitle
 import com.pandulapeter.campfire.presentation.resources.song_editor_insert_tag
@@ -210,8 +211,8 @@ private fun contentInsertions(): List<List<EditorInsertion>> = listOf(
  *
  * This is also the order they are written in, since none of these goes to the caret: they belong to the header and
  * are put there, see [insertIntoHeader]. A directive that can only be true once — a song has one title and came out
- * in one year — is offered until the file carries it and then no longer, which leaves the tags and the languages of
- * a song as the two that can be added again and again.
+ * in one year — is offered until the file carries it and then no longer, which leaves the tags, the languages and the
+ * links of a song as the three that can be added again and again.
  *
  * `{new_song}` is left out, since it splits an imported file into several songs and the editor is only ever looking
  * at one of them. `{transpose}` is left out on purpose too: the renderer does honor it, but transposition here is
@@ -236,6 +237,7 @@ private fun metadataInsertions(): List<List<EditorInsertion>> = listOf(
         EditorInsertion.metadata(stringResource(Res.string.song_editor_insert_duration), name = "duration"),
         EditorInsertion.metadata(stringResource(Res.string.song_editor_insert_tag), name = "tag"),
         EditorInsertion.meta(stringResource(Res.string.song_editor_insert_language), key = "language"),
+        EditorInsertion.meta(stringResource(Res.string.song_editor_insert_link), key = "link"),
     ),
 )
 
@@ -287,8 +289,8 @@ private data class EditorInsertion(
 
         /**
          * A custom metadata item, which is how ChordPro carries what it has no directive of its own for — the
-         * language of a song and its cover being the two Campfire reads, see `ChordProSyntax.language` and
-         * `ChordProSyntax.cover`. Part of the header like every other [metadata] item, whatever it is spelled as.
+         * language of a song, its cover and its links being the three Campfire reads, see `ChordProSyntax.language`,
+         * `ChordProSyntax.cover` and `ChordProSyntax.link`. Part of the header like every other [metadata] item, whatever it is spelled as.
          */
         fun meta(label: String, key: String) = EditorInsertion(
             label = label,

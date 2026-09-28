@@ -83,6 +83,7 @@ import com.pandulapeter.campfire.domain.api.useCases.SaveUserPreferencesUseCase
 import com.pandulapeter.campfire.domain.api.useCases.SearchCoverArtUseCase
 import com.pandulapeter.campfire.domain.api.useCases.SetChordProCoverArtUseCase
 import com.pandulapeter.campfire.domain.api.useCases.SetChordProLanguagesUseCase
+import com.pandulapeter.campfire.domain.api.useCases.SetChordProLinkUseCase
 import com.pandulapeter.campfire.domain.api.useCases.SetChordProTagUseCase
 import com.pandulapeter.campfire.domain.api.useCases.SynchronizeLibraryUseCase
 import com.pandulapeter.campfire.domain.api.useCases.TransposeChordProTextUseCase
@@ -171,6 +172,7 @@ class CampfireViewModel(
     private val setChordProCoverArt: SetChordProCoverArtUseCase,
     private val setChordProLanguages: SetChordProLanguagesUseCase,
     private val setChordProTag: SetChordProTagUseCase,
+    private val setChordProLink: SetChordProLinkUseCase,
     private val connectSyncProvider: ConnectSyncProviderUseCase,
     private val disconnectSyncProvider: DisconnectSyncProviderUseCase,
     private val cancelSyncConnection: CancelSyncConnectionUseCase,
@@ -1447,6 +1449,14 @@ class CampfireViewModel(
     }
 
     /**
+     * Adds a link to a song or takes one off it, from the header of the song details screen. Like a tag, the link is
+     * written into the song's own file (`SetChordProLinkUseCase`), so it travels with it through an export or a sync run.
+     */
+    fun setSongLink(fileName: String, url: String, isAdded: Boolean) = launchLibraryChange {
+        editSongText(fileName) { text -> setChordProLink(text = text, url = url, isAdded = isAdded) }
+    }
+
+    /**
      * Makes [url] the song's cover, or takes the cover off for null, from the cover search sheet. Written into the
      * file like a tag is, so that the cover travels with the song wherever it goes.
      */
@@ -2460,6 +2470,7 @@ class CampfireViewModel(
             is DialogType.SongDisplayControls -> songFileName
             is DialogType.DeleteSong -> song.fileName
             is DialogType.AddSongTag -> song.fileName
+            is DialogType.AddSongLink -> song.fileName
             is DialogType.SongLanguages -> song.fileName
             is DialogType.CoverArtSearch -> song.fileName
             else -> null
@@ -2775,6 +2786,8 @@ class CampfireViewModel(
          * from [tags].
          */
         data class AddSongTag(val song: Song) : DialogType
+        /** Opened from the same header, for an address typed or pasted in. */
+        data class AddSongLink(val song: Song) : DialogType
         /** Opened from the same header, and asking about every language at once rather than one at a time. */
         data class SongLanguages(val song: Song) : DialogType
         /** The records the song may have come out on, whose front cover can be made the song's, see [searchCoverArt]. */

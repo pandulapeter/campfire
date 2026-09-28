@@ -55,6 +55,8 @@ paths, `Is*` for a question with a yes or no answer (`IsFirstRun`), or a verb fo
   than one value at a time: the picker asks about every language before it is closed, and the file is better rewritten
   once than once per checkbox. The codes are normalized by `:chordpro` on the way in, so `en-US`, `EN` and `eng` all
   name the language `en` does.
+- `SetChordProLinkUseCase` is the same for one link of a song, added after the others or taken off wherever it is
+  written.
 - `SetChordProCoverArtUseCase` is the same for the cover, a song having one: it rewrites the cover line in place,
   writes one after the album, or takes it off for null.
 - `GetCoverArtUseCase` and `SearchCoverArtUseCase` are the covers themselves: the bytes of one, from the device's copy

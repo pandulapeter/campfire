@@ -275,6 +275,7 @@
     <string name="song_editor_insert_duration">Duration</string>
     <string name="song_editor_insert_tag">Tag</string>
     <string name="song_editor_insert_language">Language</string>
+    <string name="song_editor_insert_link">Link</string>
     <string name="song_editor_transpose_text_up">Transpose text up</string>
     <string name="song_editor_transpose_text_down">Transpose text down</string>
     <string name="song_editor_revert">Revert</string>
@@ -315,6 +316,10 @@
     <string name="song_details_tag_remove">Remove the \"%1$s\" tag</string>
     <string name="song_details_tag_name">Tag</string>
     <string name="song_details_tag_suggestions">Already in your library</string>
+    <string name="song_details_link_add">Add link</string>
+    <string name="song_details_link_remove">Remove the link to %1$s</string>
+    <string name="song_details_link_address">Web address</string>
+    <string name="song_details_link_address_hint">A video, a recording, a tab or any other page about the song</string>
     <string name="song_details_language">Language</string>
     <string name="song_details_language_search">Search for a language</string>
     <string name="song_details_language_no_search_results">No language matches this search. Its two or three letter code will find it even where there is no name for it.</string>
