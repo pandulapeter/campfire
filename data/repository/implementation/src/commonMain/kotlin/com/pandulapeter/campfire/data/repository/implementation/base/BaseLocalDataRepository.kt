@@ -10,11 +10,12 @@
 package com.pandulapeter.campfire.data.repository.implementation.base
 
 import com.pandulapeter.campfire.data.model.DataState
-import kotlin.concurrent.Volatile
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.getAndUpdate
 import kotlinx.coroutines.flow.update
+import kotlinx.coroutines.flow.updateAndGet
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 
@@ -26,9 +27,12 @@ import kotlinx.coroutines.sync.withLock
  *
  * A change made through [updateData] while a read is running is on disk already, but the read may have listed the
  * directory before it got there, and publishing that result as it is would drop the change from the list until the
- * next rescan. Rather than replaying the changes onto the result, a read that saw one land reads again once it has
- * published: a sync run rescans the library while the user goes on editing it, and a second directory listing is
- * the one answer that is right whatever the change was.
+ * next rescan. A read that saw one land reads again once it has published, since a second directory listing is the one
+ * answer that is right whatever the change was — but only once: a sync run refreshes the files it wrote about once a
+ * second for as long as it runs, and a scan slower than that would otherwise never finish. The changes that land
+ * during that second read are applied onto its result instead, which every caller of [updateData] makes safe: each
+ * change replaces or drops the entries of the files it names with what is on disk now, so applying it again to a
+ * list that already has it changes nothing.
  */
 internal abstract class BaseLocalDataRepository<T> {
 
@@ -57,9 +61,11 @@ internal abstract class BaseLocalDataRepository<T> {
      */
     private var hasReadFailed = false
 
-    /** Compared before and after a read, which is how it notices an [updateData] that arrived while it was running. */
-    @Volatile
-    private var updateCount = 0
+    /**
+     * Every change [updateData] applied since the running read started, in order, or null while no read is running.
+     * A state flow for its atomic update, since [updateData] is called from any thread and does not suspend.
+     */
+    private val transformsDuringRead = MutableStateFlow<List<(T?) -> T>?>(null)
 
     /** Reads everything this repository caches, from its own local source. */
     protected abstract suspend fun loadDataFromLocalSource(): T
@@ -93,7 +99,7 @@ internal abstract class BaseLocalDataRepository<T> {
      * failed, and the UI goes on reporting that.
      */
     protected fun updateData(transform: (T?) -> T) {
-        updateCount++
+        transformsDuringRead.update { it?.plus(transform) }
         _dataState.update { if (it is DataState.Failure) DataState.Failure(transform(it.data)) else DataState.Idle(transform(it.data)) }
     }
 
@@ -146,10 +152,27 @@ internal abstract class BaseLocalDataRepository<T> {
         }
     }
 
-    private suspend fun read(): T? {
-        val updateCountAtStart = updateCount
-        val data = readOnce() ?: return null
-        return if (updateCount != updateCountAtStart) read() else data
+    private suspend fun read(): T? = try {
+        var rereads = 0
+        var data = readOnce()
+        while (data != null && !transformsDuringRead.value.isNullOrEmpty() && rereads++ < MAX_REREADS) {
+            data = readOnce()
+        }
+        val transforms = transformsDuringRead.getAndUpdate { null }.orEmpty()
+        if (data == null || transforms.isEmpty()) {
+            data
+        } else {
+            // Applied onto the state as it is now rather than onto the result: a change that landed after the result
+            // was published is in the state already and applies again as a no-op, while one that lands after the
+            // recording stops is applied by updateData alone, and replacing the state wholesale would drop it.
+            _dataState.updateAndGet { current ->
+                val published: T = current.data ?: data
+                val replayed = transforms.fold(published) { result, transform -> transform(result) }
+                if (current is DataState.Failure) DataState.Failure(replayed) else DataState.Idle(replayed)
+            }.data
+        }
+    } finally {
+        transformsDuringRead.value = null
     }
 
     private suspend fun readOnce(): T? = _dataState.run {
@@ -157,6 +180,7 @@ internal abstract class BaseLocalDataRepository<T> {
         val previousData = value.data
         isPublishingPartialData = previousData == null
         value = DataState.Loading(previousData)
+        transformsDuringRead.value = emptyList()
         try {
             loadDataFromLocalSource().also {
                 value = DataState.Idle(it)
@@ -179,5 +203,11 @@ internal abstract class BaseLocalDataRepository<T> {
         } finally {
             isPublishingPartialData = false
         }
+    }
+
+    private companion object {
+
+        /** How many times a read goes again for changes that landed while it ran before it applies them instead. */
+        const val MAX_REREADS = 1
     }
 }

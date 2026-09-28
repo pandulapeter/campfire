@@ -136,6 +136,31 @@ class BaseLocalDataRepositoryTest {
     }
 
     @Test
+    fun `a change that lands during a read makes it read once more`() = runTest {
+        val repository = TestRepository(backgroundScope, batches = listOf(listOf("a")))
+        repository.load()
+        repository.onRead = { if (repository.reads == 1) repository.add("x") }
+
+        repository.reload()
+
+        assertEquals(2, repository.reads)
+        assertEquals(DataState.Idle(listOf("a")), repository.states.last())
+    }
+
+    @Test
+    fun `changes that keep landing during reads are applied rather than read again`() = runTest {
+        val repository = TestRepository(backgroundScope, batches = listOf(listOf("a")))
+        repository.load()
+        repository.onRead = { repository.add("x${repository.reads}") }
+
+        val result = repository.reload()
+
+        assertEquals(2, repository.reads)
+        assertEquals(listOf("a", "x2"), result)
+        assertEquals(DataState.Idle(listOf("a", "x2")), repository.states.last())
+    }
+
+    @Test
     fun `writes reach the storage one at a time and in order`() = runTest {
         val repository = TestRepository(backgroundScope, batches = listOf(emptyList()))
         val persisted = mutableListOf<List<String>>()
@@ -275,7 +300,19 @@ class BaseLocalDataRepositoryTest {
 
         fun add(item: String) = updateData { it.orEmpty() + item }
 
+        /** How many times the local source was read since [onRead] was last set. */
+        var reads = 0
+
+        /** Called as each read lists the local source, which is where a change that lands during a read lands. */
+        var onRead: (() -> Unit)? = null
+            set(value) {
+                field = value
+                reads = 0
+            }
+
         override suspend fun loadDataFromLocalSource(): List<String> {
+            reads++
+            onRead?.invoke()
             batches.dropLast(1).forEach { publishPartialData(it) }
             gate?.await()
             if (shouldFail) throw IllegalStateException("The local source could not be read.")

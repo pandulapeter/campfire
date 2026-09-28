@@ -21,7 +21,10 @@ data already on screen in the `Loading` state, so a refresh never blanks the lis
 `Failure(previous data)` rather than an empty list. A failure stays one through `updateData`, and the next
 `loadDataIfNeeded()` reads again even though a change since has put data in the cache — otherwise a song created after
 a failed scan would stand in for the whole library. A write that lands through `updateData` while a read is running
-makes that read go again once it has published, since its directory listing may predate the file.
+makes that read go again once it has published, since its directory listing may predate the file — once: the changes
+that land during that second read are applied onto its result instead, since a sync run refreshes the files it wrote
+about once a second and a scan slower than that would otherwise never finish. Every `updateData` transform replaces or
+drops the entries of the files it names with what is on disk, so applying one again is harmless.
 
 A load that arrives in pieces can publish them with `publishPartialData`, which is what the song scan does with the
 batches it has parsed — a library of thousands then fills the list as it is read instead of showing nothing
