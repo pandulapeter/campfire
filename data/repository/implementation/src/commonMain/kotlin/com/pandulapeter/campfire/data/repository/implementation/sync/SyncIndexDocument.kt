@@ -32,6 +32,13 @@ internal data class SyncIndexDocument(
      * killed, swiped away, suspended by iOS - is still recognisable as interrupted the next time it starts.
      */
     val isRunInProgress: Boolean = false,
+    /**
+     * Whether the run [isRunInProgress] marks is one nobody asked for - the one a change to the library schedules.
+     * Such a run is routinely cut off by the app being swiped away right after an edit, and one that was is neither
+     * reported as interrupted nor allowed to keep the next launch from starting its own run, which carries the same
+     * changes. Written and cleared together with [isRunInProgress].
+     */
+    val isAutomaticRunInProgress: Boolean = false,
     /** Keyed by `songs/Artist - Title.cho`, see [SyncKey.path]. */
     val entries: Map<String, Entry> = emptyMap(),
 ) {
@@ -45,6 +52,12 @@ internal data class SyncIndexDocument(
     fun toIndex(): Map<SyncKey, SyncIndexEntry> = entries.mapNotNull { (path, entry) ->
         SyncKey.fromPath(path)?.let { it to SyncIndexEntry(localHash = entry.localHash, remoteRevision = entry.remoteRevision) }
     }.toMap()
+
+    /** This document with the marker saying a run is going, and whether it is an automatic one. */
+    fun markedAsRunning(isAutomatic: Boolean) = copy(isRunInProgress = true, isAutomaticRunInProgress = isAutomatic)
+
+    /** This document with no run marked as going. */
+    fun markedAsFinished() = copy(isRunInProgress = false, isAutomaticRunInProgress = false)
 
     /**
      * This document as [account]'s, if it is: an index written when the key was still the account's e-mail address
@@ -74,6 +87,7 @@ internal data class SyncIndexDocument(
             accountId = accountId,
             lastSyncedAt = lastSyncedAt,
             isRunInProgress = false,
+            isAutomaticRunInProgress = false,
             entries = index.entries.associate { (key, entry) ->
                 key.path to Entry(localHash = entry.localHash, remoteRevision = entry.remoteRevision)
             },

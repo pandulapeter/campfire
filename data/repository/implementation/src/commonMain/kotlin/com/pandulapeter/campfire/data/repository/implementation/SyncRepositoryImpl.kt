@@ -163,7 +163,7 @@ internal class SyncRepositoryImpl(
                 if (dueAt == null) return@collectLatest
                 delay(-dueAt.elapsedNow())
                 syncJob.load()?.join()
-                if (scheduledRunDueAt.compareAndSet(dueAt, null)) startRun(SyncDeletionPolicy.ASK)
+                if (scheduledRunDueAt.compareAndSet(dueAt, null)) startRun(SyncDeletionPolicy.ASK, isAutomatic = true)
             }
         }
     }
@@ -243,17 +243,22 @@ internal class SyncRepositoryImpl(
             return disconnectedResult
         }
         val document = loadIndexOrNull() ?: SyncIndexDocument()
+        // An automatic run is the one leaving the app starts, and being swiped away right after an edit is how it
+        // routinely ends. Reported and left unrepeated, it would keep that very edit off the cloud folder until the
+        // user asked for a run - for the sake of a message about a run nobody asked for, which the launch run that
+        // carries the same changes makes pointless anyway.
+        val wasInterrupted = document.isRunInProgress && !document.isAutomaticRunInProgress
         _syncState.update {
             SyncState.Connected(
                 account = account,
                 progress = null,
                 lastSyncedAt = document.lastSyncedAt.takeIf { at -> at > 0 },
                 // A run that was still marked as going when the app started is one the app never came back from.
-                lastOutcome = if (document.isRunInProgress) SyncOutcome.Interrupted else null,
+                lastOutcome = if (wasInterrupted) SyncOutcome.Interrupted else null,
             )
         }
         if (document.isRunInProgress) {
-            saveIndexQuietly(document.copy(isRunInProgress = false))
+            saveIndexQuietly(document.markedAsFinished())
         }
         if (storedAccount != null) {
             refreshAccount(connected)
@@ -261,7 +266,7 @@ internal class SyncRepositoryImpl(
         return SyncRepository.RestoreResult(
             isConnected = true,
             didReturnFromAuthorization = false,
-            wasInterrupted = document.isRunInProgress,
+            wasInterrupted = wasInterrupted,
         )
     }
 
@@ -424,12 +429,17 @@ internal class SyncRepositoryImpl(
         syncJob.exchange(null)?.cancel()
     }
 
-    /** Starts a run unless one is going, and answers whether it did. */
-    private fun startRun(deletionPolicy: SyncDeletionPolicy): Boolean {
+    /**
+     * Starts a run unless one is going, and answers whether it did.
+     *
+     * @param isAutomatic Whether nobody asked for this run - the one [scheduleSynchronization] waits to start. It is
+     *   written into the index's marker, see [SyncIndexDocument.isAutomaticRunInProgress].
+     */
+    private fun startRun(deletionPolicy: SyncDeletionPolicy, isAutomatic: Boolean = false): Boolean {
         val current = syncJob.load()
         if (current?.isActive == true) return false
         // Lazy, so that a run that lost the race below is dropped before it has done anything.
-        val run = scope.launch(start = CoroutineStart.LAZY) { runSynchronization(deletionPolicy) }
+        val run = scope.launch(start = CoroutineStart.LAZY) { runSynchronization(deletionPolicy, isAutomatic) }
         if (!syncJob.compareAndSet(current, run)) {
             run.cancel()
             return false
@@ -443,7 +453,7 @@ internal class SyncRepositoryImpl(
      * put on screen has to be inside the try, because the only way off any other path is with the progress still
      * showing and no way left to stop or restart it. Stopping a run during those opening writes did exactly that.
      */
-    private suspend fun runSynchronization(deletionPolicy: SyncDeletionPolicy) {
+    private suspend fun runSynchronization(deletionPolicy: SyncDeletionPolicy, isAutomatic: Boolean) {
         // No check for the lock being taken: a run asked for while the previous one is still clearing up waits for
         // it rather than being dropped, which is what "stop, then start again" looks like from the settings screen.
         // Two runs at once are prevented by syncJob in startRun().
@@ -477,10 +487,10 @@ internal class SyncRepositoryImpl(
                 // Taken over before the marker is written, so that an index filed under the key an earlier version used
                 // is under the current one from the first write of this run, however the run ends.
                 val document = loadIndex().adoptedBy(connected.account)
-                latestIndex = { document.copy(isRunInProgress = true) }
+                latestIndex = { document.markedAsRunning(isAutomatic) }
                 // Written before anything moves, so that a run the app never comes back from is still recognisable
                 // as interrupted next time - iOS suspending the app mid sync looks exactly like being killed.
-                saveIndex(document.copy(isRunInProgress = true))
+                saveIndex(document.markedAsRunning(isAutomatic))
                 val result = engine.synchronize(
                     provider = provider,
                     document = document,
@@ -490,9 +500,10 @@ internal class SyncRepositoryImpl(
                         scheduleLiveRefresh()
                     },
                     onIndexChanged = { snapshot ->
-                        latestIndex = snapshot
+                        val marked = { snapshot().markedAsRunning(isAutomatic) }
+                        latestIndex = marked
                         hasFinishedOperations = true
-                        scheduleIndexWrite(snapshot)
+                        scheduleIndexWrite(marked)
                     },
                     onLocalFileChanged = { key -> changedFilesMutex.withLock { changedFiles += key } },
                     deletionPolicy = deletionPolicy,
@@ -503,7 +514,7 @@ internal class SyncRepositoryImpl(
                         // Asked before the deletions moved, but not necessarily before anything did: a second pass
                         // can find the folder emptied after the first one had already brought files in, and those
                         // are on disk whether or not the question is answered.
-                        latestIndex?.let { saveIndexQuietly(it().copy(isRunInProgress = false)) }
+                        latestIndex?.let { saveIndexQuietly(it().markedAsFinished()) }
                         refreshLibraryAfterRun()
                         updateConnected {
                             it.copy(
@@ -694,7 +705,7 @@ internal class SyncRepositoryImpl(
      */
     private suspend fun finishRunCutShort(latestIndex: (() -> SyncIndexDocument)?) {
         indexWriteJob?.join()
-        latestIndex?.let { saveIndexQuietly(it().copy(isRunInProgress = false)) }
+        latestIndex?.let { saveIndexQuietly(it().markedAsFinished()) }
         refreshLibraryAfterRun()
     }
 

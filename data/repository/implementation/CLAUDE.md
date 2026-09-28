@@ -159,7 +159,10 @@ and a repository that has not been read yet rescans instead, since there is no l
   took (`liveRescanPauseAfter`), so that re-reading what a run wrote never becomes most of what it does.
   A run the app never came back from is found by the index's `isRunInProgress` marker at `restore`, reported as
   interrupted next time, and that run is left for the user to start: `RestoreResult.wasInterrupted` keeps
-  `RestoreSyncUseCase` from starting one on launch, which would replace the message before it could be read.
+  `RestoreSyncUseCase` from starting one on launch, which would replace the message before it could be read. Only a
+  run somebody asked for, or a launch started, is treated so: the marker also says whether the run was an automatic
+  one (`isAutomaticRunInProgress`), and one of those — which being swiped away right after an edit routinely cuts
+  off — is cleared without a word and followed by the ordinary launch run, which carries the same changes.
   **Automatic runs wait for the library to settle**: `scheduleSynchronization` — asked for by every change the app
   makes to a song or setlist file, which the two repositories announce through `LibraryChanges` —
   sets when the run is due, ten seconds after the latest request (`AUTOMATIC_RUN_DELAY`), and one `collectLatest` over

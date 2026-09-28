@@ -388,6 +388,65 @@ class SyncRepositoryImplTest {
     }
 
     @Test
+    fun `an interrupted automatic run is neither reported nor keeps the launch run from starting`() = runTest {
+        val stateLocalSource = FakeSyncStateLocalSource(index = """{"isRunInProgress":true,"isAutomaticRunInProgress":true}""")
+        val repository = repository(provider = FakeSyncProvider(account = ACCOUNT), stateLocalSource = stateLocalSource)
+
+        assertFalse(repository.restore().wasInterrupted)
+        assertNull((repository.syncState.value as SyncState.Connected).lastOutcome)
+        assertFalse("\"isRunInProgress\": true" in stateLocalSource.index.orEmpty())
+        assertFalse("\"isAutomaticRunInProgress\": true" in stateLocalSource.index.orEmpty())
+    }
+
+    @Test
+    fun `an automatic run marks itself as one in the index`() = runTest {
+        val gate = CompletableDeferred<Unit>()
+        val stateLocalSource = FakeSyncStateLocalSource()
+        val repository = repository(
+            provider = FakeSyncProvider(
+                files = mapOf(song(1) to "One".encodeToByteArray()),
+                onDownload = { gate.await() },
+                account = ACCOUNT,
+            ),
+            stateLocalSource = stateLocalSource,
+        )
+
+        repository.restore()
+        repository.scheduleSynchronization()
+        repository.startScheduledSynchronization()
+        repository.syncState.first { (it as? SyncState.Connected)?.progress?.total == 1 }
+
+        assertTrue("\"isAutomaticRunInProgress\": true" in stateLocalSource.index.orEmpty())
+        gate.complete(Unit)
+        repository.awaitOutcome()
+        assertFalse("\"isRunInProgress\": true" in stateLocalSource.index.orEmpty())
+        assertFalse("\"isAutomaticRunInProgress\": true" in stateLocalSource.index.orEmpty())
+    }
+
+    @Test
+    fun `a run somebody asked for is not marked as automatic`() = runTest {
+        val gate = CompletableDeferred<Unit>()
+        val stateLocalSource = FakeSyncStateLocalSource()
+        val repository = repository(
+            provider = FakeSyncProvider(
+                files = mapOf(song(1) to "One".encodeToByteArray()),
+                onDownload = { gate.await() },
+                account = ACCOUNT,
+            ),
+            stateLocalSource = stateLocalSource,
+        )
+
+        repository.restore()
+        repository.synchronize(SyncDeletionPolicy.ASK)
+        repository.syncState.first { (it as? SyncState.Connected)?.progress?.total == 1 }
+
+        assertTrue("\"isRunInProgress\": true" in stateLocalSource.index.orEmpty())
+        assertTrue("\"isAutomaticRunInProgress\": false" in stateLocalSource.index.orEmpty())
+        gate.complete(Unit)
+        repository.awaitOutcome()
+    }
+
+    @Test
     fun `a disconnect that is cancelled after the credentials went still ends disconnected`() = runTest {
         val stateLocalSource = FakeSyncStateLocalSource(index = "{}")
         val provider = FakeSyncProvider(account = ACCOUNT).apply { onDisconnect = { delay(1_000) } }

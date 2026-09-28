@@ -53,7 +53,9 @@ interface SyncRepository {
      *   so this reports that the app came back, not that it came back connected.
      * @param wasInterrupted Whether the last run never finished - the app was killed, swiped away or suspended while
      *   it was going. The caller must not start a run on its own then: the run would replace the message saying so
-     *   before anyone could read it, and starting it again is one button away from that message.
+     *   before anyone could read it, and starting it again is one button away from that message. False for an
+     *   automatic run (see [scheduleSynchronization]) that was cut short: nobody asked for that one, and the launch run
+     *   is what carries the changes it was carrying.
      */
     data class RestoreResult(
         val isConnected: Boolean,

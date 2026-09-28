@@ -475,7 +475,9 @@ the only possible one. The per-module `CLAUDE.md` files carry the detail; the sh
   schedules the next one.
 - The index carries an "a run was going" marker, written before anything moves and cleared when it finishes, so a
   run the app never came back from — killed, swiped away, suspended by iOS — is reported as interrupted next time
-  rather than silently forgotten, and that run is left for the user to start rather than started on launch.
+  rather than silently forgotten, and that run is left for the user to start rather than started on launch. That is
+  only for a run the user or a launch started: an automatic one cut short is not reported, and the launch run that
+  follows carries its changes.
 - A file changed on both sides is never merged: the local one keeps the name and the incoming one lands next to it
   as ` (2)` — or the first number free both on this device and in the cloud folder, so that it never takes the name
   of a file still on its way down — a name of the other device's making, numbered the way any document is, rather
