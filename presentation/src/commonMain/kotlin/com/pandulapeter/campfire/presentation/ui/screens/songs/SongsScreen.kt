@@ -306,9 +306,12 @@ private fun SongList(
     // Remembered, since a new modifier every time the list recomposes would recompose the grid with it.
     val gridModifier = remember(topFade) { Modifier.fillMaxSize().listTopFadeViewport(topFade) }
 
+    // Keyed on the query as it is searched for, so that a space or a punctuation mark, which changes nothing in the
+    // results, does not throw a scrolled list back to the top.
+    val searchedQuery = remember(query) { viewModel.normalizeForSearch(query) }
     ScrollToTopWhenChanged(
         listState = listState,
-        key = "$query|${userPreferences?.sortingMode?.name}|${songFilter.selectedTags.sorted()}|${userPreferences?.tagMatchMode?.name}|${songFilter.selectedLanguages.sorted()}|${userPreferences?.languageMatchMode?.name}",
+        key = "$searchedQuery|${userPreferences?.sortingMode?.name}|${songFilter.selectedTags.sorted()}|${userPreferences?.tagMatchMode?.name}|${songFilter.selectedLanguages.sorted()}|${userPreferences?.languageMatchMode?.name}",
         contents = songGroups,
     )
 

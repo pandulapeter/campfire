@@ -257,11 +257,14 @@ private fun SetlistList(
     rowsCache.retainOnly(setlistsWithSongs)
 
     val isSearchOpen by viewModel.setlistsSearch.isOpen.collectAsStateWithLifecycle()
+    val query = if (isSearchOpen) viewModel.setlistsSearch.textFieldState.text.toString() else ""
+    val searchedQuery = remember(query) { viewModel.normalizeForSearch(query) }
     ScrollToTopWhenChanged(
         listState = listState,
-        // A closed search narrows nothing whatever its field still holds, as on the songs screen. Sorting sends the
-        // list to its new first setlist, but the archive toggle lives at the end and must stay within reach there.
-        key = "${if (isSearchOpen) viewModel.setlistsSearch.textFieldState.text.toString() else ""}|${userPreferences?.setlistSortingMode?.name}",
+        // A closed search narrows nothing whatever its field still holds, as on the songs screen, and the query is
+        // the one searched for there too. Sorting sends the list to its new first setlist, but the archive toggle
+        // lives at the end and must stay within reach there.
+        key = "$searchedQuery|${userPreferences?.setlistSortingMode?.name}",
         contents = setlistsWithSongs,
     )
 

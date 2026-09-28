@@ -10,6 +10,7 @@
 package com.pandulapeter.campfire.presentation.ui
 
 import com.pandulapeter.campfire.data.model.domain.Song
+import com.pandulapeter.campfire.domain.api.models.SongSection
 
 /** A song with the title, artist and tags the search compares, normalized for searching. */
 internal data class SearchableSong(
@@ -93,4 +94,23 @@ internal fun rankSongs(songs: List<SearchableSong>, query: String): List<Song> {
         buckets[rank] += song.song
     }
     return buildList { for (rank in buckets.indices.reversed()) addAll(buckets[rank]) }
+}
+
+/**
+ * What the song list shows for [normalizedQuery]: the [sections] as they are when there is nothing to search for, and
+ * otherwise the ranked matches of [filtered] as one headerless group. The decision is made on the normalized query
+ * rather than on the typed one, since a query of punctuation, symbols or emoji alone folds to nothing and would
+ * otherwise "rank" the whole list in its own order, without its headers.
+ *
+ * No groups at all when nothing matches, rather than one empty group: a search with no results has to look empty to
+ * whoever decides between the list and a placeholder, not like a list with one section.
+ */
+internal fun songGroupsFor(
+    sections: List<SongSection>,
+    filtered: List<SearchableSong>,
+    normalizedQuery: String,
+): List<CampfireViewModel.SongGroup> = if (normalizedQuery.isEmpty()) {
+    sections.map { CampfireViewModel.SongGroup(header = it.header, songs = it.songs) }
+} else {
+    rankSongs(filtered, normalizedQuery).takeIf { it.isNotEmpty() }?.let { listOf(CampfireViewModel.SongGroup(header = null, songs = it)) }.orEmpty()
 }

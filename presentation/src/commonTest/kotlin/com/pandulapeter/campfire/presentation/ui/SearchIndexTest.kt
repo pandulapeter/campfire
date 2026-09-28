@@ -10,6 +10,7 @@
 package com.pandulapeter.campfire.presentation.ui
 
 import com.pandulapeter.campfire.data.model.domain.Song
+import com.pandulapeter.campfire.domain.api.models.SongSection
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertSame
@@ -63,6 +64,28 @@ class SearchIndexTest {
         assertEquals(setOf("renamed.cho"), final.byFileName.keys)
         assertEquals(setOf("renamed.cho"), final.songsByFileName.keys)
         assertEquals(11, calls)
+    }
+
+    @Test
+    fun anEmptyNormalizedQueryKeepsTheSections() {
+        val first = searchable("first", "first", "a", emptyList())
+        val second = searchable("second", "second", "b", emptyList())
+        val sections = listOf(
+            SongSection(header = SongSection.Header.Letter('F'), songs = listOf(first.song)),
+            SongSection(header = SongSection.Header.Letter('S'), songs = listOf(second.song)),
+        )
+        assertEquals(
+            listOf(
+                CampfireViewModel.SongGroup(header = SongSection.Header.Letter('F'), songs = listOf(first.song)),
+                CampfireViewModel.SongGroup(header = SongSection.Header.Letter('S'), songs = listOf(second.song)),
+            ),
+            songGroupsFor(sections, listOf(first, second), ""),
+        )
+        assertEquals(
+            listOf(CampfireViewModel.SongGroup(header = null, songs = listOf(second.song))),
+            songGroupsFor(sections, listOf(first, second), "sec"),
+        )
+        assertEquals(emptyList(), songGroupsFor(sections, listOf(first, second), "nothing"))
     }
 
     private fun searchable(name: String, title: String, artist: String, tags: List<String>) = SearchableSong(

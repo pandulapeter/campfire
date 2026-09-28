@@ -692,13 +692,7 @@ class CampfireViewModel(
     // The sections arrive cut, from the same pass that sorted them. Cutting them here would take the sorting mode
     // from the preferences, which change before the list sorted by them arrives.
     val songGroups = combine(indexedSongs, songsSearch.activeQuery) { indexed, query ->
-        if (query.isBlank()) {
-            indexed.sections.map { SongGroup(header = it.header, songs = it.songs) }
-        } else {
-            // No groups at all when nothing matches, rather than one empty group: a search with no results has to
-            // look empty to whoever decides between the list and a placeholder, not like a list with one section.
-            rankSongs(indexed.search.filtered, normalizeSearchText(query)).takeIf { it.isNotEmpty() }?.let { listOf(SongGroup(header = null, songs = it)) }.orEmpty()
-        }
+        songGroupsFor(sections = indexed.sections, filtered = indexed.search.filtered, normalizedQuery = normalizeSearchText(query))
     }.flowOn(Dispatchers.Default).asState(emptyList())
 
     /** True while an import is running, which the screens that can start one show as a progress bar. */
@@ -781,10 +775,11 @@ class CampfireViewModel(
      * is the list somebody wrote down, and three of its twelve songs is not that list.
      */
     val setlistsWithSongs = combine(visibleSetlists, indexedSongs, setlistsSearch.activeQuery) { setlists, indexed, query ->
-        if (query.isBlank()) {
+        // Branched on the folded query, as the song list is: one of punctuation or symbols alone is no search.
+        val normalizedQuery = normalizeSearchText(query)
+        if (normalizedQuery.isEmpty()) {
             setlists
         } else {
-            val normalizedQuery = normalizeSearchText(query)
             setlists.filter { it.setlist.matchesSearch(normalizedQuery = normalizedQuery, songs = indexed.search.byFileName) }
         }
     }.flowOn(Dispatchers.Default).asState(emptyList())
