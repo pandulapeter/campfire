@@ -33,10 +33,12 @@ interface SetlistLocalSource {
     suspend fun saveSetlist(setlist: Setlist): Setlist
 
     /**
-     * Saves the setlist under [title] and moves its file to the name that title gives it, returning the setlist as
-     * it now is, carrying the size of its file. The file name is the identity of a setlist, so this is a different thing from [saveSetlist]: the
-     * caller ends up with a setlist whose `fileName` may have changed. Everything else the setlist carries is
-     * written as it is handed over, the description included, since only the title decides the name.
+     * Saves the setlist under [title] and, when the title changed, moves its file to the name that title gives it,
+     * returning the setlist as it now is, carrying the size of its file. The file name is the identity of a setlist, so
+     * this is a different thing from [saveSetlist]: the caller ends up with a setlist whose `fileName` may have
+     * changed. Everything else the setlist carries is written as it is handed over, the description included, since
+     * only the title decides the name. A [title] that gives the name the setlist's stored title gives moves nothing,
+     * so a file that is not named by today's rule keeps its name until the title itself changes.
      *
      * Nothing inside the library points at a setlist by name, so there is nothing to follow the move.
      */

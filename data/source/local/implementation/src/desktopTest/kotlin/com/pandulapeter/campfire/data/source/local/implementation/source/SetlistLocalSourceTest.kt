@@ -11,6 +11,7 @@ package com.pandulapeter.campfire.data.source.local.implementation.source
 
 import com.pandulapeter.campfire.data.model.domain.Setlist
 import com.pandulapeter.campfire.data.source.local.implementation.storage.file.JvmFileStorage
+import com.pandulapeter.campfire.data.source.local.implementation.storage.file.StorageDirectory
 import kotlinx.coroutines.runBlocking
 import java.io.File
 import java.nio.file.Files
@@ -20,7 +21,8 @@ import kotlin.test.assertEquals
 
 /**
  * What a save hands back is what the caller caches, so it has to be what the file holds: a model built in memory that
- * names a song twice must come back naming it once, the way the document is written.
+ * names a song twice must come back naming it once, the way the document is written. And a save through the edit
+ * dialog moves the file only when the title changed.
  */
 class SetlistLocalSourceTest {
 
@@ -53,6 +55,29 @@ class SetlistLocalSourceTest {
         assertEquals(listOf("a.cho", "b.cho"), renamed.entries.map { it.songFileName })
         assertEquals(2, renamed.entries.first().transposition)
         assertEquals(listOf("a.cho", "b.cho"), setlistLocalSource.loadSetlist("concert.setlist.json")?.entries?.map { it.songFileName })
+    }
+
+    @Test
+    fun `a setlist saved under its own title keeps a file name of another rule`() = runBlocking {
+        val setlist = setlistNamingASongTwice(fileName = "My Set.setlist.json", title = "My Set")
+        setlistLocalSource.saveSetlist(setlist)
+
+        val saved = setlistLocalSource.renameSetlist(setlist.copy(description = "For the lake"), "My Set")
+
+        assertEquals("My Set.setlist.json", saved.fileName)
+        assertEquals(listOf("My Set.setlist.json"), fileStorage.list(StorageDirectory.SETLISTS).map { it.name })
+        assertEquals("For the lake", setlistLocalSource.loadSetlist("My Set.setlist.json")?.description)
+    }
+
+    @Test
+    fun `a setlist given a new title moves to the name that title gives`() = runBlocking {
+        val setlist = setlistNamingASongTwice(fileName = "My Set.setlist.json", title = "My Set")
+        setlistLocalSource.saveSetlist(setlist)
+
+        val renamed = setlistLocalSource.renameSetlist(setlist, "Other")
+
+        assertEquals("other.setlist.json", renamed.fileName)
+        assertEquals(listOf("other.setlist.json"), fileStorage.list(StorageDirectory.SETLISTS).map { it.name })
     }
 
     private fun setlistNamingASongTwice(fileName: String, title: String) = Setlist(

@@ -104,8 +104,11 @@ internal class SetlistLocalSourceImpl(
         val renamed = setlist.copy(title = title)
         val desired = setlistFileName(title)
         // A title that normalizes to the name the file already has (a change of capitals, or of the punctuation the
-        // name never carried) moves nothing: the file is where it belongs, and the copy would only be its own.
-        if (setlist.fileName.isNamed(desired)) {
+        // name never carried) moves nothing: the file is where it belongs, and the copy would only be its own. Nor does
+        // a title whose name is the one the stored title gives: a save of the edit dialog that only changed the
+        // description, or nothing, is no reason to move a file named by hand or by an older rule, and a move reaches
+        // every synced device as a deletion and a new file.
+        if (setlist.fileName.isNamed(desired) || setlistFileName(setlist.title) == desired) {
             return saveSetlist(renamed)
         }
         val fileName = fileStorage.uniqueName(StorageDirectory.SETLISTS, desired, currentName = setlist.fileName)
