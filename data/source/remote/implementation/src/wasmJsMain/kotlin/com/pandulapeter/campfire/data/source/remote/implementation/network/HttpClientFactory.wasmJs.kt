@@ -21,4 +21,4 @@ import io.ktor.client.engine.js.Js
  * a page to name itself, so what it sees is the browser's own user agent and the page's `Origin`, which is the address
  * the web build is published at and says as much about who is asking.
  */
-internal actual fun createHttpClient() = HttpClient(Js) { configureClient(sendsUserAgent = false) }
+internal actual fun createHttpClient() = HttpClient(Js) { configureClient(sendsUserAgent = false, hasSocketTimeout = false) }

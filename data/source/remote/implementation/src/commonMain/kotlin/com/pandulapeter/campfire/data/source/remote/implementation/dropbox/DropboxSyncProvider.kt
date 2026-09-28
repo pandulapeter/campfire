@@ -31,6 +31,9 @@ import com.pandulapeter.campfire.data.source.remote.implementation.crypto.dropbo
 import com.pandulapeter.campfire.data.source.remote.implementation.network.toAsciiJsonString
 import com.pandulapeter.campfire.data.source.remote.implementation.network.urlEncode
 import io.ktor.client.HttpClient
+import io.ktor.client.network.sockets.ConnectTimeoutException
+import io.ktor.client.network.sockets.SocketTimeoutException
+import io.ktor.client.plugins.HttpRequestTimeoutException
 import io.ktor.client.request.header
 import io.ktor.client.request.post
 import io.ktor.client.request.setBody
@@ -389,6 +392,10 @@ internal class DropboxSyncProvider(
      * Dropbox has stopped accepting it - while the refresh token that would fix that is perfectly good. [block] is
      * handed the token it sends, so that the one refused is known and only that one is renewed: the transfers of a run
      * refused together share one renewal. A second 401 is the real refusal.
+     *
+     * A timeout produces no answer at all, and is retried with the same doubling wait: on a phone it is more often a
+     * cell handover or a moment in a tunnel than a service that is gone, and one of them ending the run would leave a
+     * large library on a poor connection never finishing a sync. Anything else the transport throws is not retried.
      */
     private suspend fun request(block: suspend (accessToken: String) -> HttpResponse): HttpResponse {
         var attempt = 0
@@ -399,7 +406,20 @@ internal class DropboxSyncProvider(
             // stay a network failure of the run rather than become one of this file.
             val response = transport {
                 token = accessToken(refused = refusedToken)
-                block(token)
+                try {
+                    block(token)
+                } catch (exception: Exception) {
+                    // Null asks for another attempt; the last one is left to transport, which makes it the run's
+                    // network failure as before.
+                    currentCoroutineContext().ensureActive()
+                    if (attempt >= MAXIMUM_RETRIES || !exception.isTimeout()) throw exception
+                    null
+                }
+            }
+            if (response == null) {
+                delay(min(DEFAULT_RETRY_SECONDS shl attempt, MAXIMUM_RETRY_SECONDS) * 1000L + Random.nextLong(RETRY_JITTER_MILLIS))
+                attempt++
+                continue
             }
             if (response.status == HttpStatusCode.Unauthorized && refusedToken == null) {
                 refusedToken = token
@@ -411,6 +431,8 @@ internal class DropboxSyncProvider(
             delay(retryAfterMillis + Random.nextLong(RETRY_JITTER_MILLIS))
         }
     }
+
+    private fun Exception.isTimeout() = this is HttpRequestTimeoutException || this is ConnectTimeoutException || this is SocketTimeoutException
 
     /** Null when the answer is one to act on rather than to wait out. */
     private suspend fun HttpResponse.retryAfterMillis(attempt: Int): Long? = when {

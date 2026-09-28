@@ -43,6 +43,12 @@ redirect URIs character for character, which is why the desktop port is fixed.
   (measured: 314 files in 51 s). It is not atomic — the files disappear one after another while it runs — so the
   window is shorter, not gone. Entries it turns away as busy (or a whole job refused that way) are sent again after
   the same back-off as any other write.
+- The client bounds the time to connect (20 s) and the silence between two packets (60 s), and not a request as a
+  whole: a `list_folder` page of a few thousand songs, or one long song, takes minutes on a 2G or congested link while
+  data is arriving the whole time, and a total bound would end every run of such a library on such a link. The
+  browser keeps a total bound of ten minutes, since `fetch` has no timeout between packets. A timeout of any of the
+  three is retried with the same doubling wait as the answers below, since on a phone it is more often a cell
+  handover than a service that is gone; it ends the run only once the attempts run out.
 - Every call is retried while Dropbox answers 429, 5xx, or a 409 whose summary says `too_many_write_operations` (its
   answer to several writes landing in one folder at once, which the engine's own concurrency provokes), waiting what
   the body's `retry_after` or the `Retry-After` header asks for — or, where neither says, a wait that doubles from 2 s

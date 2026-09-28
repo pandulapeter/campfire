@@ -24,6 +24,7 @@ import io.ktor.client.HttpClientConfig
 import io.ktor.client.engine.mock.MockEngine
 import io.ktor.client.engine.mock.MockRequestHandleScope
 import io.ktor.client.engine.mock.respond
+import io.ktor.client.network.sockets.SocketTimeoutException
 import io.ktor.client.plugins.HttpRequestTimeoutException
 import io.ktor.client.plugins.HttpTimeout
 import io.ktor.client.request.HttpRequestData
@@ -200,9 +201,12 @@ class DropboxRequestTest {
         assertIs<CancellationException>(failure)
     }
 
-    /** What the client does with its own request timeout: it cancels the call, and reports the reason instead. */
+    /**
+     * What the client does with its own request timeout: it cancels the call, and reports the reason instead. Retried
+     * like any other timeout, and the service not being reached once the attempts run out.
+     */
     @Test
-    fun `a request that times out is the service not being reached`() = runTest {
+    fun `a request that keeps timing out is the service not being reached`() = runTest {
         val provider = provider(
             configure = { install(HttpTimeout) { requestTimeoutMillis = 50 } },
         ) { awaitCancellation() }
@@ -345,6 +349,29 @@ class DropboxRequestTest {
             expected = "Dropbox refused the authorization: 400 invalid_grant: refresh token is invalid or revoked",
             actual = exception.message,
         )
+    }
+
+    /** A cell handover or a tunnel, which the next attempt gets through. */
+    @Test
+    fun `a socket timeout is retried`() = runTest {
+        var attempts = 0
+        val provider = provider {
+            if (++attempts <= 2) throw SocketTimeoutException("Stalled")
+            respondJson("""{"entries":[],"cursor":"","has_more":false}""")
+        }
+        provider.list()
+        assertEquals(3, attempts)
+    }
+
+    @Test
+    fun `a socket timeout on every attempt is the service not being reached`() = runTest {
+        var attempts = 0
+        val provider = provider {
+            attempts++
+            throw SocketTimeoutException("Stalled")
+        }
+        assertIs<SocketTimeoutException>(assertFailsWith<SyncNetworkException> { provider.list() }.cause)
+        assertEquals(7, attempts)
     }
 
     private fun provider(
