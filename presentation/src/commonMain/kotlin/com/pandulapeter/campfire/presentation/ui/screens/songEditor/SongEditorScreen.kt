@@ -55,6 +55,7 @@ import androidx.compose.material3.VerticalDivider
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.Stable
 import androidx.compose.runtime.State
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
@@ -84,6 +85,8 @@ import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.platform.LocalWindowInfo
 import androidx.compose.ui.text.TextRange
 import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.unit.Dp
+import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.pandulapeter.campfire.chordpro.ChordProSummaryCache
@@ -124,6 +127,7 @@ import com.pandulapeter.campfire.presentation.ui.components.EmptyState
 import com.pandulapeter.campfire.presentation.ui.components.EmptyStateAction
 import com.pandulapeter.campfire.presentation.ui.components.ExpandChevron
 import com.pandulapeter.campfire.presentation.ui.components.fadingTopEdge
+import com.pandulapeter.campfire.presentation.ui.components.only
 import com.pandulapeter.campfire.presentation.ui.components.SegmentedChoice
 import com.pandulapeter.campfire.presentation.ui.components.WindowSize
 import com.pandulapeter.campfire.presentation.ui.navigation.CampfireDestination
@@ -468,12 +472,8 @@ private fun LoadedSongEditor(
                 textFieldState = textFieldState,
                 scrollState = fieldScrollState,
                 horizontalScrollState = fieldHorizontalScrollState,
-                contentPadding = PaddingValues(
-                    start = contentPadding.calculateStartPadding(layoutDirection),
-                    // Next to the preview the divider is the end of this pane, not the window.
-                    end = if (hasSideBySidePreview) 0.dp else contentPadding.calculateEndPadding(layoutDirection),
-                    bottom = contentPadding.calculateBottomPadding(),
-                ),
+                // Next to the preview the divider is the end of this pane, not the window.
+                contentPadding = contentPadding.only(start = true, end = !hasSideBySidePreview, bottom = true),
             )
         }
         val preview: @Composable (Modifier) -> Unit = { paneModifier ->
@@ -486,11 +486,7 @@ private fun LoadedSongEditor(
                 fontScale = fontScale,
                 isHorizontalFlow = userPreferences?.isHorizontalSectionFlowEnabled == true,
                 chordSpelling = chordSpelling,
-                contentPadding = PaddingValues(
-                    start = if (hasSideBySidePreview) 0.dp else contentPadding.calculateStartPadding(layoutDirection),
-                    end = contentPadding.calculateEndPadding(layoutDirection),
-                    bottom = contentPadding.calculateBottomPadding(),
-                ),
+                contentPadding = contentPadding.only(start = !hasSideBySidePreview, end = true, bottom = true),
             )
         }
         // The panes take what the app bar and the toggle above them leave, rather than the whole window: a Column
@@ -653,7 +649,6 @@ private fun ChordProTextField(
         )
     }
     val bodyLarge = MaterialTheme.typography.bodyLarge
-    val layoutDirection = LocalLayoutDirection.current
     val density = LocalDensity.current
     // The bottom of the padding this screen was handed is the navigation bar, or the keyboard wherever that reaches
     // higher, and the two are spent differently here. The keyboard covers the bottom of the field whatever it is
@@ -661,7 +656,6 @@ private fun ChordProTextField(
     // the keyboard, and keeping the caret in view - which it does whenever its size changes - keeps it above it. The
     // bar and the room after the last line only mean anything once scrolled past, so they are spent at the end alone.
     val restingBottomInset = WindowInsets.contentEdges.asPaddingValues().calculateBottomPadding()
-    val keyboardPadding = (contentPadding.calculateBottomPadding() - restingBottomInset).coerceAtLeast(0.dp)
     val endPadding = restingBottomInset + 32.dp
     val endPaddingPx = with(density) { endPadding.roundToPx() }
     // Unlike SongPreview's bottom padding, which sits inside its own verticalScroll and is therefore only ever
@@ -673,10 +667,10 @@ private fun ChordProTextField(
     // there is further to scroll, which puts the padding straight back - the two states chase each other forever.
     // Requiring the field to have scrolled back up by at least the padding's own height before giving it up is what
     // breaks that loop.
-    var respectsBottomInset by remember { mutableStateOf(false) }
+    val respectsBottomInset = remember { mutableStateOf(false) }
     LaunchedEffect(scrollState, endPaddingPx) {
         snapshotFlow { scrollState.value to scrollState.maxValue }.collect { (value, maxValue) ->
-            respectsBottomInset = if (respectsBottomInset) value >= maxValue - endPaddingPx else value >= maxValue
+            respectsBottomInset.value = if (respectsBottomInset.value) value >= maxValue - endPaddingPx else value >= maxValue
         }
     }
     BasicTextField(
@@ -696,9 +690,12 @@ private fun ChordProTextField(
             // scroll under a strip of nothing below the toolbar rather than up to its edge. The toolbar's own bottom
             // padding is the space between the two at rest.
             .padding(
-                start = contentPadding.calculateStartPadding(layoutDirection) + 16.dp,
-                end = contentPadding.calculateEndPadding(layoutDirection) + 16.dp,
-                bottom = keyboardPadding + if (respectsBottomInset) endPadding else 0.dp,
+                EditorFieldPadding(
+                    contentPadding = contentPadding,
+                    restingBottomInset = restingBottomInset,
+                    endPadding = endPadding,
+                    respectsBottomInset = respectsBottomInset,
+                )
             ),
         state = textFieldState,
         textStyle = bodyLarge.copy(
@@ -714,6 +711,33 @@ private fun ChordProTextField(
         // swallows the press that should have put the caret in it, and nothing can be typed at all.
         scrollState = scrollState,
     )
+}
+
+/**
+ * The padding around the editor's field, every side of it asked for while the field is laid out rather than while it
+ * is composed: the bottom follows the keyboard, whose inset changes on every frame it slides for, and so does whether
+ * the room after the last line is spent, which the field's own scrolling decides. Read while composing, either would
+ * compose the whole field again on each of those frames.
+ *
+ * Only the part of the handed padding that reaches higher than the resting inset is taken off the field, see
+ * [ChordProTextField].
+ */
+@Stable
+private class EditorFieldPadding(
+    private val contentPadding: PaddingValues,
+    private val restingBottomInset: Dp,
+    private val endPadding: Dp,
+    private val respectsBottomInset: State<Boolean>,
+) : PaddingValues {
+
+    override fun calculateLeftPadding(layoutDirection: LayoutDirection) = contentPadding.calculateLeftPadding(layoutDirection) + 16.dp
+
+    override fun calculateTopPadding() = 0.dp
+
+    override fun calculateRightPadding(layoutDirection: LayoutDirection) = contentPadding.calculateRightPadding(layoutDirection) + 16.dp
+
+    override fun calculateBottomPadding() = (contentPadding.calculateBottomPadding() - restingBottomInset).coerceAtLeast(0.dp) +
+            if (respectsBottomInset.value) endPadding else 0.dp
 }
 
 /**
@@ -764,23 +788,21 @@ private fun SongPreview(
             .mapLatest { inputs -> inputs to withContext(Dispatchers.Default) { prepare(inputs) } }
             .collect { preview = it }
     }
-    val layoutDirection = LocalLayoutDirection.current
     val topPadding = 8.dp
-    val bottomPadding = contentPadding.calculateBottomPadding() + 32.dp
+    // The keyboard only ever covers the lower part of the preview, which the scroll room below the last line lets the
+    // user scroll past, so it decides that room and not the columns: the height the sections are laid out against is
+    // the pane's less the resting inset, and the preview keeps its columns while the keyboard comes and goes.
+    val restingBottomPadding = WindowInsets.contentEdges.asPaddingValues().calculateBottomPadding() + 32.dp
     BoxWithConstraints(modifier = modifier) {
         SongLyrics(
             modifier = Modifier
                 .fillMaxSize()
                 .fadingTopEdge(scrollState)
                 .verticalScroll(scrollState)
-                .padding(
-                    start = contentPadding.calculateStartPadding(layoutDirection) + 16.dp,
-                    end = contentPadding.calculateEndPadding(layoutDirection) + 16.dp,
-                    top = topPadding,
-                    bottom = bottomPadding,
-                ),
+                .padding(start = 16.dp, end = 16.dp, top = topPadding)
+                .padding(contentPadding.only(start = true, end = true, bottom = true, extraBottom = 32.dp)),
             model = preview.second,
-            availableHeight = maxHeight - topPadding - bottomPadding,
+            availableHeight = maxHeight - topPadding - restingBottomPadding,
             fontScale = fontScale,
             isHorizontalFlow = isHorizontalFlow,
             // The preview shows what is being typed rather than narrating it: every edit that changes a section's
