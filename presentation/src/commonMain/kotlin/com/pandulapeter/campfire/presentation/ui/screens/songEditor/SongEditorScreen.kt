@@ -30,6 +30,7 @@ import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.ScrollState
@@ -117,6 +118,7 @@ import com.pandulapeter.campfire.presentation.ui.contentEdges
 import com.pandulapeter.campfire.presentation.ui.components.ActionsMenu
 import com.pandulapeter.campfire.presentation.ui.components.ActionsMenuItem
 import com.pandulapeter.campfire.presentation.ui.components.CampfireTopAppBar
+import com.pandulapeter.campfire.presentation.ui.components.CoverArtImage
 import com.pandulapeter.campfire.presentation.ui.components.DelayedLoadingIndicator
 import com.pandulapeter.campfire.presentation.ui.components.EmptyState
 import com.pandulapeter.campfire.presentation.ui.components.EmptyStateAction
@@ -125,6 +127,8 @@ import com.pandulapeter.campfire.presentation.ui.components.fadingTopEdge
 import com.pandulapeter.campfire.presentation.ui.components.SegmentedChoice
 import com.pandulapeter.campfire.presentation.ui.components.WindowSize
 import com.pandulapeter.campfire.presentation.ui.navigation.CampfireDestination
+import com.pandulapeter.campfire.presentation.ui.screens.songDetails.APP_BAR_COVER_GAP
+import com.pandulapeter.campfire.presentation.ui.screens.songDetails.APP_BAR_COVER_SIZE
 import com.pandulapeter.campfire.presentation.ui.screens.songDetails.SongLyrics
 import com.pandulapeter.campfire.presentation.ui.screens.songDetails.SongLyricsInputs
 import com.pandulapeter.campfire.presentation.ui.screens.songDetails.TextTranspositionControls
@@ -135,6 +139,7 @@ import com.pandulapeter.campfire.presentation.ui.theme.LocalSecondAccentColor
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.FlowPreview
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.debounce
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.filter
@@ -143,6 +148,7 @@ import kotlinx.coroutines.flow.mapLatest
 import kotlinx.coroutines.flow.mapNotNull
 import kotlinx.coroutines.withContext
 import org.jetbrains.compose.resources.painterResource
+import kotlin.time.Duration.Companion.milliseconds
 
 /**
  * The raw ChordPro text of one song, with what it will look like next to it. Wide windows show both at once, narrow
@@ -363,21 +369,11 @@ private fun LoadedSongEditor(
                 }
             },
             title = {
-                Column {
-                    Text(
-                        text = summary.metadata.displayTitle(destination.fileName.removeSuffix(LibraryFiles.SONG_EXTENSION)),
-                        style = MaterialTheme.typography.titleMedium,
-                        maxLines = 1,
-                        overflow = TextOverflow.Ellipsis,
-                    )
-                    Text(
-                        text = summary.metadata.artist.orEmpty(),
-                        style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                        maxLines = 1,
-                        overflow = TextOverflow.Ellipsis,
-                    )
-                }
+                EditorTitle(
+                    title = summary.metadata.displayTitle(destination.fileName.removeSuffix(LibraryFiles.SONG_EXTENSION)),
+                    artist = summary.metadata.artist.orEmpty(),
+                    coverArtUrl = summary.metadata.coverArt.takeIf { userPreferences?.isCoverArtEnabled == true },
+                )
             },
             actions = {
                 IconButton(
@@ -513,6 +509,59 @@ private fun LoadedSongEditor(
                 if (showPreview) preview(Modifier.fillMaxSize()) else editor(Modifier.fillMaxSize())
             }
         }
+    }
+}
+
+/**
+ * The song as the text being typed names it, with its cover in front of the title the way the song details screen
+ * draws it, so that an address written or changed by hand is seen before it is saved.
+ *
+ * The cover follows the text only once the typing has paused ([COVER_ART_DELAY]): every half-typed address that happens
+ * to be a valid one would otherwise be a download of its own, and one that failed is not asked again for a while. A
+ * cover taken out of the text goes at once, since that asks nothing. It takes no press here, unlike the details
+ * screen's: the cover search writes into the file, under a draft that has not been saved.
+ */
+@Composable
+private fun EditorTitle(
+    title: String,
+    artist: String,
+    coverArtUrl: String?,
+) = Row(
+    verticalAlignment = Alignment.CenterVertically,
+) {
+    var shownCoverArtUrl by remember { mutableStateOf(coverArtUrl) }
+    LaunchedEffect(coverArtUrl) {
+        if (coverArtUrl != null) delay(COVER_ART_DELAY)
+        shownCoverArtUrl = coverArtUrl
+    }
+    // Keyed on whether there is a cover rather than on its address, so that one address changing to another is the
+    // image crossfading in its place rather than the room for it closing and opening again.
+    AnimatedContent(
+        targetState = shownCoverArtUrl,
+        transitionSpec = { fadeIn() togetherWith fadeOut() },
+        contentKey = { it != null },
+    ) { url ->
+        if (url != null) {
+            CoverArtImage(
+                modifier = Modifier.padding(end = APP_BAR_COVER_GAP).size(APP_BAR_COVER_SIZE),
+                url = url,
+            )
+        }
+    }
+    Column {
+        Text(
+            text = title,
+            style = MaterialTheme.typography.titleMedium,
+            maxLines = 1,
+            overflow = TextOverflow.Ellipsis,
+        )
+        Text(
+            text = artist,
+            style = MaterialTheme.typography.bodySmall,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+            maxLines = 1,
+            overflow = TextOverflow.Ellipsis,
+        )
     }
 }
 
@@ -902,6 +951,7 @@ private val PANE_CHOICE_MAX_WIDTH = 400.dp
 private val SMALL_SCREEN_SIZE = 600.dp
 private const val SECTION_START = "{start_of_"
 private const val PREVIEW_DELAY_MILLIS = 150L
+private val COVER_ART_DELAY = 500.milliseconds
 
 /**
  * What the editor takes for a long document: 100 KB as a saved state writes it, several times the longest song

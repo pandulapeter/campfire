@@ -4,6 +4,7 @@
 {artist: Traditional American}
 {composer: Daniel E. Kelley}
 {lyricist: Brewster M. Higley}
+{meta: cover https://raw.githubusercontent.com/pandulapeter/campfire/refs/heads/master/app/android/appIcon.png}
 {year: 1872}
 {key: G}
 {capo: 2}
@@ -14,6 +15,8 @@
 {tag: Easy}
 {tag: Singalong}
 {meta: language en}
+{meta: link https://en.wikipedia.org/wiki/Home_on_the_Range}
+{meta: link https://www.youtube.com/results?search_query=home+on+the+range}
 
 {comment_italic: Written as a poem in Kansas and set to music soon after, it was sung around cattle drive campfires long before anyone knew who wrote it.}
 

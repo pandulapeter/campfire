@@ -888,9 +888,9 @@ private val APP_BAR_NAVIGATION_WIDTH = 52.dp // The 48dp button and the 4dp the 
 private val APP_BAR_END_PADDING = 4.dp
 private val APP_BAR_ACTION_WIDTH = 48.dp
 
-/** As tall as the title and the artist next to it: a titleMedium and a bodySmall line. */
-private val APP_BAR_COVER_SIZE = 40.dp
-private val APP_BAR_COVER_GAP = 12.dp
+/** As tall as the title and the artist next to it: a titleMedium and a bodySmall line. The editor's bar shares it. */
+internal val APP_BAR_COVER_SIZE = 40.dp
+internal val APP_BAR_COVER_GAP = 12.dp
 private val MIN_TITLE_WIDTH = 160.dp // About fifteen characters of a title, enough to tell one song from the next.
 private val TITLE_TOUCH_HORIZONTAL_OUTSET = 4.dp // The padding the bar puts around its title.
 private val TITLE_TOUCH_VERTICAL_OUTSET = 12.dp // From the two lines of title, 40dp, to the bar's 64dp.

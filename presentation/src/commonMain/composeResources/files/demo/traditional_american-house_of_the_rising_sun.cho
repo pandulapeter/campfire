@@ -1,12 +1,14 @@
 {title: House of the Rising Sun}
 {artist: Traditional American}
-{meta: cover https://coverartarchive.org/release-group/98a52ceb-98df-3e93-ac14-1bb767e7a9d3/front-250}
+{meta: cover https://raw.githubusercontent.com/pandulapeter/campfire/refs/heads/master/app/android/appIcon.png}
 {key: Am}
 {tempo: 76}
 {time: 6/8}
 {tag: Demo}
 {tag: Fingerpicking}
 {meta: language en}
+{meta: link https://en.wikipedia.org/wiki/The_House_of_the_Rising_Sun}
+{meta: link https://www.youtube.com/results?search_query=house+of+the+rising+sun}
 
 {start_of_intro: Intro}
 [Am] [C] [D] [F] [Am] [E7] [Am] [E7]

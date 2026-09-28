@@ -22,6 +22,7 @@ import androidx.compose.ui.platform.PlatformInsets
 import androidx.compose.ui.platform.PlatformWindowInsets
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.window.WindowPlacement
 import com.jetbrains.JBR
 import com.jetbrains.WindowDecorations
 import com.pandulapeter.campfire.presentation.ui.CampfireViewModel
@@ -35,11 +36,11 @@ import javax.swing.SwingUtilities
  * What is left of the system's title bar once the window's content is laid out under it: a strip of [height] at the
  * top that the system still drags the window by, with its window buttons drawn over the app's own background.
  *
- * @param windowsTitleBar The JetBrains Runtime's title bar on Windows, which is where the buttons' colors are set.
+ * @param customTitleBar The JetBrains Runtime's title bar, which is where the Windows buttons' colors are set.
  */
 internal class ExtendedTitleBar(
     val height: Dp,
-    val windowsTitleBar: WindowDecorations.CustomTitleBar?,
+    val customTitleBar: WindowDecorations.CustomTitleBar,
 )
 
 /**
@@ -50,36 +51,36 @@ internal class ExtendedTitleBar(
  * since the JDK does not lay the content out again when this changes on a window already on screen.
  *
  * @return The strip the content is laid out under, or null where the window keeps the system's title bar: on Linux,
- *   where the window manager draws it, and on a runtime other than the JetBrains Runtime on Windows.
+ *   where the window manager draws it, and on a runtime other than the JetBrains Runtime.
  */
 internal fun ComposeWindow.extendContentIntoTitleBar(): ExtendedTitleBar? = when {
-    isMacOs -> {
-        // The system handles the mouse over the strip before the content sees it, so it drags the window by itself.
-        rootPane.putClientProperty("apple.awt.fullWindowContent", true)
-        rootPane.putClientProperty("apple.awt.transparentTitleBar", true)
-        rootPane.putClientProperty("apple.awt.windowTitleVisible", false)
-        ExtendedTitleBar(height = MAC_TITLE_BAR_HEIGHT, windowsTitleBar = null)
-    }
-    isWindows -> extendContentIntoWindowsTitleBar()
+    isMacOs -> extendContentIntoCustomTitleBar(height = MAC_TITLE_BAR_HEIGHT)
+    isWindows -> extendContentIntoCustomTitleBar(height = WINDOWS_TITLE_BAR_HEIGHT)
     else -> null
 }
 
 /**
- * The JetBrains Runtime's custom title bar, which draws the caption buttons over the content and gives the rest of
- * the strip the title bar's behavior - dragging, snapping, a double click that maximizes, the system menu - but only
- * where nothing in the window listens to the mouse, and Compose's canvas listens everywhere. So every mouse event over
- * the strip is marked as the title bar's, which the runtime asks for per event: an event listener of the toolkit runs
- * after it has made its own guess and before it acts on it. Nothing of the app is ever under the strip, which the
- * screens keep clear of ([TitleBarInsets]), so there is nothing there to take the mouse away from. The listener lives
- * as long as the process does, like the one window it serves.
+ * The JetBrains Runtime's custom title bar, which draws the window buttons over the content and gives the rest of the
+ * strip the title bar's behavior - dragging, snapping, the system menu, and a double click that does what the system
+ * is set to do with one (on macOS, Desktop & Dock's zoom, fill, minimize or nothing) - but only where nothing in the
+ * window listens to the mouse, and Compose's canvas listens everywhere. (The macOS client properties that make a title
+ * bar transparent lay the content out the same way, but the double click reaches the content there, and the window
+ * never zooms.) So every mouse event over the strip is marked as the title bar's, which the runtime asks for per
+ * event: an event listener of the toolkit runs after it has made its own guess and before it acts on it. Nothing of
+ * the app is ever under the strip, which the screens keep clear of ([TitleBarInsets]), so there is nothing there to
+ * take the mouse away from - except in full screen, where there is no strip and the app bar reaches the top edge. The
+ * listener lives as long as the process does, like the one window it serves.
  */
-private fun ComposeWindow.extendContentIntoWindowsTitleBar(): ExtendedTitleBar? {
+private fun ComposeWindow.extendContentIntoCustomTitleBar(height: Dp): ExtendedTitleBar? {
     val decorations = JBR.getWindowDecorations() ?: return null
-    val titleBar = decorations.createCustomTitleBar().apply { height = WINDOWS_TITLE_BAR_HEIGHT.value }
+    val titleBar = decorations.createCustomTitleBar().apply { this.height = height.value }
     decorations.setCustomTitleBar(this, titleBar)
     Toolkit.getDefaultToolkit().addAWTEventListener(
         { event ->
-            if (event is MouseEvent && event.id != MouseEvent.MOUSE_EXITED && event.id != MouseEvent.MOUSE_WHEEL) {
+            if (
+                event is MouseEvent && event.id != MouseEvent.MOUSE_EXITED && event.id != MouseEvent.MOUSE_WHEEL &&
+                placement != WindowPlacement.Fullscreen
+            ) {
                 val component = event.component
                 if (component != null && SwingUtilities.getWindowAncestor(component) === this) {
                     // The height is measured from the top of the client area, which is where the root pane starts.
@@ -91,7 +92,7 @@ private fun ComposeWindow.extendContentIntoWindowsTitleBar(): ExtendedTitleBar? 
         },
         AWTEvent.MOUSE_EVENT_MASK or AWTEvent.MOUSE_MOTION_EVENT_MASK,
     )
-    return ExtendedTitleBar(height = WINDOWS_TITLE_BAR_HEIGHT, windowsTitleBar = titleBar)
+    return ExtendedTitleBar(height = height, customTitleBar = titleBar)
 }
 
 /**
@@ -112,7 +113,9 @@ internal fun TitleBarAppearance(
             window.rootPane.putClientProperty("apple.awt.windowAppearance", if (isDarkTheme) "NSAppearanceNameDarkAqua" else "NSAppearanceNameAqua")
         }
         // Every property set redraws the title bar, and this runs with every recomposition.
-        titleBar.windowsTitleBar?.takeIf { it.properties[WINDOWS_DARK_CONTROLS] != isDarkTheme }?.putProperty(WINDOWS_DARK_CONTROLS, isDarkTheme)
+        if (isWindows && titleBar.customTitleBar.properties[WINDOWS_DARK_CONTROLS] != isDarkTheme) {
+            titleBar.customTitleBar.putProperty(WINDOWS_DARK_CONTROLS, isDarkTheme)
+        }
     }
 }
 

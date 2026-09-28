@@ -52,9 +52,10 @@ val macSigningIdentity = project.property("campfire.mac.signingIdentity").toStri
 
 /**
  * The JDK whose runtime image, `jpackage` and `java` the packaging and `run` use. It is the JetBrains Runtime rather
- * than whichever JDK of that version is installed, because only it lets the content be laid out under the title bar
- * on Windows (its custom title bar, see TitleBar.kt) and lets a window follow the app's own light or dark theme on
- * macOS (`apple.awt.windowAppearance`), without which the window buttons disappear into the app's background.
+ * than whichever JDK of that version is installed, because only it lets the content be laid out under a title bar
+ * that still behaves as one (its custom title bar, see TitleBar.kt) and lets a window follow the app's own light or
+ * dark theme on macOS (`apple.awt.windowAppearance`), without which the window buttons disappear into the app's
+ * background.
  * Gradle downloads it where it is missing.
  */
 val toolchainLauncher = javaToolchains.launcherFor {
