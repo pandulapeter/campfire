@@ -10,10 +10,10 @@
 # To do
 - Sort and Filter UI should be improved (better animations)
 - Haptic effects
+- Chord diagrams
 - Optional close confirmation dialog on supported platforms
 - Add genre tags, similar to language tags
 - Add ability to add links as metadata items
-- Cover art thumbnails as tags, use https://musicbrainz.org/doc/Cover_Art_Archive/API
 - Add support for the Nashville chord system
 - Once Microsoft Store, App Store and Mac App Store listings are approved, update included URL-s + this Readme
 - Add more automatic sync triggers
