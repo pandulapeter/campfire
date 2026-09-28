@@ -545,13 +545,21 @@ private fun CampfireScreens(
         ime = ime,
         density = density,
     )
-    val songDetailsContentPadding: PaddingValues = KeyboardAwarePadding(
+    val songEditorContentPadding: PaddingValues = KeyboardAwarePadding(
         start = systemBars.calculateStartPadding(layoutDirection),
         end = systemBars.calculateEndPadding(layoutDirection),
         bottom = systemBars.calculateBottomPadding(),
         coveredHeight = 0.dp,
         ime = ime,
         density = density,
+    )
+    // Nothing on the song details screen is typed into, so its padding does not follow the keyboard: the one a dialog
+    // opened from its header brings up would otherwise reflow the lyrics behind that dialog, into more columns and
+    // back, and lift the setlist's pager bar, on every frame of its slide in and out.
+    val songDetailsContentPadding = PaddingValues(
+        start = systemBars.calculateStartPadding(layoutDirection),
+        end = systemBars.calculateEndPadding(layoutDirection),
+        bottom = systemBars.calculateBottomPadding(),
     )
     // The snackbar sits above the chrome, and above the keyboard wherever that reaches higher: the app is laid out
     // under the keyboard rather than resized by it, and a message sent while somebody is typing - a save that failed
@@ -662,7 +670,7 @@ private fun CampfireScreens(
                             viewModel = viewModel,
                             destination = destination,
                             windowSize = windowSize,
-                            contentPadding = songDetailsContentPadding,
+                            contentPadding = songEditorContentPadding,
                             onBack = viewModel::navigateBack,
                         )
                     }
