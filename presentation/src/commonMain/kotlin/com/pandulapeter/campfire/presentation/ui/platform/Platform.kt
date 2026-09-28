@@ -84,7 +84,7 @@ internal enum class Distribution(
     val isApple: Boolean = false,
 ) {
     PLAY_STORE(listingUrl = "https://play.google.com/store/apps/details?id=com.pandulapeter.campfire"),
-    APP_STORE(listingUrl = null, isApple = true),
+    APP_STORE(listingUrl = "https://apps.apple.com/app/id6815160850", isApple = true),
     MAC_APP_STORE(listingUrl = null, isApple = true),
     MICROSOFT_STORE(listingUrl = null),
 }

@@ -8,11 +8,17 @@
  * https://mozilla.org/MPL/2.0/.
 -->
 # To do
+- Regenerate the baseline profile
 - Sort and Filter UI should be improved (better animations)
+- Predictive back in Settings
+- Library screen could display image cache size
+- Song details snap should snap again when a section is expanded / collapsed
+- Song details chord cards should wrap content
+- Pixel 10 Pro XL Landscape: Román lány layout could be optimized
 - Haptic effects
 - Chord diagrams
 - Optional close confirmation dialog on supported platforms
 - Add support for the Nashville chord system
-- Once Microsoft Store, App Store and Mac App Store listings are approved, update included URL-s + this Readme
+- Once Microsoft Store and Mac App Store listings are approved, update included URL-s + this Readme
 - Add support for external control devices with a focus-by-section feature
 - Each top-level Composable should be defined in a separate file
