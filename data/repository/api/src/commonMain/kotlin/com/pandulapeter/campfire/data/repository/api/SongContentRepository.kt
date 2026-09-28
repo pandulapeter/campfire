@@ -13,8 +13,9 @@ import com.pandulapeter.campfire.data.model.domain.SongContent
 import kotlinx.coroutines.flow.Flow
 
 /**
- * The text of the songs that have been opened, kept in memory so that paging back and forth in a setlist does not
- * read the same files over and over. The list of songs does not carry the text, see `SongRepository`.
+ * The text of the songs that have been opened recently, kept in memory so that paging back and forth in a setlist does
+ * not read the same files over and over. Only the latest few are kept, since a long session would otherwise hold every
+ * song it ever opened. The list of songs does not carry the text, see `SongRepository`.
  */
 interface SongContentRepository {
 

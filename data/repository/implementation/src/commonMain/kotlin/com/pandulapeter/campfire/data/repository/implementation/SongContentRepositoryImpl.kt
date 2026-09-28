@@ -24,7 +24,14 @@ internal class SongContentRepositoryImpl(
     private val songLocalSource: SongLocalSource,
 ) : SongContentRepository {
 
-    private val cache = mutableMapOf<String, SongContent>()
+    /**
+     * The least recently used first: a hit is moved to the end, and what is dropped to stay within [MAXIMUM_CACHED_SONGS]
+     * and [MAXIMUM_CACHED_CHARACTERS] is taken from the start. The count is what keeps a long session from holding every
+     * song it opened; the characters are what keep a handful of songbooks pasted into one file each from doing the
+     * same. Either is several times what the pages of a setlist around the one on screen need.
+     */
+    private val cache = LinkedHashMap<String, SongContent>()
+    private var cachedCharacters = 0L
     private val mutex = Mutex()
 
     /**
@@ -43,7 +50,10 @@ internal class SongContentRepositoryImpl(
      */
     override suspend fun loadSongContent(fileName: String, useCache: Boolean): SongContent? {
         val generationBeforeRead = mutex.withLock {
-            if (useCache) cache[fileName]?.let { return it }
+            if (useCache) cache.remove(fileName)?.let { content ->
+                cache[fileName] = content
+                return content
+            }
             generation
         }
         val content = try {
@@ -56,7 +66,7 @@ internal class SongContentRepositoryImpl(
         } ?: return null
         if (useCache) {
             mutex.withLock {
-                if (generation == generationBeforeRead) cache[fileName] = content
+                if (generation == generationBeforeRead) put(content)
             }
         }
         return content
@@ -64,7 +74,12 @@ internal class SongContentRepositoryImpl(
 
     override suspend fun invalidate(fileName: String?) = mutex.withLock {
         generation++
-        if (fileName == null) cache.clear() else cache.remove(fileName)
+        if (fileName == null) {
+            cache.clear()
+            cachedCharacters = 0
+        } else {
+            remove(fileName)
+        }
         _invalidations.tryEmit(fileName)
         Unit
     }
@@ -76,7 +91,7 @@ internal class SongContentRepositoryImpl(
      */
     override suspend fun invalidate(fileNames: Set<String>) = mutex.withLock {
         generation++
-        fileNames.forEach(cache::remove)
+        fileNames.forEach(::remove)
         if (fileNames.size > MAXIMUM_NAMED_INVALIDATIONS) {
             _invalidations.tryEmit(null)
         } else {
@@ -85,7 +100,24 @@ internal class SongContentRepositoryImpl(
         Unit
     }
 
+    /** A text larger than the whole budget is handed out without being kept, rather than emptying the cache for it. */
+    private fun put(content: SongContent) {
+        remove(content.fileName)
+        if (content.text.length > MAXIMUM_CACHED_CHARACTERS) return
+        cache[content.fileName] = content
+        cachedCharacters += content.text.length
+        while (cache.size > MAXIMUM_CACHED_SONGS || cachedCharacters > MAXIMUM_CACHED_CHARACTERS) {
+            remove(cache.keys.first())
+        }
+    }
+
+    private fun remove(fileName: String) {
+        cache.remove(fileName)?.let { cachedCharacters -= it.text.length }
+    }
+
     private companion object {
         const val MAXIMUM_NAMED_INVALIDATIONS = 32
+        const val MAXIMUM_CACHED_SONGS = 32
+        const val MAXIMUM_CACHED_CHARACTERS = 1L shl 20
     }
 }

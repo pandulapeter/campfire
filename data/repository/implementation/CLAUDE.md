@@ -94,10 +94,12 @@ and a repository that has not been read yet rescans instead, since there is no l
   answer — the grid grows at its end rather than shifting under the user. `commonTest` covers the sharing, the
   bound and the downloads it skips, the failures, the pruning and the search's order of emissions.
 - `SongContentRepositoryImpl` is not a `BaseLocalDataRepository`: it is a keyed in-memory cache of song *texts*, so
-  paging through a setlist re-reads nothing. The exports and the import's check for a song already there pass
-  `useCache = false`, which reads the file itself and neither answers from the cache nor fills it: they have to see
-  what is on disk now, and walking the library through the cache would leave all of it in memory. The editor invalidates one entry after a save. The
-  lock only guards the map, never a read: a read that started before an invalidation is told so by a generation
+  paging through a setlist re-reads nothing. It keeps the 32 most recently used, and at most a million characters of
+  them — a long session would otherwise hold every song it opened, and a few songbooks pasted into one file each
+  would hold the rest; a text larger than all of that is handed out and not kept. The exports and the import's check
+  for a song already there pass `useCache = false`, which reads the file itself and neither answers from the cache
+  nor fills it: they have to see what is on disk now, and walking the library through the cache would leave all of it
+  in memory. The editor invalidates one entry after a save. The lock only guards the map, never a read: a read that started before an invalidation is told so by a generation
   counter and does not put the text it read back into the cache. Every invalidation is also emitted on
   `invalidations`, which is how the ViewModel's own copies of the open texts learn that a sync run or a rescan has
   replaced the files under them. A refresh drops its files' texts in one step, named one event each up to 32 and as

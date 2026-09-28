@@ -19,8 +19,8 @@ Repository interfaces only. Consumed by `:domain:implementation`; implemented by
   behind, and two quick changes built on it would undo each other. `renameSetlist` is the same thing for the title and
   the description, the one change that may move the file: it takes the setlist's name and reads the rest of it itself.
   `saveSetlist` is for a setlist the caller owns as a whole — one just created or copied.
-- `SongContentRepository` — the *text* of the songs that have been opened, cached in memory so that paging through a
-  setlist does not re-read the same files. Deliberately not a `DataState` flow: it is a lookup, not a screen's state.
+- `SongContentRepository` — the *text* of the songs that have been opened recently, cached in memory so that paging
+  through a setlist does not re-read the same files. Deliberately not a `DataState` flow: it is a lookup, not a screen's state.
 - `UserPreferencesRepository` — one document, read once and written whole. `hasStoredUserPreferences` is the one
   thing here that is not about what is in it: the demo library asks it to tell a fresh installation from a device
   Campfire has been used on, and it is deliberately uncached, since the very first save makes it false.

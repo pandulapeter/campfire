@@ -46,6 +46,46 @@ class SongContentRepositoryImplTest {
     }
 
     @Test
+    fun `only the most recently used songs are kept`() = runTest {
+        (0..40).forEach { localSource.files["$it.cho"] = "text" }
+        (0..40).forEach { repository.loadSongContent("$it.cho") }
+        // Used again, so it is the most recent rather than the oldest.
+        repository.loadSongContent("9.cho")
+        localSource.reads.clear()
+
+        (0..40).forEach { repository.loadSongContent("$it.cho") }
+
+        assertEquals((0..8).map { "$it.cho" }, localSource.reads.take(9))
+        assertEquals(false, "9.cho" in localSource.reads)
+    }
+
+    @Test
+    fun `a few very long songs are not all kept`() = runTest {
+        val long = "x".repeat(400_000)
+        (0..3).forEach { localSource.files["$it.cho"] = long }
+        (0..3).forEach { repository.loadSongContent("$it.cho") }
+        localSource.reads.clear()
+
+        repository.loadSongContent("3.cho")
+        repository.loadSongContent("0.cho")
+
+        assertEquals(listOf("0.cho"), localSource.reads)
+    }
+
+    @Test
+    fun `a text larger than the whole budget is handed out without emptying the cache`() = runTest {
+        localSource.files["a.cho"] = "text"
+        localSource.files["huge.cho"] = "x".repeat(2_000_000)
+        repository.loadSongContent("a.cho")
+
+        assertEquals(2_000_000, repository.loadSongContent("huge.cho")?.text?.length)
+        repository.loadSongContent("a.cho")
+        repository.loadSongContent("huge.cho")
+
+        assertEquals(listOf("a.cho", "huge.cho", "huge.cho"), localSource.reads)
+    }
+
+    @Test
     fun `a read that an invalidation overtook is not cached`() = runTest {
         localSource.files["a.cho"] = "old"
         localSource.readGate = CompletableDeferred()
