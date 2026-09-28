@@ -108,6 +108,27 @@ interface SyncRepository {
      */
     fun synchronize(deletionPolicy: SyncDeletionPolicy = SyncDeletionPolicy.ASK)
 
+    /**
+     * Asks for a run that nobody pressed a button for: the one every change the app makes to a song or setlist file asks
+     * for on its own. It starts ten seconds after the last such request rather than after the first, so that a burst of
+     * edits - a few tags toggled, an import of a hundred files - is carried by one run. A request made while a run is
+     * going is honoured after that run, which may have read the library before the change. Ignored while nothing is
+     * connected.
+     *
+     * Only these runs wait; the one a launch starts goes through [synchronize], like the button's. A run [synchronize]
+     * starts makes the one waiting unnecessary and takes its place, and [cancelSynchronization] drops it along with the
+     * run it stops, since a run the user has just stopped must not start again on its own a few seconds later.
+     */
+    fun scheduleSynchronization()
+
+    /**
+     * Starts the run [scheduleSynchronization] is waiting to start without waiting any longer, and does nothing when
+     * none is. For the moment the app stops being the one in front: a phone keeps a run alive in the background only
+     * once the app has told the platform about it, which it can only do while it is still in front, and on iOS a
+     * suspended app would not get to start it at all.
+     */
+    fun startScheduledSynchronization()
+
     /** Stops a run where it is. What has already moved stays moved, and the next run picks up from there. */
     fun cancelSynchronization()
 }

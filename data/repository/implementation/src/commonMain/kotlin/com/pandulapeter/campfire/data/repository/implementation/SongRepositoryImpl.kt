@@ -31,6 +31,7 @@ internal class SongRepositoryImpl(
     private val songLocalSource: SongLocalSource,
     private val songContentRepository: SongContentRepository,
     private val libraryFileLock: LibraryFileLock,
+    private val libraryChanges: LibraryChanges,
 ) : BaseLocalDataRepository<List<Song>>(), SongRepository {
 
     override val songs = dataState
@@ -97,6 +98,7 @@ internal class SongRepositoryImpl(
                     updateData { current -> current.orEmpty().filterNot { it.fileName == updated.fileName } + updated }
                 }
             }
+            libraryChanges.onLibraryChanged()
             true
         }
     }
@@ -107,6 +109,7 @@ internal class SongRepositoryImpl(
             // their rows by, so a name that is in the cache already - a file deleted behind the app's back whose name
             // has just been given out again - must not end up in it twice.
             updateData { current -> current.orEmpty().filterNot { it.fileName == song.fileName } + song }
+            libraryChanges.onLibraryChanged()
         }
     }
 
@@ -114,7 +117,7 @@ internal class SongRepositoryImpl(
 
     override suspend fun importSong(fileName: String, text: String, shouldReplace: Boolean) = nameMutex.withLock {
         libraryFileLock.withLock { songLocalSource.importSong(fileName = fileName, text = text, shouldReplace = shouldReplace) }
-    }
+    }.also { libraryChanges.onLibraryChanged() }
 
     override suspend fun adoptImported(songs: Collection<Song>) {
         if (songs.isEmpty()) return
@@ -131,6 +134,7 @@ internal class SongRepositoryImpl(
         updateData { current ->
             current.orEmpty().filterNot { it.fileName == song.fileName || it.fileName == renamed.fileName } + renamed
         }
+        libraryChanges.onLibraryChanged()
         renamed
     }
 
@@ -139,6 +143,7 @@ internal class SongRepositoryImpl(
             songLocalSource.deleteSong(fileName)
             songContentRepository.invalidate(fileName)
             updateData { current -> current.orEmpty().filterNot { it.fileName == fileName } }
+            libraryChanges.onLibraryChanged()
         }
     }
 

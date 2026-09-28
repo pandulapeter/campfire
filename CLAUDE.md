@@ -465,6 +465,14 @@ the only possible one. The per-module `CLAUDE.md` files carry the detail; the sh
   it to slow down — being rate limited is the expected answer to a first sync of a whole library, not a reason to
   give up on it. A file that fails on its own is named in the
   run's summary rather than ending it, and such a run does not count as the last successful one.
+- **A run starts on its own at launch and after every change the app makes to a song or a setlist** — a save, a tag, a
+  new, imported, renamed or deleted file. The launch's starts at once; a change's ten seconds after the latest such
+  request, so a burst of edits or an import is one run (`SyncRepository.scheduleSynchronization`). A request made during
+  a run is carried out after it. Every run that starts at once — the launch's, Sync now, and the first run after
+  connecting — takes the place of one that is waiting; Stop drops the waiting one too. The
+  app leaving the front starts a waiting run at once, since a phone only keeps alive a run it was told about while the
+  app was still in front. The files a run writes go around the repositories that announce changes, so a run never
+  schedules the next one.
 - The index carries an "a run was going" marker, written before anything moves and cleared when it finishes, so a
   run the app never came back from — killed, swiped away, suspended by iOS — is reported as interrupted next time
   rather than silently forgotten, and that run is left for the user to start rather than started on launch.

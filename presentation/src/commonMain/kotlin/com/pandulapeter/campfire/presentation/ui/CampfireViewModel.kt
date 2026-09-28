@@ -85,6 +85,7 @@ import com.pandulapeter.campfire.domain.api.useCases.SetChordProCoverArtUseCase
 import com.pandulapeter.campfire.domain.api.useCases.SetChordProLanguagesUseCase
 import com.pandulapeter.campfire.domain.api.useCases.SetChordProLinkUseCase
 import com.pandulapeter.campfire.domain.api.useCases.SetChordProTagUseCase
+import com.pandulapeter.campfire.domain.api.useCases.StartScheduledSynchronizationUseCase
 import com.pandulapeter.campfire.domain.api.useCases.SynchronizeLibraryUseCase
 import com.pandulapeter.campfire.domain.api.useCases.TransposeChordProTextUseCase
 import com.pandulapeter.campfire.domain.api.useCases.TransposeChordProUseCase
@@ -180,6 +181,7 @@ class CampfireViewModel(
     private val cancelSynchronization: CancelSynchronizationUseCase,
     private val restoreSync: RestoreSyncUseCase,
     private val synchronizeLibrary: SynchronizeLibraryUseCase,
+    private val startScheduledSynchronization: StartScheduledSynchronizationUseCase,
     private val normalizeLanguageCode: NormalizeLanguageCodeUseCase,
     private val normalizeText: NormalizeTextUseCase,
     private val normalizeSearchText: NormalizeSearchTextUseCase,
@@ -1562,8 +1564,13 @@ class CampfireViewModel(
      * running: iOS ends a process in the background without a word, and so does Android to a task swiped away and a
      * mobile browser to a tab it wants the memory of. Stores the unsaved text, or removes what was stored when there
      * is none. Nothing before the draft a previous run left has been read, or it would be written over.
+     *
+     * An automatic sync run that is still waiting for the library to settle starts now as well: the phones keep a run
+     * alive in the background only once the app has told them about it, which it does from the composition, and that
+     * stops soon after this.
      */
     fun onAppPaused() {
+        startScheduledSynchronization()
         if (_isEditorDraftRecoveryPending.value) return
         val draft = _editorDraft.value?.takeIf { hasUnsavedEditorText() }
         viewModelScope.launch { storeEditorDraft(draft) }

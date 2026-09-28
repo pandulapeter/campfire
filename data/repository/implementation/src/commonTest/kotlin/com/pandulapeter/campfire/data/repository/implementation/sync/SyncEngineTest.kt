@@ -16,6 +16,7 @@ import com.pandulapeter.campfire.data.model.domain.SyncAccount
 import com.pandulapeter.campfire.data.model.domain.SyncDeletionDirection
 import com.pandulapeter.campfire.data.model.domain.SyncDeletionPolicy
 import com.pandulapeter.campfire.data.model.domain.SyncProviderId
+import com.pandulapeter.campfire.data.repository.implementation.LibraryChanges
 import com.pandulapeter.campfire.data.repository.implementation.LibraryFileLock
 import com.pandulapeter.campfire.data.repository.implementation.SongContentRepositoryImpl
 import com.pandulapeter.campfire.data.repository.implementation.SongRepositoryImpl
@@ -227,7 +228,7 @@ class SyncEngineTest {
         val local = FakeLibraryFileLocalSource(files = mapOf(song(1) to ORIGINAL))
         val songLocalSource = LibrarySongLocalSource(local)
         val lock = LibraryFileLock()
-        val repository = SongRepositoryImpl(songLocalSource, SongContentRepositoryImpl(songLocalSource), lock)
+        val repository = SongRepositoryImpl(songLocalSource, SongContentRepositoryImpl(songLocalSource), lock, LibraryChanges())
         val provider = FakeSyncProvider(files = mapOf(song(1) to THERE))
         // The save starts once the engine has decided the file is still the one it saw, and gets as far as it can
         // before the engine writes the download.
@@ -258,7 +259,7 @@ class SyncEngineTest {
         val local = FakeLibraryFileLocalSource(files = mapOf(song(1) to ORIGINAL, song(2) to ORIGINAL))
         val songLocalSource = LibrarySongLocalSource(local)
         val lock = LibraryFileLock()
-        val repository = SongRepositoryImpl(songLocalSource, SongContentRepositoryImpl(songLocalSource), lock)
+        val repository = SongRepositoryImpl(songLocalSource, SongContentRepositoryImpl(songLocalSource), lock, LibraryChanges())
         val provider = FakeSyncProvider(files = mapOf(song(2) to ORIGINAL))
         var save: Job? = null
         local.onDelete = { key ->

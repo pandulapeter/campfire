@@ -35,7 +35,7 @@ class SetlistRepositoryImplTest {
     @Test
     fun `a rename keeps what the setlist gained since the caller read it`() = runTest {
         val localSource = FakeSetlistLocalSource(listOf(setlist(FILE_NAME, "a.cho")))
-        val repository = SetlistRepositoryImpl(localSource, LibraryFileLock())
+        val repository = SetlistRepositoryImpl(localSource, LibraryFileLock(), LibraryChanges())
 
         repository.updateSetlist(FILE_NAME) { it.copy(entries = it.entries + Setlist.Entry("b.cho"), isArchived = true) }
         val renamed = repository.renameSetlist(FILE_NAME, "Summer", "For the lake")
@@ -53,7 +53,7 @@ class SetlistRepositoryImplTest {
     @Test
     fun `a rename of a setlist that is gone writes nothing`() = runTest {
         val localSource = FakeSetlistLocalSource(emptyList())
-        val repository = SetlistRepositoryImpl(localSource, LibraryFileLock())
+        val repository = SetlistRepositoryImpl(localSource, LibraryFileLock(), LibraryChanges())
 
         assertNull(repository.renameSetlist(FILE_NAME, "Summer", ""))
         assertTrue(localSource.files.isEmpty())
@@ -62,7 +62,7 @@ class SetlistRepositoryImplTest {
     @Test
     fun `a rename waits for the change being written`() = runTest {
         val localSource = FakeSetlistLocalSource(listOf(setlist(FILE_NAME, "a.cho")))
-        val repository = SetlistRepositoryImpl(localSource, LibraryFileLock())
+        val repository = SetlistRepositoryImpl(localSource, LibraryFileLock(), LibraryChanges())
         val gate = CompletableDeferred<Unit>().also { localSource.saveGate = it }
 
         launch { repository.updateSetlist(FILE_NAME) { it.copy(entries = it.entries + Setlist.Entry("b.cho")) } }
@@ -81,7 +81,7 @@ class SetlistRepositoryImplTest {
     @Test
     fun `a deletion waits for the change being written`() = runTest {
         val localSource = FakeSetlistLocalSource(listOf(setlist(FILE_NAME, "a.cho")))
-        val repository = SetlistRepositoryImpl(localSource, LibraryFileLock())
+        val repository = SetlistRepositoryImpl(localSource, LibraryFileLock(), LibraryChanges())
         val gate = CompletableDeferred<Unit>().also { localSource.saveGate = it }
 
         launch { repository.updateSetlist(FILE_NAME) { it.copy(entries = it.entries + Setlist.Entry("b.cho")) } }
@@ -98,7 +98,7 @@ class SetlistRepositoryImplTest {
     @Test
     fun `a save waits for the change being written`() = runTest {
         val localSource = FakeSetlistLocalSource(listOf(setlist(FILE_NAME, "a.cho")))
-        val repository = SetlistRepositoryImpl(localSource, LibraryFileLock())
+        val repository = SetlistRepositoryImpl(localSource, LibraryFileLock(), LibraryChanges())
         val gate = CompletableDeferred<Unit>().also { localSource.saveGate = it }
 
         launch { repository.updateSetlist(FILE_NAME) { it.copy(entries = it.entries + Setlist.Entry("b.cho")) } }
@@ -114,7 +114,7 @@ class SetlistRepositoryImplTest {
     @Test
     fun `two setlists created at once get a name each`() = runTest {
         val localSource = FakeSetlistLocalSource(emptyList())
-        val repository = SetlistRepositoryImpl(localSource, LibraryFileLock())
+        val repository = SetlistRepositoryImpl(localSource, LibraryFileLock(), LibraryChanges())
 
         val created = listOf(
             async { repository.createSetlist("Gig", "", 1) },
@@ -129,7 +129,7 @@ class SetlistRepositoryImplTest {
     @Test
     fun `a created setlist whose name the list already holds is listed once`() = runTest {
         val localSource = FakeSetlistLocalSource(listOf(setlist(FILE_NAME)))
-        val repository = SetlistRepositoryImpl(localSource, LibraryFileLock())
+        val repository = SetlistRepositoryImpl(localSource, LibraryFileLock(), LibraryChanges())
         repository.loadSetlistsIfNeeded()
         localSource.files.remove(FILE_NAME)
 
@@ -141,7 +141,7 @@ class SetlistRepositoryImplTest {
     @Test
     fun `a creation waits for the change being written`() = runTest {
         val localSource = FakeSetlistLocalSource(listOf(setlist(FILE_NAME, "a.cho")))
-        val repository = SetlistRepositoryImpl(localSource, LibraryFileLock())
+        val repository = SetlistRepositoryImpl(localSource, LibraryFileLock(), LibraryChanges())
         val gate = CompletableDeferred<Unit>().also { localSource.saveGate = it }
 
         launch { repository.updateSetlist(FILE_NAME) { it.copy(entries = it.entries + Setlist.Entry("b.cho")) } }
@@ -159,7 +159,7 @@ class SetlistRepositoryImplTest {
     @Test
     fun `a change whose caller is cancelled after the file was written still reaches the cache`() = runTest {
         val localSource = FakeSetlistLocalSource(listOf(setlist(FILE_NAME, "a.cho")))
-        val repository = SetlistRepositoryImpl(localSource, LibraryFileLock())
+        val repository = SetlistRepositoryImpl(localSource, LibraryFileLock(), LibraryChanges())
         val gate = CompletableDeferred<Unit>().also { localSource.afterSaveGate = it }
 
         val job = launch { repository.updateSetlist(FILE_NAME) { it.copy(entries = it.entries + Setlist.Entry("b.cho")) } }
@@ -174,7 +174,7 @@ class SetlistRepositoryImplTest {
     @Test
     fun `a change cancelled before it took the lock writes nothing`() = runTest {
         val localSource = FakeSetlistLocalSource(listOf(setlist(FILE_NAME, "a.cho")))
-        val repository = SetlistRepositoryImpl(localSource, LibraryFileLock())
+        val repository = SetlistRepositoryImpl(localSource, LibraryFileLock(), LibraryChanges())
         val gate = CompletableDeferred<Unit>().also { localSource.saveGate = it }
 
         launch { repository.updateSetlist(FILE_NAME) { it.copy(entries = it.entries + Setlist.Entry("b.cho")) } }
@@ -191,7 +191,7 @@ class SetlistRepositoryImplTest {
     @Test
     fun `a change is built on the file rather than on the list read before it`() = runTest {
         val localSource = FakeSetlistLocalSource(listOf(setlist(FILE_NAME, "a.cho", "b.cho")))
-        val repository = SetlistRepositoryImpl(localSource, LibraryFileLock())
+        val repository = SetlistRepositoryImpl(localSource, LibraryFileLock(), LibraryChanges())
         repository.loadSetlistsIfNeeded()
         localSource.files[FILE_NAME] = setlist(FILE_NAME, "b.cho", "a.cho", "c.cho")
 
@@ -206,7 +206,7 @@ class SetlistRepositoryImplTest {
     @Test
     fun `the cache keeps the size the write reported`() = runTest {
         val localSource = FakeSetlistLocalSource(listOf(setlist(FILE_NAME, "a.cho")))
-        val repository = SetlistRepositoryImpl(localSource, LibraryFileLock())
+        val repository = SetlistRepositoryImpl(localSource, LibraryFileLock(), LibraryChanges())
         repository.loadSetlistsIfNeeded()
 
         repository.updateSetlist(FILE_NAME) { it.copy(isArchived = true) }
@@ -217,7 +217,7 @@ class SetlistRepositoryImplTest {
     @Test
     fun `a rename is built on the file as well`() = runTest {
         val localSource = FakeSetlistLocalSource(listOf(setlist(FILE_NAME, "a.cho", "b.cho")))
-        val repository = SetlistRepositoryImpl(localSource, LibraryFileLock())
+        val repository = SetlistRepositoryImpl(localSource, LibraryFileLock(), LibraryChanges())
         repository.loadSetlistsIfNeeded()
         localSource.files[FILE_NAME] = setlist(FILE_NAME, "b.cho", "a.cho", "c.cho")
 
@@ -229,7 +229,7 @@ class SetlistRepositoryImplTest {
     @Test
     fun `a change to a setlist whose file is gone writes nothing and drops it from the list`() = runTest {
         val localSource = FakeSetlistLocalSource(listOf(setlist(FILE_NAME, "a.cho")))
-        val repository = SetlistRepositoryImpl(localSource, LibraryFileLock())
+        val repository = SetlistRepositoryImpl(localSource, LibraryFileLock(), LibraryChanges())
         repository.loadSetlistsIfNeeded()
         localSource.files.remove(FILE_NAME)
 
@@ -241,7 +241,7 @@ class SetlistRepositoryImplTest {
     @Test
     fun `a setlist whose file cannot be decoded is changed as the list has it`() = runTest {
         val localSource = FakeSetlistLocalSource(listOf(setlist(FILE_NAME, "a.cho")))
-        val repository = SetlistRepositoryImpl(localSource, LibraryFileLock())
+        val repository = SetlistRepositoryImpl(localSource, LibraryFileLock(), LibraryChanges())
         repository.loadSetlistsIfNeeded()
         localSource.isUnreadable = true
 
@@ -253,7 +253,7 @@ class SetlistRepositoryImplTest {
     @Test
     fun `the setlists naming a song are read from the files`() = runTest {
         val localSource = FakeSetlistLocalSource(listOf(setlist(FILE_NAME, "a.cho")))
-        val repository = SetlistRepositoryImpl(localSource, LibraryFileLock())
+        val repository = SetlistRepositoryImpl(localSource, LibraryFileLock(), LibraryChanges())
         repository.loadSetlistsIfNeeded()
         localSource.files[SECOND_FILE_NAME] = setlist(SECOND_FILE_NAME, "a.cho", "b.cho")
 
@@ -265,7 +265,7 @@ class SetlistRepositoryImplTest {
     @Test
     fun `a setlist only the cache knows still counts`() = runTest {
         val localSource = FakeSetlistLocalSource(listOf(setlist(FILE_NAME, "a.cho")))
-        val repository = SetlistRepositoryImpl(localSource, LibraryFileLock())
+        val repository = SetlistRepositoryImpl(localSource, LibraryFileLock(), LibraryChanges())
         repository.loadSetlistsIfNeeded()
         localSource.unlistable = setOf(FILE_NAME)
 
@@ -275,7 +275,7 @@ class SetlistRepositoryImplTest {
     @Test
     fun `setlists that cannot be listed are not taken for none`() = runTest {
         val localSource = FakeSetlistLocalSource(listOf(setlist(FILE_NAME, "a.cho")))
-        val repository = SetlistRepositoryImpl(localSource, LibraryFileLock())
+        val repository = SetlistRepositoryImpl(localSource, LibraryFileLock(), LibraryChanges())
         repository.loadSetlistsIfNeeded()
         localSource.isListingBroken = true
 

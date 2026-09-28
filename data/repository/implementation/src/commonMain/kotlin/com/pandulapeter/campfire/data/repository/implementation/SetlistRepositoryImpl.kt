@@ -25,6 +25,7 @@ import org.koin.core.annotation.Single
 internal class SetlistRepositoryImpl(
     private val setlistLocalSource: SetlistLocalSource,
     private val libraryFileLock: LibraryFileLock,
+    private val libraryChanges: LibraryChanges,
 ) : BaseLocalDataRepository<List<Setlist>>(), SetlistRepository {
 
     override val setlists = dataState
@@ -86,6 +87,7 @@ internal class SetlistRepositoryImpl(
     override suspend fun createSetlist(title: String, description: String, priority: Int): Setlist = writing {
         setlistLocalSource.createSetlist(title = title, description = description, priority = priority).also { created ->
             updateData { current -> current.orEmpty().filterNot { it.fileName == created.fileName } + created }
+            libraryChanges.onLibraryChanged()
         }
     }
 
@@ -103,6 +105,7 @@ internal class SetlistRepositoryImpl(
                 updateData { current ->
                     current.orEmpty().filterNot { it.fileName == fileName || it.fileName == renamed.fileName } + renamed
                 }
+                libraryChanges.onLibraryChanged()
             }
         }
     }
@@ -110,7 +113,7 @@ internal class SetlistRepositoryImpl(
     override suspend fun parseSetlist(document: String) = setlistLocalSource.parseSetlist(document)
 
     override suspend fun importSetlist(setlist: Setlist, shouldReplace: Boolean) = writing {
-        setlistLocalSource.importSetlist(setlist, shouldReplace)
+        setlistLocalSource.importSetlist(setlist, shouldReplace).also { libraryChanges.onLibraryChanged() }
     }
 
     override suspend fun adoptImported(setlists: Collection<Setlist>) {
@@ -126,6 +129,7 @@ internal class SetlistRepositoryImpl(
     override suspend fun deleteSetlist(fileName: String) = writing {
         setlistLocalSource.deleteSetlist(fileName)
         forget(fileName)
+        libraryChanges.onLibraryChanged()
     }
 
     /**
@@ -161,6 +165,7 @@ internal class SetlistRepositoryImpl(
     private suspend fun write(setlist: Setlist): Setlist {
         val saved = setlistLocalSource.saveSetlist(setlist)
         updateData { current -> current.orEmpty().filterNot { it.fileName == saved.fileName } + saved }
+        libraryChanges.onLibraryChanged()
         return saved
     }
 }

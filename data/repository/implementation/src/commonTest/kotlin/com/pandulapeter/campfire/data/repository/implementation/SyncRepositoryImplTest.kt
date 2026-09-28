@@ -41,6 +41,7 @@ import com.pandulapeter.campfire.data.source.remote.api.SyncRemoteStorageFullExc
 import com.pandulapeter.campfire.data.source.remote.api.hashing.localContentHash
 import com.pandulapeter.campfire.data.source.remote.api.model.AuthorizationCompletionPage
 import kotlinx.coroutines.CompletableDeferred
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.awaitCancellation
 import kotlinx.coroutines.cancelAndJoin
 import kotlinx.coroutines.delay
@@ -50,6 +51,7 @@ import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.runCurrent
 import kotlinx.coroutines.test.runTest
+import kotlinx.coroutines.withContext
 import kotlinx.serialization.json.Json
 import kotlin.test.Test
 import kotlin.test.assertEquals
@@ -77,6 +79,33 @@ class SyncRepositoryImplTest {
 
         assertEquals(SyncOutcome.Failure(SyncFailureReason.STORAGE), state.lastOutcome)
         assertNull(state.progress)
+    }
+
+    @Test
+    fun `an automatic run starts straight away when the app leaves the front`() = runTest {
+        val repository = repository(provider = FakeSyncProvider(files = mapOf(song(1) to "One".encodeToByteArray()), account = ACCOUNT))
+
+        repository.restore()
+        repository.scheduleSynchronization()
+        repository.startScheduledSynchronization()
+        val state = repository.awaitOutcome()
+
+        assertEquals(1, assertIs<SyncOutcome.Success>(state.lastOutcome).summary.downloaded)
+    }
+
+    @Test
+    fun `stopping sync drops the automatic run that is waiting`() = runTest {
+        val provider = FakeSyncProvider(account = ACCOUNT)
+        val repository = repository(provider = provider)
+
+        repository.restore()
+        repository.scheduleSynchronization()
+        repository.cancelSynchronization()
+        repository.startScheduledSynchronization()
+        // The run would start on the repository's own dispatcher, so the test waits in real time for one that must not.
+        withContext(Dispatchers.Default) { delay(200) }
+
+        assertEquals(0, provider.listCount)
     }
 
     @Test
@@ -805,6 +834,7 @@ class SyncRepositoryImplTest {
         setlistRepository = setlistRepository,
         libraryFileLocalSource = libraryFileLocalSource,
         libraryFileLock = LibraryFileLock(),
+        libraryChanges = LibraryChanges(),
     )
 
     /**

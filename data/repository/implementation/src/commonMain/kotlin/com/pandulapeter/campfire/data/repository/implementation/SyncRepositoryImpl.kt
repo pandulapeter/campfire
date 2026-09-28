@@ -7,7 +7,7 @@
  * If a copy of the MPL was not distributed with this file, You can obtain one at
  * https://mozilla.org/MPL/2.0/.
  */
-@file:OptIn(ExperimentalTime::class)
+@file:OptIn(ExperimentalTime::class, ExperimentalAtomicApi::class)
 
 package com.pandulapeter.campfire.data.repository.implementation
 
@@ -41,6 +41,8 @@ import com.pandulapeter.campfire.data.source.remote.api.model.RemoteAuthorizatio
 import com.pandulapeter.campfire.data.source.remote.api.model.redirectParameters
 import kotlinx.coroutines.cancelAndJoin
 import kotlin.concurrent.Volatile
+import kotlin.concurrent.atomics.AtomicReference
+import kotlin.concurrent.atomics.ExperimentalAtomicApi
 import kotlin.time.Clock
 import kotlin.time.Duration
 import kotlin.time.Duration.Companion.seconds
@@ -51,13 +53,16 @@ import kotlin.time.measureTime
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineExceptionHandler
 import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.CoroutineStart
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.NonCancellable
 import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.sync.Mutex
@@ -89,6 +94,7 @@ internal class SyncRepositoryImpl(
     private val setlistRepository: SetlistRepository,
     libraryFileLocalSource: LibraryFileLocalSource,
     libraryFileLock: LibraryFileLock,
+    libraryChanges: LibraryChanges,
 ) : SyncRepository {
 
     private val providers = syncProviders.all
@@ -111,7 +117,16 @@ internal class SyncRepositoryImpl(
             println("A sync job ended in an exception nothing caught: $throwable")
         },
     )
-    private var syncJob: Job? = null
+
+    /**
+     * The run that is going, or the last one. Swapped atomically rather than assigned: the buttons start and stop runs
+     * from the main thread, while an automatic run is started from this scope's own, and two starters that both found
+     * no run going would each start one, the second one then being the only one Stop can reach.
+     */
+    private val syncJob = AtomicReference<Job?>(null)
+
+    /** When the automatic run [scheduleSynchronization] asked for is to start, or null while none is waiting. */
+    private val scheduledRunDueAt = MutableStateFlow<TimeMark?>(null)
 
     /** One run at a time: two of them over the same files would each undo half of what the other did. */
     private val mutex = Mutex()
@@ -138,6 +153,20 @@ internal class SyncRepositoryImpl(
     private var indexWriteJob: Job? = null
     private var accountRefreshJob: Job? = null
     private var lastIndexWrite: TimeMark? = null
+
+    init {
+        scope.launch { libraryChanges.changes.collect { scheduleSynchronization() } }
+        // collectLatest is the debounce: a request that arrives while the previous one is still waiting, or still waiting
+        // for a run to end, moves the start instead of adding a second run.
+        scope.launch {
+            scheduledRunDueAt.collectLatest { dueAt ->
+                if (dueAt == null) return@collectLatest
+                delay(-dueAt.elapsedNow())
+                syncJob.load()?.join()
+                if (scheduledRunDueAt.compareAndSet(dueAt, null)) startRun(SyncDeletionPolicy.ASK)
+            }
+        }
+    }
 
     override suspend fun restore() = restoreMutex.withLock { restoreConnection() }
 
@@ -296,8 +325,8 @@ internal class SyncRepositoryImpl(
         accountRefreshJob?.cancel()
         // A run that is still going would carry on against an account that is gone, fail, and report that failure
         // onto an account the user just disconnected.
-        syncJob?.cancelAndJoin()
-        syncJob = null
+        scheduledRunDueAt.value = null
+        syncJob.exchange(null)?.cancelAndJoin()
         withContext(NonCancellable) {
             providers.forEach { provider ->
                 // Asked inside the try, so that credentials that cannot be read right now still end in a disconnect.
@@ -376,14 +405,37 @@ internal class SyncRepositoryImpl(
      * about the files that were gone when it was asked, not a setting every later run should inherit.
      */
     override fun synchronize(deletionPolicy: SyncDeletionPolicy) {
-        if (syncJob?.isActive == true) return
-        syncJob = scope.launch { runSynchronization(deletionPolicy) }
+        // The run starts after every change an automatic one is waiting for, so it carries them too.
+        if (startRun(deletionPolicy)) scheduledRunDueAt.value = null
+    }
+
+    override fun scheduleSynchronization() {
+        if (_syncState.value !is SyncState.Connected) return
+        scheduledRunDueAt.value = TimeSource.Monotonic.markNow() + AUTOMATIC_RUN_DELAY
+    }
+
+    override fun startScheduledSynchronization() {
+        scheduledRunDueAt.update { dueAt -> dueAt?.let { TimeSource.Monotonic.markNow() } }
     }
 
     /** Stops a run where it is. What has already moved stays moved, and the next run picks up from there. */
     override fun cancelSynchronization() {
-        syncJob?.cancel()
-        syncJob = null
+        scheduledRunDueAt.value = null
+        syncJob.exchange(null)?.cancel()
+    }
+
+    /** Starts a run unless one is going, and answers whether it did. */
+    private fun startRun(deletionPolicy: SyncDeletionPolicy): Boolean {
+        val current = syncJob.load()
+        if (current?.isActive == true) return false
+        // Lazy, so that a run that lost the race below is dropped before it has done anything.
+        val run = scope.launch(start = CoroutineStart.LAZY) { runSynchronization(deletionPolicy) }
+        if (!syncJob.compareAndSet(current, run)) {
+            run.cancel()
+            return false
+        }
+        run.start()
+        return true
     }
 
     /**
@@ -394,7 +446,7 @@ internal class SyncRepositoryImpl(
     private suspend fun runSynchronization(deletionPolicy: SyncDeletionPolicy) {
         // No check for the lock being taken: a run asked for while the previous one is still clearing up waits for
         // it rather than being dropped, which is what "stop, then start again" looks like from the settings screen.
-        // Two runs at once are prevented by syncJob in synchronize().
+        // Two runs at once are prevented by syncJob in startRun().
         mutex.withLock {
             val provider = try {
                 providers.firstOrNull { it.isConnected() }
@@ -814,6 +866,9 @@ internal class SyncRepositoryImpl(
     private companion object {
         /** How much of a run a killed app can lose at most, traded against rewriting the whole index per file. */
         val INDEX_WRITE_INTERVAL = 2.seconds
+
+        /** How long the library has to stay unchanged before an automatic run starts, see [scheduleSynchronization]. */
+        val AUTOMATIC_RUN_DELAY = 10.seconds
 
         val disconnectedResult = SyncRepository.RestoreResult(
             isConnected = false,

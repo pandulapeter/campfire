@@ -23,6 +23,7 @@ import com.pandulapeter.campfire.domain.api.useCases.ForgetSyncConnectionUseCase
 import com.pandulapeter.campfire.domain.api.useCases.GetSyncProvidersUseCase
 import com.pandulapeter.campfire.domain.api.useCases.GetSyncStateUseCase
 import com.pandulapeter.campfire.domain.api.useCases.RestoreSyncUseCase
+import com.pandulapeter.campfire.domain.api.useCases.StartScheduledSynchronizationUseCase
 import com.pandulapeter.campfire.domain.api.useCases.SynchronizeLibraryUseCase
 import org.koin.core.annotation.Factory
 
@@ -106,6 +107,14 @@ class SynchronizeLibraryUseCaseImpl internal constructor(
 ) : SynchronizeLibraryUseCase {
 
     override operator fun invoke(deletionPolicy: SyncDeletionPolicy) = syncRepository.synchronize(deletionPolicy)
+}
+
+@Factory
+class StartScheduledSynchronizationUseCaseImpl internal constructor(
+    private val syncRepository: SyncRepository,
+) : StartScheduledSynchronizationUseCase {
+
+    override operator fun invoke() = syncRepository.startScheduledSynchronization()
 }
 
 @Factory

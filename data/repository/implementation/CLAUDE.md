@@ -157,6 +157,17 @@ and a repository that has not been read yet rescans instead, since there is no l
   A run the app never came back from is found by the index's `isRunInProgress` marker at `restore`, reported as
   interrupted next time, and that run is left for the user to start: `RestoreResult.wasInterrupted` keeps
   `RestoreSyncUseCase` from starting one on launch, which would replace the message before it could be read.
+  **Automatic runs wait for the library to settle**: `scheduleSynchronization` — asked for by every change the app
+  makes to a song or setlist file, which the two repositories announce through `LibraryChanges` —
+  sets when the run is due, ten seconds after the latest request (`AUTOMATIC_RUN_DELAY`), and one `collectLatest` over
+  that moment is the debounce: a request that lands while the previous one is still waiting moves the start rather than
+  adding a run. A request made while a run is going is carried out after it, since the run may have read the file
+  before the change. The files a run writes itself go around the repositories, so no run schedules the next one.
+  `synchronize` — the button, a new connection and a launch — takes the place of a waiting run, `cancelSynchronization` drops it with the run it
+  stops, `disconnect` drops it too, and `startScheduledSynchronization` starts it at once, which the app asks for as
+  it leaves the front, the last moment a phone lets it start a run that survives the background. The run slot is an
+  `AtomicReference` swapped with `compareAndSet`, since the buttons start runs from the main thread and the debounce
+  from the repository's own scope.
   `restore` is asked once per ViewModel — on Android once per activity — so a call that finds the state already
   `Connected` answers from it and reads nothing: read again from the disk, a run that is going would look like one
   that was interrupted, and its marker would be cleared under it.

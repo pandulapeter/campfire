@@ -12,9 +12,7 @@
 - Haptic effects
 - Chord diagrams
 - Optional close confirmation dialog on supported platforms
-- Add genre tags, similar to language tags
 - Add support for the Nashville chord system
 - Once Microsoft Store, App Store and Mac App Store listings are approved, update included URL-s + this Readme
-- Add more automatic sync triggers
 - Add support for external control devices with a focus-by-section feature
 - Each top-level Composable should be defined in a separate file

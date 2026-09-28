@@ -52,7 +52,9 @@ interface RestoreSyncUseCase {
 
     /**
      * Picks sync back up at start up: reads the stored account, and finishes an authorization the app was closed in
-     * the middle of. Runs a first sync if that leaves it connected.
+     * the middle of. Runs a first sync if that leaves it connected - straight away, since the library the app opens on
+     * should be the one in the cloud folder as soon as possible, and the edits that the other automatic runs wait out
+     * have not started yet.
      *
      * @return Whether this start up was the answer to a consent page the app had been sent away to, which happens
      *   on the web, and on Android when the process was reclaimed behind the browser. True either way the service answered: it says the user is coming back from connecting

@@ -26,6 +26,16 @@ interface SynchronizeLibraryUseCase {
     operator fun invoke(deletionPolicy: SyncDeletionPolicy = SyncDeletionPolicy.ASK)
 }
 
+interface StartScheduledSynchronizationUseCase {
+
+    /**
+     * Starts the automatic run that is waiting for the library to settle (see `SyncRepository.scheduleSynchronization`)
+     * straight away, and does nothing when none is waiting. For the moment the app leaves the front, the last moment a
+     * phone lets it start a run that carries on in the background.
+     */
+    operator fun invoke()
+}
+
 interface CancelSynchronizationUseCase {
 
     /** Stops a run where it is. What has already moved stays moved, and the next run picks up from there. */
