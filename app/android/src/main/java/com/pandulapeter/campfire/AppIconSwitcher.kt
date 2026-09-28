@@ -58,25 +58,32 @@ internal object AppIconSwitcher {
             themeColor.appIconColor
         }
         if (target == appliedTarget) return
-        val packageManager = context.packageManager
-        val initialEntry = component(context, INITIAL_ENTRY)
-        val hasNeverSwitched = packageManager.getComponentEnabledSetting(initialEntry) == PackageManager.COMPONENT_ENABLED_STATE_DEFAULT
-        if (hasNeverSwitched && target == UserPreferences.ThemeColor.CAMPFIRE) {
-            // The manifest's own entry is already the one of the app's own color.
+        try {
+            val packageManager = context.packageManager
+            val initialEntry = component(context, INITIAL_ENTRY)
+            val hasNeverSwitched = packageManager.getComponentEnabledSetting(initialEntry) == PackageManager.COMPONENT_ENABLED_STATE_DEFAULT
+            if (hasNeverSwitched && target == UserPreferences.ThemeColor.CAMPFIRE) {
+                // The manifest's own entry is already the one of the app's own color.
+                appliedTarget = target
+                return
+            }
+            if (hasNeverSwitched && !isLeaving) return
+            // The new entry is enabled before anything is disabled, so that there is never a moment in which the app has
+            // no launcher entry at all - a launcher that looks then would take the app for one that cannot be opened.
+            ENTRIES.entries.sortedByDescending { (color, _) -> color == target }.forEach { (color, name) ->
+                packageManager.setState(
+                    component = component(context, name),
+                    state = if (color == target) PackageManager.COMPONENT_ENABLED_STATE_ENABLED else PackageManager.COMPONENT_ENABLED_STATE_DEFAULT,
+                )
+            }
+            packageManager.setState(component = initialEntry, state = PackageManager.COMPONENT_ENABLED_STATE_DISABLED)
             appliedTarget = target
-            return
+        } catch (exception: Exception) {
+            // A device policy (a managed or work profile, some OEM launchers) may refuse a component switch, and this
+            // runs in onStop, where a crash would come back every time the app is left. The icon stays as it was, and
+            // with the target not recorded as applied, the next color change or the next stop tries again.
+            println("Could not change the launcher icon: ${exception.message}")
         }
-        if (hasNeverSwitched && !isLeaving) return
-        // The new entry is enabled before anything is disabled, so that there is never a moment in which the app has no
-        // launcher entry at all - a launcher that looks then would take the app for one that cannot be opened.
-        ENTRIES.entries.sortedByDescending { (color, _) -> color == target }.forEach { (color, name) ->
-            packageManager.setState(
-                component = component(context, name),
-                state = if (color == target) PackageManager.COMPONENT_ENABLED_STATE_ENABLED else PackageManager.COMPONENT_ENABLED_STATE_DEFAULT,
-            )
-        }
-        packageManager.setState(component = initialEntry, state = PackageManager.COMPONENT_ENABLED_STATE_DISABLED)
-        appliedTarget = target
     }
 
     private fun PackageManager.setState(component: ComponentName, state: Int) {
