@@ -91,6 +91,7 @@ import com.pandulapeter.campfire.domain.api.useCases.SynchronizeLibraryUseCase
 import com.pandulapeter.campfire.domain.api.useCases.TransposeChordProTextUseCase
 import com.pandulapeter.campfire.domain.api.useCases.TransposeChordProUseCase
 import com.pandulapeter.campfire.domain.api.useCases.UpdateSetlistUseCase
+import com.pandulapeter.campfire.domain.api.useCases.UpdateUserPreferencesUseCase
 import com.pandulapeter.campfire.presentation.ui.components.ScrollPosition
 import com.pandulapeter.campfire.presentation.ui.components.SearchState
 import com.pandulapeter.campfire.presentation.ui.components.isAnyOverflowMenuOpen
@@ -172,6 +173,7 @@ class CampfireViewModel(
     private val deleteSetlist: DeleteSetlistUseCase,
     private val saveSongContent: SaveSongContentUseCase,
     private val saveUserPreferences: SaveUserPreferencesUseCase,
+    private val updateUserPreferences: UpdateUserPreferencesUseCase,
     private val setChordProCoverArt: SetChordProCoverArtUseCase,
     private val setChordProLanguages: SetChordProLanguagesUseCase,
     private val setChordProTag: SetChordProTagUseCase,
@@ -1025,7 +1027,7 @@ class CampfireViewModel(
         }
         viewModelScope.launch {
             unsavedFontScale.filterNotNull().debounce(FONT_SCALE_SAVE_DELAY_MILLIS).collect { fontScale ->
-                userPreferences.value?.let { saveUserPreferences(it.copy(fontScale = fontScale)) }
+                updateUserPreferences { it.copy(fontScale = fontScale) }
                 // Only if nothing newer arrived while this one was being saved, or that one would never be.
                 unsavedFontScale.compareAndSet(fontScale, null)
             }
@@ -1818,23 +1820,22 @@ class CampfireViewModel(
      * drawn with. A setlist's entry only reaches the screen once its write has been round tripped through the
      * repository, and every tap inside that round trip reads the same number off the stepper, so an absolute value would
      * turn five quick taps into two. The setlist's transform is handed the latest version of the file, one write at a
-     * time ([UpdateSetlistUseCase]); the preferences are published before they are written, so [userPreferences]
-     * already holds the previous tap.
+     * time ([UpdateSetlistUseCase]), and the preferences' is applied to what the repository holds when it runs
+     * ([UpdateUserPreferencesUseCase]): [userPreferences] is a few hops downstream of it and may not have the previous
+     * tap yet.
      *
      * A setlist that is gone by now is not brought back, and saying nothing would leave a stepper that does nothing.
      */
     private fun changeTransposition(songFileName: String, setlistFileName: String?, change: (Int) -> Int) = launchLibraryChange {
         if (setlistFileName == null) {
-            userPreferences.value?.let { preferences ->
+            updateUserPreferences { preferences ->
                 val transposition = change(preferences.transpositions[songFileName] ?: 0).coerceIn(MIN_TRANSPOSITION, MAX_TRANSPOSITION)
-                saveUserPreferences(
-                    preferences.copy(
-                        transpositions = if (transposition == 0) {
-                            preferences.transpositions - songFileName
-                        } else {
-                            preferences.transpositions + (songFileName to transposition)
-                        }
-                    )
+                preferences.copy(
+                    transpositions = if (transposition == 0) {
+                        preferences.transpositions - songFileName
+                    } else {
+                        preferences.transpositions + (songFileName to transposition)
+                    }
                 )
             }
         } else {
@@ -2300,21 +2301,21 @@ class CampfireViewModel(
     // User preferences
 
 
-    fun setShouldShowArchivedSetlists(value: Boolean) = updateUserPreferences { copy(shouldShowArchivedSetlists = value) }
+    fun setShouldShowArchivedSetlists(value: Boolean) = changeUserPreferences { copy(shouldShowArchivedSetlists = value) }
 
-    fun setPerformanceModeEnabled(value: Boolean) = updateUserPreferences { copy(isPerformanceModeEnabled = value) }
+    fun setPerformanceModeEnabled(value: Boolean) = changeUserPreferences { copy(isPerformanceModeEnabled = value) }
 
-    fun setLyricsOnlyModeEnabled(value: Boolean) = updateUserPreferences { copy(isLyricsOnlyModeEnabled = value) }
+    fun setLyricsOnlyModeEnabled(value: Boolean) = changeUserPreferences { copy(isLyricsOnlyModeEnabled = value) }
 
-    fun setHorizontalSectionFlowEnabled(value: Boolean) = updateUserPreferences { copy(isHorizontalSectionFlowEnabled = value) }
+    fun setHorizontalSectionFlowEnabled(value: Boolean) = changeUserPreferences { copy(isHorizontalSectionFlowEnabled = value) }
 
     /**
      * Folds or unfolds one section of a song (or one tab or grid inside it), [key] being the name the song details
      * screen gives it. One set per song, wherever it is opened from, and kept in the preferences rather than in a
      * setlist, since it is how one reader reads the song rather than how the band plays it. It toggles what the
-     * preferences hold when the write runs, which already has the previous tap in it (see [changeTransposition]).
+     * preferences hold when the change runs, which already has the previous tap in it (see [changeTransposition]).
      */
-    fun toggleSectionFold(songFileName: String, key: String) = updateUserPreferences {
+    fun toggleSectionFold(songFileName: String, key: String) = changeUserPreferences {
         val folded = foldedSections[songFileName].orEmpty().let { if (key in it) it - key else it + key }
         copy(foldedSections = if (folded.isEmpty()) foldedSections - songFileName else foldedSections + (songFileName to folded))
     }
@@ -2346,9 +2347,9 @@ class CampfireViewModel(
         settledFontScaleState.floatValue = liveFontScale.floatValue
     }
 
-    fun setSortingMode(value: UserPreferences.SortingMode) = updateUserPreferences { copy(sortingMode = value) }
+    fun setSortingMode(value: UserPreferences.SortingMode) = changeUserPreferences { copy(sortingMode = value) }
 
-    fun setSetlistSortingMode(value: UserPreferences.SetlistSortingMode) = updateUserPreferences { copy(setlistSortingMode = value) }
+    fun setSetlistSortingMode(value: UserPreferences.SetlistSortingMode) = changeUserPreferences { copy(setlistSortingMode = value) }
 
     /** A selected tag is matched the way the filter itself matches it, without regard to case. */
     fun toggleTagFilter(tag: String) = _songFilter.update { filter ->
@@ -2362,9 +2363,9 @@ class CampfireViewModel(
         filter.copy(selectedTags = filter.selectedTags.filterNotTo(mutableSetOf()) { it.lowercase() in libraryTags })
     }
 
-    fun setTagMatchMode(value: UserPreferences.MatchMode) = updateUserPreferences { copy(tagMatchMode = value) }
+    fun setTagMatchMode(value: UserPreferences.MatchMode) = changeUserPreferences { copy(tagMatchMode = value) }
 
-    fun setLanguageMatchMode(value: UserPreferences.MatchMode) = updateUserPreferences { copy(languageMatchMode = value) }
+    fun setLanguageMatchMode(value: UserPreferences.MatchMode) = changeUserPreferences { copy(languageMatchMode = value) }
 
     /**
      * Accent and case insensitive text, for a screen that has to sort or search through something the library did
@@ -2396,22 +2397,22 @@ class CampfireViewModel(
         filter.copy(selectedLanguages = filter.selectedLanguages.filterNotTo(mutableSetOf()) { it in libraryLanguages })
     }
 
-    fun setUiMode(value: UserPreferences.UiMode) = updateUserPreferences { copy(uiMode = value) }
+    fun setUiMode(value: UserPreferences.UiMode) = changeUserPreferences { copy(uiMode = value) }
 
-    fun setThemeColor(value: UserPreferences.ThemeColor) = updateUserPreferences { copy(themeColor = value) }
+    fun setThemeColor(value: UserPreferences.ThemeColor) = changeUserPreferences { copy(themeColor = value) }
 
-    fun setAppIconThemed(value: Boolean) = updateUserPreferences { copy(isAppIconThemed = value) }
+    fun setAppIconThemed(value: Boolean) = changeUserPreferences { copy(isAppIconThemed = value) }
 
-    fun setCoverArtEnabled(value: Boolean) = updateUserPreferences { copy(isCoverArtEnabled = value) }
+    fun setCoverArtEnabled(value: Boolean) = changeUserPreferences { copy(isCoverArtEnabled = value) }
 
-    fun setLanguage(value: UserPreferences.Language) = updateUserPreferences { copy(language = value) }
+    fun setLanguage(value: UserPreferences.Language) = changeUserPreferences { copy(language = value) }
 
-    fun setAccidentals(value: UserPreferences.Accidentals) = updateUserPreferences { copy(chordSpelling = chordSpelling.copy(accidentals = value)) }
+    fun setAccidentals(value: UserPreferences.Accidentals) = changeUserPreferences { copy(chordSpelling = chordSpelling.copy(accidentals = value)) }
 
-    fun setGermanNotationEnabled(value: Boolean) = updateUserPreferences { copy(chordSpelling = chordSpelling.copy(isGermanNotationEnabled = value)) }
+    fun setGermanNotationEnabled(value: Boolean) = changeUserPreferences { copy(chordSpelling = chordSpelling.copy(isGermanNotationEnabled = value)) }
 
-    private fun updateUserPreferences(update: UserPreferences.() -> UserPreferences) = userPreferences.value?.let { userPreferences ->
-        viewModelScope.launch { saveUserPreferences(userPreferences.update()) }
+    private fun changeUserPreferences(change: UserPreferences.() -> UserPreferences) {
+        viewModelScope.launch { updateUserPreferences { it.change() } }
     }
 
     // Sync

@@ -133,6 +133,33 @@ internal abstract class BaseLocalDataRepository<T> {
      */
     protected suspend fun writeData(data: T, persist: suspend (T) -> Unit) {
         _dataState.value = DataState.Idle(data)
+        persistLatest(data, persist)
+    }
+
+    /**
+     * [writeData] for a change rather than a whole document: [transform] is applied to the data published at this
+     * moment, atomically, and the result is published and persisted the same way. A caller that built the whole
+     * document itself would build it on whatever copy of the state it holds, and a copy that has not caught up with
+     * the previous change yet - a flow a few hops downstream, collected on another dispatcher - would put that change
+     * back. [transform] may run more than once when changes race, so it has to be pure.
+     *
+     * Nothing happens while there is no data, which is before the first read and after one that failed: there is
+     * nothing for the change to apply to, and a document made of it alone would replace everything else in the store.
+     * Nor when [transform] changes nothing, which would otherwise take a failed write's [DataState.Failure] off the
+     * screen without anything having been written.
+     */
+    protected suspend fun transformAndWriteData(transform: (T) -> T, persist: suspend (T) -> Unit) {
+        var changed: T? = null
+        _dataState.update { current ->
+            val data = current.data ?: return@update current
+            val transformed = transform(data)
+            changed = transformed.takeIf { it != data }
+            if (changed == null) current else DataState.Idle(transformed)
+        }
+        persistLatest(changed ?: return, persist)
+    }
+
+    private suspend fun persistLatest(data: T, persist: suspend (T) -> Unit) {
         writeMutex.withLock {
             val latestData = _dataState.value.data ?: data
             if (latestData != lastPersistedData) {

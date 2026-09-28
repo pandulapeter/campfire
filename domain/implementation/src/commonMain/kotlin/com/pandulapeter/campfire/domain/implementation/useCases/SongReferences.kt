@@ -53,16 +53,12 @@ internal suspend fun followSongReferences(
         }
     }
     attempt {
-        userPreferencesRepository.loadUserPreferencesIfNeeded()
-            ?.takeIf { fileName in it.transpositions || fileName in it.foldedSections }
-            ?.let { preferences ->
-                userPreferencesRepository.saveUserPreferences(
-                    preferences.copy(
-                        transpositions = preferences.transpositions.movedTo(fileName, newFileName),
-                        foldedSections = preferences.foldedSections.movedTo(fileName, newFileName),
-                    ),
-                )
-            }
+        userPreferencesRepository.updateUserPreferences { preferences ->
+            preferences.copy(
+                transpositions = preferences.transpositions.movedTo(fileName, newFileName),
+                foldedSections = preferences.foldedSections.movedTo(fileName, newFileName),
+            )
+        }
     }
     failures.forEach { println("A reference to \"$fileName\" could not be updated: ${it.message}") }
     return failures.isEmpty()

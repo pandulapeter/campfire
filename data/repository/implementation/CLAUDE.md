@@ -49,7 +49,11 @@ the storage is waited for, since every caller builds its change on the state it 
 lock of their own one at a time, each writing what is published by then rather than what it was called with, so the
 last change is the last thing on disk and a burst of changes ends in one write. A write that succeeded publishes
 nothing more, and one that failed turns the state into a `Failure` only while its data is still the data on show.
-`commonTest` covers this too. A cancelled read is not a failed one: it is rethrown and leaves the cache with what it
+A change to one preference goes through `transformAndWriteData` (`updateUserPreferences`) rather than a whole
+document the caller built: the transform is applied to the state atomically, since a caller's copy of the state — the
+ViewModel's is a few `stateIn` hops downstream — may not have the previous change in it yet, and saving a document
+built on it would undo that change. A transform that changes nothing publishes and writes nothing. `saveUserPreferences`
+is left for writing the document as it is. `commonTest` covers this too. A cancelled read is not a failed one: it is rethrown and leaves the cache with what it
 held before, plus any change that landed while it ran. A `rescan()` — the refresh action — is the only thing that walks the
 directory again; an import ends with `adoptImported`, which puts the songs and setlists it wrote into the list in one
 change, dropping the cached texts of the songs among them. `refresh(fileNames)` reads the named files alone, for a

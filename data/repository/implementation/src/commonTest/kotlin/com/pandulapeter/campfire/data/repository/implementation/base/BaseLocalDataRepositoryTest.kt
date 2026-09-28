@@ -271,6 +271,47 @@ class BaseLocalDataRepositoryTest {
         assertEquals(listOf(listOf("a", "b")), persisted)
     }
 
+    @Test
+    fun `changes build on each other rather than on the copy a caller last saw`() = runTest {
+        val repository = TestRepository(backgroundScope, batches = listOf(emptyList()))
+        repository.load()
+        val persisted = mutableListOf<List<String>>()
+        val gate = CompletableDeferred<Unit>()
+
+        launch { repository.change({ it + "a" }) { persisted += it; gate.await() } }
+        runCurrent()
+        launch { repository.change({ it + "b" }) { persisted += it } }
+        runCurrent()
+        launch { repository.change({ it + "c" }) { persisted += it } }
+        runCurrent()
+        gate.complete(Unit)
+        advanceUntilIdle()
+
+        assertEquals(listOf(listOf("a"), listOf("a", "b", "c")), persisted)
+        assertEquals(DataState.Idle(listOf("a", "b", "c")), repository.states.last())
+    }
+
+    @Test
+    fun `a change before anything has been read changes nothing`() = runTest {
+        val repository = TestRepository(backgroundScope, batches = listOf(emptyList()))
+        val persisted = mutableListOf<List<String>>()
+
+        repository.change({ it + "a" }) { persisted += it }
+
+        assertTrue(persisted.isEmpty())
+        assertEquals(DataState.Loading<List<String>>(null), repository.states.last())
+    }
+
+    @Test
+    fun `a change that changes nothing leaves a failed write on show`() = runTest {
+        val repository = TestRepository(backgroundScope, batches = listOf(emptyList()))
+        repository.write(A) { throw IllegalStateException("The storage could not be written.") }
+
+        repository.change({ it }) { throw IllegalStateException("Nothing should have been written.") }
+
+        assertEquals(DataState.Failure(A), repository.states.last())
+    }
+
     /** Publishes every batch but the last as partial data, the way the library scan hands its batches over. */
     private class TestRepository(
         scope: CoroutineScope,
@@ -294,6 +335,9 @@ class BaseLocalDataRepositoryTest {
         suspend fun reload() = reloadData()
 
         suspend fun write(data: List<String>, persist: suspend (List<String>) -> Unit) = writeData(data, persist)
+
+        suspend fun change(transform: (List<String>) -> List<String>, persist: suspend (List<String>) -> Unit) =
+            transformAndWriteData(transform, persist)
 
         /** Completed by the test to let a load past its partial publishes, so that it can be cancelled or changed under first. */
         var gate: CompletableDeferred<Unit>? = null

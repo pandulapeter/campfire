@@ -30,6 +30,11 @@ internal class UserPreferencesRepositoryImpl(
         userPreferencesLocalSource.saveUserPreferences(it)
     }
 
+    override suspend fun updateUserPreferences(transform: (UserPreferences) -> UserPreferences) {
+        loadDataIfNeeded()
+        transformAndWriteData(transform) { userPreferencesLocalSource.saveUserPreferences(it) }
+    }
+
     /**
      * Not cached, unlike the preferences themselves: it is asked once as the app starts, and it is the one answer
      * here that a cache would go on repeating after the very first save has made it false.

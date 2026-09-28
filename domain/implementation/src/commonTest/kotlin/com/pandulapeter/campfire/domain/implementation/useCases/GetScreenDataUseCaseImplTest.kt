@@ -282,6 +282,7 @@ class GetScreenDataUseCaseImplTest {
     ) : UserPreferencesRepository {
         override suspend fun loadUserPreferencesIfNeeded() = throw UnsupportedOperationException()
         override suspend fun saveUserPreferences(userPreferences: UserPreferences) = throw UnsupportedOperationException()
+        override suspend fun updateUserPreferences(transform: (UserPreferences) -> UserPreferences) = throw UnsupportedOperationException()
         override suspend fun hasStoredUserPreferences() = throw UnsupportedOperationException()
     }
 

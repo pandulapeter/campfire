@@ -167,9 +167,13 @@ class SongReferencesTest {
     ) : UserPreferencesRepository {
         override val userPreferences: Flow<DataState<UserPreferences>> = emptyFlow()
         override suspend fun loadUserPreferencesIfNeeded() = PREFERENCES.copy(transpositions = transpositions, foldedSections = foldedSections)
-        override suspend fun saveUserPreferences(userPreferences: UserPreferences) {
-            transpositions = userPreferences.transpositions
-            foldedSections = userPreferences.foldedSections
+        override suspend fun saveUserPreferences(userPreferences: UserPreferences) = throw UnsupportedOperationException()
+
+        override suspend fun updateUserPreferences(transform: (UserPreferences) -> UserPreferences) {
+            transform(loadUserPreferencesIfNeeded()).let { updated ->
+                transpositions = updated.transpositions
+                foldedSections = updated.foldedSections
+            }
         }
 
         override suspend fun hasStoredUserPreferences() = throw UnsupportedOperationException()
