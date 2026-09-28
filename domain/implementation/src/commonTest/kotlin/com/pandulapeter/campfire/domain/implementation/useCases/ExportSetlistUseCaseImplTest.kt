@@ -19,6 +19,7 @@ import com.pandulapeter.campfire.data.repository.api.SongContentRepository
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.emptyFlow
 import kotlinx.coroutines.test.runTest
+import kotlinx.datetime.LocalDate
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertNotNull
@@ -56,10 +57,10 @@ class ExportSetlistUseCaseImplTest {
         override suspend fun rescan() = throw UnsupportedOperationException()
         override suspend fun refresh(fileNames: Set<String>) = throw UnsupportedOperationException()
         override suspend fun adoptImported(setlists: Collection<Setlist>) = throw UnsupportedOperationException()
-        override suspend fun createSetlist(title: String, description: String, priority: Int) = throw UnsupportedOperationException()
+        override suspend fun createSetlist(title: String, description: String, date: LocalDate) = throw UnsupportedOperationException()
         override suspend fun saveSetlist(setlist: Setlist) = throw UnsupportedOperationException()
         override suspend fun updateSetlist(fileName: String, transform: (Setlist) -> Setlist) = throw UnsupportedOperationException()
-        override suspend fun renameSetlist(fileName: String, title: String, description: String) = throw UnsupportedOperationException()
+        override suspend fun renameSetlist(fileName: String, title: String, description: String, date: LocalDate) = throw UnsupportedOperationException()
         override suspend fun parseSetlist(document: String) = throw UnsupportedOperationException()
         override suspend fun importSetlist(setlist: Setlist, shouldReplace: Boolean) = throw UnsupportedOperationException()
         override suspend fun loadSetlistFileSizes(): Map<String, Long> = throw UnsupportedOperationException()
@@ -91,7 +92,7 @@ class ExportSetlistUseCaseImplTest {
             fileName = fileName,
             title = title,
             description = "",
-            priority = 0,
+            date = null,
             isArchived = false,
             entries = emptyList(),
             size = 0L,

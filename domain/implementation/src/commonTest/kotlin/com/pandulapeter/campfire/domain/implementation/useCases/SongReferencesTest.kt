@@ -20,6 +20,7 @@ import com.pandulapeter.campfire.data.repository.api.UserPreferencesRepository
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.emptyFlow
 import kotlinx.coroutines.test.runTest
+import kotlinx.datetime.LocalDate
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
@@ -145,7 +146,7 @@ class SongReferencesTest {
         override suspend fun rescan() = throw UnsupportedOperationException()
         override suspend fun refresh(fileNames: Set<String>) = throw UnsupportedOperationException()
         override suspend fun adoptImported(setlists: Collection<Setlist>) = throw UnsupportedOperationException()
-        override suspend fun createSetlist(title: String, description: String, priority: Int) = throw UnsupportedOperationException()
+        override suspend fun createSetlist(title: String, description: String, date: LocalDate) = throw UnsupportedOperationException()
         override suspend fun saveSetlist(setlist: Setlist) = throw UnsupportedOperationException()
         override suspend fun updateSetlist(fileName: String, transform: (Setlist) -> Setlist): Setlist? {
             if (fileName in unwritable) throw IllegalStateException("The setlist could not be written.")
@@ -153,7 +154,7 @@ class SongReferencesTest {
             return files[fileName]?.let(transform)?.also { files[fileName] = it }
         }
 
-        override suspend fun renameSetlist(fileName: String, title: String, description: String) = throw UnsupportedOperationException()
+        override suspend fun renameSetlist(fileName: String, title: String, description: String, date: LocalDate) = throw UnsupportedOperationException()
         override suspend fun parseSetlist(document: String) = throw UnsupportedOperationException()
         override suspend fun importSetlist(setlist: Setlist, shouldReplace: Boolean) = throw UnsupportedOperationException()
         override suspend fun loadSetlistFileSizes(): Map<String, Long> = throw UnsupportedOperationException()
@@ -206,7 +207,7 @@ class SongReferencesTest {
             isHorizontalSectionFlowEnabled = false,
             fontScale = 1f,
             sortingMode = UserPreferences.SortingMode.BY_TITLE,
-            setlistSortingMode = UserPreferences.SetlistSortingMode.NEWEST_FIRST,
+            setlistSortingMode = UserPreferences.SetlistSortingMode.BY_DATE,
             uiMode = UserPreferences.UiMode.SYSTEM_DEFAULT,
             themeColor = UserPreferences.ThemeColor.CAMPFIRE,
             isAppIconThemed = true,
@@ -223,7 +224,7 @@ class SongReferencesTest {
             fileName = fileName,
             title = fileName,
             description = "",
-            priority = 0,
+            date = null,
             isArchived = false,
             entries = songs.map { Setlist.Entry(songFileName = it) },
             size = 0L,

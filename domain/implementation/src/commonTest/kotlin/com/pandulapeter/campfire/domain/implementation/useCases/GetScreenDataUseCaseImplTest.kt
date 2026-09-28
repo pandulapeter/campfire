@@ -27,6 +27,7 @@ import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.test.TestScope
 import kotlinx.coroutines.test.runTest
+import kotlinx.datetime.LocalDate
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFalse
@@ -41,7 +42,7 @@ import kotlin.test.assertTrue
  */
 class GetScreenDataUseCaseImplTest {
 
-    private val setlists = MutableStateFlow<DataState<List<Setlist>>>(DataState.Idle(listOf(setlist("b", priority = 1), setlist("a", priority = 2))))
+    private val setlists = MutableStateFlow<DataState<List<Setlist>>>(DataState.Idle(listOf(setlist("b", day = 1), setlist("a", day = 2))))
     private val songs = MutableStateFlow<DataState<List<Song>>>(DataState.Idle(listOf(song("Yesterday"), song("Hey Jude"))))
     private val preferences = MutableStateFlow<DataState<UserPreferences>>(DataState.Idle(PREFERENCES))
     private val filter = MutableStateFlow(SongFilter())
@@ -59,7 +60,7 @@ class GetScreenDataUseCaseImplTest {
         val latest = collectScreenData()
         val first = latest.idle()
 
-        setlists.value = DataState.Idle(setlists.value.data.orEmpty() + setlist("c", priority = 3))
+        setlists.value = DataState.Idle(setlists.value.data.orEmpty() + setlist("c", day = 3))
         val second = latest.first { it?.data?.setlists?.size == 3 }?.data
 
         assertSame(first.songSections, second?.songSections)
@@ -74,13 +75,33 @@ class GetScreenDataUseCaseImplTest {
 
         // The setlist first and the preference second, each awaited: the two halves are collected side by side, so two
         // changes made at once may arrive in either order.
-        setlists.value = DataState.Idle(setlists.value.data.orEmpty() + setlist("c", priority = 3))
+        setlists.value = DataState.Idle(setlists.value.data.orEmpty() + setlist("c", day = 3))
         assertEquals(listOf("c", "a", "b"), latest.first { it?.data?.setlists?.size == 3 }?.data?.setlists?.map { it.title })
         preferences.value = DataState.Idle(PREFERENCES.copy(setlistSortingMode = UserPreferences.SetlistSortingMode.BY_TITLE))
         val second = latest.first { it?.data?.setlists?.firstOrNull()?.title == "a" }?.data
 
         assertEquals(listOf("a", "b", "c"), second?.setlists?.map { it.title })
         assertSame(first.songSections, second?.songSections)
+    }
+
+    @Test
+    fun `by date the latest day is on top, one day's setlists by title and the undated and the archived ones after`() = runTest {
+        setlists.value = DataState.Idle(
+            listOf(
+                setlist("old", day = 1),
+                setlist("undated", day = null),
+                setlist("zebra", day = 20),
+                setlist("archived", day = 30, isArchived = true),
+                setlist("Apple", day = 20),
+                setlist("another undated", day = null),
+                setlist("new", day = 25),
+            ),
+        )
+
+        assertEquals(
+            listOf("new", "Apple", "zebra", "old", "another undated", "undated", "archived"),
+            collectScreenData().idle().setlists.map { it.title },
+        )
     }
 
     @Test
@@ -224,7 +245,7 @@ class GetScreenDataUseCaseImplTest {
         songs.value = DataState.Loading(null)
         latest.first { it is DataState.Failure && it.data == null }
 
-        setlists.value = DataState.Idle(listOf(setlist("a", priority = 1)))
+        setlists.value = DataState.Idle(listOf(setlist("a", day = 1)))
         songs.value = DataState.Idle(listOf(song("Yesterday")))
         val complete = assertIs<DataState.Idle<ScreenData>>(latest.first { it is DataState.Idle }).data
         assertTrue(complete.isWholeLibrary)
@@ -252,10 +273,10 @@ class GetScreenDataUseCaseImplTest {
         override suspend fun rescan() = throw UnsupportedOperationException()
         override suspend fun refresh(fileNames: Set<String>) = throw UnsupportedOperationException()
         override suspend fun adoptImported(setlists: Collection<Setlist>) = throw UnsupportedOperationException()
-        override suspend fun createSetlist(title: String, description: String, priority: Int) = throw UnsupportedOperationException()
+        override suspend fun createSetlist(title: String, description: String, date: LocalDate) = throw UnsupportedOperationException()
         override suspend fun saveSetlist(setlist: Setlist) = throw UnsupportedOperationException()
         override suspend fun updateSetlist(fileName: String, transform: (Setlist) -> Setlist) = throw UnsupportedOperationException()
-        override suspend fun renameSetlist(fileName: String, title: String, description: String) = throw UnsupportedOperationException()
+        override suspend fun renameSetlist(fileName: String, title: String, description: String, date: LocalDate) = throw UnsupportedOperationException()
         override suspend fun parseSetlist(document: String) = throw UnsupportedOperationException()
         override suspend fun importSetlist(setlist: Setlist, shouldReplace: Boolean) = throw UnsupportedOperationException()
         override suspend fun loadSetlistFileSizes(): Map<String, Long> = throw UnsupportedOperationException()
@@ -294,7 +315,7 @@ class GetScreenDataUseCaseImplTest {
             isHorizontalSectionFlowEnabled = false,
             fontScale = 1f,
             sortingMode = UserPreferences.SortingMode.BY_TITLE,
-            setlistSortingMode = UserPreferences.SetlistSortingMode.NEWEST_FIRST,
+            setlistSortingMode = UserPreferences.SetlistSortingMode.BY_DATE,
             uiMode = UserPreferences.UiMode.SYSTEM_DEFAULT,
             themeColor = UserPreferences.ThemeColor.CAMPFIRE,
             isAppIconThemed = true,
@@ -307,12 +328,12 @@ class GetScreenDataUseCaseImplTest {
             languageMatchMode = UserPreferences.MatchMode.ANY,
         )
 
-        fun setlist(title: String, priority: Int) = Setlist(
+        fun setlist(title: String, day: Int?, isArchived: Boolean = false) = Setlist(
             fileName = "$title.setlist.json",
             title = title,
             description = "",
-            priority = priority,
-            isArchived = false,
+            date = day?.let { LocalDate(2026, 9, it) },
+            isArchived = isArchived,
             entries = emptyList(),
             size = 0L,
         )

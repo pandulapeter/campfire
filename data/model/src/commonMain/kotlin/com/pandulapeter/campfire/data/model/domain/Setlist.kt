@@ -9,6 +9,8 @@
  */
 package com.pandulapeter.campfire.data.model.domain
 
+import kotlinx.datetime.LocalDate
+
 /**
  * One `*.setlist.json` file in the library. The transposition of a song lives in the entry rather than in the user
  * preferences, so that it travels with the setlist when the library is exported.
@@ -23,8 +25,14 @@ data class Setlist(
      * import or a sync run the way the title does, and the setlists screen's search reads it.
      */
     val description: String,
-    /** Higher first, so that the newest setlist is on top. */
-    val priority: Int,
+    /**
+     * The day the setlist is for - the gig, the rehearsal, the evening at the fire - which the setlists screen sorts by,
+     * the latest on top. It starts as the day the setlist was created in this library and the user may move it. A day
+     * rather than a moment, since that is what a setlist is planned for, and written in the file as an ISO date, so it
+     * travels with the setlist. Null for a file that names no day (or none that reads as one), written before there
+     * was a date or by hand, which is listed after every dated setlist.
+     */
+    val date: LocalDate?,
     /**
      * Whether the setlist has been put away: it is left out of the setlists screen and of the picker that adds a
      * song to one, until the user asks for the archived ones as well. It lives in the file rather than in the

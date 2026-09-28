@@ -12,6 +12,7 @@ package com.pandulapeter.campfire.data.repository.api
 import com.pandulapeter.campfire.data.model.DataState
 import com.pandulapeter.campfire.data.model.domain.Setlist
 import kotlinx.coroutines.flow.Flow
+import kotlinx.datetime.LocalDate
 
 interface SetlistRepository {
 
@@ -42,7 +43,7 @@ interface SetlistRepository {
     suspend fun refresh(fileNames: Set<String>)
 
     /** Writes a new, empty setlist under a free file name and returns it. */
-    suspend fun createSetlist(title: String, description: String, priority: Int): Setlist
+    suspend fun createSetlist(title: String, description: String, date: LocalDate): Setlist
 
     /**
      * Creates the file or overwrites it, and updates that one entry of the cached list. For a setlist the caller owns
@@ -59,13 +60,13 @@ interface SetlistRepository {
     suspend fun updateSetlist(fileName: String, transform: (Setlist) -> Setlist): Setlist?
 
     /**
-     * [updateSetlist] for the one change that may move the file: the latest version of the setlist gets [title] and
-     * [description] and nothing else of it changes, and its file moves to the name the title gives it (see
+     * [updateSetlist] for the one change that may move the file: the latest version of the setlist gets [title],
+     * [description] and [date] and nothing else of it changes, and its file moves to the name the title gives it (see
      * `SetlistLocalSource.renameSetlist`), so the setlist that comes back may have a different `fileName` than the
      * one that was asked for. Null when there is no such setlist, in which case nothing is written: a setlist that
      * was deleted while its title was being typed stays deleted.
      */
-    suspend fun renameSetlist(fileName: String, title: String, description: String): Setlist?
+    suspend fun renameSetlist(fileName: String, title: String, description: String, date: LocalDate): Setlist?
 
     /** See `SetlistLocalSource.parseSetlist`. */
     suspend fun parseSetlist(document: String): Setlist?

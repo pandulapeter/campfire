@@ -12,6 +12,7 @@ package com.pandulapeter.campfire.data.source.local.implementation.mapper
 import com.pandulapeter.campfire.data.model.domain.Setlist
 import com.pandulapeter.campfire.data.source.local.implementation.model.SetlistDocument
 import com.pandulapeter.campfire.data.source.local.implementation.model.SetlistSongDocument
+import kotlinx.datetime.LocalDate
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonObject
 
@@ -19,7 +20,7 @@ internal fun SetlistDocument.toModel(fileName: String, size: Long) = Setlist(
     fileName = fileName,
     title = title,
     description = description,
-    priority = priority,
+    date = date?.toLocalDate(),
     isArchived = isArchived,
     // A document that was edited by hand can leave a blank entry behind or name the same song twice. The second
     // mention is dropped and the first one wins, its transposition with it: the screens key their rows and the
@@ -34,7 +35,7 @@ internal fun SetlistDocument.toModel(fileName: String, size: Long) = Setlist(
 internal fun Setlist.toDocument() = SetlistDocument(
     title = title,
     description = description,
-    priority = priority,
+    date = date?.toString(),
     isArchived = isArchived,
     // Written the way it is read, so that a file never carries a duplicate whatever built the setlist in memory.
     songs = entries.distinctBy { it.songFileName }.map {
@@ -42,6 +43,12 @@ internal fun Setlist.toDocument() = SetlistDocument(
     },
     unknownFields = unknownFields.toFields(),
 )
+
+private fun String.toLocalDate() = try {
+    LocalDate.parse(trim())
+} catch (_: IllegalArgumentException) {
+    null
+}
 
 private fun JsonObject.toFieldsText() = if (isEmpty()) "" else toString()
 

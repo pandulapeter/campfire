@@ -21,6 +21,13 @@ import kotlinx.serialization.json.JsonObject
 internal data class SetlistDocument(
     val title: String = "",
     val description: String = "",
+    /** An ISO date (`2026-09-28`), kept as text so that one written by hand that does not read as a date loses only itself. */
+    val date: String? = null,
+    /**
+     * The place in the list older versions gave a setlist, which the date took over. Still declared, so that it is
+     * read and dropped rather than carried along as a field this version does not know: two copies of one setlist
+     * that differ only in it are the same setlist.
+     */
     val priority: Int = 0,
     val isArchived: Boolean = false,
     val songs: List<SetlistSongDocument> = emptyList(),

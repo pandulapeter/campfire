@@ -58,8 +58,8 @@ import com.pandulapeter.campfire.presentation.resources.setlists_new_setlist
 import com.pandulapeter.campfire.presentation.resources.setlists_search
 import com.pandulapeter.campfire.presentation.resources.setlists_show_archived
 import com.pandulapeter.campfire.presentation.resources.setlists_sort
+import com.pandulapeter.campfire.presentation.resources.setlists_sorting_mode_by_date
 import com.pandulapeter.campfire.presentation.resources.setlists_sorting_mode_by_title
-import com.pandulapeter.campfire.presentation.resources.setlists_sorting_mode_newest_first
 import com.pandulapeter.campfire.presentation.resources.setlists_remove_song
 import com.pandulapeter.campfire.presentation.ui.CampfireViewModel
 import com.pandulapeter.campfire.presentation.ui.navigation.CampfireDestination
@@ -169,7 +169,7 @@ private fun SetlistSortMenu(viewModel: CampfireViewModel) {
     SortMenu(
         contentDescription = stringResource(Res.string.setlists_sort),
         options = listOf(
-            UserPreferences.SetlistSortingMode.NEWEST_FIRST to stringResource(Res.string.setlists_sorting_mode_newest_first),
+            UserPreferences.SetlistSortingMode.BY_DATE to stringResource(Res.string.setlists_sorting_mode_by_date),
             UserPreferences.SetlistSortingMode.BY_TITLE to stringResource(Res.string.setlists_sorting_mode_by_title),
         ),
         selected = userPreferences?.setlistSortingMode,

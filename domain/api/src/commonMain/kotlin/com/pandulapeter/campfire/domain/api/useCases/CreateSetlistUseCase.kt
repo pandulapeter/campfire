@@ -10,9 +10,13 @@
 package com.pandulapeter.campfire.domain.api.useCases
 
 import com.pandulapeter.campfire.data.model.domain.Setlist
+import kotlinx.datetime.LocalDate
 
 interface CreateSetlistUseCase {
 
-    /** Writes a new, empty setlist file and returns the setlist it became. [description] may be blank. */
-    suspend operator fun invoke(title: String, description: String): Setlist
+    /**
+     * Writes a new, empty setlist file and returns the setlist it became. [description] may be blank. [date] is the
+     * day the setlist is for, which is the day it is created unless the user picked another one.
+     */
+    suspend operator fun invoke(title: String, description: String, date: LocalDate): Setlist
 }

@@ -8,7 +8,6 @@
  * https://mozilla.org/MPL/2.0/.
 -->
 # To do
-- Add an editable date field for setlists, rename the sorting option. Should default to creation date (for demo setlist too)
 - Regenerate the baseline profile
 - Song details chord cards should wrap content
 - Pixel 10 Pro XL Landscape: Román lány layout could be optimized

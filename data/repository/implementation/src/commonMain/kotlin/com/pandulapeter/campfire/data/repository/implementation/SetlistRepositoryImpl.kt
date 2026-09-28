@@ -19,6 +19,7 @@ import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 import kotlinx.coroutines.withContext
+import kotlinx.datetime.LocalDate
 import org.koin.core.annotation.Single
 
 @Single
@@ -84,8 +85,8 @@ internal class SetlistRepositoryImpl(
         updateData { current -> current.orEmpty().filterNot { it.fileName in fileNames } + reloaded }
     }
 
-    override suspend fun createSetlist(title: String, description: String, priority: Int): Setlist = writing {
-        setlistLocalSource.createSetlist(title = title, description = description, priority = priority).also { created ->
+    override suspend fun createSetlist(title: String, description: String, date: LocalDate): Setlist = writing {
+        setlistLocalSource.createSetlist(title = title, description = description, date = date).also { created ->
             updateData { current -> current.orEmpty().filterNot { it.fileName == created.fileName } + created }
             libraryChanges.onLibraryChanged()
         }
@@ -99,9 +100,9 @@ internal class SetlistRepositoryImpl(
         latest(fileName)?.let(transform)?.let { write(it) }
     }
 
-    override suspend fun renameSetlist(fileName: String, title: String, description: String) = writing {
+    override suspend fun renameSetlist(fileName: String, title: String, description: String, date: LocalDate) = writing {
         latest(fileName)?.let { setlist ->
-            setlistLocalSource.renameSetlist(setlist = setlist.copy(description = description), title = title).also { renamed ->
+            setlistLocalSource.renameSetlist(setlist = setlist.copy(description = description, date = date), title = title).also { renamed ->
                 updateData { current ->
                     current.orEmpty().filterNot { it.fileName == fileName || it.fileName == renamed.fileName } + renamed
                 }

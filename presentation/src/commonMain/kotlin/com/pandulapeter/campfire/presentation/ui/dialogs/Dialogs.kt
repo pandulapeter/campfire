@@ -14,6 +14,8 @@ import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.scaleIn
 import androidx.compose.animation.scaleOut
+import androidx.compose.foundation.interaction.MutableInteractionSource
+import androidx.compose.foundation.interaction.PressInteraction
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
@@ -45,6 +47,8 @@ import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.BottomSheetDefaults
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.DatePicker
+import androidx.compose.material3.DatePickerDialog
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -56,6 +60,7 @@ import androidx.compose.material3.SheetValue
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.rememberBottomSheetState
+import androidx.compose.material3.rememberDatePickerState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -98,6 +103,7 @@ import com.pandulapeter.campfire.presentation.resources.create
 import com.pandulapeter.campfire.presentation.resources.delete
 import com.pandulapeter.campfire.presentation.resources.done
 import com.pandulapeter.campfire.presentation.resources.ic_add
+import com.pandulapeter.campfire.presentation.resources.ic_calendar
 import com.pandulapeter.campfire.presentation.resources.ic_clear
 import com.pandulapeter.campfire.presentation.resources.ic_language
 import com.pandulapeter.campfire.presentation.resources.ic_search
@@ -120,6 +126,8 @@ import com.pandulapeter.campfire.presentation.resources.import_oversized
 import com.pandulapeter.campfire.presentation.resources.save
 import com.pandulapeter.campfire.presentation.resources.setlists_delete_setlist
 import com.pandulapeter.campfire.presentation.resources.setlists_delete_setlist_confirmation
+import com.pandulapeter.campfire.presentation.resources.setlists_date
+import com.pandulapeter.campfire.presentation.resources.setlists_date_value
 import com.pandulapeter.campfire.presentation.resources.setlists_description
 import com.pandulapeter.campfire.presentation.resources.setlists_duplicate
 import com.pandulapeter.campfire.presentation.resources.setlists_duplicate_title
@@ -127,6 +135,7 @@ import com.pandulapeter.campfire.presentation.resources.setlists_edit_setlist
 import com.pandulapeter.campfire.presentation.resources.setlists_new_setlist
 import com.pandulapeter.campfire.presentation.resources.setlists_new_setlist_title
 import com.pandulapeter.campfire.presentation.resources.setlists_no_search_results
+import com.pandulapeter.campfire.presentation.resources.setlists_pick_date
 import com.pandulapeter.campfire.presentation.resources.setlists_search
 import com.pandulapeter.campfire.presentation.resources.setlists_song_assignments
 import com.pandulapeter.campfire.presentation.resources.settings_sync_disconnect
@@ -188,7 +197,15 @@ import com.pandulapeter.campfire.presentation.ui.components.textResource
 import com.pandulapeter.campfire.presentation.ui.screens.settings.SettingsSubsection
 import com.pandulapeter.campfire.presentation.ui.screens.songDetails.SongDisplayControls
 import kotlinx.coroutines.launch
+import kotlinx.datetime.LocalDate
+import kotlinx.datetime.TimeZone
+import kotlinx.datetime.atStartOfDayIn
+import kotlinx.datetime.number
+import kotlinx.datetime.toLocalDateTime
+import kotlinx.datetime.todayIn
 import org.jetbrains.compose.resources.painterResource
+import kotlin.time.Clock
+import kotlin.time.Instant
 
 /**
  * Hosts whichever dialog or bottom sheet the view model asks for.
@@ -206,9 +223,9 @@ internal fun CampfireDialogs(
             onDismiss = viewModel::dismissDialog,
             // Dismissed before the setlist is created rather than after, since creating it is what opens the song
             // picker for it, and a dismissal arriving after that would close the picker instead.
-            onConfirm = { setlistTitle, description ->
+            onConfirm = { setlistTitle, description, date ->
                 viewModel.dismissDialog()
-                viewModel.createSetlist(title = setlistTitle, description = description)
+                viewModel.createSetlist(title = setlistTitle, description = description, date = date)
             },
         )
 
@@ -216,10 +233,11 @@ internal fun CampfireDialogs(
             title = stringResource(Res.string.setlists_edit_setlist),
             initialTitle = dialog.setlist.title,
             initialDescription = dialog.setlist.description,
+            initialDate = dialog.setlist.date,
             confirmLabel = stringResource(Res.string.save),
             onDismiss = viewModel::dismissDialog,
-            onConfirm = { setlistTitle, description ->
-                viewModel.editSetlist(setlistFileName = dialog.setlist.fileName, title = setlistTitle, description = description)
+            onConfirm = { setlistTitle, description, date ->
+                viewModel.editSetlist(setlistFileName = dialog.setlist.fileName, title = setlistTitle, description = description, date = date)
                 viewModel.dismissDialog()
             },
         )
@@ -232,8 +250,8 @@ internal fun CampfireDialogs(
             initialDescription = dialog.setlist.description,
             confirmLabel = stringResource(Res.string.setlists_duplicate),
             onDismiss = viewModel::dismissDialog,
-            onConfirm = { setlistTitle, description ->
-                viewModel.duplicateSetlist(setlist = dialog.setlist, title = setlistTitle, description = description)
+            onConfirm = { setlistTitle, description, date ->
+                viewModel.duplicateSetlist(setlist = dialog.setlist, title = setlistTitle, description = description, date = date)
                 viewModel.dismissDialog()
             },
         )
@@ -727,22 +745,25 @@ private fun rememberSingleConfirmation(): (confirm: () -> Unit) -> Unit {
 }
 
 /**
- * Everything the user gets to say about a setlist: its title, and the description that goes under its header on the
- * setlists screen. Creating one, editing one and naming a copy of one are the same dialog with different labels,
- * since all three are answering the same two questions.
+ * Everything the user gets to say about a setlist: its title, the description that goes under its header on the
+ * setlists screen, and the day it is for. Creating one, editing one and naming a copy of one are the same dialog with
+ * different labels, since all three are answering the same three questions.
  *
  * Only the title is required. The description is what somebody writes for their own sake ("acoustic, two sets, no
  * encore"), and most setlists never get one - but the setlists screen's search reads it, so a setlist that is hard
- * to name can still be found by what it is for.
+ * to name can still be found by what it is for. The date starts as today unless the setlist already has one - a
+ * copy is made for another evening, so it starts as today too - and a setlist written before there were dates gets
+ * today's the first time it is edited, since there is no creation date left to fall back on.
  */
 @Composable
 private fun SetlistDetailsDialog(
     title: String,
     initialTitle: String = "",
     initialDescription: String = "",
+    initialDate: LocalDate? = null,
     confirmLabel: String,
     onDismiss: () -> Unit,
-    onConfirm: (title: String, description: String) -> Unit,
+    onConfirm: (title: String, description: String, date: LocalDate) -> Unit,
 ) {
     // A TextFieldValue rather than a String, for the selection: a dialog that opens on a title the user is meant to
     // replace ("Summer set (copy)", the title being renamed) has all of it selected, so the first key typed writes the
@@ -753,6 +774,9 @@ private fun SetlistDetailsDialog(
         mutableStateOf(TextFieldValue(text = initialTitle, selection = TextRange(0, initialTitle.length)))
     }
     var description by rememberSaveable { mutableStateOf(initialDescription) }
+    // Saved as its ISO text, since a LocalDate is nothing the saved instance state of every platform can hold.
+    var dateText by rememberSaveable { mutableStateOf((initialDate ?: today()).toString()) }
+    val date = LocalDate.parse(dateText)
     val isValid = setlistTitle.text.isNotBlank()
     val focusRequester = rememberFirstFieldFocusRequester()
     val confirmOnce = rememberSingleConfirmation()
@@ -791,12 +815,18 @@ private fun SetlistDetailsDialog(
                     minLines = DESCRIPTION_LINES,
                     maxLines = DESCRIPTION_LINES,
                 )
+                Spacer(modifier = Modifier.height(8.dp))
+                SetlistDateField(
+                    modifier = Modifier.fillMaxWidth(),
+                    date = date,
+                    onDateChange = { dateText = it.toString() },
+                )
             }
         },
         confirmButton = {
             TextButton(
                 enabled = isValid,
-                onClick = { confirmOnce { onConfirm(setlistTitle.text, description) } },
+                onClick = { confirmOnce { onConfirm(setlistTitle.text, description, date) } },
             ) { Text(confirmLabel) }
         },
         dismissButton = {
@@ -804,6 +834,69 @@ private fun SetlistDetailsDialog(
         },
     )
 }
+
+/**
+ * The day a setlist is for, as a field that is never typed into: the calendar it opens is the one way to change it,
+ * so there is no text that could fail to be a date. The whole field opens it on a touch, and its icon is the button
+ * the keyboard reaches, since a read-only field does nothing with Enter.
+ */
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+private fun SetlistDateField(
+    modifier: Modifier = Modifier,
+    date: LocalDate,
+    onDateChange: (LocalDate) -> Unit,
+) {
+    var isPickerVisible by rememberSaveable { mutableStateOf(false) }
+    val interactionSource = remember { MutableInteractionSource() }
+    LaunchedEffect(interactionSource) {
+        interactionSource.interactions.collect { if (it is PressInteraction.Release) isPickerVisible = true }
+    }
+    OutlinedTextField(
+        modifier = modifier,
+        value = stringResource(
+            Res.string.setlists_date_value,
+            date.year.toString(),
+            date.month.number.toString().padStart(length = 2, padChar = '0'),
+            date.day.toString().padStart(length = 2, padChar = '0'),
+        ),
+        onValueChange = {},
+        readOnly = true,
+        singleLine = true,
+        label = { Text(stringResource(Res.string.setlists_date)) },
+        trailingIcon = {
+            IconButton(onClick = { isPickerVisible = true }) {
+                Icon(painter = painterResource(Res.drawable.ic_calendar), contentDescription = stringResource(Res.string.setlists_pick_date))
+            }
+        },
+        interactionSource = interactionSource,
+    )
+    if (isPickerVisible) {
+        // The picker counts in milliseconds of UTC midnights, whatever the device's time zone, so the day goes in and
+        // comes out through UTC rather than through the local zone, which would move it by a day on one side of it.
+        val state = rememberDatePickerState(initialSelectedDateMillis = date.atStartOfDayIn(TimeZone.UTC).toEpochMilliseconds())
+        val dismiss = { isPickerVisible = false }
+        DatePickerDialog(
+            onDismissRequest = dismiss,
+            confirmButton = {
+                TextButton(
+                    enabled = state.selectedDateMillis != null,
+                    onClick = {
+                        state.selectedDateMillis?.let { onDateChange(Instant.fromEpochMilliseconds(it).toLocalDateTime(TimeZone.UTC).date) }
+                        dismiss()
+                    },
+                ) { Text(stringResource(Res.string.done)) }
+            },
+            dismissButton = {
+                TextButton(onClick = dismiss) { Text(stringResource(Res.string.cancel)) }
+            },
+        ) {
+            DatePicker(state = state)
+        }
+    }
+}
+
+private fun today() = Clock.System.todayIn(TimeZone.currentSystemDefault())
 
 /**
  * The title and the artist of a song about to be created. Only the title is required: it is what the file is named
@@ -1219,8 +1312,13 @@ private fun SetlistPicker(
             initialTitle = query.trim(),
             confirmLabel = stringResource(Res.string.create),
             onDismiss = closeNamingDialog,
-            onConfirm = { setlistTitle, description ->
-                viewModel.createSetlistWithSong(title = setlistTitle, description = description, songFileName = dialog.song.fileName)
+            onConfirm = { setlistTitle, description, date ->
+                viewModel.createSetlistWithSong(
+                    title = setlistTitle,
+                    description = description,
+                    date = date,
+                    songFileName = dialog.song.fileName,
+                )
                 closeNamingDialog()
             },
         )

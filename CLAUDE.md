@@ -137,7 +137,10 @@ uninstall and nothing else does.
   is put away without the songs in it being lost; it is a field of the `*.setlist.json` file rather than a
   preference, so it travels through an export, an import or a sync run the way a tag does. The **description** — an
   optional sentence about what a setlist is for, shown under its header and read by the screen's search — lives in
-  the file for the same reason.
+  the file for the same reason, and so does the **date**: the day the setlist is for, an ISO date that starts as the
+  day it was created here (an import dates a setlist that carries none the same way, the demo one included) and is
+  moved with a calendar in the dialog that names the setlist. Sorting by date puts the latest day on top, the setlists
+  of one day by their title, and one written before there were dates after every dated one.
 - **Both list screens are searched from a button rather than from a field that is always there**: the app bar has
   no title — the list's pinned section header stands in its place — and the one search icon is the one close button (the mark morphs
   between the two as the button travels from the actions to the start of the bar, with the field after it, see

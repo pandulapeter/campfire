@@ -95,8 +95,8 @@ data class ImportPlan(
         /**
          * The library — under this name or a numbered sibling of it — or an earlier file of the same import already
          * is exactly this, so the import has nothing to do. Songs are compared by their text and setlists by their
-         * title and entries, pointing at the songs where the import puts them - never by the stored document, which
-         * carries a priority the import assigns itself.
+         * fields, the entries pointing at the songs where the import puts them - never by the stored document, and
+         * never by a date the incoming setlist does not carry, since the import dates such a setlist itself.
          */
         IDENTICAL,
 

@@ -25,7 +25,7 @@ import com.pandulapeter.campfire.presentation.resources.setlists_actions
 import com.pandulapeter.campfire.presentation.resources.setlists_archive
 import com.pandulapeter.campfire.presentation.resources.setlists_delete_setlist
 import com.pandulapeter.campfire.presentation.resources.setlists_duplicate_setlist
-import com.pandulapeter.campfire.presentation.resources.setlists_edit_title_and_description
+import com.pandulapeter.campfire.presentation.resources.setlists_edit_details
 import com.pandulapeter.campfire.presentation.resources.setlists_export
 import com.pandulapeter.campfire.presentation.resources.setlists_song_assignments
 import com.pandulapeter.campfire.presentation.resources.setlists_unarchive
@@ -64,7 +64,7 @@ internal fun SetlistActions(
         isDecorative = isDecorative,
         items = listOf(
             ActionsMenuItem(
-                title = stringResource(Res.string.setlists_edit_title_and_description),
+                title = stringResource(Res.string.setlists_edit_details),
                 icon = painterResource(Res.drawable.ic_edit),
                 onClick = { viewModel.showDialog(CampfireViewModel.DialogType.EditSetlist(setlist)) },
             ),

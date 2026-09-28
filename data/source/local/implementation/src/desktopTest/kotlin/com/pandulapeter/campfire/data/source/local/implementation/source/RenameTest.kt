@@ -119,7 +119,7 @@ class RenameTest {
             fileName = "Summer.setlist.json",
             title = "Summer",
             description = "",
-            priority = 0,
+            date = null,
             isArchived = false,
             entries = emptyList(),
             size = 0L,

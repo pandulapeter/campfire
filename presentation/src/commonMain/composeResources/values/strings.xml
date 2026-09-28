@@ -125,11 +125,14 @@
     <string name="setlists_move_up">Move up</string>
     <string name="setlists_move_down">Move down</string>
     <string name="setlists_actions">Setlist actions</string>
-    <string name="setlists_edit_title_and_description">Edit title and description</string>
+    <string name="setlists_edit_details">Edit title, description and date</string>
     <string name="setlists_song_assignments">Song assignments</string>
     <string name="setlists_add_songs">Add songs</string>
     <string name="setlists_edit_setlist">Edit setlist</string>
     <string name="setlists_description">Description (optional)</string>
+    <string name="setlists_date">Date</string>
+    <string name="setlists_date_value">%1$s-%2$s-%3$s</string>
+    <string name="setlists_pick_date">Pick a date</string>
     <string name="setlists_duplicate">Duplicate</string>
     <string name="setlists_duplicate_setlist">Duplicate setlist</string>
     <string name="setlists_duplicate_title">%1$s (copy)</string>
@@ -144,7 +147,7 @@
     <string name="setlists_no_search_results">No matching setlists</string>
     <string name="setlists_no_search_results_hint">No setlist matches this search, either by what it is called or by the songs in it.</string>
     <string name="setlists_sort">Sort setlists</string>
-    <string name="setlists_sorting_mode_newest_first">Newest</string>
+    <string name="setlists_sorting_mode_by_date">Date</string>
     <string name="setlists_sorting_mode_by_title">Title</string>
     <string name="setlists_show_archived">Show archived setlists</string>
     <string name="setlists_all_hidden">Every setlist is archived</string>

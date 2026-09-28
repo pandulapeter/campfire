@@ -12,14 +12,17 @@ package com.pandulapeter.campfire.data.source.local.implementation.mapper
 import com.pandulapeter.campfire.data.model.domain.Setlist
 import com.pandulapeter.campfire.data.source.local.implementation.model.SetlistDocument
 import com.pandulapeter.campfire.data.source.local.implementation.model.SetlistSongDocument
+import kotlinx.datetime.LocalDate
 import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.JsonPrimitive
 import kotlin.test.Test
 import kotlin.test.assertEquals
+import kotlin.test.assertNull
 
 /**
  * A setlist file is the one thing the user can hand-edit into a shape the screens cannot draw: the rows and the
- * pages are keyed by the song's file name, so a song named twice has to be read as named once.
+ * pages are keyed by the song's file name, so a song named twice has to be read as named once, and a date that is
+ * not one has to be read as no date rather than as a file that cannot be read.
  */
 internal class SetlistMappersTest {
 
@@ -49,7 +52,7 @@ internal class SetlistMappersTest {
             fileName = "summer.setlist.json",
             title = "Summer",
             description = "",
-            priority = 0,
+            date = null,
             isArchived = false,
             entries = listOf(
                 Setlist.Entry(songFileName = "a.cho", transposition = 2),
@@ -61,5 +64,20 @@ internal class SetlistMappersTest {
             expected = listOf(SetlistSongDocument(file = "a.cho", transposition = 2)),
             actual = setlist.toDocument().songs,
         )
+    }
+
+    @Test
+    fun theDateIsWrittenAsAnIsoDateAndReadBack() {
+        val setlist = SetlistDocument(title = "Summer", date = "2026-09-28").toModel("summer.setlist.json", size = 0)
+
+        assertEquals(LocalDate(2026, 9, 28), setlist.date)
+        assertEquals("2026-09-28", setlist.toDocument().date)
+    }
+
+    @Test
+    fun aDateThatIsNotOneIsNoDate() {
+        listOf("next friday", "2026-02-30", "").forEach { text ->
+            assertNull(SetlistDocument(title = "Summer", date = text).toModel("summer.setlist.json", size = 0).date)
+        }
     }
 }

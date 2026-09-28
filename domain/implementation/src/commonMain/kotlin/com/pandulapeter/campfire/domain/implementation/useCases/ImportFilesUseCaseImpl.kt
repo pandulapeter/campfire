@@ -21,7 +21,10 @@ import com.pandulapeter.campfire.domain.implementation.ImportPlanner
 import com.pandulapeter.campfire.domain.implementation.ImportPlanner.withSongFileNames
 import kotlinx.coroutines.NonCancellable
 import kotlinx.coroutines.withContext
+import kotlinx.datetime.TimeZone
+import kotlinx.datetime.todayIn
 import org.koin.core.annotation.Factory
+import kotlin.time.Clock
 
 @Factory
 class ImportFilesUseCaseImpl internal constructor(
@@ -75,7 +78,9 @@ class ImportFilesUseCaseImpl internal constructor(
             }
 
             val librarySetlists = setlistRepository.loadSetlistsIfNeeded().orEmpty()
-            var priority = (librarySetlists.maxOfOrNull { it.priority } ?: -1) + 1
+            // A setlist that arrives naming no day of its own is dated the way a new one is, by the day it was created
+            // here. The bundled demo setlist is one of them, so it is dated by the first run that plants it.
+            val today = Clock.System.todayIn(TimeZone.currentSystemDefault())
             val replacedSetlistFileNames = mutableSetOf<String>()
             // Planned again on the names the songs actually got: a song kept next to the one it collided with is
             // numbered, and a setlist pointing at it is then no longer the library's setlist it was the same as.
@@ -94,7 +99,7 @@ class ImportFilesUseCaseImpl internal constructor(
                 }
                 when (action) {
                     Action.WRITE, Action.REPLACE -> importedSetlists += setlistRepository.importSetlist(
-                        setlist = entry.setlist.withSongFileNames(storedSongFileNames).copy(priority = priority++),
+                        setlist = entry.setlist.withSongFileNames(storedSongFileNames).let { it.copy(date = it.date ?: today) },
                         shouldReplace = action == Action.REPLACE && entry.fileName !in keptSetlistFileNames &&
                             replacedSetlistFileNames.add(entry.fileName),
                     )

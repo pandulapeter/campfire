@@ -20,6 +20,7 @@ import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.runCurrent
 import kotlinx.coroutines.test.runTest
 import kotlinx.coroutines.yield
+import kotlinx.datetime.LocalDate
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
@@ -38,13 +39,14 @@ class SetlistRepositoryImplTest {
         val repository = SetlistRepositoryImpl(localSource, LibraryFileLock(), LibraryChanges())
 
         repository.updateSetlist(FILE_NAME) { it.copy(entries = it.entries + Setlist.Entry("b.cho"), isArchived = true) }
-        val renamed = repository.renameSetlist(FILE_NAME, "Summer", "For the lake")
+        val renamed = repository.renameSetlist(FILE_NAME, "Summer", "For the lake", DATE)
 
         listOf(renamed, localSource.files[RENAMED_FILE_NAME]).forEach { setlist ->
             assertEquals(listOf("a.cho", "b.cho"), setlist?.entries?.map { it.songFileName })
             assertEquals(true, setlist?.isArchived)
             assertEquals("Summer", setlist?.title)
             assertEquals("For the lake", setlist?.description)
+            assertEquals(DATE, setlist?.date)
         }
         assertTrue(FILE_NAME !in localSource.files)
         assertTrue(repository.setlists.first().data.orEmpty().none { it.fileName == FILE_NAME })
@@ -55,7 +57,7 @@ class SetlistRepositoryImplTest {
         val localSource = FakeSetlistLocalSource(emptyList())
         val repository = SetlistRepositoryImpl(localSource, LibraryFileLock(), LibraryChanges())
 
-        assertNull(repository.renameSetlist(FILE_NAME, "Summer", ""))
+        assertNull(repository.renameSetlist(FILE_NAME, "Summer", "", DATE))
         assertTrue(localSource.files.isEmpty())
     }
 
@@ -67,7 +69,7 @@ class SetlistRepositoryImplTest {
 
         launch { repository.updateSetlist(FILE_NAME) { it.copy(entries = it.entries + Setlist.Entry("b.cho")) } }
         runCurrent()
-        launch { repository.renameSetlist(FILE_NAME, "Summer", "") }
+        launch { repository.renameSetlist(FILE_NAME, "Summer", "", DATE) }
         runCurrent()
 
         assertEquals(setOf(FILE_NAME), localSource.files.keys)
@@ -117,8 +119,8 @@ class SetlistRepositoryImplTest {
         val repository = SetlistRepositoryImpl(localSource, LibraryFileLock(), LibraryChanges())
 
         val created = listOf(
-            async { repository.createSetlist("Gig", "", 1) },
-            async { repository.createSetlist("Gig", "", 1) },
+            async { repository.createSetlist("Gig", "", DATE) },
+            async { repository.createSetlist("Gig", "", DATE) },
         ).awaitAll()
 
         assertEquals(listOf(FILE_NAME, SECOND_FILE_NAME), created.map { it.fileName })
@@ -133,7 +135,7 @@ class SetlistRepositoryImplTest {
         repository.loadSetlistsIfNeeded()
         localSource.files.remove(FILE_NAME)
 
-        repository.createSetlist("Gig", "", 1)
+        repository.createSetlist("Gig", "", DATE)
 
         assertEquals(listOf(FILE_NAME), repository.setlists.first().data?.map { it.fileName })
     }
@@ -146,7 +148,7 @@ class SetlistRepositoryImplTest {
 
         launch { repository.updateSetlist(FILE_NAME) { it.copy(entries = it.entries + Setlist.Entry("b.cho")) } }
         runCurrent()
-        launch { repository.createSetlist("Gig", "", 2) }
+        launch { repository.createSetlist("Gig", "", DATE) }
         runCurrent()
 
         assertEquals(setOf(FILE_NAME), localSource.files.keys)
@@ -221,7 +223,7 @@ class SetlistRepositoryImplTest {
         repository.loadSetlistsIfNeeded()
         localSource.files[FILE_NAME] = setlist(FILE_NAME, "b.cho", "a.cho", "c.cho")
 
-        repository.renameSetlist(FILE_NAME, "Summer", "")
+        repository.renameSetlist(FILE_NAME, "Summer", "", DATE)
 
         assertEquals(listOf("b.cho", "a.cho", "c.cho"), localSource.files.getValue(RENAMED_FILE_NAME).entries.map { it.songFileName })
     }
@@ -311,7 +313,7 @@ class SetlistRepositoryImplTest {
             return files[fileName]
         }
 
-        override suspend fun createSetlist(title: String, description: String, priority: Int): Setlist {
+        override suspend fun createSetlist(title: String, description: String, date: LocalDate): Setlist {
             val name = title.lowercase()
             val fileName = generateSequence(1) { it + 1 }.map { if (it == 1) "$name.setlist.json" else "${name}_$it.setlist.json" }.first { it !in files }
             // The storage finds the name free on one trip and writes under it on another, and this is the gap between them.
@@ -320,7 +322,7 @@ class SetlistRepositoryImplTest {
                 fileName = fileName,
                 title = title,
                 description = description,
-                priority = priority,
+                date = date,
                 isArchived = false,
                 entries = emptyList(),
                 size = 0L,
@@ -358,12 +360,13 @@ class SetlistRepositoryImplTest {
         const val SECOND_FILE_NAME = "gig_2.setlist.json"
         const val RENAMED_FILE_NAME = "summer.setlist.json"
         const val SAVED_SIZE = 42L
+        val DATE = LocalDate(2026, 9, 28)
 
         fun setlist(fileName: String, vararg songs: String) = Setlist(
             fileName = fileName,
             title = "Gig",
             description = "",
-            priority = 1,
+            date = null,
             isArchived = false,
             entries = songs.map { Setlist.Entry(it) },
             size = 0L,

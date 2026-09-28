@@ -25,8 +25,8 @@ The ones that carry real logic:
   carry the last good data — and where there is none yet, a part whose first read failed stands in empty (songs,
   setlists) or at the defaults (preferences), so the part that was read is still shown; such a value says so
   (`ScreenData.isWholeLibrary`) and is never cached. A part that is merely still loading is never filled in. It also
-  orders the setlists (newest first or by title, the archived ones after the rest either
-  way) — every order it produces ends in the file name, because the repositories' lists are in no particular order (a
+  orders the setlists (by date, the latest day first, one day's setlists by title and the undated ones after the
+  dated ones, or by title; the archived ones after the rest either way) — every order it produces ends in the file name, because the repositories' lists are in no particular order (a
   written item moves to the end) and a tie would otherwise be decided by it — without ever narrowing them: the song filters are about the song list, and the setlists screen decides for
   itself whether it is showing the archived ones. The whole library travels alongside the filtered list — see
   `ScreenData.unfilteredSongs`. There are two filter groups over the same library, the tags and the languages
@@ -63,8 +63,9 @@ The ones that carry real logic:
   whole archive, which is the reason for the split — three hundred questions is not a choice. A song is compared by
   Preparing runs on `Dispatchers.Default`, because decoding, splitting, header parsing and comparisons would otherwise
   occupy the view model's main thread, and yields between songs so the web can paint and cancellation can stop it.
-  its text and a setlist by its title and entries, never by the stored document, which carries a priority the import
-  assigns itself — and the entries as they will be written, each pointing where its song lands, so a setlist that
+  its text and a setlist by its fields, never by the stored document, and never by a date the incoming setlist does
+  not carry, since the import dates such a setlist itself with the day it is imported on (which is how the demo
+  setlist gets its date, and why asking for it again finds it unchanged) — and the entries as they will be written, each pointing where its song lands, so a setlist that
   names an incoming song is only the library's one when the song ends up where the library's points. `ImportPlanner` is
   covered by `commonTest`. Applying turns each entry plus the
   `ImportConflictResolution` into write / replace / disregard / leave alone, and only `REPLACE` ever overwrites.

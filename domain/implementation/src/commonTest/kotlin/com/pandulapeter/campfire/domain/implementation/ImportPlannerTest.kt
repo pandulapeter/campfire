@@ -15,6 +15,7 @@ import com.pandulapeter.campfire.data.model.domain.normalizedToNfc
 import com.pandulapeter.campfire.domain.implementation.ImportPlanner.withSongFileNames
 import kotlinx.coroutines.test.runTest
 import kotlinx.coroutines.yield
+import kotlinx.datetime.LocalDate
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFalse
@@ -122,6 +123,21 @@ internal class ImportPlannerTest {
         )
 
         assertEquals(listOf(ImportPlan.Status.CONFLICTING), planned.map { it.status })
+    }
+
+    @Test
+    fun aSetlistThatCarriesNoDateIsTheSameAsTheLibrarysDatedOne() {
+        // The bundled demo setlist names no day, and the copy the library holds was dated by the import that planted it.
+        val library = setlist(fileName = "summer_set.setlist.json", title = "Summer set").copy(date = LocalDate(2026, 9, 28))
+
+        fun statusOf(incoming: Setlist) = ImportPlanner.planSetlists(
+            incoming = listOf(ImportPlanner.IncomingSetlist(incoming, "summer_set.setlist.json")),
+            librarySetlists = listOf(library),
+            songFileNames = emptyMap(),
+        ).single().status
+
+        assertEquals(ImportPlan.Status.IDENTICAL, statusOf(library.copy(date = null)))
+        assertEquals(ImportPlan.Status.CONFLICTING, statusOf(library.copy(date = LocalDate(2026, 10, 1))))
     }
 
     @Test
@@ -562,7 +578,7 @@ internal class ImportPlannerTest {
         fileName = fileName,
         title = title,
         description = "",
-        priority = 0,
+        date = null,
         isArchived = false,
         entries = emptyList(),
         size = 0L,
@@ -573,7 +589,7 @@ internal class ImportPlannerTest {
             fileName = "set.setlist.json",
             title = "Set",
             description = "",
-            priority = 0,
+            date = null,
             isArchived = false,
             entries = listOf(Setlist.Entry(songFileName = "song.cho")),
             size = 0L,

@@ -177,16 +177,20 @@ class GetScreenDataUseCaseImpl internal constructor(
      * only on the screen at all because the user asked to see what has been put away, and mixing them in among the
      * setlists still in use would undo the putting away.
      *
-     * Both orders end in the file name, which never ties. Priorities do - two devices that each made a setlist
-     * while offline gave them the same one, and a hand written file has none - and so do titles, and what decides a
-     * tie otherwise is the order of the repository's list, where a setlist moves to the end every time it is
-     * written: the two would trade places on the screen whenever one of them was touched.
+     * By date the latest day is on top, a setlist with no date at all after every dated one, and the setlists of one
+     * day are in the order of their titles, as they are in the other order. Both orders end in the file name, which
+     * never ties. Titles do, and what decides a tie otherwise is the order of the repository's list, where a setlist
+     * moves to the end every time it is written: the two would trade places on the screen whenever one of them was
+     * touched.
      */
     private fun List<Setlist>.sortSetlists(sortingMode: UserPreferences.SetlistSortingMode) = sortedWith(
         when (sortingMode) {
-            UserPreferences.SetlistSortingMode.NEWEST_FIRST -> compareBy<Setlist> { it.isArchived }.thenByDescending { it.priority }
-            UserPreferences.SetlistSortingMode.BY_TITLE -> compareBy<Setlist> { it.isArchived }.thenBy { normalizeText(it.title) }
-        }.thenBy { it.fileName }
+            UserPreferences.SetlistSortingMode.BY_DATE -> compareBy<Setlist> { it.isArchived }
+                .thenBy { it.date == null }
+                .thenByDescending { it.date }
+
+            UserPreferences.SetlistSortingMode.BY_TITLE -> compareBy<Setlist> { it.isArchived }
+        }.thenBy { normalizeText(it.title) }.thenBy { it.fileName }
     )
 
     /**
@@ -394,7 +398,7 @@ class GetScreenDataUseCaseImpl internal constructor(
             tagMatchMode = UserPreferences.MatchMode.ANY,
             languageMatchMode = UserPreferences.MatchMode.ANY,
         )
-        val DEFAULT_SETLIST_SORTING_MODE = UserPreferences.SetlistSortingMode.NEWEST_FIRST
+        val DEFAULT_SETLIST_SORTING_MODE = UserPreferences.SetlistSortingMode.BY_DATE
         val EMPTY_SONG_PART = SongPart(
             songs = emptyList(),
             songSections = emptyList(),

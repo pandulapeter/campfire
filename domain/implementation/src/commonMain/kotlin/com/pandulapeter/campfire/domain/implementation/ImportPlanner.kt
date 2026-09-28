@@ -222,10 +222,14 @@ internal object ImportPlanner {
         }
     }
 
-    /** A setlist's priority belongs to the import, but every other user-facing field decides whether it is the same. */
+    /**
+     * Every user-facing field decides whether a setlist is the same as the incoming [other], except a date [other] does
+     * not carry: the import gives it the day it is imported on, which a copy of it already in the library can never
+     * match - the bundled demo setlist is one, and asking for it again would otherwise always be a question.
+     */
     private fun Setlist.holdsTheSameAs(other: Setlist) =
-        title == other.title && description == other.description && isArchived == other.isArchived && entries == other.entries &&
-            unknownFields == other.unknownFields
+        title == other.title && description == other.description && (other.date == null || date == other.date) &&
+            isArchived == other.isArchived && entries == other.entries && unknownFields == other.unknownFields
 
     private fun IncomingSong.toEntry(
         status: ImportPlan.Status,

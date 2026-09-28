@@ -86,12 +86,12 @@ data class UserPreferences(
     }
 
     /**
-     * The order the setlists screen lists the setlists in. [NEWEST_FIRST] is [Setlist.priority], which is the order
-     * they were created in; an archived setlist comes after every other one whichever of these is picked, since it
-     * is only on the screen at all because the user asked to see what has been put away.
+     * The order the setlists screen lists the setlists in. [BY_DATE] is [Setlist.date], the latest on top and the
+     * setlists of one day by their title; an archived setlist comes after every other one whichever of these is
+     * picked, since it is only on the screen at all because the user asked to see what has been put away.
      */
     enum class SetlistSortingMode(val id: String) {
-        NEWEST_FIRST("newest_first"),
+        BY_DATE("by_date"),
         BY_TITLE("by_title"),
     }
 

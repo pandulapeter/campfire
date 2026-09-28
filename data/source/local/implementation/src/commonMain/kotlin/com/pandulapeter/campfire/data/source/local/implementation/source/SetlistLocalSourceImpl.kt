@@ -27,6 +27,7 @@ import com.pandulapeter.campfire.data.source.local.implementation.storage.file.S
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
+import kotlinx.datetime.LocalDate
 import org.koin.core.annotation.Single
 
 /** Setlists are decoded on [Dispatchers.Default] for the reason the songs are parsed there (see [SongLocalSourceImpl]). */
@@ -70,13 +71,13 @@ internal class SetlistLocalSourceImpl(
             ?.let { SetlistDocumentFormat.decode(it).toModel(fileName, size = size) }
     }
 
-    override suspend fun createSetlist(title: String, description: String, priority: Int): Setlist {
+    override suspend fun createSetlist(title: String, description: String, date: LocalDate): Setlist {
         val fileName = fileStorage.uniqueName(StorageDirectory.SETLISTS, setlistFileName(title))
         val setlist = Setlist(
             fileName = fileName,
             title = title,
             description = description,
-            priority = priority,
+            date = date,
             isArchived = false,
             entries = emptyList(),
             size = 0,

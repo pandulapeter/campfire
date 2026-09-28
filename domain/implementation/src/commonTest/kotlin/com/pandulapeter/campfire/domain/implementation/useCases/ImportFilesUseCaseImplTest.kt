@@ -21,10 +21,14 @@ import com.pandulapeter.campfire.domain.implementation.ImportPlanner
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.emptyFlow
 import kotlinx.coroutines.test.runTest
+import kotlinx.datetime.LocalDate
+import kotlinx.datetime.TimeZone
+import kotlinx.datetime.todayIn
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
 import kotlin.test.assertFalse
+import kotlin.time.Clock
 
 /**
  * Applying a plan is the one place anything in the library is overwritten, so what it replaces is pinned here as well
@@ -126,6 +130,25 @@ class ImportFilesUseCaseImplTest {
     }
 
     @Test
+    fun `a setlist that names no date is dated by the import and one that does keeps its own`() = runTest {
+        val setlists = FakeSetlistRepository()
+        val dated = setlist(entries = emptyList()).copy(fileName = "dated.setlist.json", title = "Dated", date = LocalDate(2020, 1, 1))
+        val plan = ImportPlan(
+            setlists = ImportPlanner.planSetlists(
+                incoming = listOf(setlist(entries = emptyList()), dated).map { ImportPlanner.IncomingSetlist(it, it.fileName) },
+                librarySetlists = emptyList(),
+                songFileNames = emptyMap(),
+            ),
+        )
+
+        ImportFilesUseCaseImpl(songRepository = FakeSongRepository(files = mutableMapOf()), setlistRepository = setlists)
+            .invoke(plan, ImportConflictResolution.KEEP_BOTH)
+
+        assertEquals(Clock.System.todayIn(TimeZone.currentSystemDefault()), setlists.files.getValue("set.setlist.json").date)
+        assertEquals(LocalDate(2020, 1, 1), setlists.files.getValue("dated.setlist.json").date)
+    }
+
+    @Test
     fun `an import that fails halfway still puts what it wrote into the list`() = runTest {
         val songs = FakeSongRepository(files = mutableMapOf(), failingImport = 2)
         val plan = ImportPlan(
@@ -192,10 +215,10 @@ class ImportFilesUseCaseImplTest {
         override suspend fun loadSetlistFileNamesNaming(songFileName: String) = throw UnsupportedOperationException()
         override suspend fun rescan() = throw UnsupportedOperationException()
         override suspend fun refresh(fileNames: Set<String>) = Unit
-        override suspend fun createSetlist(title: String, description: String, priority: Int) = throw UnsupportedOperationException()
+        override suspend fun createSetlist(title: String, description: String, date: LocalDate) = throw UnsupportedOperationException()
         override suspend fun saveSetlist(setlist: Setlist) = throw UnsupportedOperationException()
         override suspend fun updateSetlist(fileName: String, transform: (Setlist) -> Setlist) = throw UnsupportedOperationException()
-        override suspend fun renameSetlist(fileName: String, title: String, description: String) = throw UnsupportedOperationException()
+        override suspend fun renameSetlist(fileName: String, title: String, description: String, date: LocalDate) = throw UnsupportedOperationException()
         override suspend fun parseSetlist(document: String) = throw UnsupportedOperationException()
         override suspend fun importSetlist(setlist: Setlist, shouldReplace: Boolean): Setlist {
             val storedName = if (shouldReplace) setlist.fileName else files.freeName(setlist.fileName, ".setlist.json")
@@ -234,7 +257,7 @@ class ImportFilesUseCaseImplTest {
             fileName = "set.setlist.json",
             title = "Set",
             description = "",
-            priority = 0,
+            date = null,
             isArchived = false,
             entries = entries.map { Setlist.Entry(songFileName = it) },
             size = 0L,

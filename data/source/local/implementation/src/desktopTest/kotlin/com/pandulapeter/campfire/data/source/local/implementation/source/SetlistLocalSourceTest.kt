@@ -84,7 +84,7 @@ class SetlistLocalSourceTest {
         fileName = fileName,
         title = title,
         description = "",
-        priority = 0,
+        date = null,
         isArchived = false,
         entries = listOf(
             Setlist.Entry(songFileName = "a.cho", transposition = 2),

@@ -12,6 +12,7 @@ package com.pandulapeter.campfire.domain.implementation.useCases
 import com.pandulapeter.campfire.data.model.domain.Setlist
 import com.pandulapeter.campfire.data.repository.api.SetlistRepository
 import com.pandulapeter.campfire.domain.api.useCases.EditSetlistUseCase
+import kotlinx.datetime.LocalDate
 import org.koin.core.annotation.Factory
 
 @Factory
@@ -19,6 +20,6 @@ class EditSetlistUseCaseImpl internal constructor(
     private val setlistRepository: SetlistRepository,
 ) : EditSetlistUseCase {
 
-    override suspend operator fun invoke(fileName: String, title: String, description: String): Setlist? =
-        setlistRepository.renameSetlist(fileName = fileName, title = title.trim(), description = description.trim())
+    override suspend operator fun invoke(fileName: String, title: String, description: String, date: LocalDate): Setlist? =
+        setlistRepository.renameSetlist(fileName = fileName, title = title.trim(), description = description.trim(), date = date)
 }

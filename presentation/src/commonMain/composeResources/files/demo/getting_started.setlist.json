@@ -1,7 +1,6 @@
 {
     "title": "Getting started",
     "description": "The songs Campfire comes with, which between them show off most of what a ChordPro file can hold. Open one in the editor to see how it is written.",
-    "priority": 0,
     "isArchived": false,
     "songs": [
         {

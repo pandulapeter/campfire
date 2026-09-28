@@ -134,6 +134,7 @@ import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 import kotlinx.coroutines.withContext
 import kotlinx.coroutines.withTimeoutOrNull
+import kotlinx.datetime.LocalDate
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.SerializationException
 import kotlinx.serialization.json.Json
@@ -2194,8 +2195,8 @@ class CampfireViewModel(
      * the setlists screen offers no other way of doing that in one place. The picker only opens where nothing else
      * has been opened while the file was being written, and only where the library has songs to pick from.
      */
-    fun createSetlist(title: String, description: String) = launchLibraryChange {
-        val setlist = createSetlist.invoke(title = title, description = description)
+    fun createSetlist(title: String, description: String, date: LocalDate) = launchLibraryChange {
+        val setlist = createSetlist.invoke(title = title, description = description, date = date)
         if (allSongs.value.isNotEmpty()) {
             // Not through setVisibleDialog: this only ever replaces no dialog at all, behind which nothing is parked.
             _visibleDialog.compareAndSet(null, DialogType.SongPicker(setlist))
@@ -2207,8 +2208,11 @@ class CampfireViewModel(
      * moment is that the song should go into it. Both happen in the same library change, so the picker's tick is
      * already there when the new setlist appears in it.
      */
-    fun createSetlistWithSong(title: String, description: String, songFileName: String) = launchLibraryChange {
-        saveSetlist(createSetlist.invoke(title = title, description = description).copy(entries = listOf(Setlist.Entry(songFileName = songFileName))))
+    fun createSetlistWithSong(title: String, description: String, date: LocalDate, songFileName: String) = launchLibraryChange {
+        saveSetlist(
+            createSetlist.invoke(title = title, description = description, date = date)
+                .copy(entries = listOf(Setlist.Entry(songFileName = songFileName))),
+        )
     }
 
     fun addSongToSetlist(songFileName: String, setlistFileName: String) = launchLibraryChange {
@@ -2243,22 +2247,22 @@ class CampfireViewModel(
     }
 
     /**
-     * The title and the description are written together, since they are the whole of what the user gets to say
-     * about a setlist. Only the title reaches the file name, so the setlist that comes back may be under a name
+     * The title, the description and the date are written together, since they are the whole of what the user gets
+     * to say about a setlist. Only the title reaches the file name, so the setlist that comes back may be under a name
      * this one has never seen. The setlist is named rather than passed: the dialog has held its copy since it was
      * opened, and the rest of the setlist may have moved on since. One that is gone by now is not brought back.
      */
-    fun editSetlist(setlistFileName: String, title: String, description: String) = launchLibraryChange {
-        editSetlist.invoke(fileName = setlistFileName, title = title, description = description) ?: sendMessage(Message.OperationFailed)
+    fun editSetlist(setlistFileName: String, title: String, description: String, date: LocalDate) = launchLibraryChange {
+        editSetlist.invoke(fileName = setlistFileName, title = title, description = description, date = date) ?: sendMessage(Message.OperationFailed)
     }
 
     /**
-     * A copy of the setlist under a title of its own, on top of the list the way a new setlist is: it goes through
-     * [CreateSetlistUseCase] rather than through a copied file name, so the copy gets its own name, its own priority
-     * and none of the original's archived state - a copy is made to be worked on.
+     * A copy of the setlist under a title and a date of its own: it goes through [CreateSetlistUseCase] rather than
+     * through a copied file name, so the copy gets its own name and none of the original's archived state - a copy is
+     * made to be worked on.
      */
-    fun duplicateSetlist(setlist: Setlist, title: String, description: String) = launchLibraryChange {
-        saveSetlist(createSetlist.invoke(title = title, description = description).copy(entries = setlist.entries))
+    fun duplicateSetlist(setlist: Setlist, title: String, description: String, date: LocalDate) = launchLibraryChange {
+        saveSetlist(createSetlist.invoke(title = title, description = description, date = date).copy(entries = setlist.entries))
     }
 
     /** Archiving is the way a setlist that has been played is put away without the songs in it being lost. */

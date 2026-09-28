@@ -125,11 +125,14 @@
     <string name="setlists_move_up">Mozgatás feljebb</string>
     <string name="setlists_move_down">Mozgatás lejjebb</string>
     <string name="setlists_actions">Műveletek</string>
-    <string name="setlists_edit_title_and_description">Cím és leírás szerkesztése</string>
+    <string name="setlists_edit_details">Cím, leírás és dátum szerkesztése</string>
     <string name="setlists_song_assignments">Dalok hozzárendelése</string>
     <string name="setlists_add_songs">Dalok hozzáadása</string>
     <string name="setlists_edit_setlist">Lista szerkesztése</string>
     <string name="setlists_description">Leírás (nem kötelező)</string>
+    <string name="setlists_date">Dátum</string>
+    <string name="setlists_date_value">%1$s. %2$s. %3$s.</string>
+    <string name="setlists_pick_date">Dátum kiválasztása</string>
     <string name="setlists_duplicate">Megkettőzés</string>
     <string name="setlists_duplicate_setlist">Lista megkettőzése</string>
     <string name="setlists_duplicate_title">%1$s (másolat)</string>
@@ -144,7 +147,7 @@
     <string name="setlists_no_search_results">Nincs találat</string>
     <string name="setlists_no_search_results_hint">Egyetlen lista sem felel meg a keresésnek, sem a neve, sem a rajta lévő dalok alapján.</string>
     <string name="setlists_sort">Listák rendezése</string>
-    <string name="setlists_sorting_mode_newest_first">Legújabb</string>
+    <string name="setlists_sorting_mode_by_date">Dátum</string>
     <string name="setlists_sorting_mode_by_title">Cím</string>
     <string name="setlists_show_archived">Archivált listák mutatása</string>
     <string name="setlists_all_hidden">Minden lista archiválva van</string>

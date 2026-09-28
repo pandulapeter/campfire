@@ -11,6 +11,7 @@ package com.pandulapeter.campfire.domain.implementation.useCases
 
 import com.pandulapeter.campfire.data.repository.api.SetlistRepository
 import com.pandulapeter.campfire.domain.api.useCases.CreateSetlistUseCase
+import kotlinx.datetime.LocalDate
 import org.koin.core.annotation.Factory
 
 @Factory
@@ -18,10 +19,9 @@ class CreateSetlistUseCaseImpl internal constructor(
     private val setlistRepository: SetlistRepository,
 ) : CreateSetlistUseCase {
 
-    /** The newest setlist goes on top, so it gets a priority above every existing one. */
-    override suspend operator fun invoke(title: String, description: String) = setlistRepository.createSetlist(
+    override suspend operator fun invoke(title: String, description: String, date: LocalDate) = setlistRepository.createSetlist(
         title = title.trim(),
         description = description.trim(),
-        priority = (setlistRepository.loadSetlistsIfNeeded().orEmpty().maxOfOrNull { it.priority } ?: -1) + 1,
+        date = date,
     )
 }

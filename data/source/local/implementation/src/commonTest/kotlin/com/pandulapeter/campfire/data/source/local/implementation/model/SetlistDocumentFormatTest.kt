@@ -19,6 +19,7 @@ import kotlinx.serialization.json.jsonObject
 import kotlinx.serialization.json.jsonPrimitive
 import kotlin.test.Test
 import kotlin.test.assertEquals
+import kotlin.test.assertFalse
 import kotlin.test.assertNull
 import kotlin.test.assertTrue
 
@@ -45,7 +46,7 @@ internal class SetlistDocumentFormatTest {
         // What the serializer alone wrote, which is what every setlist file in the field looks like.
         val serializer = Json { prettyPrint = true }
         listOf(
-            SetlistDocument(title = "Summer", priority = 3, songs = listOf(SetlistSongDocument(file = "a.cho", transposition = 2))),
+            SetlistDocument(title = "Summer", date = "2026-09-28", songs = listOf(SetlistSongDocument(file = "a.cho", transposition = 2))),
             SetlistDocument(title = "Empty"),
         ).forEach { document -> assertEquals(serializer.encodeToString(document), SetlistDocumentFormat.encode(document)) }
     }
@@ -56,5 +57,13 @@ internal class SetlistDocumentFormatTest {
 
         assertTrue(document.unknownFields.isEmpty())
         assertTrue(document.songs.single().unknownFields.isEmpty())
+    }
+
+    @Test
+    fun theOrderOlderVersionsWroteIsReadAndDropped() {
+        val document = SetlistDocumentFormat.decode("""{"title":"Summer","priority":3}""")
+
+        assertTrue(document.unknownFields.isEmpty())
+        assertFalse("priority" in SetlistDocumentFormat.encode(document.toModel("summer.setlist.json", size = 0).toDocument()))
     }
 }

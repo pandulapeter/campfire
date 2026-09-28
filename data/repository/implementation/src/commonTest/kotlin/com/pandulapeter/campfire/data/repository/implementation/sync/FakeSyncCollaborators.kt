@@ -26,6 +26,7 @@ import kotlinx.coroutines.currentCoroutineContext
 import kotlinx.coroutines.ensureActive
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.datetime.LocalDate
 
 /**
  * The two documents sync keeps between runs, held in memory. [onSaveIndex] runs before a write of the index is
@@ -192,7 +193,7 @@ internal class RecordingSetlistRepository : SetlistRepository {
 
     override suspend fun adoptImported(setlists: Collection<Setlist>) = throw UnsupportedOperationException()
 
-    override suspend fun createSetlist(title: String, description: String, priority: Int): Setlist =
+    override suspend fun createSetlist(title: String, description: String, date: LocalDate): Setlist =
         throw UnsupportedOperationException()
 
     override suspend fun saveSetlist(setlist: Setlist): Unit = throw UnsupportedOperationException()
@@ -200,7 +201,7 @@ internal class RecordingSetlistRepository : SetlistRepository {
     override suspend fun updateSetlist(fileName: String, transform: (Setlist) -> Setlist): Setlist? =
         throw UnsupportedOperationException()
 
-    override suspend fun renameSetlist(fileName: String, title: String, description: String): Setlist? =
+    override suspend fun renameSetlist(fileName: String, title: String, description: String, date: LocalDate): Setlist? =
         throw UnsupportedOperationException()
 
     override suspend fun parseSetlist(document: String): Setlist? = throw UnsupportedOperationException()
