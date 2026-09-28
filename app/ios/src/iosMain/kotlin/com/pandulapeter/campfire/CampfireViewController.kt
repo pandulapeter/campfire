@@ -15,7 +15,14 @@ import com.pandulapeter.campfire.di.startCampfireDependencyGraph
 import com.pandulapeter.campfire.domain.api.useCases.CancelSynchronizationUseCase
 import com.pandulapeter.campfire.domain.api.useCases.GetSyncStateUseCase
 import com.pandulapeter.campfire.presentation.ui.CampfireIosApp
+import kotlinx.cinterop.BetaInteropApi
+import platform.Foundation.NSCharacterSet
+import platform.Foundation.NSMutableCharacterSet
+import platform.Foundation.NSString
 import platform.Foundation.NSURL
+import platform.Foundation.URLQueryAllowedCharacterSet
+import platform.Foundation.create
+import platform.Foundation.stringByAddingPercentEncodingWithAllowedCharacters
 import platform.UIKit.UIApplication
 import platform.UIKit.UIUserInterfaceStyle
 import platform.UIKit.UIViewController
@@ -94,8 +101,21 @@ private fun applyAppIcon(themeColor: UserPreferences.ThemeColor) {
     }
 }
 
+/**
+ * Opens [url] in the browser, percent-encoding it first where NSURL will not take it as written. A song's link is kept
+ * as the user wrote it, which may hold non-ASCII letters or characters such as `|` that a URL may not; iOS 17 encodes
+ * those itself, but before it `URLWithString` answers null for them, and the chip would do nothing at all. The set the
+ * address is encoded with is a query's plus `#` and `%`, so its structure and any escape already in it survive and only
+ * what is illegal is escaped.
+ */
+@OptIn(BetaInteropApi::class)
 private fun openUrl(url: String) {
-    NSURL.URLWithString(url)?.let { nsUrl ->
-        UIApplication.sharedApplication.openURL(nsUrl, options = emptyMap<Any?, Any>(), completionHandler = null)
-    }
+    val nsUrl = NSURL.URLWithString(url) ?: NSString.create(string = url)
+        .stringByAddingPercentEncodingWithAllowedCharacters(urlAllowedCharacters)
+        ?.let(NSURL::URLWithString)
+    nsUrl?.let { UIApplication.sharedApplication.openURL(it, options = emptyMap<Any?, Any>(), completionHandler = null) }
+}
+
+private val urlAllowedCharacters by lazy {
+    (NSCharacterSet.URLQueryAllowedCharacterSet.mutableCopy() as NSMutableCharacterSet).apply { addCharactersInString("#%") }
 }
