@@ -9,7 +9,6 @@
 -->
 # To do
 - PDF import
-- Regenerate the baseline profile
 - First time user experience tutorial
 - Sort and Filter UI should be improved (better animations)
 - Haptic effects
