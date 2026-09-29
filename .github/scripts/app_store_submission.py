@@ -9,12 +9,14 @@
 """
 Submits an uploaded build for App Review, which is everything a release used to need App Store Connect open for.
 
-    app_store_submission.py <bundle identifier> <IOS | MAC_OS> <version> <build number> <release notes file>
+    app_store_submission.py <bundle identifier> <IOS | MAC_OS> <version> <build number> <release notes file> [--prepare]
 
 It waits for App Store Connect to finish processing the build (processing is also where a build is refused, with the
 reason mailed; this fails with the state instead of waiting forever), takes the platform's version for the release -
 the one that already carries that version string, or else the editable one, renamed, or else a new one, set to be
 released as soon as it is approved - attaches the build, writes the release notes as its "What's New" and submits it.
+With --prepare it stops before the submission, leaving the version ready in App Store Connect for somebody to add the
+release's screenshots to and submit it there; a later run with the same build submits it as it is.
 
 A draft that is already there - a version prepared in App Store Connect for this release, with its new screenshots,
 whether or not it has been added to a review submission, or one that was rejected - is used as it is: the build is
@@ -163,7 +165,7 @@ def submit(app_id, platform, version):
     }})
 
 
-def main(bundle_identifier, platform, version, build_number, notes_file):
+def main(bundle_identifier, platform, version, build_number, notes_file, prepare_only):
     with open(notes_file) as file:
         notes = file.read().strip()
     if len(notes) > WHATS_NEW_LIMIT:
@@ -203,11 +205,17 @@ def main(bundle_identifier, platform, version, build_number, notes_file):
         if not notes:
             fail("An update needs release notes for its \"What's New\", and there are none.")
         write_whats_new(store_version, notes)
+    if prepare_only:
+        print(f"Prepared the {platform} version {version} ({build_number}) without submitting it: add the screenshots in "
+              "App Store Connect and submit it there.")
+        return
     submit(app["id"], platform, store_version)
     print(f"Submitted the {platform} version {version} ({build_number}) for review. It is released as soon as it is approved.")
 
 
 if __name__ == "__main__":
-    if len(sys.argv) != 6 or sys.argv[2] not in {"IOS", "MAC_OS"}:
+    arguments = sys.argv[1:]
+    prepare = arguments[5:] == ["--prepare"]
+    if len(arguments) != (6 if prepare else 5) or arguments[1] not in {"IOS", "MAC_OS"}:
         fail(__doc__.strip().split("\n\n")[1].strip())
-    main(*sys.argv[1:])
+    main(*arguments[:5], prepare)

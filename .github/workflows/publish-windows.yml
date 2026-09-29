@@ -9,7 +9,9 @@
 # Builds the Microsoft Store package of the desktop app (packageReleaseMsix) and submits it for certification with the
 # release's notes as its "What's new in this version", to be published as soon as it passes
 # (.github/scripts/microsoft_store_submission.py). The package is kept as an artifact of the run as well, for an upload
-# made by hand. A green run means submitted, not certified - certification answers by email.
+# made by hand. A green run means submitted, not certified - certification answers by email. Dispatched by hand with
+# "submit" off, it stops short of the commit and leaves the submission as a draft in Partner Center, for the release's
+# screenshots to be added to and the submission sent from there: Partner Center takes screenshots from nowhere else.
 #
 # The package is unsigned, because Partner Center signs what it certifies, so nothing here signs anything. What it
 # needs is a Microsoft Entra application with the Manager role in Partner Center, named by MICROSOFT_STORE_TENANT_ID and
@@ -31,6 +33,9 @@ on:
       release_notes:
         type: string
         required: false
+      submit:
+        type: boolean
+        default: true
   workflow_dispatch:
     inputs:
       release_tag:
@@ -41,6 +46,10 @@ on:
         description: '"What''s new in this version" for the submission, use \n for line breaks'
         type: string
         required: false
+      submit:
+        description: 'Submit for certification (off: leave the submission as a draft in Partner Center, to add screenshots to)'
+        type: boolean
+        default: true
 
 permissions:
   contents: read
@@ -185,7 +194,11 @@ jobs:
           MICROSOFT_STORE_TENANT_ID: ${{ secrets.MICROSOFT_STORE_TENANT_ID }}
           MICROSOFT_STORE_CLIENT_ID: ${{ secrets.MICROSOFT_STORE_CLIENT_ID }}
           RELEASE_NOTES: ${{ inputs.release_notes }}
+          SUBMIT: ${{ inputs.submit }}
         run: |
+          # Without the submission the run leaves everything ready but the screenshots, which are added by hand.
+          PREPARE=()
+          [ "$SUBMIT" = true ] || PREPARE=(--prepare)
           # A single-line text box has no other way to ask for a line break; the notes release.yml passes on are
           # carried through as they are, backslashes included.
           if [ "$GITHUB_EVENT_NAME" = workflow_dispatch ]; then
@@ -194,7 +207,7 @@ jobs:
             printf '%s\n' "$RELEASE_NOTES" > "$RUNNER_TEMP/release-notes.txt"
           fi
           python .github/scripts/microsoft_store_submission.py "${{ steps.package.outputs.identity }}" \
-            "${{ steps.package.outputs.version }}" "${{ steps.package.outputs.path }}" "$RUNNER_TEMP/release-notes.txt"
+            "${{ steps.package.outputs.version }}" "${{ steps.package.outputs.path }}" "$RUNNER_TEMP/release-notes.txt" "${PREPARE[@]}"
       - name: Clean up credentials
         if: always()
         run: rm -f local.properties

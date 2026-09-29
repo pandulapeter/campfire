@@ -62,6 +62,10 @@ AWAITING_STATES = {
     "READY_FOR_REVIEW", "WAITING_FOR_REVIEW", "IN_REVIEW", "WAITING_FOR_EXPORT_COMPLIANCE", "PENDING_CONTRACT",
     "ACCEPTED", "PROCESSING_FOR_APP_STORE", "PENDING_APPLE_RELEASE", "PENDING_DEVELOPER_RELEASE",
 }
+# The states of a version that has not been submitted but may still be with the build attached to it: one a run prepared
+# and left for screenshots, or one rejected and sent again as it is. Its build is submitted later, by hand, and is
+# refused if its certificate was revoked in between.
+UNSUBMITTED_STATES = {"PREPARE_FOR_SUBMISSION", "DEVELOPER_REJECTED", "REJECTED", "METADATA_REJECTED"}
 
 
 def fail(message):
@@ -230,8 +234,8 @@ def awaiting_versions(app_id, platform):
     return [item for item in versions if item["attributes"]["appStoreState"] in AWAITING_STATES]
 
 
-def awaiting_version_of_build(app_id, build):
-    """The version the build is attached to, where that one has been submitted and is not on the store yet."""
+def pending_version_of_build(app_id, build):
+    """The version the build is attached to, where that one is not on the store yet and may still be submitted with it."""
     builds = request(
         "GET", f"/builds?filter[app]={app_id}&filter[version]={build['number']}"
         f"&filter[preReleaseVersion.version]={build['version']}&filter[preReleaseVersion.platform]={build['platform']}",
@@ -239,14 +243,14 @@ def awaiting_version_of_build(app_id, build):
     if not builds:
         return None
     version = (request("GET", f"/builds/{builds[0]['id']}/appStoreVersion", missing_ok=True) or {}).get("data")
-    return version if version and version["attributes"]["appStoreState"] in AWAITING_STATES else None
+    return version if version and version["attributes"]["appStoreState"] in AWAITING_STATES | UNSUBMITTED_STATES else None
 
 
 def still_needed(app_id, platform, state):
     """Why the identities of a state file must not be revoked yet, or None where they may be."""
     build = state.get("build")
     if build:
-        version = awaiting_version_of_build(app_id, build)
+        version = pending_version_of_build(app_id, build)
         if version:
             return (f"build {build['version']} ({build['number']}) is attached to the {platform} version "
                     f"{version['attributes']['versionString']}, which is {version['attributes']['appStoreState']}")

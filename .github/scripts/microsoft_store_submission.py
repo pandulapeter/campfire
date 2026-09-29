@@ -10,18 +10,22 @@
 Submits a new .msix to the Microsoft Store for certification, which is everything an update used to need Partner Center
 open for.
 
-    microsoft_store_submission.py <package identity name> <package version> <.msix file> <release notes file>
+    microsoft_store_submission.py <package identity name> <package version> <.msix file> <release notes file> [--prepare]
 
 The app is found by its package identity name (campfire.windows.identityName), so no Store ID has to be kept anywhere.
 A new submission is a copy of the last published one: this replaces its package with the new one, writes the release
 notes as its "What's new in this version", sets it to be published as soon as it passes certification, uploads the
 package and commits it, then waits until Partner Center has accepted the commit (which is where a package that does
 not match the product's identity is refused). A green run means submitted, not certified: certification answers by
-email, usually within a few days.
+email, usually within a few days. With --prepare it stops before the commit, leaving the submission as a draft in
+Partner Center for somebody to add the release's screenshots to and submit it there; since this made it, a later run
+can still take it up and commit it.
 
-A draft that is already there - a submission started in Partner Center for this release, with its new screenshots, or one
-whose commit failed - is used instead of a new copy: its package is replaced with the new one and its "What's new in this
-version" with the notes, everything else in it is kept exactly as it is, the publish mode included, and it is committed.
+A draft this script made and did not get through - one whose commit failed - is used instead of a new copy: its package
+is replaced with the new one and its "What's new in this version" with the notes, everything else in it is kept exactly
+as it is, the publish mode included, and it is committed. A draft started in Partner Center cannot be: the API refuses
+to change a submission it did not create, and hands out no upload address for one, so the run stops and says so - that
+draft is finished in Partner Center with the package this run keeps, or deleted so that the run can make its own.
 A submission that is already past its commit with this very package version is left as it is, so a run that is repeated
 does not fail on its own success. One past its commit with anything else - the previous release still in certification
 - stops the run instead of being deleted, since the product can only have one submission in progress at a time.
@@ -55,8 +59,8 @@ RELEASE_NOTES_LIMIT = 1500
 UPLOAD_BLOCK_BYTES = 4 * 1024 * 1024
 COMMIT_TIMEOUT_SECONDS = 30 * 60
 POLL_INTERVAL_SECONDS = 30
-# The states of a submission that has not been committed yet, and so can still be changed: a draft started in Partner
-# Center, or one whose commit Partner Center refused.
+# The states of a submission that has not been committed yet: a draft started in Partner Center, which the API cannot
+# change, or one this script made whose commit Partner Center refused.
 DRAFT_STATES = {"PendingCommit", "CommitFailed"}
 # The states of a submission that is past its commit and on its way to the Store.
 SUBMITTED_STATES = {"PreProcessing", "Certification", "Release", "PendingPublication", "Publishing", "Published"}
@@ -225,7 +229,7 @@ def wait_for_commit(app_id, submission_id):
         time.sleep(POLL_INTERVAL_SECONDS)
 
 
-def main(identity_name, version, package, notes_file):
+def main(identity_name, version, package, notes_file, prepare_only):
     with open(notes_file, encoding="utf-8") as file:
         notes = file.read().strip()
     if len(notes) > RELEASE_NOTES_LIMIT:
@@ -244,9 +248,8 @@ def main(identity_name, version, package, notes_file):
         # release; what a release starts goes out as soon as it passes.
         submission["targetPublishMode"] = "Immediate"
     elif submission.get("status") in DRAFT_STATES:
-        # A draft is somebody's work on the listing for this release - its screenshots, its description - so only the
-        # package and the release notes are replaced and everything else, the publish mode included, is sent back as
-        # it came. The whole submission has to be sent, since a PUT replaces it rather than merging.
+        # A draft is work on the listing for this release, so only the package and the release notes are replaced and
+        # everything else, the publish mode included, is sent back as it came. The whole submission has to be sent, since a PUT replaces it rather than merging.
         print(f"Amending the draft submission {submission['id']} of {name} ({submission.get('status')}, with "
               f"{', '.join(sorted(package_versions(submission))) or 'no package'}).")
     elif submission.get("status") in SUBMITTED_STATES and version in package_versions(submission):
@@ -257,18 +260,22 @@ def main(identity_name, version, package, notes_file):
              f"{', '.join(sorted(package_versions(submission))) or 'no package'}). The Store takes one at a time: wait "
              "for it to be published, or delete it in Partner Center, and run this again.")
     submission_id = submission["id"]
-    # A submission the API created carries its upload address from the start; a draft started in Partner Center
-    # carries none until it has been updated through the API, and the update answers with one.
+    # Every submission the API created carries its upload address; one started in Partner Center carries none, and an
+    # update of it is refused as being in the state "None", so it is left exactly as it is.
     upload_url = submission.pop("fileUploadUrl", None)
+    if not upload_url:
+        fail(f"Submission {submission_id} was started in Partner Center, and the submission API cannot change a "
+             "submission it did not create. Either finish it there - upload the package this run keeps as its "
+             f"campfire-msix artifact ({os.path.basename(package)}), write the release notes and submit it - or delete "
+             "it there and run this again, which submits a copy of the last published submission instead.")
     replace_package(submission, os.path.basename(package))
     write_release_notes(submission, notes)
-    updated = request("PUT", f"/applications/{app['id']}/submissions/{submission_id}", submission)
-    upload_url = (updated or {}).get("fileUploadUrl") or upload_url
-    if not upload_url:
-        fail(f"Partner Center gave no upload address for submission {submission_id}. The draft now names "
-             f"{os.path.basename(package)} as a package still to be uploaded: upload it there by hand and submit it, "
-             "or delete the draft and run this again.")
+    request("PUT", f"/applications/{app['id']}/submissions/{submission_id}", submission)
     upload(upload_url, package)
+    if prepare_only:
+        print(f"Prepared submission {submission_id} with version {version} without submitting it: add the screenshots in "
+              "Partner Center and submit it there.")
+        return
     request("POST", f"/applications/{app['id']}/submissions/{submission_id}/commit")
     status = wait_for_commit(app["id"], submission_id)
     print(f"Submitted version {version} for certification ({status}), to be published "
@@ -276,6 +283,8 @@ def main(identity_name, version, package, notes_file):
 
 
 if __name__ == "__main__":
-    if len(sys.argv) != 5:
+    arguments = sys.argv[1:]
+    prepare = arguments[4:] == ["--prepare"]
+    if len(arguments) != (5 if prepare else 4):
         fail(__doc__.strip().split("\n\n")[1].strip())
-    main(*sys.argv[1:])
+    main(*arguments[:4], prepare)

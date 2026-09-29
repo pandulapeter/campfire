@@ -10,7 +10,8 @@
 # It then waits for the build to be processed and submits it for review with the release's notes as its "What's New",
 # to be released as soon as Apple approves it. A green run means submitted, not accepted — review answers by email.
 # Where another version is still waiting for Apple, the build stays in TestFlight unsubmitted and the run ends with a
-# warning instead.
+# warning instead. Dispatched by hand with "submit" off, it stops short of the submission and leaves the version
+# prepared in App Store Connect, for the release's screenshots to be added to and the version submitted from there.
 #
 # Nothing it signs with is stored anywhere, so nothing of it can expire: the run creates an Apple Distribution
 # certificate for a key made on the runner through the App Store Connect API (.github/scripts/app_store_signing.py),
@@ -33,6 +34,9 @@ on:
       release_notes:
         type: string
         required: false
+      submit:
+        type: boolean
+        default: true
   workflow_dispatch:
     inputs:
       release_tag:
@@ -47,6 +51,10 @@ on:
         description: '"What''s New" for the submission, use \n for line breaks'
         type: string
         required: false
+      submit:
+        description: 'Submit for review (off: leave the version prepared in App Store Connect, to add screenshots to)'
+        type: boolean
+        default: true
 
 permissions:
   contents: read
@@ -260,7 +268,11 @@ jobs:
           ASC_KEY_ID: ${{ secrets.APP_STORE_CONNECT_KEY_ID }}
           ASC_ISSUER_ID: ${{ secrets.APP_STORE_CONNECT_ISSUER_ID }}
           RELEASE_NOTES: ${{ inputs.release_notes }}
+          SUBMIT: ${{ inputs.submit }}
         run: |
+          # Without the submission the run leaves everything ready but the screenshots, which are added by hand.
+          PREPARE=()
+          [ "$SUBMIT" = true ] || PREPARE=(--prepare)
           # A single-line text box has no other way to ask for a line break; the notes release.yml passes on are
           # carried through as they are, backslashes included.
           if [ "$GITHUB_EVENT_NAME" = workflow_dispatch ]; then
@@ -269,7 +281,7 @@ jobs:
             printf '%s\n' "$RELEASE_NOTES" > "$RUNNER_TEMP/release-notes.txt"
           fi
           python3 .github/scripts/app_store_submission.py com.pandulapeter.campfire IOS \
-            "${{ steps.version.outputs.name }}" "${{ steps.version.outputs.build }}" "$RUNNER_TEMP/release-notes.txt"
+            "${{ steps.version.outputs.name }}" "${{ steps.version.outputs.build }}" "$RUNNER_TEMP/release-notes.txt" "${PREPARE[@]}"
       # A build has to stay signed by a valid certificate until it is approved, so a run that uploaded one leaves what it
       # created to the later runs of this workflow, which revoke it before they make their own once the build is no
       # longer waiting for Apple.

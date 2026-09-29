@@ -9,7 +9,8 @@
 # Builds the signed release APK and uploads it to the production track of the Play Console. Nothing is attached to the
 # GitHub release: Play is where the Android build is had, and a release only carries what no official channel offers.
 # Called by release.yml for every release; dispatched by hand to publish without one, or to repeat the Android half of
-# a release that went wrong.
+# a release that went wrong. Dispatched by hand with "submit" off, the release is left as a draft in the Play Console,
+# to be rolled out from there.
 
 name: 'Publish Android'
 
@@ -26,6 +27,9 @@ on:
       release_tag:
         type: string
         required: false
+      submit:
+        type: boolean
+        default: true
   workflow_dispatch:
     inputs:
       update_priority:
@@ -41,6 +45,10 @@ on:
         description: 'Tag of the release to build (leave empty to build this branch)'
         type: string
         required: false
+      submit:
+        description: 'Send the release for review (off: leave it as a draft in the Play Console, to change the listing first)'
+        type: boolean
+        default: true
 
 permissions:
   contents: read
@@ -171,7 +179,8 @@ jobs:
           mappingFile: app/android/build/outputs/mapping/release/mapping.txt
           releaseName: ${{ steps.version.outputs.name }} (${{ steps.version.outputs.code }})
           tracks: production
-          status: completed
+          # A draft is rolled out from the Play Console once whatever the release needs there has been done by hand.
+          status: ${{ inputs.submit && 'completed' || 'draft' }}
           # What the in-app update gate in :presentation reads; see the Updates section of CLAUDE.md for the
           # thresholds. Left at 0 a release is simply one Play installs on its own schedule, and the app says nothing.
           inAppUpdatePriority: ${{ inputs.update_priority }}

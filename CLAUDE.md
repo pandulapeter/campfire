@@ -374,9 +374,13 @@ uninstall and nothing else does.
     so no Store ID is kept anywhere, creates a submission — a copy of the last published one — swaps its package for
     the new one, writes the release's `whats-new` notes as its "What's new in this version", sets it to be published
     as soon as it passes certification, uploads and commits it, and waits for Partner Center to accept the commit. A
-    green run means submitted, not certified. A **draft** that is already there — one started in Partner Center with
-    the release's new screenshots, or one whose commit failed — is used instead of the copy: only its package and its
-    "What's new" are replaced, everything else in it (the publish mode included) is kept as it is, and it is committed.
+    green run means submitted, not certified. A **draft** the script made whose commit failed is used instead of the copy:
+    only its package and its "What's new" are replaced, everything else in it (the publish mode included) is kept as it
+    is, and it is committed. **A draft started in Partner Center stops the run**, untouched: the API refuses to change a
+    submission it did not create, so one prepared there is finished there with the run's `.msix` artifact, or deleted
+    so that the run can make its own. **A release with new screenshots is dispatched by hand with `submit` off**
+    instead: the run stops short of the commit, leaving a draft of its own making in Partner Center for the screenshots
+    to be added to and submitted there.
     A submission past its commit with this version is left alone, so a repeated run succeeds; one past its commit with
     anything else stops the run, since a product has only one in progress at a time. It signs in as a Microsoft Entra application with the
     Manager role in Partner Center (`MICROSOFT_STORE_TENANT_ID` and `_CLIENT_ID`) and **with no secret**: the
@@ -401,7 +405,10 @@ uninstall and nothing else does.
     later run revokes, see below), lets xcodebuild make the App Store profile for it with the App Store Connect API key, and
     uploads the exported
     `.ipa` to App Store Connect, where it lands in TestFlight. Nothing is attached to the release.
-  - **Both Apple workflows submit what they upload for review**: `.github/scripts/app_store_submission.py` waits for
+  - **Both Apple workflows submit what they upload for review** (dispatched by hand with `submit` off, they stop short
+    of the submission and leave the version prepared, for new screenshots to be added and submitted in App Store
+    Connect — and the certificate of a build attached to a version that is prepared or rejected is kept too, since that
+    build may still be submitted): `.github/scripts/app_store_submission.py` waits for
     App Store Connect to process the build, takes the platform's version for `campfire.versionName` — the existing one, the
     editable one renamed, or a new one set to be released as soon as it is approved — attaches the build, writes
     the release's `whats-new` notes as its "What's New" (all but a platform's first version) and submits it. A
@@ -431,7 +438,8 @@ uninstall and nothing else does.
     and a later run of the same workflow revokes what it names before making its own — **unless App Store Connect says
     that build is attached to a version still waiting for Apple**, in which case it is left alone and the artifact kept
     for the run after to ask about again (a state file that names no build is kept while any version of the platform
-    is waiting). A build uploaded and never submitted is revoked by the next run, whose build replaces it. A run that
+    is waiting). A build uploaded and never attached to a version is revoked by the next run, whose build replaces it; one attached
+    to a version still being prepared, or rejected, is kept like a waiting one. A run that
     uploaded nothing revokes its own in an `always()` step, and the build is recorded before the upload rather than
     after it, so that no failure after an upload revokes the certificate of what went up. The API shows nothing that tells these certificates from ones made by hand, so an artifact that expires
     leaves its certificates to expire on their own. Revoking after approval does not touch builds on the store, which
@@ -439,7 +447,8 @@ uninstall and nothing else does.
     already downloaded.
   - `publish-android.yml` writes the keystore out of `ANDROID_KEYSTORE_BASE64`, builds `assembleRelease` signed with
     the other three `ANDROID_*` secrets and uploads it and its mapping file to the production track with
-    `PLAY_SERVICE_ACCOUNT_JSON`; nothing is attached to the release. It is an **APK** and not an app bundle because the Play listing predates the bundle
+    `PLAY_SERVICE_ACCOUNT_JSON` (as a draft there when dispatched by hand with `submit` off, rolled out from the Play
+    Console); nothing is attached to the release. It is an **APK** and not an app bundle because the Play listing predates the bundle
     requirement and was never migrated; a `bundleRelease` would be rejected on upload. The "what's new" text comes
     from the workflow's `release_notes` input, which `release.yml` fills from comments in the release's description
     that the rendered page hides (`<!-- whats-new en-US … -->`, written for every store and passed to the Apple and Windows workflows as well, and `<!-- play-store update-priority: 0 -->`; the

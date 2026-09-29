@@ -111,7 +111,7 @@ both are always written:
 - bullet one
 - bullet two
 -->
-<!-- play-store update-priority: 0 -->
+<!-- play-store update-priority: 3 -->
 ```
 
 - **`whats-new en-US`** is the changelog every store gets, not Play's alone — the App Store and the Mac App
