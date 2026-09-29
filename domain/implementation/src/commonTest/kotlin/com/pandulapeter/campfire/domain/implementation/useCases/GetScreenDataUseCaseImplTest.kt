@@ -313,6 +313,7 @@ class GetScreenDataUseCaseImplTest {
             shouldShowArchivedSetlists = false,
             isLyricsOnlyModeEnabled = false,
             isHorizontalSectionFlowEnabled = false,
+            isOneRowAtATimeEnabled = false,
             fontScale = 1f,
             sortingMode = UserPreferences.SortingMode.BY_TITLE,
             setlistSortingMode = UserPreferences.SetlistSortingMode.BY_DATE,

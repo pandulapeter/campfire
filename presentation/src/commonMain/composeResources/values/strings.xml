@@ -176,6 +176,8 @@
     <string name="settings_lyrics_only_mode_description">Hide every chord and show the words on their own</string>
     <string name="settings_horizontal_section_flow">Read across the columns</string>
     <string name="settings_horizontal_section_flow_description">Where a song is wide enough for several columns, the sections carry on to the right instead of downwards, so scrolling never goes back up</string>
+    <string name="settings_one_row_at_a_time">One row at a time</string>
+    <string name="settings_one_row_at_a_time_description">Leave empty space under every row, so that the next one only comes into view once you scroll to it</string>
     <string name="settings_cover_art">Cover art</string>
     <string name="settings_cover_art_description">Show the album cover a song names next to it, downloading it once and keeping a copy on this device</string>
     <string name="settings_german_notation">German notation</string>
@@ -295,6 +297,8 @@
     <!-- Song details screen -->
     <string name="song_details_previous_song">Previous song</string>
     <string name="song_details_next_song">Next song</string>
+    <string name="song_details_previous_row">Previous row</string>
+    <string name="song_details_next_row">Next row</string>
     <string name="song_details_song_position">%1$d / %2$d</string>
     <string name="song_details_transpose_up">Transpose up</string>
     <string name="song_details_transpose_down">Transpose down</string>

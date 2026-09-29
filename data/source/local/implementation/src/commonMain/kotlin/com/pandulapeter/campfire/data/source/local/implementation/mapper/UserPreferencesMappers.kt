@@ -17,6 +17,7 @@ internal fun UserPreferencesDocument.toModel() = UserPreferences(
     shouldShowArchivedSetlists = shouldShowArchivedSetlists,
     isLyricsOnlyModeEnabled = isLyricsOnlyModeEnabled,
     isHorizontalSectionFlowEnabled = isHorizontalSectionFlowEnabled,
+    isOneRowAtATimeEnabled = isOneRowAtATimeEnabled,
     // A hand edit or a newer version's wider range must not reach the screen as it is: a size of 40 is a column per
     // word. Not a number at all is no size, and is the default.
     fontScale = fontScale.takeIf { it.isFinite() }?.coerceIn(UserPreferences.MIN_FONT_SCALE, UserPreferences.MAX_FONT_SCALE)
@@ -43,6 +44,7 @@ internal fun UserPreferences.toDocument() = UserPreferencesDocument(
     shouldShowArchivedSetlists = shouldShowArchivedSetlists,
     isLyricsOnlyModeEnabled = isLyricsOnlyModeEnabled,
     isHorizontalSectionFlowEnabled = isHorizontalSectionFlowEnabled,
+    isOneRowAtATimeEnabled = isOneRowAtATimeEnabled,
     fontScale = fontScale,
     sortingMode = sortingMode.id,
     setlistSortingMode = setlistSortingMode.id,

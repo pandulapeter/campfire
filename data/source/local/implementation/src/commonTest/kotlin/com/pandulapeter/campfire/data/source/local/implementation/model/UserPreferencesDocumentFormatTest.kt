@@ -27,6 +27,7 @@ internal class UserPreferencesDocumentFormatTest {
             shouldShowArchivedSetlists = true,
             isLyricsOnlyModeEnabled = true,
             isHorizontalSectionFlowEnabled = false,
+            isOneRowAtATimeEnabled = false,
             fontScale = 1.25f,
             sortingMode = "by_title",
             setlistSortingMode = "by_title",

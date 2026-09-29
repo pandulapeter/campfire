@@ -176,6 +176,8 @@
     <string name="settings_lyrics_only_mode_description">Az akkordok elrejtése, hogy csak a szöveg maradjon</string>
     <string name="settings_horizontal_section_flow">Olvasás az oszlopokon át</string>
     <string name="settings_horizontal_section_flow_description">Ahol egy dal több oszlopban is kifér, a szakaszok jobbra folytatódnak és nem lefelé, így görgetés közben sosem kell visszalapozni</string>
+    <string name="settings_one_row_at_a_time">Egyszerre egy sor</string>
+    <string name="settings_one_row_at_a_time_description">Üres hely minden sor alatt, így a következő csak akkor jelenik meg, amikor odagörgetsz</string>
     <string name="settings_cover_art">Borítóképek</string>
     <string name="settings_cover_art_description">A dalokban megadott albumborítók megjelenítése, amelyeket az alkalmazás egyszer letölt, majd ezen az eszközön tárol</string>
     <string name="settings_german_notation">Német hangjelölés</string>
@@ -295,6 +297,8 @@
     <!-- Song details screen -->
     <string name="song_details_previous_song">Előző dal</string>
     <string name="song_details_next_song">Következő dal</string>
+    <string name="song_details_previous_row">Előző sor</string>
+    <string name="song_details_next_row">Következő sor</string>
     <string name="song_details_song_position">%1$d / %2$d</string>
     <string name="song_details_transpose_up">Transzponálás felfelé</string>
     <string name="song_details_transpose_down">Transzponálás lefelé</string>

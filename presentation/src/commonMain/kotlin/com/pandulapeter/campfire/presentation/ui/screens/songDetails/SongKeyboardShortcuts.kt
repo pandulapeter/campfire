@@ -28,7 +28,8 @@ import androidx.compose.ui.input.key.type
 /**
  * Drives the song details screen from the arrow keys: Up and Down scroll the song being read, Left and Right step
  * to the previous and the next song of the setlist. That is a keyboard on the desktop and the web, and it is also
- * a page turner pedal paired with a phone or a tablet, which is exactly what those send.
+ * a page turner pedal paired with a phone or a tablet, which is exactly what those send. Page Up and Page Down, which
+ * the other kind of pedal sends, step between the rows of a song read across the columns, as its buttons do.
  *
  * The screen takes focus as it opens, because nothing on it would otherwise ever be focused and key events only
  * travel along the focus path. The handler sits in the preview pass rather than the bubbling one so that it sees
@@ -42,6 +43,9 @@ import androidx.compose.ui.input.key.type
  * @param onPreviousSong Null when the current song is the first one, or when there is only the one to read; the
  *   event is then left alone rather than swallowed.
  * @param onNextSong Null when the current song is the last one, the same way.
+ * @param onPreviousRow Null where there is no row to step back to - the song is not read in rows, or its first row is
+ *   already at the top - which leaves the key to the scrolling container, the same way.
+ * @param onNextRow Null where there is no row after the one being read, the same way.
  */
 @Composable
 internal fun Modifier.songKeyboardShortcuts(
@@ -49,6 +53,8 @@ internal fun Modifier.songKeyboardShortcuts(
     onScrollDown: () -> Unit,
     onPreviousSong: (() -> Unit)?,
     onNextSong: (() -> Unit)?,
+    onPreviousRow: (() -> Unit)?,
+    onNextRow: (() -> Unit)?,
 ): Modifier {
     val focusRequester = remember { FocusRequester() }
     LaunchedEffect(Unit) { focusRequester.requestFocus() }
@@ -69,6 +75,8 @@ internal fun Modifier.songKeyboardShortcuts(
                 Key.DirectionDown -> onScrollDown
                 Key.DirectionLeft -> onPreviousSong
                 Key.DirectionRight -> onNextSong
+                Key.PageUp -> onPreviousRow
+                Key.PageDown -> onNextRow
                 else -> null
             } ?: return@onPreviewKeyEvent false
             action()

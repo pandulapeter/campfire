@@ -25,6 +25,12 @@ data class UserPreferences(
     val isLyricsOnlyModeEnabled: Boolean,
     val isHorizontalSectionFlowEnabled: Boolean, // Whether the song sections are read across the columns (then downwards) instead of column by column.
     /**
+     * Whether a song read across the columns ([isHorizontalSectionFlowEnabled]) leaves empty space under every row
+     * shorter than the screen, so that a scroll resting on a row shows that row and no other. Means nothing while the
+     * sections are read column by column, which has no rows.
+     */
+    val isOneRowAtATimeEnabled: Boolean,
+    /**
      * Multiplier applied to the text size of the song details screen, [DEFAULT_FONT_SCALE] being the default, and
      * never outside [MIN_FONT_SCALE] to [MAX_FONT_SCALE].
      */

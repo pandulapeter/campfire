@@ -87,6 +87,18 @@ class SectionGridTest {
         }
     }
 
+    @Test
+    fun rowsShorterThanThePitchAreFollowedByEmptySpace() {
+        val grid = SectionGrid(rows = intArrayOf(0, 1, 2), columns = IntArray(3), columnCounts = intArrayOf(1, 1, 1))
+        val arrangement = grid.arrange(intArrayOf(100, 900, 100), SECTION_GAP, ROW_GAP, minRowPitch = 500, minLastRowHeight = 300)
+        // The short first row is padded to the pitch, the tall second one is not, and the last one is padded to its height.
+        assertContentEquals(intArrayOf(0, 500, 1440), arrangement.tops)
+        assertContentEquals(listOf(480, 1420), arrangement.dividerTops)
+        // What the rows hold ends where it does, whatever space follows it.
+        assertContentEquals(listOf(100, 1400, 1540), arrangement.rowBottoms)
+        assertEquals(1740, arrangement.height)
+    }
+
     private fun flow(heights: List<Int>, maxColumnCount: Int, maxRowHeight: Int) = flowIntoRows(
         sectionCount = heights.size,
         maxColumnCount = maxColumnCount,

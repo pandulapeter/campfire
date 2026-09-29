@@ -30,33 +30,51 @@ internal class SectionGrid(
 /** The grid of no sections at all. */
 internal fun emptyGrid() = SectionGrid(rows = IntArray(0), columns = IntArray(0), columnCounts = IntArray(0))
 
-/** The y position of every section, the total height of the layout and the y positions (centers) of the row gaps. */
+/**
+ * The y position of every section, the total height of the layout, the y positions (centers) of the row gaps and where
+ * the content of every row ends, which is above the empty space a row may be followed by.
+ */
 internal class SongArrangement(
     val tops: IntArray,
     val height: Int,
     val dividerTops: List<Int>,
+    val rowBottoms: List<Int>,
 )
 
 /**
  * Positions the sections of the grid, given their [heights] at the width of their own row: the sections of a cell
  * are stacked [sectionGap] apart, a row is as tall as its tallest cell, and the rows are [rowGap] apart.
+ *
+ * The top of every row is at least [minRowPitch] below the top of the one before it, and the last row takes up at
+ * least [minLastRowHeight], the difference being left empty under a row that is shorter than that: a song whose
+ * scroll comes to rest on the rows is then never shown with a second row under the one it rests on (see
+ * `snappedScrollTarget`), and its last row can be brought to the top like the others.
  */
-internal fun SectionGrid.arrange(heights: IntArray, sectionGap: Int, rowGap: Int): SongArrangement {
+internal fun SectionGrid.arrange(
+    heights: IntArray,
+    sectionGap: Int,
+    rowGap: Int,
+    minRowPitch: Int = 0,
+    minLastRowHeight: Int = 0,
+): SongArrangement {
     val tops = IntArray(heights.size)
     val dividerTops = mutableListOf<Int>()
+    val rowBottoms = mutableListOf<Int>()
     var rowTop = 0
     var rowHeight = 0
     for (index in heights.indices) {
         val isNewRow = index > 0 && rows[index] != rows[index - 1]
         if (isNewRow) {
-            rowTop += rowHeight + rowGap
+            rowBottoms += rowTop + rowHeight
+            rowTop += max(rowHeight + rowGap, minRowPitch)
             dividerTops += rowTop - rowGap / 2
             rowHeight = 0
         }
         tops[index] = if (index == 0 || isNewRow || columns[index] != columns[index - 1]) rowTop else tops[index - 1] + heights[index - 1] + sectionGap
         rowHeight = max(rowHeight, tops[index] + heights[index] - rowTop)
     }
-    return SongArrangement(tops = tops, height = rowTop + rowHeight, dividerTops = dividerTops)
+    if (heights.isNotEmpty()) rowBottoms += rowTop + rowHeight
+    return SongArrangement(tops = tops, height = rowTop + max(rowHeight, minLastRowHeight), dividerTops = dividerTops, rowBottoms = rowBottoms)
 }
 
 /** The grid of a layout one column wide: every section in the one cell of the one row, in their order. */

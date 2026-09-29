@@ -25,6 +25,7 @@ internal data class UserPreferencesDocument(
     // On by default: reading the sections across the columns means that scrolling never sends the reader back up,
     // which is what a song being played wants.
     val isHorizontalSectionFlowEnabled: Boolean = true,
+    val isOneRowAtATimeEnabled: Boolean = true,
     val fontScale: Float = 1f,
     val sortingMode: String = "",
     val setlistSortingMode: String = "",
