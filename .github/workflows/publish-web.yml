@@ -6,7 +6,7 @@
 # If a copy of the MPL was not distributed with this file, You can obtain one at
 # https://mozilla.org/MPL/2.0/.
 
-# Builds the web distribution and copies it over campfire/ in the website's repository. Called by release.yml for
+# Builds the web distribution and copies it over app/ in the website's repository. Called by release.yml for
 # every release; dispatched by hand to publish this branch without one.
 
 name: 'Publish web'
@@ -19,9 +19,9 @@ permissions:
   contents: read
 
 env:
-  WEBSITE_REPOSITORY: pandulapeter/pandulapeter.github.io
-  WEBSITE_BRANCH: master
-  WEBSITE_SUBDIRECTORY: campfire
+  WEBSITE_REPOSITORY: pandulapeter/campfire-website
+  WEBSITE_BRANCH: main
+  WEBSITE_SUBDIRECTORY: app
 
 jobs:
   build:
@@ -69,7 +69,7 @@ jobs:
         with:
           repository: ${{ env.WEBSITE_REPOSITORY }}
           ref: ${{ env.WEBSITE_BRANCH }}
-          ssh-key: ${{ secrets.WEBSITE_DEPLOY_KEY }}
+          ssh-key: ${{ secrets.CAMPFIRE_WEBSITE_DEPLOY_KEY }}
           path: website
       - name: Copy the distribution into the website
         run: |

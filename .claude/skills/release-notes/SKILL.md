@@ -92,7 +92,7 @@ Mirror the existing releases:
   "Implement `SyncEngine` batching". Name features the way the app names them in Settings.
 - **Keep it short.** Five to ten bullets for a feature release, one to three for a patch. Merge several
   small fixes in one area into a single bullet rather than listing each commit.
-- **Link where a link helps** — the web build (`[here](https://pandulapeter.com/campfire)`), the
+- **Link where a link helps** — the web build (`[here](https://campfire-songbook.com/app/)`), the
   ChordPro site, a contributor's profile — in the markdown style the existing notes use.
 - **No emoji, no marketing adjectives, no version numbers inside the bullets.**
 - **Thank outside contributors inline.** Find them with `git log <previous-bump>..HEAD --format='%an' | sort -u`

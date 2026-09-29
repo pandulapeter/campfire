@@ -27,8 +27,8 @@ internal class WebSyncAuthenticator : SyncAuthenticator {
 
     /**
      * The page itself, without any query or fragment, and as the folder it is served from: the exact string registered
-     * with the provider, which matches redirect URIs character for character. `…/campfire/index.html` is the same page
-     * as `…/campfire/`, but not the same redirect URI.
+     * with the provider, which matches redirect URIs character for character. `…/app/index.html` is the same page
+     * as `…/app/`, but not the same redirect URI.
      */
     override suspend fun prepareRedirectUri() = currentPageUrl()
 
@@ -56,7 +56,7 @@ internal class WebSyncAuthenticator : SyncAuthenticator {
 
 /**
  * The folder the page is served from rather than the page's own address, which names the screen the app is on
- * (`…/campfire/settings/library`): the page's base, which `index.html` writes as the folder it was loaded from before
+ * (`…/app/settings/library`): the page's base, which `index.html` writes as the folder it was loaded from before
  * the app changes the address for the first time.
  */
 private fun currentPageUrl(): String {

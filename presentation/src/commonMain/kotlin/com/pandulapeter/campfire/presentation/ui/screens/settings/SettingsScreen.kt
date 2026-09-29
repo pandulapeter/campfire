@@ -816,7 +816,7 @@ private fun AboutSection(
         title = stringResource(Res.string.settings_privacy_policy),
         description = stringResource(Res.string.settings_privacy_policy_description),
         icon = painterResource(Res.drawable.ic_privacy_policy),
-        onClick = { urlOpener("https://pandulapeter.com/legal/privacy_policy-campfire.html") },
+        onClick = { urlOpener("https://campfire-songbook.com/privacy/") },
     )
     LinkListItem(
         title = stringResource(Res.string.settings_created_by),

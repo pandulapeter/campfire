@@ -350,9 +350,10 @@ uninstall and nothing else does.
   Nothing for the Mac or for Windows is attached: the Mac App Store build is the Mac build, and it is Apple silicon
   only, and the Microsoft Store build is the Windows build. `packageReleaseMsi` and `packageDmg` still build, and
   nothing publishes either.
-  - `publish-web.yml` builds the distribution and copies it over `campfire/` in the `pandulapeter.github.io`
-    repository, which it reaches with the deploy key in `WEBSITE_DEPLOY_KEY`. The copy is an `rsync --delete`, so the
-    folder holds nothing but the distribution — the privacy policy and the rest of the site live elsewhere there.
+  - `publish-web.yml` builds the distribution and copies it over `app/` in the `campfire-website` repository
+    (https://campfire-songbook.com/app/), which it reaches with the deploy key in `CAMPFIRE_WEBSITE_DEPLOY_KEY`. The
+    copy is an `rsync --delete`, so the folder holds nothing but the distribution — the privacy policy and the rest of
+    the site live elsewhere there.
   - `publish-linux.yml` builds `packageReleaseDeb` on amd64 and arm64 — jpackage only packages for the machine it runs
     on — and attaches both to the release, which is the whole of how the Linux build is handed out (the README's "Get
     Campfire" section links to the latest release's page, and a `.deb` is not something anybody signs on its own).
@@ -585,7 +586,7 @@ start, which is what the rest of `app/web` is about — see its `CLAUDE.md`.
   or asks about unsaved text before it leaves a screen. An address that is opened is resolved once the library has
   been read, behind the launch screen; one naming nothing the library holds opens the songs. GitHub Pages serves a
   deep address as its site-wide 404 page, which hands it to `index.html` in the query string (`404.html` in the
-  `pandulapeter.github.io` repository keeps the whole path for `campfire` only), and `index.html` writes a `<base>`
+  `campfire-website` repository does this for addresses under `app/`), and `index.html` writes a `<base>`
   for the folder it lives in, which every relative URL of the page and the app depends on.
 - The loading screen has a determinate progress bar, fed by a `fetch` wrapper that counts the bytes of the binaries
   against the total the build wrote into the page. It is a page and not an installable app on purpose: there is no

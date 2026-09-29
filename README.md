@@ -22,7 +22,7 @@ It also includes on-the-fly transposition, adjustable font sizing, a lyrics-only
 <img src="documentation/screenshots/04.png" width="32%" /> <img src="documentation/screenshots/05.png" width="32%" /> <img src="documentation/screenshots/06.png" width="32%" />
 
 The app works offline, requires no account, and doesn't rely on a central server. Syncing the library across devices is handled directly through your own Dropbox storage.
-Campfire is free, open-source, and has no ads or tracking. Check out the [Privacy Policy](https://pandulapeter.com/legal/privacy_policy-campfire.html) for more information.
+Campfire is free, open-source, and has no ads or tracking. Check out the [Privacy Policy](https://campfire-songbook.com/privacy/) for more information.
 
 <!-- Settings links to this heading's anchor (#get-campfire); renaming it means changing SettingsScreen.kt too. -->
 ## Get Campfire
@@ -33,7 +33,7 @@ Campfire is currently available for the following platforms:
 <a href="https://apps.apple.com/app/id6815160850"><img src="documentation/images/badge_ios.png" alt="Campfire for iOS" height="32px" /></a>
 <a href="https://apps.microsoft.com/detail/9MSR62F288M1"><img src="documentation/images/badge_windows.png" alt="Campfire for Windows" height="32px" /></a>
 <a href="https://github.com/pandulapeter/campfire/releases/latest"><img src="documentation/images/badge_linux.png" alt="Campfire for Linux" height="32px" /></a>
-<a href="https://pandulapeter.com/campfire"><img src="documentation/images/badge_web.png" alt="Campfire in the browser" height="32px" /></a>
+<a href="https://campfire-songbook.com/app/"><img src="documentation/images/badge_web.png" alt="Campfire in the browser" height="32px" /></a>
 
 macOS is coming really soon (under final review):
 

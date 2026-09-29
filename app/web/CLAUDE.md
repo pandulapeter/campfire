@@ -40,9 +40,9 @@ direction.
   `withFrameNanos` resumes while its own frame is still being assembled — so the fade uncovers the app rather than an
   empty page. The webpack output is named `campfire.js` (`outputModuleName` + `commonWebpackConfig`).
 - **The page is only ever loaded as the folder it lives in.** Every screen of the app has an address of its own
-  (`…/campfire/song/…`, see `BrowserRoutes` in `:presentation`), which is not a file: GitHub Pages answers it with the
-  site's `404.html`, which sends it on to `…/campfire/?/song/…` — the whole path for `campfire`, where the other apps on
-  the site get theirs squashed into one segment — and `webpack.config.d/routes.js` has the development server redirect
+  (`…/app/song/…`, see `BrowserRoutes` in `:presentation`), which is not a file: GitHub Pages answers it with the
+  site's `404.html` (in the `campfire-website` repository), which sends it on to `…/app/?/song/…` with the whole path —
+  and `webpack.config.d/routes.js` has the development server redirect
   the same way, for navigations whose first segment is one of the app's. The first script of `index.html` then writes
   that folder into a `<base>` before anything is fetched, and puts the address from the query string back into the
   address bar. The `<base>` is load bearing: once the app has put a deeper address up, every relative URL — the icon,
@@ -133,10 +133,10 @@ out of the address bar as it is read, so a reload cannot replay a spent code). T
 URL, which has to be registered with the service — a deployment served from a different address needs its own entry.
 It is always written as the folder the page is served from — the `<base>`, not the address bar, which names the screen
 the button was pressed on — ending in `/`, with any `index.html` taken off, since the service matches it character for
-character and the same page opened as `…/campfire/index.html` would otherwise ask for a URI nobody registered:
-`https://pandulapeter.com/campfire/` for the deployment and `http://localhost:8080/` for the development server are
-the two entries. The deployment's is the custom domain rather than `pandulapeter.github.io/campfire/`, which
-redirects to it: the page is always running on the custom domain when it asks, and the service compares the URI as a
+character and the same page opened as `…/app/index.html` would otherwise ask for a URI nobody registered:
+`https://campfire-songbook.com/app/` for the deployment and `http://localhost:8080/` for the development server are
+the two entries. The deployment's is the custom domain rather than `pandulapeter.github.io/campfire-website/app/`,
+which redirects to it: the page is always running on the custom domain when it asks, and the service compares the URI as a
 string before any redirect could come into it.
 The answer therefore always lands on the songs' address, with the code in the query string: `restore` reports that
 this start up came back from a consent page (whatever the service answered) and `CampfireViewModel` opens the Library
