@@ -163,6 +163,16 @@
             height: 100%;
         }
 
+        /* Compose gives its canvas "pan-x pan-y", so that a page it is nested in can still be scrolled, and hands a
+           touch gesture to the browser whenever it reported a scroll by the first touchmove but moved nothing with it.
+           A drag that sets off while a scroll is still settling reports an empty one as the finger lands, and the
+           browser then cancels the whole gesture for a page that cannot scroll at all, so the drag is lost: the first
+           touch at the top of a song. This page is the app and nothing else, so every gesture is the app's.
+           Important, since Compose writes its value into the canvas' own style. */
+        #app canvas {
+            touch-action: none !important;
+        }
+
         #splash {
             position: fixed;
             top: 0;
