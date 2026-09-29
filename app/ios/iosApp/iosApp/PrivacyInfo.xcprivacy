@@ -11,8 +11,9 @@
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0">
 <dict>
-	<!-- Nothing is tracked and nothing is collected: the only thing that leaves the device is sync, to a folder
-	     of the user's own, and no server of Campfire's is involved in it. -->
+	<!-- Nothing is tracked and nothing is collected, and no server of Campfire's is involved in anything: the only
+	     things that leave the device are sync, to a folder of the user's own, the cover images a song's own file
+	     names, and the cover searches the user asks MusicBrainz and the iTunes Search API for. -->
 	<key>NSPrivacyTracking</key>
 	<false/>
 	<key>NSPrivacyTrackingDomains</key>

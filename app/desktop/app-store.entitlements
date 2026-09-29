@@ -17,9 +17,10 @@
  - allow-jit, allow-unsigned-executable-memory and disable-library-validation are what a JVM needs under the
    hardened runtime: HotSpot writes machine code at run time, and loads skiko and its own libraries, which are not
    signed as part of this executable.
- - network.client is sync. network.server is two loopback sockets: the one the Dropbox consent page redirects to on
-   127.0.0.1:53682 for the length of one authorization, and the one that hands a second launch's files over to the
-   running instance (SingleInstance.kt). Neither is reachable from outside the machine.
+ - network.client is sync, the cover downloads and the cover search. network.server is two loopback sockets: the one
+   the Dropbox consent page redirects to on 127.0.0.1:53682 for the length of one authorization, and the one that hands
+   a second launch's files over to the running instance (SingleInstance.kt). Neither is reachable from outside the
+   machine.
  - user-selected.read-write is the import and export dialogs, and the files opened from Finder or dropped on the
    window.
  - The last two tie the build to the App ID its provisioning profile was made for; TestFlight refuses a build
