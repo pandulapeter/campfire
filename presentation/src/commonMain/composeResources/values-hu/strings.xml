@@ -186,7 +186,7 @@
     <string name="settings_library_delete_prompt">A megerősítéshez írd be: %1$s</string>
     <string name="settings_library_storage">Tárhely</string>
     <string name="settings_library_storage_granted">A böngésző vállalta, hogy megőrzi a könyvtárat, amíg nem törlöd az oldal adatait.</string>
-    <string name="settings_library_storage_best_effort">A böngésző nem vállalta a könyvtár megőrzését, és törölheti, ha kevés a szabad hely az eszközön. Exportáld, vagy kapcsold be a szinkronizálást, hogy máshol is legyen egy másolat.</string>
+    <string name="settings_library_storage_best_effort">A böngésző megőrzi a könyvtárat, de még nem vállalta, hogy akkor is megtartja, ha kevés a szabad hely az eszközön. Ha könyvjelzőt teszel az oldalra, vagy rendszeresen használod, ez általában megváltozik; addig egy exportálás vagy a szinkronizálás máshol is megőriz egy másolatot.</string>
     <string name="settings_import">Dalok vagy zip archívumok importálása…</string>
     <string name="settings_export_all">Könyvtár exportálása zipként</string>
     <string name="settings_songs">Dalok</string>
