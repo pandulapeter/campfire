@@ -9,7 +9,7 @@
 # Builds the Linux packages of the desktop app and attaches them to a GitHub release. jpackage only ever packages for the
 # machine it runs on, so there is one runner per processor. This is the whole of how the Linux build is handed out: no
 # store carries it, a Debian package is not something anybody signs on its own, and the release page is what the
-# README's "Get Campfire" section links to.
+# website's download section (https://campfire-songbook.com/#download) and the README's "Get Campfire" section link to.
 #
 # Called by release.yml for every release; dispatched by hand to attach the packages to a release that is already there.
 

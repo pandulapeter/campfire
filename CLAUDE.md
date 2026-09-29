@@ -205,18 +205,21 @@ uninstall and nothing else does.
   packaged ones included, is the hand-drawn orange one in `app/icons` recolored by `app/generate_theme_icons.py` — the
   app's own onto the gradient read off the Android icon's background — and the files it writes are committed.
 - **The app says nothing about the other builds but where to find them.** Settings → About is one section on every
-  platform, and the row that names no platform — "Every version of Campfire" — leads to the README's "Get Campfire"
-  section, which is a page that can be kept up to date without a release and the one place a store has nothing to
-  say about. `Distribution` (in `:presentation`'s `ui/platform/Platform.kt`) is now just the four app stores and
+  platform, and the row that names no platform — "Every version of Campfire" — leads to the download section of the
+  app's website, https://campfire-songbook.com/#download (the `campfire-website` repository, which the web build is
+  deployed into as well), which is a page that can be kept up to date without a release and the one place a store has
+  nothing to say about. `Distribution` (in `:presentation`'s `ui/platform/Platform.kt`) is now just the four app stores and
   their listing URLs, a null `listingUrl` marking one the app is not on yet; publishing is filling it in.
   Every platform has exactly one official way to get the app, so no build is told where it is handed out:
   `platformStore` is the store of the platform the app is **running** on — a Mac build made by hand is a Mac build
   like the one the Mac App Store hands out — and it decides both the one "Rate Campfire" row, absent on Linux, on the
   web and wherever that listing does not exist yet, and whether the app may ask for money at all
   (`canAskForDonations`: never on an Apple platform, guideline 3.1.1). The row says *rate* and never *install*: a store page
-  carries an install button, and a second copy of the app would come with a library of its own. **GitHub is the
-  project's website and its issue tracker**; the About section links nothing else but the author's own site, the
-  privacy policy and the donation page.
+  carries an install button, and a second copy of the app would come with a library of its own. **campfire-songbook.com is the
+  project's website**, and what the app and the README point people at first: the downloads, the support page (which
+  answers the common questions and gives both an email address and the GitHub issues as the way to report a problem —
+  Settings' "Help and support" row), and the privacy policy. **GitHub is the source code and the issue tracker**, and
+  its row comes after those; the About section links nothing else but the author's own site and the donation page.
 - The file name is a song's (and a setlist's) identity. Nothing is ever overwritten implicitly: a new or imported file
   that collides gets a `_2`, `_3`… suffix (`FileNames.kt`). An **import decides before it writes**: every incoming
   file is held against the name it wants (`PrepareImportUseCase` -> `ImportPlan`), a song the library already holds
@@ -355,8 +358,8 @@ uninstall and nothing else does.
     copy is an `rsync --delete`, so the folder holds nothing but the distribution — the privacy policy and the rest of
     the site live elsewhere there.
   - `publish-linux.yml` builds `packageReleaseDeb` on amd64 and arm64 — jpackage only packages for the machine it runs
-    on — and attaches both to the release, which is the whole of how the Linux build is handed out (the README's "Get
-    Campfire" section links to the latest release's page, and a `.deb` is not something anybody signs on its own).
+    on — and attaches both to the release, which is the whole of how the Linux build is handed out (the website's download
+    section and the README's "Get Campfire" section link to the latest release's page, and a `.deb` is not something anybody signs on its own).
     It builds on the oldest supported Ubuntu rather than the newest, since a `.deb` asks for the system libraries it
     was built against and the runner therefore decides the lowest distribution it installs on. The two legs do not
     cancel each other. ProGuard breaks an app in ways only starting it shows (see `app/desktop`), so each leg also

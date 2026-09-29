@@ -243,7 +243,7 @@
     <string name="settings_user_interface_language_hungarian">Magyar</string>
     <string name="settings_user_interface_language_more_coming">Hamarosan további nyelvek is elérhetők lesznek</string>
     <string name="settings_distributions_all">A Campfire összes változata</string>
-    <string name="settings_distributions_all_description">A projekt GitHub-oldalán</string>
+    <string name="settings_distributions_all_description">A campfire-songbook.com oldalon</string>
     <string name="settings_distribution_play_store">Google Play</string>
     <string name="settings_distribution_app_store">App Store</string>
     <string name="settings_distribution_mac_app_store">Mac App Store</string>
@@ -252,9 +252,9 @@
     <string name="settings_rate_description">Írj véleményt itt: %1$s</string>
     <string name="settings_about">Névjegy</string>
     <string name="settings_git_hub">Campfire a GitHubon</string>
-    <string name="settings_git_hub_description">Forráskód és a projekt honlapja</string>
-    <string name="settings_report_issue">Hiba jelentése</string>
-    <string name="settings_report_issue_description">Hibajegy nyitása a GitHubon</string>
+    <string name="settings_git_hub_description">Forráskód és hibajegyek</string>
+    <string name="settings_help">Súgó és támogatás</string>
+    <string name="settings_help_description">Gyakori kérdések, és hogyan jelezhetsz egy hibát</string>
     <string name="settings_privacy_policy">Adatvédelmi nyilatkozat</string>
     <string name="settings_privacy_policy_description">Mit kezel az alkalmazás az adataiddal</string>
     <string name="settings_support">Hívj meg egy kávéra</string>

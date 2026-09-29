@@ -105,6 +105,8 @@ import com.pandulapeter.campfire.presentation.resources.settings_german_notation
 import com.pandulapeter.campfire.presentation.resources.settings_german_notation_description
 import com.pandulapeter.campfire.presentation.resources.settings_git_hub
 import com.pandulapeter.campfire.presentation.resources.settings_git_hub_description
+import com.pandulapeter.campfire.presentation.resources.settings_help
+import com.pandulapeter.campfire.presentation.resources.settings_help_description
 import com.pandulapeter.campfire.presentation.resources.settings_horizontal_section_flow
 import com.pandulapeter.campfire.presentation.resources.settings_horizontal_section_flow_description
 import com.pandulapeter.campfire.presentation.resources.settings_one_row_at_a_time
@@ -132,8 +134,6 @@ import com.pandulapeter.campfire.presentation.resources.settings_privacy_policy
 import com.pandulapeter.campfire.presentation.resources.settings_privacy_policy_description
 import com.pandulapeter.campfire.presentation.resources.settings_rate
 import com.pandulapeter.campfire.presentation.resources.settings_rate_description
-import com.pandulapeter.campfire.presentation.resources.settings_report_issue
-import com.pandulapeter.campfire.presentation.resources.settings_report_issue_description
 import com.pandulapeter.campfire.presentation.resources.settings_songs
 import com.pandulapeter.campfire.presentation.resources.settings_support
 import com.pandulapeter.campfire.presentation.resources.settings_support_description
@@ -768,11 +768,12 @@ private fun SyncSection(
 }
 
 /**
- * What the app is and where it lives: GitHub is both its home page and where a problem is reported, and it is also
- * where every build of Campfire is listed, which is the whole of what the app says about the other platforms - a
- * page can be kept up to date without a release, and it is the one place App Review has nothing to say about. The row
- * that names the author is the link to the author's own site, since that is what a name with a link on it is expected
- * to lead to.
+ * What the app is and where it lives: campfire-songbook.com is its home page. Every build of Campfire is listed there,
+ * which is the whole of what the app says about the other platforms, since a page can be kept up to date without a
+ * release and it is the one place App Review has nothing to say about; and its support page answers the common
+ * questions and says how to reach the author, by email or on GitHub. GitHub comes after those, as the source code and
+ * the issue tracker, since that is what it is to somebody who has never used it. The row that names the author is the
+ * link to the author's own site, since that is what a name with a link on it is expected to lead to.
  *
  * The rating row leads to the store of the platform the app is running on, and only once that listing exists. It
  * says "rate", never "get it from the store": a store page has an install button on it, and somebody who has the
@@ -782,25 +783,17 @@ private fun SyncSection(
 private fun AboutSection(
     urlOpener: (String) -> Unit,
 ) = SettingsSection {
-    // The README's "Get Campfire" section, whose anchor GitHub derives from the heading, so renaming that heading
-    // means changing it here.
     LinkListItem(
         title = stringResource(Res.string.settings_distributions_all),
         description = stringResource(Res.string.settings_distributions_all_description),
         icon = painterResource(Res.drawable.ic_phone),
-        onClick = { urlOpener("$GIT_HUB_URL#get-campfire") },
+        onClick = { urlOpener("$WEBSITE_URL#download") },
     )
     LinkListItem(
-        title = stringResource(Res.string.settings_git_hub),
-        description = stringResource(Res.string.settings_git_hub_description),
-        icon = painterResource(Res.drawable.ic_git_hub),
-        onClick = { urlOpener(GIT_HUB_URL) },
-    )
-    LinkListItem(
-        title = stringResource(Res.string.settings_report_issue),
-        description = stringResource(Res.string.settings_report_issue_description),
+        title = stringResource(Res.string.settings_help),
+        description = stringResource(Res.string.settings_help_description),
         icon = painterResource(Res.drawable.ic_bug),
-        onClick = { urlOpener("$GIT_HUB_URL/issues") },
+        onClick = { urlOpener("${WEBSITE_URL}support/") },
     )
     platformStore?.let { store ->
         store.listingUrl?.let { listingUrl ->
@@ -816,7 +809,13 @@ private fun AboutSection(
         title = stringResource(Res.string.settings_privacy_policy),
         description = stringResource(Res.string.settings_privacy_policy_description),
         icon = painterResource(Res.drawable.ic_privacy_policy),
-        onClick = { urlOpener("https://campfire-songbook.com/privacy/") },
+        onClick = { urlOpener("${WEBSITE_URL}privacy/") },
+    )
+    LinkListItem(
+        title = stringResource(Res.string.settings_git_hub),
+        description = stringResource(Res.string.settings_git_hub_description),
+        icon = painterResource(Res.drawable.ic_git_hub),
+        onClick = { urlOpener("https://github.com/pandulapeter/campfire") },
     )
     LinkListItem(
         title = stringResource(Res.string.settings_created_by),
@@ -880,4 +879,4 @@ private fun AppIconSurface.description() = stringResource(
     }
 )
 
-private const val GIT_HUB_URL = "https://github.com/pandulapeter/campfire"
+private const val WEBSITE_URL = "https://campfire-songbook.com/"
