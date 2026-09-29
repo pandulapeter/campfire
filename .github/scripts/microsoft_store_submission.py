@@ -257,12 +257,17 @@ def main(identity_name, version, package, notes_file):
              f"{', '.join(sorted(package_versions(submission))) or 'no package'}). The Store takes one at a time: wait "
              "for it to be published, or delete it in Partner Center, and run this again.")
     submission_id = submission["id"]
+    # A submission the API created carries its upload address from the start; a draft started in Partner Center
+    # carries none until it has been updated through the API, and the update answers with one.
     upload_url = submission.pop("fileUploadUrl", None)
-    if not upload_url:
-        fail(f"Partner Center gave no upload address for submission {submission_id}.")
     replace_package(submission, os.path.basename(package))
     write_release_notes(submission, notes)
-    request("PUT", f"/applications/{app['id']}/submissions/{submission_id}", submission)
+    updated = request("PUT", f"/applications/{app['id']}/submissions/{submission_id}", submission)
+    upload_url = (updated or {}).get("fileUploadUrl") or upload_url
+    if not upload_url:
+        fail(f"Partner Center gave no upload address for submission {submission_id}. The draft now names "
+             f"{os.path.basename(package)} as a package still to be uploaded: upload it there by hand and submit it, "
+             "or delete the draft and run this again.")
     upload(upload_url, package)
     request("POST", f"/applications/{app['id']}/submissions/{submission_id}/commit")
     status = wait_for_commit(app["id"], submission_id)
