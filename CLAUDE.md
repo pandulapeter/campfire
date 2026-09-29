@@ -451,7 +451,9 @@ uninstall and nothing else does.
     Console); nothing is attached to the release. It is an **APK** and not an app bundle because the Play listing predates the bundle
     requirement and was never migrated; a `bundleRelease` would be rejected on upload. The "what's new" text comes
     from the workflow's `release_notes` input, which `release.yml` fills from comments in the release's description
-    that the rendered page hides (`<!-- whats-new en-US … -->`, written for every store and passed to the Apple and Windows workflows as well, and `<!-- play-store update-priority: 0 -->`; the
+    that the rendered page hides (`<!-- whats-new en-US … -->`, written for every store and passed to the Apple and Windows workflows as well, and `<!-- play-store update-priority: 0 -->`, and one
+    `<!-- <store> submit: true -->` for each of `play-store`, `app-store`, `mac-app-store` and `microsoft-store`, whose
+    `false` passes that store's workflow `submit` off so the release is left there as a draft; the
     format is in that file's header) — carried through as it is, backslashes included; only the hand-dispatched
     form's `\n` is expanded, since a single-line text box has no other way to ask for a line break. It falls back to the visible description with its markdown taken out — or,
     dispatched by hand with nothing given, to the commit log since the previous tag. Every store listing is in

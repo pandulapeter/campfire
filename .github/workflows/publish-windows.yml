@@ -9,9 +9,10 @@
 # Builds the Microsoft Store package of the desktop app (packageReleaseMsix) and submits it for certification with the
 # release's notes as its "What's new in this version", to be published as soon as it passes
 # (.github/scripts/microsoft_store_submission.py). The package is kept as an artifact of the run as well, for an upload
-# made by hand. A green run means submitted, not certified - certification answers by email. Dispatched by hand with
-# "submit" off, it stops short of the commit and leaves the submission as a draft in Partner Center, for the release's
-# screenshots to be added to and the submission sent from there: Partner Center takes screenshots from nowhere else.
+# made by hand. A green run means submitted, not certified - certification answers by email. With "submit" off - the box
+# of a hand dispatch, or a release whose description says <!-- microsoft-store submit: false --> - it stops short of the
+# commit and leaves the submission as a draft in Partner Center, for the release's screenshots to be added to and the
+# submission sent from there: Partner Center takes screenshots from nowhere else.
 #
 # The package is unsigned, because Partner Center signs what it certifies, so nothing here signs anything. What it
 # needs is a Microsoft Entra application with the Manager role in Partner Center, named by MICROSOFT_STORE_TENANT_ID and

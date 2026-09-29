@@ -104,7 +104,7 @@ Mirror the existing releases:
 
 `release.yml` reads the stores' "what's new" text out of the release body itself, from HTML comments that
 the rendered release page does not show. They go at the very end of the draft, after a blank line, and
-both are always written:
+all of them are always written:
 
 ```
 <!-- whats-new en-US
@@ -112,6 +112,10 @@ both are always written:
 - bullet two
 -->
 <!-- play-store update-priority: 3 -->
+<!-- play-store submit: true -->
+<!-- app-store submit: true -->
+<!-- mac-app-store submit: true -->
+<!-- microsoft-store submit: true -->
 ```
 
 - **`whats-new en-US`** is the changelog every store gets, not Play's alone — the App Store and the Mac App
@@ -125,12 +129,16 @@ both are always written:
   not by eyeballing it, and report the count back. Shorten wording before dropping a bullet.
 - **No markdown**: no links, no bold, no backticks. Plain `-` bullets and plain text only. Nothing in the
   block may contain `-->`.
-- **`play-store update-priority`** is Play's in-app update priority, and the only store setting the release
-  body carries. Always write it, with **0** unless the user asked for something else, so the user can see
+- **`play-store update-priority`** is Play's in-app update priority. Always write it, with **0** unless the user asked for something else, so the user can see
   it and change it before publishing: 0–1 leaves the update to Play's own schedule, 2–3 offers it inside
   the installed app, 4–5 blocks the app until it is installed (see the Updates section of `CLAUDE.md`).
   Never pick a number above 0 on your own; mention the line when reporting back, so a release that fixes
   something serious can be raised before it is published.
+- **`<store> submit`** says, per store, whether the release is sent for review / certification (`true`) or
+  only uploaded and left as a draft there (`false`) — for new screenshots, say, which the pipeline cannot
+  add, to be put in by hand before sending it from the store's console. Always write all four, **`true`**
+  unless the user asked otherwise, so they can see them and flip one before publishing; anything but
+  `true` or `false` stops the release. Mention them when reporting back.
 
 Where `publish-android.yml` is dispatched by hand instead, its `release_notes` input is a single-line
 field that takes the same text with a literal `\n` for every line break.

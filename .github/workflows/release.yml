@@ -18,12 +18,19 @@
 #   - Up to 500 characters of plain text
 #   -->
 #   <!-- play-store update-priority: 0 -->
+#   <!-- play-store submit: true -->
+#   <!-- app-store submit: true -->
+#   <!-- mac-app-store submit: true -->
+#   <!-- microsoft-store submit: true -->
 #
 # The notes are written for every store that shows them: Play gets them as its release notes, the App Store and the
 # Mac App Store as the "What's New" of the version the iOS and macOS jobs submit for review, and the Microsoft Store as
 # the "What's new in this version" of the submission the Windows job makes; the priority is Play's alone (see the
-# Updates section of CLAUDE.md for what the number decides). Both are optional. Without the notes the visible
-# description stands in for them, with its markdown taken out, and without the priority it is 0.
+# Updates section of CLAUDE.md for what the number decides). A store's "submit: false" is its workflow's submit input
+# turned off: the release is uploaded and left there as a draft - a draft Play release, a version prepared in App Store
+# Connect, an uncommitted Partner Center submission - for whatever it needs by hand, new screenshots say, and is sent
+# from there. All of them are optional. Without the notes the visible description stands in for them, with its
+# markdown taken out, without the priority it is 0, and without a store's submit it is true.
 
 name: 'Release'
 
@@ -42,6 +49,10 @@ jobs:
     outputs:
       release_notes: ${{ steps.notes.outputs.release_notes }}
       update_priority: ${{ steps.notes.outputs.update_priority }}
+      play_store_submit: ${{ steps.notes.outputs.play_store_submit }}
+      app_store_submit: ${{ steps.notes.outputs.app_store_submit }}
+      mac_app_store_submit: ${{ steps.notes.outputs.mac_app_store_submit }}
+      microsoft_store_submit: ${{ steps.notes.outputs.microsoft_store_submit }}
     steps:
       - name: Check out repository
         uses: actions/checkout@v5
@@ -106,6 +117,7 @@ jobs:
           python3 - <<'PYTHON'
           import os
           import re
+          import sys
 
           body = os.environ["RELEASE_BODY"].replace("\r\n", "\n")
 
@@ -116,10 +128,22 @@ jobs:
               visible = re.sub(r"\[([^\]]+)\]\([^)]+\)", r"\1", visible)
               english = re.sub(r"\*\*|`", "", visible).strip()
           priority = re.search(r"<!--\s*play-store\s+update-priority:\s*([0-5])\s*-->", body)
+          # Anything but true or false stops the release: a misspelt "flase" read as the default would submit what was
+          # meant to wait for screenshots.
+          submit = {}
+          for store in ["play-store", "app-store", "mac-app-store", "microsoft-store"]:
+              flag = re.search(rf"<!--\s*{store}\s+submit:\s*(.*?)\s*-->", body)
+              value = flag.group(1).lower() if flag else "true"
+              if value not in {"true", "false"}:
+                  print(f"::error::The release says \"{store} submit: {flag.group(1)}\"; it takes true or false.", file=sys.stderr)
+                  sys.exit(1)
+              submit[store.replace("-", "_") + "_submit"] = value
 
           with open(os.environ["GITHUB_OUTPUT"], "a") as output:
               output.write(f"release_notes<<END_OF_RELEASE_NOTES\n{english}\nEND_OF_RELEASE_NOTES\n")
               output.write(f"update_priority={priority.group(1) if priority else '0'}\n")
+              for name, value in submit.items():
+                  output.write(f"{name}={value}\n")
           PYTHON
 
   android:
@@ -130,6 +154,7 @@ jobs:
       update_priority: ${{ needs.prepare.outputs.update_priority }}
       release_notes: ${{ needs.prepare.outputs.release_notes }}
       release_tag: ${{ github.event.release.tag_name }}
+      submit: ${{ needs.prepare.outputs.play_store_submit == 'true' }}
     secrets: inherit
 
   web:
@@ -158,6 +183,7 @@ jobs:
     with:
       release_tag: ${{ github.event.release.tag_name }}
       release_notes: ${{ needs.prepare.outputs.release_notes }}
+      submit: ${{ needs.prepare.outputs.microsoft_store_submit == 'true' }}
     secrets: inherit
 
   ios:
@@ -172,6 +198,7 @@ jobs:
     with:
       release_tag: ${{ github.event.release.tag_name }}
       release_notes: ${{ needs.prepare.outputs.release_notes }}
+      submit: ${{ needs.prepare.outputs.app_store_submit == 'true' }}
     secrets: inherit
 
   macos:
@@ -186,4 +213,5 @@ jobs:
     with:
       release_tag: ${{ github.event.release.tag_name }}
       release_notes: ${{ needs.prepare.outputs.release_notes }}
+      submit: ${{ needs.prepare.outputs.mac_app_store_submit == 'true' }}
     secrets: inherit

@@ -6,12 +6,13 @@
 # If a copy of the MPL was not distributed with this file, You can obtain one at
 # https://mozilla.org/MPL/2.0/.
 
-# Builds the iOS app, signs it for the App Store and uploads it to App Store Connect, where it lands in TestFlight.
-# It then waits for the build to be processed and submits it for review with the release's notes as its "What's New",
-# to be released as soon as Apple approves it. A green run means submitted, not accepted — review answers by email.
-# Where another version is still waiting for Apple, the build stays in TestFlight unsubmitted and the run ends with a
-# warning instead. Dispatched by hand with "submit" off, it stops short of the submission and leaves the version
-# prepared in App Store Connect, for the release's screenshots to be added to and the version submitted from there.
+# Builds the iOS app, signs it for the App Store and uploads it to App Store Connect, where it lands in TestFlight. It
+# then waits for the build to be processed and submits it for review with the release's notes as its "What's New", to be
+# released as soon as Apple approves it. A green run means submitted, not accepted — review answers by email. Where
+# another version is still waiting for Apple, the build stays in TestFlight unsubmitted and the run ends with a warning
+# instead. With "submit" off - the box of a hand dispatch, or a release whose description says
+# <!-- app-store submit: false --> - it stops short of the submission and leaves the version prepared in App Store
+# Connect, for the release's screenshots to be added to and the version submitted from there.
 #
 # Nothing it signs with is stored anywhere, so nothing of it can expire: the run creates an Apple Distribution
 # certificate for a key made on the runner through the App Store Connect API (.github/scripts/app_store_signing.py),

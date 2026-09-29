@@ -7,12 +7,12 @@
 # https://mozilla.org/MPL/2.0/.
 
 # Builds the Mac App Store package of the desktop app, sandboxed and signed, and uploads it to App Store Connect, where
-# it lands in TestFlight. It then waits for the build to be processed and submits it for review with the release's
-# notes as its "What's New", to be released as soon as Apple approves it. A green run means submitted, not accepted —
-# review answers by email. Where another version is still waiting for Apple, the build stays in TestFlight unsubmitted
-# and the run ends with a warning instead. Dispatched by hand with "submit" off, it stops short of the submission and leaves the
-# version prepared in App Store Connect, for the release's screenshots to be added to and the version submitted from
-# there.
+# it lands in TestFlight. It then waits for the build to be processed and submits it for review with the release's notes
+# as its "What's New", to be released as soon as Apple approves it. A green run means submitted, not accepted — review
+# answers by email. Where another version is still waiting for Apple, the build stays in TestFlight unsubmitted and the
+# run ends with a warning instead. With "submit" off - the box of a hand dispatch, or a release whose description says
+# <!-- mac-app-store submit: false --> - it stops short of the submission and leaves the version prepared in App Store
+# Connect, for the release's screenshots to be added to and the version submitted from there.
 #
 # The build is Apple silicon only: jpackage packages for the machine it runs on, and App Store Connect takes an
 # arm64-only Mac app from macOS 12 on. Asking for the .pkg is what signs and sandboxes it; the donation link is left

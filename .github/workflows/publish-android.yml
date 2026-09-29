@@ -8,9 +8,9 @@
 
 # Builds the signed release APK and uploads it to the production track of the Play Console. Nothing is attached to the
 # GitHub release: Play is where the Android build is had, and a release only carries what no official channel offers.
-# Called by release.yml for every release; dispatched by hand to publish without one, or to repeat the Android half of
-# a release that went wrong. Dispatched by hand with "submit" off, the release is left as a draft in the Play Console,
-# to be rolled out from there.
+# Called by release.yml for every release; dispatched by hand to publish without one, or to repeat the Android half of a
+# release that went wrong. With "submit" off - the box of a hand dispatch, or a release whose description says
+# <!-- play-store submit: false --> - the release is left as a draft in the Play Console, to be rolled out from there.
 
 name: 'Publish Android'
 
