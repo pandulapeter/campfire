@@ -205,10 +205,12 @@ internal fun SongFilters(
     val songFilter by viewModel.songFilter.collectAsStateWithLifecycle()
     val tags by viewModel.tags.collectAsStateWithLifecycle()
     val languages by viewModel.languages.collectAsStateWithLifecycle()
+    val scrollState = rememberScrollState()
     Column(
         modifier = modifier
             .fillMaxWidth()
-            .verticalScroll(rememberScrollState())
+            .fadingTopEdge(scrollState)
+            .verticalScroll(scrollState)
             .padding(contentPadding),
         verticalArrangement = Arrangement.spacedBy(8.dp),
     ) {

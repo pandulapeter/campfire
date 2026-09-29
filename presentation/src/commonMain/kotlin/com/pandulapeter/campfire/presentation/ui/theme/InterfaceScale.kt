@@ -24,7 +24,7 @@ import com.pandulapeter.campfire.presentation.ui.platform.isDesktopPlatform
  *
  * It is also what the desktop window turns the smallest size the layouts are made for into a minimum window size with.
  */
-val interfaceScale = if (isDesktopPlatform) 0.85f else 1f
+val interfaceScale = if (isDesktopPlatform) 1f else 1f
 
 /**
  * Draws [content] at [interfaceScale], by scaling the density everything under it converts its dp and sp with. That is
