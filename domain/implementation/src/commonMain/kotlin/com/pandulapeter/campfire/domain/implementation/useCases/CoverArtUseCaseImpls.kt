@@ -12,6 +12,8 @@ package com.pandulapeter.campfire.domain.implementation.useCases
 import com.pandulapeter.campfire.chordpro.ChordProCoverArt
 import com.pandulapeter.campfire.data.model.domain.CoverArtQuery
 import com.pandulapeter.campfire.data.repository.api.CoverArtRepository
+import com.pandulapeter.campfire.domain.api.useCases.ClearCoverArtCacheUseCase
+import com.pandulapeter.campfire.domain.api.useCases.GetCoverArtCacheSizeUseCase
 import com.pandulapeter.campfire.domain.api.useCases.GetCoverArtUseCase
 import com.pandulapeter.campfire.domain.api.useCases.SearchCoverArtUseCase
 import com.pandulapeter.campfire.domain.api.useCases.SetChordProCoverArtUseCase
@@ -29,6 +31,22 @@ class GetCoverArtUseCaseImpl internal constructor(
 ) : GetCoverArtUseCase {
 
     override suspend operator fun invoke(url: String) = coverArtRepository.getCoverArt(url)
+}
+
+@Factory
+class GetCoverArtCacheSizeUseCaseImpl internal constructor(
+    private val coverArtRepository: CoverArtRepository,
+) : GetCoverArtCacheSizeUseCase {
+
+    override operator fun invoke() = coverArtRepository.coverArtCacheSize
+}
+
+@Factory
+class ClearCoverArtCacheUseCaseImpl internal constructor(
+    private val coverArtRepository: CoverArtRepository,
+) : ClearCoverArtCacheUseCase {
+
+    override suspend operator fun invoke() = coverArtRepository.clearCoverArtCache()
 }
 
 @Factory

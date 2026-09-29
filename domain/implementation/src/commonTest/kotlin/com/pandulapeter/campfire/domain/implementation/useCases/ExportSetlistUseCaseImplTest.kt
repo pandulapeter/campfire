@@ -66,6 +66,7 @@ class ExportSetlistUseCaseImplTest {
         override suspend fun loadSetlistFileSizes(): Map<String, Long> = throw UnsupportedOperationException()
         override suspend fun loadSetlistDocument(fileName: String) = if (fileName == setlist.fileName) "{}" else null
         override suspend fun deleteSetlist(fileName: String) = throw UnsupportedOperationException()
+        override suspend fun deleteAllSetlists() = throw UnsupportedOperationException()
     }
 
     private class FakeSongContentRepository : SongContentRepository {

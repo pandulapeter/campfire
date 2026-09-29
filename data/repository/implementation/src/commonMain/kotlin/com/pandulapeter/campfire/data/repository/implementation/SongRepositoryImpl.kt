@@ -147,6 +147,16 @@ internal class SongRepositoryImpl(
         }
     }
 
+    override suspend fun deleteAllSongs() = libraryFileLock.withLock {
+        withContext(NonCancellable) {
+            val remaining = deleteEach(songLocalSource.loadSongFileSizes().keys, songLocalSource::deleteSong)
+            songContentRepository.invalidate()
+            updateData { current -> current.orEmpty().filter { it.fileName in remaining } }
+            libraryChanges.onLibraryChanged()
+            remaining.throwFirstFailure()
+        }
+    }
+
     /**
      * Runs [block] under [nameMutex] and then [libraryFileLock], taken cancellably in that order and held until the
      * block has finished whatever happens.

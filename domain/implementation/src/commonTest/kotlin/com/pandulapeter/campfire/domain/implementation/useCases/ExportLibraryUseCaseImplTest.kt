@@ -198,6 +198,7 @@ class ExportLibraryUseCaseImplTest {
         override suspend fun importSong(fileName: String, text: String, shouldReplace: Boolean) = throw UnsupportedOperationException()
         override suspend fun renameSong(song: Song) = throw UnsupportedOperationException()
         override suspend fun deleteSong(fileName: String) = throw UnsupportedOperationException()
+        override suspend fun deleteAllSongs() = throw UnsupportedOperationException()
     }
 
     /** Read from several threads at once, since the export reads its songs in parallel on `Dispatchers.Default`. */
@@ -239,6 +240,7 @@ class ExportLibraryUseCaseImplTest {
         override suspend fun loadSetlistFileSizes() = folder
         override suspend fun loadSetlistDocument(fileName: String) = if (fileName in unreadable) null else document
         override suspend fun deleteSetlist(fileName: String) = throw UnsupportedOperationException()
+        override suspend fun deleteAllSetlists() = throw UnsupportedOperationException()
     }
 
     private class FakeArchiveRepository : ArchiveRepository {

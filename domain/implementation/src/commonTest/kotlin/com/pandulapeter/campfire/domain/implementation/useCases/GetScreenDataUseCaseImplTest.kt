@@ -282,6 +282,7 @@ class GetScreenDataUseCaseImplTest {
         override suspend fun loadSetlistFileSizes(): Map<String, Long> = throw UnsupportedOperationException()
         override suspend fun loadSetlistDocument(fileName: String) = throw UnsupportedOperationException()
         override suspend fun deleteSetlist(fileName: String) = throw UnsupportedOperationException()
+        override suspend fun deleteAllSetlists() = throw UnsupportedOperationException()
     }
 
     private class FakeSongRepository(override val songs: MutableStateFlow<DataState<List<Song>>>) : SongRepository {
@@ -296,6 +297,7 @@ class GetScreenDataUseCaseImplTest {
         override suspend fun importSong(fileName: String, text: String, shouldReplace: Boolean) = throw UnsupportedOperationException()
         override suspend fun renameSong(song: Song) = throw UnsupportedOperationException()
         override suspend fun deleteSong(fileName: String) = throw UnsupportedOperationException()
+        override suspend fun deleteAllSongs() = throw UnsupportedOperationException()
     }
 
     private class FakeUserPreferencesRepository(

@@ -223,26 +223,17 @@ internal fun SettingsPage(
 }
 
 /**
- * One group of settings: its rows, under a [title] where the tab holds another group as well. A tab holding one names
- * it already, so that one has none.
+ * One group of settings, untitled: the tab names it already, and the one tab that holds two sets the first apart by
+ * putting it on a card (the library's sync section).
  *
  * The rows lie on the screen itself rather than on a card of their own, so a row's ripple and its text keep the
- * keylines of the app bar and of every list in the app; what tells two groups apart is the title and the room above it.
+ * keylines of the app bar and of every list in the app.
  */
 @Composable
 internal fun SettingsSection(
     modifier: Modifier = Modifier,
-    title: String? = null,
     content: @Composable ColumnScope.() -> Unit,
 ) = Column(modifier = modifier.fillMaxWidth()) {
-    title?.let {
-        Text(
-            modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = SECTION_TITLE_PADDING),
-            text = it,
-            style = MaterialTheme.typography.titleSmall,
-            color = MaterialTheme.colorScheme.primary,
-        )
-    }
     content()
 }
 
@@ -349,9 +340,6 @@ private val SECTION_GAP = 16.dp
 
 /** What the first row of a page keeps free under the tabs. */
 private val PAGE_TOP_PADDING = 8.dp
-
-/** What the title of a section keeps above and below itself. */
-private val SECTION_TITLE_PADDING = 8.dp
 
 /** Above this four tabs are four words spread apart rather than a row of tabs. */
 internal val SETTINGS_TAB_ROW_MAX_WIDTH = MAX_COLUMN_WIDTH

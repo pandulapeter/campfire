@@ -48,10 +48,12 @@ import com.pandulapeter.campfire.domain.api.models.SongFilter
 import com.pandulapeter.campfire.domain.api.models.SongSection
 import com.pandulapeter.campfire.domain.api.useCases.CancelSyncConnectionUseCase
 import com.pandulapeter.campfire.domain.api.useCases.CancelSynchronizationUseCase
+import com.pandulapeter.campfire.domain.api.useCases.ClearCoverArtCacheUseCase
 import com.pandulapeter.campfire.domain.api.useCases.ConnectSyncProviderUseCase
 import com.pandulapeter.campfire.domain.api.useCases.ConvertChordProNotationUseCase
 import com.pandulapeter.campfire.domain.api.useCases.CreateSetlistUseCase
 import com.pandulapeter.campfire.domain.api.useCases.CreateSongUseCase
+import com.pandulapeter.campfire.domain.api.useCases.DeleteLibraryUseCase
 import com.pandulapeter.campfire.domain.api.useCases.DeleteSetlistUseCase
 import com.pandulapeter.campfire.domain.api.useCases.DeleteSongUseCase
 import com.pandulapeter.campfire.domain.api.useCases.DisconnectSyncProviderUseCase
@@ -62,6 +64,7 @@ import com.pandulapeter.campfire.domain.api.useCases.ExportSetlistUseCase
 import com.pandulapeter.campfire.domain.api.useCases.ExportSongsUseCase
 import com.pandulapeter.campfire.domain.api.useCases.GetScreenDataUseCase
 import com.pandulapeter.campfire.domain.api.useCases.GetSongContentInvalidationsUseCase
+import com.pandulapeter.campfire.domain.api.useCases.GetCoverArtCacheSizeUseCase
 import com.pandulapeter.campfire.domain.api.useCases.GetEditorDraftUseCase
 import com.pandulapeter.campfire.domain.api.useCases.GetSongContentUseCase
 import com.pandulapeter.campfire.domain.api.useCases.GetSyncProvidersUseCase
@@ -161,6 +164,7 @@ class CampfireViewModel(
     getSongContentInvalidations: GetSongContentInvalidationsUseCase,
     private val createSong: CreateSongUseCase,
     private val deleteSong: DeleteSongUseCase,
+    private val deleteLibrary: DeleteLibraryUseCase,
     private val prepareImport: PrepareImportUseCase,
     private val importFiles: ImportFilesUseCase,
     private val exportSongs: ExportSongsUseCase,
@@ -192,6 +196,8 @@ class CampfireViewModel(
     private val normalizeSearchText: NormalizeSearchTextUseCase,
     private val parseChordPro: ParseChordProUseCase,
     private val searchCoverArt: SearchCoverArtUseCase,
+    getCoverArtCacheSize: GetCoverArtCacheSizeUseCase,
+    private val clearCoverArtCache: ClearCoverArtCacheUseCase,
     private val transposeChordPro: TransposeChordProUseCase,
     private val transposeChordProText: TransposeChordProTextUseCase,
     private val convertChordProNotation: ConvertChordProNotationUseCase,
@@ -699,6 +705,13 @@ class CampfireViewModel(
             }
         }
         .asState(null)
+
+    /**
+     * The bytes the copies of the covers take up, null until they have been listed. Eager like every other state, so
+     * that the settings screen opens on the number rather than fading it in; the repository lists the folder once per
+     * change at most, and only one listing at a time.
+     */
+    val coverArtCacheSize = getCoverArtCacheSize().asState(null)
 
     // The sections arrive cut, from the same pass that sorted them. Cutting them here would take the sorting mode
     // from the preferences, which change before the list sorted by them arrives.
@@ -2287,6 +2300,18 @@ class CampfireViewModel(
         deleteSetlist.invoke(setlistFileName)
     }
 
+    /**
+     * Only ever offered from the settings screen, whose back stack holds no song screen and no editor, so there is
+     * nothing open on a file that is about to go.
+     */
+    fun deleteLibrary() = launchLibraryChange {
+        deleteLibrary.invoke()
+    }
+
+    fun clearCoverArtCache() {
+        viewModelScope.launch { clearCoverArtCache.invoke() }
+    }
+
     /** The transposition of the song travels in the entry, so removing it takes the transposition with it. */
     fun removeSongFromSetlist(songFileName: String, setlistFileName: String) = launchLibraryChange {
         updateSetlist(setlistFileName) { setlist -> setlist.copy(entries = setlist.entries.filterNot { it.songFileName == songFileName }) }
@@ -2859,6 +2884,13 @@ class CampfireViewModel(
          * going through the consent page again, which is not something to end up in by mistapping a list row.
          */
         data class DisconnectSync(val accountName: String) : DialogType
+        /** Asked before the copies of the covers are deleted, which costs a download of each one shown again. */
+        data object ClearCoverArtCache : DialogType
+        /**
+         * Asked before every song and setlist is deleted, and answered by typing a word rather than by a tap, since it
+         * is the one thing in the app that loses the user's own work wholesale.
+         */
+        data object DeleteLibrary : DialogType
         /** Asked before the editor is left with something in it that has not been written yet, see [navigateBack]. */
         data object UnsavedChanges : DialogType
 

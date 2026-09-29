@@ -29,6 +29,7 @@ import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.joinAll
+import kotlinx.coroutines.launch
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.toList
 import kotlinx.coroutines.sync.Mutex
@@ -171,6 +172,23 @@ class CoverArtRepositoryImplTest {
     }
 
     @Test
+    fun `the cache size follows the copies being written and pruned`() = runTest {
+        val local = FakeCoverArtLocalSource()
+        local.copies[keyOf(OTHER_URL)] = byteArrayOf(1, 2, 3, 4, 5)
+        val songs = MutableStateFlow<DataState<List<Song>>>(DataState.Loading(null))
+        val repository = repository(local = local, remote = FakeCoverArtRemoteSource { CoverArtDownload.Image(IMAGE) }, songs = songs)
+        val sizes = MutableStateFlow<Long?>(null)
+        backgroundScope.launch { repository.coverArtCacheSize.collect { sizes.value = it } }
+        suspend fun awaitSize(size: Long) = withContext(Dispatchers.Default) { withTimeout(5_000) { while (sizes.value != size) delay(1) } }
+
+        awaitSize(5)
+        repository.getCoverArt(URL)
+        awaitSize(8)
+        songs.value = DataState.Idle(listOf(song(URL)))
+        awaitSize(3)
+    }
+
+    @Test
     fun `a search reports every service as it answers, in the order they answer`() = runTest {
         val musicBrainz = FakeCoverArtSearchRemoteSource(CoverArtService.MUSIC_BRAINZ) { onBusy ->
             onBusy()
@@ -248,6 +266,8 @@ class CoverArtRepositoryImplTest {
         override suspend fun keepOnlyCoverArt(keys: Set<String>) {
             copies.keys.retainAll(keys)
         }
+
+        override suspend fun getCoverArtCacheSize() = mutex.withLock { copies.values.sumOf { it.size.toLong() } }
     }
 
     private class FakeCoverArtRemoteSource(private val answer: suspend () -> CoverArtDownload) : CoverArtRemoteSource {

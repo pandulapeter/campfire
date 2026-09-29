@@ -11,8 +11,9 @@ package com.pandulapeter.campfire.presentation.ui.screens.songDetails
 
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.EnterExitState
+import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.LinearEasing
-import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
@@ -850,7 +851,14 @@ private fun StepButton(
     enter = scaleIn() + fadeIn(),
     exit = scaleOut() + fadeOut(),
 ) {
-    val rotation by animateFloatAsState(iconRotation)
+    // The arrow only turns on a button that stays: at the end of a song or a setlist the direction changes in the very
+    // frame the button starts leaving, and it would otherwise spin as it scales away. One arriving is composed afresh
+    // and comes already pointing where it has to.
+    val rotation = remember { Animatable(iconRotation) }
+    val isStaying = transition.targetState == EnterExitState.Visible
+    LaunchedEffect(iconRotation, isStaying) {
+        if (isStaying) rotation.animateTo(iconRotation)
+    }
     SmallFloatingActionButton(
         // A button that has the focus takes it away with it as it leaves, which leaves nothing on the screen focused
         // and every key after that to Compose's own focus search, which scrolls the song instead of stepping it. They
@@ -861,7 +869,7 @@ private fun StepButton(
         onClick = onClick,
     ) {
         Icon(
-            modifier = Modifier.rotate(rotation),
+            modifier = Modifier.rotate(rotation.value),
             painter = icon,
             contentDescription = contentDescription,
         )

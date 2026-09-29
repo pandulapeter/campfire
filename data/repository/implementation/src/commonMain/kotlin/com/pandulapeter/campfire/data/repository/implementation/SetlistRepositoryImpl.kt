@@ -136,6 +136,13 @@ internal class SetlistRepositoryImpl(
         libraryChanges.onLibraryChanged()
     }
 
+    override suspend fun deleteAllSetlists() = writing {
+        val remaining = deleteEach(setlistLocalSource.loadSetlistFileSizes().keys, setlistLocalSource::deleteSetlist)
+        updateData { current -> current.orEmpty().filter { it.fileName in remaining } }
+        libraryChanges.onLibraryChanged()
+        remaining.throwFirstFailure()
+    }
+
     /**
      * Runs [block] under [writeMutex] and then [libraryFileLock], taken cancellably in that order and held until the
      * block has finished whatever happens.

@@ -83,6 +83,7 @@ class ExportSongsUseCaseImplTest {
         override suspend fun importSong(fileName: String, text: String, shouldReplace: Boolean) = throw UnsupportedOperationException()
         override suspend fun renameSong(song: Song) = throw UnsupportedOperationException()
         override suspend fun deleteSong(fileName: String) = throw UnsupportedOperationException()
+        override suspend fun deleteAllSongs() = throw UnsupportedOperationException()
     }
 
     private class FakeSongContentRepository(private val files: Map<String, String>) : SongContentRepository {

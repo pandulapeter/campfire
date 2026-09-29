@@ -91,4 +91,7 @@ interface SetlistRepository {
 
     /** Waits for a change to the setlist that is being written, which would otherwise put the file back. */
     suspend fun deleteSetlist(fileName: String)
+
+    /** Deletes every setlist file in the folder, the way [SongRepository.deleteAllSongs] deletes the songs. */
+    suspend fun deleteAllSetlists()
 }

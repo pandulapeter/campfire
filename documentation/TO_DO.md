@@ -8,8 +8,6 @@
  * https://mozilla.org/MPL/2.0/.
 -->
 # To do
-- Settings -> Library screen could display image cache size
-- Song detail FAB show / hide animation should not rotate, just scale + fade
 - Song transposition and font size should be part of the toolbar
 - PDF import
 - Regenerate the baseline profile

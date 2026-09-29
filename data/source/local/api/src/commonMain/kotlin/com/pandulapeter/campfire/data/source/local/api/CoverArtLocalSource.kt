@@ -25,4 +25,7 @@ interface CoverArtLocalSource {
 
     /** Deletes every copy whose key is not in [keys], which is how covers no song names any more leave the device. */
     suspend fun keepOnlyCoverArt(keys: Set<String>)
+
+    /** The bytes all the copies take up together, or null when they cannot be listed. */
+    suspend fun getCoverArtCacheSize(): Long?
 }

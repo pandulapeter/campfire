@@ -29,10 +29,12 @@ import kotlinx.coroutines.NonCancellable
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.async
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.channelFlow
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.filterIsInstance
 import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.Semaphore
@@ -82,6 +84,12 @@ internal class CoverArtRepositoryImpl(
     /** When each address that failed may be asked again, null for never in this session. */
     private val failures = mutableMapOf<String, ComparableTimeMark?>()
 
+    /** Counts the writes and prunes of the copies, which is what makes [coverArtCacheSize] list them again. */
+    private val cacheChanges = MutableStateFlow(0L)
+
+    // A StateFlow conflates what arrives while its collector is busy, which is what keeps this to one listing at a time.
+    override val coverArtCacheSize = cacheChanges.map { coverArtLocalSource.getCoverArtCacheSize() }
+
     init {
         // Only a library that has been read to its end says which copies are wanted: the scan publishes its batches
         // as Loading, and a copy pruned on the strength of half a library would be downloaded again a moment later.
@@ -90,7 +98,10 @@ internal class CoverArtRepositoryImpl(
                 .filterIsInstance<DataState.Idle<List<Song>>>()
                 .map { state -> state.data.mapNotNullTo(mutableSetOf()) { song -> song.coverArtUrl?.let(::keyOf) } }
                 .distinctUntilChanged()
-                .collect { keys -> coverArtLocalSource.keepOnlyCoverArt(keys) }
+                .collect { keys ->
+                    coverArtLocalSource.keepOnlyCoverArt(keys)
+                    cacheChanges.update { it + 1 }
+                }
         }
     }
 
@@ -156,6 +167,12 @@ internal class CoverArtRepositoryImpl(
         }
     }
 
+    override suspend fun clearCoverArtCache() {
+        coverArtLocalSource.keepOnlyCoverArt(emptySet())
+        mutex.withLock { failures.clear() }
+        cacheChanges.update { it + 1 }
+    }
+
     private suspend fun load(url: String, download: Download): ByteArray? = try {
         val key = keyOf(url)
         coverArtLocalSource.loadCoverArt(key) ?: downloadSlots.withPermit {
@@ -171,7 +188,10 @@ internal class CoverArtRepositoryImpl(
     }
 
     private suspend fun fetch(url: String, key: String) = when (val download = coverArtRemoteSource.downloadCoverArt(url)) {
-        is CoverArtDownload.Image -> download.bytes.also { coverArtLocalSource.saveCoverArt(key, it) }
+        is CoverArtDownload.Image -> download.bytes.also {
+            coverArtLocalSource.saveCoverArt(key, it)
+            cacheChanges.update { changes -> changes + 1 }
+        }
         CoverArtDownload.Missing -> null.also { mutex.withLock { failures[url] = null } }
         CoverArtDownload.Unreachable -> null.also { mutex.withLock { failures[url] = TimeSource.Monotonic.markNow() + UNREACHABLE_RETRY_DELAY } }
     }

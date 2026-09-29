@@ -15,6 +15,7 @@ import androidx.compose.animation.core.SeekableTransitionState
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.rememberTransition
 import androidx.compose.foundation.ScrollState
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
@@ -26,7 +27,9 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.foundation.selection.selectableGroup
+import androidx.compose.material3.ElevatedCard
 import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
+import androidx.compose.material3.Icon
 import androidx.compose.material3.ListItem
 import androidx.compose.material3.ListItemDefaults
 import androidx.compose.material3.MaterialTheme
@@ -39,9 +42,11 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.unit.Dp
+import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigationevent.NavigationEventInfo
 import androidx.navigationevent.NavigationEventTransitionState
@@ -61,6 +66,7 @@ import com.pandulapeter.campfire.presentation.resources.ic_campfire
 import com.pandulapeter.campfire.presentation.resources.ic_coffee
 import com.pandulapeter.campfire.presentation.resources.ic_export
 import com.pandulapeter.campfire.presentation.resources.ic_git_hub
+import com.pandulapeter.campfire.presentation.resources.ic_delete
 import com.pandulapeter.campfire.presentation.resources.ic_import
 import com.pandulapeter.campfire.presentation.resources.ic_phone
 import com.pandulapeter.campfire.presentation.resources.ic_privacy_policy
@@ -105,6 +111,9 @@ import com.pandulapeter.campfire.presentation.resources.settings_one_row_at_a_ti
 import com.pandulapeter.campfire.presentation.resources.settings_one_row_at_a_time_description
 import com.pandulapeter.campfire.presentation.resources.settings_import
 import com.pandulapeter.campfire.presentation.resources.settings_library
+import com.pandulapeter.campfire.presentation.resources.settings_library_cover_art_cache
+import com.pandulapeter.campfire.presentation.resources.settings_library_cover_art_cache_clear
+import com.pandulapeter.campfire.presentation.resources.settings_library_delete
 import com.pandulapeter.campfire.presentation.resources.settings_library_size
 import com.pandulapeter.campfire.presentation.resources.settings_library_size_bytes
 import com.pandulapeter.campfire.presentation.resources.settings_library_size_decimal_separator
@@ -128,7 +137,6 @@ import com.pandulapeter.campfire.presentation.resources.settings_report_issue_de
 import com.pandulapeter.campfire.presentation.resources.settings_songs
 import com.pandulapeter.campfire.presentation.resources.settings_support
 import com.pandulapeter.campfire.presentation.resources.settings_support_description
-import com.pandulapeter.campfire.presentation.resources.settings_sync
 import com.pandulapeter.campfire.presentation.resources.settings_user_interface_language
 import com.pandulapeter.campfire.presentation.resources.settings_user_interface_language_english
 import com.pandulapeter.campfire.presentation.resources.settings_user_interface_language_hungarian
@@ -606,7 +614,9 @@ private fun GeneralSection(
 }
 
 /**
- * What the library holds and where it is, then what can be done with the whole of it.
+ * What the library holds and where it is, then what can be done with the whole of it. The two rows that say what is
+ * on the device are also how it is taken off: the library's row deletes every song and setlist, behind a dialog that
+ * wants a word typed, and the cover cache's row deletes the copies of the covers, behind an ordinary one.
  *
  * The two actions are disabled rather than hidden by performance mode, like the chord spelling under lyrics only
  * mode: this screen is the one place the mode can be switched back off, and a settings screen whose rows come and go
@@ -617,17 +627,30 @@ private fun LibrarySection(
     viewModel: CampfireViewModel,
     isImporting: Boolean,
     isPerformanceModeEnabled: Boolean,
-) = SettingsSection(title = stringResource(Res.string.settings_library)) {
+) = SettingsSection {
     // Null until the library has been read, so that the row arrives with real counts instead of showing zeroes.
     val librarySummary by viewModel.librarySummary.collectAsStateWithLifecycle()
     val demoLibraryOffer by viewModel.demoLibraryOffer.collectAsStateWithLifecycle()
     val libraryPersistence by viewModel.libraryPersistence.collectAsStateWithLifecycle()
+    val coverArtCacheSize by viewModel.coverArtCacheSize.collectAsStateWithLifecycle()
     val filePicker = LocalFilePicker.current
     AnimatedSettingsRow(value = librarySummary) { summary ->
-        ListItem(
-            colors = ListItemDefaults.colors(containerColor = Color.Transparent),
-            headlineContent = { Text(stringResource(Res.string.settings_library_summary, summary.songCount, summary.setlistCount)) },
-            supportingContent = { Text(stringResource(Res.string.settings_library_size, formattedSize(summary.size))) },
+        DeletableSettingsRow(
+            title = stringResource(Res.string.settings_library_summary, summary.songCount, summary.setlistCount),
+            description = stringResource(Res.string.settings_library_size, formattedSize(summary.size)),
+            deleteLabel = stringResource(Res.string.settings_library_delete),
+            isEnabled = summary.songCount + summary.setlistCount > 0 && !isImporting && !isPerformanceModeEnabled,
+            onClick = { viewModel.showDialog(CampfireViewModel.DialogType.DeleteLibrary) },
+        )
+    }
+    // Not while there is nothing in it: an empty cache says nothing a library without covers does not.
+    AnimatedSettingsRow(value = coverArtCacheSize?.takeIf { it > 0 }) { size ->
+        DeletableSettingsRow(
+            title = stringResource(Res.string.settings_library_cover_art_cache),
+            description = stringResource(Res.string.settings_library_size, formattedSize(size)),
+            deleteLabel = stringResource(Res.string.settings_library_cover_art_cache_clear),
+            isEnabled = !isPerformanceModeEnabled,
+            onClick = { viewModel.showDialog(CampfireViewModel.DialogType.ClearCoverArtCache) },
         )
     }
     // Only where the answer is not a foregone conclusion, which is the web: the other three platforms keep the
@@ -676,6 +699,27 @@ private fun LibrarySection(
 }
 
 /**
+ * A row that says how much of something is on the device and deletes it when tapped, which the icon at its end says
+ * before anybody taps it. The dialog it opens is the confirmation, so the row itself asks nothing.
+ *
+ * @param deleteLabel What the icon is called to a screen reader, since the icon is the only thing that names the action.
+ */
+@Composable
+private fun DeletableSettingsRow(
+    title: String,
+    description: String,
+    deleteLabel: String,
+    isEnabled: Boolean,
+    onClick: () -> Unit,
+) = ListItem(
+    modifier = Modifier.clickable(enabled = isEnabled, onClickLabel = deleteLabel, onClick = onClick).alpha(if (isEnabled) 1f else 0.5f),
+    colors = ListItemDefaults.colors(containerColor = Color.Transparent),
+    headlineContent = { Text(title) },
+    supportingContent = { Text(description) },
+    trailingContent = { Icon(painter = painterResource(Res.drawable.ic_delete), contentDescription = deleteLabel) },
+)
+
+/**
  * [bytes] in the largest unit that keeps the number at least one, in decimal units as the file browsers of Android and
  * Apple count them. One decimal below ten and none above, which is as precise as a number that changes with every
  * saved song is worth being. The separator comes from the strings rather than from the platform, so that it follows
@@ -709,14 +753,18 @@ private val SIZE_UNITS = listOf(
 
 /**
  * Collects the sync state itself, so that a run reporting every file it moves recomposes this section and no other.
- * It is the first section of the library's tab, since it is the one with something going on in it.
+ * It is the first section of the library's tab, and the one on a card of its own, since it is the one with something
+ * going on in it: the card is what sets it apart from the library's rows under it, in place of a title over each.
  */
 @Composable
 private fun SyncSection(
     viewModel: CampfireViewModel,
-) = SettingsSection(title = stringResource(Res.string.settings_sync)) {
+) = ElevatedCard(modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp)) {
     val syncState by viewModel.syncState.collectAsStateWithLifecycle()
-    SyncSettings(viewModel = viewModel, syncState = syncState)
+    // The card's own edge is where the rows start, so its first and last rows get the room a section title would give.
+    Column(modifier = Modifier.padding(vertical = 8.dp)) {
+        SyncSettings(viewModel = viewModel, syncState = syncState)
+    }
 }
 
 /**

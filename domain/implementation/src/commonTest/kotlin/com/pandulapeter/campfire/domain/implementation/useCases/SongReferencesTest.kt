@@ -160,6 +160,7 @@ class SongReferencesTest {
         override suspend fun loadSetlistFileSizes(): Map<String, Long> = throw UnsupportedOperationException()
         override suspend fun loadSetlistDocument(fileName: String) = throw UnsupportedOperationException()
         override suspend fun deleteSetlist(fileName: String) = throw UnsupportedOperationException()
+        override suspend fun deleteAllSetlists() = throw UnsupportedOperationException()
     }
 
     private class FakeUserPreferencesRepository(
@@ -193,6 +194,8 @@ class SongReferencesTest {
         override fun importFileName(fallbackTitle: String, text: String) = throw UnsupportedOperationException()
         override suspend fun importSong(fileName: String, text: String, shouldReplace: Boolean) = throw UnsupportedOperationException()
         override suspend fun renameSong(song: Song) = throw UnsupportedOperationException()
+        override suspend fun deleteAllSongs() = throw UnsupportedOperationException()
+
         override suspend fun deleteSong(fileName: String) {
             if (isBroken) throw IllegalStateException("The file could not be deleted.")
             deleted += fileName

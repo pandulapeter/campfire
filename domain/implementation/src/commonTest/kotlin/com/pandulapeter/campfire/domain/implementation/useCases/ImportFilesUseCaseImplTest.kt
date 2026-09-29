@@ -231,6 +231,7 @@ class ImportFilesUseCaseImplTest {
 
         override suspend fun renameSong(song: Song) = throw UnsupportedOperationException()
         override suspend fun deleteSong(fileName: String) = throw UnsupportedOperationException()
+        override suspend fun deleteAllSongs() = throw UnsupportedOperationException()
     }
 
     private inner class FakeSetlistRepository : SetlistRepository {
@@ -258,6 +259,7 @@ class ImportFilesUseCaseImplTest {
         override suspend fun loadSetlistFileSizes(): Map<String, Long> = throw UnsupportedOperationException()
         override suspend fun loadSetlistDocument(fileName: String) = throw UnsupportedOperationException()
         override suspend fun deleteSetlist(fileName: String) = throw UnsupportedOperationException()
+        override suspend fun deleteAllSetlists() = throw UnsupportedOperationException()
     }
 
     private companion object {

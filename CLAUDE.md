@@ -454,7 +454,9 @@ the only possible one. The per-module `CLAUDE.md` files carry the detail; the sh
   cloud too** runs again with the deletions allowed; **Keep them and upload** / **Keep them and download** runs again
   with those files' index entries dropped, so they are new on the side that still has them and are copied back. An
   answer waives the guard of its own direction only, this device being asked about first. The answer belongs to that
-  one run, and an ordinary run asks again for as long as the folder stays that way.
+  one run, and an ordinary run asks again for as long as the folder stays that way. The one run that starts with the
+  cloud folder's answer already given is the one Settings' library deletion starts, since typing `DELETE` in a dialog
+  that says the folder goes too is that answer.
 - A fresh installation never inherits a connection: a launch that finds no preferences document forgets whatever
   credentials a previous installation left in a store that outlived it (the iOS Keychain), locally and without a
   request, before anything restores them (`ForgetSyncConnectionUseCase`), so no run starts on an account nobody
@@ -506,6 +508,11 @@ the short version:
   own.
 - **The copy is the offline cache on all four platforms**: `covers/<sha256 of the address>`, outside `library/`, kept
   out of every device backup and deleted after a library read that leaves no song naming it (`CoverArtRepository`).
+  Settings → Library shows how much they take up, under the library's own size, once there is any, and tapping that
+  row deletes them (`CoverArtRepository.clearCoverArtCache`) after a confirmation; the library's own row deletes every
+  song and setlist, after a dialog that wants `DELETE` typed, and then starts a sync run with the deletions allowed
+  (`DeleteLibraryUseCase`), the typed word being the answer the run's guard would otherwise stop to ask for — so the
+  cloud folder and every device synced with it are emptied too, which the dialog says while an account is connected.
   Requests for one address share one download, only a few are made at a time, one nobody is waiting for any more by
   its turn is not made at all, and an address that failed is not asked again for the rest of the
   session (an answer that is not a cover) or for a minute (no answer at all).

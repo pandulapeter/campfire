@@ -172,6 +172,7 @@ internal class RecordingSongRepository(
     override suspend fun renameSong(song: Song): Song? = throw UnsupportedOperationException()
 
     override suspend fun deleteSong(fileName: String): Unit = throw UnsupportedOperationException()
+    override suspend fun deleteAllSongs(): Unit = throw UnsupportedOperationException()
 }
 
 /** Stands in for the setlist list that sync tells to read the library again, and counts how often it was told. */
@@ -213,4 +214,5 @@ internal class RecordingSetlistRepository : SetlistRepository {
     override suspend fun loadSetlistDocument(fileName: String): String? = throw UnsupportedOperationException()
 
     override suspend fun deleteSetlist(fileName: String): Unit = throw UnsupportedOperationException()
+    override suspend fun deleteAllSetlists(): Unit = throw UnsupportedOperationException()
 }

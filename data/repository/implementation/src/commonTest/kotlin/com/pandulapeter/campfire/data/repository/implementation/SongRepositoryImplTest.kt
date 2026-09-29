@@ -127,6 +127,20 @@ class SongRepositoryImplTest {
     }
 
     @Test
+    fun `deleting every song goes past a file that fails and keeps only that one listed`() = runTest {
+        val localSource = FakeSongLocalSource(mapOf("a.cho" to "a", "b.cho" to "b", "c.cho" to "c"))
+        localSource.undeletableFileName = "b.cho"
+        val repository = SongRepositoryImpl(localSource, SongContentRepositoryImpl(localSource), LibraryFileLock(), LibraryChanges())
+        repository.loadSongsIfNeeded()
+
+        val failure = runCatching { repository.deleteAllSongs() }.exceptionOrNull()
+
+        assertTrue(failure is IllegalStateException)
+        assertEquals(setOf("b.cho"), localSource.files.keys)
+        assertEquals(listOf("b.cho"), repository.loadSongsIfNeeded()?.map { it.fileName })
+    }
+
+    @Test
     fun `a guarded save cancelled after it wrote updates the list`() = runTest {
         val localSource = FakeSongLocalSource(mapOf(FILE_NAME to "opened"))
         val repository = SongRepositoryImpl(localSource, SongContentRepositoryImpl(localSource), LibraryFileLock(), LibraryChanges())
@@ -153,7 +167,10 @@ class SongRepositoryImplTest {
 
         override suspend fun loadSongs(onProgress: (List<Song>) -> Unit) = files.keys.map(::song)
 
-        override suspend fun loadSongFileSizes() = throw UnsupportedOperationException()
+        /** A file whose deletion fails, as one held open by another program would on Windows. */
+        var undeletableFileName: String? = null
+
+        override suspend fun loadSongFileSizes() = files.mapValues { (_, text) -> text.length.toLong() }
 
         override suspend fun loadSong(fileName: String) = if (fileName in files) song(fileName) else null
 
@@ -179,6 +196,7 @@ class SongRepositoryImplTest {
         override suspend fun renameSong(song: Song) = throw UnsupportedOperationException()
 
         override suspend fun deleteSong(fileName: String) {
+            if (fileName == undeletableFileName) throw IllegalStateException("The file is in use.")
             files.remove(fileName)
             afterWriteGate?.await()
         }

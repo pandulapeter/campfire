@@ -41,6 +41,8 @@ internal class CoverArtLocalSourceImpl(
         }
     }
 
+    override suspend fun getCoverArtCacheSize() = quietly { fileStorage.list(StorageDirectory.COVERS).sumOf { it.size } }
+
     /** Runs [action] with every failure but a cancellation logged and answered with null, see [CoverArtLocalSource]. */
     private suspend fun <T> quietly(action: suspend () -> T): T? = try {
         action()

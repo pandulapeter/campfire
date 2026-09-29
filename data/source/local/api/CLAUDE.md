@@ -44,7 +44,8 @@ platform types.
 - `CoverArtLocalSource` — the copies of the cover images the songs name, as bytes under a key the caller derives from
   the address (the repository hashes it, so a name every storage can hold). Outside `library/`: never exported,
   synced or backed up, since the address travels in the song and the image can be downloaded again. Nothing here
-  throws — a cover is never worth failing over — and `keepOnlyCoverArt` is how the ones no song names any more go.
+  throws — a cover is never worth failing over — and `keepOnlyCoverArt` is how the ones no song names any more go;
+  `getCoverArtCacheSize` adds up what the rest take.
 - `SyncStateLocalSource` — the two documents sync remembers between runs, and the note that forgetting the
   credentials is still owed (see `SyncRepository.forgetStoredConnection`), kept next to the preferences and so outside
   `library/`: neither is the user's data and an export must not carry them. Both are **opaque strings** here — what

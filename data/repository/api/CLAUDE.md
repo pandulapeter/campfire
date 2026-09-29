@@ -26,7 +26,10 @@ Repository interfaces only. Consumed by `:domain:implementation`; implemented by
   Campfire has been used on, and it is deliberately uncached, since the very first save makes it false.
 - `CoverArtRepository` — the cover images and the search that recommends one. `getCoverArt` answers bytes or nothing,
   never a failure; `searchCoverArt` is a `Flow<CoverArtSearchResults>` that asks every catalogue at once and emits
-  where the search is each time one waits or answers, a failing one recorded in `failed` rather than thrown.
+  where the search is each time one waits or answers, a failing one recorded in `failed` rather than thrown;
+  `coverArtCacheSize` is what the copies take up, listed again as they change, and `clearCoverArtCache` deletes them.
+  `SongRepository.deleteAllSongs` and `SetlistRepository.deleteAllSetlists` empty their folder as one change to the
+  list, going on past a file that fails — what Settings' "delete the library" is made of.
 - `SyncRepository` — the state machine around sync: `syncState: Flow<SyncState>`, the providers the build has, and
   `restore` / `connect` / `cancelConnection` / `disconnect` / `forgetStoredConnection` / `synchronize` /
   `cancelSynchronization`; `forgetStoredConnection` is the local-only wipe a first launch does, with no request — retried by

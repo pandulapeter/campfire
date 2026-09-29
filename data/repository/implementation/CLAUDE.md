@@ -95,8 +95,10 @@ and a repository that has not been read yet rescans instead, since there is no l
   not read yet) with a different set of addresses, deletes every copy no song names — a search result's thumbnail,
   which is fetched the same way, included. The search runs every `CoverArtSearchRemoteSource` side by side in a
   `channelFlow`, so cancelling the collection stops them all, and appends each one's candidates in the order they
-  answer — the grid grows at its end rather than shifting under the user. `commonTest` covers the sharing, the
-  bound and the downloads it skips, the failures, the pruning and the search's order of emissions.
+  answer — the grid grows at its end rather than shifting under the user. `coverArtCacheSize` lists the copies again
+  after every write and prune, off a counter in a `StateFlow`, whose conflation keeps a burst of downloads to one
+  listing at a time. `commonTest` covers the sharing, the bound and the downloads it skips, the failures, the
+  pruning, the cache size and the search's order of emissions.
 - `SongContentRepositoryImpl` is not a `BaseLocalDataRepository`: it is a keyed in-memory cache of song *texts*, so
   paging through a setlist re-reads nothing. It keeps the 32 most recently used, and at most a million characters of
   them — a long session would otherwise hold every song it opened, and a few songbooks pasted into one file each

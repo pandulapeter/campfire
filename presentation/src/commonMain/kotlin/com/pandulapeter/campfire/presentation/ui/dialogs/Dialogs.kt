@@ -102,6 +102,7 @@ import com.pandulapeter.campfire.data.model.domain.ImportConflictResolution
 import com.pandulapeter.campfire.data.model.domain.ImportPlan
 import com.pandulapeter.campfire.data.model.domain.Song
 import com.pandulapeter.campfire.data.model.domain.SongLanguage
+import com.pandulapeter.campfire.data.model.domain.SyncState
 import com.pandulapeter.campfire.presentation.localization.currentLanguage
 import com.pandulapeter.campfire.presentation.localization.pluralStringResource
 import com.pandulapeter.campfire.presentation.localization.stringResource
@@ -148,6 +149,13 @@ import com.pandulapeter.campfire.presentation.resources.setlists_no_search_resul
 import com.pandulapeter.campfire.presentation.resources.setlists_pick_date
 import com.pandulapeter.campfire.presentation.resources.setlists_search
 import com.pandulapeter.campfire.presentation.resources.setlists_song_assignments
+import com.pandulapeter.campfire.presentation.resources.settings_library_cover_art_cache_clear
+import com.pandulapeter.campfire.presentation.resources.settings_library_cover_art_cache_clear_action
+import com.pandulapeter.campfire.presentation.resources.settings_library_cover_art_cache_clear_confirmation
+import com.pandulapeter.campfire.presentation.resources.settings_library_delete
+import com.pandulapeter.campfire.presentation.resources.settings_library_delete_confirmation
+import com.pandulapeter.campfire.presentation.resources.settings_library_delete_confirmation_sync
+import com.pandulapeter.campfire.presentation.resources.settings_library_delete_prompt
 import com.pandulapeter.campfire.presentation.resources.settings_sync_disconnect
 import com.pandulapeter.campfire.presentation.resources.settings_sync_disconnect_confirmation
 import com.pandulapeter.campfire.presentation.resources.song_details_language
@@ -358,6 +366,21 @@ internal fun CampfireDialogs(
                 viewModel.disconnectSyncProvider()
                 viewModel.dismissDialog()
             },
+        )
+
+        CampfireViewModel.DialogType.ClearCoverArtCache -> ConfirmationDialog(
+            title = stringResource(Res.string.settings_library_cover_art_cache_clear),
+            text = stringResource(Res.string.settings_library_cover_art_cache_clear_confirmation),
+            confirmLabel = stringResource(Res.string.settings_library_cover_art_cache_clear_action),
+            onDismiss = viewModel::dismissDialog,
+            onConfirm = {
+                viewModel.clearCoverArtCache()
+                viewModel.dismissDialog()
+            },
+        )
+
+        CampfireViewModel.DialogType.DeleteLibrary -> DeleteLibraryDialog(
+            viewModel = viewModel,
         )
 
         CampfireViewModel.DialogType.RevertChanges -> ConfirmationDialog(
@@ -724,6 +747,79 @@ private fun ConfirmationDialog(
         TextButton(onClick = onDismiss) { Text(stringResource(Res.string.cancel)) }
     },
 )
+
+/**
+ * The one confirmation that is typed rather than tapped: every song and setlist on the device goes with it, and a
+ * button in the place where every other dialog's confirmation sits is one a hand reaches out of habit. The word is
+ * [DELETE_LIBRARY_CONFIRMATION] in every language, so that it is the same word whatever the app is set to, and what is
+ * typed is put in capitals as it is typed, so that the only thing left to get right is the word itself.
+ *
+ * The sync sentence is there only while an account is connected, and in the error color: the deletion starts a run
+ * that carries it to the cloud folder without asking again (`DeleteLibraryUseCase`), so every other device loses the
+ * library too, and that is the part of the dialog somebody who means "this phone" must not skim past.
+ */
+@Composable
+private fun DeleteLibraryDialog(
+    viewModel: CampfireViewModel,
+) {
+    val syncState by viewModel.syncState.collectAsStateWithLifecycle()
+    var value by rememberSaveable(stateSaver = TextFieldValue.Saver) { mutableStateOf(TextFieldValue()) }
+    val isConfirmed = value.text.trim() == DELETE_LIBRARY_CONFIRMATION
+    val focusRequester = rememberFirstFieldFocusRequester()
+    val confirmOnce = rememberSingleConfirmation()
+    val deleteLibrary = {
+        confirmOnce {
+            viewModel.deleteLibrary()
+            viewModel.dismissDialog()
+        }
+    }
+    AlertDialog(
+        onDismissRequest = viewModel::dismissDialog,
+        title = { Text(stringResource(Res.string.settings_library_delete)) },
+        text = {
+            Column(verticalArrangement = Arrangement.spacedBy(16.dp)) {
+                Text(stringResource(Res.string.settings_library_delete_confirmation))
+                if (syncState is SyncState.Connected) {
+                    Text(
+                        text = stringResource(Res.string.settings_library_delete_confirmation_sync),
+                        color = MaterialTheme.colorScheme.error,
+                    )
+                }
+                OutlinedTextField(
+                    modifier = Modifier.fillMaxWidth().focusRequester(focusRequester),
+                    value = value,
+                    onValueChange = { typed ->
+                        // A letter whose capital is longer than itself (ß) makes the text longer than the selection
+                        // was measured against.
+                        val text = typed.text.asSingleLine().uppercase().take(MAX_DELETE_LIBRARY_CONFIRMATION_LENGTH)
+                        value = typed.copy(
+                            text = text,
+                            selection = TextRange(typed.selection.start.coerceAtMost(text.length), typed.selection.end.coerceAtMost(text.length)),
+                        )
+                    },
+                    label = { Text(stringResource(Res.string.settings_library_delete_prompt, DELETE_LIBRARY_CONFIRMATION)) },
+                    singleLine = true,
+                    keyboardOptions = KeyboardOptions(
+                        capitalization = KeyboardCapitalization.Characters,
+                        autoCorrectEnabled = false,
+                        imeAction = ImeAction.Done,
+                    ),
+                    keyboardActions = KeyboardActions(onDone = { if (isConfirmed) deleteLibrary() }),
+                )
+            }
+        },
+        confirmButton = {
+            TextButton(
+                enabled = isConfirmed,
+                colors = ButtonDefaults.textButtonColors(contentColor = MaterialTheme.colorScheme.error),
+                onClick = deleteLibrary,
+            ) { Text(stringResource(Res.string.delete)) }
+        },
+        dismissButton = {
+            TextButton(onClick = viewModel::dismissDialog) { Text(stringResource(Res.string.cancel)) }
+        },
+    )
+}
 
 /**
  * The [FocusRequester] of the field a dialog opens onto. A dialog that is there to be typed into puts the caret in
@@ -1836,6 +1932,8 @@ private const val MAX_TITLE_LENGTH = 60
 
 /** A tag is a label to filter by, a word or two, and it sits in a pill next to others under a song's title. */
 private const val MAX_TAG_LENGTH = 30
+private const val DELETE_LIBRARY_CONFIRMATION = "DELETE"
+private const val MAX_DELETE_LIBRARY_CONFIRMATION_LENGTH = 30
 private const val MAX_DESCRIPTION_LENGTH = 300
 private const val DESCRIPTION_LINES = 3
 

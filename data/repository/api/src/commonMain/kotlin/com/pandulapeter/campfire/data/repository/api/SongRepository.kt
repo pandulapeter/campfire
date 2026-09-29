@@ -73,4 +73,11 @@ interface SongRepository {
     suspend fun renameSong(song: Song): Song?
 
     suspend fun deleteSong(fileName: String)
+
+    /**
+     * Deletes every song file in the folder, the ones that did not read included, as one change to the list. Every file
+     * is attempted even after one fails; the list then keeps the ones that are still there, and the first failure is
+     * thrown.
+     */
+    suspend fun deleteAllSongs()
 }

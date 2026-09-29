@@ -37,4 +37,18 @@ interface CoverArtRepository {
      * answered; collecting it is what runs the search, and cancelling the collection stops it.
      */
     fun searchCoverArt(query: CoverArtQuery): Flow<CoverArtSearchResults>
+
+    /**
+     * The bytes the device's copies take up together, or null while they cannot be listed. Collecting it lists them,
+     * and lists them again whenever a copy is written or pruned for as long as the collection lasts — only the latest
+     * state being listed where several changes arrive during one listing, so a burst of downloads is not a listing
+     * each.
+     */
+    val coverArtCacheSize: Flow<Long?>
+
+    /**
+     * Deletes every copy. Nothing about the songs changes: a cover that is shown again is downloaded again, and the
+     * addresses that failed are forgotten with the copies, so that it is asked for afresh.
+     */
+    suspend fun clearCoverArtCache()
 }

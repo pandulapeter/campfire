@@ -176,6 +176,14 @@
     <string name="settings_library_size_megabytes">%1$s MB</string>
     <string name="settings_library_size_gigabytes">%1$s GB</string>
     <string name="settings_library_size_decimal_separator">,</string>
+    <string name="settings_library_cover_art_cache">Borítóképek gyorsítótára</string>
+    <string name="settings_library_cover_art_cache_clear">Borítóképek gyorsítótárának törlése</string>
+    <string name="settings_library_cover_art_cache_clear_confirmation">Az eszközön tárolt borítóképek törlődnek. Mindegyiket újra letölti az alkalmazás, amikor legközelebb megjelenik.</string>
+    <string name="settings_library_cover_art_cache_clear_action">Törlés</string>
+    <string name="settings_library_delete">Könyvtár törlése</string>
+    <string name="settings_library_delete_confirmation">Az eszközön lévő összes dal és lista törlődik. Ez nem vonható vissza.</string>
+    <string name="settings_library_delete_confirmation_sync">A Dropbox-szinkronizálás a törlés után azonnal elindul, és a Dropbox-mappádból, valamint minden vele szinkronizált eszközről is törli őket.</string>
+    <string name="settings_library_delete_prompt">A megerősítéshez írd be: %1$s</string>
     <string name="settings_library_storage">Tárhely</string>
     <string name="settings_library_storage_granted">A böngésző vállalta, hogy megőrzi a könyvtárat, amíg nem törlöd az oldal adatait.</string>
     <string name="settings_library_storage_best_effort">A böngésző nem vállalta a könyvtár megőrzését, és törölheti, ha kevés a szabad hely az eszközön. Exportáld, vagy kapcsold be a szinkronizálást, hogy máshol is legyen egy másolat.</string>
@@ -371,7 +379,6 @@
     <string name="song_details_no_data_hint">A fájlt nem sikerült beolvasni.</string>
 
     <!-- Settings screen: sync -->
-    <string name="settings_sync">Szinkronizálás</string>
     <string name="settings_sync_unavailable">Ez a Campfire build szinkronizálási azonosítók nélkül készült, így nincs mihez csatlakozni.</string>
     <string name="settings_sync_description">Tartsd azonosan a könyvtárat minden eszközön egy saját felhőmappán keresztül. A Campfire-nek nincs szervere: a fájlok közvetlenül az eszközeid és a saját tárhelyed között mozognak.</string>
     <string name="settings_sync_connect_dropbox">Dropbox csatlakoztatása</string>

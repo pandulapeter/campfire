@@ -176,6 +176,14 @@
     <string name="settings_library_size_megabytes">%1$s MB</string>
     <string name="settings_library_size_gigabytes">%1$s GB</string>
     <string name="settings_library_size_decimal_separator">.</string>
+    <string name="settings_library_cover_art_cache">Cover art cache</string>
+    <string name="settings_library_cover_art_cache_clear">Clear cover art cache</string>
+    <string name="settings_library_cover_art_cache_clear_confirmation">The cover images kept on this device will be deleted. Each one is downloaded again the next time it is shown.</string>
+    <string name="settings_library_cover_art_cache_clear_action">Clear</string>
+    <string name="settings_library_delete">Delete library</string>
+    <string name="settings_library_delete_confirmation">Every song and setlist on this device will be deleted. This cannot be undone.</string>
+    <string name="settings_library_delete_confirmation_sync">Dropbox sync starts as soon as they are deleted, and deletes them from your Dropbox folder and from every device synced with it as well.</string>
+    <string name="settings_library_delete_prompt">Type %1$s to confirm</string>
     <string name="settings_library_storage">Storage</string>
     <string name="settings_library_storage_granted">Your browser has agreed to keep the library until you clear this site\'s data.</string>
     <string name="settings_library_storage_best_effort">Your browser has not promised to keep the library, and may remove it if the device runs low on space. Export it or connect sync to have a copy elsewhere.</string>
@@ -371,7 +379,6 @@
     <string name="song_details_no_data_hint">The file could not be read.</string>
 
     <!-- Settings screen: sync -->
-    <string name="settings_sync">Sync</string>
     <string name="settings_sync_unavailable">This build of Campfire was made without sync credentials, so there is nothing to connect to.</string>
     <string name="settings_sync_description">Keep the library the same on every device through a cloud folder you own. Campfire has no server: the files go straight between your devices and your own storage.</string>
     <string name="settings_sync_connect_dropbox">Connect Dropbox</string>
