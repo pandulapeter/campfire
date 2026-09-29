@@ -18,7 +18,7 @@
 - Chord diagrams
 - Optional close confirmation dialog on supported platforms
 - Add support for the Nashville chord system
-- Once Microsoft Store and Mac App Store listings are approved, update included URL-s + this Readme
+- Once the Mac App Store listing is approved, update included URL-s + this Readme
 - Test support for external control devices with a focus-by-section feature
 - Each top-level Composable should be defined in a separate file
 - Improve test coverage
