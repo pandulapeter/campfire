@@ -819,15 +819,23 @@ internal fun SwitchListItem(
     Switch(checked = isChecked, enabled = isEnabled, onCheckedChange = null)
 }
 
+/**
+ * @param horizontalInset Room kept at either end inside the row, on top of the list item's own, so that a row that
+ *   reaches past the content it sits in - the checklist of a dialog, whose rows light up to its edges - can still line
+ *   its checkbox up with that content.
+ */
 @Composable
 internal fun CheckboxListItem(
     modifier: Modifier = Modifier,
     title: String,
     description: String? = null,
     isChecked: Boolean,
+    horizontalInset: Dp = 0.dp,
     onCheckedChange: (Boolean) -> Unit,
 ) = ListItem(
-    modifier = modifier.toggleable(value = isChecked, role = Role.Checkbox, onValueChange = onCheckedChange),
+    modifier = modifier
+        .toggleable(value = isChecked, role = Role.Checkbox, onValueChange = onCheckedChange)
+        .padding(horizontal = horizontalInset),
     colors = ListItemDefaults.colors(containerColor = Color.Transparent),
     headlineContent = { Text(title) },
     supportingContent = description?.let { { Text(it) } },
@@ -885,6 +893,7 @@ internal fun LinkListItem(
 /**
  * @param isEmphasized Whether the row is an invitation to do something ("New setlist") rather than one entry of a
  *   list of things that can be done, which is what the actions of a song or of the library are.
+ * @param horizontalInset What [CheckboxListItem]'s is, for a row that sits among checkboxes.
  */
 @Composable
 internal fun ActionListItem(
@@ -893,9 +902,13 @@ internal fun ActionListItem(
     icon: Painter,
     isEnabled: Boolean = true,
     isEmphasized: Boolean = true,
+    horizontalInset: Dp = 0.dp,
     onClick: () -> Unit,
 ) = ListItem(
-    modifier = modifier.clickable(enabled = isEnabled, onClick = onClick).alpha(if (isEnabled) 1f else 0.5f),
+    modifier = modifier
+        .clickable(enabled = isEnabled, onClick = onClick)
+        .alpha(if (isEnabled) 1f else 0.5f)
+        .padding(horizontal = horizontalInset),
     colors = if (isEmphasized) {
         ListItemDefaults.colors(
             containerColor = Color.Transparent,

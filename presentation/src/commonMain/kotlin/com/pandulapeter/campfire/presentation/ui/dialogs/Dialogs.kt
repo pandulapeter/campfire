@@ -82,6 +82,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.graphics.luminance
+import androidx.compose.ui.layout.layout
 import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
@@ -96,6 +97,7 @@ import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.offset
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.pandulapeter.campfire.chordpro.ChordProLinks
 import com.pandulapeter.campfire.data.model.domain.ImportConflictResolution
@@ -1231,6 +1233,7 @@ private fun SongTagsDialog(
                     LazyColumn(
                         modifier = Modifier
                             .padding(top = 8.dp)
+                            .reachingDialogEdges()
                             .heightIn(max = MAX_CHECKLIST_HEIGHT)
                             .fadingVerticalEdges(listState),
                         state = listState,
@@ -1240,6 +1243,7 @@ private fun SongTagsDialog(
                                 ActionListItem(
                                     title = textResource(Res.string.song_details_tag_create, typedTag),
                                     icon = painterResource(Res.drawable.ic_add),
+                                    horizontalInset = DIALOG_CHECKLIST_ROW_INSET,
                                     onClick = enterTypedTag,
                                 )
                             }
@@ -1251,6 +1255,7 @@ private fun SongTagsDialog(
                             CheckboxListItem(
                                 title = tag,
                                 isChecked = tag in selectedTags,
+                                horizontalInset = DIALOG_CHECKLIST_ROW_INSET,
                                 onCheckedChange = { isChecked ->
                                     selectedTags = if (isChecked) selectedTags + tag else selectedTags - tag
                                 },
@@ -1426,6 +1431,7 @@ private fun SongLanguagesDialog(
                     LazyColumn(
                         modifier = Modifier
                             .padding(top = 8.dp)
+                            .reachingDialogEdges()
                             .heightIn(max = MAX_CHECKLIST_HEIGHT)
                             .fadingVerticalEdges(listState),
                         state = listState,
@@ -1439,6 +1445,7 @@ private fun SongLanguagesDialog(
                                 // The code is under the name, and is the name itself where there is none to put above it.
                                 description = language.name?.let { language.code.uppercase() },
                                 isChecked = language.code in selectedCodes,
+                                horizontalInset = DIALOG_CHECKLIST_ROW_INSET,
                                 onCheckedChange = { isChecked ->
                                     selectedCodes = if (isChecked) selectedCodes + language.code else selectedCodes - language.code
                                 },
@@ -1983,6 +1990,33 @@ private val MIN_DATE_ROW_WIDTH = 360.dp
 /** What Material's `OutlinedTextField` leaves above its border for the label that sits on it. */
 private val OUTLINED_FIELD_LABEL_ROOM = 8.dp
 private val MAX_CHECKLIST_HEIGHT = 320.dp
+
+/**
+ * What Material's `AlertDialog` pads its content by on every side. Material narrows it for a precision pointer, but only
+ * behind a flag the app does not turn on.
+ */
+private val DIALOG_CONTENT_PADDING = 24.dp
+
+/**
+ * What lines the checkboxes of a dialog's checklist up with the edge of the field above them: the list item keeps
+ * 16 dp at its start and the checkbox draws its box 2 dp inside its own bounds, which leaves this much of the dialog's
+ * padding for the row to add.
+ */
+private val DIALOG_CHECKLIST_ROW_INSET = DIALOG_CONTENT_PADDING - 18.dp
+
+/**
+ * A dialog's checklist running out over the dialog's padding to both of its edges, so that a row lights up across the
+ * whole dialog when it is pressed, the way it does in a sheet, while reporting only the width of the content around
+ * it so that everything else is laid out as it would be without it. The rows keep their content in line with the rest
+ * of the dialog's with [DIALOG_CHECKLIST_ROW_INSET].
+ */
+private fun Modifier.reachingDialogEdges() = layout { measurable, constraints ->
+    val outset = DIALOG_CONTENT_PADDING.roundToPx()
+    val placeable = measurable.measure(constraints.offset(horizontal = outset * 2))
+    layout((placeable.width - outset * 2).coerceAtLeast(0), placeable.height) {
+        placeable.placeRelative(-outset, 0)
+    }
+}
 
 /**
  * How a dialog or a sheet about one song names it under its title: the artist and the title, or the title alone for a
