@@ -532,11 +532,11 @@ internal fun SongDetailsScreen(
                         onRetry = { viewModel.loadSongContent(song.fileName) },
                         // Tagging writes the song's own file, so in performance mode the header's chips are read the way
                         // the editor's preview reads them.
-                        onAddTag = if (isPerformanceModeEnabled) null else {
-                            { viewModel.showDialog(CampfireViewModel.DialogType.AddSongTag(song = song)) }
+                        onManageTags = if (isPerformanceModeEnabled) null else {
+                            { viewModel.showDialog(CampfireViewModel.DialogType.SongTags(song = song)) }
                         },
                         onRemoveTag = if (isPerformanceModeEnabled) null else {
-                            { tag -> viewModel.setSongTag(fileName = song.fileName, tag = tag, isSelected = false) }
+                            { tag -> viewModel.removeSongTag(fileName = song.fileName, tag = tag) }
                         },
                         onEditLanguages = if (isPerformanceModeEnabled) null else {
                             { viewModel.showDialog(CampfireViewModel.DialogType.SongLanguages(song)) }
@@ -712,7 +712,7 @@ private fun SongDetailsPage(
     contentPadding: PaddingValues,
     renderSong: (text: String, transposition: Int, spelling: UserPreferences.ChordSpelling) -> ChordProSong,
     onRetry: () -> Unit,
-    onAddTag: (() -> Unit)?,
+    onManageTags: (() -> Unit)?,
     onRemoveTag: ((String) -> Unit)?,
     onEditLanguages: (() -> Unit)?,
     onOpenLink: (String) -> Unit,
@@ -814,7 +814,7 @@ private fun SongDetailsPage(
                 isHorizontalFlow = isHorizontalFlow,
                 foldedSections = foldedSections,
                 onFoldToggled = onFoldToggled,
-                onAddTag = onAddTag,
+                onManageTags = onManageTags,
                 onRemoveTag = onRemoveTag,
                 onEditLanguages = onEditLanguages,
                 onOpenLink = onOpenLink,

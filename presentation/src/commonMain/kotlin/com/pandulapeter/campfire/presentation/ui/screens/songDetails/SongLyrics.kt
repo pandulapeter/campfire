@@ -103,6 +103,7 @@ import com.pandulapeter.campfire.presentation.resources.Res
 import com.pandulapeter.campfire.presentation.resources.ic_add
 import com.pandulapeter.campfire.presentation.resources.ic_album
 import com.pandulapeter.campfire.presentation.resources.ic_clear
+import com.pandulapeter.campfire.presentation.resources.ic_edit
 import com.pandulapeter.campfire.presentation.resources.ic_language
 import com.pandulapeter.campfire.presentation.resources.ic_link
 import com.pandulapeter.campfire.presentation.resources.song_details_album
@@ -126,8 +127,8 @@ import com.pandulapeter.campfire.presentation.resources.song_details_change_cove
 import com.pandulapeter.campfire.presentation.resources.song_details_link_add
 import com.pandulapeter.campfire.presentation.resources.song_details_set_cover_art
 import com.pandulapeter.campfire.presentation.resources.song_details_link_remove
-import com.pandulapeter.campfire.presentation.resources.song_details_tag_add
 import com.pandulapeter.campfire.presentation.resources.song_details_tag_remove
+import com.pandulapeter.campfire.presentation.resources.song_details_tags_manage
 import com.pandulapeter.campfire.presentation.resources.song_details_tempo
 import com.pandulapeter.campfire.presentation.resources.song_details_time
 import com.pandulapeter.campfire.presentation.resources.song_details_year
@@ -212,7 +213,7 @@ internal fun SongLyrics(
     isHorizontalFlow: Boolean = false,
     foldedSections: Set<String> = emptySet(),
     onFoldToggled: ((key: String) -> Unit)? = null,
-    onAddTag: (() -> Unit)? = null,
+    onManageTags: (() -> Unit)? = null,
     onRemoveTag: ((String) -> Unit)? = null,
     onEditLanguages: (() -> Unit)? = null,
     onOpenLink: ((String) -> Unit)? = null,
@@ -309,7 +310,7 @@ internal fun SongLyrics(
                 },
             song = model.song,
             fontScale = fontScale,
-            onAddTag = onAddTag,
+            onManageTags = onManageTags,
             onRemoveTag = onRemoveTag,
             onEditLanguages = onEditLanguages,
             onOpenLink = onOpenLink,
@@ -448,16 +449,16 @@ private fun CutSongNotice(
  * that is drawn in parentheses after it, and the artist. The key leads the accent line, as [song] has been transposed
  * to it, so it names what is played rather than what the file declares.
  *
- * @param onAddTag Null where the tags are only read, which is the editor's preview: there the file itself is under
+ * @param onManageTags Null where the tags are only read, which is the editor's preview: there the file itself is under
  *   the caret, and a chip writing into it from the side would be editing the text the editor has not saved yet.
- * @param onEditLanguages Null wherever [onAddTag] is, and for the same reason. The chip is then shown only by a song
+ * @param onEditLanguages Null wherever [onManageTags] is, and for the same reason. The chip is then shown only by a song
  *   that declares a language, since there is nothing to say about one that does not and nothing to tap to change it.
  * @param onOpenLink Null where a link is only shown, not followed: the editor's preview, where a tap is meant for the
  *   text rather than for a browser.
- * @param onAddLink Null wherever [onAddTag] is, and for the same reason; so is [onRemoveLink].
+ * @param onAddLink Null wherever [onManageTags] is, and for the same reason; so is [onRemoveLink].
  * @param onEditCoverArt Opens the cover search, on a chip above the tags reading "Set" or "Change" by whether the file
  *   names a cover. It shares its row with the languages rather than being one more chip among the tags, since a cover
- *   is one thing about the song rather than one of a list of them. Null wherever [onAddTag] is, and also while covers
+ *   is one thing about the song rather than one of a list of them. Null wherever [onManageTags] is, and also while covers
  *   are turned off.
  */
 @Composable
@@ -465,7 +466,7 @@ private fun SongMetadataHeader(
     modifier: Modifier = Modifier,
     song: ChordProSong,
     fontScale: Float,
-    onAddTag: (() -> Unit)?,
+    onManageTags: (() -> Unit)?,
     onRemoveTag: ((String) -> Unit)?,
     onEditLanguages: (() -> Unit)?,
     onOpenLink: ((String) -> Unit)?,
@@ -475,7 +476,7 @@ private fun SongMetadataHeader(
 ) = Column(modifier = modifier.padding(bottom = SECTION_GAP)) {
     SongChips(
         song = song,
-        onAddTag = onAddTag,
+        onManageTags = onManageTags,
         onRemoveTag = onRemoveTag,
         onEditLanguages = onEditLanguages,
         onOpenLink = onOpenLink,
@@ -514,7 +515,7 @@ private fun SongMetadataHeader(
 private fun SongChips(
     modifier: Modifier = Modifier,
     song: ChordProSong,
-    onAddTag: (() -> Unit)?,
+    onManageTags: (() -> Unit)?,
     onRemoveTag: ((String) -> Unit)?,
     onEditLanguages: (() -> Unit)?,
     onOpenLink: ((String) -> Unit)?,
@@ -549,7 +550,7 @@ private fun SongChips(
             }
         }
     }
-    if (metadata.tags.isNotEmpty() || onAddTag != null) {
+    if (metadata.tags.isNotEmpty() || onManageTags != null) {
         TagFlowRow(
             modifier = Modifier.padding(bottom = 4.dp),
         ) {
@@ -561,11 +562,11 @@ private fun SongChips(
                     onTrailingIconClick = onRemoveTag?.let { { it(tag) } },
                 )
             }
-            onAddTag?.let { onClick ->
+            onManageTags?.let { onClick ->
                 TagPill(
-                    text = stringResource(Res.string.song_details_tag_add),
+                    text = stringResource(Res.string.song_details_tags_manage),
                     onClick = onClick,
-                    leadingIcon = painterResource(Res.drawable.ic_add),
+                    leadingIcon = painterResource(Res.drawable.ic_edit),
                 )
             }
         }

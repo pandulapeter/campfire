@@ -45,11 +45,8 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.dp
-import com.pandulapeter.campfire.presentation.localization.stringResource
 import com.pandulapeter.campfire.presentation.resources.Res
-import com.pandulapeter.campfire.presentation.resources.ic_add
 import com.pandulapeter.campfire.presentation.resources.ic_language
-import com.pandulapeter.campfire.presentation.resources.song_details_tag_add
 import org.jetbrains.compose.resources.painterResource
 
 /**
@@ -62,8 +59,6 @@ import org.jetbrains.compose.resources.painterResource
  *   filters, and [selectedTags] (compared without regard to case, as the filter compares them) are drawn selected so
  *   that a second tap reads as what it is, taking the filter off again.
  * @param onLanguageClicked The same for the languages, against [selectedLanguages].
- * @param onAddTag Null where the song is not to be tagged from here. Otherwise the row ends in the song details
- *   header's own "Add tag" chip, so a song can be filed without being opened.
  */
 @Composable
 internal fun SongLabels(
@@ -74,7 +69,6 @@ internal fun SongLabels(
     selectedLanguages: Set<String> = emptySet(),
     onTagClicked: ((String) -> Unit)? = null,
     onLanguageClicked: ((String) -> Unit)? = null,
-    onAddTag: (() -> Unit)? = null,
 ) {
     val scrollState = rememberScrollState()
     Row(
@@ -99,13 +93,6 @@ internal fun SongLabels(
                 isSelected = onLanguageClicked != null && code in selectedLanguages,
                 onClick = onLanguageClicked?.let { { it(code) } },
                 leadingIcon = painterResource(Res.drawable.ic_language),
-            )
-        }
-        onAddTag?.let { onClick ->
-            TagPill(
-                text = stringResource(Res.string.song_details_tag_add),
-                onClick = onClick,
-                leadingIcon = painterResource(Res.drawable.ic_add),
             )
         }
     }

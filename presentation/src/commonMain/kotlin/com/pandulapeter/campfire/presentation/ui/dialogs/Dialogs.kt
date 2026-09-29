@@ -164,9 +164,9 @@ import com.pandulapeter.campfire.presentation.resources.song_details_language_se
 import com.pandulapeter.campfire.presentation.resources.song_details_link_add
 import com.pandulapeter.campfire.presentation.resources.song_details_link_address
 import com.pandulapeter.campfire.presentation.resources.song_details_link_address_hint
-import com.pandulapeter.campfire.presentation.resources.song_details_tag_add
-import com.pandulapeter.campfire.presentation.resources.song_details_tag_name
-import com.pandulapeter.campfire.presentation.resources.song_details_tag_suggestions
+import com.pandulapeter.campfire.presentation.resources.song_details_tag_create
+import com.pandulapeter.campfire.presentation.resources.song_details_tags_manage
+import com.pandulapeter.campfire.presentation.resources.song_details_tags_search
 import com.pandulapeter.campfire.presentation.resources.song_editor_discard
 import com.pandulapeter.campfire.presentation.resources.song_editor_revert
 import com.pandulapeter.campfire.presentation.resources.song_editor_revert_confirmation
@@ -326,7 +326,7 @@ internal fun CampfireDialogs(
             },
         )
 
-        is CampfireViewModel.DialogType.AddSongTag -> AddSongTagDialog(
+        is CampfireViewModel.DialogType.SongTags -> SongTagsDialog(
             viewModel = viewModel,
             dialog = dialog,
         )
@@ -1155,38 +1155,60 @@ private fun NewSongDialog(
 }
 
 /**
- * One tag to put on a song, typed or picked. The suggestions are the tags the rest of the library already uses,
- * narrowed by whatever has been typed so far, because a library where the same idea is filed under "christmas",
- * "Christmas" and "xmas" is a library whose tags filter nothing.
+ * Every tag of a song, managed in one place: the library's tags as a checklist with the song's own ticked and at the
+ * top, and a field that narrows the list and creates a tag the library does not have yet. As with the languages
+ * ([SongLanguagesDialog]), the whole set is written when the dialog is confirmed, so a file the user owns is rewritten
+ * once rather than once per checkbox, and the order is decided as the dialog opens rather than by what is ticked: a row
+ * that moved under the finger that has just ticked it would be worse than a list that has to be scrolled.
+ *
+ * Offering the library's tags before anything is typed is the point of the list, because a library where the same idea
+ * is filed under "christmas", "Christmas" and "xmas" is a library whose tags filter nothing. For the same reason what is
+ * typed ticks the tag it spells, whatever its case, and a tag is only created where there is none to tick.
  *
  * It names the song it tags under its title ([SongDialogTitle]) wherever it was opened from: a tag put on the row next
  * to the one that was meant is a file quietly rewritten, and saying it over the song details screen as well keeps the
  * dialog reading the same from both places.
  */
 @Composable
-private fun AddSongTagDialog(
+private fun SongTagsDialog(
     viewModel: CampfireViewModel,
-    dialog: CampfireViewModel.DialogType.AddSongTag,
+    dialog: CampfireViewModel.DialogType.SongTags,
 ) {
-    val tags by viewModel.tags.collectAsStateWithLifecycle()
-    var value by rememberSaveable { mutableStateOf("") }
-    val isValid = value.isNotBlank()
-    val focusRequester = rememberFirstFieldFocusRequester()
-    val addTag = { tag: String ->
-        viewModel.setSongTag(fileName = dialog.song.fileName, tag = tag, isSelected = true)
-        viewModel.dismissDialog()
+    val libraryTags by viewModel.tags.collectAsStateWithLifecycle()
+    var query by rememberSaveable { mutableStateOf("") }
+    // Saved, since the dialog outlives a recreated Activity and Done writes whatever is ticked at that moment.
+    var selectedTags by rememberSaveable(dialog.song.fileName, stateSaver = stringListSaver) { mutableStateOf(dialog.song.tags) }
+    var createdTags by rememberSaveable(dialog.song.fileName, stateSaver = stringListSaver) { mutableStateOf(emptyList()) }
+    // The song's own tags first, in the order its file lists them, then the ones created here, then the rest of the
+    // library, most used first. Two spellings of a tag are one tag, and the song's own spelling is the one kept.
+    val offeredTags = remember(dialog.song, createdTags, libraryTags) {
+        (dialog.song.tags + createdTags + libraryTags.map { it.name }).distinctBy { it.lowercase() }
     }
-    val searchableTags = remember(tags) { tags.map { it to viewModel.normalizeForSearch(it.name) } }
-    val suggestions = remember(searchableTags, dialog.song, value) {
-        val songTags = dialog.song.tags.mapTo(mutableSetOf()) { it.lowercase() }
-        val normalizedValue = viewModel.normalizeForSearch(value)
-        searchableTags.mapNotNull { (tag, name) -> tag.takeIf { it.name.lowercase() !in songTags && normalizedValue in name } }
+    val searchableTags = remember(offeredTags) { offeredTags.map { it to viewModel.normalizeForSearch(it) } }
+    val matches = remember(searchableTags, query) {
+        val normalizedQuery = viewModel.normalizeForSearch(query)
+        searchableTags.mapNotNull { (tag, name) -> tag.takeIf { normalizedQuery in name } }
+    }
+    val typedTag = query.trim()
+    val spelledTag = offeredTags.firstOrNull { it.equals(typedTag, ignoreCase = true) }
+    val focusRequester = rememberFirstFieldFocusRequester()
+    val keyboardController = LocalSoftwareKeyboardController.current
+    val enterTypedTag = {
+        when {
+            typedTag.isEmpty() -> keyboardController?.hide()
+            spelledTag != null -> if (spelledTag !in selectedTags) selectedTags = selectedTags + spelledTag
+            else -> {
+                createdTags = createdTags + typedTag
+                selectedTags = selectedTags + typedTag
+            }
+        }
+        query = ""
     }
     AlertDialog(
         onDismissRequest = viewModel::dismissDialog,
         title = {
             SongDialogTitle(
-                title = stringResource(Res.string.song_details_tag_add),
+                title = stringResource(Res.string.song_details_tags_manage),
                 song = dialog.song,
             )
         },
@@ -1194,34 +1216,44 @@ private fun AddSongTagDialog(
             Column {
                 OutlinedTextField(
                     modifier = Modifier.fillMaxWidth().focusRequester(focusRequester),
-                    value = value,
-                    onValueChange = { value = it.asSingleLine().take(MAX_TAG_LENGTH) },
-                    label = { Text(stringResource(Res.string.song_details_tag_name)) },
+                    value = query,
+                    onValueChange = { query = it.asSingleLine().take(MAX_TAG_LENGTH) },
+                    label = { Text(stringResource(Res.string.song_details_tags_search)) },
                     singleLine = true,
                     keyboardOptions = KeyboardOptions(imeAction = ImeAction.Done),
-                    keyboardActions = KeyboardActions(onDone = { if (isValid) addTag(value) }),
+                    // Handling Done keeps the keyboard up, which is what lets the next tag be typed straight away.
+                    keyboardActions = KeyboardActions(onDone = { enterTypedTag() }),
                 )
-                // However many tags a library has grown to, the ones that match what is being typed are the only
-                // ones worth offering, and the list is scrolled rather than allowed to push the buttons off screen.
-                if (suggestions.isNotEmpty()) {
-                    Text(
-                        modifier = Modifier.padding(top = 16.dp, bottom = 8.dp),
-                        text = stringResource(Res.string.song_details_tag_suggestions),
-                        style = MaterialTheme.typography.labelLarge,
-                        color = MaterialTheme.colorScheme.primary,
-                    )
-                    val scrollState = rememberScrollState()
-                    HideKeyboardWhenScrolledDown(scrollState)
-                    TagFlowRow(
+                val isCreatable = typedTag.isNotEmpty() && spelledTag == null
+                if (isCreatable || matches.isNotEmpty()) {
+                    val listState = rememberLazyListState()
+                    HideKeyboardWhenScrolledDown(listState)
+                    LazyColumn(
                         modifier = Modifier
-                            .heightIn(max = MAX_SUGGESTIONS_HEIGHT)
-                            .fadingVerticalEdges(scrollState)
-                            .verticalScroll(scrollState),
+                            .padding(top = 8.dp)
+                            .heightIn(max = MAX_CHECKLIST_HEIGHT)
+                            .fadingVerticalEdges(listState),
+                        state = listState,
                     ) {
-                        suggestions.forEach { tag ->
-                            TagPill(
-                                text = tag.name,
-                                onClick = { addTag(tag.name) },
+                        if (isCreatable) {
+                            item(key = CREATE_TAG_KEY) {
+                                ActionListItem(
+                                    title = textResource(Res.string.song_details_tag_create, typedTag),
+                                    icon = painterResource(Res.drawable.ic_add),
+                                    onClick = enterTypedTag,
+                                )
+                            }
+                        }
+                        items(
+                            items = matches,
+                            key = { it },
+                        ) { tag ->
+                            CheckboxListItem(
+                                title = tag,
+                                isChecked = tag in selectedTags,
+                                onCheckedChange = { isChecked ->
+                                    selectedTags = if (isChecked) selectedTags + tag else selectedTags - tag
+                                },
                             )
                         }
                     }
@@ -1230,9 +1262,13 @@ private fun AddSongTagDialog(
         },
         confirmButton = {
             TextButton(
-                enabled = isValid,
-                onClick = { addTag(value) },
-            ) { Text(stringResource(Res.string.song_details_tag_add)) }
+                onClick = {
+                    // A tag typed but not entered yet is still one the user meant to put on the song.
+                    val tags = if (typedTag.isNotEmpty() && spelledTag == null) selectedTags + typedTag else selectedTags
+                    viewModel.setSongTags(fileName = dialog.song.fileName, tags = tags, offeredTags = offeredTags)
+                    viewModel.dismissDialog()
+                },
+            ) { Text(stringResource(Res.string.done)) }
         },
         dismissButton = {
             TextButton(onClick = viewModel::dismissDialog) { Text(stringResource(Res.string.cancel)) }
@@ -1390,7 +1426,7 @@ private fun SongLanguagesDialog(
                     LazyColumn(
                         modifier = Modifier
                             .padding(top = 8.dp)
-                            .heightIn(max = MAX_LANGUAGES_HEIGHT)
+                            .heightIn(max = MAX_CHECKLIST_HEIGHT)
                             .fadingVerticalEdges(listState),
                         state = listState,
                     ) {
@@ -1930,8 +1966,12 @@ private val SHEET_BOTTOM_PADDING = 16.dp
 private val PICKER_LIST_TOP_PADDING = 8.dp
 private const val MAX_TITLE_LENGTH = 60
 
+/** The tags ticked in the tag dialog, and the ones created there, as a Bundle can hold them. */
+private val stringListSaver = listSaver<List<String>, String>(save = { it }, restore = { it })
+
 /** A tag is a label to filter by, a word or two, and it sits in a pill next to others under a song's title. */
 private const val MAX_TAG_LENGTH = 30
+private const val CREATE_TAG_KEY = "createTag"
 private const val DELETE_LIBRARY_CONFIRMATION = "DELETE"
 private const val MAX_DELETE_LIBRARY_CONFIRMATION_LENGTH = 30
 private const val MAX_DESCRIPTION_LENGTH = 300
@@ -1942,8 +1982,7 @@ private val MIN_DATE_ROW_WIDTH = 360.dp
 
 /** What Material's `OutlinedTextField` leaves above its border for the label that sits on it. */
 private val OUTLINED_FIELD_LABEL_ROOM = 8.dp
-private val MAX_SUGGESTIONS_HEIGHT = 160.dp
-private val MAX_LANGUAGES_HEIGHT = 320.dp
+private val MAX_CHECKLIST_HEIGHT = 320.dp
 
 /**
  * How a dialog or a sheet about one song names it under its title: the artist and the title, or the title alone for a

@@ -1479,12 +1479,29 @@ class CampfireViewModel(
     }
 
     /**
-     * Puts a tag on a song or takes it off, from the header of the screen that is playing it. The file is rewritten
-     * rather than the list entry changed: tags live in the song's own text, which is what makes them travel with the
-     * file when it is exported, synced or opened anywhere else.
+     * Takes a tag off a song, from the header of the screen that is playing it. The file is rewritten rather than the
+     * list entry changed: tags live in the song's own text, which is what makes them travel with the file when it is
+     * exported, synced or opened anywhere else.
      */
-    fun setSongTag(fileName: String, tag: String, isSelected: Boolean) = launchLibraryChange {
-        editSongText(fileName) { text -> setChordProTag(text = text, tag = tag, isSelected = isSelected) }
+    fun removeSongTag(fileName: String, tag: String) = launchLibraryChange {
+        editSongText(fileName) { text -> setChordProTag(text = text, tag = tag, isSelected = false) }
+    }
+
+    /**
+     * Makes [tags] the tags a song carries, from the tag dialog: every one of [offeredTags] the dialog left unticked is
+     * taken off and every ticked one put on, compared without regard to case, as the file's tags always are. The file
+     * is rewritten once for the whole set, as [setSongLanguages] writes one. What it carries is read from the text the
+     * edit is built on rather than from the list entry the dialog was opened with, so a tag another device synced in
+     * while the dialog was open, and which it therefore never offered, is left on.
+     */
+    fun setSongTags(fileName: String, tags: List<String>, offeredTags: List<String>) = launchLibraryChange {
+        val keptKeys = tags.mapTo(mutableSetOf()) { it.lowercase() }
+        val offeredKeys = offeredTags.mapTo(mutableSetOf()) { it.lowercase() }
+        editSongText(fileName) { text ->
+            val removed = parseChordPro(text).metadata.tags.filter { it.lowercase() in offeredKeys && it.lowercase() !in keptKeys }
+            val withoutRemoved = removed.fold(text) { current, tag -> setChordProTag(text = current, tag = tag, isSelected = false) }
+            tags.fold(withoutRemoved) { current, tag -> setChordProTag(text = current, tag = tag, isSelected = true) }
+        }
     }
 
     /**
@@ -2554,7 +2571,7 @@ class CampfireViewModel(
         get() = when (this) {
             is DialogType.SetlistPicker -> song.fileName
             is DialogType.DeleteSong -> song.fileName
-            is DialogType.AddSongTag -> song.fileName
+            is DialogType.SongTags -> song.fileName
             is DialogType.AddSongLink -> song.fileName
             is DialogType.SongLanguages -> song.fileName
             is DialogType.CoverArtSearch -> song.fileName
@@ -2869,10 +2886,10 @@ class CampfireViewModel(
         data class DuplicateSetlist(val setlist: Setlist) : DialogType
         data class DeleteSong(val song: Song) : DialogType
         /**
-         * Opened from the tag header of the song details screen or from a row of the song list; the suggestions come
-         * from [tags].
+         * Opened from the tag header of the song details screen or from a row of the song list; what it offers besides
+         * the song's own tags is [tags].
          */
-        data class AddSongTag(val song: Song) : DialogType
+        data class SongTags(val song: Song) : DialogType
         /** Opened from the same header, for an address typed or pasted in. */
         data class AddSongLink(val song: Song) : DialogType
         /** Opened from the same header, and asking about every language at once rather than one at a time. */

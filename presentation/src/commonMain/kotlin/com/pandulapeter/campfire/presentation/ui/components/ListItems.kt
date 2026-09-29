@@ -138,8 +138,6 @@ import kotlin.math.roundToInt
  * @param onTagClicked Toggles a tag in the song list's filter, exactly as its chip in the filters does. Null, together
  *   with [onLanguageClicked], leaves the pills to be read only.
  * @param onLanguageClicked The same for a language.
- * @param onAddTag Opens the tag dialog for this song, whose chip then ends the labels the way it ends them in the song
- *   details header. Null where the song's file is not to be written from here (performance mode, a setlist).
  * @param onLongClick A shortcut to the row's overflow menu, on the touch platforms where holding a row is a natural
  *   way to ask what can be done to it.
  * @param cardPadding The card's space from the edges of its grid cell, adjusted for inner columns in wide grids.
@@ -163,7 +161,6 @@ internal fun SongListItem(
     songFilter: SongFilter = SongFilter(),
     onTagClicked: ((String) -> Unit)? = null,
     onLanguageClicked: ((String) -> Unit)? = null,
-    onAddTag: (() -> Unit)? = null,
     cardPadding: PaddingValues = PaddingValues(horizontal = SONG_CARD_OUTER_PADDING, vertical = SONG_CARD_VERTICAL_PADDING),
     containerColor: Color = MaterialTheme.colorScheme.surfaceContainerLow,
     shadowElevation: Dp = 0.dp,
@@ -267,7 +264,7 @@ internal fun SongListItem(
                     }
                 }
             },
-            labelsContent = if (languages.isEmpty() && tags.isEmpty() && onAddTag == null) {
+            labelsContent = if (languages.isEmpty() && tags.isEmpty()) {
                 null
             } else {
                 {
@@ -278,7 +275,6 @@ internal fun SongListItem(
                         selectedLanguages = songFilter.selectedLanguages,
                         onTagClicked = onTagClicked,
                         onLanguageClicked = onLanguageClicked,
-                        onAddTag = onAddTag,
                     )
                 }
             },

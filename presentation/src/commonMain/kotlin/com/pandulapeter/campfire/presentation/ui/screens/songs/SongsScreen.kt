@@ -429,13 +429,6 @@ private fun SongList(
                             songFilter = songFilter,
                             onTagClicked = viewModel::toggleTagFilter,
                             onLanguageClicked = viewModel::toggleLanguageFilter,
-                            // Tagging writes the song's own file, which performance mode keeps out of reach.
-                            onAddTag = if (isPerformanceModeEnabled) null else {
-                                {
-                                    keyboardController?.hide()
-                                    viewModel.showDialog(CampfireViewModel.DialogType.AddSongTag(song = song))
-                                }
-                            },
                             onClick = {
                                 keyboardController?.hide()
                                 viewModel.openSong(song)
