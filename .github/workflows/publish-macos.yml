@@ -266,7 +266,8 @@ jobs:
           xcrun altool --upload-app --type macos --file "$PACKAGE" --apiKey "$ASC_KEY_ID" --apiIssuer "$ASC_ISSUER_ID"
           echo "Uploaded ${{ steps.version.outputs.name }} (${{ steps.version.outputs.build }}). It appears in TestFlight once App Store Connect has processed it."
       # Waits for App Store Connect to process the build, which can take half an hour, and submits it with the release's
-      # notes as its "What's New", to be released as soon as it is approved (.github/scripts/app_store_submission.py).
+      # notes as its "What's New" - in the draft version already prepared in App Store Connect where there is one, whose
+      # screenshots and release option are kept (.github/scripts/app_store_submission.py).
       - name: Submit for review
         if: inputs.submit_for_review
         env:

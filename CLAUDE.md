@@ -404,8 +404,12 @@ uninstall and nothing else does.
   - **Both Apple workflows submit what they upload for review when a release calls them** (`submit_for_review`;
     a hand dispatch only when its box is ticked): `.github/scripts/app_store_submission.py` waits for App Store
     Connect to process the build, takes the platform's version for `campfire.versionName` — the existing one, the
-    editable one renamed, or a new one — sets it to be released as soon as it is approved, attaches the build, writes
-    the release's `whats-new` notes as its "What's New" (all but a platform's first version) and submits it. A green
+    editable one renamed, or a new one set to be released as soon as it is approved — attaches the build, writes
+    the release's `whats-new` notes as its "What's New" (all but a platform's first version) and submits it. A
+    **draft** that is already there — a version prepared in App Store Connect with the release's new screenshots,
+    added to a review submission or not, or one that was rejected — is used as it is: only its build and its "What's
+    New" are replaced, everything else in it (the release option included) is kept, and it is submitted in the review
+    submission it is already in. A green
     run means submitted, not approved; App Review answers by email, and a rejection is answered in App Store Connect.
     A version that is already in review with this build is left alone, so a repeated run succeeds. Where another
     version of the platform is still waiting for Apple — in review, or approved and not on the store yet — the build

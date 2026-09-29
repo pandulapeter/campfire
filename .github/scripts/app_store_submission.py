@@ -13,10 +13,16 @@ Submits an uploaded build for App Review, which is everything a release used to 
 
 It waits for App Store Connect to finish processing the build (processing is also where a build is refused, with the
 reason mailed; this fails with the state instead of waiting forever), takes the platform's version for the release -
-the one that already carries that version string, or else the editable one, renamed, or else a new one - sets it to
-be released as soon as it is approved, attaches the build, writes the release notes as its "What's New" and submits
-it. A version that is already waiting for review or further along with this very build is left as it is, so a run
-that is repeated does not fail on its own success. Where another build is waiting for Apple - under review, or approved
+the one that already carries that version string, or else the editable one, renamed, or else a new one, set to be
+released as soon as it is approved - attaches the build, writes the release notes as its "What's New" and submits it.
+
+A draft that is already there - a version prepared in App Store Connect for this release, with its new screenshots,
+whether or not it has been added to a review submission, or one that was rejected - is used as it is: the build is
+attached to it and its "What's New" replaced with the notes, everything else in it is kept exactly as it is, the release
+option included, and it is submitted, in the review submission it is already in where there is one.
+
+A version that is already waiting for review or further along with this very build is left as it is, so a run that is
+repeated does not fail on its own success. Where another build is waiting for Apple - under review, or approved
 and not on the store yet - this one is not submitted at all, since a platform takes one version at a time: it stays in
 TestFlight, the run says so with a warning rather than failing, and it is submitted by hand once the other one has been
 decided, or replaced by the next release's build. That is decided before waiting for processing, which a build that is
@@ -30,8 +36,14 @@ import time
 
 from app_store_signing import awaiting_versions, fail, request
 
-# The states in which a version still takes a build, notes and a submission.
-EDITABLE_STATES = {"PREPARE_FOR_SUBMISSION", "DEVELOPER_REJECTED", "REJECTED", "METADATA_REJECTED", "INVALID_BINARY"}
+# The states in which a version still takes a build, notes and a submission. READY_FOR_REVIEW is a version added to a
+# review submission that has not been submitted yet, which is what "Add for Review" in App Store Connect leaves behind.
+EDITABLE_STATES = {
+    "PREPARE_FOR_SUBMISSION", "READY_FOR_REVIEW", "DEVELOPER_REJECTED", "REJECTED", "METADATA_REJECTED", "INVALID_BINARY",
+}
+# The states of a review submission that has not been handed to App Review, or has been handed back with a rejection:
+# the platform has at most one of them, and a new one cannot be started next to it.
+OPEN_SUBMISSION_STATES = "READY_FOR_REVIEW,UNRESOLVED_ISSUES"
 PROCESSING_TIMEOUT_SECONDS = 90 * 60
 POLL_INTERVAL_SECONDS = 60
 # The most App Store Connect takes for "What's New".
@@ -82,21 +94,19 @@ def version_for_release(app_id, platform, version):
     existing = next((item for item in versions if item["attributes"]["versionString"] == version), None)
     if existing is None:
         existing = next((item for item in versions if item["attributes"]["appStoreState"] in EDITABLE_STATES), None)
-    attributes = {"releaseType": "AFTER_APPROVAL"}
     if existing is None:
         created = request("POST", "/appStoreVersions", {"data": {
             "type": "appStoreVersions",
-            "attributes": {"platform": platform, "versionString": version, **attributes},
+            "attributes": {"platform": platform, "versionString": version, "releaseType": "AFTER_APPROVAL"},
             "relationships": {"app": {"data": {"type": "apps", "id": app_id}}},
         }})["data"]
         print(f"Created the {platform} version {version}.")
         return created, has_earlier
-    if existing["attributes"]["appStoreState"] in EDITABLE_STATES:
-        if existing["attributes"]["versionString"] != version:
-            print(f"Renaming the editable {platform} version {existing['attributes']['versionString']} to {version}.")
-            attributes["versionString"] = version
+    # A draft keeps its release option: whoever prepared it in App Store Connect may have chosen to release it by hand.
+    if existing["attributes"]["appStoreState"] in EDITABLE_STATES and existing["attributes"]["versionString"] != version:
+        print(f"Renaming the editable {platform} version {existing['attributes']['versionString']} to {version}.")
         request("PATCH", f"/appStoreVersions/{existing['id']}", {"data": {
-            "type": "appStoreVersions", "id": existing["id"], "attributes": attributes,
+            "type": "appStoreVersions", "id": existing["id"], "attributes": {"versionString": version},
         }})
     return existing, has_earlier
 
@@ -126,7 +136,7 @@ def write_whats_new(version, notes):
 def submit(app_id, platform, version):
     """Adds the version to the platform's open review submission, or to a new one, and submits it."""
     open_submissions = request(
-        "GET", f"/reviewSubmissions?filter[app]={app_id}&filter[platform]={platform}&filter[state]=READY_FOR_REVIEW",
+        "GET", f"/reviewSubmissions?filter[app]={app_id}&filter[platform]={platform}&filter[state]={OPEN_SUBMISSION_STATES}",
     )["data"]
     if open_submissions:
         submission = open_submissions[0]
@@ -159,7 +169,11 @@ def main(bundle_identifier, platform, version, build_number, notes_file):
     if len(notes) > WHATS_NEW_LIMIT:
         fail(f"The release notes are {len(notes)} characters long, and App Store Connect takes {WHATS_NEW_LIMIT}.")
     app = find_app(bundle_identifier)
-    awaiting = awaiting_versions(app["id"], platform)
+    # A draft that was added to a review submission counts as waiting for Apple to the signing script, which keeps its
+    # certificate either way, but it has not been submitted and is this release's to take.
+    awaiting = [
+        item for item in awaiting_versions(app["id"], platform) if item["attributes"]["appStoreState"] not in EDITABLE_STATES
+    ]
     if awaiting:
         attributes = awaiting[0]["attributes"]
         awaiting_build = attached_build_number(awaiting[0])
