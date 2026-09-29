@@ -9,6 +9,7 @@
 -->
 # To do
 - PDF import
+- Toggle to sort tags by usage or alphabetically
 - First time user experience tutorial
 - Sort and Filter UI should be improved (better animations)
 - Haptic effects
