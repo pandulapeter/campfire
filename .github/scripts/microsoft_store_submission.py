@@ -19,10 +19,16 @@ package and commits it, then waits until Partner Center has accepted the commit 
 not match the product's identity is refused). A green run means submitted, not certified: certification answers by
 email, usually within a few days.
 
-A submission that is already in progress with this very package version is left as it is, so a run that is repeated does
-not fail on its own success. One in progress with anything else - a draft started in Partner Center, the previous
-release still in certification, a commit that failed - stops the run instead of being deleted: it may be somebody's
-work, and the product can only have one submission in progress at a time.
+A draft that is already there - a submission started in Partner Center for this release, with its new screenshots, or one
+whose commit failed - is used instead of a new copy: its package is replaced with the new one and its "What's new in this
+version" with the notes, everything else in it is kept exactly as it is, the publish mode included, and it is committed.
+A submission that is already past its commit with this very package version is left as it is, so a run that is repeated
+does not fail on its own success. One past its commit with anything else - the previous release still in certification
+- stops the run instead of being deleted, since the product can only have one submission in progress at a time.
+
+Nothing here signs anything or makes a credential that is later revoked, so nothing a run does can undo a build that is
+still in certification: the package is unsigned and Partner Center signs it with a certificate of its own, and the sign-in
+is a token that is simply let expire.
 
 Uses the Microsoft Store submission API as a Microsoft Entra application that has the Manager role in Partner Center,
 named by MICROSOFT_STORE_TENANT_ID and MICROSOFT_STORE_CLIENT_ID. It proves who it is with no secret at all: the
@@ -49,6 +55,9 @@ RELEASE_NOTES_LIMIT = 1500
 UPLOAD_BLOCK_BYTES = 4 * 1024 * 1024
 COMMIT_TIMEOUT_SECONDS = 30 * 60
 POLL_INTERVAL_SECONDS = 30
+# The states of a submission that has not been committed yet, and so can still be changed: a draft started in Partner
+# Center, or one whose commit Partner Center refused.
+DRAFT_STATES = {"PendingCommit", "CommitFailed"}
 # The states of a submission that is past its commit and on its way to the Store.
 SUBMITTED_STATES = {"PreProcessing", "Certification", "Release", "PendingPublication", "Publishing", "Published"}
 
@@ -127,24 +136,19 @@ def find_app(identity_name):
          "cannot see it: it needs the Manager role on the account.")
 
 
-def pending_submission(app, version):
-    """False where there is nothing in progress, True where this version already is; stops on anything else."""
+def pending_submission(app):
+    """The submission the app has in progress, or None where there is none."""
     pending = app.get("pendingApplicationSubmission")
-    if not pending:
-        return False
-    submission = request("GET", f"/applications/{app['id']}/submissions/{pending['id']}")
-    status = submission.get("status")
-    versions = {package.get("version") for package in submission.get("applicationPackages", [])
-                if package.get("fileStatus") != "PendingDelete"}
-    if status in SUBMITTED_STATES and version in versions:
-        print(f"Version {version} is already submitted ({status}); nothing to do.")
-        return True
-    fail(f"The app already has a submission in progress ({status}, with {', '.join(sorted(v for v in versions if v)) or 'no package'}). "
-         "The Store takes one at a time: wait for it to be published, or delete it in Partner Center, and run this again.")
+    return request("GET", f"/applications/{app['id']}/submissions/{pending['id']}") if pending else None
 
 
-def prepare(submission, package_name, notes):
-    """Swaps the package of the copied submission for the new one and writes the notes into every listing."""
+def package_versions(submission):
+    return {package.get("version") for package in submission.get("applicationPackages", [])
+            if package.get("fileStatus") != "PendingDelete" and package.get("version")}
+
+
+def replace_package(submission, package_name):
+    """Marks every package of the submission for deletion and names the new one in their place."""
     packages = submission.get("applicationPackages", [])
     for package in packages:
         package["fileStatus"] = "PendingDelete"
@@ -156,14 +160,16 @@ def prepare(submission, package_name, notes):
         "minimumSystemRam": "None",
     })
     submission["applicationPackages"] = packages
+
+
+def write_release_notes(submission, notes):
     listings = submission.get("listings", {})
     if not listings:
-        fail("The copied submission has no Store listing to write the release notes into.")
+        fail("The submission has no Store listing to write the release notes into.")
     # The listing is in English only; any other listing it gains gets the same text rather than the last release's.
     for language, listing in listings.items():
         listing.setdefault("baseListing", {})["releaseNotes"] = notes
         print(f"Wrote the release notes for {language}.")
-    submission["targetPublishMode"] = "Immediate"
 
 
 def upload(upload_url, package):
@@ -211,7 +217,7 @@ def wait_for_commit(app_id, submission_id):
         if status != "CommitStarted":
             errors = "\n".join(f"{error.get('code')}: {error.get('details')}" for error in details.get("errors", []))
             fail(f"Partner Center did not accept the submission ({status}):\n{errors or 'no details given'}\n"
-                 "Delete the submission in Partner Center before running this again.")
+                 "It is left as a draft: fix what Partner Center names in it, and submit it there or run this again.")
         if time.time() > deadline:
             fail(f"The commit was still in progress after {COMMIT_TIMEOUT_SECONDS // 60} minutes; see Partner Center.")
         print("The commit is still in progress, asking again in half a minute.")
@@ -229,18 +235,39 @@ def main(identity_name, version, package, notes_file):
     if not os.path.isfile(package):
         fail(f"There is no package at {package}.")
     app = find_app(identity_name)
-    if pending_submission(app, version):
+    name = app.get("primaryName", identity_name)
+    submission = pending_submission(app)
+    if submission is None:
+        submission = request("POST", f"/applications/{app['id']}/submissions")
+        print(f"Created submission {submission['id']} for {name}.")
+        # A copy of the last published submission keeps that one's publish mode, which may have been a date or a manual
+        # release; what a release starts goes out as soon as it passes.
+        submission["targetPublishMode"] = "Immediate"
+    elif submission.get("status") in DRAFT_STATES:
+        # A draft is somebody's work on the listing for this release - its screenshots, its description - so only the
+        # package and the release notes are replaced and everything else, the publish mode included, is sent back as
+        # it came. The whole submission has to be sent, since a PUT replaces it rather than merging.
+        print(f"Amending the draft submission {submission['id']} of {name} ({submission.get('status')}, with "
+              f"{', '.join(sorted(package_versions(submission))) or 'no package'}).")
+    elif submission.get("status") in SUBMITTED_STATES and version in package_versions(submission):
+        print(f"Version {version} is already submitted ({submission.get('status')}); nothing to do.")
         return
-    submission = request("POST", f"/applications/{app['id']}/submissions")
+    else:
+        fail(f"The app already has a submission in progress ({submission.get('status')}, with "
+             f"{', '.join(sorted(package_versions(submission))) or 'no package'}). The Store takes one at a time: wait "
+             "for it to be published, or delete it in Partner Center, and run this again.")
     submission_id = submission["id"]
-    upload_url = submission.pop("fileUploadUrl")
-    print(f"Created submission {submission_id} for {app.get('primaryName', identity_name)}.")
-    prepare(submission, os.path.basename(package), notes)
+    upload_url = submission.pop("fileUploadUrl", None)
+    if not upload_url:
+        fail(f"Partner Center gave no upload address for submission {submission_id}.")
+    replace_package(submission, os.path.basename(package))
+    write_release_notes(submission, notes)
     request("PUT", f"/applications/{app['id']}/submissions/{submission_id}", submission)
     upload(upload_url, package)
     request("POST", f"/applications/{app['id']}/submissions/{submission_id}/commit")
     status = wait_for_commit(app["id"], submission_id)
-    print(f"Submitted version {version} for certification ({status}). It is published as soon as it passes.")
+    print(f"Submitted version {version} for certification ({status}), to be published "
+          f"{'as soon as it passes' if submission.get('targetPublishMode') == 'Immediate' else 'as the submission says (' + str(submission.get('targetPublishMode')) + ')'}.")
 
 
 if __name__ == "__main__":

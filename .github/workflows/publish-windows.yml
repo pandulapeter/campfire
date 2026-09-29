@@ -181,8 +181,8 @@ jobs:
           name: campfire-msix
           path: ${{ steps.package.outputs.path }}
           retention-days: 30
-      # Creates the submission, swaps in the package, writes the notes, commits it and waits for Partner Center to
-      # accept the commit (.github/scripts/microsoft_store_submission.py).
+      # Creates the submission, or amends the draft one already there, swaps in the package, writes the notes, commits
+      # it and waits for Partner Center to accept the commit (.github/scripts/microsoft_store_submission.py).
       - name: Submit for certification
         if: inputs.submit
         env:

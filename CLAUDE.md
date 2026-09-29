@@ -374,15 +374,19 @@ uninstall and nothing else does.
     so no Store ID is kept anywhere, creates a submission — a copy of the last published one — swaps its package for
     the new one, writes the release's `whats-new` notes as its "What's new in this version", sets it to be published
     as soon as it passes certification, uploads and commits it, and waits for Partner Center to accept the commit. A
-    green run means submitted, not certified. A submission already in progress with this version is left alone, so a
-    repeated run succeeds; one in progress with anything else stops the run rather than being deleted, since it may
-    be somebody's draft and a product has only one at a time. It signs in as a Microsoft Entra application with the
+    green run means submitted, not certified. A **draft** that is already there — one started in Partner Center with
+    the release's new screenshots, or one whose commit failed — is used instead of the copy: only its package and its
+    "What's new" are replaced, everything else in it (the publish mode included) is kept as it is, and it is committed.
+    A submission past its commit with this version is left alone, so a repeated run succeeds; one past its commit with
+    anything else stops the run, since a product has only one in progress at a time. It signs in as a Microsoft Entra application with the
     Manager role in Partner Center (`MICROSOFT_STORE_TENANT_ID` and `_CLIENT_ID`) and **with no secret**: the
     application has a federated credential that trusts the OIDC token GitHub hands the job, for the subject
     `repo:pandulapeter/campfire:environment:microsoft-store` — which is why the job runs in the `microsoft-store`
     environment and why `release.yml` grants it `id-token: write` — so, like everything Apple's workflows use, nothing
     it signs in with expires (a client secret would, after two years at most). The package is unsigned, since the
-    Store signs what it certifies, and nothing is attached to the release.
+    Store signs what it certifies with a certificate of its own, so unlike the Apple workflows nothing is revoked after
+    a run and nothing a later run does can invalidate a build still in certification; nothing is attached to the
+    release.
   - `publish-macos.yml` builds `packageReleasePkg` on an Apple silicon runner — asking for the `.pkg` is what signs
     and sandboxes it — signed with a Mac App
     Distribution and a Mac Installer Distribution certificate and the two Mac App Store provisioning profiles (the
