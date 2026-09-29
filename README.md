@@ -38,6 +38,18 @@ macOS is coming really soon (under final review):
 
 <a href="https://github.com/pandulapeter/campfire/releases/latest"><img src="documentation/images/badge_macos.png" alt="Campfire for macOS" height="32px" /></a>
 
+## Under the hood
+
+Campfire is a [Kotlin Multiplatform](https://kotlinlang.org/docs/multiplatform.html) project targeting Android, iOS, desktop (JVM) and the web (Kotlin/Wasm).
+The whole interface is written once with Compose Multiplatform and Material 3 Expressive, with navigation handled by Navigation 3 and dependencies wired together at compile time using Koin Annotations.
+Platform-specific code is limited to thin shells: file pickers, system bars, share and "open with" intents, and the storage behind the library, which is a plain folder on Android, iOS and desktop and the Origin Private File System in the browser.
+
+The code is split into small modules with a strict `api` / `implementation` boundary at every layer: a `presentation` module with the screens and the ViewModel, a `domain` layer of single-method use cases, repositories on top of local and remote data sources, and the `app` modules that hold each platform's entry point.
+The ChordPro parser, transposer and serializer live in a dependency-free `chordpro` module, so the format logic can be tested and reused independently of any UI or storage.
+
+Everything the app owns is a plain file: songs are `.cho` files and setlists are small JSON documents, so nothing is locked inside a database.
+Syncing is a pure planning step over file hashes and a remote listing, run against a provider interface that Dropbox implements through OAuth with PKCE, which is why no backend of Campfire's own is needed.
+
 ## License
 
 Copyright (c) Péter Pandula 2017-2026. This software is licensed under the
