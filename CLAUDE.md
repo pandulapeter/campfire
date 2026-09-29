@@ -369,8 +369,7 @@ uninstall and nothing else does.
   - `publish-windows.yml` builds `packageReleaseMsix` on a Windows runner (whose image has the SDK's makeappx),
     checks the identity and the version in the package's manifest against `gradle.properties`, starts the app image it
     was made of the way the Linux legs do (the Windows launcher writes no log, so there only an exit counts), keeps
-    the `.msix` as an artifact of the run and, called by a release (a hand dispatch only when its box is ticked),
-    submits it with `.github/scripts/microsoft_store_submission.py`. That finds the app by its package identity name,
+    the `.msix` as an artifact of the run and submits it with `.github/scripts/microsoft_store_submission.py`. That finds the app by its package identity name,
     so no Store ID is kept anywhere, creates a submission — a copy of the last published one — swaps its package for
     the new one, writes the release's `whats-new` notes as its "What's new in this version", sets it to be published
     as soon as it passes certification, uploads and commits it, and waits for Partner Center to accept the commit. A
@@ -401,9 +400,8 @@ uninstall and nothing else does.
     later run revokes, see below), lets xcodebuild make the App Store profile for it with the App Store Connect API key, and
     uploads the exported
     `.ipa` to App Store Connect, where it lands in TestFlight. Nothing is attached to the release.
-  - **Both Apple workflows submit what they upload for review when a release calls them** (`submit_for_review`;
-    a hand dispatch only when its box is ticked): `.github/scripts/app_store_submission.py` waits for App Store
-    Connect to process the build, takes the platform's version for `campfire.versionName` — the existing one, the
+  - **Both Apple workflows submit what they upload for review**: `.github/scripts/app_store_submission.py` waits for
+    App Store Connect to process the build, takes the platform's version for `campfire.versionName` — the existing one, the
     editable one renamed, or a new one set to be released as soon as it is approved — attaches the build, writes
     the release's `whats-new` notes as its "What's New" (all but a platform's first version) and submits it. A
     **draft** that is already there — a version prepared in App Store Connect with the release's new screenshots,

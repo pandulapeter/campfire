@@ -158,7 +158,6 @@ jobs:
     with:
       release_tag: ${{ github.event.release.tag_name }}
       release_notes: ${{ needs.prepare.outputs.release_notes }}
-      submit: true
     secrets: inherit
 
   ios:
@@ -173,7 +172,6 @@ jobs:
     with:
       release_tag: ${{ github.event.release.tag_name }}
       release_notes: ${{ needs.prepare.outputs.release_notes }}
-      submit_for_review: true
     secrets: inherit
 
   macos:
@@ -188,5 +186,4 @@ jobs:
     with:
       release_tag: ${{ github.event.release.tag_name }}
       release_notes: ${{ needs.prepare.outputs.release_notes }}
-      submit_for_review: true
     secrets: inherit

@@ -6,11 +6,10 @@
 # If a copy of the MPL was not distributed with this file, You can obtain one at
 # https://mozilla.org/MPL/2.0/.
 
-# Builds the Microsoft Store package of the desktop app (packageReleaseMsix) and, called by a release, submits it for
-# certification with the release's notes as its "What's new in this version", to be published as soon as it passes
-# (.github/scripts/microsoft_store_submission.py). Dispatched by hand it submits only when asked, and the package is
-# kept as an artifact of the run either way, for an upload made by hand. A green run means submitted, not certified -
-# certification answers by email.
+# Builds the Microsoft Store package of the desktop app (packageReleaseMsix) and submits it for certification with the
+# release's notes as its "What's new in this version", to be published as soon as it passes
+# (.github/scripts/microsoft_store_submission.py). The package is kept as an artifact of the run as well, for an upload
+# made by hand. A green run means submitted, not certified - certification answers by email.
 #
 # The package is unsigned, because Partner Center signs what it certifies, so nothing here signs anything. What it
 # needs is a Microsoft Entra application with the Manager role in Partner Center, named by MICROSOFT_STORE_TENANT_ID and
@@ -32,19 +31,12 @@ on:
       release_notes:
         type: string
         required: false
-      submit:
-        type: boolean
-        default: false
   workflow_dispatch:
     inputs:
       release_tag:
         description: 'Tag of the release to build'
         type: string
         required: true
-      submit:
-        description: 'Submit the package to the Microsoft Store for certification, to be published as soon as it passes'
-        type: boolean
-        default: false
       release_notes:
         description: '"What''s new in this version" for the submission, use \n for line breaks'
         type: string
@@ -73,7 +65,6 @@ jobs:
           DROPBOX_APP_KEY: ${{ secrets.DROPBOX_APP_KEY }}
           TENANT_ID: ${{ secrets.MICROSOFT_STORE_TENANT_ID }}
           CLIENT_ID: ${{ secrets.MICROSOFT_STORE_CLIENT_ID }}
-          SUBMIT: ${{ inputs.submit }}
         run: |
           PROBLEMS=0
           problem() {
@@ -83,10 +74,8 @@ jobs:
           # The empty string is the checked-in default, because a fresh clone has to build without a secret, so
           # nothing downstream would notice a published build that has no sync provider at all.
           [ -n "$DROPBOX_APP_KEY" ] || problem DROPBOX_APP_KEY "empty or not visible to this workflow"
-          if [ "$SUBMIT" = true ]; then
-            [[ "$TENANT_ID" =~ ^[0-9a-fA-F-]{36}$ ]] || problem MICROSOFT_STORE_TENANT_ID "expected a GUID, found ${#TENANT_ID} characters"
-            [[ "$CLIENT_ID" =~ ^[0-9a-fA-F-]{36}$ ]] || problem MICROSOFT_STORE_CLIENT_ID "expected a GUID, found ${#CLIENT_ID} characters"
-          fi
+          [[ "$TENANT_ID" =~ ^[0-9a-fA-F-]{36}$ ]] || problem MICROSOFT_STORE_TENANT_ID "expected a GUID, found ${#TENANT_ID} characters"
+          [[ "$CLIENT_ID" =~ ^[0-9a-fA-F-]{36}$ ]] || problem MICROSOFT_STORE_CLIENT_ID "expected a GUID, found ${#CLIENT_ID} characters"
           if [ "$PROBLEMS" -gt 0 ]; then
             echo "Set them from a terminal that can prompt for hidden input: gh secret set <name> --repo $GITHUB_REPOSITORY" >&2
             exit 1
@@ -184,7 +173,6 @@ jobs:
       # Creates the submission, or amends the draft one already there, swaps in the package, writes the notes, commits
       # it and waits for Partner Center to accept the commit (.github/scripts/microsoft_store_submission.py).
       - name: Submit for certification
-        if: inputs.submit
         env:
           MICROSOFT_STORE_TENANT_ID: ${{ secrets.MICROSOFT_STORE_TENANT_ID }}
           MICROSOFT_STORE_CLIENT_ID: ${{ secrets.MICROSOFT_STORE_CLIENT_ID }}

@@ -7,10 +7,10 @@
 # https://mozilla.org/MPL/2.0/.
 
 # Builds the iOS app, signs it for the App Store and uploads it to App Store Connect, where it lands in TestFlight.
-# Called by a release, it then waits for the build to be processed and submits it for review with the release's notes
-# as its "What's New", to be released as soon as Apple approves it; dispatched by hand, it does so only when asked.
-# Either way a green run means submitted, not accepted — review answers by email. Where another version is still
-# waiting for Apple, the build stays in TestFlight unsubmitted and the run ends with a warning instead.
+# It then waits for the build to be processed and submits it for review with the release's notes as its "What's New",
+# to be released as soon as Apple approves it. A green run means submitted, not accepted — review answers by email.
+# Where another version is still waiting for Apple, the build stays in TestFlight unsubmitted and the run ends with a
+# warning instead.
 #
 # Nothing it signs with is stored anywhere, so nothing of it can expire: the run creates an Apple Distribution
 # certificate for a key made on the runner through the App Store Connect API (.github/scripts/app_store_signing.py),
@@ -33,9 +33,6 @@ on:
       release_notes:
         type: string
         required: false
-      submit_for_review:
-        type: boolean
-        default: false
   workflow_dispatch:
     inputs:
       release_tag:
@@ -46,10 +43,6 @@ on:
         description: 'Build number to upload under instead of campfire.buildNumber (for a repeated upload)'
         type: string
         required: false
-      submit_for_review:
-        description: 'Submit the build for review once it has been processed, to be released as soon as it is approved'
-        type: boolean
-        default: false
       release_notes:
         description: '"What''s New" for the submission, use \n for line breaks'
         type: string
@@ -255,7 +248,6 @@ jobs:
       # notes as its "What's New" - in the draft version already prepared in App Store Connect where there is one, whose
       # screenshots and release option are kept (.github/scripts/app_store_submission.py).
       - name: Submit for review
-        if: inputs.submit_for_review
         env:
           ASC_KEY_ID: ${{ secrets.APP_STORE_CONNECT_KEY_ID }}
           ASC_ISSUER_ID: ${{ secrets.APP_STORE_CONNECT_ISSUER_ID }}
