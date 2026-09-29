@@ -81,7 +81,7 @@ import org.jetbrains.compose.resources.painterResource
  * readable, a section header measured at its narrowest pinned width, the song details app bar keeping the title - so
  * that the decision follows the width of the list or the window rather than the length of one title, and every row of
  * a list offers the same number of buttons. The buttons come and go by expanding and shrinking as that width crosses
- * a button's, the way the song details' steppers move between the bar and their sheet.
+ * a button's, the way the song details' steppers move between the bar and its menu.
  *
  * Separate from [SongActions] because not every row that wants these has a song behind it: a setlist entry whose file
  * has gone missing still has the one action of being taken out of the setlist, and the editor has its revert.
@@ -94,6 +94,9 @@ import org.jetbrains.compose.resources.painterResource
  *   in front of it.
  * @param isDecorative Draws the icons alone, for the copy of a section header that is only ever seen being pushed away
  *   and takes no touches.
+ * @param menuFooter Drawn at the end of the menu, after its entries: controls that are adjusted rather than chosen, so
+ *   they leave the menu open, and that have no button of their own however much room there is - which keeps the
+ *   overflow button there for good.
  */
 @Composable
 internal fun ActionsMenu(
@@ -104,23 +107,25 @@ internal fun ActionsMenu(
     items: List<ActionsMenuItem>,
     isExpandable: Boolean = true,
     isDecorative: Boolean = false,
+    menuFooter: (@Composable () -> Unit)? = null,
 ) = BoxWithConstraints(
     modifier = modifier,
 ) {
     val buttonWidth = actionButtonWidth()
     val slotCount = (maxWidth / buttonWidth).toInt().coerceAtLeast(1)
     val expandableItems = if (isExpandable) items.filterNot { it.isAlwaysInMenu } else emptyList()
-    val buttonItems = if (expandableItems.size == items.size && items.size <= slotCount) {
+    val buttonItems = if (menuFooter == null && expandableItems.size == items.size && items.size <= slotCount) {
         items
     } else {
         // The overflow button stays, so it takes one of the places.
         expandableItems.take(slotCount - 1)
     }
     val menuItems = items.filterNot { it in buttonItems }
+    val hasMenu = menuItems.isNotEmpty() || menuFooter != null
     // A menu the room has just emptied, or one a long press asked for with nothing left in it, would otherwise be left
     // open in its state and drop down on its own the next time the row narrows.
-    LaunchedEffect(menuItems.isEmpty(), state.isExpanded) {
-        if (menuItems.isEmpty()) state.dismiss()
+    LaunchedEffect(hasMenu, state.isExpanded) {
+        if (!hasMenu) state.dismiss()
     }
     Row(
         verticalAlignment = Alignment.CenterVertically,
@@ -147,7 +152,7 @@ internal fun ActionsMenu(
             }
         }
         AnimatedVisibility(
-            visible = menuItems.isNotEmpty(),
+            visible = hasMenu,
             enter = fadeIn() + expandHorizontally(),
             exit = fadeOut() + shrinkHorizontally(),
         ) {
@@ -179,6 +184,7 @@ internal fun ActionsMenu(
                             onClick = { select(item.onClick) },
                         )
                     }
+                    menuFooter?.invoke()
                 }
             }
         }
@@ -262,6 +268,7 @@ private val ACTION_BUTTON_CONTAINER_SIZE = 40.dp
  *   of it rather than removed from every setlist and the library at once.
  * @param leadingItems Actions that belong to the row rather than to the song, put before the song's own: moving a row
  *   of a setlist up or down, and taking it out of the setlist.
+ * @param menuFooter The song details screen's transposition and text size steppers, see [ActionsMenu].
  */
 @Composable
 internal fun SongActions(
@@ -273,12 +280,14 @@ internal fun SongActions(
     isEditAlwaysInMenu: Boolean = false,
     isDeletable: Boolean,
     leadingItems: List<ActionsMenuItem> = emptyList(),
+    menuFooter: (@Composable () -> Unit)? = null,
 ) {
     val filePicker = LocalFilePicker.current
     ActionsMenu(
         modifier = modifier,
         state = state,
         isExpandable = isExpandable,
+        menuFooter = menuFooter,
         items = leadingItems + listOfNotNull(
             ActionsMenuItem(
                 title = stringResource(Res.string.songs_edit_song),

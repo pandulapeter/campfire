@@ -329,6 +329,8 @@
     <string name="song_details_text_size_increase">Szöveg nagyítása</string>
     <string name="song_details_text_size_decrease">Szöveg kicsinyítése</string>
     <string name="song_details_text_size_reset">Szövegméret visszaállítása</string>
+    <string name="song_details_transposition">Transzponálás</string>
+    <string name="song_details_text_size">Szövegméret</string>
     <string name="song_details_section_chorus">Refrén</string>
     <string name="song_details_section_bridge">Átkötés</string>
     <string name="song_details_section_tab">Tab</string>

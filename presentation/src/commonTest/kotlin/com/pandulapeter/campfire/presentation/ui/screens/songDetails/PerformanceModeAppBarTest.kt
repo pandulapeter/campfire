@@ -32,4 +32,28 @@ class PerformanceModeAppBarTest {
     fun `a tablet keeps the cover`() {
         assertTrue(showsCoverInPerformanceMode(800.dp))
     }
+
+    @Test
+    fun `the text size stepper stays in the bar for as long as the title keeps 160dp beside it`() {
+        // The back button and the bar's paddings, and the stepper and its padding take 180dp.
+        assertTrue(showsFontScaleInPerformanceBar(340.dp))
+        assertFalse(showsFontScaleInPerformanceBar(339.dp))
+    }
+
+    @Test
+    fun `a phone in portrait keeps the text size stepper in the bar`() {
+        assertTrue(showsFontScaleInPerformanceBar(360.dp))
+    }
+
+    @Test
+    fun `the transposition stepper is in the bar for as long as the title keeps 280dp beside it`() {
+        // Beside 152dp of everything else, the stepper and its padding take 148dp.
+        assertTrue(showsTranspositionInBar(appBarWidth = 580.dp, otherContentWidth = 152.dp))
+        assertFalse(showsTranspositionInBar(appBarWidth = 579.dp, otherContentWidth = 152.dp))
+    }
+
+    @Test
+    fun `a phone keeps the transposition stepper in the menu`() {
+        assertFalse(showsTranspositionInBar(appBarWidth = 411.dp, otherContentWidth = 152.dp))
+    }
 }

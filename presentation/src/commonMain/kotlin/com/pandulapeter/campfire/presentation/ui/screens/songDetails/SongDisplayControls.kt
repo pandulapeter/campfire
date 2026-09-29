@@ -10,15 +10,11 @@
 package com.pandulapeter.campfire.presentation.ui.screens.songDetails
 
 import androidx.compose.animation.AnimatedContent
-import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.animateFloatAsState
-import androidx.compose.animation.expandVertically
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
-import androidx.compose.animation.shrinkVertically
 import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.height
@@ -65,41 +61,52 @@ import kotlin.math.roundToInt
 import org.jetbrains.compose.resources.painterResource
 
 /**
- * The transposition and text size steppers of the song details screen, one under the other at the end of the song's
- * header (see [SongLyrics]), where they scroll with the song. The header always has the room for them, which the app
- * bar did not beside a long title and a row of actions. Performance mode leaves only the text size, and that goes into
- * the app bar instead, which it has emptied of everything else.
- *
- * @param isTranspositionShown False for a song with no chords and in lyrics only mode, where there is nothing for a
- *   transposition to move.
+ * The transposition stepper of the song details screen for [song], reading the key it takes the song to. It is in the
+ * app bar wherever the bar has the room for it, and a row at the end of the bar's overflow menu otherwise
+ * ([MenuStepperRow]), since it is set once for a song rather than played with; the key itself is on the header's accent
+ * line with the capo either way.
  */
 @Composable
-internal fun SongDisplayControls(
+internal fun SongTranspositionControls(
     modifier: Modifier = Modifier,
     viewModel: CampfireViewModel,
     song: Song,
     setlistFileName: String?,
     transposition: Int,
-    isTranspositionShown: Boolean,
     chordSpelling: UserPreferences.ChordSpelling,
-) = Column(
+) = TranspositionControls(
     modifier = modifier,
-    horizontalAlignment = Alignment.End,
+    transposition = transposition,
+    key = viewModel.renderKey(song = song, transposition = transposition, spelling = chordSpelling),
+    onStep = { viewModel.stepTransposition(song.fileName, setlistFileName, it) },
+    onReset = { viewModel.resetTransposition(song.fileName, setlistFileName) },
+)
+
+/**
+ * A stepper as a row of an overflow menu: the name of what it sets, in a menu entry's style, at its paddings and its
+ * height, so that it lines up with the entries under it, and the stepper at the end. The row is not an entry that is
+ * chosen and takes no press itself, and the menu stays open while the stepper's buttons are pressed, so that a song is
+ * taken up three semitones in three taps with the result in sight.
+ */
+@Composable
+internal fun MenuStepperRow(
+    label: String,
+    stepper: @Composable () -> Unit,
+) = Row(
+    modifier = Modifier
+        .widthIn(min = MENU_ROW_MIN_WIDTH)
+        .height(MENU_ROW_HEIGHT)
+        .padding(horizontal = MENU_ROW_HORIZONTAL_PADDING),
+    verticalAlignment = Alignment.CenterVertically,
 ) {
-    AnimatedVisibility(
-        visible = isTranspositionShown,
-        enter = fadeIn() + expandVertically(),
-        exit = fadeOut() + shrinkVertically(),
-    ) {
-        TranspositionControls(
-            modifier = Modifier.padding(bottom = STACKED_STEPPER_SPACING),
-            transposition = transposition,
-            key = viewModel.renderKey(song = song, transposition = transposition, spelling = chordSpelling),
-            onStep = { viewModel.stepTransposition(song.fileName, setlistFileName, it) },
-            onReset = { viewModel.resetTransposition(song.fileName, setlistFileName) },
-        )
-    }
-    LiveFontScaleControls(viewModel = viewModel)
+    Text(
+        modifier = Modifier
+            .weight(1f)
+            .padding(end = MENU_ROW_LABEL_GAP),
+        text = label,
+        style = MaterialTheme.typography.labelLarge,
+    )
+    stepper()
 }
 
 /**
@@ -206,12 +213,12 @@ private fun fontScaleLabel(fontScale: Float) = "${(fontScale * 100).roundToInt()
 
 /**
  * A decrease button, the current value (highlighted when it differs from the default, tapping it resets it) and an
- * increase button, in a tonal pill that keeps the three of them together: two of these sit next to each other in
- * the song's header, and the text size one sits alone in the app bar in performance mode, where loose icon buttons
- * would blend into the row of controls around them.
+ * increase button, in a tonal pill that keeps the three of them together: two of these sit one under the other in
+ * the song details menu, the editor's sits among its pane controls, and the text size one sits alone in the app bar in
+ * performance mode, where loose icon buttons would blend into the row of controls around them.
  *
- * The pill is shorter and its buttons narrower than Material's, since full height buttons make two of them look
- * oversized next to the chips of the song details header and in the app bars. On a touch screen the buttons still take
+ * The pill is shorter and its buttons narrower than Material's, since full height buttons look oversized in a menu row
+ * and in the app bars. On a touch screen the buttons still take
  * a touch 48dp across, since Compose extends a small target's touch area to the minimum touch target size; only their
  * drawn size shrinks.
  *
@@ -334,7 +341,10 @@ private val VALUE_MIN_WIDTH = 44.dp
 /** How wide a stepper is drawn, at least, for the app bar that has to leave its title room beside one. */
 internal val STEPPER_WIDTH = BUTTON_WIDTH * 2 + VALUE_MIN_WIDTH
 private val ICON_SIZE = 20.dp
-private val STACKED_STEPPER_SPACING = 8.dp
+private val MENU_ROW_HEIGHT = 48.dp // A menu entry's own.
+private val MENU_ROW_HORIZONTAL_PADDING = 12.dp // A menu entry's own.
+private val MENU_ROW_LABEL_GAP = 16.dp
+private val MENU_ROW_MIN_WIDTH = 280.dp
 
 internal const val KEY_SEPARATOR = "\u00B7"
 

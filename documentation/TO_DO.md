@@ -8,7 +8,6 @@
  * https://mozilla.org/MPL/2.0/.
 -->
 # To do
-- Song transposition and font size should be part of the toolbar
 - PDF import
 - Regenerate the baseline profile
 - First time user experience tutorial

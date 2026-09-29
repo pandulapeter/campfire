@@ -329,6 +329,8 @@
     <string name="song_details_text_size_increase">Increase text size</string>
     <string name="song_details_text_size_decrease">Decrease text size</string>
     <string name="song_details_text_size_reset">Reset text size</string>
+    <string name="song_details_transposition">Transpose</string>
+    <string name="song_details_text_size">Text size</string>
     <string name="song_details_section_chorus">Chorus</string>
     <string name="song_details_section_bridge">Bridge</string>
     <string name="song_details_section_tab">Tab</string>

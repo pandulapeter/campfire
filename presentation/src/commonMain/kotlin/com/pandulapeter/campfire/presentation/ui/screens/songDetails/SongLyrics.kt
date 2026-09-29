@@ -15,7 +15,6 @@ import androidx.compose.animation.core.Animatable
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.horizontalScroll
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.IntrinsicSize
@@ -126,6 +125,7 @@ import com.pandulapeter.campfire.presentation.resources.song_details_tempo
 import com.pandulapeter.campfire.presentation.resources.song_details_time
 import com.pandulapeter.campfire.presentation.resources.song_details_year
 import com.pandulapeter.campfire.presentation.resources.songs_edit_song
+import com.pandulapeter.campfire.presentation.resources.songs_key
 import com.pandulapeter.campfire.presentation.ui.components.EDGE_FADE_SIZE
 import com.pandulapeter.campfire.presentation.ui.components.ExpandChevron
 import com.pandulapeter.campfire.presentation.ui.components.TagFlowRow
@@ -190,7 +190,6 @@ import kotlin.math.roundToInt
  * the song details screen's buttons that step through it. A song that fits the screen has none of them, and takes the
  * width, unless [keepsStepButtonInset] is set: in a setlist the same buttons page to the songs beside it, whatever the
  * song. Zero where there are no buttons at all, which is the editor's preview.
- * @param displayControls Drawn at the end of the header, see [SongMetadataHeader].
  * @param onOpenEditor Offered under a song too long to be laid out whole, see [LayoutBudget]; null where the editor is
  * already open or may not be opened (performance mode).
  */
@@ -213,7 +212,6 @@ internal fun SongLyrics(
     onAddLink: (() -> Unit)? = null,
     onRemoveLink: ((String) -> Unit)? = null,
     onEditCoverArt: (() -> Unit)? = null,
-    displayControls: (@Composable () -> Unit)? = null,
     onRowsPlaced: ((SongRows) -> Unit)? = null,
     rowViewportHeight: Dp = Dp.Unspecified,
     rowViewportBottomPadding: Dp = 0.dp,
@@ -311,7 +309,6 @@ internal fun SongLyrics(
             onAddLink = onAddLink,
             onRemoveLink = onRemoveLink,
             onEditCoverArt = onEditCoverArt,
-            displayControls = displayControls,
         )
         LookaheadScope {
             SongSectionsLayout(
@@ -441,8 +438,8 @@ private fun CutSongNotice(
  * The tags of the song and everything else its directives say, above the lyrics and scrolling with them. Every
  * directive the editor can insert has to be visible somewhere, and this is where the ones that are neither lyrics
  * nor chords end up - so what is missing here is only what the app bar already carries: the title, the subtitle
- * that is drawn in parentheses after it, the artist, and the key, which lives inside the transposition control that
- * is the only reason to look at it.
+ * that is drawn in parentheses after it, and the artist. The key leads the accent line, as [song] has been transposed
+ * to it, so it names what is played rather than what the file declares.
  *
  * @param onAddTag Null where the tags are only read, which is the editor's preview: there the file itself is under
  *   the caret, and a chip writing into it from the side would be editing the text the editor has not saved yet.
@@ -455,10 +452,6 @@ private fun CutSongNotice(
  *   names a cover. It shares its row with the languages rather than being one more chip among the tags, since a cover
  *   is one thing about the song rather than one of a list of them. Null wherever [onAddTag] is, and also while covers
  *   are turned off.
- * @param displayControls The song details screen's transposition and text size steppers ([SongDisplayControls]), at
- *   the end of the chip rows, which wrap before them; the metadata lines under both have the whole width. Null in the
- *   editor's preview, which has a transposition of its own, and in performance mode, which keeps the one stepper it
- *   has in the app bar.
  */
 @Composable
 private fun SongMetadataHeader(
@@ -472,31 +465,23 @@ private fun SongMetadataHeader(
     onAddLink: (() -> Unit)?,
     onRemoveLink: ((String) -> Unit)?,
     onEditCoverArt: (() -> Unit)?,
-    displayControls: (@Composable () -> Unit)?,
 ) = Column(modifier = modifier.padding(bottom = SECTION_GAP)) {
-    // The chips take the start of the row and wrap before the steppers, while the lines under them have the whole width,
-    // since a long line of credits would otherwise be broken into a narrow column beside two small controls.
-    Row {
-        SongChips(
-            modifier = Modifier.weight(1f),
-            song = song,
-            onAddTag = onAddTag,
-            onRemoveTag = onRemoveTag,
-            onEditLanguages = onEditLanguages,
-            onOpenLink = onOpenLink,
-            onAddLink = onAddLink,
-            onRemoveLink = onRemoveLink,
-            onEditCoverArt = onEditCoverArt,
-        )
-        displayControls?.let { controls ->
-            Box(modifier = Modifier.padding(start = DISPLAY_CONTROLS_GAP)) { controls() }
-        }
-    }
+    SongChips(
+        song = song,
+        onAddTag = onAddTag,
+        onRemoveTag = onRemoveTag,
+        onEditLanguages = onEditLanguages,
+        onOpenLink = onOpenLink,
+        onAddLink = onAddLink,
+        onRemoveLink = onRemoveLink,
+        onEditCoverArt = onEditCoverArt,
+    )
     val metadata = song.metadata
     // What is played, in the accent colour, above who wrote it: one is read off the page while playing and the
     // other is only ever looked up.
     MetadataLine(
         values = listOfNotNull(
+            metadata.key?.takeIf { it.isNotBlank() }?.let { textResource(Res.string.songs_key, it) },
             metadata.capo?.takeIf { it != 0 }?.let { stringResource(Res.string.song_details_capo, it) },
             metadata.tempo?.takeIf { it.isNotBlank() }?.let { textResource(Res.string.song_details_tempo, it) },
             metadata.time?.takeIf { it.isNotBlank() }?.let { textResource(Res.string.song_details_time, it) },
@@ -2262,7 +2247,6 @@ private val MIN_COLUMN_WIDTH = 384.dp
 private val MAX_COLUMN_WIDTH = 560.dp
 private val COLUMN_GAP = 32.dp
 private val SECTION_GAP = 20.dp
-private val DISPLAY_CONTROLS_GAP = 12.dp
 private val ROW_GAP = 40.dp
 private const val LINE_HEIGHT_SAMPLE = "X"
 private const val CHARACTER_WIDTH_SAMPLE_LENGTH = 64

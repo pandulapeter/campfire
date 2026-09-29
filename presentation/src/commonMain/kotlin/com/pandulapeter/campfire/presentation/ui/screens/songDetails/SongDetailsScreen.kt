@@ -15,10 +15,12 @@ import androidx.compose.animation.EnterExitState
 import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.LinearEasing
 import androidx.compose.animation.core.tween
+import androidx.compose.animation.expandHorizontally
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.scaleIn
 import androidx.compose.animation.scaleOut
+import androidx.compose.animation.shrinkHorizontally
 import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.ScrollState
 import androidx.compose.foundation.clickable
@@ -105,7 +107,10 @@ import com.pandulapeter.campfire.presentation.resources.song_details_previous_se
 import com.pandulapeter.campfire.presentation.resources.song_details_previous_song
 import com.pandulapeter.campfire.presentation.resources.song_details_scroll_to_top
 import com.pandulapeter.campfire.presentation.resources.song_details_song_position
+import com.pandulapeter.campfire.presentation.resources.song_details_text_size
+import com.pandulapeter.campfire.presentation.resources.song_details_transposition
 import com.pandulapeter.campfire.presentation.ui.CampfireViewModel
+import com.pandulapeter.campfire.presentation.ui.components.ActionsMenu
 import com.pandulapeter.campfire.presentation.ui.components.CampfireTopAppBar
 import com.pandulapeter.campfire.presentation.ui.components.CoverArtImage
 import com.pandulapeter.campfire.presentation.ui.components.DelayedLoadingIndicator
@@ -124,8 +129,10 @@ import org.jetbrains.compose.resources.painterResource
 
 /**
  * The lyrics (and chords) of a song, or of a setlist's songs in a pager. The transposition and the text size are
- * adjusted with the steppers at the end of each song's header ([SongDisplayControls]), or, in performance mode, where
- * only the text size is left and the app bar has nothing else to hold, with a stepper in the bar. The text size can
+ * adjusted with steppers in the app bar: the transposition is one of the bar's controls wherever it has the room
+ * ([showsTranspositionInBar]) and the text size never is, except in performance mode, where it is the only control left
+ * and the bar has nothing else to hold ([showsFontScaleInPerformanceBar]). Whatever the bar has no room for is a row at
+ * the end of its overflow menu instead ([MenuStepperRow]). The text size can
  * also be changed with a pinch or Ctrl / Cmd + scroll on the content itself, see [fontScaleGestures], and on the
  * desktop and the web with Ctrl / Cmd + plus, minus and zero, which the window answers ([CampfireViewModel.zoomSongText]).
  *
@@ -221,8 +228,9 @@ internal fun SongDetailsScreen(
     val layoutDirection = LocalLayoutDirection.current
     val appBarWidth = settledWidth - contentPadding.calculateStartPadding(layoutDirection) - contentPadding.calculateEndPadding(layoutDirection)
     // Decided from the settled width and for every song of the pager at once, like the song actions below, so that the
-    // cover does not come and go during a navigation transition or a page change.
+    // cover and the steppers do not come and go during a navigation transition or a page change.
     val showsCoverInBar = isCoverArtEnabled && (!isPerformanceModeEnabled || showsCoverInPerformanceMode(appBarWidth))
+    val showsFontScaleInBar = isPerformanceModeEnabled && showsFontScaleInPerformanceBar(appBarWidth)
     // Whatever else the bar holds: the back button with the bar's own start padding, the bar's end padding, the cover
     // in front of the title (reserved for every song of the pager, so that paging to a song without one does not move
     // the actions in and out of their menu), and the song's two buttons (the setlist assignments only for a song read
@@ -231,13 +239,19 @@ internal fun SongDetailsScreen(
         destination.setlistFileName == null -> APP_BAR_ACTION_WIDTH * 2
         else -> APP_BAR_ACTION_WIDTH
     } + if (showsCoverInBar && songs.any { it.coverArtUrl != null }) APP_BAR_COVER_SIZE + APP_BAR_COVER_GAP else 0.dp
+    // The transposition comes out of the menu before any of the song's own actions do: it is what is reached for while a
+    // song is being read, where the actions are about the file. The room is kept for it whether the song on screen has
+    // chords or not, so that paging between the two does not move the actions in and out of their menu.
+    val showsTranspositionInBar = !isPerformanceModeEnabled && showsTranspositionInBar(appBarWidth, otherAppBarContentWidth)
     // The song's own actions come out of their menu only as far as they leave the title
     // MIN_TITLE_WIDTH_BESIDE_SONG_ACTIONS: every one of them is a click further away in the menu, and they are several -
     // a title cut to its first words to make room for Export is a bar that has stopped saying which song it is. Worked
     // out from the settled width, so that the buttons do not come and go while a navigation transition runs. The
     // overflow button is counted among the other content above, and is what SongActions is handed the room for too.
-    val songActionsMaxWidth = (appBarWidth - otherAppBarContentWidth + APP_BAR_ACTION_WIDTH - MIN_TITLE_WIDTH_BESIDE_SONG_ACTIONS)
-        .coerceAtLeast(APP_BAR_ACTION_WIDTH)
+    val songActionsMaxWidth = (
+        appBarWidth - otherAppBarContentWidth + APP_BAR_ACTION_WIDTH - MIN_TITLE_WIDTH_BESIDE_SONG_ACTIONS -
+            if (showsTranspositionInBar) TRANSPOSITION_STEPPER_WIDTH + APP_BAR_STEPPER_END_PADDING else 0.dp
+        ).coerceAtLeast(APP_BAR_ACTION_WIDTH)
 
     val coroutineScope = rememberCoroutineScope()
     val pageStepper = remember(pagerState, coroutineScope) { PageStepper(pagerState, coroutineScope) }
@@ -319,11 +333,19 @@ internal fun SongDetailsScreen(
                     Row(
                         verticalAlignment = Alignment.CenterVertically,
                     ) {
-                        song?.coverArtUrl?.takeIf { showsCoverInBar }?.let { url ->
-                            CoverArtImage(
-                                modifier = Modifier.padding(end = APP_BAR_COVER_GAP).size(APP_BAR_COVER_SIZE),
-                                url = url,
-                            )
+                        song?.coverArtUrl?.let { url ->
+                            // Only a window resized across the width that makes room for it animates: one that opens
+                            // the screen with the cover out or in shows it that way from its first frame.
+                            AnimatedVisibility(
+                                visible = showsCoverInBar,
+                                enter = fadeIn() + expandHorizontally(),
+                                exit = fadeOut() + shrinkHorizontally(),
+                            ) {
+                                CoverArtImage(
+                                    modifier = Modifier.padding(end = APP_BAR_COVER_GAP).size(APP_BAR_COVER_SIZE),
+                                    url = url,
+                                )
+                            }
                         }
                         Column {
                             Text(
@@ -345,14 +367,50 @@ internal fun SongDetailsScreen(
             },
             actions = {
                 // Performance mode leaves the bar with nothing else in it, and the text size is the one setting left
-                // to it, so it stays in reach at the top of the screen rather than scrolling away with the header.
-                if (isPerformanceModeEnabled) {
+                // to it, so it is in the bar wherever the title leaves it the room, and alone in a menu where not.
+                // Both are there, one leaving as the other arrives, so that a window resized across the width that
+                // decides it hands the stepper over the way the song's actions move in and out of their menu.
+                AnimatedVisibility(
+                    visible = isPerformanceModeEnabled && showsFontScaleInBar,
+                    enter = fadeIn() + expandHorizontally(),
+                    exit = fadeOut() + shrinkHorizontally(),
+                ) {
                     LiveFontScaleControls(
                         modifier = Modifier.padding(end = APP_BAR_STEPPER_END_PADDING),
                         viewModel = viewModel,
                     )
                 }
+                AnimatedVisibility(
+                    visible = isPerformanceModeEnabled && !showsFontScaleInBar,
+                    enter = fadeIn() + expandHorizontally(),
+                    exit = fadeOut() + shrinkHorizontally(),
+                ) {
+                    ActionsMenu(
+                        items = emptyList(),
+                        menuFooter = {
+                            MenuStepperRow(label = stringResource(Res.string.song_details_text_size)) {
+                                LiveFontScaleControls(viewModel = viewModel)
+                            }
+                        },
+                    )
+                }
                 currentSong?.takeIf { !isPerformanceModeEnabled }?.let { song ->
+                    val isTranspositionShown = shouldShowChords && song.hasChords
+                    val transposition = transpositions[song.fileName, destination.setlistFileName]
+                    AnimatedVisibility(
+                        visible = showsTranspositionInBar && isTranspositionShown,
+                        enter = fadeIn() + expandHorizontally(),
+                        exit = fadeOut() + shrinkHorizontally(),
+                    ) {
+                        SongTranspositionControls(
+                            modifier = Modifier.padding(end = APP_BAR_STEPPER_END_PADDING),
+                            viewModel = viewModel,
+                            song = song,
+                            setlistFileName = destination.setlistFileName,
+                            transposition = transposition,
+                            chordSpelling = chordSpelling,
+                        )
+                    }
                     // Only a song read from the library gets the button: one read from a setlist is already filed, and
                     // is taken out of it from the setlist's own row.
                     val isReadFromLibrary = destination.setlistFileName == null
@@ -370,6 +428,22 @@ internal fun SongDetailsScreen(
                         isExpandable = true,
                         isEditAlwaysInMenu = !isReadFromLibrary,
                         isDeletable = isReadFromLibrary,
+                        menuFooter = {
+                            MenuStepperRow(label = stringResource(Res.string.song_details_text_size)) {
+                                LiveFontScaleControls(viewModel = viewModel)
+                            }
+                            if (!showsTranspositionInBar && isTranspositionShown) {
+                                MenuStepperRow(label = stringResource(Res.string.song_details_transposition)) {
+                                    SongTranspositionControls(
+                                        viewModel = viewModel,
+                                        song = song,
+                                        setlistFileName = destination.setlistFileName,
+                                        transposition = transposition,
+                                        chordSpelling = chordSpelling,
+                                    )
+                                }
+                            }
+                        },
                     )
                 }
             },
@@ -475,18 +549,6 @@ internal fun SongDetailsScreen(
                         },
                         onEditCoverArt = if (isPerformanceModeEnabled || !isCoverArtEnabled) null else {
                             { viewModel.showDialog(CampfireViewModel.DialogType.CoverArtSearch(song)) }
-                        },
-                        displayControls = if (isPerformanceModeEnabled) null else {
-                            {
-                                SongDisplayControls(
-                                    viewModel = viewModel,
-                                    song = song,
-                                    setlistFileName = destination.setlistFileName,
-                                    transposition = transpositions[song.fileName, destination.setlistFileName],
-                                    isTranspositionShown = shouldShowChords && song.hasChords,
-                                    chordSpelling = chordSpelling,
-                                )
-                            }
                         },
                         // Performance mode takes every way into the editor out of the app, this one included.
                         onOpenEditor = if (isPerformanceModeEnabled) null else {
@@ -654,7 +716,6 @@ private fun SongDetailsPage(
     onAddLink: (() -> Unit)?,
     onRemoveLink: ((String) -> Unit)?,
     onEditCoverArt: (() -> Unit)?,
-    displayControls: (@Composable () -> Unit)?,
     onOpenEditor: (() -> Unit)?,
 ) = AnimatedContent(
     modifier = Modifier.fillMaxSize(),
@@ -757,7 +818,6 @@ private fun SongDetailsPage(
                 onAddLink = onAddLink,
                 onRemoveLink = onRemoveLink,
                 onEditCoverArt = onEditCoverArt,
-                displayControls = displayControls,
                 onOpenEditor = onOpenEditor,
                 // The padding is inside the scroll, so a row is at the top of the viewport once the song is scrolled by
                 // its position plus the padding above it.
@@ -1003,12 +1063,30 @@ internal fun buildSetlistSlots(entries: List<Setlist.Entry>, songFileNames: List
 }
 
 /**
- * Whether the app bar of a screen [appBarWidth] wide still has room for the cover in performance mode, where it holds
- * the text size stepper and nothing else. The cover is decoration there, while the title is what tells the player
- * which song is up, so the cover is the one to leave where the title would be left less than [MIN_TITLE_WIDTH].
+ * Whether the app bar of a screen [appBarWidth] wide has room for the text size stepper in performance mode, where it is
+ * the only control the bar holds: wherever it leaves the title [MIN_TITLE_WIDTH], since the title is what tells the
+ * player which song is up. Where it does not, the stepper is in a menu of its own. The cover is not counted, since it
+ * is the first to leave ([showsCoverInPerformanceMode]).
  */
-internal fun showsCoverInPerformanceMode(appBarWidth: Dp) = appBarWidth - APP_BAR_NAVIGATION_WIDTH - APP_BAR_END_PADDING -
-    STEPPER_WIDTH - APP_BAR_STEPPER_END_PADDING - APP_BAR_COVER_SIZE - APP_BAR_COVER_GAP >= MIN_TITLE_WIDTH
+internal fun showsFontScaleInPerformanceBar(appBarWidth: Dp) = appBarWidth - APP_BAR_NAVIGATION_WIDTH - APP_BAR_END_PADDING -
+    STEPPER_WIDTH - APP_BAR_STEPPER_END_PADDING >= MIN_TITLE_WIDTH
+
+/**
+ * Whether the app bar of a screen [appBarWidth] wide still has room for the cover in performance mode. The cover is
+ * decoration there, so it is only shown next to the text size stepper ([showsFontScaleInPerformanceBar]) and only where
+ * the title is still left [MIN_TITLE_WIDTH] beside the two.
+ */
+internal fun showsCoverInPerformanceMode(appBarWidth: Dp) = showsFontScaleInPerformanceBar(appBarWidth) &&
+    appBarWidth - APP_BAR_NAVIGATION_WIDTH - APP_BAR_END_PADDING - STEPPER_WIDTH - APP_BAR_STEPPER_END_PADDING -
+    APP_BAR_COVER_SIZE - APP_BAR_COVER_GAP >= MIN_TITLE_WIDTH
+
+/**
+ * Whether the app bar of a screen [appBarWidth] wide has room for the transposition stepper outside performance mode,
+ * next to [otherContentWidth] of everything else the bar always holds: wherever the title is still left
+ * [MIN_TITLE_WIDTH_BESIDE_SONG_ACTIONS], the room the song's own actions leave it too.
+ */
+internal fun showsTranspositionInBar(appBarWidth: Dp, otherContentWidth: Dp) = appBarWidth - otherContentWidth -
+    TRANSPOSITION_STEPPER_WIDTH - APP_BAR_STEPPER_END_PADDING >= MIN_TITLE_WIDTH_BESIDE_SONG_ACTIONS
 
 private const val LABEL_SEPARATOR = "·"
 private val PAGE_TOP_PADDING = 8.dp // Inside the scroll, above the header.
@@ -1017,6 +1095,9 @@ private val STEP_BUTTON_GAP = 8.dp
 private val STEP_BUTTON_EDGE_MARGIN = 16.dp
 private val PAGER_CONTROLS_HEIGHT = 48.dp
 private val APP_BAR_STEPPER_END_PADDING = 8.dp
+
+/** The room kept for the transposition stepper, which is wider than [STEPPER_WIDTH] by the key after the amount. */
+private val TRANSPOSITION_STEPPER_WIDTH = 140.dp
 private val APP_BAR_NAVIGATION_WIDTH = 52.dp // The 48dp button and the 4dp the bar pads its start by.
 private val APP_BAR_END_PADDING = 4.dp
 private val APP_BAR_ACTION_WIDTH = 48.dp
