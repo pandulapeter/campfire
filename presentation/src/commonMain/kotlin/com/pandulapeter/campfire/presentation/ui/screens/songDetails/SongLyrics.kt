@@ -18,12 +18,15 @@ import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.FlowRow
+import androidx.compose.foundation.layout.IntrinsicSize
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.wrapContentWidth
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.LocalMinimumInteractiveComponentSize
@@ -326,8 +329,13 @@ internal fun SongLyrics(
                             )
 
                             is RenderSection.Lines -> if (section.isOnCard) {
+                                // The layout hands every section the whole width of its column, but a card is only as
+                                // wide as its widest line (and its padding), so that a short chorus does not stretch a
+                                // wide empty surface across the column. A line that is wider still wraps at the column.
                                 Surface(
-                                    modifier = sectionModifier,
+                                    modifier = sectionModifier
+                                        .wrapContentWidth(align = Alignment.Start)
+                                        .width(IntrinsicSize.Max),
                                     shape = MaterialTheme.shapes.large,
                                     color = MaterialTheme.colorScheme.surfaceContainerHigh,
                                     shadowElevation = CARD_ELEVATION,

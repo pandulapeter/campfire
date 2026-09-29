@@ -8,8 +8,8 @@
  * https://mozilla.org/MPL/2.0/.
 -->
 # To do
+- PDF import
 - Regenerate the baseline profile
-- Song details chord cards should wrap content
 - Pixel 10 Pro XL Landscape: Román lány layout could be optimized
 - First time user experience tutorial
 - Sort and Filter UI should be improved (better animations)
