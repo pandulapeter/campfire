@@ -10,7 +10,7 @@
 # Campfire
 *Your songbook, on every screen you own.*
 
-**[campfire-songbook.com](https://campfire-songbook.com/)** · [Download](https://campfire-songbook.com/#download) · [Open the web app](https://campfire-songbook.com/app/) · [Support](https://campfire-songbook.com/support/)
+**[campfire-songbook.com](https://campfire-songbook.com/)**
 
 Campfire is a chord sheet viewer and editor built around the plain-text [ChordPro](https://www.chordpro.org/chordpro/chordpro-introduction/) format.
 It runs natively on Android, iOS, macOS, Windows, Linux and the web. 
@@ -28,8 +28,7 @@ Campfire is free, open-source, and has no ads or tracking. Check out the [Privac
 
 ## Get Campfire
 
-Every version of Campfire is listed on its website, [campfire-songbook.com](https://campfire-songbook.com/#download).
-It is currently available for the following platforms:
+The app is currently available for the following platforms:
 
 <a href="https://play.google.com/store/apps/details?id=com.pandulapeter.campfire"><img src="documentation/images/badge_android.png" alt="Campfire for Android" height="32px" /></a>
 <a href="https://apps.apple.com/app/id6815160850"><img src="documentation/images/badge_ios.png" alt="Campfire for iOS" height="32px" /></a>
