@@ -50,7 +50,14 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.layout.IntrinsicMeasurable
+import androidx.compose.ui.layout.IntrinsicMeasureScope
 import androidx.compose.ui.layout.Layout
+import androidx.compose.ui.layout.Measurable
+import androidx.compose.ui.layout.MeasureScope
+import androidx.compose.ui.node.LayoutModifierNode
+import androidx.compose.ui.node.ModifierNodeElement
+import androidx.compose.ui.semantics.clearAndSetSemantics
 import androidx.compose.ui.layout.layout
 import androidx.compose.ui.layout.layoutId
 import androidx.compose.ui.layout.LookaheadScope
@@ -752,96 +759,103 @@ private fun SongSectionContent(
             chevronSize = chevronSize,
         )
     }
-    if (!hasBody) return@Column
+    // A folded card keeps its body composed for the width alone, so that it stays as wide as its widest line rather
+    // than narrowing to its title and widening again every time it is toggled. Keyed on the fold, so that the body
+    // unfolded is composed afresh and fades in like any other.
+    val isBodyKeptForWidth = !hasBody && isOnCard && section.parts.isNotEmpty()
+    if (!hasBody && !isBodyKeptForWidth) return@Column
     val hasTitle = header != null || sectionToggle != null
-    Column(
-        modifier = Modifier
-            .fillMaxWidth()
-            .fadingIn(isFadingIn = foldedRuns?.hasBeenToggled(sectionFold) == true)
-            .padding(
-                if (isOnCard) {
-                    PaddingValues(start = CARD_PADDING, top = if (hasTitle) 0.dp else CARD_PADDING, end = CARD_PADDING, bottom = CARD_PADDING)
-                } else {
-                    PaddingValues(top = if (header != null) HEADER_GAP else 0.dp)
-                }
-            ),
-    ) {
-        // Tablature and grids are runs of lines inside a section rather than sections of their own, so the lines are
-        // grouped: each run is folded as one, a run of tablature is also measured as one block (its columns only line
-        // up while they are measured together), and everything else is laid out line by line around them. A comment
-        // that cut the section stands where the file has it, between the lines around it. A section that is nothing
-        // but one run is folded as the section it is, so its run has no toggle of its own.
-        val runNameCounts = mutableMapOf<String, Int>()
-        section.parts.forEach { part ->
-            when (part) {
-                is RenderSection.Comment -> SongComment(
-                    modifier = Modifier.padding(vertical = INLINE_COMMENT_GAP),
-                    comment = part,
-                    fontScale = fontScale,
-                )
+    key(isBodyKeptForWidth) {
+        Column(
+            modifier = Modifier
+                .then(if (isBodyKeptForWidth) Modifier.widthOnly() else Modifier)
+                .fillMaxWidth()
+                .fadingIn(isFadingIn = foldedRuns?.hasBeenToggled(sectionFold) == true)
+                .padding(
+                    if (isOnCard) {
+                        PaddingValues(start = CARD_PADDING, top = if (hasTitle) 0.dp else CARD_PADDING, end = CARD_PADDING, bottom = CARD_PADDING)
+                    } else {
+                        PaddingValues(top = if (header != null) HEADER_GAP else 0.dp)
+                    }
+                ),
+        ) {
+            // Tablature and grids are runs of lines inside a section rather than sections of their own, so the lines are
+            // grouped: each run is folded as one, a run of tablature is also measured as one block (its columns only line
+            // up while they are measured together), and everything else is laid out line by line around them. A comment
+            // that cut the section stands where the file has it, between the lines around it. A section that is nothing
+            // but one run is folded as the section it is, so its run has no toggle of its own.
+            val runNameCounts = mutableMapOf<String, Int>()
+            section.parts.forEach { part ->
+                when (part) {
+                    is RenderSection.Comment -> SongComment(
+                        modifier = Modifier.padding(vertical = INLINE_COMMENT_GAP),
+                        comment = part,
+                        fontScale = fontScale,
+                    )
 
-                is SectionPart.Lines -> part.runs.forEach { group ->
-                    val kind = group.first().foldableKind()
-                    if (kind == null) {
-                        group.forEach { line ->
-                            when (line) {
-                                is ChordProLine.Lyrics -> if (line.chords.isEmpty()) {
-                                    Text(
-                                        modifier = Modifier.fillMaxWidth(),
-                                        text = line.text,
+                    is SectionPart.Lines -> part.runs.forEach { group ->
+                        val kind = group.first().foldableKind()
+                        if (kind == null) {
+                            group.forEach { line ->
+                                when (line) {
+                                    is ChordProLine.Lyrics -> if (line.chords.isEmpty()) {
+                                        Text(
+                                            modifier = Modifier.fillMaxWidth(),
+                                            text = line.text,
+                                            style = lyricsStyle,
+                                            color = MaterialTheme.colorScheme.onSurface,
+                                        )
+                                    } else {
+                                        SongLineWithChords(
+                                            line = line,
+                                            lyricsStyle = lyricsStyle,
+                                            textMeasurements = textMeasurements,
+                                        )
+                                    }
+
+                                    // Never reached: tablature and grid lines are always part of a run of their own.
+                                    is ChordProLine.Tab, is ChordProLine.Grid -> Unit
+
+                                    ChordProLine.Blank -> Text(
+                                        text = "",
                                         style = lyricsStyle,
-                                        color = MaterialTheme.colorScheme.onSurface,
-                                    )
-                                } else {
-                                    SongLineWithChords(
-                                        line = line,
-                                        lyricsStyle = lyricsStyle,
-                                        textMeasurements = textMeasurements,
                                     )
                                 }
-
-                                // Never reached: tablature and grid lines are always part of a run of their own.
-                                is ChordProLine.Tab, is ChordProLine.Grid -> Unit
-
-                                ChordProLine.Blank -> Text(
-                                    text = "",
-                                    style = lyricsStyle,
-                                )
                             }
+                            return@forEach
                         }
-                        return@forEach
-                    }
-                    val runModifier = if (wholeSectionKind != null || foldedRuns == null) {
-                        Modifier
-                    } else {
-                        val runName = group.first().environmentLabel ?: kind.name.lowercase()
-                        val run = "$sectionFold/${runNameCounts.nextFoldKey(runName)}"
-                        FoldToggleRow(
-                            kind = kind,
-                            label = group.first().environmentLabel ?: defaultLabels.labelOf(kind),
-                            toggle = FoldToggle(isExpanded = !foldedRuns.isCollapsed(run), onToggled = { foldedRuns.toggle(run) }),
-                            style = headerStyle,
-                            chevronSize = chevronSize,
-                        )
-                        if (foldedRuns.isCollapsed(run)) return@forEach
-                        Modifier.fadingIn(isFadingIn = foldedRuns.hasBeenToggled(run))
-                    }
-                    when (kind) {
-                        FoldableKind.TAB -> SongTabRun(
-                            modifier = runModifier.fillMaxWidth(),
-                            lines = group.map { (it as? ChordProLine.Tab)?.text.orEmpty() },
-                            style = monospaceLyricsStyle,
-                            textMeasurer = textMeasurements.textMeasurer,
-                        )
+                        val runModifier = if (wholeSectionKind != null || foldedRuns == null) {
+                            Modifier
+                        } else {
+                            val runName = group.first().environmentLabel ?: kind.name.lowercase()
+                            val run = "$sectionFold/${runNameCounts.nextFoldKey(runName)}"
+                            FoldToggleRow(
+                                kind = kind,
+                                label = group.first().environmentLabel ?: defaultLabels.labelOf(kind),
+                                toggle = FoldToggle(isExpanded = !foldedRuns.isCollapsed(run), onToggled = { foldedRuns.toggle(run) }),
+                                style = headerStyle,
+                                chevronSize = chevronSize,
+                            )
+                            if (foldedRuns.isCollapsed(run)) return@forEach
+                            Modifier.fadingIn(isFadingIn = foldedRuns.hasBeenToggled(run))
+                        }
+                        when (kind) {
+                            FoldableKind.TAB -> SongTabRun(
+                                modifier = runModifier.fillMaxWidth(),
+                                lines = group.map { (it as? ChordProLine.Tab)?.text.orEmpty() },
+                                style = monospaceLyricsStyle,
+                                textMeasurer = textMeasurements.textMeasurer,
+                            )
 
-                        FoldableKind.GRID -> Column(modifier = runModifier.fillMaxWidth()) {
-                            group.forEach { line ->
-                                if (line is ChordProLine.Grid) {
-                                    SongGridLine(
-                                        line = line,
-                                        lyricsStyle = monospaceLyricsStyle,
-                                        chordStyle = monospaceChordStyle,
-                                    )
+                            FoldableKind.GRID -> Column(modifier = runModifier.fillMaxWidth()) {
+                                group.forEach { line ->
+                                    if (line is ChordProLine.Grid) {
+                                        SongGridLine(
+                                            line = line,
+                                            lyricsStyle = monospaceLyricsStyle,
+                                            chordStyle = monospaceChordStyle,
+                                        )
+                                    }
                                 }
                             }
                         }
@@ -1143,6 +1157,26 @@ private fun Modifier.fadingIn(isFadingIn: Boolean): Modifier {
     val spec = MaterialTheme.motionScheme.defaultEffectsSpec<Float>()
     LaunchedEffect(alpha) { alpha.animateTo(1f, spec) }
     return graphicsLayer { this.alpha = alpha.value }
+}
+
+/**
+ * Lays its content out as nothing and draws none of it, while answering the intrinsic widths the content would, so
+ * that a parent sized to `IntrinsicSize.Max` keeps the width the content would have given it. Its semantics are
+ * cleared, since a screen reader would otherwise read out lines that are not on screen.
+ */
+private fun Modifier.widthOnly() = clearAndSetSemantics {} then WidthOnlyElement
+
+private data object WidthOnlyElement : ModifierNodeElement<WidthOnlyNode>() {
+    override fun create() = WidthOnlyNode()
+    override fun update(node: WidthOnlyNode) = Unit
+}
+
+private class WidthOnlyNode : Modifier.Node(), LayoutModifierNode {
+    override fun MeasureScope.measure(measurable: Measurable, constraints: Constraints) = layout(0, 0) {}
+    override fun IntrinsicMeasureScope.minIntrinsicWidth(measurable: IntrinsicMeasurable, height: Int) = measurable.minIntrinsicWidth(height)
+    override fun IntrinsicMeasureScope.maxIntrinsicWidth(measurable: IntrinsicMeasurable, height: Int) = measurable.maxIntrinsicWidth(height)
+    override fun IntrinsicMeasureScope.minIntrinsicHeight(measurable: IntrinsicMeasurable, width: Int) = 0
+    override fun IntrinsicMeasureScope.maxIntrinsicHeight(measurable: IntrinsicMeasurable, width: Int) = 0
 }
 
 /**
