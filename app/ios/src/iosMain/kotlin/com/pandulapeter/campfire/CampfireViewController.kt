@@ -107,14 +107,34 @@ private fun applyAppIcon(themeColor: UserPreferences.ThemeColor) {
  * those itself, but before it `URLWithString` answers null for them, and the chip would do nothing at all. The set the
  * address is encoded with is a query's plus `#` and `%`, so its structure and any escape already in it survive and only
  * what is illegal is escaped.
+ *
+ * An App Store listing is opened in the App Store app under its `itms-apps` scheme instead: iOS does not reliably hand
+ * an `apps.apple.com` address opened by another app to the store, and leaves it to Safari, which shows a page that can
+ * only send the user on. The https address is still opened when the scheme is refused, where the App Store app has
+ * been removed or is restricted.
  */
 @OptIn(BetaInteropApi::class)
 private fun openUrl(url: String) {
     val nsUrl = NSURL.URLWithString(url) ?: NSString.create(string = url)
         .stringByAddingPercentEncodingWithAllowedCharacters(urlAllowedCharacters)
         ?.let(NSURL::URLWithString)
-    nsUrl?.let { UIApplication.sharedApplication.openURL(it, options = emptyMap<Any?, Any>(), completionHandler = null) }
+        ?: return
+    val storeUrl = nsUrl.takeIf { it.host == APP_STORE_HOST && it.scheme == "https" }
+        ?.absoluteString
+        ?.let { NSURL.URLWithString(APP_STORE_SCHEME + it.removePrefix("https")) }
+    if (storeUrl == null) {
+        open(nsUrl)
+    } else {
+        UIApplication.sharedApplication.openURL(storeUrl, options = emptyMap<Any?, Any>()) { isOpened ->
+            if (!isOpened) open(nsUrl)
+        }
+    }
 }
+
+private fun open(url: NSURL) = UIApplication.sharedApplication.openURL(url, options = emptyMap<Any?, Any>(), completionHandler = null)
+
+private const val APP_STORE_HOST = "apps.apple.com"
+private const val APP_STORE_SCHEME = "itms-apps"
 
 private val urlAllowedCharacters by lazy {
     (NSCharacterSet.URLQueryAllowedCharacterSet.mutableCopy() as NSMutableCharacterSet).apply { addCharactersInString("#%") }

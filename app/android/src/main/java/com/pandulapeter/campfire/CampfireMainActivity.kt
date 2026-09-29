@@ -271,11 +271,28 @@ class CampfireMainActivity : ComponentActivity() {
             .map { it.toString() }
     }
 
-    private fun openUrl(url: String, isDarkTheme: Boolean) = try {
+    /**
+     * Opens [url] in a Custom Tab, except a Play listing, which goes to the Play Store app: a Custom Tab shows it as a
+     * web page that can only send the user on to the store. Play claims its own https addresses, so the same URL is
+     * handed to it by package, and a device without Play gets the web page after all.
+     */
+    private fun openUrl(url: String, isDarkTheme: Boolean) {
+        val uri = url.toUri()
+        if (uri.host == PLAY_STORE_HOST) {
+            try {
+                startActivity(Intent(Intent.ACTION_VIEW, uri).setPackage(PLAY_STORE_PACKAGE))
+                return
+            } catch (_: ActivityNotFoundException) {
+            }
+        }
+        openInCustomTab(uri, isDarkTheme)
+    }
+
+    private fun openInCustomTab(uri: Uri, isDarkTheme: Boolean) = try {
         CustomTabsIntent.Builder()
             .setColorScheme(if (isDarkTheme) CustomTabsIntent.COLOR_SCHEME_DARK else CustomTabsIntent.COLOR_SCHEME_LIGHT)
             .build()
-            .launchUrl(this, url.toUri())
+            .launchUrl(this, uri)
     } catch (exception: ActivityNotFoundException) {
         Toast.makeText(this, exception.message, Toast.LENGTH_SHORT).show()
     }
@@ -286,3 +303,6 @@ class CampfireMainActivity : ComponentActivity() {
     @Suppress("DEPRECATION")
     private fun Intent.parcelableArrayListExtra(name: String): List<Uri>? = getParcelableArrayListExtra(name)
 }
+
+private const val PLAY_STORE_HOST = "play.google.com"
+private const val PLAY_STORE_PACKAGE = "com.android.vending"
