@@ -103,6 +103,14 @@ jobs:
         uses: actions/checkout@v5
         with:
           ref: ${{ inputs.release_tag }}
+      # The tag decides what is built, but talking to the store is the workflow's business: a fix to these scripts has to
+      # reach a release that is already tagged, and the one run by hand to repeat it, rather than wait for the next tag.
+      - name: Take the store scripts from the workflow's commit
+        env:
+          WORKFLOW_SHA: ${{ github.workflow_sha }}
+        run: |
+          git fetch --depth 1 origin "$WORKFLOW_SHA"
+          git checkout FETCH_HEAD -- .github/scripts
       - name: Set up JDK 21
         uses: actions/setup-java@v5
         with:
