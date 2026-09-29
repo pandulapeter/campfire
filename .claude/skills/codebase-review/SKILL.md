@@ -139,7 +139,11 @@ whole. Run the tests after each lane and the full build after the last; a break 
 user whether to delete the folder. Final checks: `git log --format=%B START..HEAD | grep -ciE
 'co-authored|claude|session|generated'` prints 0, `git log --oneline START..HEAD` is one line per plan, `git status`
 is clean and `git worktree list` shows only the checkout. Report the commit count, the skipped plans with reasons,
-and the manual checks owed; update the memory. **Do not push.**
+and the manual checks owed (copy them out of the README first, since the next step deletes it); update the memory.
+
+**Last step**: when no plan file is left (only `README.md` and `EXECUTION.md`), delete the plans folder and commit it
+as `Remove the review plans.` without asking. If skipped plans remain, the folder stays until the user decides.
+**Do not push.**
 
 ## This repository: Campfire
 

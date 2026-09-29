@@ -90,10 +90,11 @@ internal fun nextRowOffset(scroll: Int, restingOffsets: List<Int>, maxValue: Int
 
 /**
  * The scroll position that puts the row the one at [scroll] comes after under the top of the viewport - or the row at
- * [scroll] itself, where the reader is past its top - and null above the first row, which is the header's.
+ * [scroll] itself, where the reader is past its top - and null only at the very top of the song. The header above the
+ * first row counts as a row of its own, rested on at the top of the song, since it is scrolled away like one.
  */
 internal fun previousRowOffset(scroll: Int, restingOffsets: List<Int>, maxValue: Int): Int? =
-    restingOffsets.map { it.coerceIn(0, maxValue) }.sorted().lastOrNull { it < scroll - POSITION_TOLERANCE }
+    (listOf(0) + restingOffsets.map { it.coerceIn(0, maxValue) }).sorted().lastOrNull { it < scroll - POSITION_TOLERANCE }
 
 /**
  * The fling of a song read across the columns, which comes to rest at [snappedScrollTarget] rather than wherever the

@@ -19,7 +19,7 @@
 - Optional close confirmation dialog on supported platforms
 - Add support for the Nashville chord system
 - Once Microsoft Store and Mac App Store listings are approved, update included URL-s + this Readme
-- Add support for external control devices with a focus-by-section feature
+- Test support for external control devices with a focus-by-section feature
 - Each top-level Composable should be defined in a separate file
 - Improve test coverage
 - Streaming zip writer on all platforms

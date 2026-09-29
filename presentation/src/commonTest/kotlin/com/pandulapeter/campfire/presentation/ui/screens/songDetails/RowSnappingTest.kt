@@ -87,7 +87,9 @@ class RowSnappingTest {
         val rows = listOf(300, 1300, 2300)
         assertEquals(300, nextRowOffset(scroll = 0, restingOffsets = rows, maxValue = 3000))
         assertEquals(null, previousRowOffset(scroll = 0, restingOffsets = rows, maxValue = 3000))
-        assertEquals(null, previousRowOffset(scroll = 300, restingOffsets = rows, maxValue = 3000))
+        // The header is a row of its own, so only the very top of the song has nothing above it.
+        assertEquals(0, previousRowOffset(scroll = 300, restingOffsets = rows, maxValue = 3000))
+        assertEquals(0, previousRowOffset(scroll = 150, restingOffsets = rows, maxValue = 3000))
         assertEquals(2300, nextRowOffset(scroll = 1300, restingOffsets = rows, maxValue = 3000))
         assertEquals(300, previousRowOffset(scroll = 1300, restingOffsets = rows, maxValue = 3000))
         // Inside a tall row, the previous button goes back to its own top.
