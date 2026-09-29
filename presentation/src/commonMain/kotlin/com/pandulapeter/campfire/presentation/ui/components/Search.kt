@@ -85,6 +85,7 @@ import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.input.pointer.PointerIcon
 import androidx.compose.ui.input.pointer.pointerHoverIcon
+import androidx.compose.ui.layout.Layout
 import androidx.compose.ui.layout.LayoutCoordinates
 import androidx.compose.ui.layout.LookaheadScope
 import androidx.compose.ui.layout.layout
@@ -415,6 +416,31 @@ internal data class AppBarOverlap(
             val uncovered = 1f - appBarReveal.coerceIn(0f, 1f)
             return AppBarOverlap(reach = reach, coverage = uncovered, height = LIST_APP_BAR_HEIGHT * uncovered)
         }
+    }
+}
+
+/**
+ * A list screen's list with its [SearchableTopAppBar] over it, both filling the screen: drawn in that order, but with
+ * the bar measured first. The bar reports how far its buttons reach ([AppBarOverlap.reach]) as it is measured, and the
+ * list's section headers count the room their actions may take out of that reach as they are measured, so the other
+ * way around the first frame of the screen is laid out with no reach at all - every setlist header letting its actions
+ * out of their menu and then shrinking them away again a frame later, which is what coming back to the screen showed.
+ */
+@Composable
+internal fun ListUnderAppBar(
+    modifier: Modifier = Modifier,
+    list: @Composable () -> Unit,
+    appBar: @Composable () -> Unit,
+) = Layout(
+    modifier = modifier,
+    contents = listOf(list, appBar),
+) { (listMeasurables, appBarMeasurables), constraints ->
+    val childConstraints = constraints.copy(minWidth = 0, minHeight = 0)
+    val appBarPlaceables = appBarMeasurables.map { it.measure(childConstraints) }
+    val listPlaceables = listMeasurables.map { it.measure(childConstraints) }
+    layout(constraints.maxWidth, constraints.maxHeight) {
+        listPlaceables.forEach { it.placeRelative(x = 0, y = 0) }
+        appBarPlaceables.forEach { it.placeRelative(x = 0, y = 0) }
     }
 }
 

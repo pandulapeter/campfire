@@ -94,11 +94,13 @@ import com.pandulapeter.campfire.presentation.resources.ic_next
 import com.pandulapeter.campfire.presentation.resources.ic_previous
 import com.pandulapeter.campfire.presentation.resources.retry
 import com.pandulapeter.campfire.presentation.resources.song_details_next_row
+import com.pandulapeter.campfire.presentation.resources.song_details_next_section
 import com.pandulapeter.campfire.presentation.resources.song_details_next_song
 import com.pandulapeter.campfire.presentation.resources.song_details_empty
 import com.pandulapeter.campfire.presentation.resources.song_details_no_data
 import com.pandulapeter.campfire.presentation.resources.song_details_no_data_hint
 import com.pandulapeter.campfire.presentation.resources.song_details_previous_row
+import com.pandulapeter.campfire.presentation.resources.song_details_previous_section
 import com.pandulapeter.campfire.presentation.resources.song_details_previous_song
 import com.pandulapeter.campfire.presentation.resources.song_details_scroll_to_top
 import com.pandulapeter.campfire.presentation.resources.song_details_song_position
@@ -241,20 +243,21 @@ internal fun SongDetailsScreen(
     // The arrow keys scroll the song the reader is looking at, and the pages each scroll on their own, so the one
     // that is current hands its state up here for them to drive.
     var currentPageScrollState by remember { mutableStateOf<ScrollState?>(null) }
-    // The row buttons, and the keys that press them, step between the rows of the song being read, for the same reason.
-    var currentPageRowStepper by remember { mutableStateOf<RowStepper?>(null) }
-    // Read in rows, the row buttons go on to the song beside this one at either end of it, worked out from the page being
-    // headed for like the pager bar's buttons. Both are decided again at the time of the press.
-    val hasPreviousSongToStepTo = isHorizontalFlow && canPage && pagerState.targetPage > 0
-    val hasNextSongToStepTo = isHorizontalFlow && canPage && pagerState.targetPage < songs.lastIndex
-    val canStepBackInSong = currentPageRowStepper?.canStepBack == true
-    val canStepForwardInSong = currentPageRowStepper?.canStepForward == true
+    // The step buttons, and the keys that press them, step between the sections or the rows of the song being read, for
+    // the same reason.
+    var currentPageStepper by remember { mutableStateOf<SongStepper?>(null) }
+    // The steps go on to the song beside this one at either end of it, worked out from the page being headed for like the
+    // pager bar's buttons. Both are decided again at the time of the press.
+    val hasPreviousSongToStepTo = canPage && pagerState.targetPage > 0
+    val hasNextSongToStepTo = canPage && pagerState.targetPage < songs.lastIndex
+    val canStepBackInSong = currentPageStepper?.canStepBack == true
+    val canStepForwardInSong = currentPageStepper?.canStepForward == true
     fun stepBack() {
-        val stepper = currentPageRowStepper
+        val stepper = currentPageStepper
         if (stepper?.canStepBack == true) coroutineScope.launch { stepper.step(-1) } else if (pagerState.targetPage > 0) pageStepper.step(-1)
     }
     fun stepForward() {
-        val stepper = currentPageRowStepper
+        val stepper = currentPageStepper
         if (stepper?.canStepForward == true) coroutineScope.launch { stepper.step(1) } else if (pagerState.targetPage < songs.lastIndex) pageStepper.step(1)
     }
 
@@ -274,8 +277,8 @@ internal fun SongDetailsScreen(
             .songKeyboardShortcuts(
                 onScrollUp = { currentPageScrollState?.let { coroutineScope.launch { it.scrollByKeyStep(-1f) } } },
                 onScrollDown = { currentPageScrollState?.let { coroutineScope.launch { it.scrollByKeyStep(1f) } } },
-                // Whatever the row buttons would do where they are there, so that a pedal pressing Up and Down reads
-                // the song the way the buttons do; where they are not, the keys scroll.
+                // Whatever the step buttons would do where they are there, so that a pedal pressing Up and Down reads the
+                // song the way the buttons do; where they are not, the keys scroll.
                 onStepBack = if (canStepBackInSong || hasPreviousSongToStepTo) ::stepBack else null,
                 onStepForward = if (canStepForwardInSong || hasNextSongToStepTo) ::stepForward else null,
                 isUncovered = visibleDialog == null && viewModel.backStack.lastOrNull() is CampfireDestination.SongDetails,
@@ -390,7 +393,7 @@ internal fun SongDetailsScreen(
                 DelayedLoadingIndicator()
             }
         } else {
-            // The row buttons are drawn over the pager rather than over each page, so there is one pair of them that
+            // The step buttons are drawn over the pager rather than over each page, so there is one pair of them that
             // stays where it is while the songs slide past under it.
             Box(
                 modifier = Modifier
@@ -411,10 +414,10 @@ internal fun SongDetailsScreen(
                     val song = songs[page]
                     val scrollState = rememberScrollState()
                     val flingBehavior = rememberRowSnapFlingBehavior(scrollState)
-                    val rowStepper = remember(scrollState, flingBehavior) { RowStepper(scrollState, flingBehavior) }
+                    val stepper = remember(scrollState, flingBehavior) { SongStepper(scrollState, flingBehavior) }
                     if (page == pagerState.currentPage) SideEffect {
                         currentPageScrollState = scrollState
-                        currentPageRowStepper = rowStepper
+                        currentPageStepper = stepper
                     }
                     // Only the song being read follows a pinch frame by frame; the pages beside it are composed and laid out
                     // too, and take the scale once it has settled. A swipe makes its page the target, which follows at once.
@@ -431,13 +434,13 @@ internal fun SongDetailsScreen(
                         song = song,
                         scrollState = scrollState,
                         flingBehavior = flingBehavior,
-                        // In a setlist the row buttons page to the songs beside every song, a single row or not.
-                        keepsRowEndInset = isHorizontalFlow && canPage,
                         text = shownText,
                         hasFailed = song.fileName in failedSongFileNames,
                         transposition = transpositions[song.fileName, destination.setlistFileName],
                         shouldShowChords = shouldShowChords,
                         fontScale = if (isFollowingGesture) ({ viewModel.fontScale }) else ({ viewModel.settledFontScale }),
+                        // In a setlist the step buttons page to the songs beside every song, whether it scrolls or not.
+                        keepsStepButtonInset = canPage,
                         isHorizontalFlow = isHorizontalFlow,
                         isOneRowAtATimeEnabled = isOneRowAtATimeEnabled,
                         // One set per song, wherever it is opened from: folding is how this reader reads it, not how the
@@ -490,15 +493,16 @@ internal fun SongDetailsScreen(
                         },
                     )
                 }
-                RowStepButtons(
+                StepButtons(
+                    isSteppedByRow = currentPageStepper?.isSteppedByRow == true,
                     canStepBackInSong = canStepBackInSong,
                     canStepForwardInSong = canStepForwardInSong,
                     hasPreviousSong = hasPreviousSongToStepTo,
                     hasNextSong = hasNextSongToStepTo,
                     contentPadding = PaddingValues(
-                        top = PAGE_TOP_PADDING + ROW_STEP_BUTTON_EDGE_MARGIN,
+                        top = PAGE_TOP_PADDING + STEP_BUTTON_EDGE_MARGIN,
                         end = pageContentPadding.calculateEndPadding(layoutDirection) + 16.dp,
-                        bottom = pageContentPadding.calculateBottomPadding() + ROW_STEP_BUTTON_EDGE_MARGIN,
+                        bottom = pageContentPadding.calculateBottomPadding() + STEP_BUTTON_EDGE_MARGIN,
                     ),
                     onStepBack = ::stepBack,
                     onStepForward = ::stepForward,
@@ -627,12 +631,12 @@ private fun SongDetailsPage(
     song: Song,
     scrollState: ScrollState,
     flingBehavior: RowSnapFlingBehavior,
-    keepsRowEndInset: Boolean,
     text: String?,
     hasFailed: Boolean,
     transposition: Int,
     shouldShowChords: Boolean,
     fontScale: () -> Float,
+    keepsStepButtonInset: Boolean,
     isHorizontalFlow: Boolean,
     isOneRowAtATimeEnabled: Boolean,
     foldedSections: Set<String>,
@@ -764,25 +768,28 @@ private fun SongDetailsPage(
                 rowViewportBottomPadding = bottomPadding,
                 // The buttons are as far from the end of the screen as the text is, so the text only has to leave
                 // them their own width and a gap.
-                rowEndInset = ROW_STEP_BUTTON_SIZE + ROW_STEP_BUTTON_GAP,
-                keepsRowEndInset = keepsRowEndInset,
+                stepButtonInset = STEP_BUTTON_SIZE + STEP_BUTTON_GAP,
+                keepsStepButtonInset = keepsStepButtonInset,
             )
         }
     }
 }
 
 /**
- * The two buttons of a song read across the columns that step between its rows: the previous one at the top of the
- * end edge, the next one at its bottom, each there only for as long as there is a row to step to. In a setlist they go
- * on to the song beside this one where there is no row left in their direction ([hasPreviousSong], [hasNextSong]), and
- * turn to point the way the pager goes to say so; they only leave at the ends of the setlist. There is one pair for
- * the whole pager, answering whichever song is current, rather than one on every page sliding past with it.
+ * The two buttons that step through the song being read: between its rows where it is read across the columns in
+ * several of them, and between its sections everywhere else, the header above them counting as one. The previous one
+ * is at the top of the end edge, the next one at its bottom, each there only for as long as there is somewhere to step
+ * to in its direction. In a setlist they go on to the song beside this one where there is nothing left in their
+ * direction ([hasPreviousSong], [hasNextSong]), and turn to point the way the pager goes to say so; they only leave at
+ * the ends of the setlist. There is one pair for the whole pager, answering whichever song is current, rather than one
+ * on every page sliding past with it.
  *
- * They are drawn over the song, which leaves them that edge of the screen for as long as they can be there
- * (`SongLyrics`' `rowEndInset`), so neither ever covers a line of it; the header above the first row leaves it too.
+ * They are drawn over the song, which leaves them that edge of the screen wherever it has to be scrolled
+ * (`SongLyrics`' `stepButtonInset`), so neither ever covers a line of it; the header leaves it too.
  */
 @Composable
-private fun BoxScope.RowStepButtons(
+private fun BoxScope.StepButtons(
+    isSteppedByRow: Boolean,
     canStepBackInSong: Boolean,
     canStepForwardInSong: Boolean,
     hasPreviousSong: Boolean,
@@ -795,30 +802,42 @@ private fun BoxScope.RowStepButtons(
     // A quarter turn one way makes the arrow pointing down point to where the next song is, and the arrow pointing up to
     // where the previous one is, whichever way the layout reads.
     val pagingRotation = if (layoutDirection == LayoutDirection.Ltr) -90f else 90f
-    RowStepButton(
+    StepButton(
         modifier = Modifier
             .align(Alignment.TopEnd)
             .padding(top = contentPadding.calculateTopPadding(), end = contentPadding.calculateEndPadding(layoutDirection)),
         isVisible = canStepBackInSong || hasPreviousSong,
         icon = painterResource(Res.drawable.ic_move_up),
         iconRotation = if (canStepBackInSong) 0f else pagingRotation,
-        contentDescription = stringResource(if (canStepBackInSong) Res.string.song_details_previous_row else Res.string.song_details_previous_song),
+        contentDescription = stringResource(
+            when {
+                !canStepBackInSong -> Res.string.song_details_previous_song
+                isSteppedByRow -> Res.string.song_details_previous_row
+                else -> Res.string.song_details_previous_section
+            },
+        ),
         onClick = onStepBack,
     )
-    RowStepButton(
+    StepButton(
         modifier = Modifier
             .align(Alignment.BottomEnd)
             .padding(bottom = contentPadding.calculateBottomPadding(), end = contentPadding.calculateEndPadding(layoutDirection)),
         isVisible = canStepForwardInSong || hasNextSong,
         icon = painterResource(Res.drawable.ic_move_down),
         iconRotation = if (canStepForwardInSong) 0f else pagingRotation,
-        contentDescription = stringResource(if (canStepForwardInSong) Res.string.song_details_next_row else Res.string.song_details_next_song),
+        contentDescription = stringResource(
+            when {
+                !canStepForwardInSong -> Res.string.song_details_next_song
+                isSteppedByRow -> Res.string.song_details_next_row
+                else -> Res.string.song_details_next_section
+            },
+        ),
         onClick = onStepForward,
     )
 }
 
 @Composable
-private fun RowStepButton(
+private fun StepButton(
     modifier: Modifier = Modifier,
     isVisible: Boolean,
     icon: Painter,
@@ -837,7 +856,7 @@ private fun RowStepButton(
         // and every key after that to Compose's own focus search, which scrolls the song instead of stepping it. They
         // are pressed by the same keys the screen hears anyway.
         modifier = Modifier
-            .size(ROW_STEP_BUTTON_SIZE)
+            .size(STEP_BUTTON_SIZE)
             .focusProperties { canFocus = false },
         onClick = onClick,
     ) {
@@ -985,9 +1004,9 @@ internal fun showsCoverInPerformanceMode(appBarWidth: Dp) = appBarWidth - APP_BA
 
 private const val LABEL_SEPARATOR = "·"
 private val PAGE_TOP_PADDING = 8.dp // Inside the scroll, above the header.
-private val ROW_STEP_BUTTON_SIZE = 40.dp
-private val ROW_STEP_BUTTON_GAP = 8.dp
-private val ROW_STEP_BUTTON_EDGE_MARGIN = 16.dp
+private val STEP_BUTTON_SIZE = 40.dp
+private val STEP_BUTTON_GAP = 8.dp
+private val STEP_BUTTON_EDGE_MARGIN = 16.dp
 private val PAGER_CONTROLS_HEIGHT = 48.dp
 private val APP_BAR_STEPPER_END_PADDING = 8.dp
 private val APP_BAR_NAVIGATION_WIDTH = 52.dp // The 48dp button and the 4dp the bar pads its start by.

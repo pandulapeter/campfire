@@ -77,6 +77,7 @@ import com.pandulapeter.campfire.presentation.ui.components.ListLayout
 import com.pandulapeter.campfire.presentation.ui.components.ImportProgress
 import com.pandulapeter.campfire.presentation.ui.components.ListColumns
 import com.pandulapeter.campfire.presentation.ui.components.ListPlaceholder
+import com.pandulapeter.campfire.presentation.ui.components.ListUnderAppBar
 import com.pandulapeter.campfire.presentation.ui.components.NewItemMenu
 import com.pandulapeter.campfire.presentation.ui.components.ScrollToTopWhenChanged
 import com.pandulapeter.campfire.presentation.ui.components.SearchableTopAppBar
@@ -159,17 +160,21 @@ internal fun SongsScreen(
         Row {
             // The bar spans the list alone rather than the whole screen, so that its buttons and the search stay at the
             // top of the list they act on instead of standing over the side panel beside it.
-            Box(modifier = Modifier.weight(1f).fillMaxHeight()) {
-                SongList(
-                    modifier = Modifier.fillMaxSize().underAppBar { appBarReveal.value },
-                    viewModel = viewModel,
-                    listState = listState,
-                    placeholder = placeholder,
-                    columnCount = columnCount,
-                    hasLoadedLibrary = hasLoadedLibrary,
-                    contentPadding = listContentPadding,
-                    appBarOverlap = appBarOverlap,
-                )
+            ListUnderAppBar(
+                modifier = Modifier.weight(1f).fillMaxHeight(),
+                list = {
+                    SongList(
+                        modifier = Modifier.fillMaxSize().underAppBar { appBarReveal.value },
+                        viewModel = viewModel,
+                        listState = listState,
+                        placeholder = placeholder,
+                        columnCount = columnCount,
+                        hasLoadedLibrary = hasLoadedLibrary,
+                        contentPadding = listContentPadding,
+                        appBarOverlap = appBarOverlap,
+                    )
+                },
+            ) {
                 SearchableTopAppBar(
                     contentPadding = listContentPadding,
                     appBarReveal = { appBarReveal.value },

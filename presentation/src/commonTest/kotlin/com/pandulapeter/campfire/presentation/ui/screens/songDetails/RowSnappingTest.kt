@@ -25,7 +25,7 @@ class RowSnappingTest {
     ) = snappedScrollTarget(
         start = start,
         target = target,
-        rows = SongRows(restingOffsets = dividers, bottoms = bottoms, hasSeveralRows = true),
+        rows = SongRows(restingOffsets = dividers, bottoms = bottoms),
         viewportHeight = viewport,
         maxValue = maxValue,
     )
@@ -85,18 +85,18 @@ class RowSnappingTest {
     @Test
     fun theButtonsStepToTheNeighbouringRows() {
         val rows = listOf(300, 1300, 2300)
-        assertEquals(300, nextRowOffset(scroll = 0, restingOffsets = rows, maxValue = 3000))
-        assertEquals(null, previousRowOffset(scroll = 0, restingOffsets = rows, maxValue = 3000))
+        assertEquals(300, nextStepOffset(scroll = 0, stepOffsets = rows, maxValue = 3000))
+        assertEquals(null, previousStepOffset(scroll = 0, stepOffsets = rows, maxValue = 3000))
         // The header is a row of its own, so only the very top of the song has nothing above it.
-        assertEquals(0, previousRowOffset(scroll = 300, restingOffsets = rows, maxValue = 3000))
-        assertEquals(0, previousRowOffset(scroll = 150, restingOffsets = rows, maxValue = 3000))
-        assertEquals(2300, nextRowOffset(scroll = 1300, restingOffsets = rows, maxValue = 3000))
-        assertEquals(300, previousRowOffset(scroll = 1300, restingOffsets = rows, maxValue = 3000))
+        assertEquals(0, previousStepOffset(scroll = 300, stepOffsets = rows, maxValue = 3000))
+        assertEquals(0, previousStepOffset(scroll = 150, stepOffsets = rows, maxValue = 3000))
+        assertEquals(2300, nextStepOffset(scroll = 1300, stepOffsets = rows, maxValue = 3000))
+        assertEquals(300, previousStepOffset(scroll = 1300, stepOffsets = rows, maxValue = 3000))
         // Inside a tall row, the previous button goes back to its own top.
-        assertEquals(1300, previousRowOffset(scroll = 1800, restingOffsets = rows, maxValue = 3000))
-        assertEquals(null, nextRowOffset(scroll = 2300, restingOffsets = rows, maxValue = 3000))
+        assertEquals(1300, previousStepOffset(scroll = 1800, stepOffsets = rows, maxValue = 3000))
+        assertEquals(null, nextStepOffset(scroll = 2300, stepOffsets = rows, maxValue = 3000))
         // A row the scroll cannot reach the top of is as far as it goes, and there is no row after that.
-        assertEquals(2000, nextRowOffset(scroll = 1300, restingOffsets = rows, maxValue = 2000))
-        assertEquals(null, nextRowOffset(scroll = 2000, restingOffsets = rows, maxValue = 2000))
+        assertEquals(2000, nextStepOffset(scroll = 1300, stepOffsets = rows, maxValue = 2000))
+        assertEquals(null, nextStepOffset(scroll = 2000, stepOffsets = rows, maxValue = 2000))
     }
 }

@@ -35,13 +35,23 @@ import kotlin.math.sign
  * on each ([restingOffsets], ascending - the bottom edge of the divider above the row, so that the divider itself is
  * just out of view, or the row's own top where it has no divider) and where each one's content ends ([bottoms], one per
  * resting offset, above whatever empty space follows it). None at all where the song is not read in rows.
+ *
+ * [stepOffsets] are where Page Up / Page Down and the buttons at the end of the screen step to, ascending, the top of the
+ * song not among them: the resting offsets of a song of several rows, and just above every section of any other, whose
+ * header is then the first thing stepped past ([isSteppedByRow] telling the two apart). None before the song has been
+ * laid out.
  */
 internal data class SongRows(
     val restingOffsets: List<Int> = emptyList(),
     val bottoms: List<Int> = emptyList(),
-    val hasSeveralRows: Boolean = false,
+    val stepOffsets: List<Int> = emptyList(),
+    val isSteppedByRow: Boolean = false,
 ) {
-    fun offsetBy(offset: Int) = copy(restingOffsets = restingOffsets.map { it + offset }, bottoms = bottoms.map { it + offset })
+    fun offsetBy(offset: Int) = copy(
+        restingOffsets = restingOffsets.map { it + offset },
+        bottoms = bottoms.map { it + offset },
+        stepOffsets = stepOffsets.map { it + offset },
+    )
 }
 
 /**
@@ -82,26 +92,27 @@ internal fun snappedScrollTarget(
 }
 
 /**
- * The scroll position that puts the row after the one at [scroll] under the top of the viewport, or null where there is
- * none left to step to - the last row is on screen, or the song cannot be scrolled far enough for another one.
+ * The scroll position that puts the stop after the one at [scroll] - a row, or a section of a single column - under the
+ * top of the viewport, or null where there is none left to step to: the last one is on screen, or the song cannot be
+ * scrolled far enough for another one.
  */
-internal fun nextRowOffset(scroll: Int, restingOffsets: List<Int>, maxValue: Int): Int? =
-    restingOffsets.map { it.coerceIn(0, maxValue) }.sorted().firstOrNull { it > scroll + POSITION_TOLERANCE }
+internal fun nextStepOffset(scroll: Int, stepOffsets: List<Int>, maxValue: Int): Int? =
+    stepOffsets.map { it.coerceIn(0, maxValue) }.sorted().firstOrNull { it > scroll + POSITION_TOLERANCE }
 
 /**
- * The scroll position that puts the row the one at [scroll] comes after under the top of the viewport - or the row at
+ * The scroll position that puts the stop the one at [scroll] comes after under the top of the viewport - or the stop at
  * [scroll] itself, where the reader is past its top - and null only at the very top of the song. The header above the
- * first row counts as a row of its own, rested on at the top of the song, since it is scrolled away like one.
+ * first stop counts as one of its own, rested on at the top of the song, since it is scrolled away like one.
  */
-internal fun previousRowOffset(scroll: Int, restingOffsets: List<Int>, maxValue: Int): Int? =
-    (listOf(0) + restingOffsets.map { it.coerceIn(0, maxValue) }).sorted().lastOrNull { it < scroll - POSITION_TOLERANCE }
+internal fun previousStepOffset(scroll: Int, stepOffsets: List<Int>, maxValue: Int): Int? =
+    (listOf(0) + stepOffsets.map { it.coerceIn(0, maxValue) }).sorted().lastOrNull { it < scroll - POSITION_TOLERANCE }
 
 /**
  * The fling of a song read across the columns, which comes to rest at [snappedScrollTarget] rather than wherever the
  * decay would leave it, so that a row is read from its divider rather than from somewhere in the middle of its first
  * line. The [rows] are written by the layout every time it places them, in the scroll's own coordinates; the first
  * resting offset is the one above the song, below its header. With none (a song laid out in a single column, or read
- * column by column) the fling is the ordinary one. They are state, since the buttons that step between the rows are
+ * column by column) the fling is the ordinary one. They are state, since the buttons that step through the song are
  * shown from them; the layout writes them only when they change.
  */
 internal class RowSnapFlingBehavior(
@@ -163,27 +174,25 @@ internal class RowSnapFlingBehavior(
 }
 
 /**
- * Steps the song scrolled by [scrollState] from one row to the next or the previous one, through the positions its
- * [flingBehavior] snaps to: what the buttons at the end of the screen and Page Up / Page Down do. The two offsets are
- * derived state, so that whatever shows a way to step is only told when there starts or stops being one.
+ * Steps the song scrolled by [scrollState] from one stop to the next or the previous one, through the [SongRows.stepOffsets]
+ * its [flingBehavior] is handed with the rows: what the buttons at the end of the screen and Page Up / Page Down do. The
+ * two offsets are derived state, so that whatever shows a way to step is only told when there starts or stops being one.
  */
-internal class RowStepper(
+internal class SongStepper(
     private val scrollState: ScrollState,
     private val flingBehavior: RowSnapFlingBehavior,
 ) {
     private val previous = derivedStateOf {
-        val rows = flingBehavior.rows
-        if (rows.hasSeveralRows) previousRowOffset(scrollState.value, rows.restingOffsets, scrollState.maxValue) else null
+        val stepOffsets = flingBehavior.rows.stepOffsets
+        if (stepOffsets.isEmpty()) null else previousStepOffset(scrollState.value, stepOffsets, scrollState.maxValue)
     }
-    private val next = derivedStateOf {
-        val rows = flingBehavior.rows
-        if (rows.hasSeveralRows) nextRowOffset(scrollState.value, rows.restingOffsets, scrollState.maxValue) else null
-    }
+    private val next = derivedStateOf { nextStepOffset(scrollState.value, flingBehavior.rows.stepOffsets, scrollState.maxValue) }
 
+    val isSteppedByRow get() = flingBehavior.rows.isSteppedByRow
     val canStepBack get() = previous.value != null
     val canStepForward get() = next.value != null
 
-    /** Scrolls to the previous row where [direction] is negative and to the next one otherwise, if there is one. */
+    /** Scrolls to the previous stop where [direction] is negative and to the next one otherwise, if there is one. */
     suspend fun step(direction: Int) {
         val target = (if (direction < 0) previous.value else next.value) ?: return
         scrollState.animateScrollTo(target)

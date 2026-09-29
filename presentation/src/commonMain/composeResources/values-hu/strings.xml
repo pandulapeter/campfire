@@ -299,6 +299,8 @@
     <string name="song_details_next_song">Következő dal</string>
     <string name="song_details_previous_row">Előző sor</string>
     <string name="song_details_next_row">Következő sor</string>
+    <string name="song_details_previous_section">Előző szakasz</string>
+    <string name="song_details_next_section">Következő szakasz</string>
     <string name="song_details_song_position">%1$d / %2$d</string>
     <string name="song_details_transpose_up">Transzponálás felfelé</string>
     <string name="song_details_transpose_down">Transzponálás lefelé</string>

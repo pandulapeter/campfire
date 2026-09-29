@@ -73,6 +73,7 @@ import com.pandulapeter.campfire.presentation.ui.components.FastScroller
 import com.pandulapeter.campfire.presentation.ui.components.FAST_SCROLLER_WIDTH
 import com.pandulapeter.campfire.presentation.ui.components.ListColumns
 import com.pandulapeter.campfire.presentation.ui.components.ListPlaceholder
+import com.pandulapeter.campfire.presentation.ui.components.ListUnderAppBar
 import com.pandulapeter.campfire.presentation.ui.components.NewItemMenu
 import com.pandulapeter.campfire.presentation.ui.components.HideKeyboardWhenScrolledDown
 import com.pandulapeter.campfire.presentation.ui.components.ListLayout
@@ -134,15 +135,19 @@ internal fun SetlistsScreen(
     val appBarOverlap: () -> AppBarOverlap = remember(appBarReveal) {
         { AppBarOverlap.of(reach = appBarReach, appBarReveal = appBarReveal.value) }
     }
-    Box(modifier = modifier.fillMaxSize()) {
-        SetlistList(
-            modifier = Modifier.fillMaxSize().underAppBar { appBarReveal.value },
-            viewModel = viewModel,
-            listState = listState,
-            columnCount = columnCount,
-            contentPadding = contentPadding,
-            appBarOverlap = appBarOverlap,
-        )
+    ListUnderAppBar(
+        modifier = modifier.fillMaxSize(),
+        list = {
+            SetlistList(
+                modifier = Modifier.fillMaxSize().underAppBar { appBarReveal.value },
+                viewModel = viewModel,
+                listState = listState,
+                columnCount = columnCount,
+                contentPadding = contentPadding,
+                appBarOverlap = appBarOverlap,
+            )
+        },
+    ) {
         SearchableTopAppBar(
             contentPadding = contentPadding,
             appBarReveal = { appBarReveal.value },

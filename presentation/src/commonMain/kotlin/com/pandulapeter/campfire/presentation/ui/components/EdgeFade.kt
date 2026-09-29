@@ -271,4 +271,4 @@ internal fun Modifier.fadingLeftEdge(
     }
 
 /** How far content fades in over below whatever it scrolls under, and how far it is scrolled before it fades fully. */
-private val EDGE_FADE_SIZE = 24.dp
+internal val EDGE_FADE_SIZE = 24.dp

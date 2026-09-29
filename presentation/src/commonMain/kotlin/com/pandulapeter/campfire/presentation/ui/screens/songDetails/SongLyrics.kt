@@ -126,6 +126,7 @@ import com.pandulapeter.campfire.presentation.resources.song_details_tempo
 import com.pandulapeter.campfire.presentation.resources.song_details_time
 import com.pandulapeter.campfire.presentation.resources.song_details_year
 import com.pandulapeter.campfire.presentation.resources.songs_edit_song
+import com.pandulapeter.campfire.presentation.ui.components.EDGE_FADE_SIZE
 import com.pandulapeter.campfire.presentation.ui.components.ExpandChevron
 import com.pandulapeter.campfire.presentation.ui.components.TagFlowRow
 import com.pandulapeter.campfire.presentation.ui.components.TagPill
@@ -176,17 +177,19 @@ import kotlin.math.roundToInt
  * folded on the details screen would hide the lines being typed into it.
  * @param onRowsPlaced Handed the rows of the horizontal flow ([SongRows]: where a scroll comes to rest on each - the
  * bottom edge of the divider above it, so that the divider itself is just out of view - and where its content ends),
- * measured from the top of this composable's content, every time they are placed, where they settle rather than where
- * an animation has got them to. The song details screen snaps its scroll to them and steps between them.
+ * and the stops the song is stepped through, measured from the top of this composable's content, every time they are
+ * placed, where they settle rather than where an animation has got them to. The song details screen snaps its scroll to
+ * the rows and steps between the stops.
  * @param rowViewportHeight The height of the viewport the song is scrolled in, where that scroll comes to rest on the
  * dividers of the horizontal flow: every row is then followed by empty space down to the bottom of that viewport, so
  * that a scroll resting on a divider shows no row but the one under it, and the last row can be brought to the top like
  * the others. Unspecified where nothing snaps, which is the editor's preview.
  * @param rowViewportBottomPadding How much the scroll holds under this composable, which is part of the room the last
  * row needs to be brought to the top of the viewport.
- * @param rowEndInset How much of the end edge a song of several rows leaves to what is drawn over it there: the song
- * details screen's buttons that step between the rows. A song of a single row has none of them, and takes the width,
- * unless [keepsRowEndInset] is set: in a setlist the same buttons page to the songs beside it, a single row or not.
+ * @param stepButtonInset How much of the end edge a song that has to be scrolled leaves to what is drawn over it there:
+ * the song details screen's buttons that step through it. A song that fits the screen has none of them, and takes the
+ * width, unless [keepsStepButtonInset] is set: in a setlist the same buttons page to the songs beside it, whatever the
+ * song. Zero where there are no buttons at all, which is the editor's preview.
  * @param displayControls Drawn at the end of the header, see [SongMetadataHeader].
  * @param onOpenEditor Offered under a song too long to be laid out whole, see [LayoutBudget]; null where the editor is
  * already open or may not be opened (performance mode).
@@ -214,8 +217,8 @@ internal fun SongLyrics(
     onRowsPlaced: ((SongRows) -> Unit)? = null,
     rowViewportHeight: Dp = Dp.Unspecified,
     rowViewportBottomPadding: Dp = 0.dp,
-    rowEndInset: Dp = 0.dp,
-    keepsRowEndInset: Boolean = false,
+    stepButtonInset: Dp = 0.dp,
+    keepsStepButtonInset: Boolean = false,
     onOpenEditor: (() -> Unit)? = null,
 ) {
     // The fold toggles of the runs inside a section are named by these too, where the file names them nothing.
@@ -289,17 +292,12 @@ internal fun SongLyrics(
                 .fillMaxWidth()
                 .padding(horizontal = CARD_PADDING)
                 .layout { measurable, constraints ->
-                    // The rows leave the end edge to the buttons drawn over it, and so does the header, since the next
-                    // row's button is on the screen under it before the song has been scrolled at all. Whether there
-                    // are rows is only decided below, so the header asks whether there can be: a width that holds two
-                    // columns next to the buttons. Deciding it here rather than from what the rows turn out to be keeps
-                    // the header from being laid out at one width and then at another.
-                    val insetPx = if (isHorizontalFlow) rowEndInset.roundToPx() else 0
-                    val columnGapPx = COLUMN_GAP.roundToPx()
-                    val rowWidth = constraints.maxWidth + extraWidth.roundToPx() - insetPx
-                    val canHaveRows = insetPx > 0 &&
-                        (keepsRowEndInset || rowWidth + columnGapPx >= 2 * ((MIN_COLUMN_WIDTH * fontScale).roundToPx() + columnGapPx))
-                    val headerWidth = if (canHaveRows) (constraints.maxWidth - insetPx).coerceAtLeast(0) else constraints.maxWidth
+                    // The song leaves the end edge to the buttons drawn over it, and so does the header, since the next
+                    // section's button is on the screen next to it before the song has been scrolled at all. Whether the
+                    // song has to be scrolled is only decided below, from the height of the grid, which depends on this
+                    // header's, so the header leaves the edge wherever there can be buttons: deciding it from what the
+                    // grid turns out to be would lay the header out at one width and then at another.
+                    val headerWidth = (constraints.maxWidth - stepButtonInset.roundToPx()).coerceAtLeast(0)
                     val placeable = measurable.measure(constraints.copy(minWidth = minOf(constraints.minWidth, headerWidth), maxWidth = headerWidth))
                     if (placeable.height != headerHeight) headerHeight = placeable.height
                     layout(constraints.maxWidth, placeable.height) { placeable.placeRelative(0, 0) }
@@ -331,8 +329,8 @@ internal fun SongLyrics(
                 maxRowHeight = availableHeight,
                 rowViewportHeight = rowViewportHeight,
                 rowViewportBottomPadding = rowViewportBottomPadding,
-                rowEndInset = rowEndInset,
-                keepsRowEndInset = keepsRowEndInset,
+                stepButtonInset = stepButtonInset,
+                keepsStepButtonInset = keepsStepButtonInset,
                 extraWidth = extraWidth,
                 sectionCount = sections.size,
                 isHorizontalFlow = isHorizontalFlow,
@@ -1403,10 +1401,12 @@ private fun TextStyle.scaled(scale: Float) = copy(
  * and the grid decided for the last settled width, which is the same on every frame of a transition.
  *
  * [onRowsPlaced] is handed where the scroll rests on each row (the bottom edge of its divider) and where each ends as they settle,
- * every time the layout is measured ahead, which is before any of them is animated to its place. A song of several rows
- * read across leaves [rowEndInset] of the end edge empty, for the buttons drawn over it there; the grid is searched
- * for at that narrower width, and a song that is a single row there is laid out across the full one - unless
- * [keepsRowEndInset], where the buttons page through a setlist and are there whatever the song is.
+ * every time the layout is measured ahead, which is before any of them is animated to its place, along with the stops
+ * the song is stepped through: those rows, or where the song is not read in several of them, a stop above every
+ * section. A song that has to be scrolled leaves [stepButtonInset] of the end edge empty, for the buttons that step
+ * through it drawn over it there; the grid is searched for at that narrower width, and a song that fits the screen there
+ * is laid out across the full one - unless [keepsStepButtonInset], where the buttons page through a setlist and are
+ * there whatever the song is.
  *
  * Where the scroll comes to rest on those dividers ([rowViewportHeight]), a row read across that leaves part of the
  * viewport empty is followed by that much empty space, the last one included, so that a row is read with nothing but
@@ -1427,8 +1427,8 @@ private fun SongSectionsLayout(
     maxRowHeight: Dp,
     rowViewportHeight: Dp,
     rowViewportBottomPadding: Dp,
-    rowEndInset: Dp,
-    keepsRowEndInset: Boolean,
+    stepButtonInset: Dp,
+    keepsStepButtonInset: Boolean,
     extraWidth: Dp,
     sectionCount: Int,
     isHorizontalFlow: Boolean,
@@ -1455,7 +1455,7 @@ private fun SongSectionsLayout(
         else -> (availableHeight.roundToPx() - headerHeight()).coerceAtLeast(0)
     }
     val maxRowHeightPx = if (maxRowHeight.isSpecified && maxRowHeight > 0.dp) maxRowHeight.roundToPx() else Int.MAX_VALUE
-    val endInsetPx = if (isHorizontalFlow) rowEndInset.roundToPx() else 0
+    val endInsetPx = stepButtonInset.roundToPx()
     fun maxColumnCountFor(totalWidth: Int) = ((totalWidth + columnGapPx) / (minColumnWidth.roundToPx() + columnGapPx)).coerceIn(1, maxOf(1, measurables.size))
     fun columnWidthFor(totalWidth: Int, columnCount: Int) = ((totalWidth - columnGapPx * (columnCount - 1)) / columnCount).coerceIn(0, maxColumnWidthPx)
 
@@ -1478,11 +1478,11 @@ private fun SongSectionsLayout(
         maxRowHeight = maxRowHeightPx,
         maxColumnCount = maxColumnCountFor(settledWidth),
         endInset = endInsetPx,
-        keepsEndInset = keepsRowEndInset,
+        keepsEndInset = keepsStepButtonInset,
         isHorizontalFlow = isHorizontalFlow,
     )
 
-    fun searchGrid(totalWidth: Int): SectionGrid {
+    fun searchGrid(totalWidth: Int): SearchedGrid {
         val maxColumnCount = maxColumnCountFor(totalWidth)
 
         fun heightAtWidth(index: Int, width: Int) = sectionMeasurements.height(
@@ -1520,7 +1520,12 @@ private fun SongSectionsLayout(
         return if (availableHeightPx > 0) {
             var candidate = 1
             var candidateGrid = gridFor(candidate)
-            while (candidate < maxColumnCount && candidateGrid.height() > availableHeightPx) {
+            var fits = false
+            while (candidate < maxColumnCount) {
+                if (candidateGrid.height() <= availableHeightPx) {
+                    fits = true
+                    break
+                }
                 // Even a perfectly even split needs this many columns, so there is no point in trying the ones in
                 // between. The rows of the horizontal flow may be narrower than the candidate, down to a single
                 // column, so the sections are only as tall there as they are in the widest column.
@@ -1529,20 +1534,25 @@ private fun SongSectionsLayout(
                 candidate = maxOf(candidate + 1, ceil(totalHeight.toDouble() / availableHeightPx).toInt()).coerceAtMost(maxColumnCount)
                 candidateGrid = gridFor(candidate)
             }
-            candidateGrid
+            // A single column is never measured to find out (see gridFor), so it is taken for a song that scrolls, which
+            // on a window with room for nothing wider is nearly every song.
+            SearchedGrid(candidateGrid, fits = fits || (candidate > 1 && candidateGrid.height() <= availableHeightPx))
         } else {
-            gridFor(maxColumnCount)
+            SearchedGrid(gridFor(maxColumnCount), fits = false)
         }
     }
 
     val (grid, isInset) = sectionMeasurements.grid(gridKey) {
-        // The buttons that step between the rows sit at the end of the screen, so the rows leave them that edge. A
-        // song that is a single row there has no buttons to leave room for, and is laid out across the whole width -
-        // in that one row even where the whole width would have made it several, which would bring the buttons back.
-        val insetGrid = if (endInsetPx > 0) searchGrid(settledWidth - endInsetPx) else null
+        // The buttons that step through the song sit at the end of the screen, so a song that has to be scrolled leaves
+        // them that edge. One that fits the screen there has no buttons to leave room for, and is laid out across the
+        // whole width, where it fits all the more. Several rows read across are stepped through however short they
+        // are, since each is followed by empty space down to the bottom of the screen.
+        val insetSearch = if (endInsetPx > 0) searchGrid(settledWidth - endInsetPx) else null
         when {
-            insetGrid == null -> DecidedGrid(searchGrid(settledWidth), isInset = false)
-            else -> DecidedGrid(insetGrid, isInset = keepsRowEndInset || insetGrid.columnCounts.size > 1)
+            insetSearch == null -> DecidedGrid(searchGrid(settledWidth).grid, isInset = false)
+            keepsStepButtonInset || !insetSearch.fits || (isHorizontalFlow && insetSearch.grid.columnCounts.size > 1) ->
+                DecidedGrid(insetSearch.grid, isInset = true)
+            else -> DecidedGrid(searchGrid(settledWidth).grid, isInset = false)
         }
     }
     val layoutWidth = if (isInset) (width - endInsetPx).coerceAtLeast(0) else width
@@ -1617,12 +1627,22 @@ private fun SongSectionsLayout(
     // What is reported is the bottom edge of each divider, so a scroll resting there has the divider just above it.
     if (isLookingAhead) {
         val dividerBottoms = dividerTops.map { it - dividerHeight / 2 + dividerHeight }
+        // Without a divider above it, the first row is rested on at its own top.
+        val restingOffsets = if (hasDividerAbove || dividerBottoms.isEmpty()) dividerBottoms else listOf(0) + dividerBottoms
         onRowsPlaced(
             SongRows(
-                // Without a divider above it, the first row is rested on at its own top.
-                restingOffsets = if (hasDividerAbove || dividerBottoms.isEmpty()) dividerBottoms else listOf(0) + dividerBottoms,
+                restingOffsets = restingOffsets,
                 bottoms = if (dividerBottoms.isEmpty()) emptyList() else arrangement.rowBottoms.map { it + songTop },
-                hasSeveralRows = hasSeveralRows,
+                // A section is stepped to as far above it as the song fades out under the top of the screen, so that it
+                // starts where that fade ends and is read whole, its label included. The first one's stop is above the
+                // top of this layout, in the header, which is only added by whoever is handed them.
+                stepOffsets = if (hasSeveralRows) {
+                    restingOffsets
+                } else {
+                    val fadePx = EDGE_FADE_SIZE.roundToPx()
+                    arrangement.tops.map { songTop + it - fadePx }
+                },
+                isSteppedByRow = hasSeveralRows,
             ),
         )
     }
@@ -1715,6 +1735,12 @@ private data class SectionGridKey(
     val endInset: Int,
     val keepsEndInset: Boolean,
     val isHorizontalFlow: Boolean,
+)
+
+/** A grid [SongSectionsLayout] searched for, and whether the whole song [fits] into the height available to it. */
+private data class SearchedGrid(
+    val grid: SectionGrid,
+    val fits: Boolean,
 )
 
 /** The grid [SongSectionsLayout] decided on, and whether it was decided for the width less the end inset. */

@@ -35,10 +35,11 @@ import kotlinx.coroutines.launch
 /**
  * Drives the song details screen from the arrow keys: Up and Down scroll the song being read, Left and Right step
  * to the previous and the next song of the setlist. That is a keyboard on the desktop and the web, and it is also
- * a page turner pedal paired with a phone or a tablet, which is exactly what those send. Where a song read across the
- * columns has its buttons that step between the rows, Up and Down press those instead of scrolling, and so do Page Up
- * and Page Down, which the other kind of pedal sends: a pedal is pressed while both hands are on the instrument, and a
- * press that nudges the song by a tenth of the screen would leave the reader halfway through a row.
+ * a page turner pedal paired with a phone or a tablet, which is exactly what those send. Where the song has its buttons
+ * that step through it - between its rows where it is read across the columns, between its sections otherwise - Up and
+ * Down press those instead of scrolling, and so do Page Up and Page Down, which the other kind of pedal sends: a pedal
+ * is pressed while both hands are on the instrument, and a press that nudges the song by a tenth of the screen would
+ * leave the reader halfway through a verse.
  *
  * The screen takes focus as it opens, because nothing on it would otherwise ever be focused and key events only
  * travel along the focus path. The handler sits in the preview pass rather than the bubbling one so that it sees
@@ -52,8 +53,8 @@ import kotlinx.coroutines.launch
  * @param onPreviousSong Null when the current song is the first one, or when there is only the one to read; the
  *   event is then left alone rather than swallowed.
  * @param onNextSong Null when the current song is the last one, the same way.
- * @param onStepBack What the row buttons' previous button does - the previous row, or at the first one the previous
- *   song of a setlist - or null where that button is not there, which leaves Up to scroll and Page Up alone.
+ * @param onStepBack What the step buttons' previous button does - the previous section or row, or at the first one the
+ *   previous song of a setlist - or null where that button is not there, which leaves Up to scroll and Page Up alone.
  * @param onStepForward The same for the next button, Down and Page Down.
  * @param isUncovered Whether no dialog, sheet or other screen is drawn over this one. The screen takes the focus as
  *   soon as this holds, and back whenever it loses it while this holds and no overflow menu is open: focus that went to
