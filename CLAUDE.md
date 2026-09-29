@@ -140,8 +140,10 @@ uninstall and nothing else does.
   the file for the same reason, and so does the **date**: the day the setlist is for, an ISO date that starts as the
   day it was created here (an import dates a setlist that carries none the same way, the demo one included, unless it
   replaces a library setlist, whose day it keeps) and is moved with a calendar in the dialog that names the setlist.
-  Sorting by date puts the latest day on top, the setlists of one day by their title, and one written before there
-  were dates after every dated one.
+  The same dialog's **Countdown** checkbox, off by default and in the file too, puts a subtitle under the setlist's
+  sticky header that says how far that day is ("In 5 days", "Today", "Yesterday") — the only place the date shows
+  outside the dialog, so the one way it can be seen in performance mode. Sorting by date puts the latest day on top, the setlists
+  of one day by their title, and one written before there were dates after every dated one.
 - **Both list screens are searched from a button rather than from a field that is always there**: the app bar has
   no title — the list's pinned section header stands in its place — and the one search icon is the one close button (the mark morphs
   between the two as the button travels from the actions to the start of the bar, with the field after it, see

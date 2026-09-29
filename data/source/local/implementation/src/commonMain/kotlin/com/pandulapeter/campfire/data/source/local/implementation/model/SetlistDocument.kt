@@ -37,6 +37,7 @@ internal data class SetlistDocument(
      */
     @Serializable(with = OptionalTextSerializer::class)
     val date: String? = null,
+    val isCountdownShown: Boolean = false,
     /**
      * The place in the list older versions gave a setlist, which the date took over. Still declared, so that it is
      * read and dropped rather than carried along as a field this version does not know: two copies of one setlist

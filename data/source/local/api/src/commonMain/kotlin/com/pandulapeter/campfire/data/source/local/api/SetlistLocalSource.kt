@@ -28,7 +28,7 @@ interface SetlistLocalSource {
      * Writes an empty setlist under a file name derived from the title, suffixed until it is free, and returns it,
      * carrying the size of its file. File naming is the storage layer's business, so callers only supply what goes inside.
      */
-    suspend fun createSetlist(title: String, description: String, date: LocalDate): Setlist
+    suspend fun createSetlist(title: String, description: String, date: LocalDate, isCountdownShown: Boolean): Setlist
 
     /** Writes [setlist] under the file name it carries and returns it carrying the size of the file it became. */
     suspend fun saveSetlist(setlist: Setlist): Setlist

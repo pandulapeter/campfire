@@ -133,6 +133,18 @@
     <string name="setlists_date">Date</string>
     <string name="setlists_date_value">%1$s-%2$s-%3$s</string>
     <string name="setlists_pick_date">Pick a date</string>
+    <string name="setlists_countdown">Countdown</string>
+    <string name="setlists_countdown_today">Today</string>
+    <string name="setlists_countdown_tomorrow">Tomorrow</string>
+    <string name="setlists_countdown_yesterday">Yesterday</string>
+    <plurals name="setlists_countdown_in_days">
+        <item quantity="one">In %1$d day</item>
+        <item quantity="other">In %1$d days</item>
+    </plurals>
+    <plurals name="setlists_countdown_days_ago">
+        <item quantity="one">%1$d day ago</item>
+        <item quantity="other">%1$d days ago</item>
+    </plurals>
     <string name="setlists_duplicate">Duplicate</string>
     <string name="setlists_duplicate_setlist">Duplicate setlist</string>
     <string name="setlists_duplicate_title">%1$s (copy)</string>
@@ -373,9 +385,21 @@
     <string name="settings_sync_disconnect_confirmation">Disconnect %1$s? Campfire forgets the account and stops syncing. Nothing is removed from the library or from the cloud folder.</string>
     <string name="settings_sync_now">Sync now</string>
     <string name="settings_sync_never">Not synced yet</string>
-    <string name="settings_sync_last_synced">Last synced successfully on %1$s</string>
+    <string name="settings_sync_last_synced_moments_ago">Last synced successfully moments ago</string>
+    <plurals name="settings_sync_last_synced_minutes_ago">
+        <item quantity="one">Last synced successfully a minute ago</item>
+        <item quantity="other">Last synced successfully %1$d minutes ago</item>
+    </plurals>
+    <plurals name="settings_sync_last_synced_hours_ago">
+        <item quantity="one">Last synced successfully an hour ago</item>
+        <item quantity="other">Last synced successfully %1$d hours ago</item>
+    </plurals>
+    <string name="settings_sync_last_synced_yesterday">Last synced successfully yesterday</string>
+    <plurals name="settings_sync_last_synced_days_ago">
+        <item quantity="one">Last synced successfully %1$d day ago</item>
+        <item quantity="other">Last synced successfully %1$d days ago</item>
+    </plurals>
     <!-- The order of the date and time parts of the line above: year, month, day, hour, minute, each already padded. -->
-    <string name="settings_sync_date_time">%1$s-%2$s-%3$s at %4$s:%5$s</string>
     <string name="settings_sync_failed_network">Could not reach the service. Campfire will try again next time.</string>
     <string name="settings_sync_failed_authorization">The connection was refused. Connect the account again.</string>
     <string name="settings_sync_failed_storage">The library could not be read or written.</string>

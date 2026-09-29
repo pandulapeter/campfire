@@ -230,10 +230,10 @@ class ExportLibraryUseCaseImplTest {
         override suspend fun rescan() = throw UnsupportedOperationException()
         override suspend fun refresh(fileNames: Set<String>) = throw UnsupportedOperationException()
         override suspend fun adoptImported(setlists: Collection<Setlist>) = throw UnsupportedOperationException()
-        override suspend fun createSetlist(title: String, description: String, date: LocalDate) = throw UnsupportedOperationException()
+        override suspend fun createSetlist(title: String, description: String, date: LocalDate, isCountdownShown: Boolean) = throw UnsupportedOperationException()
         override suspend fun saveSetlist(setlist: Setlist) = throw UnsupportedOperationException()
         override suspend fun updateSetlist(fileName: String, transform: (Setlist) -> Setlist) = throw UnsupportedOperationException()
-        override suspend fun renameSetlist(fileName: String, title: String, description: String, date: LocalDate) = throw UnsupportedOperationException()
+        override suspend fun renameSetlist(fileName: String, title: String, description: String, date: LocalDate, isCountdownShown: Boolean) = throw UnsupportedOperationException()
         override suspend fun parseSetlist(document: String) = throw UnsupportedOperationException()
         override suspend fun importSetlist(setlist: Setlist, shouldReplace: Boolean) = throw UnsupportedOperationException()
         override suspend fun loadSetlistFileSizes() = folder

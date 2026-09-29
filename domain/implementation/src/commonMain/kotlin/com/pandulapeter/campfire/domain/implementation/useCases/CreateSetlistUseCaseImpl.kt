@@ -19,9 +19,10 @@ class CreateSetlistUseCaseImpl internal constructor(
     private val setlistRepository: SetlistRepository,
 ) : CreateSetlistUseCase {
 
-    override suspend operator fun invoke(title: String, description: String, date: LocalDate) = setlistRepository.createSetlist(
+    override suspend operator fun invoke(title: String, description: String, date: LocalDate, isCountdownShown: Boolean) = setlistRepository.createSetlist(
         title = title.trim(),
         description = description.trim(),
         date = date,
+        isCountdownShown = isCountdownShown,
     )
 }

@@ -34,6 +34,12 @@ data class Setlist(
      */
     val date: LocalDate?,
     /**
+     * Whether the setlist's header says how far away [date] is ("In 5 days", "Yesterday"), which is how the day can be
+     * read on the setlists screen at all. Off unless the user asks for it, since plenty of setlists are dated only
+     * because every setlist is. It lives in the file next to the date, so it travels with the setlist.
+     */
+    val isCountdownShown: Boolean = false,
+    /**
      * Whether the setlist has been put away: it is left out of the setlists screen and of the picker that adds a
      * song to one, until the user asks for the archived ones as well. It lives in the file rather than in the
      * preferences, so that a setlist that was retired on one device is retired on every other one it syncs to.

@@ -21,6 +21,7 @@ internal fun SetlistDocument.toModel(fileName: String, size: Long) = Setlist(
     title = title,
     description = description,
     date = date?.toLocalDate(),
+    isCountdownShown = isCountdownShown,
     isArchived = isArchived,
     // A document that was edited by hand can leave a blank entry behind or name the same song twice. The second
     // mention is dropped and the first one wins, its transposition with it: the screens key their rows and the
@@ -36,6 +37,7 @@ internal fun Setlist.toDocument() = SetlistDocument(
     title = title,
     description = description,
     date = date?.toString(),
+    isCountdownShown = isCountdownShown,
     isArchived = isArchived,
     // Written the way it is read, so that a file never carries a duplicate whatever built the setlist in memory.
     songs = entries.distinctBy { it.songFileName }.map {

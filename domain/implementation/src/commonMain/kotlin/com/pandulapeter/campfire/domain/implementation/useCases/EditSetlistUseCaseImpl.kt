@@ -20,6 +20,6 @@ class EditSetlistUseCaseImpl internal constructor(
     private val setlistRepository: SetlistRepository,
 ) : EditSetlistUseCase {
 
-    override suspend operator fun invoke(fileName: String, title: String, description: String, date: LocalDate): Setlist? =
-        setlistRepository.renameSetlist(fileName = fileName, title = title.trim(), description = description.trim(), date = date)
+    override suspend operator fun invoke(fileName: String, title: String, description: String, date: LocalDate, isCountdownShown: Boolean): Setlist? =
+        setlistRepository.renameSetlist(fileName = fileName, title = title.trim(), description = description.trim(), date = date, isCountdownShown = isCountdownShown)
 }

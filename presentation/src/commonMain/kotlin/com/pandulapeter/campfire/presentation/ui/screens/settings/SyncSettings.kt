@@ -56,7 +56,6 @@ import com.pandulapeter.campfire.presentation.resources.settings_sync_connection
 import com.pandulapeter.campfire.presentation.resources.settings_sync_connection_failed_network
 import com.pandulapeter.campfire.presentation.resources.settings_sync_connection_failed_storage
 import com.pandulapeter.campfire.presentation.resources.settings_sync_connection_failed_unknown
-import com.pandulapeter.campfire.presentation.resources.settings_sync_date_time
 import com.pandulapeter.campfire.presentation.resources.settings_sync_delete_locally
 import com.pandulapeter.campfire.presentation.resources.settings_sync_delete_remotely
 import com.pandulapeter.campfire.presentation.resources.settings_sync_deletions_pending
@@ -71,7 +70,11 @@ import com.pandulapeter.campfire.presentation.resources.settings_sync_failed_unk
 import com.pandulapeter.campfire.presentation.resources.settings_sync_interrupted
 import com.pandulapeter.campfire.presentation.resources.settings_sync_keep_and_download
 import com.pandulapeter.campfire.presentation.resources.settings_sync_keep_and_upload
-import com.pandulapeter.campfire.presentation.resources.settings_sync_last_synced
+import com.pandulapeter.campfire.presentation.resources.settings_sync_last_synced_days_ago
+import com.pandulapeter.campfire.presentation.resources.settings_sync_last_synced_hours_ago
+import com.pandulapeter.campfire.presentation.resources.settings_sync_last_synced_minutes_ago
+import com.pandulapeter.campfire.presentation.resources.settings_sync_last_synced_moments_ago
+import com.pandulapeter.campfire.presentation.resources.settings_sync_last_synced_yesterday
 import com.pandulapeter.campfire.presentation.resources.settings_sync_never
 import com.pandulapeter.campfire.presentation.resources.settings_sync_now
 import com.pandulapeter.campfire.presentation.resources.settings_sync_preparing
@@ -83,13 +86,13 @@ import com.pandulapeter.campfire.presentation.resources.settings_sync_unavailabl
 import com.pandulapeter.campfire.presentation.ui.CampfireViewModel
 import com.pandulapeter.campfire.data.source.remote.api.model.AuthorizationCompletionPage
 import com.pandulapeter.campfire.presentation.ui.components.ActionListItem
+import com.pandulapeter.campfire.presentation.ui.components.Elapsed
 import com.pandulapeter.campfire.presentation.ui.components.pluralTextResource
+import com.pandulapeter.campfire.presentation.ui.components.rememberElapsed
 import com.pandulapeter.campfire.presentation.ui.components.textResource
 import com.pandulapeter.campfire.presentation.ui.platform.withSyncCounts
 import kotlin.time.ExperimentalTime
 import kotlin.time.Instant
-import kotlinx.datetime.TimeZone
-import kotlinx.datetime.toLocalDateTime
 import org.jetbrains.compose.resources.painterResource
 
 /**
@@ -355,28 +358,22 @@ private fun SyncProgress.text() = if (isPreparing) {
 }
 
 /**
- * An exact local date and time rather than "3 hours ago": this line is the answer to "did my library get where I
- * think it did", and a run that happened at a moment the user remembers answers that better than an elapsed time.
- * The order of the parts is a string resource, so each language puts them where it puts them.
+ * How long ago the last run finished, in the words anybody would use ("15 minutes ago", "Yesterday") rather than as a
+ * timestamp to be subtracted from the clock in one's head. It changes the moment it would stop being true for as long
+ * as the screen is open ([rememberElapsed]), so it never says "moments ago" about a run from before lunch.
  */
 @Composable
 private fun lastSyncedText(lastSyncedAt: Long?): String {
     if (lastSyncedAt == null) return stringResource(Res.string.settings_sync_never)
-    val local = Instant.fromEpochMilliseconds(lastSyncedAt).toLocalDateTime(TimeZone.currentSystemDefault())
-    return stringResource(
-        Res.string.settings_sync_last_synced,
-        stringResource(
-            Res.string.settings_sync_date_time,
-            local.year.toString(),
-            (local.month.ordinal + 1).padded(),
-            local.day.padded(),
-            local.hour.padded(),
-            local.minute.padded(),
-        ),
-    )
+    val sinceLastSync by rememberElapsed(Instant.fromEpochMilliseconds(lastSyncedAt))
+    return when (val elapsed = sinceLastSync) {
+        Elapsed.Moments -> stringResource(Res.string.settings_sync_last_synced_moments_ago)
+        is Elapsed.Minutes -> pluralStringResource(Res.plurals.settings_sync_last_synced_minutes_ago, elapsed.minutes, elapsed.minutes)
+        is Elapsed.Hours -> pluralStringResource(Res.plurals.settings_sync_last_synced_hours_ago, elapsed.hours, elapsed.hours)
+        Elapsed.Yesterday -> stringResource(Res.string.settings_sync_last_synced_yesterday)
+        is Elapsed.Days -> pluralStringResource(Res.plurals.settings_sync_last_synced_days_ago, elapsed.days, elapsed.days)
+    }
 }
-
-private fun Int.padded() = toString().padStart(length = 2, padChar = '0')
 
 /**
  * A full disk fails every file of a run, and a first run on a device edited on both sides can keep a copy of every song;

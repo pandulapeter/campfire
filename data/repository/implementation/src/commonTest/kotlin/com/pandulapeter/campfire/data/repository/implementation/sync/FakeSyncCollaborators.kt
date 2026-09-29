@@ -193,7 +193,7 @@ internal class RecordingSetlistRepository : SetlistRepository {
 
     override suspend fun adoptImported(setlists: Collection<Setlist>) = throw UnsupportedOperationException()
 
-    override suspend fun createSetlist(title: String, description: String, date: LocalDate): Setlist =
+    override suspend fun createSetlist(title: String, description: String, date: LocalDate, isCountdownShown: Boolean): Setlist =
         throw UnsupportedOperationException()
 
     override suspend fun saveSetlist(setlist: Setlist): Unit = throw UnsupportedOperationException()
@@ -201,7 +201,7 @@ internal class RecordingSetlistRepository : SetlistRepository {
     override suspend fun updateSetlist(fileName: String, transform: (Setlist) -> Setlist): Setlist? =
         throw UnsupportedOperationException()
 
-    override suspend fun renameSetlist(fileName: String, title: String, description: String, date: LocalDate): Setlist? =
+    override suspend fun renameSetlist(fileName: String, title: String, description: String, date: LocalDate, isCountdownShown: Boolean): Setlist? =
         throw UnsupportedOperationException()
 
     override suspend fun parseSetlist(document: String): Setlist? = throw UnsupportedOperationException()

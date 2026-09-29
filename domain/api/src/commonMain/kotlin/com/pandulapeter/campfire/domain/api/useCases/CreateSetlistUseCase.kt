@@ -16,7 +16,8 @@ interface CreateSetlistUseCase {
 
     /**
      * Writes a new, empty setlist file and returns the setlist it became. [description] may be blank. [date] is the
-     * day the setlist is for, which is the day it is created unless the user picked another one.
+     * day the setlist is for, which is the day it is created unless the user picked another one, and
+     * [isCountdownShown] whether the setlist's header counts down to it.
      */
-    suspend operator fun invoke(title: String, description: String, date: LocalDate): Setlist
+    suspend operator fun invoke(title: String, description: String, date: LocalDate, isCountdownShown: Boolean): Setlist
 }

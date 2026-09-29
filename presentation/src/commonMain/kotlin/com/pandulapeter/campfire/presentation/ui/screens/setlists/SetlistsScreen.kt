@@ -42,6 +42,7 @@ import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.pandulapeter.campfire.data.model.domain.Setlist
 import com.pandulapeter.campfire.data.model.domain.UserPreferences
 import com.pandulapeter.campfire.presentation.resources.Res
 import com.pandulapeter.campfire.presentation.resources.ic_add
@@ -51,6 +52,11 @@ import com.pandulapeter.campfire.presentation.resources.ic_move_up
 import com.pandulapeter.campfire.presentation.resources.ic_setlists_remove
 import com.pandulapeter.campfire.presentation.resources.setlists_add_songs
 import com.pandulapeter.campfire.presentation.resources.setlists_archived
+import com.pandulapeter.campfire.presentation.resources.setlists_countdown_days_ago
+import com.pandulapeter.campfire.presentation.resources.setlists_countdown_in_days
+import com.pandulapeter.campfire.presentation.resources.setlists_countdown_today
+import com.pandulapeter.campfire.presentation.resources.setlists_countdown_tomorrow
+import com.pandulapeter.campfire.presentation.resources.setlists_countdown_yesterday
 import com.pandulapeter.campfire.presentation.resources.setlists_create_setlist
 import com.pandulapeter.campfire.presentation.resources.setlists_move_down
 import com.pandulapeter.campfire.presentation.resources.setlists_move_up
@@ -97,14 +103,19 @@ import com.pandulapeter.campfire.presentation.ui.components.fadingUnderListTop
 import com.pandulapeter.campfire.presentation.ui.components.only
 import com.pandulapeter.campfire.presentation.ui.components.pushedSectionHeader
 import com.pandulapeter.campfire.presentation.ui.components.pushedSectionHeaderPlacement
+import com.pandulapeter.campfire.presentation.ui.components.RelativeDay
+import com.pandulapeter.campfire.presentation.ui.components.relativeDay
+import com.pandulapeter.campfire.presentation.ui.components.rememberToday
 import com.pandulapeter.campfire.presentation.ui.components.rememberHasLoadedLibrary
 import com.pandulapeter.campfire.presentation.ui.components.rememberRetainedLazyGridState
 import com.pandulapeter.campfire.presentation.ui.components.rememberSectionHeaderState
 import com.pandulapeter.campfire.presentation.ui.components.songCardPadding
 import com.pandulapeter.campfire.presentation.ui.components.underAppBar
 import com.pandulapeter.campfire.presentation.ui.platform.LocalFilePicker
+import com.pandulapeter.campfire.presentation.localization.pluralStringResource
 import com.pandulapeter.campfire.presentation.localization.stringResource
 import kotlinx.coroutines.launch
+import kotlinx.datetime.LocalDate
 import org.jetbrains.compose.resources.painterResource
 import sh.calvin.reorderable.ReorderableItem
 import sh.calvin.reorderable.rememberReorderableLazyGridState
@@ -202,6 +213,8 @@ private fun SetlistList(
     // Remembered, since a new modifier every time the list recomposes would recompose the grid with it.
     val gridModifier = remember(topFade) { Modifier.fillMaxSize().listTopFadeViewport(topFade) }
     val isPerformanceModeEnabled by viewModel.isPerformanceModeEnabled.collectAsStateWithLifecycle()
+    // Read by the headers alone, so midnight recomposes the ones counting down and not the list around them.
+    val today by rememberToday()
     // Read once each, so that the branches below and the placeholders they render can never disagree about them.
     val setlistsPlaceholder = viewModel.setlistsPlaceholder.collectAsStateWithLifecycle().value
     // Lyrics only mode takes the chords out of the viewer, and the key is the shortest way of writing them down.
@@ -317,6 +330,7 @@ private fun SetlistList(
                             state = { headerState.value },
                             endPadding = headerEndPadding,
                             text = setlistWithSongs.setlist.title,
+                            subtitle = setlistWithSongs.setlist.countdownText(today),
                             // A setlist is only ever on this screen archived because the filter was asked to show them,
                             // so the mark is what tells it from the ones still in use.
                             icon = if (setlistWithSongs.setlist.isArchived) painterResource(Res.drawable.ic_archive) else null,
@@ -528,9 +542,11 @@ private fun PushedSetlistHeader(
     val key by remember(pushed) { derivedStateOf { pushed.value?.key } }
     val setlistsByKey = remember(setlistsWithSongs) { setlistsWithSongs.associateBy { "setlist_${it.setlist.fileName}" } }
     val setlist = key?.let { setlistsByKey[it] }?.setlist ?: return
+    val today by rememberToday()
     SectionHeader(
         modifier = Modifier.pushedSectionHeaderPlacement(pushed).clearAndSetSemantics {},
         text = setlist.title,
+        subtitle = setlist.countdownText(today),
         // Pinned for as long as it is being pushed away: it keeps the width it had in the bar's place rather than
         // widening again as it leaves.
         state = { SectionHeaderState(visibleFraction = pushed.value?.visibleFraction ?: 0f, pinnedFraction = 1f) },
@@ -706,5 +722,21 @@ private class SetlistItemKey(val string: String?) {
     companion object {
         // Contains characters no normalized name can hold, so it can never occur inside a setlist's file name.
         private const val TOKEN = "#*#"
+    }
+}
+
+/**
+ * How far the setlist's day is, for the subtitle of its header, where the user asked for it: the header is pinned while
+ * its songs are read, so the day stays in sight in performance mode too, where nothing else on the screen shows it.
+ */
+@Composable
+private fun Setlist.countdownText(today: LocalDate): String? {
+    val date = date?.takeIf { isCountdownShown } ?: return null
+    return when (val day = relativeDay(date = date, today = today)) {
+        RelativeDay.Today -> stringResource(Res.string.setlists_countdown_today)
+        RelativeDay.Tomorrow -> stringResource(Res.string.setlists_countdown_tomorrow)
+        RelativeDay.Yesterday -> stringResource(Res.string.setlists_countdown_yesterday)
+        is RelativeDay.InDays -> pluralStringResource(Res.plurals.setlists_countdown_in_days, day.days, day.days)
+        is RelativeDay.DaysAgo -> pluralStringResource(Res.plurals.setlists_countdown_days_ago, day.days, day.days)
     }
 }

@@ -33,6 +33,7 @@ import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.only
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.safeDrawing
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyListScope
@@ -40,6 +41,7 @@ import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.selection.toggleable
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
@@ -47,6 +49,7 @@ import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.BottomSheetDefaults
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.Checkbox
 import androidx.compose.material3.DatePicker
 import androidx.compose.material3.DatePickerDefaults
 import androidx.compose.material3.DatePickerDialog
@@ -75,12 +78,14 @@ import androidx.compose.runtime.setValue
 import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.graphics.luminance
 import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
+import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.TextRange
@@ -130,6 +135,7 @@ import com.pandulapeter.campfire.presentation.resources.import_oversized
 import com.pandulapeter.campfire.presentation.resources.save
 import com.pandulapeter.campfire.presentation.resources.setlists_delete_setlist
 import com.pandulapeter.campfire.presentation.resources.setlists_delete_setlist_confirmation
+import com.pandulapeter.campfire.presentation.resources.setlists_countdown
 import com.pandulapeter.campfire.presentation.resources.setlists_date
 import com.pandulapeter.campfire.presentation.resources.setlists_date_value
 import com.pandulapeter.campfire.presentation.resources.setlists_description
@@ -226,9 +232,9 @@ internal fun CampfireDialogs(
             onDismiss = viewModel::dismissDialog,
             // Dismissed before the setlist is created rather than after, since creating it is what opens the song
             // picker for it, and a dismissal arriving after that would close the picker instead.
-            onConfirm = { setlistTitle, description, date ->
+            onConfirm = { setlistTitle, description, date, isCountdownShown ->
                 viewModel.dismissDialog()
-                viewModel.createSetlist(title = setlistTitle, description = description, date = date)
+                viewModel.createSetlist(title = setlistTitle, description = description, date = date, isCountdownShown = isCountdownShown)
             },
         )
 
@@ -237,10 +243,17 @@ internal fun CampfireDialogs(
             initialTitle = dialog.setlist.title,
             initialDescription = dialog.setlist.description,
             initialDate = dialog.setlist.date,
+            initialIsCountdownShown = dialog.setlist.isCountdownShown,
             confirmLabel = stringResource(Res.string.save),
             onDismiss = viewModel::dismissDialog,
-            onConfirm = { setlistTitle, description, date ->
-                viewModel.editSetlist(setlistFileName = dialog.setlist.fileName, title = setlistTitle, description = description, date = date)
+            onConfirm = { setlistTitle, description, date, isCountdownShown ->
+                viewModel.editSetlist(
+                    setlistFileName = dialog.setlist.fileName,
+                    title = setlistTitle,
+                    description = description,
+                    date = date,
+                    isCountdownShown = isCountdownShown,
+                )
                 viewModel.dismissDialog()
             },
         )
@@ -251,10 +264,17 @@ internal fun CampfireDialogs(
             title = stringResource(Res.string.setlists_duplicate),
             initialTitle = textResource(Res.string.setlists_duplicate_title, dialog.setlist.title),
             initialDescription = dialog.setlist.description,
+            initialIsCountdownShown = dialog.setlist.isCountdownShown,
             confirmLabel = stringResource(Res.string.setlists_duplicate),
             onDismiss = viewModel::dismissDialog,
-            onConfirm = { setlistTitle, description, date ->
-                viewModel.duplicateSetlist(setlist = dialog.setlist, title = setlistTitle, description = description, date = date)
+            onConfirm = { setlistTitle, description, date, isCountdownShown ->
+                viewModel.duplicateSetlist(
+                    setlist = dialog.setlist,
+                    title = setlistTitle,
+                    description = description,
+                    date = date,
+                    isCountdownShown = isCountdownShown,
+                )
                 viewModel.dismissDialog()
             },
         )
@@ -738,8 +758,8 @@ private fun rememberSingleConfirmation(): (confirm: () -> Unit) -> Unit {
 
 /**
  * Everything the user gets to say about a setlist: its title, the description that goes under its header on the
- * setlists screen, and the day it is for. Creating one, editing one and naming a copy of one are the same dialog with
- * different labels, since all three are answering the same three questions.
+ * setlists screen, and the day it is for, with whether its header counts down to that day. Creating one, editing one and
+ * naming a copy of one are the same dialog with different labels, since all three are answering the same questions.
  *
  * Only the title is required. The description is what somebody writes for their own sake ("acoustic, two sets, no
  * encore"), and most setlists never get one - but the setlists screen's search reads it, so a setlist that is hard
@@ -753,9 +773,10 @@ private fun SetlistDetailsDialog(
     initialTitle: String = "",
     initialDescription: String = "",
     initialDate: LocalDate? = null,
+    initialIsCountdownShown: Boolean = false,
     confirmLabel: String,
     onDismiss: () -> Unit,
-    onConfirm: (title: String, description: String, date: LocalDate) -> Unit,
+    onConfirm: (title: String, description: String, date: LocalDate, isCountdownShown: Boolean) -> Unit,
 ) {
     // A TextFieldValue rather than a String, for the selection: a dialog that opens on a title the user is meant to
     // replace ("Summer set (copy)", the title being renamed) has all of it selected, so the first key typed writes the
@@ -769,6 +790,7 @@ private fun SetlistDetailsDialog(
     // Saved as its ISO text, since a LocalDate is nothing the saved instance state of every platform can hold.
     var dateText by rememberSaveable { mutableStateOf((initialDate ?: today()).toString()) }
     val date = LocalDate.parse(dateText)
+    var isCountdownShown by rememberSaveable { mutableStateOf(initialIsCountdownShown) }
     val isValid = setlistTitle.text.isNotBlank()
     val focusRequester = rememberFirstFieldFocusRequester()
     val confirmOnce = rememberSingleConfirmation()
@@ -808,23 +830,84 @@ private fun SetlistDetailsDialog(
                     maxLines = DESCRIPTION_LINES,
                 )
                 Spacer(modifier = Modifier.height(8.dp))
-                SetlistDateField(
-                    modifier = Modifier.fillMaxWidth(),
+                SetlistDateRow(
                     date = date,
                     onDateChange = { dateText = it.toString() },
+                    isCountdownShown = isCountdownShown,
+                    onCountdownShownChange = { isCountdownShown = it },
                 )
             }
         },
         confirmButton = {
             TextButton(
                 enabled = isValid,
-                onClick = { confirmOnce { onConfirm(setlistTitle.text, description, date) } },
+                onClick = { confirmOnce { onConfirm(setlistTitle.text, description, date, isCountdownShown) } },
             ) { Text(confirmLabel) }
         },
         dismissButton = {
             TextButton(onClick = onDismiss) { Text(stringResource(Res.string.cancel)) }
         },
     )
+}
+
+/**
+ * The date field with the switch for its countdown next to it, which moves under the field where the two do not fit
+ * side by side - on a phone the dialog is narrower than a date and a label, and a date cut short is no date.
+ */
+@Composable
+private fun SetlistDateRow(
+    date: LocalDate,
+    onDateChange: (LocalDate) -> Unit,
+    isCountdownShown: Boolean,
+    onCountdownShownChange: (Boolean) -> Unit,
+) = BoxWithConstraints {
+    if (maxWidth >= MIN_DATE_ROW_WIDTH) {
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            SetlistDateField(
+                modifier = Modifier.weight(1f),
+                date = date,
+                onDateChange = onDateChange,
+            )
+            Spacer(modifier = Modifier.width(8.dp))
+            // An outlined field keeps room above its border for the label to sit in, and it is the border the box is
+            // meant to be centered against, not the field with that room.
+            SetlistCountdownCheckbox(
+                modifier = Modifier.padding(top = OUTLINED_FIELD_LABEL_ROOM),
+                isChecked = isCountdownShown,
+                onCheckedChange = onCountdownShownChange,
+            )
+        }
+    } else {
+        Column {
+            SetlistDateField(
+                modifier = Modifier.fillMaxWidth(),
+                date = date,
+                onDateChange = onDateChange,
+            )
+            Spacer(modifier = Modifier.height(4.dp))
+            SetlistCountdownCheckbox(
+                isChecked = isCountdownShown,
+                onCheckedChange = onCountdownShownChange,
+            )
+        }
+    }
+}
+
+/** The label toggles the box too, so the whole row is the one control a screen reader lands on. */
+@Composable
+private fun SetlistCountdownCheckbox(
+    modifier: Modifier = Modifier,
+    isChecked: Boolean,
+    onCheckedChange: (Boolean) -> Unit,
+) = Row(
+    modifier = modifier
+        .clip(MaterialTheme.shapes.small)
+        .toggleable(value = isChecked, role = Role.Checkbox, onValueChange = onCheckedChange)
+        .padding(end = 12.dp),
+    verticalAlignment = Alignment.CenterVertically,
+) {
+    Checkbox(checked = isChecked, onCheckedChange = null, modifier = Modifier.padding(12.dp))
+    Text(text = stringResource(Res.string.setlists_countdown), style = MaterialTheme.typography.bodyLarge)
 }
 
 /**
@@ -1335,11 +1418,12 @@ private fun SetlistPicker(
             initialTitle = query.trim(),
             confirmLabel = stringResource(Res.string.create),
             onDismiss = closeNamingDialog,
-            onConfirm = { setlistTitle, description, date ->
+            onConfirm = { setlistTitle, description, date, isCountdownShown ->
                 viewModel.createSetlistWithSong(
                     title = setlistTitle,
                     description = description,
                     date = date,
+                    isCountdownShown = isCountdownShown,
                     songFileName = dialog.song.fileName,
                 )
                 closeNamingDialog()
@@ -1754,6 +1838,12 @@ private const val MAX_TITLE_LENGTH = 60
 private const val MAX_TAG_LENGTH = 30
 private const val MAX_DESCRIPTION_LENGTH = 300
 private const val DESCRIPTION_LINES = 3
+
+/** What a whole date and the countdown's label take side by side, in either language. */
+private val MIN_DATE_ROW_WIDTH = 360.dp
+
+/** What Material's `OutlinedTextField` leaves above its border for the label that sits on it. */
+private val OUTLINED_FIELD_LABEL_ROOM = 8.dp
 private val MAX_SUGGESTIONS_HEIGHT = 160.dp
 private val MAX_LANGUAGES_HEIGHT = 320.dp
 

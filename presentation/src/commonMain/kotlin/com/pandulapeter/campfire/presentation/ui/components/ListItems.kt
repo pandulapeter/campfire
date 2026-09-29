@@ -596,6 +596,9 @@ internal fun rememberSectionHeaderState(listState: LazyGridState, headerIndex: I
  * Everything that follows the scroll position is handed over as a function and read only while the row is laid out
  * ([state]) or drawn ([opacity], [contentOpacity], [pushedDistancePx]), so that a scroll moving it recomposes nothing.
  *
+ * @param subtitle A second line under the name, in the type of the text under the header rather than the header's own:
+ *   a setlist's countdown, which has to stay in sight wherever in the setlist the reader is. The pill is as tall as the
+ *   bar's, which holds both lines, so a subtitle moves nothing around the header.
  * @param action The buttons at the end of the pill, a setlist's [SetlistActions]: handed the modifier that decides how
  *   much of the pill they may take, and the one that keeps each of them from taking the focus ([unfocusable]). The room
  *   is counted at the width the pill narrows to once pinned, whatever it is now, so that a header does not trade its
@@ -608,6 +611,7 @@ internal fun rememberSectionHeaderState(listState: LazyGridState, headerIndex: I
 internal fun SectionHeader(
     modifier: Modifier = Modifier,
     text: String,
+    subtitle: String? = null,
     state: () -> SectionHeaderState,
     endPadding: Dp,
     icon: Painter? = null,
@@ -672,17 +676,29 @@ internal fun SectionHeader(
                         )
                     }
                 }
-                Text(
+                Column(
                     modifier = Modifier.weight(1f, fill = false).padding(end = if (hasAction) SECTION_HEADER_TEXT_GAP else 0.dp),
-                    text = text,
-                    // The settings screen's tab labels, the other thing that stands at the top of a top level screen.
-                    style = MaterialTheme.typography.titleSmall,
-                    // The palette's second accent, which is the primary color in every palette but the app's own: the
-                    // headers the list is filed under stand apart from the titles of everything around the list.
-                    color = LocalSecondAccentColor.current,
-                    maxLines = 1,
-                    overflow = TextOverflow.Ellipsis,
-                )
+                ) {
+                    Text(
+                        text = text,
+                        // The settings screen's tab labels, the other thing that stands at the top of a top level screen.
+                        style = MaterialTheme.typography.titleSmall,
+                        // The palette's second accent, which is the primary color in every palette but the app's own: the
+                        // headers the list is filed under stand apart from the titles of everything around the list.
+                        color = LocalSecondAccentColor.current,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis,
+                    )
+                    subtitle?.let {
+                        Text(
+                            text = it,
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            maxLines = 1,
+                            overflow = TextOverflow.Ellipsis,
+                        )
+                    }
+                }
             }
             action?.invoke(
                 Modifier.layout { measurable, constraints ->

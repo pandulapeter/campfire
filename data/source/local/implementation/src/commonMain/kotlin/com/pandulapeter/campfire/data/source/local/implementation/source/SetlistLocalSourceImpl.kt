@@ -71,13 +71,14 @@ internal class SetlistLocalSourceImpl(
             ?.let { SetlistDocumentFormat.decode(it).toModel(fileName, size = size) }
     }
 
-    override suspend fun createSetlist(title: String, description: String, date: LocalDate): Setlist {
+    override suspend fun createSetlist(title: String, description: String, date: LocalDate, isCountdownShown: Boolean): Setlist {
         val fileName = fileStorage.uniqueName(StorageDirectory.SETLISTS, setlistFileName(title))
         val setlist = Setlist(
             fileName = fileName,
             title = title,
             description = description,
             date = date,
+            isCountdownShown = isCountdownShown,
             isArchived = false,
             entries = emptyList(),
             size = 0,

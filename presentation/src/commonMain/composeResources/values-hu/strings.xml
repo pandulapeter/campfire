@@ -133,6 +133,18 @@
     <string name="setlists_date">Dátum</string>
     <string name="setlists_date_value">%1$s. %2$s. %3$s.</string>
     <string name="setlists_pick_date">Dátum kiválasztása</string>
+    <string name="setlists_countdown">Visszaszámlálás</string>
+    <string name="setlists_countdown_today">Ma</string>
+    <string name="setlists_countdown_tomorrow">Holnap</string>
+    <string name="setlists_countdown_yesterday">Tegnap</string>
+    <plurals name="setlists_countdown_in_days">
+        <item quantity="one">%1$d nap múlva</item>
+        <item quantity="other">%1$d nap múlva</item>
+    </plurals>
+    <plurals name="setlists_countdown_days_ago">
+        <item quantity="one">%1$d napja</item>
+        <item quantity="other">%1$d napja</item>
+    </plurals>
     <string name="setlists_duplicate">Megkettőzés</string>
     <string name="setlists_duplicate_setlist">Lista megkettőzése</string>
     <string name="setlists_duplicate_title">%1$s (másolat)</string>
@@ -373,9 +385,21 @@
     <string name="settings_sync_disconnect_confirmation">Leválasztod a következő fiókot: %1$s? A Campfire elfelejti a fiókot, és nem szinkronizál tovább. Sem a könyvtárból, sem a felhőmappából nem törlődik semmi.</string>
     <string name="settings_sync_now">Szinkronizálás most</string>
     <string name="settings_sync_never">Még nem volt szinkronizálva</string>
-    <string name="settings_sync_last_synced">Legutóbb sikeresen szinkronizálva: %1$s</string>
+    <string name="settings_sync_last_synced_moments_ago">Legutóbb sikeresen szinkronizálva: pillanatokkal ezelőtt</string>
+    <plurals name="settings_sync_last_synced_minutes_ago">
+        <item quantity="one">Legutóbb sikeresen szinkronizálva: egy perce</item>
+        <item quantity="other">Legutóbb sikeresen szinkronizálva: %1$d perce</item>
+    </plurals>
+    <plurals name="settings_sync_last_synced_hours_ago">
+        <item quantity="one">Legutóbb sikeresen szinkronizálva: egy órája</item>
+        <item quantity="other">Legutóbb sikeresen szinkronizálva: %1$d órája</item>
+    </plurals>
+    <string name="settings_sync_last_synced_yesterday">Legutóbb sikeresen szinkronizálva: tegnap</string>
+    <plurals name="settings_sync_last_synced_days_ago">
+        <item quantity="one">Legutóbb sikeresen szinkronizálva: %1$d napja</item>
+        <item quantity="other">Legutóbb sikeresen szinkronizálva: %1$d napja</item>
+    </plurals>
     <!-- A fenti sor dátum- és időrészének sorrendje: év, hónap, nap, óra, perc, mind előre kiegészítve. -->
-    <string name="settings_sync_date_time">%1$s. %2$s. %3$s. %4$s:%5$s</string>
     <string name="settings_sync_failed_network">A szolgáltatás nem érhető el. A Campfire legközelebb újra megpróbálja.</string>
     <string name="settings_sync_failed_authorization">A kapcsolatot elutasították. Csatlakoztasd újra a fiókot.</string>
     <string name="settings_sync_failed_storage">A könyvtárat nem sikerült olvasni vagy írni.</string>

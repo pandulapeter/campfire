@@ -8,12 +8,13 @@
  * https://mozilla.org/MPL/2.0/.
 -->
 # To do
+- Settings -> Library screen could display image cache size
+- Song detail FAB show / hide animation should not rotate, just scale + fade
+- Song transposition and font size should be part of the toolbar
 - PDF import
-- Setlist date countdown feature, implement similar logic for sync (friendly, readable way of showing durations)
 - Regenerate the baseline profile
 - First time user experience tutorial
 - Sort and Filter UI should be improved (better animations)
-- Settings -> Library screen could display image cache size
 - Haptic effects
 - Chord diagrams
 - Optional close confirmation dialog on supported platforms

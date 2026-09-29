@@ -229,7 +229,7 @@ internal object ImportPlanner {
      */
     private fun Setlist.holdsTheSameAs(other: Setlist) =
         title == other.title && description == other.description && (other.date == null || date == other.date) &&
-            isArchived == other.isArchived && entries == other.entries && unknownFields == other.unknownFields
+            isCountdownShown == other.isCountdownShown && isArchived == other.isArchived && entries == other.entries && unknownFields == other.unknownFields
 
     private fun IncomingSong.toEntry(
         status: ImportPlan.Status,

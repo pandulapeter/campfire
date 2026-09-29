@@ -43,7 +43,7 @@ interface SetlistRepository {
     suspend fun refresh(fileNames: Set<String>)
 
     /** Writes a new, empty setlist under a free file name and returns it. */
-    suspend fun createSetlist(title: String, description: String, date: LocalDate): Setlist
+    suspend fun createSetlist(title: String, description: String, date: LocalDate, isCountdownShown: Boolean): Setlist
 
     /**
      * Creates the file or overwrites it, and updates that one entry of the cached list. For a setlist the caller owns
@@ -61,12 +61,12 @@ interface SetlistRepository {
 
     /**
      * [updateSetlist] for the one change that may move the file: the latest version of the setlist gets [title],
-     * [description] and [date] and nothing else of it changes, and its file moves to the name the title gives it (see
+     * [description], [date] and [isCountdownShown] and nothing else of it changes, and its file moves to the name the title gives it (see
      * `SetlistLocalSource.renameSetlist`), so the setlist that comes back may have a different `fileName` than the
      * one that was asked for. Null when there is no such setlist, in which case nothing is written: a setlist that
      * was deleted while its title was being typed stays deleted.
      */
-    suspend fun renameSetlist(fileName: String, title: String, description: String, date: LocalDate): Setlist?
+    suspend fun renameSetlist(fileName: String, title: String, description: String, date: LocalDate, isCountdownShown: Boolean): Setlist?
 
     /** See `SetlistLocalSource.parseSetlist`. */
     suspend fun parseSetlist(document: String): Setlist?

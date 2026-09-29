@@ -11,13 +11,16 @@ package com.pandulapeter.campfire.data.source.local.implementation.mapper
 
 import com.pandulapeter.campfire.data.model.domain.Setlist
 import com.pandulapeter.campfire.data.source.local.implementation.model.SetlistDocument
+import com.pandulapeter.campfire.data.source.local.implementation.model.SetlistDocumentFormat
 import com.pandulapeter.campfire.data.source.local.implementation.model.SetlistSongDocument
 import kotlinx.datetime.LocalDate
 import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.JsonPrimitive
 import kotlin.test.Test
 import kotlin.test.assertEquals
+import kotlin.test.assertFalse
 import kotlin.test.assertNull
+import kotlin.test.assertTrue
 
 /**
  * A setlist file is the one thing the user can hand-edit into a shape the screens cannot draw: the rows and the
@@ -72,6 +75,15 @@ internal class SetlistMappersTest {
 
         assertEquals(LocalDate(2026, 9, 28), setlist.date)
         assertEquals("2026-09-28", setlist.toDocument().date)
+    }
+
+    @Test
+    fun theCountdownIsWrittenOnlyWhereItIsShown() {
+        val setlist = SetlistDocumentFormat.decode("""{"title":"Summer","isCountdownShown":true}""").toModel("summer.setlist.json", size = 0)
+
+        assertTrue(setlist.isCountdownShown)
+        assertTrue("isCountdownShown" in SetlistDocumentFormat.encode(setlist.toDocument()))
+        assertFalse("isCountdownShown" in SetlistDocumentFormat.encode(setlist.copy(isCountdownShown = false).toDocument()))
     }
 
     @Test

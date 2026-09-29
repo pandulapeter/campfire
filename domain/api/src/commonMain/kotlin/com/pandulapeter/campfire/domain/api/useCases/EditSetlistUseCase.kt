@@ -15,8 +15,8 @@ import kotlinx.datetime.LocalDate
 interface EditSetlistUseCase {
 
     /**
-     * Writes what the user can say about a setlist: its title, the description that may be blank, and the day it
-     * is for. The setlist is named rather than handed over, because whoever asks has usually been holding it for as
+     * Writes what the user can say about a setlist: its title, the description that may be blank, the day it
+     * is for and whether its header counts down to that day. The setlist is named rather than handed over, because whoever asks has usually been holding it for as
      * long as a dialog was open, and everything else it carries - the entries, their transpositions, whether it is
      * archived - is taken from the library as it is at the moment of the write.
      *
@@ -25,5 +25,5 @@ interface EditSetlistUseCase {
      * `fileName` the caller has not seen before, and sync will carry it across as a deletion and a new file. Null
      * when the setlist is no longer there, and nothing has been written then.
      */
-    suspend operator fun invoke(fileName: String, title: String, description: String, date: LocalDate): Setlist?
+    suspend operator fun invoke(fileName: String, title: String, description: String, date: LocalDate, isCountdownShown: Boolean): Setlist?
 }
