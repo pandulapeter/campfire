@@ -9,11 +9,13 @@
  */
 package com.pandulapeter.campfire.presentation.ui.components
 
+import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.Spring
 import androidx.compose.animation.core.VisibilityThreshold
 import androidx.compose.animation.core.spring
 import androidx.compose.foundation.gestures.ScrollableState
 import androidx.compose.foundation.lazy.grid.LazyGridItemScope
+import androidx.compose.foundation.lazy.grid.LazyGridLayoutInfo
 import androidx.compose.foundation.lazy.grid.LazyGridState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -21,12 +23,18 @@ import androidx.compose.runtime.SideEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.GraphicsLayerScope
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.unit.IntOffset
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.filter
+import kotlinx.coroutines.launch
 
 /**
  * Whether the lists have the whole library and can start animating their items, which they must not do while they
@@ -66,22 +74,50 @@ internal fun rememberHasLoadedLibrary(isLoading: Boolean): Boolean {
  * The key last scrolled to the top is saved, so that coming back from another screen keeps the restored position
  * rather than jumping to the top.
  *
+ * A change of [key] that was asked for from a row of the list itself - a tag on a song, which narrows the list to the
+ * songs carrying it - leaves that row where it was instead, since the row is what the user was looking at and it is
+ * still in the list the change leads to. The row is put in [anchor] before the change is made, and the position is
+ * asked for once the contents it changes arrive: by the row's new index, with the offset it had on screen, which the
+ * grid honors as far as there is list above the row to fill it with and stops at the top where there is not. That
+ * is a jump to a different position, so the grid animates none of it, and [anchor] narrates the change instead (see
+ * [anchoredTransition]).
+ *
  * @param contents What the grid is built from, compared by identity: a new instance is a change of the list.
+ * @param itemIndex The index of the item with the given key in [contents], or null where it holds no such item.
  */
 @Composable
 internal fun ScrollToTopWhenChanged(
     listState: LazyGridState,
     key: String,
     contents: Any?,
+    anchor: ListAnchor? = null,
+    itemIndex: (Any) -> Int? = { null },
 ) {
     var lastScrollToTopKey by rememberSaveable { mutableStateOf(key) }
     val heldTop = remember { HeldTop(contents) }
+    val coroutineScope = rememberCoroutineScope()
     // A side effect rather than a launched one, because it runs before the grid measures what this composition gave
     // it: a request made a frame later would come after the grid had already followed its first row down.
     SideEffect {
-        if (key != lastScrollToTopKey) {
+        val hasKeyChanged = key != lastScrollToTopKey
+        if (hasKeyChanged) {
             lastScrollToTopKey = key
             heldTop.isHolding = true
+            heldTop.anchoredItem = anchor?.take()
+        }
+        val anchoredItem = heldTop.anchoredItem
+        if (anchoredItem != null) {
+            if (contents !== heldTop.contents) {
+                heldTop.anchoredItem = null
+                val index = itemIndex(anchoredItem.key)
+                if (index == null) {
+                    listState.requestScrollToItem(0)
+                } else {
+                    listState.requestScrollToItem(index = index, scrollOffset = -anchoredItem.offset)
+                    anchor?.animateFrom(anchoredItem.visibleOffsets, coroutineScope)
+                }
+            }
+        } else if (hasKeyChanged) {
             listState.requestScrollToItem(0)
         } else if (heldTop.isHolding && contents !== heldTop.contents && !listState.isScrollInProgress) {
             listState.requestScrollToItem(
@@ -92,13 +128,109 @@ internal fun ScrollToTopWhenChanged(
         heldTop.contents = contents
     }
     LaunchedEffect(listState) {
-        snapshotFlow { listState.isScrollInProgress }.filter { it }.collect { heldTop.isHolding = false }
+        snapshotFlow { listState.isScrollInProgress }.filter { it }.collect {
+            heldTop.isHolding = false
+            // A list scrolled before the change arrived has moved on from the row, and bringing it back would undo
+            // the scroll.
+            heldTop.anchoredItem = null
+            anchor?.stopTransition()
+        }
+    }
+}
+
+/**
+ * The row the next change of [ScrollToTopWhenChanged]'s key keeps in place, and the transition that narrates the
+ * change around it. The row is not state: it is set by the tap that makes the change, in the same event, and read by
+ * the effect of the composition that change causes. The transition is, since every item's layer reads it.
+ */
+internal class ListAnchor {
+    private var item: AnchoredItem? = null
+    private var transition by mutableStateOf<AnchorTransition?>(null)
+    private var transitionJob: Job? = null
+
+    /** Remembers where the item with [key] is on screen, if it is on screen at all, and where every item around it is. */
+    fun set(listState: LazyGridState, key: Any) {
+        val visibleItems = listState.layoutInfo.visibleItemsInfo
+        item = visibleItems.firstOrNull { it.key == key }?.let { anchoredItem ->
+            AnchoredItem(
+                key = key,
+                offset = anchoredItem.offset.y,
+                visibleOffsets = visibleItems.associate { it.key to it.offset },
+            )
+        }
+    }
+
+    fun take() = item.also { item = null }
+
+    fun animateFrom(visibleOffsets: Map<Any, IntOffset>, coroutineScope: CoroutineScope) {
+        transitionJob?.cancel()
+        val newTransition = AnchorTransition(visibleOffsets)
+        transition = newTransition
+        transitionJob = coroutineScope.launch {
+            try {
+                newTransition.progress.animateTo(1f, ITEM_FADE_SPEC)
+            } finally {
+                if (transition === newTransition) transition = null
+            }
+        }
+    }
+
+    fun stopTransition() {
+        transitionJob?.cancel()
+    }
+
+    /**
+     * Where the item with [key] is drawn from, relative to where the grid placed it, and how opaque it is: an item
+     * that was on screen before the change slides in from where it was, and one that was not fades in where it is.
+     */
+    fun GraphicsLayerScope.applyTransition(listState: LazyGridState, key: Any) {
+        val transition = transition ?: return
+        val progress = transition.progress.value
+        val previousOffset = transition.previousOffsets[key]
+        if (previousOffset == null) {
+            alpha = progress
+        } else {
+            val offset = transition.offsetOf(listState, key) ?: return
+            translationX = (previousOffset.x - offset.x) * (1f - progress)
+            translationY = (previousOffset.y - offset.y) * (1f - progress)
+        }
+    }
+}
+
+/**
+ * The movement of an item across an anchored change of [ScrollToTopWhenChanged]'s key, which the grid does not animate
+ * itself: it asks for the new position by index, and a lazy grid answers a jump by forgetting where every item was,
+ * since a jump is ordinarily a scroll and a scroll is not a change of the list. What the change looks like is then
+ * drawn on top of the grid's own layout, which is final from the first frame, so nothing is measured twice and the
+ * rows only move in their layers. The items the change takes away are gone at once, since nothing draws them any more.
+ */
+internal fun Modifier.anchoredTransition(anchor: ListAnchor, listState: LazyGridState, key: Any) = graphicsLayer {
+    with(anchor) { applyTransition(listState, key) }
+}
+
+/** An item of the grid, how far below the start of the viewport its top was, in pixels, and where the rest were. */
+internal class AnchoredItem(val key: Any, val offset: Int, val visibleOffsets: Map<Any, IntOffset>)
+
+private class AnchorTransition(val previousOffsets: Map<Any, IntOffset>) {
+    val progress = Animatable(0f)
+    private var layoutInfo: LazyGridLayoutInfo? = null
+    private var offsets = emptyMap<Any, IntOffset>()
+
+    /** Worked out once per layout rather than once per item, since every visible item asks while the change runs. */
+    fun offsetOf(listState: LazyGridState, key: Any): IntOffset? {
+        val currentLayoutInfo = listState.layoutInfo
+        if (currentLayoutInfo !== layoutInfo) {
+            layoutInfo = currentLayoutInfo
+            offsets = currentLayoutInfo.visibleItemsInfo.associate { it.key to it.offset }
+        }
+        return offsets[key]
     }
 }
 
 /** What [ScrollToTopWhenChanged] remembers between compositions, none of which is ever drawn. */
 private class HeldTop(var contents: Any?) {
     var isHolding = false
+    var anchoredItem: AnchoredItem? = null
 }
 
 /**

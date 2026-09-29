@@ -50,6 +50,7 @@ import androidx.compose.ui.semantics.clearAndSetSemantics
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.pandulapeter.campfire.data.model.domain.Song
 import com.pandulapeter.campfire.data.model.domain.UserPreferences
 import com.pandulapeter.campfire.domain.api.models.SongSection
 import com.pandulapeter.campfire.presentation.localization.stringResource
@@ -74,6 +75,7 @@ import com.pandulapeter.campfire.presentation.ui.components.DismissSheetWhenSide
 import com.pandulapeter.campfire.presentation.ui.components.FAST_SCROLLER_WIDTH
 import com.pandulapeter.campfire.presentation.ui.components.FastScroller
 import com.pandulapeter.campfire.presentation.ui.components.HideKeyboardWhenScrolledDown
+import com.pandulapeter.campfire.presentation.ui.components.ListAnchor
 import com.pandulapeter.campfire.presentation.ui.components.ListLayout
 import com.pandulapeter.campfire.presentation.ui.components.ImportProgress
 import com.pandulapeter.campfire.presentation.ui.components.ListColumns
@@ -92,6 +94,7 @@ import com.pandulapeter.campfire.presentation.ui.components.SortMenu
 import com.pandulapeter.campfire.presentation.ui.components.allowsNewItemMenu
 import com.pandulapeter.campfire.presentation.ui.components.animateAppBarReveal
 import com.pandulapeter.campfire.presentation.ui.components.belowAppBarOverlap
+import com.pandulapeter.campfire.presentation.ui.components.anchoredTransition
 import com.pandulapeter.campfire.presentation.ui.components.besideSidePanel
 import com.pandulapeter.campfire.presentation.ui.components.fadingUnderListTop
 import com.pandulapeter.campfire.presentation.ui.components.listItemAnimation
@@ -326,10 +329,27 @@ private fun SongList(
     // Keyed on the query as it is searched for, so that a space or a punctuation mark, which changes nothing in the
     // results, does not throw a scrolled list back to the top.
     val searchedQuery = remember(query) { viewModel.normalizeForSearch(query) }
+    // A tag or a language tapped on a row is one the song carries, so the list it filters to still holds that song,
+    // and the song stays where the tap left it rather than the list going back to the top.
+    val filterAnchor = remember { ListAnchor() }
+    val onTagClicked: (Song, String) -> Unit = remember(viewModel, listState) {
+        { song, tag ->
+            filterAnchor.set(listState, songItemKey(song))
+            viewModel.toggleTagFilter(tag)
+        }
+    }
+    val onLanguageClicked: (Song, String) -> Unit = remember(viewModel, listState) {
+        { song, language ->
+            filterAnchor.set(listState, songItemKey(song))
+            viewModel.toggleLanguageFilter(language)
+        }
+    }
     ScrollToTopWhenChanged(
         listState = listState,
         key = "$searchedQuery|${userPreferences?.sortingMode?.name}|${songFilter.selectedTags.sorted()}|${userPreferences?.tagMatchMode?.name}|${songFilter.selectedLanguages.sorted()}|${userPreferences?.languageMatchMode?.name}",
         contents = songGroups,
+        anchor = filterAnchor,
+        itemIndex = { key -> songGroups.itemIndexOf(key, hasPlaceholder = placeholder != null) },
     )
 
     // A lazy grid holds on to the key of its first visible item across a change of its contents, which is right for
@@ -389,7 +409,8 @@ private fun SongList(
                     ) { headerIndex ->
                         val headerState = rememberSectionHeaderState(listState, headerIndex)
                         SectionHeader(
-                            modifier = listItemAnimation(listState, hasLoadedLibrary),
+                            modifier = listItemAnimation(listState, hasLoadedLibrary)
+                                .anchoredTransition(filterAnchor, listState, "header_${header.key}"),
                             state = { headerState.value },
                             endPadding = headerEndPadding,
                             text = header.displayText(),
@@ -401,7 +422,7 @@ private fun SongList(
                 }
                 itemsIndexed(
                     items = group.songs,
-                    key = { _, song -> "song_${song.fileName}" },
+                    key = { _, song -> songItemKey(song) },
                     contentType = { _, _ -> "song" },
                 ) { songIndex, song ->
                     val actionsMenuState = rememberOverflowMenuState()
@@ -417,7 +438,10 @@ private fun SongList(
                     val isInSetlist = song.fileName in songFileNamesInSetlists
                     // The placement animation changes as a scroll starts and ends, so it goes on a box of its own: on
                     // the row, it would be a new modifier each time, and the whole row would be composed again with it.
-                    Box(modifier = listItemAnimation(listState, hasLoadedLibrary)) {
+                    Box(
+                        modifier = listItemAnimation(listState, hasLoadedLibrary)
+                            .anchoredTransition(filterAnchor, listState, songItemKey(song)),
+                    ) {
                         SongListItem(
                             modifier = Modifier.fadingUnderListTop(topFade),
                             song = song,
@@ -427,8 +451,8 @@ private fun SongList(
                             coverArtUrl = song.coverArtUrl?.takeIf { isCoverArtEnabled },
                             labelsOnEverySong = labelsOnEverySong,
                             songFilter = songFilter,
-                            onTagClicked = viewModel::toggleTagFilter,
-                            onLanguageClicked = viewModel::toggleLanguageFilter,
+                            onTagClicked = { onTagClicked(song, it) },
+                            onLanguageClicked = { onLanguageClicked(song, it) },
                             onClick = {
                                 keyboardController?.hide()
                                 viewModel.openSong(song)
@@ -528,6 +552,20 @@ private fun PushedSongSectionHeader(
         pushedDistancePx = { pushed.value?.pushedDistance ?: 0 },
         appBarOverlap = appBarOverlap,
     )
+}
+
+private fun songItemKey(song: Song) = "song_${song.fileName}"
+
+/** The grid index of the item with [key], counted the way [SongList] emits its items. */
+private fun List<CampfireViewModel.SongGroup>.itemIndexOf(key: Any, hasPlaceholder: Boolean): Int? {
+    var index = if (hasPlaceholder) 1 else 0
+    forEach { group ->
+        if (group.header != null) index++
+        val songIndex = group.songs.indexOfFirst { songItemKey(it) == key }
+        if (songIndex >= 0) return index + songIndex
+        index += group.songs.size
+    }
+    return null
 }
 
 internal class SongSectionIndex(groups: List<Group>) {
