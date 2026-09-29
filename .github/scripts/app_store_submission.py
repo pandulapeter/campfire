@@ -16,8 +16,11 @@ reason mailed; this fails with the state instead of waiting forever), takes the 
 the one that already carries that version string, or else the editable one, renamed, or else a new one - sets it to
 be released as soon as it is approved, attaches the build, writes the release notes as its "What's New" and submits
 it. A version that is already waiting for review or further along with this very build is left as it is, so a run
-that is repeated does not fail on its own success; one that is there with another build is an error, since only one
-version of a platform can be in review at a time.
+that is repeated does not fail on its own success. Where another build is waiting for Apple - under review, or approved
+and not on the store yet - this one is not submitted at all, since a platform takes one version at a time: it stays in
+TestFlight, the run says so with a warning rather than failing, and it is submitted by hand once the other one has been
+decided, or replaced by the next release's build. That is decided before waiting for processing, which a build that is
+not going to be submitted has no reason to wait for.
 
 Uses the App Store Connect API the way app_store_signing.py does, and the same environment.
 """
@@ -25,7 +28,7 @@ Uses the App Store Connect API the way app_store_signing.py does, and the same e
 import sys
 import time
 
-from app_store_signing import fail, request
+from app_store_signing import awaiting_versions, fail, request
 
 # The states in which a version still takes a build, notes and a submission.
 EDITABLE_STATES = {"PREPARE_FOR_SUBMISSION", "DEVELOPER_REJECTED", "REJECTED", "METADATA_REJECTED", "INVALID_BINARY"}
@@ -103,6 +106,11 @@ def attached_build_id(version):
     return build["id"] if build else None
 
 
+def attached_build_number(version):
+    build = request("GET", f"/appStoreVersions/{version['id']}/build?fields[builds]=version", missing_ok=True)
+    return ((build or {}).get("data") or {}).get("attributes", {}).get("version")
+
+
 def write_whats_new(version, notes):
     localizations = request("GET", f"/appStoreVersions/{version['id']}/appStoreVersionLocalizations")["data"]
     if not localizations:
@@ -151,6 +159,18 @@ def main(bundle_identifier, platform, version, build_number, notes_file):
     if len(notes) > WHATS_NEW_LIMIT:
         fail(f"The release notes are {len(notes)} characters long, and App Store Connect takes {WHATS_NEW_LIMIT}.")
     app = find_app(bundle_identifier)
+    awaiting = awaiting_versions(app["id"], platform)
+    if awaiting:
+        attributes = awaiting[0]["attributes"]
+        awaiting_build = attached_build_number(awaiting[0])
+        if attributes["versionString"] == version and awaiting_build == build_number:
+            print(f"The {platform} version {version} is already {attributes['appStoreState']} with build {build_number}; nothing to do.")
+        else:
+            print(f"::warning::The {platform} version {attributes['versionString']} is {attributes['appStoreState']} with "
+                  f"build {awaiting_build}, and a platform takes one version at a time, so build {version} ({build_number}) "
+                  "stays in TestFlight without being submitted. Submit it by hand once that one has been decided, or let "
+                  "the next release replace it.")
+        return
     build = wait_for_build(app["id"], platform, version, build_number)
     store_version, has_earlier = version_for_release(app["id"], platform, version)
     state = store_version["attributes"]["appStoreState"]
@@ -158,8 +178,8 @@ def main(bundle_identifier, platform, version, build_number, notes_file):
         if attached_build_id(store_version) == build["id"]:
             print(f"The {platform} version {version} is already {state} with build {build_number}; nothing to do.")
             return
-        fail(f"The {platform} version {version} is already {state} with another build. Only one version of a platform can "
-             "be in review at a time: submit this one by hand once that has been decided.")
+        fail(f"The {platform} version {version} is already {state} with another build, and a released version takes no "
+             "new one: raise campfire.versionName for this release.")
     request("PATCH", f"/appStoreVersions/{store_version['id']}/relationships/build", {
         "data": {"type": "builds", "id": build["id"]},
     })

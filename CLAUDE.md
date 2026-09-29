@@ -397,8 +397,8 @@ uninstall and nothing else does.
     the fresh sandbox container. It uploads the `.pkg` with `altool` and the same App Store Connect API key as iOS,
     and submits it for review the way iOS does (below); its `build_number` input uploads a release again under a
     number App Store Connect has not seen.
-  - `publish-ios.yml` archives the app signed with an Apple Distribution certificate the run creates for itself and
-    revokes at the end, lets xcodebuild make the App Store profile for it with the App Store Connect API key, and
+  - `publish-ios.yml` archives the app signed with an Apple Distribution certificate the run creates for itself (and a
+    later run revokes, see below), lets xcodebuild make the App Store profile for it with the App Store Connect API key, and
     uploads the exported
     `.ipa` to App Store Connect, where it lands in TestFlight. Nothing is attached to the release.
   - **Both Apple workflows submit what they upload for review when a release calls them** (`submit_for_review`;
@@ -407,8 +407,11 @@ uninstall and nothing else does.
     editable one renamed, or a new one — sets it to be released as soon as it is approved, attaches the build, writes
     the release's `whats-new` notes as its "What's New" (all but a platform's first version) and submits it. A green
     run means submitted, not approved; App Review answers by email, and a rejection is answered in App Store Connect.
-    A version that is already in review with this build is left alone, so a repeated run succeeds; one in review with
-    another build stops the run, since a platform can have only one version in review at a time. The Xcode project
+    A version that is already in review with this build is left alone, so a repeated run succeeds. Where another
+    version of the platform is still waiting for Apple — in review, or approved and not on the store yet — the build
+    is not submitted at all, since a platform takes one version at a time: it stays in TestFlight and the run ends
+    green with a warning, before waiting for processing; it is submitted by hand once the other has been decided, or
+    replaced by the next release's. The Xcode project
     starts Gradle itself and passes it no properties, so the sync key is written into `local.properties` there —
     which the version build phase reads too, after `gradle.properties` and with the last value winning, which is how
     the hand-dispatched form's `build_number` uploads a release again under a number App Store Connect has not seen
@@ -417,13 +420,17 @@ uninstall and nothing else does.
     Connect API key (`APP_STORE_CONNECT_KEY_ID`, `_ISSUER_ID` and `_PRIVATE_KEY`, the last one the `.p8` file's text
     rather than base64, an Admin key shared with Kubriko) does not. So the two Apple workflows make their own
     identities with `.github/scripts/app_store_signing.py`: a key generated on the runner, a certificate for it and the
-    profiles that name it, created through the API into a keychain of the run's own, and revoked and deleted by the next
+    profiles that name it, created through the API into a keychain of the run's own, and revoked and deleted by a later
     run — exactly what a run created, recorded in a state file, and never anything made by hand. **Not at the end of
     the run that made it**: a build whose certificate is revoked before App Review approves it is refused as an
     invalid binary (ITMS-90238), even after it was processed, attached and submitted. So a run that uploaded a build
-    keeps its state file as an artifact (`app-store-signing-ios` / `-macos`, 90 days), and the next run of the same
-    workflow revokes what it names before making its own; a run that uploaded nothing revokes its own in an `always()`
-    step. The API shows nothing that tells these certificates from ones made by hand, so an artifact that expires
+    records the build in its state file, which it keeps as an artifact (`app-store-signing-ios` / `-macos`, 90 days),
+    and a later run of the same workflow revokes what it names before making its own — **unless App Store Connect says
+    that build is attached to a version still waiting for Apple**, in which case it is left alone and the artifact kept
+    for the run after to ask about again (a state file that names no build is kept while any version of the platform
+    is waiting). A build uploaded and never submitted is revoked by the next run, whose build replaces it. A run that
+    uploaded nothing revokes its own in an `always()` step, and the build is recorded before the upload rather than
+    after it, so that no failure after an upload revokes the certificate of what went up. The API shows nothing that tells these certificates from ones made by hand, so an artifact that expires
     leaves its certificates to expire on their own. Revoking after approval does not touch builds on the store, which
     Apple signs again. It must never be used for a Developer ID certificate, whose revocation breaks every copy of an app
     already downloaded.

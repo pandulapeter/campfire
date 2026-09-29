@@ -9,7 +9,9 @@
 # Builds the Mac App Store package of the desktop app, sandboxed and signed, and uploads it to App Store Connect, where
 # it lands in TestFlight. Called by a release, it then waits for the build to be processed and submits it for review
 # with the release's notes as its "What's New", to be released as soon as Apple approves it; dispatched by hand, it
-# does so only when asked. Either way a green run means submitted, not accepted — review answers by email.
+# does so only when asked. Either way a green run means submitted, not accepted — review answers by email. Where
+# another version is still waiting for Apple, the build stays in TestFlight unsubmitted and the run ends with a
+# warning instead.
 #
 # The build is Apple silicon only: jpackage packages for the machine it runs on, and App Store Connect takes an
 # arm64-only Mac app from macOS 12 on. Asking for the .pkg is what signs and sandboxes it; the donation link is left
@@ -18,8 +20,9 @@
 # Nothing it signs with is stored anywhere, so nothing of it can expire: the run creates a Mac App Distribution and a
 # Mac Installer Distribution certificate for a key made on the runner, and the two Mac App Store provisioning profiles
 # (the app's and the bundled Java runtime's) that name them, through the App Store Connect API
-# (.github/scripts/app_store_signing.py). The next run revokes and deletes all of it, since the build it signed is
-# refused if it is revoked before App Review approves it (this one does, at its end, if it uploaded nothing). That takes
+# (.github/scripts/app_store_signing.py). A later run revokes and deletes all of it once the build it signed is no
+# longer waiting for Apple, since that build is refused if it is revoked before App Review approves it (this one does, at
+# its end, if it uploaded nothing). That takes
 # an API key with the Admin role, and actions: write for the artifact that carries the ids from one run to the next.
 #
 # Called by release.yml for every release; dispatched by hand to upload a release again, which App Store Connect only
@@ -128,8 +131,9 @@ jobs:
           chmod 600 "$ASC_KEY_PATH"
           echo "ASC_KEY_PATH=$ASC_KEY_PATH" >> "$GITHUB_ENV"
           export ASC_KEY_PATH
-          # What the last run kept for the build it uploaded, revoked before this one makes its own.
-          python3 .github/scripts/app_store_signing.py cleanup-earlier app-store-signing-macos
+          # What earlier runs kept for the builds they uploaded, revoked before this one makes its own - except for a
+          # build that is still waiting for Apple, which would be refused without it.
+          python3 .github/scripts/app_store_signing.py cleanup-earlier app-store-signing-macos com.pandulapeter.campfire MAC_OS
           KEYCHAIN_PATH="$RUNNER_TEMP/signing.keychain-db"
           KEYCHAIN_PASSWORD=$(uuidgen)
           echo "KEYCHAIN_PATH=$KEYCHAIN_PATH" >> "$GITHUB_ENV"
@@ -257,6 +261,8 @@ jobs:
             echo "::error::No .pkg was built." >&2
             exit 1
           fi
+          # Before the upload, since a step that fails after it would revoke the certificate of the build it uploaded.
+          python3 .github/scripts/app_store_signing.py record-build MAC_OS "${{ steps.version.outputs.name }}" "${{ steps.version.outputs.build }}"
           xcrun altool --upload-app --type macos --file "$PACKAGE" --apiKey "$ASC_KEY_ID" --apiIssuer "$ASC_ISSUER_ID"
           echo "Uploaded ${{ steps.version.outputs.name }} (${{ steps.version.outputs.build }}). It appears in TestFlight once App Store Connect has processed it."
       # Waits for App Store Connect to process the build, which can take half an hour, and submits it with the release's
@@ -278,7 +284,8 @@ jobs:
           python3 .github/scripts/app_store_submission.py com.pandulapeter.campfire MAC_OS \
             "${{ steps.version.outputs.name }}" "${{ steps.version.outputs.build }}" "$RUNNER_TEMP/release-notes.txt"
       # A build has to stay signed by a valid certificate until it is approved, so a run that uploaded one leaves what it
-      # created to the next run of this workflow, which revokes it before it makes its own.
+      # created to the later runs of this workflow, which revoke it before they make their own once the build is no
+      # longer waiting for Apple.
       - name: Keep the signing identities for the build under review
         if: always() && steps.upload.outcome == 'success'
         uses: actions/upload-artifact@v4

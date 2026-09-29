@@ -15,11 +15,14 @@ provisioning profiles - so a run makes its own: a private key that never leaves 
 the profiles that name that certificate. A build has to stay signed by a valid certificate until App Review has
 approved it, not only until it is uploaded or processed: one whose certificate is revoked in the meantime is refused as
 an invalid binary (ITMS-90238, CSSMERR_TP_CERT_REVOKED), even after it has been attached and submitted. So a run that
-uploaded a build keeps its identities, and the workflow hands the state file on as an artifact, which the next run of
-the same workflow revokes before it makes its own (`cleanup-earlier`); a run that uploaded nothing revokes its own at
-the end. Revoking a distribution certificate does not touch what Apple has already approved, which it signs again, so
-nothing but the build still waiting for review ever depends on it - and the next upload of the platform is the build
-that replaces that one. Apple tells certificates made here and certificates made by hand apart in no way the API
+uploaded a build notes which build it was in the state file (`record-build`) and keeps its identities, and the workflow
+hands the state file on as an artifact, which the next run of the same workflow revokes before it makes its own
+(`cleanup-earlier`) - unless App Store Connect says the build is attached to a version that is still waiting for review,
+in review or not on the store yet, in which case it is left alone and the artifact kept, to be asked about again by the
+run after. A state file from before builds were recorded is kept for as long as any version of the platform is waiting
+for Apple. A build that was uploaded and not submitted is revoked by the next run, whose own build replaces it. A run
+that uploaded nothing revokes its own at the end. Revoking a distribution certificate does not touch what Apple has
+already released, which it signs again. Apple tells certificates made here and certificates made by hand apart in no way the API
 shows, so what a run made is known only from its state file: an artifact that expires before the next run leaves its
 certificates to expire on their own after a year. Never use this for a Developer ID certificate: an app signed outside
 the store is checked against it on every Mac that opens it, and revoking it breaks every copy already downloaded.
@@ -29,8 +32,9 @@ identity somebody made by hand is never touched. It only needs the Python standa
 
     app_store_signing.py certificate <certificateType> <keychain>
     app_store_signing.py profile <profileType> <bundle identifier> <certificateType> <output file>
+    app_store_signing.py record-build <IOS | MAC_OS> <version> <build number>
     app_store_signing.py cleanup
-    app_store_signing.py cleanup-earlier <artifact name>
+    app_store_signing.py cleanup-earlier <artifact name> <bundle identifier> <IOS | MAC_OS>
 
 Reads ASC_KEY_ID, ASC_ISSUER_ID and ASC_KEY_PATH (the .p8 file), and APP_STORE_SIGNING_STATE, the state file;
 `cleanup-earlier` also GITHUB_REPOSITORY and GH_TOKEN, for the gh command line tool, with the actions: write permission.
@@ -51,6 +55,13 @@ API = "https://api.appstoreconnect.apple.com/v1"
 # LibreSSL, which every macOS has: it signs the token the same way everywhere, and it is not whatever a runner image
 # happens to put first on the PATH.
 OPENSSL = "/usr/bin/openssl"
+# The states of a version that has been submitted and is not on the store yet: the build attached to one is still checked
+# against its certificate. An approved one counts until it is on the store: keeping a certificate one run longer costs
+# nothing, and revoking it early gets the build refused.
+AWAITING_STATES = {
+    "READY_FOR_REVIEW", "WAITING_FOR_REVIEW", "IN_REVIEW", "WAITING_FOR_EXPORT_COMPLIANCE", "PENDING_CONTRACT",
+    "ACCEPTED", "PROCESSING_FOR_APP_STORE", "PENDING_APPLE_RELEASE", "PENDING_DEVELOPER_RELEASE",
+}
 
 
 def fail(message):
@@ -195,20 +206,88 @@ def gh(*arguments):
     return subprocess.run(["gh", *arguments], check=True, capture_output=True, text=True).stdout
 
 
-def cleanup_earlier(artifact_name):
-    """Revokes what earlier runs kept for their builds under review, and deletes each artifact once it has done so."""
+def record_build(platform, version, build_number):
+    """Notes in the state file which build its identities signed, which is what `cleanup-earlier` asks Apple about."""
+    state = read_state()
+    state["build"] = {"platform": platform, "version": version, "number": build_number}
+    write_state(state)
+
+
+def find_app_id(bundle_identifier):
+    apps = request("GET", f"/apps?filter[bundleId]={bundle_identifier}")["data"]
+    app = next((item for item in apps if item["attributes"]["bundleId"] == bundle_identifier), None)
+    if app is None:
+        fail(f"There is no app with the bundle ID {bundle_identifier} in App Store Connect.")
+    return app["id"]
+
+
+def awaiting_versions(app_id, platform):
+    """The platform's versions that have been submitted and are not on the store yet."""
+    versions = request(
+        "GET", f"/apps/{app_id}/appStoreVersions?filter[platform]={platform}&limit=50"
+        "&fields[appStoreVersions]=versionString,appStoreState",
+    )["data"]
+    return [item for item in versions if item["attributes"]["appStoreState"] in AWAITING_STATES]
+
+
+def awaiting_version_of_build(app_id, build):
+    """The version the build is attached to, where that one has been submitted and is not on the store yet."""
+    builds = request(
+        "GET", f"/builds?filter[app]={app_id}&filter[version]={build['number']}"
+        f"&filter[preReleaseVersion.version]={build['version']}&filter[preReleaseVersion.platform]={build['platform']}",
+    )["data"]
+    if not builds:
+        return None
+    version = (request("GET", f"/builds/{builds[0]['id']}/appStoreVersion", missing_ok=True) or {}).get("data")
+    return version if version and version["attributes"]["appStoreState"] in AWAITING_STATES else None
+
+
+def still_needed(app_id, platform, state):
+    """Why the identities of a state file must not be revoked yet, or None where they may be."""
+    build = state.get("build")
+    if build:
+        version = awaiting_version_of_build(app_id, build)
+        if version:
+            return (f"build {build['version']} ({build['number']}) is attached to the {platform} version "
+                    f"{version['attributes']['versionString']}, which is {version['attributes']['appStoreState']}")
+        return None
+    # A state file that names no build tells nothing about which one it signed, so it is kept for as long as any version
+    # of the platform is waiting for Apple, since that may be the one.
+    awaiting = awaiting_versions(app_id, platform)
+    if awaiting:
+        version = awaiting[0]["attributes"]
+        return f"the {platform} version {version['versionString']} is {version['appStoreState']}"
+    return None
+
+
+def cleanup_earlier(artifact_name, bundle_identifier, platform):
+    """
+    Revokes what earlier runs kept for their builds, except for a build that is still waiting for Apple, and deletes each
+    artifact once nothing in it is kept any more - so identities that are kept are asked about again by the next run.
+    """
     repository = os.environ["GITHUB_REPOSITORY"]
     artifacts = json.loads(gh("api", f"repos/{repository}/actions/artifacts?name={artifact_name}&per_page=100"))["artifacts"]
+    app_id = None
     for artifact in artifacts:
         if artifact["expired"]:
             continue
+        run_id = artifact["workflow_run"]["id"]
+        kept = False
         with tempfile.TemporaryDirectory() as directory:
-            gh("run", "download", str(artifact["workflow_run"]["id"]), "--repo", repository, "--name", artifact_name, "--dir", directory)
+            gh("run", "download", str(run_id), "--repo", repository, "--name", artifact_name, "--dir", directory)
             for path in glob.glob(os.path.join(directory, "*.json")):
                 with open(path) as file:
-                    remove(json.load(file))
-        gh("api", "--method", "DELETE", f"repos/{repository}/actions/artifacts/{artifact['id']}")
-        print(f"Removed what run {artifact['workflow_run']['id']} kept for its build.")
+                    state = json.load(file)
+                app_id = app_id or find_app_id(bundle_identifier)
+                reason = still_needed(app_id, platform, state)
+                if reason:
+                    print(f"Keeping what run {run_id} made, since {reason}: revoking it would get that build refused.")
+                    kept = True
+                else:
+                    remove(state)
+        if not kept:
+            gh("api", "--method", "DELETE", f"repos/{repository}/actions/artifacts/{artifact['id']}")
+            print(f"Removed what run {run_id} kept for its build.")
 
 
 if __name__ == "__main__":
@@ -219,7 +298,9 @@ if __name__ == "__main__":
         create_profile(*arguments)
     elif command == "cleanup" and not arguments:
         cleanup()
-    elif command == "cleanup-earlier" and len(arguments) == 1:
+    elif command == "record-build" and len(arguments) == 3:
+        record_build(*arguments)
+    elif command == "cleanup-earlier" and len(arguments) == 3:
         cleanup_earlier(*arguments)
     else:
         fail(__doc__.strip().split("\n\n")[3])
