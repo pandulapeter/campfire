@@ -130,19 +130,6 @@ private fun IntArray.balanceIntoCells(from: Int, until: Int, cellCount: Int, sec
 }
 
 /**
- * The height the first row of [flowIntoRows] is held to, under a header [headerHeight] tall on a screen of
- * [maxRowHeight]: what the header leaves of the screen, as long as that is at least half of it. A header that takes
- * more than half the screen is scrolled away before the first row is read, so that row is held to the screen like the
- * others rather than to the sliver the header leaves, which only one section would fit in, alone in a row of one
- * column at the top of the song.
- */
-internal fun firstRowHeightCap(maxRowHeight: Int, headerHeight: Int) = when {
-    maxRowHeight == Int.MAX_VALUE -> maxRowHeight
-    maxRowHeight - headerHeight < maxRowHeight / 2 -> maxRowHeight
-    else -> maxRowHeight - headerHeight
-}
-
-/**
  * Packs [sectionCount] sections into rows that are read across, then downwards, each row having between one and
  * [maxColumnCount] columns: [heightAt] tells how tall a section is in a row of a given number of columns, since fewer
  * columns are wider ones. Within a row the sections fill its columns top to bottom, stacked [sectionGap] apart, and
@@ -151,14 +138,19 @@ internal fun firstRowHeightCap(maxRowHeight: Int, headerHeight: Int) = when {
  *
  * **A row of more than one column is never taller than [maxRowHeight]**, the height of the screen: its columns are
  * read one after the other, and a column that runs past the bottom of the screen sends the reader back up to the top
- * of the next one, which is the very thing the rows exist to avoid. The first row is held to [maxFirstRowHeight]
- * instead, what the song's header leaves of the screen: it is read with the header above it, since the top of the song
- * is where a scroll comes to rest before the first divider. Where the header leaves less than half the screen the
- * caller passes the whole of it here too (see [firstRowHeightCap]). Up to that height a row is free to be as tall as
- * its columns need, so a song that fits the screen in columns is a single row of them, exactly the layout the columns
- * read top to bottom would give it, since nothing is scrolled past there to be sent back to. A section taller than
- * that gets a row of its own, which is read from top to bottom like any other scrolling text, and so does a stack in a
- * single column, since the same cap keeps it from growing past the one section that has to be scrolled anyway.
+ * of the next one, which is the very thing the rows exist to avoid. Up to that height a row is free to be as tall as its
+ * columns need, so a song that fits the screen in columns is a single row of them, exactly the layout the columns read
+ * top to bottom would give it, since nothing is scrolled past there to be sent back to. The song's header is not part of
+ * any row: the rows start below it, so every row, the first one included, has the whole screen.
+ *
+ * **A section that is taller than the screen on its own lets its row be as tall as it is**, up to half a screen more
+ * ([maxRowHeight] and a half): it has to be scrolled through anyway, and the columns beside it only send the reader
+ * back up by what it overflows the screen with, which is less than what they would be scrolled by as rows of one column
+ * each under it. A short screen - a phone held sideways - has verses and choruses a little taller than itself, and
+ * they would otherwise all be stacked one per row in a single column with most of the width empty. A section taller
+ * than that gets a row of its own, which is read from top to bottom like any other scrolling text. A stack in a single
+ * column is held to the screen alone, since stacking more under a section that has to be scrolled anyway saves nothing
+ * but the gap between two rows.
  *
  * A row has exactly as many columns as its sections fill, so no row is left with a hole in it: a hole in the middle
  * of a song looks like a mistake, and even at its end it is width the sections could have used to wrap less. Where a
@@ -185,7 +177,6 @@ internal fun flowIntoRows(
     sectionGap: Int,
     rowGap: Int,
     maxRowHeight: Int,
-    maxFirstRowHeight: Int,
 ): SectionGrid {
     if (sectionCount == 0) return emptyGrid()
     // heights[k - 1][i] is the height of section i in a row of k columns, heightSums[k - 1][i] the total height of
@@ -242,8 +233,8 @@ internal fun flowIntoRows(
     val tallest = IntArray(maxColumnCount)
     val lowestHeights = IntArray(maxColumnCount)
     val isExhausted = BooleanArray(maxColumnCount)
+    val maxOverflowingRowHeight = if (maxRowHeight == Int.MAX_VALUE) maxRowHeight else maxRowHeight + maxRowHeight / 2
     for (start in sectionCount - 1 downTo 0) {
-        val maxHeight = if (start == 0) maxFirstRowHeight else maxRowHeight
         var best = Long.MAX_VALUE
         tallest.fill(0)
         lowestHeights.fill(0)
@@ -260,12 +251,17 @@ internal fun flowIntoRows(
                 val height = if (end - start == 1) {
                     sectionHeights[start]
                 } else {
-                    // Every longer row holds this section too, and no longer row fits a screen that this one does
-                    // not, so none of them can have this many columns either.
-                    val height = if (tallest[column] > maxHeight) null else rowHeight(columnCount, start, end, max(lowestHeights[column], tallest[column]), maxHeight)
+                    val ceiling = if (columnCount == 1) maxRowHeight else maxOverflowingRowHeight
+                    val maxHeight = if (columnCount == 1) maxRowHeight else max(maxRowHeight, tallest[column])
+                    // Every longer row holds this section too, and no longer row fits under the ceiling that this one
+                    // does not, so none of them can have this many columns either. Under the cap of this row alone it
+                    // may still not fit where a longer one would, since a taller section raises the cap.
+                    val height = if (tallest[column] > ceiling) null else rowHeight(columnCount, start, end, max(lowestHeights[column], tallest[column]), maxHeight)
                     if (height == null) {
-                        isExhausted[column] = true
-                        exhaustedCount++
+                        if (tallest[column] > ceiling || cellCount(sectionHeights, start, end, ceiling) > columnCount) {
+                            isExhausted[column] = true
+                            exhaustedCount++
+                        }
                         continue
                     }
                     height

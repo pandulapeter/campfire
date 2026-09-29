@@ -58,6 +58,7 @@ import androidx.compose.ui.layout.LookaheadScope
 import androidx.compose.ui.unit.Constraints
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.IntOffset
+import androidx.compose.ui.unit.TextUnit
 import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.platform.LocalDensity
@@ -80,6 +81,7 @@ import androidx.compose.ui.text.style.LineHeightStyle
 import androidx.compose.ui.text.style.ResolvedTextDirection
 import androidx.compose.ui.text.style.TextDirection
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.em
 import androidx.compose.ui.unit.isSpecified
 import com.pandulapeter.campfire.chordpro.ChordProHighlighter
 import com.pandulapeter.campfire.chordpro.ChordProTabWrapper
@@ -171,7 +173,7 @@ import kotlin.math.roundToInt
  * [SongSectionContent]), which are saved per song, and [onFoldToggled] is handed each key a fold toggles to save it.
  * Null where nothing folds, which is the editor's preview: it is there to show what is being written, and a section
  * folded on the details screen would hide the lines being typed into it.
- * @param onDividersPlaced Handed the y position of every divider between the rows of the horizontal flow, measured
+ * @param onDividersPlaced Handed the y position of every divider above the rows of the horizontal flow, measured
  * from the top of this composable's content, every time they are placed, where they settle rather than where an
  * animation has got them to. The song details screen snaps its scroll to them.
  * @param displayControls Drawn at the end of the header, see [SongMetadataHeader].
@@ -297,8 +299,9 @@ internal fun SongLyrics(
                 rowGap = ROW_GAP,
                 availableHeight = availableHeight,
                 headerHeight = { headerHeight },
-                // A row is read once the header has scrolled away, so it has the whole of the screen to fit into -
-                // except the first, which the scroll comes to rest on with the header still above it.
+                // The header ends in a section gap of its own, so one that is no taller than that shows nothing.
+                hasHeader = { headerHeight > with(density) { SECTION_GAP.roundToPx() } },
+                // A row is read once the header has scrolled away, so it has the whole of the screen to fit into.
                 maxRowHeight = availableHeight,
                 extraWidth = extraWidth,
                 sectionCount = sections.size,
@@ -371,9 +374,9 @@ internal fun SongLyrics(
                         }
                     }
                 }
-                // The dividers between the rows of the horizontal flow. At most one fewer than there are sections is
-                // ever placed, the rest stay unmeasured.
-                repeat((sections.size - 1).coerceAtLeast(0)) { HorizontalDivider() }
+                // The dividers above the rows of the horizontal flow, one for each at most; the ones a song laid out
+                // in fewer rows has no place for stay unmeasured.
+                repeat(sections.size) { HorizontalDivider() }
             }
         }
         if (model.isCut) {
@@ -1239,6 +1242,11 @@ private class SongTextMeasurements(
         textMeasurer.measure(AnnotatedString(LINE_HEIGHT_SAMPLE), lyricsStyle).size.height
     }
 
+    /** The height of the text of one line of lyrics, without the leading its style's line height adds around it. */
+    val lyricsTextHeight by lazy(LazyThreadSafetyMode.NONE) {
+        textMeasurer.measure(AnnotatedString(LINE_HEIGHT_SAMPLE), lyricsStyle.copy(lineHeight = TextUnit.Unspecified)).size.height
+    }
+
     /** The width of one [PADDING] character, which the lyrics under a chord wider than they are get filled up with. */
     val paddingWidth by lazy(LazyThreadSafetyMode.NONE) { measureFragment(PADDING.toString()) }
 
@@ -1334,17 +1342,17 @@ private fun TextStyle.scaled(scale: Float) = copy(
  * sections fill, so a row of two sections is split in two wider columns rather than leaving a hole where a third one
  * would go, and the rows are chosen to make the song as short as possible. A row of several columns is never taller
  * than [maxRowHeight], the whole of the screen, since the reader could not reach the top of its next column without
- * scrolling back past what was just played - and while the [headerHeight] above it leaves at least half the screen,
- * the first row is never taller than what it leaves, since the scroll comes to rest on the top of the song rather than
- * on the top of that row (a header taller than that is scrolled away first, see [firstRowHeightCap]) - but
- * up to that its columns are as tall as they need, so a song that fits
- * the screen in columns is laid out exactly as it would be read top to bottom (see [flowIntoRows]). A section with
- * lines that do not wrap - a staff of tablature longer than a column - may have a row of its own as wide as those
- * lines, where that makes the song shorter. The rows are told apart by a divider drawn in the gap between them. (A
- * single column reads the same way in both modes, so it is always laid out as a plain column, without dividers.)
+ * scrolling back past what was just played - unless a section in it is taller than the screen anyway, by a little -
+ * but up to that its columns are as tall as they need, so a song that fits the screen in columns is laid out exactly
+ * as it would be read top to bottom (see [flowIntoRows]). A section with lines that do not wrap - a staff of tablature
+ * longer than a column - may have a row of its own as wide as those lines, where that makes the song shorter. The rows
+ * are told apart by a divider drawn in the gap between them, and the first one by a divider above it where [hasHeader]:
+ * the header above the song is not part of any row, but scrolled away like one, so every row has the whole screen. (A single column
+ * reads the same way in both modes, so it is always laid out as a plain column, without dividers.)
  *
  * The columns are made as wide (and therefore as few) as possible while the whole song still fits into
- * [availableHeight] less the [headerHeight] above them, so that the lyrics wrap as little as they can and the vertical space is actually used: a song
+ * [availableHeight] - less the [headerHeight] above them where they are read top to bottom, since those are read with
+ * the header still on the screen - so that the lyrics wrap as little as they can and the vertical space is actually used: a song
  * that needs three columns is not squeezed into five just because the window is wide enough for five. Songs that do
  * not fit no matter what get as many columns as the width allows (in the horizontal flow: at most as many in each
  * row). Column widths stay between [minColumnWidth] and [maxColumnWidth] and the whole block is centered, so a short
@@ -1364,7 +1372,7 @@ private fun TextStyle.scaled(scale: Float) = copy(
  * finds is kept in [sectionMeasurements]: the intrinsic height of every section at every width it was asked about,
  * and the grid decided for the last settled width, which is the same on every frame of a transition.
  *
- * [onDividersPlaced] is handed the y positions the dividers between the rows settle at every time the layout is measured
+ * [onDividersPlaced] is handed the y positions the dividers above the rows settle at every time the layout is measured
  * ahead, which is before any of them is animated to its place.
  */
 @Composable
@@ -1377,6 +1385,7 @@ private fun SongSectionsLayout(
     rowGap: Dp,
     availableHeight: Dp,
     headerHeight: () -> Int,
+    hasHeader: () -> Boolean,
     maxRowHeight: Dp,
     extraWidth: Dp,
     sectionCount: Int,
@@ -1397,9 +1406,13 @@ private fun SongSectionsLayout(
     val sectionGapPx = sectionGap.roundToPx()
     val rowGapPx = rowGap.roundToPx()
     val maxColumnWidthPx = maxColumnWidth.roundToPx()
-    val availableHeightPx = if (availableHeight.isSpecified) (availableHeight.roundToPx() - headerHeight()).coerceAtLeast(0) else 0
+    // Rows are read with the header scrolled away, while columns read top to bottom are read under it.
+    val availableHeightPx = when {
+        !availableHeight.isSpecified -> 0
+        isHorizontalFlow -> availableHeight.roundToPx()
+        else -> (availableHeight.roundToPx() - headerHeight()).coerceAtLeast(0)
+    }
     val maxRowHeightPx = if (maxRowHeight.isSpecified && maxRowHeight > 0.dp) maxRowHeight.roundToPx() else Int.MAX_VALUE
-    val maxFirstRowHeightPx = firstRowHeightCap(maxRowHeight = maxRowHeightPx, headerHeight = headerHeight())
     val maxColumnCount = ((settledWidth + columnGapPx) / (minColumnWidth.roundToPx() + columnGapPx)).coerceIn(1, maxOf(1, measurables.size))
     fun columnWidthFor(totalWidth: Int, columnCount: Int) = ((totalWidth - columnGapPx * (columnCount - 1)) / columnCount).coerceIn(0, maxColumnWidthPx)
 
@@ -1420,7 +1433,6 @@ private fun SongSectionsLayout(
         settledWidth = settledWidth,
         availableHeight = availableHeightPx,
         maxRowHeight = maxRowHeightPx,
-        maxFirstRowHeight = maxFirstRowHeightPx,
         maxColumnCount = maxColumnCount,
         isHorizontalFlow = isHorizontalFlow,
     )
@@ -1447,7 +1459,6 @@ private fun SongSectionsLayout(
                 sectionGap = sectionGapPx,
                 rowGap = rowGapPx,
                 maxRowHeight = maxRowHeightPx,
-                maxFirstRowHeight = maxFirstRowHeightPx,
             )
             else -> List(measurables.size) { heightAt(it, columnCount) }.balanceIntoColumns(columnCount, sectionGapPx)
         }
@@ -1490,6 +1501,13 @@ private fun SongSectionsLayout(
         placeable
     }
     val arrangement = grid.arrange(heights = IntArray(placeables.size) { placeables[it].height }, sectionGap = sectionGapPx, rowGap = rowGapPx)
+    // A song read in rows starts below a divider of its own, half a row gap down, the header above it ending in a
+    // section gap: the header is scrolled away like a row of its own, and the scroll comes to rest on the top of the
+    // song the way it does on every other row. A single column has no rows to tell apart, and a header that shows
+    // nothing has nothing to be told apart from.
+    val hasDividerAbove = isHorizontalFlow && hasHeader() && (grid.columnCounts.size > 1 || grid.columnCounts.any { it > 1 })
+    val songTop = if (hasDividerAbove) rowGapPx / 2 else 0
+    val dividerTops = if (hasDividerAbove) listOf(0) + arrangement.dividerTops.map { it + songTop } else arrangement.dividerTops
     val centeredRowStarts = IntArray(columnWidths.size) { row ->
         val columnCount = grid.columnCounts[row]
         ((width - columnWidths[row] * columnCount - columnGapPx * (columnCount - 1)) / 2).coerceAtLeast(0)
@@ -1503,15 +1521,15 @@ private fun SongSectionsLayout(
     val rowStarts = IntArray(columnWidths.size) { row -> if (grid.columnCounts[row] == 1) contentStart else centeredRowStarts[row] }
     // The approach pass places the rows where their sections' animations have got to, which is not where a scroll
     // comes to rest: a fold toggled a moment before a fling would otherwise have it snap to a divider still moving.
-    if (isLookingAhead) onDividersPlaced(arrangement.dividerTops)
-    val dividers = arrangement.dividerTops.take(dividerMeasurables.size).mapIndexed { index, top ->
+    if (isLookingAhead) onDividersPlaced(dividerTops)
+    val dividers = dividerTops.take(dividerMeasurables.size).mapIndexed { index, top ->
         val placeable = dividerMeasurables[index].measure(Constraints(minWidth = contentWidth, maxWidth = contentWidth))
         placeable to IntOffset(x = contentStart, y = top - placeable.height / 2)
     }
-    layout(width, arrangement.height.coerceIn(constraints.minHeight, constraints.maxHeight)) {
+    layout(width, (songTop + arrangement.height).coerceIn(constraints.minHeight, constraints.maxHeight)) {
         placeables.forEachIndexed { index, placeable ->
             val row = grid.rows[index]
-            placeable.place(x = rowStarts[row] + grid.columns[index] * (columnWidths[row] + columnGapPx), y = arrangement.tops[index])
+            placeable.place(x = rowStarts[row] + grid.columns[index] * (columnWidths[row] + columnGapPx), y = songTop + arrangement.tops[index])
         }
         dividers.forEach { (placeable, position) -> placeable.place(position) }
     }
@@ -1590,7 +1608,6 @@ private data class SectionGridKey(
     val settledWidth: Int,
     val availableHeight: Int,
     val maxRowHeight: Int,
-    val maxFirstRowHeight: Int,
     val maxColumnCount: Int,
     val isHorizontalFlow: Boolean,
 )
@@ -1980,8 +1997,20 @@ private fun SongLineWithChords(
         )
     }
     val chordLineHeight = chordLayouts.maxOf { it.size.height }
-    // Lines without any lyrics (e.g. an intro) only need to be as tall as the chords themselves.
-    val lineHeight = with(density) { (if (line.text.isBlank()) chordLineHeight else chordLineHeight + textMeasurements.lyricsLineHeight).toSp() }
+    // Lines without any lyrics (e.g. an intro) only need to be as tall as the chords themselves. The height is in pixels
+    // and is handed over as a multiple of the font size rather than in sp: under Android's non-linear font scaling a
+    // line height in sp is scaled by the same factor as the font size rather than by its own, so a round trip from
+    // pixels through sp comes back taller, and the lyrics, which sit at the bottom of the line, drift away from their
+    // chords.
+    val lineHeight = with(density) {
+        (if (line.text.isBlank()) chordLineHeight else chordLineHeight + textMeasurements.lyricsLineHeight).toFloat() / lyricsStyle.fontSize.toPx()
+    }.em
+    // The chords are drawn with the leading of their style above and below them, and the lyrics start right under that,
+    // so their own leading goes below them instead: a chord then sits as close to the words it is played over as the
+    // leading of one line, and the next line's chords are three times that further down. Sat on the very bottom of the
+    // line, the lyrics would be exactly the other way around, closer to the chords of the next line than to their own.
+    val lyricsLeading = (textMeasurements.lyricsLineHeight - textMeasurements.lyricsTextHeight).coerceAtLeast(0)
+    val lyricsAlignment = LineHeightStyle.Alignment(topRatio = chordLineHeight.toFloat() / (chordLineHeight + lyricsLeading))
     var lyricsLayout by remember { mutableStateOf<TextLayoutResult?>(null) }
     // The chords are drawn rather than composed, so a screen reader would read the padded lyrics alone. It is given
     // the line the way ChordPro writes it instead, each chord in brackets where it falls.
@@ -2033,7 +2062,7 @@ private fun SongLineWithChords(
         style = lyricsStyle.copy(
             lineHeight = lineHeight,
             lineHeightStyle = LineHeightStyle(
-                alignment = LineHeightStyle.Alignment.Bottom,
+                alignment = lyricsAlignment,
                 trim = LineHeightStyle.Trim.None,
             ),
         ),

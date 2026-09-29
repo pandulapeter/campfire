@@ -59,8 +59,8 @@ internal fun snappedScrollTarget(
  * The fling of a song read across the columns, which comes to rest at [snappedScrollTarget] rather than wherever the
  * decay would leave it, so that a row is read from its divider rather than from somewhere in the middle of its first
  * line. [dividerOffsets] are written by the layout every time it places the rows, in the scroll's own coordinates, and
- * are not state, since nothing is drawn from them; with none (a song laid out in one row, or read column by column)
- * the fling is the ordinary one.
+ * are not state, since nothing is drawn from them; the first of them is the one above the song, below its header. With
+ * none (a song laid out in a single column, or read column by column) the fling is the ordinary one.
  */
 internal class RowSnapFlingBehavior(
     private val scrollState: ScrollState,

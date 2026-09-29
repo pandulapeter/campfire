@@ -9,8 +9,8 @@
 -->
 # To do
 - PDF import
+- Setlist date countdown feature, implement similar logic for sync (friendly, readable way of showing durations)
 - Regenerate the baseline profile
-- Pixel 10 Pro XL Landscape: Román lány layout could be optimized
 - First time user experience tutorial
 - Sort and Filter UI should be improved (better animations)
 - Settings -> Library screen could display image cache size
