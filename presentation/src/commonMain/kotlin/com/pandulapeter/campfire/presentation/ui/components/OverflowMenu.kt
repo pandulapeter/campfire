@@ -18,6 +18,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.Modifier
 import com.pandulapeter.campfire.presentation.ui.LocalIsCoveredByRequiredUpdate
 
 /**
@@ -33,6 +34,7 @@ import com.pandulapeter.campfire.presentation.ui.LocalIsCoveredByRequiredUpdate
  */
 @Composable
 internal fun OverflowMenu(
+    modifier: Modifier = Modifier,
     state: OverflowMenuState = rememberOverflowMenuState(),
     button: @Composable (open: () -> Unit) -> Unit,
     content: @Composable (select: (action: () -> Unit) -> Unit) -> Unit,
@@ -48,7 +50,7 @@ internal fun OverflowMenu(
             onDispose { openOverflowMenuCount-- }
         }
     }
-    Box {
+    Box(modifier = modifier) {
         button(state::open)
         DropdownMenu(
             expanded = isShown,

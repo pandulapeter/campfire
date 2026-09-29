@@ -67,6 +67,7 @@ import com.pandulapeter.campfire.presentation.resources.songs_sorting_mode_by_ti
 import com.pandulapeter.campfire.presentation.resources.songs_unknown_artist
 import com.pandulapeter.campfire.presentation.resources.songs_unsorted_label
 import com.pandulapeter.campfire.presentation.ui.CampfireViewModel
+import com.pandulapeter.campfire.presentation.ui.components.ACTION_BUTTON_OVERLAP
 import com.pandulapeter.campfire.presentation.ui.components.AppBarOverlap
 import com.pandulapeter.campfire.presentation.ui.components.ControlsSidePanel
 import com.pandulapeter.campfire.presentation.ui.components.DismissSheetWhenSidePanelAppears
@@ -96,6 +97,7 @@ import com.pandulapeter.campfire.presentation.ui.components.fadingUnderListTop
 import com.pandulapeter.campfire.presentation.ui.components.listItemAnimation
 import com.pandulapeter.campfire.presentation.ui.components.listTopFadeViewport
 import com.pandulapeter.campfire.presentation.ui.components.only
+import com.pandulapeter.campfire.presentation.ui.components.overlappingAction
 import com.pandulapeter.campfire.presentation.ui.components.pushedSectionHeader
 import com.pandulapeter.campfire.presentation.ui.components.pushedSectionHeaderPlacement
 import com.pandulapeter.campfire.presentation.ui.components.rememberHasLoadedLibrary
@@ -191,9 +193,15 @@ internal fun SongsScreen(
                         )
                     },
                     actions = {
-                        SongSortMenu(viewModel)
+                        SongSortMenu(
+                            modifier = Modifier.overlappingAction(),
+                            viewModel = viewModel,
+                        )
                         // The last tag leaving the library takes the filters with it while the list is being looked at.
-                        AnimatedVisibility(visible = hasSongFilters && !isSidePanelVisible) {
+                        AnimatedVisibility(
+                            modifier = Modifier.overlappingAction(),
+                            visible = hasSongFilters && !isSidePanelVisible,
+                        ) {
                             SongFiltersAction(
                                 isSongFilterActive = isSongFilterActive,
                                 onClick = { viewModel.showDialog(CampfireViewModel.DialogType.SongFilters) },
@@ -218,9 +226,13 @@ internal fun SongsScreen(
 }
 
 @Composable
-private fun SongSortMenu(viewModel: CampfireViewModel) {
+private fun SongSortMenu(
+    modifier: Modifier = Modifier,
+    viewModel: CampfireViewModel,
+) {
     val userPreferences by viewModel.userPreferences.collectAsStateWithLifecycle()
     SortMenu(
+        modifier = modifier,
         contentDescription = stringResource(Res.string.songs_sort),
         options = listOf(
             UserPreferences.SortingMode.BY_ARTIST to stringResource(Res.string.songs_sorting_mode_by_artist),
@@ -445,7 +457,7 @@ private fun SongList(
                             } else {
                                 {
                                     Row(
-                                        horizontalArrangement = Arrangement.spacedBy(-SETLIST_ASSIGNMENTS_BUTTON_OVERLAP),
+                                        horizontalArrangement = Arrangement.spacedBy(-ACTION_BUTTON_OVERLAP),
                                         verticalAlignment = Alignment.CenterVertically,
                                     ) {
                                         SetlistAssignmentsButton(
@@ -565,11 +577,3 @@ private fun SongSection.Header.displayText(): String = when (this) {
 }
 
 private const val SYMBOLS_LABEL = "#"
-
-/**
- * How far the setlist assignments button of a song row reaches into the overflow button after it. A setlist row puts
- * its drag handle's icon right against that button, so its two icons are only the button's own padding apart, and
- * two buttons side by side would put twice that between the star and the dots. The button drawn last is the one a
- * press on the overlap reaches, which still leaves the star most of its touch target.
- */
-private val SETLIST_ASSIGNMENTS_BUTTON_OVERLAP = 12.dp

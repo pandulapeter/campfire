@@ -118,6 +118,7 @@ import com.pandulapeter.campfire.presentation.resources.song_editor_show_shortcu
 import com.pandulapeter.campfire.presentation.resources.song_editor_undo
 import com.pandulapeter.campfire.presentation.ui.CampfireViewModel
 import com.pandulapeter.campfire.presentation.ui.contentEdges
+import com.pandulapeter.campfire.presentation.ui.components.ACTION_BUTTON_OVERLAP
 import com.pandulapeter.campfire.presentation.ui.components.ActionsMenu
 import com.pandulapeter.campfire.presentation.ui.components.ActionsMenuItem
 import com.pandulapeter.campfire.presentation.ui.components.CampfireTopAppBar
@@ -128,6 +129,7 @@ import com.pandulapeter.campfire.presentation.ui.components.EmptyStateAction
 import com.pandulapeter.campfire.presentation.ui.components.ExpandChevron
 import com.pandulapeter.campfire.presentation.ui.components.fadingTopEdge
 import com.pandulapeter.campfire.presentation.ui.components.only
+import com.pandulapeter.campfire.presentation.ui.components.overlappingAction
 import com.pandulapeter.campfire.presentation.ui.components.SegmentedChoice
 import com.pandulapeter.campfire.presentation.ui.components.WindowSize
 import com.pandulapeter.campfire.presentation.ui.navigation.CampfireDestination
@@ -392,6 +394,7 @@ private fun LoadedSongEditor(
                     )
                 }
                 IconButton(
+                    modifier = Modifier.overlappingAction(start = ACTION_BUTTON_OVERLAP, end = 0.dp),
                     enabled = textFieldState.undoState.canRedo,
                     onClick = { textFieldState.undoState.redo() },
                 ) {
@@ -401,6 +404,7 @@ private fun LoadedSongEditor(
                     )
                 }
                 IconButton(
+                    modifier = Modifier.overlappingAction(start = ACTION_BUTTON_OVERLAP, end = 0.dp),
                     enabled = hasUnsavedChanges && !isSaving,
                     onClick = onSaveRequested,
                 ) {
@@ -410,6 +414,7 @@ private fun LoadedSongEditor(
                     )
                 }
                 EditorMenu(
+                    modifier = Modifier.overlappingAction(start = ACTION_BUTTON_OVERLAP, end = 0.dp),
                     canRevert = hasUnsavedChanges && hasSavedText && !isSaving,
                     onRevert = { viewModel.showDialog(CampfireViewModel.DialogType.RevertChanges) },
                 )
@@ -820,9 +825,11 @@ private fun SongPreview(
  */
 @Composable
 private fun EditorMenu(
+    modifier: Modifier = Modifier,
     canRevert: Boolean,
     onRevert: () -> Unit,
 ) = ActionsMenu(
+    modifier = modifier,
     items = listOf(
         ActionsMenuItem(
             title = stringResource(Res.string.song_editor_revert),

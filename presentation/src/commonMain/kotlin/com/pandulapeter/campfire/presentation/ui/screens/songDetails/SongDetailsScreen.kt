@@ -110,6 +110,7 @@ import com.pandulapeter.campfire.presentation.resources.song_details_song_positi
 import com.pandulapeter.campfire.presentation.resources.song_details_text_size
 import com.pandulapeter.campfire.presentation.resources.song_details_transposition
 import com.pandulapeter.campfire.presentation.ui.CampfireViewModel
+import com.pandulapeter.campfire.presentation.ui.components.ACTION_BUTTON_OVERLAP
 import com.pandulapeter.campfire.presentation.ui.components.ActionsMenu
 import com.pandulapeter.campfire.presentation.ui.components.CampfireTopAppBar
 import com.pandulapeter.campfire.presentation.ui.components.CoverArtImage
@@ -117,6 +118,7 @@ import com.pandulapeter.campfire.presentation.ui.components.DelayedLoadingIndica
 import com.pandulapeter.campfire.presentation.ui.components.EmptyState
 import com.pandulapeter.campfire.presentation.ui.components.EmptyStateAction
 import com.pandulapeter.campfire.presentation.ui.components.fadingTopEdge
+import com.pandulapeter.campfire.presentation.ui.components.overlappingAction
 import com.pandulapeter.campfire.presentation.ui.components.SetlistAssignmentsButton
 import com.pandulapeter.campfire.presentation.ui.components.SongActions
 import com.pandulapeter.campfire.presentation.ui.navigation.CampfireDestination
@@ -250,7 +252,7 @@ internal fun SongDetailsScreen(
     // overflow button is counted among the other content above, and is what SongActions is handed the room for too.
     val songActionsMaxWidth = (
         appBarWidth - otherAppBarContentWidth + APP_BAR_ACTION_WIDTH - MIN_TITLE_WIDTH_BESIDE_SONG_ACTIONS -
-            if (showsTranspositionInBar) TRANSPOSITION_STEPPER_WIDTH + APP_BAR_STEPPER_END_PADDING else 0.dp
+            if (showsTranspositionInBar) TRANSPOSITION_STEPPER_WIDTH else 0.dp
         ).coerceAtLeast(APP_BAR_ACTION_WIDTH)
 
     val coroutineScope = rememberCoroutineScope()
@@ -403,7 +405,6 @@ internal fun SongDetailsScreen(
                         exit = fadeOut() + shrinkHorizontally(),
                     ) {
                         SongTranspositionControls(
-                            modifier = Modifier.padding(end = APP_BAR_STEPPER_END_PADDING),
                             viewModel = viewModel,
                             song = song,
                             setlistFileName = destination.setlistFileName,
@@ -422,7 +423,9 @@ internal fun SongDetailsScreen(
                         )
                     }
                     SongActions(
-                        modifier = Modifier.widthIn(max = songActionsMaxWidth),
+                        modifier = Modifier
+                            .overlappingAction(start = if (isReadFromLibrary) ACTION_BUTTON_OVERLAP else 0.dp, end = 0.dp)
+                            .widthIn(max = songActionsMaxWidth),
                         viewModel = viewModel,
                         song = song,
                         isExpandable = true,
@@ -1086,7 +1089,7 @@ internal fun showsCoverInPerformanceMode(appBarWidth: Dp) = showsFontScaleInPerf
  * [MIN_TITLE_WIDTH_BESIDE_SONG_ACTIONS], the room the song's own actions leave it too.
  */
 internal fun showsTranspositionInBar(appBarWidth: Dp, otherContentWidth: Dp) = appBarWidth - otherContentWidth -
-    TRANSPOSITION_STEPPER_WIDTH - APP_BAR_STEPPER_END_PADDING >= MIN_TITLE_WIDTH_BESIDE_SONG_ACTIONS
+    TRANSPOSITION_STEPPER_WIDTH >= MIN_TITLE_WIDTH_BESIDE_SONG_ACTIONS
 
 private const val LABEL_SEPARATOR = "·"
 private val PAGE_TOP_PADDING = 8.dp // Inside the scroll, above the header.
@@ -1094,6 +1097,12 @@ private val STEP_BUTTON_SIZE = 40.dp
 private val STEP_BUTTON_GAP = 8.dp
 private val STEP_BUTTON_EDGE_MARGIN = 16.dp
 private val PAGER_CONTROLS_HEIGHT = 48.dp
+
+/**
+ * What the text size stepper of performance mode leaves after it, the last thing in the bar. The transposition stepper
+ * has none: a button always follows it, and that button's touch target already keeps its icon off the pill by as much
+ * as two neighboring buttons keep their icons apart.
+ */
 private val APP_BAR_STEPPER_END_PADDING = 8.dp
 
 /** The room kept for the transposition stepper, which is wider than [STEPPER_WIDTH] by the key after the amount. */

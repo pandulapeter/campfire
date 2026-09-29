@@ -169,7 +169,8 @@ import org.jetbrains.compose.resources.painterResource
  *   new - which come last, after [actions] and a divider that sets them apart, while the search is closed and make way
  *   for the field while it is open, leaving and coming back on the spring the search action travels on so that the
  *   field's edge and they move as one.
- * @param actions The screen's other actions, which stay whether or not the search is open.
+ * @param actions The screen's other actions, which stay whether or not the search is open. Each is laid out with
+ *   [overlappingAction], as every action of the pill is.
  */
 @OptIn(ExperimentalSharedTransitionApi::class)
 @Composable
@@ -224,7 +225,7 @@ internal fun SearchableTopAppBar(
     }
     val layoutDirection = LocalLayoutDirection.current
     val density = LocalDensity.current
-    val endPadding = contentPadding.calculateEndPadding(layoutDirection) + APP_BAR_HORIZONTAL_PADDING
+    val endPadding = contentPadding.calculateEndPadding(layoutDirection) + APP_BAR_END_PADDING
     val containerColor = MaterialTheme.colorScheme.background
     val pillColor = MaterialTheme.colorScheme.surfaceContainerHigh
     val pill = remember { SearchPill() }
@@ -308,10 +309,11 @@ internal fun SearchableTopAppBar(
                                 pill.closedActions = lookaheadScope.lookaheadBoundsOf(pill.bar, it)
                             }
                         }
-                        .padding(horizontal = ACTIONS_PILL_PADDING),
+                        .padding(horizontal = ACTIONS_PILL_PADDING + ACTION_BUTTON_OVERLAP / 2),
                     verticalAlignment = Alignment.CenterVertically,
                 ) {
                     SearchActionSlot(
+                        modifier = Modifier.overlappingAction(),
                         searchTransition = searchTransition,
                         isHoldingAction = { !it },
                     ) {
@@ -326,6 +328,7 @@ internal fun SearchableTopAppBar(
                             val closedSearchActionsSizeSpec = searchTravelSpec(visibilityThreshold = IntSize.VisibilityThreshold)
                             val closedSearchActionsFadeSpec = searchTravelSpec<Float>()
                             searchTransition.AnimatedVisibility(
+                                modifier = Modifier.overlappingAction(),
                                 visible = { !it },
                                 enter = fadeIn(closedSearchActionsFadeSpec) + expandHorizontally(closedSearchActionsSizeSpec),
                                 exit = fadeOut(closedSearchActionsFadeSpec) + shrinkHorizontally(closedSearchActionsSizeSpec),
@@ -472,12 +475,14 @@ internal fun Modifier.belowAppBarOverlap(appBarOverlap: () -> AppBarOverlap) = l
  */
 @Composable
 private fun SearchActionSlot(
+    modifier: Modifier = Modifier,
     searchTransition: Transition<Boolean>,
     isHoldingAction: (Boolean) -> Boolean,
     content: @Composable () -> Unit,
 ) {
     val sizeSpec = searchTravelSpec(visibilityThreshold = IntSize.VisibilityThreshold)
     searchTransition.AnimatedVisibility(
+        modifier = modifier,
         visible = isHoldingAction,
         enter = expandHorizontally(animationSpec = sizeSpec, clip = false),
         exit = shrinkHorizontally(animationSpec = sizeSpec, clip = false),
@@ -870,7 +875,7 @@ private val CLOSED_FIELD_OFFSET = 52.dp
  */
 internal val LIST_APP_BAR_HEIGHT = 56.dp
 
-/** The room the pill behind the closed bar's buttons leaves at either end of them. */
+/** The room the pill behind the closed bar's buttons leaves at either end of their touch targets. */
 private val ACTIONS_PILL_PADDING = 4.dp
 
 /** The room on either side of [ClosedSearchActionsDivider]. */
@@ -883,12 +888,21 @@ private val CLOSED_SEARCH_ACTIONS_DIVIDER_HEIGHT = 24.dp
 private val APP_BAR_HORIZONTAL_PADDING = 4.dp
 
 /**
+ * The bar's end padding, wider than its start by the half of [ACTION_BUTTON_OVERLAP] the new item button no longer
+ * takes up: that keeps [ClosedSearchActionsDivider] on the column of the song cards' overflow buttons, which the
+ * [FastScroller]'s bubble runs down too.
+ */
+private val APP_BAR_END_PADDING = APP_BAR_HORIZONTAL_PADDING + ACTION_BUTTON_OVERLAP / 2
+
+/**
  * How far in from the end edge of a list the middle of the closed bar's [ClosedSearchActionsDivider] stands, past the
- * list's own end inset: the bar's end padding, the pill's, the one 48dp button the list's new item menu is and the gap
- * before the line. The [FastScroller] centers its bubble on it, so that the two read as one column down the list.
+ * list's own end inset: the bar's end padding, the pill's, the one 48dp button the list's new item menu is, less the
+ * half of the overlap it reaches past the line with, and the gap before the line. The [FastScroller] centers its
+ * bubble on it, so that the two read as one column down the list.
  */
 internal val CLOSED_SEARCH_ACTIONS_DIVIDER_END_INSET =
-    APP_BAR_HORIZONTAL_PADDING + ACTIONS_PILL_PADDING + 48.dp + CLOSED_SEARCH_ACTIONS_DIVIDER_GAP + DividerDefaults.Thickness / 2
+    APP_BAR_END_PADDING + ACTIONS_PILL_PADDING + 48.dp - ACTION_BUTTON_OVERLAP / 2 + CLOSED_SEARCH_ACTIONS_DIVIDER_GAP +
+        DividerDefaults.Thickness / 2
 
 private val FIELD_HEIGHT = 40.dp
 private val CLEAR_BUTTON_SIZE = 32.dp

@@ -101,6 +101,7 @@ import com.pandulapeter.campfire.presentation.ui.components.rememberListTopFade
 import com.pandulapeter.campfire.presentation.ui.components.listTopFadeViewport
 import com.pandulapeter.campfire.presentation.ui.components.fadingUnderListTop
 import com.pandulapeter.campfire.presentation.ui.components.only
+import com.pandulapeter.campfire.presentation.ui.components.overlappingAction
 import com.pandulapeter.campfire.presentation.ui.components.pushedSectionHeader
 import com.pandulapeter.campfire.presentation.ui.components.pushedSectionHeaderPlacement
 import com.pandulapeter.campfire.presentation.ui.components.RelativeDay
@@ -174,15 +175,24 @@ internal fun SetlistsScreen(
                     onCreate = { viewModel.showDialog(CampfireViewModel.DialogType.NewSetlist) },
                 )
             },
-            actions = { SetlistSortMenu(viewModel) },
+            actions = {
+                SetlistSortMenu(
+                    modifier = Modifier.overlappingAction(),
+                    viewModel = viewModel,
+                )
+            },
         )
     }
 }
 
 @Composable
-private fun SetlistSortMenu(viewModel: CampfireViewModel) {
+private fun SetlistSortMenu(
+    modifier: Modifier = Modifier,
+    viewModel: CampfireViewModel,
+) {
     val userPreferences by viewModel.userPreferences.collectAsStateWithLifecycle()
     SortMenu(
+        modifier = modifier,
         contentDescription = stringResource(Res.string.setlists_sort),
         options = listOf(
             UserPreferences.SetlistSortingMode.BY_DATE to stringResource(Res.string.setlists_sorting_mode_by_date),

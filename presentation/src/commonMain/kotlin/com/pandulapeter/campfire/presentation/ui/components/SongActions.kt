@@ -21,6 +21,7 @@ import androidx.compose.animation.shrinkHorizontally
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.Icon
@@ -81,7 +82,9 @@ import org.jetbrains.compose.resources.painterResource
  * readable, a section header measured at its narrowest pinned width, the song details app bar keeping the title - so
  * that the decision follows the width of the list or the window rather than the length of one title, and every row of
  * a list offers the same number of buttons. The buttons come and go by expanding and shrinking as that width crosses
- * a button's, the way the song details' steppers move between the bar and its menu.
+ * a button's, the way the song details' steppers move between the bar and its menu. They reach into each other by
+ * [ACTION_BUTTON_OVERLAP] and the row pads its ends by half of that, so a menu of one button is as wide as the button,
+ * and whatever stands next to the row overlaps its first button by trimming the row's start (see [overlappingAction]).
  *
  * Separate from [SongActions] because not every row that wants these has a song behind it: a setlist entry whose file
  * has gone missing still has the one action of being taken out of the setlist, and the editor has its revert.
@@ -112,7 +115,7 @@ internal fun ActionsMenu(
     modifier = modifier,
 ) {
     val buttonWidth = actionButtonWidth()
-    val slotCount = (maxWidth / buttonWidth).toInt().coerceAtLeast(1)
+    val slotCount = ((maxWidth - ACTION_BUTTON_OVERLAP) / (buttonWidth - ACTION_BUTTON_OVERLAP)).toInt().coerceAtLeast(1)
     val expandableItems = if (isExpandable) items.filterNot { it.isAlwaysInMenu } else emptyList()
     val buttonItems = if (menuFooter == null && expandableItems.size == items.size && items.size <= slotCount) {
         items
@@ -128,6 +131,7 @@ internal fun ActionsMenu(
         if (!hasMenu) state.dismiss()
     }
     Row(
+        modifier = Modifier.padding(horizontal = ACTION_BUTTON_OVERLAP / 2),
         verticalAlignment = Alignment.CenterVertically,
     ) {
         items.forEach { item ->
@@ -135,6 +139,7 @@ internal fun ActionsMenu(
             // name, Share song) moves every one after it along.
             key(item.title) {
                 AnimatedVisibility(
+                    modifier = Modifier.overlappingAction(),
                     visible = item in buttonItems,
                     enter = fadeIn() + expandHorizontally(),
                     exit = fadeOut() + shrinkHorizontally(),
@@ -152,6 +157,7 @@ internal fun ActionsMenu(
             }
         }
         AnimatedVisibility(
+            modifier = Modifier.overlappingAction(),
             visible = hasMenu,
             enter = fadeIn() + expandHorizontally(),
             exit = fadeOut() + shrinkHorizontally(),

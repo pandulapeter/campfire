@@ -744,9 +744,11 @@ private fun Density.sectionHeaderEndInsets(
     overlap: AppBarOverlap,
     endPadding: Dp,
 ): SectionHeaderEndInsets {
-    // The cards end at the scroller's column, and a pinned header ends where the bar's buttons begin.
+    // The cards end at the scroller's column, and a pinned header's action ends where the bar's pill begins: its touch
+    // target keeps the icon off the pill by as much as two neighboring buttons keep their icons apart, and the header's
+    // own pill, which draws nothing, reaches that little way in under the bar.
     val cardsEndInset = (endPadding + SONG_CARD_OUTER_PADDING).toPx()
-    val pinnedEndInset = maxOf(cardsEndInset, (overlap.reach + SECTION_HEADER_APP_BAR_GAP).toPx())
+    val pinnedEndInset = maxOf(cardsEndInset, (overlap.reach - SECTION_HEADER_PILL_ACTION_END_PADDING).toPx())
     // Eased rather than linear, since the fraction is the scroll position itself: the header gives way gently as it
     // starts coming into the bar's place and settles into the room it has left the same way. The list moving down
     // under an opening search takes a pinned header out of that place, so the same curve is run on how much of it the
@@ -1207,9 +1209,6 @@ private val SECTION_HEADER_MIN_TEXT_WIDTH = 160.dp
 
 /** The room a section header's text leaves before its action. */
 private val SECTION_HEADER_TEXT_GAP = 4.dp
-
-/** The room a pinned section header's pill leaves before the app bar's buttons. */
-private val SECTION_HEADER_APP_BAR_GAP = 8.dp
 
 /** As tall as the pill behind the app bar's buttons, which it stands next to once pinned. */
 private val SECTION_HEADER_PILL_HEIGHT = 48.dp

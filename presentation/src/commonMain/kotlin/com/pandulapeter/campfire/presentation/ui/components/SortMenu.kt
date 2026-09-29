@@ -28,11 +28,13 @@ import org.jetbrains.compose.resources.painterResource
  */
 @Composable
 internal fun <T> SortMenu(
+    modifier: Modifier = Modifier,
     contentDescription: String,
     options: List<Pair<T, String>>,
     selected: T?,
     onSelected: (T) -> Unit,
 ) = OverflowMenu(
+    modifier = modifier,
     button = { open ->
         IconButton(onClick = open) {
             Icon(
