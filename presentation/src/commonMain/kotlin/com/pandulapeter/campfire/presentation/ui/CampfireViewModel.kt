@@ -1826,11 +1826,13 @@ class CampfireViewModel(
      * tap yet.
      *
      * A setlist that is gone by now is not brought back, and saying nothing would leave a stepper that does nothing.
+     *
+     * The result is wrapped around the octave ([wrapTransposition]), so the stepper never runs into an end.
      */
     private fun changeTransposition(songFileName: String, setlistFileName: String?, change: (Int) -> Int) = launchLibraryChange {
         if (setlistFileName == null) {
             updateUserPreferences { preferences ->
-                val transposition = change(preferences.transpositions[songFileName] ?: 0).coerceIn(MIN_TRANSPOSITION, MAX_TRANSPOSITION)
+                val transposition = wrapTransposition(change(preferences.transpositions[songFileName] ?: 0))
                 preferences.copy(
                     transpositions = if (transposition == 0) {
                         preferences.transpositions - songFileName
@@ -1844,7 +1846,7 @@ class CampfireViewModel(
                 setlist.copy(
                     entries = setlist.entries.map { entry ->
                         if (entry.songFileName == songFileName) {
-                            entry.copy(transposition = change(entry.transposition).coerceIn(MIN_TRANSPOSITION, MAX_TRANSPOSITION))
+                            entry.copy(transposition = wrapTransposition(change(entry.transposition)))
                         } else {
                             entry
                         }
@@ -2779,11 +2781,14 @@ class CampfireViewModel(
         private val bySetlist: Map<String, Map<String, Int>> = emptyMap(),
     ) {
 
-        operator fun get(songFileName: String, setlistFileName: String?): Int = if (setlistFileName == null) {
-            library[songFileName] ?: 0
-        } else {
-            bySetlist[setlistFileName]?.get(songFileName) ?: 0
-        }
+        /** Wrapped on the way out too, since a file or a preferences document may hold any amount (see [wrapTransposition]). */
+        operator fun get(songFileName: String, setlistFileName: String?): Int = wrapTransposition(
+            if (setlistFileName == null) {
+                library[songFileName] ?: 0
+            } else {
+                bySetlist[setlistFileName]?.get(songFileName) ?: 0
+            }
+        )
     }
 
     /**
@@ -2863,8 +2868,6 @@ class CampfireViewModel(
     }
 
     companion object {
-        const val MIN_TRANSPOSITION = -11
-        const val MAX_TRANSPOSITION = 11
         const val DEFAULT_FONT_SCALE = UserPreferences.DEFAULT_FONT_SCALE
         const val MIN_FONT_SCALE = UserPreferences.MIN_FONT_SCALE
         const val MAX_FONT_SCALE = UserPreferences.MAX_FONT_SCALE
@@ -2882,5 +2885,13 @@ class CampfireViewModel(
         private val MIN_RESCAN_INTERVAL = 10.seconds
         private val EXIT_SYNC_GRACE = 15.seconds // Long enough for the run an edit asks for, short enough to never look hung.
         private val EXIT_SYNC_STOP_GRACE = 2.seconds
+        private const val SEMITONES_PER_OCTAVE = 12
+
+        /**
+         * [semitones] as the one amount between -5 and +6 that moves the chords to the same names: twelve semitones up
+         * or down is the same song, so +7 reads as -5 and -6 as +6, the stepper steps around the octave rather than into
+         * an end, and a label never claims more than half an octave either way.
+         */
+        fun wrapTransposition(semitones: Int) = (semitones + 5).mod(SEMITONES_PER_OCTAVE) - 5
     }
 }

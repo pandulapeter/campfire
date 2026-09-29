@@ -9,6 +9,7 @@
  */
 package com.pandulapeter.campfire.presentation.ui.screens.songDetails
 
+import com.pandulapeter.campfire.presentation.ui.CampfireViewModel
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertTrue
@@ -35,5 +36,16 @@ class TranspositionLabelTest {
     @Test
     fun `a blank key is left out`() {
         assertEquals("+3", transpositionLabel(3, " "))
+    }
+
+    @Test
+    fun `a transposition wraps around the octave, halfway being up`() {
+        assertEquals(6, CampfireViewModel.wrapTransposition(6))
+        assertEquals(6, CampfireViewModel.wrapTransposition(-6))
+        assertEquals(-5, CampfireViewModel.wrapTransposition(7))
+        assertEquals(-5, CampfireViewModel.wrapTransposition(-5))
+        assertEquals(1, CampfireViewModel.wrapTransposition(-11))
+        assertEquals(0, CampfireViewModel.wrapTransposition(12))
+        assertEquals(0, CampfireViewModel.wrapTransposition(0))
     }
 }
