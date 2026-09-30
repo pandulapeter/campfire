@@ -55,10 +55,12 @@ import androidx.compose.material3.SmallFloatingActionButton
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.SideEffect
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateMapOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
@@ -265,6 +267,9 @@ internal fun SongDetailsScreen(
     // The step buttons, and the keys that press them, step between the sections or the rows of the song being read, for
     // the same reason.
     var currentPageStepper by remember { mutableStateOf<SongStepper?>(null) }
+    // The scroll of every page that is composed, the ones beside the current page included, so that a step back from
+    // the top of a song can put the one before it at its end before the pager gets there.
+    val pageScrollStates = remember { mutableStateMapOf<Int, ScrollState>() }
     // The steps go on to the song beside this one at either end of it, worked out from the page being headed for like the
     // pager bar's buttons. Both are decided again at the time of the press.
     val hasPreviousSongToStepTo = canPage && pagerState.targetPage > 0
@@ -273,7 +278,15 @@ internal fun SongDetailsScreen(
     val canStepForwardInSong = currentPageStepper?.canStepForward == true
     fun stepBack() {
         val stepper = currentPageStepper
-        if (stepper?.canStepBack == true) coroutineScope.launch { stepper.step(-1) } else if (pagerState.targetPage > 0) pageStepper.step(-1)
+        if (stepper?.canStepBack == true) {
+            coroutineScope.launch { stepper.step(-1) }
+        } else if (pagerState.targetPage > 0) {
+            // Going back from the top of a song is going back to the last lines of the one before it, and landing on its
+            // top instead would have the next press skip that song whole. A page not laid out yet has nowhere to go but
+            // its top.
+            pageScrollStates[pagerState.targetPage - 1]?.let { state -> coroutineScope.launch { state.scrollTo(state.maxValue) } }
+            pageStepper.step(-1)
+        }
     }
     fun stepForward() {
         val stepper = currentPageStepper
@@ -493,6 +506,10 @@ internal fun SongDetailsScreen(
                 ) { page ->
                     val song = songs[page]
                     val scrollState = rememberScrollState()
+                    DisposableEffect(page, scrollState) {
+                        pageScrollStates[page] = scrollState
+                        onDispose { if (pageScrollStates[page] === scrollState) pageScrollStates.remove(page) }
+                    }
                     val flingBehavior = rememberRowSnapFlingBehavior(scrollState)
                     val stepper = remember(scrollState, flingBehavior) { SongStepper(scrollState, flingBehavior) }
                     if (page == pagerState.currentPage) SideEffect {
