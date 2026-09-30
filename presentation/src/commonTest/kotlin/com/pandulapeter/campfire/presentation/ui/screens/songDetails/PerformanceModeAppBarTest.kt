@@ -47,9 +47,9 @@ class PerformanceModeAppBarTest {
 
     @Test
     fun `the transposition stepper is in the bar for as long as the title keeps 280dp beside it`() {
-        // Beside 152dp of everything else, the stepper and its padding take 148dp.
-        assertTrue(showsTranspositionInBar(appBarWidth = 580.dp, otherContentWidth = 152.dp))
-        assertFalse(showsTranspositionInBar(appBarWidth = 579.dp, otherContentWidth = 152.dp))
+        // Beside 152dp of everything else, the stepper takes 140dp: the button after it keeps it off the pill.
+        assertTrue(showsTranspositionInBar(appBarWidth = 572.dp, otherContentWidth = 152.dp))
+        assertFalse(showsTranspositionInBar(appBarWidth = 571.dp, otherContentWidth = 152.dp))
     }
 
     @Test
