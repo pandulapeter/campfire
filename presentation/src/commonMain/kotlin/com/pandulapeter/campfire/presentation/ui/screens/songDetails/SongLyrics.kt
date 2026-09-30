@@ -1413,10 +1413,11 @@ private fun TextStyle.scaled(scale: Float) = copy(
  * but up to that its columns are as tall as they need, so a song that fits the screen in columns is laid out exactly
  * as it would be read top to bottom (see [flowIntoRows]). A section with lines that do not wrap - a staff of tablature
  * longer than a column - may have a row of its own as wide as those lines, where that makes the song shorter. The rows
- * are told apart by a divider drawn in the gap between them, and the first one by a divider above it where [hasHeader]
- * and the song scrolls: the header above the song is not part of any row, but scrolled away like one, so every row has the
- * whole screen, while a song that fits the screen is read with the header in view and needs nothing between them. (A single column
- * has no rows to tell apart, so it is laid out as a plain column, without dividers.)
+ * are told apart by a divider drawn in the gap between them, and the first one by a divider above it where [hasHeader]:
+ * the header above the song is not part of any row, but scrolled away like one, so every row has the whole screen. A
+ * single row only has that divider where the song scrolls, since a song of one row that fits the screen is read with the
+ * header in view and has no other row it would be told apart from like one. (A single column has no rows to tell
+ * apart, so it is laid out as a plain column, without dividers.)
  *
  * The columns are made as wide (and therefore as few) as possible while the whole song still fits into
  * [availableHeight] so that the lyrics wrap as little as they can and the vertical space is actually used: a song
@@ -1454,9 +1455,9 @@ private fun TextStyle.scaled(scale: Float) = copy(
  *
  * Where the scroll comes to rest on those dividers ([rowViewportHeight]), the last row read across is followed by as
  * much empty space as it leaves of the viewport, so that it can be scrolled to the top of the screen like every other
- * row rather than being read wherever the end of the song happens to leave it - a song of a single row too. That space,
- * and the divider above the first row, are only there where the song scrolls anyway: where it is taller than the
- * screen together with the header above it, or where [isOneRowAtATime] makes it so. With [isOneRowAtATime] every other row
+ * row rather than being read wherever the end of the song happens to leave it - a song of a single row too. That space
+ * is only there where the song scrolls anyway: where it is taller than the screen together with the header above it,
+ * or where [isOneRowAtATime] makes it so. With [isOneRowAtATime] every other row
  * is followed by that space too, so that a row is read with nothing but itself on the screen: the next row peeking in
  * under it would be read as part of it, which is what the dividers are there to prevent. The grid is still decided
  * without that space, since it is not something a shorter song could save.
@@ -1617,21 +1618,26 @@ private fun SongSectionsLayout(
     }
     val hasSeveralRows = grid.columnCounts.size > 1
     val sectionHeights = IntArray(placeables.size) { placeables[it].height }
+    // Several rows under a header always start below a divider of their own, like the one between any two of them, so
+    // the first row is told apart from the header the way it is from the second one, whether the song scrolls or not.
+    val hasRowsUnderHeader = hasSeveralRows && hasHeader()
     // A single column has no rows to tell apart, so it is laid out as one, without dividers or space under it. Rows
-    // read across only scroll where they are taller than the screen with the header above them - measured without the
-    // divider above them, which is only there for a song that scrolls - or where every one of them is followed by the
-    // rest of the screen. A song that fits the screen is left as it is: space under it would only make it scrollable.
-    val isScrolledByRow = (grid.columnCounts.size > 1 || grid.columnCounts.any { it > 1 }) && (
-        headerHeight() + grid.arrange(sectionHeights, sectionGapPx, rowGapPx).height > availableHeightPx ||
+    // read across only scroll where they are taller than the screen with the header above them - measured with the
+    // divider above them only where there are several rows, since a single row only has one where it scrolls - or
+    // where every one of them is followed by the rest of the screen. A song that fits the screen is left as it is:
+    // space under it would only make it scrollable.
+    val isScrolledByRow = (hasSeveralRows || grid.columnCounts.any { it > 1 }) && (
+        headerHeight() + (if (hasRowsUnderHeader) rowGapPx / 2 else 0) + grid.arrange(sectionHeights, sectionGapPx, rowGapPx).height > availableHeightPx ||
             hasSeveralRows && isOneRowAtATime && rowViewportHeight.isSpecified
         )
     // A song read in rows starts below a divider of its own, half a row gap down, the header above it ending in a
     // section gap: the header is scrolled away like a row of its own, and the scroll comes to rest on the top of the
-    // song the way it does on every other row. A header that shows nothing has nothing to be told apart from.
-    val hasDividerAbove = isScrolledByRow && hasHeader()
-    // The divider is placed wherever there are rows under a header, and faded in and out by whether the song scrolls
-    // (see DividerAboveFade), since that changes with every step of a pinch or of a window being resized.
-    val canHaveDividerAbove = hasHeader() && (grid.columnCounts.size > 1 || grid.columnCounts.any { it > 1 })
+    // song the way it does on every other row. A single row has it only where it scrolls, since there is no other row
+    // for the header to be told apart from like one. A header that shows nothing has nothing to be told apart from.
+    val hasDividerAbove = hasHeader() && (hasRowsUnderHeader || isScrolledByRow)
+    // The divider is placed wherever there are rows or columns under a header, and faded in and out by whether it is
+    // shown (see DividerAboveFade), since that changes with every step of a pinch or of a window being resized.
+    val canHaveDividerAbove = hasHeader() && (hasSeveralRows || grid.columnCounts.any { it > 1 })
     if (isLookingAhead) onDividerAboveDecided(hasDividerAbove)
     val songTop = if (hasDividerAbove) rowGapPx / 2 else 0
     val centeredRowStarts = IntArray(columnWidths.size) { row ->
@@ -1735,9 +1741,9 @@ private fun SongSectionsLayout(
 }
 
 /**
- * The opacity of the divider under the header of a song read in rows, which is only there where the song scrolls: the
- * layout decides that ([isShown]) as it measures, and [follow] fades the divider to it. Until it has been decided once
- * the divider is drawn as it is decided, so that a song opens with it already there or already gone.
+ * The opacity of the divider under the header of a song read in rows, which is only there where there are several rows
+ * or the song scrolls: the layout decides that ([isShown]) as it measures, and [follow] fades the divider to it. Until it
+ * has been decided once the divider is drawn as it is decided, so that a song opens with it already there or already gone.
  */
 private class DividerAboveFade {
 
