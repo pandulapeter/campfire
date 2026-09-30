@@ -37,7 +37,7 @@ import kotlin.math.sign
  * resting offset, above whatever empty space follows it). None at all where the song is not read in rows.
  *
  * [stepOffsets] are where Page Up / Page Down and the buttons at the end of the screen step to, ascending, the top of the
- * song not among them: the resting offsets of a song of several rows, and just above every section of any other, whose
+ * song not among them: the resting offsets of a song that scrolls in rows, and just above every section of any other, whose
  * header is then the first thing stepped past ([isSteppedByRow] telling the two apart). None before the song has been
  * laid out.
  */

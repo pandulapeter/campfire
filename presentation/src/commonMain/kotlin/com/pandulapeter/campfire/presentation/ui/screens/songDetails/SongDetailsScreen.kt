@@ -828,7 +828,8 @@ private fun SongDetailsPage(
                     val offsetRows = rows.offsetBy(topPaddingPx)
                     if (offsetRows != flingBehavior.rows) flingBehavior.rows = offsetRows
                 },
-                rowViewportHeight = if (isOneRowAtATimeEnabled) maxHeight else Dp.Unspecified,
+                rowViewportHeight = maxHeight,
+                isOneRowAtATime = isOneRowAtATimeEnabled,
                 rowViewportBottomPadding = bottomPadding,
                 // The buttons are as far from the end of the screen as the text is, so the text only has to leave
                 // them their own width and a gap.
@@ -840,8 +841,8 @@ private fun SongDetailsPage(
 }
 
 /**
- * The two buttons that step through the song being read: between its rows where it is read across the columns in
- * several of them, and between its sections everywhere else, the header above them counting as one. The previous one
+ * The two buttons that step through the song being read: between its rows where it is read across the columns and
+ * scrolls, however few of them there are, and between its sections everywhere else, the header above them counting as one. The previous one
  * is at the top of the end edge, the next one at its bottom, each there only for as long as there is somewhere to step
  * to in its direction. In a setlist they go on to the song beside this one where there is nothing left in their
  * direction ([hasPreviousSong], [hasNextSong]), and turn to point the way the pager goes to say so; they only leave at
