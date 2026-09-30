@@ -194,8 +194,6 @@
     <string name="settings_performance_mode_description">Makes the app read-only while you play: editing, deleting, reordering and transposing are hidden, so an accidental tap can\'t change anything</string>
     <string name="settings_lyrics_only_mode">Lyrics only</string>
     <string name="settings_lyrics_only_mode_description">Hide every chord and show the words on their own</string>
-    <string name="settings_horizontal_section_flow">Read across the columns</string>
-    <string name="settings_horizontal_section_flow_description">Where a song is wide enough for several columns, the sections carry on to the right instead of downwards, so scrolling never goes back up</string>
     <string name="settings_one_row_at_a_time">One row at a time</string>
     <string name="settings_one_row_at_a_time_description">Leave empty space under every row, so that the next one only comes into view once you scroll to it</string>
     <string name="settings_cover_art">Cover art</string>

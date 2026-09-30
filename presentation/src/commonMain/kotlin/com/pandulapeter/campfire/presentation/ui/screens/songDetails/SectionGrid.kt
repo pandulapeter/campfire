@@ -14,7 +14,6 @@ import kotlin.math.max
 /**
  * Which cell every section goes into: the row it is in, its column within that row, and the number of columns of
  * every row (which decides how wide the columns of that row are). The sections of a cell are stacked in their order.
- * The columns flowing top to bottom are a single row.
  *
  * This is what is decided for the settled width, while the positions are only worked out by [arrange] from the
  * heights the sections have at the width the layout is actually given.
@@ -93,20 +92,6 @@ internal fun singleColumnGrid(sectionCount: Int) = SectionGrid(
 )
 
 /**
- * Distributes the sections (given by their heights, in order) into [columnCount] columns, filled top to bottom, so
- * that the columns end up as close to equally tall as possible without ever splitting a section (see
- * [balanceIntoCells]).
- */
-internal fun List<Int>.balanceIntoColumns(columnCount: Int, sectionGap: Int): SectionGrid {
-    if (isEmpty()) return emptyGrid()
-    return SectionGrid(
-        rows = IntArray(size),
-        columns = toIntArray().balanceIntoCells(from = 0, until = size, cellCount = columnCount, sectionGap = sectionGap, maxCellHeight = Int.MAX_VALUE),
-        columnCounts = intArrayOf(columnCount),
-    )
-}
-
-/**
  * The cell of every section in [from, until) when they are stacked into [cellCount] consecutive cells, [sectionGap]
  * apart, none of them taller than [maxCellHeight] and all of them as close to equally tall as possible.
  *
@@ -165,8 +150,8 @@ private fun IntArray.balanceIntoCells(from: Int, until: Int, cellCount: Int, sec
  * **A row of more than one column is never taller than [maxRowHeight]**, the height of the screen: its columns are
  * read one after the other, and a column that runs past the bottom of the screen sends the reader back up to the top
  * of the next one, which is the very thing the rows exist to avoid. Up to that height a row is free to be as tall as its
- * columns need, so a song that fits the screen in columns is a single row of them, exactly the layout the columns read
- * top to bottom would give it, since nothing is scrolled past there to be sent back to. The song's header is not part of
+ * columns need, so a song that fits the screen in columns is a single row of them, filled top to bottom, since nothing
+ * is scrolled past there to be sent back to. The song's header is not part of
  * any row: the rows start below it, so every row, the first one included, has the whole screen.
  *
  * **A section that is taller than the screen on its own lets its row be as tall as it is**, up to half a screen more
@@ -187,7 +172,7 @@ private fun IntArray.balanceIntoCells(from: Int, until: Int, cellCount: Int, sec
  * to make up the count, and a split never makes one taller. That height only grows with the row, so it is carried from
  * one end of the row to the next, and a column count is given up for a row once not even the whole screen holds its
  * sections in that many columns. A single section always fits in a row of its own, so there is always a way to pack the
- * song. The row that wins is then balanced under its height the way the columns read top to bottom are.
+ * song. The row that wins is then balanced under its height (see [balanceIntoCells]).
  *
  * **A section whose lines do not wrap may have a row of its own as wide as it needs**, the whole width at most, where
  * [wideHeightAt] gives its height in one: a staff of tablature longer than a column is cut into systems there, and

@@ -22,9 +22,9 @@ class SectionGridTest {
         // The sections of a song of short verses, two long bridges and a few choruses, which three columns read top to
         // bottom hold on one screen while no row of them is ever as tall as its columns would have to be.
         val heights = listOf(80, 110, 110, 200, 170, 60, 110, 110, 200, 170, 170, 110)
-        val columns = heights.balanceIntoColumns(3, SECTION_GAP)
-        assertTrue(columns.height(heights) <= 900)
-        assertTrue(flow(heights, maxColumnCount = 3, maxRowHeight = 900).height(heights) <= columns.height(heights))
+        val columnsHeight = topToBottomHeight(heights, 3)
+        assertTrue(columnsHeight <= 900)
+        assertTrue(flow(heights, maxColumnCount = 3, maxRowHeight = 900).height(heights) <= columnsHeight)
     }
 
     @Test
@@ -57,8 +57,8 @@ class SectionGridTest {
     }
 
     @Test
-    fun balancedColumnsStayEven() {
-        val grid = List(7) { 100 }.balanceIntoColumns(3, SECTION_GAP)
+    fun balancedRowStaysEven() {
+        val grid = flow(List(7) { 100 }, maxColumnCount = 3, maxRowHeight = 900)
         assertEquals(listOf(2, 2, 3), grid.columns.toList().groupingBy { it }.eachCount().values.sorted())
     }
 
@@ -82,8 +82,8 @@ class SectionGridTest {
                     assertTrue(rowHeight <= limit, "Row $row of $columnCount columns is $rowHeight tall, more than $limit")
                 }
             }
-            val columns = heights.balanceIntoColumns(maxColumnCount, SECTION_GAP)
-            if (columns.height(heights) <= maxRowHeight) assertTrue(grid.height(heights) <= columns.height(heights))
+            val columnsHeight = topToBottomHeight(heights, maxColumnCount)
+            if (columnsHeight <= maxRowHeight) assertTrue(grid.height(heights) <= columnsHeight)
         }
     }
 
@@ -113,8 +113,8 @@ class SectionGridTest {
     fun gridSearchedAgainForTheSameCellsIsTheSameGrid() {
         // A window being resized searches for its grid on every frame, and the sections only glide where it changed.
         val heights = List(6) { 280 }
-        assertTrue(heights.balanceIntoColumns(2, SECTION_GAP).hasSameCellsAs(heights.balanceIntoColumns(2, SECTION_GAP)))
-        assertTrue(!heights.balanceIntoColumns(2, SECTION_GAP).hasSameCellsAs(heights.balanceIntoColumns(3, SECTION_GAP)))
+        assertTrue(flow(heights, maxColumnCount = 2, maxRowHeight = 900).hasSameCellsAs(flow(heights, maxColumnCount = 2, maxRowHeight = 900)))
+        assertTrue(!flow(heights, maxColumnCount = 2, maxRowHeight = 900).hasSameCellsAs(flow(heights, maxColumnCount = 3, maxRowHeight = 900)))
         assertTrue(!singleColumnGrid(6).hasSameCellsAs(SectionGrid(IntArray(6), IntArray(6), intArrayOf(1), wideRows = booleanArrayOf(true))))
     }
 
@@ -125,6 +125,21 @@ class SectionGridTest {
     }
 
     private fun SectionGrid.height(heights: List<Int>) = arrange(heights.toIntArray(), SECTION_GAP, ROW_GAP).height
+
+    /**
+     * The height of the lowest split of the sections into at most [columnCount] columns filled top to bottom, which is
+     * what the rows are held against: a song that fits the screen that way must fit it read across as well.
+     */
+    private fun topToBottomHeight(heights: List<Int>, columnCount: Int): Int {
+        fun stackHeight(start: Int, end: Int) = (start until end).sumOf { heights[it] } + SECTION_GAP * (end - start - 1)
+        // lowest[k][end] is the lowest height of the first end sections stacked into at most k columns.
+        val lowest = Array(columnCount + 1) { IntArray(heights.size + 1) { Int.MAX_VALUE } }
+        for (k in 0..columnCount) lowest[k][0] = 0
+        for (k in 1..columnCount) for (end in 1..heights.size) for (start in 0 until end) {
+            if (lowest[k - 1][start] != Int.MAX_VALUE) lowest[k][end] = minOf(lowest[k][end], maxOf(lowest[k - 1][start], stackHeight(start, end)))
+        }
+        return lowest[columnCount][heights.size]
+    }
 
     private companion object {
         const val SECTION_GAP = 20

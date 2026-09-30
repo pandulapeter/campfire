@@ -220,7 +220,6 @@ internal fun SongDetailsScreen(
     // caught up with a change to it yet - so that two numberings are never mixed in one bar.
     val setlistSlots = remember(setlist, songs) { setlist?.let { buildSetlistSlots(it.entries, songs.map { song -> song.fileName }) } }
     val shouldShowChords = userPreferences?.isLyricsOnlyModeEnabled != true
-    val isHorizontalFlow = userPreferences?.isHorizontalSectionFlowEnabled == true
     val isOneRowAtATimeEnabled = userPreferences?.isOneRowAtATimeEnabled == true
     val isCoverArtEnabled = userPreferences?.isCoverArtEnabled == true
     val chordSpelling = userPreferences?.chordSpelling ?: UserPreferences.ChordSpelling.Default
@@ -516,7 +515,6 @@ internal fun SongDetailsScreen(
                         fontScale = if (isFollowingGesture) ({ viewModel.fontScale }) else ({ viewModel.settledFontScale }),
                         // In a setlist the step buttons page to the songs beside every song, whether it scrolls or not.
                         keepsStepButtonInset = canPage,
-                        isHorizontalFlow = isHorizontalFlow,
                         isOneRowAtATimeEnabled = isOneRowAtATimeEnabled,
                         // One set per song, wherever it is opened from: folding is how this reader reads it, not how the
                         // setlist has the band play it.
@@ -700,7 +698,6 @@ private fun SongDetailsPage(
     shouldShowChords: Boolean,
     fontScale: () -> Float,
     keepsStepButtonInset: Boolean,
-    isHorizontalFlow: Boolean,
     isOneRowAtATimeEnabled: Boolean,
     foldedSections: Set<String>,
     onFoldToggled: (key: String) -> Unit,
@@ -800,7 +797,6 @@ private fun SongDetailsPage(
                 extraWidth = (settledWidth - maxWidth).coerceAtLeast(0.dp),
                 sectionMotion = if (isChangingContinuously) SectionMotion.GLIDE else SectionMotion.SPRING,
                 fontScale = currentFontScale,
-                isHorizontalFlow = isHorizontalFlow,
                 foldedSections = foldedSections,
                 onFoldToggled = onFoldToggled,
                 onManageTags = onManageTags,

@@ -22,9 +22,6 @@ internal data class UserPreferencesDocument(
     // would hide every new song right after it was made.
     val shouldShowArchivedSetlists: Boolean = false,
     val isLyricsOnlyModeEnabled: Boolean = false,
-    // On by default: reading the sections across the columns means that scrolling never sends the reader back up,
-    // which is what a song being played wants.
-    val isHorizontalSectionFlowEnabled: Boolean = true,
     val isOneRowAtATimeEnabled: Boolean = false,
     val fontScale: Float = 1f,
     val sortingMode: String = "",

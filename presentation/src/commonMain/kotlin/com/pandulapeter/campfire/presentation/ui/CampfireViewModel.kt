@@ -2387,8 +2387,6 @@ class CampfireViewModel(
 
     fun setLyricsOnlyModeEnabled(value: Boolean) = changeUserPreferences { copy(isLyricsOnlyModeEnabled = value) }
 
-    fun setHorizontalSectionFlowEnabled(value: Boolean) = changeUserPreferences { copy(isHorizontalSectionFlowEnabled = value) }
-
     fun setOneRowAtATimeEnabled(value: Boolean) = changeUserPreferences { copy(isOneRowAtATimeEnabled = value) }
 
     /**

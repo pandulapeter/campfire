@@ -194,8 +194,6 @@
     <string name="settings_performance_mode_description">Előadás közben csak olvashatóvá teszi az alkalmazást: a szerkesztés, a törlés, az átrendezés és a transzponálás eltűnik, így egy véletlen érintés sem változtat meg semmit</string>
     <string name="settings_lyrics_only_mode">Csak dalszöveg</string>
     <string name="settings_lyrics_only_mode_description">Az akkordok elrejtése, hogy csak a szöveg maradjon</string>
-    <string name="settings_horizontal_section_flow">Olvasás az oszlopokon át</string>
-    <string name="settings_horizontal_section_flow_description">Ahol egy dal több oszlopban is kifér, a szakaszok jobbra folytatódnak és nem lefelé, így görgetés közben sosem kell visszalapozni</string>
     <string name="settings_one_row_at_a_time">Egyszerre egy sor</string>
     <string name="settings_one_row_at_a_time_description">Üres hely minden sor alatt, így a következő csak akkor jelenik meg, amikor odagörgetsz</string>
     <string name="settings_cover_art">Borítóképek</string>

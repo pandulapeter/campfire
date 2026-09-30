@@ -23,11 +23,9 @@ data class UserPreferences(
      */
     val shouldShowArchivedSetlists: Boolean,
     val isLyricsOnlyModeEnabled: Boolean,
-    val isHorizontalSectionFlowEnabled: Boolean, // Whether the song sections are read across the columns (then downwards) instead of column by column.
     /**
-     * Whether a song read across the columns ([isHorizontalSectionFlowEnabled]) leaves empty space under every row
-     * shorter than the screen, so that a scroll resting on a row shows that row and no other. Means nothing while the
-     * sections are read column by column, which has no rows.
+     * Whether a song leaves empty space under every row of columns shorter than the screen, so that a scroll resting on
+     * a row shows that row and no other.
      */
     val isOneRowAtATimeEnabled: Boolean,
     /**

@@ -16,7 +16,6 @@ internal fun UserPreferencesDocument.toModel() = UserPreferences(
     isPerformanceModeEnabled = isPerformanceModeEnabled,
     shouldShowArchivedSetlists = shouldShowArchivedSetlists,
     isLyricsOnlyModeEnabled = isLyricsOnlyModeEnabled,
-    isHorizontalSectionFlowEnabled = isHorizontalSectionFlowEnabled,
     isOneRowAtATimeEnabled = isOneRowAtATimeEnabled,
     // A hand edit or a newer version's wider range must not reach the screen as it is: a size of 40 is a column per
     // word. Not a number at all is no size, and is the default.
@@ -43,7 +42,6 @@ internal fun UserPreferences.toDocument() = UserPreferencesDocument(
     isPerformanceModeEnabled = isPerformanceModeEnabled,
     shouldShowArchivedSetlists = shouldShowArchivedSetlists,
     isLyricsOnlyModeEnabled = isLyricsOnlyModeEnabled,
-    isHorizontalSectionFlowEnabled = isHorizontalSectionFlowEnabled,
     isOneRowAtATimeEnabled = isOneRowAtATimeEnabled,
     fontScale = fontScale,
     sortingMode = sortingMode.id,

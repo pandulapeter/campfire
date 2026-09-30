@@ -107,8 +107,6 @@ import com.pandulapeter.campfire.presentation.resources.settings_git_hub
 import com.pandulapeter.campfire.presentation.resources.settings_git_hub_description
 import com.pandulapeter.campfire.presentation.resources.settings_help
 import com.pandulapeter.campfire.presentation.resources.settings_help_description
-import com.pandulapeter.campfire.presentation.resources.settings_horizontal_section_flow
-import com.pandulapeter.campfire.presentation.resources.settings_horizontal_section_flow_description
 import com.pandulapeter.campfire.presentation.resources.settings_one_row_at_a_time
 import com.pandulapeter.campfire.presentation.resources.settings_one_row_at_a_time_description
 import com.pandulapeter.campfire.presentation.resources.settings_import
@@ -484,18 +482,9 @@ private fun SongDisplaySection(
         onCheckedChange = viewModel::setLyricsOnlyModeEnabled,
     )
     SwitchListItem(
-        title = stringResource(Res.string.settings_horizontal_section_flow),
-        description = stringResource(Res.string.settings_horizontal_section_flow_description),
-        isChecked = userPreferences?.isHorizontalSectionFlowEnabled == true,
-        onCheckedChange = viewModel::setHorizontalSectionFlowEnabled,
-    )
-    // Only rows read across the columns have anything to leave space under, so this waits for the switch above it
-    // rather than leaving, the way the chord spelling waits for the chords.
-    SwitchListItem(
         title = stringResource(Res.string.settings_one_row_at_a_time),
         description = stringResource(Res.string.settings_one_row_at_a_time_description),
         isChecked = userPreferences?.isOneRowAtATimeEnabled == true,
-        isEnabled = userPreferences?.isHorizontalSectionFlowEnabled == true,
         onCheckedChange = viewModel::setOneRowAtATimeEnabled,
     )
     // The one switch here that decides whether the app reaches the network on its own: off, no cover is fetched from

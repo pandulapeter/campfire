@@ -490,7 +490,6 @@ private fun LoadedSongEditor(
                 scrollState = previewScrollState,
                 transposition = transpositions[destination.fileName, null],
                 fontScale = fontScale,
-                isHorizontalFlow = userPreferences?.isHorizontalSectionFlowEnabled == true,
                 chordSpelling = chordSpelling,
                 contentPadding = contentPadding.only(start = !hasSideBySidePreview, end = true, bottom = true),
             )
@@ -761,7 +760,6 @@ private fun SongPreview(
     scrollState: ScrollState,
     transposition: Int,
     fontScale: Float,
-    isHorizontalFlow: Boolean,
     chordSpelling: UserPreferences.ChordSpelling,
     contentPadding: PaddingValues,
 ) {
@@ -810,7 +808,6 @@ private fun SongPreview(
             model = preview.second,
             availableHeight = maxHeight - topPadding - restingBottomPadding,
             fontScale = fontScale,
-            isHorizontalFlow = isHorizontalFlow,
             sectionMotion = SectionMotion.NONE,
         )
     }

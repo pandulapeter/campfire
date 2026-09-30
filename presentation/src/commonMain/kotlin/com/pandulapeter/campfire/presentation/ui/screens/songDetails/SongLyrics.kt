@@ -165,9 +165,8 @@ import kotlin.math.roundToInt
  * prepared without chords (see [prepareSongLyrics]) renders only the lyrics: the chords are dropped and lines that
  * consisted of nothing but chords (e.g. an intro) are skipped entirely.
  *
- * The song is split into sections (verse, chorus, ...) which are flowed into columns by [SongSectionsLayout], either
- * top to bottom or, when [isHorizontalFlow] is set, in rows across the columns. Choruses are drawn on a raised card
- * of their own so that they stand out from the surrounding sections. A section is never split between columns, and
+ * The song is split into sections (verse, chorus, ...) which are flowed into rows across the columns by
+ * [SongSectionsLayout]. Choruses are drawn on a raised card of their own so that they stand out from the surrounding sections. A section is never split between columns, and
  * sections move to their new place when the column count changes (e.g. when a window is resized), see [sectionMotion].
  *
  * @param model The song and its sections, built away from the main thread by [rememberSongLyricsModel].
@@ -181,19 +180,17 @@ import kotlin.math.roundToInt
  * @param sectionMotion How the sections get to the place a change of the layout gives them, see [SectionMotion].
  * @param fontScale Multiplier applied to the text sizes (and to the column widths, so that larger text does not get
  * squeezed into narrow columns).
- * @param isHorizontalFlow Whether the sections should be read across the columns and then downwards (see
- * [SongSectionsLayout]) instead of column by column.
  * @param foldedSections The keys of the sections, tabs and grids of this song the reader has folded away (see
  * [SongSectionContent]), which are saved per song, and [onFoldToggled] is handed each key a fold toggles to save it.
  * Null where nothing folds, which is the editor's preview: it is there to show what is being written, and a section
  * folded on the details screen would hide the lines being typed into it.
- * @param onRowsPlaced Handed the rows of the horizontal flow ([SongRows]: where a scroll comes to rest on each - the
+ * @param onRowsPlaced Handed the rows of the song ([SongRows]: where a scroll comes to rest on each - the
  * bottom edge of the divider above it, so that the divider itself is just out of view - and where its content ends),
  * and the stops the song is stepped through, measured from the top of this composable's content, every time they are
  * placed, where they settle rather than where an animation has got them to. The song details screen snaps its scroll to
  * the rows and steps between the stops.
  * @param rowViewportHeight The height of the viewport the song is scrolled in, where that scroll comes to rest on the
- * dividers of the horizontal flow: the last row is then followed by empty space down to the bottom of that viewport, so
+ * dividers between the rows: the last row is then followed by empty space down to the bottom of that viewport, so
  * that it can be brought to the top like the others. Unspecified where nothing snaps, which is the editor's preview.
  * @param isOneRowAtATime Whether every row, not only the last one, is followed by empty space down to the bottom of
  * [rowViewportHeight], so that a scroll resting on a divider shows no row but the one under it.
@@ -215,7 +212,6 @@ internal fun SongLyrics(
     extraWidth: Dp = 0.dp,
     sectionMotion: SectionMotion = SectionMotion.SPRING,
     fontScale: Float = 1f,
-    isHorizontalFlow: Boolean = false,
     foldedSections: Set<String> = emptySet(),
     onFoldToggled: ((key: String) -> Unit)? = null,
     onManageTags: (() -> Unit)? = null,
@@ -351,7 +347,6 @@ internal fun SongLyrics(
                 keepsStepButtonInset = keepsStepButtonInset,
                 extraWidth = extraWidth,
                 sectionCount = sections.size,
-                isHorizontalFlow = isHorizontalFlow,
                 sectionKeys = sectionKeys,
                 sectionAnimations = sectionAnimations,
                 sectionGlides = sectionGlides,
@@ -426,7 +421,7 @@ internal fun SongLyrics(
                         }
                     }
                 }
-                // The divider under the header first, then the ones between the rows of the horizontal flow, one for
+                // The divider under the header first, then the ones between the rows, one for
                 // each at most; the ones a song laid out in fewer rows has no place for stay unmeasured.
                 HorizontalDivider(modifier = Modifier.graphicsLayer { alpha = dividerAboveFade.alpha })
                 repeat((sections.size - 1).coerceAtLeast(0)) { HorizontalDivider() }
@@ -1407,9 +1402,9 @@ private fun TextStyle.scaled(scale: Float) = copy(
  * Flows its children (the song sections, followed by the dividers that may be drawn between rows of them) into
  * columns.
  *
- * By default the sections fill the columns top to bottom and the reader continues at the top of the next column.
- * With [isHorizontalFlow] they are read across the columns instead, the way the systems of sheet music are: the
- * sections are packed into rows, so that a song that needs to be scrolled never sends the reader back to the top of
+ * The sections are read across the columns, the way the systems of sheet music are, rather than filling the columns
+ * top to bottom and sending the reader on to the top of the next one: they are packed into rows, so that a song that
+ * needs to be scrolled never sends the reader back to the top of
  * the next column, since whatever has been scrolled past has been played. Every row gets as many columns as its own
  * sections fill, so a row of two sections is split in two wider columns rather than leaving a hole where a third one
  * would go, and the rows are chosen to make the song as short as possible. A row of several columns is never taller
@@ -1421,14 +1416,13 @@ private fun TextStyle.scaled(scale: Float) = copy(
  * are told apart by a divider drawn in the gap between them, and the first one by a divider above it where [hasHeader]
  * and the song scrolls: the header above the song is not part of any row, but scrolled away like one, so every row has the
  * whole screen, while a song that fits the screen is read with the header in view and needs nothing between them. (A single column
- * reads the same way in both modes, so it is always laid out as a plain column, without dividers.)
+ * has no rows to tell apart, so it is laid out as a plain column, without dividers.)
  *
  * The columns are made as wide (and therefore as few) as possible while the whole song still fits into
- * [availableHeight] - less the [headerHeight] above them where they are read top to bottom, since those are read with
- * the header still on the screen - so that the lyrics wrap as little as they can and the vertical space is actually used: a song
+ * [availableHeight] so that the lyrics wrap as little as they can and the vertical space is actually used: a song
  * that needs three columns is not squeezed into five just because the window is wide enough for five. Songs that do
- * not fit no matter what get as many columns as the width allows (in the horizontal flow: at most as many in each
- * row). Column widths stay between [minColumnWidth] and [maxColumnWidth] and the whole block is centered, so a short
+ * not fit no matter what get as many columns as the width allows in each row. Column widths stay between
+ * [minColumnWidth] and [maxColumnWidth] and the whole block is centered, so a short
  * song does not end up as one screen-wide column of short lines. Within it a row narrower than the widest one is
  * centered too, except for a row of a single column, which is aligned to the start of the others.
  *
@@ -1486,7 +1480,6 @@ private fun SongSectionsLayout(
     keepsStepButtonInset: Boolean,
     extraWidth: Dp,
     sectionCount: Int,
-    isHorizontalFlow: Boolean,
     sectionKeys: List<SectionKey>,
     sectionAnimations: List<SectionAnimation>,
     sectionGlides: SectionGlides?,
@@ -1507,18 +1500,14 @@ private fun SongSectionsLayout(
     val sectionGapPx = sectionGap.roundToPx()
     val rowGapPx = rowGap.roundToPx()
     val maxColumnWidthPx = maxColumnWidth.roundToPx()
-    // Rows are read with the header scrolled away, while columns read top to bottom are read under it.
-    val availableHeightPx = when {
-        !availableHeight.isSpecified -> 0
-        isHorizontalFlow -> availableHeight.roundToPx()
-        else -> (availableHeight.roundToPx() - headerHeight()).coerceAtLeast(0)
-    }
+    // Rows are read with the header scrolled away, so they have the whole of the available height.
+    val availableHeightPx = if (availableHeight.isSpecified) availableHeight.roundToPx() else 0
     val maxRowHeightPx = if (maxRowHeight.isSpecified && maxRowHeight > 0.dp) maxRowHeight.roundToPx() else Int.MAX_VALUE
     val endInsetPx = stepButtonInset.roundToPx()
     fun maxColumnCountFor(totalWidth: Int) = ((totalWidth + columnGapPx) / (minColumnWidth.roundToPx() + columnGapPx)).coerceIn(1, maxOf(1, measurables.size))
     fun columnWidthFor(totalWidth: Int, columnCount: Int) = ((totalWidth - columnGapPx * (columnCount - 1)) / columnCount).coerceIn(0, maxColumnWidthPx)
 
-    // The width of a row of the horizontal flow the section at index has to itself, or null where that would be no
+    // The width of a row the section at index has to itself, or null where that would be no
     // wider than a column: a section can be narrower than its minimum intrinsic width only by breaking the lines that
     // do not wrap (a staff of tablature, the bars of a grid), while everything else in it wraps as a column's would.
     fun wideWidthFor(index: Int, totalWidth: Int) = sectionMeasurements.minWidth(index, measurables[index]::minIntrinsicWidth)
@@ -1538,7 +1527,6 @@ private fun SongSectionsLayout(
         maxColumnCount = maxColumnCountFor(settledWidth),
         endInset = endInsetPx,
         keepsEndInset = keepsStepButtonInset,
-        isHorizontalFlow = isHorizontalFlow,
     )
 
     fun searchGrid(totalWidth: Int): SearchedGrid {
@@ -1558,7 +1546,7 @@ private fun SongSectionsLayout(
             // the song out once for a number nobody reads and then once more to be drawn, and on a window too narrow
             // for a second column - which is every phone - this is the only grid there is.
             columnCount == 1 -> singleColumnGrid(measurables.size)
-            isHorizontalFlow -> flowIntoRows(
+            else -> flowIntoRows(
                 sectionCount = measurables.size,
                 maxColumnCount = columnCount,
                 heightAt = ::heightAt,
@@ -1567,7 +1555,6 @@ private fun SongSectionsLayout(
                 rowGap = rowGapPx,
                 maxRowHeight = maxRowHeightPx,
             )
-            else -> List(measurables.size) { heightAt(it, columnCount) }.balanceIntoColumns(columnCount, sectionGapPx)
         }
 
         fun SectionGrid.height() = arrange(
@@ -1586,10 +1573,9 @@ private fun SongSectionsLayout(
                     break
                 }
                 // Even a perfectly even split needs this many columns, so there is no point in trying the ones in
-                // between. The rows of the horizontal flow may be narrower than the candidate, down to a single
-                // column, so the sections are only as tall there as they are in the widest column.
-                val boundColumnCount = if (isHorizontalFlow) 1 else candidate
-                val totalHeight = measurables.indices.sumOf { heightAt(it, boundColumnCount) } + sectionGapPx * (measurables.size - 1).coerceAtLeast(0)
+                // between. The rows may be narrower than the candidate, down to a single column, so the sections are
+                // only as tall there as they are in the widest column.
+                val totalHeight = measurables.indices.sumOf { heightAt(it, 1) } + sectionGapPx * (measurables.size - 1).coerceAtLeast(0)
                 candidate = maxOf(candidate + 1, ceil(totalHeight.toDouble() / availableHeightPx).toInt()).coerceAtMost(maxColumnCount)
                 candidateGrid = gridFor(candidate)
             }
@@ -1609,7 +1595,7 @@ private fun SongSectionsLayout(
         val insetSearch = if (endInsetPx > 0) searchGrid(settledWidth - endInsetPx) else null
         when {
             insetSearch == null -> DecidedGrid(searchGrid(settledWidth).grid, isInset = false)
-            keepsStepButtonInset || !insetSearch.fits || (isHorizontalFlow && insetSearch.grid.columnCounts.size > 1) ->
+            keepsStepButtonInset || !insetSearch.fits || insetSearch.grid.columnCounts.size > 1 ->
                 DecidedGrid(insetSearch.grid, isInset = true)
             else -> DecidedGrid(searchGrid(settledWidth).grid, isInset = false)
         }
@@ -1629,13 +1615,13 @@ private fun SongSectionsLayout(
         if (isLookingAhead) sectionAnimations[index].isTooTallToAnimate = placeable.height >= heightLimit
         placeable
     }
-    val hasSeveralRows = isHorizontalFlow && grid.columnCounts.size > 1
+    val hasSeveralRows = grid.columnCounts.size > 1
     val sectionHeights = IntArray(placeables.size) { placeables[it].height }
-    // A single column reads the same in both modes, so it is laid out as one, without dividers or space under it. Rows
+    // A single column has no rows to tell apart, so it is laid out as one, without dividers or space under it. Rows
     // read across only scroll where they are taller than the screen with the header above them - measured without the
     // divider above them, which is only there for a song that scrolls - or where every one of them is followed by the
     // rest of the screen. A song that fits the screen is left as it is: space under it would only make it scrollable.
-    val isScrolledByRow = isHorizontalFlow && (grid.columnCounts.size > 1 || grid.columnCounts.any { it > 1 }) && (
+    val isScrolledByRow = (grid.columnCounts.size > 1 || grid.columnCounts.any { it > 1 }) && (
         headerHeight() + grid.arrange(sectionHeights, sectionGapPx, rowGapPx).height > availableHeightPx ||
             hasSeveralRows && isOneRowAtATime && rowViewportHeight.isSpecified
         )
@@ -1645,7 +1631,7 @@ private fun SongSectionsLayout(
     val hasDividerAbove = isScrolledByRow && hasHeader()
     // The divider is placed wherever there are rows under a header, and faded in and out by whether the song scrolls
     // (see DividerAboveFade), since that changes with every step of a pinch or of a window being resized.
-    val canHaveDividerAbove = isHorizontalFlow && hasHeader() && (grid.columnCounts.size > 1 || grid.columnCounts.any { it > 1 })
+    val canHaveDividerAbove = hasHeader() && (grid.columnCounts.size > 1 || grid.columnCounts.any { it > 1 })
     if (isLookingAhead) onDividerAboveDecided(hasDividerAbove)
     val songTop = if (hasDividerAbove) rowGapPx / 2 else 0
     val centeredRowStarts = IntArray(columnWidths.size) { row ->
@@ -1872,7 +1858,6 @@ private data class SectionGridKey(
     val maxColumnCount: Int,
     val endInset: Int,
     val keepsEndInset: Boolean,
-    val isHorizontalFlow: Boolean,
 )
 
 /** A grid [SongSectionsLayout] searched for, and whether the whole song [fits] into the height available to it. */

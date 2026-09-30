@@ -135,8 +135,8 @@ internal fun previousStepOffset(scroll: Int, stepOffsets: List<Int>, maxValue: I
  * The fling of a song read across the columns, which comes to rest at [snappedScrollTarget] rather than wherever the
  * decay would leave it, so that a row is read from its divider rather than from somewhere in the middle of its first
  * line. The [rows] are written by the layout every time it places them, in the scroll's own coordinates; the first
- * resting offset is the one above the song, below its header. With none (a song laid out in a single column, or read
- * column by column) the fling is the ordinary one. They are state, since the buttons that step through the song are
+ * resting offset is the one above the song, below its header. With none (a song laid out in a single column) the fling
+ * is the ordinary one. They are state, since the buttons that step through the song are
  * shown from them; the layout writes them only when they change.
  */
 internal class RowSnapFlingBehavior(
