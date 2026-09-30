@@ -278,8 +278,9 @@ uninstall and nothing else does.
   index, the setlist slots, stepper labels, section grid and the cutting of sections into columns, row snapping and section measurements of the details screen, the editor's token cache), run on
   the desktop target with
   `./gradlew :chordpro:desktopTest :domain:implementation:desktopTest :data:source:local:implementation:desktopTest :data:source:remote:api:desktopTest :data:source:remote:implementation:desktopTest :data:repository:implementation:desktopTest :presentation:desktopTest`.
-  The web build's storage worker, which is JavaScript, has a Node test of its own (see `app/web`).
-  `.github/workflows/tests.yml` runs both — every module's `desktopTest` and the Node test — on every pull request, every
+  The web build's storage worker, which is JavaScript, has a Node test of its own (see `app/web`), and the parser of a
+  release's description, which is Python, a `unittest` next to it in `.github/scripts`.
+  `.github/workflows/tests.yml` runs all three — every module's `desktopTest`, the Node test and the Python one — on every pull request, every
   night on the default branch, and from `publish-all.yml` before it starts a single store build, so a failing test
   stops a release.
   The UI itself is untested by code: `:app:baselineprofile` drives it, but only to record a profile, asserts nothing
@@ -457,7 +458,12 @@ uninstall and nothing else does.
     that the rendered page hides (`<!-- whats-new en-US … -->`, written for every store and passed to the Apple and Windows workflows as well, and `<!-- play-store update-priority: 0 -->`, and one
     `<!-- <store> submit: true -->` for each of `play-store`, `app-store`, `mac-app-store` and `microsoft-store`, whose
     `false` passes that store's workflow `submit` off so the release is left there as a draft; the
-    format is in that file's header) — carried through as it is, backslashes included; only the hand-dispatched
+    format is in that file's header). `.github/scripts/release_description.py` reads them, and nothing it cannot read
+    is taken as absent, since every default is the stronger action: a store name it does not know, a `submit` other
+    than `true` or `false`, a priority outside 0–5, or notes longer than App Store Connect's 4 000 characters or
+    Partner Center's 1 500 (whatever those stores' `submit` says) stop the release before a build starts, and notes
+    over Play's 500 are a warning, since Play is given the lines that fit. The text is carried through as it is,
+    backslashes included; only the hand-dispatched
     form's `\n` is expanded, since a single-line text box has no other way to ask for a line break. It falls back to the visible description with its markdown taken out — or,
     dispatched by hand with nothing given, to the commit log since the previous tag. Every store listing is in
     English only, however many languages the app itself speaks. Its `update_priority` input is

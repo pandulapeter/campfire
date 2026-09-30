@@ -6,8 +6,8 @@
 # If a copy of the MPL was not distributed with this file, You can obtain one at
 # https://mozilla.org/MPL/2.0/.
 
-# Every test the repository has: the unit tests of every module, run on the desktop target, and the Node test of the
-# web build's storage worker. Run on every pull request, every night on the default branch, which catches what was
+# Every test the repository has: the unit tests of every module, run on the desktop target, the Node test of the
+# web build's storage worker and the Python test of the release description's parser. Run on every pull request, every night on the default branch, which catches what was
 # pushed there directly, and by publish-all.yml before it starts a single store build, so a failing test stops a
 # release.
 
@@ -43,6 +43,10 @@ jobs:
           distribution: 'zulu'
           java-version: 21
           cache: 'gradle'
+      # Before Gradle, whose failure would skip every later step. The parser of a release's description is what
+      # publish-all.yml stops a release with, before a build starts.
+      - name: Run the release description parser's tests
+        run: python3 -m unittest discover -s .github/scripts -p 'test_*.py'
       # The unqualified task runs in every module that has one, so a module that gains tests is covered without a
       # change here. --continue reports the failures of every module rather than only the first.
       - name: Run the unit tests

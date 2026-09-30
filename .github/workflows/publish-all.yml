@@ -31,7 +31,11 @@
 # turned off: the release is uploaded and left there as a draft - a draft Play release, a version prepared in App Store
 # Connect, an uncommitted Partner Center submission - for whatever it needs by hand, new screenshots say, and is sent
 # from there. All of them are optional. Without the notes the visible description stands in for them, with its
-# markdown taken out, without the priority it is 0, and without a store's submit it is true.
+# markdown taken out, without the priority it is 0, and without a store's submit it is true. What is there has to be
+# readable, though (.github/scripts/release_description.py): a store name it does not know, a submit other than true or
+# false and a priority outside 0-5 stop the release, and so do notes longer than App Store Connect's 4000 characters or
+# Partner Center's 1500, whatever those stores' submit says; over Play's 500 is a warning, since Play gets the lines
+# that fit.
 
 name: 'Publish all'
 
@@ -110,42 +114,13 @@ jobs:
             echo "::error::DROPBOX_APP_KEY is empty or not visible to this workflow. A release built without it would have no sync provider at all." >&2
             exit 1
           fi
+      # The parser is a script of its own so that it is tested; it stops the release on a comment it cannot read,
+      # and on notes a store would refuse, before any build starts.
       - name: Read the release notes
         id: notes
         env:
           RELEASE_BODY: ${{ github.event.release.body }}
-        run: |
-          python3 - <<'PYTHON'
-          import os
-          import re
-          import sys
-
-          body = os.environ["RELEASE_BODY"].replace("\r\n", "\n")
-
-          match = re.search(r"<!--\s*whats-new\s+en-US\s*\n(.*?)-->", body, re.S)
-          english = match.group(1).strip() if match else ""
-          if not english:
-              visible = re.sub(r"<!--.*?-->", "", body, flags=re.S)
-              visible = re.sub(r"\[([^\]]+)\]\([^)]+\)", r"\1", visible)
-              english = re.sub(r"\*\*|`", "", visible).strip()
-          priority = re.search(r"<!--\s*play-store\s+update-priority:\s*([0-5])\s*-->", body)
-          # Anything but true or false stops the release: a misspelt "flase" read as the default would submit what was
-          # meant to wait for screenshots.
-          submit = {}
-          for store in ["play-store", "app-store", "mac-app-store", "microsoft-store"]:
-              flag = re.search(rf"<!--\s*{store}\s+submit:\s*(.*?)\s*-->", body)
-              value = flag.group(1).lower() if flag else "true"
-              if value not in {"true", "false"}:
-                  print(f"::error::The release says \"{store} submit: {flag.group(1)}\"; it takes true or false.", file=sys.stderr)
-                  sys.exit(1)
-              submit[store.replace("-", "_") + "_submit"] = value
-
-          with open(os.environ["GITHUB_OUTPUT"], "a") as output:
-              output.write(f"release_notes<<END_OF_RELEASE_NOTES\n{english}\nEND_OF_RELEASE_NOTES\n")
-              output.write(f"update_priority={priority.group(1) if priority else '0'}\n")
-              for name, value in submit.items():
-                  output.write(f"{name}={value}\n")
-          PYTHON
+        run: python3 .github/scripts/release_description.py
 
   # A failing test stops the release before anything is built, signed or submitted. Run beside prepare rather than
   # after it, since neither needs the other.
