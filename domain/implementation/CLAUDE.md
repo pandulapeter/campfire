@@ -63,15 +63,15 @@ The ones that carry real logic:
   (`ImportPlan.SongEntry.replacesFileName`), so that no setlist of the batch is pointed at a name the song list does
   not hold. Only a decision made before anything is written can be put to the user as one question about a
   whole archive, which is the reason for the split — three hundred questions is not a choice. A song is compared by
-  Preparing runs on `Dispatchers.Default`, because decoding, splitting, header parsing and comparisons would otherwise
-  occupy the view model's main thread, and yields between songs so the web can paint and cancellation can stop it.
   its text and a setlist by its fields, never by the stored document, and never by a date the incoming setlist does
   not carry — nor, then, by its countdown, which no file older than the date can say either (a replacement keeps the
   library's) — since the import dates such a setlist itself with the day it is imported on (which is how the demo
   setlist gets its date, and why asking for it again finds it unchanged), or, where it replaces a library setlist,
   with the day that one had — and the entries as they will be written, each pointing where its song lands, so a setlist that
   names an incoming song is only the library's one when the song ends up where the library's points. `ImportPlanner` is
-  covered by `commonTest`. Applying turns each entry plus the
+  covered by `commonTest`. Preparing runs on `Dispatchers.Default`, because decoding, splitting, header parsing and
+  comparisons would otherwise occupy the view model's main thread, and yields between songs so the web can paint and
+  cancellation can stop it. Applying turns each entry plus the
   `ImportConflictResolution` into write / replace / disregard / leave alone, and only `REPLACE` ever overwrites.
   Songs are still written before setlists and the names they actually got are remembered, so that a setlist arriving in
   the same archive still points at its songs after a collision renamed one — a disregarded duplicate maps to the copy

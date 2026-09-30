@@ -207,6 +207,9 @@ import kotlin.math.roundToInt
  * @param canCutSections Whether a section may be cut into pieces put side by side in the columns of a row, where the
  * song would not fit the screen otherwise (see [flowIntoRowsCuttingSections]). Off in the editor's preview, which
  * follows every edit, and would move the pieces of a section from column to column as it is typed into.
+ * @param isSingleColumn Whether the sections are stacked in one column however wide the window is, the way a phone
+ * lays them out. The editor's preview next to the text sets it: half a window flows a song into columns that the
+ * next keystroke reshuffles, and the lines being typed are only easy to find in the order they are written.
  * @param onOpenEditor Offered under a song too long to be laid out whole, see [LayoutBudget]; null where the editor is
  * already open or may not be opened (performance mode).
  */
@@ -235,6 +238,7 @@ internal fun SongLyrics(
     stepButtonInset: Dp = 0.dp,
     keepsStepButtonInset: Boolean = false,
     canCutSections: Boolean = false,
+    isSingleColumn: Boolean = false,
     onOpenEditor: (() -> Unit)? = null,
 ) {
     // The fold toggles of the runs inside a section are named by these too, where the file names them nothing.
@@ -384,6 +388,7 @@ internal fun SongLyrics(
                 animations = animations,
                 cardPadding = CARD_PADDING,
                 canCutSections = canCutSections,
+                isSingleColumn = isSingleColumn,
                 sectionGlides = sectionGlides,
                 sectionMeasurements = sectionMeasurements,
                 onRowsPlaced = { rows -> onRowsPlaced?.invoke(rows.offsetBy(headerHeight)) },
@@ -1552,6 +1557,7 @@ private fun SongSectionsLayout(
     animations: List<SectionAnimation>,
     cardPadding: Dp,
     canCutSections: Boolean,
+    isSingleColumn: Boolean,
     sectionGlides: SectionGlides?,
     sectionMeasurements: SectionMeasurements,
     onRowsPlaced: (SongRows) -> Unit,
@@ -1578,7 +1584,11 @@ private fun SongSectionsLayout(
     val maxRowHeightPx = if (maxRowHeight.isSpecified && maxRowHeight > 0.dp) maxRowHeight.roundToPx() else Int.MAX_VALUE
     val endInsetPx = stepButtonInset.roundToPx()
     val piecePadding = IntArray(sectionCount) { if (units.cardStarts[it] >= 0) cardPadding.roundToPx() else 0 }
-    fun widthColumnCountFor(totalWidth: Int) = ((totalWidth + columnGapPx) / (minColumnWidth.roundToPx() + columnGapPx)).coerceAtLeast(1)
+    fun widthColumnCountFor(totalWidth: Int) = if (isSingleColumn) {
+        1
+    } else {
+        ((totalWidth + columnGapPx) / (minColumnWidth.roundToPx() + columnGapPx)).coerceAtLeast(1)
+    }
     fun maxColumnCountFor(totalWidth: Int) = widthColumnCountFor(totalWidth).coerceAtMost(maxOf(1, sectionCount))
     fun columnWidthFor(totalWidth: Int, columnCount: Int) = ((totalWidth - columnGapPx * (columnCount - 1)) / columnCount).coerceIn(0, maxColumnWidthPx)
     fun unitsOf(section: Int) = units.sectionStarts[section] until units.sectionStarts[section + 1]

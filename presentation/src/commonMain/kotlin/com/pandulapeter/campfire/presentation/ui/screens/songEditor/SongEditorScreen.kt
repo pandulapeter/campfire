@@ -492,6 +492,7 @@ private fun LoadedSongEditor(
                 fontScale = fontScale,
                 chordSpelling = chordSpelling,
                 contentPadding = contentPadding.only(start = !hasSideBySidePreview, end = true, bottom = true),
+                isSingleColumn = hasSideBySidePreview,
             )
         }
         // The panes take what the app bar and the toggle above them leave, rather than the whole window: a Column
@@ -750,6 +751,8 @@ private class EditorFieldPadding(
  * from the main thread.
  *
  * @param scrollState Where the preview is scrolled to, hoisted so that it survives the pane being composed again.
+ * @param isSingleColumn Whether the song is stacked in one column (see [SongLyrics]): next to the field, where the
+ * preview follows the text being typed. On its own it lays the song out the way the song details screen does.
  */
 @OptIn(FlowPreview::class, ExperimentalCoroutinesApi::class)
 @Composable
@@ -762,6 +765,7 @@ private fun SongPreview(
     fontScale: Float,
     chordSpelling: UserPreferences.ChordSpelling,
     contentPadding: PaddingValues,
+    isSingleColumn: Boolean,
 ) {
     val labels = rememberDefaultSectionLabels()
     val latestTransposition by rememberUpdatedState(transposition)
@@ -809,6 +813,7 @@ private fun SongPreview(
             availableHeight = maxHeight - topPadding - restingBottomPadding,
             fontScale = fontScale,
             sectionMotion = SectionMotion.NONE,
+            isSingleColumn = isSingleColumn,
         )
     }
 }
