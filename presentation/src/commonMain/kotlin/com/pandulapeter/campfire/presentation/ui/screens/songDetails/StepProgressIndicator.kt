@@ -15,14 +15,24 @@ import androidx.compose.foundation.Canvas
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clipToBounds
 import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.semantics.ProgressBarRangeInfo
+import androidx.compose.ui.semantics.progressBarRangeInfo
+import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.semantics.stateDescription
 import androidx.compose.ui.unit.dp
+import com.pandulapeter.campfire.presentation.localization.stringResource
+import com.pandulapeter.campfire.presentation.resources.Res
+import com.pandulapeter.campfire.presentation.resources.song_details_step_progress_row
+import com.pandulapeter.campfire.presentation.resources.song_details_step_progress_section
 import kotlin.math.ceil
 import kotlin.math.floor
+import kotlin.math.roundToInt
 
 /**
  * A dot for every stop of the song being read - its rows, or its sections where it is read in a single column - with the
@@ -35,6 +45,9 @@ import kotlin.math.floor
  *
  * More stops than the column has room for are scrolled through with the mark kept near the middle, and the dots fade
  * and shrink towards whichever end has more beyond it, as far as there is more, the way the edges of a scrolled list fade.
+ *
+ * A screen reader is told the stop the mark is nearest and how many there are, which is read in composition through a
+ * derived state, so that it recomposes once per stop rather than once per pixel scrolled.
  *
  * Everything moving is read while drawing, so neither the scroll nor a count animating recomposes anything. It fades by the
  * colors it draws with rather than through a layer, since the web build does not redraw a layer whose alpha alone changed.
@@ -59,8 +72,31 @@ internal fun StepProgressIndicator(
     }
     val dotColor = MaterialTheme.colorScheme.outlineVariant
     val selectedColor = MaterialTheme.colorScheme.primary
+    // While the header above the first stop is read the progress is negative, and the first stop is the one announced.
+    val currentStop by remember(stepper) { derivedStateOf { stepper?.stopProgress?.roundToInt()?.coerceAtLeast(0) ?: 0 } }
+    val description = if (isShown) {
+        stringResource(
+            if (stepper?.isSteppedByRow == true) Res.string.song_details_step_progress_row else Res.string.song_details_step_progress_section,
+            currentStop.coerceAtMost(stopCount - 1) + 1,
+            stopCount,
+        )
+    } else {
+        null
+    }
     // The dots scrolled past either end of the column are drawn only as far as its edge, which is where they fade out to.
-    Canvas(modifier = modifier.clipToBounds()) {
+    Canvas(
+        modifier = modifier
+            .clipToBounds()
+            .semantics {
+                if (description != null) {
+                    progressBarRangeInfo = ProgressBarRangeInfo(
+                        current = currentStop.coerceAtMost(stopCount - 1).toFloat(),
+                        range = 0f..(stopCount - 1).toFloat(),
+                    )
+                    stateDescription = description
+                }
+            },
+    ) {
         val alpha = visibility
         if (alpha == 0f) return@Canvas
         val pitch = DOT_PITCH.toPx()

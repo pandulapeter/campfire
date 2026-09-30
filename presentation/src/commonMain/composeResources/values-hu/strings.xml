@@ -319,6 +319,8 @@
     <string name="song_details_next_row">Következő sor</string>
     <string name="song_details_previous_section">Előző szakasz</string>
     <string name="song_details_next_section">Következő szakasz</string>
+    <string name="song_details_step_progress_row">%1$d. sor (%2$d közül)</string>
+    <string name="song_details_step_progress_section">%1$d. szakasz (%2$d közül)</string>
     <string name="song_details_scroll_up">Görgetés felfelé</string>
     <string name="song_details_scroll_down">Görgetés lefelé</string>
     <string name="song_details_song_position">%1$d / %2$d</string>

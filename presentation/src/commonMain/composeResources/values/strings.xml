@@ -319,6 +319,8 @@
     <string name="song_details_next_row">Next row</string>
     <string name="song_details_previous_section">Previous section</string>
     <string name="song_details_next_section">Next section</string>
+    <string name="song_details_step_progress_row">Row %1$d of %2$d</string>
+    <string name="song_details_step_progress_section">Section %1$d of %2$d</string>
     <string name="song_details_scroll_up">Scroll up</string>
     <string name="song_details_scroll_down">Scroll down</string>
     <string name="song_details_song_position">%1$d / %2$d</string>
