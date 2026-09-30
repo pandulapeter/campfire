@@ -26,6 +26,14 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.compose.runtime.snapshotFlow
+import kotlinx.coroutines.awaitCancellation
+import kotlinx.coroutines.coroutineScope
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.flow.collectLatest
+import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withTimeoutOrNull
 import kotlin.math.abs
 import kotlin.math.max
 import kotlin.math.sign
@@ -39,12 +47,14 @@ import kotlin.math.sign
  * [stepOffsets] are where Page Up / Page Down and the buttons at the end of the screen step to, ascending, the top of the
  * song not among them: the resting offsets of a song that scrolls in rows, and just above every section of any other, whose
  * header is then the first thing stepped past ([isSteppedByRow] telling the two apart). None before the song has been
- * laid out.
+ * laid out. Each stop is also named by the index of the section it starts with ([stepSections], one per stop), which is
+ * what it is still called once a new layout has flowed the sections into different rows or columns (see [ReadingAnchor]).
  */
 internal data class SongRows(
     val restingOffsets: List<Int> = emptyList(),
     val bottoms: List<Int> = emptyList(),
     val stepOffsets: List<Int> = emptyList(),
+    val stepSections: List<Int> = emptyList(),
     val isSteppedByRow: Boolean = false,
 ) {
     fun offsetBy(offset: Int) = copy(
@@ -180,11 +190,98 @@ internal class RowSnapFlingBehavior(
     }
 
     /**
-     * Brings the song to rest where a fling that set off from where it is with no velocity would, which is how it is
-     * put back on a divider after the rows moved under it: a fold toggled opens or closes a section, and every divider
-     * after it moves while the scroll stays where it was.
+     * Brings the reader back to where they were in the song once it has been laid out again - a window resized, the
+     * text pinched or stepped to another size, a section folded, the song rewritten by a transposition - since the
+     * scroll keeps its position in pixels, which is somewhere else entirely in the new layout: on the row, or the
+     * section, they were reading. Where the reader is ([ReadingAnchor]) is taken whenever the scroll comes to rest,
+     * from the stops it came to rest among, never from a position a new layout has already clamped, and never from
+     * where a move of this function's own left it, so a pinch through a hundred layouts returns to the row it started
+     * in rather than to one it passed on the way.
+     *
+     * The move waits until the layout has held still for [LAYOUT_SETTLE_MILLIS]: a pinch or a window edge being dragged
+     * lays the song out on every frame while its sections glide to their new places, and a scroll following each of
+     * those layouts under them flickers. It is animated, like a fling coming to rest, and waits for the end of the
+     * scroll to have caught up with the new layout where that is still growing. A scroll of the reader's own, begun
+     * before or during the move, is left alone, and is where the reader is once it comes to rest.
      */
-    suspend fun settle() = scrollState.scroll { performFling(0f) }
+    suspend fun keepReaderInPlace(): Nothing = coroutineScope {
+        var anchor: ReadingAnchor? = null
+        var isMoving = false
+        // Where a move of this function's own left the scroll, which is not somewhere the reader chose.
+        var movedTo: Int? = null
+        launch {
+            snapshotFlow { scrollState.isScrollInProgress }.collect { isScrolling ->
+                if (isScrolling || isMoving) return@collect
+                if (scrollState.value != movedTo) anchor = readingAnchorOf(scrollState.value, rows)
+                movedTo = null
+            }
+        }
+        snapshotFlow { rows }.collectLatest { currentRows ->
+            if (anchor == null) {
+                anchor = readingAnchorOf(scrollState.value, currentRows)
+                return@collectLatest
+            }
+            delay(LAYOUT_SETTLE_MILLIS)
+            // Read after the wait, since a scroll the reader made during it came to rest on this layout.
+            val currentAnchor = anchor ?: return@collectLatest
+            if (scrollState.isScrollInProgress) return@collectLatest
+            val target = anchoredScrollOffset(currentAnchor, currentRows, scrollState.viewportSize, Int.MAX_VALUE) ?: return@collectLatest
+            withTimeoutOrNull(LAYOUT_SETTLE_MILLIS * 4) { snapshotFlow { scrollState.maxValue }.first { it >= target } }
+            val reachableTarget = target.coerceAtMost(scrollState.maxValue)
+            if (reachableTarget == scrollState.value) return@collectLatest
+            isMoving = true
+            try {
+                scrollState.animateScrollTo(reachableTarget)
+            } finally {
+                isMoving = false
+                movedTo = scrollState.value
+            }
+        }
+        awaitCancellation()
+    }
+}
+
+/**
+ * Where the reader is in a song, in terms that outlive a new layout of it: the stop they are past - a row, or a section
+ * where the song is not stepped through by rows - named by the section it starts with ([section], null for the header
+ * above the first one), and how far past it they are ([offset]).
+ */
+internal data class ReadingAnchor(val section: Int?, val offset: Int)
+
+/**
+ * Where the reader is at [scroll] among the stops of [rows]: past the lowest one above it, which in columns read top to
+ * bottom need not be the last one listed. Null before the song has been laid out.
+ */
+internal fun readingAnchorOf(scroll: Int, rows: SongRows): ReadingAnchor? {
+    if (rows.stepOffsets.isEmpty() || rows.stepSections.size != rows.stepOffsets.size) return null
+    var stop = -1
+    rows.stepOffsets.forEachIndexed { index, offset ->
+        if (offset <= scroll + POSITION_TOLERANCE && (stop < 0 || offset > rows.stepOffsets[stop])) stop = index
+    }
+    return if (stop < 0) {
+        ReadingAnchor(section = null, offset = scroll)
+    } else {
+        ReadingAnchor(section = rows.stepSections[stop], offset = (scroll - rows.stepOffsets[stop]).coerceAtLeast(0))
+    }
+}
+
+/**
+ * The scroll position that puts the reader back where [anchor] says they were among [rows] laid out anew: past the stop
+ * that now holds the section theirs started with, as far as they were past theirs - though never so far into a row that
+ * its content ends above the bottom of the viewport - and in the header no further down than the first stop. Null
+ * before the song has been laid out.
+ */
+internal fun anchoredScrollOffset(anchor: ReadingAnchor, rows: SongRows, viewportHeight: Int, maxValue: Int): Int? {
+    if (rows.stepOffsets.isEmpty() || rows.stepSections.size != rows.stepOffsets.size) return null
+    val section = anchor.section ?: return anchor.offset.coerceIn(0, rows.stepOffsets.min().coerceAtLeast(0)).coerceIn(0, maxValue)
+    var stop = 0
+    rows.stepSections.forEachIndexed { index, stopSection ->
+        if (stopSection <= section && stopSection > rows.stepSections[stop]) stop = index
+    }
+    val stepOffset = rows.stepOffsets[stop]
+    val bottom = if (rows.isSteppedByRow) rows.bottoms.getOrNull(stop) else null
+    val lastFree = bottom?.let { it - viewportHeight }?.coerceAtLeast(stepOffset) ?: Int.MAX_VALUE
+    return (stepOffset + anchor.offset).coerceAtMost(lastFree).coerceIn(0, maxValue)
 }
 
 /**
@@ -226,3 +323,4 @@ internal fun rememberRowSnapFlingBehavior(scrollState: ScrollState): RowSnapFlin
 private const val POSITION_TOLERANCE = 1f
 private const val MIN_ANGULAR_FREQUENCY = 12f
 private const val MAX_ANGULAR_FREQUENCY = 40f
+private const val LAYOUT_SETTLE_MILLIS = 250L

@@ -1714,6 +1714,11 @@ private fun SongSectionsLayout(
                     val fadePx = EDGE_FADE_SIZE.roundToPx()
                     arrangement.tops.map { songTop + it - fadePx }
                 },
+                stepSections = if (isSteppedByRow) {
+                    List(grid.columnCounts.size) { row -> grid.rows.indexOfFirst { it == row } }
+                } else {
+                    List(placeables.size) { it }
+                },
                 isSteppedByRow = isSteppedByRow,
             ),
         )

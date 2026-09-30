@@ -64,7 +64,6 @@ import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.runtime.snapshotFlow
-import androidx.compose.runtime.withFrameNanos
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.rotate
@@ -124,8 +123,6 @@ import com.pandulapeter.campfire.presentation.ui.components.SongActions
 import com.pandulapeter.campfire.presentation.ui.navigation.CampfireDestination
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.delay
-import kotlinx.coroutines.flow.collectLatest
-import kotlinx.coroutines.flow.drop
 import kotlinx.coroutines.launch
 import org.jetbrains.compose.resources.painterResource
 
@@ -775,15 +772,7 @@ private fun SongDetailsPage(
         }
         val topPadding = PAGE_TOP_PADDING
         val topPaddingPx = with(LocalDensity.current) { topPadding.roundToPx() }
-        // A section folded or unfolded moves every divider after it while the scroll stays where it was, so the song
-        // is put back on one. The frame waited for is the one that lays the rows out where the fold leaves them.
-        val latestFoldedSections by rememberUpdatedState(foldedSections)
-        LaunchedEffect(flingBehavior) {
-            snapshotFlow { latestFoldedSections }.drop(1).collectLatest {
-                withFrameNanos {}
-                flingBehavior.settle()
-            }
-        }
+        LaunchedEffect(flingBehavior) { flingBehavior.keepReaderInPlace() }
         val bottomPadding = contentPadding.calculateBottomPadding() + 32.dp
         // The lyrics scroll, so they need to be told from the outside how much room there is for them without
         // scrolling: that is what decides how many columns they are flowed into.

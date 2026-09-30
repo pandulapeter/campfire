@@ -121,4 +121,55 @@ class RowSnappingTest {
         assertEquals(null, nextStepOffset(scroll = 100, stepOffsets = emptyList(), maxValue = 3000))
         assertEquals(0, previousStepOffset(scroll = 100, stepOffsets = emptyList(), maxValue = 3000))
     }
+
+    @Test
+    fun theReaderStaysInTheRowTheirFirstSectionMovesTo() {
+        // Three rows starting with sections 0, 2 and 5, the reader resting on the second one.
+        val before = SongRows(restingOffsets = listOf(300, 1300, 2300), bottoms = listOf(1000, 2000, 3000), stepOffsets = listOf(300, 1300, 2300), stepSections = listOf(0, 2, 5), isSteppedByRow = true)
+        val anchor = readingAnchorOf(scroll = 1300, rows = before)
+        assertEquals(ReadingAnchor(section = 2, offset = 0), anchor)
+        // A narrower window puts sections 2 and 3 in a row of their own, starting at 1900, and section 4 in the next one.
+        val after = SongRows(restingOffsets = listOf(300, 1100, 1900, 2700), bottoms = listOf(900, 1700, 2500, 3300), stepOffsets = listOf(300, 1100, 1900, 2700), stepSections = listOf(0, 1, 2, 4), isSteppedByRow = true)
+        assertEquals(1900, anchoredScrollOffset(anchor!!, after, viewportHeight = 1000, maxValue = 4000))
+        // A wider one joins the first two rows, and the reader's section is now in the first.
+        val wider = SongRows(restingOffsets = listOf(300, 1300), bottoms = listOf(1000, 2000), stepOffsets = listOf(300, 1300), stepSections = listOf(0, 5), isSteppedByRow = true)
+        assertEquals(300, anchoredScrollOffset(anchor, wider, viewportHeight = 1000, maxValue = 4000))
+    }
+
+    @Test
+    fun theReaderKeepsTheirPlaceInsideATallRowAsFarAsItReaches() {
+        val rows = SongRows(restingOffsets = listOf(300, 1300), bottoms = listOf(1000, 3300), stepOffsets = listOf(300, 1300), stepSections = listOf(0, 3), isSteppedByRow = true)
+        val anchor = readingAnchorOf(scroll = 1800, rows = rows)!!
+        assertEquals(ReadingAnchor(section = 3, offset = 500), anchor)
+        val shorter = SongRows(restingOffsets = listOf(300, 1100), bottoms = listOf(900, 2400), stepOffsets = listOf(300, 1100), stepSections = listOf(0, 3), isSteppedByRow = true)
+        assertEquals(1400, anchoredScrollOffset(anchor, shorter, viewportHeight = 1000, maxValue = 4000))
+        val muchShorter = SongRows(restingOffsets = listOf(300, 1100), bottoms = listOf(900, 1800), stepOffsets = listOf(300, 1100), stepSections = listOf(0, 3), isSteppedByRow = true)
+        assertEquals(1100, anchoredScrollOffset(anchor, muchShorter, viewportHeight = 1000, maxValue = 4000))
+    }
+
+    @Test
+    fun theReaderInTheHeaderStaysInIt() {
+        val rows = SongRows(restingOffsets = listOf(300, 1300), bottoms = listOf(1000, 2000), stepOffsets = listOf(300, 1300), stepSections = listOf(0, 3), isSteppedByRow = true)
+        assertEquals(ReadingAnchor(section = null, offset = 0), readingAnchorOf(scroll = 0, rows = rows))
+        val anchor = readingAnchorOf(scroll = 200, rows = rows)!!
+        val shorterHeader = rows.copy(stepOffsets = listOf(150, 1150))
+        assertEquals(150, anchoredScrollOffset(anchor, shorterHeader, viewportHeight = 1000, maxValue = 4000))
+    }
+
+    @Test
+    fun sectionsOutOfVerticalOrderAreAnchoredByPosition() {
+        // Two columns read top to bottom: sections 0 and 1 in the first, 2 and 3 in the second.
+        val columns = SongRows(stepOffsets = listOf(-24, 800, -24, 600), stepSections = listOf(0, 1, 2, 3))
+        assertEquals(ReadingAnchor(section = 3, offset = 100), readingAnchorOf(scroll = 700, rows = columns))
+        // A single column stacks all four, and the reader is kept in section 3.
+        val column = SongRows(stepOffsets = listOf(-24, 800, 1600, 2400), stepSections = listOf(0, 1, 2, 3))
+        assertEquals(2500, anchoredScrollOffset(ReadingAnchor(section = 3, offset = 100), column, viewportHeight = 1000, maxValue = 4000))
+        assertEquals(2000, anchoredScrollOffset(ReadingAnchor(section = 3, offset = 100), column, viewportHeight = 1000, maxValue = 2000))
+    }
+
+    @Test
+    fun aSongNotLaidOutYetHasNoAnchor() {
+        assertEquals(null, readingAnchorOf(scroll = 100, rows = SongRows()))
+        assertEquals(null, anchoredScrollOffset(ReadingAnchor(section = 1, offset = 0), SongRows(), viewportHeight = 1000, maxValue = 4000))
+    }
 }
