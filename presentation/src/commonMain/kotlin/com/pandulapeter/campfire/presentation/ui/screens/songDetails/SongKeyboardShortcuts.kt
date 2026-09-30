@@ -16,6 +16,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.rememberUpdatedState
+import androidx.compose.runtime.snapshotFlow
 import androidx.compose.runtime.withFrameNanos
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.FocusRequester
@@ -29,6 +30,7 @@ import androidx.compose.ui.input.key.isMetaPressed
 import androidx.compose.ui.input.key.key
 import androidx.compose.ui.input.key.onPreviewKeyEvent
 import androidx.compose.ui.input.key.type
+import androidx.compose.ui.platform.LocalWindowInfo
 import com.pandulapeter.campfire.presentation.ui.components.isAnyOverflowMenuOpen
 import kotlinx.coroutines.launch
 
@@ -49,6 +51,13 @@ import kotlinx.coroutines.launch
  * keys are worth more to a reader here than they are to Tab, which still traverses everything. Only the four on their
  * own: an arrow with Alt, Meta or Ctrl is somebody else's shortcut - the browser's Back among them - and is left
  * unconsumed.
+ *
+ * A step key held down is one step, however many repeats the system sends while it is: a foot resting on a pedal is
+ * not a request to page, and pages stepped past at the speed of a key repeat are never on screen at rest. So a step
+ * key is acted on at its first press only, until it is released, the window losing the focus counting as a release
+ * since the release then goes to another one. Where AWT on Linux delivers a repeat as a release and a press (X11
+ * without detectable auto-repeat), a held key still steps per repeat. A scroll keeps taking every repeat, which is
+ * what makes a held arrow scroll continuously.
  *
  * @param onPreviousSong Null when the current song is the first one, or when there is only the one to read; the
  *   event is then left alone rather than swallowed.
@@ -76,9 +85,15 @@ internal fun Modifier.songKeyboardShortcuts(
     val coroutineScope = rememberCoroutineScope()
     val latestIsUncovered by rememberUpdatedState(isUncovered)
     LaunchedEffect(isUncovered) { if (isUncovered) focusRequester.requestFocus() }
+    // Only the handler reads it, so it is no state.
+    val heldStepKeys = remember { mutableSetOf<Key>() }
+    // The focus inside a window stays where it was when the window loses it, so that is not reported below.
+    val windowInfo = LocalWindowInfo.current
+    LaunchedEffect(windowInfo) { snapshotFlow { windowInfo.isWindowFocused }.collect { if (!it) heldStepKeys.clear() } }
     return this
         .focusRequester(focusRequester)
         .onFocusChanged { focusState ->
+            if (!focusState.hasFocus) heldStepKeys.clear()
             if (!focusState.hasFocus) coroutineScope.launch {
                 // Whatever took the focus, if anything, has it by the next frame, and so has whatever it is drawn by.
                 withFrameNanos {}
@@ -87,6 +102,8 @@ internal fun Modifier.songKeyboardShortcuts(
         }
         .focusable()
         .onPreviewKeyEvent { keyEvent ->
+            // Before the check for modifiers below, so that a key released with one of them down is still released.
+            if (keyEvent.type == KeyEventType.KeyUp) heldStepKeys.remove(keyEvent.key)
             // Key repeats arrive as further KeyDown events, which is what makes a held arrow scroll continuously.
             if (keyEvent.type != KeyEventType.KeyDown) return@onPreviewKeyEvent false
             // An arrow pressed with Alt, Meta or Ctrl belongs to whoever sent it rather than to the reader: Alt + Left
@@ -95,13 +112,20 @@ internal fun Modifier.songKeyboardShortcuts(
             // leaving those presses alone. Shift is not among them: it modifies a selection, and there is nothing on
             // this screen to select.
             if (keyEvent.isAltPressed || keyEvent.isMetaPressed || keyEvent.isCtrlPressed) return@onPreviewKeyEvent false
+            val step = when (keyEvent.key) {
+                Key.DirectionUp, Key.PageUp -> onStepBack
+                Key.DirectionDown, Key.PageDown -> onStepForward
+                else -> null
+            }
+            if (step != null) {
+                if (heldStepKeys.add(keyEvent.key)) step()
+                return@onPreviewKeyEvent true
+            }
             val action = when (keyEvent.key) {
-                Key.DirectionUp -> onStepBack ?: onScrollUp
-                Key.DirectionDown -> onStepForward ?: onScrollDown
+                Key.DirectionUp -> onScrollUp
+                Key.DirectionDown -> onScrollDown
                 Key.DirectionLeft -> onPreviousSong
                 Key.DirectionRight -> onNextSong
-                Key.PageUp -> onStepBack
-                Key.PageDown -> onStepForward
                 else -> null
             } ?: return@onPreviewKeyEvent false
             action()
