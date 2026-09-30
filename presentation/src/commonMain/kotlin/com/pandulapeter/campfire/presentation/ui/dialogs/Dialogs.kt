@@ -1250,7 +1250,7 @@ private fun SongTagsDialog(
                         }
                         items(
                             items = matches,
-                            key = { it },
+                            key = { "tag:$it" },
                         ) { tag ->
                             CheckboxListItem(
                                 title = tag,
@@ -1978,7 +1978,11 @@ private val stringListSaver = listSaver<List<String>, String>(save = { it }, res
 
 /** A tag is a label to filter by, a word or two, and it sits in a pill next to others under a song's title. */
 private const val MAX_TAG_LENGTH = 30
-private const val CREATE_TAG_KEY = "createTag"
+/**
+ * The key of the tag dialog's create row. A tag row's key is its tag behind a `tag:` prefix, since a tag is text anybody
+ * may have written, and only the prefix keeps one spelled like this key from being listed under the same key as the row.
+ */
+private const val CREATE_TAG_KEY = "create"
 private const val DELETE_LIBRARY_CONFIRMATION = "DELETE"
 private const val MAX_DELETE_LIBRARY_CONFIRMATION_LENGTH = 30
 private const val MAX_DESCRIPTION_LENGTH = 300
