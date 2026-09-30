@@ -44,6 +44,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.key
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.drawscope.clipRect
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.semantics.Role
 import androidx.compose.runtime.mutableIntStateOf
@@ -2675,39 +2676,48 @@ private fun SongLineWithChords(
                 val layout = lyricsLayout ?: return@drawBehind
                 val textLength = layout.layoutInput.text.length
                 val gap = CHORD_GAP.toPx()
-                var previousLineIndex = -1
-                // The edge the next chord of this line must not cross: where it has to start on a line that runs to
-                // the right, where it has to end on one that runs to the left. One variable rather than two, since
-                // there is one rule - a chord never sits on the chord before it.
-                var previousChordEdge = 0f
-                paddedLine.chords.forEachIndexed { index, chord ->
-                    val chordLayout = chordLayouts[index]
-                    val offset = chord.position.coerceIn(0, textLength)
-                    val lineIndex = layout.getLineForOffset(offset)
-                    // A right to left paragraph is laid out from the right edge leftwards, so x falls as the offset
-                    // grows and the chords have to be kept apart the other way. The paragraph's direction rather than
-                    // that of the run the chord lands in, since "further along the line" is the paragraph's to say: two
-                    // chords of one line answering differently would be drawn on top of each other.
-                    val isRightToLeft = layout.getParagraphDirection(offset) == ResolvedTextDirection.Rtl
-                    if (lineIndex != previousLineIndex) {
-                        previousLineIndex = lineIndex
-                        previousChordEdge = if (isRightToLeft) size.width else 0f
+                // Each chord is drawn at its row's top, inside the line's height, so the clip only cuts what reaches past
+                // the end edge: a chord or an annotation wider than the line, which is clipped rather than wrapped, since a
+                // second line of it would land on the lyrics under it. The content description keeps its whole text.
+                clipRect {
+                    var previousLineIndex = -1
+                    // The edge the next chord of this line must not cross: where it has to start on a line that runs to
+                    // the right, where it has to end on one that runs to the left. One variable rather than two, since
+                    // there is one rule - a chord never sits on the chord before it.
+                    var previousChordEdge = 0f
+                    paddedLine.chords.forEachIndexed { index, chord ->
+                        val chordLayout = chordLayouts[index]
+                        val offset = chord.position.coerceIn(0, textLength)
+                        val lineIndex = layout.getLineForOffset(offset)
+                        // A right to left paragraph is laid out from the right edge leftwards, so x falls as the offset
+                        // grows and the chords have to be kept apart the other way. The paragraph's direction rather than
+                        // that of the run the chord lands in, since "further along the line" is the paragraph's to say: two
+                        // chords of one line answering differently would be drawn on top of each other.
+                        val isRightToLeft = layout.getParagraphDirection(offset) == ResolvedTextDirection.Rtl
+                        if (lineIndex != previousLineIndex) {
+                            previousLineIndex = lineIndex
+                            previousChordEdge = if (isRightToLeft) size.width else 0f
+                        }
+                        val chordWidth = chordLayout.size.width
+                        val maxX = max(0f, size.width - chordWidth)
+                        val position = layout.getHorizontalPosition(offset, usePrimaryDirection = true)
+                        // Kept inside the line where that leaves the chord before it alone; where it cannot, the chord stays
+                        // where it belongs and what reaches past the edge is clipped, since a chord drawn over another one
+                        // cannot be read at all.
+                        val x = if (isRightToLeft) {
+                            // The chord hangs to the left of its character, the way it hangs to the right of it in a line
+                            // that runs the other way, so the position is its right edge.
+                            min(previousChordEdge - chordWidth, max(min(position, previousChordEdge) - chordWidth, 0f))
+                        } else {
+                            max(previousChordEdge, min(max(position, previousChordEdge), maxX))
+                        }
+                        drawText(
+                            textLayoutResult = chordLayout,
+                            color = if (chord.isAnnotation) annotationColor else chordColor,
+                            topLeft = Offset(x, layout.getLineTop(lineIndex)),
+                        )
+                        previousChordEdge = if (isRightToLeft) x - gap else x + chordWidth + gap
                     }
-                    val maxX = max(0f, size.width - chordLayout.size.width)
-                    val position = layout.getHorizontalPosition(offset, usePrimaryDirection = true)
-                    val x = if (isRightToLeft) {
-                        // The chord hangs to the left of its character, the way it hangs to the right of it in a line
-                        // that runs the other way, so the position is its right edge.
-                        (min(position, previousChordEdge) - chordLayout.size.width).coerceIn(0f, maxX)
-                    } else {
-                        max(position, previousChordEdge).coerceIn(0f, maxX)
-                    }
-                    drawText(
-                        textLayoutResult = chordLayout,
-                        color = if (chord.isAnnotation) annotationColor else chordColor,
-                        topLeft = Offset(x, layout.getLineTop(lineIndex)),
-                    )
-                    previousChordEdge = if (isRightToLeft) x - gap else x + chordLayout.size.width + gap
                 }
             },
         text = paddedLine.text,
@@ -2739,8 +2749,16 @@ private fun ChordProLine.Lyrics.withChordsInline() = buildString {
  * Returns a copy of the line where every piece of lyrics that sits under a chord is at least as wide as the chord
  * (plus [gap]), by appending non-breaking spaces, each [paddingWidth] wide, to it. Chord positions are updated to point
  * into the padded lyrics.
+ *
+ * The padded line may only wrap between two chords, and only where the original text has a word boundary: the
+ * whitespace at either end of a padded piece is made non-breaking too, so that a chord, the space it sits on and the
+ * padding that makes room for it never end up on two rows, and a [BREAK_OPPORTUNITY] follows every piece that ends at a
+ * word boundary. Without it a chord-only line would be one unbreakable run the layout can only break at an arbitrary
+ * character, leaving the chord at the end of a row with no room for it; with it every chord starts whatever row it is
+ * sent to. The inner spaces of a piece stay ordinary, so a long piece of lyrics under one chord still wraps between its
+ * words.
  */
-private fun ChordProLine.Lyrics.padLyricsToFitChords(
+internal fun ChordProLine.Lyrics.padLyricsToFitChords(
     chordWidths: List<Float>,
     gap: Float,
     paddingWidth: Float,
@@ -2748,13 +2766,22 @@ private fun ChordProLine.Lyrics.padLyricsToFitChords(
 ): ChordProLine.Lyrics {
     val paddedLyrics = StringBuilder(text.substring(0, chords.first().position))
     val paddedChords = chords.mapIndexed { index, chord ->
-        val fragment = text.substring(chord.position, chords.getOrNull(index + 1)?.position ?: text.length)
+        val end = chords.getOrNull(index + 1)?.position ?: text.length
+        val fragment = text.substring(chord.position, end)
         val paddedChord = chord.copy(position = paddedLyrics.length)
-        paddedLyrics.append(fragment)
         val missingWidth = chordWidths[index] + gap - measureWidth(fragment)
         if (missingWidth > 0 && paddingWidth > 0) {
+            val innerStart = fragment.indexOfFirst { !it.isWhitespace() }.let { if (it < 0) fragment.length else it }
+            val innerEnd = fragment.indexOfLast { !it.isWhitespace() } + 1
+            repeat(innerStart) { paddedLyrics.append(PADDING) }
+            if (innerEnd > innerStart) paddedLyrics.append(fragment, innerStart, innerEnd)
+            repeat(fragment.length - maxOf(innerStart, innerEnd)) { paddedLyrics.append(PADDING) }
             repeat(ceil(missingWidth / paddingWidth).toInt()) { paddedLyrics.append(PADDING) }
+        } else {
+            paddedLyrics.append(fragment)
         }
+        val isWordBoundary = end == 0 || text.getOrNull(end - 1)?.isWhitespace() == true || text.getOrNull(end)?.isWhitespace() == true
+        if (index < chords.lastIndex && isWordBoundary) paddedLyrics.append(BREAK_OPPORTUNITY)
         paddedChord
     }
     return ChordProLine.Lyrics(text = paddedLyrics.toString(), chords = paddedChords)
@@ -2794,5 +2821,11 @@ private const val MAX_ANIMATED_SECTION_HEIGHT = 1 shl 17
 private const val MAX_ANIMATED_WIDE_SECTION_HEIGHT = 1 shl 15
 private const val WIDE_SECTION_WIDTH = (1 shl 13) - 1
 private const val PADDING = '\u00A0' // Non-breaking space, so that the padding never gets trimmed or wrapped.
+
+/**
+ * A zero-width space, which is where a line padded to fit its chords may wrap: default-ignorable, so no font draws
+ * anything for it, and a break opportunity after it to every line breaker (class ZW).
+ */
+private const val BREAK_OPPORTUNITY = '\u200B'
 private const val BEAT_SYMBOL = "\u00B7"
 private const val CHIP_SEPARATOR = "\u00B7"

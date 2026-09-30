@@ -68,6 +68,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clipToBounds
 import androidx.compose.ui.draw.rotate
 import androidx.compose.ui.focus.focusProperties
 import androidx.compose.ui.graphics.painter.Painter
@@ -510,6 +511,10 @@ internal fun SongDetailsScreen(
                     val shownText = if (!hasShownLyrics && !isFollowingGesture && pagerState.isScrollInProgress) null else text
                     if (shownText != null && !hasShownLyrics) SideEffect { hasShownLyrics = true }
                     SongDetailsPage(
+                        // Chords and annotations are drawn rather than measured, so this is what keeps anything a line
+                        // draws past its end off the page of the next song. The page's own padding holds the cards'
+                        // shadows, the header pills and the fade, so nothing that belongs to it is cut.
+                        modifier = Modifier.clipToBounds(),
                         song = song,
                         scrollState = scrollState,
                         flingBehavior = flingBehavior,
@@ -714,6 +719,7 @@ private fun SongPagerControls(
  */
 @Composable
 private fun SongDetailsPage(
+    modifier: Modifier = Modifier,
     song: Song,
     scrollState: ScrollState,
     flingBehavior: RowSnapFlingBehavior,
@@ -740,7 +746,7 @@ private fun SongDetailsPage(
     onEditCoverArt: (() -> Unit)?,
     onOpenEditor: (() -> Unit)?,
 ) = AnimatedContent(
-    modifier = Modifier.fillMaxSize(),
+    modifier = modifier.fillMaxSize(),
     targetState = text,
     transitionSpec = { fadeIn() togetherWith fadeOut() },
     contentKey = { it != null },
