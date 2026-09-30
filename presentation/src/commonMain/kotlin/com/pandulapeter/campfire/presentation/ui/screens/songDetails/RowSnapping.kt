@@ -246,6 +246,32 @@ internal fun previousStepOffset(scroll: Int, stepOffsets: List<Int>, maxValue: I
 }
 
 /**
+ * The stops of [rows] a song that scrolls no further than [maxValue] can be brought to, ascending and each once: a stop
+ * too close to the end of the song to reach the top of the screen is rested on where the song ends, together with any
+ * other that is, since that is where the steps take the reader to both. What the progress indicator counts, so a song
+ * that does not scroll at all has one.
+ */
+internal fun reachableStops(rows: SongRows, maxValue: Int) = rows.stepOffsets.map { it.coerceIn(0, maxValue) }.distinct().sorted()
+
+/**
+ * Where the reader at [scroll] is among [stops] (see [reachableStops]), in stops: the index of one where the song rests on
+ * it, and in between two by how far it has scrolled from the one to the other. Above the first one, where the header is
+ * being read, it runs from -1 at the top of the song up to 0 at the first stop.
+ */
+internal fun stopProgress(scroll: Int, stops: List<Int>): Float {
+    if (stops.isEmpty()) return 0f
+    val first = stops.first()
+    if (scroll < first) return scroll.toFloat() / first - 1f
+    if (scroll == first) return 0f
+    for (i in 1 until stops.size) {
+        val start = stops[i - 1]
+        val end = stops[i]
+        if (scroll < end) return i - 1 + (scroll - start).toFloat() / (end - start)
+    }
+    return stops.lastIndex.toFloat()
+}
+
+/**
  * The fling of a song read across the columns, which comes to rest at [snappedScrollTarget] rather than wherever the
  * decay would leave it, so that a row is read from its divider rather than from somewhere in the middle of its first
  * line. The [rows] are written by the layout every time it places them, in the scroll's own coordinates; the first
@@ -422,6 +448,12 @@ internal class SongStepper(
     val canStepForward by derivedStateOf { next.value != null }
     val isPagingBack by derivedStateOf { previous.value?.let { !isStepStop(it, flingBehavior.rows, scrollState.maxValue) } == true }
     val isPagingForward by derivedStateOf { next.value?.let { !isStepStop(it, flingBehavior.rows, scrollState.maxValue) } == true }
+
+    // Only a new layout changes the stops, so the list is built once per layout rather than once per pixel scrolled.
+    private val stops = derivedStateOf { reachableStops(flingBehavior.rows, scrollState.maxValue) }
+    val stopCount by derivedStateOf { stops.value.size }
+    // Changes with every pixel scrolled, so it is only to be read where that invalidates nothing but drawing.
+    val stopProgress get() = stopProgress(scrollState.value, stops.value)
 
     // Where the step being animated is headed, which the next press is counted from: the step is slow enough to be
     // followed, and a pedal pressed twice in quick succession means two steps from where the song was, not one step and

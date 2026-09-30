@@ -34,11 +34,13 @@ import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.calculateEndPadding
 import androidx.compose.foundation.layout.calculateStartPadding
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.PagerState
@@ -557,6 +559,24 @@ internal fun SongDetailsScreen(
                         },
                     )
                 }
+                val stepButtonsTop = PAGE_TOP_PADDING + STEP_BUTTON_EDGE_MARGIN
+                val stepButtonsEnd = pageContentPadding.calculateEndPadding(layoutDirection) + 16.dp
+                val stepButtonsBottom = pageContentPadding.calculateBottomPadding() + STEP_BUTTON_EDGE_MARGIN
+                // The dots take the room between the two buttons whether or not the buttons are there, so that neither
+                // arriving nor leaving moves them. That column is the one the song leaves the buttons, so no dot is ever
+                // drawn over a line of it.
+                StepProgressIndicator(
+                    modifier = Modifier
+                        .align(Alignment.TopEnd)
+                        .padding(
+                            top = stepButtonsTop + STEP_BUTTON_SIZE + STEP_BUTTON_GAP,
+                            end = stepButtonsEnd,
+                            bottom = stepButtonsBottom + STEP_BUTTON_SIZE + STEP_BUTTON_GAP,
+                        )
+                        .width(STEP_BUTTON_SIZE)
+                        .fillMaxHeight(),
+                    stepper = currentPageStepper,
+                )
                 StepButtons(
                     isSteppedByRow = currentPageStepper?.isSteppedByRow == true,
                     isPagingBack = currentPageStepper?.isPagingBack == true,
@@ -566,9 +586,9 @@ internal fun SongDetailsScreen(
                     hasPreviousSong = hasPreviousSongToStepTo,
                     hasNextSong = hasNextSongToStepTo,
                     contentPadding = PaddingValues(
-                        top = PAGE_TOP_PADDING + STEP_BUTTON_EDGE_MARGIN,
-                        end = pageContentPadding.calculateEndPadding(layoutDirection) + 16.dp,
-                        bottom = pageContentPadding.calculateBottomPadding() + STEP_BUTTON_EDGE_MARGIN,
+                        top = stepButtonsTop,
+                        end = stepButtonsEnd,
+                        bottom = stepButtonsBottom,
                     ),
                     onStepBack = ::stepBack,
                     onStepForward = ::stepForward,

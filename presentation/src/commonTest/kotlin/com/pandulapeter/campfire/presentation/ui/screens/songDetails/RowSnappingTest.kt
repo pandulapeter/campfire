@@ -258,4 +258,41 @@ class RowSnappingTest {
         assertEquals(null, readingAnchorOf(scroll = 100, rows = SongRows()))
         assertEquals(null, anchoredScrollOffset(ReadingAnchor(section = 1, offset = 0), SongRows(), viewportHeight = 1000, maxValue = 4000))
     }
+
+    @Test
+    fun stopsTooCloseToTheEndOfTheSongAreCountedOnceWhereItEnds() {
+        val column = SongRows(stepOffsets = listOf(-24, 800, 1600, 2400))
+        assertEquals(listOf(0, 800, 1600, 2400), reachableStops(column, maxValue = 4000))
+        assertEquals(listOf(0, 800, 1500), reachableStops(column, maxValue = 1500))
+        // Columns read top to bottom list their sections out of vertical order.
+        assertEquals(listOf(0, 600, 800), reachableStops(SongRows(stepOffsets = listOf(-24, 800, -24, 600)), maxValue = 4000))
+        // A song that does not scroll has a single place to be.
+        assertEquals(listOf(0), reachableStops(column, maxValue = 0))
+        assertEquals(emptyList(), reachableStops(SongRows(), maxValue = 4000))
+    }
+
+    @Test
+    fun theProgressFollowsTheScrollBetweenTheStops() {
+        val stops = listOf(300, 1100, 1900)
+        // Reading the header above the first stop.
+        assertEquals(-1f, stopProgress(scroll = 0, stops = stops))
+        assertEquals(-0.5f, stopProgress(scroll = 150, stops = stops))
+        assertEquals(0f, stopProgress(scroll = 300, stops = stops))
+        assertEquals(0.5f, stopProgress(scroll = 700, stops = stops))
+        assertEquals(1f, stopProgress(scroll = 1100, stops = stops))
+        assertEquals(1.25f, stopProgress(scroll = 1300, stops = stops))
+        assertEquals(2f, stopProgress(scroll = 2500, stops = stops))
+        assertEquals(0f, stopProgress(scroll = 500, stops = emptyList()))
+    }
+
+    @Test
+    fun theProgressDotsAreCenteredWhereTheyFitAndScrolledToTheMarkWhereNot() {
+        assertEquals(20f, stepProgressOffset(contentHeight = 60f, availableHeight = 100f, markCenter = 30f))
+        // The mark is kept in the middle, as far as the ends of the column let it be.
+        assertEquals(0f, stepProgressOffset(contentHeight = 300f, availableHeight = 100f, markCenter = 6f))
+        assertEquals(-100f, stepProgressOffset(contentHeight = 300f, availableHeight = 100f, markCenter = 150f))
+        assertEquals(-200f, stepProgressOffset(contentHeight = 300f, availableHeight = 100f, markCenter = 294f))
+        // Exactly fitting is both, so growing past the room does not jump.
+        assertEquals(0f, stepProgressOffset(contentHeight = 100f, availableHeight = 100f, markCenter = 94f))
+    }
 }
