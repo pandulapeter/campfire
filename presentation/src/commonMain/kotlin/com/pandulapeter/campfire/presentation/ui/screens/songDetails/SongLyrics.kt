@@ -1722,7 +1722,27 @@ private fun SongSectionsLayout(
     val (grid, isInset) = decidedGrid
     val layoutWidth = if (isInset) (width - endInsetPx).coerceAtLeast(0) else width
     val columnWidths = IntArray(grid.columnCounts.size) { grid.rowWidth(it, layoutWidth) }
-    val unitWidths = IntArray(unitCount) { unitWidthFor(it, columnWidths[grid.rows[it]]) }
+    // A column is only as wide as the widest thing in it, up to the width it was given, so that a row can be centered
+    // by what it shows rather than by the empty space its columns leave after short lines. Only a card needs its width
+    // to decide the grid; everything else wraps at the column's width, which is the same height at any width it fits
+    // in, so the widths of the rest are only asked for here, once, for the grid that won.
+    val cellWidths = Array(grid.columnCounts.size) { row -> IntArray(grid.columnCounts[row]) }
+    for (unit in 0 until unitCount) {
+        val row = grid.rows[unit]
+        val columnWidth = columnWidths[row]
+        val contentWidth = if (units.cardStarts[units.unitSections[unit]] >= 0) {
+            unitWidthFor(unit, columnWidth)
+        } else {
+            minOf(columnWidth, sectionMeasurements.maxWidth(unit, measurables[unit]::maxIntrinsicWidth))
+        }
+        cellWidths[row][grid.columns[unit]] = maxOf(cellWidths[row][grid.columns[unit]], contentWidth)
+    }
+    // A card narrower than its cell keeps its own width; everything else takes the cell's, so that its lines, which
+    // take their direction from their own content, start at the same edge as the other lines of the cell.
+    val unitWidths = IntArray(unitCount) { unit ->
+        val row = grid.rows[unit]
+        if (units.cardStarts[units.unitSections[unit]] >= 0) unitWidthFor(unit, columnWidths[row]) else cellWidths[row][grid.columns[unit]]
+    }
     val placeables = measurables.mapIndexed { index, measurable ->
         val unitWidth = unitWidths[index]
         val heightLimit = maxAnimatedSectionHeight(unitWidth)
@@ -1760,18 +1780,31 @@ private fun SongSectionsLayout(
     val canHaveDividerAbove = hasHeader() && (hasSeveralRows || grid.columnCounts.any { it > 1 })
     if (isLookingAhead) onDividerAboveDecided(hasDividerAbove)
     val songTop = if (hasDividerAbove) rowGapPx / 2 else 0
-    val centeredRowStarts = IntArray(columnWidths.size) { row ->
-        val columnCount = grid.columnCounts[row]
-        val rowSpan = columnWidths[row] * columnCount + columnGapPx * (columnCount - 1)
-        val centered = (width - rowSpan) / 2
-        // Centered on the whole width wherever that keeps the row out of the edge left to the buttons.
-        when {
-            !isInset -> centered
-            layoutDirection == LayoutDirection.Ltr -> minOf(centered, layoutWidth - rowSpan)
-            else -> maxOf(centered, endInsetPx)
-        }.coerceIn(0, (width - rowSpan).coerceAtLeast(0))
+    // The space a row leaves is shared out evenly: as much of it before the first column, between every two and after
+    // the last, so that no column looks pushed to one side of the row. Two columns are never closer than a column gap,
+    // what is left of the space then being split between the two edges. The whole width is shared out wherever that
+    // keeps the row out of the edge left to the buttons, and only the rest of it otherwise.
+    fun spacedEvenly(widths: IntArray, regionStart: Int, regionWidth: Int): IntArray {
+        val shownCount = widths.count { it > 0 }
+        val freeSpace = (regionWidth - widths.sum()).coerceAtLeast(0)
+        val gap = maxOf(columnGapPx, freeSpace / (shownCount + 1))
+        var start = regionStart + ((freeSpace - gap * (shownCount - 1).coerceAtLeast(0)) / 2).coerceAtLeast(0)
+        // A column left empty takes no room at all.
+        return IntArray(widths.size) { column -> start.also { if (widths[column] > 0) start += widths[column] + gap } }
     }
-    val contentStart = centeredRowStarts.minOrNull() ?: 0
+    val cellStarts = Array(cellWidths.size) { row ->
+        val widths = cellWidths[row]
+        val acrossWholeWidth = spacedEvenly(widths, regionStart = 0, regionWidth = width)
+        val rowEnd = widths.indices.filter { widths[it] > 0 }.maxOfOrNull { acrossWholeWidth[it] + widths[it] } ?: 0
+        val rowStart = widths.indices.filter { widths[it] > 0 }.minOfOrNull { acrossWholeWidth[it] } ?: 0
+        when {
+            !isInset -> acrossWholeWidth
+            layoutDirection == LayoutDirection.Ltr && rowEnd <= layoutWidth -> acrossWholeWidth
+            layoutDirection == LayoutDirection.Rtl && rowStart >= endInsetPx -> acrossWholeWidth
+            layoutDirection == LayoutDirection.Ltr -> spacedEvenly(widths, regionStart = 0, regionWidth = layoutWidth)
+            else -> spacedEvenly(widths, regionStart = endInsetPx, regionWidth = layoutWidth)
+        }
+    }
     // The dividers span the whole width rather than the rows, which are as wide as the text size makes the columns: a
     // divider that grew and shrank with a pinch would read as part of the song rather than as the page's own.
     val dividerConstraints = Constraints(minWidth = width, maxWidth = width)
@@ -1803,10 +1836,6 @@ private fun SongSectionsLayout(
     )
     val rowDividerTops = arrangement.dividerTops.map { it + songTop }
     val dividerTops = if (hasDividerAbove) listOf(0) + rowDividerTops else rowDividerTops
-    // A row of a single section starts where the columns of the other rows do, so that its text lines up with the text
-    // above and below it instead of floating in the middle of the screen. A song of nothing but single columns has no
-    // other rows to line up with, and is centered as a whole.
-    val rowStarts = IntArray(columnWidths.size) { row -> if (grid.columnCounts[row] == 1) contentStart else centeredRowStarts[row] }
     // The approach pass places the rows where their sections' animations have got to, which is not where a scroll
     // comes to rest: a fold toggled a moment before a fling would otherwise have it snap to a divider still moving.
     // What is reported is the bottom edge of each divider, so a scroll resting there has the divider just above it.
@@ -1847,9 +1876,10 @@ private fun SongSectionsLayout(
     } + listOfNotNull(dividerAbovePlaceable?.let { it to IntOffset(x = 0, y = -it.height / 2) })
     val positions = Array(placeables.size) { index ->
         val row = grid.rows[index]
-        val columnStart = rowStarts[row] + grid.columns[index] * (columnWidths[row] + columnGapPx)
-        // A card narrower than its column sits at the column's start, which is its right edge in a right to left layout.
-        val x = if (layoutDirection == LayoutDirection.Rtl) columnStart + columnWidths[row] - unitWidths[index] else columnStart
+        val column = grid.columns[index]
+        val cellStart = cellStarts[row][column]
+        // A card narrower than its cell sits at the cell's start, which is its right edge in a right to left layout.
+        val x = if (layoutDirection == LayoutDirection.Rtl) cellStart + cellWidths[row][column] - unitWidths[index] else cellStart
         IntOffset(x = x, y = songTop + arrangement.tops[index])
     }
     // Every piece of a section on a card - the whole section, where it is not cut - is drawn on a card of its own,
