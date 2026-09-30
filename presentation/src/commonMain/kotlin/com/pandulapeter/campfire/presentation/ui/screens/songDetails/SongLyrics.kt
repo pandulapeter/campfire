@@ -1686,7 +1686,7 @@ private fun SongSectionsLayout(
         // anything for it. A song of one section has only ever been tried in a single column, so whether it fits the
         // screen whole is only found out here.
         val cutColumnCount = widthColumnCountFor(totalWidth).coerceAtMost(unitCount)
-        if (searched.fits || !canCutSections || availableHeightPx <= 0 || cutColumnCount < 2) return searched
+        if (searched.fits || !canCutSections || availableHeightPx <= 0 || cutColumnCount < 2 || sectionCount > MAX_CUT_SECTION_COUNT) return searched
         val height = searched.grid.height()
         if (height <= availableHeightPx) return SearchedGrid(searched.grid, fits = true, height = height)
 
@@ -2830,6 +2830,13 @@ private const val MAX_SECTION_WIDTHS = 32
  * the screen, since the cut costs the reader more than a sliver of height saves them.
  */
 private const val MIN_CUT_SAVING_FRACTION = 8
+
+/**
+ * The most sections a song may have for its sections to be cut at all. A file of more than this is a songbook rather
+ * than a song, and is read by paging through it; the search for cuts grows faster than the song does, runs on the main
+ * thread, and runs again on every frame of a pinch.
+ */
+private const val MAX_CUT_SECTION_COUNT = 200
 private const val UNMEASURED = -1
 private const val MAX_MEASURED_TEXTS = 4096
 private const val MAX_ANIMATED_SECTION_HEIGHT = 1 shl 17

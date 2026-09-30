@@ -104,28 +104,46 @@ class SectionCuttingTest {
             val sections = List(random.nextInt(1, 12)) { List(random.nextInt(1, 6)) { random.nextInt(40, 200) } }
             val maxRowHeight = random.nextInt(250, 700)
             val maxColumnCount = random.nextInt(2, 4)
-            val units = unitSections(sections)
             val padding = IntArray(sections.size) { if (random.nextBoolean()) 12 else 0 }
             val grid = cut(sections, maxColumnCount, maxRowHeight, padding, cutsEverySection = random.nextBoolean())
-            val heights = sections.flatten().toIntArray()
-            grid.columnCounts.forEachIndexed { row, columnCount ->
-                val rowUnits = units.indices.filter { grid.rows[it] == row }
-                assertEquals((0 until columnCount).toList(), rowUnits.map { grid.columns[it] }.distinct())
-                if (columnCount > 1) {
-                    val rowGrid = SectionGrid(IntArray(rowUnits.size), IntArray(rowUnits.size) { grid.columns[rowUnits[it]] }, intArrayOf(columnCount))
-                    val height = rowGrid.arrange(
-                        heights = IntArray(rowUnits.size) { heights[rowUnits[it]] },
-                        sectionGap = SECTION_GAP,
-                        rowGap = ROW_GAP,
-                        unitSections = IntArray(rowUnits.size) { units[rowUnits[it]] },
-                        piecePadding = padding,
-                    ).height
-                    assertTrue(height <= maxRowHeight, "Row $row of $columnCount columns is $height tall, more than $maxRowHeight")
-                }
-            }
-            // Every section is in one row.
-            sections.indices.forEach { section -> assertEquals(1, units.indices.filter { units[it] == section }.map { grid.rows[it] }.distinct().size) }
+            assertRowsFitAndHoldWholeSections(grid, sections, maxRowHeight, padding)
         }
+    }
+
+    @Test
+    fun aSongbookSizedFileIsCutByTheSameRules() {
+        val random = Random(11)
+        val sections = List(1000) { List(3) { random.nextInt(40, 200) } }
+        val padding = IntArray(sections.size)
+        val grid = cut(sections, maxColumnCount = 4, maxRowHeight = 500, piecePadding = padding, cutsEverySection = true)
+        assertRowsFitAndHoldWholeSections(grid, sections, maxRowHeight = 500, padding = padding)
+        val rowOfUnit = grid.rows.toList()
+        assertEquals(rowOfUnit.sorted(), rowOfUnit)
+    }
+
+    /** No row of several columns is taller than [maxRowHeight], every row fills its columns, and no section crosses a row. */
+    private fun assertRowsFitAndHoldWholeSections(grid: SectionGrid, sections: List<List<Int>>, maxRowHeight: Int, padding: IntArray) {
+        val units = unitSections(sections)
+        val heights = sections.flatten().toIntArray()
+        val unitsByRow = units.indices.groupBy { grid.rows[it] }
+        grid.columnCounts.forEachIndexed { row, columnCount ->
+            val rowUnits = unitsByRow[row].orEmpty()
+            assertEquals((0 until columnCount).toList(), rowUnits.map { grid.columns[it] }.distinct())
+            if (columnCount > 1) {
+                val rowGrid = SectionGrid(IntArray(rowUnits.size), IntArray(rowUnits.size) { grid.columns[rowUnits[it]] }, intArrayOf(columnCount))
+                val height = rowGrid.arrange(
+                    heights = IntArray(rowUnits.size) { heights[rowUnits[it]] },
+                    sectionGap = SECTION_GAP,
+                    rowGap = ROW_GAP,
+                    unitSections = IntArray(rowUnits.size) { units[rowUnits[it]] },
+                    piecePadding = padding,
+                ).height
+                assertTrue(height <= maxRowHeight, "Row $row of $columnCount columns is $height tall, more than $maxRowHeight")
+            }
+        }
+        // Every section is in one row.
+        val rowsBySection = units.indices.groupBy({ units[it] }, { grid.rows[it] })
+        sections.indices.forEach { section -> assertEquals(1, rowsBySection[section].orEmpty().distinct().size) }
     }
 
     private fun unitSections(sectionUnits: List<List<Int>>) = sectionUnits.flatMapIndexed { section, units -> List(units.size) { section } }.toIntArray()

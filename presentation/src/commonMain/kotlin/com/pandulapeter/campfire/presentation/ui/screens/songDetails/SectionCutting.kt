@@ -48,6 +48,10 @@ internal fun flowIntoRowsCuttingSections(
     val sectionCount = sectionStarts.size - 1
     if (sectionCount <= 0) return emptyGrid()
     val unitCount = sectionStarts[sectionCount]
+    // Looked up for every unit of every row tried, which a scan of the section starts made quadratic in a long song.
+    val unitSections = IntArray(unitCount).also { table ->
+        for (section in 0 until sectionCount) table.fill(section, sectionStarts[section], sectionStarts[section + 1])
+    }
     val heights = Array(maxColumnCount) { column -> IntArray(unitCount) { heightAt(it, column + 1) } }
     val sectionHeights = Array(maxColumnCount) { column ->
         IntArray(sectionCount) { section -> (sectionStarts[section] until sectionStarts[section + 1]).sumOf { heights[column][it] } }
@@ -153,13 +157,13 @@ internal fun flowIntoRowsCuttingSections(
         val lowest = listOfNotNull(whole, oversizedCut, everyCut).minOrNull() ?: return null
         if (whole != null && whole - lowest < minCutSaving) {
             val sectionCells = sectionHeightsAtWidth.balanceIntoCells(start, end, columnCount, sectionGap, whole)
-            return Triple(IntArray(units) { unit -> sectionCells[sectionOf(sectionStarts, sectionStarts[start] + unit) - start] }, whole, false)
+            return Triple(IntArray(units) { unit -> sectionCells[unitSections[sectionStarts[start] + unit] - start] }, whole, false)
         }
         val (cuts, cap) = if (oversizedCut != null && oversizedCut - lowest < minCutSaving) Cuts.OVERSIZED to oversizedCut else Cuts.EVERY to everyCut!!
         val cells = fill(columnCount, start, end, cap, cuts)!!.first
         val isCut = (1 until units).any { unit ->
             val first = sectionStarts[start]
-            cells[unit] != cells[unit - 1] && sectionOf(sectionStarts, first + unit) == sectionOf(sectionStarts, first + unit - 1)
+            cells[unit] != cells[unit - 1] && unitSections[first + unit] == unitSections[first + unit - 1]
         }
         return Triple(cells, cap, isCut)
     }
@@ -228,13 +232,6 @@ private enum class Cuts {
     /** Only a section taller than the screen, which does not fit a row whole however the row is laid out. */
     OVERSIZED,
     EVERY,
-}
-
-/** The section of [unit] among sections whose units start at [sectionStarts]. */
-internal fun sectionOf(sectionStarts: IntArray, unit: Int): Int {
-    var section = 0
-    while (section + 1 < sectionStarts.size && sectionStarts[section + 1] <= unit) section++
-    return section
 }
 
 /** Whether [grid], a grid of chunks, puts any section into more than one cell. */
