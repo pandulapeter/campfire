@@ -2905,8 +2905,8 @@ class CampfireViewModel(
         data class DuplicateSetlist(val setlist: Setlist) : DialogType
         data class DeleteSong(val song: Song) : DialogType
         /**
-         * Opened from the tag header of the song details screen or from a row of the song list; what it offers besides
-         * the song's own tags is [tags].
+         * Opened from the tag header of the song details screen (the Manage tags chip), and offers the song's own tags and
+         * the rest of the library's.
          */
         data class SongTags(val song: Song) : DialogType
         /** Opened from the same header, for an address typed or pasted in. */
