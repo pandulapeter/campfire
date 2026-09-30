@@ -163,8 +163,8 @@ as `Remove the review plans.` without asking. If skipped plans remain, the folde
 - `local.properties` is not in a worktree; copy it in only for lanes whose manual check needs the Dropbox key.
 - Strings go into both `values/strings.xml` and `values-hu/strings.xml`. A changed behaviour updates the module
   `CLAUDE.md` and, where the root one describes it, the root `CLAUDE.md`.
-- Manual checks owed after execution belong in the memory note; the ones a release would be blocked by go into
-  `documentation/testing/release-check.md`, which stays half an hour long — never a per-platform suite.
+- Manual checks owed after execution belong in the memory note, the ones a release would be blocked by among them —
+  never a per-platform suite.
 - Commit examples in this repo's voice: `Stop a sync run that would empty the cloud folder, and ask which way to
   settle it.` · `Leave a bracket unchanged unless it is a whole chord name.` · `Add the <nth> review plans.` ·
   `Remove the review plans.`

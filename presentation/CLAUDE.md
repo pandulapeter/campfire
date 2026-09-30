@@ -129,8 +129,7 @@ Everything else is `commonMain`:
 
 ## Scrolling performance
 
-See `documentation/SCROLLING_PERFORMANCE.md` for the audit and device profiling recipe. `ListTopFade` caches an inverse
-gradient and uses `DstOut` inside its existing offscreen layer, translating the drawing rather than rebuilding a shader
-for every card position. `FastScroller` consumes a conflated channel once per frame so new pointer events cannot cancel
+`ListTopFade` caches an inverse gradient and uses `DstOut` inside its existing offscreen layer, translating the drawing
+rather than rebuilding a shader for every card position. `FastScroller` consumes a conflated channel once per frame so new pointer events cannot cancel
 the frame wait or a scroll in progress; animation values are read while drawing. `SongStepper` scans offsets without
 sorting or allocating lists per scroll update and derives button availability independently from the target position.

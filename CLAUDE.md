@@ -283,9 +283,7 @@ uninstall and nothing else does.
   night on the default branch, and from `publish-all.yml` before it starts a single store build, so a failing test
   stops a release.
   The UI itself is untested by code: `:app:baselineprofile` drives it, but only to record a profile, asserts nothing
-  and is never run by CI. Before a release, `documentation/testing/release-check.md` is run on a Mac (its
-  `README.md` says how): half an hour of the checks whose failure would block one. A change to what it exercises —
-  the first run, importing, sync, the packaged builds — updates it in the same change.
+  and is never run by CI; a release is checked by hand, on a Mac, before it is published.
 
 ## Build
 
