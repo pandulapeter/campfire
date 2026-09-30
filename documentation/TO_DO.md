@@ -10,7 +10,6 @@
 # To do
 - Word / PDF import
 - Global sync status display
-- Metadata should not scale with the song lyrics text (but key / capo / BPM should)
 - Toggle to sort tags by usage or alphabetically
 - Links and tags are too easy to delete, no way to undo and no confirmation dialog.
 - Song details screen: move all options that edit the file into the overflow menu 

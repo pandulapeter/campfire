@@ -455,7 +455,8 @@ private fun CutSongNotice(
  * The tags of the song and everything else its directives say, above the lyrics and scrolling with them. Every
  * directive the editor can insert has to be visible somewhere, and this is where the ones that are neither lyrics
  * nor chords end up - so what is missing here is only what the app bar already carries: the title, the subtitle
- * that is drawn in parentheses after it, and the artist. The key leads the accent line, as [song] has been transposed
+ * that is drawn in parentheses after it, and the artist. Only what is played (the key, the capo, the tempo and the time)
+ * follows [fontScale]; the rest keeps the interface's size. The key leads the accent line, as [song] has been transposed
  * to it, so it names what is played rather than what the file declares.
  *
  * @param onManageTags Null where the tags are only read, which is the editor's preview: there the file itself is under
@@ -483,6 +484,22 @@ private fun SongMetadataHeader(
     onRemoveLink: ((String) -> Unit)?,
     onEditCoverArt: (() -> Unit)?,
 ) = Column(modifier = modifier.padding(bottom = SECTION_GAP)) {
+    val metadata = song.metadata
+    // Who wrote it and where it came out is only ever looked up, so it stays at the size of the interface above the
+    // chips; what is played is read off the page while playing, so it grows with the lyrics under them, in the accent
+    // colour the chords are drawn in.
+    MetadataLine(
+        modifier = Modifier.padding(bottom = 12.dp),
+        values = listOfNotNull(
+            metadata.composer?.takeIf { it.isNotBlank() }?.let { textResource(Res.string.song_details_composer, it) },
+            metadata.lyricist?.takeIf { it.isNotBlank() }?.let { textResource(Res.string.song_details_lyricist, it) },
+            metadata.album?.takeIf { it.isNotBlank() }?.let { textResource(Res.string.song_details_album, it) },
+            metadata.year?.takeIf { it.isNotBlank() }?.let { textResource(Res.string.song_details_year, it) },
+            metadata.duration?.takeIf { it.isNotBlank() }?.let { textResource(Res.string.song_details_duration, it) },
+        ),
+        style = MaterialTheme.typography.bodyMedium,
+        color = MaterialTheme.colorScheme.onSurfaceVariant,
+    )
     SongChips(
         song = song,
         onManageTags = onManageTags,
@@ -493,10 +510,8 @@ private fun SongMetadataHeader(
         onRemoveLink = onRemoveLink,
         onEditCoverArt = onEditCoverArt,
     )
-    val metadata = song.metadata
-    // What is played, in the accent colour, above who wrote it: one is read off the page while playing and the
-    // other is only ever looked up.
     MetadataLine(
+        modifier = Modifier.padding(top = 4.dp),
         values = listOfNotNull(
             metadata.key?.takeIf { it.isNotBlank() }?.let { textResource(Res.string.songs_key, it) },
             metadata.capo?.takeIf { it != 0 }?.let { stringResource(Res.string.song_details_capo, it) },
@@ -505,17 +520,6 @@ private fun SongMetadataHeader(
         ),
         style = MaterialTheme.typography.labelLarge.scaled(fontScale),
         color = LocalSecondAccentColor.current,
-    )
-    MetadataLine(
-        values = listOfNotNull(
-            metadata.composer?.takeIf { it.isNotBlank() }?.let { textResource(Res.string.song_details_composer, it) },
-            metadata.lyricist?.takeIf { it.isNotBlank() }?.let { textResource(Res.string.song_details_lyricist, it) },
-            metadata.album?.takeIf { it.isNotBlank() }?.let { textResource(Res.string.song_details_album, it) },
-            metadata.year?.takeIf { it.isNotBlank() }?.let { textResource(Res.string.song_details_year, it) },
-            metadata.duration?.takeIf { it.isNotBlank() }?.let { textResource(Res.string.song_details_duration, it) },
-        ),
-        style = MaterialTheme.typography.bodyMedium.scaled(fontScale),
-        color = MaterialTheme.colorScheme.onSurfaceVariant,
     )
 }
 
@@ -635,7 +639,7 @@ private fun MetadataLine(
 ) {
     if (values.isEmpty()) return
     Text(
-        modifier = modifier.padding(top = 4.dp),
+        modifier = modifier,
         text = values.joinToString("  $CHIP_SEPARATOR  "),
         style = style,
         color = color,
@@ -1624,15 +1628,11 @@ private fun SongSectionsLayout(
             else -> maxOf(centered, endInsetPx)
         }.coerceIn(0, (width - rowSpan).coerceAtLeast(0))
     }
-    // The rows may be of different widths, so the content (and the dividers with it) is as wide as the widest of them.
     val contentStart = centeredRowStarts.minOrNull() ?: 0
-    val contentEnd = centeredRowStarts.indices.maxOfOrNull { row ->
-        val columnCount = grid.columnCounts[row]
-        centeredRowStarts[row] + columnWidths[row] * columnCount + columnGapPx * (columnCount - 1)
-    } ?: width
-    val contentWidth = (contentEnd - contentStart).coerceAtLeast(0)
+    // The dividers span the whole width rather than the rows, which are as wide as the text size makes the columns: a
+    // divider that grew and shrank with a pinch would read as part of the song rather than as the page's own.
     val dividerCount = (grid.columnCounts.size - 1).coerceAtLeast(0) + if (hasDividerAbove) 1 else 0
-    val dividerPlaceables = dividerMeasurables.take(dividerCount).map { it.measure(Constraints(minWidth = contentWidth, maxWidth = contentWidth)) }
+    val dividerPlaceables = dividerMeasurables.take(dividerCount).map { it.measure(Constraints(minWidth = width, maxWidth = width)) }
     val dividerHeight = dividerPlaceables.firstOrNull()?.height ?: 0
     // A song of one row is left as it is: there is no other row to keep off the screen, and space under it would only
     // make a song that fits the screen scrollable.
@@ -1684,7 +1684,7 @@ private fun SongSectionsLayout(
         )
     }
     val dividers = dividerPlaceables.mapIndexed { index, placeable ->
-        placeable to IntOffset(x = contentStart, y = dividerTops[index] - placeable.height / 2)
+        placeable to IntOffset(x = 0, y = dividerTops[index] - placeable.height / 2)
     }
     val positions = Array(placeables.size) { index ->
         val row = grid.rows[index]
