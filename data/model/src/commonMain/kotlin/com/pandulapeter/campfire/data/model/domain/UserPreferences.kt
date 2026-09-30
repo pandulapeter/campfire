@@ -25,7 +25,7 @@ data class UserPreferences(
     val isLyricsOnlyModeEnabled: Boolean,
     /**
      * Whether a song leaves empty space under every row of columns shorter than the screen, so that a scroll resting on
-     * a row shows that row and no other.
+     * a row shows that row and no other. On by default.
      */
     val isOneRowAtATimeEnabled: Boolean,
     /**

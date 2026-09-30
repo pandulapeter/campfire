@@ -22,7 +22,7 @@ internal data class UserPreferencesDocument(
     // would hide every new song right after it was made.
     val shouldShowArchivedSetlists: Boolean = false,
     val isLyricsOnlyModeEnabled: Boolean = false,
-    val isOneRowAtATimeEnabled: Boolean = false,
+    val isOneRowAtATimeEnabled: Boolean = true,
     val fontScale: Float = 1f,
     val sortingMode: String = "",
     val setlistSortingMode: String = "",
