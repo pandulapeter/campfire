@@ -253,6 +253,83 @@ class RowSnappingTest {
         assertEquals(2000, anchoredScrollOffset(ReadingAnchor(section = 3, offset = 100), column, viewportHeight = 1000, maxValue = 2000))
     }
 
+    /** A single section stepped to at 59, whose 400 lines of [lineHeight] start at 100. */
+    private fun tallSection(lineHeight: Int) = SongRows(
+        stepOffsets = listOf(59),
+        stepSections = listOf(0),
+        lineTops = List(400) { 100 + it * lineHeight },
+        lineBottoms = List(400) { 100 + (it + 1) * lineHeight },
+        lineSections = List(400) { 0 },
+    )
+
+    @Test
+    fun aTextSizeChangeInsideATallSectionKeepsTheLine() {
+        // Line 30 is at the top of what is read, with 5 px of it above.
+        val anchor = readingAnchorOf(scroll = 700 - 41 + 5, rows = tallSection(20), readingTop = 41)!!
+        assertEquals(LineAnchor(section = 0, index = 30, offset = 5, height = 20), anchor.line)
+        assertEquals(100 + 30 * 36 + 9 - 41, anchoredScrollOffset(anchor, tallSection(36), viewportHeight = 450, maxValue = 100_000, readingTop = 41))
+        assertEquals(100 + 30 * 60 + 15 - 41, anchoredScrollOffset(anchor, tallSection(60), viewportHeight = 450, maxValue = 100_000, readingTop = 41))
+    }
+
+    @Test
+    fun shrinkingTheTextInsideATallSectionNeverMovesTheReaderToALaterLine() {
+        val anchor = readingAnchorOf(scroll = 100 + 30 * 36 - 41 + 5, rows = tallSection(36), readingTop = 41)!!
+        assertEquals(700 + 2 - 41, anchoredScrollOffset(anchor, tallSection(20), viewportHeight = 450, maxValue = 100_000, readingTop = 41))
+    }
+
+    @Test
+    fun aReaderOnAStopStaysOnIt() {
+        val rows = tallSection(20).copy(stepOffsets = listOf(59, 8100), stepSections = listOf(0, 1), lineSections = List(400) { 0 })
+        val anchor = readingAnchorOf(scroll = 8100, rows = rows, readingTop = 41)!!
+        assertEquals(ReadingAnchor(section = 1, offset = 0), anchor)
+        val larger = tallSection(36).copy(stepOffsets = listOf(59, 14500), stepSections = listOf(0, 1))
+        assertEquals(14500, anchoredScrollOffset(anchor, larger, viewportHeight = 450, maxValue = 100_000, readingTop = 41))
+    }
+
+    /** Rows 0 and 1 in a single column: sections 0 to 2 in the first, three lines of 100 px each from 300. */
+    private val rowOfThreeSections = SongRows(
+        restingOffsets = listOf(300, 1300),
+        bottoms = listOf(1200, 2000),
+        stepOffsets = listOf(300, 1300),
+        stepSections = listOf(0, 3),
+        isSteppedByRow = true,
+        lineTops = List(9) { 300 + it * 100 },
+        lineBottoms = List(9) { 400 + it * 100 },
+        lineSections = List(9) { it / 3 },
+    )
+
+    /** Sections 0 and 1 in the first row, section 2 in a row of its own from 1000, with lines of 150 px. */
+    private fun sectionTwoInARowOfItsOwn(sectionTwoLines: Int = 3) = SongRows(
+        restingOffsets = listOf(300, 1000, 1600),
+        bottoms = listOf(900, 1450, 2200),
+        stepOffsets = listOf(300, 1000, 1600),
+        stepSections = listOf(0, 2, 3),
+        isSteppedByRow = true,
+        lineTops = List(6) { 300 + it * 100 } + List(sectionTwoLines) { 1000 + it * 150 },
+        lineBottoms = List(6) { 400 + it * 100 } + List(sectionTwoLines) { 1150 + it * 150 },
+        lineSections = List(6) { it / 3 } + List(sectionTwoLines) { 2 },
+    )
+
+    @Test
+    fun aLineIsFoundInTheRowItsSectionMovedTo() {
+        // The reader is 20 px into the second line of section 2.
+        val anchor = readingAnchorOf(scroll = 1020, rows = rowOfThreeSections)!!
+        assertEquals(LineAnchor(section = 2, index = 1, offset = 20, height = 100), anchor.line)
+        assertEquals(1150 + 30, anchoredScrollOffset(anchor, sectionTwoInARowOfItsOwn(), viewportHeight = 200, maxValue = 4000))
+    }
+
+    @Test
+    fun aLineTheNewLayoutDoesNotPageThroughFallsBackToTheStop() {
+        val anchor = readingAnchorOf(scroll = 1020, rows = rowOfThreeSections)!!
+        val byStop = anchor.copy(line = null)
+        // Section 2 folded to a single piece.
+        val folded = sectionTwoInARowOfItsOwn(sectionTwoLines = 1)
+        assertEquals(anchoredScrollOffset(byStop, folded, viewportHeight = 200, maxValue = 4000), anchoredScrollOffset(anchor, folded, viewportHeight = 200, maxValue = 4000))
+        // Section 2 in a row of several columns, which lists no lines.
+        val columns = sectionTwoInARowOfItsOwn(sectionTwoLines = 0)
+        assertEquals(anchoredScrollOffset(byStop, columns, viewportHeight = 200, maxValue = 4000), anchoredScrollOffset(anchor, columns, viewportHeight = 200, maxValue = 4000))
+    }
+
     @Test
     fun aSongNotLaidOutYetHasNoAnchor() {
         assertEquals(null, readingAnchorOf(scroll = 100, rows = SongRows()))

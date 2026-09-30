@@ -1847,6 +1847,7 @@ private fun SongSectionsLayout(
         // holds: stepping to every section would stop in the middle of a row. A single row with nothing above it to
         // step past has no stops of its own, and is stepped through by its sections.
         val isSteppedByRow = isScrolledByRow && restingOffsets.isNotEmpty()
+        val singleColumnUnits = (0 until unitCount).filter { grid.columnCounts[grid.rows[it]] == 1 }
         onRowsPlaced(
             SongRows(
                 restingOffsets = restingOffsets,
@@ -1867,7 +1868,9 @@ private fun SongSectionsLayout(
                 },
                 isSteppedByRow = isSteppedByRow,
                 // Only a single column is paged through: a row of several is never taller than the screen.
-                lineTops = (0 until unitCount).filter { grid.columnCounts[grid.rows[it]] == 1 }.map { songTop + arrangement.tops[it] },
+                lineTops = singleColumnUnits.map { songTop + arrangement.tops[it] },
+                lineBottoms = singleColumnUnits.map { songTop + arrangement.tops[it] + unitHeights[it] },
+                lineSections = singleColumnUnits.map { units.unitSections[it] },
             ),
         )
     }

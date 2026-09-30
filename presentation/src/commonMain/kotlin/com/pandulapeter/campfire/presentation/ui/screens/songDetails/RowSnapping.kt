@@ -54,7 +54,9 @@ import kotlin.math.sign
  *
  * [lineTops] are where the pieces a single column is made of start - every section, and within one the chunks it may be
  * cut into, which start between two of its lines (see [sectionChunkStarts]) - so that a step that pages through what
- * does not fit the screen can bring a line to the top of it rather than half of one.
+ * does not fit the screen can bring a line to the top of it rather than half of one. [lineBottoms] are where each of
+ * those pieces ends and [lineSections] the section each belongs to, which together name a line in terms another layout
+ * of the song still has (see [LineAnchor]).
  */
 internal data class SongRows(
     val restingOffsets: List<Int> = emptyList(),
@@ -63,13 +65,19 @@ internal data class SongRows(
     val stepSections: List<Int> = emptyList(),
     val isSteppedByRow: Boolean = false,
     val lineTops: List<Int> = emptyList(),
+    val lineBottoms: List<Int> = emptyList(),
+    val lineSections: List<Int> = emptyList(),
 ) {
     fun offsetBy(offset: Int) = copy(
         restingOffsets = restingOffsets.map { it + offset },
         bottoms = bottoms.map { it + offset },
         stepOffsets = stepOffsets.map { it + offset },
         lineTops = lineTops.map { it + offset },
+        lineBottoms = lineBottoms.map { it + offset },
     )
+
+    /** Whether the three lists that describe the pieces of a single column describe the same pieces. */
+    val hasLines get() = lineTops.isNotEmpty() && lineBottoms.size == lineTops.size && lineSections.size == lineTops.size
 }
 
 /**
@@ -355,20 +363,20 @@ internal class RowSnapFlingBehavior(
         launch {
             snapshotFlow { scrollState.isScrollInProgress }.collect { isScrolling ->
                 if (isScrolling || isMoving) return@collect
-                if (scrollState.value != movedTo) anchor = readingAnchorOf(scrollState.value, rows)
+                if (scrollState.value != movedTo) anchor = readingAnchorOf(scrollState.value, rows, readingWindow.top)
                 movedTo = null
             }
         }
         snapshotFlow { rows }.collectLatest { currentRows ->
             if (anchor == null) {
-                anchor = readingAnchorOf(scrollState.value, currentRows)
+                anchor = readingAnchorOf(scrollState.value, currentRows, readingWindow.top)
                 return@collectLatest
             }
             delay(LAYOUT_SETTLE_MILLIS)
             // Read after the wait, since a scroll the reader made during it came to rest on this layout.
             val currentAnchor = anchor ?: return@collectLatest
             if (scrollState.isScrollInProgress) return@collectLatest
-            val target = anchoredScrollOffset(currentAnchor, currentRows, scrollState.viewportSize, Int.MAX_VALUE) ?: return@collectLatest
+            val target = anchoredScrollOffset(currentAnchor, currentRows, scrollState.viewportSize, Int.MAX_VALUE, readingWindow.top) ?: return@collectLatest
             withTimeoutOrNull(LAYOUT_SETTLE_MILLIS * 4) { snapshotFlow { scrollState.maxValue }.first { it >= target } }
             val reachableTarget = target.coerceAtMost(scrollState.maxValue)
             if (reachableTarget == scrollState.value) return@collectLatest
@@ -388,40 +396,103 @@ internal class RowSnapFlingBehavior(
  * Where the reader is in a song, in terms that outlive a new layout of it: the stop they are past - a row, or a section
  * where the song is not stepped through by rows - named by the section it starts with ([section], null for the header
  * above the first one), and how far past it they are ([offset]).
+ *
+ * Inside a stop that is taller than the screen that offset is a number of pixels, which is a different line at every
+ * text size, so there the reader is also anchored by the [line] they are reading, and the stop only stands in for it
+ * where the new layout has no such line.
  */
-internal data class ReadingAnchor(val section: Int?, val offset: Int)
+internal data class ReadingAnchor(val section: Int?, val offset: Int, val line: LineAnchor? = null)
+
+/**
+ * The piece of a single column the reader is at (see [SongRows.lineTops]), named by its [section] and its [index] among
+ * that section's pieces - both the same in every layout, since a section a single column holds is composed one chunk
+ * per line whatever the width and the text size - with how far below its top the reading position is ([offset]) and
+ * how tall it was then ([height]), so that the place inside a line that has wrapped differently is kept as a proportion.
+ */
+internal data class LineAnchor(val section: Int, val index: Int, val offset: Int, val height: Int)
 
 /**
  * Where the reader is at [scroll] among the stops of [rows]: past the lowest one above it, which in columns read top to
- * bottom need not be the last one listed. Null before the song has been laid out.
+ * bottom need not be the last one listed, and at the line that is under [readingTop], where reading starts below the
+ * top of the viewport. A reader resting on the stop itself is anchored by the stop alone, so that they are put back on
+ * it exactly. Null before the song has been laid out.
  */
-internal fun readingAnchorOf(scroll: Int, rows: SongRows): ReadingAnchor? {
+internal fun readingAnchorOf(scroll: Int, rows: SongRows, readingTop: Int = 0): ReadingAnchor? {
     if (rows.stepOffsets.isEmpty() || rows.stepSections.size != rows.stepOffsets.size) return null
     val stop = stopAt(scroll, rows.stepOffsets)
-    return if (stop < 0) {
-        ReadingAnchor(section = null, offset = scroll)
-    } else {
-        ReadingAnchor(section = rows.stepSections[stop], offset = (scroll - rows.stepOffsets[stop]).coerceAtLeast(0))
+    if (stop < 0) return ReadingAnchor(section = null, offset = scroll)
+    val stopSection = rows.stepSections[stop]
+    val offset = scroll - rows.stepOffsets[stop]
+    val anchor = ReadingAnchor(section = stopSection, offset = offset.coerceAtLeast(0))
+    if (offset <= POSITION_TOLERANCE || !rows.hasLines) return anchor
+    // The rows before the stop hold only earlier sections, so a stop with no line of its own - a row of several
+    // columns - finds none here and is anchored as before.
+    val at = scroll + readingTop
+    var line = -1
+    rows.lineTops.forEachIndexed { index, top ->
+        if (rows.lineSections[index] >= stopSection && top <= at) line = index
     }
+    if (line < 0) return anchor
+    val lineSection = rows.lineSections[line]
+    return anchor.copy(
+        line = LineAnchor(
+            section = lineSection,
+            index = (0 until line).count { rows.lineSections[it] == lineSection },
+            offset = at - rows.lineTops[line],
+            height = rows.lineBottoms[line] - rows.lineTops[line],
+        ),
+    )
 }
 
 /**
- * The scroll position that puts the reader back where [anchor] says they were among [rows] laid out anew: past the stop
- * that now holds the section theirs started with, as far as they were past theirs - though never so far into a row that
- * its content ends above the bottom of the viewport - and in the header no further down than the first stop. Null
- * before the song has been laid out.
+ * The scroll position that puts the reader back where [anchor] says they were among [rows] laid out anew: on the same
+ * line under [readingTop], as far into it as they were in proportion to its height, where the new layout still pages
+ * through that line in a single column; otherwise past the stop that now holds the section theirs started with, as far
+ * as they were past theirs. Never so far into a row that its content ends above the bottom of the viewport, and in the
+ * header no further down than the first stop. Null before the song has been laid out.
  */
-internal fun anchoredScrollOffset(anchor: ReadingAnchor, rows: SongRows, viewportHeight: Int, maxValue: Int): Int? {
+internal fun anchoredScrollOffset(anchor: ReadingAnchor, rows: SongRows, viewportHeight: Int, maxValue: Int, readingTop: Int = 0): Int? {
     if (rows.stepOffsets.isEmpty() || rows.stepSections.size != rows.stepOffsets.size) return null
     val section = anchor.section ?: return anchor.offset.coerceIn(0, rows.stepOffsets.min().coerceAtLeast(0)).coerceIn(0, maxValue)
+    val line = anchor.line
+    val lineIndex = if (line != null && rows.hasLines) {
+        // A section folded since lists one piece where it listed many, and one now in a row of several lists none.
+        var seen = 0
+        rows.lineSections.indices.firstOrNull { index -> rows.lineSections[index] == line.section && seen++ == line.index }
+    } else {
+        null
+    }
+    if (line == null || lineIndex == null) {
+        val stop = stopHolding(section, rows)
+        return (rows.stepOffsets[stop] + anchor.offset).coerceAtMost(lastFreeOffset(stop, rows, viewportHeight)).coerceIn(0, maxValue)
+    }
+    val top = rows.lineTops[lineIndex]
+    val height = rows.lineBottoms[lineIndex] - rows.lineTops[lineIndex]
+    // Rounded down, towards what has been read. A reader in the gap after the line keeps their distance from it in
+    // pixels, since a gap does not grow with the text.
+    val mapped = when {
+        line.offset >= line.height -> height + (line.offset - line.height)
+        else -> (line.offset.toLong() * height / line.height).toInt()
+    }
+    // The line may now be in a row that starts with another section, so the row is looked up by the line's own.
+    val stop = stopHolding(line.section, rows)
+    return (top + mapped - readingTop).coerceAtMost(lastFreeOffset(stop, rows, viewportHeight)).coerceIn(0, maxValue)
+}
+
+/** The index of the stop of [rows] that holds [section]: the one starting with the latest section not after it. */
+private fun stopHolding(section: Int, rows: SongRows): Int {
     var stop = 0
     rows.stepSections.forEachIndexed { index, stopSection ->
         if (stopSection <= section && stopSection > rows.stepSections[stop]) stop = index
     }
+    return stop
+}
+
+/** The furthest a reader in the [stop] of [rows] may be scrolled, which in a row is where its content meets the bottom of the viewport. */
+private fun lastFreeOffset(stop: Int, rows: SongRows, viewportHeight: Int): Int {
     val stepOffset = rows.stepOffsets[stop]
     val bottom = if (rows.isSteppedByRow) rows.bottoms.getOrNull(stop) else null
-    val lastFree = bottom?.let { it - viewportHeight }?.coerceAtLeast(stepOffset) ?: Int.MAX_VALUE
-    return (stepOffset + anchor.offset).coerceAtMost(lastFree).coerceIn(0, maxValue)
+    return bottom?.let { it - viewportHeight }?.coerceAtLeast(stepOffset) ?: Int.MAX_VALUE
 }
 
 /**
