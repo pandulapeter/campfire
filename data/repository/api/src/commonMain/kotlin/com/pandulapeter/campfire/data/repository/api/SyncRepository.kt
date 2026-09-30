@@ -99,17 +99,19 @@ interface SyncRepository {
 
     /**
      * Starts a run, if nothing is connected there is nothing to start, and if one is already going this does
-     * nothing - so pressing the button twice cannot start two runs over the same files.
+     * nothing - so pressing the button twice cannot start two runs over the same files. Returns whether it started
+     * one: false where a run is already going, which the request then does not survive, its [deletionPolicy]
+     * included.
      *
-     * Deliberately not suspend and returning nothing: a run outlives whoever asked for it, and what it is doing and
-     * how it ended arrive through [syncState]. That is also what lets it carry on while the app is in the
-     * background on Android, where the screen that started it may be gone.
+     * Deliberately not suspend: a run outlives whoever asked for it, and what it is doing and how it ended arrive
+     * through [syncState]. That is also what lets it carry on while the app is in the background on Android, where
+     * the screen that started it may be gone.
      *
      * @param deletionPolicy What happens to files found gone from one side. [SyncDeletionPolicy.ASK] stops a run that
      *   would delete most of the library on this device or in the cloud folder and reports
      *   [SyncOutcome.DeletionsNeedConfirmation]; the other four are the answers to that question, two per direction.
      */
-    fun synchronize(deletionPolicy: SyncDeletionPolicy = SyncDeletionPolicy.ASK)
+    fun synchronize(deletionPolicy: SyncDeletionPolicy = SyncDeletionPolicy.ASK): Boolean
 
     /**
      * Asks for a run that nobody pressed a button for: the one every change the app makes to a song or setlist file asks

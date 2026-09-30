@@ -18,8 +18,8 @@ interface DeleteLibraryUseCase {
      * deletions allowed ([com.pandulapeter.campfire.data.model.domain.SyncDeletionPolicy.DELETE_REMOTELY]): the
      * confirmation the user typed is the answer the run's guard would otherwise stop to ask for, so the cloud folder,
      * and every device synced with it, is emptied as well. A file changed on another device since the last run still
-     * comes back, since an edit beats a deletion; and where a run is already going the request is dropped and the
-     * automatic run after it asks as usual. Every file is attempted even after one fails, the first failure being
+     * comes back, since an edit beats a deletion. A run that is already going is stopped before anything is deleted,
+     * since it would keep this one from starting; what it had moved stays moved. Every file is attempted even after one fails, the first failure being
      * thrown at the end.
      */
     suspend operator fun invoke()

@@ -409,9 +409,9 @@ internal class SyncRepositoryImpl(
      * The policy belongs to this one run rather than to the state: an answer to "delete them here too?" is an answer
      * about the files that were gone when it was asked, not a setting every later run should inherit.
      */
-    override fun synchronize(deletionPolicy: SyncDeletionPolicy) {
+    override fun synchronize(deletionPolicy: SyncDeletionPolicy) = startRun(deletionPolicy).also { isStarted ->
         // The run starts after every change an automatic one is waiting for, so it carries them too.
-        if (startRun(deletionPolicy)) scheduledRunDueAt.value = null
+        if (isStarted) scheduledRunDueAt.value = null
     }
 
     override fun scheduleSynchronization() {

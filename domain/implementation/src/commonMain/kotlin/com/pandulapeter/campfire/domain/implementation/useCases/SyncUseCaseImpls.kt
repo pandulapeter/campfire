@@ -106,7 +106,9 @@ class SynchronizeLibraryUseCaseImpl internal constructor(
     private val syncRepository: SyncRepository,
 ) : SynchronizeLibraryUseCase {
 
-    override operator fun invoke(deletionPolicy: SyncDeletionPolicy) = syncRepository.synchronize(deletionPolicy)
+    override operator fun invoke(deletionPolicy: SyncDeletionPolicy) {
+        syncRepository.synchronize(deletionPolicy)
+    }
 }
 
 @Factory

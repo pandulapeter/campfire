@@ -542,7 +542,8 @@ the short version:
   out of every device backup and deleted after a library read that leaves no song naming it (`CoverArtRepository`).
   Settings → Library shows how much they take up, under the library's own size, once there is any, and tapping that
   row deletes them (`CoverArtRepository.clearCoverArtCache`) after a confirmation; the library's own row deletes every
-  song and setlist, after a dialog that wants `DELETE` typed, and then starts a sync run with the deletions allowed
+  song and setlist, after a dialog that wants `DELETE` typed, stops any run that is going and then starts a sync run
+  with the deletions allowed
   (`DeleteLibraryUseCase`), the typed word being the answer the run's guard would otherwise stop to ask for — so the
   cloud folder and every device synced with it are emptied too, which the dialog says while an account is connected.
   Requests for one address share one download, only a few are made at a time, one nobody is waiting for any more by

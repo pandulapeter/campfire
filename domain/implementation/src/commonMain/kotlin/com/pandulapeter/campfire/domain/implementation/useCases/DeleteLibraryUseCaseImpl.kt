@@ -37,12 +37,17 @@ class DeleteLibraryUseCaseImpl internal constructor(
      * should follow it; a file that could not be deleted is still here, so the run leaves its copy in the folder alone.
      */
     override suspend operator fun invoke() = withContext(NonCancellable) {
+        // A run that is going would keep the deletion's own run from starting, and its answer with it; what it had
+        // already moved stays moved, and the run below carries the rest.
+        syncRepository.cancelSynchronization()
         val songsFailure = runCatchingFailure { songRepository.deleteAllSongs() }
         val setlistsFailure = runCatchingFailure { setlistRepository.deleteAllSetlists() }
         userPreferencesRepository.updateUserPreferences { preferences ->
             preferences.copy(transpositions = emptyMap(), foldedSections = emptyMap())
         }
-        syncRepository.synchronize(SyncDeletionPolicy.DELETE_REMOTELY)
+        if (!syncRepository.synchronize(SyncDeletionPolicy.DELETE_REMOTELY)) {
+            println("The deletion's sync run could not be started, a run was already going.")
+        }
         (songsFailure ?: setlistsFailure)?.let { throw it } ?: Unit
     }
 
