@@ -346,7 +346,9 @@ uninstall and nothing else does.
   last published release's (the highest of the three per-store counters, for a release from before there was one),
   since a store would refuse a used one only after the other builds had gone out, running every test, and then calling the six workflows below side by side. Each of them is the local build command plus the secrets a checkout does not have, and each can still be
   dispatched by hand, to publish without a release or to repeat one half of a release that went wrong. What they build is the tag's, but the store
-  scripts in `.github/scripts` come from the workflow's own commit, so a fix to one reaches a release already tagged. Every build
+  scripts in `.github/scripts` come from the commit the workflow itself runs from — the tag's on a release, and the
+  branch's when the workflow is dispatched by hand with `release_tag` set, which is how a fix to one reaches a release
+  already tagged without a new tag. Every build
   passes `campfire.dropbox.appKey` from the `DROPBOX_APP_KEY` secret, because a published app built without it would
   quietly have no sync provider at all — so each workflow, and `publish-all.yml` before it calls any of them, refuses to
   start when that secret is empty. The check is in the workflows rather than in Gradle: an empty key is the

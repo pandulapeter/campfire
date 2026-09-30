@@ -36,7 +36,7 @@ The app is currently available for the following platforms:
 
 macOS is coming really soon (under final review):
 
-<a href="https://github.com/pandulapeter/campfire/releases/latest"><img src="documentation/images/badge_macos.png" alt="Campfire for macOS" height="32px" /></a>
+<a href="https://campfire-songbook.com/#download"><img src="documentation/images/badge_macos.png" alt="Campfire for macOS" height="32px" /></a>
 
 ## Under the hood
 

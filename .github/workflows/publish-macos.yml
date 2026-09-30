@@ -112,8 +112,9 @@ jobs:
         uses: actions/checkout@v5
         with:
           ref: ${{ inputs.release_tag }}
-      # The tag decides what is built, but talking to the store is the workflow's business: a fix to these scripts has to
-      # reach a release that is already tagged, and the one run by hand to repeat it, rather than wait for the next tag.
+      # The tag decides what is built, and the scripts come from the commit this workflow runs from: the tag's on a
+      # release, so a re-run of it takes the same scripts, and the branch's when it is dispatched by hand with
+      # release_tag set, which is how a fix to these scripts reaches a release that is already tagged.
       - name: Take the store scripts from the workflow's commit
         env:
           WORKFLOW_SHA: ${{ github.workflow_sha }}
