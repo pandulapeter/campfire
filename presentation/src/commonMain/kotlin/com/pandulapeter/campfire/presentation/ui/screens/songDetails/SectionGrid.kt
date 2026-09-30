@@ -15,6 +15,10 @@ import kotlin.math.max
  * Which cell every section goes into: the row it is in, its column within that row, and the number of columns of
  * every row (which decides how wide the columns of that row are). The sections of a cell are stacked in their order.
  *
+ * The layout places the chunks sections are composed as (see [sectionChunkStarts]) rather than whole sections, so the
+ * grid it places is one of chunks, every chunk of a section in its section's cell ([expandedTo]) unless the section was
+ * cut into pieces side by side (see [flowIntoRowsCuttingSections]).
+ *
  * This is what is decided for the settled width, while the positions are only worked out by [arrange] from the
  * heights the sections have at the width the layout is actually given.
  */
@@ -34,6 +38,17 @@ internal fun SectionGrid.hasSameCellsAs(other: SectionGrid) = this === other || 
         wideRows.contentEquals(other.wideRows)
     )
 
+/**
+ * This grid of sections as a grid of the chunks they are composed as, where [unitSections] names the section of every
+ * chunk: each of them in its section's cell.
+ */
+internal fun SectionGrid.expandedTo(unitSections: IntArray) = SectionGrid(
+    rows = IntArray(unitSections.size) { rows[unitSections[it]] },
+    columns = IntArray(unitSections.size) { columns[unitSections[it]] },
+    columnCounts = columnCounts,
+    wideRows = wideRows,
+)
+
 /** The grid of no sections at all. */
 internal fun emptyGrid() = SectionGrid(rows = IntArray(0), columns = IntArray(0), columnCounts = IntArray(0))
 
@@ -52,6 +67,11 @@ internal class SongArrangement(
  * Positions the sections of the grid, given their [heights] at the width of their own row: the sections of a cell
  * are stacked [sectionGap] apart, a row is as tall as its tallest cell, and the rows are [rowGap] apart.
  *
+ * Where the grid places chunks, [unitSections] names the section of each: the chunks of one section follow each other
+ * with no gap. A section on a card has the card's padding at its top and bottom inside its first and last chunk, so a
+ * piece of it cut off from the rest ends in that padding ([piecePadding], by section, nothing for a section drawn
+ * without a card) where it is cut, and the piece continuing it in the next column starts with it.
+ *
  * The top of every row is at least [minRowPitch] below the top of the one before it, and the last row takes up at
  * least [minLastRowHeight], the difference being left empty under a row that is shorter than that: a song whose
  * scroll comes to rest on the rows is then never shown with a second row under the one it rests on (see
@@ -63,12 +83,17 @@ internal fun SectionGrid.arrange(
     rowGap: Int,
     minRowPitch: Int = 0,
     minLastRowHeight: Int = 0,
+    unitSections: IntArray? = null,
+    piecePadding: IntArray? = null,
 ): SongArrangement {
+    fun sectionOf(index: Int) = unitSections?.get(index) ?: index
+    fun paddingOf(index: Int) = piecePadding?.get(sectionOf(index)) ?: 0
     val tops = IntArray(heights.size)
     val dividerTops = mutableListOf<Int>()
     val rowBottoms = mutableListOf<Int>()
     var rowTop = 0
     var rowHeight = 0
+    var cellBottom = 0
     for (index in heights.indices) {
         val isNewRow = index > 0 && rows[index] != rows[index - 1]
         if (isNewRow) {
@@ -77,8 +102,17 @@ internal fun SectionGrid.arrange(
             dividerTops += rowTop - rowGap / 2
             rowHeight = 0
         }
-        tops[index] = if (index == 0 || isNewRow || columns[index] != columns[index - 1]) rowTop else tops[index - 1] + heights[index - 1] + sectionGap
-        rowHeight = max(rowHeight, tops[index] + heights[index] - rowTop)
+        val isNewCell = index == 0 || isNewRow || columns[index] != columns[index - 1]
+        val continuesSection = index > 0 && sectionOf(index) == sectionOf(index - 1)
+        tops[index] = when {
+            isNewCell -> rowTop + if (continuesSection) paddingOf(index) else 0
+            continuesSection -> cellBottom
+            else -> cellBottom + sectionGap
+        }
+        val isCut = index < heights.lastIndex && sectionOf(index + 1) == sectionOf(index) &&
+            (rows[index + 1] != rows[index] || columns[index + 1] != columns[index])
+        cellBottom = tops[index] + heights[index] + if (isCut) paddingOf(index) else 0
+        rowHeight = max(rowHeight, cellBottom - rowTop)
     }
     if (heights.isNotEmpty()) rowBottoms += rowTop + rowHeight
     return SongArrangement(tops = tops, height = rowTop + max(rowHeight, minLastRowHeight), dividerTops = dividerTops, rowBottoms = rowBottoms)
@@ -100,7 +134,7 @@ internal fun singleColumnGrid(sectionCount: Int) = SectionGrid(
  * cells from the ideal height. Every cell gets at least one section, so the cells always span the full width of their
  * row. The caller makes sure that such a split exists.
  */
-private fun IntArray.balanceIntoCells(from: Int, until: Int, cellCount: Int, sectionGap: Int, maxCellHeight: Int): IntArray {
+internal fun IntArray.balanceIntoCells(from: Int, until: Int, cellCount: Int, sectionGap: Int, maxCellHeight: Int): IntArray {
     val size = until - from
     if (cellCount == 1) return IntArray(size)
     val prefixHeights = LongArray(size + 1)

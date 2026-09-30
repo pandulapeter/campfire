@@ -275,7 +275,7 @@ uninstall and nothing else does.
   `:data:repository:implementation` (`SyncPlanner`, which decides what happens to every file in a sync run, and the
   cover cache) and
   `:presentation` (the pure helpers behind its screens: the search index and ranking, the song picker's filter chips, the fast scroller's section
-  index, the setlist slots, stepper labels, section grid, row snapping and section measurements of the details screen, the editor's token cache), run on
+  index, the setlist slots, stepper labels, section grid and the cutting of sections into columns, row snapping and section measurements of the details screen, the editor's token cache), run on
   the desktop target with
   `./gradlew :chordpro:desktopTest :domain:implementation:desktopTest :data:source:local:implementation:desktopTest :data:source:remote:api:desktopTest :data:source:remote:implementation:desktopTest :data:repository:implementation:desktopTest :presentation:desktopTest`.
   The web build's storage worker, which is JavaScript, has a Node test of its own (see `app/web`).

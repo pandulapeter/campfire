@@ -838,6 +838,7 @@ private fun SongDetailsPage(
                 // them their own width and a gap.
                 stepButtonInset = STEP_BUTTON_SIZE + STEP_BUTTON_GAP,
                 keepsStepButtonInset = keepsStepButtonInset,
+                canCutSections = true,
             )
         }
     }

@@ -14,26 +14,28 @@ import androidx.compose.animation.animateBounds
 import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.AnimationSpec
 import androidx.compose.animation.core.VectorConverter
+import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.FlowRow
-import androidx.compose.foundation.layout.IntrinsicSize
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.layout.wrapContentWidth
+import androidx.compose.foundation.shape.CornerSize
 import androidx.compose.material3.HorizontalDivider
+import androidx.compose.material3.LocalContentColor
 import androidx.compose.material3.LocalMinimumInteractiveComponentSize
 import androidx.compose.material3.LocalTextStyle
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
+import androidx.compose.material3.contentColorFor
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.Immutable
 import androidx.compose.runtime.CompositionLocalProvider
@@ -66,6 +68,7 @@ import androidx.compose.ui.layout.LookaheadScope
 import androidx.compose.ui.unit.Constraints
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.IntOffset
+import androidx.compose.ui.unit.IntRect
 import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.TextUnit
 import androidx.compose.ui.draw.drawBehind
@@ -164,8 +167,9 @@ import kotlin.math.roundToInt
  * consisted of nothing but chords (e.g. an intro) are skipped entirely.
  *
  * The song is split into sections (verse, chorus, ...) which are flowed into rows across the columns by
- * [SongSectionsLayout]. Choruses are drawn on a raised card of their own so that they stand out from the surrounding sections. A section is never split between columns, and
- * sections move to their new place when the column count changes (e.g. when a window is resized), see [sectionMotion].
+ * [SongSectionsLayout]. Choruses are drawn on a raised card of their own so that they stand out from the surrounding
+ * sections. A section is only cut between columns as a last resort, where [canCutSections] allows it, and sections move
+ * to their new place when the column count changes (e.g. when a window is resized), see [sectionMotion].
  *
  * @param model The song and its sections, built away from the main thread by [rememberSongLyricsModel].
  * @param availableHeight The height the song can occupy without scrolling; the column count is picked so that it
@@ -198,6 +202,9 @@ import kotlin.math.roundToInt
  * the song details screen's buttons that step through it. A song that fits the screen has none of them, and takes the
  * width, unless [keepsStepButtonInset] is set: in a setlist the same buttons page to the songs beside it, whatever the
  * song. Zero where there are no buttons at all, which is the editor's preview.
+ * @param canCutSections Whether a section may be cut into pieces put side by side in the columns of a row, where the
+ * song would not fit the screen otherwise (see [flowIntoRowsCuttingSections]). Off in the editor's preview, which
+ * follows every edit, and would move the pieces of a section from column to column as it is typed into.
  * @param onOpenEditor Offered under a song too long to be laid out whole, see [LayoutBudget]; null where the editor is
  * already open or may not be opened (performance mode).
  */
@@ -225,13 +232,12 @@ internal fun SongLyrics(
     rowViewportBottomPadding: Dp = 0.dp,
     stepButtonInset: Dp = 0.dp,
     keepsStepButtonInset: Boolean = false,
+    canCutSections: Boolean = false,
     onOpenEditor: (() -> Unit)? = null,
 ) {
     // The fold toggles of the runs inside a section are named by these too, where the file names them nothing.
     val defaultLabels = rememberDefaultSectionLabels()
     val sections = model.sections
-    // Whether each section is too tall to be animated, which only the layout finds out.
-    val sectionAnimations = remember(sections) { List(sections.size) { SectionAnimation() } }
     val glideScope = rememberCoroutineScope()
     val glideSpec = MaterialTheme.motionScheme.defaultSpatialSpec<IntOffset>()
     val sectionGlides = if (sectionMotion == SectionMotion.NONE) null else remember(glideScope, glideSpec) { SectionGlides(glideScope, glideSpec) }
@@ -271,8 +277,22 @@ internal fun SongLyrics(
     // Everything the height of a section depends on apart from its own content and the width it is measured at, the
     // folded runs included. Within one of these the sizes of a section are reused by content, so an edit or a
     // transposition only measures the sections it changed.
-    val sectionSizesPool = remember(fontScale, density, foldedSections, lyricsStyle, headerStyle, defaultLabels) { SectionSizesPool<RenderSection>() }
-    val sectionMeasurements = remember(sections, sectionSizesPool) { SectionMeasurements(sectionSizesPool.sizesFor(sections)) }
+    val sectionSizesPool = remember(fontScale, density, foldedSections, lyricsStyle, headerStyle, defaultLabels) { SectionSizesPool<UnitContent>() }
+    // Every section that may be cut is composed as the chunks it may be cut into, which the layout keeps together until
+    // it has no other way of fitting the song (see flowIntoRowsCuttingSections). A folded section is one, since what is
+    // left of it is its header.
+    val units = remember(sections, foldedSections, canCutSections) {
+        SongUnits.of(sections) { section -> canCutSections && section.foldKey !in foldedSections }
+    }
+    val sectionMeasurements = remember(units, sectionSizesPool) {
+        SectionMeasurements(
+            sectionSizesPool.sizesFor(
+                units.itemRanges.mapIndexed { unit, items -> UnitContent(sections[units.unitSections[unit]], items.first, items.last) },
+            ),
+        )
+    }
+    // Whether each chunk, and then each card, is too tall to be animated, which only the layout finds out.
+    val animations = remember(units) { List(units.unitSections.size + units.cardCount) { SectionAnimation() } }
     // Each section is emitted under a key of its content, so a section inserted above the others does not hand each of
     // their nodes the section that used to be its neighbour. Equal sections are told apart by the order they come in.
     val sectionKeys = remember(sections) {
@@ -281,6 +301,18 @@ internal fun SongLyrics(
             val occurrence = (occurrences[section] ?: 0) + 1
             occurrences[section] = occurrence
             SectionKey(hash = section.hashCode(), occurrence = occurrence)
+        }
+    }
+    val unitKeys = remember(units, sectionKeys) {
+        List(units.unitSections.size) { unit -> UnitKey(section = sectionKeys[units.unitSections[unit]], firstItem = units.itemRanges[unit].first) }
+    }
+    val cardKeys = remember(units, sectionKeys) {
+        buildList {
+            sections.indices.forEach { section ->
+                if (units.cardStarts[section] >= 0) {
+                    repeat(units.sectionStarts[section + 1] - units.sectionStarts[section]) { piece -> add(CardKey(section = sectionKeys[section], piece = piece)) }
+                }
+            }
         }
     }
     // One measurer for the whole page. Everything measured through it is kept by whoever asked for it (see
@@ -344,52 +376,65 @@ internal fun SongLyrics(
                 stepButtonInset = stepButtonInset,
                 keepsStepButtonInset = keepsStepButtonInset,
                 extraWidth = extraWidth,
-                sectionCount = sections.size,
-                sectionKeys = sectionKeys,
-                sectionAnimations = sectionAnimations,
+                units = units,
+                unitKeys = unitKeys,
+                cardKeys = cardKeys,
+                animations = animations,
+                cardPadding = CARD_PADDING,
+                canCutSections = canCutSections,
                 sectionGlides = sectionGlides,
                 sectionMeasurements = sectionMeasurements,
                 onRowsPlaced = { rows -> onRowsPlaced?.invoke(rows.offsetBy(headerHeight)) },
                 onDividerAboveDecided = { isShown -> dividerAboveFade.isShown = isShown },
             ) {
-                sections.forEachIndexed { index, section ->
-                    key(sectionKeys[index]) {
-                        // A section the layout found too tall is measured in full only once this is off it: see maxAnimatedSectionHeight.
-                        // One still gliding from a change that kept coming is left to finish on its own, since the spring
-                        // would start at the place the glide has not reached yet.
-                        // Each section is read as a whole and in the order the song declares, whatever column it was put in:
+                // Whether a chunk or a card is placed by animateBounds: not while the layout follows a change that keeps
+                // coming or a navigation transition, not where it is too tall for it (see maxAnimatedSectionHeight), and
+                // not while it is still gliding from a change that kept coming, since the spring would start at the place
+                // the glide has not reached yet.
+                fun Modifier.movedBy(key: Any, animation: SectionAnimation): Modifier {
+                    val isGliding = sectionGlides?.isGliding(key) == true
+                    return if (sectionMotion != SectionMotion.SPRING || extraWidth > 0.dp || animation.isTooTallToAnimate || isGliding) {
+                        this
+                    } else {
+                        animateBounds(this@LookaheadScope).layoutId(AnimatedSectionLayoutId)
+                    }
+                }
+                units.itemRanges.forEachIndexed { unit, items ->
+                    val section = sections[units.unitSections[unit]]
+                    key(unitKeys[unit]) {
+                        // Each chunk is read as a whole and in the order the song declares, whatever column it was put in:
                         // the reading order is otherwise worked out from the geometry, line by line across the page, which
                         // with two columns reads the first line of each, then the second line of each.
-                        val isGliding = sectionGlides?.isGliding(sectionKeys[index]) == true
-                        val sectionModifier = if (sectionMotion != SectionMotion.SPRING || extraWidth > 0.dp || sectionAnimations[index].isTooTallToAnimate || isGliding) {
-                            Modifier
-                        } else {
-                            Modifier.animateBounds(this@LookaheadScope).layoutId(AnimatedSectionLayoutId)
-                        }.semantics {
+                        val unitModifier = Modifier.movedBy(unitKeys[unit], animations[unit]).semantics {
                             isTraversalGroup = true
-                            traversalIndex = index.toFloat()
+                            traversalIndex = unit.toFloat()
                         }
                         when (section) {
                             is RenderSection.Comment -> SongComment(
-                                modifier = sectionModifier.padding(horizontal = CARD_PADDING),
+                                modifier = unitModifier.padding(horizontal = CARD_PADDING),
                                 comment = section,
                                 fontScale = fontScale,
                             )
 
                             is RenderSection.Lines -> if (section.isOnCard) {
-                                // The layout hands every section the whole width of its column, but a card is only as
-                                // wide as its widest line (and its padding), so that a short chorus does not stretch a
-                                // wide empty surface across the column. A line that is wider still wraps at the column.
-                                Surface(
-                                    modifier = sectionModifier
-                                        .wrapContentWidth(align = Alignment.Start)
-                                        .width(IntrinsicSize.Max),
-                                    shape = MaterialTheme.shapes.large,
-                                    color = MaterialTheme.colorScheme.surfaceContainerHigh,
-                                    shadowElevation = CARD_ELEVATION,
-                                ) {
+                                // The card is drawn by the layout behind the chunks of every piece; the chunk only takes
+                                // the card's corners, so that a press on its title row is drawn inside them.
+                                val cardShape = MaterialTheme.shapes.large
+                                val zeroCorner = CornerSize(0.dp)
+                                val isFirstChunk = items.first == 0
+                                val isLastChunk = items.last >= section.itemCount - 1
+                                CompositionLocalProvider(LocalContentColor provides contentColorFor(MaterialTheme.colorScheme.surfaceContainerHigh)) {
                                     SongSectionContent(
+                                        modifier = unitModifier.clip(
+                                            cardShape.copy(
+                                                topStart = if (isFirstChunk) cardShape.topStart else zeroCorner,
+                                                topEnd = if (isFirstChunk) cardShape.topEnd else zeroCorner,
+                                                bottomEnd = if (isLastChunk) cardShape.bottomEnd else zeroCorner,
+                                                bottomStart = if (isLastChunk) cardShape.bottomStart else zeroCorner,
+                                            ),
+                                        ),
                                         section = section,
+                                        items = items,
                                         isOnCard = true,
                                         headerStyle = headerStyle,
                                         lyricsStyle = lyricsStyle,
@@ -404,8 +449,9 @@ internal fun SongLyrics(
                                 // The same horizontal padding as inside a card, so that every section's text starts at the
                                 // same x position whether it is carded or not.
                                 SongSectionContent(
-                                    modifier = sectionModifier.padding(horizontal = CARD_PADDING),
+                                    modifier = unitModifier.padding(horizontal = CARD_PADDING),
                                     section = section,
+                                    items = items,
                                     isOnCard = false,
                                     headerStyle = headerStyle,
                                     lyricsStyle = lyricsStyle,
@@ -417,6 +463,24 @@ internal fun SongLyrics(
                                 )
                             }
                         }
+                    }
+                }
+                // The cards the pieces of the sections on a card are drawn on, as many as each could be cut into; the
+                // ones a layout has no piece for stay unmeasured.
+                val cardShape = MaterialTheme.shapes.large
+                val cardColor = MaterialTheme.colorScheme.surfaceContainerHigh
+                cardKeys.forEachIndexed { card, cardKey ->
+                    key(cardKey) {
+                        Box(
+                            modifier = Modifier
+                                .movedBy(cardKey, animations[units.unitSections.size + card])
+                                .graphicsLayer {
+                                    shadowElevation = CARD_ELEVATION.toPx()
+                                    shape = cardShape
+                                    clip = false
+                                }
+                                .background(color = cardColor, shape = cardShape),
+                        )
                     }
                 }
                 // The divider under the header first, then the ones between the rows, one for
@@ -716,12 +780,18 @@ private fun SongComment(
  * [prepareForDisplay]), so there is nothing of that kind to fold there.
  *
  * On a card the paddings are laid out here rather than by the caller, so that the title row's press reaches the edges
- * of the card.
+ * of the card. The card itself is drawn by `SongSectionsLayout` behind what this draws, since it has to be drawn once
+ * for every piece a section may be cut into.
+ *
+ * What this draws is one chunk of the section ([sectionChunkStarts]): the items from [items] (a line, a comment standing
+ * between two lines, or a whole run of tablature or grid lines, counted in the section's order), headed by the header
+ * where it is the first one, and on a card ending in its bottom padding where it is the last one.
  */
 @Composable
 private fun SongSectionContent(
     modifier: Modifier = Modifier,
     section: RenderSection.Lines,
+    items: IntRange,
     isOnCard: Boolean,
     headerStyle: TextStyle,
     lyricsStyle: TextStyle,
@@ -741,11 +811,13 @@ private fun SongSectionContent(
     val sectionToggle = if (section.parts.isNotEmpty() && (header != null || wholeSectionKind != null)) foldToggle(sectionFold) else null
     val hasBody = section.parts.isNotEmpty() && sectionToggle?.isExpanded != false
     val chevronSize = FOLD_CHEVRON_SIZE * fontScale
+    val isFirstChunk = items.first == 0
+    val isLastChunk = items.last >= section.itemCount - 1
     // Tablature and grids are both columns of characters that have to line up with the ones above and below them.
     val monospaceFontFamily = LocalMonospaceFontFamily.current
     val monospaceLyricsStyle = lyricsStyle.copy(fontFamily = monospaceFontFamily)
     val monospaceChordStyle = chordStyle.copy(fontFamily = monospaceFontFamily)
-    when {
+    if (isFirstChunk) when {
         header != null && isOnCard -> CardTitleRow(
             // The gap under the title belongs to the lines under it, so that a folded card is as deep above its title
             // as below it.
@@ -791,9 +863,14 @@ private fun SongSectionContent(
                 .fadingIn(isFadingIn = foldedRuns?.hasBeenToggled(sectionFold) == true)
                 .padding(
                     if (isOnCard) {
-                        PaddingValues(start = CARD_PADDING, top = if (hasTitle) 0.dp else CARD_PADDING, end = CARD_PADDING, bottom = CARD_PADDING)
+                        PaddingValues(
+                            start = CARD_PADDING,
+                            top = if (isFirstChunk && !hasTitle) CARD_PADDING else 0.dp,
+                            end = CARD_PADDING,
+                            bottom = if (isLastChunk) CARD_PADDING else 0.dp,
+                        )
                     } else {
-                        PaddingValues(top = if (header != null) HEADER_GAP else 0.dp)
+                        PaddingValues(top = if (isFirstChunk && header != null) HEADER_GAP else 0.dp)
                     }
                 ),
         ) {
@@ -802,20 +879,25 @@ private fun SongSectionContent(
             // up while they are measured together), and everything else is laid out line by line around them. A comment
             // that cut the section stands where the file has it, between the lines around it. A section that is nothing
             // but one run is folded as the section it is, so its run has no toggle of its own.
+            // Every item is counted, drawn or not, and so is every run's fold, since a run is named by how many
+            // runs of its name came before it in the section.
             val runNameCounts = mutableMapOf<String, Int>()
+            var item = 0
             section.parts.forEach { part ->
                 when (part) {
-                    is RenderSection.Comment -> SongComment(
-                        modifier = Modifier.padding(vertical = INLINE_COMMENT_GAP),
-                        comment = part,
-                        fontScale = fontScale,
-                    )
+                    is RenderSection.Comment -> if (item++ in items) {
+                        SongComment(
+                            modifier = Modifier.padding(vertical = INLINE_COMMENT_GAP),
+                            comment = part,
+                            fontScale = fontScale,
+                        )
+                    }
 
                     is SectionPart.Lines -> part.runs.forEach { group ->
                         val kind = group.first().foldableKind()
                         if (kind == null) {
                             group.forEach { line ->
-                                when (line) {
+                                if (item++ in items) when (line) {
                                     is ChordProLine.Lyrics -> if (line.chords.isEmpty()) {
                                         Text(
                                             modifier = Modifier.fillMaxWidth(),
@@ -842,11 +924,13 @@ private fun SongSectionContent(
                             }
                             return@forEach
                         }
+                        val isShown = item++ in items
                         val runModifier = if (wholeSectionKind != null || foldedRuns == null) {
                             Modifier
                         } else {
                             val runName = group.first().environmentLabel ?: kind.name.lowercase()
                             val run = "$sectionFold/${runNameCounts.nextFoldKey(runName)}"
+                            if (!isShown) return@forEach
                             FoldToggleRow(
                                 kind = kind,
                                 label = group.first().environmentLabel ?: defaultLabels.labelOf(kind),
@@ -857,6 +941,7 @@ private fun SongSectionContent(
                             if (foldedRuns.isCollapsed(run)) return@forEach
                             Modifier.fadingIn(isFadingIn = foldedRuns.hasBeenToggled(run))
                         }
+                        if (!isShown) return@forEach
                         when (kind) {
                             FoldableKind.TAB -> SongTabBlock(
                                 modifier = runModifier.fillMaxWidth(),
@@ -1147,7 +1232,7 @@ private fun Modifier.fadingIn(isFadingIn: Boolean): Modifier {
 
 /**
  * Lays its content out as nothing and draws none of it, while answering the intrinsic widths the content would, so
- * that a parent sized to `IntrinsicSize.Max` keeps the width the content would have given it. Its semantics are
+ * that a card, which is as wide as the widest of what it holds, keeps the width the content would have given it. Its semantics are
  * cleared, since a screen reader would otherwise read out lines that are not on screen.
  */
 private fun Modifier.widthOnly() = clearAndSetSemantics {} then WidthOnlyElement
@@ -1399,6 +1484,12 @@ private fun TextStyle.scaled(scale: Float) = copy(
  * song does not end up as one screen-wide column of short lines. Within it a row narrower than the widest one is
  * centered too, except for a row of a single column, which is aligned to the start of the others.
  *
+ * What it places are the chunks of [units]: every section whole, or as the chunks it may be cut into, which follow each
+ * other in one cell unless the grid cuts between them. Where the song would scroll with its sections whole and
+ * [canCutSections], the grid is searched for once more with cuts allowed, and taken where it fits the song on the screen
+ * or cuts only sections taller than the screen (see [flowIntoRowsCuttingSections]). The cards of the sections drawn on
+ * one are placed here, one behind every piece, from as many as each section could be cut into ([cardKeys]).
+ *
  * The candidate column counts are evaluated with the sections' intrinsic heights (they are only measured once, with
  * the width that won), starting from a single column and jumping straight to the smallest count that could possibly
  * fit whenever the current one does not, and a window with room for a single column asks for none of them, since one
@@ -1452,9 +1543,12 @@ private fun SongSectionsLayout(
     stepButtonInset: Dp,
     keepsStepButtonInset: Boolean,
     extraWidth: Dp,
-    sectionCount: Int,
-    sectionKeys: List<SectionKey>,
-    sectionAnimations: List<SectionAnimation>,
+    units: SongUnits,
+    unitKeys: List<UnitKey>,
+    cardKeys: List<CardKey>,
+    animations: List<SectionAnimation>,
+    cardPadding: Dp,
+    canCutSections: Boolean,
     sectionGlides: SectionGlides?,
     sectionMeasurements: SectionMeasurements,
     onRowsPlaced: (SongRows) -> Unit,
@@ -1464,9 +1558,12 @@ private fun SongSectionsLayout(
     modifier = modifier,
     content = content,
 ) { allMeasurables, constraints ->
-    val measurables = allMeasurables.take(sectionCount)
-    val dividerAboveMeasurable = allMeasurables.getOrNull(sectionCount)
-    val dividerMeasurables = allMeasurables.drop(sectionCount + 1)
+    val unitCount = units.unitSections.size
+    val sectionCount = units.sectionStarts.size - 1
+    val measurables = allMeasurables.take(unitCount)
+    val cardMeasurables = allMeasurables.subList(unitCount, unitCount + units.cardCount)
+    val dividerAboveMeasurable = allMeasurables.getOrNull(unitCount + units.cardCount)
+    val dividerMeasurables = allMeasurables.drop(unitCount + units.cardCount + 1)
     val width = constraints.maxWidth
     val settledWidth = width + extraWidth.roundToPx()
     val columnGapPx = columnGap.roundToPx()
@@ -1477,18 +1574,30 @@ private fun SongSectionsLayout(
     val availableHeightPx = if (availableHeight.isSpecified) availableHeight.roundToPx() else 0
     val maxRowHeightPx = if (maxRowHeight.isSpecified && maxRowHeight > 0.dp) maxRowHeight.roundToPx() else Int.MAX_VALUE
     val endInsetPx = stepButtonInset.roundToPx()
-    fun maxColumnCountFor(totalWidth: Int) = ((totalWidth + columnGapPx) / (minColumnWidth.roundToPx() + columnGapPx)).coerceIn(1, maxOf(1, measurables.size))
+    val piecePadding = IntArray(sectionCount) { if (units.cardStarts[it] >= 0) cardPadding.roundToPx() else 0 }
+    fun widthColumnCountFor(totalWidth: Int) = ((totalWidth + columnGapPx) / (minColumnWidth.roundToPx() + columnGapPx)).coerceAtLeast(1)
+    fun maxColumnCountFor(totalWidth: Int) = widthColumnCountFor(totalWidth).coerceAtMost(maxOf(1, sectionCount))
     fun columnWidthFor(totalWidth: Int, columnCount: Int) = ((totalWidth - columnGapPx * (columnCount - 1)) / columnCount).coerceIn(0, maxColumnWidthPx)
+    fun unitsOf(section: Int) = units.sectionStarts[section] until units.sectionStarts[section + 1]
 
-    // The width of a row the section at index has to itself, or null where that would be no
+    // A card is as wide as its widest line, up to the width of its column, so that a short chorus does not stretch a wide
+    // empty surface across the column, and every chunk of it is laid out at that width, so that its pieces are as wide
+    // as each other. A line that is wider still wraps at the column.
+    fun unitWidthFor(unit: Int, columnWidth: Int): Int {
+        val section = units.unitSections[unit]
+        if (units.cardStarts[section] < 0) return columnWidth
+        return minOf(columnWidth, unitsOf(section).maxOf { sectionMeasurements.maxWidth(it, measurables[it]::maxIntrinsicWidth) })
+    }
+
+    // The width of a row the section has to itself, or null where that would be no
     // wider than a column: a section can be narrower than its minimum intrinsic width only by breaking the lines that
     // do not wrap (a staff of tablature, the bars of a grid), while everything else in it wraps as a column's would.
-    fun wideWidthFor(index: Int, totalWidth: Int) = sectionMeasurements.minWidth(index, measurables[index]::minIntrinsicWidth)
+    fun wideWidthFor(section: Int, totalWidth: Int) = unitsOf(section).maxOf { sectionMeasurements.minWidth(it, measurables[it]::minIntrinsicWidth) }
         .takeIf { it > maxColumnWidthPx && totalWidth > maxColumnWidthPx }
         ?.let { minOf(it, totalWidth) }
 
     fun SectionGrid.rowWidth(row: Int, totalWidth: Int) = if (wideRows[row]) {
-        wideWidthFor(rows.indexOf(row), totalWidth) ?: columnWidthFor(totalWidth, 1)
+        wideWidthFor(units.unitSections[rows.indexOf(row)], totalWidth) ?: columnWidthFor(totalWidth, 1)
     } else {
         columnWidthFor(totalWidth, columnCounts[row])
     }
@@ -1505,38 +1614,44 @@ private fun SongSectionsLayout(
     fun searchGrid(totalWidth: Int): SearchedGrid {
         val maxColumnCount = maxColumnCountFor(totalWidth)
 
-        fun heightAtWidth(index: Int, width: Int) = sectionMeasurements.height(
-            index = index,
-            width = width,
-            measure = measurables[index]::maxIntrinsicHeight,
+        fun unitHeightAt(unit: Int, columnWidth: Int) = sectionMeasurements.height(
+            index = unit,
+            width = unitWidthFor(unit, columnWidth),
+            measure = measurables[unit]::maxIntrinsicHeight,
         )
 
-        fun heightAt(index: Int, columnCount: Int) = heightAtWidth(index, columnWidthFor(totalWidth, columnCount))
+        fun sectionHeightAt(section: Int, columnWidth: Int) = unitsOf(section).sumOf { unitHeightAt(it, columnWidth) }
+
+        fun heightAt(section: Int, columnCount: Int) = sectionHeightAt(section, columnWidthFor(totalWidth, columnCount))
+
+        fun wideHeightAt(section: Int) = wideWidthFor(section, totalWidth)?.let { sectionHeightAt(section, it) }
 
         fun gridFor(columnCount: Int) = when {
             // A single column is every section stacked in its order, however tall each of them is, so it is the one
             // grid that is known without an intrinsic measurement. Asking for the heights anyway lays every line of
             // the song out once for a number nobody reads and then once more to be drawn, and on a window too narrow
             // for a second column - which is every phone - this is the only grid there is.
-            columnCount == 1 -> singleColumnGrid(measurables.size)
+            columnCount == 1 -> singleColumnGrid(sectionCount)
             else -> flowIntoRows(
-                sectionCount = measurables.size,
+                sectionCount = sectionCount,
                 maxColumnCount = columnCount,
                 heightAt = ::heightAt,
-                wideHeightAt = { index -> wideWidthFor(index, totalWidth)?.let { heightAtWidth(index, it) } },
+                wideHeightAt = ::wideHeightAt,
                 sectionGap = sectionGapPx,
                 rowGap = rowGapPx,
                 maxRowHeight = maxRowHeightPx,
             )
-        }
+        }.expandedTo(units.unitSections)
 
         fun SectionGrid.height() = arrange(
-            heights = IntArray(measurables.size) { heightAtWidth(it, rowWidth(rows[it], totalWidth)) },
+            heights = IntArray(unitCount) { unitHeightAt(it, rowWidth(rows[it], totalWidth)) },
             sectionGap = sectionGapPx,
             rowGap = rowGapPx,
+            unitSections = units.unitSections,
+            piecePadding = piecePadding,
         ).height
 
-        return if (availableHeightPx > 0) {
+        val searched = if (availableHeightPx > 0) {
             var candidate = 1
             var candidateGrid = gridFor(candidate)
             var fits = false
@@ -1548,7 +1663,7 @@ private fun SongSectionsLayout(
                 // Even a perfectly even split needs this many columns, so there is no point in trying the ones in
                 // between. The rows may be narrower than the candidate, down to a single column, so the sections are
                 // only as tall there as they are in the widest column.
-                val totalHeight = measurables.indices.sumOf { heightAt(it, 1) } + sectionGapPx * (measurables.size - 1).coerceAtLeast(0)
+                val totalHeight = (0 until sectionCount).sumOf { heightAt(it, 1) } + sectionGapPx * (sectionCount - 1).coerceAtLeast(0)
                 candidate = maxOf(candidate + 1, ceil(totalHeight.toDouble() / availableHeightPx).toInt()).coerceAtMost(maxColumnCount)
                 candidateGrid = gridFor(candidate)
             }
@@ -1558,6 +1673,34 @@ private fun SongSectionsLayout(
         } else {
             SearchedGrid(gridFor(maxColumnCount), fits = false)
         }
+
+        // Only a song that has to be scrolled with its sections whole is ever cut, and only where the width has room for
+        // the pieces side by side - which is what keeps a phone, whose single column is never measured, from measuring
+        // anything for it. A song of one section has only ever been tried in a single column, so whether it fits the
+        // screen whole is only found out here.
+        val cutColumnCount = widthColumnCountFor(totalWidth).coerceAtMost(unitCount)
+        if (searched.fits || !canCutSections || availableHeightPx <= 0 || cutColumnCount < 2) return searched
+        val height = searched.grid.height()
+        if (height <= availableHeightPx) return SearchedGrid(searched.grid, fits = true)
+
+        fun cutGrid(cutsEverySection: Boolean) = flowIntoRowsCuttingSections(
+            sectionStarts = units.sectionStarts,
+            maxColumnCount = cutColumnCount,
+            heightAt = { unit, columnCount -> unitHeightAt(unit, columnWidthFor(totalWidth, columnCount)) },
+            wideHeightAt = ::wideHeightAt,
+            piecePadding = piecePadding,
+            sectionGap = sectionGapPx,
+            rowGap = rowGapPx,
+            maxRowHeight = maxRowHeightPx,
+            minCutSaving = availableHeightPx / MIN_CUT_SAVING_FRACTION,
+            cutsEverySection = cutsEverySection,
+        ).takeIf { cutsAnySection(it, units.unitSections) }
+
+        // A song that fits the screen once a section is cut is read without a single scroll, which is worth a cut
+        // wherever it is. Otherwise only a section taller than the screen is cut, into columns side by side in which
+        // it fits.
+        cutGrid(cutsEverySection = true)?.let { grid -> if (grid.height() <= availableHeightPx) return SearchedGrid(grid, fits = true) }
+        return cutGrid(cutsEverySection = false)?.let { grid -> SearchedGrid(grid, fits = false) } ?: searched
     }
 
     val decidedGrid = sectionMeasurements.grid(gridKey) {
@@ -1576,20 +1719,21 @@ private fun SongSectionsLayout(
     val (grid, isInset) = decidedGrid
     val layoutWidth = if (isInset) (width - endInsetPx).coerceAtLeast(0) else width
     val columnWidths = IntArray(grid.columnCounts.size) { grid.rowWidth(it, layoutWidth) }
+    val unitWidths = IntArray(unitCount) { unitWidthFor(it, columnWidths[grid.rows[it]]) }
     val placeables = measurables.mapIndexed { index, measurable ->
-        val columnWidth = columnWidths[grid.rows[index]]
-        val heightLimit = maxAnimatedSectionHeight(columnWidth)
+        val unitWidth = unitWidths[index]
+        val heightLimit = maxAnimatedSectionHeight(unitWidth)
         // Only a section that is being animated is held to the limit. One that reaches it is cut short for the one
         // frame it takes the composition to take the animation off it, which happens far below the screen.
         val maxHeight = if (measurable.layoutId === AnimatedSectionLayoutId) minOf(constraints.maxHeight, heightLimit) else constraints.maxHeight
-        val placeable = measurable.measure(Constraints(minWidth = columnWidth, maxWidth = columnWidth, maxHeight = maxHeight))
+        val placeable = measurable.measure(Constraints(minWidth = unitWidth, maxWidth = unitWidth, maxHeight = maxHeight))
         // The approach pass of an animated section reports the size the animation is at, which says nothing about
         // the size it is going to: only the lookahead pass measures that.
-        if (isLookingAhead) sectionAnimations[index].isTooTallToAnimate = placeable.height >= heightLimit
+        if (isLookingAhead) animations[index].isTooTallToAnimate = placeable.height >= heightLimit
         placeable
     }
     val hasSeveralRows = grid.columnCounts.size > 1
-    val sectionHeights = IntArray(placeables.size) { placeables[it].height }
+    val unitHeights = IntArray(placeables.size) { placeables[it].height }
     // Several rows under a header always start below a divider of their own, like the one between any two of them, so
     // the first row is told apart from the header the way it is from the second one, whether the song scrolls or not.
     val hasRowsUnderHeader = hasSeveralRows && hasHeader()
@@ -1599,7 +1743,8 @@ private fun SongSectionsLayout(
     // where every one of them is followed by the rest of the screen. A song that fits the screen is left as it is:
     // space under it would only make it scrollable.
     val isScrolledByRow = (hasSeveralRows || grid.columnCounts.any { it > 1 }) && (
-        headerHeight() + (if (hasRowsUnderHeader) rowGapPx / 2 else 0) + grid.arrange(sectionHeights, sectionGapPx, rowGapPx).height > availableHeightPx ||
+        headerHeight() + (if (hasRowsUnderHeader) rowGapPx / 2 else 0) +
+            grid.arrange(unitHeights, sectionGapPx, rowGapPx, unitSections = units.unitSections, piecePadding = piecePadding).height > availableHeightPx ||
             hasSeveralRows && isOneRowAtATime && rowViewportHeight.isSpecified
         )
     // A song read in rows starts below a divider of its own, half a row gap down, the header above it ending in a
@@ -1633,7 +1778,7 @@ private fun SongSectionsLayout(
     val isPaddedToViewport = isScrolledByRow && rowViewportHeight.isSpecified
     val rowViewportHeightPx = if (isPaddedToViewport) rowViewportHeight.roundToPx() else 0
     val arrangement = grid.arrange(
-        heights = sectionHeights,
+        heights = unitHeights,
         sectionGap = sectionGapPx,
         rowGap = rowGapPx,
         // Resting on a divider, half a row gap above its row, the viewport ends half a row gap short of the next row's
@@ -1647,6 +1792,8 @@ private fun SongSectionsLayout(
         } else {
             0
         },
+        unitSections = units.unitSections,
+        piecePadding = piecePadding,
     )
     val rowDividerTops = arrangement.dividerTops.map { it + songTop }
     val dividerTops = if (hasDividerAbove) listOf(0) + rowDividerTops else rowDividerTops
@@ -1676,12 +1823,12 @@ private fun SongSectionsLayout(
                     restingOffsets
                 } else {
                     val fadePx = EDGE_FADE_SIZE.roundToPx()
-                    arrangement.tops.map { songTop + it - fadePx }
+                    List(sectionCount) { section -> songTop + arrangement.tops[units.sectionStarts[section]] - fadePx }
                 },
                 stepSections = if (isSteppedByRow) {
-                    List(grid.columnCounts.size) { row -> grid.rows.indexOfFirst { it == row } }
+                    List(grid.columnCounts.size) { row -> units.unitSections[grid.rows.indexOfFirst { it == row }] }
                 } else {
-                    List(placeables.size) { it }
+                    List(sectionCount) { it }
                 },
                 isSteppedByRow = isSteppedByRow,
             ),
@@ -1692,22 +1839,55 @@ private fun SongSectionsLayout(
     } + listOfNotNull(dividerAbovePlaceable?.let { it to IntOffset(x = 0, y = -it.height / 2) })
     val positions = Array(placeables.size) { index ->
         val row = grid.rows[index]
-        IntOffset(x = rowStarts[row] + grid.columns[index] * (columnWidths[row] + columnGapPx), y = songTop + arrangement.tops[index])
+        val columnStart = rowStarts[row] + grid.columns[index] * (columnWidths[row] + columnGapPx)
+        // A card narrower than its column sits at the column's start, which is its right edge in a right to left layout.
+        val x = if (layoutDirection == LayoutDirection.Rtl) columnStart + columnWidths[row] - unitWidths[index] else columnStart
+        IntOffset(x = x, y = songTop + arrangement.tops[index])
+    }
+    // Every piece of a section on a card - the whole section, where it is not cut - is drawn on a card of its own,
+    // which reaches over the padding the arrangement leaves at a cut: the piece's card, and where it is placed.
+    val cards = mutableListOf<Pair<Int, IntRect>>()
+    var pieceStart = 0
+    var piece = 0
+    for (index in 0 until unitCount) {
+        val section = units.unitSections[index]
+        val isLastOfSection = index == units.sectionStarts[section + 1] - 1
+        if (!isLastOfSection && grid.rows[index + 1] == grid.rows[index] && grid.columns[index + 1] == grid.columns[index]) continue
+        if (units.cardStarts[section] >= 0) {
+            val top = positions[pieceStart].y - if (pieceStart > units.sectionStarts[section]) piecePadding[section] else 0
+            val bottom = positions[index].y + placeables[index].height + if (isLastOfSection) 0 else piecePadding[section]
+            val left = positions[pieceStart].x
+            cards += (units.cardStarts[section] + piece) to IntRect(left, top, left + unitWidths[pieceStart], bottom)
+        }
+        piece = if (isLastOfSection) 0 else piece + 1
+        pieceStart = index + 1
+    }
+    val cardPlaceables = cards.map { (card, bounds) ->
+        val measurable = cardMeasurables[card]
+        val heightLimit = maxAnimatedSectionHeight(bounds.width)
+        val height = if (measurable.layoutId === AnimatedSectionLayoutId) minOf(bounds.height, heightLimit) else bounds.height
+        if (isLookingAhead) animations[unitCount + card].isTooTallToAnimate = bounds.height >= heightLimit
+        measurable.measure(Constraints.fixed(bounds.width, height))
     }
     if (isLookingAhead && sectionGlides != null) {
         sectionGlides.follow(
-            keys = sectionKeys,
+            keys = unitKeys + cards.map { cardKeys[it.first] },
             grid = decidedGrid,
-            positions = positions,
-            isCarriedByBounds = { index -> measurables[index].layoutId === AnimatedSectionLayoutId },
+            positions = Array(unitCount + cards.size) { if (it < unitCount) positions[it] else cards[it - unitCount].second.topLeft },
+            isCarriedByBounds = { index ->
+                (if (index < unitCount) measurables[index] else cardMeasurables[cards[index - unitCount].first]).layoutId === AnimatedSectionLayoutId
+            },
         )
     }
     layout(width, (songTop + arrangement.height).coerceIn(constraints.minHeight, constraints.maxHeight)) {
-        placeables.forEachIndexed { index, placeable ->
-            // Read while placing, so that a glide only places the sections again on every frame it runs.
-            val glide = if (isLookingAhead || sectionGlides == null) IntOffset.Zero else sectionGlides.offsetOf(sectionKeys[index])
-            placeable.place(positions[index] + glide)
+        // Read while placing, so that a glide only places the sections again on every frame it runs.
+        fun glideOf(key: Any) = if (isLookingAhead || sectionGlides == null) IntOffset.Zero else sectionGlides.offsetOf(key)
+        // The cards first, since what is placed later is drawn over what was placed before it.
+        cardPlaceables.forEachIndexed { index, placeable ->
+            val (card, bounds) = cards[index]
+            placeable.place(bounds.topLeft + glideOf(cardKeys[card]))
         }
+        placeables.forEachIndexed { index, placeable -> placeable.place(positions[index] + glideOf(unitKeys[index])) }
         dividers.forEach { (placeable, position) -> placeable.place(position) }
     }
 }
@@ -1757,6 +1937,13 @@ private class SectionMeasurements(private val sizes: List<SectionSizes>) {
         return sectionSizes.minWidth
     }
 
+    /** The maximum intrinsic width of the section at [index], which is how wide a card around it grows. */
+    fun maxWidth(index: Int, measure: (Int) -> Int): Int {
+        val sectionSizes = sizes[index]
+        if (sectionSizes.maxWidth == UNMEASURED) sectionSizes.maxWidth = measure(Constraints.Infinity)
+        return sectionSizes.maxWidth
+    }
+
     /** The grid decided for [key], which is only searched for again once the key has changed. */
     fun grid(key: SectionGridKey, search: () -> DecidedGrid): DecidedGrid {
         if (key != lastGridKey) {
@@ -1776,6 +1963,7 @@ internal class SectionSizes {
 
     val heightsByWidth = HashMap<Int, Int>()
     var minWidth = UNMEASURED
+    var maxWidth = UNMEASURED
 }
 
 /**
@@ -1828,6 +2016,80 @@ private data class SectionKey(
     val occurrence: Int,
 )
 
+/** The key of a chunk of a section ([SongUnits]): its section's, and the first of the section's items it holds. */
+private data class UnitKey(
+    val section: SectionKey,
+    val firstItem: Int,
+)
+
+/** The key of the card a piece of a section is drawn on: its section's, and which of its pieces it is. */
+private data class CardKey(
+    val section: SectionKey,
+    val piece: Int,
+)
+
+/**
+ * What a chunk of a section holds, which is what its measurements are reused by (see [SectionSizesPool]): the section
+ * and its items from [firstItem] to [lastItem].
+ */
+private data class UnitContent(
+    val section: RenderSection,
+    val firstItem: Int,
+    val lastItem: Int,
+)
+
+/**
+ * The chunks the sections of a song are composed and laid out as, see [sectionChunkStarts]: the chunks of section `s`
+ * are [sectionStarts]`[s]` to [sectionStarts]`[s + 1]`, each of them the section's items in [itemRanges] and each
+ * belonging to the section in [unitSections]. A section on a card is drawn on as many cards as it has chunks, since
+ * no more pieces of it can ever be placed than that: its first is [cardStarts]`[s]` of the [cardCount] the layout is
+ * handed, -1 for a section drawn without a card.
+ */
+private class SongUnits(
+    val sectionStarts: IntArray,
+    val unitSections: IntArray,
+    val itemRanges: List<IntRange>,
+    val cardStarts: IntArray,
+    val cardCount: Int,
+) {
+
+    companion object {
+
+        /** The chunks of [sections], where each section [isCuttable] says so is composed as the chunks it may be cut into. */
+        fun of(sections: List<RenderSection>, isCuttable: (RenderSection.Lines) -> Boolean): SongUnits {
+            val sectionStarts = IntArray(sections.size + 1)
+            val unitSections = mutableListOf<Int>()
+            val itemRanges = mutableListOf<IntRange>()
+            val cardStarts = IntArray(sections.size) { -1 }
+            var cardCount = 0
+            sections.forEachIndexed { index, section ->
+                val ranges = if (section is RenderSection.Lines) {
+                    val starts = if (isCuttable(section)) section.chunkStarts else intArrayOf(0)
+                    starts.mapIndexed { chunk, start -> start until (starts.getOrNull(chunk + 1) ?: section.itemCount) }
+                } else {
+                    listOf(0 until 1)
+                }
+                ranges.forEach { range ->
+                    unitSections += index
+                    itemRanges += range
+                }
+                sectionStarts[index + 1] = sectionStarts[index] + ranges.size
+                if (section is RenderSection.Lines && section.isOnCard) {
+                    cardStarts[index] = cardCount
+                    cardCount += ranges.size
+                }
+            }
+            return SongUnits(
+                sectionStarts = sectionStarts,
+                unitSections = unitSections.toIntArray(),
+                itemRanges = itemRanges,
+                cardStarts = cardStarts,
+                cardCount = cardCount,
+            )
+        }
+    }
+}
+
 /** Everything the [SectionGrid] depends on, apart from the heights of the sections. */
 private data class SectionGridKey(
     val settledWidth: Int,
@@ -1874,21 +2136,21 @@ private class SectionGlides(
     private val spec: AnimationSpec<IntOffset>,
 ) {
 
-    private val glides = HashMap<SectionKey, SectionGlide>()
-    private var lastKeys: List<SectionKey>? = null
+    private val glides = HashMap<Any, SectionGlide>()
+    private var lastKeys: List<Any>? = null
     private var lastGrid: DecidedGrid? = null
 
-    /** Whether the section of [key] is still on its way to its place, which is state. */
-    fun isGliding(key: SectionKey) = glides[key]?.isGliding == true
+    /** Whether the chunk or the card of [key] is still on its way to its place, which is state. */
+    fun isGliding(key: Any) = glides[key]?.isGliding == true
 
-    /** How far from its place the section of [key] is drawn, which is state. */
-    fun offsetOf(key: SectionKey) = glides[key]?.offset ?: IntOffset.Zero
+    /** How far from its place the chunk or the card of [key] is drawn, which is state. */
+    fun offsetOf(key: Any) = glides[key]?.offset ?: IntOffset.Zero
 
     /**
      * Takes the [positions] the sections of [keys] are placed at in [grid], and starts a glide for every one whose
      * position moved because the grid changed, unless it [isCarriedByBounds], which animates its own.
      */
-    fun follow(keys: List<SectionKey>, grid: DecidedGrid, positions: Array<IntOffset>, isCarriedByBounds: (Int) -> Boolean) {
+    fun follow(keys: List<Any>, grid: DecidedGrid, positions: Array<IntOffset>, isCarriedByBounds: (Int) -> Boolean) {
         if (keys !== lastKeys) {
             val current = keys.toHashSet()
             glides.entries.removeAll { (key, glide) -> (key !in current).also { if (it) glide.stop() } }
@@ -2030,7 +2292,8 @@ internal data class DefaultSectionLabels(
 )
 
 /**
- * One unit the column layout places. Sections are never split, so this is also the granularity of the balancing.
+ * One section of the song. The column layout places sections whole, or as the chunks they may be cut into as a last
+ * resort (see [SongUnits]).
  *
  * Immutable, and marked so on every class rather than on the interface alone, since the compiler would infer the lists
  * they hold as unstable: they are built fresh by [toRenderSections] and never changed, which is what lets a section
@@ -2053,6 +2316,27 @@ internal sealed interface RenderSection {
 
         /** Text-dependent values are built with the section, never again during zoom or theme recomposition. */
         val lines = parts.flatMap { (it as? SectionPart.Lines)?.lines.orEmpty() }
+
+        /**
+         * What [SongSectionContent] draws the section as, one under the other: every comment between two of its lines,
+         * every line, and every run of tablature or grid lines as one.
+         */
+        val itemKinds = parts.flatMap { part ->
+            when (part) {
+                is Comment -> listOf(SectionItemKind.COMMENT)
+                is SectionPart.Lines -> part.runs.flatMap { run ->
+                    if (run.first().foldableKind() != null) {
+                        listOf(SectionItemKind.CONTENT)
+                    } else {
+                        run.map { line -> if (line == ChordProLine.Blank) SectionItemKind.BLANK else SectionItemKind.CONTENT }
+                    }
+                }
+            }
+        }
+        val itemCount get() = itemKinds.size
+
+        /** Where the section may be cut, see [sectionChunkStarts]. */
+        val chunkStarts = sectionChunkStarts(itemKinds)
         val wholeFoldableKind = lines.wholeFoldableKind()
         val firstEnvironmentLabel = lines.firstNotNullOfOrNull { it.environmentLabel }
     }
@@ -2449,6 +2733,12 @@ private const val LINE_HEIGHT_SAMPLE = "X"
 private const val CHARACTER_WIDTH_SAMPLE_LENGTH = 64
 private const val MAX_TAB_WIDTHS = 8
 private const val MAX_SECTION_WIDTHS = 32
+
+/**
+ * A row may cut a section to save more of its height than it would otherwise, but not for less than this fraction of
+ * the screen, since the cut costs the reader more than a sliver of height saves them.
+ */
+private const val MIN_CUT_SAVING_FRACTION = 8
 private const val UNMEASURED = -1
 private const val MAX_MEASURED_TEXTS = 4096
 private const val MAX_ANIMATED_SECTION_HEIGHT = 1 shl 17
