@@ -99,4 +99,26 @@ class RowSnappingTest {
         assertEquals(2000, nextStepOffset(scroll = 1300, stepOffsets = rows, maxValue = 2000))
         assertEquals(null, nextStepOffset(scroll = 2000, stepOffsets = rows, maxValue = 2000))
     }
+
+    @Test
+    fun stepsFollowVerticalPositionAcrossColumnsAndClampUnreachableSections() {
+        val sections = listOf(2300, -24, 1300, 300, 1300, 3400)
+        assertEquals(1300, nextStepOffset(scroll = 300, stepOffsets = sections, maxValue = 2000))
+        assertEquals(300, previousStepOffset(scroll = 1300, stepOffsets = sections, maxValue = 2000))
+        assertEquals(2000, nextStepOffset(scroll = 1300, stepOffsets = sections, maxValue = 2000))
+        assertEquals(1300, previousStepOffset(scroll = 2000, stepOffsets = sections, maxValue = 2000))
+        assertEquals(null, nextStepOffset(scroll = 2000, stepOffsets = sections, maxValue = 2000))
+    }
+
+    @Test
+    fun stepsRespectTheOnePixelToleranceAndTheEndsOfTheSong() {
+        val sections = listOf(-24, 300, 1300, 2300)
+        assertEquals(1300, nextStepOffset(scroll = 299, stepOffsets = sections, maxValue = 3000))
+        assertEquals(0, previousStepOffset(scroll = 301, stepOffsets = sections, maxValue = 3000))
+        assertEquals(null, previousStepOffset(scroll = 1, stepOffsets = sections, maxValue = 3000))
+        assertEquals(null, nextStepOffset(scroll = 0, stepOffsets = sections, maxValue = 0))
+        assertEquals(null, previousStepOffset(scroll = 0, stepOffsets = sections, maxValue = 0))
+        assertEquals(null, nextStepOffset(scroll = 100, stepOffsets = emptyList(), maxValue = 3000))
+        assertEquals(0, previousStepOffset(scroll = 100, stepOffsets = emptyList(), maxValue = 3000))
+    }
 }

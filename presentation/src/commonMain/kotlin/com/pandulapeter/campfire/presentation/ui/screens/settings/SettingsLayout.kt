@@ -199,7 +199,7 @@ internal fun SettingsPage(
     Row(
         modifier = modifier
             .fillMaxSize()
-            .fadingTopEdge(scrollState)
+            .fadingTopEdge(scrollState, MaterialTheme.colorScheme.background)
             .verticalScroll(scrollState)
             .padding(
                 start = contentPadding.calculateStartPadding(layoutDirection),

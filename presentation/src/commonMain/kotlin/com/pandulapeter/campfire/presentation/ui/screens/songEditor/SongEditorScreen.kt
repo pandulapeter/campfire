@@ -686,7 +686,7 @@ private fun ChordProTextField(
             // the minimum, so the whole pane stays the field and a press anywhere in it places the caret. The field
             // asks its ancestors to bring the caret into view as it moves, so this follows the typing on its own.
             // The fade goes outside that container, on the pane itself, so it stays at the pane's top edge.
-            .fadingTopEdge(scrollState)
+            .fadingTopEdge(scrollState, MaterialTheme.colorScheme.background)
             .horizontalScroll(horizontalScrollState)
             // The keyboard reaches the field only through the content padding this screen was handed, see CampfireApp,
             // and only the part of it that covers the field is applied, once: applying the whole inset a second time
@@ -802,7 +802,7 @@ private fun SongPreview(
         SongLyrics(
             modifier = Modifier
                 .fillMaxSize()
-                .fadingTopEdge(scrollState)
+                .fadingTopEdge(scrollState, MaterialTheme.colorScheme.background)
                 .verticalScroll(scrollState)
                 .padding(start = 16.dp, end = 16.dp, top = topPadding)
                 .padding(contentPadding.only(start = true, end = true, bottom = true, extraBottom = 32.dp)),

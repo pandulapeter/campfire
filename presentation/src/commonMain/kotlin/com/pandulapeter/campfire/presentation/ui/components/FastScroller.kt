@@ -44,7 +44,6 @@ import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
-import androidx.compose.runtime.snapshotFlow
 import androidx.compose.runtime.withFrameNanos
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -65,8 +64,8 @@ import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.util.lerp
-import kotlinx.coroutines.flow.collectLatest
-import kotlinx.coroutines.flow.filter
+import kotlinx.coroutines.channels.Channel
+import kotlinx.coroutines.channels.ReceiveChannel
 import kotlinx.coroutines.withTimeoutOrNull
 import kotlin.math.abs
 import kotlin.math.max
@@ -108,40 +107,29 @@ internal fun FastScroller(
     // which would otherwise lay out rows that are never drawn. A fraction that arrives before the frame replaces the
     // one waiting for it, and the last one of a drag is still applied after the drag has ended.
     LaunchedEffect(state) {
-        snapshotFlow { state.pendingFraction }
-            .filter { it != NO_PENDING_SCROLL }
-            .collectLatest { fraction ->
-                withFrameNanos { }
-                state.scrollToFraction(fraction)
-                // Cleared, so that a later change of the list does not replay the jump.
-                if (state.pendingFraction == fraction) state.pendingFraction = NO_PENDING_SCROLL
-            }
+        scrollOncePerFrame(state.scrollRequests, state::scrollToFraction)
     }
     val interactionSource = remember { MutableInteractionSource() }
     val isHovered by interactionSource.collectIsHoveredAsState()
     // Both derived, since what they are worked out from changes on every scrolled pixel and what they come to only
     // once in a while: read directly, they would recompose the scroller for the whole length of every scroll.
     val isVisible by remember(state) { derivedStateOf { state.isScrollable } }
-    val alpha by animateFloatAsState(
+    val alpha = animateFloatAsState(
         targetValue = if (isVisible) 1f else 0f,
         animationSpec = MaterialTheme.motionScheme.defaultEffectsSpec(),
     )
     // Progress values instead of animated colors, so that the thumb follows the color scheme immediately while it is
     // animating between the light and the dark theme (a color animation would chase it and trail behind).
-    val hoverProgress by animateFloatAsState(
+    val hoverProgress = animateFloatAsState(
         targetValue = if (isHovered || state.isDragging) 1f else 0f,
         animationSpec = MaterialTheme.motionScheme.defaultEffectsSpec(),
     )
-    val dragProgress by animateFloatAsState(
+    val dragProgress = animateFloatAsState(
         targetValue = if (state.isDragging) 1f else 0f,
         animationSpec = MaterialTheme.motionScheme.defaultEffectsSpec(),
     )
-    val thumbColor = lerp(
-        start = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = lerp(IDLE_THUMB_ALPHA, 1f, hoverProgress)),
-        stop = MaterialTheme.colorScheme.primary,
-        fraction = dragProgress,
-    )
-    val trackColor = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = TRACK_ALPHA * hoverProgress)
+    val idleColor = MaterialTheme.colorScheme.onSurfaceVariant
+    val activeColor = MaterialTheme.colorScheme.primary
     val label by remember(gridState, labelForItem) { derivedStateOf { labelForItem(gridState.firstVisibleItemIndex) } }
 
     Box(
@@ -160,17 +148,25 @@ internal fun FastScroller(
                 // until hovering it recorded the drawing again. The bubble needs none of it, as it is only shown while
                 // dragging, which ends the moment the scroller goes away.
                 .drawBehind {
+                    // Animation values are only needed for paint, so their frames should not recompose the scroller.
+                    val hover = hoverProgress.value
+                    val thumbColor = lerp(
+                        start = idleColor.copy(alpha = lerp(IDLE_THUMB_ALPHA, 1f, hover)),
+                        stop = activeColor,
+                        fraction = dragProgress.value,
+                    )
+                    val trackColor = idleColor.copy(alpha = TRACK_ALPHA * hover)
                     val thumbWidth = THUMB_WIDTH.toPx()
                     drawRoundRect(
                         color = trackColor,
-                        alpha = alpha,
+                        alpha = alpha.value,
                         topLeft = Offset(x = size.width - thumbWidth - THUMB_END_PADDING.toPx(), y = 0f),
                         size = Size(width = thumbWidth, height = size.height),
                         cornerRadius = CornerRadius(thumbWidth / 2),
                     )
                     drawRoundRect(
                         color = thumbColor,
-                        alpha = alpha,
+                        alpha = alpha.value,
                         topLeft = Offset(x = size.width - thumbWidth - THUMB_END_PADDING.toPx(), y = state.thumbTop),
                         size = Size(width = thumbWidth, height = state.thumbHeight),
                         cornerRadius = CornerRadius(thumbWidth / 2),
@@ -248,7 +244,7 @@ private fun Modifier.thumbDragGestures(
         // enough - and a drag that never ends leaves the bubble up and the thumb frozen the next time it comes back.
         try {
             state.startDrag(pressY = down.position.y)?.let { fraction ->
-                state.pendingFraction = fraction
+                state.scrollRequests.trySend(fraction)
             }
             if (press == ThumbPress.GRAB) {
                 // The finger may have travelled up to the touch slop while the gesture was being told apart. Only a
@@ -256,13 +252,13 @@ private fun Modifier.thumbDragGestures(
                 currentEvent.changes.firstOrNull { it.id == down.id && it.position.y != down.position.y }?.let { change ->
                     val fraction = state.dragBy(change.position.y - down.position.y)
                     change.consume()
-                    state.pendingFraction = fraction
+                    state.scrollRequests.trySend(fraction)
                 }
                 drag(down.id) { change ->
                     // The delta has to be read before consuming the change, as consumed changes report none.
                     val fraction = state.dragBy(change.positionChange().y)
                     change.consume()
-                    state.pendingFraction = fraction
+                    state.scrollRequests.trySend(fraction)
                 }
             }
         } finally {
@@ -313,8 +309,8 @@ private class FastScrollerState(
         private set
     private var draggedThumbTop by mutableFloatStateOf(0f)
 
-    /** The scroll fraction the list is to be moved to on the next frame, [NO_PENDING_SCROLL] while there is none. */
-    var pendingFraction by mutableFloatStateOf(NO_PENDING_SCROLL)
+    /** Only the newest pointer position matters before a frame; receiving it consumes that request exactly once. */
+    val scrollRequests = Channel<Float>(Channel.CONFLATED)
 
     /**
      * Worked out once per change of the list's layout rather than once per reader: a single frame of a scroll asks for
@@ -376,6 +372,17 @@ private class FastScrollerState(
 }
 
 /**
+ * New pointer events replace the pending position without cancelling the frame wait or an in-flight layout.
+ * A channel also retains a request that returns to an earlier fraction while the preceding scroll is suspended.
+ */
+internal suspend fun scrollOncePerFrame(requests: ReceiveChannel<Float>, onScroll: suspend (Float) -> Unit) {
+    for (fraction in requests) {
+        withFrameNanos { }
+        onScroll(requests.tryReceive().getOrNull() ?: fraction)
+    }
+}
+
+/**
  * Estimates the scroll position from the sizes of the visible items, as the total content size of a lazy grid is
  * unknown. Null if the whole list fits into the viewport.
  */
@@ -431,5 +438,4 @@ private val BUBBLE_SIZE = 48.dp
 private val BUBBLE_ELEVATION = 2.dp
 private val BUBBLE_TRANSFORM_ORIGIN = TransformOrigin(pivotFractionX = 1f, pivotFractionY = 0.5f)
 private const val IDLE_THUMB_ALPHA = 0.5f
-private const val NO_PENDING_SCROLL = -1f
 private const val TRACK_ALPHA = 0.12f

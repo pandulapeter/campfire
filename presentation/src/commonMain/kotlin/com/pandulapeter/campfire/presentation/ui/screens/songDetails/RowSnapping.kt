@@ -96,16 +96,30 @@ internal fun snappedScrollTarget(
  * top of the viewport, or null where there is none left to step to: the last one is on screen, or the song cannot be
  * scrolled far enough for another one.
  */
-internal fun nextStepOffset(scroll: Int, stepOffsets: List<Int>, maxValue: Int): Int? =
-    stepOffsets.map { it.coerceIn(0, maxValue) }.sorted().firstOrNull { it > scroll + POSITION_TOLERANCE }
+internal fun nextStepOffset(scroll: Int, stepOffsets: List<Int>, maxValue: Int): Int? {
+    // Queried on every scroll update. Sections in different columns need not arrive in vertical order, but finding
+    // the nearest stop needs neither a sorted copy nor a list of clamped offsets.
+    var next: Int? = null
+    for (offset in stepOffsets) {
+        val candidate = offset.coerceIn(0, maxValue)
+        if (candidate > scroll + POSITION_TOLERANCE && (next == null || candidate < next)) next = candidate
+    }
+    return next
+}
 
 /**
  * The scroll position that puts the stop the one at [scroll] comes after under the top of the viewport - or the stop at
  * [scroll] itself, where the reader is past its top - and null only at the very top of the song. The header above the
  * first stop counts as one of its own, rested on at the top of the song, since it is scrolled away like one.
  */
-internal fun previousStepOffset(scroll: Int, stepOffsets: List<Int>, maxValue: Int): Int? =
-    (listOf(0) + stepOffsets.map { it.coerceIn(0, maxValue) }).sorted().lastOrNull { it < scroll - POSITION_TOLERANCE }
+internal fun previousStepOffset(scroll: Int, stepOffsets: List<Int>, maxValue: Int): Int? {
+    var previous: Int? = if (scroll > POSITION_TOLERANCE) 0 else null
+    for (offset in stepOffsets) {
+        val candidate = offset.coerceIn(0, maxValue)
+        if (candidate < scroll - POSITION_TOLERANCE && (previous == null || candidate > previous)) previous = candidate
+    }
+    return previous
+}
 
 /**
  * The fling of a song read across the columns, which comes to rest at [snappedScrollTarget] rather than wherever the
@@ -189,8 +203,9 @@ internal class SongStepper(
     private val next = derivedStateOf { nextStepOffset(scrollState.value, flingBehavior.rows.stepOffsets, scrollState.maxValue) }
 
     val isSteppedByRow get() = flingBehavior.rows.isSteppedByRow
-    val canStepBack get() = previous.value != null
-    val canStepForward get() = next.value != null
+    // The target changes as each section is passed, but the screen only needs to know whether a target exists.
+    val canStepBack by derivedStateOf { previous.value != null }
+    val canStepForward by derivedStateOf { next.value != null }
 
     /** Scrolls to the previous stop where [direction] is negative and to the next one otherwise, if there is one. */
     suspend fun step(direction: Int) {

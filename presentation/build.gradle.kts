@@ -74,6 +74,7 @@ kotlin {
         }
         commonTest.dependencies {
             implementation(kotlin("test"))
+            implementation(libs.kotlin.coroutines.test)
         }
         androidMain.dependencies {
             // Edge-to-edge system bar styling, done by the Android shell in ui/CampfireAndroidApp.kt.

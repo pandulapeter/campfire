@@ -21,6 +21,7 @@ import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.drawWithCache
 import androidx.compose.ui.draw.drawWithContent
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
@@ -28,6 +29,7 @@ import androidx.compose.ui.graphics.BlendMode
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.CompositingStrategy
+import androidx.compose.ui.graphics.drawscope.translate
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.input.pointer.PointerEventPass
 import androidx.compose.ui.input.pointer.pointerInput
@@ -100,19 +102,30 @@ internal fun Modifier.fadingUnderListTop(fade: ListTopFade): Modifier {
         .graphicsLayer {
             compositingStrategy = if (position.top < fade.heightPx && fade.strength > 0f) CompositingStrategy.Offscreen else CompositingStrategy.Auto
         }
-        .drawWithContent {
-            drawContent()
-            if (position.top < fade.heightPx) {
-                val strength = fade.strength
-                if (strength > 0f) {
-                    drawRect(
-                        brush = Brush.verticalGradient(
-                            colors = listOf(Color.Black.copy(alpha = 1f - strength), Color.Black),
-                            startY = fade.coveredHeightPx - position.top,
-                            endY = fade.heightPx - position.top,
-                        ),
-                        blendMode = BlendMode.DstIn,
-                    )
+        .drawWithCache {
+            // Keep the shader in viewport coordinates and move the canvas beneath it. Rebuilding the gradient
+            // with the card's new offset allocated a brush and shader on every frame of a scroll.
+            val mask = Brush.verticalGradient(
+                colors = listOf(Color.Black, Color.Transparent),
+                startY = fade.coveredHeightPx,
+                endY = fade.heightPx,
+            )
+            onDrawWithContent {
+                drawContent()
+                val top = position.top
+                if (top < fade.heightPx) {
+                    val strength = fade.strength
+                    if (strength > 0f) {
+                        translate(top = -top) {
+                            drawRect(
+                                brush = mask,
+                                topLeft = Offset(0f, top),
+                                size = size,
+                                alpha = strength,
+                                blendMode = BlendMode.DstOut,
+                            )
+                        }
+                    }
                 }
             }
         }
@@ -154,6 +167,26 @@ internal fun Modifier.fadingTopEdge(scrolled: () -> Int) = fadingVerticalEdges(
 
 /** [fadingTopEdge] for a container scrolled by [scrollState]. */
 internal fun Modifier.fadingTopEdge(scrollState: ScrollState) = fadingTopEdge { scrollState.value }
+
+/**
+ * The same fade over a known opaque background, without rasterizing the entire viewport into an offscreen buffer.
+ * Only the edge strip is painted. Keep the masking overload for dialogs and other containers whose backing differs.
+ */
+internal fun Modifier.fadingTopEdge(scrollState: ScrollState, backgroundColor: Color) = drawWithCache {
+    val height = EDGE_FADE_SIZE.toPx()
+    val gradient = Brush.verticalGradient(
+        colors = listOf(backgroundColor, backgroundColor.copy(alpha = 0f)),
+        startY = 0f,
+        endY = height,
+    )
+    onDrawWithContent {
+        drawContent()
+        val strength = (scrollState.value / height).coerceIn(0f, 1f)
+        if (strength > 0f) {
+            drawRect(brush = gradient, size = Size(size.width, height), alpha = strength)
+        }
+    }
+}
 
 /** [fadingTopEdge] for a lazy list, which only knows how far it is scrolled into its first item. */
 internal fun Modifier.fadingTopEdge(listState: LazyListState) = fadingTopEdge { listState.scrolledFromTop() }

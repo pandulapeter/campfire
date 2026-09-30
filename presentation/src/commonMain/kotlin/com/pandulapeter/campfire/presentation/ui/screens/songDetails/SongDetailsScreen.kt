@@ -797,7 +797,7 @@ private fun SongDetailsPage(
             SongLyrics(
                 modifier = Modifier
                     .fillMaxSize()
-                    .fadingTopEdge(scrollState)
+                    .fadingTopEdge(scrollState, MaterialTheme.colorScheme.background)
                     .verticalScroll(state = scrollState, flingBehavior = flingBehavior)
                     .padding(
                         start = contentPadding.calculateStartPadding(layoutDirection) + 16.dp,
