@@ -1268,8 +1268,13 @@ private fun SongTagsDialog(
         confirmButton = {
             TextButton(
                 onClick = {
-                    // A tag typed but not entered yet is still one the user meant to put on the song.
-                    val tags = if (typedTag.isNotEmpty() && spelledTag == null) selectedTags + typedTag else selectedTags
+                    // A tag typed but not entered yet is still one the user meant to put on the song, spelled as the library
+                    // spells it.
+                    val tags = when {
+                        typedTag.isEmpty() -> selectedTags
+                        spelledTag != null -> if (spelledTag in selectedTags) selectedTags else selectedTags + spelledTag
+                        else -> selectedTags + typedTag
+                    }
                     viewModel.setSongTags(fileName = dialog.song.fileName, tags = tags, offeredTags = offeredTags)
                     viewModel.dismissDialog()
                 },
