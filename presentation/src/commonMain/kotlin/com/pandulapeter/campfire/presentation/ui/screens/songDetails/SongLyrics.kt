@@ -195,7 +195,8 @@ import kotlin.math.roundToInt
  * dividers between the rows: the last row is then followed by empty space down to the bottom of that viewport, so
  * that it can be brought to the top like the others. Unspecified where nothing snaps, which is the editor's preview.
  * @param isOneRowAtATime Whether every row, not only the last one, is followed by empty space down to the bottom of
- * [rowViewportHeight], so that a scroll resting on a divider shows no row but the one under it.
+ * [rowViewportHeight], so that a scroll resting on a divider shows no row but the one under it, in the middle of the
+ * screen.
  * @param rowViewportBottomPadding How much the scroll holds under this composable, which is part of the room the last
  * row needs to be brought to the top of the viewport.
  * @param stepButtonInset How much of the end edge a song that has to be scrolled leaves to what is drawn over it there:
@@ -1522,8 +1523,9 @@ private fun TextStyle.scaled(scale: Float) = copy(
  * is only there where the song scrolls anyway: where it is taller than the screen together with the header above it,
  * or where [isOneRowAtATime] makes it so. With [isOneRowAtATime] every other row
  * is followed by that space too, so that a row is read with nothing but itself on the screen: the next row peeking in
- * under it would be read as part of it, which is what the dividers are there to prevent. The grid is still decided
- * without that space, since it is not something a shorter song could save.
+ * under it would be read as part of it, which is what the dividers are there to prevent. A row shorter than the screen
+ * is then read in the middle of it, the space split above and below it, rather than at the top of a screen that is
+ * otherwise empty. The grid is still decided without that space, since it is not something a shorter song could save.
  */
 @Composable
 private fun SongSectionsLayout(
@@ -1778,6 +1780,13 @@ private fun SongSectionsLayout(
     val dividerHeight = (dividerAbovePlaceable ?: dividerPlaceables.firstOrNull())?.height ?: 0
     val isPaddedToViewport = isScrolledByRow && rowViewportHeight.isSpecified
     val rowViewportHeightPx = if (isPaddedToViewport) rowViewportHeight.roundToPx() else 0
+    // How much of the viewport a row has with the scroll resting on the divider above it: measured from the row's top
+    // rather than from where the scroll rests (the bottom of its divider), and less what the scroll holds below this.
+    val readableRowHeight = if (isPaddedToViewport) {
+        rowViewportHeightPx - rowGapPx / 2 + (dividerHeight - dividerHeight / 2) - rowViewportBottomPadding.roundToPx()
+    } else {
+        0
+    }
     val arrangement = grid.arrange(
         heights = unitHeights,
         sectionGap = sectionGapPx,
@@ -1786,13 +1795,9 @@ private fun SongSectionsLayout(
         // divider, so that the divider stays out of it too. That also holds for the top of the song where it has no
         // divider above it, since the scroll then rests on the header, which is above the song.
         minRowPitch = if (isPaddedToViewport && isOneRowAtATime) rowViewportHeightPx + rowGapPx else 0,
-        // Measured from the last row's top rather than from where the scroll rests above it (the bottom of its
-        // divider), and less what the scroll holds below this.
-        minLastRowHeight = if (isPaddedToViewport) {
-            rowViewportHeightPx - rowGapPx / 2 + (dividerHeight - dividerHeight / 2) - rowViewportBottomPadding.roundToPx()
-        } else {
-            0
-        },
+        minLastRowHeight = readableRowHeight,
+        // A row read with nothing but itself on the screen is read in the middle of what the screen shows of it.
+        centeredRowHeight = if (isOneRowAtATime) readableRowHeight else 0,
         unitSections = units.unitSections,
         piecePadding = piecePadding,
     )

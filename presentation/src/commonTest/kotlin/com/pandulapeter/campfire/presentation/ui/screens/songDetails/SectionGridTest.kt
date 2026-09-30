@@ -95,6 +95,25 @@ class SectionGridTest {
         assertEquals(1740, arrangement.height)
     }
 
+    @Test
+    fun rowsShorterThanTheCenteredHeightAreMovedToItsMiddle() {
+        val grid = SectionGrid(rows = intArrayOf(0, 1, 2), columns = IntArray(3), columnCounts = intArrayOf(1, 1, 1))
+        val arrangement = grid.arrange(
+            heights = intArrayOf(100, 900, 100),
+            sectionGap = SECTION_GAP,
+            rowGap = ROW_GAP,
+            minRowPitch = 500,
+            minLastRowHeight = 300,
+            centeredRowHeight = 300,
+        )
+        // The short rows are moved down by half of what they leave of the height, the tall one stays at its top, and
+        // the dividers and the height of the whole are where they would be without it.
+        assertContentEquals(intArrayOf(100, 500, 1540), arrangement.tops)
+        assertContentEquals(listOf(480, 1420), arrangement.dividerTops)
+        assertContentEquals(listOf(200, 1400, 1640), arrangement.rowBottoms)
+        assertEquals(1740, arrangement.height)
+    }
+
     private fun flow(heights: List<Int>, maxColumnCount: Int, maxRowHeight: Int) = flowIntoRows(
         sectionCount = heights.size,
         maxColumnCount = maxColumnCount,

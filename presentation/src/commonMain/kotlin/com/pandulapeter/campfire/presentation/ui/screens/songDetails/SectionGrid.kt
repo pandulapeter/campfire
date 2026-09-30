@@ -76,6 +76,10 @@ internal class SongArrangement(
  * least [minLastRowHeight], the difference being left empty under a row that is shorter than that: a song whose
  * scroll comes to rest on the rows is then never shown with a second row under the one it rests on (see
  * `snappedScrollTarget`), and its last row can be brought to the top like the others.
+ *
+ * A row shorter than [centeredRowHeight] is moved down by half of what it leaves of that height, so that it is read in
+ * the middle of the screen rather than at the top of an otherwise empty one. The divider above it stays where it is,
+ * so the scroll still comes to rest on the same spot.
  */
 internal fun SectionGrid.arrange(
     heights: IntArray,
@@ -83,6 +87,7 @@ internal fun SectionGrid.arrange(
     rowGap: Int,
     minRowPitch: Int = 0,
     minLastRowHeight: Int = 0,
+    centeredRowHeight: Int = 0,
     unitSections: IntArray? = null,
     piecePadding: IntArray? = null,
 ): SongArrangement {
@@ -91,6 +96,7 @@ internal fun SectionGrid.arrange(
     val tops = IntArray(heights.size)
     val dividerTops = mutableListOf<Int>()
     val rowBottoms = mutableListOf<Int>()
+    val rowTops = mutableListOf<Int>()
     var rowTop = 0
     var rowHeight = 0
     var cellBottom = 0
@@ -102,6 +108,7 @@ internal fun SectionGrid.arrange(
             dividerTops += rowTop - rowGap / 2
             rowHeight = 0
         }
+        if (index == 0 || isNewRow) rowTops += rowTop
         val isNewCell = index == 0 || isNewRow || columns[index] != columns[index - 1]
         val continuesSection = index > 0 && sectionOf(index) == sectionOf(index - 1)
         tops[index] = when {
@@ -115,7 +122,15 @@ internal fun SectionGrid.arrange(
         rowHeight = max(rowHeight, cellBottom - rowTop)
     }
     if (heights.isNotEmpty()) rowBottoms += rowTop + rowHeight
-    return SongArrangement(tops = tops, height = rowTop + max(rowHeight, minLastRowHeight), dividerTops = dividerTops, rowBottoms = rowBottoms)
+    val rowShifts = IntArray(rowTops.size) { row -> ((centeredRowHeight - (rowBottoms[row] - rowTops[row])) / 2).coerceAtLeast(0) }
+    for (index in heights.indices) tops[index] += rowShifts[rows[index]]
+    val shiftedRowBottoms = rowBottoms.mapIndexed { row, bottom -> bottom + rowShifts[row] }
+    return SongArrangement(
+        tops = tops,
+        height = rowTop + max(rowHeight + (rowShifts.lastOrNull() ?: 0), minLastRowHeight),
+        dividerTops = dividerTops,
+        rowBottoms = shiftedRowBottoms,
+    )
 }
 
 /** The grid of a layout one column wide: every section in the one cell of the one row, in their order. */
