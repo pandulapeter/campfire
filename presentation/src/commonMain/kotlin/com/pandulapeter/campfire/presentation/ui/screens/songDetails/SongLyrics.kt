@@ -1612,6 +1612,7 @@ private fun SongSectionsLayout(
         maxColumnCount = maxColumnCountFor(settledWidth),
         endInset = endInsetPx,
         keepsEndInset = keepsStepButtonInset,
+        headerHeight = headerHeight(),
     )
 
     fun searchGrid(totalWidth: Int): SearchedGrid {
@@ -1657,9 +1658,11 @@ private fun SongSectionsLayout(
         val searched = if (availableHeightPx > 0) {
             var candidate = 1
             var candidateGrid = gridFor(candidate)
+            var candidateHeight = Int.MAX_VALUE
             var fits = false
             while (candidate < maxColumnCount) {
-                if (candidateGrid.height() <= availableHeightPx) {
+                candidateHeight = candidateGrid.height()
+                if (candidateHeight <= availableHeightPx) {
                     fits = true
                     break
                 }
@@ -1672,9 +1675,10 @@ private fun SongSectionsLayout(
             }
             // A single column is never measured to find out (see gridFor), so it is taken for a song that scrolls, which
             // on a window with room for nothing wider is nearly every song.
-            SearchedGrid(candidateGrid, fits = fits || (candidate > 1 && candidateGrid.height() <= availableHeightPx))
+            if (!fits && candidate > 1) candidateHeight = candidateGrid.height()
+            SearchedGrid(candidateGrid, fits = candidateHeight <= availableHeightPx, height = candidateHeight)
         } else {
-            SearchedGrid(gridFor(maxColumnCount), fits = false)
+            SearchedGrid(gridFor(maxColumnCount), fits = false, height = Int.MAX_VALUE)
         }
 
         // Only a song that has to be scrolled with its sections whole is ever cut, and only where the width has room for
@@ -1684,7 +1688,7 @@ private fun SongSectionsLayout(
         val cutColumnCount = widthColumnCountFor(totalWidth).coerceAtMost(unitCount)
         if (searched.fits || !canCutSections || availableHeightPx <= 0 || cutColumnCount < 2) return searched
         val height = searched.grid.height()
-        if (height <= availableHeightPx) return SearchedGrid(searched.grid, fits = true)
+        if (height <= availableHeightPx) return SearchedGrid(searched.grid, fits = true, height = height)
 
         fun cutGrid(cutsEverySection: Boolean) = flowIntoRowsCuttingSections(
             sectionStarts = units.sectionStarts,
@@ -1703,21 +1707,27 @@ private fun SongSectionsLayout(
         // A song that fits the screen once a section is cut is read without a single scroll, which is worth a cut
         // wherever it is. Otherwise only a section taller than the screen is cut, into columns side by side in which
         // it fits.
-        cutGrid(cutsEverySection = true)?.let { grid -> if (grid.height() <= availableHeightPx) return SearchedGrid(grid, fits = true) }
-        return cutGrid(cutsEverySection = false)?.let { grid -> SearchedGrid(grid, fits = false) } ?: searched
+        cutGrid(cutsEverySection = true)?.let { grid ->
+            val cutHeight = grid.height()
+            if (cutHeight <= availableHeightPx) return SearchedGrid(grid, fits = true, height = cutHeight)
+        }
+        return cutGrid(cutsEverySection = false)?.let { grid -> SearchedGrid(grid, fits = false, height = Int.MAX_VALUE) } ?: searched
     }
 
     val decidedGrid = sectionMeasurements.grid(gridKey) {
         // The buttons that step through the song sit at the end of the screen, so a song that has to be scrolled leaves
-        // them that edge. One that fits the screen there has no buttons to leave room for, and is laid out across the
-        // whole width, where it fits all the more. Several rows read across are stepped through however short they
-        // are, since each is followed by empty space down to the bottom of the screen.
+        // them that edge. One that fits the screen under its header has no buttons to leave room for, and is laid out
+        // across the whole width - but only where it still fits there, since the grid found for the whole width may be
+        // one of fewer, taller columns, which would scroll with the buttons over it. Several rows read across are
+        // stepped through however short they are, since each is followed by empty space down to the bottom of the screen.
         val insetSearch = if (endInsetPx > 0) searchGrid(settledWidth - endInsetPx) else null
+        fun SearchedGrid.fitsUnderHeader() = fitsUnderHeader(fits, grid.columnCounts.size, headerHeight(), height, availableHeightPx)
         when {
             insetSearch == null -> DecidedGrid(searchGrid(settledWidth).grid, isInset = false)
-            keepsStepButtonInset || !insetSearch.fits || insetSearch.grid.columnCounts.size > 1 ->
-                DecidedGrid(insetSearch.grid, isInset = true)
-            else -> DecidedGrid(searchGrid(settledWidth).grid, isInset = false)
+            keepsStepButtonInset || !insetSearch.fitsUnderHeader() -> DecidedGrid(insetSearch.grid, isInset = true)
+            else -> searchGrid(settledWidth).let { full ->
+                if (full.fitsUnderHeader()) DecidedGrid(full.grid, isInset = false) else DecidedGrid(insetSearch.grid, isInset = true)
+            }
         }
     }
     val (grid, isInset) = decidedGrid
@@ -2148,12 +2158,17 @@ private data class SectionGridKey(
     val maxColumnCount: Int,
     val endInset: Int,
     val keepsEndInset: Boolean,
+    val headerHeight: Int,
 )
 
-/** A grid [SongSectionsLayout] searched for, and whether the whole song [fits] into the height available to it. */
+/**
+ * A grid [SongSectionsLayout] searched for, whether the whole song [fits] into the height available to it, and how tall
+ * it is where that was worked out - [Int.MAX_VALUE] where it was not, which is only where it does not fit.
+ */
 private data class SearchedGrid(
     val grid: SectionGrid,
     val fits: Boolean,
+    val height: Int,
 )
 
 /** The grid [SongSectionsLayout] decided on, and whether it was decided for the width less the end inset. */

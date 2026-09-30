@@ -160,4 +160,13 @@ class SectionGridTest {
         const val SECTION_GAP = 20
         const val ROW_GAP = 40
     }
+
+    @Test
+    fun aSongFitsTheScreenOnlyWhereItFitsUnderItsHeader() {
+        assertEquals(false, fitsUnderHeader(fits = true, rowCount = 1, headerHeight = 200, gridHeight = 650, availableHeight = 696))
+        assertEquals(true, fitsUnderHeader(fits = true, rowCount = 1, headerHeight = 0, gridHeight = 650, availableHeight = 696))
+        assertEquals(true, fitsUnderHeader(fits = true, rowCount = 1, headerHeight = 40, gridHeight = 650, availableHeight = 696))
+        assertEquals(false, fitsUnderHeader(fits = true, rowCount = 2, headerHeight = 0, gridHeight = 300, availableHeight = 696))
+        assertEquals(false, fitsUnderHeader(fits = false, rowCount = 1, headerHeight = 0, gridHeight = 300, availableHeight = 696))
+    }
 }
