@@ -141,6 +141,21 @@ internal class ImportPlannerTest {
     }
 
     @Test
+    fun aSetlistThatCarriesNoDateSaysNothingAboutTheCountdownEither() {
+        val library = setlist(fileName = "summer_set.setlist.json", title = "Summer set").copy(date = LocalDate(2026, 9, 28), isCountdownShown = true)
+
+        fun statusOf(incoming: Setlist) = ImportPlanner.planSetlists(
+            incoming = listOf(ImportPlanner.IncomingSetlist(incoming, "summer_set.setlist.json")),
+            librarySetlists = listOf(library),
+            songFileNames = emptyMap(),
+        ).single().status
+
+        assertEquals(ImportPlan.Status.IDENTICAL, statusOf(library.copy(date = null, isCountdownShown = false)))
+        // A file that carries a date was written by a build that knew the countdown, so its flag is what it says.
+        assertEquals(ImportPlan.Status.CONFLICTING, statusOf(library.copy(isCountdownShown = false)))
+    }
+
+    @Test
     fun aSongIsRecognizedUnderTheLibraryNameItArrivedWith() = runTest {
         // Exported under a name the library gave it before the naming rule changed, and named by its header now.
         val plan = plan(library = mapOf("old_name.cho" to A), song(text = A, sourceFileName = "old_name.cho"))

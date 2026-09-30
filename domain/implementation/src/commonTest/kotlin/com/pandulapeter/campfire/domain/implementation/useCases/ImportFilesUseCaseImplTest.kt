@@ -175,6 +175,37 @@ class ImportFilesUseCaseImplTest {
     }
 
     @Test
+    fun `an undated setlist that replaces a library one keeps its countdown and a dated one brings its own`() = runTest {
+        val library = setlist(entries = listOf("a.cho")).copy(
+            fileName = "gig.setlist.json",
+            title = "Gig",
+            date = LocalDate(2026, 1, 10),
+            isCountdownShown = true,
+        )
+        suspend fun replacing(incoming: Setlist) = FakeSetlistRepository().let { setlists ->
+            setlists.files[library.fileName] = library
+            val plan = ImportPlan(
+                setlists = ImportPlanner.planSetlists(
+                    incoming = listOf(ImportPlanner.IncomingSetlist(setlist = incoming, sourceFileName = library.fileName)),
+                    librarySetlists = listOf(library),
+                    songFileNames = emptyMap(),
+                ),
+            )
+            assertEquals(listOf(ImportPlan.Status.CONFLICTING), plan.setlists.map { it.status })
+            ImportFilesUseCaseImpl(songRepository = FakeSongRepository(files = mutableMapOf()), setlistRepository = setlists)
+                .invoke(plan, ImportConflictResolution.REPLACE)
+            setlists.files.getValue(library.fileName)
+        }
+
+        replacing(library.copy(date = null, isCountdownShown = false, description = "Changed")).let { written ->
+            assertEquals("Changed", written.description)
+            assertEquals(library.date, written.date)
+            assertEquals(true, written.isCountdownShown)
+        }
+        assertEquals(false, replacing(library.copy(isCountdownShown = false)).isCountdownShown)
+    }
+
+    @Test
     fun `an import that fails halfway still puts what it wrote into the list`() = runTest {
         val songs = FakeSongRepository(files = mutableMapOf(), failingImport = 2)
         val plan = ImportPlan(

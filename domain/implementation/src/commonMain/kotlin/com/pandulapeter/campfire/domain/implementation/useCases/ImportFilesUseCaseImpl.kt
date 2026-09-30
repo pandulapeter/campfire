@@ -101,11 +101,17 @@ class ImportFilesUseCaseImpl internal constructor(
                     Action.WRITE, Action.REPLACE -> {
                         val shouldReplace = action == Action.REPLACE && entry.fileName !in keptSetlistFileNames &&
                             replacedSetlistFileNames.add(entry.fileName)
-                        // An undated file that replaces a library setlist says nothing about its day, so the day stays the
-                        // one the library had. One that is written numbered instead is a new setlist, dated as one.
-                        val fallbackDate = if (shouldReplace) librarySetlists.firstOrNull { it.fileName == entry.fileName }?.date else null
+                        // An undated file that replaces a library setlist says nothing about its day or its countdown, so
+                        // both stay what the library had. One that is written numbered instead is a new setlist, dated as
+                        // one.
+                        val replaced = if (shouldReplace) librarySetlists.firstOrNull { it.fileName == entry.fileName } else null
                         importedSetlists += setlistRepository.importSetlist(
-                            setlist = entry.setlist.withSongFileNames(storedSongFileNames).let { it.copy(date = it.date ?: fallbackDate ?: today) },
+                            setlist = entry.setlist.withSongFileNames(storedSongFileNames).let {
+                                it.copy(
+                                    date = it.date ?: replaced?.date ?: today,
+                                    isCountdownShown = if (it.date == null && replaced != null) replaced.isCountdownShown else it.isCountdownShown,
+                                )
+                            },
                             shouldReplace = shouldReplace,
                         )
                     }

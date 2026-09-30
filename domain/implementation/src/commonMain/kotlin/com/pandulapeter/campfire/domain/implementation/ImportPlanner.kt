@@ -224,12 +224,14 @@ internal object ImportPlanner {
 
     /**
      * Every user-facing field decides whether a setlist is the same as the incoming [other], except a date [other] does
-     * not carry: the import gives it the day it is imported on, which a copy of it already in the library can never
-     * match - the bundled demo setlist is one, and asking for it again would otherwise always be a question.
+     * not carry, and with it the countdown, which no file older than the date can say either: the import gives it the
+     * day it is imported on, which a copy of it already in the library can never match - the bundled demo setlist is
+     * one, and asking for it again would otherwise always be a question.
      */
     private fun Setlist.holdsTheSameAs(other: Setlist) =
-        title == other.title && description == other.description && (other.date == null || date == other.date) &&
-            isCountdownShown == other.isCountdownShown && isArchived == other.isArchived && entries == other.entries && unknownFields == other.unknownFields
+        title == other.title && description == other.description &&
+            (other.date == null || (date == other.date && isCountdownShown == other.isCountdownShown)) &&
+            isArchived == other.isArchived && entries == other.entries && unknownFields == other.unknownFields
 
     private fun IncomingSong.toEntry(
         status: ImportPlan.Status,
