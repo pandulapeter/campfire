@@ -73,6 +73,13 @@ class SectionCuttingTest {
     }
 
     @Test
+    fun aSectionIsOnlyCutWhereItMayBe() {
+        // Six lines, which may only be cut in front of the fifth: the two columns are four lines and two.
+        val grid = cut(sectionUnits = listOf(List(6) { 100 }), maxColumnCount = 2, maxRowHeight = 500, isCuttableBefore = { it == 4 })
+        assertContentEquals(intArrayOf(0, 0, 0, 0, 1, 1), grid.columns)
+    }
+
+    @Test
     fun sectionsThatFitTheColumnsWholeAreNotCut() {
         val sections = listOf(listOf(100), listOf(100), listOf(100), listOf(100))
         listOf(false, true).forEach { cutsEverySection ->
@@ -129,6 +136,7 @@ class SectionCuttingTest {
         maxRowHeight: Int,
         piecePadding: IntArray = IntArray(sectionUnits.size),
         cutsEverySection: Boolean = false,
+        isCuttableBefore: (Int) -> Boolean = { true },
     ): SectionGrid {
         val heights = sectionUnits.flatten()
         val sectionStarts = IntArray(sectionUnits.size + 1).also { starts ->
@@ -138,6 +146,7 @@ class SectionCuttingTest {
             sectionStarts = sectionStarts,
             maxColumnCount = maxColumnCount,
             heightAt = { unit, _ -> heights[unit] },
+            isCuttableBefore = isCuttableBefore,
             wideHeightAt = { null },
             piecePadding = piecePadding,
             sectionGap = SECTION_GAP,

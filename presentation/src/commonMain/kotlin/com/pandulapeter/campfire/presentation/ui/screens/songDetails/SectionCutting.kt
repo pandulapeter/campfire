@@ -23,7 +23,8 @@ package com.pandulapeter.campfire.presentation.ui.screens.songDetails
  * with the rest of the width empty - or a row of sections that only balance into its columns once one of them is cut.
  *
  * The grid is one of chunks: the units of section `s` are `sectionStarts[s]` to `sectionStarts[s + 1]`, [heightAt] the
- * height of a unit in a row of a given number of columns, and a section may only be cut between two of its units. A
+ * height of a unit in a row of a given number of columns, and a section may only be cut in front of a unit
+ * [isCuttableBefore] says so of. A
  * section on a card has [piecePadding] at both sides of every cut, as [arrange] places them. Within a row the cells are filled in their order, each piece as tall as the height of the
  * row allows, the lowest such height being searched for. A row prefers no cut at all, and then cuts only the
  * sections taller than [maxRowHeight], unless cutting more saves at least [minCutSaving] of its height; every row with a
@@ -35,6 +36,7 @@ internal fun flowIntoRowsCuttingSections(
     sectionStarts: IntArray,
     maxColumnCount: Int,
     heightAt: (unit: Int, columnCount: Int) -> Int,
+    isCuttableBefore: (unit: Int) -> Boolean,
     wideHeightAt: (section: Int) -> Int?,
     piecePadding: IntArray,
     sectionGap: Int,
@@ -79,12 +81,20 @@ internal fun flowIntoRowsCuttingSections(
             while (from < until) {
                 val base = if (isEmpty) 0 else used + sectionGap
                 val top = if (isContinuation) padding else 0
+                // The longest piece that fits, ending where the section ends or where it may be cut; one that ends before
+                // the section does ends in the padding of the cut.
                 var to = from
                 var height = 0
-                // A piece that ends before the section does ends in the padding of the cut.
-                while (to < until && base + top + height + unitHeights[to] + (if (to + 1 < until) padding else 0) <= cap) {
-                    height += unitHeights[to]
-                    to++
+                var end = from
+                var stackedHeight = 0
+                while (end < until && base + top + stackedHeight + unitHeights[end] <= cap) {
+                    stackedHeight += unitHeights[end]
+                    end++
+                    val endsSection = end == until
+                    if ((endsSection || (isCut && isCuttableBefore(end))) && base + top + stackedHeight + (if (endsSection) 0 else padding) <= cap) {
+                        to = end
+                        height = stackedHeight
+                    }
                 }
                 if (to == from || (to < until && !isCut && !isEmpty)) {
                     if (isEmpty) return null

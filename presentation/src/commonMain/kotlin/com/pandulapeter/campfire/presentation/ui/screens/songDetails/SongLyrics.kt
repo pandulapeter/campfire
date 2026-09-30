@@ -1687,6 +1687,7 @@ private fun SongSectionsLayout(
             sectionStarts = units.sectionStarts,
             maxColumnCount = cutColumnCount,
             heightAt = { unit, columnCount -> unitHeightAt(unit, columnWidthFor(totalWidth, columnCount)) },
+            isCuttableBefore = { unit -> units.isCuttableBefore[unit] },
             wideHeightAt = ::wideHeightAt,
             piecePadding = piecePadding,
             sectionGap = sectionGapPx,
@@ -1831,6 +1832,8 @@ private fun SongSectionsLayout(
                     List(sectionCount) { it }
                 },
                 isSteppedByRow = isSteppedByRow,
+                // Only a single column is paged through: a row of several is never taller than the screen.
+                lineTops = (0 until unitCount).filter { grid.columnCounts[grid.rows[it]] == 1 }.map { songTop + arrangement.tops[it] },
             ),
         )
     }
@@ -2039,39 +2042,46 @@ private data class UnitContent(
 )
 
 /**
- * The chunks the sections of a song are composed and laid out as, see [sectionChunkStarts]: the chunks of section `s`
- * are [sectionStarts]`[s]` to [sectionStarts]`[s + 1]`, each of them the section's items in [itemRanges] and each
- * belonging to the section in [unitSections]. A section on a card is drawn on as many cards as it has chunks, since
- * no more pieces of it can ever be placed than that: its first is [cardStarts]`[s]` of the [cardCount] the layout is
- * handed, -1 for a section drawn without a card.
+ * The chunks the sections of a song are composed and laid out as: every line of a section that may be cut, and every
+ * other section whole. The chunks of section `s` are [sectionStarts]`[s]` to [sectionStarts]`[s + 1]`, each of them the
+ * section's items in [itemRanges] and each belonging to the section in [unitSections], and the section may only be cut
+ * in front of the ones [isCuttableBefore] says so of (see [sectionChunkStarts]). Every line is a chunk of its own, rather
+ * than every stretch between two places a cut may fall, so that the layout knows where every line starts, which is
+ * where a step through a section taller than the screen brings the next page to (see [SongRows.lineTops]).
+ *
+ * A section on a card is drawn on as many cards as it has chunks, since no more pieces of it can ever be placed than
+ * that: its first is [cardStarts]`[s]` of the [cardCount] the layout is handed, -1 for a section drawn without a card.
  */
 private class SongUnits(
     val sectionStarts: IntArray,
     val unitSections: IntArray,
     val itemRanges: List<IntRange>,
+    val isCuttableBefore: BooleanArray,
     val cardStarts: IntArray,
     val cardCount: Int,
 ) {
 
     companion object {
 
-        /** The chunks of [sections], where each section [isCuttable] says so is composed as the chunks it may be cut into. */
+        /** The chunks of [sections], where each section [isCuttable] says so is composed line by line. */
         fun of(sections: List<RenderSection>, isCuttable: (RenderSection.Lines) -> Boolean): SongUnits {
             val sectionStarts = IntArray(sections.size + 1)
             val unitSections = mutableListOf<Int>()
             val itemRanges = mutableListOf<IntRange>()
+            val isCuttableBefore = mutableListOf<Boolean>()
             val cardStarts = IntArray(sections.size) { -1 }
             var cardCount = 0
             sections.forEachIndexed { index, section ->
-                val ranges = if (section is RenderSection.Lines) {
-                    val starts = if (isCuttable(section)) section.chunkStarts else intArrayOf(0)
-                    starts.mapIndexed { chunk, start -> start until (starts.getOrNull(chunk + 1) ?: section.itemCount) }
+                val ranges = if (section is RenderSection.Lines && isCuttable(section) && section.itemCount > 1) {
+                    List(section.itemCount) { item -> item..item }
                 } else {
-                    listOf(0 until 1)
+                    listOf(0 until ((section as? RenderSection.Lines)?.itemCount ?: 1))
                 }
+                val cutStarts = (section as? RenderSection.Lines)?.chunkStarts
                 ranges.forEach { range ->
                     unitSections += index
                     itemRanges += range
+                    isCuttableBefore += range.first > 0 && cutStarts?.contains(range.first) == true
                 }
                 sectionStarts[index + 1] = sectionStarts[index] + ranges.size
                 if (section is RenderSection.Lines && section.isOnCard) {
@@ -2083,6 +2093,7 @@ private class SongUnits(
                 sectionStarts = sectionStarts,
                 unitSections = unitSections.toIntArray(),
                 itemRanges = itemRanges,
+                isCuttableBefore = isCuttableBefore.toBooleanArray(),
                 cardStarts = cardStarts,
                 cardCount = cardCount,
             )

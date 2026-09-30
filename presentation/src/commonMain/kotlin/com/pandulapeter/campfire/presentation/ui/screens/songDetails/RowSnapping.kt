@@ -11,10 +11,12 @@ package com.pandulapeter.campfire.presentation.ui.screens.songDetails
 
 import androidx.compose.animation.core.AnimationState
 import androidx.compose.animation.core.DecayAnimationSpec
+import androidx.compose.animation.core.FastOutSlowInEasing
 import androidx.compose.animation.core.Spring
 import androidx.compose.animation.core.animateTo
 import androidx.compose.animation.core.calculateTargetValue
 import androidx.compose.animation.core.spring
+import androidx.compose.animation.core.tween
 import androidx.compose.animation.rememberSplineBasedDecay
 import androidx.compose.foundation.ScrollState
 import androidx.compose.foundation.gestures.FlingBehavior
@@ -49,6 +51,10 @@ import kotlin.math.sign
  * header is then the first thing stepped past ([isSteppedByRow] telling the two apart). None before the song has been
  * laid out. Each stop is also named by the index of the section it starts with ([stepSections], one per stop), which is
  * what it is still called once a new layout has flowed the sections into different rows or columns (see [ReadingAnchor]).
+ *
+ * [lineTops] are where the pieces a single column is made of start - every section, and within one the chunks it may be
+ * cut into, which start between two of its lines (see [sectionChunkStarts]) - so that a step that pages through what
+ * does not fit the screen can bring a line to the top of it rather than half of one.
  */
 internal data class SongRows(
     val restingOffsets: List<Int> = emptyList(),
@@ -56,11 +62,13 @@ internal data class SongRows(
     val stepOffsets: List<Int> = emptyList(),
     val stepSections: List<Int> = emptyList(),
     val isSteppedByRow: Boolean = false,
+    val lineTops: List<Int> = emptyList(),
 ) {
     fun offsetBy(offset: Int) = copy(
         restingOffsets = restingOffsets.map { it + offset },
         bottoms = bottoms.map { it + offset },
         stepOffsets = stepOffsets.map { it + offset },
+        lineTops = lineTops.map { it + offset },
     )
 }
 
@@ -126,7 +134,8 @@ internal data class ReadingWindow(val top: Int = 0, val bottom: Int = 0, val end
  *
  * That is the next stop ([nextStepOffset]) wherever all of the stop the reader is in is on screen. A row or a section
  * that is taller than what can be read at once - a long verse on a phone held sideways, or any section at a large
- * enough text size - is paged through first, [ReadingWindow.pageHeight] at a time, and the next stop is only stepped to
+ * enough text size - is paged through first, [ReadingWindow.pageHeight] at a time - or less, to bring the start of a line to
+ * the top ([SongRows.lineTops]) - and the next stop is only stepped to
  * once its content's end is in view: from the top of a row taller than the screen the next row's divider is further
  * than the screen, and stepping to it would skip the part of this row in between. Only the content of a row counts,
  * never the empty space it is followed by (see [SongRows.bottoms]); a section, which is followed by nothing but the
@@ -150,7 +159,18 @@ internal fun nextStepTarget(scroll: Int, rows: SongRows, viewportHeight: Int, wi
             limit = minOf(limit, lastContent)
         }
     }
-    return if (lastContent > scroll + POSITION_TOLERANCE) minOf(scroll + window.pageHeight(viewportHeight), limit) else next
+    if (lastContent <= scroll + POSITION_TOLERANCE) return next
+    // The furthest start of a line that a page reaches, so that the page begins with a whole line rather than with the
+    // bottom half of one. None within the page - a staff of tablature taller than it - and the page is taken as it is.
+    val pageHeight = window.pageHeight(viewportHeight)
+    var page = scroll + pageHeight
+    var lineStart: Int? = null
+    for (top in rows.lineTops) {
+        val candidate = top - window.top
+        if (candidate > scroll + pageHeight / 2 && candidate <= page && (lineStart == null || candidate > lineStart)) lineStart = candidate
+    }
+    page = lineStart ?: page
+    return minOf(page, limit)
 }
 
 /**
@@ -164,7 +184,14 @@ internal fun previousStepTarget(scroll: Int, rows: SongRows, viewportHeight: Int
     val previous = previousStepOffset(scroll, rows.stepOffsets, maxValue) ?: return null
     // Everything between the two is in view from the stop before.
     if (scroll - previous <= window.visibleHeight(viewportHeight)) return previous
-    var target = maxOf(scroll - window.pageHeight(viewportHeight), previous)
+    val pageHeight = window.pageHeight(viewportHeight)
+    // A page back begins with a whole line as well: the one nearest to a page above, but never further than that.
+    var lineStart: Int? = null
+    for (top in rows.lineTops) {
+        val candidate = top - window.top
+        if (candidate >= scroll - pageHeight && candidate < scroll - pageHeight / 2 && (lineStart == null || candidate < lineStart)) lineStart = candidate
+    }
+    var target = maxOf(lineStart ?: (scroll - pageHeight), previous)
     if (rows.isSteppedByRow) {
         val stop = stopAt(target, rows.stepOffsets)
         val bottom = if (stop >= 0) rows.bottoms.getOrNull(stop) else null
@@ -396,10 +423,30 @@ internal class SongStepper(
     val isPagingBack by derivedStateOf { previous.value?.let { !isStepStop(it, flingBehavior.rows, scrollState.maxValue) } == true }
     val isPagingForward by derivedStateOf { next.value?.let { !isStepStop(it, flingBehavior.rows, scrollState.maxValue) } == true }
 
+    // Where the step being animated is headed, which the next press is counted from: the step is slow enough to be
+    // followed, and a pedal pressed twice in quick succession means two steps from where the song was, not one step and
+    // a bit from wherever the first had got to.
+    private var stepTarget: Int? = null
+
     /** Scrolls to the previous stop where [direction] is negative and to the next one otherwise, if there is one. */
     suspend fun step(direction: Int) {
-        val target = (if (direction < 0) previous.value else next.value) ?: return
-        scrollState.animateScrollTo(target)
+        val from = stepTarget ?: scrollState.value
+        val rows = flingBehavior.rows
+        val viewport = scrollState.viewportSize
+        val window = flingBehavior.readingWindow
+        val target = (
+            if (direction < 0) previousStepTarget(from, rows, viewport, window, scrollState.maxValue) else nextStepTarget(from, rows, viewport, window, scrollState.maxValue)
+            ) ?: return
+        stepTarget = target
+        try {
+            // Slow and even, for a reader whose eyes are on the song while it moves: a screen's worth takes as long as
+            // STEP_DURATION_PER_SCREEN, and no step is quicker than MIN_STEP_DURATION, so a short one is still seen to move.
+            val distance = abs(target - scrollState.value)
+            val duration = if (viewport > 0) (STEP_DURATION_PER_SCREEN * distance / viewport).coerceIn(MIN_STEP_DURATION, STEP_DURATION_PER_SCREEN) else MIN_STEP_DURATION
+            scrollState.animateScrollTo(target, tween(durationMillis = duration, easing = FastOutSlowInEasing))
+        } finally {
+            if (stepTarget == target) stepTarget = null
+        }
     }
 }
 
@@ -416,6 +463,9 @@ private const val POSITION_TOLERANCE = 1f
 private const val MIN_ANGULAR_FREQUENCY = 12f
 private const val MAX_ANGULAR_FREQUENCY = 40f
 private const val LAYOUT_SETTLE_MILLIS = 250L
+
+private const val STEP_DURATION_PER_SCREEN = 700
+private const val MIN_STEP_DURATION = 400
 
 /** The least a page step moves the song by, so that a viewport with no room left to read in still gets somewhere. */
 private const val MIN_PAGE_HEIGHT = 8

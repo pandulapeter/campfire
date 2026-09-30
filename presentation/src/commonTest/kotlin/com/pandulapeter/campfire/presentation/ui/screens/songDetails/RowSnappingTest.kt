@@ -191,6 +191,18 @@ class RowSnappingTest {
     }
 
     @Test
+    fun aPageBeginsWithTheStartOfALineWhereOneIsWithinReach() {
+        // A section taller than the screen whose lines start at 0, 400, 850 and 1300, right under the fade at the top.
+        val section = SongRows(stepOffsets = listOf(0, 3000), stepSections = listOf(0, 1), lineTops = listOf(24, 424, 874, 1324))
+        val window = ReadingWindow(top = 24, overlap = 100)
+        assertEquals(850, next(scroll = 0, rows = section, window = window))
+        assertEquals(1300, next(scroll = 850, rows = section, window = window))
+        assertEquals(850, previousStepTarget(scroll = 1300, rows = section, viewportHeight = 1000, window = window, maxValue = 3300))
+        // With no line starting within the page - a staff of tablature taller than it - the page is taken whole.
+        assertEquals(2176, next(scroll = 1300, rows = section, window = window))
+    }
+
+    @Test
     fun aPageIsNeverLessThanHalfOfWhatCanBeRead() {
         assertEquals(500, ReadingWindow(overlap = 2000).pageHeight(viewportHeight = 1000))
         assertEquals(700, ReadingWindow(top = 50, bottom = 150, overlap = 100).pageHeight(viewportHeight = 1000))
