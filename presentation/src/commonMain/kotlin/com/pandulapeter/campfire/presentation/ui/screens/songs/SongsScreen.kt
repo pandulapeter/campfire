@@ -300,11 +300,6 @@ private fun SongList(
     appBarOverlap: () -> AppBarOverlap,
 ) {
     val songGroups by viewModel.songGroups.collectAsStateWithLifecycle()
-    val isSearchOpen by viewModel.songsSearch.isOpen.collectAsStateWithLifecycle()
-    // Read straight off the field's own state, which is where the text lives now, see SearchState. A closed search
-    // narrows nothing whatever its field still holds, so closing one changes what the list holds as much as emptying
-    // the field does.
-    val query = if (isSearchOpen) viewModel.songsSearch.textFieldState.text.toString() else ""
     val userPreferences by viewModel.userPreferences.collectAsStateWithLifecycle()
     val songFilter by viewModel.songFilter.collectAsStateWithLifecycle()
     val transpositions by viewModel.transpositions.collectAsStateWithLifecycle()
@@ -320,15 +315,12 @@ private fun SongList(
     val coroutineScope = rememberCoroutineScope()
     // One boundary and label per group, in lazy-grid item coordinates, for the fast scroller and pushed header.
     val sectionIndex = remember(songGroups) {
-        SongSectionIndex(songGroups.map { SongSectionIndex.Group(songCount = it.songs.size, header = it.header) })
+        SongSectionIndex(songGroups.groups.map { SongSectionIndex.Group(songCount = it.songs.size, header = it.header) })
     }
     val topFade = rememberListTopFade(listState)
     // Remembered, since a new modifier every time the list recomposes would recompose the grid with it.
     val gridModifier = remember(topFade) { Modifier.fillMaxSize().listTopFadeViewport(topFade) }
 
-    // Keyed on the query as it is searched for, so that a space or a punctuation mark, which changes nothing in the
-    // results, does not throw a scrolled list back to the top.
-    val searchedQuery = remember(query) { viewModel.normalizeForSearch(query) }
     // A tag or a language tapped on a row is one the song carries, so the list it filters to still holds that song,
     // and the song stays where the tap left it rather than the list going back to the top.
     val filterAnchor = remember { ListAnchor() }
@@ -346,10 +338,13 @@ private fun SongList(
     }
     ScrollToTopWhenChanged(
         listState = listState,
-        key = "$searchedQuery|${userPreferences?.sortingMode?.name}|${songFilter.selectedTags.sorted()}|${userPreferences?.tagMatchMode?.name}|${songFilter.selectedLanguages.sorted()}|${userPreferences?.languageMatchMode?.name}",
+        // The key the list was built for rather than one read off the filter and the preferences, which change before
+        // the list does: the two arrive together, so the anchor is taken and consumed in one composition, and a filter
+        // that leaves every song where it was still delivers a list for it to be consumed by.
+        key = songGroups.filterKey,
         contents = songGroups,
         anchor = filterAnchor,
-        itemIndex = { key -> songGroups.itemIndexOf(key, hasPlaceholder = placeholder != null) },
+        itemIndex = { key -> songGroups.groups.itemIndexOf(key, hasPlaceholder = placeholder != null) },
     )
 
     // A lazy grid holds on to the key of its first visible item across a change of its contents, which is right for
@@ -401,7 +396,7 @@ private fun SongList(
                     )
                 }
             }
-            songGroups.forEach { group ->
+            songGroups.groups.forEach { group ->
                 group.header?.let { header ->
                     stickyHeader(
                         key = "header_${header.key}",

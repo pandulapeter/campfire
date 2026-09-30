@@ -97,6 +97,10 @@ class GetScreenDataUseCaseImpl internal constructor(
                     tags = songPart.tags,
                     languages = songPart.languages,
                     unfilteredSongs = songPart.unfilteredSongs,
+                    songFilter = songPart.songFilter,
+                    sortingMode = songPart.sortingMode,
+                    tagMatchMode = songPart.tagMatchMode,
+                    languageMatchMode = songPart.languageMatchMode,
                 ).also {
                     cache = it
                 }
@@ -126,6 +130,10 @@ class GetScreenDataUseCaseImpl internal constructor(
             languages = songPart.languages,
             unfilteredSongs = songPart.unfilteredSongs,
             isWholeLibrary = false,
+            songFilter = songPart.songFilter,
+            sortingMode = songPart.sortingMode,
+            tagMatchMode = songPart.tagMatchMode,
+            languageMatchMode = songPart.languageMatchMode,
         )
     }
 
@@ -150,6 +158,10 @@ class GetScreenDataUseCaseImpl internal constructor(
             tags = availableTags.recountedTagsOver(songsByLanguage),
             languages = availableLanguages.recountedLanguagesOver(songsByTag),
             unfilteredSongs = this,
+            songFilter = filter,
+            sortingMode = songListPreferences.sortingMode,
+            tagMatchMode = songListPreferences.tagMatchMode,
+            languageMatchMode = songListPreferences.languageMatchMode,
         )
     }
 
@@ -160,6 +172,10 @@ class GetScreenDataUseCaseImpl internal constructor(
         val tags: List<Tag>,
         val languages: List<SongLanguage>,
         val unfilteredSongs: List<Song>,
+        val songFilter: SongFilter,
+        val sortingMode: UserPreferences.SortingMode,
+        val tagMatchMode: UserPreferences.MatchMode,
+        val languageMatchMode: UserPreferences.MatchMode,
     )
 
     /**
@@ -405,6 +421,10 @@ class GetScreenDataUseCaseImpl internal constructor(
             tags = emptyList(),
             languages = emptyList(),
             unfilteredSongs = emptyList(),
+            songFilter = SongFilter(),
+            sortingMode = DEFAULT_SONG_LIST_PREFERENCES.sortingMode,
+            tagMatchMode = DEFAULT_SONG_LIST_PREFERENCES.tagMatchMode,
+            languageMatchMode = DEFAULT_SONG_LIST_PREFERENCES.languageMatchMode,
         )
     }
 }

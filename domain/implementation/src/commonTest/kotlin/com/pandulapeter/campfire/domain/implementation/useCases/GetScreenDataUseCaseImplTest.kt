@@ -160,6 +160,31 @@ class GetScreenDataUseCaseImplTest {
     }
 
     @Test
+    fun `the song list carries the filter and the preferences it was built for`() = runTest {
+        filter.value = SongFilter(selectedTags = setOf("Folk"), selectedLanguages = setOf("ru"))
+        preferences.value = DataState.Idle(PREFERENCES.copy(tagMatchMode = UserPreferences.MatchMode.ALL))
+
+        val screenData = collectScreenData().first { it?.data?.tagMatchMode == UserPreferences.MatchMode.ALL }?.data
+
+        assertEquals(SongFilter(selectedTags = setOf("Folk"), selectedLanguages = setOf("ru")), screenData?.songFilter)
+        assertEquals(UserPreferences.SortingMode.BY_TITLE, screenData?.sortingMode)
+        assertEquals(UserPreferences.MatchMode.ALL, screenData?.tagMatchMode)
+        assertEquals(UserPreferences.MatchMode.ANY, screenData?.languageMatchMode)
+    }
+
+    @Test
+    fun `a filter that leaves the same songs still emits a new value`() = runTest {
+        songs.value = DataState.Idle(listOf(song("Yesterday", tags = listOf("Demo")), song("Hey Jude", tags = listOf("Demo"))))
+        val latest = collectScreenData()
+        val first = latest.idle()
+
+        filter.value = SongFilter(selectedTags = setOf("Demo"))
+        val second = latest.first { it?.data?.songFilter?.selectedTags == setOf("Demo") }?.data
+
+        assertEquals(first.songs, second?.songs)
+    }
+
+    @Test
     fun `several selected languages mean any of them or every one of them as the preferences say`() = runTest {
         songs.value = DataState.Idle(
             listOf(

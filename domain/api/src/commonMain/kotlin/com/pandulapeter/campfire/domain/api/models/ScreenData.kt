@@ -13,6 +13,7 @@ import com.pandulapeter.campfire.data.model.domain.Setlist
 import com.pandulapeter.campfire.data.model.domain.Song
 import com.pandulapeter.campfire.data.model.domain.SongLanguage
 import com.pandulapeter.campfire.data.model.domain.Tag
+import com.pandulapeter.campfire.data.model.domain.UserPreferences
 
 data class ScreenData(
     /**
@@ -56,4 +57,15 @@ data class ScreenData(
      * value for the library.
      */
     val isWholeLibrary: Boolean = true,
+    /**
+     * The filter [songs] was narrowed by, and below it the preferences it was narrowed and sorted by. They travel with
+     * the list rather than being read by the caller from where they are set, since those have moved on before the list
+     * built from them arrives, and they are what makes two equal lists built for two different filters two different
+     * values: a caller that has to tell which filter the list on screen answers (the song list keeping a tapped row in
+     * place) would otherwise never hear about a filter that left every song where it was.
+     */
+    val songFilter: SongFilter = SongFilter(),
+    val sortingMode: UserPreferences.SortingMode = UserPreferences.SortingMode.BY_ARTIST,
+    val tagMatchMode: UserPreferences.MatchMode = UserPreferences.MatchMode.ANY,
+    val languageMatchMode: UserPreferences.MatchMode = UserPreferences.MatchMode.ANY,
 )

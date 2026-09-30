@@ -29,7 +29,9 @@ The ones that carry real logic:
   dated ones, or by title; the archived ones after the rest either way) — every order it produces ends in the file name, because the repositories' lists are in no particular order (a
   written item moves to the end) and a tie would otherwise be decided by it — without ever narrowing them: the song filters are about the song list, and the setlists screen decides for
   itself whether it is showing the archived ones. The whole library travels alongside the filtered list — see
-  `ScreenData.unfilteredSongs`. There are two filter groups over the same library, the tags and the languages
+  `ScreenData.unfilteredSongs`, and so do the filter and the three preferences the list was built for
+  (`ScreenData.songFilter`, `sortingMode`, `tagMatchMode`, `languageMatchMode`), which is what makes two equal lists
+  built for two filters two values that the final `distinctUntilChanged` lets through. There are two filter groups over the same library, the tags and the languages
   (`SongLanguage`, with `UNKNOWN` standing for the songs that declare none), and each is counted over the songs the
   *other* one leaves, so the numbers on a chip say what picking it would actually do. Neither can empty the other:
   what still counts as a tag and what still counts as a language are both decided from the chord-filtered library

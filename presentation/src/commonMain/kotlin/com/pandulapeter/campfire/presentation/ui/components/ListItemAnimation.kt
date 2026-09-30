@@ -82,7 +82,10 @@ internal fun rememberHasLoadedLibrary(isLoading: Boolean): Boolean {
  * is a jump to a different position, so the grid animates none of it, and [anchor] narrates the change instead (see
  * [anchoredTransition]).
  *
- * @param contents What the grid is built from, compared by identity: a new instance is a change of the list.
+ * @param contents What the grid is built from, compared by identity: a new instance is a change of the list. Where an
+ * [anchor] is passed, a value that changes with [key] and carries it, so that the two arrive in one composition: the
+ * anchor is only consumed by a change of [contents], and a key that changed without one - a filter that leaves the
+ * list as it was - would leave the row pending until the list next changes for some unrelated reason.
  * @param itemIndex The index of the item with the given key in [contents], or null where it holds no such item.
  */
 @Composable

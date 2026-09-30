@@ -675,14 +675,19 @@ class CampfireViewModel(
      */
     private val songSearchIndex = SongSearchIndex { normalizeSearchText(it) }
     private val indexedSongs = screenData.map { state ->
+        val data = state.data
         IndexedSongInput(
-            all = state.data?.unfilteredSongs.orEmpty(),
-            filtered = state.data?.songs.orEmpty(),
-            sections = state.data?.songSections.orEmpty(),
+            all = data?.unfilteredSongs.orEmpty(),
+            filtered = data?.songs.orEmpty(),
+            sections = data?.songSections.orEmpty(),
+            filterKey = data?.let {
+                "${it.sortingMode.name}|${it.songFilter.selectedTags.sorted()}|${it.tagMatchMode.name}|" +
+                    "${it.songFilter.selectedLanguages.sorted()}|${it.languageMatchMode.name}"
+            }.orEmpty(),
         )
     }.distinctUntilChanged().map { input ->
-        IndexedSongs(input.sections, songSearchIndex.update(input.all, input.filtered))
-    }.flowOn(Dispatchers.Default).asState(IndexedSongs(emptyList(), SongSearchSnapshot.Empty))
+        IndexedSongs(input.sections, songSearchIndex.update(input.all, input.filtered), input.filterKey)
+    }.flowOn(Dispatchers.Default).asState(IndexedSongs(emptyList(), SongSearchSnapshot.Empty, ""))
 
     /** Shared file-name lookup for screens that resolve songs from a destination or a setlist. */
     val songsByFileName = indexedSongs.map { it.search.songsByFileName }.asState(emptyMap())
@@ -737,8 +742,12 @@ class CampfireViewModel(
     // The sections arrive cut, from the same pass that sorted them. Cutting them here would take the sorting mode
     // from the preferences, which change before the list sorted by them arrives.
     val songGroups = combine(indexedSongs, songsSearch.activeQuery) { indexed, query ->
-        songGroupsFor(sections = indexed.sections, filtered = indexed.search.filtered, normalizedQuery = normalizeSearchText(query))
-    }.flowOn(Dispatchers.Default).asState(emptyList())
+        val normalizedQuery = normalizeSearchText(query)
+        SongGroups(
+            filterKey = "$normalizedQuery|${indexed.filterKey}",
+            groups = songGroupsFor(sections = indexed.sections, filtered = indexed.search.filtered, normalizedQuery = normalizedQuery),
+        )
+    }.flowOn(Dispatchers.Default).asState(SongGroups(filterKey = "", groups = emptyList()))
 
     /** True while an import is running, which the screens that can start one show as a progress bar. */
     private val _isImporting = MutableStateFlow(false)
@@ -775,7 +784,7 @@ class CampfireViewModel(
     val songsPlaceholder = combine(screenData, songGroups, _isImporting) { screenData, songGroups, isImporting ->
         val data = screenData.data
         when {
-            songGroups.isNotEmpty() -> null
+            songGroups.groups.isNotEmpty() -> null
             // The library itself, not the filtered list: a library that only holds songs the filters hide is not an
             // empty one, and offering to create a first song there would be answering a question nobody asked.
             data == null || data.unfilteredSongs.isEmpty() -> screenData.emptyPlaceholder(Placeholder.NO_SONGS, isImporting)
@@ -2814,15 +2823,18 @@ class CampfireViewModel(
         val size: Long,
     )
 
+    /** @param filterKey The filter and the preferences [filtered] was built for, see [SongGroups]. */
     private data class IndexedSongInput(
         val all: List<Song>,
         val filtered: List<Song>,
         val sections: List<SongSection>,
+        val filterKey: String,
     )
 
     private data class IndexedSongs(
         val sections: List<SongSection>,
         val search: SongSearchSnapshot,
+        val filterKey: String,
     )
 
     /**
@@ -2832,6 +2844,17 @@ class CampfireViewModel(
     data class LabelsOnEverySong(
         val tags: Set<String> = emptySet(),
         val languages: Set<String> = emptySet(),
+    )
+
+    /**
+     * The song list with the filter, the sort and the query it was built for: two equal lists for two filters are two
+     * values. The song list scrolls by [filterKey] and keeps a tapped row in place once the list built for it arrives,
+     * and with the key read from anywhere else a filter that left every song where it was would never deliver that
+     * list, leaving the row to be put back in place by whatever changed the list next.
+     */
+    data class SongGroups(
+        val filterKey: String,
+        val groups: List<SongGroup>,
     )
 
     /** @param header Null for the results of a search, which are ranked rather than filed under anything. */
