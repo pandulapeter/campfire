@@ -16,7 +16,6 @@ import androidx.compose.animation.core.AnimationSpec
 import androidx.compose.animation.core.VectorConverter
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.IntrinsicSize
@@ -28,7 +27,6 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.wrapContentWidth
-import androidx.compose.foundation.rememberScrollState
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.LocalMinimumInteractiveComponentSize
 import androidx.compose.material3.LocalTextStyle
@@ -860,7 +858,7 @@ private fun SongSectionContent(
                             Modifier.fadingIn(isFadingIn = foldedRuns.hasBeenToggled(run))
                         }
                         when (kind) {
-                            FoldableKind.TAB -> SongTabRun(
+                            FoldableKind.TAB -> SongTabBlock(
                                 modifier = runModifier.fillMaxWidth(),
                                 lines = group.map { (it as? ChordProLine.Tab)?.text.orEmpty() },
                                 style = monospaceLyricsStyle,
@@ -978,38 +976,6 @@ private fun SectionTitle(
             isExpanded = it.isExpanded,
             tint = MaterialTheme.colorScheme.primary,
         )
-    }
-}
-
-/**
- * One run of `{start_of_tab}` lines. A run with a staff in it is tablature, wrapped into rows that fit ([SongTabBlock]);
- * one with no staff in it is preformatted text, chord names over lyrics most often. Its columns only line up while no
- * line is cut, and there is no column a cut would be harmless on the way there is on a staff, so it scrolls sideways
- * instead.
- */
-@Composable
-private fun SongTabRun(
-    modifier: Modifier = Modifier,
-    lines: List<String>,
-    style: TextStyle,
-    textMeasurer: TextMeasurer,
-) = if (ChordProTabWrapper.isTablature(lines)) {
-    SongTabBlock(
-        modifier = modifier,
-        lines = lines,
-        style = style,
-        textMeasurer = textMeasurer,
-    )
-} else {
-    Column(modifier = modifier.horizontalScroll(rememberScrollState())) {
-        lines.forEach { line ->
-            Text(
-                text = line,
-                style = style,
-                softWrap = false,
-                color = MaterialTheme.colorScheme.onSurface,
-            )
-        }
     }
 }
 
@@ -1200,9 +1166,12 @@ private class WidthOnlyNode : Modifier.Node(), LayoutModifierNode {
 }
 
 /**
- * One run of tablature, cut into as many rows as it takes to fit the width, the way a tab book breaks a staff into
- * systems (see [ChordProTabWrapper]). The rows are a blank line apart, so that the last string of one is never read
- * as the first string of the next.
+ * One run of `{start_of_tab}` lines, cut into as many rows as it takes to fit the width. A run with a staff in it is
+ * tablature, cut the way a tab book breaks a staff into systems, its rows a blank line apart so that the last string of
+ * one is never read as the first string of the next; one with no staff in it is preformatted text - chord names over
+ * lyrics most often - cut between words, each line of chord names together with the lyrics under it, and read like
+ * wrapped text with no gap between its rows (see [ChordProTabWrapper] for both). Neither scrolls sideways, since a song
+ * may be read with nothing but a pedal that scrolls it up and down.
  *
  * The text is drawn rather than composed, because where the cuts fall depends on the width the block is measured
  * at, and the section this block is in is measured at several widths before one wins (see [SongSectionsLayout]):
@@ -1255,8 +1224,10 @@ private class TabRows(
     private val textMeasurer: TextMeasurer,
 ) {
 
-    /** The height of a blank line in the tab's own font: the gap between two rows. */
-    val rowGap = textMeasurer.measure(AnnotatedString(LINE_HEIGHT_SAMPLE), style).size.height
+    private val isTablature = ChordProTabWrapper.isTablature(lines)
+
+    /** The height of a blank line in the tab's own font between the systems of tablature, and nothing elsewhere. */
+    val rowGap = if (isTablature) textMeasurer.measure(AnnotatedString(LINE_HEIGHT_SAMPLE), style).size.height else 0
 
     // A monospace font, so the width of one character is the width of many divided by their count, measured with
     // enough of them for the rounding of the total not to matter.
@@ -1277,7 +1248,8 @@ private class TabRows(
         if (recentWidths.size > MAX_TAB_WIDTHS) rowsByWidth.remove(recentWidths.removeFirst())
         return rowsByWidth.getOrPut(width) {
             val maxColumns = if (width >= naturalWidth || characterWidth <= 0f) Int.MAX_VALUE else (width / characterWidth).toInt()
-            ChordProTabWrapper.wrap(lines, maxColumns).map { row ->
+            val rows = if (isTablature) ChordProTabWrapper.wrap(lines, maxColumns) else ChordProTabWrapper.wrapPreformatted(lines, maxColumns)
+            rows.map { row ->
                 row.map { line -> textMeasurer.measure(AnnotatedString(line), style, softWrap = false) }
             }
         }
@@ -1343,8 +1315,8 @@ private class SongTextMeasurements(
 
 /**
  * One `{start_of_grid}` line: bars, chords, beats and repeats laid out as a chord chart. A line wider than its column
- * breaks between bars rather than being cut off, the way a staff of tablature is broken into systems, so every chord
- * of it stays on the page at any text size.
+ * breaks between bars rather than being cut off, the way a staff of tablature is broken into systems, and a single bar
+ * wider than the column breaks between its own tokens, so every chord of it stays on the page at any text size.
  */
 @Composable
 private fun SongGridLine(
@@ -1353,7 +1325,7 @@ private fun SongGridLine(
     chordStyle: TextStyle,
 ) = FlowRow(modifier = Modifier.fillMaxWidth()) {
     line.tokens.bars().forEach { bar ->
-        Row {
+        FlowRow {
             bar.forEach { token ->
                 val (text, style, color) = when (token) {
                     is GridToken.Bar -> Triple(token.text, lyricsStyle, MaterialTheme.colorScheme.outline)
@@ -1409,8 +1381,8 @@ private fun TextStyle.scaled(scale: Float) = copy(
  * sections fill, so a row of two sections is split in two wider columns rather than leaving a hole where a third one
  * would go, and the rows are chosen to make the song as short as possible. A row of several columns is never taller
  * than [maxRowHeight], the whole of the screen, since the reader could not reach the top of its next column without
- * scrolling back past what was just played - unless a section in it is taller than the screen anyway, by a little -
- * but up to that its columns are as tall as they need, so a song that fits the screen in columns is laid out exactly
+ * scrolling back past what was just played, and a section taller than the screen gets a row of its own - but up to
+ * that its columns are as tall as they need, so a song that fits the screen in columns is laid out exactly
  * as it would be read top to bottom (see [flowIntoRows]). A section with lines that do not wrap - a staff of tablature
  * longer than a column - may have a row of its own as wide as those lines, where that makes the song shorter. The rows
  * are told apart by a divider drawn in the gap between them, and the first one by a divider above it where [hasHeader]:

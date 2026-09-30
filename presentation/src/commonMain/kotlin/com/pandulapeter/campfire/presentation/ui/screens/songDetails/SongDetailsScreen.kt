@@ -104,7 +104,9 @@ import com.pandulapeter.campfire.presentation.resources.song_details_no_data_hin
 import com.pandulapeter.campfire.presentation.resources.song_details_previous_row
 import com.pandulapeter.campfire.presentation.resources.song_details_previous_section
 import com.pandulapeter.campfire.presentation.resources.song_details_previous_song
+import com.pandulapeter.campfire.presentation.resources.song_details_scroll_down
 import com.pandulapeter.campfire.presentation.resources.song_details_scroll_to_top
+import com.pandulapeter.campfire.presentation.resources.song_details_scroll_up
 import com.pandulapeter.campfire.presentation.resources.song_details_song_position
 import com.pandulapeter.campfire.presentation.resources.song_details_text_size
 import com.pandulapeter.campfire.presentation.resources.song_details_transposition
@@ -114,6 +116,7 @@ import com.pandulapeter.campfire.presentation.ui.components.ActionsMenu
 import com.pandulapeter.campfire.presentation.ui.components.CampfireTopAppBar
 import com.pandulapeter.campfire.presentation.ui.components.CoverArtImage
 import com.pandulapeter.campfire.presentation.ui.components.DelayedLoadingIndicator
+import com.pandulapeter.campfire.presentation.ui.components.EDGE_FADE_SIZE
 import com.pandulapeter.campfire.presentation.ui.components.EmptyState
 import com.pandulapeter.campfire.presentation.ui.components.EmptyStateAction
 import com.pandulapeter.campfire.presentation.ui.components.fadingTopEdge
@@ -556,6 +559,8 @@ internal fun SongDetailsScreen(
                 }
                 StepButtons(
                     isSteppedByRow = currentPageStepper?.isSteppedByRow == true,
+                    isPagingBack = currentPageStepper?.isPagingBack == true,
+                    isPagingForward = currentPageStepper?.isPagingForward == true,
                     canStepBackInSong = canStepBackInSong,
                     canStepForwardInSong = canStepForwardInSong,
                     hasPreviousSong = hasPreviousSongToStepTo,
@@ -780,6 +785,19 @@ private fun SongDetailsPage(
             // A single change - a window maximised, a stepper tapped - springs the sections to their new place; a burst
             // of them, from a pinch or a window edge being dragged, is followed, gliding only over the grid's jumps.
             val isChangingContinuously = rememberContinuousChange(maxWidth, currentFontScale)
+            val density = LocalDensity.current
+            val lyricsLineHeight = MaterialTheme.typography.bodyLarge.lineHeight
+            val readingWindow = with(density) {
+                ReadingWindow(
+                    top = EDGE_FADE_SIZE.roundToPx(),
+                    bottom = contentPadding.calculateBottomPadding().roundToPx(),
+                    end = (bottomPadding - contentPadding.calculateBottomPadding()).roundToPx(),
+                    // A chorded line is a line of chords over a line of lyrics, and it is the last of those that the eye
+                    // looks for at the top of the next page.
+                    overlap = (lyricsLineHeight * currentFontScale).roundToPx() * 2,
+                )
+            }
+            SideEffect { flingBehavior.readingWindow = readingWindow }
             SongLyrics(
                 modifier = Modifier
                     .fillMaxSize()
@@ -827,9 +845,10 @@ private fun SongDetailsPage(
 
 /**
  * The two buttons that step through the song being read: between its rows where it is read across the columns and
- * scrolls, however few of them there are, and between its sections everywhere else, the header above them counting as one. The previous one
- * is at the top of the end edge, the next one at its bottom, each there only for as long as there is somewhere to step
- * to in its direction. In a setlist they go on to the song beside this one where there is nothing left in their
+ * scrolls, however few of them there are, and between its sections everywhere else, the header above them counting as one,
+ * paging through a row or a section taller than the screen on the way ([isPagingBack], [isPagingForward], which only
+ * change what they are called). The previous one is at the top of the end edge, the next one at its bottom, each there
+ * only for as long as there is something of the song to step to in its direction. In a setlist they go on to the song beside this one where there is nothing left in their
  * direction ([hasPreviousSong], [hasNextSong]), and turn to point the way the pager goes to say so; they only leave at
  * the ends of the setlist. There is one pair for the whole pager, answering whichever song is current, rather than one
  * on every page sliding past with it.
@@ -840,6 +859,8 @@ private fun SongDetailsPage(
 @Composable
 private fun BoxScope.StepButtons(
     isSteppedByRow: Boolean,
+    isPagingBack: Boolean,
+    isPagingForward: Boolean,
     canStepBackInSong: Boolean,
     canStepForwardInSong: Boolean,
     hasPreviousSong: Boolean,
@@ -862,6 +883,7 @@ private fun BoxScope.StepButtons(
         contentDescription = stringResource(
             when {
                 !canStepBackInSong -> Res.string.song_details_previous_song
+                isPagingBack -> Res.string.song_details_scroll_up
                 isSteppedByRow -> Res.string.song_details_previous_row
                 else -> Res.string.song_details_previous_section
             },
@@ -878,6 +900,7 @@ private fun BoxScope.StepButtons(
         contentDescription = stringResource(
             when {
                 !canStepForwardInSong -> Res.string.song_details_next_song
+                isPagingForward -> Res.string.song_details_scroll_down
                 isSteppedByRow -> Res.string.song_details_next_row
                 else -> Res.string.song_details_next_section
             },

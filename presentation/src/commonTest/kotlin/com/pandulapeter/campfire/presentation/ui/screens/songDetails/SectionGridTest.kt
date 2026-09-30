@@ -45,14 +45,13 @@ class SectionGridTest {
     }
 
     @Test
-    fun sectionsALittleTallerThanTheScreenShareARow() {
-        // The verses and choruses of a phone held sideways, each a little taller than the screen.
+    fun sectionsALittleTallerThanTheScreenHaveRowsOfTheirOwn() {
+        // The verses and choruses of a phone held sideways, each a little taller than the screen: a column beside one
+        // would send the reader back up to its top once they had scrolled to the end of the other.
         val heights = listOf(290, 100, 290, 170, 300, 290, 300)
         val grid = flow(heights, maxColumnCount = 2, maxRowHeight = 270)
-        assertEquals(3, grid.columnCounts.count { it == 2 }, "Rows of ${grid.columnCounts.toList()} columns")
-        grid.columnCounts.indices.forEach { row ->
-            val sections = heights.indices.filter { grid.rows[it] == row }
-            assertTrue(rowHeight(grid, row, heights) <= sections.maxOf { heights[it] }.coerceAtLeast(270))
+        heights.indices.filter { heights[it] > 270 }.forEach { index ->
+            assertEquals(listOf(index), heights.indices.filter { grid.rows[it] == grid.rows[index] })
         }
     }
 
@@ -76,10 +75,7 @@ class SectionGridTest {
                 assertEquals((0 until columnCount).toList(), sections.map { grid.columns[it] }.distinct())
                 if (sections.size > 1) {
                     val rowHeight = rowHeight(grid, row, heights)
-                    // Only a section taller than the screen on its own, by half a screen at most, lets its row past it.
-                    val tallest = sections.maxOf { heights[it] }
-                    val limit = if (columnCount > 1 && tallest <= maxRowHeight + maxRowHeight / 2) maxOf(maxRowHeight, tallest) else maxRowHeight
-                    assertTrue(rowHeight <= limit, "Row $row of $columnCount columns is $rowHeight tall, more than $limit")
+                    assertTrue(rowHeight <= maxRowHeight, "Row $row of $columnCount columns is $rowHeight tall, more than $maxRowHeight")
                 }
             }
             val columnsHeight = topToBottomHeight(heights, maxColumnCount)

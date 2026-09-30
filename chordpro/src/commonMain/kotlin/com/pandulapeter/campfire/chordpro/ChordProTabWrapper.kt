@@ -31,8 +31,7 @@ object ChordProTabWrapper {
 
     /**
      * Whether the lines are tablature at all: a run inside `{start_of_tab}` that holds no staff line is preformatted
-     * text (chord names over lyrics, most often), whose columns line up only while no line is cut, and it is left to
-     * the caller to show that some other way.
+     * text (chord names over lyrics, most often), which has no staff to cut by and is cut by [wrapPreformatted] instead.
      */
     fun isTablature(lines: List<String>) = lines.any(ChordProSyntax::isStaffLine)
 
@@ -45,9 +44,10 @@ object ChordProTabWrapper {
      * more row lines than half its characters, which only a crafted file does: shown unwrapped, it runs past the edge
      * rather than into memory no screen can draw.
      *
-     * The rows are never wider than [maxColumns] unless that leaves fewer than [MIN_CAPACITY] columns for the music
-     * itself, at which point the strings are shown that wide anyway, since a staff cut into pieces of two characters
-     * is not a staff any more.
+     * Where repeating the string names would leave fewer than [MIN_CAPACITY] columns for the music itself, the
+     * continuation rows go without them, since a row too narrow to be read at is the greater loss. The rows are never
+     * wider than [maxColumns] unless even that leaves fewer than [MIN_CAPACITY] columns, at which point the strings are
+     * shown that wide anyway, since a staff cut into pieces of two characters is not a staff any more.
      */
     fun wrap(lines: List<String>, maxColumns: Int): List<List<String>> {
         val isStaffLine = lines.map(ChordProSyntax::isStaffLine)
@@ -71,11 +71,84 @@ object ChordProTabWrapper {
         return rows
     }
 
+    /**
+     * Cuts [lines], a run of preformatted text inside a tab environment (one that is not tablature, see [isTablature]),
+     * into rows of at most [maxColumns] characters, so that none of it is out of reach past the edge of a screen that
+     * is only ever scrolled up and down. Such a run is chord names written over lyrics, whose columns only line up
+     * while the two lines are cut at the same places, so a line of nothing but chord names is cut together with the
+     * line under it and every other line on its own, the rows following each other with no gap, the way wrapped text
+     * does. A cut falls in front of the last column that is a space on every line it is made in, so that words and
+     * chord names stay whole, and only a word longer than the whole row is cut inside it. The spaces a cut leaves at the
+     * start of a row are taken off every line of it alike, which keeps each chord over the syllable it was written over;
+     * a line with nothing left to say in a row (the chord names past the last chord) is left out of that row.
+     *
+     * The run comes back as a single row whenever it fits as it is, and so does one that would wrap into more row lines
+     * than half its characters, for the reason [wrap] gives.
+     */
+    fun wrapPreformatted(lines: List<String>, maxColumns: Int): List<List<String>> {
+        if ((lines.maxOfOrNull { it.length } ?: 0) <= maxColumns) return listOf(lines)
+        val capacity = maxColumns.coerceAtLeast(1)
+        val budget = lines.size + lines.sumOf { it.length } / 2
+        val rows = mutableListOf<List<String>>()
+        var lineCount = 0
+        var index = 0
+        while (index < lines.size) {
+            val groupSize = if (index + 1 < lines.size && isChordLine(lines[index]) && !isChordLine(lines[index + 1])) 2 else 1
+            cutTogether(lines.subList(index, index + groupSize), capacity).forEach { row ->
+                lineCount += row.size
+                if (lineCount > budget) return listOf(lines)
+                rows += row
+            }
+            index += groupSize
+        }
+        return rows
+    }
+
+    /** The rows of [wrapPreformatted] for [lines] that are cut at the same columns. */
+    private fun cutTogether(lines: List<String>, capacity: Int): List<List<String>> {
+        val length = lines.maxOf { it.length }
+        if (length <= capacity) return listOf(lines)
+        val rows = mutableListOf<List<String>>()
+        var start = 0
+        while (start < length) {
+            val maxEnd = start + capacity
+            val end = if (maxEnd >= length) {
+                length
+            } else {
+                (maxEnd downTo start + 1).firstOrNull { end -> lines.all { isQuietColumn(it, isStaffLine = false, column = end) } } ?: maxEnd
+            }
+            val row = lines.mapNotNull { line ->
+                val from = cutBoundary(line, start)
+                val to = cutBoundary(line, end)
+                (if (from < to) line.substring(from, to) else "").trimEnd().takeIf { it.isNotEmpty() }
+            }
+            if (row.isNotEmpty()) rows += row
+            start = end
+            while (start < length && lines.all { isQuietColumn(it, isStaffLine = false, column = start) }) start++
+        }
+        return rows
+    }
+
+    /**
+     * Whether [line] holds chord names and nothing else a reader would sing: a bar line, a slash or a repeat count
+     * (`x2`) may stand between them, and a name may be put in parentheses.
+     */
+    private fun isChordLine(line: String): Boolean {
+        val words = ChordProSyntax.words(line).map { it.value.trim('(', ')') }
+        return words.any(ChordProChordNames::isChordName) && words.all { word ->
+            word.isEmpty() || ChordProChordNames.isChordName(word) || word.none(Char::isLetterOrDigit) || repeatCountRegex.matches(word)
+        }
+    }
+
+    private val repeatCountRegex = Regex("[xX×]?\\d+[xX×]?")
+
     /** [wrap] for the lines of one system, or null as soon as its rows hold more than [budget] lines. */
     private fun wrapSystem(lines: List<String>, isStaffLine: List<Boolean>, maxColumns: Int, budget: Int): List<List<String>>? {
         val length = lines.maxOfOrNull { it.length } ?: 0
         if (isStaffLine.none { it } || length <= maxColumns) return if (lines.size > budget) null else listOf(lines)
-        val prefixes = lines.mapIndexed { index, line -> if (isStaffLine[index]) staffPrefix(line) else "" }
+        val repeatedPrefixes = lines.mapIndexed { index, line -> if (isStaffLine[index]) staffPrefix(line) else "" }
+        val repeatsPrefixes = maxColumns - repeatedPrefixes.maxOf { it.length } >= MIN_CAPACITY
+        val prefixes = if (repeatsPrefixes) repeatedPrefixes else lines.map { "" }
         val prefixWidth = prefixes.maxOf { it.length }
         val barColumns = barColumns(lines, isStaffLine, length)
         val rows = mutableListOf<List<String>>()

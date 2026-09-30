@@ -9,6 +9,7 @@
 -->
 # To do
 - Word / PDF import
+- What's new dialog
 - Global sync status display
 - Toggle to sort tags by usage or alphabetically
 - Links and tags are too easy to delete, no way to undo and no confirmation dialog.
@@ -19,7 +20,7 @@
 - First time user experience tutorial
 - Sort and Filter UI should be improved (better animations)
 - Haptic effects
-- Chord diagrams (guitar, ukulele, keyboard)
+- Chord diagrams (guitar, ukulele, keyboard) - user library, variations
 - Metronome?
 - Optional close confirmation dialog on supported platforms
 - Add support for Latin and Nashville notations

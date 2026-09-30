@@ -149,19 +149,15 @@ private fun IntArray.balanceIntoCells(from: Int, until: Int, cellCount: Int, sec
  *
  * **A row of more than one column is never taller than [maxRowHeight]**, the height of the screen: its columns are
  * read one after the other, and a column that runs past the bottom of the screen sends the reader back up to the top
- * of the next one, which is the very thing the rows exist to avoid. Up to that height a row is free to be as tall as its
- * columns need, so a song that fits the screen in columns is a single row of them, filled top to bottom, since nothing
- * is scrolled past there to be sent back to. The song's header is not part of
+ * of the next one, which is the very thing the rows exist to avoid - and which a reader stepping through the song with
+ * a pedal, who can only go on or go back, cannot do without going back over what they have just played. Up to that
+ * height a row is free to be as tall as its columns need, so a song that fits the screen in columns is a single row of
+ * them, filled top to bottom, since nothing is scrolled past there to be sent back to. The song's header is not part of
  * any row: the rows start below it, so every row, the first one included, has the whole screen.
  *
- * **A section that is taller than the screen on its own lets its row be as tall as it is**, up to half a screen more
- * ([maxRowHeight] and a half): it has to be scrolled through anyway, and the columns beside it only send the reader
- * back up by what it overflows the screen with, which is less than what they would be scrolled by as rows of one column
- * each under it. A short screen - a phone held sideways - has verses and choruses a little taller than itself, and
- * they would otherwise all be stacked one per row in a single column with most of the width empty. A section taller
- * than that gets a row of its own, which is read from top to bottom like any other scrolling text. A stack in a single
- * column is held to the screen alone, since stacking more under a section that has to be scrolled anyway saves nothing
- * but the gap between two rows.
+ * **A section that is taller than the screen on its own gets a row of its own**, which is read from top to bottom like
+ * any other scrolling text, however little it overflows the screen by. A stack in a single column is held to the screen
+ * too, since stacking more under a section that has to be scrolled anyway saves nothing but the gap between two rows.
  *
  * A row has exactly as many columns as its sections fill, so no row is left with a hole in it: a hole in the middle
  * of a song looks like a mistake, and even at its end it is width the sections could have used to wrap less. Where a
@@ -244,7 +240,6 @@ internal fun flowIntoRows(
     val tallest = IntArray(maxColumnCount)
     val lowestHeights = IntArray(maxColumnCount)
     val isExhausted = BooleanArray(maxColumnCount)
-    val maxOverflowingRowHeight = if (maxRowHeight == Int.MAX_VALUE) maxRowHeight else maxRowHeight + maxRowHeight / 2
     for (start in sectionCount - 1 downTo 0) {
         var best = Long.MAX_VALUE
         tallest.fill(0)
@@ -262,14 +257,11 @@ internal fun flowIntoRows(
                 val height = if (end - start == 1) {
                     sectionHeights[start]
                 } else {
-                    val ceiling = if (columnCount == 1) maxRowHeight else maxOverflowingRowHeight
-                    val maxHeight = if (columnCount == 1) maxRowHeight else max(maxRowHeight, tallest[column])
-                    // Every longer row holds this section too, and no longer row fits under the ceiling that this one
-                    // does not, so none of them can have this many columns either. Under the cap of this row alone it
-                    // may still not fit where a longer one would, since a taller section raises the cap.
-                    val height = if (tallest[column] > ceiling) null else rowHeight(columnCount, start, end, max(lowestHeights[column], tallest[column]), maxHeight)
+                    // Every longer row holds this section too, and no longer row fits under the screen where this one does
+                    // not, so none of them can have this many columns either.
+                    val height = if (tallest[column] > maxRowHeight) null else rowHeight(columnCount, start, end, max(lowestHeights[column], tallest[column]), maxRowHeight)
                     if (height == null) {
-                        if (tallest[column] > ceiling || cellCount(sectionHeights, start, end, ceiling) > columnCount) {
+                        if (tallest[column] > maxRowHeight || cellCount(sectionHeights, start, end, maxRowHeight) > columnCount) {
                             isExhausted[column] = true
                             exhaustedCount++
                         }

@@ -332,6 +332,53 @@ class ChordProTabWrapperTest {
         assertTrue(ChordProTabWrapper.wrap(lines, maxColumns = 40).sumOf { it.size } < 20_000)
     }
 
+    @Test
+    fun `a row too narrow for the string names and a readable staff goes without the names`() {
+        val rows = ChordProTabWrapper.wrap(riff, maxColumns = 9)
+        assertTrue(rows.size > 2)
+        assertTrue(rows.all { row -> row.all { it.length <= 9 } })
+    }
+
+    @Test
+    fun `preformatted text that fits is returned as it is`() {
+        val lines = listOf("    Am         C", "Hello darkness my old friend")
+        assertSame(lines, ChordProTabWrapper.wrapPreformatted(lines, maxColumns = 40).single())
+    }
+
+    @Test
+    fun `chord names are cut together with the lyrics under them`() {
+        assertEquals(
+            listOf(
+                listOf("    Am", "Hello darkness"),
+                listOf("C", "my old friend"),
+            ),
+            ChordProTabWrapper.wrapPreformatted(listOf("    Am         C", "Hello darkness my old friend"), maxColumns = 14),
+        )
+    }
+
+    @Test
+    fun `a line of lyrics alone is cut between its words`() {
+        assertEquals(
+            listOf(listOf("one two"), listOf("three"), listOf("four")),
+            ChordProTabWrapper.wrapPreformatted(listOf("one two three four"), maxColumns = 9),
+        )
+    }
+
+    @Test
+    fun `a word longer than the row is cut inside it`() {
+        assertEquals(
+            listOf(listOf("abcd"), listOf("efgh"), listOf("ij")),
+            ChordProTabWrapper.wrapPreformatted(listOf("abcdefghij"), maxColumns = 4),
+        )
+    }
+
+    @Test
+    fun `lines that are not chord names are cut on their own`() {
+        val rows = ChordProTabWrapper.wrapPreformatted(listOf("first line of words", "second line of words"), maxColumns = 12)
+        assertTrue(rows.all { it.size == 1 })
+        assertEquals("first line of words second line of words", rows.joinToString(" ") { it.single() })
+    }
+
     private val twoSystems = listOf(
         "   C       G",
         "e|---0---|---3---|",

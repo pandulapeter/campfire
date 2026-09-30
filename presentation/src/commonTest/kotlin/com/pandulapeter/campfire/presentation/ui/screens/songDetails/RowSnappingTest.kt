@@ -11,6 +11,7 @@ package com.pandulapeter.campfire.presentation.ui.screens.songDetails
 
 import kotlin.test.Test
 import kotlin.test.assertEquals
+import kotlin.test.assertTrue
 
 class RowSnappingTest {
 
@@ -120,6 +121,79 @@ class RowSnappingTest {
         assertEquals(null, previousStepOffset(scroll = 0, stepOffsets = sections, maxValue = 0))
         assertEquals(null, nextStepOffset(scroll = 100, stepOffsets = emptyList(), maxValue = 3000))
         assertEquals(0, previousStepOffset(scroll = 100, stepOffsets = emptyList(), maxValue = 3000))
+    }
+
+    /** A short row, a row twice the viewport's height and a short last row, each followed by empty space. */
+    private val rowsWithATallOne = SongRows(
+        restingOffsets = listOf(300, 1300, 3300),
+        bottoms = listOf(1100, 3000, 3700),
+        stepOffsets = listOf(300, 1300, 3300),
+        stepSections = listOf(0, 1, 2),
+        isSteppedByRow = true,
+    )
+
+    /** Pages of 900: the viewport less the overlap. */
+    private val window = ReadingWindow(overlap = 100)
+
+    private fun next(scroll: Int, rows: SongRows = rowsWithATallOne, maxValue: Int = 3300, window: ReadingWindow = this.window) =
+        nextStepTarget(scroll = scroll, rows = rows, viewportHeight = 1000, window = window, maxValue = maxValue)
+
+    private fun previous(scroll: Int, rows: SongRows = rowsWithATallOne, maxValue: Int = 3300) =
+        previousStepTarget(scroll = scroll, rows = rows, viewportHeight = 1000, window = window, maxValue = maxValue)
+
+    @Test
+    fun aRowTallerThanTheScreenIsPagedThroughBeforeTheNextOne() {
+        assertEquals(300, next(scroll = 0))
+        assertEquals(1300, next(scroll = 300))
+        // Its content ends 2000 below the top of the viewport at its top, so it is paged until that end is in view.
+        assertEquals(2000, next(scroll = 1300))
+        assertEquals(3300, next(scroll = 2000))
+        assertEquals(null, next(scroll = 3300))
+    }
+
+    @Test
+    fun steppingBackLandsOnTheEndOfATallRowAndTheTopOfAShortOne() {
+        assertEquals(2000, previous(scroll = 3300))
+        assertEquals(1300, previous(scroll = 2000))
+        assertEquals(300, previous(scroll = 1300))
+        assertEquals(0, previous(scroll = 300))
+        assertEquals(null, previous(scroll = 0))
+    }
+
+    @Test
+    fun aTallLastRowIsPagedThroughToTheEndOfTheSongBeforeTheButtonGoesOn() {
+        val rows = rowsWithATallOne.copy(bottoms = listOf(1100, 3000, 5000))
+        assertEquals(4000, next(scroll = 3300, rows = rows, maxValue = 4000))
+        assertTrue(!isStepStop(4000, rows, maxValue = 4000))
+        assertEquals(null, next(scroll = 4000, rows = rows, maxValue = 4000))
+    }
+
+    @Test
+    fun sectionsTallerThanTheScreenArePagedThroughToTheEndOfTheSong() {
+        val sections = SongRows(stepOffsets = listOf(-24, 400, 2000), stepSections = listOf(0, 1, 2))
+        val window = ReadingWindow(end = 50, overlap = 100)
+        assertEquals(1300, next(scroll = 400, rows = sections, maxValue = 3000, window = window))
+        assertEquals(2000, next(scroll = 1300, rows = sections, maxValue = 3000, window = window))
+        // The last section has no stop after it, so it is paged through to the end of the song.
+        assertEquals(2900, next(scroll = 2000, rows = sections, maxValue = 3000, window = window))
+        assertEquals(3000, next(scroll = 2900, rows = sections, maxValue = 3000, window = window))
+        // Short of the end by less than the empty space after the song, all of it has been on screen.
+        assertEquals(null, next(scroll = 2960, rows = sections, maxValue = 3000, window = window))
+        assertEquals(1100, previous(scroll = 2000, rows = sections, maxValue = 3000))
+    }
+
+    @Test
+    fun aSectionThatFitsWhatCanBeReadIsSteppedPastWhole() {
+        // Further apart than a page, but no further than what can be read at once, so nothing between them is skipped.
+        val sections = SongRows(stepOffsets = listOf(0, 950), stepSections = listOf(0, 1))
+        assertEquals(950, next(scroll = 0, rows = sections, maxValue = 3000))
+        assertEquals(0, previous(scroll = 950, rows = sections, maxValue = 3000))
+    }
+
+    @Test
+    fun aPageIsNeverLessThanHalfOfWhatCanBeRead() {
+        assertEquals(500, ReadingWindow(overlap = 2000).pageHeight(viewportHeight = 1000))
+        assertEquals(700, ReadingWindow(top = 50, bottom = 150, overlap = 100).pageHeight(viewportHeight = 1000))
     }
 
     @Test
