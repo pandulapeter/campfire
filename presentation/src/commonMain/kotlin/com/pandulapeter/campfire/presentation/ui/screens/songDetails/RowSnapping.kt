@@ -128,11 +128,17 @@ internal data class ReadingWindow(val top: Int = 0, val bottom: Int = 0, val end
     /** How much of the song can be read at once. */
     fun visibleHeight(viewportHeight: Int) = viewportHeight - top - bottom
 
-    /** How far a step within a stop moves the song, which is never less than half of what can be read at once. */
+    /**
+     * How far a step within a stop moves the song: never less than two thirds of what can be read at once, since at a
+     * large text size on a small screen two lines of overlap would leave a page smaller than a line.
+     */
     fun pageHeight(viewportHeight: Int): Int {
         val visibleHeight = visibleHeight(viewportHeight)
-        return (visibleHeight - overlap).coerceAtLeast(visibleHeight / 2).coerceAtLeast(MIN_PAGE_HEIGHT)
+        return (visibleHeight - overlap.coerceAtMost(visibleHeight / 3)).coerceAtLeast(visibleHeight / 2).coerceAtLeast(MIN_PAGE_HEIGHT)
     }
+
+    /** The height of a line of lyrics, which [overlap] is two of: the least a press should move the song by. */
+    val lineHeight get() = overlap / 2
 }
 
 /**
@@ -149,8 +155,26 @@ internal data class ReadingWindow(val top: Int = 0, val bottom: Int = 0, val end
  * never the empty space it is followed by (see [SongRows.bottoms]); a section, which is followed by nothing but the
  * gap before the next one, is all in view once the next one's top is. The last stop is paged through to the end of
  * the song, which is also why there is always a step left while any of the song is below the screen.
+ *
+ * A press that would move the song by less than a line - stops that the end of the song has clamped to within a few
+ * pixels of each other, a fling that came to rest just above one - goes on from where it would have stopped, step by
+ * step, for as long as that stays within what can be read at once past the reader, so that the walk passes over no
+ * line the reader has not had on screen. A step that is small for a reason - the end of a row's content just below -
+ * is taken as it is. Null is only returned once all of the song's content is on screen.
  */
 internal fun nextStepTarget(scroll: Int, rows: SongRows, viewportHeight: Int, window: ReadingWindow, maxValue: Int): Int? {
+    var target = nextStepTargetOnce(scroll, rows, viewportHeight, window, maxValue) ?: return null
+    while (target - scroll < window.lineHeight) {
+        val further = nextStepTargetOnce(target, rows, viewportHeight, window, maxValue)
+            ?: return if (maxValue - window.end <= scroll + POSITION_TOLERANCE) null else target
+        if (further > scroll + window.visibleHeight(viewportHeight)) break
+        target = further
+    }
+    return target
+}
+
+/** One step of [nextStepTarget], however small. */
+private fun nextStepTargetOnce(scroll: Int, rows: SongRows, viewportHeight: Int, window: ReadingWindow, maxValue: Int): Int? {
     if (rows.stepOffsets.isEmpty()) return null
     val next = nextStepOffset(scroll, rows.stepOffsets, maxValue)
     var limit = minOf(maxValue, next ?: Int.MAX_VALUE)
@@ -185,9 +209,22 @@ internal fun nextStepTarget(scroll: Int, rows: SongRows, viewportHeight: Int, wi
  * The scroll position the previous button and Page Up move the song at [scroll] to, or null only at the very top of it:
  * [nextStepTarget] the other way. The stop the reader is in, or the one before it, is paged back through where it does
  * not fit the screen, so that stepping back from a row lands on the end of a tall row before it rather than on its
- * top, and a short row before it is stepped to whole, never to the empty space that follows it.
+ * top, and a short row before it is stepped to whole, never to the empty space that follows it. A press that would move
+ * the song by less than a line goes on the same way as there.
  */
 internal fun previousStepTarget(scroll: Int, rows: SongRows, viewportHeight: Int, window: ReadingWindow, maxValue: Int): Int? {
+    var target = previousStepTargetOnce(scroll, rows, viewportHeight, window, maxValue) ?: return null
+    while (scroll - target < window.lineHeight) {
+        // Only the very top of the song hands off backwards, so a step that finds nothing further keeps the one it has.
+        val further = previousStepTargetOnce(target, rows, viewportHeight, window, maxValue) ?: break
+        if (further < scroll - window.visibleHeight(viewportHeight)) break
+        target = further
+    }
+    return target
+}
+
+/** One step of [previousStepTarget], however small. */
+private fun previousStepTargetOnce(scroll: Int, rows: SongRows, viewportHeight: Int, window: ReadingWindow, maxValue: Int): Int? {
     if (rows.stepOffsets.isEmpty()) return null
     val previous = previousStepOffset(scroll, rows.stepOffsets, maxValue) ?: return null
     // Everything between the two is in view from the stop before.
@@ -256,10 +293,19 @@ internal fun previousStepOffset(scroll: Int, stepOffsets: List<Int>, maxValue: I
 /**
  * The stops of [rows] a song that scrolls no further than [maxValue] can be brought to, ascending and each once: a stop
  * too close to the end of the song to reach the top of the screen is rested on where the song ends, together with any
- * other that is, since that is where the steps take the reader to both. What the progress indicator counts, so a song
- * that does not scroll at all has one.
+ * other that is, since that is where the steps take the reader to both. Of a run of stops each closer than [minGap] to
+ * the one before, only the last is kept, since a press walks through the others (see [nextStepTarget]). What the
+ * progress indicator counts, so a song that does not scroll at all has one.
  */
-internal fun reachableStops(rows: SongRows, maxValue: Int) = rows.stepOffsets.map { it.coerceIn(0, maxValue) }.distinct().sorted()
+internal fun reachableStops(rows: SongRows, maxValue: Int, minGap: Int = 0): List<Int> {
+    val stops = rows.stepOffsets.map { it.coerceIn(0, maxValue) }.distinct().sorted()
+    if (minGap <= 0) return stops
+    val kept = mutableListOf<Int>()
+    stops.forEachIndexed { index, stop ->
+        if (index > 0 && stop - stops[index - 1] < minGap) kept[kept.lastIndex] = stop else kept += stop
+    }
+    return kept
+}
 
 /**
  * Where the reader at [scroll] is among [stops] (see [reachableStops]), in stops: the index of one where the song rests on
@@ -521,7 +567,7 @@ internal class SongStepper(
     val isPagingForward by derivedStateOf { next.value?.let { !isStepStop(it, flingBehavior.rows, scrollState.maxValue) } == true }
 
     // Only a new layout changes the stops, so the list is built once per layout rather than once per pixel scrolled.
-    private val stops = derivedStateOf { reachableStops(flingBehavior.rows, scrollState.maxValue) }
+    private val stops = derivedStateOf { reachableStops(flingBehavior.rows, scrollState.maxValue, flingBehavior.readingWindow.lineHeight) }
     val stopCount by derivedStateOf { stops.value.size }
     // Changes with every pixel scrolled, so it is only to be read where that invalidates nothing but drawing.
     val stopProgress get() = stopProgress(scrollState.value, stops.value)

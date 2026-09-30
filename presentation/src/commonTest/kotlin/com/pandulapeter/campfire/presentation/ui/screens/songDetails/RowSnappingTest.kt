@@ -203,9 +203,43 @@ class RowSnappingTest {
     }
 
     @Test
-    fun aPageIsNeverLessThanHalfOfWhatCanBeRead() {
-        assertEquals(500, ReadingWindow(overlap = 2000).pageHeight(viewportHeight = 1000))
+    fun aPageIsNeverLessThanTwoThirdsOfWhatCanBeRead() {
+        assertEquals(667, ReadingWindow(overlap = 2000).pageHeight(viewportHeight = 1000))
+        assertEquals(353 - 353 / 3, ReadingWindow(overlap = 204).pageHeight(viewportHeight = 353))
+        assertEquals(353 - 40, ReadingWindow(overlap = 40).pageHeight(viewportHeight = 353))
         assertEquals(700, ReadingWindow(top = 50, bottom = 150, overlap = 100).pageHeight(viewportHeight = 1000))
+    }
+
+    /** A line of 40. */
+    private val lineWindow = ReadingWindow(overlap = 80)
+
+    @Test
+    fun stopsClampedCloseTogetherAreSteppedPastInOnePress() {
+        val rows = SongRows(stepOffsets = listOf(1000, 1010, 1020), stepSections = listOf(0, 1, 2))
+        assertEquals(1020, nextStepTarget(scroll = 990, rows = rows, viewportHeight = 600, window = lineWindow, maxValue = 1020))
+        assertEquals(null, nextStepTarget(scroll = 1020, rows = rows, viewportHeight = 600, window = lineWindow, maxValue = 1020))
+        val back = previousStepTarget(scroll = 1020, rows = rows, viewportHeight = 600, window = lineWindow, maxValue = 1020)!!
+        assertTrue(1020 - back >= 40)
+        assertTrue(1020 - back <= 600)
+    }
+
+    @Test
+    fun aPressJustAboveATallSectionPagesIntoItRatherThanPastIt() {
+        val rows = SongRows(stepOffsets = listOf(1000, 5000), stepSections = listOf(0, 1))
+        val target = nextStepTarget(scroll = 995, rows = rows, viewportHeight = 600, window = lineWindow, maxValue = 10_000)!!
+        assertTrue(target in 1035..995 + 600)
+    }
+
+    @Test
+    fun aPressAFewPixelsShortOfTheEndHandsOff() {
+        val rows = SongRows(stepOffsets = listOf(500, 3000), stepSections = listOf(0, 1))
+        assertEquals(null, nextStepTarget(scroll = 1996, rows = rows, viewportHeight = 600, window = lineWindow.copy(end = 32), maxValue = 2000))
+    }
+
+    @Test
+    fun stopsCloserThanALineAreCountedOnce() {
+        assertEquals(listOf(1020), reachableStops(SongRows(stepOffsets = listOf(1000, 1010, 1020)), maxValue = 4000, minGap = 40))
+        assertEquals(listOf(0, 800, 1600), reachableStops(SongRows(stepOffsets = listOf(0, 800, 1600)), maxValue = 4000, minGap = 40))
     }
 
     @Test
