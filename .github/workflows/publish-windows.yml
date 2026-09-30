@@ -200,7 +200,7 @@ jobs:
           # Without the submission the run leaves everything ready but the screenshots, which are added by hand.
           PREPARE=()
           [ "$SUBMIT" = true ] || PREPARE=(--prepare)
-          # A single-line text box has no other way to ask for a line break; the notes release.yml passes on are
+          # A single-line text box has no other way to ask for a line break; the notes publish-all.yml passes on are
           # carried through as they are, backslashes included.
           if [ "$GITHUB_EVENT_NAME" = workflow_dispatch ]; then
             printf '%b\n' "$RELEASE_NOTES" > "$RUNNER_TEMP/release-notes.txt"

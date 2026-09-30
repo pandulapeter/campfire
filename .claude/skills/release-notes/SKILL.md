@@ -6,7 +6,7 @@ description: Write a paste-ready GitHub release-notes draft (with the stores' "w
 # Campfire release notes
 
 Produce **one** throwaway markdown file whose whole contents the user pastes into the description of a
-new GitHub release: the notes people read, followed by the hidden block `release.yml` reads. Publishing
+new GitHub release: the notes people read, followed by the hidden block `publish-all.yml` reads. Publishing
 that release is the entire release process, so the file has to be complete as it is — nothing to fill
 in, nothing to cut before pasting. Match the style of the existing notes at
 https://github.com/pandulapeter/campfire/releases.
@@ -67,9 +67,9 @@ them. If a change has no effect a user could notice, it is not in the notes.
    user, briefly:
    - the path, and that the file is a throwaway to delete after pasting;
    - to paste **all of it** into the description of a new release tagged `<version>` on the commit
-     that carries that `campfire.versionName` (`release.yml` refuses a tag that disagrees with it), with
+     that carries that `campfire.versionName` (`publish-all.yml` refuses a tag that disagrees with it), with
      "Set as a pre-release" left off, since a pre-release ships nothing;
-   - that **publishing the release is what ships it**: `release.yml` sends the builds to Play and the
+   - that **publishing the release is what ships it**: `publish-all.yml` sends the builds to Play and the
      website, submits the iOS and macOS builds for App Review and the Windows build for Microsoft Store
      certification (each published as soon as it passes), and attaches the Linux packages to the release
      itself — so the notes never list or link downloads.
@@ -102,7 +102,7 @@ Mirror the existing releases:
 
 ## Style — the store "what's new"
 
-`release.yml` reads the stores' "what's new" text out of the release body itself, from HTML comments that
+`publish-all.yml` reads the stores' "what's new" text out of the release body itself, from HTML comments that
 the rendered release page does not show. They go at the very end of the draft, after a blank line, and
 all of them are always written:
 

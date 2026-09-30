@@ -6,7 +6,7 @@
 # If a copy of the MPL was not distributed with this file, You can obtain one at
 # https://mozilla.org/MPL/2.0/.
 
-# Builds the web distribution and copies it over app/ in the website's repository. Called by release.yml for
+# Builds the web distribution and copies it over app/ in the website's repository. Called by publish-all.yml for
 # every release; dispatched by hand to publish this branch without one.
 
 name: 'Publish web'

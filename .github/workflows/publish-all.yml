@@ -33,7 +33,7 @@
 # from there. All of them are optional. Without the notes the visible description stands in for them, with its
 # markdown taken out, without the priority it is 0, and without a store's submit it is true.
 
-name: 'Release'
+name: 'Publish all'
 
 on:
   release:

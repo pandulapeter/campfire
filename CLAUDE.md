@@ -279,7 +279,7 @@ uninstall and nothing else does.
   the desktop target with
   `./gradlew :chordpro:desktopTest :domain:implementation:desktopTest :data:source:local:implementation:desktopTest :data:source:remote:api:desktopTest :data:source:remote:implementation:desktopTest :data:repository:implementation:desktopTest :presentation:desktopTest`.
   The web build's storage worker, which is JavaScript, has a Node test of its own (see `app/web`).
-  Nothing runs either on a push; `release.yml` runs both — every module's `desktopTest` and the Node test — before it
+  Nothing runs either on a push; `publish-all.yml` runs both — every module's `desktopTest` and the Node test — before it
   starts a single store build, so a failing test stops a release.
   The UI itself is untested by code: `:app:baselineprofile` drives it, but only to record a profile, asserts nothing
   and is never run by CI. Before a release, `documentation/testing/release-check.md` is run on a Mac (its
@@ -341,7 +341,7 @@ uninstall and nothing else does.
   then `xcrun simctl install/launch`.
 - `./gradlew :app:web:wasmJsBrowserDevelopmentRun` — web app on a dev server; `:app:web:wasmJsBrowserDistribution` writes
   the deployable site to `app/web/build/dist/wasmJs/productionExecutable`.
-- **Publishing a GitHub release is the release.** `release.yml` answers it (a pre-release is left alone) by checking
+- **Publishing a GitHub release is the release.** `publish-all.yml` answers it (a pre-release is left alone) by checking
   that the tag is the `campfire.versionName` of the commit it is on — a tag on a commit that still carries the last
   version would submit that version again under a new name — and that `campfire.buildNumber` is higher than the
   last published release's (the highest of the three per-store counters, for a release from before there was one),
@@ -349,7 +349,7 @@ uninstall and nothing else does.
   dispatched by hand, to publish without a release or to repeat one half of a release that went wrong. What they build is the tag's, but the store
   scripts in `.github/scripts` come from the workflow's own commit, so a fix to one reaches a release already tagged. Every build
   passes `campfire.dropbox.appKey` from the `DROPBOX_APP_KEY` secret, because a published app built without it would
-  quietly have no sync provider at all — so each workflow, and `release.yml` before it calls any of them, refuses to
+  quietly have no sync provider at all — so each workflow, and `publish-all.yml` before it calls any of them, refuses to
   start when that secret is empty. The check is in the workflows rather than in Gradle: an empty key is the
   checked-in default and has to keep building a fresh clone. **A release carries only what no official channel
   offers**: nothing that a store or the website already hands out is attached to it, which leaves the Linux `.deb`.
@@ -388,7 +388,7 @@ uninstall and nothing else does.
     Manager role in Partner Center (`MICROSOFT_STORE_TENANT_ID` and `_CLIENT_ID`) and **with no secret**: the
     application has a federated credential that trusts the OIDC token GitHub hands the job, for the subject
     `repo:pandulapeter/campfire:environment:microsoft-store` — which is why the job runs in the `microsoft-store`
-    environment and why `release.yml` grants it `id-token: write` — so, like everything Apple's workflows use, nothing
+    environment and why `publish-all.yml` grants it `id-token: write` — so, like everything Apple's workflows use, nothing
     it signs in with expires (a client secret would, after two years at most). The package is unsigned, since the
     Store signs what it certifies with a certificate of its own, so unlike the Apple workflows nothing is revoked after
     a run and nothing a later run does can invalidate a build still in certification; nothing is attached to the
@@ -452,7 +452,7 @@ uninstall and nothing else does.
     `PLAY_SERVICE_ACCOUNT_JSON` (as a draft there when dispatched by hand with `submit` off, rolled out from the Play
     Console); nothing is attached to the release. It is an **APK** and not an app bundle because the Play listing predates the bundle
     requirement and was never migrated; a `bundleRelease` would be rejected on upload. The "what's new" text comes
-    from the workflow's `release_notes` input, which `release.yml` fills from comments in the release's description
+    from the workflow's `release_notes` input, which `publish-all.yml` fills from comments in the release's description
     that the rendered page hides (`<!-- whats-new en-US … -->`, written for every store and passed to the Apple and Windows workflows as well, and `<!-- play-store update-priority: 0 -->`, and one
     `<!-- <store> submit: true -->` for each of `play-store`, `app-store`, `mac-app-store` and `microsoft-store`, whose
     `false` passes that store's workflow `submit` off so the release is left there as a draft; the

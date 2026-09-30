@@ -11,7 +11,7 @@
 # store carries it, a Debian package is not something anybody signs on its own, and the release page is what the
 # website's download section (https://campfire-songbook.com/#download) and the README's "Get Campfire" section link to.
 #
-# Called by release.yml for every release; dispatched by hand to attach the packages to a release that is already there.
+# Called by publish-all.yml for every release; dispatched by hand to attach the packages to a release that is already there.
 
 name: 'Publish Linux'
 
