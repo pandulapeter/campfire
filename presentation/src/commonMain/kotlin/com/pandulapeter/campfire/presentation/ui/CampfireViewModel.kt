@@ -355,9 +355,9 @@ class CampfireViewModel(
     /**
      * Answers a pinch on a touchpad the way the song details screen answers one on a touchscreen: [factor] is how much
      * farther apart the fingers are than at the last report, damped by the same [PINCH_SENSITIVITY]. Only a platform
-     * that tells a touchpad pinch apart from a scroll calls it - the macOS desktop app and Safari, which report the
-     * gesture itself, and the other browsers, which report a Ctrl + scroll the user is not holding Ctrl for - and it
-     * is asked from the window rather than from the screen, since none of these ever reach Compose as a pinch. It is
+     * that tells a touchpad pinch apart from a scroll calls it - the macOS desktop app, which reports the gesture itself,
+     * and Chrome, Edge and Firefox, which report a Ctrl + scroll the user is not holding Ctrl for; Safari reports a
+     * gesture of its own that nothing listens for, so there a pinch zooms the page - and it is asked from the window rather than from the screen, since none of these ever reach Compose as a pinch. It is
      * gated like the shortcuts ([isSongTextZoomable]), and answers whether it did, so that anywhere else the gesture is
      * left to whoever else wants it.
      */

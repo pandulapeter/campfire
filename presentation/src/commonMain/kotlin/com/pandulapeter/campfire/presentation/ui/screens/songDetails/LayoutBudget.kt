@@ -18,6 +18,9 @@ import com.pandulapeter.campfire.chordpro.model.GridToken
  * file that is not one: a songbook concatenated into one `.cho`, or a log file dropped into the folder. One of 60 000
  * lines froze a desktop for seconds and took gigabytes; on a phone it is the app being killed. The limits are several
  * times the longest real song (a long tab file is under 1 000 lines and 60 kB), so no song is ever cut.
+ *
+ * It is also the one bound on the song details screen's promise that every line is reachable by stepping: past it the
+ * notice stands in for the rest.
  */
 internal object LayoutBudget {
 
