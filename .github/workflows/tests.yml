@@ -1,0 +1,52 @@
+# This file is part of Campfire.
+# Copyright (c) Pandula Péter 2017-2026.
+# https://github.com/pandulapeter/campfire
+#
+# This Source Code Form is subject to the terms of the Mozilla Public License, v. 2.0.
+# If a copy of the MPL was not distributed with this file, You can obtain one at
+# https://mozilla.org/MPL/2.0/.
+
+# Every test the repository has: the unit tests of every module, run on the desktop target, and the Node test of the
+# web build's storage worker. Run on every pull request, every night on the default branch, which catches what was
+# pushed there directly, and by publish-all.yml before it starts a single store build, so a failing test stops a
+# release.
+
+name: 'Tests'
+
+on:
+  pull_request:
+  schedule:
+    # A scheduled run's failure is emailed to whoever last changed this line.
+    - cron: '0 2 * * *'
+  workflow_call:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  # A new push to a pull request makes the run for the previous one moot. Nothing else shares a group: the ref of a
+  # release's run is its tag, and a scheduled run is never cancelled by another.
+  group: test-${{ github.event_name == 'pull_request' && github.event.pull_request.number || github.run_id }}
+  cancel-in-progress: true
+
+jobs:
+  test:
+    name: Run the tests
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v5
+      - name: Set up JDK 21
+        uses: actions/setup-java@v5
+        with:
+          distribution: 'zulu'
+          java-version: 21
+          cache: 'gradle'
+      # The unqualified task runs in every module that has one, so a module that gains tests is covered without a
+      # change here. --continue reports the failures of every module rather than only the first.
+      - name: Run the unit tests
+        run: ./gradlew desktopTest --continue
+      # The web build's storage worker is JavaScript, and its journal is tested by Node rather than by Gradle.
+      - name: Run the web storage worker's tests
+        run: node --test app/web/tests/opfs-writer.test.cjs

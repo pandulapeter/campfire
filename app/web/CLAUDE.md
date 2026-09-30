@@ -94,8 +94,8 @@ direction.
   whole directory, which `OpfsFileStorage` asks for before it first reads one, and a file that cannot be recovered is
   only logged, since failing it would lock the user out of the whole library. `node --test app/web/tests/opfs-writer.test.cjs`
   runs the journal against an in-memory directory, checking that the worker killed at every step it takes, and killed
-  again during the recovery, always leaves the old song or the new one; `publish-all.yml` runs it before a release, and
-  otherwise nothing but a person changing the worker does. Not preloaded and not part
+  again during the recovery, always leaves the old song or the new one; `tests.yml` runs it on every pull request, every
+  night and before a release. Not preloaded and not part
   of the loading screen's byte count: it is only fetched by the first write that needs it. One worker serves the page
   for as long as it is open, answering each request with its `id`, which is what the page matches the replies by.
 

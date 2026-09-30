@@ -279,8 +279,9 @@ uninstall and nothing else does.
   the desktop target with
   `./gradlew :chordpro:desktopTest :domain:implementation:desktopTest :data:source:local:implementation:desktopTest :data:source:remote:api:desktopTest :data:source:remote:implementation:desktopTest :data:repository:implementation:desktopTest :presentation:desktopTest`.
   The web build's storage worker, which is JavaScript, has a Node test of its own (see `app/web`).
-  Nothing runs either on a push; `publish-all.yml` runs both — every module's `desktopTest` and the Node test — before it
-  starts a single store build, so a failing test stops a release.
+  `.github/workflows/tests.yml` runs both — every module's `desktopTest` and the Node test — on every pull request, every
+  night on the default branch, and from `publish-all.yml` before it starts a single store build, so a failing test
+  stops a release.
   The UI itself is untested by code: `:app:baselineprofile` drives it, but only to record a profile, asserts nothing
   and is never run by CI. Before a release, `documentation/testing/release-check.md` is run on a Mac (its
   `README.md` says how): half an hour of the checks whose failure would block one. A change to what it exercises —
