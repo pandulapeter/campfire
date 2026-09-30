@@ -278,7 +278,9 @@ uninstall and nothing else does.
   index, the setlist slots, stepper labels, section grid, row snapping and section measurements of the details screen, the editor's token cache), run on
   the desktop target with
   `./gradlew :chordpro:desktopTest :domain:implementation:desktopTest :data:source:local:implementation:desktopTest :data:source:remote:api:desktopTest :data:source:remote:implementation:desktopTest :data:repository:implementation:desktopTest :presentation:desktopTest`.
-  The web build's storage worker, which is JavaScript, has a Node test of its own, run by hand (see `app/web`).
+  The web build's storage worker, which is JavaScript, has a Node test of its own (see `app/web`).
+  Nothing runs either on a push; `release.yml` runs both — every module's `desktopTest` and the Node test — before it
+  starts a single store build, so a failing test stops a release.
   The UI itself is untested by code: `:app:baselineprofile` drives it, but only to record a profile, asserts nothing
   and is never run by CI. Before a release, `documentation/testing/release-check.md` is run on a Mac (its
   `README.md` says how): half an hour of the checks whose failure would block one. A change to what it exercises —
@@ -343,7 +345,7 @@ uninstall and nothing else does.
   that the tag is the `campfire.versionName` of the commit it is on — a tag on a commit that still carries the last
   version would submit that version again under a new name — and that `campfire.buildNumber` is higher than the
   last published release's (the highest of the three per-store counters, for a release from before there was one),
-  since a store would refuse a used one only after the other builds had gone out, and then calling the six workflows below side by side. Each of them is the local build command plus the secrets a checkout does not have, and each can still be
+  since a store would refuse a used one only after the other builds had gone out, running every test, and then calling the six workflows below side by side. Each of them is the local build command plus the secrets a checkout does not have, and each can still be
   dispatched by hand, to publish without a release or to repeat one half of a release that went wrong. What they build is the tag's, but the store
   scripts in `.github/scripts` come from the workflow's own commit, so a fix to one reaches a release already tagged. Every build
   passes `campfire.dropbox.appKey` from the `DROPBOX_APP_KEY` secret, because a published app built without it would
