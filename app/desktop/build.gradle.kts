@@ -72,6 +72,11 @@ compose.desktop {
         if (isLinuxHost) {
             jvmArgs("--add-opens=java.desktop/sun.awt.X11=ALL-UNNAMED")
         }
+        // The package the JDK hands a trackpad pinch to only exists on macOS, and is not exported either (see
+        // TouchpadMagnification.kt).
+        if (isMacHost) {
+            jvmArgs("--add-exports=java.desktop/com.apple.eawt.event=ALL-UNNAMED")
+        }
         buildTypes.release.proguard {
             configurationFiles.from(project.file("proguard-rules.pro"))
             // One jar instead of a hundred. Windows Defender scans every file the app opens again whenever its
@@ -321,6 +326,9 @@ kotlin {
 
 /** Whether this build runs on Linux, which is the only host jpackage builds the .deb on. */
 val isLinuxHost get() = System.getProperty("os.name").orEmpty().lowercase().contains("linux")
+
+/** Whether this build runs on macOS, the only host whose runtime has the trackpad gesture package in it. */
+val isMacHost get() = System.getProperty("os.name").orEmpty().lowercase().contains("mac")
 
 /** Whether this build runs on Windows, which is the only host jpackage builds the .msi on. */
 val isWindowsHost get() = System.getProperty("os.name").orEmpty().lowercase().contains("windows")

@@ -149,7 +149,7 @@ internal fun TitleBarInsets(
     CompositionLocalProvider(LocalPlatformWindowInsets provides insets, content = content)
 }
 
-private val isMacOs = System.getProperty("os.name").orEmpty().lowercase().contains("mac")
+internal val isMacOs = System.getProperty("os.name").orEmpty().lowercase().contains("mac")
 
 internal val isWindows = System.getProperty("os.name").orEmpty().lowercase().contains("windows")
 

@@ -19,6 +19,7 @@ import androidx.compose.ui.input.pointer.PointerEventType
 import androidx.compose.ui.input.pointer.isCtrlPressed
 import androidx.compose.ui.input.pointer.isMetaPressed
 import androidx.compose.ui.input.pointer.pointerInput
+import com.pandulapeter.campfire.presentation.ui.CampfireViewModel
 import com.pandulapeter.campfire.presentation.ui.platform.verticalWheelNotches
 import kotlin.math.pow
 import kotlinx.coroutines.channels.Channel
@@ -32,6 +33,12 @@ import kotlinx.coroutines.launch
  *
  * The pinch is deliberately damped ([PINCH_SENSITIVITY]): the text has to be readable while it is being resized,
  * so precision matters more than speed.
+ *
+ * A Ctrl + scroll is also what Windows makes of a pinch on a touchpad, which comes as a stream of fractions of a notch,
+ * as a trackpad's scroll does; they are added up by a [FontScaleAccumulator], since each on its own is less than the
+ * whole percent the scale is kept in. The pinches that can be told apart from a scroll - the one macOS reports to the
+ * desktop app, and the Ctrl + scroll a browser makes of one while Ctrl is not held - reach
+ * [CampfireViewModel.magnifySongText] from the window instead, and never get here.
  *
  * A new scale is reported at most once per frame, with the latest value the gesture arrived at: pointer events come
  * faster than frames, and every scale reported lays the whole song out again, which on a long song is more work than
@@ -97,13 +104,15 @@ internal fun Modifier.fontScaleGestures(
             }
         }
         launch {
+            val wheelFontScale = FontScaleAccumulator()
             awaitPointerEventScope {
                 while (true) {
                     val event = awaitPointerEvent(PointerEventPass.Initial)
                     if (event.type == PointerEventType.Scroll && (event.keyboardModifiers.isCtrlPressed || event.keyboardModifiers.isMetaPressed)) {
                         // Towards the user (a positive delta) zooms out and away zooms in, like in a browser. Counted in notches,
                         // since the web hands over the browser's own pixels.
-                        changeFontScale((pendingFontScale ?: fontScale()) - event.verticalWheelNotches() * SCROLL_SENSITIVITY)
+                        val notches = event.verticalWheelNotches()
+                        changeFontScale(wheelFontScale.next(pendingFontScale ?: fontScale()) { it - notches * SCROLL_SENSITIVITY })
                         event.changes.forEach { it.consume() }
                     }
                 }
@@ -118,5 +127,10 @@ private data class PinchStart(
     val fontScale: Float,
 )
 
-private const val PINCH_SENSITIVITY = 0.4f // Exponent applied to the spread ratio of the fingers.
+/**
+ * The exponent applied to the spread ratio of the fingers, on a touchscreen and on a touchpad alike
+ * ([CampfireViewModel.magnifySongText]), so that the same movement of the same fingers resizes the text as much on both.
+ */
+internal const val PINCH_SENSITIVITY = 0.4f
+
 private const val SCROLL_SENSITIVITY = 0.05f // Font scale change per notch of the scroll wheel.

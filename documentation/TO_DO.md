@@ -9,7 +9,6 @@
 -->
 # To do
 - Word / PDF import
-- Touchpad zoom gesture support
 - Global sync status display
 - Metadata should not scale with the song lyrics text (but key / capo / BPM should)
 - Toggle to sort tags by usage or alphabetically

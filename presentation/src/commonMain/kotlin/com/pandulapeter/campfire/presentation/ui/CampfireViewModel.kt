@@ -104,6 +104,8 @@ import com.pandulapeter.campfire.presentation.ui.platform.FilePicker
 import com.pandulapeter.campfire.presentation.ui.platform.LibraryPersistence
 import com.pandulapeter.campfire.presentation.ui.platform.requestLibraryPersistence
 import com.pandulapeter.campfire.presentation.ui.screens.settings.SettingsTab
+import com.pandulapeter.campfire.presentation.ui.screens.songDetails.FontScaleAccumulator
+import com.pandulapeter.campfire.presentation.ui.screens.songDetails.PINCH_SENSITIVITY
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.Dispatchers
@@ -143,6 +145,7 @@ import kotlinx.serialization.SerializationException
 import kotlinx.serialization.json.Json
 import kotlin.math.ceil
 import kotlin.math.floor
+import kotlin.math.pow
 import kotlin.math.roundToInt
 import kotlin.time.Duration.Companion.seconds
 import kotlin.time.TimeMark
@@ -343,6 +346,24 @@ class CampfireViewModel(
         } else {
             adjustFontScale(steps)
         }
+        return true
+    }
+
+    /** Where the pinches [magnifySongText] is given add up, which each arrive as too small a step to be kept on their own. */
+    private val touchpadFontScale = FontScaleAccumulator()
+
+    /**
+     * Answers a pinch on a touchpad the way the song details screen answers one on a touchscreen: [factor] is how much
+     * farther apart the fingers are than at the last report, damped by the same [PINCH_SENSITIVITY]. Only a platform
+     * that tells a touchpad pinch apart from a scroll calls it - the macOS desktop app and Safari, which report the
+     * gesture itself, and the other browsers, which report a Ctrl + scroll the user is not holding Ctrl for - and it
+     * is asked from the window rather than from the screen, since none of these ever reach Compose as a pinch. It is
+     * gated like the shortcuts ([isSongTextZoomable]), and answers whether it did, so that anywhere else the gesture is
+     * left to whoever else wants it.
+     */
+    fun magnifySongText(factor: Float): Boolean {
+        if (!isSongTextZoomable) return false
+        if (factor > 0f && factor.isFinite()) setFontScale(touchpadFontScale.next(fontScale) { it * factor.pow(PINCH_SENSITIVITY) })
         return true
     }
 

@@ -35,6 +35,7 @@ import org.w3c.dom.events.KeyboardEvent
 import org.w3c.dom.events.WheelEvent
 import kotlin.js.ExperimentalWasmJsInterop
 import kotlin.js.unsafeCast
+import kotlin.math.exp
 import org.koin.compose.viewmodel.koinViewModel
 
 /**
@@ -203,20 +204,28 @@ private fun setFavicon(fileName: String) {
 /**
  * Turns the browser's zoom shortcuts into the text size of the song details screen while it is on top
  * ([CampfireViewModel.isSongTextZoomable]): Ctrl / Cmd + plus, minus and zero step it the way the app bar's buttons
- * do, and a Ctrl + scroll - which is also what Chrome, Edge and Firefox make of a pinch on a trackpad - is kept from
- * the browser so that the screen's own gesture handler can have it (see fontScaleGestures). A zoomed page is the
- * whole app grown around a song that stayed the same size, which is not what anybody reading one asked for. Everywhere
- * else the browser zooms the page as it always does, which is how the rest of the app is made larger on the web.
+ * do, and a Ctrl + scroll is kept from the browser so that the screen's own gesture handler can have it (see
+ * fontScaleGestures). A zoomed page is the whole app grown around a song that stayed the same size, which is not what
+ * anybody reading one asked for. Everywhere else the browser zooms the page as it always does, which is how the rest of
+ * the app is made larger on the web.
+ *
+ * Every browser the app runs in reports a pinch on a touchpad as a Ctrl + scroll too, with Ctrl set although nobody
+ * holds it and a distance that is the logarithm of the pinch ([PIXELS_PER_PINCH_E]) - which, taken for notches of a
+ * wheel, would move the text a few percent for a whole pinch. So a Ctrl + scroll arriving while the Ctrl key is not
+ * down is taken for the pinch it is: it goes to [CampfireViewModel.magnifySongText] and is stopped before the canvas
+ * hears of it. Whether the key is down is only known from its own key events, so one held since before the page had the
+ * focus reads as not held, and scrolling with it resizes as fast as a pinch does.
  *
  * Window listeners in the capture phase, for the reasons [SearchShortcutEffect] gives. The wheel listener has to be
  * declared not passive, since a wheel listener on the window is passive unless it says otherwise and a passive one
- * cannot prevent anything; it only prevents the default and leaves the event to reach the canvas. Safari zooms on a
- * pinch through gesture events of its own rather than the wheel, and is left to do so.
+ * cannot prevent anything.
  */
 @Composable
 private fun SongTextZoomEffect(viewModel: CampfireViewModel) = DisposableEffect(viewModel) {
-    val keyListener: (Event) -> Unit = listener@{ event ->
+    var isControlKeyDown = false
+    val keyDownListener: (Event) -> Unit = listener@{ event ->
         val keyEvent = event.unsafeCast<KeyboardEvent>()
+        if (keyEvent.key == KEY_CONTROL) isControlKeyDown = true
         // key rather than code, as the browser's own zoom goes by it: the plus of a Hungarian layout is Shift + 3.
         // Alt is left out because AltGr arrives as Ctrl + Alt on Windows, and AltGr with these keys types a character
         // on some layouts.
@@ -230,13 +239,29 @@ private fun SongTextZoomEffect(viewModel: CampfireViewModel) = DisposableEffect(
             keyEvent.preventDefault()
         }
     }
-    val wheelListener: (Event) -> Unit = { event ->
-        if (event.unsafeCast<WheelEvent>().ctrlKey && viewModel.isSongTextZoomable) event.preventDefault()
+    val keyUpListener: (Event) -> Unit = { event ->
+        if (event.unsafeCast<KeyboardEvent>().key == KEY_CONTROL) isControlKeyDown = false
     }
-    window.addEventListener(EVENT_KEY_DOWN, keyListener, true)
+    // A key released while another window has the focus is never reported to this one.
+    val blurListener: (Event) -> Unit = { isControlKeyDown = false }
+    val wheelListener: (Event) -> Unit = { event ->
+        val wheelEvent = event.unsafeCast<WheelEvent>()
+        if (wheelEvent.ctrlKey && viewModel.isSongTextZoomable) {
+            event.preventDefault()
+            if (!isControlKeyDown && wheelEvent.deltaMode == WheelEvent.DOM_DELTA_PIXEL) {
+                event.stopPropagation()
+                viewModel.magnifySongText(exp(-wheelEvent.deltaY / PIXELS_PER_PINCH_E).toFloat())
+            }
+        }
+    }
+    window.addEventListener(EVENT_KEY_DOWN, keyDownListener, true)
+    window.addEventListener(EVENT_KEY_UP, keyUpListener, true)
+    window.addEventListener(EVENT_BLUR, blurListener)
     window.addEventListener(EVENT_WHEEL, wheelListener, AddEventListenerOptions(passive = false, capture = true))
     onDispose {
-        window.removeEventListener(EVENT_KEY_DOWN, keyListener, true)
+        window.removeEventListener(EVENT_KEY_DOWN, keyDownListener, true)
+        window.removeEventListener(EVENT_KEY_UP, keyUpListener, true)
+        window.removeEventListener(EVENT_BLUR, blurListener)
         window.removeEventListener(EVENT_WHEEL, wheelListener, true)
     }
 }
@@ -399,3 +424,7 @@ private fun stopForwardingEscapeKey() {
 
 private const val EVENT_KEY_DOWN = "keydown"
 private const val EVENT_WHEEL = "wheel"
+private const val EVENT_KEY_UP = "keyup"
+private const val EVENT_BLUR = "blur"
+private const val KEY_CONTROL = "Control"
+private const val PIXELS_PER_PINCH_E = 100.0 // A pinch that moves the fingers e times farther apart scrolls by -100 px.

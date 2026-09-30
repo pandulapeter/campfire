@@ -163,6 +163,12 @@ fun main(args: Array<String>) {
                 window.addWindowFocusListener(focusListener)
                 onDispose { window.removeWindowFocusListener(focusListener) }
             }
+            // A pinch on a Mac's trackpad resizes the text of a song the way Ctrl / Cmd + scroll does, which is what
+            // Windows makes of a pinch on its touchpads and so needs nothing of its own.
+            DisposableEffect(window) {
+                val stopListening = window.listenForTouchpadMagnification { factor -> viewModel.value?.magnifySongText(factor) }
+                onDispose { stopListening?.invoke() }
+            }
             // Another process was asked to open Campfire and handed over to this one, so this is the window the
             // user is looking for.
             LaunchedEffect(Unit) {

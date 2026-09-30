@@ -37,6 +37,15 @@ free rather than starting without it; and an instance that has decided to exit s
 (`stopListeningForOtherInstances`, called before `exitApplication`) while keeping the lock until it is gone, so it never
 acknowledges files it will not open. It uses `java.base` only.
 
+A pinch on a Mac's trackpad reaches AWT as neither a mouse event nor a touch, so Compose never hears of it; the JDK
+hands it only to a `com.apple.eawt.event` listener registered on a Swing component. `TouchpadMagnification.kt`
+registers one on the window's root pane and passes each magnification on to the view model's `magnifySongText`,
+which resizes the song text like a touch pinch while the song details screen is on top and ignores it elsewhere. The
+package exists only in a macOS runtime and is not exported, so it is reached through reflection (the build is also
+made on Linux and Windows) and the application starts with `--add-exports=java.desktop/com.apple.eawt.event=ALL-UNNAMED`
+on a macOS host only, the way the Linux one gets its `--add-opens`; without it the listener is simply not there.
+Windows needs nothing of its own, since it makes a touchpad pinch into the Ctrl + wheel the screen already answers.
+
 Everything the process prints is also written to `campfire.log` in the data directory (`DesktopLog`), since an
 installed build started from Finder, the Start menu or a `.desktop` entry has nowhere for standard output to go and the
 app has no crash reporting: `System.out` and `System.err` are mirrored into it line by line with a timestamp, and a
