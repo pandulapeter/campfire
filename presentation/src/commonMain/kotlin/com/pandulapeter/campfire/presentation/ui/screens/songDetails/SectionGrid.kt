@@ -27,6 +27,14 @@ internal class SectionGrid(
     val wideRows: BooleanArray = BooleanArray(columnCounts.size),
 )
 
+/** Whether [other] puts every section into the same cell as this grid, in rows of the same widths. */
+internal fun SectionGrid.hasSameCellsAs(other: SectionGrid) = this === other || (
+    rows.contentEquals(other.rows) &&
+        columns.contentEquals(other.columns) &&
+        columnCounts.contentEquals(other.columnCounts) &&
+        wideRows.contentEquals(other.wideRows)
+    )
+
 /** The grid of no sections at all. */
 internal fun emptyGrid() = SectionGrid(rows = IntArray(0), columns = IntArray(0), columnCounts = IntArray(0))
 

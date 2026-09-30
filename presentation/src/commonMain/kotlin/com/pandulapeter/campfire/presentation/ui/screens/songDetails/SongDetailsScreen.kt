@@ -791,8 +791,8 @@ private fun SongDetailsPage(
             modifier = Modifier.fillMaxSize()
         ) {
             val currentFontScale = fontScale()
-            // A single change - a window maximised, a stepper tapped - still animates the sections to their new place;
-            // a burst of them, from a pinch or a window edge being dragged, makes them follow without springing.
+            // A single change - a window maximised, a stepper tapped - springs the sections to their new place; a burst
+            // of them, from a pinch or a window edge being dragged, is followed, gliding only over the grid's jumps.
             val isChangingContinuously = rememberContinuousChange(maxWidth, currentFontScale)
             SongLyrics(
                 modifier = Modifier
@@ -809,7 +809,7 @@ private fun SongDetailsPage(
                 availableHeight = maxHeight - topPadding - bottomPadding,
                 // The pages fill the screen, so whatever the screen is still missing this layout is missing too.
                 extraWidth = (settledWidth - maxWidth).coerceAtLeast(0.dp),
-                animatesSections = !isChangingContinuously,
+                sectionMotion = if (isChangingContinuously) SectionMotion.GLIDE else SectionMotion.SPRING,
                 fontScale = currentFontScale,
                 isHorizontalFlow = isHorizontalFlow,
                 foldedSections = foldedSections,

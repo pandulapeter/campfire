@@ -109,6 +109,15 @@ class SectionGridTest {
         maxRowHeight = maxRowHeight,
     )
 
+    @Test
+    fun gridSearchedAgainForTheSameCellsIsTheSameGrid() {
+        // A window being resized searches for its grid on every frame, and the sections only glide where it changed.
+        val heights = List(6) { 280 }
+        assertTrue(heights.balanceIntoColumns(2, SECTION_GAP).hasSameCellsAs(heights.balanceIntoColumns(2, SECTION_GAP)))
+        assertTrue(!heights.balanceIntoColumns(2, SECTION_GAP).hasSameCellsAs(heights.balanceIntoColumns(3, SECTION_GAP)))
+        assertTrue(!singleColumnGrid(6).hasSameCellsAs(SectionGrid(IntArray(6), IntArray(6), intArrayOf(1), wideRows = booleanArrayOf(true))))
+    }
+
     private fun rowHeight(grid: SectionGrid, row: Int, heights: List<Int>): Int {
         val sections = heights.indices.filter { grid.rows[it] == row }
         return SectionGrid(IntArray(sections.size), IntArray(sections.size) { grid.columns[sections[it]] }, intArrayOf(grid.columnCounts[row]))

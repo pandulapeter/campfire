@@ -16,6 +16,7 @@
 - Song details screen: move all options that edit the file into the overflow menu 
 - Remove cover should have a confirmation dialog too
 - Show all tags logic should depend on space
+- Read across columns OFF: up/down FAB-s only step between sections in the first column
 - First time user experience tutorial
 - Sort and Filter UI should be improved (better animations)
 - Haptic effects

@@ -135,6 +135,7 @@ import com.pandulapeter.campfire.presentation.ui.components.WindowSize
 import com.pandulapeter.campfire.presentation.ui.navigation.CampfireDestination
 import com.pandulapeter.campfire.presentation.ui.screens.songDetails.APP_BAR_COVER_GAP
 import com.pandulapeter.campfire.presentation.ui.screens.songDetails.APP_BAR_COVER_SIZE
+import com.pandulapeter.campfire.presentation.ui.screens.songDetails.SectionMotion
 import com.pandulapeter.campfire.presentation.ui.screens.songDetails.SongLyrics
 import com.pandulapeter.campfire.presentation.ui.screens.songDetails.SongLyricsInputs
 import com.pandulapeter.campfire.presentation.ui.screens.songDetails.TextTranspositionControls
@@ -810,9 +811,7 @@ private fun SongPreview(
             availableHeight = maxHeight - topPadding - restingBottomPadding,
             fontScale = fontScale,
             isHorizontalFlow = isHorizontalFlow,
-            // The preview shows what is being typed rather than narrating it: every edit that changes a section's
-            // height would otherwise start a spring on every section below it.
-            animatesSections = false,
+            sectionMotion = SectionMotion.NONE,
         )
     }
 }

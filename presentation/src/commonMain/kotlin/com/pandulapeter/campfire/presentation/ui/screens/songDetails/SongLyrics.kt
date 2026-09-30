@@ -12,6 +12,8 @@ package com.pandulapeter.campfire.presentation.ui.screens.songDetails
 import androidx.compose.animation.ExperimentalSharedTransitionApi
 import androidx.compose.animation.animateBounds
 import androidx.compose.animation.core.Animatable
+import androidx.compose.animation.core.AnimationSpec
+import androidx.compose.animation.core.VectorConverter
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.horizontalScroll
@@ -47,6 +49,7 @@ import androidx.compose.ui.semantics.Role
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
@@ -143,7 +146,10 @@ import com.pandulapeter.campfire.presentation.ui.components.textResource
 import com.pandulapeter.campfire.presentation.ui.theme.LocalMonospaceFontFamily
 import com.pandulapeter.campfire.presentation.ui.theme.LocalSecondAccentColor
 import com.pandulapeter.campfire.presentation.localization.stringResource
+import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import org.jetbrains.compose.resources.painterResource
 import kotlin.math.ceil
@@ -159,8 +165,7 @@ import kotlin.math.roundToInt
  * The song is split into sections (verse, chorus, ...) which are flowed into columns by [SongSectionsLayout], either
  * top to bottom or, when [isHorizontalFlow] is set, in rows across the columns. Choruses are drawn on a raised card
  * of their own so that they stand out from the surrounding sections. A section is never split between columns, and
- * sections animate to their new place when the column count changes (e.g. when a window is resized) - except one that
- * is too tall for `animateBounds` to measure, which simply appears there.
+ * sections move to their new place when the column count changes (e.g. when a window is resized), see [sectionMotion].
  *
  * @param model The song and its sections, built away from the main thread by [rememberSongLyricsModel].
  * @param availableHeight The height the song can occupy without scrolling; the column count is picked so that it
@@ -168,13 +173,9 @@ import kotlin.math.roundToInt
  * @param extraWidth How much wider this layout is going to be once the animation that is currently resizing it has
  * finished (see [SongDetailsScreen]'s settled width). The column count is decided for that final width, so that the
  * sections do not flow into a different number of columns for the duration of a navigation transition and then jump
- * back. While it is not zero the sections also stop animating to their new place: the layout is following a width
+ * back. While it is not zero the sections also stop springing to their new place: the layout is following a width
  * that changes on every frame, and springing after each of those only makes it lag behind.
- * @param animatesSections False while the width or the text size keeps changing (a pinch, a window being dragged) and
- * in the editor's preview, which follows every edit: the sections then snap to their new place instead of springing
- * after it, for the reason [extraWidth] gives. `animateBounds` also measures each section at its animated size and at
- * its target size in every frame, and a line of text keeps only one of those layouts, so it is laid out twice a frame
- * for as long as the spring runs.
+ * @param sectionMotion How the sections get to the place a change of the layout gives them, see [SectionMotion].
  * @param fontScale Multiplier applied to the text sizes (and to the column widths, so that larger text does not get
  * squeezed into narrow columns).
  * @param isHorizontalFlow Whether the sections should be read across the columns and then downwards (see
@@ -208,7 +209,7 @@ internal fun SongLyrics(
     model: SongLyricsModel,
     availableHeight: Dp = Dp.Unspecified,
     extraWidth: Dp = 0.dp,
-    animatesSections: Boolean = true,
+    sectionMotion: SectionMotion = SectionMotion.SPRING,
     fontScale: Float = 1f,
     isHorizontalFlow: Boolean = false,
     foldedSections: Set<String> = emptySet(),
@@ -232,6 +233,9 @@ internal fun SongLyrics(
     val sections = model.sections
     // Whether each section is too tall to be animated, which only the layout finds out.
     val sectionAnimations = remember(sections) { List(sections.size) { SectionAnimation() } }
+    val glideScope = rememberCoroutineScope()
+    val glideSpec = MaterialTheme.motionScheme.defaultSpatialSpec<IntOffset>()
+    val sectionGlides = if (sectionMotion == SectionMotion.NONE) null else remember(glideScope, glideSpec) { SectionGlides(glideScope, glideSpec) }
     val density = LocalDensity.current
     // Kept across a new song text rather than keyed on it, since a transposition or a tag put on rewrites the song and
     // must not make what was just unfolded fade in a second time.
@@ -339,17 +343,22 @@ internal fun SongLyrics(
                 extraWidth = extraWidth,
                 sectionCount = sections.size,
                 isHorizontalFlow = isHorizontalFlow,
+                sectionKeys = sectionKeys,
                 sectionAnimations = sectionAnimations,
+                sectionGlides = sectionGlides,
                 sectionMeasurements = sectionMeasurements,
                 onRowsPlaced = { rows -> onRowsPlaced?.invoke(rows.offsetBy(headerHeight)) },
             ) {
                 sections.forEachIndexed { index, section ->
                     key(sectionKeys[index]) {
                         // A section the layout found too tall is measured in full only once this is off it: see maxAnimatedSectionHeight.
+                        // One still gliding from a change that kept coming is left to finish on its own, since the spring
+                        // would start at the place the glide has not reached yet.
                         // Each section is read as a whole and in the order the song declares, whatever column it was put in:
                         // the reading order is otherwise worked out from the geometry, line by line across the page, which
                         // with two columns reads the first line of each, then the second line of each.
-                        val sectionModifier = if (!animatesSections || extraWidth > 0.dp || sectionAnimations[index].isTooTallToAnimate) {
+                        val isGliding = sectionGlides?.isGliding(sectionKeys[index]) == true
+                        val sectionModifier = if (sectionMotion != SectionMotion.SPRING || extraWidth > 0.dp || sectionAnimations[index].isTooTallToAnimate || isGliding) {
                             Modifier
                         } else {
                             Modifier.animateBounds(this@LookaheadScope).layoutId(AnimatedSectionLayoutId)
@@ -1416,6 +1425,11 @@ private fun TextStyle.scaled(scale: Float) = copy(
  * out in the width that is available right now, so that a layout that is still being resized keeps its sections
  * where they are and only lets them grow into the space as it arrives.
  *
+ * A section that is not carried by `animateBounds` glides across a change of the grid ([sectionGlides]): where it was
+ * placed before and where the new grid places it are measured in the lookahead pass, and the approach pass places it
+ * that far from its new place, the distance running down to nothing. Only the grid changing moves a section by more
+ * than the frame's own change, so everything else is followed as it comes.
+ *
  * The layout is measured on every frame of a navigation transition and of a window being resized, so what the search
  * finds is kept in [sectionMeasurements]: the intrinsic height of every section at every width it was asked about,
  * and the grid decided for the last settled width, which is the same on every frame of a transition.
@@ -1452,7 +1466,9 @@ private fun SongSectionsLayout(
     extraWidth: Dp,
     sectionCount: Int,
     isHorizontalFlow: Boolean,
+    sectionKeys: List<SectionKey>,
     sectionAnimations: List<SectionAnimation>,
+    sectionGlides: SectionGlides?,
     sectionMeasurements: SectionMeasurements,
     onRowsPlaced: (SongRows) -> Unit,
     content: @Composable () -> Unit,
@@ -1562,7 +1578,7 @@ private fun SongSectionsLayout(
         }
     }
 
-    val (grid, isInset) = sectionMeasurements.grid(gridKey) {
+    val decidedGrid = sectionMeasurements.grid(gridKey) {
         // The buttons that step through the song sit at the end of the screen, so a song that has to be scrolled leaves
         // them that edge. One that fits the screen there has no buttons to leave room for, and is laid out across the
         // whole width, where it fits all the more. Several rows read across are stepped through however short they
@@ -1575,6 +1591,7 @@ private fun SongSectionsLayout(
             else -> DecidedGrid(searchGrid(settledWidth).grid, isInset = false)
         }
     }
+    val (grid, isInset) = decidedGrid
     val layoutWidth = if (isInset) (width - endInsetPx).coerceAtLeast(0) else width
     val columnWidths = IntArray(grid.columnCounts.size) { grid.rowWidth(it, layoutWidth) }
     val placeables = measurables.mapIndexed { index, measurable ->
@@ -1669,10 +1686,23 @@ private fun SongSectionsLayout(
     val dividers = dividerPlaceables.mapIndexed { index, placeable ->
         placeable to IntOffset(x = contentStart, y = dividerTops[index] - placeable.height / 2)
     }
+    val positions = Array(placeables.size) { index ->
+        val row = grid.rows[index]
+        IntOffset(x = rowStarts[row] + grid.columns[index] * (columnWidths[row] + columnGapPx), y = songTop + arrangement.tops[index])
+    }
+    if (isLookingAhead && sectionGlides != null) {
+        sectionGlides.follow(
+            keys = sectionKeys,
+            grid = decidedGrid,
+            positions = positions,
+            isCarriedByBounds = { index -> measurables[index].layoutId === AnimatedSectionLayoutId },
+        )
+    }
     layout(width, (songTop + arrangement.height).coerceIn(constraints.minHeight, constraints.maxHeight)) {
         placeables.forEachIndexed { index, placeable ->
-            val row = grid.rows[index]
-            placeable.place(x = rowStarts[row] + grid.columns[index] * (columnWidths[row] + columnGapPx), y = songTop + arrangement.tops[index])
+            // Read while placing, so that a glide only places the sections again on every frame it runs.
+            val glide = if (isLookingAhead || sectionGlides == null) IntOffset.Zero else sectionGlides.offsetOf(sectionKeys[index])
+            placeable.place(positions[index] + glide)
         }
         dividers.forEach { (placeable, position) -> placeable.place(position) }
     }
@@ -1740,6 +1770,30 @@ internal class SectionSizesPool<T> {
     }
 }
 
+/** How the sections of [SongLyrics] get to the place a change of its layout gives them. */
+internal enum class SectionMotion {
+
+    /**
+     * A change that comes on its own - a window maximised, a step of the text size - is narrated: every section springs
+     * to its new place and size (`animateBounds`), and one too tall for that glides like [GLIDE].
+     */
+    SPRING,
+
+    /**
+     * A change that keeps coming - a pinch, a window edge being dragged - is followed as it comes, and only the jump a
+     * section makes where the grid changes is glided over. A spring restarted on every frame would trail behind the
+     * change, and `animateBounds` measures every section at its animated size and at its target size in every frame,
+     * while a line of text keeps only one of those layouts, so each would be laid out twice a frame.
+     */
+    GLIDE,
+
+    /**
+     * Every section is simply where the layout puts it, which is the editor's preview: it shows what is being typed rather
+     * than narrating it, and every edit that changes a section's height would otherwise move every section below it.
+     */
+    NONE,
+}
+
 /** The key a section is emitted under in [SongLyrics]: its content's hash, and which of the sections equal to it it is. */
 private data class SectionKey(
     val hash: Int,
@@ -1767,7 +1821,11 @@ private data class SearchedGrid(
 private data class DecidedGrid(
     val grid: SectionGrid,
     val isInset: Boolean,
-)
+) {
+
+    /** Whether [other] lays every section out in the same cell and in the same width as this one. */
+    fun hasSameCellsAs(other: DecidedGrid) = isInset == other.isInset && grid.hasSameCellsAs(other.grid)
+}
 
 /**
  * Whether a section can be animated to its place inside [SongSectionsLayout]. The layout is the only one that knows
@@ -1777,6 +1835,83 @@ private data class DecidedGrid(
 private class SectionAnimation {
 
     var isTooTallToAnimate by mutableStateOf(false)
+}
+
+/**
+ * The glide of every section across a change of the grid, see [SongSectionsLayout]. The positions are followed in the
+ * lookahead pass and the offsets read in the approach pass, both by the key of each section, so a section that is
+ * added or edited has no position to glide from.
+ */
+private class SectionGlides(
+    private val scope: CoroutineScope,
+    private val spec: AnimationSpec<IntOffset>,
+) {
+
+    private val glides = HashMap<SectionKey, SectionGlide>()
+    private var lastKeys: List<SectionKey>? = null
+    private var lastGrid: DecidedGrid? = null
+
+    /** Whether the section of [key] is still on its way to its place, which is state. */
+    fun isGliding(key: SectionKey) = glides[key]?.isGliding == true
+
+    /** How far from its place the section of [key] is drawn, which is state. */
+    fun offsetOf(key: SectionKey) = glides[key]?.offset ?: IntOffset.Zero
+
+    /**
+     * Takes the [positions] the sections of [keys] are placed at in [grid], and starts a glide for every one whose
+     * position moved because the grid changed, unless it [isCarriedByBounds], which animates its own.
+     */
+    fun follow(keys: List<SectionKey>, grid: DecidedGrid, positions: Array<IntOffset>, isCarriedByBounds: (Int) -> Boolean) {
+        if (keys !== lastKeys) {
+            val current = keys.toHashSet()
+            glides.entries.removeAll { (key, glide) -> (key !in current).also { if (it) glide.stop() } }
+            lastKeys = keys
+        }
+        val isNewGrid = lastGrid.let { it != null && !it.hasSameCellsAs(grid) }
+        lastGrid = grid
+        keys.forEachIndexed { index, key ->
+            val glide = glides.getOrPut(key) { SectionGlide() }
+            val previous = glide.target
+            glide.target = positions[index]
+            if (isNewGrid && previous != null && previous != positions[index] && !isCarriedByBounds(index)) {
+                glide.start(jump = previous - positions[index], scope = scope, spec = spec)
+            }
+        }
+    }
+}
+
+/**
+ * The glide of one section: where it was last placed, and how far from there it is still drawn. A jump is added to
+ * [offset] in the pass that finds it rather than when the coroutine that animates it gets to run, which is after that
+ * frame has been placed, so the section would otherwise be drawn at its new place for a frame before being sent back.
+ */
+private class SectionGlide {
+
+    var target: IntOffset? = null
+    var isGliding by mutableStateOf(false)
+        private set
+    private val animatable = Animatable(IntOffset.Zero, IntOffset.VectorConverter)
+    private var pendingJump = IntOffset.Zero
+    private var job: Job? = null
+
+    val offset get() = animatable.value + pendingJump
+
+    fun start(jump: IntOffset, scope: CoroutineScope, spec: AnimationSpec<IntOffset>) {
+        pendingJump += jump
+        isGliding = true
+        job?.cancel()
+        job = scope.launch {
+            val velocity = animatable.velocity
+            animatable.snapTo(animatable.value + pendingJump)
+            pendingJump = IntOffset.Zero
+            animatable.animateTo(targetValue = IntOffset.Zero, animationSpec = spec, initialVelocity = velocity)
+            isGliding = false
+        }
+    }
+
+    fun stop() {
+        job?.cancel()
+    }
 }
 
 /**
