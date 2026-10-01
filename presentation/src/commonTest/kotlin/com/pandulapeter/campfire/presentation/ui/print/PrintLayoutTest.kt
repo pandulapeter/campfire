@@ -20,6 +20,10 @@ internal class PrintLayoutTest {
     private fun song(lines: List<ChordProLine>, blocks: List<ChordProBlock>? = null) = PrintSong("song.cho", "A song", "Artist", song = ChordProSong(
         ChordProMetadata(key = "D", capo = 2), blocks ?: listOf(ChordProBlock.Section(SectionType.Verse, "Verse", lines))))
     private fun source(song: PrintSong) = PrintSource("A song", songs = listOf(song))
+    private fun lyrics(count: Int, prefix: String = "Line") = (1..count).map { ChordProLine.Lyrics("$prefix $it", emptyList()) }
+    private fun PrintDocument.placeOf(text: String) = pages.withIndex().firstNotNullOf { (index, page) ->
+        page.texts.firstOrNull { it.text == text }?.let { index to it.x }
+    }
 
     @Test fun longSongsKeepEveryLineAndChordWithinPrintableColumns() {
         val lines = (1..180).map { ChordProLine.Lyrics("Line $it " + "words ".repeat(14), listOf(ChordProLine.Lyrics.Chord(0, "D", false))) }
@@ -134,5 +138,40 @@ internal class PrintLayoutTest {
         val prefixes = document.pages.flatMap { it.texts }.filter { it.text.contains('|') }.map { it.text.substringBefore('|') }
         assertTrue(prefixes.size > 6)
         prefixes.chunked(6).forEach { assertEquals(listOf("e", "B", "G", "D", "A", "E"), it) }
+    }
+
+    @Test fun aHeadingStaysInTheColumnOfItsFirstSection() {
+        val settings = PrintSettings(columns = 2, startSongsOnNewPage = false)
+        (1..90).forEach { count ->
+            val first = song(lyrics(count, "First")).copy(title = "First")
+            val second = song(lyrics(10, "Second")).copy(title = "Second")
+            val document = layout(PrintSource("Two songs", songs = listOf(first, second)), settings)
+            assertEquals(document.placeOf("Second"), document.placeOf("Second 1"), "after $count lines")
+        }
+    }
+
+    @Test fun aBreakAtTheStartOfASongDoesNotStrandItsHeading() {
+        val entry = song(emptyList(), listOf(ChordProBlock.Break, ChordProBlock.Section(SectionType.Verse, "Verse", lyrics(3))))
+        val document = layout(source(entry), PrintSettings(columns = 2))
+        assertEquals(document.placeOf("A song"), document.placeOf("Line 1"))
+    }
+
+    @Test fun aSectionTooTallToShareAColumnWithItsHeadingStartsUnderIt() {
+        val settings = PrintSettings(columns = 2)
+        val margin = settings.marginMm * 72f / 25.4f
+        val capacity = settings.paper.height - 2 * margin - 18f
+        // The section is one row shorter than a column: its label and all but two of the rows that would fill one.
+        val document = layout(source(song(lyrics((capacity / (settings.fontSize * 1.45f)).toInt() - 2))), settings)
+        assertEquals(document.placeOf("A song"), document.placeOf("Line 1"))
+    }
+
+    @Test fun aMissingSongKeepsItsHeadingWithItsNotice() {
+        val settings = PrintSettings(columns = 2, startSongsOnNewPage = false)
+        (1..90).forEach { count ->
+            val first = song(lyrics(count, "First")).copy(title = "First")
+            val missing = first.copy(title = "Gone", song = null)
+            val document = layout(PrintSource("Two songs", songs = listOf(first, missing)), settings)
+            assertEquals(document.placeOf("Gone"), document.placeOf("Missing"), "after $count lines")
+        }
     }
 }

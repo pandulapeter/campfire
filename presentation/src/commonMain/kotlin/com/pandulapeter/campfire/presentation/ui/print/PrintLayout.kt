@@ -56,6 +56,7 @@ internal fun layoutPrintDocument(
     val columnWidth = (width - 2 * margin - gutter * (options.columns - 1)) / options.columns
     val bottom = height - margin - if (options.showPageNumbers) 18f else 0f
     val capacity = bottom - margin
+    val headingGap = options.fontSize / 2f
     val pages = mutableListOf<MutableList<PrintText>>()
     var column = 0
     var y = margin
@@ -65,10 +66,11 @@ internal fun layoutPrintDocument(
     }
     fun newPage() { if (pages.isNotEmpty() && pages.last().isNotEmpty()) page() }
     fun space(amount: Float) { y = (y + amount).coerceAtMost(bottom) }
-    fun place(rows: List<Row>) {
-        val total = rows.sumOf { it.height.toDouble() }.toFloat()
-        val firstRows = rows.take(2).sumOf { it.height.toDouble() }.toFloat()
-        if ((total <= capacity && y + total > bottom) || (total > capacity && firstRows <= capacity && y + firstRows > bottom)) nextColumn()
+    fun place(rows: List<Row>, keepWhole: Boolean = true) {
+        val total = rows.height()
+        val firstRows = rows.take(2).height()
+        val fitsWhole = keepWhole && total <= capacity
+        if ((fitsWhole && y + total > bottom) || (!fitsWhole && firstRows <= capacity && y + firstRows > bottom)) nextColumn()
         rows.forEach { row ->
             if (y + row.height > bottom) nextColumn()
             val x = margin + column * (columnWidth + gutter)
@@ -84,6 +86,95 @@ internal fun layoutPrintDocument(
         song.metadata.tempo?.let { "${labels.tempo}: $it" },
         song.metadata.time?.let { "${labels.time}: $it" },
     ).joinToString("   ")
+    fun rowsFor(block: ChordProBlock): List<Row> = when (block) {
+        is ChordProBlock.Section -> buildList {
+            val sectionLabel = block.label ?: when (val type = block.type) {
+                SectionType.Verse -> labels.verse
+                SectionType.Chorus -> labels.chorus
+                SectionType.Bridge -> labels.bridge
+                is SectionType.Custom -> type.name.replace('_', ' ').replaceFirstChar { it.uppercase() }
+                SectionType.Paragraph -> null
+            }
+            sectionLabel?.takeUnless { block.isContinuation }?.let { addAll(wrapped(it, bold = true)) }
+            block.lines.forEachIndexed lineLoop@ { lineIndex, line ->
+                when (line) {
+                    is ChordProLine.Lyrics -> {
+                        val visible = line.copy(chords = line.chords.filter { if (it.isAnnotation) options.showComments else options.showChords })
+                        // Hiding a chord-only line must also remove the empty lyric row beneath it.
+                        if (line.chords.isNotEmpty() && visible.chords.isEmpty() && visible.text.isBlank()) return@lineLoop
+                        val lyrics = if (visible.chords.isNotEmpty()) visible.padLyricsToFitChords(
+                            chordWidths = visible.chords.map { measure(it.name, options.fontSize, true) },
+                            gap = measure(" ", options.fontSize, false),
+                            paddingWidth = measure("\u00A0", options.fontSize, false),
+                            measureWidth = { measure(it, options.fontSize, false) },
+                        ) else visible
+                        val fragments = wrapPrintText(lyrics.text, columnWidth) { measure(it, options.fontSize, false) }
+                        var start = 0
+                        fragments.forEachIndexed { fragmentIndex, fragment ->
+                            val end = start + fragment.length
+                            val chords = lyrics.chords.filter { it.position >= start && (it.position < end || fragmentIndex == fragments.lastIndex) }
+                            // Chords anchored at the same character are kept beside each other; if the chord
+                            // run is wider than the column, extra chord-only rows keep every symbol readable.
+                            val parts = mutableListOf<Part>()
+                            var chordX = 0f
+                            var chordY = 0f
+                            chords.forEach { chord ->
+                                val anchor = measure(fragment.take((chord.position - start).coerceIn(0, fragment.length)), options.fontSize, false)
+                                var x = maxOf(anchor, chordX)
+                                val chordWidth = measure(chord.name, options.fontSize, true)
+                                if (x + chordWidth > columnWidth) { chordY += options.fontSize * 1.3f; x = 0f }
+                                wrapPrintText(chord.name, columnWidth) { measure(it, options.fontSize, true) }.forEachIndexed { i, name ->
+                                    if (i > 0) { chordY += options.fontSize * 1.3f; x = 0f }
+                                    parts += Part(name, x = x, y = chordY, size = options.fontSize, bold = true)
+                                }
+                                chordX = x + chordWidth + measure(" ", options.fontSize, false)
+                            }
+                            val lyricY = if (parts.isEmpty()) 0f else chordY + options.fontSize * 1.3f
+                            parts += Part(fragment, y = lyricY, size = options.fontSize)
+                            val rowHeight = lyricY + options.fontSize * 1.45f
+                            if (rowHeight <= capacity) add(Row(parts, rowHeight)) else {
+                                // A very long annotation can span a page by itself. Keep its final line with
+                                // the lyrics while allowing its preceding lines to flow through the document.
+                                val byLine = parts.groupBy { it.y }.entries.toList()
+                                byLine.dropLast(2).forEach { (_, values) -> add(Row(values.map { it.copy(y = 0f) }, options.fontSize * 1.3f)) }
+                                val last = byLine.takeLast(2)
+                                val top = last.first().key
+                                add(Row(last.flatMap { it.value }.map { it.copy(y = it.y - top) }, options.fontSize * 2.75f))
+                            }
+                            start = end
+                        }
+                    }
+                    is ChordProLine.Tab -> if (options.showChords && (lineIndex == 0 || block.lines[lineIndex - 1] !is ChordProLine.Tab || !line.continuesEnvironment)) {
+                        val run = block.lines.drop(lineIndex).takeWhile { it is ChordProLine.Tab && (it === line || it.continuesEnvironment) }.map { (it as ChordProLine.Tab).text }
+                        line.label?.takeUnless { it == sectionLabel }?.let { addAll(wrapped(it, bold = true)) }
+                        val characters = (columnWidth / measure("M", options.fontSize, false)).toInt().coerceAtLeast(1)
+                        val systems = if (ChordProTabWrapper.isTablature(run)) ChordProTabWrapper.wrap(run, characters) else ChordProTabWrapper.wrapPreformatted(run, characters)
+                        systems.forEach { system ->
+                            val rows = system.flatMap { wrapped(it) }
+                            val systemHeight = rows.sumOf { it.height.toDouble() }.toFloat()
+                            if (systemHeight <= capacity) {
+                                var rowY = 0f
+                                add(Row(rows.flatMap { row -> row.parts.map { it.copy(y = rowY) }.also { rowY += row.height } }, systemHeight))
+                            } else addAll(rows)
+                        }
+                    }
+                    is ChordProLine.Grid -> if (options.showChords) addAll(wrapped(line.tokens.joinToString(" ") { token ->
+                        when (token) {
+                            is GridToken.Bar -> token.text
+                            is GridToken.Chord -> token.name
+                            is GridToken.Text -> token.text
+                            is GridToken.Repeat -> token.text
+                            GridToken.Beat -> "."
+                        }
+                    }, bold = true))
+                    ChordProLine.Blank -> add(Row(emptyList(), options.fontSize * 0.7f))
+                }
+            }
+        }
+        is ChordProBlock.Comment -> if (options.showComments && (!block.isInTabOrGrid || options.showChords)) wrapped(block.text) else emptyList()
+        is ChordProBlock.ChorusRecall -> block.blocks.flatMap(::rowsFor).ifEmpty { block.label?.let { wrapped(it, bold = true) }.orEmpty() }
+        is ChordProBlock.Transpose, ChordProBlock.Break -> emptyList()
+    }
 
     page()
     if (source.isSetlist && (options.includeSetlistOverview || options.setlistMode == PrintSettings.SetlistMode.RUNNING_ORDER)) {
@@ -112,106 +203,32 @@ internal fun layoutPrintDocument(
             entry.artist?.takeIf { it.isNotBlank() }?.let { heading += wrapped(it) }
             entry.song?.let { metadata(it).takeIf(String::isNotBlank)?.let { heading += wrapped(it) } }
         }
-        // Keep the title and its metadata with at least one body row.
-        val headingHeight = heading.sumOf { it.height.toDouble() }.toFloat()
-        if (headingHeight + options.fontSize * 3 < capacity && y + headingHeight + options.fontSize * 3 > bottom) nextColumn()
+        // The heading travels with the first block that prints anything (a missing song's notice standing in for it):
+        // that block whole where heading and block fit a column together, otherwise its first two rows, after which the
+        // block flows on from under its heading. A break before that block is ignored, since the heading has just
+        // started the song where it is.
+        val blocks = entry.song?.blocks.orEmpty()
+        var firstIndex = -1
+        var firstRows = if (entry.song == null) wrapped(labels.missing) else emptyList()
+        blocks.forEachIndexed { index, block ->
+            if (firstIndex < 0 && block != ChordProBlock.Break) rowsFor(block).takeIf { it.isNotEmpty() }?.let { firstIndex = index; firstRows = it }
+        }
+        val headingHeight = heading.height()
+        val keepFirstWhole = headingHeight + headingGap + firstRows.height() <= capacity
+        val together = headingHeight + headingGap + if (keepFirstWhole) firstRows.height() else firstRows.take(2).height()
+        if (firstRows.isNotEmpty() && together <= capacity && y + together > bottom) nextColumn()
         place(heading)
-        space(options.fontSize / 2f)
-        val song = entry.song
-        if (song == null) place(wrapped(labels.missing)) else {
-            fun rowsFor(block: ChordProBlock): List<Row> = when (block) {
-                is ChordProBlock.Section -> buildList {
-                    val sectionLabel = block.label ?: when (val type = block.type) {
-                        SectionType.Verse -> labels.verse
-                        SectionType.Chorus -> labels.chorus
-                        SectionType.Bridge -> labels.bridge
-                        is SectionType.Custom -> type.name.replace('_', ' ').replaceFirstChar { it.uppercase() }
-                        SectionType.Paragraph -> null
+        space(headingGap)
+        if (entry.song == null) place(firstRows, keepWhole = keepFirstWhole) else if (firstIndex >= 0) {
+            blocks.forEachIndexed { index, block ->
+                when {
+                    index < firstIndex -> Unit
+                    index == firstIndex -> { place(firstRows, keepWhole = keepFirstWhole); space(options.fontSize * 0.65f) }
+                    block == ChordProBlock.Break -> if (y > margin) nextColumn()
+                    else -> {
+                        val rows = rowsFor(block)
+                        if (rows.isNotEmpty()) { place(rows); space(options.fontSize * 0.65f) }
                     }
-                    sectionLabel?.takeUnless { block.isContinuation }?.let { addAll(wrapped(it, bold = true)) }
-                    block.lines.forEachIndexed lineLoop@ { lineIndex, line ->
-                        when (line) {
-                            is ChordProLine.Lyrics -> {
-                                val visible = line.copy(chords = line.chords.filter { if (it.isAnnotation) options.showComments else options.showChords })
-                                // Hiding a chord-only line must also remove the empty lyric row beneath it.
-                                if (line.chords.isNotEmpty() && visible.chords.isEmpty() && visible.text.isBlank()) return@lineLoop
-                                val lyrics = if (visible.chords.isNotEmpty()) visible.padLyricsToFitChords(
-                                    chordWidths = visible.chords.map { measure(it.name, options.fontSize, true) },
-                                    gap = measure(" ", options.fontSize, false),
-                                    paddingWidth = measure("\u00A0", options.fontSize, false),
-                                    measureWidth = { measure(it, options.fontSize, false) },
-                                ) else visible
-                                val fragments = wrapPrintText(lyrics.text, columnWidth) { measure(it, options.fontSize, false) }
-                                var start = 0
-                                fragments.forEachIndexed { fragmentIndex, fragment ->
-                                    val end = start + fragment.length
-                                    val chords = lyrics.chords.filter { it.position >= start && (it.position < end || fragmentIndex == fragments.lastIndex) }
-                                    // Chords anchored at the same character are kept beside each other; if the chord
-                                    // run is wider than the column, extra chord-only rows keep every symbol readable.
-                                    val parts = mutableListOf<Part>()
-                                    var chordX = 0f
-                                    var chordY = 0f
-                                    chords.forEach { chord ->
-                                        val anchor = measure(fragment.take((chord.position - start).coerceIn(0, fragment.length)), options.fontSize, false)
-                                        var x = maxOf(anchor, chordX)
-                                        val chordWidth = measure(chord.name, options.fontSize, true)
-                                        if (x + chordWidth > columnWidth) { chordY += options.fontSize * 1.3f; x = 0f }
-                                        wrapPrintText(chord.name, columnWidth) { measure(it, options.fontSize, true) }.forEachIndexed { i, name ->
-                                            if (i > 0) { chordY += options.fontSize * 1.3f; x = 0f }
-                                            parts += Part(name, x = x, y = chordY, size = options.fontSize, bold = true)
-                                        }
-                                        chordX = x + chordWidth + measure(" ", options.fontSize, false)
-                                    }
-                                    val lyricY = if (parts.isEmpty()) 0f else chordY + options.fontSize * 1.3f
-                                    parts += Part(fragment, y = lyricY, size = options.fontSize)
-                                    val rowHeight = lyricY + options.fontSize * 1.45f
-                                    if (rowHeight <= capacity) add(Row(parts, rowHeight)) else {
-                                        // A very long annotation can span a page by itself. Keep its final line with
-                                        // the lyrics while allowing its preceding lines to flow through the document.
-                                        val byLine = parts.groupBy { it.y }.entries.toList()
-                                        byLine.dropLast(2).forEach { (_, values) -> add(Row(values.map { it.copy(y = 0f) }, options.fontSize * 1.3f)) }
-                                        val last = byLine.takeLast(2)
-                                        val top = last.first().key
-                                        add(Row(last.flatMap { it.value }.map { it.copy(y = it.y - top) }, options.fontSize * 2.75f))
-                                    }
-                                    start = end
-                                }
-                            }
-                            is ChordProLine.Tab -> if (options.showChords && (lineIndex == 0 || block.lines[lineIndex - 1] !is ChordProLine.Tab || !line.continuesEnvironment)) {
-                                val run = block.lines.drop(lineIndex).takeWhile { it is ChordProLine.Tab && (it === line || it.continuesEnvironment) }.map { (it as ChordProLine.Tab).text }
-                                line.label?.takeUnless { it == sectionLabel }?.let { addAll(wrapped(it, bold = true)) }
-                                val characters = (columnWidth / measure("M", options.fontSize, false)).toInt().coerceAtLeast(1)
-                                val systems = if (ChordProTabWrapper.isTablature(run)) ChordProTabWrapper.wrap(run, characters) else ChordProTabWrapper.wrapPreformatted(run, characters)
-                                systems.forEach { system ->
-                                    val rows = system.flatMap { wrapped(it) }
-                                    val systemHeight = rows.sumOf { it.height.toDouble() }.toFloat()
-                                    if (systemHeight <= capacity) {
-                                        var rowY = 0f
-                                        add(Row(rows.flatMap { row -> row.parts.map { it.copy(y = rowY) }.also { rowY += row.height } }, systemHeight))
-                                    } else addAll(rows)
-                                }
-                            }
-                            is ChordProLine.Grid -> if (options.showChords) addAll(wrapped(line.tokens.joinToString(" ") { token ->
-                                when (token) {
-                                    is GridToken.Bar -> token.text
-                                    is GridToken.Chord -> token.name
-                                    is GridToken.Text -> token.text
-                                    is GridToken.Repeat -> token.text
-                                    GridToken.Beat -> "."
-                                }
-                            }, bold = true))
-                            ChordProLine.Blank -> add(Row(emptyList(), options.fontSize * 0.7f))
-                        }
-                    }
-                }
-                is ChordProBlock.Comment -> if (options.showComments && (!block.isInTabOrGrid || options.showChords)) wrapped(block.text) else emptyList()
-                is ChordProBlock.ChorusRecall -> block.blocks.flatMap(::rowsFor).ifEmpty { block.label?.let { wrapped(it, bold = true) }.orEmpty() }
-                is ChordProBlock.Transpose, ChordProBlock.Break -> emptyList()
-            }
-            song.blocks.forEach { block ->
-                if (block == ChordProBlock.Break) { if (y > margin) nextColumn() } else {
-                    val rows = rowsFor(block)
-                    if (rows.isNotEmpty()) { place(rows); space(options.fontSize * 0.65f) }
                 }
             }
         }
@@ -222,6 +239,8 @@ internal fun layoutPrintDocument(
 
 private data class Part(val text: String, val x: Float = 0f, val y: Float = 0f, val size: Int, val bold: Boolean = false)
 private data class Row(val parts: List<Part>, val height: Float)
+
+private fun List<Row>.height() = sumOf { it.height.toDouble() }.toFloat()
 
 private fun finishPrintDocument(width: Float, height: Float, pages: List<List<PrintText>>, settings: PrintSettings, margin: Float): PrintDocument {
     val nonempty = pages.filter { it.isNotEmpty() }
