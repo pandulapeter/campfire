@@ -20,6 +20,7 @@ import com.pandulapeter.campfire.chordpro.model.SectionType
 import com.pandulapeter.campfire.data.model.domain.PrintSettings
 import com.pandulapeter.campfire.presentation.ui.screens.songDetails.DefaultSectionLabels
 import com.pandulapeter.campfire.presentation.ui.screens.songDetails.alignedGridBars
+import com.pandulapeter.campfire.presentation.ui.screens.songDetails.areAll
 import com.pandulapeter.campfire.presentation.ui.screens.songDetails.labelOf
 import com.pandulapeter.campfire.presentation.ui.screens.songDetails.padLyricsToFitChords
 import kotlinx.coroutines.yield
@@ -340,8 +341,13 @@ private class PrintLayouter(
             SectionType.Chorus -> labels.sections.chorus
             SectionType.Bridge -> labels.sections.bridge
             is SectionType.Custom -> labels.sections.labelOf(type)
-            // The viewer heads an unnamed paragraph with nothing but its fold toggle, which a page has no use for.
-            SectionType.Paragraph -> null
+            // A paragraph of nothing but tablature or a grid is a bare environment, which names itself, as on screen; one of
+            // lyrics is headed on screen by its fold toggle alone, which a page has no use for.
+            SectionType.Paragraph -> when {
+                section.lines.areAll<ChordProLine.Tab>() -> labels.sections.tab
+                section.lines.areAll<ChordProLine.Grid>() -> labels.sections.grid
+                else -> null
+            }
         }
         val lines = section.lines.flatMapIndexed { lineIndex, line ->
             when (line) {

@@ -2333,7 +2333,7 @@ private fun ChordProBlock.Section.header(defaultLabels: DefaultSectionLabels): S
 internal const val UNNAMED_SECTION_HEADER = ""
 
 /** True when every line that says anything is of the given kind, blank lines inside the run notwithstanding. */
-private inline fun <reified T : ChordProLine> List<ChordProLine>.areAll() =
+internal inline fun <reified T : ChordProLine> List<ChordProLine>.areAll() =
     any { it is T } && all { it is T || it == ChordProLine.Blank }
 
 /**

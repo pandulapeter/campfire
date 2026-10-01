@@ -92,6 +92,30 @@ internal class PrintLayoutTest {
         assertTrue("Riff" in layout(source(song(emptyList(), listOf(riff)))).pages.flatMap { it.texts }.map { it.text })
     }
 
+    @Test fun aBareTabIsHeadedTabAndLeftOutWithItsHeadingWhenChordsAreHidden() = runTest {
+        val tab = song(emptyList(), listOf(ChordProBlock.Section(SectionType.Paragraph, null, listOf(ChordProLine.Tab("e|---0---|")))))
+        val texts = layout(source(tab)).pages.flatMap { it.texts }
+        val heading = texts.single { it.text == "Tab" }
+        assertTrue(heading.style.bold)
+        assertEquals(90, heading.style.gray)
+        assertTrue(texts.any { it.text.startsWith("e|") && it.y > heading.y })
+        val hidden = layout(source(tab), PrintSettings(showChords = false)).pages.flatMap { it.texts }.map { it.text }
+        assertFalse("Tab" in hidden || hidden.any { it.startsWith("e|") })
+    }
+
+    @Test fun aBareGridIsHeadedGridAndLeftOutWithItsHeadingWhenChordsAreHidden() = runTest {
+        val grid = song(emptyList(), listOf(ChordProBlock.Section(SectionType.Paragraph, null, listOf(
+            ChordProLine.Grid(listOf(GridToken.Bar("|"), GridToken.Chord("G"), GridToken.Bar("|"))),
+        ))))
+        val texts = layout(source(grid)).pages.flatMap { it.texts }
+        val heading = texts.single { it.text == "Grid" }
+        assertTrue(heading.style.bold)
+        assertEquals(90, heading.style.gray)
+        assertTrue(texts.any { it.text.contains("G") && it.style.monospace && it.y > heading.y })
+        val hidden = layout(source(grid), PrintSettings(showChords = false)).pages.flatMap { it.texts }.map { it.text }
+        assertFalse("Grid" in hidden || hidden.any { it.contains("G |") })
+    }
+
     @Test fun aSectionWrittenWithoutLinesKeepsItsLabel() = runTest {
         val cue = ChordProBlock.Section(SectionType.Bridge, "Bridge", emptyList())
         assertTrue("Bridge" in layout(source(song(emptyList(), listOf(cue)))).pages.flatMap { it.texts }.map { it.text })
