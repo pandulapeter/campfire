@@ -231,4 +231,19 @@ internal class PrintLayoutTest {
         assertTrue(follow.y <= lyrics.y + 12 * 2.75f + 0.01f, "$lyrics $follow")
         texts.filter { it.size != 9 }.forEach { assertTrue(it.x + measure(it.text, it.size, it.bold) <= margin + columnWidth + 0.01f, it.toString()) }
     }
+
+    @Test fun aChorusRecallIsHeadedByItsOwnLabel() {
+        val chorus = ChordProBlock.Section(SectionType.Chorus, null, listOf(ChordProLine.Lyrics("Sing along", emptyList())))
+        val texts = layout(source(song(emptyList(), listOf(chorus, ChordProBlock.ChorusRecall("Last time", listOf(chorus))))))
+            .pages.flatMap { it.texts }.map { it.text }
+        assertEquals(1, texts.count { it == "Chorus" })
+        assertEquals(1, texts.count { it == "Last time" })
+        assertEquals(2, texts.count { it == "Sing along" })
+        assertTrue(texts.indexOf("Last time") > texts.indexOf("Chorus"))
+    }
+
+    @Test fun aChorusRecallWithNothingToRecallPrintsItsHeading() {
+        val texts = layout(source(song(emptyList(), listOf(ChordProBlock.ChorusRecall(null))))).pages.flatMap { it.texts }
+        assertEquals(1, texts.count { it.text == "Chorus" && it.bold })
+    }
 }

@@ -86,7 +86,7 @@ internal fun layoutPrintDocument(
         song.metadata.tempo?.let { "${labels.tempo}: $it" },
         song.metadata.time?.let { "${labels.time}: $it" },
     ).joinToString("   ")
-    fun rowsFor(block: ChordProBlock): List<Row> = when (block) {
+    fun rowsFor(block: ChordProBlock, labelOverride: String? = null): List<Row> = when (block) {
         is ChordProBlock.Section -> {
             val sectionLabel = block.label ?: when (val type = block.type) {
                 SectionType.Verse -> labels.verse
@@ -181,10 +181,17 @@ internal fun layoutPrintDocument(
             // A section whose every line the options hide leaves out its label too, rather than printing a heading with
             // nothing under it; one written with no lines at all keeps it, since there the label is the cue.
             if (block.lines.isNotEmpty() && lines.none { row -> row.parts.any { !it.text.isPrintBlank() } }) emptyList()
-            else sectionLabel?.takeUnless { block.isContinuation }?.let { wrapped(it, bold = true) }.orEmpty() + lines
+            else (labelOverride ?: sectionLabel?.takeUnless { block.isContinuation })?.let { wrapped(it, bold = true) }.orEmpty() + lines
         }
         is ChordProBlock.Comment -> if (options.showComments && (!block.isInTabOrGrid || options.showChords)) wrapped(block.text) else emptyList()
-        is ChordProBlock.ChorusRecall -> block.blocks.flatMap(::rowsFor).ifEmpty { block.label?.let { wrapped(it, bold = true) }.orEmpty() }
+        is ChordProBlock.ChorusRecall -> {
+            // As in the viewer, the recall's own heading goes on the first recalled piece that prints anything, and is
+            // printed on its own when nothing is: a recall says where the chorus is sung, even with nothing under it.
+            var header: String? = block.label ?: (block.blocks.firstOrNull() as? ChordProBlock.Section)?.label ?: labels.chorus
+            block.blocks.flatMap { piece ->
+                if (piece is ChordProBlock.Section && header != null) rowsFor(piece, header).also { if (it.isNotEmpty()) header = null } else rowsFor(piece)
+            }.ifEmpty { header?.let { wrapped(it, bold = true) }.orEmpty() }
+        }
         is ChordProBlock.Transpose, ChordProBlock.Break -> emptyList()
     }
 
