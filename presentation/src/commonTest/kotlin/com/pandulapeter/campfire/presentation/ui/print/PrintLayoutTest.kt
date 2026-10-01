@@ -73,15 +73,26 @@ internal class PrintLayoutTest {
         val instrumentalLines = (1..100).map {
             ChordProLine.Lyrics(if (it % 2 == 0) "    " else "", listOf(ChordProLine.Lyrics.Chord(0, "D", false)))
         }
-        fun entry(lines: List<ChordProLine>) = song(emptyList(), listOf(
-            ChordProBlock.Section(SectionType.Custom("instrumental"), "Instrumental", lines),
-            ChordProBlock.Section(SectionType.Verse, "Verse", listOf(ChordProLine.Lyrics("Sung words", emptyList()))),
-        ))
+        val verse = ChordProBlock.Section(SectionType.Verse, "Verse", listOf(ChordProLine.Lyrics("Sung words", emptyList())))
+        val entry = song(emptyList(), listOf(ChordProBlock.Section(SectionType.Custom("instrumental"), "Instrumental", instrumentalLines), verse))
         val settings = PrintSettings(showChords = false)
-        val document = layout(source(entry(instrumentalLines)), settings)
-        assertEquals(layout(source(entry(emptyList())), settings), document)
+        val document = layout(source(entry), settings)
+        assertEquals(layout(source(song(emptyList(), listOf(verse))), settings), document)
         assertEquals(1, document.pages.size)
-        assertTrue(layout(source(entry(instrumentalLines))).pages.size > 1)
+        assertFalse(document.pages.flatMap { it.texts }.any { it.text == "Instrumental" })
+        assertTrue(layout(source(entry)).pages.size > 1)
+    }
+
+    @Test fun aTabOnlySectionLeavesOutItsLabelWhenChordsAreHidden() {
+        val riff = ChordProBlock.Section(SectionType.Custom("riff"), "Riff", listOf(ChordProLine.Tab("e|--0--2--|"), ChordProLine.Tab("B|--1--3--|", continuesEnvironment = true)))
+        val texts = layout(source(song(emptyList(), listOf(riff))), PrintSettings(showChords = false)).pages.flatMap { it.texts }.map { it.text }
+        assertFalse("Riff" in texts)
+        assertTrue("Riff" in layout(source(song(emptyList(), listOf(riff)))).pages.flatMap { it.texts }.map { it.text })
+    }
+
+    @Test fun aSectionWrittenWithoutLinesKeepsItsLabel() {
+        val cue = ChordProBlock.Section(SectionType.Bridge, "Bridge", emptyList())
+        assertTrue("Bridge" in layout(source(song(emptyList(), listOf(cue)))).pages.flatMap { it.texts }.map { it.text })
     }
 
     @Test fun chordOnlyLinesKeepVisibleAnnotationsWhenChordsAreHidden() {
@@ -93,7 +104,7 @@ internal class PrintLayoutTest {
         val texts = layout(source(entry), settings).pages.single().texts
         assertTrue(texts.any { it.text == "Solo" })
         assertFalse(texts.any { it.text == "D" })
-        assertEquals(layout(source(song(emptyList())), settings.copy(showComments = false)),
+        assertEquals(layout(source(song(emptyList(), emptyList())), settings.copy(showComments = false)),
             layout(source(entry), settings.copy(showComments = false)))
     }
 
