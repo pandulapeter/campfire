@@ -84,7 +84,7 @@
     <string name="songs_new_song_artist">Előadó</string>
     <string name="songs_artist_and_title">%1$s - %2$s</string>
     <string name="songs_actions">Műveletek</string>
-    <string name="songs_edit_song">Dal szerkesztése</string>
+    <string name="songs_edit_song">Dalfájl szerkesztése</string>
     <string name="songs_setlist_assignments">Listákhoz rendelés</string>
     <string name="songs_update_file_name">Fájlnév frissítése</string>
     <string name="songs_update_file_name_partly">A fájl új nevet kapott, de egy lista vagy a mentett transzponálás még a régi névre hivatkozik</string>
@@ -100,8 +100,8 @@
     <string name="songs_lyrics_only">Csak dalszöveg</string>
     <string name="songs_key">Hangnem: %1$s</string>
     <string name="songs_tags">Címkék</string>
-    <string name="songs_tags_show_all">Mind a(z) %1$d megjelenítése</string>
-    <string name="songs_tags_show_less">Kevesebb</string>
+    <string name="songs_filters_show_all">Mind a(z) %1$d megjelenítése</string>
+    <string name="songs_filters_show_less">Kevesebb</string>
     <string name="songs_tags_clear">Kijelölés törlése</string>
     <string name="songs_tags_match_mode">A dalon legyen rajta</string>
     <string name="songs_tags_match_mode_any">Bármelyik címke</string>

@@ -8,21 +8,21 @@
  * https://mozilla.org/MPL/2.0/.
 -->
 # To do
-- Word + PDF import
-- What's new dialog
-- Offline mode for web
-- Global sync status display
-- Show all tags logic should depend on space
-- First time user experience tutorial
+- Make dialog / bottom sheet titles consistent
+- Offline mode for web (execute documentation/WEB_OFFLINE_SUPPORT_PROPOSAL.md)
 - Haptic effects
-- Chord diagrams (guitar, ukulele, keyboard) - user library, variations
-- Metronome?
-- Optional close confirmation dialog on supported platforms
-- Add support for Latin and Nashville notations
+- Global sync status display
+- Optional close confirmation dialog on relevant platforms
+- What's new dialog
 - Simplify adding comments / annotations
-- External monitor support for lyrics only...?
+- Word + PDF import
+- External monitor support for lyrics only...? Maybe as a new window on desktop
+- Add support for Latin and Nashville notations
+- Chord diagrams (guitar, ukulele, keyboard) - user library, variations
 - Once the Mac App Store listing is approved, update included URL-s + this Readme
-- Test support for external control devices with a focus-by-section feature
-- Each top-level Composable should be defined in a separate file
+- Test support with external control devices
 - Improve test coverage
 - Streaming zip writer on all platforms
+- Each top-level Composable should be defined in a separate file
+- First time user experience tutorial ?
+- Metronome ?

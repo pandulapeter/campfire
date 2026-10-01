@@ -24,6 +24,7 @@ import androidx.compose.foundation.indication
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.IntrinsicSize
 import androidx.compose.foundation.layout.PaddingValues
@@ -66,6 +67,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.painter.Painter
+import androidx.compose.ui.layout.layoutId
 import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.text.style.TextOverflow
@@ -93,8 +95,8 @@ import com.pandulapeter.campfire.presentation.resources.songs_tags_clear
 import com.pandulapeter.campfire.presentation.resources.songs_tags_match_mode
 import com.pandulapeter.campfire.presentation.resources.songs_tags_match_mode_all
 import com.pandulapeter.campfire.presentation.resources.songs_tags_match_mode_any
-import com.pandulapeter.campfire.presentation.resources.songs_tags_show_all
-import com.pandulapeter.campfire.presentation.resources.songs_tags_show_less
+import com.pandulapeter.campfire.presentation.resources.songs_filters_show_all
+import com.pandulapeter.campfire.presentation.resources.songs_filters_show_less
 import com.pandulapeter.campfire.presentation.ui.CampfireViewModel
 import org.jetbrains.compose.resources.painterResource
 
@@ -207,77 +209,82 @@ internal fun PaddingValues.besideSidePanel(isSidePanelVisible: Boolean) =
  * neither where there is nothing to filter by (`CampfireViewModel.hasSongFilters`). The order of the list is not among
  * them: it is a [SortMenu] in the app bar, as on the setlists screen, since it changes how the library is laid out
  * rather than which songs are in it.
+ *
+ * The groups share the height of the panel or the sheet between them ([FilterGroupsLayout]), so that as much of both
+ * is in sight at once as fits, and each keeps the rest of its chips behind a "Show all" of its own.
+ *
+ * @param uncoveredTopInset The sheet's `BottomSheetContentScope.uncoveredTopInset`, for the height of the sheet at
+ *   its tallest rather than at the offset it happens to be at.
  */
 @Composable
 internal fun SongFilters(
     modifier: Modifier = Modifier,
     viewModel: CampfireViewModel,
     contentPadding: PaddingValues = PaddingValues(),
+    uncoveredTopInset: () -> Dp = { 0.dp },
+) = BoxWithConstraints(
+    modifier = modifier.fillMaxWidth(),
 ) {
     val userPreferences by viewModel.userPreferences.collectAsStateWithLifecycle()
     val songFilter by viewModel.songFilter.collectAsStateWithLifecycle()
     val tags by viewModel.tags.collectAsStateWithLifecycle()
     val languages by viewModel.languages.collectAsStateWithLifecycle()
     val scrollState = rememberScrollState()
-    Column(
-        modifier = modifier
+    // The height of what the filters are shown in is only known outside the scroll, which measures its content
+    // against an unbounded one.
+    val availableHeight = maxHeight - uncoveredTopInset() - contentPadding.calculateTopPadding() - contentPadding.calculateBottomPadding()
+    FilterGroupsLayout(
+        modifier = Modifier
             .fillMaxWidth()
             .fadingTopEdge(scrollState)
             .verticalScroll(scrollState)
             .padding(contentPadding),
-        verticalArrangement = Arrangement.spacedBy(8.dp),
+        availableHeight = availableHeight,
     ) {
         // A library nobody has tagged has nothing to offer here, and a section title above an empty row would only
         // ask a question the songs cannot answer yet.
-        AnimatedVisibility(
-            visible = tags.isNotEmpty(),
-            enter = expandVertically() + fadeIn(),
-            exit = shrinkVertically() + fadeOut(),
-        ) {
-            TagFilters(
-                tags = tags,
-                selectedTags = songFilter.selectedTags,
-                matchMode = userPreferences?.tagMatchMode ?: UserPreferences.MatchMode.ANY,
-                sortingMode = userPreferences?.tagSortingMode ?: UserPreferences.LabelSortingMode.BY_USAGE,
-                onTagClicked = viewModel::toggleTagFilter,
-                onClear = viewModel::clearTagFilter,
-                onMatchModeSelected = viewModel::setTagMatchMode,
-                onSortingModeSelected = viewModel::setTagSortingMode,
-            )
-        }
+        TagFilters(
+            isVisible = tags.isNotEmpty(),
+            tags = tags,
+            selectedTags = songFilter.selectedTags,
+            matchMode = userPreferences?.tagMatchMode ?: UserPreferences.MatchMode.ANY,
+            sortingMode = userPreferences?.tagSortingMode ?: UserPreferences.LabelSortingMode.BY_USAGE,
+            onTagClicked = viewModel::toggleTagFilter,
+            onClear = viewModel::clearTagFilter,
+            onMatchModeSelected = viewModel::setTagMatchMode,
+            onSortingModeSelected = viewModel::setTagSortingMode,
+        )
         // A library that sings in one language has nothing to choose between, and the one group it would offer
         // ("Unknown", against the single language) is a question about a library nobody has filled in yet.
-        AnimatedVisibility(
-            visible = languages.size > 1,
-            enter = expandVertically() + fadeIn(),
-            exit = shrinkVertically() + fadeOut(),
-        ) {
-            LanguageFilters(
-                languages = languages,
-                selectedLanguages = songFilter.selectedLanguages,
-                matchMode = userPreferences?.languageMatchMode ?: UserPreferences.MatchMode.ANY,
-                sortingMode = userPreferences?.languageSortingMode ?: UserPreferences.LabelSortingMode.BY_USAGE,
-                onLanguageClicked = viewModel::toggleLanguageFilter,
-                onClear = viewModel::clearLanguageFilter,
-                onMatchModeSelected = viewModel::setLanguageMatchMode,
-                onSortingModeSelected = viewModel::setLanguageSortingMode,
-            )
-        }
+        LanguageFilters(
+            isVisible = languages.size > 1,
+            languages = languages,
+            selectedLanguages = songFilter.selectedLanguages,
+            matchMode = userPreferences?.languageMatchMode ?: UserPreferences.MatchMode.ANY,
+            sortingMode = userPreferences?.languageSortingMode ?: UserPreferences.LabelSortingMode.BY_USAGE,
+            onLanguageClicked = viewModel::toggleLanguageFilter,
+            onClear = viewModel::clearLanguageFilter,
+            onMatchModeSelected = viewModel::setLanguageMatchMode,
+            onSortingModeSelected = viewModel::setLanguageSortingMode,
+        )
     }
 }
 
 /**
  * The tags of the library as a filter. There is no fixed set of tags to lay out: they are whatever the songs happen
  * to carry, so the first ones in the chosen order - the most used, or the alphabet's first - are shown and the rest
- * are a tap away ([MAX_COLLAPSED_TAG_COUNT]): a library with two hundred tags must not push the groups under it off
- * the bottom of the panel.
+ * are a tap away once there are more than the room [FilterGroupsLayout] gives them holds: a library with two hundred
+ * tags must not push the languages under it off the bottom of the panel.
  *
  * A selected tag is always among the ones shown, whatever its position: the filter that is on has to be visible to
  * be turned off.
+ *
+ * It is not one layout but the children of [FilterGroupsLayout] that the group is made of, since that is what shares
+ * the room out between the groups' chips.
  */
 @Composable
 private fun TagFilters(
-    modifier: Modifier = Modifier,
+    isVisible: Boolean,
     tags: List<Tag>,
     selectedTags: Set<String>,
     matchMode: UserPreferences.MatchMode,
@@ -286,32 +293,35 @@ private fun TagFilters(
     onClear: () -> Unit,
     onMatchModeSelected: (UserPreferences.MatchMode) -> Unit,
     onSortingModeSelected: (UserPreferences.LabelSortingMode) -> Unit,
-) = Column(modifier = modifier) {
+) {
     var isExpanded by rememberSaveable { mutableStateOf(false) }
     val selected = remember(selectedTags) { selectedTags.mapTo(mutableSetOf()) { it.lowercase() } }
     val orderedTags = remember(tags, sortingMode) { tags.orderedBy(sortingMode) }
-    val visibleTags = remember(orderedTags, selected, isExpanded) {
-        if (isExpanded) orderedTags else orderedTags.filterIndexed { index, tag -> index < MAX_COLLAPSED_TAG_COUNT || tag.name.lowercase() in selected }
-    }
+    val isPinned = remember(orderedTags, selected) { orderedTags.map { it.name.lowercase() in selected } }
     // A tag the library no longer has stays selected, and clearing deliberately leaves it alone
     // (CampfireViewModel.clearTagFilter), so what the clear action and the match mode are offered for is a selection
     // among the chips rather than whatever the filter still holds - a button that cleared nothing visible, or an
     // "any / every" asked about one chip and a tag nobody can see, would be answering a question the screen never
     // asked.
-    val selectedChipCount = remember(tags, selected) { tags.count { it.name.lowercase() in selected } }
-    FilterSectionTitle(
-        title = stringResource(Res.string.songs_tags),
-        sortingMode = sortingMode,
-        onSortingModeSelected = onSortingModeSelected,
-        isClearVisible = selectedChipCount > 0,
-        clearText = stringResource(Res.string.songs_tags_clear),
-        onClearClicked = onClear,
-    )
-    TagFlowRow(
-        modifier = Modifier.padding(start = CONTROLS_PADDING, end = CONTROLS_PADDING, bottom = CHIP_GAP),
-        gap = CHIP_GAP,
+    val selectedChipCount = isPinned.count { it }
+    FilterGroupPart(isVisible = isVisible) {
+        FilterSectionTitle(
+            title = stringResource(Res.string.songs_tags),
+            sortingMode = sortingMode,
+            onSortingModeSelected = onSortingModeSelected,
+            isClearVisible = selectedChipCount > 0,
+            clearText = stringResource(Res.string.songs_tags_clear),
+            onClearClicked = onClear,
+        )
+    }
+    FilterGroupChips(
+        isVisible = isVisible,
+        isExpanded = isExpanded,
+        isPinned = isPinned,
+        count = tags.size,
+        onExpandedChanged = { isExpanded = it },
     ) {
-        visibleTags.forEach { tag ->
+        orderedTags.forEach { tag ->
             CountedFilterChip(
                 label = tag.name,
                 songCount = tag.songCount,
@@ -320,24 +330,9 @@ private fun TagFilters(
             )
         }
     }
-    // This one stays under the chips, since what it asks about is the list it is at the end of - and unlike the
-    // clearing of the filter it comes and goes with the size of the library rather than with what is selected.
-    if (tags.size > MAX_COLLAPSED_TAG_COUNT) {
-        TextButton(
-            modifier = Modifier.padding(horizontal = CONTROLS_PADDING - BUTTON_INSET),
-            onClick = { isExpanded = !isExpanded },
-        ) {
-            Text(
-                text = if (isExpanded) {
-                    stringResource(Res.string.songs_tags_show_less)
-                } else {
-                    stringResource(Res.string.songs_tags_show_all, tags.size)
-                }
-            )
-        }
-    }
     MatchModeChoice(
-        isVisible = selectedChipCount > 1,
+        modifier = Modifier.layoutId(FilterSlot.TRANSIENT),
+        isVisible = isVisible && selectedChipCount > 1,
         title = stringResource(Res.string.songs_tags_match_mode),
         anyText = stringResource(Res.string.songs_tags_match_mode_any),
         allText = stringResource(Res.string.songs_tags_match_mode_all),
@@ -347,13 +342,14 @@ private fun TagFilters(
 }
 
 /**
- * The languages of the library as a filter, under the tags and simpler than they are in one way: a library sings in
- * a handful of languages rather than in a hundred, so there is nothing to hide behind a "show all". A song can carry
- * several languages the way it carries several tags, though, so "any / every" is asked here too.
+ * The languages of the library as a filter, under the tags and laid out the way they are: a library usually sings in
+ * a handful of languages, which then take a line or two and are shown whole, but one gathered from all over the world
+ * is cut down to the room it is given like the tags. A song can carry several languages the way it carries several
+ * tags, so "any / every" is asked here too.
  */
 @Composable
 private fun LanguageFilters(
-    modifier: Modifier = Modifier,
+    isVisible: Boolean,
     languages: List<SongLanguage>,
     selectedLanguages: Set<String>,
     matchMode: UserPreferences.MatchMode,
@@ -362,24 +358,32 @@ private fun LanguageFilters(
     onClear: () -> Unit,
     onMatchModeSelected: (UserPreferences.MatchMode) -> Unit,
     onSortingModeSelected: (UserPreferences.LabelSortingMode) -> Unit,
-) = Column(modifier = modifier) {
+) {
+    var isExpanded by rememberSaveable { mutableStateOf(false) }
     val appLanguageCode = currentLanguage.value.code
     val orderedLanguages = remember(languages, sortingMode, appLanguageCode) {
         languages.orderedBy(sortingMode) { code -> languageName(code = code, appLanguageCode = appLanguageCode) ?: code.uppercase() }
     }
     // The chips rather than the filter, for the same reason [TagFilters] counts them that way.
-    val hasClearableSelection = remember(languages, selectedLanguages) { languages.any { it.code in selectedLanguages } }
-    FilterSectionTitle(
-        title = stringResource(Res.string.songs_languages),
-        sortingMode = sortingMode,
-        onSortingModeSelected = onSortingModeSelected,
-        isClearVisible = hasClearableSelection,
-        clearText = stringResource(Res.string.songs_languages_clear),
-        onClearClicked = onClear,
-    )
-    TagFlowRow(
-        modifier = Modifier.padding(start = CONTROLS_PADDING, end = CONTROLS_PADDING, bottom = CHIP_GAP),
-        gap = CHIP_GAP,
+    val isPinned = remember(orderedLanguages, selectedLanguages) { orderedLanguages.map { it.code in selectedLanguages } }
+    val selectedChipCount = isPinned.count { it }
+    FilterGroupPart(isVisible = isVisible) {
+        FilterSectionTitle(
+            modifier = Modifier.padding(top = FILTER_GROUP_GAP),
+            title = stringResource(Res.string.songs_languages),
+            sortingMode = sortingMode,
+            onSortingModeSelected = onSortingModeSelected,
+            isClearVisible = selectedChipCount > 0,
+            clearText = stringResource(Res.string.songs_languages_clear),
+            onClearClicked = onClear,
+        )
+    }
+    FilterGroupChips(
+        isVisible = isVisible,
+        isExpanded = isExpanded,
+        isPinned = isPinned,
+        count = languages.size,
+        onExpandedChanged = { isExpanded = it },
     ) {
         orderedLanguages.forEach { language ->
             CountedFilterChip(
@@ -391,12 +395,70 @@ private fun LanguageFilters(
         }
     }
     MatchModeChoice(
-        isVisible = selectedLanguages.count { selected -> languages.any { it.code == selected } } > 1,
+        modifier = Modifier.layoutId(FilterSlot.TRANSIENT),
+        isVisible = isVisible && selectedChipCount > 1,
         title = stringResource(Res.string.songs_languages_match_mode),
         anyText = stringResource(Res.string.songs_languages_match_mode_any),
         allText = stringResource(Res.string.songs_languages_match_mode_all),
         matchMode = matchMode,
         onMatchModeSelected = onMatchModeSelected,
+    )
+}
+
+/** A part of a filter group that comes and goes with the whole group, as one child of [FilterGroupsLayout]. */
+@Composable
+private fun FilterGroupPart(
+    modifier: Modifier = Modifier,
+    isVisible: Boolean,
+    content: @Composable () -> Unit,
+) = AnimatedVisibility(
+    modifier = modifier,
+    visible = isVisible,
+    enter = expandVertically() + fadeIn(),
+    exit = shrinkVertically() + fadeOut(),
+) {
+    content()
+}
+
+/**
+ * The chips of a filter group, cut down to the room [FilterGroupsLayout] gives them, with the "Show all" that opens
+ * the rest under them. That one stays under the chips, since what it asks about is the list it is at the end of - and
+ * unlike the clearing of the filter it comes and goes with the room the chips have rather than with what is selected.
+ *
+ * @param count How many chips there are, which is what "Show all" says.
+ */
+@Composable
+private fun FilterGroupChips(
+    isVisible: Boolean,
+    isExpanded: Boolean,
+    isPinned: List<Boolean>,
+    count: Int,
+    onExpandedChanged: (Boolean) -> Unit,
+    chips: @Composable () -> Unit,
+) = FilterGroupPart(
+    modifier = Modifier.layoutId(if (isExpanded) FilterSlot.EXPANDED_CHIPS else FilterSlot.CHIPS),
+    isVisible = isVisible,
+) {
+    CollapsibleChipFlow(
+        isExpanded = isExpanded,
+        isPinned = isPinned,
+        horizontalPadding = CONTROLS_PADDING,
+        gap = CHIP_GAP,
+        toggle = {
+            TextButton(
+                modifier = Modifier.padding(horizontal = CONTROLS_PADDING - BUTTON_INSET),
+                onClick = { onExpandedChanged(!isExpanded) },
+            ) {
+                Text(
+                    text = if (isExpanded) {
+                        stringResource(Res.string.songs_filters_show_less)
+                    } else {
+                        stringResource(Res.string.songs_filters_show_all, count)
+                    }
+                )
+            }
+        },
+        chips = chips,
     )
 }
 
@@ -690,9 +752,11 @@ private val SIDE_PANEL_WIDTH = 320.dp
 private val SIDE_PANEL_TOP_PADDING = 16.dp
 private val SIDE_PANEL_BOTTOM_PADDING = 16.dp
 private const val SIDE_PANEL_MIN_COLUMN_COUNT = 2
-private const val MAX_COLLAPSED_TAG_COUNT = 12
 private val MAX_TAG_WIDTH = 160.dp
 private val CONTROLS_PADDING = 16.dp
+
+/** Between the tags and the languages under them. */
+private val FILTER_GROUP_GAP = 8.dp
 
 /** What a Material filter chip keeps between its border and its label, and between the check and the label. */
 private val CHIP_PADDING = 16.dp

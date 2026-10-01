@@ -67,6 +67,7 @@ import androidx.compose.material3.TextButton
 import androidx.compose.material3.rememberBottomSheetState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
@@ -307,6 +308,7 @@ internal fun CampfireDialogs(
             SongFilters(
                 viewModel = viewModel,
                 contentPadding = contentPadding,
+                uncoveredTopInset = uncoveredTopInset,
             )
         }
 
@@ -1944,14 +1946,36 @@ internal fun CampfireBottomSheet(
         )
         // Read inside the sheet, which is a window of its own on Android and gets the insets of that window.
         val bottomInset = WindowInsets.safeDrawing.only(WindowInsetsSides.Bottom).asPaddingValues().calculateBottomPadding()
-        BottomSheetContentScope(columnScope = this, close = close).content(PaddingValues(bottom = bottomInset + SHEET_BOTTOM_PADDING))
+        val topInset = WindowInsets.safeDrawing.only(WindowInsetsSides.Top)
+        val density = LocalDensity.current
+        // Material pads the sheet by as much of the top inset as its offset has not taken up yet (an offset not
+        // decided yet takes up none of it).
+        val uncoveredTopInset = remember(sheetState, topInset, density) {
+            derivedStateOf {
+                val offset = runCatching { sheetState.requireOffset() }.getOrDefault(0f)
+                with(density) { offset.coerceIn(0f, topInset.getTop(density).toFloat()).toDp() }
+            }
+        }
+        BottomSheetContentScope(
+            columnScope = this,
+            close = close,
+            uncoveredTopInset = { uncoveredTopInset.value },
+        ).content(PaddingValues(bottom = bottomInset + SHEET_BOTTOM_PADDING))
     }
 }
 
-/** The column of a [CampfireBottomSheet], which its content can also close the sheet from. */
+/**
+ * The column of a [CampfireBottomSheet], which its content can also close the sheet from.
+ *
+ * @param uncoveredTopInset How much of the top inset the sheet is not padded by at the moment: Material pads it by the
+ *   part of the inset its top edge has come into, so the height its content is offered changes as it slides up and is
+ *   dragged. Content that sizes itself to that height takes this off it to have the height of the sheet at its
+ *   tallest, which does not move - or the sheet's height would decide its own offset, and the offset the height.
+ */
 internal class BottomSheetContentScope(
     columnScope: ColumnScope,
     private val close: () -> Unit,
+    val uncoveredTopInset: () -> Dp,
 ) : ColumnScope by columnScope {
 
     fun close() = close.invoke()
