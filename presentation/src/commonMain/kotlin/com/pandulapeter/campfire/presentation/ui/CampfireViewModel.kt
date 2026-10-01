@@ -916,10 +916,10 @@ class CampfireViewModel(
     private val unsavedFontScale = MutableStateFlow<Float?>(null)
 
     /**
-     * The export sheet's options as it last set them and not saved yet. A step of its size or its margins is a new
+     * The export screen's options as it last set them and not saved yet. A step of its size or its margins is a new
      * value, and saving each one would publish the preferences to every screen once a step, so they are saved the way
-     * [unsavedFontScale] is: once they have held still, or at once when the sheet goes (see [setVisibleDialog]). A
-     * sheet composed again within that moment, as a rotation does, starts from this rather than a step back.
+     * [unsavedFontScale] is: once they have held still, or at once when the screen goes (see [setVisibleDialog]). A
+     * screen composed again within that moment, as a rotation does, starts from this rather than a step back.
      */
     private val _pendingPrintSettings = MutableStateFlow<PrintSettings?>(null)
     val pendingPrintSettings = _pendingPrintSettings.asStateFlow()
@@ -2037,7 +2037,7 @@ class CampfireViewModel(
     val isFileTransferActive = _isFileTransferActive.asStateFlow()
 
     /**
-     * How far the export sheet's PDF has been drawn, from its Save until the file is ready to be handed to the picker,
+     * How far the export screen's PDF has been drawn, from its Save until the file is ready to be handed to the picker,
      * and null otherwise: once the picker is up there is nothing left to count, and nothing to cancel either (see
      * [cancelPdfExport]).
      */
@@ -2046,7 +2046,7 @@ class CampfireViewModel(
 
     private var pdfExportJob: Job? = null
 
-    /** Emitted with the sheet an export was started from once its file is saved, for that sheet, and no other, to close. */
+    /** Emitted with the screen an export was started from once its file is saved, for that screen, and no other, to close. */
     private val _printExportSaved = MutableSharedFlow<DialogType.PrintExport>(extraBufferCapacity = 1)
     val printExportSaved = _printExportSaved.asSharedFlow()
 
@@ -2368,7 +2368,7 @@ class CampfireViewModel(
         val job = launchFileTransfer {
             _pdfExportProgress.value = PdfExportProgress(done = 0, total = pageCount)
             try {
-                // A share leaves the sheet open, since a second share or a save may follow; save() only calls onSaved for a save.
+                // A share leaves the screen open, since a second share or a save may follow; save() only calls onSaved for a save.
                 save(filePicker, isShare = isShare, onSaved = { _printExportSaved.tryEmit(dialog) }) {
                     val bytes = try {
                         withContext(Dispatchers.Default) { create { done -> _pdfExportProgress.value = PdfExportProgress(done = done, total = pageCount) } }
@@ -2788,9 +2788,10 @@ class CampfireViewModel(
         // service's one request a second.
         if (dialogType !is DialogType.CoverArtSearch) clearCoverArtSearch()
         val previousDialog = _visibleDialog.value
-        // However the export sheet goes - closed, Escape, the web's Back, another dialog put over it - it is removed from
-        // the composition at once, so nothing in it could do this, and a sheet opened again in the next moment has to
-        // find the options it left.
+        // However the export screen goes - closed, Escape, the web's Back, another dialog put over it - it stays drawn
+        // while it slides away, so its own disposal would be too late: its options are saved and its drawing cancelled
+        // here, a screen opened again in the next moment finds the options it left, and its Save, Share and options do
+        // nothing once it is no longer the dialog on screen.
         if (previousDialog is DialogType.PrintExport && dialogType != previousDialog) {
             _pendingPrintSettings.value?.let { viewModelScope.launch { savePrintSettings(it) } }
             // An export nobody is looking at any more would put its picker up over whatever is on screen by then.
@@ -2810,7 +2811,8 @@ class CampfireViewModel(
      * What a bottom sheet dismisses itself with: [dialogType] goes only while it is still the dialog on screen. A
      * sheet reports its dismissal from the end of its hide animation, and one that is replaced while it is hiding
      * reports the cancellation of that animation the same way - Material's scrim and back handlers included - by
-     * which time the dialog on screen is the one that replaced it.
+     * which time the dialog on screen is the one that replaced it. It is also how the export screen closes itself, for
+     * the same reason: its saved file and its back gesture can both arrive once another dialog has replaced it.
      */
     fun dismissSheet(dialogType: DialogType) {
         if (_visibleDialog.value == dialogType) dismissDialog()

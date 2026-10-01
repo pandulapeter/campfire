@@ -27,8 +27,8 @@ import kotlinx.coroutines.yield
 import kotlin.math.roundToInt
 
 /**
- * What a PDF is made of, read once when the export sheet opens: a snapshot, so that the preview and the file agree even
- * if the library changes underneath the sheet. [date] is already formatted in the app's language.
+ * What a PDF is made of, read once when the export screen opens: a snapshot, so that the preview and the file agree even
+ * if the library changes underneath the screen. [date] is already formatted in the app's language.
  */
 internal data class PrintSource(
     val title: String,
@@ -91,7 +91,7 @@ internal data class PrintDocument(
 )
 
 /**
- * The words the layout prints, resolved by the sheet in the app's language, since the layout runs off the composition
+ * The words the layout prints, resolved by the export screen in the app's language, since the layout runs off the composition
  * where no string resource can be read.
  */
 internal data class PrintLabels(
