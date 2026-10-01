@@ -148,6 +148,14 @@ class SectionCuttingTest {
 
     private fun unitSections(sectionUnits: List<List<Int>>) = sectionUnits.flatMapIndexed { section, units -> List(units.size) { section } }.toIntArray()
 
+    @Test
+    fun shortSectionSharesTheWideRowOfTheSectionAfterIt() {
+        val grid = cut(listOf(listOf(200), listOf(900), listOf(300), listOf(300)), maxColumnCount = 2, maxRowHeight = 600, wideHeights = mapOf(1 to 250))
+        assertContentEquals(intArrayOf(0, 0, 1, 1), grid.rows)
+        assertContentEquals(intArrayOf(1, 2), grid.columnCounts)
+        assertContentEquals(booleanArrayOf(true, false), grid.wideRows)
+    }
+
     private fun cut(
         sectionUnits: List<List<Int>>,
         maxColumnCount: Int,
@@ -155,6 +163,7 @@ class SectionCuttingTest {
         piecePadding: IntArray = IntArray(sectionUnits.size),
         cutsEverySection: Boolean = false,
         isCuttableBefore: (Int) -> Boolean = { true },
+        wideHeights: Map<Int, Int> = emptyMap(),
     ): SectionGrid {
         val heights = sectionUnits.flatten()
         val sectionStarts = IntArray(sectionUnits.size + 1).also { starts ->
@@ -165,7 +174,7 @@ class SectionCuttingTest {
             maxColumnCount = maxColumnCount,
             heightAt = { unit, _ -> heights[unit] },
             isCuttableBefore = isCuttableBefore,
-            wideHeightAt = { null },
+            wideHeightAt = { wideHeights[it] },
             piecePadding = piecePadding,
             sectionGap = SECTION_GAP,
             rowGap = ROW_GAP,

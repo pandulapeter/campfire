@@ -114,11 +114,29 @@ class SectionGridTest {
         assertEquals(1740, arrangement.height)
     }
 
-    private fun flow(heights: List<Int>, maxColumnCount: Int, maxRowHeight: Int) = flowIntoRows(
+    @Test
+    fun shortSectionSharesTheWideRowOfTheSectionAfterIt() {
+        // An info card above a staff of tablature that would be cut into systems in a column: the card is stacked in
+        // the tab's wide row rather than being left with a row, and a screen, of its own.
+        val grid = flow(listOf(200, 900, 300, 300), maxColumnCount = 2, maxRowHeight = 600, wideHeights = mapOf(1 to 250))
+        assertContentEquals(intArrayOf(0, 0, 1, 1), grid.rows)
+        assertContentEquals(intArrayOf(0, 0, 0, 1), grid.columns)
+        assertContentEquals(intArrayOf(1, 2), grid.columnCounts)
+        assertContentEquals(booleanArrayOf(true, false), grid.wideRows)
+    }
+
+    @Test
+    fun wideRowIsNotStackedTallerThanTheScreen() {
+        val grid = flow(listOf(200, 900, 300, 300), maxColumnCount = 2, maxRowHeight = 400, wideHeights = mapOf(1 to 250))
+        assertContentEquals(intArrayOf(0, 1, 2, 2), grid.rows)
+        assertContentEquals(booleanArrayOf(false, true, false), grid.wideRows)
+    }
+
+    private fun flow(heights: List<Int>, maxColumnCount: Int, maxRowHeight: Int, wideHeights: Map<Int, Int> = emptyMap()) = flowIntoRows(
         sectionCount = heights.size,
         maxColumnCount = maxColumnCount,
         heightAt = { index, _ -> heights[index] },
-        wideHeightAt = { null },
+        wideHeightAt = { wideHeights[it] },
         sectionGap = SECTION_GAP,
         rowGap = ROW_GAP,
         maxRowHeight = maxRowHeight,

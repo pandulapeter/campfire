@@ -230,7 +230,9 @@ internal fun IntArray.balanceIntoCells(from: Int, until: Int, cellCount: Int, se
  * [wideHeightAt] gives its height in one: a staff of tablature longer than a column is cut into systems there, and
  * the column beside it grows by as many staves, while in a row of its own it can be read as it was written. It is one
  * more candidate for the row starting at that section, taken wherever it makes the song shorter, so a tab that fits a
- * column anyway, or one too long for the window as well, stays where it was.
+ * column anyway, or one too long for the window as well, stays where it was. The sections around it may be stacked in
+ * that row too, each at its own width ([forEachWideRow]), so a short section next to it is not left with a row of its
+ * own: the gap between two sections is shorter than the one between two rows, so that is taken wherever it fits.
  */
 internal fun flowIntoRows(
     sectionCount: Int,
@@ -284,7 +286,7 @@ internal fun flowIntoRows(
 
     // costs[i] is the smallest total height of the sections from i onwards, rowEnds[i] where their first row ends,
     // rowColumnCounts[i] how many columns that row has, rowHeights[i] how tall it is and isRowWide[i] whether it is a
-    // wide row of section i alone.
+    // wide row.
     val costs = LongArray(sectionCount + 1)
     val rowEnds = IntArray(sectionCount + 1)
     val rowColumnCounts = IntArray(sectionCount + 1)
@@ -338,15 +340,14 @@ internal fun flowIntoRows(
             }
             end++
         }
-        val wideHeight = wideHeightAt(start)
-        if (wideHeight != null) {
-            val cost = wideHeight + if (start + 1 < sectionCount) rowGap + costs[start + 1] else 0L
+        forEachWideRow(start, sectionCount, heights[0], wideHeightAt, sectionGap, maxRowHeight) { end, height ->
+            val cost = height + if (end < sectionCount) rowGap + costs[end] else 0L
             // Only where it is strictly shorter, since a row wider than a column has lines longer than a column's.
             if (cost < best) {
                 best = cost
-                rowEnds[start] = start + 1
+                rowEnds[start] = end
                 rowColumnCounts[start] = 1
-                rowHeights[start] = wideHeight
+                rowHeights[start] = height
                 isRowWide[start] = true
             }
         }
@@ -377,4 +378,34 @@ internal fun flowIntoRows(
         start = end
     }
     return SectionGrid(rows = rows, columns = columns, columnCounts = columnCounts.toIntArray(), wideRows = wideRows.toBooleanArray())
+}
+
+/**
+ * Calls [onRow] with the end and the height of every wide row that may start at [start]: the sections from there
+ * stacked in a single column, at least one of them needing more than a column ([wideHeightAt] being its height in a row
+ * as wide as it needs, null for one that does not), each of the others as tall as in a single column ([columnHeights]),
+ * since it is laid out at a column's width.
+ *
+ * Without the sections around it a wide row would leave a short section next to it with a row of its own, and so
+ * with a screen of its own wherever the rows are read one at a time: a song's info card above a long staff of
+ * tablature. A stack of several is held to [maxRowHeight], as a stack in a single column is in [flowIntoRows].
+ */
+internal inline fun forEachWideRow(
+    start: Int,
+    sectionCount: Int,
+    columnHeights: IntArray,
+    wideHeightAt: (index: Int) -> Int?,
+    sectionGap: Int,
+    maxRowHeight: Int,
+    onRow: (end: Int, height: Int) -> Unit,
+) {
+    var height = -sectionGap.toLong()
+    var isWide = false
+    for (index in start until sectionCount) {
+        val wideHeight = wideHeightAt(index)
+        height += sectionGap + (wideHeight ?: columnHeights[index])
+        if (index > start && height > maxRowHeight) return
+        isWide = isWide || wideHeight != null
+        if (isWide) onRow(index + 1, height.toInt())
+    }
 }

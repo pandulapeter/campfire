@@ -1309,10 +1309,13 @@ private fun SongSectionsLayout(
         .takeIf { it > maxColumnWidthPx && totalWidth > maxColumnWidthPx }
         ?.let { minOf(it, totalWidth) }
 
-    fun SectionGrid.rowWidth(row: Int, totalWidth: Int) = if (wideRows[row]) {
-        wideWidthFor(units.unitSections[rows.indexOf(row)], totalWidth) ?: columnWidthFor(totalWidth, 1)
+    // A wide row is a single column in which every section is as wide as it needs: the ones whose lines do not wrap as
+    // wide as those lines, and the rest as wide as a single column, so that what wraps is not read in lines longer
+    // than a column's because a staff of tablature shares the row.
+    fun SectionGrid.columnWidthOf(unit: Int, totalWidth: Int) = if (wideRows[rows[unit]]) {
+        wideWidthFor(units.unitSections[unit], totalWidth) ?: columnWidthFor(totalWidth, 1)
     } else {
-        columnWidthFor(totalWidth, columnCounts[row])
+        columnWidthFor(totalWidth, columnCounts[rows[unit]])
     }
 
     val gridKey = SectionGridKey(
@@ -1357,7 +1360,7 @@ private fun SongSectionsLayout(
         }.expandedTo(units.unitSections)
 
         fun SectionGrid.height() = arrange(
-            heights = IntArray(unitCount) { unitHeightAt(it, rowWidth(rows[it], totalWidth)) },
+            heights = IntArray(unitCount) { unitHeightAt(it, columnWidthOf(it, totalWidth)) },
             sectionGap = sectionGapPx,
             rowGap = rowGapPx,
             unitSections = units.unitSections,
@@ -1441,7 +1444,7 @@ private fun SongSectionsLayout(
     }
     val (grid, isInset) = decidedGrid
     val layoutWidth = if (isInset) (width - endInsetPx).coerceAtLeast(0) else width
-    val columnWidths = IntArray(grid.columnCounts.size) { grid.rowWidth(it, layoutWidth) }
+    val columnWidths = IntArray(unitCount) { grid.columnWidthOf(it, layoutWidth) }
     // A column is only as wide as the widest thing in it, up to the width it was given, so that a row can be centered
     // by what it shows rather than by the empty space its columns leave after short lines. Only a card needs its width
     // to decide the grid; everything else wraps at the column's width, which is the same height at any width it fits
@@ -1449,7 +1452,7 @@ private fun SongSectionsLayout(
     val cellWidths = Array(grid.columnCounts.size) { row -> IntArray(grid.columnCounts[row]) }
     for (unit in 0 until unitCount) {
         val row = grid.rows[unit]
-        val columnWidth = columnWidths[row]
+        val columnWidth = columnWidths[unit]
         val contentWidth = if (units.cardStarts[units.unitSections[unit]] >= 0) {
             unitWidthFor(unit, columnWidth)
         } else {
@@ -1458,10 +1461,18 @@ private fun SongSectionsLayout(
         cellWidths[row][grid.columns[unit]] = maxOf(cellWidths[row][grid.columns[unit]], contentWidth)
     }
     // A card narrower than its cell keeps its own width; everything else takes the cell's, so that its lines, which
-    // take their direction from their own content, start at the same edge as the other lines of the cell.
+    // take their direction from their own content, start at the same edge as the other lines of the cell. In a wide row,
+    // where every section has a width of its own, a section is as wide as its widest line instead, every chunk of it
+    // alike, so that it can be centered whole.
     val unitWidths = IntArray(unitCount) { unit ->
-        val row = grid.rows[unit]
-        if (units.cardStarts[units.unitSections[unit]] >= 0) unitWidthFor(unit, columnWidths[row]) else cellWidths[row][grid.columns[unit]]
+        val section = units.unitSections[unit]
+        when {
+            units.cardStarts[section] >= 0 -> unitWidthFor(unit, columnWidths[unit])
+            grid.wideRows[grid.rows[unit]] -> unitsOf(section).maxOf {
+                minOf(columnWidths[it], sectionMeasurements.maxWidth(it, measurables[it]::maxIntrinsicWidth))
+            }
+            else -> cellWidths[grid.rows[unit]][grid.columns[unit]]
+        }
     }
     val placeables = measurables.mapIndexed { index, measurable ->
         val unitWidth = unitWidths[index]
@@ -1582,8 +1593,14 @@ private fun SongSectionsLayout(
         val row = grid.rows[index]
         val column = grid.columns[index]
         val cellStart = cellStarts[row][column]
-        // A card narrower than its cell sits at the cell's start, which is its right edge in a right to left layout.
-        val x = if (layoutDirection == LayoutDirection.Rtl) cellStart + cellWidths[row][column] - unitWidths[index] else cellStart
+        // A card narrower than its cell sits at the cell's start, which is its right edge in a right to left layout. A
+        // wide row is a single column of sections as wide as each needs, so each of them is centered in it, as the
+        // columns of every other row are centered in the width.
+        val x = when {
+            grid.wideRows[row] -> cellStart + (cellWidths[row][column] - unitWidths[index]) / 2
+            layoutDirection == LayoutDirection.Rtl -> cellStart + cellWidths[row][column] - unitWidths[index]
+            else -> cellStart
+        }
         IntOffset(x = x, y = arrangement.tops[index])
     }
     // Every piece of a section on a card - the whole section, where it is not cut - is drawn on a card of its own,

@@ -29,7 +29,7 @@ package com.pandulapeter.campfire.presentation.ui.screens.songDetails
  * row allows, the lowest such height being searched for. A row prefers no cut at all, and then cuts only the
  * sections taller than [maxRowHeight], unless cutting more saves at least [minCutSaving] of its height; every row with a
  * cut in it also counts that much taller while the rows are chosen, so that fewer cuts win. Everything else - where
- * the rows end, how many columns each has, the ties, a section with a wide row of its own ([wideHeightAt]) - is
+ * the rows end, how many columns each has, the ties, the wide rows ([wideHeightAt]) - is
  * decided the way [flowIntoRows] decides it, a row of several columns never being taller than [maxRowHeight].
  */
 internal fun flowIntoRowsCuttingSections(
@@ -193,14 +193,13 @@ internal fun flowIntoRowsCuttingSections(
                 }
             }
         }
-        val wideHeight = wideHeightAt(start)
-        if (wideHeight != null) {
-            val cost = wideHeight + if (start + 1 < sectionCount) rowGap + costs[start + 1] else 0L
+        forEachWideRow(start, sectionCount, sectionHeights[0], wideHeightAt, sectionGap, maxRowHeight) { end, height ->
+            val cost = height + if (end < sectionCount) rowGap + costs[end] else 0L
             if (cost < best) {
                 best = cost
-                rowEnds[start] = start + 1
+                rowEnds[start] = end
                 rowColumnCounts[start] = 1
-                rowCells[start] = IntArray(sectionStarts[start + 1] - sectionStarts[start])
+                rowCells[start] = IntArray(sectionStarts[end] - sectionStarts[start])
                 isRowWide[start] = true
             }
         }

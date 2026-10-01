@@ -9,7 +9,6 @@
 -->
 # To do
 - Haptic effects
-- Try to avoid one small section / screen
 - Global sync status display
 - Optional close confirmation dialog on relevant platforms
 - What's new dialog
