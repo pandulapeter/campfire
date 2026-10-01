@@ -116,6 +116,7 @@ import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.FlowPreview
+import kotlinx.coroutines.CoroutineStart
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.NonCancellable
 import kotlinx.coroutines.async
@@ -2016,14 +2017,31 @@ class CampfireViewModel(
      */
     private var fileTransferJob: Job? = null
 
+    /** Whether [fileTransferJob] is running, for the buttons that would start one and so would be ignored meanwhile. */
+    private val _isFileTransferActive = MutableStateFlow(false)
+    val isFileTransferActive = _isFileTransferActive.asStateFlow()
+
+    /** True from the export sheet's Save until the PDF has been saved, or has not been, in the way any export ends. */
+    private val _isExportingPdf = MutableStateFlow(false)
+    val isExportingPdf = _isExportingPdf.asStateFlow()
+
     /**
      * Only as safe as the pickers are: every one of them has to answer on every way its screen can go away, since a
      * transfer that never ended would keep the app from importing or exporting anything again. Nothing that suspends
      * may come between the tap and the picker either, because the web's file input needs the tap's user activation.
+     *
+     * [isFileTransferActive] is cleared by the completion of the job that set it, which also comes for a job cancelled
+     * before it started, where a `finally` would not run, and only while that job is still the latest: the handler of
+     * one that ended late must not clear the flag of the next. The job starts once it is recorded, since the main
+     * dispatcher is immediate and a block that never suspends would otherwise complete before it is.
      */
     private fun launchFileTransfer(block: suspend () -> Unit) {
         if (fileTransferJob?.isActive == true) return
-        fileTransferJob = viewModelScope.launch { block() }
+        _isFileTransferActive.value = true
+        val job = viewModelScope.launch(start = CoroutineStart.LAZY) { block() }
+        fileTransferJob = job
+        job.invokeOnCompletion { if (fileTransferJob === job) _isFileTransferActive.value = false }
+        job.start()
     }
 
     /**
@@ -2305,14 +2323,14 @@ class CampfireViewModel(
         _pendingPrintSettings.compareAndSet(value, null)
     }
 
-    internal fun exportPdf(filePicker: FilePicker, title: String, onFinished: () -> Unit, create: suspend () -> ByteArray) {
-        if (fileTransferJob?.isActive == true) { onFinished(); return }
-        launchFileTransfer {
-            try {
-                save(filePicker) {
-                    ExportedFile(LibraryFiles.normalizedName(title) + ".pdf", "application/pdf", withContext(Dispatchers.Default) { create() })
-                }
-            } finally { onFinished() }
+    internal fun exportPdf(filePicker: FilePicker, title: String, create: suspend () -> ByteArray) = launchFileTransfer {
+        _isExportingPdf.value = true
+        try {
+            save(filePicker) {
+                ExportedFile(LibraryFiles.normalizedName(title) + ".pdf", "application/pdf", withContext(Dispatchers.Default) { create() })
+            }
+        } finally {
+            _isExportingPdf.value = false
         }
     }
 

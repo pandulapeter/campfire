@@ -54,6 +54,7 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
+import androidx.compose.runtime.saveable.Saver
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -97,8 +98,10 @@ internal fun PrintExportSheet(viewModel: CampfireViewModel, dialog: CampfireView
     var source by remember(dialog) { mutableStateOf<PrintSource?>(null) }
     var failed by remember(dialog) { mutableStateOf(false) }
     var attempt by remember(dialog) { mutableIntStateOf(0) }
-    var selected by remember(dialog) { mutableStateOf<Set<Int>?>(null) }
-    var exporting by remember { mutableStateOf(false) }
+    // Saved, or a rotation would put back every song somebody had unticked; null until the source has been read.
+    var selected by rememberSaveable(dialog, stateSaver = SELECTION_SAVER) { mutableStateOf<Set<Int>?>(null) }
+    val isExporting by viewModel.isExportingPdf.collectAsStateWithLifecycle()
+    val isFileTransferActive by viewModel.isFileTransferActive.collectAsStateWithLifecycle()
     var page by rememberSaveable(dialog) { mutableIntStateOf(0) }
     val filePicker = LocalFilePicker.current
     val fontResolver = LocalFontFamilyResolver.current
@@ -203,13 +206,13 @@ internal fun PrintExportSheet(viewModel: CampfireViewModel, dialog: CampfireView
         }
         PrintActions(
             contentPadding = contentPadding,
-            canSave = isCurrent && laidOut?.document?.pages?.isNotEmpty() == true && !exporting,
-            isExporting = exporting,
+            // Any import or export running would make the view model ignore the tap, so the button does not take it.
+            canSave = isCurrent && laidOut?.document?.pages?.isNotEmpty() == true && !isFileTransferActive,
+            isExporting = isExporting,
             onSave = {
                 laidOut?.document?.let { snapshot ->
-                    exporting = true
                     val title = source!!.title
-                    viewModel.exportPdf(filePicker, title, onFinished = { exporting = false }) { newRenderer().pdf(snapshot, title) }
+                    viewModel.exportPdf(filePicker, title) { newRenderer().pdf(snapshot, title) }
                 }
             },
         )
@@ -564,6 +567,9 @@ private fun Modifier.wheelZoom(onZoom: (notches: Float, position: Offset) -> Uni
 private fun LayoutIndicator(isVisible: Boolean) = AnimatedVisibility(isVisible, enter = EnterTransition.None, exit = fadeOut()) {
     DelayedLoadingIndicator()
 }
+
+/** The selected songs by their place in the source, with null (nothing read yet) saved as nothing at all. */
+private val SELECTION_SAVER = Saver<Set<Int>?, List<Int>>(save = { it?.toList() }, restore = { it.toSet() })
 
 private const val MAX_ZOOM = 4f
 private const val DOUBLE_TAP_ZOOM = 2.5f
