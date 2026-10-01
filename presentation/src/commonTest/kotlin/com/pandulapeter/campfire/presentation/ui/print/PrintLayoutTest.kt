@@ -236,7 +236,7 @@ internal class PrintLayoutTest {
         val label = texts.first { it.text == "Verse" }
         val annotationRows = texts.filter { annotation.contains(it.text.trim()) && it.bold && it.text.isNotBlank() && it.text != "Verse" }
         assertEquals(label.y + 12 * 1.45f, annotationRows.minOf { it.y }, 0.01f)
-        val lyrics = texts.first { it.text.startsWith("Lyrics here") }
+        val lyrics = texts.first { it.text.contains("here") }
         val follow = texts.first { it.text.contains("follow") }
         assertTrue(follow.y <= lyrics.y + 12 * 2.75f + 0.01f, "$lyrics $follow")
         texts.filter { it.size != 9 }.forEach { assertTrue(it.x + measure(it.text, it.size, it.bold) <= margin + columnWidth + 0.01f, it.toString()) }
@@ -292,5 +292,31 @@ internal class PrintLayoutTest {
         val texts = document.pages.flatMap { it.texts }
         assertEquals(texts.first { it.text == "a" }.y + 12 * 1.45f, texts.first { it.text == "b" }.y, 0.01f)
         assertFalse(texts.any { '\n' in it.text || '\r' in it.text })
+    }
+
+    @Test fun wrappingBreaksAtTheLastSpaceWhenTheWordAfterItFitsALine() {
+        val word = "averyveryverylongwordthatalmostfits"
+        assertEquals(listOf("Oh ", word), wrapPrintText("Oh $word", word.length + 1f) { it.length.toFloat() })
+    }
+
+    @Test fun wrappingNeverSplitsAGraphemeCluster() {
+        listOf("o\u030B", "\uD83D\uDC68\u200D\uD83D\uDC69\u200D\uD83D\uDC67", "\uD83D\uDC4D\uD83C\uDFFD", "\uD83C\uDDED\uD83C\uDDFA").forEach { cluster ->
+            val input = "ab" + cluster.repeat(3) + "cd"
+            (1..input.length).forEach { width ->
+                val parts = wrapPrintText(input, width.toFloat()) { it.length.toFloat() }
+                assertEquals(input, parts.joinToString(""))
+                val boundaries = parts.runningFold(0) { position, part -> position + part.length }
+                // Every cut falls before "ab", between the two letters, at a cluster boundary or among "cd".
+                val allowed = setOf(0, 1, 2) + (0..3).map { 2 + it * cluster.length } + setOf(input.length - 1, input.length)
+                assertTrue(boundaries.all { it in allowed }, "$cluster at $width: $parts")
+            }
+        }
+    }
+
+    @Test fun wrappingEmojiIntoNarrowColumnsAlwaysAdvancesAndKeepsSurrogatesPaired() {
+        val input = "\uD83D\uDE00".repeat(5)
+        val parts = wrapPrintText(input, 1f) { it.length.toFloat() }
+        assertEquals(input, parts.joinToString(""))
+        assertTrue(parts.all { it.isNotEmpty() && !it.last().isHighSurrogate() && !it.first().isLowSurrogate() })
     }
 }
