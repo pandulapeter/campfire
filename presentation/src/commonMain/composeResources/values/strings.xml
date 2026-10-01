@@ -523,7 +523,5 @@
     <string name="print_page">Page %1$d of %2$d</string>
     <string name="print_previous">Previous</string>
     <string name="print_next">Next</string>
-    <string name="print_zoom_in">Zoom in</string>
-    <string name="print_zoom_out">Zoom out</string>
     <string name="print_time">Time</string>
 </resources>

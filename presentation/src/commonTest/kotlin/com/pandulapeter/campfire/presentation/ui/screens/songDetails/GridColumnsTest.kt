@@ -42,12 +42,26 @@ class GridColumnsTest {
     fun `the bar lines of a run stand under each other whatever the chords are`() {
         assertEquals(
             listOf(
-                "|: Am . . | C  . . | D  . . |  F  . . |",
+                "|: Am . . | C  . . | D  . .  | F  . . |",
                 "|  Am . . | E7 . . | Am     :| x2",
             ),
             aligned(
                 "|: Am . . | C . . | D . . | F . . |",
                 "| Am . . | E7 . . | Am :| x2",
+            ),
+        )
+    }
+
+    @Test
+    fun `a closing repeat ends where the bar lines above it do`() {
+        assertEquals(
+            listOf(
+                "|: Am | C  | D  | F   |",
+                "|  Am | E7 | Am | Am :| x2",
+            ),
+            aligned(
+                "|: Am | C | D | F |",
+                "| Am | E7 | Am | Am :| x2",
             ),
         )
     }

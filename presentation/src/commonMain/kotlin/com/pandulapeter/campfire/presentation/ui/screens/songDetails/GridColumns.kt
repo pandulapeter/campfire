@@ -86,15 +86,27 @@ internal fun List<List<GridToken>>.alignedGridBars(textOf: (GridToken) -> String
                 }
                 addAligned(bar.opening, openingWidths[index], textOf)
                 cellWidths[index].forEachIndexed { cellIndex, width -> addAligned(bar.cells.getOrNull(cellIndex), width, textOf) }
-                addAligned(bar.closing, closingWidths[index], textOf)
+                addAligned(bar.closing, closingWidths[index], textOf, isAlignedToTheEnd = true)
             }
         }.trimmedAtTheEnd()
     }
 }
 
-/** [token] in a column [width] characters wide and the space after it, or only spaces where it is null. */
-private fun MutableList<GridCell>.addAligned(token: GridToken?, width: Int, textOf: (GridToken) -> String) {
-    if (width > 0) add(GridCell(token = token, text = (token?.let(textOf) ?: "").padEnd(width) + " "))
+/**
+ * [token] in a column [width] characters wide and the space after it, or only spaces where it is null. A closing bar line
+ * is [isAlignedToTheEnd], so that the stroke of a `:|` stands under the `|` of the lines around it, the way an opening
+ * `|:` starts where their `|` does.
+ */
+private fun MutableList<GridCell>.addAligned(
+    token: GridToken?,
+    width: Int,
+    textOf: (GridToken) -> String,
+    isAlignedToTheEnd: Boolean = false,
+) {
+    if (width > 0) {
+        val text = token?.let(textOf) ?: ""
+        add(GridCell(token = token, text = (if (isAlignedToTheEnd) text.padStart(width) else text.padEnd(width)) + " "))
+    }
 }
 
 /** A bar cut into its margin, its opening bar line, its cells and its closing bar line, see [alignedGridBars]. */

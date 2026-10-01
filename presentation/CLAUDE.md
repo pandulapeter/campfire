@@ -202,8 +202,8 @@ Retry count start over. The previous document stays on screen while the next is 
 change), and Save only takes a document laid out from what the sheet shows now. Options are written to the view model's
 `pendingPrintSettings` as they change and saved to the preferences once they have settled for half a second; whatever
 is still pending is saved as the sheet goes, however it goes (`setVisibleDialog`). On phones the preview is above the options.
-Pages are turned by a swipe, the buttons, or the arrow, Page Up / Down, Home and End keys, and zoomed by a pinch, a
-double tap or the zoom button; Ctrl / Cmd and the scroll wheel zoom in the desktop application only, which
+Pages are turned by a swipe, the buttons, or the arrow, Page Up / Down, Home and End keys, and zoomed by a pinch or a
+double tap; Ctrl / Cmd and the scroll wheel zoom in the desktop application only, which
 `isLaunchScreenWholeStartup` stands in for, since in a browser that chord is the page's own zoom. A page is described to
 a screen reader by its number.
 

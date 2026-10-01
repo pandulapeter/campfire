@@ -152,8 +152,6 @@ import com.pandulapeter.campfire.presentation.resources.print_share
 import com.pandulapeter.campfire.presentation.resources.print_song_sheets
 import com.pandulapeter.campfire.presentation.resources.print_songs
 import com.pandulapeter.campfire.presentation.resources.print_time
-import com.pandulapeter.campfire.presentation.resources.print_zoom_in
-import com.pandulapeter.campfire.presentation.resources.print_zoom_out
 import com.pandulapeter.campfire.presentation.resources.retry
 import com.pandulapeter.campfire.presentation.resources.song_details_text_size
 import com.pandulapeter.campfire.presentation.resources.song_details_text_size_decrease
@@ -751,9 +749,9 @@ private fun PrintPreview(
 
 /**
  * The pages side by side in a pager, turned by a swipe, by the buttons under them or, once the pane has the focus, by
- * the arrow, Page Up / Page Down, Home and End keys, and zoomed by a pinch, a double tap, the zoom button or, on the
- * desktop, Ctrl / Cmd and the scroll wheel. A zoomed page is drawn again at its new size rather than scaled up, so it
- * stays sharp, and the pager does not take a swipe while it is zoomed, since the swipe is the pan.
+ * the arrow, Page Up / Page Down, Home and End keys, and zoomed by a pinch, a double tap or, on the desktop, Ctrl / Cmd
+ * and the scroll wheel. A zoomed page is drawn again at its new size rather than scaled up, so it stays sharp, and the
+ * pager does not take a swipe while it is zoomed, since the swipe is the pan.
  */
 @Composable
 private fun PrintPages(
@@ -873,12 +871,6 @@ private fun PrintPages(
             Text(stringResource(Res.string.print_page, pagerState.currentPage + 1, pageCount), style = MaterialTheme.typography.bodySmall)
             IconButton(enabled = pagerState.currentPage + 1 < pageCount, onClick = { turnTo(pagerState.currentPage + 1) }) {
                 Icon(painterResource(Res.drawable.ic_next), contentDescription = stringResource(Res.string.print_next))
-            }
-            IconButton(onClick = { zoomTo(if (zoom > 1f) 1f else DOUBLE_TAP_ZOOM) }) {
-                Icon(
-                    painter = painterResource(if (zoom > 1f) Res.drawable.ic_subtract else Res.drawable.ic_add),
-                    contentDescription = stringResource(if (zoom > 1f) Res.string.print_zoom_out else Res.string.print_zoom_in),
-                )
             }
         }
     }

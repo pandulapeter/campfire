@@ -523,7 +523,5 @@
     <string name="print_page">%1$d. oldal / %2$d</string>
     <string name="print_previous">Előző</string>
     <string name="print_next">Következő</string>
-    <string name="print_zoom_in">Nagyítás</string>
-    <string name="print_zoom_out">Kicsinyítés</string>
     <string name="print_time">Ütemmutató</string>
 </resources>
