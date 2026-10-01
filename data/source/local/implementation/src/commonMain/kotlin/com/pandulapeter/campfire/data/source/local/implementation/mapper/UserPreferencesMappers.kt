@@ -9,6 +9,8 @@
  */
 package com.pandulapeter.campfire.data.source.local.implementation.mapper
 
+import com.pandulapeter.campfire.data.model.domain.PrintSettings
+import com.pandulapeter.campfire.data.source.local.implementation.model.PrintSettingsDocument
 import com.pandulapeter.campfire.data.model.domain.UserPreferences
 import com.pandulapeter.campfire.data.source.local.implementation.model.UserPreferencesDocument
 
@@ -40,6 +42,7 @@ internal fun UserPreferencesDocument.toModel() = UserPreferences(
     languageMatchMode = UserPreferences.MatchMode.entries.firstOrNull { it.id == languageMatchMode } ?: UserPreferences.MatchMode.ANY,
     tagSortingMode = UserPreferences.LabelSortingMode.entries.firstOrNull { it.id == tagSortingMode } ?: UserPreferences.LabelSortingMode.BY_USAGE,
     languageSortingMode = UserPreferences.LabelSortingMode.entries.firstOrNull { it.id == languageSortingMode } ?: UserPreferences.LabelSortingMode.BY_USAGE,
+    printSettings = printSettings.toModel(),
 )
 
 internal fun UserPreferences.toDocument() = UserPreferencesDocument(
@@ -65,4 +68,37 @@ internal fun UserPreferences.toDocument() = UserPreferencesDocument(
     languageMatchMode = languageMatchMode.id,
     tagSortingMode = tagSortingMode.id,
     languageSortingMode = languageSortingMode.id,
+    printSettings = printSettings.toDocument(),
 )
+
+internal fun PrintSettingsDocument.toModel() = PrintSettings(
+    paper = PrintSettings.Paper.entries.firstOrNull { it.id == paper } ?: PrintSettings.Paper.A4,
+    setlistMode = PrintSettings.SetlistMode.entries.firstOrNull { it.id == setlistMode } ?: PrintSettings.SetlistMode.SONG_SHEETS,
+    isLandscape = isLandscape,
+    fontSize = fontSize,
+    marginMm = marginMm,
+    columns = columns,
+    showChords = showChords,
+    showComments = showComments,
+    showMetadata = showMetadata,
+    showPageNumbers = showPageNumbers,
+    startSongsOnNewPage = startSongsOnNewPage,
+    includeSetlistOverview = includeSetlistOverview,
+).normalized()
+
+internal fun PrintSettings.toDocument() = normalized().let { settings ->
+    PrintSettingsDocument(
+        paper = settings.paper.id,
+        setlistMode = settings.setlistMode.id,
+        isLandscape = settings.isLandscape,
+        fontSize = settings.fontSize,
+        marginMm = settings.marginMm,
+        columns = settings.columns,
+        showChords = settings.showChords,
+        showComments = settings.showComments,
+        showMetadata = settings.showMetadata,
+        showPageNumbers = settings.showPageNumbers,
+        startSongsOnNewPage = settings.startSongsOnNewPage,
+        includeSetlistOverview = settings.includeSetlistOverview,
+    )
+}

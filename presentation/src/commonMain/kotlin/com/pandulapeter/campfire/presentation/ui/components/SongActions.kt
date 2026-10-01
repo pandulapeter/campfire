@@ -49,6 +49,8 @@ import com.pandulapeter.campfire.presentation.localization.stringResource
 import com.pandulapeter.campfire.presentation.resources.Res
 import com.pandulapeter.campfire.presentation.resources.ic_delete
 import com.pandulapeter.campfire.presentation.resources.ic_edit
+import com.pandulapeter.campfire.presentation.resources.ic_print
+import com.pandulapeter.campfire.presentation.resources.print_export
 import com.pandulapeter.campfire.presentation.resources.ic_export
 import com.pandulapeter.campfire.presentation.resources.ic_more
 import com.pandulapeter.campfire.presentation.resources.ic_rename
@@ -287,6 +289,7 @@ internal fun SongActions(
     isExpandable: Boolean,
     isEditAlwaysInMenu: Boolean = false,
     isDeletable: Boolean,
+    setlistFileName: String? = null,
     leadingItems: List<ActionsMenuItem> = emptyList(),
     fileEditItems: List<ActionsMenuItem> = emptyList(),
     menuFooter: (@Composable () -> Unit)? = null,
@@ -333,6 +336,12 @@ internal fun SongActions(
                 icon = painterResource(Res.drawable.ic_export),
                 isAlwaysInMenu = true,
                 onClick = { viewModel.exportSong(filePicker, song.fileName) },
+            ),
+            ActionsMenuItem(
+                title = stringResource(Res.string.print_export),
+                icon = painterResource(Res.drawable.ic_print),
+                isAlwaysInMenu = true,
+                onClick = { viewModel.showDialog(CampfireViewModel.DialogType.PrintExport(song = song, songSetlistFileName = setlistFileName)) },
             ),
             if (isDeletable) {
                 ActionsMenuItem(

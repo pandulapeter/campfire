@@ -9,6 +9,9 @@
  */
 package com.pandulapeter.campfire.data.source.local.implementation.mapper
 
+import com.pandulapeter.campfire.data.model.domain.PrintSettings
+import com.pandulapeter.campfire.data.source.local.implementation.model.PrintSettingsDocument
+import com.pandulapeter.campfire.data.source.local.implementation.model.UserPreferencesDocumentFormat
 import com.pandulapeter.campfire.data.model.domain.UserPreferences
 import com.pandulapeter.campfire.data.source.local.implementation.model.UserPreferencesDocument
 import kotlin.test.Test
@@ -16,6 +19,25 @@ import kotlin.test.assertEquals
 
 /** A value a newer or an older version wrote costs that one setting, never the document it is in. */
 internal class UserPreferencesMappersTest {
+
+    @Test
+    fun printSettingsSurviveSavingAndReloadingPreferences() {
+        val settings = PrintSettings(paper = PrintSettings.Paper.LETTER, isLandscape = true, fontSize = 18,
+            marginMm = 20, columns = 2, showChords = false, showComments = false, showMetadata = false,
+            showPageNumbers = false, startSongsOnNewPage = false, setlistMode = PrintSettings.SetlistMode.RUNNING_ORDER,
+            includeSetlistOverview = false)
+        val preferences = UserPreferencesDocument().toModel().copy(printSettings = settings)
+        val saved = UserPreferencesDocumentFormat.encode(preferences.toDocument())
+        assertEquals(settings, UserPreferencesDocumentFormat.decode(saved).document.toModel().printSettings)
+        assertEquals(PrintSettings(), UserPreferencesDocumentFormat.decode("{}").document.toModel().printSettings)
+    }
+
+    @Test
+    fun malformedPrintSizesAndUnknownPaperFallBackWithoutLosingOtherChoices() {
+        val preferences = UserPreferencesDocument(printSettings = PrintSettingsDocument(paper = "tabloid", setlistMode = "unknown",
+            fontSize = 400, marginMm = -1, columns = 50, showChords = false)).toModel()
+        assertEquals(PrintSettings(fontSize = 20, marginMm = 10, columns = 2, showChords = false), preferences.printSettings)
+    }
 
     @Test
     fun anUnknownEnumIdFallsBackForThatFieldOnly() {

@@ -448,6 +448,7 @@ internal fun SongDetailsScreen(
                         isExpandable = true,
                         isEditAlwaysInMenu = true,
                         isDeletable = destination.setlistFileName == null,
+                        setlistFileName = destination.setlistFileName,
                         fileEditItems = songMetadataActions(
                             viewModel = viewModel,
                             song = song,

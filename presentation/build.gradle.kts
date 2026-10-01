@@ -76,6 +76,10 @@ kotlin {
             implementation(kotlin("test"))
             implementation(libs.kotlin.coroutines.test)
         }
+        desktopTest.dependencies {
+            // The print renderer tests draw real pages off screen and therefore need Skia's native runtime.
+            implementation(compose.desktop.currentOs)
+        }
         androidMain.dependencies {
             // Edge-to-edge system bar styling, done by the Android shell in ui/CampfireAndroidApp.kt.
             implementation(libs.androidx.activity.compose)

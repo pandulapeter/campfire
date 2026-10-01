@@ -651,6 +651,7 @@ private fun SetlistEntryActions(
             song = entry.song,
             isExpandable = false,
             isDeletable = false,
+            setlistFileName = setlistFileName,
             leadingItems = setlistRowActions(onMoveUp, onMoveDown, onRemove),
         )
 

@@ -18,6 +18,8 @@ import com.pandulapeter.campfire.presentation.resources.ic_archive
 import com.pandulapeter.campfire.presentation.resources.ic_delete
 import com.pandulapeter.campfire.presentation.resources.ic_duplicate
 import com.pandulapeter.campfire.presentation.resources.ic_edit
+import com.pandulapeter.campfire.presentation.resources.ic_print
+import com.pandulapeter.campfire.presentation.resources.print_export
 import com.pandulapeter.campfire.presentation.resources.ic_export
 import com.pandulapeter.campfire.presentation.resources.ic_share
 import com.pandulapeter.campfire.presentation.resources.ic_songs
@@ -103,6 +105,12 @@ internal fun SetlistActions(
                 icon = painterResource(Res.drawable.ic_export),
                 isAlwaysInMenu = true,
                 onClick = { viewModel.exportSetlist(filePicker, setlist.fileName) },
+            ),
+            ActionsMenuItem(
+                title = stringResource(Res.string.print_export),
+                icon = painterResource(Res.drawable.ic_print),
+                isAlwaysInMenu = true,
+                onClick = { viewModel.showDialog(CampfireViewModel.DialogType.PrintExport(setlist = setlist)) },
             ),
             ActionsMenuItem(
                 title = stringResource(Res.string.setlists_delete_setlist),

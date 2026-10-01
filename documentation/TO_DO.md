@@ -9,13 +9,12 @@
 -->
 # To do
 - Haptic effects
+- .docx, .pdf, .txt import (Execute documentation/PDF_AND_WORD_IMPORT_PLAN.md)
 - Global sync status display
 - Optional close confirmation dialog on relevant platforms
 - What's new dialog
 - Simplify adding comments / annotations
 - Metronome
-- PDF export (for print)
-- Word + PDF import
 - External monitor support for lyrics only...? Maybe as a new window on desktop
 - Add support for Latin and Nashville notations
 - Chord diagrams (guitar, ukulele, keyboard) - user library, variations

@@ -41,4 +41,22 @@ internal data class UserPreferencesDocument(
     val languageMatchMode: String = "",
     val tagSortingMode: String = "",
     val languageSortingMode: String = "",
+    val printSettings: PrintSettingsDocument = PrintSettingsDocument(),
+)
+
+
+@Serializable
+internal data class PrintSettingsDocument(
+    val paper: String = "a4",
+    val isLandscape: Boolean = false,
+    val fontSize: Int = 12,
+    val marginMm: Int = 15,
+    val columns: Int = 1,
+    val showChords: Boolean = true,
+    val showComments: Boolean = true,
+    val showMetadata: Boolean = true,
+    val showPageNumbers: Boolean = true,
+    val startSongsOnNewPage: Boolean = true,
+    val setlistMode: String = "song_sheets",
+    val includeSetlistOverview: Boolean = true,
 )

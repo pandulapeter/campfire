@@ -88,6 +88,19 @@ draft and every cover. A reinstall starts disconnected too: a
 launch that finds no preferences document forgets any credentials it finds, since the iOS Keychain outlives an
 uninstall and nothing else does.
 
+## Printing
+
+Song and setlist action menus offer a separate **Export to PDF** sheet (`presentation/ui/dialogs/PrintExportSheet.kt`).
+`PrintSettings` are local user preferences, mapped through `PrintSettingsDocument`, independent of the viewer's text
+size and folded sections. A setlist can export its running order or the selected song sheets, retaining the original
+slot numbers and the transposition of each entry; a lone song reached through a setlist uses that entry's key too.
+Missing or unreadable songs retain a visibly marked place. The source is a snapshot read when the sheet opens.
+`presentation/ui/print/PrintLayout.kt` lays out PDF points using the same font measurements as the preview, keeping
+lyric/chord pairs and guitar systems together, and flowing long songs across columns and pages. `PrintRenderer`
+draws both the preview and the lossless grayscale page images (216 dpi) embedded by the common `PrintPdfWriter`.
+These PDFs are for printing: they contain page images, not selectable text. Saving uses the existing `FilePicker`
+on every platform. New controls and text written into PDFs are localized in both languages.
+
 ## Conventions
 
 - Library modules apply the convention plugins from `gradle/build-logic` (`campfire-library`, or

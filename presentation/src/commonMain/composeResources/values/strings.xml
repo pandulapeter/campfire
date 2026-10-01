@@ -486,4 +486,43 @@
     <string name="app_update_restart">Restart</string>
     <string name="app_update_required">Update required</string>
     <string name="app_update_required_hint">This version of Campfire can no longer be used. Your library stays exactly where it is.</string>
+
+    <!-- PDF export -->
+    <string name="print_export">Export to PDF</string>
+    <string name="print_save">Save PDF</string>
+    <string name="print_preview">Preview</string>
+    <string name="print_options">Options</string>
+    <string name="print_paper">Paper size</string>
+    <string name="print_a4">A4</string>
+    <string name="print_letter">Letter</string>
+    <string name="print_landscape">Landscape</string>
+    <string name="print_font_size">Text size: %1$d pt</string>
+    <string name="print_margin">Margins: %1$d mm</string>
+    <string name="print_columns">Columns</string>
+    <string name="print_chords">Chords, tablature and grids</string>
+    <string name="print_comments">Comments</string>
+    <string name="print_metadata">Artist and song details</string>
+    <string name="print_page_numbers">Page numbers</string>
+    <string name="print_key_hint">Songs use their current key and chord notation. Export options are saved for next time.</string>
+    <string name="print_setlist_content">Setlist content</string>
+    <string name="print_song_sheets">Song sheets</string>
+    <string name="print_running_order">Running order</string>
+    <string name="print_overview">Include running order</string>
+    <string name="print_new_page">Start each song on a new page</string>
+    <string name="print_songs">Songs to export</string>
+    <string name="print_select_all">Select all</string>
+    <string name="print_select_none">Clear selection</string>
+    <string name="print_missing">Song file missing or unreadable</string>
+    <string name="print_load_failed">Could not prepare the preview.</string>
+    <string name="print_no_songs">Select at least one song to export.</string>
+    <string name="print_page">Page %1$d of %2$d</string>
+    <string name="print_previous">Previous</string>
+    <string name="print_next">Next</string>
+    <string name="print_key">Key</string>
+    <string name="print_capo">Capo</string>
+    <string name="print_tempo">Tempo</string>
+    <string name="print_time">Time</string>
+    <string name="print_verse">Verse</string>
+    <string name="print_chorus">Chorus</string>
+    <string name="print_bridge">Bridge</string>
 </resources>

@@ -43,6 +43,10 @@ import com.pandulapeter.campfire.data.model.domain.SyncProgress
 import com.pandulapeter.campfire.data.model.domain.SyncProviderId
 import com.pandulapeter.campfire.data.source.remote.api.model.AuthorizationCompletionPage
 import com.pandulapeter.campfire.data.model.domain.SyncState
+import com.pandulapeter.campfire.data.model.domain.PrintSettings
+import com.pandulapeter.campfire.data.model.domain.LibraryFiles
+import com.pandulapeter.campfire.presentation.ui.print.PrintSource
+import com.pandulapeter.campfire.presentation.ui.print.PrintSong
 import com.pandulapeter.campfire.data.model.domain.UserPreferences
 import com.pandulapeter.campfire.domain.api.models.ScreenData
 import com.pandulapeter.campfire.domain.api.models.SongFilter
@@ -2251,6 +2255,43 @@ class CampfireViewModel(
         }
     }
 
+    internal suspend fun preparePrintSource(dialog: DialogType.PrintExport): PrintSource {
+        val preferences = userPreferencesState.value.data
+        val setlist = dialog.setlist
+        val entries = setlist?.entries ?: listOf(Setlist.Entry(requireNotNull(dialog.song).fileName))
+        val songs = screenData.value.data?.unfilteredSongs.orEmpty().associateBy { it.fileName }
+        val songSetlist = dialog.songSetlistFileName?.let { name -> screenData.value.data?.setlists?.firstOrNull { it.fileName == name } }
+        val printSongs = entries.mapIndexed { index, entry ->
+            val song = songs[entry.songFileName] ?: dialog.song
+            val content = getSongContent(entry.songFileName)
+            val transposition = when {
+                setlist != null -> entry.transposition
+                songSetlist != null -> songSetlist.entries.firstOrNull { it.songFileName == entry.songFileName }?.transposition ?: 0
+                else -> preferences?.transpositions?.get(entry.songFileName) ?: 0
+            }
+            val rendered = content?.let { withContext(Dispatchers.Default) {
+                renderSong(it.text, transposition, preferences?.chordSpelling ?: UserPreferences.ChordSpelling.Default)
+            } }
+            PrintSong(entry.songFileName, song?.title ?: entry.songFileName.substringBeforeLast('.'), song?.artist,
+                index = if (setlist == null) null else index + 1, song = rendered)
+        }
+        return PrintSource(title = setlist?.title ?: requireNotNull(dialog.song).title,
+            description = setlist?.description.orEmpty(), date = setlist?.date?.toString(), isSetlist = setlist != null, songs = printSongs)
+    }
+
+    fun setPrintSettings(value: PrintSettings) = changeUserPreferences { copy(printSettings = value.normalized()) }
+
+    internal fun exportPdf(filePicker: FilePicker, title: String, onFinished: () -> Unit, create: suspend () -> ByteArray) {
+        if (fileTransferJob?.isActive == true) { onFinished(); return }
+        launchFileTransfer {
+            try {
+                save(filePicker) {
+                    ExportedFile(LibraryFiles.normalizedName(title) + ".pdf", "application/pdf", withContext(Dispatchers.Default) { create() })
+                }
+            } finally { onFinished() }
+        }
+    }
+
     fun exportSong(filePicker: FilePicker, songFileName: String) = launchFileTransfer {
         save(filePicker) { exportSongs(listOf(songFileName)) }
     }
@@ -2991,6 +3032,7 @@ class CampfireViewModel(
     }
 
     sealed interface DialogType {
+        data class PrintExport(val song: Song? = null, val setlist: Setlist? = null, val songSetlistFileName: String? = null) : DialogType
         data object NewSetlist : DialogType
         data object NewSong : DialogType
         data object SongFilters : DialogType
