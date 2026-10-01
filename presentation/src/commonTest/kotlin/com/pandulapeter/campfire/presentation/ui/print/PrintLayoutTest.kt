@@ -190,4 +190,14 @@ internal class PrintLayoutTest {
             }
         }
     }
+
+    @Test fun aChordOnlyLineTakesOneRow() {
+        val entry = song(listOf(
+            ChordProLine.Lyrics("", listOf(ChordProLine.Lyrics.Chord(0, "G", false), ChordProLine.Lyrics.Chord(0, "C", false))),
+            ChordProLine.Lyrics("Sung words", emptyList()),
+        ))
+        val texts = layout(source(entry)).pages.single().texts
+        assertEquals(texts.first { it.text == "G" }.y + 12 * 1.45f, texts.first { it.text == "Sung words" }.y, 0.01f)
+        assertFalse(texts.any { it.text.isBlank() || it.text.all { char -> char == '\u00A0' || char == ' ' } })
+    }
 }

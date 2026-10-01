@@ -129,9 +129,12 @@ internal fun layoutPrintDocument(
                                 }
                                 chordX = x + chordWidth + measure(" ", options.fontSize, false)
                             }
+                            // A fragment of chords over nothing but padding is one row of chords, not chords over an empty
+                            // lyric row; a blank fragment without chords is an empty line the song asked for.
+                            val isChordsOnly = parts.isNotEmpty() && fragment.all { it == ' ' || it == '\u00A0' || it == '\u200B' }
                             val lyricY = if (parts.isEmpty()) 0f else chordY + options.fontSize * 1.3f
-                            parts += Part(fragment, y = lyricY, size = options.fontSize)
-                            val rowHeight = lyricY + options.fontSize * 1.45f
+                            if (!isChordsOnly) parts += Part(fragment, y = lyricY, size = options.fontSize)
+                            val rowHeight = (if (isChordsOnly) chordY else lyricY) + options.fontSize * 1.45f
                             if (rowHeight <= capacity) add(Row(parts, rowHeight)) else {
                                 // A very long annotation can span a page by itself. Keep its final line with
                                 // the lyrics while allowing its preceding lines to flow through the document.
