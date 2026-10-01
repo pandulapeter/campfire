@@ -9,6 +9,10 @@
  */
 package com.pandulapeter.campfire.presentation.ui.print
 
+import androidx.compose.ui.geometry.Size
+import androidx.compose.ui.graphics.Canvas
+import androidx.compose.ui.graphics.ImageBitmap
+import androidx.compose.ui.graphics.drawscope.CanvasDrawScope
 import androidx.compose.ui.text.TextMeasurer
 import androidx.compose.ui.text.font.createFontFamilyResolver
 import androidx.compose.ui.unit.Density
@@ -86,8 +90,8 @@ internal class PrintRendererTest {
 
     @Test fun reusingThePageBitmapLeaksNothingBetweenPages() = runBlocking {
         val renderer = PrintRenderer(TextMeasurer(createFontFamilyResolver(), Density(1f), LayoutDirection.Ltr))
-        val top = PrintPage(listOf(PrintText(text = "MMMMMMMM", x = 10f, y = 5f, size = 20)))
-        val bottom = PrintPage(listOf(PrintText(text = "MMMMMMMM", x = 10f, y = 70f, size = 20)))
+        val top = PrintPage(listOf(PrintText(text = "MMMMMMMM", x = 10f, y = 5f, style = PrintStyle(20))))
+        val bottom = PrintPage(listOf(PrintText(text = "MMMMMMMM", x = 10f, y = 70f, style = PrintStyle(20))))
         val bytes = renderer.pdf(PrintDocument(width = 100f, height = 100f, pages = listOf(top, bottom, top)), "Pages")
         val width = 300
         val pages = imageStreams(bytes).map { stream -> unpack(inflate(stream), width) }
@@ -128,5 +132,31 @@ internal class PrintRendererTest {
             val byte = packed[index / width * rowBytes + index % width / 2].toInt() and 255
             if (index % width % 2 == 0) byte shr 4 else byte and 15
         }
+    }
+
+    @Test fun detailsArePrintedGrayAndLyricsBlack() = runBlocking {
+        val renderer = PrintRenderer(TextMeasurer(createFontFamilyResolver(), Density(1f), LayoutDirection.Ltr))
+        val song = ChordProParser.parse("{title: Gray}\n{key: D}\n{tempo: 96}\nWords that are sung in black")
+        val document = layoutPrintDocument(PrintSource("Gray", songs = listOf(PrintSong("gray.cho", "Gray", "Artist", song = song))),
+            PrintSettings(), PrintLabels("Key", "Capo", "Tempo", "Time", "Missing", "Chorus", "Bridge"), renderer::width)
+        val page = document.pages.first()
+        val scale = 3f
+        val width = ceil(document.width * scale).toInt()
+        val height = ceil(document.height * scale).toInt()
+        val bitmap = ImageBitmap(width, height)
+        CanvasDrawScope().draw(Density(1f), LayoutDirection.Ltr, Canvas(bitmap), Size(width.toFloat(), height.toFloat())) {
+            renderer.draw(this, page, scale)
+        }
+        fun darkest(text: PrintText): Int {
+            val left = (text.x * scale).toInt()
+            val top = (text.y * scale).toInt()
+            val right = ((text.x + renderer.width(text.text, text.style)) * scale).toInt()
+            val bottom = ((text.y + text.style.size * 1.2f) * scale).toInt()
+            val pixels = IntArray((right - left) * (bottom - top))
+            bitmap.readPixels(pixels, startX = left, startY = top, width = right - left, height = bottom - top)
+            return pixels.minOf { it shr 16 and 255 }
+        }
+        assertTrue(darkest(page.texts.first { it.text.startsWith("Key:") }) >= 70)
+        assertTrue(darkest(page.texts.first { it.text.startsWith("Words") }) <= 30)
     }
 }

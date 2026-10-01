@@ -22,6 +22,7 @@ import androidx.compose.ui.text.TextMeasurer
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.drawText
 import androidx.compose.ui.text.font.FontFamily
+import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.Density
 import androidx.compose.ui.unit.LayoutDirection
@@ -31,16 +32,32 @@ import kotlinx.coroutines.yield
 import kotlin.coroutines.coroutineContext
 import kotlin.math.ceil
 
-internal class PrintRenderer(private val measurer: TextMeasurer, private val fontFamily: FontFamily = FontFamily.Monospace) {
-    private val cache = mutableMapOf<Triple<String, Int, Boolean>, TextLayoutResult>()
+/**
+ * Draws and measures the texts of a [PrintDocument]. [textFontFamily] is the face the viewer sets lyrics in, and
+ * [monospaceFontFamily] the one of its tablature and grids, so that the page reads like the screen.
+ */
+internal class PrintRenderer(
+    private val measurer: TextMeasurer,
+    private val monospaceFontFamily: FontFamily = FontFamily.Monospace,
+    private val textFontFamily: FontFamily = FontFamily.Default,
+) {
+    private val cache = mutableMapOf<Pair<String, PrintStyle>, TextLayoutResult>()
 
-    private fun text(value: String, size: Int, bold: Boolean): TextLayoutResult {
+    private fun PrintStyle.toTextStyle() = TextStyle(
+        color = Color(gray, gray, gray),
+        fontFamily = if (monospace) monospaceFontFamily else textFontFamily,
+        fontSize = size.sp,
+        fontWeight = if (bold) FontWeight.Bold else FontWeight.Normal,
+        fontStyle = if (italic) FontStyle.Italic else FontStyle.Normal,
+        fontFeatureSettings = "liga=0",
+    )
+
+    private fun text(value: String, style: PrintStyle): TextLayoutResult {
         if (cache.size >= 512) cache.clear()
-        return cache.getOrPut(Triple(value, size, bold)) {
+        return cache.getOrPut(value to style) {
             measurer.measure(
                 text = value,
-                style = TextStyle(color = Color.Black, fontFamily = fontFamily, fontSize = size.sp,
-                    fontWeight = if (bold) FontWeight.Bold else FontWeight.Normal, fontFeatureSettings = "liga=0"),
+                style = style.toTextStyle(),
                 softWrap = false,
                 density = Density(1f, 1f),
                 layoutDirection = LayoutDirection.Ltr,
@@ -48,17 +65,15 @@ internal class PrintRenderer(private val measurer: TextMeasurer, private val fon
         }
     }
 
-    fun width(value: String, size: Int, bold: Boolean): Float {
+    fun width(value: String, style: PrintStyle): Float {
         // Measuring intermediate substrings must not keep all of them alive for the life of a large setlist.
-        return measurer.measure(value, TextStyle(fontFamily = fontFamily, fontSize = size.sp,
-            fontWeight = if (bold) FontWeight.Bold else FontWeight.Normal, fontFeatureSettings = "liga=0"),
-            softWrap = false, density = Density(1f, 1f), layoutDirection = LayoutDirection.Ltr).size.width.toFloat()
+        return measurer.measure(value, style.toTextStyle(), softWrap = false, density = Density(1f, 1f), layoutDirection = LayoutDirection.Ltr).size.width.toFloat()
     }
 
     fun draw(scope: DrawScope, page: PrintPage, scale: Float) = with(scope) {
         drawRect(Color.White)
         scale(scale, scale, pivot = Offset.Zero) {
-            page.texts.forEach { item -> drawText(text(item.text, item.size, item.bold), topLeft = Offset(item.x, item.y)) }
+            page.texts.forEach { item -> drawText(text(item.text, item.style), topLeft = Offset(item.x, item.y)) }
         }
     }
 

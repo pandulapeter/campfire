@@ -16,7 +16,7 @@ import kotlin.test.*
 
 internal class PrintLayoutTest {
     private val labels = PrintLabels("Key", "Capo", "Tempo", "Time", "Missing", "Chorus", "Bridge")
-    private fun measure(text: String, size: Int, bold: Boolean) = text.count { it != '\u200B' } * size * 0.6f
+    private fun measure(text: String, style: PrintStyle) = text.count { it != '\u200B' } * style.size * 0.6f
     private suspend fun layout(source: PrintSource, settings: PrintSettings = PrintSettings()) = layoutPrintDocument(source, settings, labels, ::measure)
     private fun song(lines: List<ChordProLine>, blocks: List<ChordProBlock>? = null) = PrintSong("song.cho", "A song", "Artist", song = ChordProSong(
         ChordProMetadata(key = "D", capo = 2), blocks ?: listOf(ChordProBlock.Section(SectionType.Verse, "Verse", lines))))
@@ -37,13 +37,13 @@ internal class PrintLayoutTest {
         val columnWidth = (document.width - 2 * margin - 18) / 2
         texts.forEach { item ->
             assertTrue(item.x >= margin)
-            assertTrue(item.x + measure(item.text, item.size, item.bold) <= document.width - margin + 0.01f, item.toString())
+            assertTrue(item.x + measure(item.text, item.style) <= document.width - margin + 0.01f, item.toString())
             assertTrue(item.y < document.height - margin + 0.01f)
-            if (item.text != "D" && item.size != 9) assertTrue(measure(item.text, item.size, item.bold) <= columnWidth)
+            if (item.text != "D" && item.style.size != 9) assertTrue(measure(item.text, item.style) <= columnWidth)
         }
         document.pages.forEach { page ->
             page.texts.filter { it.text == "D" }.forEach { chord ->
-                assertTrue(page.texts.any { it.x == chord.x && it.y > chord.y && it.y < chord.y + 30 && !it.bold })
+                assertTrue(page.texts.any { it.x == chord.x && it.y > chord.y && it.y < chord.y + 30 && !it.style.bold })
             }
         }
     }
@@ -53,7 +53,7 @@ internal class PrintLayoutTest {
         val texts = layout(source(song(listOf(line)))).pages.single().texts
         val lyrics = texts.first { it.text.startsWith("a") }
         val chord = texts.first { it.text == "D" }
-        assertEquals(lyrics.x + measure(lyrics.text.substringBefore('b'), lyrics.size, false), chord.x, 0.01f)
+        assertEquals(lyrics.x + measure(lyrics.text.substringBefore('b'), lyrics.style), chord.x, 0.01f)
         assertTrue(chord.y < lyrics.y)
     }
 
@@ -157,7 +157,7 @@ internal class PrintLayoutTest {
     @Test fun aWrappedPreformattedRunHasNoGapBetweenItsSystems() = runTest {
         val lines = listOf("G" + " ".repeat(60) + "C", "Words " .repeat(12)).mapIndexed { i, text -> ChordProLine.Tab(text, continuesEnvironment = i > 0) }
         val page = layout(source(song(lines)), PrintSettings(columns = 2, fontSize = 16)).pages.single().texts
-        val texts = page.filter { it.size == 16 && it.y > page.first { label -> label.text == "Verse" }.y }
+        val texts = page.filter { it.style.size == 16 && it.y > page.first { label -> label.text == "Verse" }.y }
         assertTrue(texts.size > 2)
         texts.zipWithNext().forEach { (upper, lower) -> assertEquals(16 * 1.45f, lower.y - upper.y, 0.01f) }
     }
@@ -207,8 +207,8 @@ internal class PrintLayoutTest {
             document.pages.forEachIndexed { index, page ->
                 val number = page.texts.single { it.text == "${index + 1} / ${document.pages.size}" }
                 assertTrue(number.y + 11 <= document.height - margin && number.y >= bottom, number.toString())
-                assertEquals(document.width / 2, number.x + measure(number.text, number.size, false) / 2, 0.01f)
-                (page.texts - number).forEach { assertTrue(it.y + it.size * 1.45f <= bottom + 0.01f, it.toString()) }
+                assertEquals(document.width / 2, number.x + measure(number.text, number.style) / 2, 0.01f)
+                (page.texts - number).forEach { assertTrue(it.y + it.style.size * 1.45f <= bottom + 0.01f, it.toString()) }
             }
         }
     }
@@ -235,12 +235,12 @@ internal class PrintLayoutTest {
         val margin = settings.marginMm * 72f / 25.4f
         val columnWidth = (document.width - 2 * margin - 18) / 2
         val label = texts.first { it.text == "Verse" }
-        val annotationRows = texts.filter { annotation.contains(it.text.trim()) && it.bold && it.text.isNotBlank() && it.text != "Verse" }
-        assertEquals(label.y + 12 * 1.45f, annotationRows.minOf { it.y }, 0.01f)
+        val annotationRows = texts.filter { annotation.contains(it.text.trim()) && it.style.bold && it.text.isNotBlank() && it.text != "Verse" }
+        assertEquals(label.y + label.style.size * 1.45f, annotationRows.minOf { it.y }, 0.01f)
         val lyrics = texts.first { it.text.contains("here") }
         val follow = texts.first { it.text.contains("follow") }
         assertTrue(follow.y <= lyrics.y + 12 * 2.75f + 0.01f, "$lyrics $follow")
-        texts.filter { it.size != 9 }.forEach { assertTrue(it.x + measure(it.text, it.size, it.bold) <= margin + columnWidth + 0.01f, it.toString()) }
+        texts.filter { it.style.size != 9 }.forEach { assertTrue(it.x + measure(it.text, it.style) <= margin + columnWidth + 0.01f, it.toString()) }
     }
 
     @Test fun aChorusRecallIsHeadedByItsOwnLabel() = runTest {
@@ -255,7 +255,7 @@ internal class PrintLayoutTest {
 
     @Test fun aChorusRecallWithNothingToRecallPrintsItsHeading() = runTest {
         val texts = layout(source(song(emptyList(), listOf(ChordProBlock.ChorusRecall(null))))).pages.flatMap { it.texts }
-        assertEquals(1, texts.count { it.text == "Chorus" && it.bold })
+        assertEquals(1, texts.count { it.text == "Chorus" && it.style.bold })
     }
 
     @Test fun onlyANamedVerseIsHeaded() = runTest {
@@ -263,7 +263,7 @@ internal class PrintLayoutTest {
         val named = ChordProBlock.Section(SectionType.Verse, "Verse 2", lyrics(2, "Named"))
         val texts = layout(source(song(emptyList(), listOf(unnamed, named)))).pages.flatMap { it.texts }
         assertFalse(texts.any { it.text == "Verse" })
-        assertEquals(1, texts.count { it.text == "Verse 2" && it.bold })
+        assertEquals(1, texts.count { it.text == "Verse 2" && it.style.bold })
         assertTrue(texts.first { it.text == "Plain 1" }.y < texts.first { it.text == "Verse 2" }.y)
     }
 
@@ -275,7 +275,7 @@ internal class PrintLayoutTest {
         suspend fun rows(tokens: List<GridToken>): List<String> {
             val entry = song(emptyList(), listOf(ChordProBlock.Section(SectionType.Paragraph, null, listOf(ChordProLine.Grid(tokens)))))
             // A two-column A4 page at 20 points holds three of these bars to a row, and not four.
-            return layout(source(entry), PrintSettings(columns = 2, fontSize = 20)).pages.flatMap { it.texts }.filter { it.size == 20 && it.bold }.map { it.text }
+            return layout(source(entry), PrintSettings(columns = 2, fontSize = 20)).pages.flatMap { it.texts }.filter { it.style.size == 20 && it.style.bold }.map { it.text }
         }
         val bars = setOf("|", "|:", ":|")
         val tokens = grid(emptyList())
@@ -333,7 +333,22 @@ internal class PrintLayoutTest {
             ChordProLine.Lyrics("Line $line of a short song", chords.mapIndexed { index, chord -> ChordProLine.Lyrics.Chord(index * 5, chord, false) })
         }
         var calls = 0
-        layoutPrintDocument(source(song(lines)), PrintSettings(), labels) { text, size, bold -> calls++; measure(text, size, bold) }
+        layoutPrintDocument(source(song(lines)), PrintSettings(), labels) { text, style -> calls++; measure(text, style) }
         assertTrue(calls <= 12 * 40, "$calls measurements")
+    }
+
+    @Test fun onlyTablatureAndGridsAreMonospaceAndTheTitleLeads() = runTest {
+        val entry = song(listOf(
+            ChordProLine.Lyrics("Sung words", listOf(ChordProLine.Lyrics.Chord(0, "D", false))),
+            ChordProLine.Tab("e|--0--2--|"),
+            ChordProLine.Grid(listOf(GridToken.Bar("|"), GridToken.Chord("G"), GridToken.Bar("|"))),
+        ))
+        val texts = layout(source(entry)).pages.single().texts
+        assertTrue(texts.single { it.text == "e|--0--2--|" }.style.monospace)
+        assertTrue(texts.single { it.text == "| G |" }.style.monospace)
+        assertFalse(texts.single { it.text == "Sung words" }.style.monospace)
+        assertFalse(texts.single { it.text == "D" }.style.monospace)
+        assertEquals(PrintStyle(19, bold = true), texts.single { it.text == "A song" }.style)
+        assertEquals(90, texts.single { it.text == "Verse" }.style.gray)
     }
 }
