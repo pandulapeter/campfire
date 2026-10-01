@@ -73,6 +73,7 @@ internal class PrintRenderer(
     fun draw(scope: DrawScope, page: PrintPage, scale: Float) = with(scope) {
         drawRect(Color.White)
         scale(scale, scale, pivot = Offset.Zero) {
+            page.rules.forEach { rule -> drawRect(Color(rule.gray, rule.gray, rule.gray), topLeft = Offset(rule.x, rule.y), size = Size(rule.width, rule.height)) }
             page.texts.forEach { item -> drawText(text(item.text, item.style), topLeft = Offset(item.x, item.y)) }
         }
     }

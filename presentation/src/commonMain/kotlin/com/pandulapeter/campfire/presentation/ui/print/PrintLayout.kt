@@ -42,7 +42,9 @@ internal data class PrintStyle(val size: Int, val bold: Boolean = false, val ita
 
 /** Coordinates and sizes are PDF points (1/72 inch), independent of screen density and accessibility text size. */
 internal data class PrintText(val text: String, val x: Float, val y: Float, val style: PrintStyle)
-internal data class PrintPage(val texts: List<PrintText>)
+/** A filled rectangle, the way frames and bars are drawn; in PDF points like the texts, [gray] from 0 (black) to 255. */
+internal data class PrintRule(val x: Float, val y: Float, val width: Float, val height: Float, val gray: Int = 0)
+internal data class PrintPage(val texts: List<PrintText>, val rules: List<PrintRule> = emptyList())
 internal data class PrintDocument(val width: Float, val height: Float, val pages: List<PrintPage>)
 internal data class PrintLabels(val key: String, val capo: String, val tempo: String, val time: String, val missing: String, val chorus: String, val bridge: String)
 
@@ -74,6 +76,8 @@ internal suspend fun layoutPrintDocument(
     val titleStyle = PrintStyle((options.fontSize * 1.6f).roundToInt(), bold = true)
     val lyricStyle = PrintStyle(options.fontSize)
     val chordStyle = PrintStyle(options.fontSize, bold = true)
+    val annotationStyle = PrintStyle(options.fontSize, italic = true)
+    val commentStyle = PrintStyle(options.fontSize, italic = true, gray = 90)
     val detailStyle = PrintStyle(options.fontSize - 1, gray = 90)
     val labelStyle = PrintStyle(options.fontSize - 1, bold = true, gray = 90)
     val tabStyle = PrintStyle(options.fontSize, monospace = true)
@@ -84,14 +88,14 @@ internal suspend fun layoutPrintDocument(
     val shortMeasurements = mutableMapOf<Pair<String, PrintStyle>, Float>()
     fun measure(text: String, style: PrintStyle): Float =
         if (text.length <= 8) shortMeasurements.getOrPut(text to style) { measureText(text, style) } else measureText(text, style)
-    val pages = mutableListOf<MutableList<PrintText>>()
+    val pages = mutableListOf<PageContent>()
     var column = 0
     var y = margin
-    fun page() { pages.add(mutableListOf()); column = 0; y = margin }
+    fun page() { pages.add(PageContent()); column = 0; y = margin }
     fun nextColumn() {
         if (column + 1 < options.columns) { column++; y = margin } else page()
     }
-    fun newPage() { if (pages.isNotEmpty() && pages.last().isNotEmpty()) page() }
+    fun newPage() { if (pages.isNotEmpty() && pages.last().texts.isNotEmpty()) page() }
     fun space(amount: Float) { y = (y + amount).coerceAtMost(bottom) }
     fun place(rows: List<Row>, keepWhole: Boolean = true) {
         val total = rows.height()
@@ -101,18 +105,34 @@ internal suspend fun layoutPrintDocument(
         rows.forEach { row ->
             if (y + row.height > bottom) nextColumn()
             val x = margin + column * (columnWidth + gutter)
-            row.parts.forEach { part -> pages.last().add(PrintText(part.text, x + part.x, y + part.y, part.style)) }
+            row.parts.forEach { part -> pages.last().texts.add(PrintText(part.text, x + part.x, y + part.y, part.style)) }
+            row.rules.forEach { rule -> pages.last().rules.add(rule.copy(x = x + rule.x, y = y + rule.y)) }
             y += row.height
         }
     }
     // A line break inside a text (a setlist description has up to three lines) starts a row of its own, since a row is
     // one line tall and the renderer would draw the rest over whatever comes under it.
-    fun wrapped(text: String, style: PrintStyle = lyricStyle): List<Row> = text.lines().flatMap { line ->
-        wrapPrintText(line, columnWidth) { measure(it, style) }.map { Row(listOf(Part(it, style = style)), style.size * 1.45f) }
+    fun wrapped(text: String, style: PrintStyle = lyricStyle, width: Float = columnWidth): List<Row> = text.lines().flatMap { line ->
+        wrapPrintText(line, width) { measure(it, style) }.map { Row(listOf(Part(it, style = style)), style.size * 1.45f) }
     }
     // The space above a label belongs to its first row, so that it never ends a column on its own or opens one with a gap.
     fun label(text: String): List<Row> = wrapped(text, labelStyle).mapIndexed { index, row ->
         if (index == 0) Row(row.parts.map { it.copy(y = it.y + labelSpace) }, row.height + labelSpace) else row
+    }
+    // Every row of a boxed comment carries its own piece of the frame, inside its own height, so that a box the
+    // placement splits between columns continues as an open frame and never draws over what is before or after it.
+    fun boxed(text: String): List<Row> {
+        val rows = wrapped(text, lyricStyle, columnWidth - 10f)
+        return rows.mapIndexed { index, row ->
+            val top = if (index == 0) 3f else 0f
+            val height = row.height + top + if (index == rows.lastIndex) 3f else 0f
+            Row(row.parts.map { it.copy(x = it.x + 5f, y = it.y + top) }, height, buildList {
+                add(PrintRule(0f, 0f, 0.75f, height))
+                add(PrintRule(columnWidth - 0.75f, 0f, 0.75f, height))
+                if (index == 0) add(PrintRule(0f, 0f, columnWidth, 0.75f))
+                if (index == rows.lastIndex) add(PrintRule(0f, height - 0.75f, columnWidth, 0.75f))
+            })
+        }
     }
     fun metadata(song: ChordProSong): String = listOfNotNull(
         song.metadata.key?.takeIf { options.showChords }?.let { "${labels.key}: $it" },
@@ -140,7 +160,7 @@ internal suspend fun layoutPrintDocument(
                             // A chord wider than the column is wrapped onto rows of its own, so the lyrics under it are padded
                             // to a column at most rather than to its full width.
                             val lyrics = if (visible.chords.isNotEmpty()) visible.padLyricsToFitChords(
-                                chordWidths = visible.chords.map { minOf(measure(it.name, chordStyle), columnWidth) },
+                                chordWidths = visible.chords.map { minOf(measure(it.name, if (it.isAnnotation) annotationStyle else chordStyle), columnWidth) },
                                 gap = measure(" ", lyricStyle),
                                 paddingWidth = measure("\u00A0", lyricStyle),
                                 measureWidth = { measure(it, lyricStyle) },
@@ -158,14 +178,16 @@ internal suspend fun layoutPrintDocument(
                                 chords.forEach { chord ->
                                     val anchor = measure(fragment.take((chord.position - start).coerceIn(0, fragment.length)), lyricStyle)
                                     var x = maxOf(anchor, chordX)
-                                    val chordWidth = measure(chord.name, chordStyle)
+                                    // An annotation is an instruction rather than a chord, so it is set apart from the chords.
+                                    val style = if (chord.isAnnotation) annotationStyle else chordStyle
+                                    val chordWidth = measure(chord.name, style)
                                     if (x > 0f && x + chordWidth > columnWidth) { chordY += options.fontSize * 1.3f; x = 0f }
-                                    val pieces = wrapPrintText(chord.name, columnWidth) { measure(it, chordStyle) }
+                                    val pieces = wrapPrintText(chord.name, columnWidth) { measure(it, style) }
                                     pieces.forEachIndexed { i, name ->
                                         if (i > 0) { chordY += options.fontSize * 1.3f; x = 0f }
-                                        parts += Part(name, x = x, y = chordY, style = chordStyle)
+                                        parts += Part(name, x = x, y = chordY, style = style)
                                     }
-                                    val lastWidth = if (pieces.size == 1) chordWidth else measure(pieces.last(), chordStyle)
+                                    val lastWidth = if (pieces.size == 1) chordWidth else measure(pieces.last(), style)
                                     chordX = x + lastWidth + measure(" ", lyricStyle)
                                 }
                                 // A fragment of chords over nothing but padding is one row of chords, not chords over an empty
@@ -229,7 +251,11 @@ internal suspend fun layoutPrintDocument(
             if (block.lines.isNotEmpty() && lines.none { row -> row.parts.any { !it.text.isPrintBlank() } }) emptyList()
             else (labelOverride ?: sectionLabel?.takeUnless { block.isContinuation })?.let(::label).orEmpty() + lines
         }
-        is ChordProBlock.Comment -> if (options.showComments && (!block.isInTabOrGrid || options.showChords)) wrapped(block.text) else emptyList()
+        is ChordProBlock.Comment -> when {
+            !options.showComments || (block.isInTabOrGrid && !options.showChords) -> emptyList()
+            block.style == CommentStyle.BOX -> boxed(block.text)
+            else -> wrapped(block.text, commentStyle)
+        }
         is ChordProBlock.ChorusRecall -> {
             // As in the viewer, the recall's own heading goes on the first recalled piece that prints anything, and is
             // printed on its own when nothing is: a recall says where the chorus is sung, even with nothing under it.
@@ -306,7 +332,12 @@ internal suspend fun layoutPrintDocument(
 }
 
 private data class Part(val text: String, val x: Float = 0f, val y: Float = 0f, val style: PrintStyle)
-private data class Row(val parts: List<Part>, val height: Float)
+private data class Row(val parts: List<Part>, val height: Float, val rules: List<PrintRule> = emptyList())
+
+private class PageContent {
+    val texts = mutableListOf<PrintText>()
+    val rules = mutableListOf<PrintRule>()
+}
 
 private fun List<Row>.height() = sumOf { it.height.toDouble() }.toFloat()
 
@@ -328,16 +359,16 @@ private fun String.isPrintBlank() = all { it.isWhitespace() || it == '\u00A0' ||
 private fun finishPrintDocument(
     width: Float,
     height: Float,
-    pages: List<List<PrintText>>,
+    pages: List<PageContent>,
     settings: PrintSettings,
     margin: Float,
     measure: (text: String, style: PrintStyle) -> Float,
 ): PrintDocument {
-    val nonempty = pages.filter { it.isNotEmpty() }
-    return PrintDocument(width, height, nonempty.mapIndexed { index, texts ->
+    val nonempty = pages.filter { it.texts.isNotEmpty() }
+    return PrintDocument(width, height, nonempty.mapIndexed { index, page ->
         val number = "${index + 1} / ${nonempty.size}"
         val style = PrintStyle(9, gray = 90)
-        PrintPage(if (settings.showPageNumbers) texts + PrintText(number, (width - measure(number, style)) / 2, height - margin - 11f, style) else texts)
+        PrintPage(if (settings.showPageNumbers) page.texts + PrintText(number, (width - measure(number, style)) / 2, height - margin - 11f, style) else page.texts, page.rules)
     })
 }
 

@@ -235,7 +235,7 @@ internal class PrintLayoutTest {
         val margin = settings.marginMm * 72f / 25.4f
         val columnWidth = (document.width - 2 * margin - 18) / 2
         val label = texts.first { it.text == "Verse" }
-        val annotationRows = texts.filter { annotation.contains(it.text.trim()) && it.style.bold && it.text.isNotBlank() && it.text != "Verse" }
+        val annotationRows = texts.filter { annotation.contains(it.text.trim()) && it.style.italic && it.text.isNotBlank() }
         assertEquals(label.y + label.style.size * 1.45f, annotationRows.minOf { it.y }, 0.01f)
         val lyrics = texts.first { it.text.contains("here") }
         val follow = texts.first { it.text.contains("follow") }
@@ -350,5 +350,44 @@ internal class PrintLayoutTest {
         assertFalse(texts.single { it.text == "D" }.style.monospace)
         assertEquals(PrintStyle(19, bold = true), texts.single { it.text == "A song" }.style)
         assertEquals(90, texts.single { it.text == "Verse" }.style.gray)
+    }
+
+    @Test fun anAnnotationIsItalicAndNotBold() = runTest {
+        val entry = song(listOf(ChordProLine.Lyrics("Sing", listOf(ChordProLine.Lyrics.Chord(0, "Everybody", true), ChordProLine.Lyrics.Chord(0, "D7", false)))))
+        val texts = layout(source(entry)).pages.single().texts
+        val annotation = texts.single { it.text == "Everybody" }
+        assertTrue(annotation.style.italic && !annotation.style.bold)
+        assertTrue(texts.single { it.text == "D7" }.style.bold)
+    }
+
+    @Test fun aPlainCommentIsItalic() = runTest {
+        val texts = layout(source(song(emptyList(), listOf(ChordProBlock.Comment("Repeat twice", CommentStyle.PLAIN))))).pages.single().texts
+        assertTrue(texts.single { it.text == "Repeat twice" }.style.italic)
+    }
+
+    @Test fun aBoxedCommentIsFramedInsideItsColumn() = runTest {
+        val settings = PrintSettings(columns = 2)
+        val document = layout(source(song(emptyList(), listOf(ChordProBlock.Comment("Boxed", CommentStyle.BOX)))), settings)
+        val page = document.pages.single()
+        val text = page.texts.single { it.text == "Boxed" }
+        val margin = settings.marginMm * 72f / 25.4f
+        val columnWidth = (document.width - 2 * margin - 18) / 2
+        assertEquals(4, page.rules.size)
+        page.rules.forEach { assertTrue(it.x >= margin - 0.01f && it.x + it.width <= margin + columnWidth + 0.01f, it.toString()) }
+        assertTrue(page.rules.minOf { it.x } < text.x && page.rules.maxOf { it.x + it.width } > text.x + measure(text.text, text.style))
+        assertTrue(page.rules.minOf { it.y } < text.y && page.rules.maxOf { it.y + it.height } > text.y + text.style.size * 1.2f)
+    }
+
+    @Test fun aBoxedCommentSplitBetweenColumnsStaysAnOpenFrame() = runTest {
+        val settings = PrintSettings(columns = 2)
+        val document = layout(source(song(emptyList(), listOf(ChordProBlock.Comment("Boxed words ".repeat(120).trim(), CommentStyle.BOX)))), settings)
+        val rules = document.pages.first().rules
+        val margin = settings.marginMm * 72f / 25.4f
+        val horizontal = rules.filter { it.width > 1f }
+        val vertical = rules.filter { it.width < 1f }
+        assertEquals(2, horizontal.size)
+        assertTrue(vertical.any { it.x < document.width / 2 } && vertical.any { it.x > document.width / 2 })
+        assertTrue(horizontal.minOf { it.x } < document.width / 2 && horizontal.maxOf { it.x } > document.width / 2)
+        assertTrue(rules.all { it.y >= margin - 0.01f })
     }
 }
