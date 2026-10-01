@@ -120,9 +120,9 @@ internal fun PrintExportSheet(viewModel: CampfireViewModel, dialog: CampfireView
     val textFontFamily = MaterialTheme.typography.bodyLarge.fontFamily ?: FontFamily.Default
     fun newRenderer() = PrintRenderer(TextMeasurer(fontResolver, Density(1f), LayoutDirection.Ltr, cacheSize = 256), fontFamily, textFontFamily)
     val renderer = remember(fontResolver, fontFamily, textFontFamily) { newRenderer() }
-    val labels = PrintLabels(stringResource(Res.string.print_key), stringResource(Res.string.print_capo),
-        stringResource(Res.string.print_tempo), stringResource(Res.string.print_time), stringResource(Res.string.print_missing),
-        stringResource(Res.string.print_chorus), stringResource(Res.string.print_bridge))
+    val labels = PrintLabels(stringResource(Res.string.song_editor_insert_key), stringResource(Res.string.song_editor_insert_capo),
+        stringResource(Res.string.song_editor_insert_tempo), stringResource(Res.string.print_time), stringResource(Res.string.print_missing),
+        stringResource(Res.string.song_details_section_chorus), stringResource(Res.string.song_details_section_bridge))
     LaunchedEffect(dialog, attempt) {
         failed = false
         try {
@@ -408,7 +408,7 @@ private fun PrintOptions(modifier: Modifier, source: PrintSource, settings: Prin
                     SettingsSectionTitle(text = stringResource(Res.string.print_songs))
                     Row(Modifier.padding(horizontal = 4.dp)) {
                         TextButton(onClick = { onSelected(source.songs.indices.toSet()) }) { Text(stringResource(Res.string.print_select_all)) }
-                        TextButton(onClick = { onSelected(emptySet()) }) { Text(stringResource(Res.string.print_select_none)) }
+                        TextButton(onClick = { onSelected(emptySet()) }) { Text(stringResource(Res.string.songs_tags_clear)) }
                     }
                 }
             }

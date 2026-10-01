@@ -516,7 +516,6 @@
     <string name="print_new_page">Start each song on a new page</string>
     <string name="print_songs">Songs to export</string>
     <string name="print_select_all">Select all</string>
-    <string name="print_select_none">Clear selection</string>
     <string name="print_missing">Song file missing or unreadable</string>
     <string name="print_load_failed">Could not prepare the PDF.</string>
     <string name="print_no_songs">Select at least one song to export.</string>
@@ -526,10 +525,5 @@
     <string name="print_next">Next</string>
     <string name="print_zoom_in">Zoom in</string>
     <string name="print_zoom_out">Zoom out</string>
-    <string name="print_key">Key</string>
-    <string name="print_capo">Capo</string>
-    <string name="print_tempo">Tempo</string>
     <string name="print_time">Time</string>
-    <string name="print_chorus">Chorus</string>
-    <string name="print_bridge">Bridge</string>
 </resources>
