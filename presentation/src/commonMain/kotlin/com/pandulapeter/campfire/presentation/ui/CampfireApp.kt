@@ -69,6 +69,7 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.SideEffect
 import androidx.compose.runtime.Stable
 import androidx.compose.runtime.State
+import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableIntStateOf
@@ -90,6 +91,7 @@ import androidx.compose.ui.layout.Placeable
 import androidx.compose.ui.layout.SubcomposeLayout
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalLayoutDirection
+import androidx.compose.ui.semantics.clearAndSetSemantics
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.Density
 import androidx.compose.ui.unit.Dp
@@ -596,6 +598,11 @@ private fun CampfireScreens(
     // What the screens' own lifecycles are compared with, see ScreenSurface.
     val hostLifecycle = LocalLifecycleOwner.current.lifecycle
     val printExportTransition = remember { PrintExportTransition() }
+    // The export screen is drawn in this layout rather than in a window of its own, which a screen reader would take for
+    // modal, so the app under it is taken out of the semantics tree while it covers it - only once fully, so that the
+    // screen a back gesture is revealing is not empty to an accessibility service halfway through the swipe. Derived,
+    // so that the app is not recomposed on every frame of the slide.
+    val isPrintExportCovering by remember { derivedStateOf { printExportTransition.progress.value >= 1f } }
 
     Box(
         modifier = Modifier.fillMaxSize()
@@ -604,7 +611,8 @@ private fun CampfireScreens(
             // The export screen is dealt over the screens the way a destination is, so they give way to it the same way.
             modifier = Modifier
                 .fillMaxSize()
-                .graphicsLayer { translationX = -backgroundSlideOffset((printExportTransition.progress.value * size.width).roundToInt()).toFloat() },
+                .graphicsLayer { translationX = -backgroundSlideOffset((printExportTransition.progress.value * size.width).roundToInt()).toFloat() }
+                .then(if (isPrintExportCovering) Modifier.clearAndSetSemantics { } else Modifier),
             backStack = backStack,
             onBack = viewModel::navigateBack,
             // The same spec decides the direction for both parameters, see navigationTransition. Nothing is animated
