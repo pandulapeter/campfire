@@ -1153,7 +1153,7 @@ private fun SongGridLine(
  * starts with a stray bar line. The line that opens the first bar stays with it, and whatever follows the last bar
  * line (a repeat count, a comment) is a piece of its own.
  */
-private fun List<GridToken>.bars(): List<List<GridToken>> {
+internal fun List<GridToken>.bars(): List<List<GridToken>> {
     val bars = mutableListOf<List<GridToken>>()
     var bar = mutableListOf<GridToken>()
     forEach { token ->

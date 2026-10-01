@@ -255,4 +255,24 @@ internal class PrintLayoutTest {
         assertEquals(1, texts.count { it.text == "Verse 2" && it.bold })
         assertTrue(texts.first { it.text == "Plain 1" }.y < texts.first { it.text == "Verse 2" }.y)
     }
+
+    @Test fun aGridLineBreaksBetweenBars() {
+        val chords = listOf("C", "F", "G", "Am", "Dm", "Em", "F", "G")
+        fun grid(prefix: List<GridToken>) = prefix + listOf(GridToken.Bar("|:")) + chords.flatMapIndexed { index, chord ->
+            listOf(GridToken.Chord(chord), GridToken.Beat, GridToken.Bar(if (index == chords.lastIndex) ":|" else "|"))
+        }
+        fun rows(tokens: List<GridToken>): List<String> {
+            val entry = song(emptyList(), listOf(ChordProBlock.Section(SectionType.Paragraph, null, listOf(ChordProLine.Grid(tokens)))))
+            // A two-column A4 page at 20 points holds three of these bars to a row, and not four.
+            return layout(source(entry), PrintSettings(columns = 2, fontSize = 20)).pages.flatMap { it.texts }.filter { it.size == 20 && it.bold }.map { it.text }
+        }
+        val bars = setOf("|", "|:", ":|")
+        val tokens = grid(emptyList())
+        val rows = rows(tokens)
+        assertTrue(rows.size > 2, rows.toString())
+        rows.dropLast(1).forEach { assertTrue(it.substringAfterLast(' ') in bars, rows.toString()) }
+        rows.drop(1).forEach { assertFalse(it.substringBefore(' ') in bars, rows.toString()) }
+        assertEquals(tokens.joinToString(" ") { (it as? GridToken.Chord)?.name ?: (it as? GridToken.Bar)?.text ?: "." }, rows.joinToString(" "))
+        assertTrue(rows(grid(listOf(GridToken.Text("Intro")))).first().startsWith("Intro"))
+    }
 }

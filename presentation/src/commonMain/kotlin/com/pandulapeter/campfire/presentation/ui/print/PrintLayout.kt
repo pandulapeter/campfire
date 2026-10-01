@@ -11,6 +11,7 @@ package com.pandulapeter.campfire.presentation.ui.print
 
 import com.pandulapeter.campfire.chordpro.model.*
 import com.pandulapeter.campfire.chordpro.ChordProTabWrapper
+import com.pandulapeter.campfire.presentation.ui.screens.songDetails.bars
 import com.pandulapeter.campfire.presentation.ui.screens.songDetails.padLyricsToFitChords
 import com.pandulapeter.campfire.data.model.domain.PrintSettings
 
@@ -166,15 +167,22 @@ internal fun layoutPrintDocument(
                                 } else addAll(rows)
                             }
                         }
-                        is ChordProLine.Grid -> if (options.showChords) addAll(wrapped(line.tokens.joinToString(" ") { token ->
-                            when (token) {
-                                is GridToken.Bar -> token.text
-                                is GridToken.Chord -> token.name
-                                is GridToken.Text -> token.text
-                                is GridToken.Repeat -> token.text
-                                GridToken.Beat -> "."
+                        is ChordProLine.Grid -> if (options.showChords) {
+                            // A grid line is broken between bars, as the viewer breaks it, each row taking as many whole
+                            // bars as fit; only a bar wider than the column is wrapped inside itself.
+                            val space = measure(" ", options.fontSize, true)
+                            var row = ""
+                            var rowWidth = 0f
+                            line.tokens.bars().forEach { bar ->
+                                val text = bar.joinToString(" ") { it.printText() }
+                                val barWidth = measure(text, options.fontSize, true)
+                                if (row.isNotEmpty() && rowWidth + space + barWidth <= columnWidth) { row += " $text"; rowWidth += space + barWidth } else {
+                                    if (row.isNotEmpty()) addAll(wrapped(row, bold = true))
+                                    if (barWidth <= columnWidth) { row = text; rowWidth = barWidth } else { addAll(wrapped(text, bold = true)); row = ""; rowWidth = 0f }
+                                }
                             }
-                        }, bold = true))
+                            if (row.isNotEmpty()) addAll(wrapped(row, bold = true))
+                        }
                         ChordProLine.Blank -> add(Row(emptyList(), options.fontSize * 0.7f))
                     }
                 }
@@ -261,6 +269,14 @@ private data class Part(val text: String, val x: Float = 0f, val y: Float = 0f, 
 private data class Row(val parts: List<Part>, val height: Float)
 
 private fun List<Row>.height() = sumOf { it.height.toDouble() }.toFloat()
+
+private fun GridToken.printText() = when (this) {
+    is GridToken.Bar -> text
+    is GridToken.Chord -> name
+    is GridToken.Text -> text
+    is GridToken.Repeat -> text
+    GridToken.Beat -> "."
+}
 
 /** Blank once the padding the chords add (no-break spaces and the zero-width break opportunities) is disregarded too. */
 private fun String.isPrintBlank() = all { it.isWhitespace() || it == '\u00A0' || it == '\u200B' }
