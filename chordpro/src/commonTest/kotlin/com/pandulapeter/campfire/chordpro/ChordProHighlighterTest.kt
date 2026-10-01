@@ -104,6 +104,30 @@ class ChordProHighlighterTest {
     }
 
     @Test
+    fun `any end of an environment ends a grid`() {
+        assertEquals(
+            listOf(TokenType.CHORD to "Am", TokenType.CHORD to "[Am]"),
+            spans("{start_of_grid}\n| Am |\n{end_of_verse}\n[Am]La").filter { it.first == TokenType.CHORD },
+        )
+    }
+
+    @Test
+    fun `any end of an environment ends a tab`() {
+        assertEquals(
+            listOf(TokenType.CHORD to "[3]"),
+            spans("{start_of_tab}\ne|--[3]--|\n{end_of_chorus}\ne|--[3]--|").filter { it.first == TokenType.CHORD },
+        )
+    }
+
+    @Test
+    fun `any end of an environment ends an abc block`() {
+        assertEquals(
+            listOf(TokenType.CHORD to "[C]"),
+            spans("{start_of_abc}\n[CEG]\n{end_of_verse}\n[C]").filter { it.first == TokenType.CHORD },
+        )
+    }
+
+    @Test
     fun `directive without a value is all name`() {
         assertEquals(listOf(TokenType.DIRECTIVE_NAME to "{start_of_chorus}"), spans("{start_of_chorus}"))
     }

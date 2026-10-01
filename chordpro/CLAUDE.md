@@ -239,7 +239,8 @@ in `:domain:*`. `:data:source:local:implementation` uses it directly for the met
   which are the ones the transposition renames, and inside a grid the cells the parser reads as chords, which are
   written without brackets (the margins, the bars, the beats and a `/` stay plain), and in the value of a comment or a label it colours the chords the
   transposition moves there too — whole chord names only, since a comment is drawn as it is written and neither moves a
-  `[Chorus x2]` nor lifts an annotation out.
+  `[Chorus x2]` nor lifts an annotation out. Any `{end_of_…}` ends a tab, a grid or a delegated environment, whichever
+  environment it names, since the parser, the summary and the transposition read the lines after it as ordinary ones.
 
 Everything here is pure, so everything here is tested: `commonTest`, run with `./gradlew :chordpro:desktopTest`. A
 change to the dialect belongs in a test first.

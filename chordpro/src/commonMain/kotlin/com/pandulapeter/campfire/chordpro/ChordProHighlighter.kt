@@ -71,10 +71,12 @@ object ChordProHighlighter {
                         isInGrid = it == GRID_ENVIRONMENT
                         isInDelegate = it in ChordProSyntax.delegateEnvironments
                     }
+                    // Any end of an environment ends the way the lines were being read, whichever environment it names: the parser,
+                    // the summary and the transposition all read the lines after it as ordinary ones.
                     ChordProSyntax.endOfEnvironment(directive.name)?.let {
-                        if (it == TAB_ENVIRONMENT) isInTab = false
-                        if (it == GRID_ENVIRONMENT) isInGrid = false
-                        if (it in ChordProSyntax.delegateEnvironments) isInDelegate = false
+                        isInTab = false
+                        isInGrid = false
+                        isInDelegate = false
                     }
                     tokens += directive.tokens(
                         line = line,
