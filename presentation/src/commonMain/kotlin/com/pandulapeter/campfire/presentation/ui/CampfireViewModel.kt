@@ -899,6 +899,15 @@ class CampfireViewModel(
      */
     private val unsavedFontScale = MutableStateFlow<Float?>(null)
 
+    /**
+     * The export sheet's options as it last set them and not saved yet. A step of its size or its margins is a new
+     * value, and saving each one would publish the preferences to every screen once a step, so they are saved the way
+     * [unsavedFontScale] is: once they have held still, or at once when the sheet goes (see [setVisibleDialog]). A
+     * sheet composed again within that moment, as a rotation does, starts from this rather than a step back.
+     */
+    private val _pendingPrintSettings = MutableStateFlow<PrintSettings?>(null)
+    val pendingPrintSettings = _pendingPrintSettings.asStateFlow()
+
     private val settledFontScaleState = mutableFloatStateOf(DEFAULT_FONT_SCALE)
 
     /**
@@ -1097,6 +1106,9 @@ class CampfireViewModel(
                 // Only if nothing newer arrived while this one was being saved, or that one would never be.
                 unsavedFontScale.compareAndSet(fontScale, null)
             }
+        }
+        viewModelScope.launch {
+            _pendingPrintSettings.filterNotNull().debounce(FONT_SCALE_SAVE_DELAY_MILLIS).collect { savePrintSettings(it) }
         }
         viewModelScope.launch {
             // The first read at launch, a read again, a restore, a sync run: whatever wrote the preference wins
@@ -2285,7 +2297,13 @@ class CampfireViewModel(
             description = setlist?.description.orEmpty(), date = setlist?.date?.toString(), isSetlist = setlist != null, songs = printSongs)
     }
 
-    fun setPrintSettings(value: PrintSettings) = changeUserPreferences { copy(printSettings = value.normalized()) }
+    fun setPrintSettings(value: PrintSettings) = _pendingPrintSettings.update { value.normalized() }
+
+    private suspend fun savePrintSettings(value: PrintSettings) {
+        updateUserPreferences { it.copy(printSettings = value) }
+        // Only if nothing newer arrived while this one was being saved, or that one would never be.
+        _pendingPrintSettings.compareAndSet(value, null)
+    }
 
     internal fun exportPdf(filePicker: FilePicker, title: String, onFinished: () -> Unit, create: suspend () -> ByteArray) {
         if (fileTransferJob?.isActive == true) { onFinished(); return }
@@ -2690,6 +2708,12 @@ class CampfireViewModel(
         // service's one request a second.
         if (dialogType !is DialogType.CoverArtSearch) clearCoverArtSearch()
         val previousDialog = _visibleDialog.value
+        // However the export sheet goes - closed, Escape, the web's Back, another dialog put over it - it is removed from
+        // the composition at once, so nothing in it could do this, and a sheet opened again in the next moment has to
+        // find the options it left.
+        if (previousDialog is DialogType.PrintExport && dialogType != previousDialog) {
+            _pendingPrintSettings.value?.let { viewModelScope.launch { savePrintSettings(it) } }
+        }
         _visibleDialog.update { dialogType }
         // Asked as the sheet is put up rather than by the sheet once it is composed, so that its first frame already
         // says that the search is running instead of crossfading from the hint to it while it slides up.

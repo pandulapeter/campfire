@@ -59,7 +59,7 @@ import kotlin.time.Duration.Companion.milliseconds
 internal fun PrintExportSheet(viewModel: CampfireViewModel, dialog: CampfireViewModel.DialogType.PrintExport) {
     val preferences by viewModel.userPreferences.collectAsStateWithLifecycle()
     val initialSettings = preferences?.printSettings ?: return
-    var settings by remember(dialog) { mutableStateOf(initialSettings) }
+    var settings by remember(dialog) { mutableStateOf(viewModel.pendingPrintSettings.value ?: initialSettings) }
     var source by remember(dialog) { mutableStateOf<PrintSource?>(null) }
     var failed by remember(dialog) { mutableStateOf(false) }
     var attempt by remember(dialog) { mutableIntStateOf(0) }
