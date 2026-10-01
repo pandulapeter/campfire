@@ -1256,12 +1256,14 @@ class CampfireViewModel(
      * address, which can name a song or a setlist that only the library can say is still there. The launch screen is
      * held until then, see [isLaunchNavigationPending]. Only the first call counts, since only one start up can be
      * answered, and the answer is only taken while the app is still where every start opens: coming back from a
-     * consent page opens Settings on its own, and that is the screen the user is waiting for.
+     * consent page opens Settings on its own, and that is the screen the user is waiting for. [resolve] is told whether
+     * performance mode is on as the preferences were read rather than as [isPerformanceModeEnabled] says, since that
+     * state may not have caught up with the read yet, and the mode decides whether an editor may be opened at all.
      *
      * Called by the shell while it is first composed, which is before the read it waits for can possibly have ended:
      * that read resumes on the main thread, and the composition is holding it.
      */
-    internal fun navigateOnLaunch(resolve: (songs: List<Song>, setlists: List<Setlist>) -> NavigationState?) {
+    internal fun navigateOnLaunch(resolve: (songs: List<Song>, setlists: List<Setlist>, isPerformanceModeEnabled: Boolean) -> NavigationState?) {
         if (hasNavigatedOnLaunch) return
         hasNavigatedOnLaunch = true
         _isLaunchNavigationPending.value = true
@@ -1270,7 +1272,8 @@ class CampfireViewModel(
                 val state = combine(screenData, isDemoLibraryPending) { state, isDemoLibraryPending -> state.takeUnless { isDemoLibraryPending } }
                     .first { it != null && it !is DataState.Loading }
                     ?.data
-                val destination = resolve(state?.unfilteredSongs.orEmpty(), state?.setlists.orEmpty())
+                val isPerformanceModeEnabled = userPreferencesState.first { it !is DataState.Loading }.data?.isPerformanceModeEnabled == true
+                val destination = resolve(state?.unfilteredSongs.orEmpty(), state?.setlists.orEmpty(), isPerformanceModeEnabled)
                 // A draft reopened on launch is unsaved text on screen, which an address does not get to replace.
                 editorDraftRecovery.await()
                 if (destination != null && backStack.toList() == listOf(CampfireDestination.Songs)) {

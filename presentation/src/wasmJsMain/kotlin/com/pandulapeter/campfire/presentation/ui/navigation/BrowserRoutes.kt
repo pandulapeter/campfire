@@ -75,13 +75,16 @@ internal object BrowserRoutes {
     /**
      * The place [path] names in the given library, or null for a path that is not one of the addresses above, or one
      * naming a song or a setlist the library does not hold. Only the things a path names are looked up: whatever it
-     * leaves open - the tab of the settings screen, for a bare `settings` - is taken from [current].
+     * leaves open - the tab of the settings screen, for a bare `settings` - is taken from [current]. An editor's address
+     * opens only the song under it while performance mode is on, since the mode leaves no way into the editor and an
+     * address typed or bookmarked is no exception.
      */
     fun resolve(
         path: String,
         songs: List<Song>,
         setlists: List<Setlist>,
         current: NavigationState,
+        isPerformanceModeEnabled: Boolean,
     ): NavigationState? {
         val segments = path.split('/').filter { it.isNotEmpty() }.map { decodePathSegment(it) ?: return null }
         val songFileNames = songs.mapTo(mutableSetOf()) { it.fileName }
@@ -114,10 +117,11 @@ internal object BrowserRoutes {
 
             3 -> when (segments[0]) {
                 SONG -> songFileName(segments[1], songFileNames)?.takeIf { segments[2] == EDIT }?.let { fileName ->
+                    val songDetails = CampfireDestination.SongDetails(songFileNames = listOf(fileName), setlistFileName = null, initialIndex = 0)
                     home.copy(
-                        backStack = home.backStack + listOf(
-                            CampfireDestination.SongDetails(songFileNames = listOf(fileName), setlistFileName = null, initialIndex = 0),
-                            CampfireDestination.SongEditor(fileName = fileName),
+                        backStack = home.backStack + listOfNotNull(
+                            songDetails,
+                            CampfireDestination.SongEditor(fileName = fileName).takeUnless { isPerformanceModeEnabled },
                         ),
                     )
                 }
@@ -148,11 +152,13 @@ internal object BrowserRoutes {
      * holds, which is what a history entry the browser returns to may do: the library changes while the entry waits.
      * A song read from a setlist pages through what the setlist holds now, as it does when the setlist's row is tapped
      * or its address is opened ([resolve]), and it is cut short too once the song it was on is gone from the setlist.
+     * An editor is cut off as well while performance mode is on, which may have been turned on since.
      */
     fun validate(
         state: NavigationState,
         songs: List<Song>,
         setlists: List<Setlist>,
+        isPerformanceModeEnabled: Boolean,
     ): NavigationState {
         val songFileNames = songs.mapTo(mutableSetOf()) { it.fileName }
         val setlistsByFileName = setlists.associateBy { it.fileName }
@@ -167,7 +173,7 @@ internal object BrowserRoutes {
                     if (index < 0) null else destination.copy(songFileNames = pages, initialIndex = index)
                 }
 
-                is CampfireDestination.SongEditor -> destination.takeIf { it.fileName in songFileNames }
+                is CampfireDestination.SongEditor -> destination.takeIf { !isPerformanceModeEnabled && it.fileName in songFileNames }
                 else -> destination
             } ?: break
         }

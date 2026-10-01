@@ -36,7 +36,9 @@ import kotlin.js.ExperimentalWasmJsInterop
 internal fun CampfireViewModel.navigateToBrowserAddress() {
     val path = currentBrowserPath()
     if (path.isNullOrEmpty()) return
-    navigateOnLaunch { songs, setlists -> BrowserRoutes.resolve(path = path, songs = songs, setlists = setlists, current = navigationState) }
+    navigateOnLaunch { songs, setlists, isPerformanceModeEnabled ->
+        BrowserRoutes.resolve(path = path, songs = songs, setlists = setlists, current = navigationState, isPerformanceModeEnabled = isPerformanceModeEnabled)
+    }
 }
 
 /**
@@ -179,9 +181,18 @@ private class BrowserHistory(
         val entry = entries.getOrNull(to)
         val songs = viewModel.allSongs.value
         val setlists = viewModel.setlists.value
-        val state = entry?.state?.let { BrowserRoutes.validate(state = it, songs = songs, setlists = setlists) }
+        val isPerformanceModeEnabled = viewModel.isPerformanceModeEnabled.value
+        val state = entry?.state?.let { BrowserRoutes.validate(state = it, songs = songs, setlists = setlists, isPerformanceModeEnabled = isPerformanceModeEnabled) }
             ?: (path ?: entry?.path)
-                ?.let { BrowserRoutes.resolve(path = it, songs = songs, setlists = setlists, current = viewModel.navigationState) }
+                ?.let {
+                    BrowserRoutes.resolve(
+                        path = it,
+                        songs = songs,
+                        setlists = setlists,
+                        current = viewModel.navigationState,
+                        isPerformanceModeEnabled = isPerformanceModeEnabled,
+                    )
+                }
                 // An address stands for a whole stack built up from the songs, which is only this entry when it is as deep as
                 // the entry is. One that is not - the editor of a song whose setlist page underneath was paged on, which
                 // forgot what the entry above it was when it was rewritten - would take away the screens under it and leave

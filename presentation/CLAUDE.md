@@ -20,6 +20,8 @@ The platform shells all live in the `ui` package next to `CampfireApp`, one per 
 - `wasmJsMain/ui/navigation/` — the web build's addresses. `BrowserRoutes` maps where the user is to the path of
   every history entry that should exist (one per step a back gesture would take: a screen of the back stack, or an open
   search), and a path back to a `NavigationState` against the library, a missing song or setlist resolving to nothing.
+  Performance mode leaves no way into the editor, an address included: `song/{song}/edit` opens the song alone while it
+  is on (the history then writes `song/{song}` over it), and Forward to an editor's entry stops at the song under it.
   A song is named by its file name without `.cho` (a file with another extension keeps it), a setlist without
   `.setlist.json`, both percent-encoded with `~` escaped too, since the site's 404 page carries `&` as `~and~`.
   `BrowserHistoryEffect` keeps the history in step with the app, which decides: a change of the app is written as a
