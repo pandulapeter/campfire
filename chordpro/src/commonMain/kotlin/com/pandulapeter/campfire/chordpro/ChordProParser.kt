@@ -11,6 +11,7 @@ package com.pandulapeter.campfire.chordpro
 
 import com.pandulapeter.campfire.chordpro.model.ChordProBlock
 import com.pandulapeter.campfire.chordpro.model.ChordProLine
+import com.pandulapeter.campfire.chordpro.model.ChordProLink
 import com.pandulapeter.campfire.chordpro.model.ChordProMetadata
 import com.pandulapeter.campfire.chordpro.model.ChordProSong
 import com.pandulapeter.campfire.chordpro.model.ChordProSummary
@@ -522,7 +523,7 @@ object ChordProParser {
         private val tagKeys = mutableSetOf<String>()
         private val languages = mutableListOf<String>()
         private val languageSet = mutableSetOf<String>()
-        private val links = mutableListOf<String>()
+        private val links = mutableListOf<ChordProLink>()
         private val custom = mutableMapOf<String, MutableList<String>>()
 
         fun consume(directive: ChordProSyntax.Directive) {
@@ -560,7 +561,7 @@ object ChordProParser {
                         // The same goes for the cover, the first usable one of which is the song's.
                         ChordProSyntax.isCoverMeta(directive) -> if (coverArt == null) coverArt = ChordProSyntax.cover(directive)
                         // And for the links, every usable one of which is kept, once each.
-                        ChordProSyntax.isLinkMeta(directive) -> ChordProSyntax.link(directive)?.let { if (it !in links) links += it }
+                        ChordProSyntax.isLinkMeta(directive) -> ChordProSyntax.link(directive)?.let { if (links.none { link -> link.url == it.url }) links += it }
                         name.isNotEmpty() -> custom.getOrPut(name) { mutableListOf() } += value.substringAfter(' ', missingDelimiterValue = "").trim()
                     }
                 }

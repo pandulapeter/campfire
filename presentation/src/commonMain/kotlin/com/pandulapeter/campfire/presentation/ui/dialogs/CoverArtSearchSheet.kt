@@ -218,8 +218,7 @@ internal fun CoverArtSearchSheet(
             },
             shouldShowAttribution = mode == CoverArtSheetMode.SEARCH,
             onRemove = {
-                viewModel.setSongCoverArt(fileName = dialog.song.fileName, url = null)
-                close()
+                viewModel.showDialog(CampfireViewModel.DialogType.RemoveSongCoverArt(dialog.song))
             },
             onSave = {
                 viewModel.setSongCoverArt(

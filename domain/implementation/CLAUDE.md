@@ -104,6 +104,7 @@ The ones that carry real logic:
   parser directly. `mapper/AccidentalsMappers.kt` is the whole of the translation: `:chordpro` depends on nothing and
   so knows no preferences, and takes the spelling as the nullable `preferFlats` the preference maps onto. The notation
   one needs no mapper — the preference is a flag, and `ChordProNotation` either runs or does not.
+  `SetChordProLinksUseCaseImpl` is the same thin wrapper for the link editor's whole draft, including optional names.
 - `NormalizeTextUseCaseImpl` — accent-insensitive, case-insensitive text for sorting and searching, over
   `:data:model`'s `withoutAccent` table, which the normalized file names share, with the combining marks of a
   decomposed accent dropped (`isCombiningMark`). `NormalizeSearchTextUseCaseImpl` is the search's key on top of it:

@@ -9,10 +9,18 @@
  */
 package com.pandulapeter.campfire.presentation.ui.screens.songDetails
 
+import com.pandulapeter.campfire.chordpro.model.ChordProLink
 import kotlin.test.Test
 import kotlin.test.assertEquals
 
 class LinkLabelTest {
+
+    @Test
+    fun `a supplied name is used and a blank one falls back to the host`() {
+        assertEquals("Live recording", linkLabel(ChordProLink("https://youtube.com/watch", "Live recording")))
+        assertEquals("youtube.com", linkLabel(ChordProLink("https://youtube.com/watch", " ")))
+        assertEquals("youtube.com", linkLabel(ChordProLink("https://youtube.com/watch")))
+    }
 
     @Test
     fun `a link is named by its host`() {

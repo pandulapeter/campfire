@@ -22,6 +22,7 @@ import androidx.compose.runtime.snapshots.SnapshotStateList
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.pandulapeter.campfire.chordpro.model.ChordProLink
 import com.pandulapeter.campfire.chordpro.model.ChordProMetadata
 import com.pandulapeter.campfire.chordpro.model.ChordProSong
 import com.pandulapeter.campfire.data.model.DataState
@@ -41,7 +42,6 @@ import com.pandulapeter.campfire.data.model.domain.SyncProgress
 import com.pandulapeter.campfire.data.model.domain.SyncProviderId
 import com.pandulapeter.campfire.data.source.remote.api.model.AuthorizationCompletionPage
 import com.pandulapeter.campfire.data.model.domain.SyncState
-import com.pandulapeter.campfire.data.model.domain.Tag
 import com.pandulapeter.campfire.data.model.domain.UserPreferences
 import com.pandulapeter.campfire.domain.api.models.ScreenData
 import com.pandulapeter.campfire.domain.api.models.SongFilter
@@ -87,7 +87,7 @@ import com.pandulapeter.campfire.domain.api.useCases.SaveUserPreferencesUseCase
 import com.pandulapeter.campfire.domain.api.useCases.SearchCoverArtUseCase
 import com.pandulapeter.campfire.domain.api.useCases.SetChordProCoverArtUseCase
 import com.pandulapeter.campfire.domain.api.useCases.SetChordProLanguagesUseCase
-import com.pandulapeter.campfire.domain.api.useCases.SetChordProLinkUseCase
+import com.pandulapeter.campfire.domain.api.useCases.SetChordProLinksUseCase
 import com.pandulapeter.campfire.domain.api.useCases.SetChordProTagUseCase
 import com.pandulapeter.campfire.domain.api.useCases.StartScheduledSynchronizationUseCase
 import com.pandulapeter.campfire.domain.api.useCases.SynchronizeLibraryUseCase
@@ -185,7 +185,7 @@ class CampfireViewModel(
     private val setChordProCoverArt: SetChordProCoverArtUseCase,
     private val setChordProLanguages: SetChordProLanguagesUseCase,
     private val setChordProTag: SetChordProTagUseCase,
-    private val setChordProLink: SetChordProLinkUseCase,
+    private val setChordProLinks: SetChordProLinksUseCase,
     private val connectSyncProvider: ConnectSyncProviderUseCase,
     private val disconnectSyncProvider: DisconnectSyncProviderUseCase,
     private val cancelSyncConnection: CancelSyncConnectionUseCase,
@@ -1509,15 +1509,6 @@ class CampfireViewModel(
     }
 
     /**
-     * Takes a tag off a song, from the header of the screen that is playing it. The file is rewritten rather than the
-     * list entry changed: tags live in the song's own text, which is what makes them travel with the file when it is
-     * exported, synced or opened anywhere else.
-     */
-    fun removeSongTag(fileName: String, tag: String) = launchLibraryChange {
-        editSongText(fileName) { text -> setChordProTag(text = text, tag = tag, isSelected = false) }
-    }
-
-    /**
      * Makes [tags] the tags a song carries, from the tag dialog: every one of [offeredTags] the dialog left unticked is
      * taken off and every ticked one put on, compared without regard to case, as the file's tags always are. The file
      * is rewritten once for the whole set, as [setSongLanguages] writes one. What it carries is read from the text the
@@ -1543,12 +1534,22 @@ class CampfireViewModel(
         editSongText(fileName) { text -> setChordProLanguages(text = text, codes = codes) }
     }
 
+    /** Opens the link editor on the source text, since links are not part of the song list's lighter metadata. */
+    fun showSongLinksDialog(song: Song) {
+        val text = _songTexts.value[song.fileName] ?: return
+        showDialog(DialogType.SongLinks(song = song, links = parseChordPro(text).metadata.links))
+    }
+
     /**
-     * Adds a link to a song or takes one off it, from the header of the song details screen. Like a tag, the link is
-     * written into the song's own file (`SetChordProLinkUseCase`), so it travels with it through an export or a sync run.
+     * Writes the link dialog's changes together. Links added by sync while it was open and never offered there stay
+     * in the file, as tags do: a snapshot of one dialog is not a request to erase another device's additions.
      */
-    fun setSongLink(fileName: String, url: String, isAdded: Boolean) = launchLibraryChange {
-        editSongText(fileName) { text -> setChordProLink(text = text, url = url, isAdded = isAdded) }
+    fun setSongLinks(fileName: String, links: List<ChordProLink>, offeredLinks: List<ChordProLink>) = launchLibraryChange {
+        val offeredUrls = offeredLinks.mapTo(mutableSetOf()) { it.url }
+        editSongText(fileName) { text ->
+            val addedElsewhere = parseChordPro(text).metadata.links.filterNot { it.url in offeredUrls }
+            setChordProLinks(text = text, links = links + addedElsewhere)
+        }
     }
 
     /**
@@ -2600,7 +2601,8 @@ class CampfireViewModel(
             is DialogType.SetlistPicker -> song.fileName
             is DialogType.DeleteSong -> song.fileName
             is DialogType.SongTags -> song.fileName
-            is DialogType.AddSongLink -> song.fileName
+            is DialogType.SongLinks -> song.fileName
+            is DialogType.RemoveSongCoverArt -> song.fileName
             is DialogType.SongLanguages -> song.fileName
             is DialogType.CoverArtSearch -> song.fileName
             else -> null
@@ -2928,16 +2930,18 @@ class CampfireViewModel(
         data class DuplicateSetlist(val setlist: Setlist) : DialogType
         data class DeleteSong(val song: Song) : DialogType
         /**
-         * Opened from the tag header of the song details screen (the Manage tags chip), and offers the song's own tags and
+         * Opened from the song details overflow menu, and offers the song's own tags and
          * the rest of the library's.
          */
         data class SongTags(val song: Song) : DialogType
-        /** Opened from the same header, for an address typed or pasted in. */
-        data class AddSongLink(val song: Song) : DialogType
-        /** Opened from the same header, and asking about every language at once rather than one at a time. */
+        /** A snapshot of the links offered by the overflow menu's link editor. */
+        data class SongLinks(val song: Song, val links: List<ChordProLink>) : DialogType
+        /** Opened from the same menu, and asking about every language at once rather than one at a time. */
         data class SongLanguages(val song: Song) : DialogType
         /** The records the song may have come out on, whose front cover can be made the song's, see [searchCoverArt]. */
         data class CoverArtSearch(val song: Song) : DialogType
+        /** Removing a cover rewrites the file, so the cover art sheet asks before doing it. */
+        data class RemoveSongCoverArt(val song: Song) : DialogType
         /**
          * Asked before the connected account is forgotten. Nothing is deleted either way, but reconnecting means
          * going through the consent page again, which is not something to end up in by mistapping a list row.

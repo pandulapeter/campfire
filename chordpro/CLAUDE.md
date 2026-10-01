@@ -121,11 +121,13 @@ in `:domain:*`. `:data:source:local:implementation` uses it directly for the met
   has none (the cover sits between `album` and `year` in `metadataOrder`), or removes them all for null, editing the
   text for the reason `ChordProTags` does; a line that already names the address is left as it is written. It counts
   as declared metadata under `cover`, and a song has one, so the editor stops offering it once the file carries one.
-- `ChordProLinks` — pages about a song (a video, a recording, a tab), any site at all: one `{meta: link https://…}`
-  line per link, read into `ChordProMetadata.links` in file order and each once, by the same address rule as the
-  cover. `addLink` writes a line after the last link, or into the header after the languages where there is none
+- `ChordProLinks` — pages about a song (a video, a recording, a tab), any site at all: one `{meta: link https://… Optional name}`
+  line per link, read into `ChordProMetadata.links` as `ChordProLink(url, name)` in file order, each address once
+  and keeping its first name, by the same address rule as the cover. An unnamed link has a null name. `addLink` writes a line after the last link, or into the header after the languages where there is none
   (the last of the three repeatable kinds in `metadataOrder`), and `removeLink` drops every line naming the address,
-  both editing the text for the reason `ChordProTags` does. `usableUrl` is what the dialog checks a typed address
+  both editing the text for the reason `ChordProTags` does. `setLinks` edits the whole set at once, keeping unchanged
+  lines in their original spelling and changing only the link lines; names are optional, trimmed, and cannot inject
+  braces or line breaks. The serializer keeps the names too. `usableUrl` is what the dialog checks a typed address
   against, and takes one typed without its scheme as `https`, the way a browser's address bar shows most of them —
   but only where it starts with a host (and perhaps a port), so `mailto:…`, `me@…` or a mistyped `https:/…` is refused
   rather than saved as an `https` address naming nothing.

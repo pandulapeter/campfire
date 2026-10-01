@@ -10,15 +10,12 @@
 package com.pandulapeter.campfire.domain.implementation.useCases
 
 import com.pandulapeter.campfire.chordpro.ChordProLinks
-import com.pandulapeter.campfire.domain.api.useCases.SetChordProLinkUseCase
+import com.pandulapeter.campfire.chordpro.model.ChordProLink
+import com.pandulapeter.campfire.domain.api.useCases.SetChordProLinksUseCase
 import org.koin.core.annotation.Factory
 
 @Factory
-class SetChordProLinkUseCaseImpl internal constructor() : SetChordProLinkUseCase {
+class SetChordProLinksUseCaseImpl internal constructor() : SetChordProLinksUseCase {
 
-    override operator fun invoke(text: String, url: String, isAdded: Boolean) = if (isAdded) {
-        ChordProLinks.addLink(text, url)
-    } else {
-        ChordProLinks.removeLink(text, url)
-    }
+    override operator fun invoke(text: String, links: List<ChordProLink>) = ChordProLinks.setLinks(text = text, links = links)
 }

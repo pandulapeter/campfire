@@ -155,15 +155,16 @@ uninstall and nothing else does.
 - **Tags are part of the song file**, not a store of their own: ChordPro `{tag}` directives, read by `:chordpro`
   into `Song.tags` at scan time and written back into the text the same way, so a tag travels with the file through
   an export, an import or a sync run. The library's set of tags is whatever the songs carry; the Songs screen's
-  filter offers them counted and most used first, and the song details header is where one is put on or taken off.
+  filter offers them counted and most used first, and the song details overflow menu opens the dialog that puts them
+  on or takes them off.
 - **The language of a song is carried the same way, and is its own category rather than one more tag**: a
   `{meta: language en}` directive per language, read into `Song.languages` as a lowercase ISO code — 639-2's three
   letter codes included, folded to their 639-1 equivalent where the standard has one (`eng` is `en`) and kept as
   they are where it does not (`rom`, Romani), so one language is one code however the file spells it. It gets its own
   filter group on the Songs screen — but only once the library holds more than one language, with an "Unknown" chip
   for the songs that declare none — and it is shown wherever a tag is: next to them under a song in the lists, and as
-  a chip in the song details header, which is also what opens the picker. The **names are never shipped**: the app
-  carries a list of codes and nothing else, and asks the platform what each is called in the language the app is set
+  one read-only chip per language in the song details metadata card; the overflow menu opens the picker. The **names
+  are never shipped**: the app carries a list of codes and nothing else, and asks the platform what each is called in the language the app is set
   to (`java.util.Locale`, `NSLocale`, `Intl.DisplayNames` behind `:presentation`'s `languageDisplayName`), falling
   back to the code in capitals where it cannot say.
 - **The cover of a song is carried the same way too**: a `{meta: cover https://…}` directive, read into
@@ -171,10 +172,13 @@ uninstall and nothing else does.
   else, so the cover travels through an export, an import or a sync run as a tag does, and the image is fetched where
   the song is read. Any address is taken — the library and the addresses in it are the user's — and the search is only
   ever what recommends one. See Cover art below.
-- **Links about a song are carried the same way**: a `{meta: link https://…}` directive per link, read into
+- **Links about a song are carried the same way**: a `{meta: link https://… Optional name}` directive per link, read into
   `ChordProMetadata.links`. Any page is taken, whatever site it is on, and nothing is ever fetched from one: the
-  song details header shows each as a chip named by its host, which opens the page in the browser, and adding one is
-  typing or pasting its address. Opening a link is the user's browser making the request, not Campfire.
+  song details metadata card shows each as a chip named by its optional name or its host, opening the page in the
+  browser. The card flows as the first section through the song's rows and columns; key, capo, tempo and time stay
+  outside it and scale with the lyrics. The overflow menu's Edit links dialog edits addresses and optional names together,
+  written once on Save.
+  Opening a link is the user's browser making the request, not Campfire.
 - **The app is shipped with two songs and one setlist**, in
   `presentation/src/commonMain/composeResources/files/demo`: public domain campfire standards, bundled as the plain
   ChordPro and setlist files they are and reaching the library through the ordinary import, so they collide, are
@@ -555,8 +559,9 @@ the short version:
   Requests for one address share one download, only a few are made at a time, one nobody is waiting for any more by
   its turn is not made at all, and an address that failed is not asked again for the rest of the
   session (an answer that is not a cover) or for a minute (no answer at all).
-- **The search is MusicBrainz and the iTunes Search API side by side**, from a sheet a chip in the song details header
-  opens (`Set cover art` / `Change cover art`, above the tags), each catalogue's records joining the grid as it answers and one that fails leaving the other's
+- **The search is MusicBrainz and the iTunes Search API side by side**, from a sheet the song details overflow menu
+  opens (`Set cover art` / `Change cover art`; the sheet's Remove cover asks for confirmation), each catalogue's records
+  joining the grid as it answers and one that fails leaving the other's
   there. On MusicBrainz, the release groups of an album, or those a song's recordings came out on where the album is
   empty, each with the Cover Art Archive's `front-250` of its release group; on iTunes, the albums the songs matching
   the artist and the album (or title) are on, each with Apple's artwork at 250 px. That address is what is written

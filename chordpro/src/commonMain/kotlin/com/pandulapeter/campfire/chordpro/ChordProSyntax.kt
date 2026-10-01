@@ -9,6 +9,7 @@
  */
 package com.pandulapeter.campfire.chordpro
 
+import com.pandulapeter.campfire.chordpro.model.ChordProLink
 import com.pandulapeter.campfire.chordpro.model.GridToken
 
 /**
@@ -349,14 +350,14 @@ internal object ChordProSyntax {
             directive.value?.trim()?.substringBefore(' ')?.trim()?.equals(COVER_NAME, ignoreCase = true) == true
 
     /**
-     * The address a `{meta: link …}` directive names, or null if it is not one or names nothing a browser opens. Any
+     * The address and optional name a `{meta: link …}` directive holds, or null if it is not one or names nothing a browser opens. Any
      * `http` or `https` URL is taken, for the same reason as a cover's.
      */
-    fun link(directive: Directive): String? = directive.takeIf(::isLinkMeta)
-        ?.value
-        ?.trim()
-        ?.substringAfter(' ', missingDelimiterValue = "")
-        ?.let(::webUrl)
+    fun link(directive: Directive): ChordProLink? {
+        val value = directive.takeIf(::isLinkMeta)?.value?.trim()?.substringAfter(' ', missingDelimiterValue = "")?.trim() ?: return null
+        val url = webUrl(value.takeWhile { !it.isWhitespace() }) ?: return null
+        return ChordProLink(url = url, name = value.drop(url.length).trim().takeIf { it.isNotEmpty() })
+    }
 
     /** True for a `{meta}` directive whose key names a link, whatever its value then turns out to be worth. */
     fun isLinkMeta(directive: Directive) = directive.name == META &&

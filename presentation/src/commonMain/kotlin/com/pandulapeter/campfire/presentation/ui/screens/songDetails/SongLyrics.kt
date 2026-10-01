@@ -34,7 +34,6 @@ import androidx.compose.material3.LocalTextStyle
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.material3.contentColorFor
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.Immutable
@@ -99,6 +98,7 @@ import androidx.compose.ui.unit.isSpecified
 import com.pandulapeter.campfire.chordpro.ChordProHighlighter
 import com.pandulapeter.campfire.chordpro.ChordProTabWrapper
 import com.pandulapeter.campfire.chordpro.model.ChordProBlock
+import com.pandulapeter.campfire.chordpro.model.ChordProMetadata
 import com.pandulapeter.campfire.chordpro.model.ChordProLine
 import com.pandulapeter.campfire.chordpro.model.ChordProSong
 import com.pandulapeter.campfire.chordpro.model.CommentStyle
@@ -106,21 +106,9 @@ import com.pandulapeter.campfire.chordpro.model.GridToken
 import com.pandulapeter.campfire.chordpro.model.SectionType
 import com.pandulapeter.campfire.data.model.domain.UserPreferences
 import com.pandulapeter.campfire.presentation.resources.Res
-import com.pandulapeter.campfire.presentation.resources.ic_add
-import com.pandulapeter.campfire.presentation.resources.ic_album
-import com.pandulapeter.campfire.presentation.resources.ic_clear
-import com.pandulapeter.campfire.presentation.resources.ic_edit
-import com.pandulapeter.campfire.presentation.resources.ic_language
-import com.pandulapeter.campfire.presentation.resources.ic_link
-import com.pandulapeter.campfire.presentation.resources.song_details_album
-import com.pandulapeter.campfire.presentation.resources.song_details_capo
-import com.pandulapeter.campfire.presentation.resources.song_details_composer
 import com.pandulapeter.campfire.presentation.resources.song_details_cut
-import com.pandulapeter.campfire.presentation.resources.song_details_duration
 import com.pandulapeter.campfire.presentation.resources.song_details_grid_collapse
 import com.pandulapeter.campfire.presentation.resources.song_details_grid_expand
-import com.pandulapeter.campfire.presentation.resources.song_details_language
-import com.pandulapeter.campfire.presentation.resources.song_details_lyricist
 import com.pandulapeter.campfire.presentation.resources.song_details_section_bridge
 import com.pandulapeter.campfire.presentation.resources.song_details_section_chorus
 import com.pandulapeter.campfire.presentation.resources.song_details_section_collapse
@@ -129,23 +117,8 @@ import com.pandulapeter.campfire.presentation.resources.song_details_section_gri
 import com.pandulapeter.campfire.presentation.resources.song_details_section_tab
 import com.pandulapeter.campfire.presentation.resources.song_details_tab_collapse
 import com.pandulapeter.campfire.presentation.resources.song_details_tab_expand
-import com.pandulapeter.campfire.presentation.resources.song_details_change_cover_art
-import com.pandulapeter.campfire.presentation.resources.song_details_link_add
-import com.pandulapeter.campfire.presentation.resources.song_details_set_cover_art
-import com.pandulapeter.campfire.presentation.resources.song_details_link_remove
-import com.pandulapeter.campfire.presentation.resources.song_details_tag_remove
-import com.pandulapeter.campfire.presentation.resources.song_details_tags_manage
-import com.pandulapeter.campfire.presentation.resources.song_details_tempo
-import com.pandulapeter.campfire.presentation.resources.song_details_time
-import com.pandulapeter.campfire.presentation.resources.song_details_year
-import com.pandulapeter.campfire.presentation.resources.songs_edit_song
-import com.pandulapeter.campfire.presentation.resources.songs_key
 import com.pandulapeter.campfire.presentation.ui.components.EDGE_FADE_SIZE
 import com.pandulapeter.campfire.presentation.ui.components.ExpandChevron
-import com.pandulapeter.campfire.presentation.ui.components.TagFlowRow
-import com.pandulapeter.campfire.presentation.ui.components.TagPill
-import com.pandulapeter.campfire.presentation.ui.components.languageLabel
-import com.pandulapeter.campfire.presentation.ui.components.textResource
 import com.pandulapeter.campfire.presentation.ui.theme.LocalMonospaceFontFamily
 import com.pandulapeter.campfire.presentation.ui.theme.LocalSecondAccentColor
 import com.pandulapeter.campfire.presentation.localization.stringResource
@@ -156,7 +129,6 @@ import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.filterNotNull
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
-import org.jetbrains.compose.resources.painterResource
 import kotlin.math.ceil
 import kotlin.math.max
 import kotlin.math.min
@@ -210,8 +182,6 @@ import kotlin.math.roundToInt
  * @param isSingleColumn Whether the sections are stacked in one column however wide the window is, the way a phone
  * lays them out. The editor's preview next to the text sets it: half a window flows a song into columns that the
  * next keystroke reshuffles, and the lines being typed are only easy to find in the order they are written.
- * @param onOpenEditor Offered under a song too long to be laid out whole, see [LayoutBudget]; null where the editor is
- * already open or may not be opened (performance mode).
  */
 @OptIn(ExperimentalSharedTransitionApi::class)
 @Composable
@@ -224,13 +194,7 @@ internal fun SongLyrics(
     fontScale: Float = 1f,
     foldedSections: Set<String> = emptySet(),
     onFoldToggled: ((key: String) -> Unit)? = null,
-    onManageTags: (() -> Unit)? = null,
-    onRemoveTag: ((String) -> Unit)? = null,
-    onEditLanguages: (() -> Unit)? = null,
     onOpenLink: ((String) -> Unit)? = null,
-    onAddLink: (() -> Unit)? = null,
-    onRemoveLink: ((String) -> Unit)? = null,
-    onEditCoverArt: (() -> Unit)? = null,
     onRowsPlaced: ((SongRows) -> Unit)? = null,
     rowViewportHeight: Dp = Dp.Unspecified,
     isOneRowAtATime: Boolean = false,
@@ -239,11 +203,10 @@ internal fun SongLyrics(
     keepsStepButtonInset: Boolean = false,
     canCutSections: Boolean = false,
     isSingleColumn: Boolean = false,
-    onOpenEditor: (() -> Unit)? = null,
 ) {
     // The fold toggles of the runs inside a section are named by these too, where the file names them nothing.
     val defaultLabels = rememberDefaultSectionLabels()
-    val sections = model.sections
+    val sections = remember(model.sections, model.song.metadata) { withMetadataSection(model.sections, model.song.metadata) }
     val glideScope = rememberCoroutineScope()
     val glideSpec = MaterialTheme.motionScheme.defaultSpatialSpec<IntOffset>()
     val sectionGlides = if (sectionMotion == SectionMotion.NONE) null else remember(glideScope, glideSpec) { SectionGlides(glideScope, glideSpec) }
@@ -332,15 +295,14 @@ internal fun SongLyrics(
             annotationStyle = annotationStyle,
         )
     }
-    // The metadata header scrolls with the song, so the columns below it have that much less room to fit into. It is
+    // The playing metadata scrolls with the song, so the columns below it have that much less room to fit into. It is
     // only ever read while the layout is measured, after the header above it in the same pass, so a page is composed
     // once when it opens and its first grid already knows about the header.
     var headerHeight by remember { mutableIntStateOf(0) }
     Column(modifier = modifier) {
-        SongMetadataHeader(
+        SongPlayingMetadata(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(horizontal = CARD_PADDING)
                 .layout { measurable, constraints ->
                     // The song leaves the end edge to the buttons drawn over it, and so does the header, since the next
                     // section's button is on the screen next to it before the song has been scrolled at all. Whether the
@@ -352,15 +314,8 @@ internal fun SongLyrics(
                     if (placeable.height != headerHeight) headerHeight = placeable.height
                     layout(constraints.maxWidth, placeable.height) { placeable.placeRelative(0, 0) }
                 },
-            song = model.song,
+            metadata = model.song.metadata,
             fontScale = fontScale,
-            onManageTags = onManageTags,
-            onRemoveTag = onRemoveTag,
-            onEditLanguages = onEditLanguages,
-            onOpenLink = onOpenLink,
-            onAddLink = onAddLink,
-            onRemoveLink = onRemoveLink,
-            onEditCoverArt = onEditCoverArt,
         )
         LookaheadScope {
             SongSectionsLayout(
@@ -372,8 +327,7 @@ internal fun SongLyrics(
                 rowGap = ROW_GAP,
                 availableHeight = availableHeight,
                 headerHeight = { headerHeight },
-                // The header ends in a section gap of its own, so one that is no taller than that shows nothing.
-                hasHeader = { headerHeight > with(density) { SECTION_GAP.roundToPx() } },
+                hasHeader = { headerHeight > 0 },
                 // A row is read once the header has scrolled away, so it has the whole of the screen to fit into.
                 maxRowHeight = availableHeight,
                 rowViewportHeight = rowViewportHeight,
@@ -417,6 +371,12 @@ internal fun SongLyrics(
                             traversalIndex = unit.toFloat()
                         }
                         when (section) {
+                            is RenderSection.Metadata -> SongMetadataCard(
+                                modifier = unitModifier,
+                                metadata = section.metadata,
+                                onOpenLink = onOpenLink,
+                            )
+
                             is RenderSection.Comment -> SongComment(
                                 modifier = unitModifier.padding(horizontal = CARD_PADDING),
                                 comment = section,
@@ -502,7 +462,6 @@ internal fun SongLyrics(
                     .fillMaxWidth()
                     .padding(horizontal = CARD_PADDING)
                     .padding(top = 16.dp),
-                onOpenEditor = onOpenEditor,
             )
         }
     }
@@ -512,214 +471,12 @@ internal fun SongLyrics(
 @Composable
 private fun CutSongNotice(
     modifier: Modifier = Modifier,
-    onOpenEditor: (() -> Unit)?,
-) = Column(modifier = modifier) {
-    Text(
-        text = stringResource(Res.string.song_details_cut),
-        style = MaterialTheme.typography.bodyMedium,
-        color = MaterialTheme.colorScheme.onSurfaceVariant,
-    )
-    if (onOpenEditor != null) {
-        TextButton(onClick = onOpenEditor) {
-            Text(text = stringResource(Res.string.songs_edit_song))
-        }
-    }
-}
-
-/**
- * The tags of the song and everything else its directives say, above the lyrics and scrolling with them. Every
- * directive the editor can insert has to be visible somewhere, and this is where the ones that are neither lyrics
- * nor chords end up - so what is missing here is only what the app bar already carries: the title, the subtitle
- * that is drawn in parentheses after it, and the artist. Only what is played (the key, the capo, the tempo and the time)
- * follows [fontScale]; the rest keeps the interface's size. The key leads the accent line, as [song] has been transposed
- * to it, so it names what is played rather than what the file declares.
- *
- * @param onManageTags Null where the tags are only read, which is the editor's preview: there the file itself is under
- *   the caret, and a chip writing into it from the side would be editing the text the editor has not saved yet.
- * @param onEditLanguages Null wherever [onManageTags] is, and for the same reason. The chip is then shown only by a song
- *   that declares a language, since there is nothing to say about one that does not and nothing to tap to change it.
- * @param onOpenLink Null where a link is only shown, not followed: the editor's preview, where a tap is meant for the
- *   text rather than for a browser.
- * @param onAddLink Null wherever [onManageTags] is, and for the same reason; so is [onRemoveLink].
- * @param onEditCoverArt Opens the cover search, on a chip above the tags reading "Set" or "Change" by whether the file
- *   names a cover. It shares its row with the languages rather than being one more chip among the tags, since a cover
- *   is one thing about the song rather than one of a list of them. Null wherever [onManageTags] is, and also while covers
- *   are turned off.
- */
-@Composable
-private fun SongMetadataHeader(
-    modifier: Modifier = Modifier,
-    song: ChordProSong,
-    fontScale: Float,
-    onManageTags: (() -> Unit)?,
-    onRemoveTag: ((String) -> Unit)?,
-    onEditLanguages: (() -> Unit)?,
-    onOpenLink: ((String) -> Unit)?,
-    onAddLink: (() -> Unit)?,
-    onRemoveLink: ((String) -> Unit)?,
-    onEditCoverArt: (() -> Unit)?,
-) = Column(modifier = modifier.padding(bottom = SECTION_GAP)) {
-    val metadata = song.metadata
-    // Who wrote it and where it came out is only ever looked up, so it stays at the size of the interface above the
-    // chips; what is played is read off the page while playing, so it grows with the lyrics under them, in the accent
-    // colour the chords are drawn in.
-    MetadataLine(
-        modifier = Modifier.padding(bottom = 12.dp),
-        values = listOfNotNull(
-            metadata.composer?.takeIf { it.isNotBlank() }?.let { textResource(Res.string.song_details_composer, it) },
-            metadata.lyricist?.takeIf { it.isNotBlank() }?.let { textResource(Res.string.song_details_lyricist, it) },
-            metadata.album?.takeIf { it.isNotBlank() }?.let { textResource(Res.string.song_details_album, it) },
-            metadata.year?.takeIf { it.isNotBlank() }?.let { textResource(Res.string.song_details_year, it) },
-            metadata.duration?.takeIf { it.isNotBlank() }?.let { textResource(Res.string.song_details_duration, it) },
-        ),
-        style = MaterialTheme.typography.bodyMedium,
-        color = MaterialTheme.colorScheme.onSurfaceVariant,
-    )
-    SongChips(
-        song = song,
-        onManageTags = onManageTags,
-        onRemoveTag = onRemoveTag,
-        onEditLanguages = onEditLanguages,
-        onOpenLink = onOpenLink,
-        onAddLink = onAddLink,
-        onRemoveLink = onRemoveLink,
-        onEditCoverArt = onEditCoverArt,
-    )
-    MetadataLine(
-        modifier = Modifier.padding(top = 4.dp),
-        values = listOfNotNull(
-            metadata.key?.takeIf { it.isNotBlank() }?.let { textResource(Res.string.songs_key, it) },
-            metadata.capo?.takeIf { it != 0 }?.let { stringResource(Res.string.song_details_capo, it) },
-            metadata.tempo?.takeIf { it.isNotBlank() }?.let { textResource(Res.string.song_details_tempo, it) },
-            metadata.time?.takeIf { it.isNotBlank() }?.let { textResource(Res.string.song_details_time, it) },
-        ),
-        style = MaterialTheme.typography.labelLarge.scaled(fontScale),
-        color = LocalSecondAccentColor.current,
-    )
-}
-
-/** The chip rows of [SongMetadataHeader], see its parameters. */
-@Composable
-private fun SongChips(
-    modifier: Modifier = Modifier,
-    song: ChordProSong,
-    onManageTags: (() -> Unit)?,
-    onRemoveTag: ((String) -> Unit)?,
-    onEditLanguages: (() -> Unit)?,
-    onOpenLink: ((String) -> Unit)?,
-    onAddLink: (() -> Unit)?,
-    onRemoveLink: ((String) -> Unit)?,
-    onEditCoverArt: (() -> Unit)?,
-) = Column(modifier = modifier) {
-    val metadata = song.metadata
-    // The cover and the languages share the first row, since each is one thing about the song however many values it
-    // holds, and the languages are a single chip for the same reason: it is where they are edited. The tags and the
-    // links are lists that grow, so each has a row of its own ending in the chip that adds to it, rather than the two
-    // being one list with every way of editing it piled up at the end.
-    val hasLanguageChip = metadata.languages.isNotEmpty() || onEditLanguages != null
-    if (onEditCoverArt != null || hasLanguageChip) {
-        TagFlowRow(
-            modifier = Modifier.padding(bottom = 4.dp),
-        ) {
-            onEditCoverArt?.let { onClick ->
-                TagPill(
-                    text = stringResource(if (metadata.coverArt == null) Res.string.song_details_set_cover_art else Res.string.song_details_change_cover_art),
-                    onClick = onClick,
-                    leadingIcon = painterResource(Res.drawable.ic_album),
-                )
-            }
-            if (hasLanguageChip) {
-                TagPill(
-                    text = metadata.languages.map { languageLabel(it) }.joinToString(separator = ", ")
-                        .ifEmpty { stringResource(Res.string.song_details_language) },
-                    onClick = onEditLanguages,
-                    leadingIcon = painterResource(Res.drawable.ic_language),
-                )
-            }
-        }
-    }
-    if (metadata.tags.isNotEmpty() || onManageTags != null) {
-        TagFlowRow(
-            modifier = Modifier.padding(bottom = 4.dp),
-        ) {
-            metadata.tags.forEach { tag ->
-                TagPill(
-                    text = tag,
-                    trailingIcon = if (onRemoveTag == null) null else painterResource(Res.drawable.ic_clear),
-                    trailingIconContentDescription = onRemoveTag?.let { textResource(Res.string.song_details_tag_remove, tag) },
-                    onTrailingIconClick = onRemoveTag?.let { { it(tag) } },
-                )
-            }
-            onManageTags?.let { onClick ->
-                TagPill(
-                    text = stringResource(Res.string.song_details_tags_manage),
-                    onClick = onClick,
-                    leadingIcon = painterResource(Res.drawable.ic_edit),
-                )
-            }
-        }
-    }
-    if (metadata.links.isNotEmpty() || onAddLink != null) {
-        TagFlowRow(
-            modifier = Modifier.padding(bottom = 4.dp),
-        ) {
-            // A link is named by the site it is on, which is what tells a video from a tab at a glance; the whole
-            // address is the file's business and the browser's.
-            metadata.links.forEach { url ->
-                val label = linkLabel(url)
-                TagPill(
-                    text = label,
-                    onClick = onOpenLink?.let { { it(url) } },
-                    leadingIcon = painterResource(Res.drawable.ic_link),
-                    trailingIcon = if (onRemoveLink == null) null else painterResource(Res.drawable.ic_clear),
-                    trailingIconContentDescription = onRemoveLink?.let { textResource(Res.string.song_details_link_remove, label) },
-                    onTrailingIconClick = onRemoveLink?.let { { it(url) } },
-                )
-            }
-            onAddLink?.let { onClick ->
-                TagPill(
-                    text = stringResource(Res.string.song_details_link_add),
-                    onClick = onClick,
-                    leadingIcon = painterResource(Res.drawable.ic_add),
-                )
-            }
-        }
-    }
-}
-
-/**
- * What a link is called in the header: the host it points at, without the `www.` most sites answer under as well, or
- * the address itself where it has no host to speak of.
- *
- * The authority ends where a browser ends it, which for an `http` or `https` address includes a backslash: every
- * browser reads `\` there as `/`, so `https://evil.example\@youtube.com` opens `evil.example`, and a label that took
- * what follows the `@` would name a site the link does not open.
- */
-internal fun linkLabel(url: String): String = url
-    .substringAfter("://")
-    .takeWhile { it != '/' && it != '\\' && it != '?' && it != '#' }
-    .substringAfterLast('@')
-    .substringBefore(':')
-    .lowercase()
-    .removePrefix("www.")
-    .ifEmpty { url }
-
-/** One line of the header's metadata, or nothing at all where the song declares none of it. */
-@Composable
-private fun MetadataLine(
-    modifier: Modifier = Modifier,
-    values: List<String>,
-    style: TextStyle,
-    color: Color,
-) {
-    if (values.isEmpty()) return
-    Text(
-        modifier = modifier,
-        text = values.joinToString("  $CHIP_SEPARATOR  "),
-        style = style,
-        color = color,
-    )
-}
+) = Text(
+    modifier = modifier,
+    text = stringResource(Res.string.song_details_cut),
+    style = MaterialTheme.typography.bodyMedium,
+    color = MaterialTheme.colorScheme.onSurfaceVariant,
+)
 
 /**
  * A `{comment}` line: a layout section of its own where it stands between two sections, so that it can sit between two
@@ -1457,7 +1214,7 @@ private fun List<GridToken>.bars(): List<List<GridToken>> {
     return bars
 }
 
-private fun TextStyle.scaled(scale: Float) = copy(
+internal fun TextStyle.scaled(scale: Float) = copy(
     fontSize = if (fontSize.isSpecified) fontSize * scale else fontSize,
     lineHeight = if (lineHeight.isSpecified) lineHeight * scale else lineHeight,
 )
@@ -2377,6 +2134,10 @@ internal data class DefaultSectionLabels(
 @Immutable
 internal sealed interface RenderSection {
 
+    /** The descriptive metadata, inserted after the body budget is applied and kept whole in the first grid cell. */
+    @Immutable
+    data class Metadata(val metadata: ChordProMetadata) : RenderSection
+
     /** A titled block of lines: an environment, an implicit paragraph, or a repeated chorus. */
     @Immutable
     data class Lines(
@@ -2860,4 +2621,3 @@ private const val PADDING = '\u00A0' // Non-breaking space, so that the padding 
  */
 private const val BREAK_OPPORTUNITY = '\u200B'
 private const val BEAT_SYMBOL = "\u00B7"
-private const val CHIP_SEPARATOR = "\u00B7"

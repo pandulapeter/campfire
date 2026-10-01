@@ -58,7 +58,6 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.SideEffect
-import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateMapOf
 import androidx.compose.runtime.mutableStateOf
@@ -444,8 +443,14 @@ internal fun SongDetailsScreen(
                         viewModel = viewModel,
                         song = song,
                         isExpandable = true,
-                        isEditAlwaysInMenu = !isReadFromLibrary,
+                        isEditAlwaysInMenu = true,
                         isDeletable = isReadFromLibrary,
+                        fileEditItems = songMetadataActions(
+                            viewModel = viewModel,
+                            song = song,
+                            text = songTexts[song.fileName],
+                            isCoverArtEnabled = isCoverArtEnabled,
+                        ),
                         menuFooter = {
                             MenuStepperRow(label = stringResource(Res.string.song_details_text_size)) {
                                 LiveFontScaleControls(viewModel = viewModel)
@@ -552,33 +557,7 @@ internal fun SongDetailsScreen(
                         contentPadding = pageContentPadding,
                         renderSong = viewModel::renderSong,
                         onRetry = { viewModel.loadSongContent(song.fileName) },
-                        // Tagging writes the song's own file, so in performance mode the header's chips are read the way
-                        // the editor's preview reads them.
-                        onManageTags = if (isPerformanceModeEnabled) null else {
-                            { viewModel.showDialog(CampfireViewModel.DialogType.SongTags(song = song)) }
-                        },
-                        onRemoveTag = if (isPerformanceModeEnabled) null else {
-                            { tag -> viewModel.removeSongTag(fileName = song.fileName, tag = tag) }
-                        },
-                        onEditLanguages = if (isPerformanceModeEnabled) null else {
-                            { viewModel.showDialog(CampfireViewModel.DialogType.SongLanguages(song)) }
-                        },
-                        // Following a link reads the file rather than writing it, so it is the one chip that still acts in
-                        // performance mode.
                         onOpenLink = urlOpener,
-                        onAddLink = if (isPerformanceModeEnabled) null else {
-                            { viewModel.showDialog(CampfireViewModel.DialogType.AddSongLink(song = song)) }
-                        },
-                        onRemoveLink = if (isPerformanceModeEnabled) null else {
-                            { url -> viewModel.setSongLink(fileName = song.fileName, url = url, isAdded = false) }
-                        },
-                        onEditCoverArt = if (isPerformanceModeEnabled || !isCoverArtEnabled) null else {
-                            { viewModel.showDialog(CampfireViewModel.DialogType.CoverArtSearch(song)) }
-                        },
-                        // Performance mode takes every way into the editor out of the app, this one included.
-                        onOpenEditor = if (isPerformanceModeEnabled) null else {
-                            { viewModel.openEditor(song.fileName) }
-                        },
                     )
                 }
                 val stepButtonsTop = PAGE_TOP_PADDING + STEP_BUTTON_EDGE_MARGIN
@@ -754,14 +733,7 @@ private fun SongDetailsPage(
     contentPadding: PaddingValues,
     renderSong: (text: String, transposition: Int, spelling: UserPreferences.ChordSpelling) -> ChordProSong,
     onRetry: () -> Unit,
-    onManageTags: (() -> Unit)?,
-    onRemoveTag: ((String) -> Unit)?,
-    onEditLanguages: (() -> Unit)?,
     onOpenLink: (String) -> Unit,
-    onAddLink: (() -> Unit)?,
-    onRemoveLink: ((String) -> Unit)?,
-    onEditCoverArt: (() -> Unit)?,
-    onOpenEditor: (() -> Unit)?,
 ) = AnimatedContent(
     modifier = modifier.fillMaxSize(),
     targetState = text,
@@ -860,14 +832,7 @@ private fun SongDetailsPage(
                 fontScale = currentFontScale,
                 foldedSections = foldedSections,
                 onFoldToggled = onFoldToggled,
-                onManageTags = onManageTags,
-                onRemoveTag = onRemoveTag,
-                onEditLanguages = onEditLanguages,
                 onOpenLink = onOpenLink,
-                onAddLink = onAddLink,
-                onRemoveLink = onRemoveLink,
-                onEditCoverArt = onEditCoverArt,
-                onOpenEditor = onOpenEditor,
                 // The padding is inside the scroll, so a row is at the top of the viewport once the song is scrolled by
                 // its position plus the padding above it.
                 onRowsPlaced = { rows ->

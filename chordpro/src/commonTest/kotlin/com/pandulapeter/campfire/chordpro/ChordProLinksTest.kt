@@ -9,6 +9,7 @@
  */
 package com.pandulapeter.campfire.chordpro
 
+import com.pandulapeter.campfire.chordpro.model.ChordProLink
 import com.pandulapeter.campfire.chordpro.model.ChordProMetadata
 import kotlin.test.Test
 import kotlin.test.assertEquals
@@ -23,13 +24,13 @@ class ChordProLinksTest {
     fun `links are read from their meta directives, in order and each once`() {
         val metadata = ChordProParser.parseMetadata("{title: T}\n{meta: link $video}\n{meta: Link $tab}\n{meta: link $video}")
 
-        assertEquals(listOf(video, tab), metadata.links)
+        assertEquals(listOf(ChordProLink(video), ChordProLink(tab)), metadata.links)
         assertEquals(emptyMap(), metadata.custom)
     }
 
     @Test
     fun `a value that is not an http address is not a link`() {
-        val metadata = ChordProParser.parseMetadata("{meta: link javascript:alert(1)}\n{meta: link https://}\n{meta: link https://a b}\n{meta: link}")
+        val metadata = ChordProParser.parseMetadata("{meta: link javascript:alert(1)}\n{meta: link https://}\n{meta: link}")
 
         assertEquals(emptyList(), metadata.links)
     }
@@ -89,7 +90,47 @@ class ChordProLinksTest {
     fun `links survive a round trip through the serializer`() {
         val text = ChordProSerializer.serialize(ChordProParser.parse("{title: T}\n{meta: link $video}\n{meta: link $tab}\n[C]Line"))
 
-        assertEquals(listOf(video, tab), ChordProParser.parseMetadata(text).links)
+        assertEquals(listOf(ChordProLink(video), ChordProLink(tab)), ChordProParser.parseMetadata(text).links)
+    }
+
+    @Test
+    fun `named links keep their first name and survive serialization`() {
+        val text = "{meta: link $video Live recording}\n{meta: link $video Another name}\n{meta: link $tab}"
+        val links = listOf(ChordProLink(video, "Live recording"), ChordProLink(tab))
+
+        assertEquals(links, ChordProParser.parseMetadata(text).links)
+        assertEquals(links, ChordProParser.parseMetadata(ChordProSerializer.serialize(ChordProParser.parse(text))).links)
+    }
+
+    @Test
+    fun `editing links preserves other text and the spelling of unchanged directives`() {
+        val text = "{title: T}\r\n{meta: Link $video}\r\n{meta: link $tab Old name}\r\n\r\n[C]Line\r\n"
+        val wanted = listOf(ChordProLink(video), ChordProLink(tab, "New name"), ChordProLink("youtu.be/new"))
+
+        assertEquals(
+            "{title: T}\r\n{meta: Link $video}\r\n{meta: link $tab New name}\r\n{meta: link https://youtu.be/new}\r\n\r\n[C]Line\r\n",
+            ChordProLinks.setLinks(text, wanted),
+        )
+        assertSame(text, ChordProLinks.setLinks(text, ChordProParser.parseMetadata(text).links))
+    }
+
+    @Test
+    fun `editing removes duplicates and unwanted links and trims optional names`() {
+        val text = "{title: T}\n{meta: link $video First}\n{meta: link $video Second}\n{meta: link $tab}\n[C]Line"
+
+        assertEquals(
+            "{title: T}\n{meta: link $video}\n[C]Line",
+            ChordProLinks.setLinks(text, listOf(ChordProLink(video, "  "))),
+        )
+        assertEquals("{title: T}\n[C]Line", ChordProLinks.setLinks(text, emptyList()))
+    }
+
+    @Test
+    fun `a name cannot inject another directive or a line of lyrics`() {
+        val text = ChordProLinks.setLinks("{title: T}\n[C]Line", listOf(ChordProLink(video, "Live}\n{tag: Injected")))
+
+        assertEquals(emptyList(), ChordProParser.parseMetadata(text).tags)
+        assertEquals(listOf(ChordProLink(video, "Live tag: Injected")), ChordProParser.parseMetadata(text).links)
     }
 
     @Test

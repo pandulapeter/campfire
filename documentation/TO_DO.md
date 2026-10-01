@@ -10,14 +10,13 @@
 # To do
 - Word / PDF import
 - What's new dialog
+- Offline PWA
+- Tag icon
+- Edit song metadata dialog
+- Same options on Song Details, no matter if opened from Setlists
 - Global sync status display
 - Toggle to sort tags by usage or alphabetically
-- Links and tags are too easy to delete, no way to undo and no confirmation dialog.
-- Add ability to name links
-- Song details screen: move all options that edit the file into the overflow menu, including the Edit icon
-- Remove cover should have a confirmation dialog too
 - Show all tags logic should depend on space
-- Read across columns OFF: up/down FAB-s only step between sections in the first column
 - First time user experience tutorial
 - Sort and Filter UI should be improved (better animations)
 - Haptic effects

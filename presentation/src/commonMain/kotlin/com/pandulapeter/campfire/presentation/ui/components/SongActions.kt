@@ -268,12 +268,13 @@ private val ACTION_BUTTON_CONTAINER_SIZE = 40.dp
  * @param state Whether the menu is open, hoisted by the songs screen, whose rows also open it from a long press.
  * @param isExpandable False on a song card, which keeps every action in the menu (see [ActionsMenu]).
  * @param isEditAlwaysInMenu Keeps "Edit" in the menu however much room there is, which the song details screen does for
- *   a song read through a setlist: a setlist is what is played from, and the editor is not what it is opened for.
+ *   every song: reading a song must not invite an accidental file edit.
  * @param isDeletable Whether the song can be deleted from here, which it only can where the song is read as part of
  *   the library. A setlist is the list somebody wrote down to play from, and a song reached through one is taken out
  *   of it rather than removed from every setlist and the library at once.
  * @param leadingItems Actions that belong to the row rather than to the song, put before the song's own: moving a row
  *   of a setlist up or down, and taking it out of the setlist.
+ * @param fileEditItems Metadata editors offered by the song details screen, kept after the editor in the menu.
  * @param menuFooter The song details screen's transposition and text size steppers, see [ActionsMenu].
  */
 @Composable
@@ -286,6 +287,7 @@ internal fun SongActions(
     isEditAlwaysInMenu: Boolean = false,
     isDeletable: Boolean,
     leadingItems: List<ActionsMenuItem> = emptyList(),
+    fileEditItems: List<ActionsMenuItem> = emptyList(),
     menuFooter: (@Composable () -> Unit)? = null,
 ) {
     val filePicker = LocalFilePicker.current
@@ -294,19 +296,21 @@ internal fun SongActions(
         state = state,
         isExpandable = isExpandable,
         menuFooter = menuFooter,
-        items = leadingItems + listOfNotNull(
+        items = leadingItems + listOf(
             ActionsMenuItem(
                 title = stringResource(Res.string.songs_edit_song),
                 icon = painterResource(Res.drawable.ic_edit),
                 isAlwaysInMenu = isEditAlwaysInMenu,
                 onClick = { viewModel.openEditor(song.fileName) },
             ),
+        ) + fileEditItems + listOfNotNull(
             // Only where it would do something: a file already named after its own metadata, or one with no title to
             // be named after, has nothing to update and the action would be an offer that never comes to anything.
             if (song.canUpdateFileName) {
                 ActionsMenuItem(
                     title = stringResource(Res.string.songs_update_file_name),
                     icon = painterResource(Res.drawable.ic_rename),
+                    isAlwaysInMenu = true,
                     onClick = { viewModel.updateSongFileName(song) },
                 )
             } else {

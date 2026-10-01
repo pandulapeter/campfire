@@ -92,14 +92,12 @@ import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.TextRange
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardCapitalization
-import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.offset
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import com.pandulapeter.campfire.chordpro.ChordProLinks
 import com.pandulapeter.campfire.data.model.domain.ImportConflictResolution
 import com.pandulapeter.campfire.data.model.domain.ImportPlan
 import com.pandulapeter.campfire.data.model.domain.Song
@@ -109,6 +107,8 @@ import com.pandulapeter.campfire.presentation.localization.currentLanguage
 import com.pandulapeter.campfire.presentation.localization.pluralStringResource
 import com.pandulapeter.campfire.presentation.localization.stringResource
 import com.pandulapeter.campfire.presentation.resources.Res
+import com.pandulapeter.campfire.presentation.resources.cover_art_search_remove
+import com.pandulapeter.campfire.presentation.resources.song_details_remove_cover_art_confirmation
 import com.pandulapeter.campfire.presentation.resources.cancel
 import com.pandulapeter.campfire.presentation.resources.close
 import com.pandulapeter.campfire.presentation.resources.create
@@ -163,9 +163,6 @@ import com.pandulapeter.campfire.presentation.resources.settings_sync_disconnect
 import com.pandulapeter.campfire.presentation.resources.song_details_language
 import com.pandulapeter.campfire.presentation.resources.song_details_language_no_search_results
 import com.pandulapeter.campfire.presentation.resources.song_details_language_search
-import com.pandulapeter.campfire.presentation.resources.song_details_link_add
-import com.pandulapeter.campfire.presentation.resources.song_details_link_address
-import com.pandulapeter.campfire.presentation.resources.song_details_link_address_hint
 import com.pandulapeter.campfire.presentation.resources.song_details_tag_create
 import com.pandulapeter.campfire.presentation.resources.song_details_tags_manage
 import com.pandulapeter.campfire.presentation.resources.song_details_tags_search
@@ -202,8 +199,6 @@ import com.pandulapeter.campfire.presentation.ui.components.HideKeyboardWhenScro
 import com.pandulapeter.campfire.presentation.ui.components.MAX_SEARCH_QUERY_LENGTH
 import com.pandulapeter.campfire.presentation.ui.components.RadioListItem
 import com.pandulapeter.campfire.presentation.ui.components.SongFilters
-import com.pandulapeter.campfire.presentation.ui.components.TagFlowRow
-import com.pandulapeter.campfire.presentation.ui.components.TagPill
 import com.pandulapeter.campfire.presentation.ui.components.THEME_COLOR_CHOICE_WIDTH
 import com.pandulapeter.campfire.presentation.ui.components.ThemeColorChoice
 import com.pandulapeter.campfire.presentation.ui.components.UiModeChoice
@@ -333,7 +328,7 @@ internal fun CampfireDialogs(
             dialog = dialog,
         )
 
-        is CampfireViewModel.DialogType.AddSongLink -> AddSongLinkDialog(
+        is CampfireViewModel.DialogType.SongLinks -> SongLinksDialog(
             viewModel = viewModel,
             dialog = dialog,
         )
@@ -346,6 +341,17 @@ internal fun CampfireDialogs(
         is CampfireViewModel.DialogType.CoverArtSearch -> CoverArtSearchSheet(
             viewModel = viewModel,
             dialog = dialog,
+        )
+
+        is CampfireViewModel.DialogType.RemoveSongCoverArt -> ConfirmationDialog(
+            title = stringResource(Res.string.cover_art_search_remove),
+            text = textResource(Res.string.song_details_remove_cover_art_confirmation, dialog.song.title),
+            confirmLabel = stringResource(Res.string.cover_art_search_remove),
+            onDismiss = viewModel::dismissDialog,
+            onConfirm = {
+                viewModel.setSongCoverArt(fileName = dialog.song.fileName, url = null)
+                viewModel.dismissDialog()
+            },
         )
 
         is CampfireViewModel.DialogType.DeleteSetlist -> ConfirmationDialog(
@@ -1287,61 +1293,11 @@ private fun SongTagsDialog(
 }
 
 /**
- * One link to put on a song, typed or pasted: any page on the web, whatever site it is on. What can be saved is what the
- * file keeps ([ChordProLinks.usableUrl]), so an address typed without its `https://` is taken as it is typed, the way a
- * browser's address bar takes it.
- */
-@Composable
-private fun AddSongLinkDialog(
-    viewModel: CampfireViewModel,
-    dialog: CampfireViewModel.DialogType.AddSongLink,
-) {
-    var value by rememberSaveable { mutableStateOf("") }
-    val usableUrl = ChordProLinks.usableUrl(value)
-    val focusRequester = rememberFirstFieldFocusRequester()
-    val addLink = { url: String ->
-        viewModel.setSongLink(fileName = dialog.song.fileName, url = url, isAdded = true)
-        viewModel.dismissDialog()
-    }
-    AlertDialog(
-        onDismissRequest = viewModel::dismissDialog,
-        title = {
-            SongDialogTitle(
-                title = stringResource(Res.string.song_details_link_add),
-                song = dialog.song,
-            )
-        },
-        text = {
-            OutlinedTextField(
-                modifier = Modifier.fillMaxWidth().focusRequester(focusRequester),
-                value = value,
-                // An address has no spaces in it, so the line breaks a pasted one may carry are simply dropped.
-                onValueChange = { value = it.replace(lineBreakRegex, "") },
-                label = { Text(stringResource(Res.string.song_details_link_address)) },
-                supportingText = { Text(stringResource(Res.string.song_details_link_address_hint)) },
-                singleLine = true,
-                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Uri, imeAction = ImeAction.Done),
-                keyboardActions = KeyboardActions(onDone = { usableUrl?.let(addLink) }),
-            )
-        },
-        confirmButton = {
-            TextButton(
-                enabled = usableUrl != null,
-                onClick = { usableUrl?.let(addLink) },
-            ) { Text(stringResource(Res.string.song_details_link_add)) }
-        },
-        dismissButton = {
-            TextButton(onClick = viewModel::dismissDialog) { Text(stringResource(Res.string.cancel)) }
-        },
-    )
-}
-
-/**
  * The title of a dialog about one song, with the song named under it the way a sheet's [SheetHeader] names it, wherever
  * the dialog was opened from: one opened from a row of the song list would otherwise not say which row it is about.
  */
 @Composable
-private fun SongDialogTitle(
+internal fun SongDialogTitle(
     title: String,
     song: Song,
 ) = Column {

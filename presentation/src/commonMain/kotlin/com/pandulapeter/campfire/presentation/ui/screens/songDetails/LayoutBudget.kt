@@ -40,6 +40,7 @@ internal object LayoutBudget {
             val sectionCharacters = when (section) {
                 is RenderSection.Lines -> section.lines.sumOf { it.characterCount() }
                 is RenderSection.Comment -> section.text.length
+                is RenderSection.Metadata -> 0
             }
             if (lines + sectionLines > MAX_LINES || characters + sectionCharacters > MAX_CHARACTERS) {
                 return if (index == 0 && section is RenderSection.Lines) listOf(section.cut()) to true else sections.subList(0, index) to true

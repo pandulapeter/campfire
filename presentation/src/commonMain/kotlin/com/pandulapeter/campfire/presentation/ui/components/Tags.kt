@@ -10,10 +10,8 @@
 package com.pandulapeter.campfire.presentation.ui.components
 
 import androidx.compose.foundation.ScrollState
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.FlowRowScope
 import androidx.compose.foundation.layout.Row
@@ -21,7 +19,6 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material3.Icon
 import androidx.compose.material3.LocalMinimumInteractiveComponentSize
 import androidx.compose.material3.MaterialTheme
@@ -31,7 +28,6 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.drawWithContent
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
@@ -168,8 +164,6 @@ internal fun TagFlowRow(
  * reserving that much would be taller than the song title above it.
  *
  * @param onClick Null where the pill is only read, which is what the editor's preview shows.
- * @param onTrailingIconClick Answers a click on [trailingIcon] alone - taking a tag off the song being played, which
- *   a tap that only meant to read the tag must not do.
  */
 @Composable
 internal fun TagPill(
@@ -178,9 +172,6 @@ internal fun TagPill(
     isSelected: Boolean = false,
     onClick: (() -> Unit)? = null,
     leadingIcon: Painter? = null,
-    trailingIcon: Painter? = null,
-    trailingIconContentDescription: String? = null,
-    onTrailingIconClick: (() -> Unit)? = null,
 ) {
     val contentColor = if (isSelected) MaterialTheme.colorScheme.onSecondaryContainer else MaterialTheme.colorScheme.onSurfaceVariant
     val containerColor = if (isSelected) MaterialTheme.colorScheme.secondaryContainer else MaterialTheme.colorScheme.surfaceContainerHighest
@@ -191,7 +182,7 @@ internal fun TagPill(
             // would stop one from being wider than the screen.
             modifier = Modifier.widthIn(max = TAG_MAX_WIDTH).padding(
                 start = if (leadingIcon == null) TAG_PADDING else TAG_ICON_INSET,
-                end = if (trailingIcon == null) TAG_PADDING else TAG_ICON_INSET,
+                end = TAG_PADDING,
             ),
             verticalAlignment = Alignment.CenterVertically,
         ) {
@@ -203,33 +194,13 @@ internal fun TagPill(
                 )
             }
             Text(
-                // Weighted so that the remove button is measured first: a tag as long as the pill allows is ellipsized
-                // rather than pushing it out. The pill's own maximum width is what gives the weight something to be
-                // worked out of in the sideways scrolling row of a song list (SongLabels), whose width is unbounded.
                 modifier = Modifier.weight(1f, fill = false).padding(vertical = TAG_TEXT_PADDING),
                 text = text,
                 style = MaterialTheme.typography.labelMedium,
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis,
             )
-            if (trailingIcon != null) {
-                // The icon itself is as small as the pill's text, so what can be clicked is the box around it: a
-                // tag is taken off by a tap on a 14dp glyph otherwise, which on a phone is a matter of luck.
-                Box(
-                    modifier = Modifier
-                        .padding(start = TAG_ICON_INSET)
-                        .clip(CircleShape)
-                        .clickable(enabled = onTrailingIconClick != null) { onTrailingIconClick?.invoke() }
-                        .size(TAG_TRAILING_ICON_SIZE),
-                    contentAlignment = Alignment.Center,
-                ) {
-                    Icon(
-                        modifier = Modifier.size(TAG_ICON_SIZE),
-                        painter = trailingIcon,
-                        contentDescription = trailingIconContentDescription,
-                    )
-                }
-            }
+
         }
     }
     CompositionLocalProvider(LocalMinimumInteractiveComponentSize provides Dp.Unspecified) {
@@ -263,7 +234,6 @@ private val TAG_PADDING = 8.dp
 private val TAG_TEXT_PADDING = 4.dp
 private val TAG_ICON_INSET = 6.dp
 private val TAG_ICON_SIZE = 14.dp
-private val TAG_TRAILING_ICON_SIZE = 22.dp
 
 /** Wide enough for the longest tag the tag dialog lets through to be shown whole in most scripts, ellipsized past it. */
 private val TAG_MAX_WIDTH = 240.dp
