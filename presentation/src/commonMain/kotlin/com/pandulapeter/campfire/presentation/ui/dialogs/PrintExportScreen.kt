@@ -92,6 +92,7 @@ import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clipToBounds
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
+import androidx.compose.ui.focus.focusTarget
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Rect
 import androidx.compose.ui.geometry.Size
@@ -455,8 +456,20 @@ private fun PrintExportScreen(
         state.source == null -> PrintScreenContent.LOADING
         else -> PrintScreenContent.LOADED
     }
+    // Drawn in the same window as the screen under it, so it does not take the focus by being there, and a key would
+    // otherwise go on reaching that screen - a pedal stepping the song being exported. A bare focus target draws no
+    // indication and does not hand the focus on to the first button, so it is taken on every platform, whatever the
+    // screen shows; the preview moves it further in where it takes it for its own arrows.
+    val rootFocus = remember { FocusRequester() }
+    LaunchedEffect(Unit) { rootFocus.requestFocus() }
     // A Surface, so that nothing of the app under it can be pressed through it.
-    Surface(Modifier.fillMaxSize(), color = MaterialTheme.colorScheme.background) {
+    Surface(
+        modifier = Modifier
+            .fillMaxSize()
+            .focusRequester(rootFocus)
+            .focusTarget(),
+        color = MaterialTheme.colorScheme.background,
+    ) {
         val bottomInset = WindowInsets.contentEdges.only(WindowInsetsSides.Bottom).asPaddingValues().calculateBottomPadding()
         var saveButtonSize by remember { mutableStateOf(DpSize.Zero) }
         val density = LocalDensity.current

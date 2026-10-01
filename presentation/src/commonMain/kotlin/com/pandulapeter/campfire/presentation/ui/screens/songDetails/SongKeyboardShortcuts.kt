@@ -69,7 +69,9 @@ import kotlinx.coroutines.launch
  *   soon as this holds, and back whenever it loses it while this holds and no overflow menu is open: focus that went to
  *   nothing - a focused chip on a page the pager let go of, anything focused that left the screen - leaves no path for
  *   a key to travel, and Compose then spends the next arrow on a focus search of its own, which scrolls the song
- *   instead of stepping it. Anything drawn over the screen keeps the focus it took for as long as it is there.
+ *   instead of stepping it. Anything drawn over the screen keeps the focus it took for as long as it is there. While
+ *   this does not hold the screen's keys are swallowed rather than acted on, since something drawn in the window over
+ *   the screen (the export screen) does not take the focus by being there.
  */
 @Composable
 internal fun Modifier.songKeyboardShortcuts(
@@ -84,9 +86,10 @@ internal fun Modifier.songKeyboardShortcuts(
     val focusRequester = remember { FocusRequester() }
     val coroutineScope = rememberCoroutineScope()
     val latestIsUncovered by rememberUpdatedState(isUncovered)
-    LaunchedEffect(isUncovered) { if (isUncovered) focusRequester.requestFocus() }
     // Only the handler reads it, so it is no state.
     val heldStepKeys = remember { mutableSetOf<Key>() }
+    // A key held as the cover went up is released to whatever covers the screen, so it is not taken for held here.
+    LaunchedEffect(isUncovered) { if (!isUncovered) heldStepKeys.clear() else focusRequester.requestFocus() }
     // The focus inside a window stays where it was when the window loses it, so that is not reported below.
     val windowInfo = LocalWindowInfo.current
     LaunchedEffect(windowInfo) { snapshotFlow { windowInfo.isWindowFocused }.collect { if (!it) heldStepKeys.clear() } }
@@ -112,6 +115,10 @@ internal fun Modifier.songKeyboardShortcuts(
             // leaving those presses alone. Shift is not among them: it modifies a selection, and there is nothing on
             // this screen to select.
             if (keyEvent.isAltPressed || keyEvent.isMetaPressed || keyEvent.isCtrlPressed) return@onPreviewKeyEvent false
+            // Consumed rather than left alone while the screen is covered: an arrow nobody consumes is spent by Compose on
+            // a focus search of its own, which would move the focus to a chip or a step button of the covered song and
+            // scroll it into view.
+            if (!latestIsUncovered) return@onPreviewKeyEvent keyEvent.key in STEP_AND_SCROLL_KEYS
             val step = when (keyEvent.key) {
                 Key.DirectionUp, Key.PageUp -> onStepBack
                 Key.DirectionDown, Key.PageDown -> onStepForward
@@ -132,3 +139,12 @@ internal fun Modifier.songKeyboardShortcuts(
             true
         }
 }
+
+private val STEP_AND_SCROLL_KEYS = setOf(
+    Key.DirectionUp,
+    Key.DirectionDown,
+    Key.PageUp,
+    Key.PageDown,
+    Key.DirectionLeft,
+    Key.DirectionRight,
+)
