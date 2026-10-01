@@ -174,4 +174,20 @@ internal class PrintLayoutTest {
             assertEquals(document.placeOf("Gone"), document.placeOf("Missing"), "after $count lines")
         }
     }
+
+    @Test fun thePageNumberIsCentredInsideTheBandReservedForIt() {
+        listOf(10, 25).forEach { marginMm ->
+            val settings = PrintSettings(marginMm = marginMm)
+            val document = layout(source(song(lyrics(200))), settings)
+            val margin = marginMm * 72f / 25.4f
+            val bottom = document.height - margin - 18f
+            assertTrue(document.pages.size > 1)
+            document.pages.forEachIndexed { index, page ->
+                val number = page.texts.single { it.text == "${index + 1} / ${document.pages.size}" }
+                assertTrue(number.y + 11 <= document.height - margin && number.y >= bottom, number.toString())
+                assertEquals(document.width / 2, number.x + measure(number.text, number.size, false) / 2, 0.01f)
+                (page.texts - number).forEach { assertTrue(it.y + it.size * 1.45f <= bottom + 0.01f, it.toString()) }
+            }
+        }
+    }
 }

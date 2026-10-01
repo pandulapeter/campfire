@@ -191,7 +191,7 @@ internal fun layoutPrintDocument(
                 if (options.showMetadata && !entry.artist.isNullOrBlank()) wrapped(entry.artist) else emptyList())
             space(options.fontSize / 2f)
         }
-        if (options.setlistMode == PrintSettings.SetlistMode.RUNNING_ORDER) return finishPrintDocument(width, height, pages, options, margin)
+        if (options.setlistMode == PrintSettings.SetlistMode.RUNNING_ORDER) return finishPrintDocument(width, height, pages, options, margin, measure)
         // Song sheets follow the running order on a fresh page, including in the compact layout.
         newPage()
     }
@@ -234,7 +234,7 @@ internal fun layoutPrintDocument(
         }
         space(options.fontSize.toFloat())
     }
-    return finishPrintDocument(width, height, pages, options, margin)
+    return finishPrintDocument(width, height, pages, options, margin, measure)
 }
 
 private data class Part(val text: String, val x: Float = 0f, val y: Float = 0f, val size: Int, val bold: Boolean = false)
@@ -242,10 +242,22 @@ private data class Row(val parts: List<Part>, val height: Float)
 
 private fun List<Row>.height() = sumOf { it.height.toDouble() }.toFloat()
 
-private fun finishPrintDocument(width: Float, height: Float, pages: List<List<PrintText>>, settings: PrintSettings, margin: Float): PrintDocument {
+/**
+ * The page number sits centred in the band the layout keeps free above the bottom margin (a 9 pt line is about 11 pt
+ * tall), so it never reaches into the margin the user chose, where printers may not print.
+ */
+private fun finishPrintDocument(
+    width: Float,
+    height: Float,
+    pages: List<List<PrintText>>,
+    settings: PrintSettings,
+    margin: Float,
+    measure: (text: String, size: Int, bold: Boolean) -> Float,
+): PrintDocument {
     val nonempty = pages.filter { it.isNotEmpty() }
     return PrintDocument(width, height, nonempty.mapIndexed { index, texts ->
-        PrintPage(if (settings.showPageNumbers) texts + PrintText("${index + 1} / ${nonempty.size}", margin, height - margin, 9) else texts)
+        val number = "${index + 1} / ${nonempty.size}"
+        PrintPage(if (settings.showPageNumbers) texts + PrintText(number, (width - measure(number, 9, false)) / 2, height - margin - 11f, 9) else texts)
     })
 }
 
