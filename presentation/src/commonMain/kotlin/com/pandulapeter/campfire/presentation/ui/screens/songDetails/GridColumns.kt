@@ -53,9 +53,17 @@ internal fun List<GridToken>.bars(): List<List<GridToken>> {
  * and the bar line that closes it, and each of these is aligned on its own: a bar with fewer cells than the same bar
  * of another line is padded before its closing bar line, so that one still lines up with the others. [textOf] is what
  * a token is drawn as, which only has to agree with itself about the number of characters.
+ *
+ * Whatever follows a line's last bar line (a repeat count, a note) is drawn after it as written rather than aligned: it is
+ * in the right margin of the chart, where there is nothing to line up with, and aligning it by its position would widen
+ * the bar of a longer line that happens to stand above it.
  */
 internal fun List<List<GridToken>>.alignedGridBars(textOf: (GridToken) -> String): List<List<List<GridCell>>> {
-    val lines = map { tokens -> tokens.bars().map { it.toBarParts() } }
+    val pieces = map { it.bars() }
+    val trailingPieces = pieces.map { line -> line.lastOrNull()?.takeIf { line.size > 1 && it.none { token -> token is GridToken.Bar } } }
+    val lines = pieces.mapIndexed { lineIndex, line ->
+        (if (trailingPieces[lineIndex] == null) line else line.dropLast(1)).map { it.toBarParts() }
+    }
     val barCount = lines.maxOfOrNull { it.size } ?: 0
     val marginWidths = IntArray(barCount)
     val openingWidths = IntArray(barCount)
@@ -76,7 +84,7 @@ internal fun List<List<GridToken>>.alignedGridBars(textOf: (GridToken) -> String
             closingWidths[index] = maxOf(closingWidths[index], bar.closing?.let(textOf)?.length ?: 0)
         }
     }
-    return lines.map { bars ->
+    return lines.mapIndexed { lineIndex, bars ->
         bars.mapIndexed { index, bar ->
             buildList {
                 if (marginWidths[index] > 0) {
@@ -88,7 +96,7 @@ internal fun List<List<GridToken>>.alignedGridBars(textOf: (GridToken) -> String
                 cellWidths[index].forEachIndexed { cellIndex, width -> addAligned(bar.cells.getOrNull(cellIndex), width, textOf) }
                 addAligned(bar.closing, closingWidths[index], textOf, isAlignedToTheEnd = true)
             }
-        }.trimmedAtTheEnd()
+        }.plus(listOfNotNull(trailingPieces[lineIndex]?.map { GridCell(token = it, text = textOf(it) + " ") })).trimmedAtTheEnd()
     }
 }
 

@@ -42,7 +42,7 @@ class GridColumnsTest {
     fun `the bar lines of a run stand under each other whatever the chords are`() {
         assertEquals(
             listOf(
-                "|: Am . . | C  . . | D  . .  | F  . . |",
+                "|: Am . . | C  . . | D  . .  | F . . |",
                 "|  Am . . | E7 . . | Am     :| x2",
             ),
             aligned(
@@ -76,6 +76,48 @@ class GridColumnsTest {
             aligned(
                 "Coda | G . |",
                 "| D . |",
+            ),
+        )
+    }
+
+    @Test
+    fun `the note after a line's last bar line widens no bar of a longer line`() {
+        assertEquals(
+            listOf(
+                "| Am | C | D | F | G |",
+                "| Am | C | D | F | x2 (fade out)",
+            ),
+            aligned(
+                "| Am | C | D | F | G |",
+                "| Am | C | D | F | x2 (fade out)",
+            ),
+        )
+    }
+
+    @Test
+    fun `a line with a margin label and a note after its last bar line lines up with the bars under it`() {
+        assertEquals(
+            listOf(
+                "Coda  | G  . | x2",
+                "Intro | Am . | C . |",
+            ),
+            aligned(
+                "Coda | G . | x2",
+                "Intro | Am . | C . |",
+            ),
+        )
+    }
+
+    @Test
+    fun `a line with no bar line is aligned as one bar`() {
+        assertEquals(
+            listOf(
+                "| Am   | C |",
+                "  N.C.",
+            ),
+            aligned(
+                "| Am | C |",
+                "N.C.",
             ),
         )
     }
