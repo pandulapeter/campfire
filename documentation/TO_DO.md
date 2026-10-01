@@ -8,7 +8,6 @@
  * https://mozilla.org/MPL/2.0/.
 -->
 # To do
-- Make dialog / bottom sheet titles consistent
 - Offline mode for web (execute documentation/WEB_OFFLINE_SUPPORT_PROPOSAL.md)
 - Haptic effects
 - Global sync status display

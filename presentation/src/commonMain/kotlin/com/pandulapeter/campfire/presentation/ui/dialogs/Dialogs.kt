@@ -146,8 +146,9 @@ import com.pandulapeter.campfire.presentation.resources.setlists_date
 import com.pandulapeter.campfire.presentation.resources.setlists_date_value
 import com.pandulapeter.campfire.presentation.resources.setlists_description
 import com.pandulapeter.campfire.presentation.resources.setlists_duplicate
+import com.pandulapeter.campfire.presentation.resources.setlists_duplicate_setlist
 import com.pandulapeter.campfire.presentation.resources.setlists_duplicate_title
-import com.pandulapeter.campfire.presentation.resources.setlists_edit_setlist
+import com.pandulapeter.campfire.presentation.resources.setlists_edit_details
 import com.pandulapeter.campfire.presentation.resources.setlists_new_setlist
 import com.pandulapeter.campfire.presentation.resources.setlists_new_setlist_title
 import com.pandulapeter.campfire.presentation.resources.setlists_no_search_results
@@ -163,7 +164,7 @@ import com.pandulapeter.campfire.presentation.resources.settings_library_delete_
 import com.pandulapeter.campfire.presentation.resources.settings_library_delete_prompt
 import com.pandulapeter.campfire.presentation.resources.settings_sync_disconnect
 import com.pandulapeter.campfire.presentation.resources.settings_sync_disconnect_confirmation
-import com.pandulapeter.campfire.presentation.resources.song_details_language
+import com.pandulapeter.campfire.presentation.resources.song_details_languages_edit
 import com.pandulapeter.campfire.presentation.resources.song_details_language_no_search_results
 import com.pandulapeter.campfire.presentation.resources.song_details_language_search
 import com.pandulapeter.campfire.presentation.resources.song_details_tag_create
@@ -253,7 +254,9 @@ internal fun CampfireDialogs(
         )
 
         is CampfireViewModel.DialogType.EditSetlist -> SetlistDetailsDialog(
-            title = stringResource(Res.string.setlists_edit_setlist),
+            title = stringResource(Res.string.setlists_edit_details),
+            subtitle = dialog.setlist.title,
+            isTitleFocused = false,
             initialTitle = dialog.setlist.title,
             initialDescription = dialog.setlist.description,
             initialDate = dialog.setlist.date,
@@ -275,7 +278,8 @@ internal fun CampfireDialogs(
         // Named before it is made rather than after: two setlists can carry the same title (a setlist is identified
         // by its file name), so a copy nobody named would sit under the original's title until somebody noticed.
         is CampfireViewModel.DialogType.DuplicateSetlist -> SetlistDetailsDialog(
-            title = stringResource(Res.string.setlists_duplicate),
+            title = stringResource(Res.string.setlists_duplicate_setlist),
+            subtitle = dialog.setlist.title,
             initialTitle = textResource(Res.string.setlists_duplicate_title, dialog.setlist.title),
             initialDescription = dialog.setlist.description,
             initialIsCountdownShown = dialog.setlist.isCountdownShown,
@@ -848,12 +852,17 @@ private fun DeleteLibraryDialog(
  * The [FocusRequester] of the field a dialog opens onto. A dialog that is there to be typed into puts the caret in
  * its first field rather than asking for one more tap, which on a touch platform is also what brings the keyboard
  * up with it - and every such dialog here holds that field as the first thing under the title, so there is only ever
- * the one field to open on. The song metadata form is the exception, opening on none of its fields. The song picker's sheet opens onto its search field the same way.
+ * the one field to open on. The forms that are opened to be looked over as much as to be typed into are the exception,
+ * opening on none of their fields: the song metadata form, and a setlist's details being edited. The song picker's
+ * sheet opens onto its search field the same way.
+ *
+ * @param isFocused Whether the field is given the caret as the dialog opens, for a dialog that does so only some of the
+ *   ways it is opened.
  */
 @Composable
-internal fun rememberFirstFieldFocusRequester(): FocusRequester {
+internal fun rememberFirstFieldFocusRequester(isFocused: Boolean = true): FocusRequester {
     val focusRequester = remember { FocusRequester() }
-    LaunchedEffect(Unit) { focusRequester.requestFocus() }
+    LaunchedEffect(Unit) { if (isFocused) focusRequester.requestFocus() }
     return focusRequester
 }
 
@@ -885,10 +894,17 @@ private fun rememberSingleConfirmation(): (confirm: () -> Unit) -> Unit {
  * to name can still be found by what it is for. The date starts as today unless the setlist already has one - a
  * copy is made for another evening, so it starts as today too - and a setlist written before there were dates gets
  * today's the first time it is edited, since there is no creation date left to fall back on.
+ *
+ * @param subtitle The setlist being edited or copied, named under the title. A new setlist has none to name.
+ * @param isTitleFocused Whether the dialog opens with the caret in the title. A new setlist and a copy are opened to be
+ *   named, while an edit is as often opened to look the setlist's details over or to change its date, which a keyboard
+ *   coming up over the dialog would only be in the way of.
  */
 @Composable
 private fun SetlistDetailsDialog(
     title: String,
+    subtitle: String = "",
+    isTitleFocused: Boolean = true,
     initialTitle: String = "",
     initialDescription: String = "",
     initialDate: LocalDate? = null,
@@ -898,7 +914,7 @@ private fun SetlistDetailsDialog(
     onConfirm: (title: String, description: String, date: LocalDate, isCountdownShown: Boolean) -> Unit,
 ) {
     // A TextFieldValue rather than a String, for the selection: a dialog that opens on a title the user is meant to
-    // replace ("Summer set (copy)", the title being renamed) has all of it selected, so the first key typed writes the
+    // replace ("Summer set (copy)", a search that found nothing) has all of it selected, so the first key typed writes the
     // new name instead of appending to the old one. Nothing is lost by it either, since a tap or an arrow key puts the
     // caret where it was aimed. The description is opened on for editing rather than for replacing, so its caret goes
     // to the end of what is already written instead.
@@ -911,11 +927,11 @@ private fun SetlistDetailsDialog(
     val date = LocalDate.parse(dateText)
     var isCountdownShown by rememberSaveable { mutableStateOf(initialIsCountdownShown) }
     val isValid = setlistTitle.text.isNotBlank()
-    val focusRequester = rememberFirstFieldFocusRequester()
+    val focusRequester = rememberFirstFieldFocusRequester(isFocused = isTitleFocused)
     val confirmOnce = rememberSingleConfirmation()
     AlertDialog(
         onDismissRequest = onDismiss,
-        title = { Text(title) },
+        title = { if (subtitle.isBlank()) Text(title) else SubjectDialogTitle(title = title, subtitle = subtitle) },
         text = {
             Column {
                 OutlinedTextField(
@@ -1188,7 +1204,7 @@ private fun NewSongDialog(
  * is filed under "christmas", "Christmas" and "xmas" is a library whose tags filter nothing. For the same reason what is
  * typed ticks the tag it spells, whatever its case, and a tag is only created where there is none to tick.
  *
- * It names the song it tags under its title ([SongDialogTitle]) wherever it was opened from: a tag put on the row next
+ * It names the song it tags under its title ([SubjectDialogTitle]) wherever it was opened from: a tag put on the row next
  * to the one that was meant is a file quietly rewritten, and saying it over the song details screen as well keeps the
  * dialog reading the same from both places.
  */
@@ -1233,9 +1249,9 @@ private fun SongTagsDialog(
     AlertDialog(
         onDismissRequest = viewModel::dismissDialog,
         title = {
-            SongDialogTitle(
+            SubjectDialogTitle(
                 title = stringResource(Res.string.song_details_tags_manage),
-                song = dialog.song,
+                subtitle = songLabel(dialog.song),
                 action = {
                     LabelSortingToggle(
                         sortingMode = sortingMode,
@@ -1322,21 +1338,24 @@ private fun SongTagsDialog(
 }
 
 /**
- * The title of a dialog about one song, with the song named under it the way a sheet's [SheetHeader] names it, wherever
- * the dialog was opened from: one opened from a row of the song list would otherwise not say which row it is about.
+ * The title of a dialog about one song or one setlist, with that song or setlist named under it the way a sheet's
+ * [SheetHeader] names it, wherever the dialog was opened from: one opened from a row of a list would otherwise not say
+ * which row it is about. The title itself is the label of the entry that opened the dialog, so that what was tapped is
+ * what comes up.
  *
+ * @param subtitle What the dialog acts on: [songLabel], or the setlist's title.
  * @param action A small control about the dialog's list as a whole, at the end of the title's row.
  */
 @Composable
-internal fun SongDialogTitle(
+internal fun SubjectDialogTitle(
     title: String,
-    song: Song,
+    subtitle: String,
     action: (@Composable () -> Unit)? = null,
 ) = Row(verticalAlignment = Alignment.CenterVertically) {
     Column(modifier = Modifier.weight(1f)) {
         Text(title)
         Text(
-            text = songLabel(song),
+            text = subtitle,
             style = MaterialTheme.typography.bodyMedium,
             color = MaterialTheme.colorScheme.onSurfaceVariant,
             maxLines = 1,
@@ -1405,9 +1424,9 @@ private fun SongLanguagesDialog(
     AlertDialog(
         onDismissRequest = viewModel::dismissDialog,
         title = {
-            SongDialogTitle(
-                title = stringResource(Res.string.song_details_language),
-                song = dialog.song,
+            SubjectDialogTitle(
+                title = stringResource(Res.string.song_details_languages_edit),
+                subtitle = songLabel(dialog.song),
                 action = {
                     LabelSortingToggle(
                         sortingMode = sortingMode,

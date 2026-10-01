@@ -102,7 +102,7 @@ internal fun SongLinksDialog(
     val canSave = urls.all { it != null } && urls.distinct().size == urls.size
     AlertDialog(
         onDismissRequest = viewModel::dismissDialog,
-        title = { SongDialogTitle(title = stringResource(Res.string.song_details_links_edit), song = dialog.song) },
+        title = { SubjectDialogTitle(title = stringResource(Res.string.song_details_links_edit), subtitle = songLabel(dialog.song)) },
         text = {
             LazyColumn(
                 modifier = Modifier.fillMaxWidth().heightIn(max = 420.dp).fadingVerticalEdges(listState),

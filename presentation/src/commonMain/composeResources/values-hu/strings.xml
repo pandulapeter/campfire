@@ -130,7 +130,6 @@
     <string name="setlists_edit_details">Meta-adatok szerkesztése</string>
     <string name="setlists_song_assignments">Dalok hozzárendelése</string>
     <string name="setlists_add_songs">Dalok hozzáadása</string>
-    <string name="setlists_edit_setlist">Lista szerkesztése</string>
     <string name="setlists_description">Leírás (nem kötelező)</string>
     <string name="setlists_date">Dátum</string>
     <string name="setlists_date_value">%1$s. %2$s. %3$s.</string>
@@ -373,12 +372,10 @@
     <string name="song_details_link_move_down">A(z) %1$s oldalra mutató hivatkozás mozgatása lejjebb</string>
     <string name="song_details_link_address">Webcím</string>
     <string name="song_details_link_address_hint">Egy videó, felvétel, tabulatúra vagy bármilyen más oldal a dalról</string>
-    <string name="song_details_language">Nyelv</string>
     <string name="song_details_language_search">Nyelv keresése</string>
     <string name="song_details_language_no_search_results">Egyetlen nyelv sem felel meg a keresésnek. A két- vagy hárombetűs kódjával akkor is megtalálod, ha nincs neve.</string>
     <string name="song_details_set_cover_art">Borítókép beállítása</string>
     <string name="song_details_change_cover_art">Borítókép cseréje</string>
-    <string name="cover_art_search_title">Borítókép</string>
     <string name="cover_art_search">Keresés</string>
     <string name="cover_art_search_hint">Add meg az albumot, vagy csak a dalt, és megjelennek a kiadványok, amelyeken szerepelt</string>
     <string name="cover_art_search_loading">Keresés a MusicBrainzen és az iTunesban…</string>

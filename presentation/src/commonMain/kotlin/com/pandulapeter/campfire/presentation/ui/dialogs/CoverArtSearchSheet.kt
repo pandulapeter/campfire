@@ -88,10 +88,11 @@ import com.pandulapeter.campfire.presentation.resources.cover_art_search_hint
 import com.pandulapeter.campfire.presentation.resources.cover_art_search_loading
 import com.pandulapeter.campfire.presentation.resources.cover_art_search_no_results
 import com.pandulapeter.campfire.presentation.resources.cover_art_search_remove
-import com.pandulapeter.campfire.presentation.resources.cover_art_search_title
 import com.pandulapeter.campfire.presentation.resources.ic_check
 import com.pandulapeter.campfire.presentation.resources.retry
 import com.pandulapeter.campfire.presentation.resources.save
+import com.pandulapeter.campfire.presentation.resources.song_details_change_cover_art
+import com.pandulapeter.campfire.presentation.resources.song_details_set_cover_art
 import com.pandulapeter.campfire.presentation.resources.song_editor_insert_album
 import com.pandulapeter.campfire.presentation.resources.songs_new_song_artist
 import com.pandulapeter.campfire.presentation.resources.songs_new_song_title
@@ -150,7 +151,7 @@ internal fun CoverArtSearchSheet(
     }
     val usableAddress = ChordProCoverArt.usableUrl(address)
     CampfireBottomSheet(
-        title = stringResource(Res.string.cover_art_search_title),
+        title = stringResource(if (dialog.song.coverArtUrl == null) Res.string.song_details_set_cover_art else Res.string.song_details_change_cover_art),
         subtitle = songLabel(dialog.song),
         sheetMaxWidth = SHEET_MAX_WIDTH,
         onDismiss = { viewModel.dismissSheet(dialog) },

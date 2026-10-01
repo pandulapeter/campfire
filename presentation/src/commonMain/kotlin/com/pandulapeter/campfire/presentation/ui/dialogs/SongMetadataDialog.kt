@@ -73,7 +73,7 @@ internal fun SongMetadataDialog(
     }
     AlertDialog(
         onDismissRequest = viewModel::dismissDialog,
-        title = { SongDialogTitle(title = stringResource(Res.string.song_details_metadata_edit), song = dialog.song) },
+        title = { SubjectDialogTitle(title = stringResource(Res.string.song_details_metadata_edit), subtitle = songLabel(dialog.song)) },
         text = {
             Column(
                 modifier = Modifier.fillMaxWidth().heightIn(max = 420.dp).fadingVerticalEdges(scrollState).verticalScroll(scrollState),

@@ -130,7 +130,6 @@
     <string name="setlists_edit_details">Edit metadata</string>
     <string name="setlists_song_assignments">Song assignments</string>
     <string name="setlists_add_songs">Add songs</string>
-    <string name="setlists_edit_setlist">Edit setlist</string>
     <string name="setlists_description">Description (optional)</string>
     <string name="setlists_date">Date</string>
     <string name="setlists_date_value">%1$s-%2$s-%3$s</string>
@@ -373,12 +372,10 @@
     <string name="song_details_link_move_down">Move the link to %1$s down</string>
     <string name="song_details_link_address">Web address</string>
     <string name="song_details_link_address_hint">A video, a recording, a tab or any other page about the song</string>
-    <string name="song_details_language">Language</string>
     <string name="song_details_language_search">Search for a language</string>
     <string name="song_details_language_no_search_results">No language matches this search. Its two or three letter code will find it even where there is no name for it.</string>
     <string name="song_details_set_cover_art">Set cover art</string>
     <string name="song_details_change_cover_art">Change cover art</string>
-    <string name="cover_art_search_title">Cover art</string>
     <string name="cover_art_search">Search</string>
     <string name="cover_art_search_hint">Name the album, or the song on its own, to find the records it came out on</string>
     <string name="cover_art_search_loading">Searching MusicBrainz and iTunes…</string>
