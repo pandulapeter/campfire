@@ -27,10 +27,12 @@ package com.pandulapeter.campfire.presentation.ui.screens.songDetails
  * [isCuttableBefore] says so of. A
  * section on a card has [piecePadding] at both sides of every cut, as [arrange] places them. Within a row the cells are filled in their order, each piece as tall as the height of the
  * row allows, the lowest such height being searched for. A row prefers no cut at all, and then cuts only the
- * sections taller than [maxRowHeight], unless cutting more saves at least [minCutSaving] of its height; every row with a
- * cut in it also counts that much taller while the rows are chosen, so that fewer cuts win. Everything else - where
- * the rows end, how many columns each has, the ties, the wide rows ([wideHeightAt]) - is
- * decided the way [flowIntoRows] decides it, a row of several columns never being taller than [maxRowHeight].
+ * sections taller than [maxRowHeight], unless cutting more saves at least [minCutSaving] of its height. The rows are
+ * chosen the way [flowIntoRows] chooses them - the fewest pages, then the first rows as full as possible, then the
+ * lowest - a row with a cut in it counting that much taller there, so that of two ways of laying out the same sections
+ * the one without a cut wins unless the cut saves that much. Everything else - how many columns each row has, the
+ * ties, the wide rows ([wideHeightAt]) - is decided the way [flowIntoRows] decides it, a row of several columns never
+ * being taller than [maxRowHeight].
  */
 internal fun flowIntoRowsCuttingSections(
     sectionStarts: IntArray,
@@ -40,7 +42,6 @@ internal fun flowIntoRowsCuttingSections(
     wideHeightAt: (section: Int) -> Int?,
     piecePadding: IntArray,
     sectionGap: Int,
-    rowGap: Int,
     maxRowHeight: Int,
     minCutSaving: Int,
     cutsEverySection: Boolean,
@@ -168,25 +169,28 @@ internal fun flowIntoRowsCuttingSections(
         return Triple(cells, cap, isCut)
     }
 
-    // As in flowIntoRows: costs[i] is the smallest total height of the sections from i onwards, and the rest describes
-    // the first row of that.
-    val costs = LongArray(sectionCount + 1)
+    // As in flowIntoRows: pageCounts[i] is the fewest pages the sections from i onwards fit, and the rest describes the
+    // first row of that, rowCosts[i] being its height with what a cut in it counts for.
+    val pageCounts = IntArray(sectionCount + 1)
     val rowEnds = IntArray(sectionCount + 1)
+    val rowCosts = IntArray(sectionCount + 1)
     val rowColumnCounts = IntArray(sectionCount + 1)
     val rowCells = arrayOfNulls<IntArray>(sectionCount + 1)
     val isRowWide = BooleanArray(sectionCount + 1)
     for (start in sectionCount - 1 downTo 0) {
-        var best = Long.MAX_VALUE
+        var bestPageCount = Int.MAX_VALUE
         for (end in start + 1..sectionCount) {
             // The lowest the sections could be stacked in is the widest single column, and no row holds more than the
             // screen in every column: a longer row only holds more.
             if (end - start > 1 && stackedHeight(1, start, end) > maxRowHeight.toLong() * maxColumnCount) break
             for (columnCount in 1..maxColumnCount) {
                 val (cells, height, isCut) = rowOf(columnCount, start, end) ?: continue
-                val cost = height + (if (isCut) minCutSaving else 0) + if (end < sectionCount) rowGap + costs[end] else 0L
-                if (cost < best || (cost == best && end > rowEnds[start])) {
-                    best = cost
+                val pageCount = pagesOf(height, maxRowHeight) + pageCounts[end]
+                val cost = height + if (isCut) minCutSaving else 0
+                if (isBetterRow(pageCount, end, cost, bestPageCount, rowEnds[start], rowCosts[start])) {
+                    bestPageCount = pageCount
                     rowEnds[start] = end
+                    rowCosts[start] = cost
                     rowColumnCounts[start] = columnCount
                     rowCells[start] = cells
                     isRowWide[start] = false
@@ -194,16 +198,17 @@ internal fun flowIntoRowsCuttingSections(
             }
         }
         forEachWideRow(start, sectionCount, sectionHeights[0], wideHeightAt, sectionGap, maxRowHeight) { end, height ->
-            val cost = height + if (end < sectionCount) rowGap + costs[end] else 0L
-            if (cost < best) {
-                best = cost
+            val pageCount = pagesOf(height, maxRowHeight) + pageCounts[end]
+            if (isBetterRow(pageCount, end, height, bestPageCount, rowEnds[start], rowCosts[start])) {
+                bestPageCount = pageCount
                 rowEnds[start] = end
+                rowCosts[start] = height
                 rowColumnCounts[start] = 1
                 rowCells[start] = IntArray(sectionStarts[end] - sectionStarts[start])
                 isRowWide[start] = true
             }
         }
-        costs[start] = best
+        pageCounts[start] = bestPageCount
     }
     val rows = IntArray(unitCount)
     val columns = IntArray(unitCount)

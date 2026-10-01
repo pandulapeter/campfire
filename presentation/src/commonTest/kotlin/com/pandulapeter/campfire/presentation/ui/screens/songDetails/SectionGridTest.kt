@@ -138,7 +138,6 @@ class SectionGridTest {
         heightAt = { index, _ -> heights[index] },
         wideHeightAt = { wideHeights[it] },
         sectionGap = SECTION_GAP,
-        rowGap = ROW_GAP,
         maxRowHeight = maxRowHeight,
     )
 
@@ -185,4 +184,82 @@ class SectionGridTest {
         assertEquals(false, isReadWithoutStepping(fits = true, rowCount = 2))
         assertEquals(false, isReadWithoutStepping(fits = false, rowCount = 1))
     }
+
+    @Test
+    fun firstRowIsAsFullAsTheFewestRowsAllow() {
+        // A song's info card, a short intro and then verses and choruses: packed for the lowest total height, the two
+        // short sections would have a row to themselves and the verse beside them, leaving most of the first page empty.
+        val heights = listOf(354, 232, 396, 416, 396, 416, 396, 416, 416)
+        val grid = flow(heights, maxColumnCount = 2, maxRowHeight = 967)
+        assertEquals(3, grid.columnCounts.size)
+        assertContentEquals(intArrayOf(0, 0, 0, 0, 1, 1, 1, 1, 2), grid.rows)
+    }
+
+    @Test
+    fun slackIsLeftOnTheLastPage() {
+        val heights = listOf(300, 54, 232, 252, 232, 252, 232, 252, 252)
+        val grid = flow(heights, maxColumnCount = 2, maxRowHeight = 967)
+        assertContentEquals(intArrayOf(0, 0, 0, 0, 0, 0, 0, 1, 1), grid.rows)
+    }
+
+    @Test
+    fun aRowTallerThanTheScreenIsSeveralPages() {
+        assertEquals(1, pagesOf(height = 900, maxRowHeight = 900))
+        assertEquals(2, pagesOf(height = 901, maxRowHeight = 900))
+        assertEquals(3, pagesOf(height = 2700, maxRowHeight = 900))
+    }
+
+    @Test
+    fun moreColumnsInOneRowWinOverFewerInSeveral() {
+        // Two columns fit the song as two rows, which are stepped through; three fit it as one, which is read whole.
+        val searched = searchColumns(
+            maxColumnCount = 4,
+            heights = mapOf(2 to 500, 3 to 700, 4 to 400),
+            rowCounts = mapOf(2 to 2, 3 to 1, 4 to 1),
+        )
+        assertContentEquals(intArrayOf(3), searched.grid.columnCounts)
+        assertEquals(true, searched.fits)
+        assertEquals(700, searched.height)
+    }
+
+    @Test
+    fun fewestColumnsInSeveralRowsWinWhereNoneFitInOne() {
+        val searched = searchColumns(
+            maxColumnCount = 4,
+            heights = mapOf(2 to 600, 3 to 500, 4 to 450),
+            rowCounts = mapOf(2 to 2, 3 to 2, 4 to 2),
+        )
+        assertContentEquals(intArrayOf(2, 2), searched.grid.columnCounts)
+        assertEquals(true, searched.fits)
+        assertEquals(600, searched.height)
+    }
+
+    @Test
+    fun mostColumnsWinWhereNothingFits() {
+        val searched = searchColumns(
+            maxColumnCount = 3,
+            heights = mapOf(2 to 1200, 3 to 900),
+            rowCounts = mapOf(2 to 2, 3 to 2),
+        )
+        assertContentEquals(intArrayOf(3, 3), searched.grid.columnCounts)
+        assertEquals(false, searched.fits)
+    }
+
+    /**
+     * [searchColumnCount] over grids of every column count from two to [maxColumnCount], each [rowCounts] rows of that
+     * many columns and [heights] tall, held against a screen 800 high, which the single column overflows.
+     */
+    private fun searchColumns(maxColumnCount: Int, heights: Map<Int, Int>, rowCounts: Map<Int, Int>) = searchColumnCount(
+        maxColumnCount = maxColumnCount,
+        availableHeight = 800,
+        stackedHeight = { 1000 },
+        gridFor = { columnCount ->
+            if (columnCount == 1) {
+                singleColumnGrid(sectionCount = 1)
+            } else {
+                SectionGrid(rows = IntArray(0), columns = IntArray(0), columnCounts = IntArray(rowCounts.getValue(columnCount)) { columnCount })
+            }
+        },
+        heightOf = { grid -> if (grid.rows.isEmpty()) heights.getValue(grid.columnCounts.first()) else 1000 },
+    )
 }

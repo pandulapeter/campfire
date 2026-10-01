@@ -9,6 +9,7 @@
  */
 package com.pandulapeter.campfire.presentation.ui.screens.songDetails
 
+import kotlin.math.ceil
 import kotlin.math.max
 
 /**
@@ -58,6 +59,60 @@ internal fun emptyGrid() = SectionGrid(rows = IntArray(0), columns = IntArray(0)
  * single row can: several rows read across are stepped through however short they are.
  */
 internal fun isReadWithoutStepping(fits: Boolean, rowCount: Int) = fits && rowCount == 1
+
+/**
+ * A grid searched for, whether the whole song [fits] into the height available to it, and how tall it is where that
+ * was worked out - [Int.MAX_VALUE] where it was not, which is only where it does not fit.
+ */
+internal data class SearchedGrid(
+    val grid: SectionGrid,
+    val fits: Boolean,
+    val height: Int,
+)
+
+/**
+ * The grid of the fewest columns, up to [maxColumnCount], that fits the song into [availableHeight] in a single row,
+ * [gridFor] being the grid of a given number of columns at most and [heightOf] its height.
+ *
+ * A grid of several rows can be as short as that too, and it may need fewer columns than one of a single row, since
+ * its rows are packed tighter than the columns of one: but its rows are stepped through, each on a screen of its own,
+ * where a single row is read without a single scroll (see [isReadWithoutStepping]). So it is only taken where no
+ * number of columns fits the song in one row - the fewest columns that fit it in several, which wrap the least - and
+ * where nothing fits at all, the grid of the most columns, which scrolls the least.
+ *
+ * Where [maxColumnCount] is one, that single column is not measured at all (see `SongSectionsLayout`), since it is what
+ * a window with room for nothing wider takes whatever the heights are, so it is taken as a grid that does not fit - which
+ * on such a window is nearly every song anyway. Where a number of columns does not fit
+ * the song, the next one tried is at least what even a perfectly even split of [stackedHeight], the height of every
+ * section stacked at the width of a single column, would need: the rows may be narrower than the candidate, down to a
+ * single column, so the sections are only as tall there as they are in the widest column.
+ */
+internal fun searchColumnCount(
+    maxColumnCount: Int,
+    availableHeight: Int,
+    stackedHeight: () -> Int,
+    gridFor: (columnCount: Int) -> SectionGrid,
+    heightOf: (SectionGrid) -> Int,
+): SearchedGrid {
+    var candidate = 1
+    var candidateGrid = gridFor(candidate)
+    var candidateHeight = Int.MAX_VALUE
+    var fitInRows: SearchedGrid? = null
+    while (candidate < maxColumnCount) {
+        candidateHeight = heightOf(candidateGrid)
+        if (candidateHeight <= availableHeight) {
+            if (candidateGrid.columnCounts.size == 1) return SearchedGrid(candidateGrid, fits = true, height = candidateHeight)
+            if (fitInRows == null) fitInRows = SearchedGrid(candidateGrid, fits = true, height = candidateHeight)
+            candidate++
+        } else {
+            candidate = maxOf(candidate + 1, ceil(stackedHeight().toDouble() / availableHeight).toInt()).coerceAtMost(maxColumnCount)
+        }
+        candidateGrid = gridFor(candidate)
+    }
+    if (candidate > 1) candidateHeight = heightOf(candidateGrid)
+    val widest = SearchedGrid(candidateGrid, fits = candidateHeight <= availableHeight, height = candidateHeight)
+    return if (isReadWithoutStepping(widest.fits, candidateGrid.columnCounts.size)) widest else fitInRows ?: widest
+}
 
 /**
  * The y position of every section, the total height of the layout, the y positions (centers) of the row gaps and where
@@ -200,8 +255,17 @@ internal fun IntArray.balanceIntoCells(from: Int, until: Int, cellCount: Int, se
  * Packs [sectionCount] sections into rows that are read across, then downwards, each row having between one and
  * [maxColumnCount] columns: [heightAt] tells how tall a section is in a row of a given number of columns, since fewer
  * columns are wider ones. Within a row the sections fill its columns top to bottom, stacked [sectionGap] apart, and
- * the rows are [rowGap] apart. The rows are chosen to make the song as short as possible, which is what decides how
- * much of it is on the screen at once and how much has to be scrolled.
+ * the rows are laid out apart from each other by [arrange].
+ *
+ * **The rows are chosen to take as few pages as possible, and then to fill the song's first ones as full as they can
+ * be.** A row is a stop the song is read at, a page of its own wherever the rows are read one at a time, and a row
+ * taller than the screen is as many pages as it takes to page through it ([pagesOf]): that is how many times the reader
+ * has to move on, while a row shorter than the screen saves nothing but leaves the rest of its page empty. So of the
+ * ways of packing the song into the fewest pages, the one taken is the one whose first row reaches furthest into the
+ * song, and so on for every row after it, which leaves whatever slack there is on its last page, where it reads as the
+ * end of the song - rather than leaving the first page half empty because the short sections a song opens with (its
+ * info card, an intro) pack lowest together. Only then does a row's height decide, the lowest way of laying out the
+ * same sections winning (see [isBetterRow]).
  *
  * **A row of more than one column is never taller than [maxRowHeight]**, the height of the screen: its columns are
  * read one after the other, and a column that runs past the bottom of the screen sends the reader back up to the top
@@ -218,7 +282,8 @@ internal fun IntArray.balanceIntoCells(from: Int, until: Int, cellCount: Int, se
  * A row has exactly as many columns as its sections fill, so no row is left with a hole in it: a hole in the middle
  * of a song looks like a mistake, and even at its end it is width the sections could have used to wrap less. Where a
  * row ends and how many columns it has decide how well the rest of the song can be packed, so both are chosen by a
- * dynamic program (from the last section backwards) that minimizes the total height. A candidate row of a given
+ * dynamic program (from the last section backwards), which is what makes the first row the longest that still leaves the
+ * fewest pages for the rest: what the rest is packed into is already decided by where the row ends. A candidate row of a given
  * number of columns is as tall as the lowest cap under which a first-fit stacking of its sections takes no more cells
  * than that, first-fit being what keeps consecutive sections in the fewest cells: the cells can always be split further
  * to make up the count, and a split never makes one taller. That height only grows with the row, so it is carried from
@@ -229,10 +294,11 @@ internal fun IntArray.balanceIntoCells(from: Int, until: Int, cellCount: Int, se
  * **A section whose lines do not wrap may have a row of its own as wide as it needs**, the whole width at most, where
  * [wideHeightAt] gives its height in one: a staff of tablature longer than a column is cut into systems there, and
  * the column beside it grows by as many staves, while in a row of its own it can be read as it was written. It is one
- * more candidate for the row starting at that section, taken wherever it makes the song shorter, so a tab that fits a
- * column anyway, or one too long for the window as well, stays where it was. The sections around it may be stacked in
+ * more candidate for the row starting at that section, taken wherever it is strictly better by the same order - fewer
+ * pages, a longer row, or the same row lower - so a tab that fits a column anyway, or one too long for the window as
+ * well, stays where it was. The sections around it may be stacked in
  * that row too, each at its own width ([forEachWideRow]), so a short section next to it is not left with a row of its
- * own: the gap between two sections is shorter than the one between two rows, so that is taken wherever it fits.
+ * own: a row that reaches further into the song is what the rows are chosen for, so that is taken wherever it fits.
  */
 internal fun flowIntoRows(
     sectionCount: Int,
@@ -240,7 +306,6 @@ internal fun flowIntoRows(
     heightAt: (index: Int, columnCount: Int) -> Int,
     wideHeightAt: (index: Int) -> Int?,
     sectionGap: Int,
-    rowGap: Int,
     maxRowHeight: Int,
 ): SectionGrid {
     if (sectionCount == 0) return emptyGrid()
@@ -284,10 +349,10 @@ internal fun flowIntoRows(
         return enough
     }
 
-    // costs[i] is the smallest total height of the sections from i onwards, rowEnds[i] where their first row ends,
+    // pageCounts[i] is the fewest pages the sections from i onwards fit, rowEnds[i] where their first row ends,
     // rowColumnCounts[i] how many columns that row has, rowHeights[i] how tall it is and isRowWide[i] whether it is a
     // wide row.
-    val costs = LongArray(sectionCount + 1)
+    val pageCounts = IntArray(sectionCount + 1)
     val rowEnds = IntArray(sectionCount + 1)
     val rowColumnCounts = IntArray(sectionCount + 1)
     val rowHeights = IntArray(sectionCount + 1)
@@ -299,7 +364,7 @@ internal fun flowIntoRows(
     val lowestHeights = IntArray(maxColumnCount)
     val isExhausted = BooleanArray(maxColumnCount)
     for (start in sectionCount - 1 downTo 0) {
-        var best = Long.MAX_VALUE
+        var bestPageCount = Int.MAX_VALUE
         tallest.fill(0)
         lowestHeights.fill(0)
         isExhausted.fill(false)
@@ -328,11 +393,10 @@ internal fun flowIntoRows(
                     height
                 }
                 lowestHeights[column] = height
-                val cost = height + if (end < sectionCount) rowGap + costs[end] else 0L
-                // Ties go to the longer row, so that the slack ends up at the bottom of the song rather than in its
-                // middle, and then to the fewer, wider columns, which wrap less.
-                if (cost < best || (cost == best && end > rowEnds[start])) {
-                    best = cost
+                // A full tie goes to the fewer, wider columns, which wrap less, since they are tried first.
+                val pageCount = pagesOf(height, maxRowHeight) + pageCounts[end]
+                if (isBetterRow(pageCount, end, height, bestPageCount, rowEnds[start], rowHeights[start])) {
+                    bestPageCount = pageCount
                     rowEnds[start] = end
                     rowColumnCounts[start] = columnCount
                     rowHeights[start] = height
@@ -341,17 +405,17 @@ internal fun flowIntoRows(
             end++
         }
         forEachWideRow(start, sectionCount, heights[0], wideHeightAt, sectionGap, maxRowHeight) { end, height ->
-            val cost = height + if (end < sectionCount) rowGap + costs[end] else 0L
-            // Only where it is strictly shorter, since a row wider than a column has lines longer than a column's.
-            if (cost < best) {
-                best = cost
+            // Only where it is strictly better, since a row wider than a column has lines longer than a column's.
+            val pageCount = pagesOf(height, maxRowHeight) + pageCounts[end]
+            if (isBetterRow(pageCount, end, height, bestPageCount, rowEnds[start], rowHeights[start])) {
+                bestPageCount = pageCount
                 rowEnds[start] = end
                 rowColumnCounts[start] = 1
                 rowHeights[start] = height
                 isRowWide[start] = true
             }
         }
-        costs[start] = best
+        pageCounts[start] = bestPageCount
     }
     val rows = IntArray(sectionCount)
     val columns = IntArray(sectionCount)
@@ -409,3 +473,22 @@ internal inline fun forEachWideRow(
         if (isWide) onRow(index + 1, height.toInt())
     }
 }
+
+/**
+ * How many pages a row [height] tall takes on a screen [maxRowHeight] high: one for a row that fits it, and as many as it
+ * takes to page through one that does not.
+ */
+internal fun pagesOf(height: Int, maxRowHeight: Int) =
+    if (height <= maxRowHeight) 1 else ((height - 1L) / maxRowHeight.coerceAtLeast(1) + 1).toInt()
+
+/**
+ * Whether a first row ending at [end], [height] tall and leaving the song [pageCount] pages in all, is a better start
+ * for the sections from where it starts than the best one found so far, which leaves [bestPageCount] pages, ends at
+ * [bestEnd] and is [bestHeight] tall: fewer pages first, then the row that reaches further into the song, then the
+ * lower one.
+ *
+ * The rows after the first are already the best packing of what is left from where it ends, so preferring the
+ * longest first row in a backward pass fills every row as full as the fewest pages allow, from the top of the song down.
+ */
+internal fun isBetterRow(pageCount: Int, end: Int, height: Int, bestPageCount: Int, bestEnd: Int, bestHeight: Int) =
+    pageCount < bestPageCount || pageCount == bestPageCount && (end > bestEnd || end == bestEnd && height < bestHeight)

@@ -177,7 +177,6 @@ class SectionCuttingTest {
             wideHeightAt = { wideHeights[it] },
             piecePadding = piecePadding,
             sectionGap = SECTION_GAP,
-            rowGap = ROW_GAP,
             maxRowHeight = maxRowHeight,
             minCutSaving = 50,
             cutsEverySection = cutsEverySection,

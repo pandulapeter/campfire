@@ -1179,7 +1179,8 @@ internal fun TextStyle.scaled(scale: Float) = copy(
  * needs to be scrolled never sends the reader back to the top of
  * the next column, since whatever has been scrolled past has been played. Every row gets as many columns as its own
  * sections fill, so a row of two sections is split in two wider columns rather than leaving a hole where a third one
- * would go, and the rows are chosen to make the song as short as possible. A row of several columns is never taller
+ * would go, and the rows are chosen to take as few pages as possible, the first ones as full as they can be (see
+ * [flowIntoRows]). A row of several columns is never taller
  * than [maxRowHeight], the whole of the screen, since the reader could not reach the top of its next column without
  * scrolling back past what was just played, and a section taller than the screen gets a row of its own - but up to
  * that its columns are as tall as they need, so a song that fits the screen in columns is laid out exactly
@@ -1190,11 +1191,13 @@ internal fun TextStyle.scaled(scale: Float) = copy(
  *
  * The columns are made as wide (and therefore as few) as possible while the whole song still fits into
  * [availableHeight] so that the lyrics wrap as little as they can and the vertical space is actually used: a song
- * that needs three columns is not squeezed into five just because the window is wide enough for five. Songs that do
- * not fit no matter what get as many columns as the width allows in each row. Column widths stay between
+ * that needs three columns is not squeezed into five just because the window is wide enough for five. That is the
+ * fewest columns that fit the song in a single row, wherever some number of them does, rather than fewer that fit it in
+ * rows stepped through one at a time (see [searchColumnCount]). Songs that do not fit no matter what get as many
+ * columns as the width allows in each row. Column widths stay between
  * [minColumnWidth] and [maxColumnWidth] and the whole block is centered, so a short
  * song does not end up as one screen-wide column of short lines. Within it a row narrower than the widest one is
- * centered too, except for a row of a single column, which is aligned to the start of the others.
+ * centered too, a row of a single column included.
  *
  * What it places are the chunks of [units]: every section whole, or as the chunks it may be cut into, which follow each
  * other in one cell unless the grid cuts between them. Where the song would scroll with its sections whole and
@@ -1354,7 +1357,6 @@ private fun SongSectionsLayout(
                 heightAt = ::heightAt,
                 wideHeightAt = ::wideHeightAt,
                 sectionGap = sectionGapPx,
-                rowGap = rowGapPx,
                 maxRowHeight = maxRowHeightPx,
             )
         }.expandedTo(units.unitSections)
@@ -1368,27 +1370,13 @@ private fun SongSectionsLayout(
         ).height
 
         val searched = if (availableHeightPx > 0) {
-            var candidate = 1
-            var candidateGrid = gridFor(candidate)
-            var candidateHeight = Int.MAX_VALUE
-            var fits = false
-            while (candidate < maxColumnCount) {
-                candidateHeight = candidateGrid.height()
-                if (candidateHeight <= availableHeightPx) {
-                    fits = true
-                    break
-                }
-                // Even a perfectly even split needs this many columns, so there is no point in trying the ones in
-                // between. The rows may be narrower than the candidate, down to a single column, so the sections are
-                // only as tall there as they are in the widest column.
-                val totalHeight = (0 until sectionCount).sumOf { heightAt(it, 1) } + sectionGapPx * (sectionCount - 1).coerceAtLeast(0)
-                candidate = maxOf(candidate + 1, ceil(totalHeight.toDouble() / availableHeightPx).toInt()).coerceAtMost(maxColumnCount)
-                candidateGrid = gridFor(candidate)
-            }
-            // A single column is never measured to find out (see gridFor), so it is taken for a song that scrolls, which
-            // on a window with room for nothing wider is nearly every song.
-            if (!fits && candidate > 1) candidateHeight = candidateGrid.height()
-            SearchedGrid(candidateGrid, fits = candidateHeight <= availableHeightPx, height = candidateHeight)
+            searchColumnCount(
+                maxColumnCount = maxColumnCount,
+                availableHeight = availableHeightPx,
+                stackedHeight = { (0 until sectionCount).sumOf { heightAt(it, 1) } + sectionGapPx * (sectionCount - 1).coerceAtLeast(0) },
+                gridFor = ::gridFor,
+                heightOf = { it.height() },
+            )
         } else {
             SearchedGrid(gridFor(maxColumnCount), fits = false, height = Int.MAX_VALUE)
         }
@@ -1410,7 +1398,6 @@ private fun SongSectionsLayout(
             wideHeightAt = ::wideHeightAt,
             piecePadding = piecePadding,
             sectionGap = sectionGapPx,
-            rowGap = rowGapPx,
             maxRowHeight = maxRowHeightPx,
             minCutSaving = availableHeightPx / MIN_CUT_SAVING_FRACTION,
             cutsEverySection = cutsEverySection,
@@ -1841,16 +1828,6 @@ private data class SectionGridKey(
     val maxColumnCount: Int,
     val endInset: Int,
     val keepsEndInset: Boolean,
-)
-
-/**
- * A grid [SongSectionsLayout] searched for, whether the whole song [fits] into the height available to it, and how tall
- * it is where that was worked out - [Int.MAX_VALUE] where it was not, which is only where it does not fit.
- */
-private data class SearchedGrid(
-    val grid: SectionGrid,
-    val fits: Boolean,
-    val height: Int,
 )
 
 /** The grid [SongSectionsLayout] decided on, and whether it was decided for the width less the end inset. */
