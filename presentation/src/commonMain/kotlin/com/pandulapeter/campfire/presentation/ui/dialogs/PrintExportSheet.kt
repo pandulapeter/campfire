@@ -163,6 +163,7 @@ import com.pandulapeter.campfire.presentation.resources.song_details_text_size_i
 import com.pandulapeter.campfire.presentation.resources.song_editor_insert_capo
 import com.pandulapeter.campfire.presentation.resources.song_editor_insert_key
 import com.pandulapeter.campfire.presentation.resources.song_editor_insert_tempo
+import com.pandulapeter.campfire.presentation.resources.song_editor_section_verse
 import com.pandulapeter.campfire.presentation.resources.songs_tags_clear
 import com.pandulapeter.campfire.presentation.ui.CampfireViewModel
 import com.pandulapeter.campfire.presentation.ui.components.CheckboxListItem
@@ -228,6 +229,7 @@ internal fun PrintExportSheet(
         tempo = stringResource(Res.string.song_editor_insert_tempo),
         time = stringResource(Res.string.print_time),
         missing = stringResource(Res.string.print_missing),
+        verse = stringResource(Res.string.song_editor_section_verse),
         chorus = stringResource(Res.string.song_details_section_chorus),
         bridge = stringResource(Res.string.song_details_section_bridge),
     )

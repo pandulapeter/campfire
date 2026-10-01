@@ -97,6 +97,7 @@ internal data class PrintLabels(
     val tempo: String,
     val time: String,
     val missing: String,
+    val verse: String,
     val chorus: String,
     val bridge: String,
 )
@@ -334,11 +335,11 @@ private class PrintLayouter(
         val isChorus = section.type == SectionType.Chorus
         val lineWidth = if (isChorus) width - CHORUS_INDENT else width
         val sectionLabel = section.label ?: when (val type = section.type) {
-            // An unnamed verse is set apart by the gap before it, as in the viewer, rather than by a heading.
-            SectionType.Verse -> null
+            SectionType.Verse -> labels.verse
             SectionType.Chorus -> labels.chorus
             SectionType.Bridge -> labels.bridge
             is SectionType.Custom -> type.name.replace('_', ' ').replaceFirstChar { it.uppercase() }
+            // The viewer heads an unnamed paragraph with nothing but its fold toggle, which a page has no use for.
             SectionType.Paragraph -> null
         }
         val lines = section.lines.flatMapIndexed { lineIndex, line ->

@@ -15,7 +15,7 @@ import kotlinx.coroutines.test.runTest
 import kotlin.test.*
 
 internal class PrintLayoutTest {
-    private val labels = PrintLabels("Key", "Capo", "Tempo", "Time", "Missing", "Chorus", "Bridge")
+    private val labels = PrintLabels("Key", "Capo", "Tempo", "Time", "Missing", "Verse", "Chorus", "Bridge")
     private fun measure(text: String, style: PrintStyle) = text.count { it != '\u200B' } * style.size * 0.6f
     private suspend fun layout(source: PrintSource, settings: PrintSettings = PrintSettings()) = layoutPrintDocument(source, settings, labels, ::measure)
     private fun song(lines: List<ChordProLine>, blocks: List<ChordProBlock>? = null) = PrintSong("song.cho", "A song", "Artist", song = ChordProSong(
@@ -258,13 +258,16 @@ internal class PrintLayoutTest {
         assertEquals(1, texts.count { it.text == "Chorus" && it.style.bold })
     }
 
-    @Test fun onlyANamedVerseIsHeaded() = runTest {
+    @Test fun anUnnamedVerseIsHeadedAsAVerseAndAParagraphIsNotHeaded() = runTest {
         val unnamed = ChordProBlock.Section(SectionType.Verse, null, lyrics(2, "Plain"))
         val named = ChordProBlock.Section(SectionType.Verse, "Verse 2", lyrics(2, "Named"))
-        val texts = layout(source(song(emptyList(), listOf(unnamed, named)))).pages.flatMap { it.texts }
-        assertFalse(texts.any { it.text == "Verse" })
+        val paragraph = ChordProBlock.Section(SectionType.Paragraph, null, lyrics(2, "Loose"))
+        val texts = layout(source(song(emptyList(), listOf(unnamed, named, paragraph)))).pages.flatMap { it.texts }
+        assertEquals(1, texts.count { it.text == "Verse" && it.style.bold })
         assertEquals(1, texts.count { it.text == "Verse 2" && it.style.bold })
-        assertTrue(texts.first { it.text == "Plain 1" }.y < texts.first { it.text == "Verse 2" }.y)
+        assertTrue(texts.first { it.text == "Verse" }.y < texts.first { it.text == "Plain 1" }.y)
+        val labelSize = texts.first { it.text == "Verse 2" }.style.size
+        assertEquals(listOf("Verse", "Verse 2"), texts.filter { it.style.bold && it.style.size == labelSize }.map { it.text })
     }
 
     @Test fun aGridLineBreaksBetweenBars() = runTest {

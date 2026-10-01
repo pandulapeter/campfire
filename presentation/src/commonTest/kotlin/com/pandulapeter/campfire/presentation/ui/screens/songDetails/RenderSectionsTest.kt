@@ -15,7 +15,7 @@ import kotlin.test.assertEquals
 
 class RenderSectionsTest {
 
-    private val labels = DefaultSectionLabels(chorus = "Chorus", bridge = "Bridge", tab = "Tab", grid = "Grid")
+    private val labels = DefaultSectionLabels(verse = "Verse", chorus = "Chorus", bridge = "Bridge", tab = "Tab", grid = "Grid")
 
     /** Each section as the comments it holds, or as its own text where it is a comment between sections. */
     private fun shape(text: String, shouldShowChords: Boolean = true) = prepareSongLyrics(
@@ -58,6 +58,14 @@ class RenderSectionsTest {
         assertEquals(
             listOf("Solo: lines, after tab, lines", "comment after riff"),
             shape(text, shouldShowChords = false),
+        )
+    }
+
+    @Test
+    fun `a section the file leaves unnamed is still headed, a paragraph by its fold toggle alone`() {
+        assertEquals(
+            listOf("Verse: lines", ": lines", "Tab: lines", "Chorus: lines"),
+            shape("{sov}\nla\n{eov}\n\nloose\n\n{sot}\ne|-0-|\n{eot}\n\n{soc}\nla\n{eoc}"),
         )
     }
 }

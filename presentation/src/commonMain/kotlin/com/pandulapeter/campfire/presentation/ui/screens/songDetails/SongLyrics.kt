@@ -110,6 +110,7 @@ import com.pandulapeter.campfire.presentation.resources.song_details_section_gri
 import com.pandulapeter.campfire.presentation.resources.song_details_section_tab
 import com.pandulapeter.campfire.presentation.resources.song_details_tab_collapse
 import com.pandulapeter.campfire.presentation.resources.song_details_tab_expand
+import com.pandulapeter.campfire.presentation.resources.song_editor_section_verse
 import com.pandulapeter.campfire.presentation.ui.components.EDGE_FADE_SIZE
 import com.pandulapeter.campfire.presentation.ui.components.ExpandChevron
 import com.pandulapeter.campfire.presentation.ui.theme.LocalMonospaceFontFamily
@@ -553,6 +554,7 @@ private fun SongSectionContent(
     fun foldToggle(key: String) = foldedRuns?.let { FoldToggle(isExpanded = !it.isCollapsed(key), onToggled = { it.toggle(key) }) }
     // A header over nothing (a recalled chorus with nothing left to show) has nothing to fold.
     val sectionToggle = if (section.parts.isNotEmpty() && (header != null || wholeSectionKind != null)) foldToggle(sectionFold) else null
+    val isHeaderShown = header != null && (header != UNNAMED_SECTION_HEADER || sectionToggle != null)
     val hasBody = section.parts.isNotEmpty() && sectionToggle?.isExpanded != false
     val chevronSize = FOLD_CHEVRON_SIZE * fontScale
     val isFirstChunk = items.first == 0
@@ -562,7 +564,7 @@ private fun SongSectionContent(
     val monospaceLyricsStyle = lyricsStyle.copy(fontFamily = monospaceFontFamily)
     val monospaceChordStyle = chordStyle.copy(fontFamily = monospaceFontFamily)
     if (isFirstChunk) when {
-        header != null && isOnCard -> CardTitleRow(
+        isHeaderShown && isOnCard -> CardTitleRow(
             // The gap under the title belongs to the lines under it, so that a folded card is as deep above its title
             // as below it.
             modifier = Modifier.padding(
@@ -577,7 +579,7 @@ private fun SongSectionContent(
             chevronSize = chevronSize,
         )
 
-        header != null -> SectionHeaderPill(
+        isHeaderShown -> SectionHeaderPill(
             header = header,
             toggle = sectionToggle,
             style = headerStyle,
@@ -595,7 +597,7 @@ private fun SongSectionContent(
     }
     // The body leaves the composition while it is folded, so that unfolding it composes it afresh to fade in.
     if (!hasBody) return@Column
-    val hasTitle = header != null || sectionToggle != null
+    val hasTitle = isHeaderShown || sectionToggle != null
     Column(
         modifier = Modifier
             .fillMaxWidth()
@@ -609,7 +611,7 @@ private fun SongSectionContent(
                         bottom = if (isLastChunk) CARD_PADDING else 0.dp,
                     )
                 } else {
-                    PaddingValues(top = if (isFirstChunk && header != null) HEADER_GAP else 0.dp)
+                    PaddingValues(top = if (isFirstChunk && isHeaderShown) HEADER_GAP else 0.dp)
                 }
             ),
     ) {
@@ -774,7 +776,10 @@ private fun CardTitleRow(
     isChevronAtEnd = true,
 )
 
-/** A section's name, followed by the chevron that folds it where it can be folded. */
+/**
+ * A section's name, followed by the chevron that folds it where it can be folded; only the chevron for a section with
+ * no name ([UNNAMED_SECTION_HEADER]).
+ */
 @Composable
 private fun SectionTitle(
     modifier: Modifier = Modifier,
@@ -787,6 +792,7 @@ private fun SectionTitle(
     modifier = modifier,
     verticalAlignment = Alignment.CenterVertically,
 ) {
+    // An empty name is still laid out, so that a pill with only the chevron in it is as tall as the named ones.
     Text(
         modifier = if (isChevronAtEnd) Modifier.weight(1f) else Modifier,
         text = header,
@@ -795,7 +801,7 @@ private fun SectionTitle(
     )
     toggle?.let {
         FoldChevron(
-            modifier = Modifier.padding(start = FOLD_CHEVRON_GAP).size(chevronSize),
+            modifier = Modifier.padding(start = if (header == UNNAMED_SECTION_HEADER) 0.dp else FOLD_CHEVRON_GAP).size(chevronSize),
             kind = null,
             isExpanded = it.isExpanded,
             tint = MaterialTheme.colorScheme.primary,
@@ -2001,6 +2007,7 @@ internal fun rememberSongLyricsModel(
 /** The fallback labels of the environments that have one, read here since they are string resources. */
 @Composable
 internal fun rememberDefaultSectionLabels() = DefaultSectionLabels(
+    verse = stringResource(Res.string.song_editor_section_verse),
     chorus = stringResource(Res.string.song_details_section_chorus),
     bridge = stringResource(Res.string.song_details_section_bridge),
     tab = stringResource(Res.string.song_details_section_tab),
@@ -2009,6 +2016,7 @@ internal fun rememberDefaultSectionLabels() = DefaultSectionLabels(
 
 /** The fallback names of the environments that have one. Everything else is named by the file itself. */
 internal data class DefaultSectionLabels(
+    val verse: String,
     val chorus: String,
     val bridge: String,
     val tab: String,
@@ -2148,7 +2156,7 @@ private fun ChordProSong.toRenderSections(
             }
         }
         // A section that ended up with no line to show is dropped, unless its header still says something.
-        if (parts.none { it is SectionPart.Lines } && header == null) {
+        if (parts.none { it is SectionPart.Lines } && header.isNullOrEmpty()) {
             sections += comments
             return false
         }
@@ -2274,21 +2282,29 @@ private val SectionType.foldName
         is SectionType.Custom -> name
     }
 
-private fun ChordProBlock.Section.header(defaultLabels: DefaultSectionLabels): String? = label ?: when (val sectionType = type) {
+private fun ChordProBlock.Section.header(defaultLabels: DefaultSectionLabels): String = label ?: when (val sectionType = type) {
+    SectionType.Verse -> defaultLabels.verse
     SectionType.Chorus -> defaultLabels.chorus
     SectionType.Bridge -> defaultLabels.bridge
     // "pre-chorus" reads as "Pre-chorus": the file's own wording, only capitalised.
     is SectionType.Custom -> sectionType.name.replaceFirstChar { it.uppercaseChar() }
-    SectionType.Verse -> null
     // A paragraph that is nothing but tablature or a grid is a bare `{start_of_tab}` / `{start_of_grid}` standing
     // on its own, and those name themselves even where the file gave them no label. One with lyrics around the run
-    // is an ordinary paragraph that happens to hold some, and heading that "Tab" would be a lie.
+    // is an ordinary paragraph that happens to hold some, and heading that "Tab" would be a lie - as would any other
+    // name, since the file says nothing about what it is, so it is headed by its fold toggle alone.
     SectionType.Paragraph -> when {
         lines.areAll<ChordProLine.Tab>() -> defaultLabels.tab
         lines.areAll<ChordProLine.Grid>() -> defaultLabels.grid
-        else -> null
+        else -> UNNAMED_SECTION_HEADER
     }
 }
+
+/**
+ * The header of a section the file gives no name and that has none of its own kind to fall back on, a paragraph of
+ * lyrics: a pill with nothing in it but the chevron that folds it, which is drawn only where it can fold, since a
+ * section that cannot be folded has no use for a heading that says nothing.
+ */
+internal const val UNNAMED_SECTION_HEADER = ""
 
 /** True when every line that says anything is of the given kind, blank lines inside the run notwithstanding. */
 private inline fun <reified T : ChordProLine> List<ChordProLine>.areAll() =
