@@ -200,4 +200,24 @@ internal class PrintLayoutTest {
         assertEquals(texts.first { it.text == "G" }.y + 12 * 1.45f, texts.first { it.text == "Sung words" }.y, 0.01f)
         assertFalse(texts.any { it.text.isBlank() || it.text.all { char -> char == '\u00A0' || char == ' ' } })
     }
+
+    @Test fun anAnnotationWiderThanTheColumnNeitherOpensWithAnEmptyRowNorPushesTheLyricsAway() {
+        val settings = PrintSettings(columns = 2)
+        val annotation = "Slowly, with the whole room singing along, " .repeat(3).trim()
+        val entry = song(listOf(ChordProLine.Lyrics("Lyrics here follow", listOf(
+            ChordProLine.Lyrics.Chord(0, annotation, true),
+            ChordProLine.Lyrics.Chord(12, "G", false),
+        ))))
+        val document = layout(source(entry), settings)
+        val texts = document.pages.single().texts
+        val margin = settings.marginMm * 72f / 25.4f
+        val columnWidth = (document.width - 2 * margin - 18) / 2
+        val label = texts.first { it.text == "Verse" }
+        val annotationRows = texts.filter { annotation.contains(it.text.trim()) && it.bold && it.text.isNotBlank() && it.text != "Verse" }
+        assertEquals(label.y + 12 * 1.45f, annotationRows.minOf { it.y }, 0.01f)
+        val lyrics = texts.first { it.text.startsWith("Lyrics here") }
+        val follow = texts.first { it.text.contains("follow") }
+        assertTrue(follow.y <= lyrics.y + 12 * 2.75f + 0.01f, "$lyrics $follow")
+        texts.filter { it.size != 9 }.forEach { assertTrue(it.x + measure(it.text, it.size, it.bold) <= margin + columnWidth + 0.01f, it.toString()) }
+    }
 }

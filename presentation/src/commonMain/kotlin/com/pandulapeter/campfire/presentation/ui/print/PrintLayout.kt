@@ -101,9 +101,11 @@ internal fun layoutPrintDocument(
                     is ChordProLine.Lyrics -> {
                         val visible = line.copy(chords = line.chords.filter { if (it.isAnnotation) options.showComments else options.showChords })
                         // Hiding a chord-only line must also remove the empty lyric row beneath it.
-                        if (line.chords.isNotEmpty() && visible.chords.isEmpty() && visible.text.isBlank()) return@lineLoop
+                        if (line.chords.isNotEmpty() && visible.chords.isEmpty() && visible.text.isPrintBlank()) return@lineLoop
+                        // A chord wider than the column is wrapped onto rows of its own, so the lyrics under it are padded
+                        // to a column at most rather than to its full width.
                         val lyrics = if (visible.chords.isNotEmpty()) visible.padLyricsToFitChords(
-                            chordWidths = visible.chords.map { measure(it.name, options.fontSize, true) },
+                            chordWidths = visible.chords.map { minOf(measure(it.name, options.fontSize, true), columnWidth) },
                             gap = measure(" ", options.fontSize, false),
                             paddingWidth = measure("\u00A0", options.fontSize, false),
                             measureWidth = { measure(it, options.fontSize, false) },
@@ -122,16 +124,18 @@ internal fun layoutPrintDocument(
                                 val anchor = measure(fragment.take((chord.position - start).coerceIn(0, fragment.length)), options.fontSize, false)
                                 var x = maxOf(anchor, chordX)
                                 val chordWidth = measure(chord.name, options.fontSize, true)
-                                if (x + chordWidth > columnWidth) { chordY += options.fontSize * 1.3f; x = 0f }
-                                wrapPrintText(chord.name, columnWidth) { measure(it, options.fontSize, true) }.forEachIndexed { i, name ->
+                                if (x > 0f && x + chordWidth > columnWidth) { chordY += options.fontSize * 1.3f; x = 0f }
+                                val pieces = wrapPrintText(chord.name, columnWidth) { measure(it, options.fontSize, true) }
+                                pieces.forEachIndexed { i, name ->
                                     if (i > 0) { chordY += options.fontSize * 1.3f; x = 0f }
                                     parts += Part(name, x = x, y = chordY, size = options.fontSize, bold = true)
                                 }
-                                chordX = x + chordWidth + measure(" ", options.fontSize, false)
+                                val lastWidth = if (pieces.size == 1) chordWidth else measure(pieces.last(), options.fontSize, true)
+                                chordX = x + lastWidth + measure(" ", options.fontSize, false)
                             }
                             // A fragment of chords over nothing but padding is one row of chords, not chords over an empty
                             // lyric row; a blank fragment without chords is an empty line the song asked for.
-                            val isChordsOnly = parts.isNotEmpty() && fragment.all { it == ' ' || it == '\u00A0' || it == '\u200B' }
+                            val isChordsOnly = parts.isNotEmpty() && fragment.isPrintBlank()
                             val lyricY = if (parts.isEmpty()) 0f else chordY + options.fontSize * 1.3f
                             if (!isChordsOnly) parts += Part(fragment, y = lyricY, size = options.fontSize)
                             val rowHeight = (if (isChordsOnly) chordY else lyricY) + options.fontSize * 1.45f
@@ -244,6 +248,9 @@ private data class Part(val text: String, val x: Float = 0f, val y: Float = 0f, 
 private data class Row(val parts: List<Part>, val height: Float)
 
 private fun List<Row>.height() = sumOf { it.height.toDouble() }.toFloat()
+
+/** Blank once the padding the chords add (no-break spaces and the zero-width break opportunities) is disregarded too. */
+private fun String.isPrintBlank() = all { it.isWhitespace() || it == '\u00A0' || it == '\u200B' }
 
 /**
  * The page number sits centred in the band the layout keeps free above the bottom margin (a 9 pt line is about 11 pt
