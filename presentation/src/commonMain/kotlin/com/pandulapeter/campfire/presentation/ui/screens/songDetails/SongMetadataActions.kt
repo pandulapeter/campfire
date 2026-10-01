@@ -14,7 +14,7 @@ import com.pandulapeter.campfire.data.model.domain.Song
 import com.pandulapeter.campfire.presentation.localization.stringResource
 import com.pandulapeter.campfire.presentation.resources.Res
 import com.pandulapeter.campfire.presentation.resources.ic_album
-import com.pandulapeter.campfire.presentation.resources.ic_edit
+import com.pandulapeter.campfire.presentation.resources.ic_label
 import com.pandulapeter.campfire.presentation.resources.ic_language
 import com.pandulapeter.campfire.presentation.resources.ic_link
 import com.pandulapeter.campfire.presentation.resources.song_details_change_cover_art
@@ -36,7 +36,7 @@ internal fun songMetadataActions(
 ): List<ActionsMenuItem> = listOfNotNull(
     ActionsMenuItem(
         title = stringResource(Res.string.song_details_tags_manage),
-        icon = painterResource(Res.drawable.ic_edit),
+        icon = painterResource(Res.drawable.ic_label),
         isAlwaysInMenu = true,
         onClick = { viewModel.showDialog(CampfireViewModel.DialogType.SongTags(song)) },
     ),

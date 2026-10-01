@@ -42,6 +42,7 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.dp
 import com.pandulapeter.campfire.presentation.resources.Res
+import com.pandulapeter.campfire.presentation.resources.ic_label
 import com.pandulapeter.campfire.presentation.resources.ic_language
 import org.jetbrains.compose.resources.painterResource
 
@@ -78,11 +79,11 @@ internal fun SongLabels(
                 text = tag,
                 isSelected = onTagClicked != null && selectedTags.any { it.equals(tag, ignoreCase = true) },
                 onClick = onTagClicked?.let { { it(tag) } },
+                leadingIcon = painterResource(Res.drawable.ic_label),
             )
         }
-        // A language carries the mark the song details header gives it, since it is the one label here that is not the
-        // user's own word for the song: without it a pill reading "Magyar" is a tag somebody typed, and there is no
-        // telling the two apart in a list.
+        // Each kind of label carries the mark the song details card and the overflow menu give it: without them a pill
+        // reading "Magyar" could be a language or a tag somebody typed, and there is no telling the two apart in a list.
         languages.forEach { code ->
             TagPill(
                 text = languageLabel(code),

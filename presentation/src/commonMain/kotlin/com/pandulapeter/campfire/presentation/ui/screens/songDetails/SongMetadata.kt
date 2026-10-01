@@ -26,6 +26,7 @@ import com.pandulapeter.campfire.chordpro.model.ChordProLink
 import com.pandulapeter.campfire.chordpro.model.ChordProMetadata
 import com.pandulapeter.campfire.presentation.localization.stringResource
 import com.pandulapeter.campfire.presentation.resources.Res
+import com.pandulapeter.campfire.presentation.resources.ic_label
 import com.pandulapeter.campfire.presentation.resources.ic_language
 import com.pandulapeter.campfire.presentation.resources.ic_link
 import com.pandulapeter.campfire.presentation.resources.song_details_album
@@ -141,7 +142,7 @@ private fun SongMetadataChips(
     onOpenLink: ((String) -> Unit)?,
 ) = Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
     if (metadata.tags.isNotEmpty()) {
-        TagFlowRow { metadata.tags.forEach { TagPill(text = it) } }
+        TagFlowRow { metadata.tags.forEach { TagPill(text = it, leadingIcon = painterResource(Res.drawable.ic_label)) } }
     }
     if (metadata.languages.isNotEmpty()) {
         TagFlowRow {

@@ -117,6 +117,7 @@ import com.pandulapeter.campfire.presentation.resources.done
 import com.pandulapeter.campfire.presentation.resources.ic_add
 import com.pandulapeter.campfire.presentation.resources.ic_calendar
 import com.pandulapeter.campfire.presentation.resources.ic_clear
+import com.pandulapeter.campfire.presentation.resources.ic_label
 import com.pandulapeter.campfire.presentation.resources.ic_language
 import com.pandulapeter.campfire.presentation.resources.ic_search
 import com.pandulapeter.campfire.presentation.resources.import_conflicts
@@ -1680,6 +1681,7 @@ private fun PickerFilters(
                     songCount = tag.songCount,
                     isSelected = key in selectedTags,
                     onClick = { onTagClicked(key) },
+                    leadingIcon = painterResource(Res.drawable.ic_label),
                 )
             }
         }
