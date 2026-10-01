@@ -26,7 +26,8 @@ internal fun pdfFileName(source: PrintSource, settings: PrintSettings): String {
                 if (settings.setlistMode == PrintSettings.SetlistMode.RUNNING_ORDER) RUNNING_ORDER_SUFFIX else ""
         song == null -> LibraryFiles.normalizedName(source.title)
         song.artist.isNullOrBlank() -> LibraryFiles.normalizedName(song.title)
-        else -> LibraryFiles.normalizedName(song.artist) + LibraryFiles.NORMALIZED_ARTIST_TITLE_SEPARATOR + LibraryFiles.normalizedName(song.title)
+        else -> LibraryFiles.normalizedName(song.artist) + LibraryFiles.NORMALIZED_ARTIST_TITLE_SEPARATOR +
+                LibraryFiles.normalizedName(song.title)
     }
     return base + PDF_EXTENSION
 }

@@ -15,10 +15,17 @@ package com.pandulapeter.campfire.presentation.ui.print
  * at that resolution, and they halve what Flate has to compress. No platform printing service, external process,
  * network request or third-party PDF library is needed.
  */
-internal class PrintPdfWriter(private val width: Float, private val height: Float, private val title: String) {
+internal class PrintPdfWriter(
+    private val width: Float,
+    private val height: Float,
+    private val title: String,
+) {
     private val output = PrintBytes()
-    // A page's image and content stream are encoded here first, because /Length precedes the data, and appended to the
-    // output from it: one copy per stream, into a buffer that keeps its capacity from page to page.
+
+    /**
+     * A page's image and content stream are encoded here first, because /Length precedes the data, and appended to the
+     * output from it: one copy per stream, into a buffer that keeps its capacity from page to page.
+     */
     private val scratch = PrintBytes()
     private val deflater = PrintDeflater()
     private val offsets = mutableListOf(0, 0, 0)
@@ -56,16 +63,24 @@ internal class PrintPdfWriter(private val width: Float, private val height: Floa
         require(pixelWidth > 0 && pixelHeight > 0 && packed.size == printRowBytes(pixelWidth) * pixelHeight)
         scratch.reset()
         deflater.deflate(packed, scratch)
-        val image = stream("/Type /XObject /Subtype /Image /Width $pixelWidth /Height $pixelHeight /ColorSpace /DeviceGray /BitsPerComponent 4 /Filter /FlateDecode", scratch)
+        val image = stream(
+            dictionary = "/Type /XObject /Subtype /Image /Width $pixelWidth /Height $pixelHeight " +
+                "/ColorSpace /DeviceGray /BitsPerComponent 4 /Filter /FlateDecode",
+            data = scratch,
+        )
         scratch.reset()
         scratch.text("q $width 0 0 $height 0 0 cm /Im0 Do Q")
         val content = stream("", scratch)
         // IDs 1 and 2 are reserved for the catalog and page tree.
         val pageId = offsets.size
         pageIds += pageId
-        objectText("<< /Type /Page /Parent 2 0 R /MediaBox [0 0 $width $height] /Resources << /XObject << /Im0 $image 0 R >> >> /Contents $content 0 R >>")
+        objectText(
+            "<< /Type /Page /Parent 2 0 R /MediaBox [0 0 $width $height] " +
+                "/Resources << /XObject << /Im0 $image 0 R >> >> /Contents $content 0 R >>",
+        )
     }
 
+    /** Writes the page tree, the catalog, the title and the cross-reference table after the pages, and hands out the file. */
     fun finish(): ByteArray {
         require(pageIds.isNotEmpty())
         objectText("<< /Type /Pages /Count ${pageIds.size} /Kids [${pageIds.joinToString(" ") { "$it 0 R" }}] >>", id = 2)
@@ -102,6 +117,7 @@ internal fun packPrintRows(pixels: IntArray, width: Int, rows: Int, packed: Byte
     }
 }
 
+/** The nearest of the sixteen grays a 4-bit image holds, 0 black and 15 white. */
 private fun printLevel(argb: Int) = (printGray(argb) * 15 + 127) / 255
 
 /** A growable byte buffer that keeps its capacity across [reset], so a PDF's streams are built without fresh arrays. */
@@ -109,16 +125,29 @@ internal class PrintBytes {
     private var buffer = ByteArray(1024)
     var size = 0
         private set
-    fun byte(value: Int) { reserve(1); buffer[size++] = value.toByte() }
+
+    fun byte(value: Int) {
+        reserve(1)
+        buffer[size++] = value.toByte()
+    }
+
     fun bytes(value: ByteArray, from: Int = 0, to: Int = value.size) {
         reserve(to - from)
         value.copyInto(buffer, size, from, to)
         size += to - from
     }
+
     fun bytes(value: PrintBytes) = bytes(value.buffer, 0, value.size)
+
     fun text(value: String) = bytes(value.encodeToByteArray())
-    fun reset() { size = 0 }
+
+    fun reset() {
+        size = 0
+    }
+
+    /** A copy of the bytes written, the size of the content rather than of the buffer. */
     fun result() = buffer.copyOf(size)
+
     private fun reserve(count: Int) {
         val required = size.toLong() + count
         check(required <= MAX_PRINT_BYTES) { "The PDF is too large" }

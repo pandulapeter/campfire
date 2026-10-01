@@ -165,6 +165,60 @@ Everything else is `commonMain`:
   - Export and Delete are not here: they belong to the song list and the viewer. Revert is, last in the overflow menu and behind a confirmation (`DialogType.RevertChanges`) — in the menu rather than a button of its own, because throwing away everything typed since the last save is not something to end up in by mistapping the button next to Save. It is answered by the screen rather than by the view model — the text goes back through the field's own editing, so a revert is one more step of the undo history instead of the end of it. In a document of more than 50,000 characters a whole-document rewrite (a transposition, a revert) starts the undo history over first, since each is recorded as the whole text twice.
   - The screen itself is a `BasicTextField` over a `TextFieldState` (its own `scrollState`, never wrapped in a `verticalScroll` — that swallows the press that places the caret). It never wraps a line, since the staff lines of a tab only stay in their columns while each is one line on screen: the field only scrolls along one axis of its own, so it sits in a `horizontalScroll`, which measures it against an unbounded width and still hands it the pane's as the minimum, and follows the caret because the field asks its ancestors to bring the caret into view. The part of the keyboard that covers the field is always taken off its bottom, so the field ends at the top of the keyboard and keeps the caret above it; the navigation bar and the room after the last line are only added once scrolled to the end. Both are read while the field is laid out (`EditorFieldPadding`), and the preview's scroll room likewise (`PaddingValues.only`), while the height the preview's sections are laid out against leaves the keyboard out: it only covers the lower part of the preview, so it moves neither pane's composition nor the preview's columns as it slides. Both scroll states and the preview's are held by the screen next to the `TextFieldState` rather than by the panes, since a pane is composed from scratch whenever Edit, Preview and Split change places and would otherwise go back to the first line every time, an explicit Save action (and Ctrl / Cmd + S, heard by the whole editor, which takes the focus itself as it opens and whenever its panes change, since nothing in it is focused before the text is clicked or while only the preview shows) which is the only thing that ever writes the file, and a live preview of the same `SongLyrics` the viewer uses (parsed and split into sections away from the main thread once the typing pauses, the previous rendering staying on screen until the new one is ready), side by side where the window has the room for it and one at a time otherwise — and the insertion rows leave with the field they write into whenever the preview is the only pane showing. The text size preference reaches the preview and deliberately not the field: it is how large the lyrics are read from across a room, and the field holds the source of the file rather than the song (scaling it would also move the columns of a tab away from the width the monospaced font keeps them at). Lyrics only mode is the one preference that does not reach the preview at all: it is a way of reading a song, and a preview that hid the chords being typed opposite it would answer an edit with nothing. The two panes are `weight(1f)` and not `fillMaxSize()`: a `Column` measures a weightless child against an unbounded height, and a song longer than the screen then lays the field out past the bottom edge of it instead of scrolling inside it. `ChordProOutputTransformation` colours the text from `ChordProHighlighter`'s tokens in the viewer's own colours, so a chord looks like a chord on both sides of the divider. The field runs that transformation for every caret move as well as for every edit, so the tokens are kept by `ChordProTokenCache` and only worked out again once the text has changed. The screen reports the text to the view model as it is typed without saving it (`onEditorTextChanged`), which is what `hasUnsavedEditorChanges` is measured from — a field nobody has typed in follows its file when that changes, so only text of the user's own is ever unsaved: every way back out of a screen goes through `CampfireViewModel.navigateBack`, so that is where an editor with unsaved text is caught and the `UnsavedChanges` dialog (save / discard / cancel) is asked instead of popping. The draft is also what the dialog saves, which is why it lives in the view model rather than here. A draft reopened on launch is unsaved like any other, so the update gate, the way out and the web's `beforeunload` treat it the same. The dialog's Save leaves only once the write has reported success (`saveEditorChangesAndLeave`): until then the editor holds the only copy of the text, so a write that fails takes the dialog away and leaves the editor, the text and the ordinary `SaveFailed` message — and a desktop window that was being closed stays open. A first read that fails shows the details screen's failed state, with Retry and Close, instead of the loading indicator.
 
+## PDF export
+
+`ui/dialogs/PrintExportSheet.kt` and `ui/print/`, opened as `DialogType.PrintExport` from a song's actions (with the
+setlist it was reached through, whose key it then prints in) and a setlist's. The pipeline has four steps, each its own:
+
+- **Source.** `CampfireViewModel.preparePrintSource` reads a `PrintSource` once, when the sheet opens: every song as the
+  viewer reads it (rendered, in the transposition and chord spelling the song details screen shows), a missing or
+  unreadable file as a `PrintSong` with no song, which keeps its slot. The sheet leaves out the songs that are unticked
+  and adds the setlist's date, formatted with the date picker's formatter in the app's language (`calendarLocale`).
+- **Layout.** `layoutPrintDocument` is pure: a `PrintDocument` of `PrintText`s and `PrintRule`s in PDF points, measured
+  by a function it is handed, so the tests measure with arithmetic. A private `PrintLayouter` holds the cursor and
+  `place`s rows, the unit it never splits; one function per kind of block or line builds them (`lyricsRows`, `tabRows`,
+  `gridRows`, `commentRows`, `recallRows`). A heading is kept with the first block that prints anything, a lyric line
+  with its chords, a tab system whole with a gap after it, a grid line broken between bars; a section whose lines the
+  options all hide leaves out its label, an unnamed verse is not headed, a chorus recall carries its label. Every text
+  has a `PrintStyle`: lyrics in the app's text font, tablature and grids monospace, details and labels smaller and gray,
+  annotations and comments italic, a boxed comment framed by rules. A chorus is indented behind a bar, drawn as a
+  `PrintRule` on each of its rows so that it carries on across a column or page. Wrapping (`wrapPrintText`) breaks at a
+  word where the next word fits and never inside a grapheme cluster. Only strings of up to eight characters are cached,
+  and the layout yields after each song and every 50 placed blocks: on the web it shares the page's one thread.
+- **Renderer.** `PrintRenderer` draws a page for the preview and for the file alike, and measures for the layout with the
+  same fonts, so the file is the preview at 216 dpi. An export draws every page into one reused bitmap and
+  reads it back in bands of rows, checking for cancellation between them.
+- **Writer.** `PrintPdfWriter` turns each page into a 4-bit gray image (luminance rounded to sixteen levels, which print
+  no differently from 256), compressed by `PrintDeflater`, a pure-Kotlin zlib encoder of one fixed-Huffman block, since
+  no platform offers common code a compressor. The streams go straight into one growing buffer, and the file carries a
+  `/Title` and a binary header line.
+
+Deliberately not done: no selectable text (the pages are images, which is what keeps every glyph and fallback font the
+preview shows) and no platform print service — the file is saved or shared and printed from there.
+
+The sheet's state is a `PrintExportState` from `rememberPrintExportState(dialog)`, which remembers each field on its own:
+the selection and the preview's page are `rememberSaveable`, so a rotation keeps them; the options, the source and the
+Retry count start over. The previous document stays on screen while the next is laid out (120 ms after the last
+change), and Save only takes a document laid out from what the sheet shows now. Options are written to the view model's
+`pendingPrintSettings` as they change and saved to the preferences once they have settled for half a second; whatever
+is still pending is saved as the sheet goes, however it goes (`setVisibleDialog`). On phones the preview is above the options.
+Pages are turned by a swipe, the buttons, or the arrow, Page Up / Down, Home and End keys, and zoomed by a pinch, a
+double tap or the zoom button; Ctrl / Cmd and the scroll wheel zoom in the desktop application only, which
+`isLaunchScreenWholeStartup` stands in for, since in a browser that chord is the page's own zoom. A page is described to
+a screen reader by its number.
+
+Export: `CampfireViewModel.exportPdf` draws the pages off the main thread, counting them into `pdfExportProgress`, which
+the sheet shows above its button; while it counts, the button is Cancel (`cancelPdfExport`). Once the picker is up there
+is nothing to cancel, and the progress is gone. A failure, an `OutOfMemoryError` included (except on the web, where it
+cannot be caught), is reported as a failed export. A saved file emits `printExportSaved` for that sheet, which closes
+it; a share leaves it open. Share is offered where `FilePicker.canShare` (Android and iOS). The file is named by
+`pdfFileName` the way `ExportFileNames.kt` names a song, from its header, and a setlist's running order gets a
+`-running_order` suffix so the two exports of one setlist do not collide.
+
+The tests pin the layout (`PrintLayoutTest`: columns, keeping together, styles, wrapping, the measurement counts), the
+file name, the writer's cross-reference offsets and gray packing, and the deflater (`PrintDeflaterTest`, and a round
+trip through `java.util.zip.Inflater` in `desktopTest`, where `PrintRendererTest` also draws real pages).
+
 ## Scrolling performance
 
 `ListTopFade` caches an inverse gradient and uses `DstOut` inside its existing offscreen layer, translating the drawing

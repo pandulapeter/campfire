@@ -90,17 +90,22 @@ uninstall and nothing else does.
 
 ## Printing
 
-Song and setlist action menus offer a separate **Export to PDF** sheet (`presentation/ui/dialogs/PrintExportSheet.kt`).
-`PrintSettings` are local user preferences, mapped through `PrintSettingsDocument`, independent of the viewer's text
-size and folded sections. A setlist can export its running order or the selected song sheets, retaining the original
-slot numbers and the transposition of each entry; a lone song reached through a setlist uses that entry's key too.
-Missing or unreadable songs retain a visibly marked place. The source is a snapshot read when the sheet opens.
-`presentation/ui/print/PrintLayout.kt` lays out PDF points using the same font measurements as the preview, keeping
-lyric/chord pairs and guitar systems together, and flowing long songs across columns and pages. `PrintRenderer`
-draws both the preview and the page images (216 dpi, sixteen grays, which print no differently from 256) embedded by
-the common `PrintPdfWriter`, compressed with Flate by `PrintDeflater`, a small pure-Kotlin zlib encoder.
-These PDFs are for printing: they contain page images, not selectable text. Saving uses the existing `FilePicker`
-on every platform. New controls and text written into PDFs are localized in both languages.
+Song and setlist action menus offer a separate **Export to PDF** sheet
+(`presentation/ui/dialogs/PrintExportSheet.kt`). `PrintSettings` are local user preferences, mapped through
+`PrintSettingsDocument`, saved once the options have settled and whatever way the sheet closes, independent of the
+viewer's text size and folded sections. A setlist can export its running order or the selected song sheets, retaining
+the original slot numbers and the transposition of each entry; a lone song reached through a setlist uses that entry's
+key too. Missing or unreadable songs retain a visibly marked place. The source is a snapshot read when the sheet
+opens. `presentation/ui/print/PrintLayout.kt` lays out PDF points using the same font measurements as the preview —
+lyrics in the app's text font, tablature and grids in its monospace one — keeping lyric/chord pairs and guitar systems
+together, and flowing long songs across columns and pages. `PrintRenderer` draws both the preview and the page images
+(216 dpi, sixteen grays, which print no differently from 256) embedded by the common `PrintPdfWriter`, which titles
+the file after the song or setlist, compressed with Flate by `PrintDeflater`, a small pure-Kotlin zlib encoder. These
+PDFs are for printing: they contain page images, not selectable text. Saving uses the existing `FilePicker` on every
+platform, and Android and iOS offer Share next to it; the sheet counts the pages as they are drawn, and Cancel stops
+it until the picker is up. The file is named from the song's header or the setlist's title, the way
+`ExportFileNames.kt` names a song (see `presentation/CLAUDE.md`). New controls and text written into PDFs are
+localized in both languages.
 
 ## Conventions
 

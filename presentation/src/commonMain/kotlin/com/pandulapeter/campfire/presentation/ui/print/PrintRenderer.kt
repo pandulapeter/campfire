@@ -41,6 +41,7 @@ internal class PrintRenderer(
     private val monospaceFontFamily: FontFamily = FontFamily.Monospace,
     private val textFontFamily: FontFamily = FontFamily.Default,
 ) {
+    /** The laid out texts the preview draws, bounded, since a page is drawn again on every frame of a zoom or a fade. */
     private val cache = mutableMapOf<Pair<String, PrintStyle>, TextLayoutResult>()
 
     private fun PrintStyle.toTextStyle() = TextStyle(
@@ -65,20 +66,38 @@ internal class PrintRenderer(
         }
     }
 
-    fun width(value: String, style: PrintStyle): Float {
-        // Measuring intermediate substrings must not keep all of them alive for the life of a large setlist.
-        return measurer.measure(value, style.toTextStyle(), softWrap = false, density = Density(1f, 1f), layoutDirection = LayoutDirection.Ltr).size.width.toFloat()
-    }
+    /**
+     * The width of [value] in PDF points, which the layout measures by. Not cached: the wrapping measures many
+     * intermediate substrings, and keeping all of them alive for the life of a large setlist would cost more than it saves.
+     */
+    fun width(value: String, style: PrintStyle): Float = measurer.measure(
+        text = value,
+        style = style.toTextStyle(),
+        softWrap = false,
+        density = Density(1f, 1f),
+        layoutDirection = LayoutDirection.Ltr,
+    ).size.width.toFloat()
 
+    /** Draws [page] on white, [scale] being the size of a PDF point in the pixels of [scope]. */
     fun draw(scope: DrawScope, page: PrintPage, scale: Float) = with(scope) {
         drawRect(Color.White)
         scale(scale, scale, pivot = Offset.Zero) {
-            page.rules.forEach { rule -> drawRect(Color(rule.gray, rule.gray, rule.gray), topLeft = Offset(rule.x, rule.y), size = Size(rule.width, rule.height)) }
+            page.rules.forEach { rule ->
+                drawRect(
+                    color = Color(rule.gray, rule.gray, rule.gray),
+                    topLeft = Offset(rule.x, rule.y),
+                    size = Size(rule.width, rule.height),
+                )
+            }
             page.texts.forEach { item -> drawText(text(item.text, item.style), topLeft = Offset(item.x, item.y)) }
         }
     }
 
-    /** @param onPage Called with the number of pages done after each page is added to the file. */
+    /**
+     * The PDF file of [document], each page drawn as an image, checking for cancellation between bands of rows.
+     *
+     * @param onPage Called with the number of pages done after each page is added to the file.
+     */
     suspend fun pdf(document: PrintDocument, title: String, onPage: (done: Int) -> Unit = {}): ByteArray {
         val writer = PrintPdfWriter(document.width, document.height, title)
         val scale = 3f // 216 dpi: text remains sharp at its physical print size.
@@ -112,6 +131,7 @@ internal class PrintRenderer(
     }
 }
 
+/** The rows of a page read out of the bitmap at a time, which is as often as an export checks whether it was cancelled. */
 private const val PDF_BAND_ROWS = 64
 
 /**
