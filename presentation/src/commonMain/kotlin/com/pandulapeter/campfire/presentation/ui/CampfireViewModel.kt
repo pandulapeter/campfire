@@ -2306,15 +2306,13 @@ class CampfireViewModel(
         val setlist = dialog.setlist
         val entries = setlist?.entries ?: listOf(Setlist.Entry(requireNotNull(dialog.song).fileName))
         val songs = screenData.value.data?.unfilteredSongs.orEmpty().associateBy { it.fileName }
-        val songSetlist = dialog.songSetlistFileName?.let { name -> screenData.value.data?.setlists?.firstOrNull { it.fileName == name } }
+        // Read the way the viewer reads it, so that the page is in the key the screen shows: wrapped, and for a song a
+        // setlist names more than once, the one amount the viewer settles on rather than whichever entry comes first.
+        val setlistFileName = setlist?.fileName ?: dialog.songSetlistFileName
         val printSongs = entries.mapIndexed { index, entry ->
             val song = songs[entry.songFileName] ?: dialog.song
             val content = getSongContent(entry.songFileName)
-            val transposition = when {
-                setlist != null -> entry.transposition
-                songSetlist != null -> songSetlist.entries.firstOrNull { it.songFileName == entry.songFileName }?.transposition ?: 0
-                else -> preferences?.transpositions?.get(entry.songFileName) ?: 0
-            }
+            val transposition = transpositions.value[entry.songFileName, setlistFileName]
             val rendered = content?.let { withContext(Dispatchers.Default) {
                 renderSong(it.text, transposition, preferences?.chordSpelling ?: UserPreferences.ChordSpelling.Default)
             } }
