@@ -62,9 +62,6 @@ import com.pandulapeter.campfire.presentation.resources.songs_filter
 import com.pandulapeter.campfire.presentation.resources.songs_filter_active
 import com.pandulapeter.campfire.presentation.resources.songs_new_song
 import com.pandulapeter.campfire.presentation.resources.songs_search
-import com.pandulapeter.campfire.presentation.resources.songs_sort
-import com.pandulapeter.campfire.presentation.resources.songs_sorting_mode_by_artist
-import com.pandulapeter.campfire.presentation.resources.songs_sorting_mode_by_title
 import com.pandulapeter.campfire.presentation.resources.songs_unknown_artist
 import com.pandulapeter.campfire.presentation.resources.songs_unsorted_label
 import com.pandulapeter.campfire.presentation.ui.CampfireViewModel
@@ -90,7 +87,7 @@ import com.pandulapeter.campfire.presentation.ui.components.SetlistAssignmentsBu
 import com.pandulapeter.campfire.presentation.ui.components.SongActions
 import com.pandulapeter.campfire.presentation.ui.components.SongFilters
 import com.pandulapeter.campfire.presentation.ui.components.SongListItem
-import com.pandulapeter.campfire.presentation.ui.components.SortMenu
+import com.pandulapeter.campfire.presentation.ui.components.SongSortMenu
 import com.pandulapeter.campfire.presentation.ui.components.allowsNewItemMenu
 import com.pandulapeter.campfire.presentation.ui.components.animateAppBarReveal
 import com.pandulapeter.campfire.presentation.ui.components.belowAppBarOverlap
@@ -226,24 +223,6 @@ internal fun SongsScreen(
         }
         ImportProgress(isImporting = isImporting)
     }
-}
-
-@Composable
-private fun SongSortMenu(
-    modifier: Modifier = Modifier,
-    viewModel: CampfireViewModel,
-) {
-    val userPreferences by viewModel.userPreferences.collectAsStateWithLifecycle()
-    SortMenu(
-        modifier = modifier,
-        contentDescription = stringResource(Res.string.songs_sort),
-        options = listOf(
-            UserPreferences.SortingMode.BY_ARTIST to stringResource(Res.string.songs_sorting_mode_by_artist),
-            UserPreferences.SortingMode.BY_TITLE to stringResource(Res.string.songs_sorting_mode_by_title),
-        ),
-        selected = userPreferences?.sortingMode,
-        onSelected = viewModel::setSortingMode,
-    )
 }
 
 /**

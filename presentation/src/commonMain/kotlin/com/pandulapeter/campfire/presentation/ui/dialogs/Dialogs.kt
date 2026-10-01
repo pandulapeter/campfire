@@ -22,6 +22,7 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ColumnScope
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.RowScope
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.WindowInsetsSides
@@ -201,7 +202,10 @@ import com.pandulapeter.campfire.presentation.ui.components.LabelSortingToggle
 import com.pandulapeter.campfire.presentation.ui.components.MAX_SEARCH_QUERY_LENGTH
 import com.pandulapeter.campfire.presentation.ui.components.RadioListItem
 import com.pandulapeter.campfire.presentation.ui.components.SortableChipRow
+import com.pandulapeter.campfire.presentation.ui.components.ScrollToStartWhenChanged
+import com.pandulapeter.campfire.presentation.ui.components.SetlistSortMenu
 import com.pandulapeter.campfire.presentation.ui.components.SongFilters
+import com.pandulapeter.campfire.presentation.ui.components.SongSortMenu
 import com.pandulapeter.campfire.presentation.ui.components.THEME_COLOR_CHOICE_WIDTH
 import com.pandulapeter.campfire.presentation.ui.components.ThemeColorChoice
 import com.pandulapeter.campfire.presentation.ui.components.UiModeChoice
@@ -1254,6 +1258,11 @@ private fun SongTagsDialog(
                 if (isCreatable || matches.isNotEmpty()) {
                     val listState = rememberLazyListState()
                     HideKeyboardWhenScrolledDown(listState)
+                    ScrollToStartWhenChanged(
+                        listState = listState,
+                        key = sortingMode,
+                        contents = matches,
+                    )
                     LazyColumn(
                         modifier = Modifier
                             .padding(top = 8.dp)
@@ -1427,6 +1436,11 @@ private fun SongLanguagesDialog(
                 } else {
                     val listState = rememberLazyListState()
                     HideKeyboardWhenScrolledDown(listState)
+                    ScrollToStartWhenChanged(
+                        listState = listState,
+                        key = sortingMode,
+                        contents = matches,
+                    )
                     LazyColumn(
                         modifier = Modifier
                             .padding(top = 8.dp)
@@ -1487,14 +1501,10 @@ private fun SetlistPicker(
     val setlists by viewModel.setlists.collectAsStateWithLifecycle()
     var query by rememberSaveable { mutableStateOf("") }
     // An archived setlist has been put away, so it is not offered here - unless the song is in it already, which is
-    // the only thing this sheet could still have to say about one. Sorted by title whatever the setlists screen is
-    // sorted by, since this sheet is where a setlist is looked up by its name.
+    // the only thing this sheet could still have to say about one. In the order the setlists screen is sorted by,
+    // which the sheet's own sort button changes as well.
     val pickableSetlists = remember(setlists, dialog.song.fileName) {
-        setlists
-            .filter { setlist -> !setlist.isArchived || setlist.entries.any { it.songFileName == dialog.song.fileName } }
-            .map { it to viewModel.normalize(it.title) }
-            .sortedWith(compareBy({ it.second }, { it.first.fileName }))
-            .map { it.first }
+        setlists.filter { setlist -> !setlist.isArchived || setlist.entries.any { it.songFileName == dialog.song.fileName } }
     }
     // Answered by the title or the description, the way the setlists screen's own search answers, but not by the
     // songs inside: the song this sheet is about is the only one that matters here.
@@ -1504,6 +1514,7 @@ private fun SetlistPicker(
             normalizedQuery in viewModel.normalizeForSearch(setlist.title) || normalizedQuery in viewModel.normalizeForSearch(setlist.description)
         }
     }
+    val userPreferences by viewModel.userPreferences.collectAsStateWithLifecycle()
     val isCreatingFirstSetlist = rememberSaveable { setlists.isEmpty() }
     var isNamingNewSetlist by rememberSaveable { mutableStateOf(isCreatingFirstSetlist) }
     val closeNamingDialog = { if (isCreatingFirstSetlist) viewModel.dismissDialog() else isNamingNewSetlist = false }
@@ -1511,6 +1522,7 @@ private fun SetlistPicker(
         CampfireBottomSheet(
             title = stringResource(Res.string.songs_setlist_assignments),
             subtitle = songLabel(dialog.song),
+            actions = { SetlistSortMenu(viewModel = viewModel) },
             onDismiss = { viewModel.dismissSheet(dialog) },
         ) { contentPadding ->
             PickerSearchField(
@@ -1520,6 +1532,8 @@ private fun SetlistPicker(
             )
             PickerList(
                 contentPadding = contentPadding,
+                sortingMode = userPreferences?.setlistSortingMode,
+                contents = matches,
                 noResultsText = if (matches.isEmpty() && query.isNotBlank()) stringResource(Res.string.setlists_no_search_results) else null,
             ) {
                 items(
@@ -1583,8 +1597,8 @@ private fun SetlistPicker(
  *
  * The songs the setlist already holds come first, in the setlist's own order, and stay there for as long as the sheet
  * is open for the reason the language picker keeps its own at the top: a row that jumped away from under the finger
- * that had just ticked it would be worse than a list that has to be scrolled. The rest are in alphabetical order,
- * whatever the songs screen is sorted by, since this is a list to find a song in rather than to browse.
+ * that had just ticked it would be worse than a list that has to be scrolled. The rest are in the order the songs screen
+ * is sorted by, which the sheet's own sort button changes as well.
  *
  * The list can be narrowed by the library's languages and tags as well as by the search ([PickerFilters]). Those are
  * the picker's own and start empty every time rather than following the songs screen's filters: what that screen is
@@ -1609,10 +1623,10 @@ private fun SongPicker(
     // Sorted, normalized for the search and counted for the chips by the view model, once per library rather than as
     // the sheet opens or on every keystroke, since the search runs over every song on every character typed and the
     // sheet's first frames are its slide up.
-    val alphabeticalSongs by viewModel.alphabeticalSongs.collectAsStateWithLifecycle()
-    val pickableSongs = remember(alphabeticalSongs, initialSongFileNames) {
+    val pickerSongs by viewModel.pickerSongs.collectAsStateWithLifecycle()
+    val pickableSongs = remember(pickerSongs, initialSongFileNames) {
         val initial = initialSongFileNames.toSet()
-        initialSongFileNames.mapNotNull { alphabeticalSongs.byFileName[it] } + alphabeticalSongs.list.filterNot { it.song.fileName in initial }
+        initialSongFileNames.mapNotNull { pickerSongs.byFileName[it] } + pickerSongs.list.filterNot { it.song.fileName in initial }
     }
     val filters by viewModel.songPickerFilters.collectAsStateWithLifecycle()
     val userPreferences by viewModel.userPreferences.collectAsStateWithLifecycle()
@@ -1639,6 +1653,7 @@ private fun SongPicker(
     CampfireBottomSheet(
         title = stringResource(Res.string.setlists_song_assignments),
         subtitle = setlist.title,
+        actions = { SongSortMenu(viewModel = viewModel) },
         onDismiss = { viewModel.dismissSheet(dialog) },
     ) { contentPadding ->
         PickerSearchField(
@@ -1660,6 +1675,8 @@ private fun SongPicker(
         )
         PickerList(
             contentPadding = contentPadding,
+            sortingMode = userPreferences?.sortingMode,
+            contents = matches,
             noResultsText = when {
                 // Reached from an empty setlist's "Add songs" in an empty library, which the setlists screen lists as well.
                 songs.isEmpty() -> stringResource(Res.string.songs_empty_title)
@@ -1817,11 +1834,15 @@ private fun PickerSearchField(
  *
  * @param contentPadding What the sheet's content keeps clear at the bottom, applied inside the scroll so that the last
  *   rows pass under the navigation bar and the keyboard on their way up.
+ * @param sortingMode The order the rows are in, a change of which sends the list back to its first row once the
+ *   reordered [contents] arrive ([ScrollToStartWhenChanged]).
  * @param noResultsText What to say in place of the rows, null while there is nothing to say.
  */
 @Composable
 private fun ColumnScope.PickerList(
     contentPadding: PaddingValues,
+    sortingMode: Any?,
+    contents: Any?,
     noResultsText: String?,
     content: LazyListScope.() -> Unit,
 ) {
@@ -1829,6 +1850,11 @@ private fun ColumnScope.PickerList(
     var tallestHeight by remember { mutableIntStateOf(0) }
     val listState = rememberLazyListState()
     HideKeyboardWhenScrolledDown(listState)
+    ScrollToStartWhenChanged(
+        listState = listState,
+        key = sortingMode,
+        contents = contents,
+    )
     LazyColumn(
         modifier = Modifier
             .weight(1f, fill = false)
@@ -1869,6 +1895,7 @@ private fun ColumnScope.PickerList(
  *
  * @param title What the sheet is about, named in its [SheetHeader].
  * @param subtitle What the sheet acts on, under [title]: the song or the setlist it was opened for. Left out when blank.
+ * @param actions Buttons at the end of the [SheetHeader], across from the close button, such as the order of a list.
  * @param onDismiss Has to dismiss this sheet's own dialog and nothing else (`CampfireViewModel.dismissSheet`): it is
  *   called from the end of a hide animation, by which time another dialog may have taken the sheet's place.
  * @param content Can close the sheet the way its close button does ([BottomSheetContentScope.close]), for a sheet
@@ -1880,6 +1907,7 @@ internal fun CampfireBottomSheet(
     title: String,
     subtitle: String = "",
     sheetMaxWidth: Dp = BottomSheetDefaults.SheetMaxWidth,
+    actions: (@Composable RowScope.() -> Unit)? = null,
     onDismiss: () -> Unit,
     content: @Composable BottomSheetContentScope.(contentPadding: PaddingValues) -> Unit,
 ) {
@@ -1911,6 +1939,7 @@ internal fun CampfireBottomSheet(
         SheetHeader(
             title = title,
             subtitle = subtitle,
+            actions = actions,
             onClose = close,
         )
         // Read inside the sheet, which is a window of its own on Android and gets the insets of that window.
@@ -1940,9 +1969,11 @@ internal class BottomSheetContentScope(
 private fun SheetHeader(
     title: String,
     subtitle: String,
+    actions: (@Composable RowScope.() -> Unit)?,
     onClose: () -> Unit,
 ) = Row(
-    modifier = Modifier.fillMaxWidth().padding(start = 4.dp, end = 16.dp, top = 12.dp),
+    // An action at the end sits as far from the edge as the close button does from the start.
+    modifier = Modifier.fillMaxWidth().padding(start = 4.dp, end = if (actions == null) 16.dp else 4.dp, top = 12.dp),
     verticalAlignment = Alignment.CenterVertically,
 ) {
     IconButton(onClick = onClose) {
@@ -1970,6 +2001,7 @@ private fun SheetHeader(
             )
         }
     }
+    actions?.invoke(this)
 }
 
 private val SHEET_BOTTOM_PADDING = 16.dp

@@ -14,6 +14,7 @@ import androidx.compose.animation.core.Spring
 import androidx.compose.animation.core.VisibilityThreshold
 import androidx.compose.animation.core.spring
 import androidx.compose.foundation.gestures.ScrollableState
+import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.foundation.lazy.grid.LazyGridItemScope
 import androidx.compose.foundation.lazy.grid.LazyGridLayoutInfo
 import androidx.compose.foundation.lazy.grid.LazyGridState
@@ -139,6 +140,48 @@ internal fun ScrollToTopWhenChanged(
             anchor?.stopTransition()
         }
     }
+}
+
+/**
+ * Scrolls a list of a sheet or a dialog - or a row of chips - back to its start whenever [key], the order it is sorted
+ * in, changes: what was in front before is somewhere else now, and the start is where the new order is read from.
+ *
+ * The reordered [contents] can arrive several frames after [key], where the view model sorts them away from the main
+ * thread, and a lazy list follows its first visible item to wherever that went. So, as in [ScrollToTopWhenChanged],
+ * every change of [contents] is held at the position the list is at until the list is next scrolled.
+ */
+@Composable
+internal fun ScrollToStartWhenChanged(
+    listState: LazyListState,
+    key: Any?,
+    contents: Any?,
+) {
+    val heldStart = remember { HeldStart(key, contents) }
+    // A side effect for the reason given in ScrollToTopWhenChanged: it runs before the list measures the new contents.
+    SideEffect {
+        if (key != heldStart.key) {
+            heldStart.key = key
+            heldStart.isHolding = true
+            listState.requestScrollToItem(0)
+        } else if (heldStart.isHolding && contents !== heldStart.contents && !listState.isScrollInProgress) {
+            listState.requestScrollToItem(
+                index = listState.firstVisibleItemIndex,
+                scrollOffset = listState.firstVisibleItemScrollOffset,
+            )
+        }
+        heldStart.contents = contents
+    }
+    LaunchedEffect(listState) {
+        snapshotFlow { listState.isScrollInProgress }.filter { it }.collect { heldStart.isHolding = false }
+    }
+}
+
+/** What [ScrollToStartWhenChanged] last saw, which is not state: it is only read and written by its side effect. */
+private class HeldStart(
+    var key: Any?,
+    var contents: Any?,
+) {
+    var isHolding = false
 }
 
 /**

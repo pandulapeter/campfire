@@ -562,6 +562,11 @@ internal fun <T : Any> SortableChipRow(
     contentAlignment = Alignment.CenterStart,
 ) {
     val listState = rememberLazyListState()
+    ScrollToStartWhenChanged(
+        listState = listState,
+        key = sortingMode,
+        contents = items,
+    )
     // The icon itself starts at the keyline the search field above the row starts at.
     val toggleStart = CONTROLS_PADDING - (SORTING_TOGGLE_SIZE - SORTING_TOGGLE_ICON_SIZE) / 2
     val toggleEnd = toggleStart + SORTING_TOGGLE_SIZE

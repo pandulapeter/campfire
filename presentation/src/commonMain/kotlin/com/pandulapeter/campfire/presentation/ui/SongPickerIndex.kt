@@ -37,15 +37,15 @@ internal fun SearchableSong.toPickableSong() = PickableSong(
 )
 
 /**
- * Every song of the library as the song picker lists it: alphabetically in [list], and by file name in [byFileName]
- * for the songs a setlist already holds, which the picker puts first.
+ * Every song of the library as the song picker lists it: in the songs screen's order in [list], and by file name in
+ * [byFileName] for the songs a setlist already holds, which the picker puts first.
  */
-internal class AlphabeticalSongs(
+internal class PickerSongs(
     val list: List<PickableSong>,
     val byFileName: Map<String, PickableSong>,
 ) {
     companion object {
-        val Empty = AlphabeticalSongs(emptyList(), emptyMap())
+        val Empty = PickerSongs(emptyList(), emptyMap())
     }
 }
 

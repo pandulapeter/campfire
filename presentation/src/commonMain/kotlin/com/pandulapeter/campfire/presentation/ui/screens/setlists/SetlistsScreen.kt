@@ -63,9 +63,6 @@ import com.pandulapeter.campfire.presentation.resources.setlists_move_up
 import com.pandulapeter.campfire.presentation.resources.setlists_new_setlist
 import com.pandulapeter.campfire.presentation.resources.setlists_search
 import com.pandulapeter.campfire.presentation.resources.setlists_show_archived
-import com.pandulapeter.campfire.presentation.resources.setlists_sort
-import com.pandulapeter.campfire.presentation.resources.setlists_sorting_mode_by_date
-import com.pandulapeter.campfire.presentation.resources.setlists_sorting_mode_by_title
 import com.pandulapeter.campfire.presentation.resources.setlists_remove_song
 import com.pandulapeter.campfire.presentation.ui.CampfireViewModel
 import com.pandulapeter.campfire.presentation.ui.navigation.CampfireDestination
@@ -88,10 +85,10 @@ import com.pandulapeter.campfire.presentation.ui.components.SearchableTopAppBar
 import com.pandulapeter.campfire.presentation.ui.components.SectionHeader
 import com.pandulapeter.campfire.presentation.ui.components.SectionHeaderState
 import com.pandulapeter.campfire.presentation.ui.components.SetlistActions
+import com.pandulapeter.campfire.presentation.ui.components.SetlistSortMenu
 import com.pandulapeter.campfire.presentation.ui.components.MissingSongListItem
 import com.pandulapeter.campfire.presentation.ui.components.SongListItem
 import com.pandulapeter.campfire.presentation.ui.components.SongActions
-import com.pandulapeter.campfire.presentation.ui.components.SortMenu
 import com.pandulapeter.campfire.presentation.ui.components.allowsNewItemMenu
 import com.pandulapeter.campfire.presentation.ui.components.animateAppBarReveal
 import com.pandulapeter.campfire.presentation.ui.components.belowAppBarOverlap
@@ -183,24 +180,6 @@ internal fun SetlistsScreen(
             },
         )
     }
-}
-
-@Composable
-private fun SetlistSortMenu(
-    modifier: Modifier = Modifier,
-    viewModel: CampfireViewModel,
-) {
-    val userPreferences by viewModel.userPreferences.collectAsStateWithLifecycle()
-    SortMenu(
-        modifier = modifier,
-        contentDescription = stringResource(Res.string.setlists_sort),
-        options = listOf(
-            UserPreferences.SetlistSortingMode.BY_DATE to stringResource(Res.string.setlists_sorting_mode_by_date),
-            UserPreferences.SetlistSortingMode.BY_TITLE to stringResource(Res.string.setlists_sorting_mode_by_title),
-        ),
-        selected = userPreferences?.setlistSortingMode,
-        onSelected = viewModel::setSetlistSortingMode,
-    )
 }
 
 @Composable

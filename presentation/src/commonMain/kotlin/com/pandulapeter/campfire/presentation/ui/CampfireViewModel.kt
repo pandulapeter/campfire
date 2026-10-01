@@ -704,22 +704,29 @@ class CampfireViewModel(
     val songsByFileName = indexedSongs.map { it.search.songsByFileName }.asState(emptyMap())
 
     /**
-     * Every song of the library alphabetically, with its search and filter keys, as the song picker lists and searches
-     * it. Built here rather than as the sheet opens, where the first frame of the sheet would wait for a whole library
-     * to be sorted and folded, and sorted by keys folded once per song rather than on both sides of every comparison.
+     * Every song of the library in the order the songs screen is sorted by, with its search and filter keys, as the song
+     * picker lists and searches it. Built here rather than as the sheet opens, where the first frame of the sheet would
+     * wait for a whole library to be sorted and folded, and sorted by keys folded once per song rather than on both
+     * sides of every comparison.
      */
-    internal val alphabeticalSongs = indexedSongs
-        .map { indexed ->
-            val list = indexed.search.byFileName.values
-                .map { song -> Triple(song, normalizeText(song.song.title), normalizeText(song.song.artist)) }
-                .sortedWith(compareBy({ it.second }, { it.third }, { it.first.song.fileName }))
-                .map { it.first.toPickableSong() }
-            AlphabeticalSongs(list = list, byFileName = list.associateBy { it.song.fileName })
-        }
+    internal val pickerSongs = combine(
+        indexedSongs,
+        userPreferences.map { it?.sortingMode ?: UserPreferences.SortingMode.BY_ARTIST }.distinctUntilChanged(),
+    ) { indexed, sortingMode ->
+        val list = indexed.search.byFileName.values
+            .map { song ->
+                val title = normalizeText(song.song.title)
+                val artist = normalizeText(song.song.artist)
+                if (sortingMode == UserPreferences.SortingMode.BY_ARTIST) Triple(song, artist, title) else Triple(song, title, artist)
+            }
+            .sortedWith(compareBy({ it.second }, { it.third }, { it.first.song.fileName }))
+            .map { it.first.toPickableSong() }
+        PickerSongs(list = list, byFileName = list.associateBy { it.song.fileName })
+    }
         .flowOn(Dispatchers.Default)
-        .asState(AlphabeticalSongs.Empty)
+        .asState(PickerSongs.Empty)
 
-    /** The song picker's filter chips, counted over the whole library for the same reason [alphabeticalSongs] is sorted here. */
+    /** The song picker's filter chips, counted over the whole library for the same reason [pickerSongs] is sorted here. */
     internal val songPickerFilters = allSongs
         .map(::pickerFilterOptions)
         .flowOn(Dispatchers.Default)
