@@ -116,23 +116,33 @@ internal suspend fun layoutPrintDocument(
         wrapPrintText(line, width) { measure(it, style) }.map { Row(listOf(Part(it, style = style)), style.size * 1.45f) }
     }
     // The space above a label belongs to its first row, so that it never ends a column on its own or opens one with a gap.
-    fun label(text: String): List<Row> = wrapped(text, labelStyle).mapIndexed { index, row ->
+    fun label(text: String, width: Float): List<Row> = wrapped(text, labelStyle, width).mapIndexed { index, row ->
         if (index == 0) Row(row.parts.map { it.copy(y = it.y + labelSpace) }, row.height + labelSpace) else row
     }
     // Every row of a boxed comment carries its own piece of the frame, inside its own height, so that a box the
     // placement splits between columns continues as an open frame and never draws over what is before or after it.
-    fun boxed(text: String): List<Row> {
-        val rows = wrapped(text, lyricStyle, columnWidth - 10f)
+    fun boxed(text: String, width: Float): List<Row> {
+        val rows = wrapped(text, lyricStyle, width - 10f)
         return rows.mapIndexed { index, row ->
             val top = if (index == 0) 3f else 0f
             val height = row.height + top + if (index == rows.lastIndex) 3f else 0f
             Row(row.parts.map { it.copy(x = it.x + 5f, y = it.y + top) }, height, buildList {
                 add(PrintRule(0f, 0f, 0.75f, height))
-                add(PrintRule(columnWidth - 0.75f, 0f, 0.75f, height))
-                if (index == 0) add(PrintRule(0f, 0f, columnWidth, 0.75f))
-                if (index == rows.lastIndex) add(PrintRule(0f, height - 0.75f, columnWidth, 0.75f))
+                add(PrintRule(width - 0.75f, 0f, 0.75f, height))
+                if (index == 0) add(PrintRule(0f, 0f, width, 0.75f))
+                if (index == rows.lastIndex) add(PrintRule(0f, height - 0.75f, width, 0.75f))
             })
         }
+    }
+    // A chorus is indented, with a bar down its left side that every row carries its own piece of, so that the bar
+    // continues without a gap across a column or page break; on a label's row it starts at the label, not above it.
+    fun chorusBar(rows: List<Row>, startsWithLabel: Boolean): List<Row> = rows.mapIndexed { index, row ->
+        val top = if (index == 0 && startsWithLabel) labelSpace else 0f
+        Row(
+            parts = row.parts.map { it.copy(x = it.x + CHORUS_INDENT) },
+            height = row.height,
+            rules = row.rules.map { it.copy(x = it.x + CHORUS_INDENT) } + PrintRule(0f, top, CHORUS_BAR_WIDTH, row.height - top),
+        )
     }
     fun metadata(song: ChordProSong): String = listOfNotNull(
         song.metadata.key?.takeIf { options.showChords }?.let { "${labels.key}: $it" },
@@ -140,8 +150,10 @@ internal suspend fun layoutPrintDocument(
         song.metadata.tempo?.let { "${labels.tempo}: $it" },
         song.metadata.time?.let { "${labels.time}: $it" },
     ).joinToString("   ")
-    fun rowsFor(block: ChordProBlock, labelOverride: String? = null): List<Row> = when (block) {
+    fun rowsFor(block: ChordProBlock, width: Float, labelOverride: String? = null, isInChorus: Boolean = false): List<Row> = when (block) {
         is ChordProBlock.Section -> {
+            val isChorus = block.type == SectionType.Chorus
+            val lineWidth = if (isChorus) width - CHORUS_INDENT else width
             val sectionLabel = block.label ?: when (val type = block.type) {
                 // An unnamed verse is set apart by the gap before it, as in the viewer, rather than by a heading.
                 SectionType.Verse -> null
@@ -158,14 +170,14 @@ internal suspend fun layoutPrintDocument(
                             // Hiding a chord-only line must also remove the empty lyric row beneath it.
                             if (line.chords.isNotEmpty() && visible.chords.isEmpty() && visible.text.isPrintBlank()) return@lineLoop
                             // A chord wider than the column is wrapped onto rows of its own, so the lyrics under it are padded
-                            // to a column at most rather than to its full width.
+                            // to a column at most rather than to its full lineWidth.
                             val lyrics = if (visible.chords.isNotEmpty()) visible.padLyricsToFitChords(
-                                chordWidths = visible.chords.map { minOf(measure(it.name, if (it.isAnnotation) annotationStyle else chordStyle), columnWidth) },
+                                chordWidths = visible.chords.map { minOf(measure(it.name, if (it.isAnnotation) annotationStyle else chordStyle), lineWidth) },
                                 gap = measure(" ", lyricStyle),
                                 paddingWidth = measure("\u00A0", lyricStyle),
                                 measureWidth = { measure(it, lyricStyle) },
                             ) else visible
-                            val fragments = wrapPrintText(lyrics.text, columnWidth) { measure(it, lyricStyle) }
+                            val fragments = wrapPrintText(lyrics.text, lineWidth) { measure(it, lyricStyle) }
                             var start = 0
                             fragments.forEachIndexed { fragmentIndex, fragment ->
                                 val end = start + fragment.length
@@ -181,8 +193,8 @@ internal suspend fun layoutPrintDocument(
                                     // An annotation is an instruction rather than a chord, so it is set apart from the chords.
                                     val style = if (chord.isAnnotation) annotationStyle else chordStyle
                                     val chordWidth = measure(chord.name, style)
-                                    if (x > 0f && x + chordWidth > columnWidth) { chordY += options.fontSize * 1.3f; x = 0f }
-                                    val pieces = wrapPrintText(chord.name, columnWidth) { measure(it, style) }
+                                    if (x > 0f && x + chordWidth > lineWidth) { chordY += options.fontSize * 1.3f; x = 0f }
+                                    val pieces = wrapPrintText(chord.name, lineWidth) { measure(it, style) }
                                     pieces.forEachIndexed { i, name ->
                                         if (i > 0) { chordY += options.fontSize * 1.3f; x = 0f }
                                         parts += Part(name, x = x, y = chordY, style = style)
@@ -210,15 +222,15 @@ internal suspend fun layoutPrintDocument(
                         }
                         is ChordProLine.Tab -> if (options.showChords && (lineIndex == 0 || block.lines[lineIndex - 1] !is ChordProLine.Tab || !line.continuesEnvironment)) {
                             val run = block.lines.drop(lineIndex).takeWhile { it is ChordProLine.Tab && (it === line || it.continuesEnvironment) }.map { (it as ChordProLine.Tab).text }
-                            line.label?.takeUnless { it == sectionLabel }?.let { addAll(label(it)) }
-                            val characters = (columnWidth / measure("M", tabStyle)).toInt().coerceAtLeast(1)
+                            line.label?.takeUnless { it == sectionLabel }?.let { addAll(label(it, lineWidth)) }
+                            val characters = (lineWidth / measure("M", tabStyle)).toInt().coerceAtLeast(1)
                             val isTablature = ChordProTabWrapper.isTablature(run)
                             val systems = if (isTablature) ChordProTabWrapper.wrap(run, characters) else ChordProTabWrapper.wrapPreformatted(run, characters)
                             systems.forEachIndexed { systemIndex, system ->
                                 // Staves without a gap between them read as one staff of twice the strings; a preformatted
                                 // run is chord names over lyrics, read like wrapped text, so it gets none.
                                 if (isTablature && systemIndex > 0) add(Row(emptyList(), options.fontSize * 0.7f))
-                                val rows = system.flatMap { wrapped(it, tabStyle) }
+                                val rows = system.flatMap { wrapped(it, tabStyle, lineWidth) }
                                 val systemHeight = rows.sumOf { it.height.toDouble() }.toFloat()
                                 if (systemHeight <= capacity) {
                                     var rowY = 0f
@@ -235,12 +247,12 @@ internal suspend fun layoutPrintDocument(
                             line.tokens.bars().forEach { bar ->
                                 val text = bar.joinToString(" ") { it.printText() }
                                 val barWidth = measure(text, gridStyle)
-                                if (row.isNotEmpty() && rowWidth + space + barWidth <= columnWidth) { row += " $text"; rowWidth += space + barWidth } else {
-                                    if (row.isNotEmpty()) addAll(wrapped(row, gridStyle))
-                                    if (barWidth <= columnWidth) { row = text; rowWidth = barWidth } else { addAll(wrapped(text, gridStyle)); row = ""; rowWidth = 0f }
+                                if (row.isNotEmpty() && rowWidth + space + barWidth <= lineWidth) { row += " $text"; rowWidth += space + barWidth } else {
+                                    if (row.isNotEmpty()) addAll(wrapped(row, gridStyle, lineWidth))
+                                    if (barWidth <= lineWidth) { row = text; rowWidth = barWidth } else { addAll(wrapped(text, gridStyle, lineWidth)); row = ""; rowWidth = 0f }
                                 }
                             }
-                            if (row.isNotEmpty()) addAll(wrapped(row, gridStyle))
+                            if (row.isNotEmpty()) addAll(wrapped(row, gridStyle, lineWidth))
                         }
                         ChordProLine.Blank -> add(Row(emptyList(), options.fontSize * 0.7f))
                     }
@@ -248,21 +260,26 @@ internal suspend fun layoutPrintDocument(
             }
             // A section whose every line the options hide leaves out its label too, rather than printing a heading with
             // nothing under it; one written with no lines at all keeps it, since there the label is the cue.
-            if (block.lines.isNotEmpty() && lines.none { row -> row.parts.any { !it.text.isPrintBlank() } }) emptyList()
-            else (labelOverride ?: sectionLabel?.takeUnless { block.isContinuation })?.let(::label).orEmpty() + lines
+            if (block.lines.isNotEmpty() && lines.none { row -> row.parts.any { !it.text.isPrintBlank() } }) emptyList() else {
+                val labelRows = (labelOverride ?: sectionLabel?.takeUnless { block.isContinuation })?.let { label(it, lineWidth) }.orEmpty()
+                if (isChorus) chorusBar(labelRows + lines, startsWithLabel = labelRows.isNotEmpty()) else labelRows + lines
+            }
         }
         is ChordProBlock.Comment -> when {
             !options.showComments || (block.isInTabOrGrid && !options.showChords) -> emptyList()
-            block.style == CommentStyle.BOX -> boxed(block.text)
-            else -> wrapped(block.text, commentStyle)
+            isInChorus -> chorusBar(rowsFor(block, width - CHORUS_INDENT), startsWithLabel = false)
+            block.style == CommentStyle.BOX -> boxed(block.text, width)
+            else -> wrapped(block.text, commentStyle, width)
         }
         is ChordProBlock.ChorusRecall -> {
             // As in the viewer, the recall's own heading goes on the first recalled piece that prints anything, and is
             // printed on its own when nothing is: a recall says where the chorus is sung, even with nothing under it.
             var header: String? = block.label ?: (block.blocks.firstOrNull() as? ChordProBlock.Section)?.label ?: labels.chorus
-            block.blocks.flatMap { piece ->
-                if (piece is ChordProBlock.Section && header != null) rowsFor(piece, header).also { if (it.isNotEmpty()) header = null } else rowsFor(piece)
-            }.ifEmpty { header?.let(::label).orEmpty() }
+            block.blocks.flatMapIndexed { index, piece ->
+                val isPieceInChorus = block.blocks.isInChorus(index)
+                if (piece is ChordProBlock.Section && header != null) rowsFor(piece, width, header).also { if (it.isNotEmpty()) header = null }
+                else rowsFor(piece, width, isInChorus = isPieceInChorus)
+            }.ifEmpty { header?.let { label(it, width) }.orEmpty() }
         }
         is ChordProBlock.Transpose, ChordProBlock.Break -> emptyList()
     }
@@ -301,10 +318,18 @@ internal suspend fun layoutPrintDocument(
         // block flows on from under its heading. A break before that block is ignored, since the heading has just
         // started the song where it is.
         val blocks = entry.song?.blocks.orEmpty()
+        // Between two blocks of one chorus the gap carries the chorus's bar, so that a comment does not cut it in two.
+        fun rowsAt(index: Int): List<Row> {
+            val rows = rowsFor(blocks[index], columnWidth, isInChorus = blocks.isInChorus(index))
+            return if (rows.isNotEmpty() && blocks.continuesChorusAfter(index)) {
+                rows + Row(emptyList(), options.fontSize * 0.65f, listOf(PrintRule(0f, 0f, CHORUS_BAR_WIDTH, options.fontSize * 0.65f)))
+            } else rows
+        }
+        fun spaceAfter(index: Int) { if (!blocks.continuesChorusAfter(index)) space(options.fontSize * 0.65f) }
         var firstIndex = -1
         var firstRows = if (entry.song == null) wrapped(labels.missing) else emptyList()
         blocks.forEachIndexed { index, block ->
-            if (firstIndex < 0 && block != ChordProBlock.Break) rowsFor(block).takeIf { it.isNotEmpty() }?.let { firstIndex = index; firstRows = it }
+            if (firstIndex < 0 && block != ChordProBlock.Break) rowsAt(index).takeIf { it.isNotEmpty() }?.let { firstIndex = index; firstRows = it }
         }
         val headingHeight = heading.height()
         val keepFirstWhole = headingHeight + headingGap + firstRows.height() <= capacity
@@ -317,11 +342,11 @@ internal suspend fun layoutPrintDocument(
                 if (++laidOutBlocks % 50 == 0) yield()
                 when {
                     index < firstIndex -> Unit
-                    index == firstIndex -> { place(firstRows, keepWhole = keepFirstWhole); space(options.fontSize * 0.65f) }
+                    index == firstIndex -> { place(firstRows, keepWhole = keepFirstWhole); spaceAfter(index) }
                     block == ChordProBlock.Break -> if (y > margin) nextColumn()
                     else -> {
-                        val rows = rowsFor(block)
-                        if (rows.isNotEmpty()) { place(rows); space(options.fontSize * 0.65f) }
+                        val rows = rowsAt(index)
+                        if (rows.isNotEmpty()) { place(rows); spaceAfter(index) }
                     }
                 }
             }
@@ -340,6 +365,29 @@ private class PageContent {
 }
 
 private fun List<Row>.height() = sumOf { it.height.toDouble() }.toFloat()
+
+private const val CHORUS_INDENT = 8f
+private const val CHORUS_BAR_WIDTH = 1.5f
+
+private fun ChordProBlock?.isChorus() = this is ChordProBlock.Section && type == SectionType.Chorus
+
+/** A chorus section, or a comment written inside one or at the start of one, which is printed as part of it. */
+private fun List<ChordProBlock>.isInChorus(index: Int): Boolean = when (val block = this[index]) {
+    is ChordProBlock.Section -> block.isChorus()
+    is ChordProBlock.Comment -> (block.placement == CommentPlacement.IN_SECTION && getOrNull(index - 1).isChorus()) ||
+        (block.placement == CommentPlacement.START_OF_SECTION && getOrNull(index + 1).isChorus())
+    else -> false
+}
+
+/** Whether the block after [index] is the same chorus going on: its continuation, or a comment inside or at the start of it. */
+private fun List<ChordProBlock>.continuesChorusAfter(index: Int): Boolean {
+    if (!isInChorus(index) || index + 1 > lastIndex || !isInChorus(index + 1)) return false
+    return when (val next = this[index + 1]) {
+        is ChordProBlock.Section -> next.isContinuation || (this[index] as? ChordProBlock.Comment)?.placement == CommentPlacement.START_OF_SECTION
+        is ChordProBlock.Comment -> next.placement == CommentPlacement.IN_SECTION
+        else -> false
+    }
+}
 
 private fun GridToken.printText() = when (this) {
     is GridToken.Bar -> text

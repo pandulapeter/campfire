@@ -390,4 +390,38 @@ internal class PrintLayoutTest {
         assertTrue(horizontal.minOf { it.x } < document.width / 2 && horizontal.maxOf { it.x } > document.width / 2)
         assertTrue(rules.all { it.y >= margin - 0.01f })
     }
+
+    @Test fun aChorusIsIndentedBehindABarAndAVerseIsNot() = runTest {
+        val settings = PrintSettings(columns = 2)
+        val chorus = ChordProBlock.Section(SectionType.Chorus, null, listOf(ChordProLine.Lyrics("Chorus words " + "and more words ".repeat(6), emptyList())) + lyrics(3, "Sung"))
+        val document = layout(source(song(emptyList(), listOf(chorus))), settings)
+        val page = document.pages.single()
+        val margin = settings.marginMm * 72f / 25.4f
+        val columnWidth = (document.width - 2 * margin - 18) / 2
+        val label = page.texts.single { it.text == "Chorus" }
+        val chorusTexts = page.texts.filter { it.y >= label.y && it.style.size != 9 }
+        assertTrue(chorusTexts.size > 5)
+        chorusTexts.forEach { assertTrue(it.x >= margin + 8 - 0.01f && it.x + measure(it.text, it.style) <= margin + columnWidth + 0.01f, it.toString()) }
+        // The label's row, then the wrapped first line and three more, each a lyric row tall.
+        val lyricRows = chorusTexts.count { it.style == PrintStyle(12) }
+        assertTrue(lyricRows > 4)
+        assertEquals(11 * 1.45f + lyricRows * 12 * 1.45f, page.rules.sumOf { it.height.toDouble() }.toFloat(), 0.01f)
+        assertTrue(layout(source(song(lyrics(3)))).pages.single().rules.isEmpty())
+    }
+
+    @Test fun aCommentInsideAChorusCarriesItsBar() = runTest {
+        val document = layout(source(song(emptyList(), listOf(
+            ChordProBlock.Section(SectionType.Chorus, null, lyrics(2, "Before")),
+            ChordProBlock.Comment("Softly", CommentStyle.PLAIN, CommentPlacement.IN_SECTION),
+            ChordProBlock.Section(SectionType.Chorus, null, lyrics(2, "After"), isContinuation = true),
+        ))))
+        val page = document.pages.single()
+        val comment = page.texts.single { it.text == "Softly" }
+        val margin = PrintSettings().marginMm * 72f / 25.4f
+        assertTrue(comment.x >= margin + 8 - 0.01f)
+        assertTrue(page.rules.any { it.y <= comment.y && it.y + it.height >= comment.y + comment.style.size * 1.45f })
+        // One bar from the label to the last line, with no gap where the comment cuts the chorus.
+        val bars = page.rules.sortedBy { it.y }
+        bars.zipWithNext().forEach { (upper, lower) -> assertEquals(upper.y + upper.height, lower.y, 0.01f) }
+    }
 }
