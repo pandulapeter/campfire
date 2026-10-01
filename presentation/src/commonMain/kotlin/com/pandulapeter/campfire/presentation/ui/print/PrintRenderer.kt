@@ -78,14 +78,22 @@ internal class PrintRenderer(private val measurer: TextMeasurer, private val fon
             for (row in 0 until height) {
                 if (row % 128 == 0) { coroutineContext.ensureActive(); yield() }
                 bitmap.readPixels(pixels, startY = row, width = width, height = 1)
-                pixels.forEachIndexed { column, pixel ->
-                    // All print content is neutral, so a channel is its grayscale value.
-                    gray[row * width + column] = (pixel shr 16 and 255).toByte()
-                }
+                pixels.forEachIndexed { column, pixel -> gray[row * width + column] = printGray(pixel).toByte() }
             }
             writer.addPage(width, height, gray)
             yield()
         }
         return writer.finish()
     }
+}
+
+/**
+ * The luminance of an ARGB pixel by the Rec. 601 weights. Most print content is black on white, but colour emoji in a
+ * title or a lyric are drawn in colour, and a single channel would turn a red flame white.
+ */
+internal fun printGray(argb: Int): Int {
+    val red = argb shr 16 and 255
+    val green = argb shr 8 and 255
+    val blue = argb and 255
+    return (299 * red + 587 * green + 114 * blue) / 1000
 }

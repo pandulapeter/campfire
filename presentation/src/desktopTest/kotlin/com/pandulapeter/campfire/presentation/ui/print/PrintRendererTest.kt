@@ -69,4 +69,11 @@ internal class PrintRendererTest {
         }
         Unit
     }
+
+    @Test fun convertsPixelsToGrayByLuminance() {
+        assertEquals(76, printGray(0xFFFF0000.toInt()))
+        assertEquals(149, printGray(0xFF00FF00.toInt()))
+        assertEquals(255, printGray(0xFFFFFFFF.toInt()))
+        assertEquals(0, printGray(0xFF000000.toInt()))
+    }
 }
