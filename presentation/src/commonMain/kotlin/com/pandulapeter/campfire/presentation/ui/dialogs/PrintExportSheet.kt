@@ -61,8 +61,10 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
+import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.invisibleToUser
+import androidx.compose.ui.semantics.role
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.platform.LocalFontFamilyResolver
 import androidx.compose.ui.text.TextMeasurer
@@ -549,7 +551,7 @@ private fun PrintPages(laidOut: LaidOutDocument, isCurrent: Boolean, renderer: P
                             renderer = renderer,
                             zoom = if (isShownPage) zoom else 1f,
                             pan = if (isShownPage) pan else Offset.Zero,
-                            description = pageLabel + "\n" + shownPage.texts.joinToString("\n") { it.text },
+                            description = pageLabel,
                         )
                     }
                 }
@@ -588,7 +590,12 @@ private fun PrintPageCanvas(
     modifier
         .border(1.dp, MaterialTheme.colorScheme.outlineVariant)
         .clipToBounds()
-        .semantics { contentDescription = description },
+        // A picture of a page, named by its number: its texts are in layout order, chord after lyric fragment after
+        // padding, which read aloud is noise, and the song itself is readable in the viewer.
+        .semantics {
+            contentDescription = description
+            role = Role.Image
+        },
 ) {
     drawRect(Color.White)
     translate(pan.x, pan.y) { renderer.draw(this, page, size.width * zoom / document.width) }
