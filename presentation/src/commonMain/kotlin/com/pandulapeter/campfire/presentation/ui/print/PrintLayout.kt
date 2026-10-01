@@ -18,7 +18,9 @@ import com.pandulapeter.campfire.chordpro.model.CommentStyle
 import com.pandulapeter.campfire.chordpro.model.GridToken
 import com.pandulapeter.campfire.chordpro.model.SectionType
 import com.pandulapeter.campfire.data.model.domain.PrintSettings
+import com.pandulapeter.campfire.presentation.ui.screens.songDetails.DefaultSectionLabels
 import com.pandulapeter.campfire.presentation.ui.screens.songDetails.alignedGridBars
+import com.pandulapeter.campfire.presentation.ui.screens.songDetails.labelOf
 import com.pandulapeter.campfire.presentation.ui.screens.songDetails.padLyricsToFitChords
 import kotlinx.coroutines.yield
 import kotlin.math.roundToInt
@@ -97,9 +99,8 @@ internal data class PrintLabels(
     val tempo: String,
     val time: String,
     val missing: String,
-    val verse: String,
-    val chorus: String,
-    val bridge: String,
+    /** The headings of the sections the file leaves unnamed, the viewer's own. */
+    val sections: DefaultSectionLabels,
 )
 
 /**
@@ -335,10 +336,10 @@ private class PrintLayouter(
         val isChorus = section.type == SectionType.Chorus
         val lineWidth = if (isChorus) width - CHORUS_INDENT else width
         val sectionLabel = section.label ?: when (val type = section.type) {
-            SectionType.Verse -> labels.verse
-            SectionType.Chorus -> labels.chorus
-            SectionType.Bridge -> labels.bridge
-            is SectionType.Custom -> type.name.replace('_', ' ').replaceFirstChar { it.uppercase() }
+            SectionType.Verse -> labels.sections.verse
+            SectionType.Chorus -> labels.sections.chorus
+            SectionType.Bridge -> labels.sections.bridge
+            is SectionType.Custom -> labels.sections.labelOf(type)
             // The viewer heads an unnamed paragraph with nothing but its fold toggle, which a page has no use for.
             SectionType.Paragraph -> null
         }
@@ -511,7 +512,7 @@ private class PrintLayouter(
      * its own when nothing is: a recall says where the chorus is sung, even with nothing under it.
      */
     private fun recallRows(recall: ChordProBlock.ChorusRecall, width: Float): List<Row> {
-        var header: String? = recall.label ?: (recall.blocks.firstOrNull() as? ChordProBlock.Section)?.label ?: labels.chorus
+        var header: String? = recall.label ?: (recall.blocks.firstOrNull() as? ChordProBlock.Section)?.label ?: labels.sections.chorus
         return recall.blocks.flatMapIndexed { index, piece ->
             val isPieceInChorus = recall.blocks.isInChorus(index)
             if (piece is ChordProBlock.Section && header != null) {

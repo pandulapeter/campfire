@@ -11,11 +11,12 @@ package com.pandulapeter.campfire.presentation.ui.print
 
 import com.pandulapeter.campfire.chordpro.model.*
 import com.pandulapeter.campfire.data.model.domain.PrintSettings
+import com.pandulapeter.campfire.presentation.ui.screens.songDetails.DefaultSectionLabels
 import kotlinx.coroutines.test.runTest
 import kotlin.test.*
 
 internal class PrintLayoutTest {
-    private val labels = PrintLabels("Key", "Capo", "Tempo", "Time", "Missing", "Verse", "Chorus", "Bridge")
+    private val labels = PrintLabels("Key", "Capo", "Tempo", "Time", "Missing", DefaultSectionLabels(verse = "Verse", chorus = "Chorus", bridge = "Bridge", tab = "Tab", grid = "Grid", intro = "Intro", preChorus = "Pre-chorus", solo = "Solo", outro = "Outro"))
     private fun measure(text: String, style: PrintStyle) = text.count { it != '\u200B' } * style.size * 0.6f
     private suspend fun layout(source: PrintSource, settings: PrintSettings = PrintSettings()) = layoutPrintDocument(source, settings, labels, ::measure)
     private fun song(lines: List<ChordProLine>, blocks: List<ChordProBlock>? = null) = PrintSong("song.cho", "A song", "Artist", song = ChordProSong(

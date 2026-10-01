@@ -55,10 +55,10 @@ Is a-[Am]hoboin' from [E7]town to [Am]town
 
 {start_of_solo: Organ solo}
 {start_of_grid}
-|: Am . . | C  . . | D  . . | F  . . |
-|  Am . . | C  . . | E7 . . | E7      |
-|  Am . . | C  . . | D  . . | F  . . |
-|  Am . . | E7 . . | Am . . | Am      :| x2
+|: Am | C  | D  | F   |
+|  Am | C  | E7 | E7  |
+|  Am | C  | D  | F   |
+|  Am | E7 | Am | Am :| x2
 {end_of_grid}
 {end_of_solo}
 

@@ -110,6 +110,10 @@ import com.pandulapeter.campfire.presentation.resources.song_details_section_gri
 import com.pandulapeter.campfire.presentation.resources.song_details_section_tab
 import com.pandulapeter.campfire.presentation.resources.song_details_tab_collapse
 import com.pandulapeter.campfire.presentation.resources.song_details_tab_expand
+import com.pandulapeter.campfire.presentation.resources.song_editor_section_intro
+import com.pandulapeter.campfire.presentation.resources.song_editor_section_outro
+import com.pandulapeter.campfire.presentation.resources.song_editor_section_pre_chorus
+import com.pandulapeter.campfire.presentation.resources.song_editor_section_solo
 import com.pandulapeter.campfire.presentation.resources.song_editor_section_verse
 import com.pandulapeter.campfire.presentation.ui.components.EDGE_FADE_SIZE
 import com.pandulapeter.campfire.presentation.ui.components.ExpandChevron
@@ -2012,16 +2016,39 @@ internal fun rememberDefaultSectionLabels() = DefaultSectionLabels(
     bridge = stringResource(Res.string.song_details_section_bridge),
     tab = stringResource(Res.string.song_details_section_tab),
     grid = stringResource(Res.string.song_details_section_grid),
+    intro = stringResource(Res.string.song_editor_section_intro),
+    preChorus = stringResource(Res.string.song_editor_section_pre_chorus),
+    solo = stringResource(Res.string.song_editor_section_solo),
+    outro = stringResource(Res.string.song_editor_section_outro),
 )
 
-/** The fallback names of the environments that have one. Everything else is named by the file itself. */
+/**
+ * The fallback names of the environments that have one: every kind of section the editor writes, since it writes them
+ * without a label. Everything else is named by the file itself.
+ */
 internal data class DefaultSectionLabels(
     val verse: String,
     val chorus: String,
     val bridge: String,
     val tab: String,
     val grid: String,
+    val intro: String,
+    val preChorus: String,
+    val solo: String,
+    val outro: String,
 )
+
+/**
+ * What a section of a kind ChordPro leaves to the file heads it with where it has no label: the translated name of the
+ * kinds the editor writes, and otherwise the file's own wording, only capitalised ("Interlude" for `interlude`).
+ */
+internal fun DefaultSectionLabels.labelOf(type: SectionType.Custom) = when (type.name.lowercase()) {
+    "intro" -> intro
+    "pre-chorus" -> preChorus
+    "solo" -> solo
+    "outro" -> outro
+    else -> type.name.replace('_', ' ').replaceFirstChar { it.uppercaseChar() }
+}
 
 /**
  * One section of the song. The column layout places sections whole, or as the chunks they may be cut into as a last
@@ -2286,8 +2313,7 @@ private fun ChordProBlock.Section.header(defaultLabels: DefaultSectionLabels): S
     SectionType.Verse -> defaultLabels.verse
     SectionType.Chorus -> defaultLabels.chorus
     SectionType.Bridge -> defaultLabels.bridge
-    // "pre-chorus" reads as "Pre-chorus": the file's own wording, only capitalised.
-    is SectionType.Custom -> sectionType.name.replaceFirstChar { it.uppercaseChar() }
+    is SectionType.Custom -> defaultLabels.labelOf(sectionType)
     // A paragraph that is nothing but tablature or a grid is a bare `{start_of_tab}` / `{start_of_grid}` standing
     // on its own, and those name themselves even where the file gave them no label. One with lyrics around the run
     // is an ordinary paragraph that happens to hold some, and heading that "Tab" would be a lie - as would any other

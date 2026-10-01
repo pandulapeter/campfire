@@ -15,7 +15,17 @@ import kotlin.test.assertEquals
 
 class RenderSectionsTest {
 
-    private val labels = DefaultSectionLabels(verse = "Verse", chorus = "Chorus", bridge = "Bridge", tab = "Tab", grid = "Grid")
+    private val labels = DefaultSectionLabels(
+        verse = "Versszak",
+        chorus = "Refrén",
+        bridge = "Átkötés",
+        tab = "Tab",
+        grid = "Rács",
+        intro = "Bevezető",
+        preChorus = "Pre-refrén",
+        solo = "Szóló",
+        outro = "Levezetés",
+    )
 
     /** Each section as the comments it holds, or as its own text where it is a comment between sections. */
     private fun shape(text: String, shouldShowChords: Boolean = true) = prepareSongLyrics(
@@ -33,7 +43,7 @@ class RenderSectionsTest {
     @Test
     fun `the comments written in a section fold with it and the ones between sections stand alone`() {
         assertEquals(
-            listOf("comment before", "Verse: opens, lines, cuts, lines, ends", "comment after", "Chorus: lines"),
+            listOf("comment before", "Verse: opens, lines, cuts, lines, ends", "comment after", "Refrén: lines"),
             shape("{c: before}\n{sov: Verse}\n{c: opens}\nla\n{c: cuts}\nla\n{c: ends}\n{eov}\n{c: after}\n{soc}\nla\n{eoc}"),
         )
     }
@@ -41,7 +51,7 @@ class RenderSectionsTest {
     @Test
     fun `a recalled chorus repeats the comments it opens and ends with`() {
         assertEquals(
-            listOf("Chorus: softly, lines, x2", "Chorus: softly, lines, x2"),
+            listOf("Refrén: softly, lines, x2", "Refrén: softly, lines, x2"),
             shape("{soc}\n{c: softly}\nla\n{c: x2}\n{eoc}\n\n{chorus}"),
         )
     }
@@ -64,8 +74,17 @@ class RenderSectionsTest {
     @Test
     fun `a section the file leaves unnamed is still headed, a paragraph by its fold toggle alone`() {
         assertEquals(
-            listOf("Verse: lines", ": lines", "Tab: lines", "Chorus: lines"),
+            listOf("Versszak: lines", ": lines", "Tab: lines", "Refrén: lines"),
             shape("{sov}\nla\n{eov}\n\nloose\n\n{sot}\ne|-0-|\n{eot}\n\n{soc}\nla\n{eoc}"),
+        )
+    }
+
+    @Test
+    fun `the kinds of section the editor writes are headed in the app's language, and any other kind as the file names it`() {
+        assertEquals(
+            listOf("Bevezető: lines", "Pre-refrén: lines", "Szóló: lines", "Levezetés: lines", "Interlude: lines", "Szóló 2: lines"),
+            shape("{start_of_intro}\nla\n{end_of_intro}\n{start_of_pre-chorus}\nla\n{end_of_pre-chorus}\n{start_of_solo}\nla\n{end_of_solo}\n" +
+                "{start_of_outro}\nla\n{end_of_outro}\n{start_of_interlude}\nla\n{end_of_interlude}\n{start_of_solo: Szóló 2}\nla\n{end_of_solo}"),
         )
     }
 }

@@ -19,6 +19,7 @@ import androidx.compose.ui.unit.Density
 import androidx.compose.ui.unit.LayoutDirection
 import com.pandulapeter.campfire.chordpro.ChordProParser
 import com.pandulapeter.campfire.data.model.domain.PrintSettings
+import com.pandulapeter.campfire.presentation.ui.screens.songDetails.DefaultSectionLabels
 import kotlinx.coroutines.runBlocking
 import java.io.ByteArrayOutputStream
 import java.io.File
@@ -63,7 +64,7 @@ internal class PrintRendererTest {
         val second = first.copy(fileName = "two.cho", title = "Under the stars", index = 2,
             song = parsed.copy(blocks = parsed.blocks + List(90) { ChordProParser.parse("[D]Another line of music [A7]to keep on the next page.").blocks.single() }))
         val document = layoutPrintDocument(PrintSource("Campfire concert", "Rehearsal with friends", "2026-10-01", true, listOf(first, second)),
-            PrintSettings(columns = 2), PrintLabels("Key", "Capo", "Tempo", "Time", "Missing", "Verse", "Chorus", "Bridge"), renderer::width)
+            PrintSettings(columns = 2), PrintLabels("Key", "Capo", "Tempo", "Time", "Missing", DefaultSectionLabels(verse = "Verse", chorus = "Chorus", bridge = "Bridge", tab = "Tab", grid = "Grid", intro = "Intro", preChorus = "Pre-chorus", solo = "Solo", outro = "Outro")), renderer::width)
         assertTrue(document.pages.size >= 4)
         val bytes = renderer.pdf(document, "Campfire concert")
         val contents = bytes.decodeToString()
@@ -138,7 +139,7 @@ internal class PrintRendererTest {
         val renderer = PrintRenderer(TextMeasurer(createFontFamilyResolver(), Density(1f), LayoutDirection.Ltr))
         val song = ChordProParser.parse("{title: Gray}\n{key: D}\n{tempo: 96}\nWords that are sung in black")
         val document = layoutPrintDocument(PrintSource("Gray", songs = listOf(PrintSong("gray.cho", "Gray", "Artist", song = song))),
-            PrintSettings(), PrintLabels("Key", "Capo", "Tempo", "Time", "Missing", "Verse", "Chorus", "Bridge"), renderer::width)
+            PrintSettings(), PrintLabels("Key", "Capo", "Tempo", "Time", "Missing", DefaultSectionLabels(verse = "Verse", chorus = "Chorus", bridge = "Bridge", tab = "Tab", grid = "Grid", intro = "Intro", preChorus = "Pre-chorus", solo = "Solo", outro = "Outro")), renderer::width)
         val page = document.pages.first()
         val scale = 3f
         val width = ceil(document.width * scale).toInt()

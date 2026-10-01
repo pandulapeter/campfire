@@ -155,15 +155,12 @@ import com.pandulapeter.campfire.presentation.resources.print_time
 import com.pandulapeter.campfire.presentation.resources.print_zoom_in
 import com.pandulapeter.campfire.presentation.resources.print_zoom_out
 import com.pandulapeter.campfire.presentation.resources.retry
-import com.pandulapeter.campfire.presentation.resources.song_details_section_bridge
-import com.pandulapeter.campfire.presentation.resources.song_details_section_chorus
 import com.pandulapeter.campfire.presentation.resources.song_details_text_size
 import com.pandulapeter.campfire.presentation.resources.song_details_text_size_decrease
 import com.pandulapeter.campfire.presentation.resources.song_details_text_size_increase
 import com.pandulapeter.campfire.presentation.resources.song_editor_insert_capo
 import com.pandulapeter.campfire.presentation.resources.song_editor_insert_key
 import com.pandulapeter.campfire.presentation.resources.song_editor_insert_tempo
-import com.pandulapeter.campfire.presentation.resources.song_editor_section_verse
 import com.pandulapeter.campfire.presentation.resources.songs_tags_clear
 import com.pandulapeter.campfire.presentation.ui.CampfireViewModel
 import com.pandulapeter.campfire.presentation.ui.components.CheckboxListItem
@@ -184,6 +181,7 @@ import com.pandulapeter.campfire.presentation.ui.print.PrintSource
 import com.pandulapeter.campfire.presentation.ui.print.layoutPrintDocument
 import com.pandulapeter.campfire.presentation.ui.print.pdfFileName
 import com.pandulapeter.campfire.presentation.ui.screens.songDetails.Stepper
+import com.pandulapeter.campfire.presentation.ui.screens.songDetails.rememberDefaultSectionLabels
 import com.pandulapeter.campfire.presentation.ui.theme.LocalMonospaceFontFamily
 import kotlin.math.pow
 import kotlin.time.Duration.Companion.milliseconds
@@ -229,9 +227,7 @@ internal fun PrintExportSheet(
         tempo = stringResource(Res.string.song_editor_insert_tempo),
         time = stringResource(Res.string.print_time),
         missing = stringResource(Res.string.print_missing),
-        verse = stringResource(Res.string.song_editor_section_verse),
-        chorus = stringResource(Res.string.song_details_section_chorus),
-        bridge = stringResource(Res.string.song_details_section_bridge),
+        sections = rememberDefaultSectionLabels(),
     )
     LaunchedEffect(dialog, state.attempt) {
         state.failed = false
