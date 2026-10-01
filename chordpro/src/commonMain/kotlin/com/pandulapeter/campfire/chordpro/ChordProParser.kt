@@ -15,6 +15,7 @@ import com.pandulapeter.campfire.chordpro.model.ChordProLink
 import com.pandulapeter.campfire.chordpro.model.ChordProMetadata
 import com.pandulapeter.campfire.chordpro.model.ChordProSong
 import com.pandulapeter.campfire.chordpro.model.ChordProSummary
+import com.pandulapeter.campfire.chordpro.model.CommentPlacement
 import com.pandulapeter.campfire.chordpro.model.CommentStyle
 import com.pandulapeter.campfire.chordpro.model.GridToken
 import com.pandulapeter.campfire.chordpro.model.SectionType
@@ -127,12 +128,12 @@ object ChordProParser {
                 chorus += blocks.subList(lastPieceIndex + 1, index).filterNot { it is ChordProBlock.ChorusRecall || it is ChordProBlock.Transpose }
                 chorus += block
             } else {
-                chorus?.let { choruses += lastPieceIndex to it }
-                pieces = if (block.type == SectionType.Chorus) mutableListOf(block) else null
+                chorus?.let { choruses += lastPieceIndex to it + blocks.commentsEnding(lastPieceIndex) }
+                pieces = if (block.type == SectionType.Chorus) (blocks.commentsOpening(index) + block).toMutableList() else null
             }
             lastPieceIndex = index
         }
-        pieces?.let { choruses += lastPieceIndex to it }
+        pieces?.let { choruses += lastPieceIndex to it + blocks.commentsEnding(lastPieceIndex) }
         var chorusIndex = -1
         return blocks.mapIndexed { index, block ->
             if (block !is ChordProBlock.ChorusRecall) return@mapIndexed block
@@ -140,6 +141,15 @@ object ChordProParser {
             block.copy(blocks = choruses.getOrNull(chorusIndex)?.second.orEmpty())
         }
     }
+
+    /** The comments the section at [index] opens with, which are part of the chorus a recall repeats. */
+    private fun List<ChordProBlock>.commentsOpening(index: Int) =
+        subList(0, index).takeLastWhile { (it as? ChordProBlock.Comment)?.placement == CommentPlacement.START_OF_SECTION }
+
+    /** The comments the section whose last piece is at [index] ends with, which are part of the chorus a recall repeats. */
+    private fun List<ChordProBlock>.commentsEnding(index: Int) = subList(index + 1, size)
+        .takeWhile { it is ChordProBlock.Break || it is ChordProBlock.Transpose || (it as? ChordProBlock.Comment)?.placement == CommentPlacement.IN_SECTION }
+        .filterIsInstance<ChordProBlock.Comment>()
 
     /** Only scans directive lines, so that it is cheap enough for a caller that has no interest in the body. */
     fun parseMetadata(text: String) = scan(text, shouldDetectChords = false).metadata
@@ -375,6 +385,23 @@ object ChordProParser {
         private var hasTabLine = false
 
         /**
+         * Whether a part of this section was emitted already, so that a block added now stands inside it rather than
+         * at its start (see [CommentPlacement]).
+         */
+        private var hasEmittedLines = false
+
+        /** Where in [blocks] the comments this section opened with are, which [close] moves out of it if no line follows. */
+        private val openingComments = mutableListOf<Int>()
+
+        /**
+         * Whether the tab or grid environment that is open has had a line that is not blank, and where in [blocks] the
+         * comments written inside it are. These outlive the cut [addBlock] makes, since the environment does, and only
+         * the end of the environment reads them ([finishLineMode]).
+         */
+        private var hasLineModeLine = false
+        private val lineModeComments = mutableListOf<Int>()
+
+        /**
          * Whether a `{start_of_tab}`, a `{start_of_grid}` or one of the verbatim environments is open, which says how
          * lines are read and not what section they are in.
          */
@@ -398,8 +425,10 @@ object ChordProParser {
             this.isExplicit = isExplicit
             this.headingText = headingText
             this.isContinuation = isContinuation
+            hasEmittedLines = isContinuation
             hasTabLine = false
             isOpenedByLineMode = false
+            openingComments.clear()
             lines.clear()
         }
 
@@ -418,6 +447,8 @@ object ChordProParser {
             lineMode = mode
             lineModeLabel = label
             hasTabLine = false
+            hasLineModeLine = false
+            lineModeComments.clear()
         }
 
         /**
@@ -425,6 +456,7 @@ object ChordProParser {
          * names that environment, and a line after it would otherwise be headed by it.
          */
         fun closeLineMode() {
+            finishLineMode()
             lineMode = null
             lineModeLabel = null
             if (isOpenedByLineMode && lines.all { it == ChordProLine.Blank }) close()
@@ -432,6 +464,7 @@ object ChordProParser {
         }
 
         fun close() {
+            finishLineMode()
             lineMode = null
             lineModeLabel = null
             val type = type ?: return
@@ -441,16 +474,33 @@ object ChordProParser {
             if (lines.isNotEmpty()) {
                 blocks += ChordProBlock.Section(type = type, label = label, lines = lines.toList(), isContinuation = isContinuation)
             } else {
+                if (!hasEmittedLines) openingComments.forEach { blocks.replaceComment(it) { copy(placement = CommentPlacement.BETWEEN_SECTIONS) } }
                 headingText?.let { blocks += ChordProBlock.Comment(it, CommentStyle.PLAIN) }
             }
+            openingComments.clear()
             this.type = null
             label = null
             isExplicit = false
             isContinuation = false
             hasTabLine = false
             isOpenedByLineMode = false
+            hasEmittedLines = false
             headingText = null
             lines.clear()
+        }
+
+        /**
+         * A comment in a tab or grid environment that never had a line is not a note about one: there is nothing it
+         * would be hidden with, and nothing for the serializer to write it back inside.
+         */
+        private fun finishLineMode() {
+            if (lineMode == null) return
+            if (!hasLineModeLine) lineModeComments.forEach { blocks.replaceComment(it) { copy(isInTabOrGrid = false) } }
+            lineModeComments.clear()
+        }
+
+        private fun MutableList<ChordProBlock>.replaceComment(index: Int, change: ChordProBlock.Comment.() -> ChordProBlock.Comment) {
+            this[index] = (this[index] as ChordProBlock.Comment).change()
         }
 
         /**
@@ -462,7 +512,11 @@ object ChordProParser {
          * second time nor left out of a recall of its chorus.
          */
         fun addBlock(block: ChordProBlock) {
-            if (type != null && lines.isNotEmpty()) {
+            // Blank lines alone are not a part of the section yet: flushed, they would be trimmed away, and the lines
+            // after the block would be the continuation of a section that never started.
+            val isCut = type != null && lines.any { it != ChordProLine.Blank }
+            val placedBlock = if (block is ChordProBlock.Comment) block.placed(isCut) else block
+            if (isCut) {
                 val type = this.type!!
                 val label = this.label
                 val isExplicit = this.isExplicit
@@ -472,15 +526,36 @@ object ChordProParser {
                 val lineMode = this.lineMode
                 val lineModeLabel = this.lineModeLabel
                 val hasTabLine = this.hasTabLine
+                this.lineMode = null
                 close()
-                blocks += block
+                blocks += placedBlock
                 open(type, label, isExplicit, isContinuation = true)
                 this.lineMode = lineMode
                 this.lineModeLabel = lineModeLabel
                 this.hasTabLine = hasTabLine
             } else {
-                blocks += block
+                blocks += placedBlock
             }
+            if (placedBlock is ChordProBlock.Comment) {
+                if (placedBlock.placement == CommentPlacement.START_OF_SECTION) openingComments += blocks.lastIndex
+                if (placedBlock.isInTabOrGrid) lineModeComments += blocks.lastIndex
+            }
+        }
+
+        /**
+         * Where a comment written now stands. Only an environment is a section to the reader: the lines of an implicit
+         * paragraph are just lines, unless a legacy heading named them.
+         */
+        private fun ChordProBlock.Comment.placed(isCut: Boolean): ChordProBlock.Comment {
+            val isInSection = type.let { it != null && (isExplicit || lineMode != null || it != SectionType.Paragraph) }
+            return copy(
+                placement = when {
+                    !isInSection -> CommentPlacement.BETWEEN_SECTIONS
+                    isCut || hasEmittedLines -> CommentPlacement.IN_SECTION
+                    else -> CommentPlacement.START_OF_SECTION
+                },
+                isInTabOrGrid = lineMode == LineMode.TAB || lineMode == LineMode.GRID,
+            )
         }
 
         fun addContent(rawLine: String, trimmedLine: String) {
@@ -495,6 +570,7 @@ object ChordProParser {
             if (type == null) {
                 open(SectionType.Paragraph, label = null, isExplicit = false)
             }
+            if (lineMode == LineMode.TAB || lineMode == LineMode.GRID) hasLineModeLine = true
             lines += when (lineMode) {
                 LineMode.TAB -> ChordProLine.Tab(rawLine, continuesEnvironment = hasTabLine, label = lineModeLabel).also { hasTabLine = true }
                 LineMode.GRID -> ChordProLine.Grid(ChordProSyntax.parseGridTokens(trimmedLine), label = lineModeLabel)

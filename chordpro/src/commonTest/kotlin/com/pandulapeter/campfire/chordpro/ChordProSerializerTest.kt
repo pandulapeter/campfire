@@ -41,6 +41,21 @@ class ChordProSerializerTest {
     }
 
     @Test
+    fun `the comments a section opens and ends with come back inside it`() {
+        listOf(
+            "{sov}\n{c: softly}\n[C]one\n{c: x2}\n{eov}\n{c: between}",
+            "{sov}\nla\n{sot}\n{c: before}\ne|-0-|\n{c: after}\n{eot}\n{eov}",
+            "{sot: Riff}\n{c: before}\ne|-0-|\n{c: after}\n{eot}",
+            "{sov}\n{sog: A}\n{c: before}\n| Am . |\n{eog}\n{sog: A}\n| C . |\n{eog}\n{eov}",
+            "{sot}\ne|-0-|\n{c: end of one}\n{eot}\n{sot}\n{c: start of another}\ne|-2-|\n{eot}",
+        ).forEach { text ->
+            val parsed = ChordProParser.parse(text)
+
+            assertEquals(parsed, ChordProParser.parse(ChordProSerializer.serialize(parsed)), text)
+        }
+    }
+
+    @Test
     fun `a legacy heading name cut into a tab comes back inside the tab`() {
         val parsed = ChordProParser.parse("{sot}\ne|---0---|\n{c: Solo}\ne|---3---|\n{eot}")
 

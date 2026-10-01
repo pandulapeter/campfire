@@ -351,6 +351,8 @@ class GetScreenDataUseCaseImplTest {
             chordSpelling = UserPreferences.ChordSpelling.Default,
             transpositions = emptyMap(),
             foldedSections = emptyMap(),
+            isSongInfoFolded = false,
+            foldedSongInfoSections = emptySet(),
             tagMatchMode = UserPreferences.MatchMode.ANY,
             languageMatchMode = UserPreferences.MatchMode.ANY,
         )

@@ -46,10 +46,10 @@ import kotlin.math.sign
  * just out of view, or the row's own top where it has no divider) and where each one's content ends ([bottoms], one per
  * resting offset, above whatever empty space follows it). None at all where the song is not read in rows.
  *
- * [stepOffsets] are where Page Up / Page Down and the buttons at the end of the screen step to, ascending, the top of the
- * song not among them: the resting offsets of a song that scrolls in rows, and just above every section of any other, whose
- * header is then the first thing stepped past ([isSteppedByRow] telling the two apart). None before the song has been
- * laid out. Each stop is also named by the index of the section it starts with ([stepSections], one per stop), which is
+ * [stepOffsets] are where Page Up / Page Down and the buttons at the end of the screen step to, ascending: the resting
+ * offsets of a song that scrolls in rows, and just above every section of any other ([isSteppedByRow] telling the two
+ * apart), the first one at the top of the song either way, so that a song opens on its first stop. None before the song
+ * has been laid out. Each stop is also named by the index of the section it starts with ([stepSections], one per stop), which is
  * what it is still called once a new layout has flowed the sections into different rows or columns (see [ReadingAnchor]).
  *
  * [lineTops] are where the pieces a single column is made of start - every section, and within one the chunks it may be
@@ -68,12 +68,17 @@ internal data class SongRows(
     val lineBottoms: List<Int> = emptyList(),
     val lineSections: List<Int> = emptyList(),
 ) {
-    fun offsetBy(offset: Int) = copy(
-        restingOffsets = restingOffsets.map { it + offset },
-        bottoms = bottoms.map { it + offset },
-        stepOffsets = stepOffsets.map { it + offset },
-        lineTops = lineTops.map { it + offset },
-        lineBottoms = lineBottoms.map { it + offset },
+    /**
+     * These rows in the coordinates of a scroll that holds [topPadding] above them: everything that much further down,
+     * except a stop at or above their top, which is rested on at the top of the scroll. The padding is read with the first
+     * row or section rather than scrolled past on the way to it, so the song opens on its first stop.
+     */
+    fun belowPadding(topPadding: Int) = copy(
+        restingOffsets = restingOffsets.map { if (it <= 0) 0 else it + topPadding },
+        bottoms = bottoms.map { it + topPadding },
+        stepOffsets = stepOffsets.map { if (it <= 0) 0 else it + topPadding },
+        lineTops = lineTops.map { it + topPadding },
+        lineBottoms = lineBottoms.map { it + topPadding },
     )
 
     /** Whether the three lists that describe the pieces of a single column describe the same pieces. */
@@ -106,7 +111,7 @@ internal fun snappedScrollTarget(
     if (next <= 0) return points.first().toFloat()
     val rowStart = points[next - 1].toFloat()
     val nextPoint = points[next].toFloat()
-    // The stretch above the first row is the header's, which is read as a whole with the first row coming into view.
+    // A stretch that starts at no row - the end of the song - is read as a whole.
     val bottom = rowOffsets.indexOf(points[next - 1]).takeIf { it >= 0 }?.let { rows.bottoms.getOrNull(it) }?.toFloat() ?: nextPoint
     val lastFree = (bottom - viewportHeight).coerceIn(rowStart, nextPoint)
     val isStartInRow = start >= rowStart - POSITION_TOLERANCE && start < nextPoint - POSITION_TOLERANCE
@@ -245,12 +250,12 @@ private fun previousStepTargetOnce(scroll: Int, rows: SongRows, viewportHeight: 
     return target.coerceIn(0, maxValue)
 }
 
-/** Whether [offset] is where a stop of [rows] is rested on, the top of the song counting as the header's. */
+/** Whether [offset] is where a stop of [rows] is rested on, the top of the song counting as one. */
 internal fun isStepStop(offset: Int, rows: SongRows, maxValue: Int) = offset == 0 || rows.stepOffsets.any { it.coerceIn(0, maxValue) == offset }
 
 /**
  * The index of the stop the reader at [scroll] is past among [stepOffsets]: the lowest one above it, which in columns
- * read top to bottom need not be the last one listed. -1 in the header above them.
+ * read top to bottom need not be the last one listed. -1 above all of them.
  */
 private fun stopAt(scroll: Int, stepOffsets: List<Int>): Int {
     var stop = -1
@@ -278,8 +283,7 @@ internal fun nextStepOffset(scroll: Int, stepOffsets: List<Int>, maxValue: Int):
 
 /**
  * The scroll position that puts the stop the one at [scroll] comes after under the top of the viewport - or the stop at
- * [scroll] itself, where the reader is past its top - and null only at the very top of the song. The header above the
- * first stop counts as one of its own, rested on at the top of the song, since it is scrolled away like one.
+ * [scroll] itself, where the reader is past its top - and null only at the very top of the song, which is always one.
  */
 internal fun previousStepOffset(scroll: Int, stepOffsets: List<Int>, maxValue: Int): Int? {
     var previous: Int? = if (scroll > POSITION_TOLERANCE) 0 else null
@@ -309,14 +313,11 @@ internal fun reachableStops(rows: SongRows, maxValue: Int, minGap: Int = 0): Lis
 
 /**
  * Where the reader at [scroll] is among [stops] (see [reachableStops]), in stops: the index of one where the song rests on
- * it, and in between two by how far it has scrolled from the one to the other. Above the first one, where the header is
- * being read, it runs from -1 at the top of the song up to 0 at the first stop.
+ * it, and in between two by how far it has scrolled from the one to the other. The first stop is at the top of the song,
+ * so nothing is above it.
  */
 internal fun stopProgress(scroll: Int, stops: List<Int>): Float {
-    if (stops.isEmpty()) return 0f
-    val first = stops.first()
-    if (scroll < first) return scroll.toFloat() / first - 1f
-    if (scroll == first) return 0f
+    if (stops.isEmpty() || scroll <= stops.first()) return 0f
     for (i in 1 until stops.size) {
         val start = stops[i - 1]
         val end = stops[i]
@@ -329,7 +330,7 @@ internal fun stopProgress(scroll: Int, stops: List<Int>): Float {
  * The fling of a song read across the columns, which comes to rest at [snappedScrollTarget] rather than wherever the
  * decay would leave it, so that a row is read from its divider rather than from somewhere in the middle of its first
  * line. The [rows] are written by the layout every time it places them, in the scroll's own coordinates; the first
- * resting offset is the one above the song, below its header. With none (a song laid out in a single column) the fling
+ * resting offset is the top of the song. With none (a song laid out in a single column) the fling
  * is the ordinary one. They are state, since the buttons that step through the song are
  * shown from them; the layout writes them only when they change.
  */
@@ -440,8 +441,8 @@ internal class RowSnapFlingBehavior(
 
 /**
  * Where the reader is in a song, in terms that outlive a new layout of it: the stop they are past - a row, or a section
- * where the song is not stepped through by rows - named by the section it starts with ([section], null for the header
- * above the first one), and how far past it they are ([offset]).
+ * where the song is not stepped through by rows - named by the section it starts with ([section], null above the first
+ * one), and how far past it they are ([offset]).
  *
  * Inside a stop that is taller than the screen that offset is a number of pixels, which is a different line at every
  * text size, so there the reader is also anchored by the [line] they are reading, and the stop only stands in for it
@@ -494,8 +495,8 @@ internal fun readingAnchorOf(scroll: Int, rows: SongRows, readingTop: Int = 0): 
  * The scroll position that puts the reader back where [anchor] says they were among [rows] laid out anew: on the same
  * line under [readingTop], as far into it as they were in proportion to its height, where the new layout still pages
  * through that line in a single column; otherwise past the stop that now holds the section theirs started with, as far
- * as they were past theirs. Never so far into a row that its content ends above the bottom of the viewport, and in the
- * header no further down than the first stop. Null before the song has been laid out.
+ * as they were past theirs. Never so far into a row that its content ends above the bottom of the viewport, and above
+ * the first stop no further down than it. Null before the song has been laid out.
  */
 internal fun anchoredScrollOffset(anchor: ReadingAnchor, rows: SongRows, viewportHeight: Int, maxValue: Int, readingTop: Int = 0): Int? {
     if (rows.stepOffsets.isEmpty() || rows.stepSections.size != rows.stepOffsets.size) return null

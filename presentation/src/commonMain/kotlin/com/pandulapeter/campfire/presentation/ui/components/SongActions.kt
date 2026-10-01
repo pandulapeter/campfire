@@ -259,10 +259,10 @@ private val ACTION_BUTTON_CONTAINER_SIZE = 40.dp
  * only thing on a row that says the actions exist: the long press that opens the same menu on the songs screen
  * announces itself to nobody, so it is a shortcut for the reader who already knows about it rather than the way in.
  *
- * The setlist assignments sheet is not among the entries: where the song is read as part of the library it has a
- * [SetlistAssignmentsButton] of its own in front of these, and where it is read through a setlist it is not offered
- * at all, since a sheet of every setlist next to a row's own "Remove from setlist" made two ways of leaving the setlist
- * that read as two different things.
+ * The setlist assignments sheet is not among the entries: where the song is read as part of the library, and on the
+ * song details screen wherever it was opened from, it has a [SetlistAssignmentsButton] of its own in front of these,
+ * and on a setlist row it is not offered at all, since a sheet of every setlist next to the row's own "Remove from
+ * setlist" made two ways of leaving the setlist that read as two different things.
  *
  * @param modifier Put on the whole row of buttons, whose largest width is the room the actions may take.
  * @param state Whether the menu is open, hoisted by the songs screen, whose rows also open it from a long press.
@@ -348,12 +348,15 @@ internal fun SongActions(
 }
 
 /**
- * The way into the setlist assignments sheet, put in front of [SongActions] wherever a song is read as part of
- * the library - and only there: filing songs into setlists is what the library is mostly visited for, while a song
- * read through a setlist is already filed, and leaves it through its row's own menu.
+ * The way into the setlist assignments sheet, put in front of [SongActions] on every row of the songs screen and on
+ * the song details screen, since filing songs into setlists is what the library is mostly visited for, and the details
+ * screen offers it the same way whether it was opened from the library or from a setlist. A setlist row has no such
+ * button: the song there is already filed, and leaves the setlist through the row's own menu.
  *
  * @param isInSetlist Whether the song is in at least one setlist, which fills the star. Passed in rather than collected
  *   here, since the button is in every row of the song list and one collection per screen answers them all.
+ * @param setlistFileName The setlist the song is being read through, whose box the sheet shows but does not let go
+ *   of: taking the song out of the setlist it is being read in would pull the screen out from under the reader.
  */
 @Composable
 internal fun SetlistAssignmentsButton(
@@ -361,9 +364,10 @@ internal fun SetlistAssignmentsButton(
     viewModel: CampfireViewModel,
     song: Song,
     isInSetlist: Boolean,
+    setlistFileName: String? = null,
 ) = IconButton(
     modifier = modifier,
-    onClick = { viewModel.showDialog(CampfireViewModel.DialogType.SetlistPicker(song)) },
+    onClick = { viewModel.showDialog(CampfireViewModel.DialogType.SetlistPicker(song = song, setlistFileName = setlistFileName)) },
 ) {
     // Both stars are drawn on top of each other and the one being left fades out as the other fades in, the pair turning
     // clockwise by two fifths of a turn meanwhile, whichever way the star is going: a star has five points, so the turn

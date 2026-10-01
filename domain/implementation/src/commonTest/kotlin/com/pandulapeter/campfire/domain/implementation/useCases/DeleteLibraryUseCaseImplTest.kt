@@ -184,6 +184,8 @@ class DeleteLibraryUseCaseImplTest {
             chordSpelling = UserPreferences.ChordSpelling.Default,
             transpositions = mapOf("foo.cho" to 2),
             foldedSections = mapOf("foo.cho" to setOf("Chorus")),
+            isSongInfoFolded = false,
+            foldedSongInfoSections = emptySet(),
             tagMatchMode = UserPreferences.MatchMode.ANY,
             languageMatchMode = UserPreferences.MatchMode.ANY,
         )

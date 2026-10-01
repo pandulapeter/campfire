@@ -53,13 +53,11 @@ internal fun SectionGrid.expandedTo(unitSections: IntArray) = SectionGrid(
 internal fun emptyGrid() = SectionGrid(rows = IntArray(0), columns = IntArray(0), columnCounts = IntArray(0))
 
 /**
- * Whether a grid of [rowCount] rows, [gridHeight] tall and found to fit the [availableHeight] on its own ([fits]), still fits
- * it under a header [headerHeight] tall - which is when the song does not scroll, and so has no buttons to step through
- * it that its lines would have to leave room for. Only a single row can: several rows read across are stepped through
- * however short they are. The header is counted as the song's scroll counts it for a single row, with no gap after it.
+ * Whether a grid of [rowCount] rows, found to fit the height available to it ([fits]), is read without stepping through
+ * it - which is when the song does not scroll, and so has no buttons that its lines would have to leave room for. Only a
+ * single row can: several rows read across are stepped through however short they are.
  */
-internal fun fitsUnderHeader(fits: Boolean, rowCount: Int, headerHeight: Int, gridHeight: Int, availableHeight: Int) =
-    fits && rowCount == 1 && headerHeight.toLong() + gridHeight <= availableHeight
+internal fun isReadWithoutStepping(fits: Boolean, rowCount: Int) = fits && rowCount == 1
 
 /**
  * The y position of every section, the total height of the layout, the y positions (centers) of the row gaps and where

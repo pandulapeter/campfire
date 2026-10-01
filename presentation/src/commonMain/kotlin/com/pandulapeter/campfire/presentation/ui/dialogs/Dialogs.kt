@@ -329,6 +329,11 @@ internal fun CampfireDialogs(
             dialog = dialog,
         )
 
+        is CampfireViewModel.DialogType.SongMetadata -> SongMetadataDialog(
+            viewModel = viewModel,
+            dialog = dialog,
+        )
+
         is CampfireViewModel.DialogType.SongLinks -> SongLinksDialog(
             viewModel = viewModel,
             dialog = dialog,
@@ -350,7 +355,7 @@ internal fun CampfireDialogs(
             confirmLabel = stringResource(Res.string.cover_art_search_remove),
             onDismiss = viewModel::dismissDialog,
             onConfirm = {
-                viewModel.setSongCoverArt(fileName = dialog.song.fileName, url = null)
+                viewModel.setSongCoverArt(fileName = dialog.song.fileName, isEditorDraft = dialog.isEditorDraft, url = null)
                 viewModel.dismissDialog()
             },
         )
@@ -833,11 +838,11 @@ private fun DeleteLibraryDialog(
 /**
  * The [FocusRequester] of the field a dialog opens onto. A dialog that is there to be typed into puts the caret in
  * its first field rather than asking for one more tap, which on a touch platform is also what brings the keyboard
- * up with it - and every dialog here that holds a text field holds it as the first thing under the title, so there
- * is only ever the one field to open on. The song picker's sheet opens onto its search field the same way.
+ * up with it - and every such dialog here holds that field as the first thing under the title, so there is only ever
+ * the one field to open on. The song metadata form is the exception, opening on none of its fields. The song picker's sheet opens onto its search field the same way.
  */
 @Composable
-private fun rememberFirstFieldFocusRequester(): FocusRequester {
+internal fun rememberFirstFieldFocusRequester(): FocusRequester {
     val focusRequester = remember { FocusRequester() }
     LaunchedEffect(Unit) { focusRequester.requestFocus() }
     return focusRequester
@@ -1282,7 +1287,7 @@ private fun SongTagsDialog(
                         spelledTag != null -> if (spelledTag in selectedTags) selectedTags else selectedTags + spelledTag
                         else -> selectedTags + typedTag
                     }
-                    viewModel.setSongTags(fileName = dialog.song.fileName, tags = tags, offeredTags = offeredTags)
+                    viewModel.setSongTags(fileName = dialog.song.fileName, isEditorDraft = dialog.isEditorDraft, tags = tags, offeredTags = offeredTags)
                     viewModel.dismissDialog()
                 },
             ) { Text(stringResource(Res.string.done)) }
@@ -1420,7 +1425,7 @@ private fun SongLanguagesDialog(
         confirmButton = {
             TextButton(
                 onClick = {
-                    viewModel.setSongLanguages(fileName = dialog.song.fileName, codes = selectedCodes.toList())
+                    viewModel.setSongLanguages(fileName = dialog.song.fileName, isEditorDraft = dialog.isEditorDraft, codes = selectedCodes.toList())
                     viewModel.dismissDialog()
                 },
             ) { Text(stringResource(Res.string.done)) }
@@ -1492,6 +1497,7 @@ private fun SetlistPicker(
                     CheckboxListItem(
                         title = setlist.title,
                         isChecked = setlist.entries.any { it.songFileName == dialog.song.fileName },
+                        isEnabled = setlist.fileName != dialog.setlistFileName,
                         onCheckedChange = { isChecked ->
                             if (isChecked) {
                                 viewModel.addSongToSetlist(songFileName = dialog.song.fileName, setlistFileName = setlist.fileName)

@@ -40,7 +40,21 @@ sealed interface ChordProBlock {
         val blocks: List<ChordProBlock> = emptyList(),
     ) : ChordProBlock
 
-    data class Comment(val text: String, val style: CommentStyle) : ChordProBlock
+    /**
+     * `{comment}` and its styled forms. A comment written inside a section is a block of its own like any other, since
+     * the section's lines are cut around it, so where it stood is recorded with it: a viewer folds it away with its
+     * section and leaves the ones between sections alone.
+     */
+    data class Comment(
+        val text: String,
+        val style: CommentStyle,
+        val placement: CommentPlacement = CommentPlacement.BETWEEN_SECTIONS,
+        /**
+         * Whether it was written inside a `{start_of_tab}` or a `{start_of_grid}` that has a line of its own, which
+         * makes it a note about the tablature or the grid: it says nothing where they are not shown.
+         */
+        val isInTabOrGrid: Boolean = false,
+    ) : ChordProBlock
 
     /**
      * `{transpose: N}` somewhere after the song has begun: from here on the chords are read [semitones] away from
@@ -75,3 +89,22 @@ sealed interface SectionType {
 }
 
 enum class CommentStyle { PLAIN, ITALIC, BOX }
+
+/** Which section a [ChordProBlock.Comment] was written in. */
+enum class CommentPlacement {
+
+    /**
+     * Outside every environment, or among lines that are in none, where it belongs to no section; also inside a
+     * section that ended up with no line, since there is nothing for it to belong to.
+     */
+    BETWEEN_SECTIONS,
+
+    /** Inside a section before its first line, so it belongs to the [ChordProBlock.Section] that follows it. */
+    START_OF_SECTION,
+
+    /**
+     * Inside a section after a line of it, so it belongs to the [ChordProBlock.Section] before it — and to the
+     * continuation after it, where one follows.
+     */
+    IN_SECTION,
+}

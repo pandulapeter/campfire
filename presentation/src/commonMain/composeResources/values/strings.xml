@@ -302,7 +302,7 @@
     <string name="song_editor_insert_link">Link</string>
     <string name="song_editor_transpose_text_up">Transpose text up</string>
     <string name="song_editor_transpose_text_down">Transpose text down</string>
-    <string name="song_editor_revert">Revert</string>
+    <string name="song_editor_revert">Revert all changes</string>
     <string name="song_editor_revert_confirmation">Would you like to go back to the last saved version of this song? Everything you have written since will be lost.</string>
     <string name="song_editor_unsaved_changes">Unsaved changes</string>
     <string name="song_editor_unsaved_changes_confirmation">Would you like to save what you have written before leaving the editor?</string>
@@ -346,6 +346,20 @@
     <string name="song_details_tags_manage">Edit tags</string>
     <string name="song_details_tags_search">Find or create a tag</string>
     <string name="song_details_tag_create">Create the \"%1$s\" tag</string>
+    <string name="song_details_metadata_edit">Edit metadata</string>
+    <string name="song_details_song_info">About the song</string>
+    <plurals name="song_details_info_tags">
+        <item quantity="one">Tag</item>
+        <item quantity="other">Tags</item>
+    </plurals>
+    <plurals name="song_details_info_languages">
+        <item quantity="one">Language</item>
+        <item quantity="other">Languages</item>
+    </plurals>
+    <plurals name="song_details_info_links">
+        <item quantity="one">Link</item>
+        <item quantity="other">Links</item>
+    </plurals>
     <string name="song_details_links_edit">Edit links</string>
     <string name="song_details_link_name">Name (optional)</string>
     <string name="song_details_link_duplicate">This address is already in the list</string>
@@ -353,6 +367,8 @@
     <string name="song_details_remove_cover_art_confirmation">Remove the cover art from %1$s?</string>
     <string name="song_details_link_add">Add link</string>
     <string name="song_details_link_remove">Remove the link to %1$s</string>
+    <string name="song_details_link_move_up">Move the link to %1$s up</string>
+    <string name="song_details_link_move_down">Move the link to %1$s down</string>
     <string name="song_details_link_address">Web address</string>
     <string name="song_details_link_address_hint">A video, a recording, a tab or any other page about the song</string>
     <string name="song_details_language">Language</string>

@@ -11,6 +11,7 @@ package com.pandulapeter.campfire.chordpro
 
 import com.pandulapeter.campfire.chordpro.model.ChordProBlock
 import com.pandulapeter.campfire.chordpro.model.ChordProLine
+import com.pandulapeter.campfire.chordpro.model.CommentPlacement
 import com.pandulapeter.campfire.chordpro.model.CommentStyle
 import com.pandulapeter.campfire.chordpro.model.GridToken
 import com.pandulapeter.campfire.chordpro.model.SectionType
@@ -239,11 +240,65 @@ class ChordProParserTest {
         assertEquals(
             listOf(
                 ChordProBlock.Section(SectionType.Chorus, null, listOf(ChordProParser.parseLyrics("[C]one"))),
-                ChordProBlock.Comment("softly", CommentStyle.PLAIN),
+                ChordProBlock.Comment("softly", CommentStyle.PLAIN, CommentPlacement.IN_SECTION),
                 ChordProBlock.Section(SectionType.Chorus, null, listOf(ChordProParser.parseLyrics("[G]two")), isContinuation = true),
             ),
             (blocks.last() as ChordProBlock.ChorusRecall).blocks,
         )
+    }
+
+    @Test
+    fun `a recall carries the comments the chorus opens and ends with`() {
+        val blocks = ChordProParser.parse("{soc}\n{c: softly}\n[C]one\n{c: x2}\n{eoc}\n{c: then}\n\n{chorus}").blocks
+
+        assertEquals(
+            listOf("softly", "x2"),
+            (blocks.last() as ChordProBlock.ChorusRecall).blocks.filterIsInstance<ChordProBlock.Comment>().map { it.text },
+        )
+    }
+
+    @Test
+    fun `a comment records which section it was written in`() {
+        fun placements(text: String) = ChordProParser.parse(text).blocks.filterIsInstance<ChordProBlock.Comment>().map { it.text to it.placement }
+
+        assertEquals(
+            listOf(
+                "before" to CommentPlacement.BETWEEN_SECTIONS,
+                "opens" to CommentPlacement.START_OF_SECTION,
+                "cuts" to CommentPlacement.IN_SECTION,
+                "ends" to CommentPlacement.IN_SECTION,
+                "after" to CommentPlacement.BETWEEN_SECTIONS,
+            ),
+            placements("{c: before}\n{sov}\n{c: opens}\nla\n{c: cuts}\nla\n{c: ends}\n{eov}\n{c: after}"),
+        )
+        // The lines of an implicit paragraph are in no section, and the tab environment around one was.
+        assertEquals(
+            listOf("lyrics" to CommentPlacement.BETWEEN_SECTIONS, "tab" to CommentPlacement.IN_SECTION, "after tab" to CommentPlacement.BETWEEN_SECTIONS),
+            placements("la\n{c: lyrics}\nla\n\n{sot}\ne|-0-|\n{c: tab}\n{eot}\n{c: after tab}\nla"),
+        )
+        // Blank lines are not a part of the section yet, so the comment after them still opens it.
+        val blankFirst = ChordProParser.parse("{sov}\n\n{c: opens}\nla\n{eov}").blocks
+        assertEquals(CommentPlacement.START_OF_SECTION, (blankFirst[0] as ChordProBlock.Comment).placement)
+        assertFalse((blankFirst[1] as ChordProBlock.Section).isContinuation)
+    }
+
+    @Test
+    fun `a comment in a section with no line belongs to no section`() {
+        assertEquals(
+            ChordProBlock.Comment("instrumental", CommentStyle.PLAIN),
+            ChordProParser.parse("{sov: Solo}\n{c: instrumental}\n{eov}\n\nla").blocks.first(),
+        )
+    }
+
+    @Test
+    fun `a comment records whether it was a note about a tab or a grid`() {
+        fun comment(text: String) = ChordProParser.parse(text).blocks.filterIsInstance<ChordProBlock.Comment>().single()
+
+        assertTrue(comment("{sov}\nla\n{sot}\n{c: x}\ne|-0-|\n{eot}\n{eov}").isInTabOrGrid)
+        assertTrue(comment("{sov}\n{sog}\n| Am . |\n{c: x}\n{eog}\nla\n{eov}").isInTabOrGrid)
+        assertFalse(comment("{sov}\n{sot}\ne|-0-|\n{eot}\n{c: x}\nla\n{eov}").isInTabOrGrid)
+        // An environment with no line in it has nothing the comment would be hidden with.
+        assertFalse(comment("{sov}\nla\n{sot}\n{c: x}\n{eot}\nla\n{eov}").isInTabOrGrid)
     }
 
     @Test
@@ -316,7 +371,7 @@ class ChordProParserTest {
         val blocks = ChordProParser.parse("{start_of_chorus}\n{c: Verse 1}\n[C]a\n{end_of_chorus}").blocks
 
         assertEquals(2, blocks.size)
-        assertEquals(ChordProBlock.Comment("Verse 1", CommentStyle.PLAIN), blocks[0])
+        assertEquals(ChordProBlock.Comment("Verse 1", CommentStyle.PLAIN, CommentPlacement.START_OF_SECTION), blocks[0])
         assertEquals(SectionType.Chorus, (blocks[1] as ChordProBlock.Section).type)
     }
 
@@ -465,7 +520,7 @@ class ChordProParserTest {
 
         assertEquals(3, blocks.size)
         assertEquals(ChordProLine.Tab("e|---0---2---|", label = "Riff"), (blocks[0] as ChordProBlock.Section).lines.single())
-        assertEquals(ChordProBlock.Comment("Repeat x2", CommentStyle.PLAIN), blocks[1])
+        assertEquals(ChordProBlock.Comment("Repeat x2", CommentStyle.PLAIN, CommentPlacement.IN_SECTION, isInTabOrGrid = true), blocks[1])
         val secondSection = blocks[2] as ChordProBlock.Section
         assertEquals("Riff", secondSection.label)
         assertEquals(ChordProLine.Tab("e|---3---5---|", continuesEnvironment = true, label = "Riff"), secondSection.lines[0])
@@ -489,7 +544,7 @@ class ChordProParserTest {
     fun `a legacy heading name inside a tab environment stays a comment`() {
         val blocks = ChordProParser.parse("{sot}\ne|---0---|\n{c: Solo}\ne|---3---|\n{eot}").blocks
 
-        assertEquals(ChordProBlock.Comment("Solo", CommentStyle.PLAIN), blocks[1])
+        assertEquals(ChordProBlock.Comment("Solo", CommentStyle.PLAIN, CommentPlacement.IN_SECTION, isInTabOrGrid = true), blocks[1])
         assertEquals(ChordProLine.Tab("e|---3---|", continuesEnvironment = true), (blocks[2] as ChordProBlock.Section).lines.single())
     }
 
@@ -787,7 +842,7 @@ class ChordProParserTest {
         assertEquals(listOf(ChordProLine.Lyrics("X:1", emptyList()), ChordProLine.Lyrics("[CEG]2 [A2B] |", emptyList())), section.lines)
         assertFalse(ChordProParser.summarize("{start_of_ly}\n[c e g]\n{end_of_ly}").hasChords)
         val textBlock = ChordProParser.parse("{start_of_textblock}\nfirst\n{comment: Chorus}\nsecond\n{end_of_textblock}").blocks
-        assertEquals(ChordProBlock.Comment("Chorus", CommentStyle.PLAIN), textBlock[1])
+        assertEquals(ChordProBlock.Comment("Chorus", CommentStyle.PLAIN, CommentPlacement.IN_SECTION), textBlock[1])
     }
 
     @Test
@@ -821,7 +876,7 @@ class ChordProParserTest {
         val tab = ChordProParser.parse("{sot}\ne|-3-|\n{highlight: x}\ne|-5-|\n{eot}").blocks
         assertEquals(3, tab.size)
         assertEquals(ChordProLine.Tab("e|-3-|"), (tab[0] as ChordProBlock.Section).lines.single())
-        assertEquals(ChordProBlock.Comment("x", CommentStyle.PLAIN), tab[1])
+        assertEquals(ChordProBlock.Comment("x", CommentStyle.PLAIN, CommentPlacement.IN_SECTION, isInTabOrGrid = true), tab[1])
         assertEquals(ChordProLine.Tab("e|-5-|", continuesEnvironment = true), (tab[2] as ChordProBlock.Section).lines.single())
     }
 

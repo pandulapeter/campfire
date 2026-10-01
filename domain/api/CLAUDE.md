@@ -57,6 +57,8 @@ paths, `Is*` for a question with a yes or no answer (`IsFirstRun`), or a verb fo
   name the language `en` does.
 - `SetChordProLinksUseCase` is the same for every link of a song at once, each a `ChordProLink` with an address and
   optional name: unchanged lines stay as written, renamed ones change in place, and new links follow the others.
+- `SetChordProMetadataUseCase` is the same for the single-valued header fields that say what a song is (title, artist, album, year, …),
+  given as a map of the fields to change: each is rewritten in place, written into the header, or removed when blank.
 - `SetChordProCoverArtUseCase` is the same for the cover, a song having one: it rewrites the cover line in place,
   writes one after the album, or takes it off for null.
 - `GetCoverArtUseCase` and `SearchCoverArtUseCase` are the covers themselves: the bytes of one, from the device's copy

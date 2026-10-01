@@ -130,7 +130,7 @@ internal fun CoverArtSearchSheet(
     dialog: CampfireViewModel.DialogType.CoverArtSearch,
 ) {
     val searchState by viewModel.coverArtSearch.collectAsStateWithLifecycle()
-    val initialQuery = remember(dialog.song.fileName) { viewModel.coverArtQueryOf(dialog.song) }
+    val initialQuery = remember(dialog.song.fileName) { viewModel.coverArtQueryOf(song = dialog.song, isEditorDraft = dialog.isEditorDraft) }
     var mode by rememberSaveable { mutableStateOf(CoverArtSheetMode.SEARCH) }
     var artist by rememberSaveable { mutableStateOf(initialQuery.artist) }
     var album by rememberSaveable { mutableStateOf(initialQuery.album) }
@@ -218,11 +218,12 @@ internal fun CoverArtSearchSheet(
             },
             shouldShowAttribution = mode == CoverArtSheetMode.SEARCH,
             onRemove = {
-                viewModel.showDialog(CampfireViewModel.DialogType.RemoveSongCoverArt(dialog.song))
+                viewModel.showDialog(CampfireViewModel.DialogType.RemoveSongCoverArt(song = dialog.song, isEditorDraft = dialog.isEditorDraft))
             },
             onSave = {
                 viewModel.setSongCoverArt(
                     fileName = dialog.song.fileName,
+                    isEditorDraft = dialog.isEditorDraft,
                     url = when (mode) {
                         CoverArtSheetMode.SEARCH -> selectedUrl
                         CoverArtSheetMode.ADDRESS -> usableAddress

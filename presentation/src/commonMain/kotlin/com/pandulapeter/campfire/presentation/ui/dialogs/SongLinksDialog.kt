@@ -9,16 +9,19 @@
  */
 package com.pandulapeter.campfire.presentation.ui.dialogs
 
-import androidx.compose.animation.animateContentSize
+import androidx.compose.foundation.gestures.animateScrollBy
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.LazyListState
+import androidx.compose.foundation.lazy.itemsIndexed
+import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.text.KeyboardOptions
-import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -30,9 +33,11 @@ import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.saveable.listSaver
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
+import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.input.KeyboardType
@@ -44,115 +49,243 @@ import com.pandulapeter.campfire.presentation.resources.Res
 import com.pandulapeter.campfire.presentation.resources.cancel
 import com.pandulapeter.campfire.presentation.resources.ic_add
 import com.pandulapeter.campfire.presentation.resources.ic_delete
+import com.pandulapeter.campfire.presentation.resources.ic_move_down
+import com.pandulapeter.campfire.presentation.resources.ic_move_up
 import com.pandulapeter.campfire.presentation.resources.save
 import com.pandulapeter.campfire.presentation.resources.song_details_link_add
 import com.pandulapeter.campfire.presentation.resources.song_details_link_address
 import com.pandulapeter.campfire.presentation.resources.song_details_link_address_hint
 import com.pandulapeter.campfire.presentation.resources.song_details_link_duplicate
+import com.pandulapeter.campfire.presentation.resources.song_details_link_move_down
+import com.pandulapeter.campfire.presentation.resources.song_details_link_move_up
 import com.pandulapeter.campfire.presentation.resources.song_details_link_name
 import com.pandulapeter.campfire.presentation.resources.song_details_link_remove
 import com.pandulapeter.campfire.presentation.resources.song_details_links_edit
 import com.pandulapeter.campfire.presentation.ui.CampfireViewModel
+import com.pandulapeter.campfire.presentation.ui.components.fadingVerticalEdges
 import com.pandulapeter.campfire.presentation.ui.components.textResource
 import com.pandulapeter.campfire.presentation.ui.screens.songDetails.linkLabel
+import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.launch
 import org.jetbrains.compose.resources.painterResource
 
 /**
- * All links are edited as a draft and written together on Save, so removing a row or changing a label is reversible
- * until the dialog is confirmed. URL and name strings are saved rather than model objects for Android's saved state.
+ * All links are edited as a draft and written together on Save, so removing or moving a row or changing a label is
+ * reversible until the dialog is confirmed. The order of the rows is the order the file lists the links in, and so
+ * the one the song details card shows them in. URL and name strings are saved rather than model objects for Android's saved state.
+ * The rows are a lazy list keyed by [SongLinkRow.id] rather than by position or address, since two rows may hold the
+ * same address while it is being typed: that key is what lets a moved row slide to its new place instead of the two
+ * rows swapping their contents where they stand.
  */
 @Composable
 internal fun SongLinksDialog(
     viewModel: CampfireViewModel,
     dialog: CampfireViewModel.DialogType.SongLinks,
 ) {
-    var links by rememberSaveable(dialog.song.fileName, stateSaver = songLinksSaver) { mutableStateOf(dialog.links) }
+    var rows by rememberSaveable(dialog.song.fileName, stateSaver = songLinkRowsSaver) { mutableStateOf(dialog.links.toRows()) }
+    val listState = rememberLazyListState()
+    val coroutineScope = rememberCoroutineScope()
+    fun move(index: Int, target: Int) {
+        val row = rows[index]
+        val size = listState.layoutInfo.visibleItemsInfo.firstOrNull { it.key == row.id }?.size ?: 0
+        rows = rows.swapped(index, target)
+        coroutineScope.launch { listState.reveal(key = row.id, index = target + ROWS_START_INDEX, size = size) }
+    }
+    fun add() {
+        val row = SongLinkRow(id = (rows.maxOfOrNull { it.id } ?: -1) + 1, link = ChordProLink(url = ""))
+        val size = listState.layoutInfo.visibleItemsInfo.lastOrNull { it.key is Int }?.size ?: 0
+        rows = rows + row
+        coroutineScope.launch { listState.reveal(key = row.id, index = rows.lastIndex + ROWS_START_INDEX, size = size) }
+    }
+    val links = rows.map { it.link }
     val urls = links.map { ChordProLinks.usableUrl(it.url) }
     val canSave = urls.all { it != null } && urls.distinct().size == urls.size
     AlertDialog(
         onDismissRequest = viewModel::dismissDialog,
         title = { SongDialogTitle(title = stringResource(Res.string.song_details_links_edit), song = dialog.song) },
         text = {
-            Column(
-                modifier = Modifier.fillMaxWidth().heightIn(max = 420.dp).verticalScroll(rememberScrollState()).animateContentSize(),
+            LazyColumn(
+                modifier = Modifier.fillMaxWidth().heightIn(max = 420.dp).fadingVerticalEdges(listState),
+                state = listState,
                 verticalArrangement = Arrangement.spacedBy(12.dp),
             ) {
-                Text(
-                    text = stringResource(Res.string.song_details_link_address_hint),
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                )
-                links.forEachIndexed { index, link ->
-                    SongLinkFields(
-                        link = link,
-                        isDuplicate = urls[index] != null && urls.count { it == urls[index] } > 1,
-                        onChange = { updated -> links = links.toMutableList().apply { this[index] = updated } },
-                        onRemove = { links = links.filterIndexed { other, _ -> other != index } },
+                item(key = HINT_KEY) {
+                    Text(
+                        text = stringResource(Res.string.song_details_link_address_hint),
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
                     )
                 }
-                TextButton(onClick = { links = links + ChordProLink(url = "") }) {
-                    Icon(painter = painterResource(Res.drawable.ic_add), contentDescription = null)
-                    Text(modifier = Modifier.padding(start = 8.dp), text = stringResource(Res.string.song_details_link_add))
+                itemsIndexed(
+                    items = rows,
+                    key = { _, row -> row.id },
+                ) { index, row ->
+                    SongLinkFields(
+                        modifier = Modifier.animateItem(),
+                        link = row.link,
+                        isDuplicate = urls[index] != null && urls.count { it == urls[index] } > 1,
+                        onChange = { updated -> rows = rows.map { if (it.id == row.id) it.copy(link = updated) else it } },
+                        onMoveUp = if (index > 0) ({ move(index, index - 1) }) else null,
+                        onMoveDown = if (index < rows.lastIndex) ({ move(index, index + 1) }) else null,
+                        onRemove = { rows = rows.filterNot { it.id == row.id } },
+                    )
                 }
             }
         },
+        // The whole button row is one slot, since AlertDialog only lays its buttons out at its end edge, and Add link
+        // belongs at the start of it, apart from the two that close the dialog.
         confirmButton = {
-            TextButton(
-                enabled = canSave,
-                onClick = {
-                    viewModel.setSongLinks(fileName = dialog.song.fileName, links = links, offeredLinks = dialog.links)
-                    viewModel.dismissDialog()
-                },
-            ) { Text(stringResource(Res.string.save)) }
+            Row(modifier = Modifier.fillMaxWidth()) {
+                TextButton(onClick = ::add) {
+                    Icon(painter = painterResource(Res.drawable.ic_add), contentDescription = null)
+                    Text(modifier = Modifier.padding(start = 8.dp), text = stringResource(Res.string.song_details_link_add))
+                }
+                Spacer(modifier = Modifier.weight(1f))
+                TextButton(onClick = viewModel::dismissDialog) { Text(stringResource(Res.string.cancel)) }
+                TextButton(
+                    enabled = canSave,
+                    onClick = {
+                        viewModel.setSongLinks(fileName = dialog.song.fileName, isEditorDraft = dialog.isEditorDraft, links = links, offeredLinks = dialog.links)
+                        viewModel.dismissDialog()
+                    },
+                ) { Text(stringResource(Res.string.save)) }
+            }
         },
-        dismissButton = { TextButton(onClick = viewModel::dismissDialog) { Text(stringResource(Res.string.cancel)) } },
     )
 }
 
+/**
+ * One card of the dialog. [id] means nothing outside the dialog and is not saved: a restored draft numbers its rows
+ * again, which is enough, since an id only has to stay the same for as long as the row is on screen.
+ */
+private data class SongLinkRow(
+    val id: Int,
+    val link: ChordProLink,
+)
+
+private fun List<ChordProLink>.toRows() = mapIndexed { index, link -> SongLinkRow(id = index, link = link) }
+
+private const val HINT_KEY = "hint"
+
+/** The rows come after the hint, which is the list's first item. */
+private const val ROWS_START_INDEX = 1
+
+/**
+ * @param onMoveUp Null for the first row, whose button is then shown disabled rather than left out, so that the
+ *   buttons of every row stay where they are and the field beside them keeps its width.
+ * @param onMoveDown The same for the last row.
+ */
 @Composable
 private fun SongLinkFields(
+    modifier: Modifier = Modifier,
     link: ChordProLink,
     isDuplicate: Boolean,
     onChange: (ChordProLink) -> Unit,
+    onMoveUp: (() -> Unit)?,
+    onMoveDown: (() -> Unit)?,
     onRemove: () -> Unit,
 ) = Surface(
+    modifier = modifier,
     shape = MaterialTheme.shapes.medium,
     color = MaterialTheme.colorScheme.surfaceContainer,
 ) {
-    Column(
-        modifier = Modifier.padding(12.dp),
-        verticalArrangement = Arrangement.spacedBy(8.dp),
+    Row(
+        modifier = Modifier.padding(start = 12.dp, top = 12.dp, bottom = 12.dp, end = 4.dp),
+        verticalAlignment = Alignment.CenterVertically,
     ) {
-        Row(verticalAlignment = Alignment.CenterVertically) {
+        Column(
+            modifier = Modifier.weight(1f),
+            verticalArrangement = Arrangement.spacedBy(8.dp),
+        ) {
             OutlinedTextField(
-                modifier = Modifier.weight(1f),
+                modifier = Modifier.fillMaxWidth(),
                 value = link.name.orEmpty(),
                 onValueChange = { name -> onChange(link.copy(name = name.filterNot { it == '{' || it == '}' || it == '\n' || it == '\r' })) },
                 label = { Text(stringResource(Res.string.song_details_link_name)) },
                 placeholder = { Text(linkLabel(link.url)) },
                 singleLine = true,
             )
+            OutlinedTextField(
+                modifier = Modifier.fillMaxWidth(),
+                value = link.url,
+                onValueChange = { url -> onChange(link.copy(url = url.filterNot { it == '\n' || it == '\r' })) },
+                label = { Text(stringResource(Res.string.song_details_link_address)) },
+                singleLine = true,
+                isError = isDuplicate || (link.url.isNotBlank() && ChordProLinks.usableUrl(link.url) == null),
+                supportingText = if (isDuplicate) ({ Text(stringResource(Res.string.song_details_link_duplicate)) }) else null,
+                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Uri),
+            )
+        }
+        val label = linkLabel(link)
+        Column {
+            IconButton(
+                enabled = onMoveUp != null,
+                onClick = { onMoveUp?.invoke() },
+            ) {
+                Icon(
+                    painter = painterResource(Res.drawable.ic_move_up),
+                    contentDescription = textResource(Res.string.song_details_link_move_up, label),
+                )
+            }
+            IconButton(
+                enabled = onMoveDown != null,
+                onClick = { onMoveDown?.invoke() },
+            ) {
+                Icon(
+                    painter = painterResource(Res.drawable.ic_move_down),
+                    contentDescription = textResource(Res.string.song_details_link_move_down, label),
+                )
+            }
             IconButton(onClick = onRemove) {
                 Icon(
                     painter = painterResource(Res.drawable.ic_delete),
-                    contentDescription = textResource(Res.string.song_details_link_remove, linkLabel(link)),
+                    contentDescription = textResource(Res.string.song_details_link_remove, label),
                 )
             }
         }
-        OutlinedTextField(
-            modifier = Modifier.fillMaxWidth(),
-            value = link.url,
-            onValueChange = { url -> onChange(link.copy(url = url.filterNot { it == '\n' || it == '\r' })) },
-            label = { Text(stringResource(Res.string.song_details_link_address)) },
-            singleLine = true,
-            isError = isDuplicate || (link.url.isNotBlank() && ChordProLinks.usableUrl(link.url) == null),
-            supportingText = if (isDuplicate) ({ Text(stringResource(Res.string.song_details_link_duplicate)) }) else null,
-            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Uri),
-        )
     }
 }
 
-private val songLinksSaver = listSaver<List<ChordProLink>, String>(
-    save = { links -> links.flatMap { listOf(it.url, it.name.orEmpty()) } },
-    restore = { values -> values.chunked(2).map { ChordProLink(url = it[0], name = it[1].takeIf(String::isNotEmpty)) } },
+/**
+ * Scrolls the dialog just far enough for the row that was moved or added to [index] to be wholly in view, so that the
+ * card the user is arranging stays under their eyes and the button they tapped stays under their finger for the next
+ * tap, and a new card, added at the end of a list that may reach past the dialog, is there to be typed into.
+ *
+ * The positions are the list's layout info rather than the card's own coordinates, since the card is placed at its
+ * animated position until its placement animation ends, while the layout info already holds the place it is going
+ * to; it is waited for here because the move has only been composed when this starts. A row moved past the edge of
+ * the list is not laid out at all, but it can only have gone one place past the last (or before the first) visible
+ * item, and [size] - what it measured before the move, or what the last row measures for a new one - says how far
+ * that reaches. A card taller than the list is aligned by its top.
+ */
+private suspend fun LazyListState.reveal(key: Any, index: Int, size: Int) {
+    val info = snapshotFlow { layoutInfo }.first { info ->
+        info.visibleItemsInfo.firstOrNull { it.key == key }.let { it == null || it.index == index }
+    }
+    val visibleItems = info.visibleItemsInfo
+    if (visibleItems.isEmpty()) return
+    val item = visibleItems.firstOrNull { it.key == key }
+    val top = when {
+        item != null -> item.offset
+        index < visibleItems.first().index -> visibleItems.first().offset - info.mainAxisItemSpacing - size
+        else -> visibleItems.last().offset + visibleItems.last().size + info.mainAxisItemSpacing
+    }
+    val bottom = top + (item?.size ?: size)
+    val distance = when {
+        top < info.viewportStartOffset -> top - info.viewportStartOffset
+        bottom > info.viewportEndOffset -> minOf(bottom - info.viewportEndOffset, top - info.viewportStartOffset)
+        else -> 0
+    }
+    if (distance != 0) {
+        animateScrollBy(distance.toFloat())
+    }
+}
+
+private fun <T> List<T>.swapped(first: Int, second: Int) = toMutableList().apply {
+    this[first] = this[second].also { this[second] = this[first] }
+}
+
+private val songLinkRowsSaver = listSaver<List<SongLinkRow>, String>(
+    save = { rows -> rows.flatMap { listOf(it.link.url, it.link.name.orEmpty()) } },
+    restore = { values -> values.chunked(2).map { ChordProLink(url = it[0], name = it[1].takeIf(String::isNotEmpty)) }.toRows() },
 )

@@ -823,6 +823,8 @@ internal fun SwitchListItem(
  * @param horizontalInset Room kept at either end inside the row, on top of the list item's own, so that a row that
  *   reaches past the content it sits in - the checklist of a dialog, whose rows light up to its edges - can still line
  *   its checkbox up with that content.
+ * @param isEnabled False for a box that cannot be changed from where the list was opened, which stays in its list,
+ *   dimmed, showing what it holds.
  */
 @Composable
 internal fun CheckboxListItem(
@@ -830,16 +832,18 @@ internal fun CheckboxListItem(
     title: String,
     description: String? = null,
     isChecked: Boolean,
+    isEnabled: Boolean = true,
     horizontalInset: Dp = 0.dp,
     onCheckedChange: (Boolean) -> Unit,
 ) = ListItem(
     modifier = modifier
-        .toggleable(value = isChecked, role = Role.Checkbox, onValueChange = onCheckedChange)
+        .toggleable(value = isChecked, enabled = isEnabled, role = Role.Checkbox, onValueChange = onCheckedChange)
+        .alpha(if (isEnabled) 1f else 0.5f)
         .padding(horizontal = horizontalInset),
     colors = ListItemDefaults.colors(containerColor = Color.Transparent),
     headlineContent = { Text(title) },
     supportingContent = description?.let { { Text(it) } },
-    leadingContent = { Checkbox(checked = isChecked, onCheckedChange = null) },
+    leadingContent = { Checkbox(checked = isChecked, enabled = isEnabled, onCheckedChange = null) },
 )
 
 @Composable

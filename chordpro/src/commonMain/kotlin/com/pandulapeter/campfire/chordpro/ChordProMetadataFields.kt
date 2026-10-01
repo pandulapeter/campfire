@@ -1,0 +1,95 @@
+/*
+ * This file is part of Campfire.
+ * Copyright (c) Pandula Péter 2017-2026.
+ * https://github.com/pandulapeter/campfire
+ *
+ * This Source Code Form is subject to the terms of the Mozilla Public License, v. 2.0.
+ * If a copy of the MPL was not distributed with this file, You can obtain one at
+ * https://mozilla.org/MPL/2.0/.
+ */
+package com.pandulapeter.campfire.chordpro
+
+import com.pandulapeter.campfire.chordpro.model.ChordProMetadata
+
+/**
+ * The directives that say what a song is — what it is called, who made it, what record it came out on — set directly in
+ * its text and leaving every other byte of it as it was, for the same reason [ChordProTags] does: what comes out of here
+ * is written back to the user's own file.
+ */
+object ChordProMetadataFields {
+
+    /**
+     * One directive a song says one thing with, under the name the app knows it by (see
+     * [ChordProSyntax.metadataKind]). The repeatable ones — tags, languages, links — and the cover have editors of
+     * their own, and how the song is played (`key`, `capo`, `tempo`, `time`) is part of writing it down, which is the
+     * editor's: a later `{key}` is a modulation in the body rather than a second value of the field.
+     */
+    enum class Field(val directiveName: String) {
+        TITLE("title"),
+        SUBTITLE("subtitle"),
+        ARTIST("artist"),
+        COMPOSER("composer"),
+        LYRICIST("lyricist"),
+        ALBUM("album"),
+        YEAR("year"),
+        DURATION("duration"),
+    }
+
+    /** What [metadata] says for [field], as text, or null where the song declares nothing for it. */
+    fun valueOf(metadata: ChordProMetadata, field: Field): String? = when (field) {
+        Field.TITLE -> metadata.title
+        Field.SUBTITLE -> metadata.subtitle
+        Field.ARTIST -> metadata.artist
+        Field.COMPOSER -> metadata.composer
+        Field.LYRICIST -> metadata.lyricist
+        Field.ALBUM -> metadata.album
+        Field.YEAR -> metadata.year
+        Field.DURATION -> metadata.duration
+    }?.takeIf { it.isNotBlank() }
+
+    /**
+     * Makes each value of [values] what the song says for its field, in one pass over [text]; a field not in [values]
+     * is left alone. The line the parser reads the value from is rewritten where it stands, in the spelling it was
+     * written in (`{t: …}` stays short, `{meta: title …}` stays a `meta`), and the other lines of the same field, which
+     * the parser reads past, are dropped. A field the song does not declare yet gets a line in the header, where
+     * [ChordProSyntax.metadataInsertionIndex] puts it. A null or blank value removes the field instead. A line break
+     * in a value is read as a space, since it would otherwise end the directive and leave the rest in the song as
+     * lyrics. A text that already says all of it returns unchanged.
+     */
+    fun set(text: String, values: Map<Field, String?>): String = values.entries.fold(text) { current, (field, value) ->
+        set(text = current, field = field, value = value)
+    }
+
+    private fun set(text: String, field: Field, value: String?): String {
+        val newValue = value?.replace('\r', ' ')?.replace('\n', ' ')?.trim()?.takeIf { it.isNotEmpty() }
+        val lines = ChordProSyntax.splitLines(text)
+        val indices = lines.indices.filter { lines[it].kind() == field.directiveName }
+        // The parser reads every one of these fields from its last line.
+        val effectiveIndex = indices.lastOrNull()
+        val kept = mutableListOf<String>()
+        lines.forEachIndexed { index, line ->
+            when {
+                index !in indices -> kept += line
+                index == effectiveIndex && newValue != null -> kept += if (line.value() == newValue) line else line.rewritten(field, newValue)
+            }
+        }
+        if (newValue != null && effectiveIndex == null) {
+            kept.add(ChordProSyntax.metadataInsertionIndex(kept, field.directiveName), "{${field.directiveName}: $newValue}")
+        }
+        return if (kept == lines) text else ChordProSyntax.joinLines(kept, text)
+    }
+
+    private fun String.directive() = ChordProSyntax.matchDirective(trim())
+
+    private fun String.kind() = directive()?.let(ChordProSyntax::metadataKind)
+
+    private fun String.value() = directive()?.let { ChordProSyntax.standardMeta(it) ?: it }?.value?.trim()
+
+    private fun String.rewritten(field: Field, value: String): String {
+        val indentation = takeWhile { it.isWhitespace() }
+        val name = directive()?.name ?: field.directiveName
+        return if (name == META) "$indentation{$META: ${field.directiveName} $value}" else "$indentation{$name: $value}"
+    }
+
+    private const val META = "meta"
+}

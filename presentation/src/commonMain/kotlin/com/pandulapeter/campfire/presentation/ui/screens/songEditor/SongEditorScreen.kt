@@ -91,8 +91,11 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.pandulapeter.campfire.chordpro.ChordProSummaryCache
 import com.pandulapeter.campfire.chordpro.ChordProTransposer
+import com.pandulapeter.campfire.chordpro.model.ChordProSummary
 import com.pandulapeter.campfire.chordpro.model.displayTitle
 import com.pandulapeter.campfire.data.model.domain.LibraryFiles
+import com.pandulapeter.campfire.data.model.domain.Song
+import com.pandulapeter.campfire.data.model.domain.normalizedToNfc
 import com.pandulapeter.campfire.data.model.domain.UserPreferences
 import com.pandulapeter.campfire.presentation.localization.stringResource
 import com.pandulapeter.campfire.presentation.resources.Res
@@ -141,6 +144,7 @@ import com.pandulapeter.campfire.presentation.ui.screens.songDetails.SongLyricsI
 import com.pandulapeter.campfire.presentation.ui.screens.songDetails.TextTranspositionControls
 import com.pandulapeter.campfire.presentation.ui.screens.songDetails.prepareSongLyrics
 import com.pandulapeter.campfire.presentation.ui.screens.songDetails.rememberDefaultSectionLabels
+import com.pandulapeter.campfire.presentation.ui.screens.songDetails.songMetadataActions
 import com.pandulapeter.campfire.presentation.ui.theme.LocalMonospaceFontFamily
 import com.pandulapeter.campfire.presentation.ui.theme.LocalSecondAccentColor
 import kotlinx.coroutines.Dispatchers
@@ -318,6 +322,7 @@ private fun LoadedSongEditor(
     val summary by remember(textFieldState) { derivedStateOf { summaryCache.summaryOf(text.value) } }
     val hasUnsavedChanges by viewModel.hasUnsavedEditorChanges.collectAsStateWithLifecycle()
     RevertOnRequest(viewModel = viewModel, fileName = destination.fileName, textFieldState = textFieldState, summaryCache = summaryCache)
+    EditOnRequest(viewModel = viewModel, fileName = destination.fileName, textFieldState = textFieldState, summaryCache = summaryCache)
     FollowFileWhileUntouched(viewModel = viewModel, fileName = destination.fileName, textFieldState = textFieldState, summaryCache = summaryCache)
     // The one way the file is ever written, reached from the app bar's button and from Ctrl / Cmd + S alike.
     val onSaveRequested = {
@@ -416,6 +421,13 @@ private fun LoadedSongEditor(
                 }
                 EditorMenu(
                     modifier = Modifier.overlappingAction(start = ACTION_BUTTON_OVERLAP, end = 0.dp),
+                    metadataActions = songMetadataActions(
+                        viewModel = viewModel,
+                        song = summary.toEditorSong(destination.fileName),
+                        hasText = true,
+                        isEditorDraft = true,
+                        isCoverArtEnabled = userPreferences?.isCoverArtEnabled == true,
+                    ),
                     canRevert = hasUnsavedChanges && hasSavedText && !isSaving,
                     onRevert = { viewModel.showDialog(CampfireViewModel.DialogType.RevertChanges) },
                 )
@@ -522,8 +534,8 @@ private fun LoadedSongEditor(
  *
  * The cover follows the text only once the typing has paused ([COVER_ART_DELAY]): every half-typed address that happens
  * to be a valid one would otherwise be a download of its own, and one that failed is not asked again for a while. A
- * cover taken out of the text goes at once, since that asks nothing. It takes no press here, unlike the details
- * screen's: the cover search writes into the file, under a draft that has not been saved.
+ * cover taken out of the text goes at once, since that asks nothing. It takes no press: the cover search is in the
+ * editor's menu, with the rest of what the song says about itself.
  */
 @Composable
 private fun EditorTitle(
@@ -827,11 +839,12 @@ private fun SongPreview(
 @Composable
 private fun EditorMenu(
     modifier: Modifier = Modifier,
+    metadataActions: List<ActionsMenuItem>,
     canRevert: Boolean,
     onRevert: () -> Unit,
 ) = ActionsMenu(
     modifier = modifier,
-    items = listOf(
+    items = metadataActions + listOf(
         ActionsMenuItem(
             title = stringResource(Res.string.song_editor_revert),
             icon = painterResource(Res.drawable.ic_refresh),
@@ -879,6 +892,47 @@ private fun RevertOnRequest(
         }
     }
 }
+
+/**
+ * Applies what the metadata dialogs opened from the editor's menu change, to the text being typed rather than to the
+ * file. It goes through the field's own editing, as a revert does, so that the change is one more step of the undo
+ * history and is written by Save together with everything else typed.
+ */
+@Composable
+private fun EditOnRequest(
+    viewModel: CampfireViewModel,
+    fileName: String,
+    textFieldState: TextFieldState,
+    summaryCache: ChordProSummaryCache,
+) = LaunchedEffect(textFieldState, fileName) {
+    viewModel.editorTextEdits.filter { it.fileName == fileName }.collect { request ->
+        val text = textFieldState.text.toString()
+        val edited = request.edit(text)
+        if (edited != text) {
+            summaryCache.clear()
+            textFieldState.replaceAll(edited)
+        }
+    }
+}
+
+/**
+ * The song as the text being typed describes it, which is what the metadata dialogs of the editor's menu are opened
+ * on: the library's entry describes the file, which the text may already have moved away from.
+ */
+private fun ChordProSummary.toEditorSong(fileName: String) = Song(
+    fileName = fileName,
+    title = metadata.displayTitle(fileName.removeSuffix(LibraryFiles.SONG_EXTENSION)),
+    artist = metadata.artist?.takeIf { it.isNotBlank() }.orEmpty(),
+    key = metadata.key?.takeIf { it.isNotBlank() },
+    transpose = metadata.transpose,
+    tags = metadata.tags.map { it.normalizedToNfc() }.distinctBy { it.lowercase() },
+    languages = metadata.languages,
+    coverArtUrl = metadata.coverArt,
+    hasChords = hasChords,
+    canUpdateFileName = false,
+    lastModified = 0,
+    size = 0,
+)
 
 /**
  * Keeps an editor that holds nothing of its own in step with its file. Once the file changes underneath it - a sync

@@ -162,11 +162,9 @@ class SectionGridTest {
     }
 
     @Test
-    fun aSongFitsTheScreenOnlyWhereItFitsUnderItsHeader() {
-        assertEquals(false, fitsUnderHeader(fits = true, rowCount = 1, headerHeight = 200, gridHeight = 650, availableHeight = 696))
-        assertEquals(true, fitsUnderHeader(fits = true, rowCount = 1, headerHeight = 0, gridHeight = 650, availableHeight = 696))
-        assertEquals(true, fitsUnderHeader(fits = true, rowCount = 1, headerHeight = 40, gridHeight = 650, availableHeight = 696))
-        assertEquals(false, fitsUnderHeader(fits = true, rowCount = 2, headerHeight = 0, gridHeight = 300, availableHeight = 696))
-        assertEquals(false, fitsUnderHeader(fits = false, rowCount = 1, headerHeight = 0, gridHeight = 300, availableHeight = 696))
+    fun onlyASingleRowThatFitsIsReadWithoutStepping() {
+        assertEquals(true, isReadWithoutStepping(fits = true, rowCount = 1))
+        assertEquals(false, isReadWithoutStepping(fits = true, rowCount = 2))
+        assertEquals(false, isReadWithoutStepping(fits = false, rowCount = 1))
     }
 }

@@ -229,6 +229,17 @@ internal fun SongDetailsScreen(
     val shouldShowChords = userPreferences?.isLyricsOnlyModeEnabled != true
     val isOneRowAtATimeEnabled = userPreferences?.isOneRowAtATimeEnabled == true
     val isCoverArtEnabled = userPreferences?.isCoverArtEnabled == true
+    val isSongInfoFolded = userPreferences?.isSongInfoFolded == true
+    val foldedSongInfoSections = userPreferences?.foldedSongInfoSections.orEmpty()
+    // Remembered, so that every page's lyrics skip on it until a fold actually changes.
+    val songInfoFolding = remember(isSongInfoFolded, foldedSongInfoSections, viewModel) {
+        SongInfoFolding(
+            isCardFolded = isSongInfoFolded,
+            foldedSections = foldedSongInfoSections,
+            onCardToggled = viewModel::toggleSongInfoFold,
+            onSectionToggled = viewModel::toggleSongInfoSectionFold,
+        )
+    }
     val chordSpelling = userPreferences?.chordSpelling ?: UserPreferences.ChordSpelling.Default
     val layoutDirection = LocalLayoutDirection.current
     val appBarWidth = settledWidth - contentPadding.calculateStartPadding(layoutDirection) - contentPadding.calculateEndPadding(layoutDirection)
@@ -238,12 +249,8 @@ internal fun SongDetailsScreen(
     val showsFontScaleInBar = isPerformanceModeEnabled && showsFontScaleInPerformanceBar(appBarWidth)
     // Whatever else the bar holds: the back button with the bar's own start padding, the bar's end padding, the cover
     // in front of the title (reserved for every song of the pager, so that paging to a song without one does not move
-    // the actions in and out of their menu), and the song's two buttons (the setlist assignments only for a song read
-    // from the library).
-    val otherAppBarContentWidth = APP_BAR_NAVIGATION_WIDTH + APP_BAR_END_PADDING + when {
-        destination.setlistFileName == null -> APP_BAR_ACTION_WIDTH * 2
-        else -> APP_BAR_ACTION_WIDTH
-    } + if (showsCoverInBar && songs.any { it.coverArtUrl != null }) APP_BAR_COVER_SIZE + APP_BAR_COVER_GAP else 0.dp
+    // the actions in and out of their menu), and the song's two buttons (the setlist assignments and the overflow).
+    val otherAppBarContentWidth = APP_BAR_NAVIGATION_WIDTH + APP_BAR_END_PADDING + APP_BAR_ACTION_WIDTH * 2 + if (showsCoverInBar && songs.any { it.coverArtUrl != null }) APP_BAR_COVER_SIZE + APP_BAR_COVER_GAP else 0.dp
     // The transposition comes out of the menu before any of the song's own actions do: it is what is reached for while a
     // song is being read, where the actions are about the file. The room is kept for it whether the song on screen has
     // chords or not, so that paging between the two does not move the actions in and out of their menu.
@@ -426,29 +433,26 @@ internal fun SongDetailsScreen(
                             chordSpelling = chordSpelling,
                         )
                     }
-                    // Only a song read from the library gets the button: one read from a setlist is already filed, and
-                    // is taken out of it from the setlist's own row.
-                    val isReadFromLibrary = destination.setlistFileName == null
-                    if (isReadFromLibrary) {
-                        SetlistAssignmentsButton(
-                            viewModel = viewModel,
-                            song = song,
-                            isInSetlist = song.fileName in songFileNamesInSetlists,
-                        )
-                    }
+                    SetlistAssignmentsButton(
+                        viewModel = viewModel,
+                        song = song,
+                        isInSetlist = song.fileName in songFileNamesInSetlists,
+                        setlistFileName = destination.setlistFileName,
+                    )
                     SongActions(
                         modifier = Modifier
-                            .overlappingAction(start = if (isReadFromLibrary) ACTION_BUTTON_OVERLAP else 0.dp, end = 0.dp)
+                            .overlappingAction(start = ACTION_BUTTON_OVERLAP, end = 0.dp)
                             .widthIn(max = songActionsMaxWidth),
                         viewModel = viewModel,
                         song = song,
                         isExpandable = true,
                         isEditAlwaysInMenu = true,
-                        isDeletable = isReadFromLibrary,
+                        isDeletable = destination.setlistFileName == null,
                         fileEditItems = songMetadataActions(
                             viewModel = viewModel,
                             song = song,
-                            text = songTexts[song.fileName],
+                            hasText = songTexts[song.fileName] != null,
+                            isEditorDraft = false,
                             isCoverArtEnabled = isCoverArtEnabled,
                         ),
                         menuFooter = {
@@ -552,6 +556,7 @@ internal fun SongDetailsScreen(
                         // setlist has the band play it.
                         foldedSections = userPreferences?.foldedSections?.get(song.fileName).orEmpty(),
                         onFoldToggled = { key -> viewModel.toggleSectionFold(songFileName = song.fileName, key = key) },
+                        songInfoFolding = songInfoFolding,
                         chordSpelling = chordSpelling,
                         settledWidth = settledWidth,
                         contentPadding = pageContentPadding,
@@ -728,6 +733,7 @@ private fun SongDetailsPage(
     isOneRowAtATimeEnabled: Boolean,
     foldedSections: Set<String>,
     onFoldToggled: (key: String) -> Unit,
+    songInfoFolding: SongInfoFolding,
     chordSpelling: UserPreferences.ChordSpelling,
     settledWidth: Dp,
     contentPadding: PaddingValues,
@@ -832,11 +838,12 @@ private fun SongDetailsPage(
                 fontScale = currentFontScale,
                 foldedSections = foldedSections,
                 onFoldToggled = onFoldToggled,
+                songInfoFolding = songInfoFolding,
                 onOpenLink = onOpenLink,
                 // The padding is inside the scroll, so a row is at the top of the viewport once the song is scrolled by
-                // its position plus the padding above it.
+                // its position plus the padding above it - all but the first, which is read at the top of the song.
                 onRowsPlaced = { rows ->
-                    val offsetRows = rows.offsetBy(topPaddingPx)
+                    val offsetRows = rows.belowPadding(topPaddingPx)
                     if (offsetRows != flingBehavior.rows) flingBehavior.rows = offsetRows
                 },
                 rowViewportHeight = maxHeight,
@@ -854,7 +861,7 @@ private fun SongDetailsPage(
 
 /**
  * The two buttons that step through the song being read: between its rows where it is read across the columns and
- * scrolls, however few of them there are, and between its sections everywhere else, the header above them counting as one,
+ * scrolls, however few of them there are, and between its sections everywhere else,
  * paging through a row or a section taller than the screen on the way ([isPagingBack], [isPagingForward], which only
  * change what they are called). The previous one is at the top of the end edge, the next one at its bottom, each there
  * only for as long as there is something of the song to step to in its direction. In a setlist they go on to the song beside this one where there is nothing left in their
@@ -863,7 +870,7 @@ private fun SongDetailsPage(
  * on every page sliding past with it.
  *
  * They are drawn over the song, which leaves them that edge of the screen wherever it has to be scrolled
- * (`SongLyrics`' `stepButtonInset`), so neither ever covers a line of it; the header leaves it too.
+ * (`SongLyrics`' `stepButtonInset`), so neither ever covers a line of it.
  */
 @Composable
 private fun BoxScope.StepButtons(
@@ -1110,7 +1117,7 @@ internal fun showsTranspositionInBar(appBarWidth: Dp, otherContentWidth: Dp) = a
     TRANSPOSITION_STEPPER_WIDTH >= MIN_TITLE_WIDTH_BESIDE_SONG_ACTIONS
 
 private const val LABEL_SEPARATOR = "·"
-private val PAGE_TOP_PADDING = 8.dp // Inside the scroll, above the header.
+private val PAGE_TOP_PADDING = 8.dp // Inside the scroll, above the first row, and read with it.
 private val STEP_BUTTON_SIZE = 40.dp
 private val STEP_BUTTON_GAP = 8.dp
 private val STEP_BUTTON_EDGE_MARGIN = 16.dp

@@ -13,6 +13,7 @@ import com.pandulapeter.campfire.chordpro.model.ChordProBlock
 import com.pandulapeter.campfire.chordpro.model.ChordProLine
 import com.pandulapeter.campfire.chordpro.model.ChordProMetadata
 import com.pandulapeter.campfire.chordpro.model.ChordProSong
+import com.pandulapeter.campfire.chordpro.model.CommentPlacement
 import com.pandulapeter.campfire.chordpro.model.CommentStyle
 import com.pandulapeter.campfire.chordpro.model.GridToken
 import com.pandulapeter.campfire.chordpro.model.SectionType
@@ -29,10 +30,12 @@ object ChordProSerializer {
         var index = 0
         while (index < song.blocks.size) {
             val block = song.blocks[index]
-            if (block is ChordProBlock.Section) {
+            val sectionStart = sectionStart(song.blocks, index)
+            if (sectionStart != null) {
                 // A section a comment, a break or a recall cut in two goes back into the one environment it was read
-                // from, with what cut it inside: written as two, it would come back as two sections.
-                val end = sectionEnd(song.blocks, index)
+                // from, with what cut it inside: written as two, it would come back as two sections. So do the
+                // comments it opens and ends with, which would otherwise come back as standing between sections.
+                val end = sectionEnd(song.blocks, sectionStart)
                 chunks += serializeSection(song.blocks.subList(index, end), song.metadata.transpose)
                 index = end
             } else {
@@ -43,7 +46,20 @@ object ChordProSerializer {
         return chunks.joinToString("\n\n")
     }
 
-    /** The index after the last continuation of the section at [start]; what follows its last piece is not its own. */
+    /**
+     * The index of the section that the block at [index] starts, which is either that section or the first of the
+     * comments it opens with, or null for a block that starts none.
+     */
+    private fun sectionStart(blocks: List<ChordProBlock>, index: Int): Int? {
+        var start = index
+        while ((blocks.getOrNull(start) as? ChordProBlock.Comment)?.placement == CommentPlacement.START_OF_SECTION) start++
+        return start.takeIf { blocks.getOrNull(it) is ChordProBlock.Section }
+    }
+
+    /**
+     * The index after the last continuation of the section at [start], and after the comments it ends with; whatever
+     * else follows its last piece is not its own.
+     */
     private fun sectionEnd(blocks: List<ChordProBlock>, start: Int): Int {
         var end = start + 1
         for (index in start + 1 until blocks.size) {
@@ -52,6 +68,7 @@ object ChordProSerializer {
             if (!block.isContinuation) break
             end = index + 1
         }
+        while ((blocks.getOrNull(end) as? ChordProBlock.Comment)?.placement == CommentPlacement.IN_SECTION) end++
         return end
     }
 
@@ -97,7 +114,7 @@ object ChordProSerializer {
 
     /** A section and its continuations, with the blocks that stood between them, as [sectionEnd] collects them. */
     private fun serializeSection(pieces: List<ChordProBlock>, wholeSongTranspose: Int): String {
-        val section = pieces.first() as ChordProBlock.Section
+        val section = pieces.first { it is ChordProBlock.Section } as ChordProBlock.Section
         // A paragraph has no environment of its own, so a label it carries came from the tablature or grid inside
         // it and has to go back onto that, where its lines do not carry it themselves; see `SectionBuilder.openLineMode`.
         if (section.type == SectionType.Paragraph) return serializeLines(pieces, wholeSongTranspose, section.label)
@@ -115,23 +132,43 @@ object ChordProSerializer {
      * The lines of every piece are walked together with the blocks between the pieces, in the order the file had them.
      * A block is written inside a tab or grid environment that the next line after it is still in, which is where the
      * parser found it: a Campfire 3 `{comment: Verse 2}` written outside the tab it stood in would come back as a heading.
+     * A comment says itself whether it was in one ([ChordProBlock.Comment.isInTabOrGrid]), and one that was is written
+     * inside the environment of the lines around it, opening it early where it came before the first of them.
      */
     private fun serializeLines(pieces: List<ChordProBlock>, wholeSongTranspose: Int, environmentLabel: String? = null) = buildList {
         val items: List<Any> = pieces.flatMap { piece -> if (piece is ChordProBlock.Section) piece.lines else listOf(piece) }
         var openEnvironment: String? = null
         var openEnvironmentLabel: String? = null
         var label = environmentLabel
+        // Whether the environment that is open was opened for a comment and has had no line yet, which is then the
+        // line that started it rather than one that starts another.
+        var isEnvironmentAwaitingLine = false
+        fun startEnvironment(line: ChordProLine, environment: String?) {
+            environment?.let { name ->
+                val environmentLabel = line.environmentLabel ?: label
+                add(environmentLabel?.let { "{start_of_$name: $it}" } ?: "{start_of_$name}")
+                openEnvironmentLabel = environmentLabel
+                label = null
+            }
+            openEnvironment = environment
+        }
         items.forEachIndexed { index, item ->
             if (item is ChordProBlock) {
                 val nextLine = items.subList(index + 1, items.size).firstOrNull { it is ChordProLine } as ChordProLine?
                 // A tab stays open across the block only where the tab line after it is still in the same environment.
-                val keepsEnvironmentOpen = when (openEnvironment) {
-                    "tab" -> (nextLine as? ChordProLine.Tab)?.continuesEnvironment == true
+                val keepsEnvironmentOpen = when {
+                    item is ChordProBlock.Comment -> item.isInTabOrGrid
+                    openEnvironment == "tab" -> (nextLine as? ChordProLine.Tab)?.continuesEnvironment == true
                     else -> nextLine?.let { lineEnvironmentName(it, openEnvironment) } == openEnvironment
                 }
                 if (openEnvironment != null && !keepsEnvironmentOpen) {
                     add("{end_of_$openEnvironment}")
                     openEnvironment = null
+                }
+                if (openEnvironment == null && item is ChordProBlock.Comment && item.isInTabOrGrid) {
+                    val environmentLine = items.subList(index + 1, items.size).firstOrNull { it is ChordProLine.Tab || it is ChordProLine.Grid } as ChordProLine?
+                    environmentLine?.let { startEnvironment(it, lineEnvironmentName(it, openEnvironment = null)) }
+                    isEnvironmentAwaitingLine = true
                 }
                 add(serializeBlock(item, wholeSongTranspose))
                 return@forEachIndexed
@@ -140,17 +177,12 @@ object ChordProSerializer {
             val environment = lineEnvironmentName(line, openEnvironment)
             // A tab line that starts an environment of its own is written in one, even straight after another, and so
             // is a grid line whose environment was labelled differently from the one before it.
-            val startsTab = line is ChordProLine.Tab && !line.continuesEnvironment && openEnvironment == "tab"
+            val startsTab = line is ChordProLine.Tab && !line.continuesEnvironment && openEnvironment == "tab" && !isEnvironmentAwaitingLine
             val startsGrid = line is ChordProLine.Grid && openEnvironment == "grid" && line.label != openEnvironmentLabel
+            if (line != ChordProLine.Blank) isEnvironmentAwaitingLine = false
             if (environment != openEnvironment || startsTab || startsGrid) {
                 openEnvironment?.let { add("{end_of_$it}") }
-                environment?.let { name ->
-                    val environmentLabel = line.environmentLabel ?: label
-                    add(environmentLabel?.let { "{start_of_$name: $it}" } ?: "{start_of_$name}")
-                    openEnvironmentLabel = environmentLabel
-                    label = null
-                }
-                openEnvironment = environment
+                startEnvironment(line, environment)
             }
             add(serializeLine(line))
         }

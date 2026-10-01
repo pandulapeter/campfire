@@ -88,7 +88,7 @@ class RowSnappingTest {
         val rows = listOf(300, 1300, 2300)
         assertEquals(300, nextStepOffset(scroll = 0, stepOffsets = rows, maxValue = 3000))
         assertEquals(null, previousStepOffset(scroll = 0, stepOffsets = rows, maxValue = 3000))
-        // The header is a row of its own, so only the very top of the song has nothing above it.
+        // The top of the song is always a stop, so only the very top of it has nothing above it.
         assertEquals(0, previousStepOffset(scroll = 300, stepOffsets = rows, maxValue = 3000))
         assertEquals(0, previousStepOffset(scroll = 150, stepOffsets = rows, maxValue = 3000))
         assertEquals(2300, nextStepOffset(scroll = 1300, stepOffsets = rows, maxValue = 3000))
@@ -384,16 +384,31 @@ class RowSnappingTest {
 
     @Test
     fun theProgressFollowsTheScrollBetweenTheStops() {
-        val stops = listOf(300, 1100, 1900)
-        // Reading the header above the first stop.
-        assertEquals(-1f, stopProgress(scroll = 0, stops = stops))
-        assertEquals(-0.5f, stopProgress(scroll = 150, stops = stops))
-        assertEquals(0f, stopProgress(scroll = 300, stops = stops))
-        assertEquals(0.5f, stopProgress(scroll = 700, stops = stops))
-        assertEquals(1f, stopProgress(scroll = 1100, stops = stops))
-        assertEquals(1.25f, stopProgress(scroll = 1300, stops = stops))
+        val stops = listOf(0, 800, 1600)
+        // The song opens on its first stop.
+        assertEquals(0f, stopProgress(scroll = 0, stops = stops))
+        assertEquals(0.5f, stopProgress(scroll = 400, stops = stops))
+        assertEquals(1f, stopProgress(scroll = 800, stops = stops))
+        assertEquals(1.25f, stopProgress(scroll = 1000, stops = stops))
         assertEquals(2f, stopProgress(scroll = 2500, stops = stops))
         assertEquals(0f, stopProgress(scroll = 500, stops = emptyList()))
+    }
+
+    @Test
+    fun theFirstStopIsRestedOnAtTheTopOfThePaddedScroll() {
+        val rows = SongRows(
+            restingOffsets = listOf(0, 1000),
+            bottoms = listOf(900, 1800),
+            stepOffsets = listOf(0, 1000),
+            isSteppedByRow = true,
+        ).belowPadding(topPadding = 8)
+        assertEquals(listOf(0, 1008), rows.restingOffsets)
+        assertEquals(listOf(0, 1008), rows.stepOffsets)
+        assertEquals(listOf(908, 1808), rows.bottoms)
+        // A single column is stepped to just above each section, the first of which is above the top of the song.
+        val column = SongRows(stepOffsets = listOf(-24, 476), lineTops = listOf(0, 500)).belowPadding(topPadding = 8)
+        assertEquals(listOf(0, 484), column.stepOffsets)
+        assertEquals(listOf(8, 508), column.lineTops)
     }
 
     @Test

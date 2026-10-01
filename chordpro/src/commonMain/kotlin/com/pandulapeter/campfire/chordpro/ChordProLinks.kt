@@ -42,14 +42,21 @@ object ChordProLinks {
     }
 
     /**
-     * Makes [links] the links the file carries, preserving the lines of unchanged links and every unrelated byte.
-     * Addresses are normalized by [usableUrl], each kept once; blank names are omitted, and braces and line breaks
-     * are removed from names so a label cannot write another directive into the file.
+     * Makes [links] the links the file carries, in the order of [links], preserving every unrelated byte and the line
+     * of a link that is unchanged and still in its place. The links that stay take the places of the link lines the
+     * file already has, one after the other, and the rest follow the last of them, so a reordered list moves the
+     * links rather than the lines around them. Addresses are normalized by [usableUrl], each kept once; blank names
+     * are omitted, and braces and line breaks are removed from names so a label cannot write another directive into
+     * the file.
      */
     fun setLinks(text: String, links: List<ChordProLink>): String {
         val wanted = links.mapNotNull { link ->
             usableUrl(link.url)?.let { ChordProLink(url = it, name = cleanName(link.name)) }
-        }.distinctBy { it.url }.associateBy { it.url }
+        }.distinctBy { it.url }
+        val wantedUrls = wanted.mapTo(mutableSetOf()) { it.url }
+        // Every place a wanted address already has is filled with the next link of the list, which there always is,
+        // since there are no more such places than wanted addresses.
+        val inOrder = wanted.iterator()
         val declared = mutableSetOf<String>()
         val lines = ChordProSyntax.splitLines(text)
         val kept = mutableListOf<String>()
@@ -58,14 +65,12 @@ object ChordProLinks {
             val link = directive?.let(ChordProSyntax::link)
             if (link == null) {
                 kept += line
-            } else {
-                val replacement = wanted[link.url]
-                if (replacement != null && declared.add(link.url)) {
-                    kept += if (replacement == link) line else "{meta: ${ChordProSyntax.LINK_NAME} ${value(replacement)}}"
-                }
+            } else if (link.url in wantedUrls && declared.add(link.url)) {
+                val replacement = inOrder.next()
+                kept += if (replacement == link) line else "{meta: ${ChordProSyntax.LINK_NAME} ${value(replacement)}}"
             }
         }
-        val missing = wanted.values.filterNot { it.url in declared }
+        val missing = inOrder.asSequence().toList()
         if (missing.isNotEmpty()) {
             kept.addAll(
                 ChordProSyntax.metadataInsertionIndex(kept, ChordProSyntax.LINK_NAME),

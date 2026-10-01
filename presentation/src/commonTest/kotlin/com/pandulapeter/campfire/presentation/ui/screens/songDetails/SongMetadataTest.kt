@@ -25,16 +25,22 @@ class SongMetadataTest {
         val metadata = ChordProMetadata(album = "Album", tags = listOf("Folk"), languages = listOf("en", "hu"))
         val body = listOf(verse, RenderSection.Comment(text = "Chorus", style = CommentStyle.PLAIN))
 
-        assertEquals(listOf(RenderSection.Metadata(metadata)) + body, withMetadataSection(body, metadata))
+        assertEquals(listOf(RenderSection.Metadata(metadata)) + body, withMetadataSection(body, metadata, shouldShowChords = true))
     }
 
     @Test
-    fun `playing metadata and a cover alone do not create an empty card`() {
-        val body = listOf(verse)
-        val metadata = ChordProMetadata(key = "G", capo = 2, tempo = "96", time = "6/8", coverArt = "https://example.com/cover.jpg")
+    fun `playing metadata is the metadata section on its own`() {
+        val metadata = ChordProMetadata(key = "G", capo = 2, tempo = "96", time = "6/8")
 
-        assertSame(body, withMetadataSection(body, metadata))
-        assertSame(body, withMetadataSection(body, ChordProMetadata(album = " ", composer = "")))
+        assertEquals(listOf(RenderSection.Metadata(metadata), verse), withMetadataSection(listOf(verse), metadata, shouldShowChords = true))
+    }
+
+    @Test
+    fun `a cover, a capo of zero and blank values create no section`() {
+        val body = listOf(verse)
+
+        assertSame(body, withMetadataSection(body, ChordProMetadata(coverArt = "https://example.com/cover.jpg", capo = 0), shouldShowChords = true))
+        assertSame(body, withMetadataSection(body, ChordProMetadata(album = " ", composer = "", key = " "), shouldShowChords = true))
     }
 
     @Test
@@ -44,7 +50,19 @@ class SongMetadataTest {
             ChordProMetadata(languages = listOf("en", "hu")),
             ChordProMetadata(links = listOf(ChordProLink("https://example.com"))),
         ).forEach { metadata ->
-            assertEquals(listOf(RenderSection.Metadata(metadata)), withMetadataSection(emptyList(), metadata))
+            assertEquals(listOf(RenderSection.Metadata(metadata)), withMetadataSection(emptyList(), metadata, shouldShowChords = true))
         }
+    }
+
+    @Test
+    fun `lyrics-only mode leaves out the playing metadata`() {
+        val playing = ChordProMetadata(key = "G", capo = 2, tempo = "96", time = "6/8")
+        val body = listOf(verse)
+
+        assertSame(body, withMetadataSection(body, playing, shouldShowChords = false))
+        assertEquals(
+            listOf(RenderSection.Metadata(ChordProMetadata(album = "Album")), verse),
+            withMetadataSection(body, playing.copy(album = "Album"), shouldShowChords = false),
+        )
     }
 }

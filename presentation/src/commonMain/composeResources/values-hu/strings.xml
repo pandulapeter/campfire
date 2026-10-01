@@ -302,7 +302,7 @@
     <string name="song_editor_insert_link">Hivatkozás</string>
     <string name="song_editor_transpose_text_up">Szöveg transzponálása fel</string>
     <string name="song_editor_transpose_text_down">Szöveg transzponálása le</string>
-    <string name="song_editor_revert">Visszaállítás</string>
+    <string name="song_editor_revert">Minden módosítás visszavonása</string>
     <string name="song_editor_revert_confirmation">Szeretnél visszatérni a dal utoljára mentett változatához? Minden, amit azóta írtál, elveszik.</string>
     <string name="song_editor_unsaved_changes">Nem mentett módosítások</string>
     <string name="song_editor_unsaved_changes_confirmation">Szeretnéd menteni, amit írtál, mielőtt kilépsz a szerkesztőből?</string>
@@ -346,6 +346,20 @@
     <string name="song_details_tags_manage">Címkék szerkesztése</string>
     <string name="song_details_tags_search">Címke keresése vagy létrehozása</string>
     <string name="song_details_tag_create">A(z) „%1$s” címke létrehozása</string>
+    <string name="song_details_metadata_edit">Meta-adatok szerkesztése</string>
+    <string name="song_details_song_info">A dalról</string>
+    <plurals name="song_details_info_tags">
+        <item quantity="one">Címke</item>
+        <item quantity="other">Címkék</item>
+    </plurals>
+    <plurals name="song_details_info_languages">
+        <item quantity="one">Nyelv</item>
+        <item quantity="other">Nyelvek</item>
+    </plurals>
+    <plurals name="song_details_info_links">
+        <item quantity="one">Hivatkozás</item>
+        <item quantity="other">Hivatkozások</item>
+    </plurals>
     <string name="song_details_links_edit">Hivatkozások szerkesztése</string>
     <string name="song_details_link_name">Név (nem kötelező)</string>
     <string name="song_details_link_duplicate">Ez a webcím már szerepel a listában</string>
@@ -353,6 +367,8 @@
     <string name="song_details_remove_cover_art_confirmation">Eltávolítod a(z) %1$s dal borítóképét?</string>
     <string name="song_details_link_add">Hivatkozás hozzáadása</string>
     <string name="song_details_link_remove">A(z) %1$s oldalra mutató hivatkozás eltávolítása</string>
+    <string name="song_details_link_move_up">A(z) %1$s oldalra mutató hivatkozás mozgatása feljebb</string>
+    <string name="song_details_link_move_down">A(z) %1$s oldalra mutató hivatkozás mozgatása lejjebb</string>
     <string name="song_details_link_address">Webcím</string>
     <string name="song_details_link_address_hint">Egy videó, felvétel, tabulatúra vagy bármilyen más oldal a dalról</string>
     <string name="song_details_language">Nyelv</string>

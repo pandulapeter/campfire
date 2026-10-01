@@ -175,9 +175,12 @@ uninstall and nothing else does.
 - **Links about a song are carried the same way**: a `{meta: link https://… Optional name}` directive per link, read into
   `ChordProMetadata.links`. Any page is taken, whatever site it is on, and nothing is ever fetched from one: the
   song details metadata card shows each as a chip named by its optional name or its host, opening the page in the
-  browser. The card flows as the first section through the song's rows and columns; key, capo, tempo and time stay
-  outside it and scale with the lyrics. The overflow menu's Edit links dialog edits addresses and optional names together,
-  written once on Save.
+  browser. The card flows as the first section through the song's rows and columns and scales with the lyrics; key,
+  capo, tempo and time stay outside it. The overflow menu's Edit links dialog edits addresses and optional names together,
+  and their order, written once on Save; the links are shown in that order, where tags and languages are always
+  shown alphabetically.
+  The editor's overflow menu has the same metadata entries, but there they change the text being typed rather than the
+  file, which only Save writes.
   Opening a link is the user's browser making the request, not Campfire.
 - **The app is shipped with two songs and one setlist**, in
   `presentation/src/commonMain/composeResources/files/demo`: public domain campfire standards, bundled as the plain
@@ -559,8 +562,8 @@ the short version:
   Requests for one address share one download, only a few are made at a time, one nobody is waiting for any more by
   its turn is not made at all, and an address that failed is not asked again for the rest of the
   session (an answer that is not a cover) or for a minute (no answer at all).
-- **The search is MusicBrainz and the iTunes Search API side by side**, from a sheet the song details overflow menu
-  opens (`Set cover art` / `Change cover art`; the sheet's Remove cover asks for confirmation), each catalogue's records
+- **The search is MusicBrainz and the iTunes Search API side by side**, from a sheet the song details and the editor's
+  overflow menus open (`Set cover art` / `Change cover art`; the sheet's Remove cover asks for confirmation), each catalogue's records
   joining the grid as it answers and one that fails leaving the other's
   there. On MusicBrainz, the release groups of an album, or those a song's recordings came out on where the album is
   empty, each with the Cover Art Archive's `front-250` of its release group; on iTunes, the albums the songs matching

@@ -26,6 +26,7 @@ import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.drawWithContent
@@ -41,16 +42,20 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.dp
+import com.pandulapeter.campfire.data.model.domain.isCombiningMark
+import com.pandulapeter.campfire.data.model.domain.withoutAccent
 import com.pandulapeter.campfire.presentation.resources.Res
 import com.pandulapeter.campfire.presentation.resources.ic_label
 import com.pandulapeter.campfire.presentation.resources.ic_language
+import com.pandulapeter.campfire.presentation.ui.screens.songDetails.scaled
 import org.jetbrains.compose.resources.painterResource
 
 /**
  * What a song is filed under, under its title in a song list. They stay on one line,
  * so that a row of a list cannot grow taller because somebody filed one song under a dozen labels, and whatever does
  * not fit is scrolled to sideways rather than cut off. The tags come before the languages, in the order the song
- * details header and the filters list them too, so a label is found in the same place wherever a song is shown.
+ * details header and the filters list them too, so a label is found in the same place wherever a song is shown, and
+ * each kind is in alphabetical order rather than the file's, as it is in the song details card.
  *
  * @param onTagClicked Null where the tags are only read. Otherwise a tag is a shortcut to its own chip in the song
  *   filters, and [selectedTags] (compared without regard to case, as the filter compares them) are drawn selected so
@@ -68,13 +73,15 @@ internal fun SongLabels(
     onLanguageClicked: ((String) -> Unit)? = null,
 ) {
     val scrollState = rememberScrollState()
+    val sortedTags = remember(tags) { tags.sortedAlphabeticallyBy { it } }
+    val sortedLanguages = languages.map { code -> code to languageLabel(code) }.sortedAlphabeticallyBy { it.second }
     Row(
         modifier = modifier
             .horizontalFadingEdges(scrollState)
             .horizontalScroll(scrollState),
         horizontalArrangement = Arrangement.spacedBy(TAG_GAP),
     ) {
-        tags.forEach { tag ->
+        sortedTags.forEach { tag ->
             TagPill(
                 text = tag,
                 isSelected = onTagClicked != null && selectedTags.any { it.equals(tag, ignoreCase = true) },
@@ -84,9 +91,9 @@ internal fun SongLabels(
         }
         // Each kind of label carries the mark the song details card and the overflow menu give it: without them a pill
         // reading "Magyar" could be a language or a tag somebody typed, and there is no telling the two apart in a list.
-        languages.forEach { code ->
+        sortedLanguages.forEach { (code, label) ->
             TagPill(
-                text = languageLabel(code),
+                text = label,
                 isSelected = onLanguageClicked != null && code in selectedLanguages,
                 onClick = onLanguageClicked?.let { { it(code) } },
                 leadingIcon = painterResource(Res.drawable.ic_language),
@@ -165,6 +172,8 @@ internal fun TagFlowRow(
  * reserving that much would be taller than the song title above it.
  *
  * @param onClick Null where the pill is only read, which is what the editor's preview shows.
+ * @param fontScale The song details' zoom, which the pills of its info card follow along with the lyrics; the text, the
+ *   mark and the widest a pill may grow scale together, so that a zoomed tag is not ellipsized sooner than at rest.
  */
 @Composable
 internal fun TagPill(
@@ -173,6 +182,7 @@ internal fun TagPill(
     isSelected: Boolean = false,
     onClick: (() -> Unit)? = null,
     leadingIcon: Painter? = null,
+    fontScale: Float = 1f,
 ) {
     val contentColor = if (isSelected) MaterialTheme.colorScheme.onSecondaryContainer else MaterialTheme.colorScheme.onSurfaceVariant
     val containerColor = if (isSelected) MaterialTheme.colorScheme.secondaryContainer else MaterialTheme.colorScheme.surfaceContainerHighest
@@ -181,7 +191,7 @@ internal fun TagPill(
             // The tag dialog caps what is typed, but a tag that arrives in a file (written in the editor, imported or
             // synced) is as long as its author made it, and in the sideways scrolling row of a song list nothing else
             // would stop one from being wider than the screen.
-            modifier = Modifier.widthIn(max = TAG_MAX_WIDTH).padding(
+            modifier = Modifier.widthIn(max = TAG_MAX_WIDTH * fontScale).padding(
                 start = if (leadingIcon == null) TAG_PADDING else TAG_ICON_INSET,
                 end = TAG_PADDING,
             ),
@@ -189,7 +199,7 @@ internal fun TagPill(
         ) {
             if (leadingIcon != null) {
                 Icon(
-                    modifier = Modifier.padding(end = TAG_ICON_INSET).size(TAG_ICON_SIZE),
+                    modifier = Modifier.padding(end = TAG_ICON_INSET).size(TAG_ICON_SIZE * fontScale),
                     painter = leadingIcon,
                     contentDescription = null,
                 )
@@ -197,7 +207,7 @@ internal fun TagPill(
             Text(
                 modifier = Modifier.weight(1f, fill = false).padding(vertical = TAG_TEXT_PADDING),
                 text = text,
-                style = MaterialTheme.typography.labelMedium,
+                style = MaterialTheme.typography.labelMedium.scaled(fontScale),
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis,
             )
@@ -224,6 +234,19 @@ internal fun TagPill(
             )
         }
     }
+}
+
+/**
+ * The order the tags and the languages of one song are shown in: alphabetical by what the chip reads, without regard
+ * to case or accents, so that an `Ő` is among the `O`s rather than after `Z` and `blues` does not follow `Rock` only
+ * for having been typed in lowercase. The file's own order is somebody's typing order, which says nothing a reader
+ * looking for one label among many can use.
+ */
+internal fun <T> List<T>.sortedAlphabeticallyBy(label: (T) -> String): List<T> =
+    sortedWith(compareBy<T> { alphabeticalKey(label(it)) }.thenBy(label))
+
+private fun alphabeticalKey(text: String) = buildString(text.length) {
+    text.lowercase().forEach { character -> if (!character.isCombiningMark()) append(character.withoutAccent()) }
 }
 
 /** The gap between two tags, horizontally and between the rows they wrap onto. */

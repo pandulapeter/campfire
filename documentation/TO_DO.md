@@ -10,15 +10,11 @@
 # To do
 - Word / PDF import
 - What's new dialog
-- Offline PWA
-- Tag icon
-- Edit song metadata dialog
-- Same options on Song Details, no matter if opened from Setlists
+- Offline mode for web
 - Global sync status display
 - Toggle to sort tags by usage or alphabetically
 - Show all tags logic should depend on space
 - First time user experience tutorial
-- Sort and Filter UI should be improved (better animations)
 - Haptic effects
 - Chord diagrams (guitar, ukulele, keyboard) - user library, variations
 - Metronome?

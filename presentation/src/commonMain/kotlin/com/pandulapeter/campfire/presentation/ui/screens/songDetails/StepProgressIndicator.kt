@@ -72,8 +72,7 @@ internal fun StepProgressIndicator(
     }
     val dotColor = MaterialTheme.colorScheme.outlineVariant
     val selectedColor = MaterialTheme.colorScheme.primary
-    // While the header above the first stop is read the progress is negative, and the first stop is the one announced.
-    val currentStop by remember(stepper) { derivedStateOf { stepper?.stopProgress?.roundToInt()?.coerceAtLeast(0) ?: 0 } }
+    val currentStop by remember(stepper) { derivedStateOf { stepper?.stopProgress?.roundToInt() ?: 0 } }
     val description = if (isShown) {
         stringResource(
             if (stepper?.isSteppedByRow == true) Res.string.song_details_step_progress_row else Res.string.song_details_step_progress_section,
@@ -104,9 +103,6 @@ internal fun StepProgressIndicator(
         val animatedCount = count.value
         val progress = stepper?.stopProgress ?: 0f
         val animatedSelected = progress.coerceIn(0f, (animatedCount - 1f).coerceAtLeast(0f))
-        // The header is no stop of its own, so while it is being read the mark is on none of the dots: it fades in as the
-        // header is scrolled away and the first stop comes up to the top.
-        val headerFactor = (1f + progress).coerceIn(0f, 1f)
         val contentHeight = animatedCount * pitch
         val offset = stepProgressOffset(contentHeight = contentHeight, availableHeight = available, markCenter = (animatedSelected + 0.5f) * pitch)
         val hiddenAbove = -offset.coerceAtMost(0f)
@@ -136,7 +132,7 @@ internal fun StepProgressIndicator(
             )
         }
         val markY = (animatedSelected + 0.5f) * pitch + offset
-        val markFactor = edgeFactor(markY) * headerFactor
+        val markFactor = edgeFactor(markY)
         drawCircle(
             color = selectedColor,
             radius = SELECTED_DOT_RADIUS.toPx() * (MIN_EDGE_SCALE + (1f - MIN_EDGE_SCALE) * markFactor),

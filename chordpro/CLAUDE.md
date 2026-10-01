@@ -42,8 +42,14 @@ in `:domain:*`. `:data:source:local:implementation` uses it directly for the met
   heading. The second half is marked `isContinuation`: it is the rest of a section the file wrote once, so the viewer
   does not head it again, and the serializer writes the pieces back into one environment with what cut them inside. A
   `ChorusRecall` carries the chorus it repeats (`blocks`) — every piece of the last chorus that was over where it
-  stands, and what stood between them — resolved by the parser, so that the transposition and the notation reach it
-  like any other block. The two halves of a tab are runs of their own, so the text transposition moves them as two fingerboards as
+  stands, what stood between them and the comments it opened and ended with — resolved by the parser, so that the
+  transposition and the notation reach it like any other block. **A comment records where it was written**, since a
+  comment that opens or ends a section leaves no continuation to recognise it by: `placement` is `START_OF_SECTION`
+  before the section's first line (it belongs to the section after it), `IN_SECTION` after one (to the section before
+  it) and `BETWEEN_SECTIONS` outside every environment, among the lines of an implicit paragraph, or in a section that
+  never got a line; `isInTabOrGrid` says it was a note inside a tab or grid environment that has a line, which the
+  viewer hides with it. The serializer writes a comment back where those say, opening a tab early for one that came
+  before its first line. The two halves of a tab are runs of their own, so the text transposition moves them as two fingerboards as
   well. A grid line keeps what comes before its first bar and after its last one as text, the margins ChordPro puts
   labels and comments in, and a cell may hold several chords joined with `~`, each transposed on its own.
   The model is immutable, and the Compose compiler is told so (`gradle/compose-stability.conf`): never hand it a
@@ -125,12 +131,21 @@ in `:domain:*`. `:data:source:local:implementation` uses it directly for the met
   line per link, read into `ChordProMetadata.links` as `ChordProLink(url, name)` in file order, each address once
   and keeping its first name, by the same address rule as the cover. An unnamed link has a null name. `addLink` writes a line after the last link, or into the header after the languages where there is none
   (the last of the three repeatable kinds in `metadataOrder`), and `removeLink` drops every line naming the address,
-  both editing the text for the reason `ChordProTags` does. `setLinks` edits the whole set at once, keeping unchanged
-  lines in their original spelling and changing only the link lines; names are optional, trimmed, and cannot inject
+  both editing the text for the reason `ChordProTags` does. `setLinks` edits the whole set at once and in the order it is
+  given — the links fill the places of the link lines already there, one after the other, and the rest follow the
+  last of them — keeping an unchanged line that stays in its place in its original spelling and changing only the
+  link lines; names are optional, trimmed, and cannot inject
   braces or line breaks. The serializer keeps the names too. `usableUrl` is what the dialog checks a typed address
   against, and takes one typed without its scheme as `https`, the way a browser's address bar shows most of them —
   but only where it starts with a host (and perhaps a port), so `mailto:…`, `me@…` or a mistyped `https:/…` is refused
   rather than saved as an `https` address naming nothing.
+- `ChordProMetadataFields` — the directives that say what a song is (`title`, `subtitle`, `artist`, `composer`,
+  `lyricist`, `album`, `year`, `duration`), for the song details' metadata dialog; how it is played (`key`, `capo`,
+  `tempo`, `time`) is part of writing it down and stays the editor's. `set` rewrites the line the parser reads each
+  value from — the last one — where it stands and in its own spelling (`{t: …}`, a `{meta: title …}`), drops the
+  earlier lines of the same field, writes a field the file lacks into the header by `metadataInsertionIndex`, and
+  removes it for a blank value; editing the text for the reason `ChordProTags` does. `valueOf` reads a field back out
+  of the model as text.
 - `ChordProHeader` — the block of directives a song opens with, for the editor, which writes into it while the caret
   is somewhere else entirely. ChordPro reads a `{title}` as the title from anywhere in the file, so a directive
   inserted at the caret is valid in the middle of a verse, invisible in the rendered song and nowhere near the rest

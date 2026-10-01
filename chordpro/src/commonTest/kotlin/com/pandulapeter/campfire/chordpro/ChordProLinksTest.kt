@@ -115,6 +115,19 @@ class ChordProLinksTest {
     }
 
     @Test
+    fun `editing links writes them in the order they are given`() {
+        val other = "https://example.com/chords"
+        val text = "{title: T}\n{meta: link $video Live}\n{comment: Between}\n{meta: link $tab}\n[C]Line"
+        val wanted = listOf(ChordProLink("youtu.be/new"), ChordProLink(tab), ChordProLink(other), ChordProLink(video, "Live"))
+
+        assertEquals(
+            "{title: T}\n{meta: link https://youtu.be/new}\n{comment: Between}\n{meta: link $tab}\n" +
+                "{meta: link $other}\n{meta: link $video Live}\n[C]Line",
+            ChordProLinks.setLinks(text, wanted),
+        )
+    }
+
+    @Test
     fun `editing removes duplicates and unwanted links and trims optional names`() {
         val text = "{title: T}\n{meta: link $video First}\n{meta: link $video Second}\n{meta: link $tab}\n[C]Line"
 
