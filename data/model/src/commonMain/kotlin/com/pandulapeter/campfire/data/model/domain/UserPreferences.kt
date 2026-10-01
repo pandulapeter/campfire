@@ -59,17 +59,6 @@ data class UserPreferences(
      */
     val foldedSections: Map<String, Set<String>>,
     /**
-     * Whether the card on the song details screen that says what a song is (its album, its composer, its tags, its
-     * links) is folded down to its title. One choice for every song rather than one per song like [foldedSections]:
-     * whoever folds it is not interested in what it holds, not in what it holds for one song.
-     */
-    val isSongInfoFolded: Boolean,
-    /**
-     * The groups inside that card folded down to their title, for every song at once like [isSongInfoFolded]: a song
-     * filed under dozens of tags would otherwise push everything after the card out of sight.
-     */
-    val foldedSongInfoSections: Set<SongInfoSection>,
-    /**
      * How the tags selected in the song filter combine. The selection itself is not a preference and is never
      * stored — it lives in the presentation layer for as long as the app runs — but which of the two readings the
      * user prefers is a standing choice, like the sorting mode.
@@ -98,13 +87,6 @@ data class UserPreferences(
      * What several selected values of one filter group mean together: a song that carries any one of them, or one
      * that carries all.
      */
-    /** The groups of the song details' info card that fold on their own, see [foldedSongInfoSections]. */
-    enum class SongInfoSection(val id: String) {
-        TAGS("tags"),
-        LANGUAGES("languages"),
-        LINKS("links"),
-    }
-
     enum class MatchMode(val id: String) {
         ANY("any"),
         ALL("all"),

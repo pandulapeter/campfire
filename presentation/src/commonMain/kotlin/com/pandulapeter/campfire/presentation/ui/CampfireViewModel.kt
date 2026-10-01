@@ -1591,6 +1591,9 @@ class CampfireViewModel(
         showDialog(DialogType.SongLinks(song = song, links = parseChordPro(text).metadata.links, isEditorDraft = isEditorDraft))
     }
 
+    /** What [text] says about the song beyond its lines, for the sheet of what the song is and the button opening it. */
+    fun songMetadataOf(text: String): ChordProMetadata = parseChordPro(text).metadata
+
     /**
      * Writes the link dialog's changes together. Links added by sync while it was open and never offered there stay
      * in the file, as tags do: a snapshot of one dialog is not a request to erase another device's additions.
@@ -2506,14 +2509,6 @@ class CampfireViewModel(
 
     fun setOneRowAtATimeEnabled(value: Boolean) = changeUserPreferences { copy(isOneRowAtATimeEnabled = value) }
 
-    /** Folds or unfolds the card saying what a song is, for every song at once, see [UserPreferences.isSongInfoFolded]. */
-    fun toggleSongInfoFold() = changeUserPreferences { copy(isSongInfoFolded = !isSongInfoFolded) }
-
-    /** Folds or unfolds one group of that card, for every song at once, see [UserPreferences.foldedSongInfoSections]. */
-    fun toggleSongInfoSectionFold(section: UserPreferences.SongInfoSection) = changeUserPreferences {
-        copy(foldedSongInfoSections = if (section in foldedSongInfoSections) foldedSongInfoSections - section else foldedSongInfoSections + section)
-    }
-
     /**
      * Folds or unfolds one section of a song (or one tab or grid inside it), [key] being the name the song details
      * screen gives it. One set per song, wherever it is opened from, and kept in the preferences rather than in a
@@ -2719,6 +2714,7 @@ class CampfireViewModel(
         get() = when (this) {
             is DialogType.SetlistPicker -> song.fileName
             is DialogType.DeleteSong -> song.fileName
+            is DialogType.SongInfo -> song.fileName
             // The editor's draft is the editor's to keep, whatever became of the file it was opened on.
             is DialogType.SongEdit -> song.fileName.takeUnless { isEditorDraft }
             else -> null
@@ -3053,6 +3049,12 @@ class CampfireViewModel(
         data class EditSetlist(val setlist: Setlist) : DialogType
         data class DuplicateSetlist(val setlist: Setlist) : DialogType
         data class DeleteSong(val song: Song) : DialogType
+        /**
+         * What a song says about itself beyond how it is played, opened from the song details app bar. It reads the
+         * song's text as it is now rather than a snapshot, so that what its buttons edit is there when it is opened
+         * again.
+         */
+        data class SongInfo(val song: Song) : DialogType
         /**
          * Opened from the song details overflow menu, and offers the song's own tags and
          * the rest of the library's.

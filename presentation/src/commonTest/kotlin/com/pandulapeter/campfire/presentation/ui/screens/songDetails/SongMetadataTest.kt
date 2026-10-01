@@ -25,22 +25,22 @@ class SongMetadataTest {
         val metadata = ChordProMetadata(album = "Album", tags = listOf("Folk"), languages = listOf("en", "hu"))
         val body = listOf(verse, RenderSection.Comment(text = "Chorus", style = CommentStyle.PLAIN))
 
-        assertEquals(listOf(RenderSection.Metadata(metadata)) + body, withMetadataSection(body, metadata, shouldShowChords = true))
+        assertEquals(listOf(RenderSection.Metadata(metadata)) + body, withMetadataSection(body, metadata, shouldShowChords = true, isSongInfoShown = true))
     }
 
     @Test
     fun `playing metadata is the metadata section on its own`() {
         val metadata = ChordProMetadata(key = "G", capo = 2, tempo = "96", time = "6/8")
 
-        assertEquals(listOf(RenderSection.Metadata(metadata), verse), withMetadataSection(listOf(verse), metadata, shouldShowChords = true))
+        assertEquals(listOf(RenderSection.Metadata(metadata), verse), withMetadataSection(listOf(verse), metadata, shouldShowChords = true, isSongInfoShown = true))
     }
 
     @Test
     fun `a cover, a capo of zero and blank values create no section`() {
         val body = listOf(verse)
 
-        assertSame(body, withMetadataSection(body, ChordProMetadata(coverArt = "https://example.com/cover.jpg", capo = 0), shouldShowChords = true))
-        assertSame(body, withMetadataSection(body, ChordProMetadata(album = " ", composer = "", key = " "), shouldShowChords = true))
+        assertSame(body, withMetadataSection(body, ChordProMetadata(coverArt = "https://example.com/cover.jpg", capo = 0), shouldShowChords = true, isSongInfoShown = true))
+        assertSame(body, withMetadataSection(body, ChordProMetadata(album = " ", composer = "", key = " "), shouldShowChords = true, isSongInfoShown = true))
     }
 
     @Test
@@ -50,8 +50,31 @@ class SongMetadataTest {
             ChordProMetadata(languages = listOf("en", "hu")),
             ChordProMetadata(links = listOf(ChordProLink("https://example.com"))),
         ).forEach { metadata ->
-            assertEquals(listOf(RenderSection.Metadata(metadata)), withMetadataSection(emptyList(), metadata, shouldShowChords = true))
+            assertEquals(listOf(RenderSection.Metadata(metadata)), withMetadataSection(emptyList(), metadata, shouldShowChords = true, isSongInfoShown = true))
         }
+    }
+
+    @Test
+    fun `what the song is creates no section where its card is not shown`() {
+        val body = listOf(verse)
+        val info = ChordProMetadata(album = "Album", tags = listOf("Folk"), links = listOf(ChordProLink("https://example.com")))
+
+        assertSame(body, withMetadataSection(body, info, shouldShowChords = true, isSongInfoShown = false))
+        assertEquals(
+            listOf(RenderSection.Metadata(info.copy(key = "G")), verse),
+            withMetadataSection(body, info.copy(key = "G"), shouldShowChords = true, isSongInfoShown = false),
+        )
+    }
+
+    @Test
+    fun `an editable card is there for a song that says nothing about itself yet`() {
+        val body = listOf(verse)
+
+        assertEquals(
+            listOf(RenderSection.Metadata(ChordProMetadata()), verse),
+            withMetadataSection(body, ChordProMetadata(), shouldShowChords = true, isSongInfoShown = true, isSongInfoEditable = true),
+        )
+        assertSame(body, withMetadataSection(body, ChordProMetadata(), shouldShowChords = true, isSongInfoShown = false, isSongInfoEditable = true))
     }
 
     @Test
@@ -59,10 +82,10 @@ class SongMetadataTest {
         val playing = ChordProMetadata(key = "G", capo = 2, tempo = "96", time = "6/8")
         val body = listOf(verse)
 
-        assertSame(body, withMetadataSection(body, playing, shouldShowChords = false))
+        assertSame(body, withMetadataSection(body, playing, shouldShowChords = false, isSongInfoShown = true))
         assertEquals(
             listOf(RenderSection.Metadata(ChordProMetadata(album = "Album")), verse),
-            withMetadataSection(body, playing.copy(album = "Album"), shouldShowChords = false),
+            withMetadataSection(body, playing.copy(album = "Album"), shouldShowChords = false, isSongInfoShown = true),
         )
     }
 }

@@ -168,6 +168,7 @@ import com.pandulapeter.campfire.presentation.resources.settings_sync_disconnect
 import com.pandulapeter.campfire.presentation.resources.song_details_languages_edit
 import com.pandulapeter.campfire.presentation.resources.song_details_language_no_search_results
 import com.pandulapeter.campfire.presentation.resources.song_details_language_search
+import com.pandulapeter.campfire.presentation.resources.song_details_song_info
 import com.pandulapeter.campfire.presentation.resources.song_details_tag_create
 import com.pandulapeter.campfire.presentation.resources.song_details_tags_manage
 import com.pandulapeter.campfire.presentation.resources.song_details_tags_search
@@ -222,6 +223,8 @@ import com.pandulapeter.campfire.presentation.ui.components.pickableLanguages
 import com.pandulapeter.campfire.presentation.ui.components.textResource
 import com.pandulapeter.campfire.presentation.ui.platform.calendarLocale
 import com.pandulapeter.campfire.presentation.ui.screens.settings.SettingsSubsection
+import com.pandulapeter.campfire.presentation.ui.screens.songDetails.SongInfoBody
+import com.pandulapeter.campfire.presentation.ui.screens.songDetails.rememberSongInfoEditing
 import kotlinx.coroutines.launch
 import kotlinx.datetime.LocalDate
 import kotlinx.datetime.TimeZone
@@ -318,6 +321,12 @@ internal fun CampfireDialogs(
                 uncoveredTopInset = uncoveredTopInset,
             )
         }
+
+        is CampfireViewModel.DialogType.SongInfo -> SongInfoSheet(
+            viewModel = viewModel,
+            dialog = dialog,
+            urlOpener = urlOpener,
+        )
 
         is CampfireViewModel.DialogType.SetlistPicker -> SetlistPicker(
             viewModel = viewModel,
@@ -2106,6 +2115,43 @@ private fun Modifier.reachingDialogEdges() = layout { measurable, constraints ->
     val placeable = measurable.measure(constraints.offset(horizontal = outset * 2))
     layout((placeable.width - outset * 2).coerceAtLeast(0), placeable.height) {
         placeable.placeRelative(-outset, 0)
+    }
+}
+
+/**
+ * What a song says about itself beyond how it is played, read from its text as it is now. Outside performance mode every
+ * group is there with a button that edits it, which opens that group's dialog in place of the sheet; in performance
+ * mode, which edits nothing, only what the song has.
+ */
+@Composable
+private fun SongInfoSheet(
+    viewModel: CampfireViewModel,
+    dialog: CampfireViewModel.DialogType.SongInfo,
+    urlOpener: (String) -> Unit,
+) = CampfireBottomSheet(
+    title = stringResource(Res.string.song_details_song_info),
+    subtitle = songLabel(dialog.song),
+    onDismiss = { viewModel.dismissSheet(dialog) },
+) { contentPadding ->
+    val songTexts by viewModel.songTexts.collectAsStateWithLifecycle()
+    val isPerformanceModeEnabled by viewModel.isPerformanceModeEnabled.collectAsStateWithLifecycle()
+    val text = songTexts[dialog.song.fileName]
+    val metadata = remember(text) { text?.let(viewModel::songMetadataOf) }
+    val editing = rememberSongInfoEditing(viewModel = viewModel, song = dialog.song, isEditorDraft = false)
+    if (metadata != null) {
+        val scrollState = rememberScrollState()
+        SongInfoBody(
+            modifier = Modifier
+                .weight(1f, fill = false)
+                .fadingVerticalEdges(scrollState)
+                .verticalScroll(scrollState)
+                .padding(contentPadding)
+                .padding(vertical = 8.dp),
+            metadata = metadata,
+            horizontalPadding = 16.dp,
+            editing = editing.takeUnless { isPerformanceModeEnabled },
+            onOpenLink = urlOpener,
+        )
     }
 }
 

@@ -461,7 +461,6 @@ private fun SongList(
                                             state = actionsMenuState,
                                             viewModel = viewModel,
                                             song = song,
-                                            isExpandable = false,
                                             isDeletable = true,
                                             fileEditItems = songLabelActions(
                                                 viewModel = viewModel,

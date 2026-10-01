@@ -139,12 +139,15 @@ import com.pandulapeter.campfire.presentation.ui.navigation.CampfireDestination
 import com.pandulapeter.campfire.presentation.ui.screens.songDetails.APP_BAR_COVER_GAP
 import com.pandulapeter.campfire.presentation.ui.screens.songDetails.APP_BAR_COVER_SIZE
 import com.pandulapeter.campfire.presentation.ui.screens.songDetails.SectionMotion
+import com.pandulapeter.campfire.presentation.ui.screens.songDetails.SongInfoEditing
 import com.pandulapeter.campfire.presentation.ui.screens.songDetails.SongLyrics
 import com.pandulapeter.campfire.presentation.ui.screens.songDetails.SongLyricsInputs
 import com.pandulapeter.campfire.presentation.ui.screens.songDetails.TextTranspositionControls
+import com.pandulapeter.campfire.presentation.ui.screens.songDetails.coverArtAction
 import com.pandulapeter.campfire.presentation.ui.screens.songDetails.prepareSongLyrics
 import com.pandulapeter.campfire.presentation.ui.screens.songDetails.rememberDefaultSectionLabels
-import com.pandulapeter.campfire.presentation.ui.screens.songDetails.songMetadataActions
+import com.pandulapeter.campfire.presentation.ui.screens.songDetails.rememberSongInfoEditing
+import com.pandulapeter.campfire.presentation.ui.screens.songDetails.songInfoEditingActions
 import com.pandulapeter.campfire.presentation.ui.theme.LocalMonospaceFontFamily
 import com.pandulapeter.campfire.presentation.ui.theme.LocalSecondAccentColor
 import kotlinx.coroutines.Dispatchers
@@ -323,6 +326,8 @@ private fun LoadedSongEditor(
     val hasUnsavedChanges by viewModel.hasUnsavedEditorChanges.collectAsStateWithLifecycle()
     RevertOnRequest(viewModel = viewModel, fileName = destination.fileName, textFieldState = textFieldState, summaryCache = summaryCache)
     EditOnRequest(viewModel = viewModel, fileName = destination.fileName, textFieldState = textFieldState, summaryCache = summaryCache)
+    val editorSong = summary.toEditorSong(destination.fileName)
+    val songInfoEditing = rememberSongInfoEditing(viewModel = viewModel, song = editorSong, isEditorDraft = true)
     FollowFileWhileUntouched(viewModel = viewModel, fileName = destination.fileName, textFieldState = textFieldState, summaryCache = summaryCache)
     // The one way the file is ever written, reached from the app bar's button and from Ctrl / Cmd + S alike.
     val onSaveRequested = {
@@ -421,13 +426,14 @@ private fun LoadedSongEditor(
                 }
                 EditorMenu(
                     modifier = Modifier.overlappingAction(start = ACTION_BUTTON_OVERLAP, end = 0.dp),
-                    metadataActions = songMetadataActions(
-                        viewModel = viewModel,
-                        song = summary.toEditorSong(destination.fileName),
-                        hasText = true,
-                        isEditorDraft = true,
-                        isCoverArtEnabled = userPreferences?.isCoverArtEnabled == true,
-                    ),
+                    // What the song says about itself is edited from the preview's card, and from the menu only while
+                    // the preview is out of sight.
+                    editingActions = if (panes == EditorPanes.EDIT) songInfoEditingActions(songInfoEditing) else emptyList(),
+                    coverArtAction = if (userPreferences?.isCoverArtEnabled == true) {
+                        coverArtAction(viewModel = viewModel, song = editorSong, isEditorDraft = true)
+                    } else {
+                        null
+                    },
                     canRevert = hasUnsavedChanges && hasSavedText && !isSaving,
                     onRevert = { viewModel.showDialog(CampfireViewModel.DialogType.RevertChanges) },
                 )
@@ -505,6 +511,7 @@ private fun LoadedSongEditor(
                 chordSpelling = chordSpelling,
                 contentPadding = contentPadding.only(start = !hasSideBySidePreview, end = true, bottom = true),
                 isSingleColumn = hasSideBySidePreview,
+                songInfoEditing = songInfoEditing,
             )
         }
         // The panes take what the app bar and the toggle above them leave, rather than the whole window: a Column
@@ -778,6 +785,7 @@ private fun SongPreview(
     chordSpelling: UserPreferences.ChordSpelling,
     contentPadding: PaddingValues,
     isSingleColumn: Boolean,
+    songInfoEditing: SongInfoEditing,
 ) {
     val labels = rememberDefaultSectionLabels()
     val latestTransposition by rememberUpdatedState(transposition)
@@ -826,25 +834,30 @@ private fun SongPreview(
             fontScale = fontScale,
             sectionMotion = SectionMotion.NONE,
             isSingleColumn = isSingleColumn,
+            isSongInfoShown = true,
+            songInfoEditing = songInfoEditing,
         )
     }
 }
 
 /**
- * The one action of the editor that is neither writing the file nor undoing a keystroke, behind the same overflow
- * button the song details screen uses. It is a menu of one rather than a button of its own, however much room the bar
- * has ([ActionsMenuItem.isAlwaysInMenu]), because throwing away everything typed since the last save is not something
- * to end up in by mistapping the button next to Save.
+ * The actions of the editor that are neither writing the file nor undoing a keystroke, behind the same overflow button
+ * the song details screen uses: the metadata editors of [editingActions] while the preview's card that has them as
+ * buttons is out of sight, the cover art sheet, where covers are on, and the revert. They stay in the menu however much
+ * room the bar has ([ActionsMenuItem.isAlwaysInMenu]), since throwing away everything typed since the last save is not
+ * something to end up in by mistapping the button next to Save.
  */
 @Composable
 private fun EditorMenu(
     modifier: Modifier = Modifier,
-    metadataActions: List<ActionsMenuItem>,
+    editingActions: List<ActionsMenuItem>,
+    coverArtAction: ActionsMenuItem?,
     canRevert: Boolean,
     onRevert: () -> Unit,
 ) = ActionsMenu(
     modifier = modifier,
-    items = metadataActions + listOf(
+    // The cover art is put next to Edit metadata, the other editor of the song's header, ahead of the chip groups.
+    items = editingActions.take(1) + listOfNotNull(coverArtAction) + editingActions.drop(1) + listOf(
         ActionsMenuItem(
             title = stringResource(Res.string.song_editor_revert),
             icon = painterResource(Res.drawable.ic_refresh),
@@ -916,8 +929,9 @@ private fun EditOnRequest(
 }
 
 /**
- * The song as the text being typed describes it, which is what the metadata dialogs of the editor's menu are opened
- * on: the library's entry describes the file, which the text may already have moved away from.
+ * The song as the text being typed describes it, which is what the metadata dialogs of the preview's card and the cover
+ * art sheet of the editor's menu are opened on: the library's entry describes the file, which the text may already
+ * have moved away from.
  */
 private fun ChordProSummary.toEditorSong(fileName: String) = Song(
     fileName = fileName,

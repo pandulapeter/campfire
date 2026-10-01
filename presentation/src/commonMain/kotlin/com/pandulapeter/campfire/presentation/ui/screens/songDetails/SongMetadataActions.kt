@@ -10,6 +10,9 @@
 package com.pandulapeter.campfire.presentation.ui.screens.songDetails
 
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberUpdatedState
 import com.pandulapeter.campfire.data.model.domain.Song
 import com.pandulapeter.campfire.presentation.localization.stringResource
 import com.pandulapeter.campfire.presentation.resources.Res
@@ -23,60 +26,105 @@ import com.pandulapeter.campfire.presentation.resources.song_details_languages_e
 import com.pandulapeter.campfire.presentation.resources.song_details_links_edit
 import com.pandulapeter.campfire.presentation.resources.song_details_metadata_edit
 import com.pandulapeter.campfire.presentation.resources.song_details_set_cover_art
+import com.pandulapeter.campfire.presentation.resources.song_details_song_info
 import com.pandulapeter.campfire.presentation.resources.song_details_tags_manage
 import com.pandulapeter.campfire.presentation.ui.CampfireViewModel
 import com.pandulapeter.campfire.presentation.ui.components.ActionsMenuItem
 import org.jetbrains.compose.resources.painterResource
 
 /**
- * The entries that edit what a song says about itself, in the song details overflow menu and in the editor's. They stay
- * behind the overflow tap, even when the app bar has room for more buttons. From the editor ([isEditorDraft]) they edit
- * the text being typed rather than the file, see [CampfireViewModel.DialogType.SongEdit]; [hasText] is whether the
- * text the metadata and link dialogs are prefilled from is at hand.
+ * The way into the sheet of what the song is, on the song details screen: a button of its own wherever the app bar has
+ * the room, and the first entry of its menu wherever it does not. Outside performance mode it is there for every song,
+ * since the sheet is where what the song says about itself is edited from; in it, only where there is something to
+ * read. [isEnabled] is whether the song's text, which the sheet is read from, is at hand.
  */
 @Composable
-internal fun songMetadataActions(
+internal fun songInfoAction(
     viewModel: CampfireViewModel,
     song: Song,
-    hasText: Boolean,
+    isEnabled: Boolean,
+) = ActionsMenuItem(
+    title = stringResource(Res.string.song_details_song_info),
+    icon = painterResource(Res.drawable.ic_info),
+    isEnabled = isEnabled,
+    onClick = { viewModel.showDialog(CampfireViewModel.DialogType.SongInfo(song)) },
+)
+
+/**
+ * What the edit buttons of [SongInfoBody] open: the dialog of each group, on the song details screen's sheet and on the
+ * editor preview's card alike. From the editor ([isEditorDraft]) they edit the text being typed rather than the file,
+ * see [CampfireViewModel.DialogType.SongEdit], and [song] is that text's description of the song, which follows every
+ * keystroke, so the latest one is what a button opens its dialog on.
+ */
+@Composable
+internal fun rememberSongInfoEditing(
+    viewModel: CampfireViewModel,
+    song: Song,
     isEditorDraft: Boolean,
-    isCoverArtEnabled: Boolean,
-): List<ActionsMenuItem> = listOfNotNull(
+): SongInfoEditing {
+    val latestSong by rememberUpdatedState(song)
+    return remember(viewModel, isEditorDraft) {
+        SongInfoEditing(
+            onEditMetadata = { viewModel.showSongMetadataDialog(song = latestSong, isEditorDraft = isEditorDraft) },
+            onEditTags = { viewModel.showDialog(CampfireViewModel.DialogType.SongTags(song = latestSong, isEditorDraft = isEditorDraft)) },
+            onEditLanguages = { viewModel.showDialog(CampfireViewModel.DialogType.SongLanguages(song = latestSong, isEditorDraft = isEditorDraft)) },
+            onEditLinks = { viewModel.showSongLinksDialog(song = latestSong, isEditorDraft = isEditorDraft) },
+        )
+    }
+}
+
+/**
+ * [SongInfoEditing] as entries of a menu, for the editor while its preview, and the card with the buttons on it, is out
+ * of sight. In the order of the card's groups, and kept behind the overflow tap however much room the bar has.
+ */
+@Composable
+internal fun songInfoEditingActions(editing: SongInfoEditing): List<ActionsMenuItem> = listOf(
     ActionsMenuItem(
         title = stringResource(Res.string.song_details_metadata_edit),
         icon = painterResource(Res.drawable.ic_info),
-        isEnabled = hasText,
         isAlwaysInMenu = true,
-        onClick = { viewModel.showSongMetadataDialog(song = song, isEditorDraft = isEditorDraft) },
+        onClick = editing.onEditMetadata,
     ),
-    if (isCoverArtEnabled) {
-        ActionsMenuItem(
-            title = stringResource(if (song.coverArtUrl == null) Res.string.song_details_set_cover_art else Res.string.song_details_change_cover_art),
-            icon = painterResource(Res.drawable.ic_album),
-            isAlwaysInMenu = true,
-            onClick = { viewModel.showDialog(CampfireViewModel.DialogType.CoverArtSearch(song = song, isEditorDraft = isEditorDraft)) },
-        )
-    } else {
-        null
-    },
-    *songLabelActions(
-        viewModel = viewModel,
-        song = song,
-        isEditorDraft = isEditorDraft,
-    ).toTypedArray(),
+    ActionsMenuItem(
+        title = stringResource(Res.string.song_details_tags_manage),
+        icon = painterResource(Res.drawable.ic_label),
+        isAlwaysInMenu = true,
+        onClick = editing.onEditTags,
+    ),
+    ActionsMenuItem(
+        title = stringResource(Res.string.song_details_languages_edit),
+        icon = painterResource(Res.drawable.ic_language),
+        isAlwaysInMenu = true,
+        onClick = editing.onEditLanguages,
+    ),
     ActionsMenuItem(
         title = stringResource(Res.string.song_details_links_edit),
         icon = painterResource(Res.drawable.ic_link),
-        isEnabled = hasText,
         isAlwaysInMenu = true,
-        onClick = { viewModel.showSongLinksDialog(song = song, isEditorDraft = isEditorDraft) },
+        onClick = editing.onEditLinks,
     ),
 )
 
 /**
- * The tag and the language entries of [songMetadataActions], which the song cards of the songs screen offer as well:
- * unlike the metadata and the link dialogs they need nothing but the song list's own metadata to open, and filing songs
- * under a tag or a language is done to many of them in a row, which a trip to every song's details screen makes a chore.
+ * Opens the cover art sheet, from the song details overflow menu and from the editor's: the one metadata editor that
+ * stays in those menus, since the cover is not part of [SongInfoBody].
+ */
+@Composable
+internal fun coverArtAction(
+    viewModel: CampfireViewModel,
+    song: Song,
+    isEditorDraft: Boolean,
+) = ActionsMenuItem(
+    title = stringResource(if (song.coverArtUrl == null) Res.string.song_details_set_cover_art else Res.string.song_details_change_cover_art),
+    icon = painterResource(Res.drawable.ic_album),
+    isAlwaysInMenu = true,
+    onClick = { viewModel.showDialog(CampfireViewModel.DialogType.CoverArtSearch(song = song, isEditorDraft = isEditorDraft)) },
+)
+
+/**
+ * The tag and the language editors as entries of a song card's menu on the songs screen: unlike the metadata and the
+ * link dialogs they need nothing but the song list's own metadata to open, and filing songs under a tag or a language
+ * is done to many of them in a row, which a trip to every song's details screen makes a chore.
  */
 @Composable
 internal fun songLabelActions(

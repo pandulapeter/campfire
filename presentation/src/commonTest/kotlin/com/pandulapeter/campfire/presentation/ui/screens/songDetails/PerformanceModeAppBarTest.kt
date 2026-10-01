@@ -11,6 +11,7 @@ package com.pandulapeter.campfire.presentation.ui.screens.songDetails
 
 import androidx.compose.ui.unit.dp
 import kotlin.test.Test
+import kotlin.test.assertEquals
 import kotlin.test.assertFalse
 import kotlin.test.assertTrue
 
@@ -47,13 +48,21 @@ class PerformanceModeAppBarTest {
 
     @Test
     fun `the transposition stepper is in the bar for as long as the title keeps 280dp beside it`() {
-        // Beside 152dp of everything else, the stepper takes 140dp: the button after it keeps it off the pill.
-        assertTrue(showsTranspositionInBar(appBarWidth = 572.dp, otherContentWidth = 152.dp))
-        assertFalse(showsTranspositionInBar(appBarWidth = 571.dp, otherContentWidth = 152.dp))
+        // Beside 104dp of everything else and the two buttons, the stepper takes 140dp.
+        assertTrue(appBarButtons(appBarWidth = 620.dp, otherContentWidth = 104.dp).isTranspositionShown)
+        assertFalse(appBarButtons(appBarWidth = 619.dp, otherContentWidth = 104.dp).isTranspositionShown)
     }
 
     @Test
-    fun `a phone keeps the transposition stepper in the menu`() {
-        assertFalse(showsTranspositionInBar(appBarWidth = 411.dp, otherContentWidth = 152.dp))
+    fun `the setlist assignments leave the bar before the song info does`() {
+        assertEquals(AppBarButtons(isSongInfoShown = true, isSetlistAssignmentsShown = true, isTranspositionShown = false), appBarButtons(360.dp, 104.dp))
+        assertEquals(AppBarButtons(isSongInfoShown = true, isSetlistAssignmentsShown = false, isTranspositionShown = false), appBarButtons(359.dp, 104.dp))
+        assertEquals(AppBarButtons(isSongInfoShown = true, isSetlistAssignmentsShown = false, isTranspositionShown = false), appBarButtons(312.dp, 104.dp))
+        assertEquals(AppBarButtons(isSongInfoShown = false, isSetlistAssignmentsShown = false, isTranspositionShown = false), appBarButtons(311.dp, 104.dp))
+    }
+
+    @Test
+    fun `a phone keeps both buttons and puts the transposition stepper in the menu`() {
+        assertEquals(AppBarButtons(isSongInfoShown = true, isSetlistAssignmentsShown = true, isTranspositionShown = false), appBarButtons(411.dp, 104.dp))
     }
 }

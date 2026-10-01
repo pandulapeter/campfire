@@ -252,32 +252,31 @@ private fun ActionButton(
 private val ACTION_BUTTON_CONTAINER_SIZE = 40.dp
 
 /**
- * Everything that can be done to a song, on a song row or in the song details app bar: the buttons its [ActionsMenu]
- * has the room for and the rest behind its overflow button. The menu is a dropdown on every platform, touch included,
+ * Everything that can be done to a song, on a song row or in the song details app bar, behind an overflow button: every
+ * button in front of it is put there by the screen, which decides what it has the room for. The menu is a dropdown on
+ * every platform, touch included,
  * since an overflow button is read as the promise of a menu hanging from it - which is what every other overflow
  * button in the app opens, the setlist header's and the editor's among them.
  *
- * The overflow button is there on every platform wherever not every action has a button of its own, because it is the
- * only thing on a row that says the actions exist: the long press that opens the same menu on the songs screen
- * announces itself to nobody, so it is a shortcut for the reader who already knows about it rather than the way in.
+ * The overflow button is there on every platform, because it is the only thing on a row that says the actions exist:
+ * the long press that opens the same menu on the songs screen announces itself to nobody, so it is a shortcut for the
+ * reader who already knows about it rather than the way in.
  *
- * The setlist assignments sheet is not among the entries: where the song is read as part of the library, and on the
- * song details screen wherever it was opened from, it has a [SetlistAssignmentsButton] of its own in front of these,
- * and on a setlist row it is not offered at all, since a sheet of every setlist next to the row's own "Remove from
- * setlist" made two ways of leaving the setlist that read as two different things.
+ * The setlist assignments sheet is not among the entries of its own accord: where the song is read as part of the
+ * library it has a [SetlistAssignmentsButton] in front of these, which the song details screen moves into the menu as
+ * [setlistAssignmentsAction] where its bar runs out of room, and on a setlist row it is not offered at all, since a
+ * sheet of every setlist next to the row's own "Remove from setlist" made two ways of leaving the setlist that read as
+ * two different things.
  *
- * @param modifier Put on the whole row of buttons, whose largest width is the room the actions may take.
  * @param state Whether the menu is open, hoisted by the songs screen, whose rows also open it from a long press.
- * @param isExpandable False on a song card, which keeps every action in the menu (see [ActionsMenu]).
- * @param isEditAlwaysInMenu Keeps "Edit" in the menu however much room there is, which the song details screen does for
- *   every song: reading a song must not invite an accidental file edit.
  * @param isDeletable Whether the song can be deleted from here, which it only can where the song is read as part of
  *   the library. A setlist is the list somebody wrote down to play from, and a song reached through one is taken out
  *   of it rather than removed from every setlist and the library at once.
- * @param leadingItems Actions that belong to the row rather than to the song, put before the song's own: moving a row
- *   of a setlist up or down, and taking it out of the setlist.
- * @param fileEditItems Metadata editors, kept after the editor in the menu: all of them on the song details screen, and
- *   the tags and the languages on a song card.
+ * @param leadingItems Actions put before the song's own: the ones that belong to the row rather than to the song
+ *   (moving a row of a setlist up or down, and taking it out of the setlist), and on the song details screen whichever
+ *   of its bar's buttons the bar has no room for: the sheet of what the song is, and the setlist assignments.
+ * @param fileEditItems Metadata editors, kept after the editor in the menu: the cover art on the song details screen,
+ *   whose sheet of what the song is edits the rest, and the tags and the languages on a song card.
  * @param menuFooter The song details screen's transposition and text size steppers, see [ActionsMenu].
  */
 @Composable
@@ -286,8 +285,6 @@ internal fun SongActions(
     state: OverflowMenuState = rememberOverflowMenuState(),
     viewModel: CampfireViewModel,
     song: Song,
-    isExpandable: Boolean,
-    isEditAlwaysInMenu: Boolean = false,
     isDeletable: Boolean,
     setlistFileName: String? = null,
     leadingItems: List<ActionsMenuItem> = emptyList(),
@@ -298,13 +295,12 @@ internal fun SongActions(
     ActionsMenu(
         modifier = modifier,
         state = state,
-        isExpandable = isExpandable,
+        isExpandable = false,
         menuFooter = menuFooter,
         items = leadingItems + listOf(
             ActionsMenuItem(
                 title = stringResource(Res.string.songs_edit_song),
                 icon = painterResource(Res.drawable.ic_edit),
-                isAlwaysInMenu = isEditAlwaysInMenu,
                 onClick = { viewModel.openEditor(song.fileName) },
             ),
         ) + fileEditItems + listOfNotNull(
@@ -422,6 +418,19 @@ internal fun SetlistAssignmentsButton(
         )
     }
 }
+
+/** [SetlistAssignmentsButton] as an entry of a menu, for an app bar that has run out of room for the button. */
+@Composable
+internal fun setlistAssignmentsAction(
+    viewModel: CampfireViewModel,
+    song: Song,
+    isInSetlist: Boolean,
+    setlistFileName: String? = null,
+) = ActionsMenuItem(
+    title = stringResource(Res.string.songs_setlist_assignments),
+    icon = painterResource(if (isInSetlist) Res.drawable.ic_setlists else Res.drawable.ic_setlists_outline),
+    onClick = { viewModel.showDialog(CampfireViewModel.DialogType.SetlistPicker(song = song, setlistFileName = setlistFileName)) },
+)
 
 /** How far [SetlistAssignmentsButton]'s star turns between its two states: two points of five, in degrees. */
 private const val SETLIST_ASSIGNMENTS_ICON_TURN = 144f

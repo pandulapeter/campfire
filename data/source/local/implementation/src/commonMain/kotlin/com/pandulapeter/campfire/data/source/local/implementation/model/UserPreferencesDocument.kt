@@ -35,8 +35,6 @@ internal data class UserPreferencesDocument(
     val isGermanNotationEnabled: Boolean = false,
     val transpositions: Map<String, Int> = emptyMap(),
     val foldedSections: Map<String, List<String>> = emptyMap(),
-    val isSongInfoFolded: Boolean = false,
-    val foldedSongInfoSections: List<String> = emptyList(),
     val tagMatchMode: String = "",
     val languageMatchMode: String = "",
     val tagSortingMode: String = "",

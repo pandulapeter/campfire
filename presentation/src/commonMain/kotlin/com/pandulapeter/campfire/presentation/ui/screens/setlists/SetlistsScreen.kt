@@ -649,7 +649,6 @@ private fun SetlistEntryActions(
         is CampfireViewModel.SetlistWithSongs.Entry.Present -> SongActions(
             viewModel = viewModel,
             song = entry.song,
-            isExpandable = false,
             isDeletable = false,
             setlistFileName = setlistFileName,
             leadingItems = setlistRowActions(onMoveUp, onMoveDown, onRemove),

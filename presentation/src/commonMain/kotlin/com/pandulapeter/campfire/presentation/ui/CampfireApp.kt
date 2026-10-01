@@ -683,7 +683,6 @@ private fun CampfireScreens(
                             destination = destination,
                             settledWidth = settledSongDetailsWidth,
                             contentPadding = songDetailsContentPadding,
-                            urlOpener = urlOpener,
                             onBack = viewModel::navigateBack,
                         )
                     }

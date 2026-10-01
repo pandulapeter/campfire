@@ -149,8 +149,9 @@ import kotlin.math.roundToInt
  * [SongSectionContent]), which are saved per song, and [onFoldToggled] is handed each key a fold toggles to save it.
  * Null where nothing folds, which is the editor's preview: it is there to show what is being written, and a section
  * folded on the details screen would hide the lines being typed into it.
- * @param songInfoFolding How the card saying what the song is folds, and its groups (see [SongInfo]). Null where nothing
- * folds, as for [onFoldToggled].
+ * @param isSongInfoShown Whether the song's first section holds the card of what the song is (see
+ * [SongMetadataSection]), which the editor's preview does; the song details screen opens it as a sheet instead.
+ * @param songInfoEditing The edit buttons of that card, null for none.
  * @param onRowsPlaced Handed the rows of the song ([SongRows]: where a scroll comes to rest on each - the
  * bottom edge of the divider above it, so that the divider itself is just out of view - and where its content ends),
  * and the stops the song is stepped through, measured from the top of this composable's content, every time they are
@@ -186,8 +187,8 @@ internal fun SongLyrics(
     fontScale: Float = 1f,
     foldedSections: Set<String> = emptySet(),
     onFoldToggled: ((key: String) -> Unit)? = null,
-    songInfoFolding: SongInfoFolding? = null,
-    onOpenLink: ((String) -> Unit)? = null,
+    isSongInfoShown: Boolean = false,
+    songInfoEditing: SongInfoEditing? = null,
     onRowsPlaced: ((SongRows) -> Unit)? = null,
     rowViewportHeight: Dp = Dp.Unspecified,
     isOneRowAtATime: Boolean = false,
@@ -199,11 +200,14 @@ internal fun SongLyrics(
 ) {
     // The fold toggles of the runs inside a section are named by these too, where the file names them nothing.
     val defaultLabels = rememberDefaultSectionLabels()
-    val sections = remember(model.sections, model.song.metadata, model.shouldShowChords) {
+    val isSongInfoEditable = songInfoEditing != null
+    val sections = remember(model.sections, model.song.metadata, model.shouldShowChords, isSongInfoShown, isSongInfoEditable) {
         withMetadataSection(
             sections = model.sections,
             metadata = model.song.metadata,
             shouldShowChords = model.shouldShowChords,
+            isSongInfoShown = isSongInfoShown,
+            isSongInfoEditable = isSongInfoEditable,
         )
     }
     val glideScope = rememberCoroutineScope()
@@ -242,7 +246,7 @@ internal fun SongLyrics(
     // Everything the height of a section depends on apart from its own content and the width it is measured at, the
     // folded runs included. Within one of these the sizes of a section are reused by content, so an edit or a
     // transposition only measures the sections it changed.
-    val sectionSizesPool = remember(fontScale, density, foldedSections, songInfoFolding?.isCardFolded, songInfoFolding?.foldedSections, lyricsStyle, headerStyle, defaultLabels) { SectionSizesPool<UnitContent>() }
+    val sectionSizesPool = remember(fontScale, density, foldedSections, lyricsStyle, headerStyle, defaultLabels) { SectionSizesPool<UnitContent>() }
     // Every section that may be cut is composed as the chunks it may be cut into, which the layout keeps together until
     // it has no other way of fitting the song (see flowIntoRowsCuttingSections). A folded section is one, since what is
     // left of it is its header.
@@ -342,15 +346,13 @@ internal fun SongLyrics(
                             traversalIndex = unit.toFloat()
                         }
                         when (section) {
-                            is RenderSection.Metadata -> SongInfo(
+                            is RenderSection.Metadata -> SongMetadataSection(
                                 modifier = unitModifier,
                                 metadata = section.metadata,
-                                folding = songInfoFolding,
-                                // The card springs along with the sections, and so not while they glide or keep still.
-                                lookaheadScope = if (sectionMotion == SectionMotion.SPRING && extraWidth == 0.dp) this@LookaheadScope else null,
+                                isSongInfoShown = isSongInfoShown,
+                                songInfoEditing = songInfoEditing,
                                 titleStyle = headerStyle,
                                 fontScale = fontScale,
-                                onOpenLink = onOpenLink,
                             )
 
                             is RenderSection.Comment -> SongComment(

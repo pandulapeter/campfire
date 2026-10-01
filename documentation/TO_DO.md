@@ -10,6 +10,7 @@
 # To do
 - Fix PDF rendering issues (Execute documentation/PDF_RENDERING-ISSUES.md)
 - .docx, .pdf, .txt import (Execute documentation/issues/EXECUTION.md)
+- Editor feature: clean up chordPro
 - What's new dialog
 - Global sync status display ?
 - Optional close confirmation dialog on relevant platforms

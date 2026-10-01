@@ -180,7 +180,7 @@ on every platform. New controls and text written into PDFs are localized in both
   into `Song.tags` at scan time and written back into the text the same way, so a tag travels with the file through
   an export, an import or a sync run. The library's set of tags is whatever the songs carry; the Songs screen's
   filter offers them counted, most used first or alphabetically (a toggle next to the group's title, which the dialog
-  that puts them on or takes them off — opened from the song details overflow menu and from a song card's on the Songs screen — shares; one preference per
+  that puts them on or takes them off — opened from the song details' About the song sheet, the editor preview's card and a song card's menu on the Songs screen — shares; one preference per
   group, `UserPreferences.tagSortingMode` and `languageSortingMode`, the languages being ordered the same way).
 - **The language of a song is carried the same way, and is its own category rather than one more tag**: a
   `{meta: language en}` directive per language, read into `Song.languages` as a lowercase ISO code — 639-2's three
@@ -188,7 +188,7 @@ on every platform. New controls and text written into PDFs are localized in both
   they are where it does not (`rom`, Romani), so one language is one code however the file spells it. It gets its own
   filter group on the Songs screen — but only once the library holds more than one language, with an "Unknown" chip
   for the songs that declare none — and it is shown wherever a tag is: next to them under a song in the lists, and as
-  one read-only chip per language in the song details metadata card; the same two overflow menus open the picker. The **names
+  one read-only chip per language in the song details' About the song sheet and the editor preview's card; the same places open the picker. The **names
   are never shipped**: the app carries a list of codes and nothing else, and asks the platform what each is called in the language the app is set
   to (`java.util.Locale`, `NSLocale`, `Intl.DisplayNames` behind `:presentation`'s `languageDisplayName`), falling
   back to the code in capitals where it cannot say.
@@ -199,13 +199,16 @@ on every platform. New controls and text written into PDFs are localized in both
   ever what recommends one. See Cover art below.
 - **Links about a song are carried the same way**: a `{meta: link https://… Optional name}` directive per link, read into
   `ChordProMetadata.links`. Any page is taken, whatever site it is on, and nothing is ever fetched from one: the
-  song details metadata card shows each as a chip named by its optional name or its host, opening the page in the
-  browser. The card flows as the first section through the song's rows and columns and scales with the lyrics; key,
-  capo, tempo and time stay outside it. The overflow menu's Edit links dialog edits addresses and optional names together,
+  song details' About the song sheet shows each as a chip named by its optional name or its host, opening the page in
+  the browser. The sheet is opened from the song details app bar — a button where there is room, the first entry of the
+  overflow menu where not — and holds what the song says about itself, each group with an edit button outside
+  performance mode; key, capo, tempo and time stay on the page as the song's first section. The editor's preview shows
+  the same as a card that is the song's first section, flowing through its rows and columns and scaling with the
+  lyrics, with the same edit buttons, which are entries of the editor's overflow menu while the preview is hidden.
+  Performance mode leaves the sheet's empty groups out, and the button that opens it where all of them are empty. The Edit links dialog edits addresses and optional names together,
   and their order, written once on Save; the links are shown in that order, where tags and languages are always
   shown alphabetically.
-  The editor's overflow menu has the same metadata entries, but there they change the text being typed rather than the
-  file, which only Save writes.
+  From the editor those buttons change the text being typed rather than the file, which only Save writes.
   Opening a link is the user's browser making the request, not Campfire.
 - **The app is shipped with two songs and one setlist**, in
   `presentation/src/commonMain/composeResources/files/demo`: public domain campfire standards, bundled as the plain
