@@ -9,13 +9,17 @@
  */
 package com.pandulapeter.campfire.presentation.ui.components
 
+import androidx.compose.animation.animateBounds
 import androidx.compose.animation.animateContentSize
+import androidx.compose.foundation.layout.Box
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.key
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.layout.IntrinsicMeasurable
 import androidx.compose.ui.layout.IntrinsicMeasureScope
 import androidx.compose.ui.layout.Layout
+import androidx.compose.ui.layout.LookaheadScope
 import androidx.compose.ui.layout.Measurable
 import androidx.compose.ui.layout.MeasureResult
 import androidx.compose.ui.layout.MeasureScope
@@ -120,20 +124,27 @@ internal fun FilterGroupsLayout(
  * Its intrinsic heights are what the sharing is decided by, and they are the collapsed group's whatever [isExpanded]
  * says: the max is every chip, the min [MIN_COLLAPSED_LINES] lines, the pinned chips and the toggle.
  *
+ * A chip that changes places - the group sorted the other way, or a count that moved it past another - travels there
+ * (`animateBounds`) rather than every chip staying put and being handed another label, which leaves the eye nothing to
+ * follow. That is why the chips are composed here, each under its [key]: composed in a plain loop, the chip in the first
+ * place would stay the first chip whatever value it showed.
+ *
  * @param isExpanded Every chip and the toggle, however much room there is: the user asked to see them all.
- * @param isPinned One value per chip, in the order the chips are composed in.
+ * @param isPinned One value per item, in their order.
  * @param horizontalPadding Between the chips and the edges; the toggle is placed at the start edge and pads itself.
  */
 @Composable
-internal fun CollapsibleChipFlow(
+internal fun <T : Any> CollapsibleChipFlow(
     modifier: Modifier = Modifier,
+    items: List<T>,
+    key: (T) -> Any,
     isExpanded: Boolean,
     isPinned: List<Boolean>,
     horizontalPadding: Dp,
     gap: Dp,
     toggle: @Composable () -> Unit,
-    chips: @Composable () -> Unit,
-) {
+    chip: @Composable (T) -> Unit,
+) = LookaheadScope {
     val measurePolicy = remember(isExpanded, isPinned, horizontalPadding, gap) {
         CollapsibleChipFlowMeasurePolicy(
             isExpanded = isExpanded,
@@ -146,7 +157,16 @@ internal fun CollapsibleChipFlow(
         // The chips past the fold arrive and leave in one step, and so does the toggle, so it is the height of the
         // group that moves rather than everything under it jumping by several lines.
         modifier = modifier.animateContentSize(),
-        contents = listOf(chips, toggle),
+        contents = listOf(
+            {
+                items.forEach { item ->
+                    key(key(item)) {
+                        Box(modifier = Modifier.animateBounds(this@LookaheadScope)) { chip(item) }
+                    }
+                }
+            },
+            toggle,
+        ),
         measurePolicy = measurePolicy,
     )
 }

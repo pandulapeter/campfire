@@ -110,6 +110,16 @@ uninstall and nothing else does.
   is a `<plurals>` with `one` and `other` items, read with `pluralStringResource`, rather than a second key.
 - The UI is Material 3 Expressive (`org.jetbrains.compose.material3:material3`, versioned separately from Compose
   Multiplatform in `jetbrains-compose-material3`); don't add `androidx.compose.material` (M2) back.
+- **Nearly every change the user can see is animated**: something that appears, disappears, moves, resizes, changes
+  color or swaps for something else gets there with a transition (a fade, a size or bounds animation, a crossfade, a
+  morph) rather than in one frame. Only a change the user caused is narrated this way, though — data arriving, or a
+  state that starts on a wrong initial value, is fixed at its source so the first frame is already right, not
+  animated over.
+- **Content scrolled under a bar fades out into it rather than the bar lifting**: no tonal elevation, shadow or
+  divider appears when something is scrolled under an app bar, tabs or a pinned header — the content fades into
+  nothing over a short gradient instead (`fadingTopEdge` / `fadingVerticalEdges` in `:presentation`'s
+  `components/EdgeFade.kt`, and `ListTopFade` for the list screens' cards), and the bars stay flat in the background
+  color. A new scrolling container gets the same treatment, not Material's scrolled-under elevation.
 - `:app:android` and `:app:baselineprofile` are plain Android modules, `:app:desktop` a plain JVM one, `:app:ios`
   Kotlin/Native-only and `:app:web` Kotlin/Wasm-only; every other module (`:presentation` and `:chordpro` included) is
   a multiplatform library.

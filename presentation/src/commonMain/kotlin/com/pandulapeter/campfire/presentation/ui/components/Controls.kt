@@ -11,6 +11,7 @@ package com.pandulapeter.campfire.presentation.ui.components
 
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.Crossfade
+import androidx.compose.animation.animateBounds
 import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.expandHorizontally
 import androidx.compose.animation.expandVertically
@@ -20,6 +21,7 @@ import androidx.compose.animation.shrinkHorizontally
 import androidx.compose.animation.shrinkVertically
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
+import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.indication
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
@@ -39,9 +41,6 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.widthIn
-import androidx.compose.foundation.lazy.LazyRow
-import androidx.compose.foundation.lazy.items
-import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.selection.selectable
 import androidx.compose.foundation.verticalScroll
@@ -59,6 +58,7 @@ import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.Immutable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.key
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
@@ -67,6 +67,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.painter.Painter
+import androidx.compose.ui.layout.LookaheadScope
 import androidx.compose.ui.layout.layoutId
 import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.semantics.Role
@@ -316,19 +317,18 @@ private fun TagFilters(
     }
     FilterGroupChips(
         isVisible = isVisible,
+        items = orderedTags,
+        key = { it.name.lowercase() },
         isExpanded = isExpanded,
         isPinned = isPinned,
-        count = tags.size,
         onExpandedChanged = { isExpanded = it },
-    ) {
-        orderedTags.forEach { tag ->
-            CountedFilterChip(
-                label = tag.name,
-                songCount = tag.songCount,
-                isSelected = tag.name.lowercase() in selected,
-                onClick = { onTagClicked(tag.name) },
-            )
-        }
+    ) { tag ->
+        CountedFilterChip(
+            label = tag.name,
+            songCount = tag.songCount,
+            isSelected = tag.name.lowercase() in selected,
+            onClick = { onTagClicked(tag.name) },
+        )
     }
     MatchModeChoice(
         modifier = Modifier.layoutId(FilterSlot.TRANSIENT),
@@ -380,19 +380,18 @@ private fun LanguageFilters(
     }
     FilterGroupChips(
         isVisible = isVisible,
+        items = orderedLanguages,
+        key = { it.code },
         isExpanded = isExpanded,
         isPinned = isPinned,
-        count = languages.size,
         onExpandedChanged = { isExpanded = it },
-    ) {
-        orderedLanguages.forEach { language ->
-            CountedFilterChip(
-                label = languageLabel(language.code),
-                songCount = language.songCount,
-                isSelected = language.code in selectedLanguages,
-                onClick = { onLanguageClicked(language.code) },
-            )
-        }
+    ) { language ->
+        CountedFilterChip(
+            label = languageLabel(language.code),
+            songCount = language.songCount,
+            isSelected = language.code in selectedLanguages,
+            onClick = { onLanguageClicked(language.code) },
+        )
     }
     MatchModeChoice(
         modifier = Modifier.layoutId(FilterSlot.TRANSIENT),
@@ -424,22 +423,23 @@ private fun FilterGroupPart(
  * The chips of a filter group, cut down to the room [FilterGroupsLayout] gives them, with the "Show all" that opens
  * the rest under them. That one stays under the chips, since what it asks about is the list it is at the end of - and
  * unlike the clearing of the filter it comes and goes with the room the chips have rather than with what is selected.
- *
- * @param count How many chips there are, which is what "Show all" says.
  */
 @Composable
-private fun FilterGroupChips(
+private fun <T : Any> FilterGroupChips(
     isVisible: Boolean,
+    items: List<T>,
+    key: (T) -> Any,
     isExpanded: Boolean,
     isPinned: List<Boolean>,
-    count: Int,
     onExpandedChanged: (Boolean) -> Unit,
-    chips: @Composable () -> Unit,
+    chip: @Composable (T) -> Unit,
 ) = FilterGroupPart(
     modifier = Modifier.layoutId(if (isExpanded) FilterSlot.EXPANDED_CHIPS else FilterSlot.CHIPS),
     isVisible = isVisible,
 ) {
     CollapsibleChipFlow(
+        items = items,
+        key = key,
         isExpanded = isExpanded,
         isPinned = isPinned,
         horizontalPadding = CONTROLS_PADDING,
@@ -453,12 +453,12 @@ private fun FilterGroupChips(
                     text = if (isExpanded) {
                         stringResource(Res.string.songs_filters_show_less)
                     } else {
-                        stringResource(Res.string.songs_filters_show_all, count)
+                        stringResource(Res.string.songs_filters_show_all, items.size)
                     }
                 )
             }
         },
-        chips = chips,
+        chip = chip,
     )
 }
 
@@ -610,6 +610,13 @@ internal fun LabelSortingToggle(
  * ([fadingUnderStartOverlay]), so the toggle stays where it is, read against the background, however far the row is
  * scrolled. Kept as small as it is next to a section title, with no touch target around it, so that the row is as tall
  * as its chips.
+ *
+ * A new order sends the row back to its start, which is where the order is read from, and every chip travels to its
+ * new place (`animateBounds`) rather than staying put and being handed another label. That is why the row is not lazy:
+ * a lazy row sent back to its start lets the placement animation of its items run for a single frame and then drops
+ * them where they land, and the row only holds the library's tags and languages, which the songs screen's filters
+ * compose all of too. The [LookaheadScope] is inside the scroll, so that the scroll moves the chips as a whole and only
+ * the change of order is animated.
  */
 @Composable
 internal fun <T : Any> SortableChipRow(
@@ -623,25 +630,37 @@ internal fun <T : Any> SortableChipRow(
     modifier = modifier.fillMaxWidth(),
     contentAlignment = Alignment.CenterStart,
 ) {
-    val listState = rememberLazyListState()
-    ScrollToStartWhenChanged(
-        listState = listState,
-        key = sortingMode,
-        contents = items,
-    )
+    val scrollState = rememberScrollState()
+    // Only a change of the order, never the first composition: the row may be composed again with the position it
+    // was saved at.
+    var scrolledToStartFor by remember { mutableStateOf(sortingMode) }
+    LaunchedEffect(sortingMode) {
+        if (sortingMode != scrolledToStartFor) {
+            scrolledToStartFor = sortingMode
+            scrollState.animateScrollTo(0)
+        }
+    }
     // The icon itself starts at the keyline the search field above the row starts at.
     val toggleStart = CONTROLS_PADDING - (SORTING_TOGGLE_SIZE - SORTING_TOGGLE_ICON_SIZE) / 2
     val toggleEnd = toggleStart + SORTING_TOGGLE_SIZE
-    LazyRow(
-        modifier = Modifier.fillMaxWidth().fadingUnderStartOverlay(listState = listState, overlayWidth = toggleEnd),
-        state = listState,
-        contentPadding = PaddingValues(start = toggleEnd + SORTING_TOGGLE_GAP, end = CONTROLS_PADDING),
-        horizontalArrangement = Arrangement.spacedBy(CHIP_GAP),
+    Box(
+        modifier = Modifier
+            .fillMaxWidth()
+            .fadingUnderStartOverlay(scrolledFromStart = { scrollState.value }, overlayWidth = toggleEnd)
+            .horizontalScroll(scrollState),
     ) {
-        items(
-            items = items,
-            key = key,
-        ) { item -> chip(item) }
+        LookaheadScope {
+            Row(
+                modifier = Modifier.padding(start = toggleEnd + SORTING_TOGGLE_GAP, end = CONTROLS_PADDING),
+                horizontalArrangement = Arrangement.spacedBy(CHIP_GAP),
+            ) {
+                items.forEach { item ->
+                    key(key(item)) {
+                        Box(modifier = Modifier.animateBounds(this@LookaheadScope)) { chip(item) }
+                    }
+                }
+            }
+        }
     }
     CompositionLocalProvider(LocalMinimumInteractiveComponentSize provides Dp.Unspecified) {
         LabelSortingToggle(

@@ -14,6 +14,7 @@ import androidx.compose.animation.core.Spring
 import androidx.compose.animation.core.VisibilityThreshold
 import androidx.compose.animation.core.spring
 import androidx.compose.foundation.gestures.ScrollableState
+import androidx.compose.foundation.lazy.LazyItemScope
 import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.foundation.lazy.grid.LazyGridItemScope
 import androidx.compose.foundation.lazy.grid.LazyGridLayoutInfo
@@ -143,8 +144,8 @@ internal fun ScrollToTopWhenChanged(
 }
 
 /**
- * Scrolls a list of a sheet or a dialog - or a row of chips - back to its start whenever [key], the order it is sorted
- * in, changes: what was in front before is somewhere else now, and the start is where the new order is read from.
+ * Scrolls a list of a sheet or a dialog back to its start whenever [key], the order it is sorted in, changes: what was
+ * in front before is somewhere else now, and the start is where the new order is read from.
  *
  * The reordered [contents] can arrive several frames after [key], where the view model sorts them away from the main
  * thread, and a lazy list follows its first visible item to wherever that went. So, as in [ScrollToTopWhenChanged],
@@ -326,6 +327,17 @@ internal fun LazyGridItemScope.listItemAnimation(
 } else {
     Modifier
 }
+
+/**
+ * [listItemAnimation] for a row of a lazy list rather than a grid: the lists of the sheets and the dialogs, which are
+ * never rearranged by a drag and never filled in batches, and so need neither of the grid's exceptions.
+ */
+@Composable
+internal fun LazyItemScope.listItemAnimation(listState: ScrollableState) = Modifier.animateItem(
+    fadeInSpec = ITEM_FADE_SPEC,
+    placementSpec = if (listState.isScrollInProgress) null else ITEM_PLACEMENT_SPEC,
+    fadeOutSpec = ITEM_FADE_SPEC,
+)
 
 /** The fade [Modifier.animateItem] uses by default. */
 private val ITEM_FADE_SPEC = spring<Float>(stiffness = Spring.StiffnessMediumLow)

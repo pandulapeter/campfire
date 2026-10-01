@@ -279,19 +279,21 @@ internal fun Modifier.fadingVerticalEdges(gridState: LazyGridState) = fadingVert
 )
 
 /**
- * Fades a sideways scrolling lazy row out under something pinned over its start, a control the row's items scroll
- * behind: they are gone entirely under its [overlayWidth] and fade back in over [EDGE_FADE_SIZE] past it, so the pinned
- * control is read against the background whatever is scrolled under it. As strong as the row is scrolled, like
+ * Fades a sideways scrolling row out under something pinned over its start, a control the row's items scroll behind:
+ * they are gone entirely under its [overlayWidth] and fade back in over [EDGE_FADE_SIZE] past it, so the pinned control
+ * is read against the background whatever is scrolled under it. As strong as the row is scrolled, like
  * [fadingTopEdge], so a row resting at its start - whose first item starts past the control - is drawn whole.
+ *
+ * @param scrolledFromStart How far the row has been scrolled from its start, read while it is drawn.
  */
-internal fun Modifier.fadingUnderStartOverlay(listState: LazyListState, overlayWidth: Dp) = this
+internal fun Modifier.fadingUnderStartOverlay(scrolledFromStart: () -> Int, overlayWidth: Dp) = this
     .graphicsLayer {
-        compositingStrategy = if (listState.scrolledFromTop() > 0) CompositingStrategy.Offscreen else CompositingStrategy.Auto
+        compositingStrategy = if (scrolledFromStart() > 0) CompositingStrategy.Offscreen else CompositingStrategy.Auto
     }
     .drawWithContent {
         drawContent()
         val fadeWidth = EDGE_FADE_SIZE.toPx()
-        val strength = (listState.scrolledFromTop() / fadeWidth).coerceIn(0f, 1f)
+        val strength = (scrolledFromStart() / fadeWidth).coerceIn(0f, 1f)
         if (strength > 0f) {
             val hidden = Color.Black.copy(alpha = 1f - strength)
             val overlay = overlayWidth.toPx()

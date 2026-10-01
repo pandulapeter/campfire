@@ -38,6 +38,7 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyListScope
+import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.rememberScrollState
@@ -215,6 +216,7 @@ import com.pandulapeter.campfire.presentation.ui.components.fadingTopEdge
 import com.pandulapeter.campfire.presentation.ui.components.fadingVerticalEdges
 import com.pandulapeter.campfire.presentation.ui.components.languageLabel
 import com.pandulapeter.campfire.presentation.ui.components.languageName
+import com.pandulapeter.campfire.presentation.ui.components.listItemAnimation
 import com.pandulapeter.campfire.presentation.ui.components.orderedBy
 import com.pandulapeter.campfire.presentation.ui.components.pickableLanguages
 import com.pandulapeter.campfire.presentation.ui.components.textResource
@@ -1292,6 +1294,7 @@ private fun SongTagsDialog(
                         if (isCreatable) {
                             item(key = CREATE_TAG_KEY) {
                                 ActionListItem(
+                                    modifier = listItemAnimation(listState),
                                     title = textResource(Res.string.song_details_tag_create, typedTag),
                                     icon = painterResource(Res.drawable.ic_add),
                                     horizontalInset = DIALOG_CHECKLIST_ROW_INSET,
@@ -1304,6 +1307,7 @@ private fun SongTagsDialog(
                             key = { "tag:$it" },
                         ) { tag ->
                             CheckboxListItem(
+                                modifier = listItemAnimation(listState),
                                 title = tag,
                                 isChecked = tag in selectedTags,
                                 horizontalInset = DIALOG_CHECKLIST_ROW_INSET,
@@ -1475,6 +1479,7 @@ private fun SongLanguagesDialog(
                             key = { it.code },
                         ) { language ->
                             CheckboxListItem(
+                                modifier = listItemAnimation(listState),
                                 title = language.label,
                                 // The code is under the name, and is the name itself where there is none to put above it.
                                 description = language.name?.let { language.code.uppercase() },
@@ -1556,12 +1561,13 @@ private fun SetlistPicker(
                 sortingMode = userPreferences?.setlistSortingMode,
                 contents = matches,
                 noResultsText = if (matches.isEmpty() && query.isNotBlank()) stringResource(Res.string.setlists_no_search_results) else null,
-            ) {
+            ) { listState ->
                 items(
                     items = matches,
                     key = { it.fileName },
                 ) { setlist ->
                     CheckboxListItem(
+                        modifier = listItemAnimation(listState),
                         title = setlist.title,
                         isChecked = setlist.entries.any { it.songFileName == dialog.song.fileName },
                         isEnabled = setlist.fileName != dialog.setlistFileName,
@@ -1576,6 +1582,7 @@ private fun SetlistPicker(
                 }
                 item(key = "new_setlist") {
                     ActionListItem(
+                        modifier = listItemAnimation(listState),
                         title = stringResource(Res.string.setlists_new_setlist),
                         icon = painterResource(Res.drawable.ic_add),
                         onClick = { isNamingNewSetlist = true },
@@ -1704,13 +1711,14 @@ private fun SongPicker(
                 matches.isEmpty() && (query.isNotBlank() || isFiltered) -> stringResource(Res.string.songs_no_search_results)
                 else -> null
             },
-        ) {
+        ) { listState ->
             items(
                 items = matches,
                 key = { it.song.fileName },
             ) { pickableSong ->
                 val fileName = pickableSong.song.fileName
                 CheckboxListItem(
+                    modifier = listItemAnimation(listState),
                     title = pickableSong.song.title,
                     description = pickableSong.song.artist.ifBlank { null },
                     isChecked = fileName in selectedSongFileNames,
@@ -1865,7 +1873,7 @@ private fun ColumnScope.PickerList(
     sortingMode: Any?,
     contents: Any?,
     noResultsText: String?,
-    content: LazyListScope.() -> Unit,
+    content: LazyListScope.(LazyListState) -> Unit,
 ) {
     val density = LocalDensity.current
     var tallestHeight by remember { mutableIntStateOf(0) }
@@ -1895,14 +1903,14 @@ private fun ColumnScope.PickerList(
         if (noResultsText != null) {
             item(key = "no_results") {
                 Text(
-                    modifier = Modifier.fillMaxWidth().padding(16.dp),
+                    modifier = listItemAnimation(listState).fillMaxWidth().padding(16.dp),
                     text = noResultsText,
                     style = MaterialTheme.typography.bodyMedium,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                 )
             }
         }
-        content()
+        content(listState)
     }
 }
 

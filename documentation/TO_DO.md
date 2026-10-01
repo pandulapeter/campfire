@@ -13,6 +13,8 @@
 - Optional close confirmation dialog on relevant platforms
 - What's new dialog
 - Simplify adding comments / annotations
+- Metronome
+- PDF export (for print)
 - Word + PDF import
 - External monitor support for lyrics only...? Maybe as a new window on desktop
 - Add support for Latin and Nashville notations
@@ -24,4 +26,3 @@
 - Each top-level Composable should be defined in a separate file
 - Multi-cursor in editor ?
 - First time user experience tutorial ?
-- Metronome ?
