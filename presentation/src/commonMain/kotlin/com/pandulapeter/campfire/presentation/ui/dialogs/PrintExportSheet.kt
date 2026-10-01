@@ -217,9 +217,9 @@ internal fun PrintExportSheet(viewModel: CampfireViewModel, dialog: CampfireView
             canShare = filePicker.canShare,
             onExport = { isShare ->
                 laidOut?.document?.let { snapshot ->
-                    val title = source!!.title
-                    viewModel.exportPdf(filePicker, title, dialog, snapshot.pages.size, isShare) { onPage ->
-                        newRenderer().pdf(snapshot, title, onPage = onPage)
+                    // From the sheet's own settings, which the saved preferences may not have caught up with yet.
+                    viewModel.exportPdf(filePicker, pdfFileName(source!!, settings), dialog, snapshot.pages.size, isShare) { onPage ->
+                        newRenderer().pdf(snapshot, source!!.title, onPage = onPage)
                     }
                 }
             },

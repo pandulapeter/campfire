@@ -44,7 +44,6 @@ import com.pandulapeter.campfire.data.model.domain.SyncProviderId
 import com.pandulapeter.campfire.data.source.remote.api.model.AuthorizationCompletionPage
 import com.pandulapeter.campfire.data.model.domain.SyncState
 import com.pandulapeter.campfire.data.model.domain.PrintSettings
-import com.pandulapeter.campfire.data.model.domain.LibraryFiles
 import com.pandulapeter.campfire.presentation.ui.print.PrintSource
 import com.pandulapeter.campfire.presentation.ui.print.PrintSong
 import com.pandulapeter.campfire.data.model.domain.UserPreferences
@@ -2342,7 +2341,7 @@ class CampfireViewModel(
      */
     internal fun exportPdf(
         filePicker: FilePicker,
-        title: String,
+        fileName: String,
         dialog: DialogType.PrintExport,
         pageCount: Int,
         isShare: Boolean,
@@ -2365,7 +2364,7 @@ class CampfireViewModel(
                         // file all the same once it answered.
                         _pdfExportProgress.value = null
                     }
-                    bytes?.let { ExportedFile(LibraryFiles.normalizedName(title) + ".pdf", "application/pdf", it) }
+                    bytes?.let { ExportedFile(fileName, "application/pdf", it) }
                 }
             } finally {
                 _pdfExportProgress.value = null
