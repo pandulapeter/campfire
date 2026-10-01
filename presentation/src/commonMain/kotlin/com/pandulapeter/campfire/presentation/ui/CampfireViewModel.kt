@@ -2021,9 +2021,19 @@ class CampfireViewModel(
     private val _isFileTransferActive = MutableStateFlow(false)
     val isFileTransferActive = _isFileTransferActive.asStateFlow()
 
-    /** True from the export sheet's Save until the PDF has been saved, or has not been, in the way any export ends. */
-    private val _isExportingPdf = MutableStateFlow(false)
-    val isExportingPdf = _isExportingPdf.asStateFlow()
+    /**
+     * How far the export sheet's PDF has been drawn, from its Save until the file is ready to be handed to the picker,
+     * and null otherwise: once the picker is up there is nothing left to count, and nothing to cancel either (see
+     * [cancelPdfExport]).
+     */
+    private val _pdfExportProgress = MutableStateFlow<PdfExportProgress?>(null)
+    val pdfExportProgress = _pdfExportProgress.asStateFlow()
+
+    private var pdfExportJob: Job? = null
+
+    /** Emitted with the sheet an export was started from once its file is saved, for that sheet, and no other, to close. */
+    private val _printExportSaved = MutableSharedFlow<DialogType.PrintExport>(extraBufferCapacity = 1)
+    val printExportSaved = _printExportSaved.asSharedFlow()
 
     /**
      * Only as safe as the pickers are: every one of them has to answer on every way its screen can go away, since a
@@ -2035,13 +2045,14 @@ class CampfireViewModel(
      * one that ended late must not clear the flag of the next. The job starts once it is recorded, since the main
      * dispatcher is immediate and a block that never suspends would otherwise complete before it is.
      */
-    private fun launchFileTransfer(block: suspend () -> Unit) {
-        if (fileTransferJob?.isActive == true) return
+    private fun launchFileTransfer(block: suspend () -> Unit): Job? {
+        if (fileTransferJob?.isActive == true) return null
         _isFileTransferActive.value = true
         val job = viewModelScope.launch(start = CoroutineStart.LAZY) { block() }
         fileTransferJob = job
         job.invokeOnCompletion { if (fileTransferJob === job) _isFileTransferActive.value = false }
         job.start()
+        return job
     }
 
     /**
@@ -2323,15 +2334,47 @@ class CampfireViewModel(
         _pendingPrintSettings.compareAndSet(value, null)
     }
 
-    internal fun exportPdf(filePicker: FilePicker, title: String, create: suspend () -> ByteArray) = launchFileTransfer {
-        _isExportingPdf.value = true
-        try {
-            save(filePicker) {
-                ExportedFile(LibraryFiles.normalizedName(title) + ".pdf", "application/pdf", withContext(Dispatchers.Default) { create() })
+    /**
+     * [create] draws the pages and reports each one drawn to the callback it is given. Whatever it throws, an
+     * `OutOfMemoryError` included, is the export failing rather than the app: a large setlist on a phone with a small
+     * heap can run out while drawing, which is reported the way any failed export is. On the web running out of memory
+     * is a trap that no handler sees, so there it still ends the app.
+     */
+    internal fun exportPdf(
+        filePicker: FilePicker,
+        title: String,
+        dialog: DialogType.PrintExport,
+        pageCount: Int,
+        create: suspend (onPage: (done: Int) -> Unit) -> ByteArray,
+    ) {
+        val job = launchFileTransfer {
+            _pdfExportProgress.value = PdfExportProgress(done = 0, total = pageCount)
+            try {
+                save(filePicker, onSaved = { _printExportSaved.tryEmit(dialog) }) {
+                    val bytes = try {
+                        withContext(Dispatchers.Default) { create { done -> _pdfExportProgress.value = PdfExportProgress(done = done, total = pageCount) } }
+                    } catch (exception: CancellationException) {
+                        throw exception
+                    } catch (throwable: Throwable) {
+                        println("Could not create the PDF: ${throwable::class.simpleName}")
+                        null
+                    } finally {
+                        // Before the picker, which cannot be cancelled from here: Android's would stay up and write the
+                        // file all the same once it answered.
+                        _pdfExportProgress.value = null
+                    }
+                    bytes?.let { ExportedFile(LibraryFiles.normalizedName(title) + ".pdf", "application/pdf", it) }
+                }
+            } finally {
+                _pdfExportProgress.value = null
             }
-        } finally {
-            _isExportingPdf.value = false
         }
+        if (job != null) pdfExportJob = job
+    }
+
+    /** Stops an export that is still drawing its pages, and leaves one that has its picker up to finish. */
+    fun cancelPdfExport() {
+        if (_pdfExportProgress.value != null) pdfExportJob?.cancel()
     }
 
     fun exportSong(filePicker: FilePicker, songFileName: String) = launchFileTransfer {
@@ -2731,6 +2774,8 @@ class CampfireViewModel(
         // find the options it left.
         if (previousDialog is DialogType.PrintExport && dialogType != previousDialog) {
             _pendingPrintSettings.value?.let { viewModelScope.launch { savePrintSettings(it) } }
+            // An export nobody is looking at any more would put its picker up over whatever is on screen by then.
+            cancelPdfExport()
         }
         _visibleDialog.update { dialogType }
         // Asked as the sheet is put up rather than by the sheet once it is composed, so that its first frame already
@@ -3023,6 +3068,12 @@ class CampfireViewModel(
     data class SongGroup(
         val header: SongSection.Header?,
         val songs: List<Song>,
+    )
+
+    /** How many of the [total] pages of a PDF have been drawn, see [pdfExportProgress]. */
+    data class PdfExportProgress(
+        val done: Int,
+        val total: Int,
     )
 
     /**

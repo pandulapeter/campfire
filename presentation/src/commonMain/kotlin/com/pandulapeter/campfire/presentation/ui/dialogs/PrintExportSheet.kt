@@ -60,6 +60,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.invisibleToUser
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.platform.LocalFontFamilyResolver
 import androidx.compose.ui.text.TextMeasurer
@@ -100,7 +101,7 @@ internal fun PrintExportSheet(viewModel: CampfireViewModel, dialog: CampfireView
     var attempt by remember(dialog) { mutableIntStateOf(0) }
     // Saved, or a rotation would put back every song somebody had unticked; null until the source has been read.
     var selected by rememberSaveable(dialog, stateSaver = SELECTION_SAVER) { mutableStateOf<Set<Int>?>(null) }
-    val isExporting by viewModel.isExportingPdf.collectAsStateWithLifecycle()
+    val exportProgress by viewModel.pdfExportProgress.collectAsStateWithLifecycle()
     val isFileTransferActive by viewModel.isFileTransferActive.collectAsStateWithLifecycle()
     var page by rememberSaveable(dialog) { mutableIntStateOf(0) }
     val filePicker = LocalFilePicker.current
@@ -204,33 +205,64 @@ internal fun PrintExportSheet(viewModel: CampfireViewModel, dialog: CampfireView
                 }
             }
         }
+        // Here rather than outside the sheet, since closing it the way its close button does is only possible from here.
+        LaunchedEffect(dialog) { viewModel.printExportSaved.collect { if (it == dialog) close() } }
         PrintActions(
             contentPadding = contentPadding,
+            progress = exportProgress,
             // Any import or export running would make the view model ignore the tap, so the button does not take it.
             canSave = isCurrent && laidOut?.document?.pages?.isNotEmpty() == true && !isFileTransferActive,
-            isExporting = isExporting,
             onSave = {
                 laidOut?.document?.let { snapshot ->
                     val title = source!!.title
-                    viewModel.exportPdf(filePicker, title) { newRenderer().pdf(snapshot, title) }
+                    viewModel.exportPdf(filePicker, title, dialog, snapshot.pages.size) { onPage ->
+                        newRenderer().pdf(snapshot, title, onPage = onPage)
+                    }
                 }
             },
+            onCancel = viewModel::cancelPdfExport,
         )
     }
 }
 
 /**
  * Below the scrolling area rather than in the header, and given the bottom inset itself, as the cover search's are: the
- * list above it has no bar to scroll under, so the inset is the row's alone.
+ * list above it has no bar to scroll under, so the inset is the row's alone. While the pages are drawn the progress
+ * shows above the button and the button cancels; once the picker is up there is nothing to cancel, and Save stays
+ * disabled by [canSave] until it has answered.
  */
 @Composable
-private fun PrintActions(contentPadding: PaddingValues, canSave: Boolean, isExporting: Boolean, onSave: () -> Unit) = Row(
+private fun PrintActions(
+    contentPadding: PaddingValues,
+    progress: CampfireViewModel.PdfExportProgress?,
+    canSave: Boolean,
+    onSave: () -> Unit,
+    onCancel: () -> Unit,
+) = Column(
     modifier = Modifier.fillMaxWidth().padding(start = 16.dp, end = 16.dp, top = 8.dp).padding(contentPadding),
-    verticalAlignment = Alignment.CenterVertically,
 ) {
-    Spacer(Modifier.weight(1f))
-    Button(enabled = canSave, onClick = onSave) {
-        ProgressLabel(stringResource(Res.string.print_save), isInProgress = isExporting)
+    // Keyed by whether there is any, so that the bar fades out showing the last count rather than an empty one.
+    AnimatedContent(progress, transitionSpec = { fadeIn() togetherWith fadeOut() }, contentKey = { it != null }) { shown ->
+        if (shown != null) {
+            Column(Modifier.fillMaxWidth().padding(bottom = 8.dp)) {
+                Text(
+                    text = stringResource(Res.string.print_page, (shown.done + 1).coerceAtMost(shown.total), shown.total),
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                )
+                Spacer(Modifier.height(4.dp))
+                LinearProgressIndicator(
+                    progress = { if (shown.total == 0) 0f else shown.done.toFloat() / shown.total },
+                    modifier = Modifier.fillMaxWidth(),
+                )
+            }
+        }
+    }
+    Row(verticalAlignment = Alignment.CenterVertically) {
+        Spacer(Modifier.weight(1f))
+        Button(enabled = progress != null || canSave, onClick = if (progress != null) onCancel else onSave) {
+            CrossfadedLabel(stringResource(Res.string.print_save), stringResource(Res.string.cancel), isSecondShown = progress != null)
+        }
     }
 }
 
@@ -244,12 +276,12 @@ private enum class PrintSheetContent { FAILED, LOADING, LOADED }
  */
 private class LaidOutDocument(val document: PrintDocument, val source: PrintSource, val settings: PrintSettings, val labels: PrintLabels, val generation: Int)
 
-/** The label of a button that runs something, with an indicator faded over it that keeps the button at the label's size. */
+/** Two labels of one button, faded between, the button keeping the size of the wider so that it does not jump. */
 @Composable
-private fun ProgressLabel(text: String, isInProgress: Boolean) = Box(contentAlignment = Alignment.Center) {
-    val labelAlpha by animateFloatAsState(if (isInProgress) 0f else 1f)
-    Text(text, Modifier.alpha(labelAlpha))
-    AnimatedVisibility(isInProgress, enter = fadeIn(), exit = fadeOut()) { CircularProgressIndicator(Modifier.size(20.dp), strokeWidth = 2.dp) }
+private fun CrossfadedLabel(first: String, second: String, isSecondShown: Boolean) = Box(contentAlignment = Alignment.Center) {
+    val secondAlpha by animateFloatAsState(if (isSecondShown) 1f else 0f)
+    Text(first, Modifier.alpha(1f - secondAlpha).semantics { if (isSecondShown) invisibleToUser() })
+    Text(second, Modifier.alpha(secondAlpha).semantics { if (!isSecondShown) invisibleToUser() })
 }
 
 @Composable

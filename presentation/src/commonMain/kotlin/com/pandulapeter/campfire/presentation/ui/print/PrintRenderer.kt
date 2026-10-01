@@ -78,7 +78,8 @@ internal class PrintRenderer(
         }
     }
 
-    suspend fun pdf(document: PrintDocument, title: String): ByteArray {
+    /** @param onPage Called with the number of pages done after each page is added to the file. */
+    suspend fun pdf(document: PrintDocument, title: String, onPage: (done: Int) -> Unit = {}): ByteArray {
         val writer = PrintPdfWriter(document.width, document.height, title)
         val scale = 3f // 216 dpi: text remains sharp at its physical print size.
         val width = ceil(document.width * scale).toInt()
@@ -91,7 +92,7 @@ internal class PrintRenderer(
         val drawScope = CanvasDrawScope()
         val pixels = IntArray(width * PDF_BAND_ROWS)
         val packed = ByteArray(printRowBytes(width) * height)
-        document.pages.forEach { page ->
+        document.pages.forEachIndexed { index, page ->
             coroutineContext.ensureActive()
             drawScope.draw(Density(1f), LayoutDirection.Ltr, canvas, Size(width.toFloat(), height.toFloat())) {
                 draw(this, page, scale)
@@ -104,6 +105,7 @@ internal class PrintRenderer(
                 packPrintRows(pixels, width, rows, packed, firstRow = top)
             }
             writer.addPage(width, height, packed)
+            onPage(index + 1)
             yield()
         }
         return writer.finish()
