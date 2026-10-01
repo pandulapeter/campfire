@@ -9,7 +9,14 @@
  */
 package com.pandulapeter.campfire.presentation.ui.dialogs
 
+import androidx.compose.animation.AnimatedContent
+import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.Crossfade
+import androidx.compose.animation.EnterTransition
+import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.*
@@ -20,6 +27,7 @@ import androidx.compose.runtime.*
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.platform.LocalFontFamilyResolver
@@ -34,6 +42,7 @@ import com.pandulapeter.campfire.presentation.localization.stringResource
 import com.pandulapeter.campfire.presentation.resources.*
 import com.pandulapeter.campfire.presentation.ui.CampfireViewModel
 import com.pandulapeter.campfire.presentation.ui.components.CheckboxListItem
+import com.pandulapeter.campfire.presentation.ui.components.DelayedLoadingIndicator
 import com.pandulapeter.campfire.presentation.ui.components.fadingVerticalEdges
 import com.pandulapeter.campfire.presentation.ui.platform.LocalFilePicker
 import com.pandulapeter.campfire.presentation.ui.print.*
@@ -41,8 +50,10 @@ import com.pandulapeter.campfire.presentation.ui.theme.LocalMonospaceFontFamily
 import androidx.compose.foundation.lazy.rememberLazyListState
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.withContext
 import kotlin.math.roundToInt
+import kotlin.time.Duration.Companion.milliseconds
 
 @Composable
 internal fun PrintExportSheet(viewModel: CampfireViewModel, dialog: CampfireViewModel.DialogType.PrintExport) {
@@ -74,18 +85,31 @@ internal fun PrintExportSheet(viewModel: CampfireViewModel, dialog: CampfireView
     }
     val chosenSource = remember(source, selected) { source?.let { it.copy(songs = it.songs.filterIndexed { index, _ -> index in selected.orEmpty() }) } }
     var layoutFailed by remember { mutableStateOf(false) }
-    val document by produceState<PrintDocument?>(null, chosenSource, settings, labels, renderer) {
-        value = null
+    // The last document stays on screen while the next one is laid out, so that a step of an option fades from one
+    // page to the next instead of blanking the preview to a spinner each time.
+    val laidOut by produceState<LaidOutDocument?>(null, chosenSource, settings, labels, renderer) {
         layoutFailed = false
         val input = chosenSource
-        if (input != null && input.songs.isNotEmpty()) try {
-            value = withContext(Dispatchers.Default) {
+        val inputSettings = settings
+        if (input == null || input.songs.isEmpty()) {
+            value = null
+            return@produceState
+        }
+        // A burst of steps is one layout, but the first one, with nothing on screen yet, starts at once.
+        if (value != null) delay(LAYOUT_DEBOUNCE)
+        try {
+            val document = withContext(Dispatchers.Default) {
                 val measurements = newRenderer()
                 layoutPrintDocument(input, settings, labels, measurements::width)
             }
+            value = LaidOutDocument(document, input, inputSettings, labels, generation = (value?.generation ?: 0) + 1)
         } catch (exception: CancellationException) { throw exception
         } catch (exception: Exception) { layoutFailed = true }
     }
+    // Only a document laid out from what the sheet shows now may be saved: the producer restarts a frame after an option
+    // changes, and a Save in that frame would otherwise export the old options. The source is compared by identity,
+    // since it is remembered and an equality check would walk every song in it.
+    val isCurrent = laidOut.let { it != null && it.source === chosenSource && it.settings == settings && it.labels == labels }
     val update: (PrintSettings) -> Unit = {
         val normalized = it.normalized()
         if (normalized != settings) { settings = normalized; viewModel.setPrintSettings(normalized) }
@@ -96,52 +120,78 @@ internal fun PrintExportSheet(viewModel: CampfireViewModel, dialog: CampfireView
         sheetMaxWidth = 1100.dp,
         onDismiss = { viewModel.dismissSheet(dialog) },
         actions = {
-            TextButton(enabled = document?.pages?.isNotEmpty() == true && !exporting, onClick = {
-                val snapshot = document ?: return@TextButton
+            TextButton(enabled = isCurrent && laidOut?.document?.pages?.isNotEmpty() == true && !exporting, onClick = {
+                val snapshot = laidOut?.document ?: return@TextButton
                 exporting = true
                 val title = source!!.title
                 viewModel.exportPdf(filePicker, title, onFinished = { exporting = false }) { newRenderer().pdf(snapshot, title) }
             }) {
-                if (exporting) CircularProgressIndicator(Modifier.size(20.dp), strokeWidth = 2.dp)
-                else Text(stringResource(Res.string.print_save))
+                ProgressLabel(stringResource(Res.string.print_save), isInProgress = exporting)
             }
         },
     ) { padding ->
         BoxWithConstraints(Modifier.fillMaxWidth().weight(1f, fill = false).heightIn(min = 300.dp).padding(padding)) {
-            if (failed || layoutFailed) {
-                Column(Modifier.align(Alignment.Center), horizontalAlignment = Alignment.CenterHorizontally) {
-                    Text(stringResource(Res.string.print_load_failed))
-                    TextButton(onClick = { attempt++ }) { Text(stringResource(Res.string.retry)) }
-                }
-            } else if (source == null) {
-                CircularProgressIndicator(Modifier.align(Alignment.Center))
-            } else {
-                val options: @Composable (Modifier) -> Unit = { modifier ->
-                    PrintOptions(modifier, source!!, settings, selected.orEmpty(), onSelected = { selected = it }, onSettings = update)
-                }
-                val preview: @Composable (Modifier) -> Unit = { modifier ->
-                    PrintPreview(modifier, document, renderer, selected.orEmpty().isEmpty())
-                }
-                if (maxWidth >= 760.dp) {
-                    Row(Modifier.fillMaxSize()) {
-                        options(Modifier.width(330.dp).fillMaxHeight())
-                        preview(Modifier.weight(1f).fillMaxHeight())
-                    }
-                } else {
-                    var showOptions by rememberSaveable { mutableStateOf(false) }
-                    Column(Modifier.fillMaxSize()) {
-                        Row(Modifier.fillMaxWidth().padding(horizontal = 16.dp), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                            FilterChip(selected = !showOptions, onClick = { showOptions = false }, label = { Text(stringResource(Res.string.print_preview)) })
-                            FilterChip(selected = showOptions, onClick = { showOptions = true }, label = { Text(stringResource(Res.string.print_options)) })
+            val state = when {
+                failed || layoutFailed -> PrintSheetContent.FAILED
+                source == null -> PrintSheetContent.LOADING
+                else -> PrintSheetContent.LOADED
+            }
+            AnimatedContent(state, Modifier.fillMaxSize(), transitionSpec = { fadeIn() togetherWith fadeOut() }) { shown ->
+                when (shown) {
+                    PrintSheetContent.FAILED -> Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                        Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                            Text(stringResource(Res.string.print_load_failed))
+                            TextButton(onClick = { attempt++ }) { Text(stringResource(Res.string.retry)) }
                         }
-                        Crossfade(showOptions, modifier = Modifier.weight(1f)) { optionsVisible ->
-                            if (optionsVisible) options(Modifier.fillMaxSize()) else preview(Modifier.fillMaxSize())
+                    }
+                    PrintSheetContent.LOADING -> Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) { DelayedLoadingIndicator() }
+                    PrintSheetContent.LOADED -> if (source != null) {
+                        val options: @Composable (Modifier) -> Unit = { modifier ->
+                            PrintOptions(modifier, source!!, settings, selected.orEmpty(), onSelected = { selected = it }, onSettings = update)
+                        }
+                        val preview: @Composable (Modifier) -> Unit = { modifier ->
+                            PrintPreview(modifier, laidOut, isCurrent, renderer, selected.orEmpty().isEmpty())
+                        }
+                        if (maxWidth >= 760.dp) {
+                            Row(Modifier.fillMaxSize()) {
+                                options(Modifier.width(330.dp).fillMaxHeight())
+                                preview(Modifier.weight(1f).fillMaxHeight())
+                            }
+                        } else {
+                            var showOptions by rememberSaveable { mutableStateOf(false) }
+                            Column(Modifier.fillMaxSize()) {
+                                Row(Modifier.fillMaxWidth().padding(horizontal = 16.dp), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                                    FilterChip(selected = !showOptions, onClick = { showOptions = false }, label = { Text(stringResource(Res.string.print_preview)) })
+                                    FilterChip(selected = showOptions, onClick = { showOptions = true }, label = { Text(stringResource(Res.string.print_options)) })
+                                }
+                                Crossfade(showOptions, modifier = Modifier.weight(1f)) { optionsVisible ->
+                                    if (optionsVisible) options(Modifier.fillMaxSize()) else preview(Modifier.fillMaxSize())
+                                }
+                            }
                         }
                     }
                 }
             }
         }
     }
+}
+
+/** What the sheet's area shows, which it fades between; a new document is not one of these, see [PrintPreview]. */
+private enum class PrintSheetContent { FAILED, LOADING, LOADED }
+
+/**
+ * A laid out document together with what it was laid out from, which is what tells a document that stands in for the
+ * next one while that is laid out from one that may be exported. [generation] tells one document from the next without
+ * comparing them, which would walk every text on every page.
+ */
+private class LaidOutDocument(val document: PrintDocument, val source: PrintSource, val settings: PrintSettings, val labels: PrintLabels, val generation: Int)
+
+/** The label of a button that runs something, with an indicator faded over it that keeps the button at the label's size. */
+@Composable
+private fun ProgressLabel(text: String, isInProgress: Boolean) = Box(contentAlignment = Alignment.Center) {
+    val labelAlpha by animateFloatAsState(if (isInProgress) 0f else 1f)
+    Text(text, Modifier.alpha(labelAlpha))
+    AnimatedVisibility(isInProgress, enter = fadeIn(), exit = fadeOut()) { CircularProgressIndicator(Modifier.size(20.dp), strokeWidth = 2.dp) }
 }
 
 @OptIn(ExperimentalLayoutApi::class)
@@ -210,31 +260,58 @@ private fun PrintSlider(label: String, value: Int, range: IntRange, onChange: (I
         modifier = Modifier.semantics { contentDescription = label })
 }
 
+/** What the preview shows, which it fades between, keyed by its kind so that a new document does not count as a change. */
+private sealed interface PreviewContent {
+    data object Empty : PreviewContent
+    data object Loading : PreviewContent
+    data class Pages(val laidOut: LaidOutDocument) : PreviewContent
+}
+
 @Composable
-private fun PrintPreview(modifier: Modifier, document: PrintDocument?, renderer: PrintRenderer, isEmpty: Boolean) {
+private fun PrintPreview(modifier: Modifier, laidOut: LaidOutDocument?, isCurrent: Boolean, renderer: PrintRenderer, isEmpty: Boolean) {
     var requestedPage by rememberSaveable { mutableIntStateOf(0) }
-    val pageCount = document?.pages?.size ?: 0
-    val pageIndex = requestedPage.coerceIn(0, (pageCount - 1).coerceAtLeast(0))
-    Column(modifier.padding(16.dp), horizontalAlignment = Alignment.CenterHorizontally) {
-        if (document == null || document.pages.isEmpty()) {
-            Box(Modifier.weight(1f).fillMaxWidth(), contentAlignment = Alignment.Center) {
-                if (isEmpty) Text(stringResource(Res.string.print_no_songs)) else CircularProgressIndicator()
-            }
-        } else {
-            val pageLabel = stringResource(Res.string.print_page, pageIndex + 1, pageCount)
-            val page = document.pages[pageIndex]
-            val description = pageLabel + "\n" + page.texts.joinToString("\n") { it.text }
-            BoxWithConstraints(Modifier.weight(1f).fillMaxWidth(), contentAlignment = Alignment.Center) {
-                val pageWidth = minOf(maxWidth, maxHeight * (document.width / document.height))
-                Canvas(Modifier.width(pageWidth).aspectRatio(document.width / document.height).border(1.dp, MaterialTheme.colorScheme.outlineVariant).semantics { contentDescription = description }) {
-                    renderer.draw(this, page, size.width / document.width)
+    val content = when {
+        isEmpty -> PreviewContent.Empty
+        laidOut == null || laidOut.document.pages.isEmpty() -> PreviewContent.Loading
+        else -> PreviewContent.Pages(laidOut)
+    }
+    AnimatedContent(content, modifier.padding(16.dp), transitionSpec = { fadeIn() togetherWith fadeOut() }, contentKey = { it::class }) { shown ->
+        when (shown) {
+            PreviewContent.Empty -> Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) { Text(stringResource(Res.string.print_no_songs)) }
+            PreviewContent.Loading -> Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) { DelayedLoadingIndicator() }
+            is PreviewContent.Pages -> Column(Modifier.fillMaxSize(), horizontalAlignment = Alignment.CenterHorizontally) {
+                val pageCount = shown.laidOut.document.pages.size
+                val pageIndex = requestedPage.coerceIn(0, pageCount - 1)
+                val pageLabel = stringResource(Res.string.print_page, pageIndex + 1, pageCount)
+                Box(Modifier.weight(1f).fillMaxWidth(), contentAlignment = Alignment.Center) {
+                    // Keyed by the generation, not by the document, whose equality would compare every text on every page.
+                    AnimatedContent(shown.laidOut, Modifier.fillMaxSize(), transitionSpec = { fadeIn() togetherWith fadeOut() }, contentKey = { it.generation }) { faded ->
+                        val document = faded.document
+                        val page = document.pages[pageIndex.coerceAtMost(document.pages.size - 1)]
+                        val description = pageLabel + "\n" + page.texts.joinToString("\n") { it.text }
+                        BoxWithConstraints(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                            val pageWidth = minOf(maxWidth, maxHeight * (document.width / document.height))
+                            Canvas(Modifier.width(pageWidth).aspectRatio(document.width / document.height).border(1.dp, MaterialTheme.colorScheme.outlineVariant).semantics { contentDescription = description }) {
+                                renderer.draw(this, page, size.width / document.width)
+                            }
+                        }
+                    }
+                    LayoutIndicator(isVisible = !isCurrent)
                 }
-            }
-            Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                TextButton(enabled = pageIndex > 0, onClick = { requestedPage = pageIndex - 1 }) { Text(stringResource(Res.string.print_previous)) }
-                Text(pageLabel, style = MaterialTheme.typography.bodySmall)
-                TextButton(enabled = pageIndex + 1 < pageCount, onClick = { requestedPage = pageIndex + 1 }) { Text(stringResource(Res.string.print_next)) }
+                Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                    TextButton(enabled = pageIndex > 0, onClick = { requestedPage = pageIndex - 1 }) { Text(stringResource(Res.string.print_previous)) }
+                    Text(pageLabel, style = MaterialTheme.typography.bodySmall)
+                    TextButton(enabled = pageIndex + 1 < pageCount, onClick = { requestedPage = pageIndex + 1 }) { Text(stringResource(Res.string.print_next)) }
+                }
             }
         }
     }
 }
+
+/** Shown over a page that stands in for the next one, once the layout of that has taken a moment (it fades in on its own). */
+@Composable
+private fun LayoutIndicator(isVisible: Boolean) = AnimatedVisibility(isVisible, enter = EnterTransition.None, exit = fadeOut()) {
+    DelayedLoadingIndicator()
+}
+
+private val LAYOUT_DEBOUNCE = 120.milliseconds
