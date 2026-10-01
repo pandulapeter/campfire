@@ -524,7 +524,6 @@
     <string name="print_capo">Capo</string>
     <string name="print_tempo">Tempó</string>
     <string name="print_time">Ütemmutató</string>
-    <string name="print_verse">Versszak</string>
     <string name="print_chorus">Refrén</string>
     <string name="print_bridge">Átkötés</string>
 </resources>

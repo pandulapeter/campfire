@@ -59,7 +59,7 @@ internal class PrintRendererTest {
         val second = first.copy(fileName = "two.cho", title = "Under the stars", index = 2,
             song = parsed.copy(blocks = parsed.blocks + List(90) { ChordProParser.parse("[D]Another line of music [A7]to keep on the next page.").blocks.single() }))
         val document = layoutPrintDocument(PrintSource("Campfire concert", "Rehearsal with friends", "2026-10-01", true, listOf(first, second)),
-            PrintSettings(columns = 2), PrintLabels("Key", "Capo", "Tempo", "Time", "Missing"), renderer::width)
+            PrintSettings(columns = 2), PrintLabels("Key", "Capo", "Tempo", "Time", "Missing", "Chorus", "Bridge"), renderer::width)
         assertTrue(document.pages.size >= 4)
         val bytes = renderer.pdf(document, "Campfire concert")
         val contents = bytes.decodeToString()

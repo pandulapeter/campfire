@@ -60,7 +60,7 @@ internal fun PrintExportSheet(viewModel: CampfireViewModel, dialog: CampfireView
     fun newRenderer() = PrintRenderer(TextMeasurer(fontResolver, Density(1f), LayoutDirection.Ltr, cacheSize = 256), fontFamily)
     val renderer = remember(fontResolver, fontFamily) { newRenderer() }
     val labels = PrintLabels(stringResource(Res.string.print_key), stringResource(Res.string.print_capo),
-        stringResource(Res.string.print_tempo), stringResource(Res.string.print_time), stringResource(Res.string.print_missing), stringResource(Res.string.print_verse),
+        stringResource(Res.string.print_tempo), stringResource(Res.string.print_time), stringResource(Res.string.print_missing),
         stringResource(Res.string.print_chorus), stringResource(Res.string.print_bridge))
     LaunchedEffect(dialog, attempt) {
         failed = false

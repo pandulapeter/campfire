@@ -14,7 +14,7 @@ import com.pandulapeter.campfire.data.model.domain.PrintSettings
 import kotlin.test.*
 
 internal class PrintLayoutTest {
-    private val labels = PrintLabels("Key", "Capo", "Tempo", "Time", "Missing")
+    private val labels = PrintLabels("Key", "Capo", "Tempo", "Time", "Missing", "Chorus", "Bridge")
     private fun measure(text: String, size: Int, bold: Boolean) = text.count { it != '\u200B' } * size * 0.6f
     private fun layout(source: PrintSource, settings: PrintSettings = PrintSettings()) = layoutPrintDocument(source, settings, labels, ::measure)
     private fun song(lines: List<ChordProLine>, blocks: List<ChordProBlock>? = null) = PrintSong("song.cho", "A song", "Artist", song = ChordProSong(
@@ -245,5 +245,14 @@ internal class PrintLayoutTest {
     @Test fun aChorusRecallWithNothingToRecallPrintsItsHeading() {
         val texts = layout(source(song(emptyList(), listOf(ChordProBlock.ChorusRecall(null))))).pages.flatMap { it.texts }
         assertEquals(1, texts.count { it.text == "Chorus" && it.bold })
+    }
+
+    @Test fun onlyANamedVerseIsHeaded() {
+        val unnamed = ChordProBlock.Section(SectionType.Verse, null, lyrics(2, "Plain"))
+        val named = ChordProBlock.Section(SectionType.Verse, "Verse 2", lyrics(2, "Named"))
+        val texts = layout(source(song(emptyList(), listOf(unnamed, named)))).pages.flatMap { it.texts }
+        assertFalse(texts.any { it.text == "Verse" })
+        assertEquals(1, texts.count { it.text == "Verse 2" && it.bold })
+        assertTrue(texts.first { it.text == "Plain 1" }.y < texts.first { it.text == "Verse 2" }.y)
     }
 }

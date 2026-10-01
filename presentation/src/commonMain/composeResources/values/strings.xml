@@ -524,7 +524,6 @@
     <string name="print_capo">Capo</string>
     <string name="print_tempo">Tempo</string>
     <string name="print_time">Time</string>
-    <string name="print_verse">Verse</string>
     <string name="print_chorus">Chorus</string>
     <string name="print_bridge">Bridge</string>
 </resources>

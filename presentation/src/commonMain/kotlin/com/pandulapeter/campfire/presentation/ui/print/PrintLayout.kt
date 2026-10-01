@@ -35,7 +35,7 @@ internal data class PrintSong(
 internal data class PrintText(val text: String, val x: Float, val y: Float, val size: Int, val bold: Boolean = false)
 internal data class PrintPage(val texts: List<PrintText>)
 internal data class PrintDocument(val width: Float, val height: Float, val pages: List<PrintPage>)
-internal data class PrintLabels(val key: String, val capo: String, val tempo: String, val time: String, val missing: String, val verse: String = "Verse", val chorus: String = "Chorus", val bridge: String = "Bridge")
+internal data class PrintLabels(val key: String, val capo: String, val tempo: String, val time: String, val missing: String, val chorus: String, val bridge: String)
 
 /**
  * A single layout for the preview and export. Measuring is supplied by the same Compose text renderer that draws
@@ -89,7 +89,8 @@ internal fun layoutPrintDocument(
     fun rowsFor(block: ChordProBlock, labelOverride: String? = null): List<Row> = when (block) {
         is ChordProBlock.Section -> {
             val sectionLabel = block.label ?: when (val type = block.type) {
-                SectionType.Verse -> labels.verse
+                // An unnamed verse is set apart by the gap before it, as in the viewer, rather than by a heading.
+                SectionType.Verse -> null
                 SectionType.Chorus -> labels.chorus
                 SectionType.Bridge -> labels.bridge
                 is SectionType.Custom -> type.name.replace('_', ' ').replaceFirstChar { it.uppercase() }
