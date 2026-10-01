@@ -13,6 +13,8 @@ import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.EnterTransition
 import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.expandHorizontally
+import androidx.compose.animation.shrinkHorizontally
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.togetherWith
@@ -212,10 +214,11 @@ internal fun PrintExportSheet(viewModel: CampfireViewModel, dialog: CampfireView
             progress = exportProgress,
             // Any import or export running would make the view model ignore the tap, so the button does not take it.
             canSave = isCurrent && laidOut?.document?.pages?.isNotEmpty() == true && !isFileTransferActive,
-            onSave = {
+            canShare = filePicker.canShare,
+            onExport = { isShare ->
                 laidOut?.document?.let { snapshot ->
                     val title = source!!.title
-                    viewModel.exportPdf(filePicker, title, dialog, snapshot.pages.size) { onPage ->
+                    viewModel.exportPdf(filePicker, title, dialog, snapshot.pages.size, isShare) { onPage ->
                         newRenderer().pdf(snapshot, title, onPage = onPage)
                     }
                 }
@@ -236,7 +239,8 @@ private fun PrintActions(
     contentPadding: PaddingValues,
     progress: CampfireViewModel.PdfExportProgress?,
     canSave: Boolean,
-    onSave: () -> Unit,
+    canShare: Boolean,
+    onExport: (isShare: Boolean) -> Unit,
     onCancel: () -> Unit,
 ) = Column(
     modifier = Modifier.fillMaxWidth().padding(start = 16.dp, end = 16.dp, top = 8.dp).padding(contentPadding),
@@ -260,7 +264,15 @@ private fun PrintActions(
     }
     Row(verticalAlignment = Alignment.CenterVertically) {
         Spacer(Modifier.weight(1f))
-        Button(enabled = progress != null || canSave, onClick = if (progress != null) onCancel else onSave) {
+        // One Cancel stands for both while the pages are drawn, whichever of the two started it.
+        AnimatedVisibility(canShare && progress == null, enter = fadeIn() + expandHorizontally(), exit = fadeOut() + shrinkHorizontally()) {
+            TextButton(enabled = canSave, onClick = { onExport(true) }, modifier = Modifier.padding(end = 8.dp)) {
+                Icon(painterResource(Res.drawable.ic_share), contentDescription = null, modifier = Modifier.size(ButtonDefaults.IconSize))
+                Spacer(Modifier.width(ButtonDefaults.IconSpacing))
+                Text(stringResource(Res.string.print_share))
+            }
+        }
+        Button(enabled = progress != null || canSave, onClick = if (progress != null) onCancel else ({ onExport(false) })) {
             CrossfadedLabel(stringResource(Res.string.print_save), stringResource(Res.string.cancel), isSecondShown = progress != null)
         }
     }

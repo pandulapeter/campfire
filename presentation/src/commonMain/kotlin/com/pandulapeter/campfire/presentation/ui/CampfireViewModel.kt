@@ -2345,12 +2345,14 @@ class CampfireViewModel(
         title: String,
         dialog: DialogType.PrintExport,
         pageCount: Int,
+        isShare: Boolean,
         create: suspend (onPage: (done: Int) -> Unit) -> ByteArray,
     ) {
         val job = launchFileTransfer {
             _pdfExportProgress.value = PdfExportProgress(done = 0, total = pageCount)
             try {
-                save(filePicker, onSaved = { _printExportSaved.tryEmit(dialog) }) {
+                // A share leaves the sheet open, since a second share or a save may follow; save() only calls onSaved for a save.
+                save(filePicker, isShare = isShare, onSaved = { _printExportSaved.tryEmit(dialog) }) {
                     val bytes = try {
                         withContext(Dispatchers.Default) { create { done -> _pdfExportProgress.value = PdfExportProgress(done = done, total = pageCount) } }
                     } catch (exception: CancellationException) {

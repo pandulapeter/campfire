@@ -492,6 +492,7 @@
     <!-- PDF export -->
     <string name="print_export">Exportálás PDF-be</string>
     <string name="print_save">PDF mentése</string>
+    <string name="print_share">PDF megosztása</string>
     <string name="print_paper">Papírméret</string>
     <string name="print_a4">A4</string>
     <string name="print_letter">Letter</string>
