@@ -492,8 +492,6 @@
     <!-- PDF export -->
     <string name="print_export">Export to PDF</string>
     <string name="print_save">Save PDF</string>
-    <string name="print_preview">Preview</string>
-    <string name="print_options">Options</string>
     <string name="print_paper">Paper size</string>
     <string name="print_a4">A4</string>
     <string name="print_letter">Letter</string>

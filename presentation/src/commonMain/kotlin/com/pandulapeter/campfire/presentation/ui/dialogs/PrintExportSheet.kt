@@ -11,7 +11,6 @@ package com.pandulapeter.campfire.presentation.ui.dialogs
 
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.AnimatedVisibility
-import androidx.compose.animation.Crossfade
 import androidx.compose.animation.EnterTransition
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.fadeIn
@@ -34,6 +33,7 @@ import androidx.compose.ui.platform.LocalFontFamilyResolver
 import androidx.compose.ui.text.TextMeasurer
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.unit.Density
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.dp
 import org.jetbrains.compose.resources.painterResource
@@ -123,7 +123,11 @@ internal fun PrintExportSheet(viewModel: CampfireViewModel, dialog: CampfireView
         sheetMaxWidth = 1100.dp,
         onDismiss = { viewModel.dismissSheet(dialog) },
     ) { contentPadding ->
-        BoxWithConstraints(Modifier.fillMaxWidth().weight(1f, fill = false).heightIn(min = 300.dp)) {
+        val sheetUncoveredTopInset = uncoveredTopInset
+        BoxWithConstraints(Modifier.fillMaxWidth().weight(1f, fill = false)) {
+            // The height of the sheet at its tallest: the one its content is offered changes while it slides up and is
+            // dragged, and a layout chosen by that would switch, and resize the preview, during the opening animation.
+            val stableHeight = maxHeight - sheetUncoveredTopInset()
             val state = when {
                 failed || layoutFailed -> PrintSheetContent.FAILED
                 source == null -> PrintSheetContent.LOADING
@@ -145,22 +149,20 @@ internal fun PrintExportSheet(viewModel: CampfireViewModel, dialog: CampfireView
                         val preview: @Composable (Modifier) -> Unit = { modifier ->
                             PrintPreview(modifier, laidOut, isCurrent, renderer, selected.orEmpty().isEmpty())
                         }
-                        if (maxWidth >= 760.dp) {
-                            Row(Modifier.fillMaxSize()) {
+                        when {
+                            maxWidth >= 760.dp && stableHeight >= 480.dp -> Row(Modifier.fillMaxSize()) {
                                 options(Modifier.width(330.dp).fillMaxHeight())
                                 preview(Modifier.weight(1f).fillMaxHeight())
                             }
-                        } else {
-                            var showOptions by rememberSaveable { mutableStateOf(false) }
-                            Column(Modifier.fillMaxSize()) {
-                                SegmentedChoice(
-                                    options = listOf(false to stringResource(Res.string.print_preview), true to stringResource(Res.string.print_options)),
-                                    selected = showOptions,
-                                    onSelected = { showOptions = it },
-                                )
-                                Crossfade(showOptions, modifier = Modifier.weight(1f)) { optionsVisible ->
-                                    if (optionsVisible) options(Modifier.fillMaxSize()) else preview(Modifier.fillMaxSize())
-                                }
+                            // A phone on its side: too short to stack the two, wide enough to put them side by side.
+                            maxWidth >= 600.dp -> Row(Modifier.fillMaxSize()) {
+                                options(Modifier.width(300.dp).fillMaxHeight())
+                                preview(Modifier.weight(1f).fillMaxHeight())
+                            }
+                            else -> Column(Modifier.fillMaxSize()) {
+                                preview(Modifier.fillMaxWidth().height(stableHeight * PHONE_PREVIEW_HEIGHT_FRACTION))
+                                Spacer(Modifier.height(Dp.Hairline))
+                                options(Modifier.fillMaxWidth().weight(1f))
                             }
                         }
                     }
@@ -382,6 +384,7 @@ private fun LayoutIndicator(isVisible: Boolean) = AnimatedVisibility(isVisible, 
     DelayedLoadingIndicator()
 }
 
+private const val PHONE_PREVIEW_HEIGHT_FRACTION = 0.42f
 private val LAYOUT_DEBOUNCE = 120.milliseconds
 private const val MIN_FONT_SIZE = 8
 private const val MAX_FONT_SIZE = 20
