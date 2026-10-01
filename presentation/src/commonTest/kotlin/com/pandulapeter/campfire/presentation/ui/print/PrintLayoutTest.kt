@@ -149,6 +149,16 @@ internal class PrintLayoutTest {
         val prefixes = document.pages.flatMap { it.texts }.filter { it.text.contains('|') }.map { it.text.substringBefore('|') }
         assertTrue(prefixes.size > 6)
         prefixes.chunked(6).forEach { assertEquals(listOf("e", "B", "G", "D", "A", "E"), it) }
+        val strings = document.pages.first().texts.filter { it.text.contains('|') }
+        assertTrue(strings[6].y - strings[5].y >= 16 * 1.45f + 16 * 0.7f - 0.01f)
+    }
+
+    @Test fun aWrappedPreformattedRunHasNoGapBetweenItsSystems() {
+        val lines = listOf("G" + " ".repeat(60) + "C", "Words " .repeat(12)).mapIndexed { i, text -> ChordProLine.Tab(text, continuesEnvironment = i > 0) }
+        val page = layout(source(song(lines)), PrintSettings(columns = 2, fontSize = 16)).pages.single().texts
+        val texts = page.filter { it.size == 16 && it.y > page.first { label -> label.text == "Verse" }.y }
+        assertTrue(texts.size > 2)
+        texts.zipWithNext().forEach { (upper, lower) -> assertEquals(16 * 1.45f, lower.y - upper.y, 0.01f) }
     }
 
     @Test fun aHeadingStaysInTheColumnOfItsFirstSection() {

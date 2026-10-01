@@ -157,8 +157,12 @@ internal fun layoutPrintDocument(
                             val run = block.lines.drop(lineIndex).takeWhile { it is ChordProLine.Tab && (it === line || it.continuesEnvironment) }.map { (it as ChordProLine.Tab).text }
                             line.label?.takeUnless { it == sectionLabel }?.let { addAll(wrapped(it, bold = true)) }
                             val characters = (columnWidth / measure("M", options.fontSize, false)).toInt().coerceAtLeast(1)
-                            val systems = if (ChordProTabWrapper.isTablature(run)) ChordProTabWrapper.wrap(run, characters) else ChordProTabWrapper.wrapPreformatted(run, characters)
-                            systems.forEach { system ->
+                            val isTablature = ChordProTabWrapper.isTablature(run)
+                            val systems = if (isTablature) ChordProTabWrapper.wrap(run, characters) else ChordProTabWrapper.wrapPreformatted(run, characters)
+                            systems.forEachIndexed { systemIndex, system ->
+                                // Staves without a gap between them read as one staff of twice the strings; a preformatted
+                                // run is chord names over lyrics, read like wrapped text, so it gets none.
+                                if (isTablature && systemIndex > 0) add(Row(emptyList(), options.fontSize * 0.7f))
                                 val rows = system.flatMap { wrapped(it) }
                                 val systemHeight = rows.sumOf { it.height.toDouble() }.toFloat()
                                 if (systemHeight <= capacity) {
