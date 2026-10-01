@@ -10,15 +10,17 @@
 package com.pandulapeter.campfire.presentation.ui.print
 
 /**
- * A portable PDF 1.4 writer. Pages use lossless grayscale images at 216 dpi, so the PDF retains the exact glyphs,
- * chord placement and fallback fonts of the preview on every platform. Run-length encoding keeps white paper small.
- * No platform printing service, external process, network request or third-party PDF library is needed.
+ * A portable PDF 1.4 writer. Pages are 16-level grayscale images at 216 dpi, so the PDF retains the exact glyphs, chord
+ * placement and fallback fonts of the preview on every platform; sixteen grays are indistinguishable from 256 on paper
+ * at that resolution, and they halve what Flate has to compress. No platform printing service, external process,
+ * network request or third-party PDF library is needed.
  */
 internal class PrintPdfWriter(private val width: Float, private val height: Float) {
     private val output = PrintBytes()
     // A page's image and content stream are encoded here first, because /Length precedes the data, and appended to the
     // output from it: one copy per stream, into a buffer that keeps its capacity from page to page.
     private val scratch = PrintBytes()
+    private val deflater = PrintDeflater()
     private val offsets = mutableListOf(0, 0, 0)
     private val pageIds = mutableListOf<Int>()
 
@@ -41,12 +43,15 @@ internal class PrintPdfWriter(private val width: Float, private val height: Floa
         output.text("\nendstream\nendobj\n")
     }
 
-    /** Encodes [grayscale] into the writer's own output before returning, so the caller may reuse the array for the next page. */
-    fun addPage(pixelWidth: Int, pixelHeight: Int, grayscale: ByteArray) {
-        require(pixelWidth > 0 && pixelHeight > 0 && grayscale.size == pixelWidth * pixelHeight)
+    /**
+     * Adds a page from [packed], the rows of [packPrintRows]. The pixels are compressed into the writer's own output
+     * before this returns, so the caller may reuse the array for the next page.
+     */
+    suspend fun addPage(pixelWidth: Int, pixelHeight: Int, packed: ByteArray) {
+        require(pixelWidth > 0 && pixelHeight > 0 && packed.size == printRowBytes(pixelWidth) * pixelHeight)
         scratch.reset()
-        encodePrintRuns(grayscale, scratch)
-        val image = stream("/Type /XObject /Subtype /Image /Width $pixelWidth /Height $pixelHeight /ColorSpace /DeviceGray /BitsPerComponent 8 /Filter /RunLengthDecode", scratch)
+        deflater.deflate(packed, scratch)
+        val image = stream("/Type /XObject /Subtype /Image /Width $pixelWidth /Height $pixelHeight /ColorSpace /DeviceGray /BitsPerComponent 4 /Filter /FlateDecode", scratch)
         scratch.reset()
         scratch.text("q $width 0 0 $height 0 0 cm /Im0 Do Q")
         val content = stream("", scratch)
@@ -68,30 +73,28 @@ internal class PrintPdfWriter(private val width: Float, private val height: Floa
     }
 }
 
-/** PDF RunLengthDecode, appended to [output]: literal packets 0..127, repeated packets 129..255, and 128 marks the end. */
-internal fun encodePrintRuns(input: ByteArray, output: PrintBytes) {
-    var i = 0
-    fun run(at: Int): Int {
-        var end = at + 1
-        while (end < input.size && end - at < 128 && input[end] == input[at]) end++
-        return end - at
-    }
-    while (i < input.size) {
-        val count = run(i)
-        if (count >= 3) {
-            output.byte(257 - count)
-            output.byte(input[i].toInt())
-            i += count
-        } else {
-            val start = i
-            i += count
-            while (i < input.size && i - start < 128 && run(i) < 3) i += minOf(run(i), 128 - (i - start))
-            output.byte(i - start - 1)
-            output.bytes(input, start, i)
+/** The bytes a row of [width] pixels takes at four bits a pixel: every row starts on a byte boundary. */
+internal fun printRowBytes(width: Int) = (width + 1) / 2
+
+/**
+ * Packs [rows] rows of ARGB [pixels] into [packed] from row [firstRow] on, two pixels a byte with the first one in the
+ * high nibble and an odd row's last low nibble white. Each gray is rounded to the nearest of the sixteen levels, since
+ * dropping the low bits would turn every pixel from 240 to 254 white and darken the mid-grays of antialiased edges.
+ */
+internal fun packPrintRows(pixels: IntArray, width: Int, rows: Int, packed: ByteArray, firstRow: Int) {
+    val rowBytes = printRowBytes(width)
+    for (row in 0 until rows) {
+        val source = row * width
+        val target = (firstRow + row) * rowBytes
+        for (column in 0 until rowBytes) {
+            val high = printLevel(pixels[source + 2 * column])
+            val low = if (2 * column + 1 < width) printLevel(pixels[source + 2 * column + 1]) else 15
+            packed[target + column] = (high shl 4 or low).toByte()
         }
     }
-    output.byte(128)
 }
+
+private fun printLevel(argb: Int) = (printGray(argb) * 15 + 127) / 255
 
 /** A growable byte buffer that keeps its capacity across [reset], so a PDF's streams are built without fresh arrays. */
 internal class PrintBytes {

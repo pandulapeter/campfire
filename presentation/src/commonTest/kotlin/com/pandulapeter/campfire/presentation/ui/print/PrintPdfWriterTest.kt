@@ -9,30 +9,20 @@
  */
 package com.pandulapeter.campfire.presentation.ui.print
 
-import kotlin.random.Random
+import kotlinx.coroutines.test.runTest
 import kotlin.test.*
 
 internal class PrintPdfWriterTest {
-    @Test fun losslessCompressionHandlesLiteralAndRepeatedPacketBoundaries() {
-        val input = ByteArray(400) { 255.toByte() } + ByteArray(300) { it.toByte() } +
-            Random(7).nextBytes(2000) + byteArrayOf(0, 0, 1, 1, 1, 2)
-        val encoded = runs(input)
-        val output = mutableListOf<Byte>()
-        var i = 0
-        while (true) {
-            val packet = encoded[i++].toInt() and 255
-            if (packet == 128) break
-            if (packet <= 127) repeat(packet + 1) { output += encoded[i++] }
-            else { val value = encoded[i++]; repeat(257 - packet) { output += value } }
-        }
-        assertContentEquals(input, output.toByteArray())
-        assertEquals(i, encoded.size)
-        assertTrue(runs(ByteArray(10000) { -1 }).size < 200)
+    @Test fun packsTwoRoundedGraysABytePaddingAnOddRowWithWhite() {
+        val packed = ByteArray(4)
+        val pixels = intArrayOf(0xFF000000.toInt(), 0xFFFFFFFF.toInt(), 0xFF888888.toInt())
+        packPrintRows(pixels + pixels, width = 3, rows = 2, packed = packed, firstRow = 0)
+        assertContentEquals(byteArrayOf(0x0F, 0x8F.toByte(), 0x0F, 0x8F.toByte()), packed)
     }
 
-    @Test fun pdfCrossReferenceOffsetsResolveToEveryObjectWithTwoPages() {
+    @Test fun pdfCrossReferenceOffsetsResolveToEveryObjectWithTwoPages() = runTest {
         val writer = PrintPdfWriter(595.276f, 841.89f)
-        repeat(2) { writer.addPage(8, 8, ByteArray(64) { if (it % 8 == 0) 0 else -1 }) }
+        repeat(2) { writer.addPage(8, 8, ByteArray(32) { if (it % 4 == 0) 0x0F else -1 }) }
         val bytes = writer.finish()
         val text = bytes.decodeToString()
         assertTrue(text.startsWith("%PDF-1.4"))
@@ -46,10 +36,10 @@ internal class PrintPdfWriterTest {
         }
     }
 
-    @Test fun aReusedScratchBufferWritesIdenticalPagesIdentically() {
-        val page = ByteArray(64 * 64) { if (it % 7 == 0) 0 else -1 }
+    @Test fun aReusedScratchBufferWritesIdenticalPagesIdentically() = runTest {
+        val page = ByteArray(32 * 64) { if (it % 7 == 0) 0 else -1 }
         val writer = PrintPdfWriter(100f, 100f)
-        writer.addPage(16, 16, ByteArray(256) { it.toByte() })
+        writer.addPage(32, 16, ByteArray(256) { it.toByte() })
         repeat(2) { writer.addPage(64, 64, page) }
         val bytes = writer.finish()
         // One character per byte, so that a match's position is the stream's offset in the file.
@@ -59,9 +49,9 @@ internal class PrintPdfWriterTest {
             bytes.copyOfRange(start, start + match.groupValues[2].toInt())
         }.toList()
         assertEquals(3, streams.size)
-        assertContentEquals(runs(page), streams[1])
+        assertContentEquals(deflated(page), streams[1])
         assertContentEquals(streams[1], streams[2])
     }
 
-    private fun runs(input: ByteArray) = PrintBytes().also { encodePrintRuns(input, it) }.result()
+    private suspend fun deflated(input: ByteArray) = PrintBytes().also { PrintDeflater().deflate(input, it) }.result()
 }

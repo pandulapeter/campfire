@@ -69,12 +69,12 @@ internal class PrintRenderer(private val measurer: TextMeasurer, private val fon
         val height = ceil(document.height * scale).toInt()
         // A page is an 18 MB native bitmap whose memory Skia frees only when its wrapper happens to be collected, and wasm
         // memory never shrinks, so one bitmap and one set of buffers serve every page: draw paints the whole page white
-        // before anything else, and addPage has encoded the gray array into its own output by the time it returns.
+        // before anything else, and addPage has compressed the packed page into its own output by the time it returns.
         val bitmap = ImageBitmap(width, height)
         val canvas = Canvas(bitmap)
         val drawScope = CanvasDrawScope()
         val pixels = IntArray(width * PDF_BAND_ROWS)
-        val gray = ByteArray(width * height)
+        val packed = ByteArray(printRowBytes(width) * height)
         document.pages.forEach { page ->
             coroutineContext.ensureActive()
             drawScope.draw(Density(1f), LayoutDirection.Ltr, canvas, Size(width.toFloat(), height.toFloat())) {
@@ -85,10 +85,9 @@ internal class PrintRenderer(private val measurer: TextMeasurer, private val fon
                 yield()
                 val rows = minOf(PDF_BAND_ROWS, height - top)
                 bitmap.readPixels(pixels, startY = top, width = width, height = rows)
-                val offset = top * width
-                for (index in 0 until rows * width) gray[offset + index] = printGray(pixels[index]).toByte()
+                packPrintRows(pixels, width, rows, packed, firstRow = top)
             }
-            writer.addPage(width, height, gray)
+            writer.addPage(width, height, packed)
             yield()
         }
         return writer.finish()

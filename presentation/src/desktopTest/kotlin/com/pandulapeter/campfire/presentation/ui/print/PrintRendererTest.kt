@@ -18,6 +18,8 @@ import com.pandulapeter.campfire.data.model.domain.PrintSettings
 import kotlinx.coroutines.runBlocking
 import java.io.ByteArrayOutputStream
 import java.io.File
+import java.util.zip.Inflater
+import kotlin.math.ceil
 import kotlin.test.Test
 import kotlin.test.assertContentEquals
 import kotlin.test.assertEquals
@@ -63,7 +65,10 @@ internal class PrintRendererTest {
         val contents = bytes.decodeToString()
         assertEquals(document.pages.size, Regex("/Subtype /Image").findAll(contents).count())
         assertTrue(contents.contains("/Count ${document.pages.size}"))
-        assertTrue(bytes.size < 3_000_000, "Lossless paper compression should keep ordinary setlists reasonably small.")
+        assertTrue(bytes.size < document.pages.size * 120_000, "A page of print should compress to well under 120 KB.")
+        val width = ceil(document.width * 3).toInt()
+        val height = ceil(document.height * 3).toInt()
+        imageStreams(bytes).forEach { assertEquals((width + 1) / 2 * height, inflate(it).size) }
         // Opt-in output for manual visual QA. Ordinary test runs leave no files behind.
         System.getenv("CAMPFIRE_PRINT_QA_DIR")?.let { directory ->
             File(directory).mkdirs()
@@ -84,10 +89,10 @@ internal class PrintRendererTest {
         val top = PrintPage(listOf(PrintText(text = "MMMMMMMM", x = 10f, y = 5f, size = 20)))
         val bottom = PrintPage(listOf(PrintText(text = "MMMMMMMM", x = 10f, y = 70f, size = 20)))
         val bytes = renderer.pdf(PrintDocument(width = 100f, height = 100f, pages = listOf(top, bottom, top)))
-        val pages = imageStreams(bytes).map(::decodeRuns)
-        assertEquals(3, pages.size)
         val width = 300
-        fun inked(page: ByteArray, rows: IntRange) = rows.any { row -> (0 until width).any { page[row * width + it] != (-1).toByte() } }
+        val pages = imageStreams(bytes).map { stream -> unpack(inflate(stream), width) }
+        assertEquals(3, pages.size)
+        fun inked(page: IntArray, rows: IntRange) = rows.any { row -> (0 until width).any { page[row * width + it] != 15 } }
         assertTrue(inked(pages[0], 0 until 120))
         assertTrue(!inked(pages[1], 0 until 120), "The second page must not show the first page's text.")
         assertTrue(inked(pages[1], 200 until 300))
@@ -101,15 +106,27 @@ internal class PrintRendererTest {
         }.toList()
     }
 
-    private fun decodeRuns(encoded: ByteArray): ByteArray {
+    private fun inflate(stream: ByteArray): ByteArray {
+        val inflater = Inflater()
+        inflater.setInput(stream)
         val output = ByteArrayOutputStream()
-        var index = 0
-        while (true) {
-            val packet = encoded[index++].toInt() and 255
-            if (packet == 128) break
-            if (packet <= 127) repeat(packet + 1) { output.write(encoded[index++].toInt()) }
-            else { val value = encoded[index++].toInt(); repeat(257 - packet) { output.write(value) } }
+        val buffer = ByteArray(64 * 1024)
+        while (!inflater.finished()) {
+            val count = inflater.inflate(buffer)
+            check(count > 0 || !inflater.needsInput()) { "The image stream ended early." }
+            output.write(buffer, 0, count)
         }
+        inflater.end()
         return output.toByteArray()
+    }
+
+    /** One four-bit level per pixel, 15 being white. */
+    private fun unpack(packed: ByteArray, width: Int): IntArray {
+        val rowBytes = (width + 1) / 2
+        val height = packed.size / rowBytes
+        return IntArray(width * height) { index ->
+            val byte = packed[index / width * rowBytes + index % width / 2].toInt() and 255
+            if (index % width % 2 == 0) byte shr 4 else byte and 15
+        }
     }
 }
