@@ -187,12 +187,13 @@ private fun FaviconEffect(viewModel: CampfireViewModel) {
 /**
  * Points the page's icon at [fileName], a file next to index.html, and remembers it for index.html. Storage that
  * cannot be written - blocked for the site, or a private window out of space - costs the next visit its first frames
- * in the app's own icon and nothing else.
+ * in the app's own icon and nothing else. The icon is asked for by its versioned address, which is the one it is kept
+ * in the browser under, so the icon of an app opened without a connection is there too.
  */
 private fun setFavicon(fileName: String) {
     js(
         """{
-            document.querySelector('link[rel="icon"]').setAttribute('href', fileName);
+            document.querySelector('link[rel="icon"]').setAttribute('href', window.campfireVersioned ? window.campfireVersioned(fileName) : fileName);
             try {
                 window.localStorage.setItem('campfire-icon', fileName);
             } catch (e) {

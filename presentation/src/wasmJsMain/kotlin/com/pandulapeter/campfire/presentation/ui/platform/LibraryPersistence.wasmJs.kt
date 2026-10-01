@@ -39,3 +39,6 @@ private fun isStoragePersistenceSupported(): Boolean =
 private fun isStoragePersisted(): Promise<JsBoolean?> = js("navigator.storage.persisted().catch(function () { return false; })")
 
 private fun requestStoragePersistence(): Promise<JsBoolean?> = js("navigator.storage.persist().catch(function () { return false; })")
+
+/** Set by index.html before it starts the app, and never changed afterwards: every launch finds it out again. */
+internal actual fun isAppAvailableOffline(): Boolean = js("window.campfireSavedForOffline === true")

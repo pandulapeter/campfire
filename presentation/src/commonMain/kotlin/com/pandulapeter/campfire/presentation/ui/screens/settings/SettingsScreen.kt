@@ -123,6 +123,9 @@ import com.pandulapeter.campfire.presentation.resources.settings_library_size_me
 import com.pandulapeter.campfire.presentation.resources.settings_library_storage
 import com.pandulapeter.campfire.presentation.resources.settings_library_storage_best_effort
 import com.pandulapeter.campfire.presentation.resources.settings_library_storage_granted
+import com.pandulapeter.campfire.presentation.resources.settings_library_storage_offline_best_effort
+import com.pandulapeter.campfire.presentation.resources.settings_library_storage_offline_granted
+import com.pandulapeter.campfire.presentation.resources.settings_library_storage_online_only
 import com.pandulapeter.campfire.presentation.resources.settings_library_summary
 import com.pandulapeter.campfire.presentation.resources.settings_lyrics_only_mode
 import com.pandulapeter.campfire.presentation.resources.settings_lyrics_only_mode_description
@@ -162,6 +165,7 @@ import com.pandulapeter.campfire.presentation.ui.platform.LibraryPersistence
 import com.pandulapeter.campfire.presentation.ui.platform.LocalFilePicker
 import com.pandulapeter.campfire.presentation.ui.platform.appIconSurface
 import com.pandulapeter.campfire.presentation.ui.platform.canAskForDonations
+import com.pandulapeter.campfire.presentation.ui.platform.isAppAvailableOffline
 import com.pandulapeter.campfire.presentation.ui.platform.platformStore
 import com.pandulapeter.campfire.presentation.ui.theme.CampfireColorScheme
 import com.pandulapeter.campfire.presentation.ui.theme.colorSchemePair
@@ -643,18 +647,25 @@ private fun LibrarySection(
         )
     }
     // Only where the answer is not a foregone conclusion, which is the web: the other three platforms keep the
-    // library in a file system of their own.
+    // library in a file system of their own. One row for the library and the copy of the app the page keeps next to
+    // it, since the browser keeps or evicts the two together, and this is where somebody checks whether the page
+    // opens without a connection.
     AnimatedSettingsRow(value = libraryPersistence.takeIf { it != LibraryPersistence.GUARANTEED }) { persistence ->
+        val isGranted = persistence == LibraryPersistence.GRANTED
+        val isAvailableOffline = isAppAvailableOffline()
         ListItem(
             colors = ListItemDefaults.colors(containerColor = Color.Transparent),
             headlineContent = { Text(stringResource(Res.string.settings_library_storage)) },
             supportingContent = {
                 Text(
-                    text = when (persistence) {
-                        LibraryPersistence.GRANTED -> stringResource(Res.string.settings_library_storage_granted)
-                        else -> stringResource(Res.string.settings_library_storage_best_effort)
+                    text = when {
+                        isAvailableOffline && isGranted -> stringResource(Res.string.settings_library_storage_offline_granted)
+                        isAvailableOffline -> stringResource(Res.string.settings_library_storage_offline_best_effort)
+                        else -> stringResource(Res.string.settings_library_storage_online_only) + " " + stringResource(
+                            if (isGranted) Res.string.settings_library_storage_granted else Res.string.settings_library_storage_best_effort,
+                        )
                     },
-                    color = if (persistence == LibraryPersistence.GRANTED) Color.Unspecified else MaterialTheme.colorScheme.error,
+                    color = if (isAvailableOffline && isGranted) Color.Unspecified else MaterialTheme.colorScheme.error,
                 )
             },
         )

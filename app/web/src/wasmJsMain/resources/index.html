@@ -40,6 +40,74 @@
             }
         }(window.location));
     </script>
+    <!-- The decisions behind keeping the app in the browser (see the end of the page), apart from everything that
+         acts on them so that app/web/tests/launch.test.cjs can run them as they are. Plain functions of what the build
+         says, what the cache holds and what the deployment answered. -->
+    <script id="campfire-launch" type="application/javascript">
+        window.campfireLaunch = (function () {
+            'use strict';
+
+            /** The address a file of a build is asked for and kept under: its path, versioned by its own content. */
+            function addressOf(path, entry, folder) {
+                var url = new URL(path, folder);
+                url.searchParams.set('v', entry.sha256.substring(0, 16));
+                return url.href;
+            }
+
+            /** The files of [files], a build's map, that are not among [kept], the addresses the cache holds. */
+            function missingFiles(files, kept, folder) {
+                var held = {};
+                kept.forEach(function (address) {
+                    held[address] = true;
+                });
+                return Object.keys(files).sort().map(function (path) {
+                    return { path: path, entry: files[path], address: addressOf(path, files[path], folder) };
+                }).filter(function (file) {
+                    return !held[file.address];
+                });
+            }
+
+            /** What the cache holds that the build of [files] does not name, the kept page aside. */
+            function staleAddresses(files, kept, folder) {
+                var named = {};
+                Object.keys(files).forEach(function (path) {
+                    named[addressOf(path, files[path], folder)] = true;
+                });
+                return kept.filter(function (address) {
+                    return address !== folder && !named[address];
+                });
+            }
+
+            /** Whether [text], a kept page, is the page of build [id]: the build writes its id into the page. */
+            function isPageOf(text, id) {
+                return typeof text === 'string' && text.indexOf('{"id":' + JSON.stringify(id) + ',') !== -1;
+            }
+
+            /** The answer build.json gave, or null for one that is not a build's. */
+            function parseAnswer(value) {
+                return value && typeof value.id === 'string' && typeof value.page === 'string'
+                && value.files && typeof value.files === 'object' ? value : null;
+            }
+
+            /**
+             * Whether to start the page's own build ("keep") or download the one the deployment named and start that
+             * ("update"). A build the page already reloaded for once in this tab is not tried again: a deployment
+             * whose files keep failing their check would otherwise reload the page for ever.
+             */
+            function nextStep(ownId, answer, reloadedFor) {
+                return answer && answer.id !== ownId && answer.id !== reloadedFor ? 'update' : 'keep';
+            }
+
+            return {
+                addressOf: addressOf,
+                missingFiles: missingFiles,
+                staleAddresses: staleAddresses,
+                isPageOf: isPageOf,
+                parseAnswer: parseAnswer,
+                nextStep: nextStep
+            };
+        })();
+    </script>
     <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
     <!-- The two schemes of the app's own color: the dark background, and the light surfaceContainerHigh, since Chrome
          ignores a theme-color as light as the light background. Once the preferences are read the app writes the
@@ -48,22 +116,7 @@
     <meta name="theme-color" content="#15121C" media="(prefers-color-scheme: dark)">
     <meta name="description" content="Song lyrics and chords, in a library of plain ChordPro files that stays yours.">
     <title>Campfire</title>
-    <link rel="icon" type="image/png" sizes="192x192" href="favicon-campfire.png">
-    <!-- The icon of the theme color the user chose, which the app leaves in local storage whenever it shows one (see
-         FaviconEffect in CampfireWebApp.kt), so that the tab and the loading screen are in that color before the app
-         that knows it has been downloaded. Only a name the app writes is taken: this is a URL on the page. -->
-    <script type="application/javascript">
-        (function () {
-            try {
-                var icon = window.localStorage.getItem('campfire-icon');
-                if (/^favicon-[a-z]+\.png$/.test(icon || '')) {
-                    document.querySelector('link[rel="icon"]').setAttribute('href', icon);
-                    document.documentElement.style.setProperty('--splash-icon', 'url("' + icon + '")');
-                }
-            } catch (e) {
-            }
-        })();
-    </script>
+    <link rel="icon" type="image/png" sizes="192x192">
     <!-- Every file of a distribution is asked for with its own version in the query string, this page aside, which
          is the one address that has to stay put. The host lets a browser keep any file for ten minutes by its address
          and a deployment replaces the files one address at a time, so without it a page could start with a campfire.js
@@ -71,7 +124,8 @@
          is a set of addresses of its own, which only the page that belongs to it knows, while a file a release left as
          it was keeps its address and stays cached. The versions are written by the build together with the rest of
          the manifest (see build.gradle.kts): a hash of each file's content, so a build of the same sources asks for the
-         same addresses. A file the manifest does not name is asked for as it is.
+         same addresses. A file the manifest does not name is asked for as it is. They are also the addresses the files
+         are kept in the browser under (see the end of the page), so a request the app makes offline finds its file.
 
          Everything the app fetches goes through fetch(), which is wrapped here for good, before campfire.js is loaded;
          campfire.js itself and the storage worker are asked for by name through campfireVersioned. Only addresses inside
@@ -88,18 +142,16 @@
             var build = /*{{BUILD}}*/null;
             var folder = new URL('.', document.baseURI).href;
 
+            // An address that already names a version is left as it is: that is a file of another build, which the
+            // page downloads to keep before it starts that build.
             function versioned(url) {
                 var resolved = new URL(url, document.baseURI);
-                if (!build || resolved.href.indexOf(folder) !== 0) {
+                if (!build || resolved.href.indexOf(folder) !== 0 || resolved.searchParams.has('v')) {
                     return url;
                 }
                 var path = decodeURIComponent(resolved.pathname.substring(new URL(folder).pathname.length));
-                var hash = build.files[path];
-                if (!hash) {
-                    return url;
-                }
-                resolved.searchParams.set('v', hash);
-                return resolved.href;
+                var entry = build.files[path];
+                return entry ? window.campfireLaunch.addressOf(path, entry, folder) : url;
             }
 
             window.campfireBuild = build;
@@ -125,6 +177,25 @@
                 link.href = versioned('composeResources/com.pandulapeter.campfire.presentation.resources/font/' + font + '.ttf');
                 document.head.appendChild(link);
             });
+        })();
+    </script>
+    <!-- The icon of the theme color the user chose, which the app leaves in local storage whenever it shows one (see
+         FaviconEffect in CampfireWebApp.kt), so that the tab and the loading screen are in that color before the app
+         that knows it has been downloaded. Only a name the app writes is taken: this is a URL on the page. Asked for by
+         its versioned address like every other file, which is the address it is kept under for an offline start. -->
+    <script type="application/javascript">
+        (function () {
+            var icon = 'favicon-campfire.png';
+            try {
+                var chosen = window.localStorage.getItem('campfire-icon');
+                if (/^favicon-[a-z]+\.png$/.test(chosen || '')) {
+                    icon = chosen;
+                }
+            } catch (e) {
+            }
+            icon = window.campfireVersioned(icon);
+            document.querySelector('link[rel="icon"]').setAttribute('href', icon);
+            document.documentElement.style.setProperty('--splash-icon', 'url("' + icon + '")');
         })();
     </script>
     <style>
@@ -272,14 +343,14 @@
     (function () {
         'use strict';
 
-        // Written by the build (see build.gradle.kts and the head of this page): how many .wasm binaries
-        // this distribution has and what they weigh together, uncompressed. They are the only part of a
-        // cold start worth measuring - about 96% of it - and the only part that arrives through fetch(),
-        // which is what can be watched from here; campfire.js is loaded by a <script> tag, which reports
-        // nothing.
+        // Written by the build (see build.gradle.kts and the head of this page): every file of the build with its
+        // size and digest, and how many .wasm binaries there are and what they weigh together, uncompressed. Where
+        // the build is kept in the browser, the bar measures the download of whatever it is missing; where it cannot
+        // be, it measures the binaries as the app fetches them - the only part of a cold start worth measuring,
+        // about 96% of it, and the only part that arrives through fetch(), which is what can be watched from here.
         //
-        // It stays null on the development server, where there is no distribution to describe, and the
-        // bar falls back to the sizes the server advertises.
+        // It stays null on the development server, where there is no distribution to describe, nothing is kept and
+        // the bar falls back to the sizes the server advertises.
         var BUILD = window.campfireBuild;
 
         var splash = document.getElementById('splash');
@@ -290,12 +361,14 @@
         var TEXTS = {
             en: {
                 loadFailed: 'Campfire could not be loaded. Check the connection and try again.',
+                loadFailedFirstVisit: 'Campfire could not be loaded. It needs a connection the first time it is opened in this browser, so check the connection and try again.',
                 unsupported: 'This browser cannot run Campfire. It needs Chrome or Edge 119, Firefox 120, Safari 18.2 (iOS 18.2), or a later version.',
                 alreadyOpen: 'Campfire is already open in another tab. Close that tab first, or carry on there.',
                 retry: 'Try again'
             },
             hu: {
                 loadFailed: 'A Campfire betöltése nem sikerült. Ellenőrizd a kapcsolatot, és próbáld újra.',
+                loadFailedFirstVisit: 'A Campfire betöltése nem sikerült. Az első megnyitáshoz ebben a böngészőben internetkapcsolat kell, ezért ellenőrizd a kapcsolatot, és próbáld újra.',
                 unsupported: 'Ez a böngésző nem tudja futtatni a Campfire-t. Chrome vagy Edge 119, Firefox 120, Safari 18.2 (iOS 18.2) vagy ezeknél újabb verzió kell hozzá.',
                 alreadyOpen: 'A Campfire már meg van nyitva egy másik lapon. Előbb zárd be azt a lapot, vagy folytasd ott.',
                 retry: 'Újra'
@@ -316,6 +389,12 @@
         var isReady = false;
         var isFailed = false;
         var shown = 0;
+        // Whether the app is started from the build kept in the browser, which is downloaded before anything starts,
+        // rather than straight from the network as the app asks for its files.
+        var isKeeping = false;
+        // Whether that build is complete, as far as this launch found: the one value the Storage row in Settings
+        // reports on, handed to Kotlin as window.campfireSavedForOffline.
+        var isSaved = false;
 
         // Downloading is the part whose length is known; compiling and instantiating the module is
         // not. So the download owns the first 92% of the bar and the rest is a decay that approaches
@@ -323,6 +402,9 @@
         var DOWNLOAD_SHARE = 0.92;
 
         function isStarting() {
+            if (isKeeping) {
+                return hasStarted;
+            }
             return binaries > 0 ? completed >= binaries : (completed > 0 && pending === 0);
         }
 
@@ -394,12 +476,6 @@
         }
 
         /**
-         * Counts the bytes of the .wasm downloads by reading a clone of each response. The response
-         * itself is handed back untouched, with its URL and its place in the HTTP cache: that is what
-         * lets WebAssembly.instantiateStreaming compile as it downloads, and what lets the browser keep
-         * the compiled code for the next visit.
-         */
-        /**
          * Stops the bar where it is and says so. A download that failed, or a script that threw before
          * the app was up, would otherwise leave a bar that never moves again and nothing to do about it.
          */
@@ -408,7 +484,7 @@
                 return;
             }
             isFailed = true;
-            message.textContent = text.loadFailed;
+            message.textContent = isKeeping && !isSaved ? text.loadFailedFirstVisit : text.loadFailed;
             message.hidden = false;
             retry.onclick = function () {
                 location.reload();
@@ -457,7 +533,7 @@
         window.fetch = function (input, init) {
             var url = typeof input === 'string' ? input : (input && input.url) || '';
             var response = versionedFetch.apply(this, arguments);
-            if (!/\.wasm([?#]|$)/.test(url)) {
+            if (isKeeping || !/\.wasm([?#]|$)/.test(url)) {
                 return response;
             }
             pending++;
@@ -514,6 +590,7 @@
             isReady = true;
             isFailed = false;
             schedule();
+            forgetOtherBuilds();
         };
 
         // One library, one page: the app reads its files once and writes them whole from what it remembers, so a
@@ -528,6 +605,7 @@
                 return;
             }
             hasStarted = true;
+            window.campfireSavedForOffline = isSaved;
             message.hidden = true;
             retry.hidden = true;
             track.hidden = false;
@@ -546,9 +624,321 @@
             // Asks again in place rather than reloading: a tab that came back from a consent page still has the
             // answer in its address bar, and the app has to be the one that takes it out.
             retry.onclick = function () {
-                claimLibrary(startApp, showAlreadyOpen);
+                claimLibrary(launch, showAlreadyOpen);
             };
             retry.hidden = false;
+        }
+
+        // The app keeps a copy of itself in the browser, so that this address opens without a connection: a service
+        // worker answers the page's folder from one cache (see service-worker.js for its layout, which is a contract
+        // with every page ever kept), and this page decides what goes into it. Every launch, wherever the page came
+        // from, first asks the deployment which build is current (build.json, past every cache, for three seconds):
+        //
+        // - The page's own build: whatever the cache is missing of it is downloaded - all of it on a first visit -
+        //   and the app starts.
+        // - Another build: that build's missing files are downloaded, then its page, which is stored last, and the
+        //   page is loaded again, which the worker answers with the new page. Every page only ever starts the build
+        //   it was made with, so no protocol between builds is needed.
+        // - No answer, or an update that failed anywhere: the page's own build starts from what is kept.
+        //
+        // The page being stored last is the whole of the commit: a kept build is the kept page and every file its map
+        // names, and an update cut short leaves the previous page with all of its files, and some of the next build's
+        // beside them for the next attempt to reuse. Every file is read in full and checked against its digest before
+        // it is kept, so an error page or a file of another release, caught mid-deployment, is never kept as part of
+        // a build. Only one tab ever writes the cache, since the library's lock is held before this runs. Nothing is
+        // kept on the development server, or where the browser has no Cache Storage or refuses it (Firefox's private
+        // windows): there the app starts from the network as it always has.
+        var CACHE_NAME = 'campfire-web-app';
+        var RELOADED_FOR = 'campfire-reloaded-for';
+        var ANSWER_TIMEOUT = 3000;
+        // A download gives up when nothing has arrived for this long rather than after a total time, which a slow
+        // connection could never meet for sixteen megabytes.
+        var STALL_TIMEOUT = 15000;
+        var CONCURRENT_DOWNLOADS = 4;
+        var folder = new URL('.', document.baseURI).href;
+        var cache = null;
+
+        function launch() {
+            if (hasStarted) {
+                return;
+            }
+            if (!BUILD || !window.caches || !window.crypto || !window.crypto.subtle) {
+                startApp();
+                return;
+            }
+            registerWorker();
+            Promise.all([
+                window.caches.open(CACHE_NAME).catch(function () {
+                    return null;
+                }),
+                askDeployment()
+            ]).then(function (results) {
+                cache = results[0];
+                if (!cache) {
+                    startApp();
+                    return undefined;
+                }
+                isKeeping = true;
+                expected = 0;
+                var answer = results[1];
+                if (window.campfireLaunch.nextStep(BUILD.id, answer, readReloadedFor()) === 'update') {
+                    return update(answer).catch(function () {
+                        return keep(null);
+                    });
+                }
+                return keep(answer && answer.id === BUILD.id ? answer : null);
+            }).catch(function () {
+                isSaved = false;
+            }).then(startApp);
+        }
+
+        /**
+         * Registered on every launch, which is also what has the browser look for a new version of the worker. Its
+         * address never changes, and the browser is told to check it past the HTTP cache.
+         */
+        function registerWorker() {
+            if (navigator.serviceWorker) {
+                navigator.serviceWorker.register(new URL('service-worker.js', folder).href, {
+                    scope: folder,
+                    updateViaCache: 'none'
+                }).catch(function () {
+                });
+            }
+        }
+
+        /**
+         * build.json, past the HTTP cache and the host's with an address of its own, or null. navigator.onLine is not
+         * asked: it says yes on a network that leads nowhere, which is what the time limit is for.
+         */
+        function askDeployment() {
+            var controller = new AbortController();
+            var timer = setTimeout(function () {
+                controller.abort();
+            }, ANSWER_TIMEOUT);
+            var address = new URL('build.json', folder);
+            address.searchParams.set('launch', Date.now().toString(36) + Math.random().toString(36).slice(2));
+            return versionedFetch(address.href, { cache: 'no-store', signal: controller.signal }).then(function (response) {
+                return response.ok ? response.json() : null;
+            }).then(function (value) {
+                clearTimeout(timer);
+                return window.campfireLaunch.parseAnswer(value);
+            }, function () {
+                clearTimeout(timer);
+                return null;
+            });
+        }
+
+        /**
+         * Tops up the page's own build and finds out whether it is complete. Missing files are asked for even without
+         * an answer from the deployment, since a slow first visit is still online; the page itself can only be kept
+         * with one, which is what its digest comes from. A file that cannot be had is not a failure here: the app
+         * still starts, asks the network for it, and fails the ordinary way if that cannot answer either.
+         */
+        function keep(answer) {
+            return cachedAddresses().then(function (kept) {
+                return download(window.campfireLaunch.missingFiles(BUILD.files, kept, folder));
+            }).catch(function () {
+            }).then(function () {
+                return isPageKept().then(function (isKept) {
+                    return isKept || !answer ? undefined : keepPage(answer.page).catch(function () {
+                    });
+                });
+            }).then(function () {
+                return Promise.all([isWorkerActive(), isPageKept(), cachedAddresses()]);
+            }).then(function (checks) {
+                isSaved = checks[0] && checks[1] && window.campfireLaunch.missingFiles(BUILD.files, checks[2], folder).length === 0;
+            });
+        }
+
+        /**
+         * Downloads the build the deployment named and its page, then loads the page again, at the same address -
+         * an authorization answer in the query string included, which the new build reads once as this one would
+         * have. The reload is noted for this tab, so a page that comes back as this one is not sent round again.
+         */
+        function update(answer) {
+            return cachedAddresses().then(function (kept) {
+                return download(window.campfireLaunch.missingFiles(answer.files, kept, folder));
+            }).then(function () {
+                return keepPage(answer.page);
+            }).then(function () {
+                try {
+                    window.sessionStorage.setItem(RELOADED_FOR, answer.id);
+                } catch (e) {
+                }
+                location.reload();
+                // The page is on its way out; nothing of this one starts.
+                return new Promise(function () {});
+            });
+        }
+
+        function readReloadedFor() {
+            try {
+                return window.sessionStorage.getItem(RELOADED_FOR);
+            } catch (e) {
+                return null;
+            }
+        }
+
+        function cachedAddresses() {
+            return cache.keys().then(function (requests) {
+                return requests.map(function (request) {
+                    return request.url;
+                });
+            });
+        }
+
+        function isPageKept() {
+            return cache.match(folder).then(function (response) {
+                return response ? response.text() : null;
+            }).then(function (page) {
+                return window.campfireLaunch.isPageOf(page, BUILD.id);
+            }, function () {
+                return false;
+            });
+        }
+
+        /** The worker's being there is what answers an offline navigation; a page it does not answer is not kept. */
+        function isWorkerActive() {
+            if (!navigator.serviceWorker) {
+                return Promise.resolve(false);
+            }
+            return navigator.serviceWorker.getRegistration(folder).then(function (registration) {
+                return !!(registration && registration.active);
+            }, function () {
+                return false;
+            });
+        }
+
+        /**
+         * The page of a build, asked for as index.html, which the worker has no entry for and so sends to the network,
+         * and kept under the folder's address, which is what the worker answers a navigation with.
+         */
+        function keepPage(digest) {
+            return fetchChecked(new URL('index.html', folder).href, digest, 'text/html; charset=utf-8').then(function (response) {
+                return cache.put(folder, response);
+            });
+        }
+
+        /**
+         * Downloads and keeps [files], a few at a time, counting their bytes for the bar. The first file that fails
+         * stops the rest, since the build they belong to cannot be started either way.
+         */
+        function download(files) {
+            files.forEach(function (file) {
+                expected += file.entry.size;
+            });
+            schedule();
+            var next = 0;
+            var controllers = [];
+            var isStopped = false;
+
+            function worker() {
+                if (isStopped || next >= files.length) {
+                    return Promise.resolve();
+                }
+                var file = files[next++];
+                var controller = new AbortController();
+                controllers.push(controller);
+                return fetchChecked(file.address, file.entry.sha256, null, controller).then(function (response) {
+                    return cache.put(file.address, response);
+                }).then(worker);
+            }
+
+            var workers = [];
+            for (var i = 0; i < Math.min(CONCURRENT_DOWNLOADS, files.length); i++) {
+                workers.push(worker());
+            }
+            return Promise.all(workers).catch(function (error) {
+                isStopped = true;
+                controllers.forEach(function (controller) {
+                    controller.abort();
+                });
+                throw error;
+            });
+        }
+
+        /**
+         * A file read in full and checked against its digest, as a response that carries its content type and
+         * nothing else. The binaries are always application/wasm, which is what lets them compile as they stream
+         * out of the cache, whatever the host said.
+         */
+        function fetchChecked(address, digest, type, abortController) {
+            var controller = abortController || new AbortController();
+            var stall = null;
+
+            function wait() {
+                clearTimeout(stall);
+                stall = setTimeout(function () {
+                    controller.abort();
+                }, STALL_TIMEOUT);
+            }
+
+            wait();
+            return versionedFetch(address, { cache: 'no-cache', signal: controller.signal }).then(function (response) {
+                if (!response.ok || !response.body) {
+                    throw new Error('Could not download ' + address);
+                }
+                var contentType = type || (/\.wasm$/.test(new URL(address).pathname)
+                    ? 'application/wasm'
+                    : response.headers.get('Content-Type') || 'application/octet-stream');
+                var reader = response.body.getReader();
+                var chunks = [];
+                var length = 0;
+                return (function pump() {
+                    return reader.read().then(function (chunk) {
+                        if (chunk.done) {
+                            return undefined;
+                        }
+                        wait();
+                        chunks.push(chunk.value);
+                        length += chunk.value.byteLength;
+                        received += chunk.value.byteLength;
+                        schedule();
+                        return pump();
+                    });
+                })().then(function () {
+                    clearTimeout(stall);
+                    var bytes = new Uint8Array(length);
+                    var offset = 0;
+                    chunks.forEach(function (chunk) {
+                        bytes.set(chunk, offset);
+                        offset += chunk.byteLength;
+                    });
+                    return window.crypto.subtle.digest('SHA-256', bytes).then(function (hash) {
+                        var hex = Array.prototype.map.call(new Uint8Array(hash), function (value) {
+                            return (value < 16 ? '0' : '') + value.toString(16);
+                        }).join('');
+                        if (hex !== digest) {
+                            throw new Error('Unexpected content at ' + address);
+                        }
+                        return new Response(bytes, { headers: { 'Content-Type': contentType } });
+                    });
+                });
+            }).catch(function (error) {
+                clearTimeout(stall);
+                throw error;
+            });
+        }
+
+        /**
+         * Deletes what the cache holds of other builds, once the app is up - but only while the page kept is this
+         * one, since a page of a later build is kept with its files, which are not this page's to delete.
+         */
+        function forgetOtherBuilds() {
+            if (!cache) {
+                return;
+            }
+            isPageKept().then(function (isKept) {
+                if (!isKept) {
+                    return undefined;
+                }
+                return cachedAddresses().then(function (kept) {
+                    return Promise.all(window.campfireLaunch.staleAddresses(BUILD.files, kept, folder).map(function (address) {
+                        return cache.delete(address);
+                    }));
+                });
+            }).catch(function () {
+            });
         }
 
         /**
@@ -585,7 +975,7 @@
         // Asked before the library is claimed and before anything of the app is fetched: a browser that cannot run
         // it would otherwise download sixteen megabytes to find that out, and be told to check its connection.
         if (isBrowserSupported()) {
-            claimLibrary(startApp, showAlreadyOpen);
+            claimLibrary(launch, showAlreadyOpen);
         } else {
             showUnsupported();
         }

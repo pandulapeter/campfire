@@ -6,8 +6,8 @@
 # If a copy of the MPL was not distributed with this file, You can obtain one at
 # https://mozilla.org/MPL/2.0/.
 
-# Every test the repository has: the unit tests of every module, run on the desktop target, the Node test of the
-# web build's storage worker and the Python test of the release description's parser. Run on every pull request, every night on the default branch, which catches what was
+# Every test the repository has: the unit tests of every module, run on the desktop target, the Node tests of the
+# web build's storage worker and offline support and the Python test of the release description's parser. Run on every pull request, every night on the default branch, which catches what was
 # pushed there directly, and by publish-all.yml before it starts a single store build, so a failing test stops a
 # release.
 
@@ -51,6 +51,7 @@ jobs:
       # change here. --continue reports the failures of every module rather than only the first.
       - name: Run the unit tests
         run: ./gradlew desktopTest --continue
-      # The web build's storage worker is JavaScript, and its journal is tested by Node rather than by Gradle.
-      - name: Run the web storage worker's tests
-        run: node --test app/web/tests/opfs-writer.test.cjs
+      # The web build's storage worker and what keeps the build in the browser are JavaScript, tested by Node rather
+      # than by Gradle.
+      - name: Run the web build's JavaScript tests
+        run: node --test app/web/tests/opfs-writer.test.cjs app/web/tests/offline.test.cjs

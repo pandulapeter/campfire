@@ -16,7 +16,8 @@ editor or by importing files and zip archives. **The only things that ever reach
 images and the cover search the user asks for.** Sync is off until the user connects a cloud folder of their own in
 Settings, and still involves no server of Campfire's own — see the Sync section below. A cover is fetched from the
 address a song's own file names, once, and kept on the device; the search asks MusicBrainz and the iTunes Search API,
-and only from the sheet the user opens for it; Settings' "Cover art" switch turns both off — see Cover art below. (The Android build also asks Play whether a newer version of itself exists, but that
+and only from the sheet the user opens for it; Settings' "Cover art" switch turns both off — see Cover art below. (The web build also asks its own deployment, at every launch, which build is current, which is the page being
+loaded rather than a request about the user — see Web below. The Android build also asks Play whether a newer version of itself exists, but that
 question is answered over IPC by the Play Store app; Campfire's own process makes no request — see Updates below.
 On Android and iOS the system's own device backup also carries the library and the settings — to the user's Google or
 iCloud backup, or straight to their next phone — but that is the operating system copying the app's files on the
@@ -286,9 +287,10 @@ uninstall and nothing else does.
   index, the setlist slots, stepper labels, section grid and the cutting of sections into columns, row snapping and section measurements of the details screen, the editor's token cache), run on
   the desktop target with
   `./gradlew :chordpro:desktopTest :domain:implementation:desktopTest :data:source:local:implementation:desktopTest :data:source:remote:api:desktopTest :data:source:remote:implementation:desktopTest :data:repository:implementation:desktopTest :presentation:desktopTest`.
-  The web build's storage worker, which is JavaScript, has a Node test of its own (see `app/web`), and the parser of a
+  The web build's JavaScript — its storage worker, its service worker's routing and the page's decisions about the
+  build it keeps — has Node tests of its own (see `app/web`), and the parser of a
   release's description, which is Python, a `unittest` next to it in `.github/scripts`.
-  `.github/workflows/tests.yml` runs all three — every module's `desktopTest`, the Node test and the Python one — on every pull request, every
+  `.github/workflows/tests.yml` runs all three — every module's `desktopTest`, the Node tests and the Python one — on every pull request, every
   night on the default branch, and from `publish-all.yml` before it starts a single store build, so a failing test
   stops a release.
   The UI itself is untested by code: `:app:baselineprofile` drives it, but only to record a profile, asserts nothing
@@ -635,13 +637,23 @@ start, which is what the rest of `app/web` is about — see its `CLAUDE.md`.
   deep address as its site-wide 404 page, which hands it to `index.html` in the query string (`404.html` in the
   `campfire-website` repository does this for addresses under `app/`), and `index.html` writes a `<base>`
   for the folder it lives in, which every relative URL of the page and the app depends on.
-- The loading screen has a determinate progress bar, fed by a `fetch` wrapper that counts the bytes of the binaries
-  against the total the build wrote into the page. It is a page and not an installable app on purpose: there is no
-  web app manifest and no service worker, because every platform that should have an installable Campfire has a
-  native build. A browser without Wasm GC is told so before the download starts.
-- `finishWebDistribution` (in `app/web/build.gradle.kts`) finalizes `wasmJsBrowserDistribution`: it writes that total
-  into `index.html`, and precompresses the files when `campfire.web.precompress` is on — which it is not, since GitHub
-  Pages ignores the copies (see `app/web`).
+- **The page keeps a copy of the app in the browser**, so that the address opens without a connection after one
+  visit with it, on the songs or on a bookmarked screen. Every launch asks the deployment's `build.json` which build
+  is current (past every cache, for three seconds): the page's own build tops up whatever the cache lacks and starts,
+  another build is downloaded, checked file by file against its SHA-256, stored with its page last and loaded once,
+  and no answer, or an update that fails anywhere, starts the build that is kept. A `service-worker.js` at an address
+  that never changes only answers the folder from that one cache and decides nothing; it is the way out of a kept page
+  that turned out broken, so it is never deleted. Nothing else changes for the user: no manifest, no install prompt,
+  no update dialog, and a build published while the app is open arrives on the next launch. The loading screen's
+  determinate progress bar measures the download of whatever the kept build is missing (or, where nothing can be kept,
+  the binaries as the app fetches them, against the total the build wrote into the page). It is a page and not an
+  installable app on purpose, because every platform that should have an installable Campfire has a native build. A
+  browser without Wasm GC is told so before the download starts. Settings' web-only Storage row reports whether the
+  app was saved together with whether the browser promised to keep the library, since the two are kept or evicted
+  together (`isAppAvailableOffline`, next to `requestLibraryPersistence`). See `app/web` for the launch and the cache.
+- `finishWebDistribution` (in `app/web/build.gradle.kts`) finalizes `wasmJsBrowserDistribution`: it writes the build's
+  id and the size and digest of every file into `index.html` and `build.json`, and precompresses the files when
+  `campfire.web.precompress` is on — which it is not, since GitHub Pages ignores the copies (see `app/web`).
 - OPFS, the file input and the download link are reached through `js(...)` blocks rather than through typed wrappers:
   one crossing of the Kotlin/Wasm boundary per operation is far cheaper than one per element, and several of these APIs
   have no binding. A Kotlin lambda cannot be passed into a `js(...)` block, so callbacks (file drops) come back as

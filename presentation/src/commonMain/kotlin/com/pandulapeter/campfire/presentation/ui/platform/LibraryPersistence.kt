@@ -35,3 +35,11 @@ internal enum class LibraryPersistence {
  * ask once, and the settings screen reads the answer that call left behind rather than asking again.
  */
 internal expect suspend fun requestLibraryPersistence(): LibraryPersistence
+
+/**
+ * Whether the app itself opens without a connection. Only ever false on the web, where the page keeps a copy of the
+ * app in the browser's storage for the origin next to the library, and says before it starts the app whether that copy
+ * is complete (see index.html in `:app:web`). The settings screen reports it together with [LibraryPersistence], since
+ * the browser keeps or evicts the two together.
+ */
+internal expect fun isAppAvailableOffline(): Boolean

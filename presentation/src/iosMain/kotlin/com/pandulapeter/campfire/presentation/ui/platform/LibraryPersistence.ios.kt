@@ -11,3 +11,6 @@ package com.pandulapeter.campfire.presentation.ui.platform
 
 // The iOS library is in the app's documents directory, which only the user can empty.
 internal actual suspend fun requestLibraryPersistence() = LibraryPersistence.GUARANTEED
+
+// An installed app, which needs nothing from the network to start.
+internal actual fun isAppAvailableOffline() = true

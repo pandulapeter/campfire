@@ -8,8 +8,9 @@
  * https://mozilla.org/MPL/2.0/.
 -->
 # To do
-- Offline mode for web (execute documentation/WEB_OFFLINE_SUPPORT_PROPOSAL.md)
 - Haptic effects
+- Songs screens -> Song card overflow menu -> Add edit tags and edit languages options
+- Try to avoid one small section / screen
 - Global sync status display
 - Optional close confirmation dialog on relevant platforms
 - What's new dialog
@@ -23,5 +24,6 @@
 - Improve test coverage
 - Streaming zip writer on all platforms
 - Each top-level Composable should be defined in a separate file
+- Multi-cursor in editor ?
 - First time user experience tutorial ?
 - Metronome ?

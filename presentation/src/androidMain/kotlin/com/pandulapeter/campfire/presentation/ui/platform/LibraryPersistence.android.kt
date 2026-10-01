@@ -11,3 +11,6 @@ package com.pandulapeter.campfire.presentation.ui.platform
 
 // Android keeps the library in the app's private storage, which only an uninstall removes.
 internal actual suspend fun requestLibraryPersistence() = LibraryPersistence.GUARANTEED
+
+// An installed app, which needs nothing from the network to start.
+internal actual fun isAppAvailableOffline() = true

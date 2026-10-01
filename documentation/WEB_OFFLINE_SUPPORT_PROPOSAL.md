@@ -9,7 +9,8 @@
 -->
 # Proposal: offline support for the web build
 
-Status: proposed; nothing in this document is implemented.  
+Status: implemented and verified against a production distribution served locally; the checks on the deployment
+and in Firefox and Safari are still owed.  
 Date: 1 October 2026.
 
 ## Product decision

@@ -11,3 +11,6 @@ package com.pandulapeter.campfire.presentation.ui.platform
 
 // The desktop library is an ordinary folder in the user's own data directory.
 internal actual suspend fun requestLibraryPersistence() = LibraryPersistence.GUARANTEED
+
+// An installed app, which needs nothing from the network to start.
+internal actual fun isAppAvailableOffline() = true

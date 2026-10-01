@@ -67,19 +67,28 @@ val distributionDirectory = layout.buildDirectory.dir("dist/wasmJs/productionExe
 val resourceDirectory = layout.projectDirectory.dir("src/wasmJsMain/resources")
 val shouldPrecompress = project.property("campfire.web.precompress").toString().toBoolean()
 
+/** Files of the distribution that are not part of the build the page starts: what the browser asks for past it. */
+val unversionedFiles = setOf("index.html", "build.json", "service-worker.js")
+
 /**
- * Tells index.html what its progress bar is about to download - it can only measure the binaries
- * against a total it knows before the first byte arrives - and the version of every other file, which
- * the page asks for that file with, and then, with `campfire.web.precompress` on, writes a
- * precompressed copy of everything worth compressing next to it, for hosts that serve those.
+ * Tells index.html what makes up the build it belongs to, and writes the same into build.json for the page of an
+ * earlier build to compare itself with, and then, with `campfire.web.precompress` on, writes a precompressed copy of
+ * everything worth compressing next to it, for hosts that serve those.
  *
- * Each file's version is a hash of its own content rather than the version name, or one hash of the
- * whole distribution: a file built again from other sources must not be taken for the one a browser
- * still holds, while one that a release left as it was - skiko's binary, the fonts, the drawables -
- * can go on being served from it.
+ * The map names every file the app can ask for, with its size, which the progress bar measures the download against,
+ * and the full SHA-256 of its content, which the page checks every file it keeps in the browser against before it
+ * starts a build from them, so an error page or a file of another release caught mid-deployment is never kept. The
+ * first sixteen hex digits of it are the version every file is asked for with: a hash of its own content rather than
+ * the version name, or one hash of the whole distribution, since a file built again from other sources must not be
+ * taken for the one a browser still holds, while one that a release left as it was - skiko's binary, the fonts, the
+ * drawables - can go on being served from it.
  *
- * The page is written from its source rather than edited in place, so running this over the same
- * distribution twice produces the same distribution.
+ * The build id is a hash of that map and of the page's source, so two builds with one version name are still two
+ * builds and the same sources are the same build. build.json carries the digest of the finished page too, which the
+ * page cannot carry about itself.
+ *
+ * The page is written from its source rather than edited in place, so running this over the same distribution twice
+ * produces the same distribution.
  */
 val finishWebDistribution = tasks.register("finishWebDistribution") {
     description = "Fills in the build manifest of the web distribution and precompresses it if asked to."
@@ -89,31 +98,40 @@ val finishWebDistribution = tasks.register("finishWebDistribution") {
     val placeholder = buildManifestPlaceholder
     val transport = transportSuffixes
     val compressible = compressibleSuffixes
+    val unversioned = unversionedFiles
     doLast {
         val directory = root.get().asFile
         val page = "index.html"
+        val template = templates.file(page).asFile.readText()
+        check(template.contains(placeholder)) { "$page has no $placeholder for the build manifest" }
 
         val deployed = directory.walkTopDown()
             .filter { it.isFile && transport.none(it.name::endsWith) }
             .toList()
-        val versions = deployed.map { it.relativeTo(directory).invariantSeparatorsPath to it }
-            .filter { (path, _) -> path != page }
+        val versioned = deployed.map { it.relativeTo(directory).invariantSeparatorsPath to it }
+            .filter { (path, _) -> path !in unversioned }
             .sortedBy { (path, _) -> path }
-            .associate { (path, file) ->
-                path to MessageDigest.getInstance("SHA-256").digest(file.readBytes()).take(8).joinToString("") { "%02x".format(it) }
-            }
-
-        val binaries = deployed.filter { it.name.endsWith(".wasm") }
-        val files = versions.entries.joinToString(",") { (path, version) -> "${path.toJsonString()}:${version.toJsonString()}" }
-        val manifest = "{\"binaryCount\":${binaries.size},\"binaryBytes\":${binaries.sumOf { it.length() }},\"files\":{$files}}"
-        val template = templates.file(page).asFile.readText()
-        check(template.contains(placeholder)) { "$page has no $placeholder for the build manifest" }
-        File(directory, page).writeText(template.replace(placeholder, manifest))
-        logger.lifecycle("Web distribution: ${deployed.size} files, ${versions.size} of them versioned, ${deployed.sumOf { it.length() } / 1024} KiB")
+        val files = versioned.joinToString(",") { (path, file) ->
+            "${path.toJsonString()}:{\"sha256\":${file.readBytes().sha256().toJsonString()},\"size\":${file.length()}}"
+        }
+        val binaries = versioned.map { it.second }.filter { it.name.endsWith(".wasm") }
+        val id = "$files\n$template".toByteArray().sha256().take(16)
+        val manifest = "{\"id\":${id.toJsonString()},\"binaryCount\":${binaries.size}," +
+            "\"binaryBytes\":${binaries.sumOf { it.length() }},\"files\":{$files}}"
+        val finishedPage = template.replace(placeholder, manifest)
+        File(directory, page).writeText(finishedPage)
+        File(directory, "build.json").writeText(
+            "{\"id\":${id.toJsonString()},\"page\":${finishedPage.toByteArray().sha256().toJsonString()},\"files\":{$files}}"
+        )
+        logger.lifecycle(
+            "Web distribution: build $id, ${deployed.size} files, ${versioned.size} of them versioned, " +
+                "${versioned.sumOf { it.second.length() } / 1024} KiB",
+        )
 
         if (precompress) {
             var isBrotliMissing = false
-            deployed.filter { file -> compressible.any(file.name::endsWith) }
+            directory.walkTopDown()
+                .filter { file -> file.isFile && compressible.any(file.name::endsWith) }
                 .forEach { file ->
                     file.gzipTo(File(file.parentFile, "${file.name}.gz"))
                     isBrotliMissing = isBrotliMissing || !file.brotliTo(File(file.parentFile, "${file.name}.br"))
@@ -128,6 +146,9 @@ val finishWebDistribution = tasks.register("finishWebDistribution") {
 tasks.named("wasmJsBrowserDistribution") {
     finalizedBy(finishWebDistribution)
 }
+
+/** The SHA-256 of these bytes in lowercase hex, the form the page computes it in with SubtleCrypto. */
+fun ByteArray.sha256() = MessageDigest.getInstance("SHA-256").digest(this).joinToString("") { "%02x".format(it) }
 
 /**
  * A JSON string literal: the paths come from the Compose resources, which are plain today, but nothing guarantees a
