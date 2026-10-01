@@ -79,8 +79,11 @@ internal fun layoutPrintDocument(
             y += row.height
         }
     }
-    fun wrapped(text: String, size: Int = options.fontSize, bold: Boolean = false): List<Row> =
-        wrapPrintText(text, columnWidth) { measure(it, size, bold) }.map { Row(listOf(Part(it, size = size, bold = bold)), size * 1.45f) }
+    // A line break inside a text (a setlist description has up to three lines) starts a row of its own, since a row is
+    // one line tall and the renderer would draw the rest over whatever comes under it.
+    fun wrapped(text: String, size: Int = options.fontSize, bold: Boolean = false): List<Row> = text.lines().flatMap { line ->
+        wrapPrintText(line, columnWidth) { measure(it, size, bold) }.map { Row(listOf(Part(it, size = size, bold = bold)), size * 1.45f) }
+    }
     fun metadata(song: ChordProSong): String = listOfNotNull(
         song.metadata.key?.takeIf { options.showChords }?.let { "${labels.key}: $it" },
         song.metadata.capo?.takeIf { options.showChords }?.let { "${labels.capo}: $it" },

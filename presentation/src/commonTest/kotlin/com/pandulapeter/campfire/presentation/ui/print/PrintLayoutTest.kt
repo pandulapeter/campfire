@@ -285,4 +285,12 @@ internal class PrintLayoutTest {
         assertEquals(tokens.joinToString(" ") { (it as? GridToken.Chord)?.name ?: (it as? GridToken.Bar)?.text ?: "." }, rows.joinToString(" "))
         assertTrue(rows(grid(listOf(GridToken.Text("Intro")))).first().startsWith("Intro"))
     }
+
+    @Test fun aMultiLineDescriptionTakesARowPerLine() {
+        val entry = song(lyrics(1)).copy(index = 1)
+        val document = layout(PrintSource("Concert", "a\nb", isSetlist = true, songs = listOf(entry)), PrintSettings(setlistMode = PrintSettings.SetlistMode.RUNNING_ORDER))
+        val texts = document.pages.flatMap { it.texts }
+        assertEquals(texts.first { it.text == "a" }.y + 12 * 1.45f, texts.first { it.text == "b" }.y, 0.01f)
+        assertFalse(texts.any { '\n' in it.text || '\r' in it.text })
+    }
 }
