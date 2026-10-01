@@ -16,7 +16,7 @@ internal class PrintPdfWriterTest {
     @Test fun losslessCompressionHandlesLiteralAndRepeatedPacketBoundaries() {
         val input = ByteArray(400) { 255.toByte() } + ByteArray(300) { it.toByte() } +
             Random(7).nextBytes(2000) + byteArrayOf(0, 0, 1, 1, 1, 2)
-        val encoded = encodePrintRuns(input)
+        val encoded = runs(input)
         val output = mutableListOf<Byte>()
         var i = 0
         while (true) {
@@ -27,7 +27,7 @@ internal class PrintPdfWriterTest {
         }
         assertContentEquals(input, output.toByteArray())
         assertEquals(i, encoded.size)
-        assertTrue(encodePrintRuns(ByteArray(10000) { -1 }).size < 200)
+        assertTrue(runs(ByteArray(10000) { -1 }).size < 200)
     }
 
     @Test fun pdfCrossReferenceOffsetsResolveToEveryObjectWithTwoPages() {
@@ -45,4 +45,23 @@ internal class PrintPdfWriterTest {
             assertTrue(bytes.copyOfRange(offset, minOf(offset + 16, bytes.size)).decodeToString().startsWith("${index + 1} 0 obj\n"))
         }
     }
+
+    @Test fun aReusedScratchBufferWritesIdenticalPagesIdentically() {
+        val page = ByteArray(64 * 64) { if (it % 7 == 0) 0 else -1 }
+        val writer = PrintPdfWriter(100f, 100f)
+        writer.addPage(16, 16, ByteArray(256) { it.toByte() })
+        repeat(2) { writer.addPage(64, 64, page) }
+        val bytes = writer.finish()
+        // One character per byte, so that a match's position is the stream's offset in the file.
+        val text = CharArray(bytes.size) { (bytes[it].toInt() and 255).toChar() }.concatToString()
+        val streams = Regex("""/Width (\d+) [^>]*/Length (\d+) >>\nstream\n""").findAll(text).map { match ->
+            val start = match.range.last + 1
+            bytes.copyOfRange(start, start + match.groupValues[2].toInt())
+        }.toList()
+        assertEquals(3, streams.size)
+        assertContentEquals(runs(page), streams[1])
+        assertContentEquals(streams[1], streams[2])
+    }
+
+    private fun runs(input: ByteArray) = PrintBytes().also { encodePrintRuns(input, it) }.result()
 }
