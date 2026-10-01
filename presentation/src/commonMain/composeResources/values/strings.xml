@@ -347,6 +347,8 @@
     <string name="song_details_grid_collapse">Hide the grid</string>
     <string name="song_details_section_expand">Show the section</string>
     <string name="song_details_section_collapse">Hide the section</string>
+    <string name="song_details_section_expand_starting">Show the section starting \"%1$s\"</string>
+    <string name="song_details_section_collapse_starting">Hide the section starting \"%1$s\"</string>
     <string name="song_details_tags_manage">Edit tags</string>
     <string name="song_details_tags_search">Find or create a tag</string>
     <string name="song_details_tag_create">Create the \"%1$s\" tag</string>

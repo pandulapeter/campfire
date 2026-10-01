@@ -347,6 +347,8 @@
     <string name="song_details_grid_collapse">Rács elrejtése</string>
     <string name="song_details_section_expand">Szakasz megjelenítése</string>
     <string name="song_details_section_collapse">Szakasz elrejtése</string>
+    <string name="song_details_section_expand_starting">A „%1$s” kezdetű szakasz megjelenítése</string>
+    <string name="song_details_section_collapse_starting">A „%1$s” kezdetű szakasz elrejtése</string>
     <string name="song_details_tags_manage">Címkék szerkesztése</string>
     <string name="song_details_tags_search">Címke keresése vagy létrehozása</string>
     <string name="song_details_tag_create">A(z) „%1$s” címke létrehozása</string>

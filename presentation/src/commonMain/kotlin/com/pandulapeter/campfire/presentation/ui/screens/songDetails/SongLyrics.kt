@@ -105,7 +105,9 @@ import com.pandulapeter.campfire.presentation.resources.song_details_grid_expand
 import com.pandulapeter.campfire.presentation.resources.song_details_section_bridge
 import com.pandulapeter.campfire.presentation.resources.song_details_section_chorus
 import com.pandulapeter.campfire.presentation.resources.song_details_section_collapse
+import com.pandulapeter.campfire.presentation.resources.song_details_section_collapse_starting
 import com.pandulapeter.campfire.presentation.resources.song_details_section_expand
+import com.pandulapeter.campfire.presentation.resources.song_details_section_expand_starting
 import com.pandulapeter.campfire.presentation.resources.song_details_section_grid
 import com.pandulapeter.campfire.presentation.resources.song_details_section_tab
 import com.pandulapeter.campfire.presentation.resources.song_details_tab_collapse
@@ -117,6 +119,7 @@ import com.pandulapeter.campfire.presentation.resources.song_editor_section_solo
 import com.pandulapeter.campfire.presentation.resources.song_editor_section_verse
 import com.pandulapeter.campfire.presentation.ui.components.EDGE_FADE_SIZE
 import com.pandulapeter.campfire.presentation.ui.components.ExpandChevron
+import com.pandulapeter.campfire.presentation.ui.components.textResource
 import com.pandulapeter.campfire.presentation.ui.theme.LocalMonospaceFontFamily
 import com.pandulapeter.campfire.presentation.ui.theme.LocalSecondAccentColor
 import com.pandulapeter.campfire.presentation.localization.stringResource
@@ -588,6 +591,17 @@ private fun SongSectionContent(
             toggle = sectionToggle,
             style = headerStyle,
             chevronSize = chevronSize,
+            // A pill with no name would read as one more "Hide the section" among many, so it is named by its first line.
+            chevronDescription = section.firstLyric?.takeIf { header == UNNAMED_SECTION_HEADER }?.let {
+                textResource(
+                    if (sectionToggle?.isExpanded == true) {
+                        Res.string.song_details_section_collapse_starting
+                    } else {
+                        Res.string.song_details_section_expand_starting
+                    },
+                    it,
+                )
+            },
         )
 
         sectionToggle != null && wholeSectionKind != null -> FoldToggleRow(
@@ -726,6 +740,7 @@ private fun SectionHeaderPill(
     toggle: FoldToggle?,
     style: TextStyle,
     chevronSize: Dp,
+    chevronDescription: String? = null,
 ) = CompositionLocalProvider(LocalMinimumInteractiveComponentSize provides Dp.Unspecified) {
     val pillModifier = modifier.offset(x = -HEADER_HORIZONTAL_PADDING)
     val content = @Composable {
@@ -735,6 +750,7 @@ private fun SectionHeaderPill(
             toggle = toggle,
             style = style,
             chevronSize = chevronSize,
+            chevronDescription = chevronDescription,
         )
     }
     if (toggle == null) {
@@ -782,7 +798,7 @@ private fun CardTitleRow(
 
 /**
  * A section's name, followed by the chevron that folds it where it can be folded; only the chevron for a section with
- * no name ([UNNAMED_SECTION_HEADER]).
+ * no name ([UNNAMED_SECTION_HEADER]). [chevronDescription] names the chevron instead of the default "Hide the section".
  */
 @Composable
 private fun SectionTitle(
@@ -792,6 +808,7 @@ private fun SectionTitle(
     style: TextStyle,
     chevronSize: Dp,
     isChevronAtEnd: Boolean = false,
+    chevronDescription: String? = null,
 ) = Row(
     modifier = modifier,
     verticalAlignment = Alignment.CenterVertically,
@@ -809,6 +826,7 @@ private fun SectionTitle(
             kind = null,
             isExpanded = it.isExpanded,
             tint = MaterialTheme.colorScheme.primary,
+            description = chevronDescription,
         )
     }
 }
@@ -945,17 +963,21 @@ private fun Modifier.foldToggleClickable(toggle: FoldToggle) = clickable(
     onClick = toggle.onToggled,
 )
 
-/** The app's fold chevron, named for what pressing it does to a tab, a grid, or a whole section where [kind] is null. */
+/**
+ * The app's fold chevron, named for what pressing it does to a tab, a grid, or a whole section where [kind] is null, or
+ * by [description] where one is given.
+ */
 @Composable
 internal fun FoldChevron(
     modifier: Modifier = Modifier,
     kind: FoldableKind?,
     isExpanded: Boolean,
     tint: Color,
+    description: String? = null,
 ) = ExpandChevron(
     modifier = modifier,
     isExpanded = isExpanded,
-    contentDescription = stringResource(
+    contentDescription = description ?: stringResource(
         when (kind) {
             FoldableKind.TAB -> if (isExpanded) Res.string.song_details_tab_collapse else Res.string.song_details_tab_expand
             FoldableKind.GRID -> if (isExpanded) Res.string.song_details_grid_collapse else Res.string.song_details_grid_expand
@@ -2051,6 +2073,21 @@ internal fun DefaultSectionLabels.labelOf(type: SectionType.Custom) = when (type
 }
 
 /**
+ * [text] with its runs of whitespace collapsed into single spaces and cut to [DESCRIPTION_LENGTH] characters, an ellipsis
+ * marking the cut, short enough for a screen reader to read as the name of a button. The cut never falls between the two
+ * halves of a surrogate pair, which would leave half a character for the screen reader to stumble over.
+ */
+internal fun shortenedForDescription(text: String): String {
+    val collapsed = text.trim().split(WHITESPACE).joinToString(" ")
+    if (collapsed.length <= DESCRIPTION_LENGTH) return collapsed
+    val end = if (collapsed[DESCRIPTION_LENGTH - 1].isHighSurrogate()) DESCRIPTION_LENGTH - 1 else DESCRIPTION_LENGTH
+    return collapsed.take(end) + "…"
+}
+
+private const val DESCRIPTION_LENGTH = 40
+private val WHITESPACE = Regex("\\s+")
+
+/**
  * One section of the song. The column layout places sections whole, or as the chunks they may be cut into as a last
  * resort (see [SongUnits]).
  *
@@ -2102,6 +2139,10 @@ internal sealed interface RenderSection {
         val chunkStarts = sectionChunkStarts(itemKinds)
         val wholeFoldableKind = lines.wholeFoldableKind()
         val firstEnvironmentLabel = lines.firstNotNullOfOrNull { it.environmentLabel }
+
+        /** The words of the section's first sung line, which name a fold toggle that has no header to read. */
+        val firstLyric = lines.firstNotNullOfOrNull { line -> (line as? ChordProLine.Lyrics)?.text?.trim()?.takeIf { it.isNotEmpty() } }
+            ?.let(::shortenedForDescription)
     }
 
     /** A comment between two sections, or one inside a section as one of its [SectionPart]s. */

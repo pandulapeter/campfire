@@ -12,6 +12,8 @@ package com.pandulapeter.campfire.presentation.ui.screens.songDetails
 import com.pandulapeter.campfire.chordpro.ChordProParser
 import kotlin.test.Test
 import kotlin.test.assertEquals
+import kotlin.test.assertFalse
+import kotlin.test.assertNull
 
 class RenderSectionsTest {
 
@@ -86,5 +88,33 @@ class RenderSectionsTest {
             shape("{start_of_intro}\nla\n{end_of_intro}\n{start_of_pre-chorus}\nla\n{end_of_pre-chorus}\n{start_of_solo}\nla\n{end_of_solo}\n" +
                 "{start_of_outro}\nla\n{end_of_outro}\n{start_of_interlude}\nla\n{end_of_interlude}\n{start_of_solo: Szóló 2}\nla\n{end_of_solo}"),
         )
+    }
+
+    private fun firstLyric(text: String) = prepareSongLyrics(
+        song = ChordProParser.parse(text),
+        shouldShowChords = true,
+        labels = labels,
+    ).sections.filterIsInstance<RenderSection.Lines>().single().firstLyric
+
+    @Test
+    fun `an unnamed section is named by its first sung line without its chords`() {
+        assertEquals("There is a house", firstLyric("[Am]There is a [C]house"))
+    }
+
+    @Test
+    fun `a line of nothing but chords does not name a section`() {
+        assertEquals("Sung", firstLyric("[Am] [C]\nSung"))
+        assertNull(firstLyric("[Am] [C]\n[G]"))
+    }
+
+    @Test
+    fun `a long first line is cut to forty characters and an ellipsis`() {
+        assertEquals("a".repeat(40) + "…", shortenedForDescription("a".repeat(60)))
+    }
+
+    @Test
+    fun `the cut never leaves half of a character behind`() {
+        val shortened = shortenedForDescription("a".repeat(39) + "\uD83C\uDFB8" + "a".repeat(20))
+        assertFalse(shortened.removeSuffix("…").last().isHighSurrogate())
     }
 }
