@@ -72,16 +72,16 @@ internal fun List<List<GridToken>>.alignedGridBars(textOf: (GridToken) -> String
     lines.forEach { bars ->
         bars.forEachIndexed { index, bar ->
             marginWidths[index] = maxOf(marginWidths[index], bar.margin.textWidth(textOf))
-            openingWidths[index] = maxOf(openingWidths[index], bar.opening?.let(textOf)?.length ?: 0)
+            openingWidths[index] = maxOf(openingWidths[index], bar.opening?.let(textOf)?.columns ?: 0)
             bar.cells.forEachIndexed { cellIndex, cell ->
-                val width = textOf(cell).length
+                val width = textOf(cell).columns
                 if (cellIndex < cellWidths[index].size) {
                     cellWidths[index][cellIndex] = maxOf(cellWidths[index][cellIndex], width)
                 } else {
                     cellWidths[index] += width
                 }
             }
-            closingWidths[index] = maxOf(closingWidths[index], bar.closing?.let(textOf)?.length ?: 0)
+            closingWidths[index] = maxOf(closingWidths[index], bar.closing?.let(textOf)?.columns ?: 0)
         }
     }
     return lines.mapIndexed { lineIndex, bars ->
@@ -113,7 +113,8 @@ private fun MutableList<GridCell>.addAligned(
 ) {
     if (width > 0) {
         val text = token?.let(textOf) ?: ""
-        add(GridCell(token = token, text = (if (isAlignedToTheEnd) text.padStart(width) else text.padEnd(width)) + " "))
+        val padding = " ".repeat((width - text.columns).coerceAtLeast(0))
+        add(GridCell(token = token, text = (if (isAlignedToTheEnd) padding + text else text + padding) + " "))
     }
 }
 
@@ -136,7 +137,15 @@ private fun List<GridToken>.toBarParts(): BarParts {
     )
 }
 
-private fun List<GridToken>.textWidth(textOf: (GridToken) -> String) = if (isEmpty()) 0 else sumOf { textOf(it).length } + size - 1
+private fun List<GridToken>.textWidth(textOf: (GridToken) -> String) = if (isEmpty()) 0 else sumOf { textOf(it).columns } + size - 1
+
+/**
+ * The number of columns the text takes up in a monospaced font: its UTF-16 length less the combining marks, which draw on
+ * the character before them, so that a label typed with a decomposed accent lines up with one typed with a composed one.
+ * A surrogate pair still counts as two, since what lies outside the Basic Multilingual Plane in a chart is an emoji, which
+ * a monospaced face draws from a fallback font about two columns wide.
+ */
+private val String.columns get() = length - count { it.category == CharCategory.NON_SPACING_MARK || it.category == CharCategory.ENCLOSING_MARK }
 
 /** The bars of a line with the padding after its last token taken off, which would only push a wrap early. */
 private fun List<List<GridCell>>.trimmedAtTheEnd(): List<List<GridCell>> {

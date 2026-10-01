@@ -123,6 +123,20 @@ class GridColumnsTest {
     }
 
     @Test
+    fun `a combining accent in a margin label takes up no column of its own`() {
+        assertEquals(
+            listOf(
+                "Refre\u0301n | Am |",
+                "Chorus | C  |",
+            ),
+            aligned(
+                "Refre\u0301n | Am |",
+                "Chorus | C |",
+            ),
+        )
+    }
+
+    @Test
     fun `a line on its own is drawn as written, with one space between its tokens`() {
         assertEquals(listOf("| Am . | C~G % |"), aligned("|   Am  .  |  C~G  %   |"))
     }
