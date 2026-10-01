@@ -2361,6 +2361,10 @@ class CampfireViewModel(
         isShare: Boolean,
         create: suspend (onPage: (done: Int) -> Unit) -> ByteArray,
     ) {
+        // A Save kept until the pages were laid out can arrive after the screen was closed, and its picker would come up
+        // over whatever is on screen by then. Equality rather than identity: the same export closed and opened again
+        // while it slides away is an equal instance, and the screen still showing the old one is that export.
+        if (_visibleDialog.value != dialog) return
         val job = launchFileTransfer {
             _pdfExportProgress.value = PdfExportProgress(done = 0, total = pageCount)
             try {

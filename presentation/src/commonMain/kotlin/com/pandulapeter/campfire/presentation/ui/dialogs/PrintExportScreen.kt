@@ -408,7 +408,13 @@ private fun PrintExportScreen(
     // changes, and a Save in that frame would otherwise export the old options. The source is compared by identity,
     // since it is remembered and an equality check would walk every song in it.
     val isCurrent = laidOut.let { it != null && it.source === chosenSource && it.settings == state.settings && it.labels == labels }
-    val update: (PrintSettings) -> Unit = {
+    // The screen stays composed while it slides away, after its settings were flushed and its drawing cancelled, so
+    // nothing tapped in that moment may change an option or start an export. Equality, since an equal export opened
+    // again during the slide is this one.
+    val visibleDialog by viewModel.visibleDialog.collectAsStateWithLifecycle()
+    val isOpen = visibleDialog == dialog
+    val update: (PrintSettings) -> Unit = update@{
+        if (!isOpen) return@update
         val normalized = it.normalized()
         if (normalized != state.settings) {
             state.settings = normalized
@@ -441,7 +447,7 @@ private fun PrintExportScreen(
         }
     }
     // Any import or export running would make the view model ignore the tap, so it is not even asked.
-    val requestExport = { request: ExportRequest -> if (!isFileTransferActive) requestedExport = request }
+    val requestExport = { request: ExportRequest -> if (isOpen && !isFileTransferActive) requestedExport = request }
     val close = { viewModel.dismissSheet(dialog) }
     LaunchedEffect(dialog) { viewModel.printExportSaved.collect { if (it == dialog) close() } }
     val content = when {
@@ -499,7 +505,7 @@ private fun PrintExportScreen(
                                         // Stacked under the preview, the list ends under the button, so its last row
                                         // can be scrolled clear of it; beside the preview the button is not over it.
                                         bottomPadding = bottomInset + if (isSideBySide) 8.dp else SAVE_BUTTON_CLEARANCE,
-                                        onSelected = { state.selected = it },
+                                        onSelected = { if (isOpen) state.selected = it },
                                         onSettings = update,
                                     )
                                 }
