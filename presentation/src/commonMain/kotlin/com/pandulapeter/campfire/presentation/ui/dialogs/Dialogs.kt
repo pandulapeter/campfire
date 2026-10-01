@@ -246,7 +246,8 @@ internal fun CampfireDialogs(
 ) {
     val visibleDialog by viewModel.visibleDialog.collectAsStateWithLifecycle()
     when (val dialog = visibleDialog) {
-        is CampfireViewModel.DialogType.PrintExport -> PrintExportSheet(viewModel, dialog)
+        // Drawn by PrintExportHost, which deals it over the screens rather than in a window of its own.
+        is CampfireViewModel.DialogType.PrintExport -> Unit
         CampfireViewModel.DialogType.NewSetlist -> SetlistDetailsDialog(
             title = stringResource(Res.string.setlists_new_setlist),
             confirmLabel = stringResource(Res.string.create),

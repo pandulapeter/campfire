@@ -508,7 +508,6 @@
     <string name="print_comments">Megjegyzések</string>
     <string name="print_metadata">Előadó és daladatok</string>
     <string name="print_page_numbers">Oldalszámok</string>
-    <string name="print_key_hint">A dalok az aktuális hangnemben és akkordjelöléssel jelennek meg. Az exportálási beállítások megmaradnak a következő alkalomra.</string>
     <string name="print_setlist_content">A lista tartalma</string>
     <string name="print_song_sheets">Dallapok</string>
     <string name="print_running_order">Dalsorrend</string>

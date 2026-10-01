@@ -508,7 +508,6 @@
     <string name="print_comments">Comments</string>
     <string name="print_metadata">Artist and song details</string>
     <string name="print_page_numbers">Page numbers</string>
-    <string name="print_key_hint">Songs use their current key and chord notation. Export options are saved for next time.</string>
     <string name="print_setlist_content">Setlist content</string>
     <string name="print_song_sheets">Song sheets</string>
     <string name="print_running_order">Running order</string>

@@ -144,6 +144,8 @@ import com.pandulapeter.campfire.presentation.ui.components.hasRoomForSidePanel
 import com.pandulapeter.campfire.presentation.ui.components.pluralTextResource
 import com.pandulapeter.campfire.presentation.ui.components.textResource
 import com.pandulapeter.campfire.presentation.ui.dialogs.CampfireDialogs
+import com.pandulapeter.campfire.presentation.ui.dialogs.PrintExportHost
+import com.pandulapeter.campfire.presentation.ui.dialogs.PrintExportTransition
 import com.pandulapeter.campfire.presentation.ui.navigation.CampfireDestination
 import com.pandulapeter.campfire.presentation.ui.platform.LocalSyncNotifier
 import com.pandulapeter.campfire.presentation.ui.platform.SyncNotification
@@ -593,12 +595,16 @@ private fun CampfireScreens(
     }
     // What the screens' own lifecycles are compared with, see ScreenSurface.
     val hostLifecycle = LocalLifecycleOwner.current.lifecycle
+    val printExportTransition = remember { PrintExportTransition() }
 
     Box(
         modifier = Modifier.fillMaxSize()
     ) {
         NavDisplay(
-            modifier = Modifier.fillMaxSize(),
+            // The export screen is dealt over the screens the way a destination is, so they give way to it the same way.
+            modifier = Modifier
+                .fillMaxSize()
+                .graphicsLayer { translationX = -backgroundSlideOffset((printExportTransition.progress.value * size.width).roundToInt()).toFloat() },
             backStack = backStack,
             onBack = viewModel::navigateBack,
             // The same spec decides the direction for both parameters, see navigationTransition. Nothing is animated
@@ -688,6 +694,10 @@ private fun CampfireScreens(
                     }
                 }
             },
+        )
+        PrintExportHost(
+            viewModel = viewModel,
+            transition = printExportTransition,
         )
         // Not while the update required screen covers the app: every one of these is a window of its own on Android,
         // which that screen, drawn inside the activity's content, cannot cover.
@@ -1204,6 +1214,16 @@ private fun MotionScheme.slideSpec() = when (val spec = defaultSpatialSpec<IntOf
 }
 
 /**
+ * [slideSpec] for a slide animated as the fraction of the width it has covered rather than as an offset, which keeps
+ * the two on the same curve. It settles within a thousandth of the width, a pixel or less on any window it is seen in.
+ */
+@OptIn(ExperimentalMaterial3ExpressiveApi::class)
+internal fun MotionScheme.slideFractionSpec() = when (val spec = defaultSpatialSpec<Float>()) {
+    is SpringSpec -> spring(dampingRatio = spec.dampingRatio, stiffness = spec.stiffness, visibilityThreshold = SLIDE_FRACTION_THRESHOLD)
+    else -> spec
+}
+
+/**
  * The pop driven by the predictive back gesture (Android) or the edge swipe (iOS): the same uncovering as
  * [popTransition], except that both screens follow the finger with linear specs. Their direction is fixed to the
  * horizontal pop, regardless of which edge the gesture started from.
@@ -1297,6 +1317,7 @@ private const val TAB_FADE_OUT_DURATION = 90
 private const val TAB_FADE_IN_DURATION = 210
 private const val PREDICTIVE_BACK_DURATION = 350
 private const val BACKGROUND_SLIDE_FRACTION = 0.12f
+private const val SLIDE_FRACTION_THRESHOLD = 0.001f
 
 /** How many of the files an export left out its message names, the rest being counted rather than listed. */
 private const val MAXIMUM_NAMED_FILES = 3

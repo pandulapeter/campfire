@@ -213,9 +213,10 @@ private fun setFavicon(fileName: String) {
  * Every browser the app runs in reports a pinch on a touchpad as a Ctrl + scroll too, with Ctrl set although nobody
  * holds it and a distance that is the logarithm of the pinch ([PIXELS_PER_PINCH_E]) - which, taken for notches of a
  * wheel, would move the text a few percent for a whole pinch. So a Ctrl + scroll arriving while the Ctrl key is not
- * down is taken for the pinch it is: it goes to [CampfireViewModel.magnifySongText] and is stopped before the canvas
- * hears of it. Whether the key is down is only known from its own key events, so one held since before the page had the
- * focus reads as not held, and scrolling with it resizes as fast as a pinch does.
+ * down is taken for the pinch it is: it goes to [CampfireViewModel.magnifyByTouchpad] and is stopped before the canvas
+ * hears of it - which is also how the page on preview of the PDF export screen is zoomed by a pinch, while a real
+ * Ctrl + scroll there is left to the browser. Whether the key is down is only known from its own key events, so one held
+ * since before the page had the focus reads as not held, and scrolling with it resizes as fast as a pinch does.
  *
  * Window listeners in the capture phase, for the reasons [SearchShortcutEffect] gives. The wheel listener has to be
  * declared not passive, since a wheel listener on the window is passive unless it says otherwise and a passive one
@@ -247,11 +248,12 @@ private fun SongTextZoomEffect(viewModel: CampfireViewModel) = DisposableEffect(
     val blurListener: (Event) -> Unit = { isControlKeyDown = false }
     val wheelListener: (Event) -> Unit = { event ->
         val wheelEvent = event.unsafeCast<WheelEvent>()
-        if (wheelEvent.ctrlKey && viewModel.isSongTextZoomable) {
-            event.preventDefault()
-            if (!isControlKeyDown && wheelEvent.deltaMode == WheelEvent.DOM_DELTA_PIXEL) {
+        if (wheelEvent.ctrlKey) {
+            if (viewModel.isSongTextZoomable) event.preventDefault()
+            val isPinch = !isControlKeyDown && wheelEvent.deltaMode == WheelEvent.DOM_DELTA_PIXEL
+            if (isPinch && viewModel.magnifyByTouchpad(exp(-wheelEvent.deltaY / PIXELS_PER_PINCH_E).toFloat())) {
+                event.preventDefault()
                 event.stopPropagation()
-                viewModel.magnifySongText(exp(-wheelEvent.deltaY / PIXELS_PER_PINCH_E).toFloat())
             }
         }
     }

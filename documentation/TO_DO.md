@@ -9,7 +9,8 @@
 -->
 # To do
 - Clarify misunderstandings around the different notation systems, especially during saving
-- Editor feature: clean up chordPro
+- Editor feature: clean up chordPro that standardizes the order of tags, line breaks, etc
+- Execute documentation/PDF_AND_WORD_IMPORT_PLAN.md
 - What's new dialog
 - Global sync status display ?
 - Optional close confirmation dialog on relevant platforms

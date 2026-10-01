@@ -356,22 +356,38 @@ class CampfireViewModel(
         return true
     }
 
-    /** Where the pinches [magnifySongText] is given add up, which each arrive as too small a step to be kept on their own. */
+    /** Where the pinches [magnifyByTouchpad] is given add up, which each arrive as too small a step to be kept on their own. */
     private val touchpadFontScale = FontScaleAccumulator()
 
+    private val _printPreviewMagnifications = MutableSharedFlow<Float>(extraBufferCapacity = 64)
+
+    /** The touchpad pinches [magnifyByTouchpad] hands the export screen's preview, which zooms its page by each ratio. */
+    internal val printPreviewMagnifications = _printPreviewMagnifications.asSharedFlow()
+
     /**
-     * Answers a pinch on a touchpad the way the song details screen answers one on a touchscreen: [factor] is how much
-     * farther apart the fingers are than at the last report, damped by the same [PINCH_SENSITIVITY]. Only a platform
-     * that tells a touchpad pinch apart from a scroll calls it - the macOS desktop app, which reports the gesture itself,
-     * and Chrome, Edge and Firefox, which report a Ctrl + scroll the user is not holding Ctrl for; Safari reports a
-     * gesture of its own that nothing listens for, so there a pinch zooms the page - and it is asked from the window rather than from the screen, since none of these ever reach Compose as a pinch. It is
-     * gated like the shortcuts ([isSongTextZoomable]), and answers whether it did, so that anywhere else the gesture is
-     * left to whoever else wants it.
+     * Answers a pinch on a touchpad the way a touchscreen pinch is answered where it lands: on the song details screen
+     * with the text size, [factor] being how much farther apart the fingers are than at the last report, damped by the
+     * same [PINCH_SENSITIVITY], and on the export screen with the zoom of the page on preview, by [factor] itself as a
+     * touchscreen pinch zooms it. Only a platform that tells a touchpad pinch apart from a scroll calls it - the macOS
+     * desktop app, which reports the gesture itself, and Chrome, Edge and Firefox, which report a Ctrl + scroll the user
+     * is not holding Ctrl for; Safari reports a gesture of its own that nothing listens for, so there a pinch zooms the
+     * page - and it is asked from the window rather than from the screen, since none of these ever reach Compose as a
+     * pinch. Neither screen answers one with anything drawn over it, and it answers whether one did, so that anywhere
+     * else the gesture is left to whoever else wants it.
      */
-    fun magnifySongText(factor: Float): Boolean {
-        if (!isSongTextZoomable) return false
-        if (factor > 0f && factor.isFinite()) setFontScale(touchpadFontScale.next(fontScale) { it * factor.pow(PINCH_SENSITIVITY) })
-        return true
+    fun magnifyByTouchpad(factor: Float): Boolean {
+        val isUsable = factor > 0f && factor.isFinite()
+        return when {
+            isSongTextZoomable -> {
+                if (isUsable) setFontScale(touchpadFontScale.next(fontScale) { it * factor.pow(PINCH_SENSITIVITY) })
+                true
+            }
+            visibleDialog.value is DialogType.PrintExport && !isAnyOverflowMenuOpen -> {
+                if (isUsable) _printPreviewMagnifications.tryEmit(factor)
+                true
+            }
+            else -> false
+        }
     }
 
     // Data
