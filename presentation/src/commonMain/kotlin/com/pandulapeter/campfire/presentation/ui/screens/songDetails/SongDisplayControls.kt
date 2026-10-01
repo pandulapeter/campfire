@@ -226,7 +226,7 @@ private fun fontScaleLabel(fontScale: Float) = "${(fontScale * 100).roundToInt()
  * of the key is animated.
  */
 @Composable
-private fun Stepper(
+internal fun Stepper(
     modifier: Modifier = Modifier,
     value: String,
     valueKey: Any = value,

@@ -497,9 +497,13 @@
     <string name="print_paper">Papírméret</string>
     <string name="print_a4">A4</string>
     <string name="print_letter">Letter</string>
+    <string name="print_portrait">Álló tájolás</string>
     <string name="print_landscape">Fekvő tájolás</string>
-    <string name="print_font_size">Betűméret: %1$d pt</string>
-    <string name="print_margin">Margók: %1$d mm</string>
+    <string name="print_font_size">%1$d pt</string>
+    <string name="print_margins">Margók</string>
+    <string name="print_margin">%1$d mm</string>
+    <string name="print_margin_decrease">Margók csökkentése</string>
+    <string name="print_margin_increase">Margók növelése</string>
     <string name="print_columns">Oszlopok</string>
     <string name="print_chords">Akkordok, tabulatúrák és akkordrácsok</string>
     <string name="print_comments">Megjegyzések</string>

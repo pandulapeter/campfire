@@ -36,6 +36,7 @@ import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.unit.Density
 import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.dp
+import org.jetbrains.compose.resources.painterResource
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.pandulapeter.campfire.data.model.domain.PrintSettings
 import com.pandulapeter.campfire.presentation.localization.stringResource
@@ -43,16 +44,18 @@ import com.pandulapeter.campfire.presentation.resources.*
 import com.pandulapeter.campfire.presentation.ui.CampfireViewModel
 import com.pandulapeter.campfire.presentation.ui.components.CheckboxListItem
 import com.pandulapeter.campfire.presentation.ui.components.DelayedLoadingIndicator
+import com.pandulapeter.campfire.presentation.ui.components.SegmentedChoice
+import com.pandulapeter.campfire.presentation.ui.components.SettingsSectionTitle
 import com.pandulapeter.campfire.presentation.ui.components.fadingVerticalEdges
 import com.pandulapeter.campfire.presentation.ui.platform.LocalFilePicker
 import com.pandulapeter.campfire.presentation.ui.print.*
+import com.pandulapeter.campfire.presentation.ui.screens.songDetails.Stepper
 import com.pandulapeter.campfire.presentation.ui.theme.LocalMonospaceFontFamily
 import androidx.compose.foundation.lazy.rememberLazyListState
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.withContext
-import kotlin.math.roundToInt
 import kotlin.time.Duration.Companion.milliseconds
 
 @Composable
@@ -119,18 +122,8 @@ internal fun PrintExportSheet(viewModel: CampfireViewModel, dialog: CampfireView
         subtitle = dialog.setlist?.title ?: dialog.song?.title.orEmpty(),
         sheetMaxWidth = 1100.dp,
         onDismiss = { viewModel.dismissSheet(dialog) },
-        actions = {
-            TextButton(enabled = isCurrent && laidOut?.document?.pages?.isNotEmpty() == true && !exporting, onClick = {
-                val snapshot = laidOut?.document ?: return@TextButton
-                exporting = true
-                val title = source!!.title
-                viewModel.exportPdf(filePicker, title, onFinished = { exporting = false }) { newRenderer().pdf(snapshot, title) }
-            }) {
-                ProgressLabel(stringResource(Res.string.print_save), isInProgress = exporting)
-            }
-        },
-    ) { padding ->
-        BoxWithConstraints(Modifier.fillMaxWidth().weight(1f, fill = false).heightIn(min = 300.dp).padding(padding)) {
+    ) { contentPadding ->
+        BoxWithConstraints(Modifier.fillMaxWidth().weight(1f, fill = false).heightIn(min = 300.dp)) {
             val state = when {
                 failed || layoutFailed -> PrintSheetContent.FAILED
                 source == null -> PrintSheetContent.LOADING
@@ -160,10 +153,11 @@ internal fun PrintExportSheet(viewModel: CampfireViewModel, dialog: CampfireView
                         } else {
                             var showOptions by rememberSaveable { mutableStateOf(false) }
                             Column(Modifier.fillMaxSize()) {
-                                Row(Modifier.fillMaxWidth().padding(horizontal = 16.dp), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                                    FilterChip(selected = !showOptions, onClick = { showOptions = false }, label = { Text(stringResource(Res.string.print_preview)) })
-                                    FilterChip(selected = showOptions, onClick = { showOptions = true }, label = { Text(stringResource(Res.string.print_options)) })
-                                }
+                                SegmentedChoice(
+                                    options = listOf(false to stringResource(Res.string.print_preview), true to stringResource(Res.string.print_options)),
+                                    selected = showOptions,
+                                    onSelected = { showOptions = it },
+                                )
                                 Crossfade(showOptions, modifier = Modifier.weight(1f)) { optionsVisible ->
                                     if (optionsVisible) options(Modifier.fillMaxSize()) else preview(Modifier.fillMaxSize())
                                 }
@@ -173,6 +167,33 @@ internal fun PrintExportSheet(viewModel: CampfireViewModel, dialog: CampfireView
                 }
             }
         }
+        PrintActions(
+            contentPadding = contentPadding,
+            canSave = isCurrent && laidOut?.document?.pages?.isNotEmpty() == true && !exporting,
+            isExporting = exporting,
+            onSave = {
+                laidOut?.document?.let { snapshot ->
+                    exporting = true
+                    val title = source!!.title
+                    viewModel.exportPdf(filePicker, title, onFinished = { exporting = false }) { newRenderer().pdf(snapshot, title) }
+                }
+            },
+        )
+    }
+}
+
+/**
+ * Below the scrolling area rather than in the header, and given the bottom inset itself, as the cover search's are: the
+ * list above it has no bar to scroll under, so the inset is the row's alone.
+ */
+@Composable
+private fun PrintActions(contentPadding: PaddingValues, canSave: Boolean, isExporting: Boolean, onSave: () -> Unit) = Row(
+    modifier = Modifier.fillMaxWidth().padding(start = 16.dp, end = 16.dp, top = 8.dp).padding(contentPadding),
+    verticalAlignment = Alignment.CenterVertically,
+) {
+    Spacer(Modifier.weight(1f))
+    Button(enabled = canSave, onClick = onSave) {
+        ProgressLabel(stringResource(Res.string.print_save), isInProgress = isExporting)
     }
 }
 
@@ -194,51 +215,95 @@ private fun ProgressLabel(text: String, isInProgress: Boolean) = Box(contentAlig
     AnimatedVisibility(isInProgress, enter = fadeIn(), exit = fadeOut()) { CircularProgressIndicator(Modifier.size(20.dp), strokeWidth = 2.dp) }
 }
 
-@OptIn(ExperimentalLayoutApi::class)
 @Composable
 private fun PrintOptions(modifier: Modifier, source: PrintSource, settings: PrintSettings, selected: Set<Int>, onSelected: (Set<Int>) -> Unit, onSettings: (PrintSettings) -> Unit) {
     val state = rememberLazyListState()
-    LazyColumn(modifier.fadingVerticalEdges(state), state = state, contentPadding = PaddingValues(horizontal = 16.dp, vertical = 8.dp)) {
+    LazyColumn(modifier.fadingVerticalEdges(state), state = state, contentPadding = PaddingValues(vertical = 8.dp)) {
         item {
-            Text(stringResource(Res.string.print_paper), style = MaterialTheme.typography.titleSmall)
-            FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                PrintSettings.Paper.entries.forEach { paper ->
-                    FilterChip(settings.paper == paper, { onSettings(settings.copy(paper = paper)) }, label = {
-                        Text(stringResource(if (paper == PrintSettings.Paper.A4) Res.string.print_a4 else Res.string.print_letter))
-                    })
-                }
+            SettingsSectionTitle(text = stringResource(Res.string.print_paper))
+            SegmentedChoice(
+                options = PrintSettings.Paper.entries.map { paper ->
+                    paper to stringResource(if (paper == PrintSettings.Paper.A4) Res.string.print_a4 else Res.string.print_letter)
+                },
+                selected = settings.paper,
+                onSelected = { onSettings(settings.copy(paper = it)) },
+            )
+            Spacer(Modifier.height(8.dp))
+            SegmentedChoice(
+                options = listOf(false to stringResource(Res.string.print_portrait), true to stringResource(Res.string.print_landscape)),
+                selected = settings.isLandscape,
+                onSelected = { onSettings(settings.copy(isLandscape = it)) },
+            )
+            Spacer(Modifier.height(8.dp))
+            PrintStepperRow(stringResource(Res.string.song_details_text_size)) {
+                Stepper(
+                    value = stringResource(Res.string.print_font_size, settings.fontSize),
+                    isDefault = true,
+                    decreaseIcon = painterResource(Res.drawable.ic_text_decrease),
+                    decreaseLabel = stringResource(Res.string.song_details_text_size_decrease),
+                    canDecrease = settings.fontSize > MIN_FONT_SIZE,
+                    onDecrease = { onSettings(settings.copy(fontSize = settings.fontSize - 1)) },
+                    increaseIcon = painterResource(Res.drawable.ic_text_increase),
+                    increaseLabel = stringResource(Res.string.song_details_text_size_increase),
+                    canIncrease = settings.fontSize < MAX_FONT_SIZE,
+                    onIncrease = { onSettings(settings.copy(fontSize = settings.fontSize + 1)) },
+                    resetLabel = null,
+                    onReset = null,
+                )
             }
-            CheckboxListItem(title = stringResource(Res.string.print_landscape), isChecked = settings.isLandscape, onCheckedChange = { onSettings(settings.copy(isLandscape = it)) })
-            PrintSlider(stringResource(Res.string.print_font_size, settings.fontSize), settings.fontSize, 8..20) { onSettings(settings.copy(fontSize = it)) }
-            PrintSlider(stringResource(Res.string.print_margin, settings.marginMm), settings.marginMm, 10..25) { onSettings(settings.copy(marginMm = it)) }
-            Text(stringResource(Res.string.print_columns), style = MaterialTheme.typography.titleSmall)
-            FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                (1..2).forEach { count -> FilterChip(settings.columns == count, { onSettings(settings.copy(columns = count)) }, label = { Text(count.toString()) }) }
+            PrintStepperRow(stringResource(Res.string.print_margins)) {
+                Stepper(
+                    value = stringResource(Res.string.print_margin, settings.marginMm),
+                    isDefault = true,
+                    decreaseIcon = painterResource(Res.drawable.ic_subtract),
+                    decreaseLabel = stringResource(Res.string.print_margin_decrease),
+                    canDecrease = settings.marginMm > MIN_MARGIN_MM,
+                    // To the next multiple of the step either way, so that a stored value off the steps joins them
+                    // rather than keeping its offset (12 goes to 10 or 15, never to 7 or 17); normalized() clamps it.
+                    onDecrease = { onSettings(settings.copy(marginMm = (settings.marginMm - 1) / MARGIN_STEP_MM * MARGIN_STEP_MM)) },
+                    increaseIcon = painterResource(Res.drawable.ic_add),
+                    increaseLabel = stringResource(Res.string.print_margin_increase),
+                    canIncrease = settings.marginMm < MAX_MARGIN_MM,
+                    onIncrease = { onSettings(settings.copy(marginMm = (settings.marginMm / MARGIN_STEP_MM + 1) * MARGIN_STEP_MM)) },
+                    resetLabel = null,
+                    onReset = null,
+                )
             }
+            SettingsSectionTitle(text = stringResource(Res.string.print_columns))
+            SegmentedChoice(
+                options = (1..2).map { it to it.toString() },
+                selected = settings.columns,
+                onSelected = { onSettings(settings.copy(columns = it)) },
+            )
+            Spacer(Modifier.height(8.dp))
             CheckboxListItem(title = stringResource(Res.string.print_chords), isChecked = settings.showChords, onCheckedChange = { onSettings(settings.copy(showChords = it)) })
             CheckboxListItem(title = stringResource(Res.string.print_comments), isChecked = settings.showComments, onCheckedChange = { onSettings(settings.copy(showComments = it)) })
             CheckboxListItem(title = stringResource(Res.string.print_metadata), isChecked = settings.showMetadata, onCheckedChange = { onSettings(settings.copy(showMetadata = it)) })
             CheckboxListItem(title = stringResource(Res.string.print_page_numbers), isChecked = settings.showPageNumbers, onCheckedChange = { onSettings(settings.copy(showPageNumbers = it)) })
-            Text(stringResource(Res.string.print_key_hint), style = MaterialTheme.typography.bodySmall)
+            Text(
+                modifier = Modifier.padding(horizontal = 16.dp),
+                text = stringResource(Res.string.print_key_hint),
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+            )
         }
         if (source.isSetlist) {
             item {
-                Spacer(Modifier.height(16.dp))
-                Text(stringResource(Res.string.print_setlist_content), style = MaterialTheme.typography.titleSmall)
-                FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                    PrintSettings.SetlistMode.entries.forEach { mode ->
-                        FilterChip(settings.setlistMode == mode, { onSettings(settings.copy(setlistMode = mode)) }, label = {
-                            Text(stringResource(if (mode == PrintSettings.SetlistMode.SONG_SHEETS) Res.string.print_song_sheets else Res.string.print_running_order))
-                        })
-                    }
-                }
+                SettingsSectionTitle(text = stringResource(Res.string.print_setlist_content))
+                SegmentedChoice(
+                    options = PrintSettings.SetlistMode.entries.map { mode ->
+                        mode to stringResource(if (mode == PrintSettings.SetlistMode.SONG_SHEETS) Res.string.print_song_sheets else Res.string.print_running_order)
+                    },
+                    selected = settings.setlistMode,
+                    onSelected = { onSettings(settings.copy(setlistMode = it)) },
+                )
                 if (settings.setlistMode == PrintSettings.SetlistMode.SONG_SHEETS) {
+                    Spacer(Modifier.height(8.dp))
                     CheckboxListItem(title = stringResource(Res.string.print_overview), isChecked = settings.includeSetlistOverview, onCheckedChange = { onSettings(settings.copy(includeSetlistOverview = it)) })
                     CheckboxListItem(title = stringResource(Res.string.print_new_page), isChecked = settings.startSongsOnNewPage, onCheckedChange = { onSettings(settings.copy(startSongsOnNewPage = it)) })
                 }
-                Spacer(Modifier.height(8.dp))
-                Text(stringResource(Res.string.print_songs), style = MaterialTheme.typography.titleSmall)
-                Row {
+                SettingsSectionTitle(text = stringResource(Res.string.print_songs))
+                Row(Modifier.padding(horizontal = 4.dp)) {
                     TextButton(onClick = { onSelected(source.songs.indices.toSet()) }) { Text(stringResource(Res.string.print_select_all)) }
                     TextButton(onClick = { onSelected(emptySet()) }) { Text(stringResource(Res.string.print_select_none)) }
                 }
@@ -248,16 +313,19 @@ private fun PrintOptions(modifier: Modifier, source: PrintSource, settings: Prin
                     isChecked = index in selected, onCheckedChange = { onSelected(if (it) selected + index else selected - index) })
             }
         } else if (source.songs.any { it.song == null }) {
-            item { Text(stringResource(Res.string.print_missing), color = MaterialTheme.colorScheme.error) }
+            item { Text(stringResource(Res.string.print_missing), Modifier.padding(horizontal = 16.dp), color = MaterialTheme.colorScheme.error) }
         }
     }
 }
 
+/** A label and a stepper on one line, built like the overflow menus' `MenuStepperRow`, at the sheet's own keyline. */
 @Composable
-private fun PrintSlider(label: String, value: Int, range: IntRange, onChange: (Int) -> Unit) {
-    Text(label, style = MaterialTheme.typography.titleSmall)
-    Slider(value.toFloat(), onValueChange = { onChange(it.roundToInt()) }, valueRange = range.first.toFloat()..range.last.toFloat(), steps = range.last - range.first - 1,
-        modifier = Modifier.semantics { contentDescription = label })
+private fun PrintStepperRow(label: String, stepper: @Composable () -> Unit) = Row(
+    modifier = Modifier.fillMaxWidth().heightIn(min = 56.dp).padding(horizontal = 16.dp),
+    verticalAlignment = Alignment.CenterVertically,
+) {
+    Text(label, Modifier.weight(1f).padding(end = 16.dp), style = MaterialTheme.typography.bodyLarge)
+    stepper()
 }
 
 /** What the preview shows, which it fades between, keyed by its kind so that a new document does not count as a change. */
@@ -315,3 +383,8 @@ private fun LayoutIndicator(isVisible: Boolean) = AnimatedVisibility(isVisible, 
 }
 
 private val LAYOUT_DEBOUNCE = 120.milliseconds
+private const val MIN_FONT_SIZE = 8
+private const val MAX_FONT_SIZE = 20
+private const val MIN_MARGIN_MM = 10
+private const val MAX_MARGIN_MM = 25
+private const val MARGIN_STEP_MM = 5

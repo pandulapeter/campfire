@@ -497,9 +497,13 @@
     <string name="print_paper">Paper size</string>
     <string name="print_a4">A4</string>
     <string name="print_letter">Letter</string>
+    <string name="print_portrait">Portrait</string>
     <string name="print_landscape">Landscape</string>
-    <string name="print_font_size">Text size: %1$d pt</string>
-    <string name="print_margin">Margins: %1$d mm</string>
+    <string name="print_font_size">%1$d pt</string>
+    <string name="print_margins">Margins</string>
+    <string name="print_margin">%1$d mm</string>
+    <string name="print_margin_decrease">Decrease margins</string>
+    <string name="print_margin_increase">Increase margins</string>
     <string name="print_columns">Columns</string>
     <string name="print_chords">Chords, tablature and grids</string>
     <string name="print_comments">Comments</string>
