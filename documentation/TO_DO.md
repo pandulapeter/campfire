@@ -8,7 +8,9 @@
  * https://mozilla.org/MPL/2.0/.
 -->
 # To do
-- Fix PDF rendering issues (Execute documentation/PDF_RENDERING-ISSUES.md)
+- Grids should use monospace font. Since they are intended for chords, make sure that the editor's syntax highlighting marks them as such.
+- Clarify misunderstandings around the different notation systems, especially during saving
+- Unnamed sections should still show up as sections, both in the viewer (song details + editor preview) and the PDF export. Otherwise there won't be a way to fold them.
 - .docx, .pdf, .txt import (Execute documentation/issues/EXECUTION.md)
 - Editor feature: clean up chordPro
 - What's new dialog
