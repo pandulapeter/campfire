@@ -8,11 +8,12 @@
  * https://mozilla.org/MPL/2.0/.
 -->
 # To do
-- Haptic effects
-- .docx, .pdf, .txt import (Execute documentation/PDF_AND_WORD_IMPORT_PLAN.md)
-- Global sync status display
-- Optional close confirmation dialog on relevant platforms
+- Fix PDF rendering issues (Execute documentation/PDF_RENDERING-ISSUES.md)
+- .docx, .pdf, .txt import (Execute documentation/issues/EXECUTION.md)
 - What's new dialog
+- Global sync status display ?
+- Optional close confirmation dialog on relevant platforms
+- Haptic effects
 - Simplify adding comments / annotations
 - Metronome
 - External monitor support for lyrics only...? Maybe as a new window on desktop
