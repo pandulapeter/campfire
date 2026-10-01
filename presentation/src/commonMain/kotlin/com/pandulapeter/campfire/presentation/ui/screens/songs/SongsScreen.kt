@@ -110,6 +110,7 @@ import com.pandulapeter.campfire.presentation.ui.components.underAppBar
 import com.pandulapeter.campfire.presentation.ui.navigation.CampfireDestination
 import com.pandulapeter.campfire.presentation.ui.platform.LocalFilePicker
 import com.pandulapeter.campfire.presentation.ui.platform.isDesktopPlatform
+import com.pandulapeter.campfire.presentation.ui.screens.songDetails.songLabelActions
 import kotlinx.coroutines.launch
 import org.jetbrains.compose.resources.painterResource
 
@@ -462,6 +463,11 @@ private fun SongList(
                                             song = song,
                                             isExpandable = false,
                                             isDeletable = true,
+                                            fileEditItems = songLabelActions(
+                                                viewModel = viewModel,
+                                                song = song,
+                                                isEditorDraft = false,
+                                            ),
                                         )
                                     }
                                 }

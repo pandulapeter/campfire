@@ -157,7 +157,7 @@ uninstall and nothing else does.
   into `Song.tags` at scan time and written back into the text the same way, so a tag travels with the file through
   an export, an import or a sync run. The library's set of tags is whatever the songs carry; the Songs screen's
   filter offers them counted, most used first or alphabetically (a toggle next to the group's title, which the dialog
-  that puts them on or takes them off — opened from the song details overflow menu — shares; one preference per
+  that puts them on or takes them off — opened from the song details overflow menu and from a song card's on the Songs screen — shares; one preference per
   group, `UserPreferences.tagSortingMode` and `languageSortingMode`, the languages being ordered the same way).
 - **The language of a song is carried the same way, and is its own category rather than one more tag**: a
   `{meta: language en}` directive per language, read into `Song.languages` as a lowercase ISO code — 639-2's three
@@ -165,7 +165,7 @@ uninstall and nothing else does.
   they are where it does not (`rom`, Romani), so one language is one code however the file spells it. It gets its own
   filter group on the Songs screen — but only once the library holds more than one language, with an "Unknown" chip
   for the songs that declare none — and it is shown wherever a tag is: next to them under a song in the lists, and as
-  one read-only chip per language in the song details metadata card; the overflow menu opens the picker. The **names
+  one read-only chip per language in the song details metadata card; the same two overflow menus open the picker. The **names
   are never shipped**: the app carries a list of codes and nothing else, and asks the platform what each is called in the language the app is set
   to (`java.util.Locale`, `NSLocale`, `Intl.DisplayNames` behind `:presentation`'s `languageDisplayName`), falling
   back to the code in capitals where it cannot say.

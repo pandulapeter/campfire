@@ -9,7 +9,6 @@
 -->
 # To do
 - Haptic effects
-- Songs screens -> Song card overflow menu -> Add edit tags and edit languages options
 - Try to avoid one small section / screen
 - Global sync status display
 - Optional close confirmation dialog on relevant platforms

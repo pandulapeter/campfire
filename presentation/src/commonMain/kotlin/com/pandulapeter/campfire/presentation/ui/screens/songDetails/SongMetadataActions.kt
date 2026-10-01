@@ -59,6 +59,31 @@ internal fun songMetadataActions(
     } else {
         null
     },
+    *songLabelActions(
+        viewModel = viewModel,
+        song = song,
+        isEditorDraft = isEditorDraft,
+    ).toTypedArray(),
+    ActionsMenuItem(
+        title = stringResource(Res.string.song_details_links_edit),
+        icon = painterResource(Res.drawable.ic_link),
+        isEnabled = hasText,
+        isAlwaysInMenu = true,
+        onClick = { viewModel.showSongLinksDialog(song = song, isEditorDraft = isEditorDraft) },
+    ),
+)
+
+/**
+ * The tag and the language entries of [songMetadataActions], which the song cards of the songs screen offer as well:
+ * unlike the metadata and the link dialogs they need nothing but the song list's own metadata to open, and filing songs
+ * under a tag or a language is done to many of them in a row, which a trip to every song's details screen makes a chore.
+ */
+@Composable
+internal fun songLabelActions(
+    viewModel: CampfireViewModel,
+    song: Song,
+    isEditorDraft: Boolean,
+): List<ActionsMenuItem> = listOf(
     ActionsMenuItem(
         title = stringResource(Res.string.song_details_tags_manage),
         icon = painterResource(Res.drawable.ic_label),
@@ -70,12 +95,5 @@ internal fun songMetadataActions(
         icon = painterResource(Res.drawable.ic_language),
         isAlwaysInMenu = true,
         onClick = { viewModel.showDialog(CampfireViewModel.DialogType.SongLanguages(song = song, isEditorDraft = isEditorDraft)) },
-    ),
-    ActionsMenuItem(
-        title = stringResource(Res.string.song_details_links_edit),
-        icon = painterResource(Res.drawable.ic_link),
-        isEnabled = hasText,
-        isAlwaysInMenu = true,
-        onClick = { viewModel.showSongLinksDialog(song = song, isEditorDraft = isEditorDraft) },
     ),
 )
