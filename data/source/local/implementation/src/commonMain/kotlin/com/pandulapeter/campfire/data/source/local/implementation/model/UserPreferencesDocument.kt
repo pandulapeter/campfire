@@ -39,4 +39,6 @@ internal data class UserPreferencesDocument(
     val foldedSongInfoSections: List<String> = emptyList(),
     val tagMatchMode: String = "",
     val languageMatchMode: String = "",
+    val tagSortingMode: String = "",
+    val languageSortingMode: String = "",
 )

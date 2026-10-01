@@ -77,6 +77,13 @@ data class UserPreferences(
     val tagMatchMode: MatchMode,
     /** How the languages selected in the song filter combine, a standing choice of its own like [tagMatchMode]. */
     val languageMatchMode: MatchMode,
+    /**
+     * The order the library's tags are offered in, by the song filter and by the dialog that puts them on a song alike:
+     * one standing choice, since both are the same list looked at from two places.
+     */
+    val tagSortingMode: LabelSortingMode,
+    /** The order the library's languages are offered in, a standing choice of its own like [tagSortingMode]. */
+    val languageSortingMode: LabelSortingMode,
 ) {
 
     companion object {
@@ -100,6 +107,15 @@ data class UserPreferences(
     enum class MatchMode(val id: String) {
         ANY("any"),
         ALL("all"),
+    }
+
+    /**
+     * How the values of a filter group are ordered: [BY_USAGE] puts the ones the most songs carry first, which is what a
+     * large library is filtered by, and [ALPHABETICAL] is for looking one up by its name.
+     */
+    enum class LabelSortingMode(val id: String) {
+        BY_USAGE("by_usage"),
+        ALPHABETICAL("alphabetical"),
     }
 
     enum class SortingMode(val id: String) {

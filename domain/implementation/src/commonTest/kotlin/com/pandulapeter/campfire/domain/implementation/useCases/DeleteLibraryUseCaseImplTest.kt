@@ -188,6 +188,8 @@ class DeleteLibraryUseCaseImplTest {
             foldedSongInfoSections = emptySet(),
             tagMatchMode = UserPreferences.MatchMode.ANY,
             languageMatchMode = UserPreferences.MatchMode.ANY,
+            tagSortingMode = UserPreferences.LabelSortingMode.BY_USAGE,
+            languageSortingMode = UserPreferences.LabelSortingMode.BY_USAGE,
         )
     }
 }

@@ -36,6 +36,8 @@ import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.layout.onPlaced
 import androidx.compose.ui.layout.positionInWindow
 import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.unit.Dp
+import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.dp
 
 /**
@@ -275,6 +277,41 @@ internal fun Modifier.fadingVerticalEdges(gridState: LazyGridState) = fadingVert
         }
     },
 )
+
+/**
+ * Fades a sideways scrolling lazy row out under something pinned over its start, a control the row's items scroll
+ * behind: they are gone entirely under its [overlayWidth] and fade back in over [EDGE_FADE_SIZE] past it, so the pinned
+ * control is read against the background whatever is scrolled under it. As strong as the row is scrolled, like
+ * [fadingTopEdge], so a row resting at its start - whose first item starts past the control - is drawn whole.
+ */
+internal fun Modifier.fadingUnderStartOverlay(listState: LazyListState, overlayWidth: Dp) = this
+    .graphicsLayer {
+        compositingStrategy = if (listState.scrolledFromTop() > 0) CompositingStrategy.Offscreen else CompositingStrategy.Auto
+    }
+    .drawWithContent {
+        drawContent()
+        val fadeWidth = EDGE_FADE_SIZE.toPx()
+        val strength = (listState.scrolledFromTop() / fadeWidth).coerceIn(0f, 1f)
+        if (strength > 0f) {
+            val hidden = Color.Black.copy(alpha = 1f - strength)
+            val overlay = overlayWidth.toPx()
+            // The start of the row is its right edge in a right to left layout.
+            val isRtl = layoutDirection == LayoutDirection.Rtl
+            val maskWidth = overlay + fadeWidth
+            drawRect(
+                brush = Brush.horizontalGradient(
+                    0f to hidden,
+                    overlay / maskWidth to hidden,
+                    1f to Color.Black,
+                    startX = if (isRtl) size.width else 0f,
+                    endX = if (isRtl) size.width - maskWidth else maskWidth,
+                ),
+                topLeft = Offset(if (isRtl) size.width - maskWidth else 0f, 0f),
+                size = Size(maskWidth, size.height),
+                blendMode = BlendMode.DstIn,
+            )
+        }
+    }
 
 private fun LazyListState.scrolledFromTop() = if (firstVisibleItemIndex > 0) Int.MAX_VALUE else firstVisibleItemScrollOffset
 

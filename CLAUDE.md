@@ -155,8 +155,9 @@ uninstall and nothing else does.
 - **Tags are part of the song file**, not a store of their own: ChordPro `{tag}` directives, read by `:chordpro`
   into `Song.tags` at scan time and written back into the text the same way, so a tag travels with the file through
   an export, an import or a sync run. The library's set of tags is whatever the songs carry; the Songs screen's
-  filter offers them counted and most used first, and the song details overflow menu opens the dialog that puts them
-  on or takes them off.
+  filter offers them counted, most used first or alphabetically (a toggle next to the group's title, which the dialog
+  that puts them on or takes them off — opened from the song details overflow menu — shares; one preference per
+  group, `UserPreferences.tagSortingMode` and `languageSortingMode`, the languages being ordered the same way).
 - **The language of a song is carried the same way, and is its own category rather than one more tag**: a
   `{meta: language en}` directive per language, read into `Song.languages` as a lowercase ISO code — 639-2's three
   letter codes included, folded to their 639-1 equivalent where the standard has one (`eng` is `en`) and kept as

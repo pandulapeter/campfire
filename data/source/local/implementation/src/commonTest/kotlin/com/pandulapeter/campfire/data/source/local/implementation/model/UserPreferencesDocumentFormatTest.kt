@@ -43,6 +43,8 @@ internal class UserPreferencesDocumentFormatTest {
             foldedSongInfoSections = listOf("tags", "links"),
             tagMatchMode = "all",
             languageMatchMode = "all",
+            tagSortingMode = "alphabetical",
+            languageSortingMode = "alphabetical",
         )
 
         val decoded = UserPreferencesDocumentFormat.decode(UserPreferencesDocumentFormat.encode(document))

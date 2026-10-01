@@ -112,6 +112,8 @@
     <string name="songs_languages_match_mode">A dal szóljon</string>
     <string name="songs_languages_match_mode_any">Bármelyik nyelven</string>
     <string name="songs_languages_match_mode_all">Mindegyik nyelven</string>
+    <string name="songs_labels_sorted_by_usage">Gyakoriság szerint rendezve</string>
+    <string name="songs_labels_sorted_alphabetically">Betűrendbe rendezve</string>
 
     <!-- Setlists screen -->
     <string name="setlists">Listák</string>

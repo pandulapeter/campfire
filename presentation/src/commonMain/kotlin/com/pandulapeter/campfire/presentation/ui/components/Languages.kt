@@ -49,7 +49,7 @@ internal fun languageName(code: String, appLanguageCode: String) = (
     )?.replaceFirstChar { it.uppercaseChar() }
 
 /**
- * Every language the picker knows of, named where the platform can name it and in the order they are shown in.
+ * Every language the picker knows of, named where the platform can name it, in the alphabet of those names.
  *
  * Which of them it *lists* is [PickableLanguage.isListed], and the reason for the distinction is the web: a browser's
  * `Intl.DisplayNames` carries the languages a browser is translated into rather than a catalogue of languages, so
@@ -59,11 +59,10 @@ internal fun languageName(code: String, appLanguageCode: String) = (
  * not have a second one filed under it. So an unnamed language is not listed but is still *there*, and a search for
  * its code finds it — see the dialog in `Dialogs.kt`.
  *
- * The languages the library already sings in come first, before the alphabet the rest are in. A song about to be
- * filed under a language is far likelier to be in one of the handful the library already holds than in any of the
- * six hundred it does not, and those few are also the ones whose spelling the user has already settled on.
+ * Whether the library's own languages are lifted above that alphabet is the dialog's to decide, since it is what
+ * the order the user picked for them says.
  *
- * @param alsoOffer The library's own languages: listed whatever the platform can say about them, and listed first.
+ * @param alsoOffer The library's own languages: listed whatever the platform can say about them.
  * @param normalize Accent and case insensitive text, which both the ordering and the search run on — a reader
  *   looking for Ír should not have to type the accent, and an `Ő` sorts after `Z` without it.
  */
@@ -82,7 +81,7 @@ internal fun pickableLanguages(
                 normalize = normalize,
             )
         }
-        .sortedWith(compareByDescending<PickableLanguage> { it.isInLibrary }.thenBy { it.sortKey })
+        .sortedBy { it.sortKey }
 }
 
 /** One language as the picker shows it, with the key it is ordered and searched by worked out once. */
@@ -90,7 +89,7 @@ internal class PickableLanguage(
     val code: String,
     /** Null where the platform has no name for the language, which on the web is most of them. */
     val name: String?,
-    /** Whether some song in the library is already filed under it, which is what puts it at the top of the list. */
+    /** Whether some song in the library is already filed under it, which lists it whatever the platform can name. */
     val isInLibrary: Boolean,
     normalize: (String) -> String,
 ) {

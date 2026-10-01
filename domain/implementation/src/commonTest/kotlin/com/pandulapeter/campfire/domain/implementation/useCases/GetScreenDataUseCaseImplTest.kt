@@ -355,6 +355,8 @@ class GetScreenDataUseCaseImplTest {
             foldedSongInfoSections = emptySet(),
             tagMatchMode = UserPreferences.MatchMode.ANY,
             languageMatchMode = UserPreferences.MatchMode.ANY,
+            tagSortingMode = UserPreferences.LabelSortingMode.BY_USAGE,
+            languageSortingMode = UserPreferences.LabelSortingMode.BY_USAGE,
         )
 
         fun setlist(title: String, day: Int?, isArchived: Boolean = false) = Setlist(

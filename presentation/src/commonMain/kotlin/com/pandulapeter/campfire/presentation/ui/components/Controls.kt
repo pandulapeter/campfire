@@ -23,9 +23,12 @@ import androidx.compose.foundation.border
 import androidx.compose.foundation.indication
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.IntrinsicSize
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.calculateEndPadding
 import androidx.compose.foundation.layout.calculateStartPadding
 import androidx.compose.foundation.layout.fillMaxHeight
@@ -35,12 +38,16 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.widthIn
+import androidx.compose.foundation.lazy.LazyRow
+import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.selection.selectable
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.FilterChipDefaults
 import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.LocalMinimumInteractiveComponentSize
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
@@ -69,8 +76,13 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.pandulapeter.campfire.data.model.domain.SongLanguage
 import com.pandulapeter.campfire.data.model.domain.Tag
 import com.pandulapeter.campfire.data.model.domain.UserPreferences
+import com.pandulapeter.campfire.presentation.localization.currentLanguage
 import com.pandulapeter.campfire.presentation.localization.stringResource
 import com.pandulapeter.campfire.presentation.resources.Res
+import com.pandulapeter.campfire.presentation.resources.ic_sort_by_alpha
+import com.pandulapeter.campfire.presentation.resources.ic_sort_by_usage
+import com.pandulapeter.campfire.presentation.resources.songs_labels_sorted_alphabetically
+import com.pandulapeter.campfire.presentation.resources.songs_labels_sorted_by_usage
 import com.pandulapeter.campfire.presentation.resources.songs_languages
 import com.pandulapeter.campfire.presentation.resources.songs_languages_clear
 import com.pandulapeter.campfire.presentation.resources.songs_languages_match_mode
@@ -84,6 +96,7 @@ import com.pandulapeter.campfire.presentation.resources.songs_tags_match_mode_an
 import com.pandulapeter.campfire.presentation.resources.songs_tags_show_all
 import com.pandulapeter.campfire.presentation.resources.songs_tags_show_less
 import com.pandulapeter.campfire.presentation.ui.CampfireViewModel
+import org.jetbrains.compose.resources.painterResource
 
 /**
  * Whether the [ControlsSidePanel] fits into a screen of the given width: the list comes first, so the panel only gets
@@ -225,9 +238,11 @@ internal fun SongFilters(
                 tags = tags,
                 selectedTags = songFilter.selectedTags,
                 matchMode = userPreferences?.tagMatchMode ?: UserPreferences.MatchMode.ANY,
+                sortingMode = userPreferences?.tagSortingMode ?: UserPreferences.LabelSortingMode.BY_USAGE,
                 onTagClicked = viewModel::toggleTagFilter,
                 onClear = viewModel::clearTagFilter,
                 onMatchModeSelected = viewModel::setTagMatchMode,
+                onSortingModeSelected = viewModel::setTagSortingMode,
             )
         }
         // A library that sings in one language has nothing to choose between, and the one group it would offer
@@ -241,9 +256,11 @@ internal fun SongFilters(
                 languages = languages,
                 selectedLanguages = songFilter.selectedLanguages,
                 matchMode = userPreferences?.languageMatchMode ?: UserPreferences.MatchMode.ANY,
+                sortingMode = userPreferences?.languageSortingMode ?: UserPreferences.LabelSortingMode.BY_USAGE,
                 onLanguageClicked = viewModel::toggleLanguageFilter,
                 onClear = viewModel::clearLanguageFilter,
                 onMatchModeSelected = viewModel::setLanguageMatchMode,
+                onSortingModeSelected = viewModel::setLanguageSortingMode,
             )
         }
     }
@@ -251,8 +268,9 @@ internal fun SongFilters(
 
 /**
  * The tags of the library as a filter. There is no fixed set of tags to lay out: they are whatever the songs happen
- * to carry, so the most used ones come first and the rest are a tap away ([MAX_COLLAPSED_TAG_COUNT]) - a library
- * with two hundred tags must not push the groups under it off the bottom of the panel.
+ * to carry, so the first ones in the chosen order - the most used, or the alphabet's first - are shown and the rest
+ * are a tap away ([MAX_COLLAPSED_TAG_COUNT]): a library with two hundred tags must not push the groups under it off
+ * the bottom of the panel.
  *
  * A selected tag is always among the ones shown, whatever its position: the filter that is on has to be visible to
  * be turned off.
@@ -263,14 +281,17 @@ private fun TagFilters(
     tags: List<Tag>,
     selectedTags: Set<String>,
     matchMode: UserPreferences.MatchMode,
+    sortingMode: UserPreferences.LabelSortingMode,
     onTagClicked: (String) -> Unit,
     onClear: () -> Unit,
     onMatchModeSelected: (UserPreferences.MatchMode) -> Unit,
+    onSortingModeSelected: (UserPreferences.LabelSortingMode) -> Unit,
 ) = Column(modifier = modifier) {
     var isExpanded by rememberSaveable { mutableStateOf(false) }
     val selected = remember(selectedTags) { selectedTags.mapTo(mutableSetOf()) { it.lowercase() } }
-    val visibleTags = remember(tags, selected, isExpanded) {
-        if (isExpanded) tags else tags.filterIndexed { index, tag -> index < MAX_COLLAPSED_TAG_COUNT || tag.name.lowercase() in selected }
+    val orderedTags = remember(tags, sortingMode) { tags.orderedBy(sortingMode) }
+    val visibleTags = remember(orderedTags, selected, isExpanded) {
+        if (isExpanded) orderedTags else orderedTags.filterIndexed { index, tag -> index < MAX_COLLAPSED_TAG_COUNT || tag.name.lowercase() in selected }
     }
     // A tag the library no longer has stays selected, and clearing deliberately leaves it alone
     // (CampfireViewModel.clearTagFilter), so what the clear action and the match mode are offered for is a selection
@@ -280,6 +301,8 @@ private fun TagFilters(
     val selectedChipCount = remember(tags, selected) { tags.count { it.name.lowercase() in selected } }
     FilterSectionTitle(
         title = stringResource(Res.string.songs_tags),
+        sortingMode = sortingMode,
+        onSortingModeSelected = onSortingModeSelected,
         isClearVisible = selectedChipCount > 0,
         clearText = stringResource(Res.string.songs_tags_clear),
         onClearClicked = onClear,
@@ -334,14 +357,22 @@ private fun LanguageFilters(
     languages: List<SongLanguage>,
     selectedLanguages: Set<String>,
     matchMode: UserPreferences.MatchMode,
+    sortingMode: UserPreferences.LabelSortingMode,
     onLanguageClicked: (String) -> Unit,
     onClear: () -> Unit,
     onMatchModeSelected: (UserPreferences.MatchMode) -> Unit,
+    onSortingModeSelected: (UserPreferences.LabelSortingMode) -> Unit,
 ) = Column(modifier = modifier) {
+    val appLanguageCode = currentLanguage.value.code
+    val orderedLanguages = remember(languages, sortingMode, appLanguageCode) {
+        languages.orderedBy(sortingMode) { code -> languageName(code = code, appLanguageCode = appLanguageCode) ?: code.uppercase() }
+    }
     // The chips rather than the filter, for the same reason [TagFilters] counts them that way.
     val hasClearableSelection = remember(languages, selectedLanguages) { languages.any { it.code in selectedLanguages } }
     FilterSectionTitle(
         title = stringResource(Res.string.songs_languages),
+        sortingMode = sortingMode,
+        onSortingModeSelected = onSortingModeSelected,
         isClearVisible = hasClearableSelection,
         clearText = stringResource(Res.string.songs_languages_clear),
         onClearClicked = onClear,
@@ -350,7 +381,7 @@ private fun LanguageFilters(
         modifier = Modifier.padding(start = CONTROLS_PADDING, end = CONTROLS_PADDING, bottom = CHIP_GAP),
         gap = CHIP_GAP,
     ) {
-        languages.forEach { language ->
+        orderedLanguages.forEach { language ->
             CountedFilterChip(
                 label = languageLabel(language.code),
                 songCount = language.songCount,
@@ -405,7 +436,8 @@ private fun MatchModeChoice(
 }
 
 /**
- * The title of a filter group, with the action that empties it at the other end of the same row.
+ * The title of a filter group, with the [LabelSortingToggle] of its chips right after it and the action that empties
+ * it at the other end of the same row.
  *
  * It is up here rather than under the chips because it comes and goes with the selection, and a button of its own
  * would grow and shrink everything below it - in a bottom sheet, the sheet itself - every time a filter was turned on
@@ -416,6 +448,8 @@ private fun MatchModeChoice(
 private fun FilterSectionTitle(
     modifier: Modifier = Modifier,
     title: String,
+    sortingMode: UserPreferences.LabelSortingMode,
+    onSortingModeSelected: (UserPreferences.LabelSortingMode) -> Unit,
     isClearVisible: Boolean,
     clearText: String,
     onClearClicked: () -> Unit,
@@ -430,11 +464,23 @@ private fun FilterSectionTitle(
         .height(SECTION_ACTION_HEIGHT),
     verticalAlignment = Alignment.CenterVertically,
 ) {
+    // Only as wide as its text, since the toggle is about the title and sits right after it. The title fills whatever
+    // width it is given, so a weight would hand it half of the row's free space.
     SettingsSectionTitle(
-        modifier = Modifier.weight(1f),
+        modifier = Modifier.width(IntrinsicSize.Max),
         text = title,
         contentPadding = PaddingValues(),
     )
+    // The same reason as the clear action's below: the row is as tall as the action, and the touch target would
+    // make it taller.
+    CompositionLocalProvider(LocalMinimumInteractiveComponentSize provides Dp.Unspecified) {
+        LabelSortingToggle(
+            modifier = Modifier.padding(start = SORTING_TOGGLE_GAP).size(SORTING_TOGGLE_SIZE),
+            sortingMode = sortingMode,
+            onSortingModeSelected = onSortingModeSelected,
+        )
+    }
+    Spacer(modifier = Modifier.weight(1f))
     AnimatedVisibility(
         visible = isClearVisible,
         enter = fadeIn(),
@@ -452,6 +498,90 @@ private fun FilterSectionTitle(
                 Text(text = clearText)
             }
         }
+    }
+}
+
+/**
+ * Switches the values of a group between the two [UserPreferences.LabelSortingMode]s: most used first, or
+ * alphabetical. The icon shows the order the list is in rather than the one a tap would put it in, the way a column
+ * header's sort indicator does, and so does what a screen reader announces.
+ */
+@Composable
+internal fun LabelSortingToggle(
+    modifier: Modifier = Modifier,
+    sortingMode: UserPreferences.LabelSortingMode,
+    onSortingModeSelected: (UserPreferences.LabelSortingMode) -> Unit,
+) = IconButton(
+    modifier = modifier,
+    onClick = {
+        onSortingModeSelected(
+            when (sortingMode) {
+                UserPreferences.LabelSortingMode.BY_USAGE -> UserPreferences.LabelSortingMode.ALPHABETICAL
+                UserPreferences.LabelSortingMode.ALPHABETICAL -> UserPreferences.LabelSortingMode.BY_USAGE
+            }
+        )
+    },
+) {
+    Crossfade(targetState = sortingMode) { mode ->
+        Icon(
+            modifier = Modifier.size(SORTING_TOGGLE_ICON_SIZE),
+            painter = painterResource(
+                when (mode) {
+                    UserPreferences.LabelSortingMode.BY_USAGE -> Res.drawable.ic_sort_by_usage
+                    UserPreferences.LabelSortingMode.ALPHABETICAL -> Res.drawable.ic_sort_by_alpha
+                }
+            ),
+            contentDescription = stringResource(
+                when (mode) {
+                    UserPreferences.LabelSortingMode.BY_USAGE -> Res.string.songs_labels_sorted_by_usage
+                    UserPreferences.LabelSortingMode.ALPHABETICAL -> Res.string.songs_labels_sorted_alphabetically
+                }
+            ),
+            tint = MaterialTheme.colorScheme.onSurfaceVariant,
+        )
+    }
+}
+
+/**
+ * A group of filter chips on one row that scrolls sideways, with its [LabelSortingToggle] pinned at the start of the
+ * row in place of a section title: the chips scroll behind it and fade out before they reach it
+ * ([fadingUnderStartOverlay]), so the toggle stays where it is, read against the background, however far the row is
+ * scrolled. Kept as small as it is next to a section title, with no touch target around it, so that the row is as tall
+ * as its chips.
+ */
+@Composable
+internal fun <T : Any> SortableChipRow(
+    modifier: Modifier = Modifier,
+    items: List<T>,
+    key: (T) -> Any,
+    sortingMode: UserPreferences.LabelSortingMode,
+    onSortingModeSelected: (UserPreferences.LabelSortingMode) -> Unit,
+    chip: @Composable (T) -> Unit,
+) = Box(
+    modifier = modifier.fillMaxWidth(),
+    contentAlignment = Alignment.CenterStart,
+) {
+    val listState = rememberLazyListState()
+    // The icon itself starts at the keyline the search field above the row starts at.
+    val toggleStart = CONTROLS_PADDING - (SORTING_TOGGLE_SIZE - SORTING_TOGGLE_ICON_SIZE) / 2
+    val toggleEnd = toggleStart + SORTING_TOGGLE_SIZE
+    LazyRow(
+        modifier = Modifier.fillMaxWidth().fadingUnderStartOverlay(listState = listState, overlayWidth = toggleEnd),
+        state = listState,
+        contentPadding = PaddingValues(start = toggleEnd + SORTING_TOGGLE_GAP, end = CONTROLS_PADDING),
+        horizontalArrangement = Arrangement.spacedBy(CHIP_GAP),
+    ) {
+        items(
+            items = items,
+            key = key,
+        ) { item -> chip(item) }
+    }
+    CompositionLocalProvider(LocalMinimumInteractiveComponentSize provides Dp.Unspecified) {
+        LabelSortingToggle(
+            modifier = Modifier.padding(start = toggleStart).size(SORTING_TOGGLE_SIZE),
+            sortingMode = sortingMode,
+            onSortingModeSelected = onSortingModeSelected,
+        )
     }
 }
 
@@ -569,6 +699,11 @@ internal val CHIP_GAP = 8.dp
 /** The height of a [FilterSectionTitle], which is its action's with no touch target around it, and the gap under it. */
 private val SECTION_ACTION_HEIGHT = 32.dp
 private val SECTION_TITLE_BOTTOM_PADDING = 4.dp
+
+/** The [LabelSortingToggle] is a small one, a hint about the list next to its title rather than a control of its own. */
+private val SORTING_TOGGLE_SIZE = 32.dp
+private val SORTING_TOGGLE_ICON_SIZE = 18.dp
+private val SORTING_TOGGLE_GAP = 4.dp
 
 /** The padding a text button keeps inside its own bounds, taken off so that its label lines up with the titles. */
 private val BUTTON_INSET = 12.dp

@@ -8,11 +8,10 @@
  * https://mozilla.org/MPL/2.0/.
 -->
 # To do
-- Word / PDF import
+- Word + PDF import
 - What's new dialog
 - Offline mode for web
 - Global sync status display
-- Toggle to sort tags by usage or alphabetically
 - Show all tags logic should depend on space
 - First time user experience tutorial
 - Haptic effects

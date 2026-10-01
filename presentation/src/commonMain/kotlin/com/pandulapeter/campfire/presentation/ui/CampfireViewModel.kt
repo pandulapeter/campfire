@@ -2524,6 +2524,10 @@ class CampfireViewModel(
 
     fun setLanguageMatchMode(value: UserPreferences.MatchMode) = changeUserPreferences { copy(languageMatchMode = value) }
 
+    fun setTagSortingMode(value: UserPreferences.LabelSortingMode) = changeUserPreferences { copy(tagSortingMode = value) }
+
+    fun setLanguageSortingMode(value: UserPreferences.LabelSortingMode) = changeUserPreferences { copy(languageSortingMode = value) }
+
     /**
      * Accent and case insensitive text, for a screen that has to sort or search through something the library did
      * not put in order for it - the picker of every language there is, which is ordered by a name that depends on

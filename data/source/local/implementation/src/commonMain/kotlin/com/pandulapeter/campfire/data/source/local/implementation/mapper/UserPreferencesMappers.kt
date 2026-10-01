@@ -38,6 +38,8 @@ internal fun UserPreferencesDocument.toModel() = UserPreferences(
     foldedSongInfoSections = foldedSongInfoSections.mapNotNullTo(mutableSetOf()) { id -> UserPreferences.SongInfoSection.entries.firstOrNull { it.id == id } },
     tagMatchMode = UserPreferences.MatchMode.entries.firstOrNull { it.id == tagMatchMode } ?: UserPreferences.MatchMode.ANY,
     languageMatchMode = UserPreferences.MatchMode.entries.firstOrNull { it.id == languageMatchMode } ?: UserPreferences.MatchMode.ANY,
+    tagSortingMode = UserPreferences.LabelSortingMode.entries.firstOrNull { it.id == tagSortingMode } ?: UserPreferences.LabelSortingMode.BY_USAGE,
+    languageSortingMode = UserPreferences.LabelSortingMode.entries.firstOrNull { it.id == languageSortingMode } ?: UserPreferences.LabelSortingMode.BY_USAGE,
 )
 
 internal fun UserPreferences.toDocument() = UserPreferencesDocument(
@@ -61,4 +63,6 @@ internal fun UserPreferences.toDocument() = UserPreferencesDocument(
     foldedSongInfoSections = foldedSongInfoSections.map { it.id },
     tagMatchMode = tagMatchMode.id,
     languageMatchMode = languageMatchMode.id,
+    tagSortingMode = tagSortingMode.id,
+    languageSortingMode = languageSortingMode.id,
 )

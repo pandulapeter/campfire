@@ -37,7 +37,6 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyListScope
-import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.rememberScrollState
@@ -103,6 +102,7 @@ import com.pandulapeter.campfire.data.model.domain.ImportPlan
 import com.pandulapeter.campfire.data.model.domain.Song
 import com.pandulapeter.campfire.data.model.domain.SongLanguage
 import com.pandulapeter.campfire.data.model.domain.SyncState
+import com.pandulapeter.campfire.data.model.domain.UserPreferences
 import com.pandulapeter.campfire.presentation.localization.currentLanguage
 import com.pandulapeter.campfire.presentation.localization.pluralStringResource
 import com.pandulapeter.campfire.presentation.localization.stringResource
@@ -197,8 +197,10 @@ import com.pandulapeter.campfire.presentation.ui.components.CheckboxListItem
 import com.pandulapeter.campfire.presentation.ui.components.CHIP_GAP
 import com.pandulapeter.campfire.presentation.ui.components.CountedFilterChip
 import com.pandulapeter.campfire.presentation.ui.components.HideKeyboardWhenScrolledDown
+import com.pandulapeter.campfire.presentation.ui.components.LabelSortingToggle
 import com.pandulapeter.campfire.presentation.ui.components.MAX_SEARCH_QUERY_LENGTH
 import com.pandulapeter.campfire.presentation.ui.components.RadioListItem
+import com.pandulapeter.campfire.presentation.ui.components.SortableChipRow
 import com.pandulapeter.campfire.presentation.ui.components.SongFilters
 import com.pandulapeter.campfire.presentation.ui.components.THEME_COLOR_CHOICE_WIDTH
 import com.pandulapeter.campfire.presentation.ui.components.ThemeColorChoice
@@ -207,6 +209,7 @@ import com.pandulapeter.campfire.presentation.ui.components.fadingTopEdge
 import com.pandulapeter.campfire.presentation.ui.components.fadingVerticalEdges
 import com.pandulapeter.campfire.presentation.ui.components.languageLabel
 import com.pandulapeter.campfire.presentation.ui.components.languageName
+import com.pandulapeter.campfire.presentation.ui.components.orderedBy
 import com.pandulapeter.campfire.presentation.ui.components.pickableLanguages
 import com.pandulapeter.campfire.presentation.ui.components.textResource
 import com.pandulapeter.campfire.presentation.ui.platform.calendarLocale
@@ -1189,14 +1192,17 @@ private fun SongTagsDialog(
     dialog: CampfireViewModel.DialogType.SongTags,
 ) {
     val libraryTags by viewModel.tags.collectAsStateWithLifecycle()
+    val userPreferences by viewModel.userPreferences.collectAsStateWithLifecycle()
+    val sortingMode = userPreferences?.tagSortingMode ?: UserPreferences.LabelSortingMode.BY_USAGE
     var query by rememberSaveable { mutableStateOf("") }
     // Saved, since the dialog outlives a recreated Activity and Done writes whatever is ticked at that moment.
     var selectedTags by rememberSaveable(dialog.song.fileName, stateSaver = stringListSaver) { mutableStateOf(dialog.song.tags) }
     var createdTags by rememberSaveable(dialog.song.fileName, stateSaver = stringListSaver) { mutableStateOf(emptyList()) }
     // The song's own tags first, in the order its file lists them, then the ones created here, then the rest of the
-    // library, most used first. Two spellings of a tag are one tag, and the song's own spelling is the one kept.
-    val offeredTags = remember(dialog.song, createdTags, libraryTags) {
-        (dialog.song.tags + createdTags + libraryTags.map { it.name }).distinctBy { it.lowercase() }
+    // library in the order the filter shows them. Two spellings of a tag are one tag, and the song's own spelling is the
+    // one kept.
+    val offeredTags = remember(dialog.song, createdTags, libraryTags, sortingMode) {
+        (dialog.song.tags + createdTags + libraryTags.orderedBy(sortingMode).map { it.name }).distinctBy { it.lowercase() }
     }
     val searchableTags = remember(offeredTags) { offeredTags.map { it to viewModel.normalizeForSearch(it) } }
     val matches = remember(searchableTags, query) {
@@ -1224,6 +1230,12 @@ private fun SongTagsDialog(
             SongDialogTitle(
                 title = stringResource(Res.string.song_details_tags_manage),
                 song = dialog.song,
+                action = {
+                    LabelSortingToggle(
+                        sortingMode = sortingMode,
+                        onSortingModeSelected = viewModel::setTagSortingMode,
+                    )
+                },
             )
         },
         text = {
@@ -1301,20 +1313,26 @@ private fun SongTagsDialog(
 /**
  * The title of a dialog about one song, with the song named under it the way a sheet's [SheetHeader] names it, wherever
  * the dialog was opened from: one opened from a row of the song list would otherwise not say which row it is about.
+ *
+ * @param action A small control about the dialog's list as a whole, at the end of the title's row.
  */
 @Composable
 internal fun SongDialogTitle(
     title: String,
     song: Song,
-) = Column {
-    Text(title)
-    Text(
-        text = songLabel(song),
-        style = MaterialTheme.typography.bodyMedium,
-        color = MaterialTheme.colorScheme.onSurfaceVariant,
-        maxLines = 1,
-        overflow = TextOverflow.Ellipsis,
-    )
+    action: (@Composable () -> Unit)? = null,
+) = Row(verticalAlignment = Alignment.CenterVertically) {
+    Column(modifier = Modifier.weight(1f)) {
+        Text(title)
+        Text(
+            text = songLabel(song),
+            style = MaterialTheme.typography.bodyMedium,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+            maxLines = 1,
+            overflow = TextOverflow.Ellipsis,
+        )
+    }
+    action?.invoke()
 }
 
 /**
@@ -1326,8 +1344,9 @@ internal fun SongDialogTitle(
  * that reordered itself under the finger that has just ticked it would be worse than a list that has to be scrolled.
  *
  * What is listed before anything is typed is what can be named, plus the languages the song and the library already
- * use — and those come first, since the next song to be filed is far likelier to be in one of them than in any of
- * the six hundred the library has never held. Everything else — on the web that is most languages, see
+ * use. Ordered by usage, the library's come first, most used first: the next song to be filed is far likelier to be in
+ * one of them than in any of the six hundred the library has never held. Ordered alphabetically, they are among the
+ * rest, since that order is asked for by somebody who looks a language up by its name. Everything else — on the web that is most languages, see
  * [pickableLanguages] — is found by typing its code, which is also what such a row is labelled with. A language
  * nobody can name is still a language the file can be filed under, and the code is the one thing the app always
  * knows about it.
@@ -1339,18 +1358,25 @@ private fun SongLanguagesDialog(
 ) {
     val appLanguageCode = currentLanguage.value.code
     val libraryLanguages by viewModel.languages.collectAsStateWithLifecycle()
+    val userPreferences by viewModel.userPreferences.collectAsStateWithLifecycle()
+    val sortingMode = userPreferences?.languageSortingMode ?: UserPreferences.LabelSortingMode.BY_USAGE
     var query by rememberSaveable { mutableStateOf("") }
     // Saved, since the dialog outlives a recreated Activity and Done writes whatever is ticked at that moment.
     var selectedCodes by rememberSaveable(
         dialog.song.fileName,
         stateSaver = listSaver<Set<String>, String>(save = { it.toList() }, restore = { it.toSet() }),
     ) { mutableStateOf(dialog.song.languages.toSet()) }
-    val languages = remember(dialog.song, libraryLanguages, appLanguageCode) {
+    val languages = remember(dialog.song, libraryLanguages, appLanguageCode, sortingMode) {
         val declared = dialog.song.languages
-        val alsoOffer = declared + libraryLanguages.map { it.code }.filterNot { it == SongLanguage.UNKNOWN }
-        val pickable = pickableLanguages(appLanguageCode = appLanguageCode, alsoOffer = alsoOffer, normalize = viewModel::normalize)
-        // The song's own languages come first and stay there, in the order the file lists them.
-        declared.mapNotNull { code -> pickable.firstOrNull { it.code == code } } + pickable.filterNot { it.code in declared }
+        val libraryCodes = libraryLanguages.map { it.code }.filterNot { it == SongLanguage.UNKNOWN }
+        val pickable = pickableLanguages(appLanguageCode = appLanguageCode, alsoOffer = declared + libraryCodes, normalize = viewModel::normalize)
+        // The song's own languages come first and stay there, in the order the file lists them, whichever order the
+        // rest are in.
+        val leading = when (sortingMode) {
+            UserPreferences.LabelSortingMode.BY_USAGE -> (declared + libraryCodes).distinct()
+            UserPreferences.LabelSortingMode.ALPHABETICAL -> declared
+        }
+        leading.mapNotNull { code -> pickable.firstOrNull { it.code == code } } + pickable.filterNot { it.code in leading }
     }
     val focusRequester = rememberFirstFieldFocusRequester()
     val keyboardController = LocalSoftwareKeyboardController.current
@@ -1371,6 +1397,12 @@ private fun SongLanguagesDialog(
             SongDialogTitle(
                 title = stringResource(Res.string.song_details_language),
                 song = dialog.song,
+                action = {
+                    LabelSortingToggle(
+                        sortingMode = sortingMode,
+                        onSortingModeSelected = viewModel::setLanguageSortingMode,
+                    )
+                },
             )
         },
         text = {
@@ -1583,6 +1615,7 @@ private fun SongPicker(
         initialSongFileNames.mapNotNull { alphabeticalSongs.byFileName[it] } + alphabeticalSongs.list.filterNot { it.song.fileName in initial }
     }
     val filters by viewModel.songPickerFilters.collectAsStateWithLifecycle()
+    val userPreferences by viewModel.userPreferences.collectAsStateWithLifecycle()
     // Only what the chips still offer narrows the list: a tag that left the library while the sheet was open would
     // otherwise keep hiding every song with no chip left to turn it off.
     val activeTags = remember(filters, selectedTags) {
@@ -1618,8 +1651,12 @@ private fun SongPicker(
             filters = filters,
             selectedTags = activeTags,
             selectedLanguages = activeLanguages,
+            tagSortingMode = userPreferences?.tagSortingMode ?: UserPreferences.LabelSortingMode.BY_USAGE,
+            languageSortingMode = userPreferences?.languageSortingMode ?: UserPreferences.LabelSortingMode.BY_USAGE,
             onTagClicked = { tag -> selectedTags = if (tag in activeTags) selectedTags - tag else selectedTags + tag },
             onLanguageClicked = { code -> selectedLanguages = if (code in activeLanguages) selectedLanguages - code else selectedLanguages + code },
+            onTagSortingModeSelected = viewModel::setTagSortingMode,
+            onLanguageSortingModeSelected = viewModel::setLanguageSortingMode,
         )
         PickerList(
             contentPadding = contentPadding,
@@ -1660,7 +1697,9 @@ private fun SongPicker(
  * list starts right under the search field.
  *
  * Selected chips stay where they are rather than moving to the front, for the reason the picker's rows do: a chip that
- * jumped away from under the finger that had just tapped it would have to be found again to be turned off.
+ * jumped away from under the finger that had just tapped it would have to be found again to be turned off. The order
+ * they are in is the one the songs screen's filters show them in, and each row starts with the same toggle that
+ * switches it ([SortableChipRow]).
  */
 @Composable
 private fun PickerFilters(
@@ -1668,18 +1707,29 @@ private fun PickerFilters(
     filters: PickerFilterOptions,
     selectedTags: Set<String>,
     selectedLanguages: Set<String>,
+    tagSortingMode: UserPreferences.LabelSortingMode,
+    languageSortingMode: UserPreferences.LabelSortingMode,
     onTagClicked: (String) -> Unit,
     onLanguageClicked: (String) -> Unit,
+    onTagSortingModeSelected: (UserPreferences.LabelSortingMode) -> Unit,
+    onLanguageSortingModeSelected: (UserPreferences.LabelSortingMode) -> Unit,
 ) {
     if (filters.languages.isEmpty() && filters.tags.isEmpty()) return
+    val appLanguageCode = currentLanguage.value.code
+    val tags = remember(filters.tags, tagSortingMode) { filters.tags.orderedBy(tagSortingMode) }
+    val languages = remember(filters.languages, languageSortingMode, appLanguageCode) {
+        filters.languages.orderedBy(languageSortingMode) { code -> languageName(code = code, appLanguageCode = appLanguageCode) ?: code.uppercase() }
+    }
     Column(
         modifier = modifier.fillMaxWidth().padding(top = CHIP_GAP),
         verticalArrangement = Arrangement.spacedBy(CHIP_GAP),
     ) {
         if (filters.tags.isNotEmpty()) {
-            PickerFilterRow(
-                items = filters.tags,
+            SortableChipRow(
+                items = tags,
                 key = { "tag_${it.name.lowercase()}" },
+                sortingMode = tagSortingMode,
+                onSortingModeSelected = onTagSortingModeSelected,
             ) { tag ->
                 val key = tag.name.lowercase()
                 CountedFilterChip(
@@ -1692,9 +1742,11 @@ private fun PickerFilters(
             }
         }
         if (filters.languages.isNotEmpty()) {
-            PickerFilterRow(
-                items = filters.languages,
+            SortableChipRow(
+                items = languages,
                 key = { "language_${it.code}" },
+                sortingMode = languageSortingMode,
+                onSortingModeSelected = onLanguageSortingModeSelected,
             ) { language ->
                 CountedFilterChip(
                     label = languageLabel(language.code),
@@ -1706,24 +1758,6 @@ private fun PickerFilters(
             }
         }
     }
-}
-
-/** One group of [PickerFilters], on a row of its own that scrolls sideways. */
-@Composable
-private fun <T : Any> PickerFilterRow(
-    modifier: Modifier = Modifier,
-    items: List<T>,
-    key: (T) -> Any,
-    chip: @Composable (T) -> Unit,
-) = LazyRow(
-    modifier = modifier.fillMaxWidth(),
-    contentPadding = PaddingValues(horizontal = 16.dp),
-    horizontalArrangement = Arrangement.spacedBy(CHIP_GAP),
-) {
-    items(
-        items = items,
-        key = key,
-    ) { item -> chip(item) }
 }
 
 /**
