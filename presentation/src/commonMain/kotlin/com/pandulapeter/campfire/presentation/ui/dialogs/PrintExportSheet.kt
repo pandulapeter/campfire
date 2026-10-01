@@ -46,6 +46,7 @@ import androidx.compose.ui.input.pointer.isMetaPressed
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.ui.unit.IntSize
+import com.pandulapeter.campfire.presentation.ui.platform.calendarLocale
 import com.pandulapeter.campfire.presentation.ui.platform.isDesktopPlatform
 import com.pandulapeter.campfire.presentation.ui.platform.isLaunchScreenWholeStartup
 import com.pandulapeter.campfire.presentation.ui.platform.verticalWheelNotches
@@ -76,6 +77,7 @@ import androidx.compose.ui.unit.dp
 import org.jetbrains.compose.resources.painterResource
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.pandulapeter.campfire.data.model.domain.PrintSettings
+import com.pandulapeter.campfire.presentation.localization.currentLanguage
 import com.pandulapeter.campfire.presentation.localization.stringResource
 import com.pandulapeter.campfire.presentation.resources.*
 import com.pandulapeter.campfire.presentation.ui.CampfireViewModel
@@ -93,8 +95,11 @@ import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.withContext
+import kotlinx.datetime.TimeZone
+import kotlinx.datetime.atStartOfDayIn
 import kotlin.time.Duration.Companion.milliseconds
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 internal fun PrintExportSheet(viewModel: CampfireViewModel, dialog: CampfireViewModel.DialogType.PrintExport) {
     val preferences by viewModel.userPreferences.collectAsStateWithLifecycle()
@@ -126,7 +131,15 @@ internal fun PrintExportSheet(viewModel: CampfireViewModel, dialog: CampfireView
         } catch (exception: CancellationException) { throw exception
         } catch (exception: Exception) { failed = true }
     }
-    val chosenSource = remember(source, selected) { source?.let { it.copy(songs = it.songs.filterIndexed { index, _ -> index in selected.orEmpty() }) } }
+    // The setlist's day as the setlist dialog shows it, in the app's language. The formatter counts in UTC midnights, so
+    // the day goes in as one: any other zone would print the day before or after it on one side of UTC.
+    val languageCode = currentLanguage.value.code
+    val locale = remember(languageCode) { calendarLocale(languageCode) }
+    val dateFormatter = remember { DatePickerDefaults.dateFormatter() }
+    val date = dialog.setlist?.date?.let { day -> dateFormatter.formatDate(day.atStartOfDayIn(TimeZone.UTC).toEpochMilliseconds(), locale) ?: day.toString() }
+    val chosenSource = remember(source, selected, date) {
+        source?.let { it.copy(date = date, songs = it.songs.filterIndexed { index, _ -> index in selected.orEmpty() }) }
+    }
     var layoutFailed by remember { mutableStateOf(false) }
     // The last document stays on screen while the next one is laid out, so that a step of an option fades from one
     // page to the next instead of blanking the preview to a spinner each time.

@@ -2320,7 +2320,7 @@ class CampfireViewModel(
                 index = if (setlist == null) null else index + 1, song = rendered)
         }
         return PrintSource(title = setlist?.title ?: requireNotNull(dialog.song).title,
-            description = setlist?.description.orEmpty(), date = setlist?.date?.toString(), isSetlist = setlist != null, songs = printSongs)
+            description = setlist?.description.orEmpty(), isSetlist = setlist != null, songs = printSongs)
     }
 
     fun setPrintSettings(value: PrintSettings) = _pendingPrintSettings.update { value.normalized() }
