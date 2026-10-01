@@ -15,7 +15,7 @@ package com.pandulapeter.campfire.presentation.ui.print
  * at that resolution, and they halve what Flate has to compress. No platform printing service, external process,
  * network request or third-party PDF library is needed.
  */
-internal class PrintPdfWriter(private val width: Float, private val height: Float) {
+internal class PrintPdfWriter(private val width: Float, private val height: Float, private val title: String) {
     private val output = PrintBytes()
     // A page's image and content stream are encoded here first, because /Length precedes the data, and appended to the
     // output from it: one copy per stream, into a buffer that keeps its capacity from page to page.
@@ -24,7 +24,12 @@ internal class PrintPdfWriter(private val width: Float, private val height: Floa
     private val offsets = mutableListOf(0, 0, 0)
     private val pageIds = mutableListOf<Int>()
 
-    init { output.text("%PDF-1.4\n%Campfire\n") }
+    init {
+        // Four bytes above 127 on the second line tell mail gateways and transfer tools that the file is binary.
+        output.text("%PDF-1.4\n%")
+        output.bytes(byteArrayOf(0xE2.toByte(), 0xE3.toByte(), 0xCF.toByte(), 0xD3.toByte()))
+        output.text("\n")
+    }
 
     private fun beginObject(id: Int = offsets.size): Int {
         if (id == offsets.size) offsets += output.size else offsets[id] = output.size
@@ -65,10 +70,13 @@ internal class PrintPdfWriter(private val width: Float, private val height: Floa
         require(pageIds.isNotEmpty())
         objectText("<< /Type /Pages /Count ${pageIds.size} /Kids [${pageIds.joinToString(" ") { "$it 0 R" }}] >>", id = 2)
         objectText("<< /Type /Catalog /Pages 2 0 R >>", id = 1)
+        // A UTF-16BE hex string needs no escaping and holds any script, so viewers and print dialogs show the real title.
+        val titleHex = buildString { title.forEach { append(it.code.toString(16).padStart(4, '0')) } }
+        val info = objectText("<< /Title <FEFF$titleHex> /Producer (Campfire) >>")
         val xref = output.size
         output.text("xref\n0 ${offsets.size}\n0000000000 65535 f \n")
         offsets.drop(1).forEach { output.text("${it.toString().padStart(10, '0')} 00000 n \n") }
-        output.text("trailer\n<< /Size ${offsets.size} /Root 1 0 R >>\nstartxref\n$xref\n%%EOF\n")
+        output.text("trailer\n<< /Size ${offsets.size} /Root 1 0 R /Info $info 0 R >>\nstartxref\n$xref\n%%EOF\n")
         return output.result()
     }
 }

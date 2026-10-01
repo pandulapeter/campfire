@@ -62,8 +62,8 @@ internal class PrintRenderer(private val measurer: TextMeasurer, private val fon
         }
     }
 
-    suspend fun pdf(document: PrintDocument): ByteArray {
-        val writer = PrintPdfWriter(document.width, document.height)
+    suspend fun pdf(document: PrintDocument, title: String): ByteArray {
+        val writer = PrintPdfWriter(document.width, document.height, title)
         val scale = 3f // 216 dpi: text remains sharp at its physical print size.
         val width = ceil(document.width * scale).toInt()
         val height = ceil(document.height * scale).toInt()

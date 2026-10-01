@@ -21,16 +21,21 @@ internal class PrintPdfWriterTest {
     }
 
     @Test fun pdfCrossReferenceOffsetsResolveToEveryObjectWithTwoPages() = runTest {
-        val writer = PrintPdfWriter(595.276f, 841.89f)
+        val writer = PrintPdfWriter(595.276f, 841.89f, "Szőke (live)")
         repeat(2) { writer.addPage(8, 8, ByteArray(32) { if (it % 4 == 0) 0x0F else -1 }) }
         val bytes = writer.finish()
         val text = bytes.decodeToString()
         assertTrue(text.startsWith("%PDF-1.4"))
         assertTrue(text.contains("/Count 2"))
+        assertTrue((10..13).all { bytes[it].toInt() and 255 >= 128 }, "The second line marks the file as binary.")
+        assertTrue(text.contains("/Title <FEFF0053007a0151006b006500200028006c0069007600650029>"))
+        val info = Regex("""/Info (\d+) 0 R""").find(text)!!.groupValues[1].toInt()
         val xrefOffset = text.substringAfterLast("startxref\n").substringBefore('\n').toInt()
         val xref = bytes.copyOfRange(xrefOffset, bytes.size).decodeToString()
         assertTrue(xref.startsWith("xref\n"))
-        xref.lines().drop(3).takeWhile { it.endsWith(" n ") }.forEachIndexed { index, line ->
+        val entries = xref.lines().drop(3).takeWhile { it.endsWith(" n ") }
+        assertTrue(info <= entries.size)
+        entries.forEachIndexed { index, line ->
             val offset = line.take(10).toInt()
             assertTrue(bytes.copyOfRange(offset, minOf(offset + 16, bytes.size)).decodeToString().startsWith("${index + 1} 0 obj\n"))
         }
@@ -38,7 +43,7 @@ internal class PrintPdfWriterTest {
 
     @Test fun aReusedScratchBufferWritesIdenticalPagesIdentically() = runTest {
         val page = ByteArray(32 * 64) { if (it % 7 == 0) 0 else -1 }
-        val writer = PrintPdfWriter(100f, 100f)
+        val writer = PrintPdfWriter(100f, 100f, "Pages")
         writer.addPage(32, 16, ByteArray(256) { it.toByte() })
         repeat(2) { writer.addPage(64, 64, page) }
         val bytes = writer.finish()

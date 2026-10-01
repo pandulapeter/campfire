@@ -100,7 +100,8 @@ internal fun PrintExportSheet(viewModel: CampfireViewModel, dialog: CampfireView
             TextButton(enabled = document?.pages?.isNotEmpty() == true && !exporting, onClick = {
                 val snapshot = document ?: return@TextButton
                 exporting = true
-                viewModel.exportPdf(filePicker, source!!.title, onFinished = { exporting = false }) { newRenderer().pdf(snapshot) }
+                val title = source!!.title
+                viewModel.exportPdf(filePicker, title, onFinished = { exporting = false }) { newRenderer().pdf(snapshot, title) }
             }) {
                 if (exporting) CircularProgressIndicator(Modifier.size(20.dp), strokeWidth = 2.dp)
                 else Text(stringResource(Res.string.print_save))

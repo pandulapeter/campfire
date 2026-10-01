@@ -61,7 +61,7 @@ internal class PrintRendererTest {
         val document = layoutPrintDocument(PrintSource("Campfire concert", "Rehearsal with friends", "2026-10-01", true, listOf(first, second)),
             PrintSettings(columns = 2), PrintLabels("Key", "Capo", "Tempo", "Time", "Missing"), renderer::width)
         assertTrue(document.pages.size >= 4)
-        val bytes = renderer.pdf(document)
+        val bytes = renderer.pdf(document, "Campfire concert")
         val contents = bytes.decodeToString()
         assertEquals(document.pages.size, Regex("/Subtype /Image").findAll(contents).count())
         assertTrue(contents.contains("/Count ${document.pages.size}"))
@@ -88,7 +88,7 @@ internal class PrintRendererTest {
         val renderer = PrintRenderer(TextMeasurer(createFontFamilyResolver(), Density(1f), LayoutDirection.Ltr))
         val top = PrintPage(listOf(PrintText(text = "MMMMMMMM", x = 10f, y = 5f, size = 20)))
         val bottom = PrintPage(listOf(PrintText(text = "MMMMMMMM", x = 10f, y = 70f, size = 20)))
-        val bytes = renderer.pdf(PrintDocument(width = 100f, height = 100f, pages = listOf(top, bottom, top)))
+        val bytes = renderer.pdf(PrintDocument(width = 100f, height = 100f, pages = listOf(top, bottom, top)), "Pages")
         val width = 300
         val pages = imageStreams(bytes).map { stream -> unpack(inflate(stream), width) }
         assertEquals(3, pages.size)
