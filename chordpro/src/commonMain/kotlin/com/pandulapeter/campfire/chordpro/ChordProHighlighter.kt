@@ -9,6 +9,8 @@
  */
 package com.pandulapeter.campfire.chordpro
 
+import com.pandulapeter.campfire.chordpro.model.GridToken
+
 /**
  * Finds the parts of a ChordPro document an editor wants to colour. It lives next to the parser rather than in the
  * UI so that the two cannot drift apart: what counts as a directive or a chord is decided in exactly one place, and
@@ -25,6 +27,8 @@ object ChordProHighlighter {
 
         /** What the directive is set to, without the closing brace. */
         DIRECTIVE_VALUE,
+
+        /** A bracketed chord over the lyrics, or a chord cell of a grid, which is written without brackets. */
         CHORD,
 
         /** `[*text]`, spaces inside the brackets allowed, which the viewer shows in the lyrics rather than as a chord. */
@@ -45,8 +49,10 @@ object ChordProHighlighter {
         val tokens = mutableListOf<Token>()
         // Chords are not chords on the staff of a tab or inside an environment handed to another program: the brackets
         // there are part of the tablature or of the notation, and the viewer leaves them alone too. The other lines of
-        // a tab are rows of chord names, whose brackets the transposition renames.
+        // a tab are rows of chord names, whose brackets the transposition renames. A grid has no brackets at all: its
+        // cells are chords as they are, and the transposition renames them.
         var isInTab = false
+        var isInGrid = false
         var isInDelegate = false
         // The lines and their offsets come from ChordProSyntax rather than from a walk of their own, so that a file
         // written with any of the three line endings is highlighted the way it is parsed.
@@ -62,10 +68,12 @@ object ChordProHighlighter {
                 directive != null -> {
                     ChordProSyntax.startOfEnvironment(directive.name)?.let {
                         isInTab = it == TAB_ENVIRONMENT
+                        isInGrid = it == GRID_ENVIRONMENT
                         isInDelegate = it in ChordProSyntax.delegateEnvironments
                     }
                     ChordProSyntax.endOfEnvironment(directive.name)?.let {
                         if (it == TAB_ENVIRONMENT) isInTab = false
+                        if (it == GRID_ENVIRONMENT) isInGrid = false
                         if (it in ChordProSyntax.delegateEnvironments) isInDelegate = false
                     }
                     tokens += directive.tokens(
@@ -74,6 +82,8 @@ object ChordProHighlighter {
                         valueStart = ChordProSyntax.directiveValueStart(trimmed),
                     )
                 }
+
+                isInGrid -> tokens += gridChordTokens(line, lineStart)
 
                 // A staff line's brackets are part of the tablature, which the transposition moves by its frets; the
                 // brackets of any other line of a tab are chords to it, and are coloured as chords here.
@@ -111,6 +121,16 @@ object ChordProHighlighter {
             listOf(name)
         }
     }
+
+    /**
+     * The chord cells of a grid line, read the way the parser reads them, so that a margin label or a `/` is left
+     * plain. The words are counted on the line as it is written rather than trimmed, which is the same words at the
+     * offsets the editor needs.
+     */
+    private fun gridChordTokens(line: String, lineStart: Int): List<Token> = ChordProSyntax.words(line)
+        .zip(ChordProSyntax.parseGridTokens(line.trim()))
+        .filter { (_, token) -> token is GridToken.Chord }
+        .map { (word, _) -> Token(TokenType.CHORD, lineStart + word.range.first, lineStart + word.range.last + 1) }
 
     /**
      * The chords of the text of a comment or a label, offsets into [text]: the brackets the transposition moves there.
@@ -165,5 +185,6 @@ object ChordProHighlighter {
 
     private const val SOURCE_COMMENT = "#"
     private const val TAB_ENVIRONMENT = "tab"
+    private const val GRID_ENVIRONMENT = "grid"
     private const val ANNOTATION_PREFIX = "*"
 }

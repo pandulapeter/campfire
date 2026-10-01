@@ -236,7 +236,8 @@ in `:domain:*`. `:data:source:local:implementation` uses it directly for the met
   `ChordProSyntax` rather than walking them itself, so it agrees with the parser about where a line ends whichever of
   the three endings the file uses, and reads a bracket trimmed the way the parser does, so a `[ *softly]` is an
   annotation and an empty `[]` is not a chord. Inside a tab it colours the brackets of the lines that are not the staff,
-  which are the ones the transposition renames, and in the value of a comment or a label it colours the chords the
+  which are the ones the transposition renames, and inside a grid the cells the parser reads as chords, which are
+  written without brackets (the margins, the bars, the beats and a `/` stay plain), and in the value of a comment or a label it colours the chords the
   transposition moves there too — whole chord names only, since a comment is drawn as it is written and neither moves a
   `[Chorus x2]` nor lifts an annotation out.
 

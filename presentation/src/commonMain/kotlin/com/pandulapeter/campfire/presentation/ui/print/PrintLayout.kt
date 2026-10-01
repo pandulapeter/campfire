@@ -18,7 +18,7 @@ import com.pandulapeter.campfire.chordpro.model.CommentStyle
 import com.pandulapeter.campfire.chordpro.model.GridToken
 import com.pandulapeter.campfire.chordpro.model.SectionType
 import com.pandulapeter.campfire.data.model.domain.PrintSettings
-import com.pandulapeter.campfire.presentation.ui.screens.songDetails.bars
+import com.pandulapeter.campfire.presentation.ui.screens.songDetails.alignedGridBars
 import com.pandulapeter.campfire.presentation.ui.screens.songDetails.padLyricsToFitChords
 import kotlinx.coroutines.yield
 import kotlin.math.roundToInt
@@ -348,7 +348,11 @@ private class PrintLayouter(
                     val startsRun = lineIndex == 0 || section.lines[lineIndex - 1] !is ChordProLine.Tab || !line.continuesEnvironment
                     if (options.showChords && startsRun) tabRows(section.lines, lineIndex, sectionLabel, lineWidth) else emptyList()
                 }
-                is ChordProLine.Grid -> if (options.showChords) gridRows(line, lineWidth) else emptyList()
+                is ChordProLine.Grid -> {
+                    val previous = section.lines.getOrNull(lineIndex - 1)
+                    val startsRun = previous !is ChordProLine.Grid || previous.label != line.label
+                    if (options.showChords && startsRun) gridRows(section.lines, lineIndex, lineWidth) else emptyList()
+                }
                 ChordProLine.Blank -> listOf(Row(emptyList(), options.fontSize * 0.7f))
             }
         }
@@ -464,32 +468,34 @@ private class PrintLayouter(
     }
 
     /**
-     * A grid line is broken between bars, as the viewer breaks it, each row taking as many whole bars as fit; only a bar
-     * wider than the column is wrapped inside itself.
+     * The run of grid lines starting at [lineIndex], aligned into columns as the viewer aligns them, each line broken
+     * between bars as the viewer breaks it, a row taking as many whole bars as fit; only a bar wider than the column is
+     * wrapped inside itself.
      */
-    private fun gridRows(line: ChordProLine.Grid, lineWidth: Float): List<Row> = buildList {
-        val space = measure(" ", gridStyle)
+    private fun gridRows(lines: List<ChordProLine>, lineIndex: Int, lineWidth: Float): List<Row> {
+        val first = lines[lineIndex] as ChordProLine.Grid
+        val run = lines.subList(lineIndex, lines.size)
+            .takeWhile { it is ChordProLine.Grid && it.label == first.label }
+            .map { (it as ChordProLine.Grid).tokens }
+        return run.alignedGridBars { it.printText() }.flatMap { bars -> gridLineRows(bars.map { bar -> bar.joinToString("") { it.text } }, lineWidth) }
+    }
+
+    private fun gridLineRows(bars: List<String>, lineWidth: Float): List<Row> = buildList {
         var row = ""
-        var rowWidth = 0f
-        line.tokens.bars().forEach { bar ->
-            val text = bar.joinToString(" ") { it.printText() }
-            val barWidth = measure(text, gridStyle)
-            if (row.isNotEmpty() && rowWidth + space + barWidth <= lineWidth) {
-                row += " $text"
-                rowWidth += space + barWidth
+        bars.forEach { text ->
+            if (row.isNotEmpty() && measure(row + text.trimEnd(), gridStyle) <= lineWidth) {
+                row += text
             } else {
-                if (row.isNotEmpty()) addAll(wrapped(row, gridStyle, lineWidth))
-                if (barWidth <= lineWidth) {
+                if (row.isNotEmpty()) addAll(wrapped(row.trimEnd(), gridStyle, lineWidth))
+                if (measure(text.trimEnd(), gridStyle) <= lineWidth) {
                     row = text
-                    rowWidth = barWidth
                 } else {
-                    addAll(wrapped(text, gridStyle, lineWidth))
+                    addAll(wrapped(text.trimEnd(), gridStyle, lineWidth))
                     row = ""
-                    rowWidth = 0f
                 }
             }
         }
-        if (row.isNotEmpty()) addAll(wrapped(row, gridStyle, lineWidth))
+        if (row.isNotEmpty()) addAll(wrapped(row.trimEnd(), gridStyle, lineWidth))
     }
 
     private fun commentRows(comment: ChordProBlock.Comment, width: Float, isInChorus: Boolean): List<Row> = when {

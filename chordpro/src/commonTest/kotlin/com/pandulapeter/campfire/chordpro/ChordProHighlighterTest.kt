@@ -186,6 +186,28 @@ class ChordProHighlighterTest {
     }
 
     @Test
+    fun `the chord cells of a grid are chords, and its margins, bars and beats are not`() {
+        val text = "{start_of_grid}\nA |: Am . C~G | / % :| x2\n{end_of_grid}\nAm"
+        assertEquals(
+            listOf(
+                TokenType.DIRECTIVE_NAME to "{start_of_grid}",
+                TokenType.CHORD to "Am",
+                TokenType.CHORD to "C~G",
+                TokenType.DIRECTIVE_NAME to "{end_of_grid}",
+            ),
+            spans(text),
+        )
+    }
+
+    @Test
+    fun `the chord cells of an indented grid line are found where they are written`() {
+        val text = "{sog}\n  | Am  . |\n{eog}"
+        val chord = ChordProHighlighter.tokenize(text).single { it.type == TokenType.CHORD }
+        assertEquals("Am", text.substring(chord.start, chord.end))
+        assertEquals(text.indexOf("Am"), chord.start)
+    }
+
+    @Test
     fun `a delegate block's braces and hash lines are not tokens`() {
         val text = "{start_of_ly}\n{ c d e }\n#(x)\n{end_of_ly}"
         assertEquals(

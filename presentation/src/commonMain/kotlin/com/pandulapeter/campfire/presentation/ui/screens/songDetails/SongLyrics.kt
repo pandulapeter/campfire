@@ -83,6 +83,7 @@ import androidx.compose.ui.text.rememberTextMeasurer
 import androidx.compose.ui.text.style.LineHeightStyle
 import androidx.compose.ui.text.style.ResolvedTextDirection
 import androidx.compose.ui.text.style.TextDirection
+import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.em
 import androidx.compose.ui.unit.isSpecified
@@ -689,14 +690,15 @@ private fun SongSectionContent(
                         )
 
                         FoldableKind.GRID -> Column(modifier = runModifier.fillMaxWidth()) {
-                            group.forEach { line ->
-                                if (line is ChordProLine.Grid) {
-                                    SongGridLine(
-                                        line = line,
-                                        lyricsStyle = monospaceLyricsStyle,
-                                        chordStyle = monospaceChordStyle,
-                                    )
-                                }
+                            val alignedLines = remember(group) {
+                                group.filterIsInstance<ChordProLine.Grid>().map { it.tokens }.alignedGridBars { it.displayText() }
+                            }
+                            alignedLines.forEach { bars ->
+                                SongGridLine(
+                                    bars = bars,
+                                    lyricsStyle = monospaceLyricsStyle,
+                                    chordStyle = monospaceChordStyle,
+                                )
                             }
                         }
                     }
@@ -1116,55 +1118,48 @@ private class SongTextMeasurements(
 }
 
 /**
- * One `{start_of_grid}` line: bars, chords, beats and repeats laid out as a chord chart. A line wider than its column
- * breaks between bars rather than being cut off, the way a staff of tablature is broken into systems, and a single bar
- * wider than the column breaks between its own tokens, so every chord of it stays on the page at any text size.
+ * One `{start_of_grid}` line: bars, chords, beats and repeats laid out as a chord chart, in the columns
+ * [alignedGridBars] lined them up in with the other lines of the run. A line wider than its column breaks between bars
+ * rather than being cut off, the way a staff of tablature is broken into systems; a single bar wider than the column
+ * wraps inside itself, so every chord of it stays on the page at any text size.
+ *
+ * Each bar is one text rather than a text per token, since only the characters of one monospaced text are sure to
+ * stand in the columns of the line above it: the gaps between them are spaces of the same font.
  */
 @Composable
 private fun SongGridLine(
-    line: ChordProLine.Grid,
+    bars: List<List<GridCell>>,
     lyricsStyle: TextStyle,
     chordStyle: TextStyle,
 ) = FlowRow(modifier = Modifier.fillMaxWidth()) {
-    line.tokens.bars().forEach { bar ->
-        FlowRow {
-            bar.forEach { token ->
-                val (text, style, color) = when (token) {
-                    is GridToken.Bar -> Triple(token.text, lyricsStyle, MaterialTheme.colorScheme.outline)
-                    is GridToken.Chord -> Triple(token.name, chordStyle, LocalSecondAccentColor.current)
-                    GridToken.Beat -> Triple(BEAT_SYMBOL, lyricsStyle, MaterialTheme.colorScheme.onSurfaceVariant)
-                    is GridToken.Repeat -> Triple(token.text, lyricsStyle, MaterialTheme.colorScheme.onSurfaceVariant)
-                    is GridToken.Text -> Triple(token.text, lyricsStyle, Color.Unspecified)
+    val chordColor = LocalSecondAccentColor.current
+    val barColor = MaterialTheme.colorScheme.outline
+    val beatColor = MaterialTheme.colorScheme.onSurfaceVariant
+    bars.forEach { bar ->
+        Text(
+            text = buildAnnotatedString {
+                bar.forEach { cell ->
+                    val spanStyle = when (cell.token) {
+                        is GridToken.Bar -> SpanStyle(color = barColor)
+                        is GridToken.Chord -> chordStyle.toSpanStyle().copy(color = chordColor)
+                        GridToken.Beat, is GridToken.Repeat -> SpanStyle(color = beatColor)
+                        is GridToken.Text, null -> null
+                    }
+                    if (spanStyle == null) append(cell.text) else withStyle(spanStyle) { append(cell.text) }
                 }
-                Text(
-                    modifier = Modifier.padding(end = GRID_TOKEN_GAP),
-                    text = text,
-                    style = style,
-                    softWrap = false,
-                    color = color,
-                )
-            }
-        }
+            },
+            style = lyricsStyle,
+        )
     }
 }
 
-/**
- * The tokens of a grid line cut into bars, each ending on the bar line that closes it, so that a wrapped line never
- * starts with a stray bar line. The line that opens the first bar stays with it, and whatever follows the last bar
- * line (a repeat count, a comment) is a piece of its own.
- */
-internal fun List<GridToken>.bars(): List<List<GridToken>> {
-    val bars = mutableListOf<List<GridToken>>()
-    var bar = mutableListOf<GridToken>()
-    forEach { token ->
-        bar += token
-        if (token is GridToken.Bar && bar.size > 1) {
-            bars += bar
-            bar = mutableListOf()
-        }
-    }
-    if (bar.isNotEmpty()) bars += bar
-    return bars
+/** What a grid token is drawn as: a beat as a raised dot, which reads as a beat where a full stop reads as text. */
+private fun GridToken.displayText() = when (this) {
+    is GridToken.Bar -> text
+    is GridToken.Chord -> name
+    GridToken.Beat -> BEAT_SYMBOL
+    is GridToken.Repeat -> text
+    is GridToken.Text -> text
 }
 
 internal fun TextStyle.scaled(scale: Float) = copy(
@@ -2490,7 +2485,6 @@ internal fun ChordProLine.Lyrics.padLyricsToFitChords(
 }
 
 private val CHORD_GAP = 4.dp
-private val GRID_TOKEN_GAP = 6.dp
 private val CARD_PADDING = 12.dp
 private val CARD_ELEVATION = 1.dp
 private val HEADER_GAP = 8.dp
