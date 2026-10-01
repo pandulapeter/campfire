@@ -16,8 +16,10 @@ import androidx.compose.ui.unit.LayoutDirection
 import com.pandulapeter.campfire.chordpro.ChordProParser
 import com.pandulapeter.campfire.data.model.domain.PrintSettings
 import kotlinx.coroutines.runBlocking
+import java.io.ByteArrayOutputStream
 import java.io.File
 import kotlin.test.Test
+import kotlin.test.assertContentEquals
 import kotlin.test.assertEquals
 import kotlin.test.assertTrue
 
@@ -75,5 +77,39 @@ internal class PrintRendererTest {
         assertEquals(149, printGray(0xFF00FF00.toInt()))
         assertEquals(255, printGray(0xFFFFFFFF.toInt()))
         assertEquals(0, printGray(0xFF000000.toInt()))
+    }
+
+    @Test fun reusingThePageBitmapLeaksNothingBetweenPages() = runBlocking {
+        val renderer = PrintRenderer(TextMeasurer(createFontFamilyResolver(), Density(1f), LayoutDirection.Ltr))
+        val top = PrintPage(listOf(PrintText(text = "MMMMMMMM", x = 10f, y = 5f, size = 20)))
+        val bottom = PrintPage(listOf(PrintText(text = "MMMMMMMM", x = 10f, y = 70f, size = 20)))
+        val bytes = renderer.pdf(PrintDocument(width = 100f, height = 100f, pages = listOf(top, bottom, top)))
+        val pages = imageStreams(bytes).map(::decodeRuns)
+        assertEquals(3, pages.size)
+        val width = 300
+        fun inked(page: ByteArray, rows: IntRange) = rows.any { row -> (0 until width).any { page[row * width + it] != (-1).toByte() } }
+        assertTrue(inked(pages[0], 0 until 120))
+        assertTrue(!inked(pages[1], 0 until 120), "The second page must not show the first page's text.")
+        assertTrue(inked(pages[1], 200 until 300))
+        assertContentEquals(pages[0], pages[2])
+    }
+
+    private fun imageStreams(bytes: ByteArray): List<ByteArray> {
+        val text = String(bytes, Charsets.ISO_8859_1)
+        return Regex("""/Subtype /Image [^>]*/Length (\d+) >>\nstream\n""").findAll(text).map { match ->
+            bytes.copyOfRange(match.range.last + 1, match.range.last + 1 + match.groupValues[1].toInt())
+        }.toList()
+    }
+
+    private fun decodeRuns(encoded: ByteArray): ByteArray {
+        val output = ByteArrayOutputStream()
+        var index = 0
+        while (true) {
+            val packet = encoded[index++].toInt() and 255
+            if (packet == 128) break
+            if (packet <= 127) repeat(packet + 1) { output.write(encoded[index++].toInt()) }
+            else { val value = encoded[index++].toInt(); repeat(257 - packet) { output.write(value) } }
+        }
+        return output.toByteArray()
     }
 }

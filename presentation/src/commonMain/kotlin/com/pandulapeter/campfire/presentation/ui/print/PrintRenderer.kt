@@ -64,21 +64,29 @@ internal class PrintRenderer(private val measurer: TextMeasurer, private val fon
 
     suspend fun pdf(document: PrintDocument): ByteArray {
         val writer = PrintPdfWriter(document.width, document.height)
+        val scale = 3f // 216 dpi: text remains sharp at its physical print size.
+        val width = ceil(document.width * scale).toInt()
+        val height = ceil(document.height * scale).toInt()
+        // A page is an 18 MB native bitmap whose memory Skia frees only when its wrapper happens to be collected, and wasm
+        // memory never shrinks, so one bitmap and one set of buffers serve every page: draw paints the whole page white
+        // before anything else, and addPage has encoded the gray array into its own output by the time it returns.
+        val bitmap = ImageBitmap(width, height)
+        val canvas = Canvas(bitmap)
+        val drawScope = CanvasDrawScope()
+        val pixels = IntArray(width * PDF_BAND_ROWS)
+        val gray = ByteArray(width * height)
         document.pages.forEach { page ->
             coroutineContext.ensureActive()
-            val scale = 3f // 216 dpi: text remains sharp at its physical print size.
-            val width = ceil(document.width * scale).toInt()
-            val height = ceil(document.height * scale).toInt()
-            val bitmap = ImageBitmap(width, height)
-            CanvasDrawScope().draw(Density(1f), LayoutDirection.Ltr, Canvas(bitmap), Size(width.toFloat(), height.toFloat())) {
+            drawScope.draw(Density(1f), LayoutDirection.Ltr, canvas, Size(width.toFloat(), height.toFloat())) {
                 draw(this, page, scale)
             }
-            val pixels = IntArray(width)
-            val gray = ByteArray(width * height)
-            for (row in 0 until height) {
-                if (row % 128 == 0) { coroutineContext.ensureActive(); yield() }
-                bitmap.readPixels(pixels, startY = row, width = width, height = 1)
-                pixels.forEachIndexed { column, pixel -> gray[row * width + column] = printGray(pixel).toByte() }
+            for (top in 0 until height step PDF_BAND_ROWS) {
+                coroutineContext.ensureActive()
+                yield()
+                val rows = minOf(PDF_BAND_ROWS, height - top)
+                bitmap.readPixels(pixels, startY = top, width = width, height = rows)
+                val offset = top * width
+                for (index in 0 until rows * width) gray[offset + index] = printGray(pixels[index]).toByte()
             }
             writer.addPage(width, height, gray)
             yield()
@@ -86,6 +94,8 @@ internal class PrintRenderer(private val measurer: TextMeasurer, private val fon
         return writer.finish()
     }
 }
+
+private const val PDF_BAND_ROWS = 64
 
 /**
  * The luminance of an ARGB pixel by the Rec. 601 weights. Most print content is black on white, but colour emoji in a

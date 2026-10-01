@@ -37,6 +37,7 @@ internal class PrintPdfWriter(private val width: Float, private val height: Floa
         return objectBytes(body.result())
     }
 
+    /** Encodes [grayscale] into the writer's own output before returning, so the caller may reuse the array for the next page. */
     fun addPage(pixelWidth: Int, pixelHeight: Int, grayscale: ByteArray) {
         require(pixelWidth > 0 && pixelHeight > 0 && grayscale.size == pixelWidth * pixelHeight)
         val image = stream("/Type /XObject /Subtype /Image /Width $pixelWidth /Height $pixelHeight /ColorSpace /DeviceGray /BitsPerComponent 8 /Filter /RunLengthDecode", encodePrintRuns(grayscale))
