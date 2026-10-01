@@ -116,7 +116,11 @@ import com.pandulapeter.campfire.presentation.resources.Res
 import com.pandulapeter.campfire.presentation.resources.error_link_not_opened
 import com.pandulapeter.campfire.presentation.resources.error_operation_failed
 import com.pandulapeter.campfire.presentation.resources.export_failed
+import com.pandulapeter.campfire.presentation.resources.export_library_saved
+import com.pandulapeter.campfire.presentation.resources.export_pdf_saved
+import com.pandulapeter.campfire.presentation.resources.export_setlist_saved
 import com.pandulapeter.campfire.presentation.resources.export_skipped_files
+import com.pandulapeter.campfire.presentation.resources.export_song_saved
 import com.pandulapeter.campfire.presentation.resources.export_too_large_to_import
 import com.pandulapeter.campfire.presentation.resources.ic_campfire
 import com.pandulapeter.campfire.presentation.resources.ic_setlists
@@ -755,6 +759,10 @@ private fun Messages(
         is CampfireViewModel.Message.ImportOversized -> pluralStringResource(Res.plurals.import_oversized, current.count, current.count)
         CampfireViewModel.Message.ImportFailed -> stringResource(Res.string.import_failed)
         CampfireViewModel.Message.ExportFailed -> stringResource(Res.string.export_failed)
+        CampfireViewModel.Message.PdfSaved -> stringResource(Res.string.export_pdf_saved)
+        CampfireViewModel.Message.SongExported -> stringResource(Res.string.export_song_saved)
+        CampfireViewModel.Message.SetlistExported -> stringResource(Res.string.export_setlist_saved)
+        CampfireViewModel.Message.LibraryExported -> stringResource(Res.string.export_library_saved)
         CampfireViewModel.Message.ExportTooLargeToImport -> stringResource(Res.string.export_too_large_to_import)
         is CampfireViewModel.Message.ExportSkippedFiles -> pluralTextResource(
             Res.plurals.export_skipped_files,

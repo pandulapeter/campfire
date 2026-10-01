@@ -2369,7 +2369,12 @@ class CampfireViewModel(
             _pdfExportProgress.value = PdfExportProgress(done = 0, total = pageCount)
             try {
                 // A share leaves the screen open, since a second share or a save may follow; save() only calls onSaved for a save.
-                save(filePicker, isShare = isShare, onSaved = { _printExportSaved.tryEmit(dialog) }) {
+                save(
+                    filePicker = filePicker,
+                    savedMessage = Message.PdfSaved,
+                    isShare = isShare,
+                    onSaved = { _printExportSaved.tryEmit(dialog) },
+                ) {
                     val bytes = try {
                         withContext(Dispatchers.Default) { create { done -> _pdfExportProgress.value = PdfExportProgress(done = done, total = pageCount) } }
                     } catch (exception: CancellationException) {
@@ -2397,28 +2402,29 @@ class CampfireViewModel(
     }
 
     fun exportSong(filePicker: FilePicker, songFileName: String) = launchFileTransfer {
-        save(filePicker) { exportSongs(listOf(songFileName)) }
+        save(filePicker, savedMessage = Message.SongExported) { exportSongs(listOf(songFileName)) }
     }
 
     fun shareSong(filePicker: FilePicker, songFileName: String) = launchFileTransfer {
-        save(filePicker, isShare = true) { exportSongs(listOf(songFileName)) }
+        save(filePicker, savedMessage = Message.SongExported, isShare = true) { exportSongs(listOf(songFileName)) }
     }
 
     fun exportSetlist(filePicker: FilePicker, setlistFileName: String) = launchFileTransfer {
-        save(filePicker) { exportSetlist.invoke(setlistFileName) }
+        save(filePicker, savedMessage = Message.SetlistExported) { exportSetlist.invoke(setlistFileName) }
     }
 
     fun shareSetlist(filePicker: FilePicker, setlistFileName: String) = launchFileTransfer {
-        save(filePicker, isShare = true) { exportSetlist.invoke(setlistFileName) }
+        save(filePicker, savedMessage = Message.SetlistExported, isShare = true) { exportSetlist.invoke(setlistFileName) }
     }
 
     fun exportLibrary(filePicker: FilePicker) = launchFileTransfer {
         var skippedFileNames = emptyList<String>()
         save(
             filePicker = filePicker,
+            savedMessage = Message.LibraryExported,
             // After the save rather than instead of it: the archive is a real copy of everything that could be read,
             // and what it is missing is the one thing the user could not otherwise find out.
-            onSaved = { if (skippedFileNames.isNotEmpty()) sendMessage(Message.ExportSkippedFiles(skippedFileNames)) },
+            warnings = { listOfNotNull(skippedFileNames.takeIf { it.isNotEmpty() }?.let(Message::ExportSkippedFiles)) },
         ) {
             exportLibrary.invoke()?.also { skippedFileNames = it.skippedFileNames }?.file
         }
@@ -2440,10 +2446,17 @@ class CampfireViewModel(
      * An archive over what an import takes is saved all the same, since it is still a complete copy that unzips by
      * hand, but the user is told so the day it is made rather than the day it is needed. [onSaved] runs once the file
      * has been saved, and not for one the user dismissed the dialog of.
+     *
+     * A saved file is confirmed with [savedMessage], unless something about it is worth saying instead ([warnings],
+     * read once the file has been made): each of those already says the file was saved, and a confirmation queued
+     * after them would only hold up the one line that matters. A share is not confirmed at all, since the platform's
+     * own sheet is what the user sees it go out through, and it cannot tell a share that happened from one dismissed.
      */
     private suspend fun save(
         filePicker: FilePicker,
+        savedMessage: Message,
         isShare: Boolean = false,
+        warnings: () -> List<Message> = { emptyList() },
         onSaved: () -> Unit = {},
         export: suspend () -> ExportedFile?,
     ) = try {
@@ -2452,9 +2465,9 @@ class CampfireViewModel(
             file == null -> sendMessage(Message.ExportFailed)
             isShare -> filePicker.shareFile(file)
             filePicker.saveFile(file) -> {
-                if (file.mimeType == ExportedFile.ZIP_MIME_TYPE && file.bytes.size > ImportLimits.MAX_IMPORT_SIZE) {
-                    sendMessage(Message.ExportTooLargeToImport)
-                }
+                val isTooLargeToImport = file.mimeType == ExportedFile.ZIP_MIME_TYPE && file.bytes.size > ImportLimits.MAX_IMPORT_SIZE
+                val messages = listOfNotNull(Message.ExportTooLargeToImport.takeIf { isTooLargeToImport }) + warnings()
+                messages.ifEmpty { listOf(savedMessage) }.forEach(::sendMessage)
                 onSaved()
             }
         }
@@ -2945,11 +2958,10 @@ class CampfireViewModel(
         val selectedLanguages: List<String>,
     )
 
-    /** Something that has happened and is worth one line of text at the bottom of the screen. */
-    /** What the cover search sheet shows under its fields, see [coverArtSearch]. */
     /** One change of [editorTextEdits]: [edit] applied to the text the editor of [fileName] holds when it arrives. */
     class EditorTextEdit(val fileName: String, val edit: (String) -> String)
 
+    /** What the cover search sheet shows under its fields, see [coverArtSearch]. */
     sealed interface CoverArtSearchState {
 
         /** Nothing has been asked yet, or there is nothing to ask by. */
@@ -2959,6 +2971,7 @@ class CampfireViewModel(
         data class Active(val query: CoverArtQuery, val results: CoverArtSearchResults) : CoverArtSearchState
     }
 
+    /** Something that has happened and is worth one line of text at the bottom of the screen. */
     sealed interface Message {
         data class ImportFinished(val result: ImportResult) : Message
 
@@ -2969,6 +2982,10 @@ class CampfireViewModel(
         data class ImportOversized(val count: Int) : Message
         data object ImportFailed : Message
         data object ExportFailed : Message
+        data object PdfSaved : Message
+        data object SongExported : Message
+        data object SetlistExported : Message
+        data object LibraryExported : Message
 
         /** An archive that was saved, but that the import would refuse for its size. */
         data object ExportTooLargeToImport : Message
