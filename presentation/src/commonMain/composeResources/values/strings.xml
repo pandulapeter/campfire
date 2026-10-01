@@ -518,8 +518,9 @@
     <string name="print_select_all">Select all</string>
     <string name="print_select_none">Clear selection</string>
     <string name="print_missing">Song file missing or unreadable</string>
-    <string name="print_load_failed">Could not prepare the preview.</string>
+    <string name="print_load_failed">Could not prepare the PDF.</string>
     <string name="print_no_songs">Select at least one song to export.</string>
+    <string name="print_setlist_empty">This setlist has no songs yet.</string>
     <string name="print_page">Page %1$d of %2$d</string>
     <string name="print_previous">Previous</string>
     <string name="print_next">Next</string>

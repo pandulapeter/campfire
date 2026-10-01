@@ -518,8 +518,9 @@
     <string name="print_select_all">Mind kijelölése</string>
     <string name="print_select_none">Kijelölés törlése</string>
     <string name="print_missing">A dal fájlja hiányzik vagy nem olvasható</string>
-    <string name="print_load_failed">Nem sikerült elkészíteni az előnézetet.</string>
+    <string name="print_load_failed">Nem sikerült elkészíteni a PDF-et.</string>
     <string name="print_no_songs">Jelölj ki legalább egy dalt az exportáláshoz.</string>
+    <string name="print_setlist_empty">Ebben a listában még nincsenek dalok.</string>
     <string name="print_page">%1$d. oldal, összesen %2$d</string>
     <string name="print_previous">Előző</string>
     <string name="print_next">Következő</string>

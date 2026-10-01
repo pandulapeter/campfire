@@ -128,7 +128,8 @@ internal fun PrintExportSheet(viewModel: CampfireViewModel, dialog: CampfireView
     var layoutFailed by remember { mutableStateOf(false) }
     // The last document stays on screen while the next one is laid out, so that a step of an option fades from one
     // page to the next instead of blanking the preview to a spinner each time.
-    val laidOut by produceState<LaidOutDocument?>(null, chosenSource, settings, labels, renderer) {
+    // Retry is keyed too: the source it reads again equals the one that failed to lay out, so without it nothing would.
+    val laidOut by produceState<LaidOutDocument?>(null, chosenSource, settings, labels, renderer, attempt) {
         layoutFailed = false
         val input = chosenSource
         val inputSettings = settings
@@ -185,7 +186,12 @@ internal fun PrintExportSheet(viewModel: CampfireViewModel, dialog: CampfireView
                             PrintOptions(modifier, source!!, settings, selected.orEmpty(), onSelected = { selected = it }, onSettings = update)
                         }
                         val preview: @Composable (Modifier) -> Unit = { modifier ->
-                            PrintPreview(modifier, laidOut, isCurrent, renderer, selected.orEmpty().isEmpty(), page = page, onPageSettled = { page = it })
+                            val emptyMessage = when {
+                                source!!.songs.isEmpty() -> stringResource(Res.string.print_setlist_empty)
+                                selected.orEmpty().isEmpty() -> stringResource(Res.string.print_no_songs)
+                                else -> null
+                            }
+                            PrintPreview(modifier, laidOut, isCurrent, renderer, emptyMessage, page = page, onPageSettled = { page = it })
                         }
                         when {
                             maxWidth >= 760.dp && stableHeight >= 480.dp -> Row(Modifier.fillMaxSize()) {
@@ -383,10 +389,12 @@ private fun PrintOptions(modifier: Modifier, source: PrintSource, settings: Prin
                     CheckboxListItem(title = stringResource(Res.string.print_overview), isChecked = settings.includeSetlistOverview, onCheckedChange = { onSettings(settings.copy(includeSetlistOverview = it)) })
                     CheckboxListItem(title = stringResource(Res.string.print_new_page), isChecked = settings.startSongsOnNewPage, onCheckedChange = { onSettings(settings.copy(startSongsOnNewPage = it)) })
                 }
-                SettingsSectionTitle(text = stringResource(Res.string.print_songs))
-                Row(Modifier.padding(horizontal = 4.dp)) {
-                    TextButton(onClick = { onSelected(source.songs.indices.toSet()) }) { Text(stringResource(Res.string.print_select_all)) }
-                    TextButton(onClick = { onSelected(emptySet()) }) { Text(stringResource(Res.string.print_select_none)) }
+                if (source.songs.isNotEmpty()) {
+                    SettingsSectionTitle(text = stringResource(Res.string.print_songs))
+                    Row(Modifier.padding(horizontal = 4.dp)) {
+                        TextButton(onClick = { onSelected(source.songs.indices.toSet()) }) { Text(stringResource(Res.string.print_select_all)) }
+                        TextButton(onClick = { onSelected(emptySet()) }) { Text(stringResource(Res.string.print_select_none)) }
+                    }
                 }
             }
             itemsIndexed(source.songs) { index, entry ->
@@ -411,12 +419,14 @@ private fun PrintStepperRow(label: String, stepper: @Composable () -> Unit) = Ro
 
 /** What the preview shows, which it fades between, keyed by its kind so that a new document does not count as a change. */
 private sealed interface PreviewContent {
-    data object Empty : PreviewContent
+    data class Empty(val message: String) : PreviewContent
     data object Loading : PreviewContent
     data class Pages(val laidOut: LaidOutDocument) : PreviewContent
 }
 
 /**
+ * @param emptyMessage What to say instead of the pages where there are none to show: a setlist with no songs, or none
+ *   of them chosen.
  * @param page The page asked for, which the sheet keeps rather than the pager: after a rotation the layout starts over and
  *   there are no pages for a while, and a pager state restored on its own would clamp the saved page to the first one.
  */
@@ -426,18 +436,18 @@ private fun PrintPreview(
     laidOut: LaidOutDocument?,
     isCurrent: Boolean,
     renderer: PrintRenderer,
-    isEmpty: Boolean,
+    emptyMessage: String?,
     page: Int,
     onPageSettled: (Int) -> Unit,
 ) {
     val content = when {
-        isEmpty -> PreviewContent.Empty
+        emptyMessage != null -> PreviewContent.Empty(emptyMessage)
         laidOut == null || laidOut.document.pages.isEmpty() -> PreviewContent.Loading
         else -> PreviewContent.Pages(laidOut)
     }
     AnimatedContent(content, modifier.padding(16.dp), transitionSpec = { fadeIn() togetherWith fadeOut() }, contentKey = { it::class }) { shown ->
         when (shown) {
-            PreviewContent.Empty -> Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) { Text(stringResource(Res.string.print_no_songs)) }
+            is PreviewContent.Empty -> Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) { Text(shown.message) }
             PreviewContent.Loading -> Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) { DelayedLoadingIndicator() }
             is PreviewContent.Pages -> PrintPages(shown.laidOut, isCurrent, renderer, page, onPageSettled)
         }
