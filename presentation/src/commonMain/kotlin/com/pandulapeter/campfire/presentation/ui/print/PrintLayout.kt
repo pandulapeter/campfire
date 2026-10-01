@@ -14,6 +14,7 @@ import com.pandulapeter.campfire.chordpro.ChordProTabWrapper
 import com.pandulapeter.campfire.presentation.ui.screens.songDetails.bars
 import com.pandulapeter.campfire.presentation.ui.screens.songDetails.padLyricsToFitChords
 import com.pandulapeter.campfire.data.model.domain.PrintSettings
+import kotlinx.coroutines.yield
 
 internal data class PrintSource(
     val title: String,
@@ -42,12 +43,15 @@ internal data class PrintLabels(val key: String, val capo: String, val tempo: St
  * A single layout for the preview and export. Measuring is supplied by the same Compose text renderer that draws
  * both. A lyric/chord pair is indivisible; a section that fits in a column is kept together. Longer sections flow
  * through columns and pages without reducing the requested size or clipping the remainder.
+ *
+ * It suspends between songs and every few dozen blocks: on the web the layout shares the page's one thread, and only
+ * while it is suspended can the page paint and a newer choice of options cancel a stale layout.
  */
-internal fun layoutPrintDocument(
+internal suspend fun layoutPrintDocument(
     source: PrintSource,
     settings: PrintSettings,
     labels: PrintLabels,
-    measure: (text: String, size: Int, bold: Boolean) -> Float,
+    measureText: (text: String, size: Int, bold: Boolean) -> Float,
 ): PrintDocument {
     val options = settings.normalized()
     val width = if (options.isLandscape) options.paper.height else options.paper.width
@@ -58,6 +62,11 @@ internal fun layoutPrintDocument(
     val bottom = height - margin - if (options.showPageNumbers) 18f else 0f
     val capacity = bottom - margin
     val headingGap = options.fontSize / 2f
+    // Chord names, spaces and the other short strings are measured over and over; only they are kept, so that the
+    // substrings of lyrics the wrapping tries are not held for the life of a large setlist.
+    val shortMeasurements = mutableMapOf<Triple<String, Int, Boolean>, Float>()
+    fun measure(text: String, size: Int, bold: Boolean): Float =
+        if (text.length <= 8) shortMeasurements.getOrPut(Triple(text, size, bold)) { measureText(text, size, bold) } else measureText(text, size, bold)
     val pages = mutableListOf<MutableList<PrintText>>()
     var column = 0
     var y = margin
@@ -226,11 +235,13 @@ internal fun layoutPrintDocument(
                 if (options.showMetadata && !entry.artist.isNullOrBlank()) wrapped(entry.artist) else emptyList())
             space(options.fontSize / 2f)
         }
-        if (options.setlistMode == PrintSettings.SetlistMode.RUNNING_ORDER) return finishPrintDocument(width, height, pages, options, margin, measure)
+        if (options.setlistMode == PrintSettings.SetlistMode.RUNNING_ORDER) return finishPrintDocument(width, height, pages, options, margin, ::measure)
         // Song sheets follow the running order on a fresh page, including in the compact layout.
         newPage()
     }
+    var laidOutBlocks = 0
     source.songs.forEachIndexed { index, entry ->
+        yield()
         if (index > 0 && options.startSongsOnNewPage) newPage()
         val title = entry.index?.let { "$it. ${entry.title}" } ?: entry.title
         val heading = wrapped(title, options.fontSize + 2, true).toMutableList()
@@ -256,6 +267,7 @@ internal fun layoutPrintDocument(
         space(headingGap)
         if (entry.song == null) place(firstRows, keepWhole = keepFirstWhole) else if (firstIndex >= 0) {
             blocks.forEachIndexed { index, block ->
+                if (++laidOutBlocks % 50 == 0) yield()
                 when {
                     index < firstIndex -> Unit
                     index == firstIndex -> { place(firstRows, keepWhole = keepFirstWhole); space(options.fontSize * 0.65f) }
@@ -269,7 +281,7 @@ internal fun layoutPrintDocument(
         }
         space(options.fontSize.toFloat())
     }
-    return finishPrintDocument(width, height, pages, options, margin, measure)
+    return finishPrintDocument(width, height, pages, options, margin, ::measure)
 }
 
 private data class Part(val text: String, val x: Float = 0f, val y: Float = 0f, val size: Int, val bold: Boolean = false)
@@ -310,6 +322,7 @@ private fun finishPrintDocument(
 /** Preserve every character (including spaces used as chord anchors), splitting at words where there is room. */
 internal fun wrapPrintText(text: String, width: Float, measure: (String) -> Float): List<String> {
     if (text.isEmpty()) return listOf("")
+    if (measure(text) <= width) return listOf(text)
     val result = mutableListOf<String>()
     var start = 0
     while (start < text.length) {

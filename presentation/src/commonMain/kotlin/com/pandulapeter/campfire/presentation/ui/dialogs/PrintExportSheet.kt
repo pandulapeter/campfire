@@ -41,7 +41,6 @@ import androidx.compose.foundation.lazy.rememberLazyListState
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
-import kotlinx.coroutines.ensureActive
 import kotlin.math.roundToInt
 
 @Composable
@@ -79,10 +78,7 @@ internal fun PrintExportSheet(viewModel: CampfireViewModel, dialog: CampfireView
         if (input != null && input.songs.isNotEmpty()) try {
             value = withContext(Dispatchers.Default) {
                 val measurements = newRenderer()
-                layoutPrintDocument(input, settings, labels) { text, size, bold ->
-                    coroutineContext.ensureActive()
-                    measurements.width(text, size, bold)
-                }
+                layoutPrintDocument(input, settings, labels, measurements::width)
             }
         } catch (exception: CancellationException) { throw exception
         } catch (exception: Exception) { layoutFailed = true }
