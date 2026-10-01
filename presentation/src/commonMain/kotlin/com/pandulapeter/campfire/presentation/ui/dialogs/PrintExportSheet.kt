@@ -18,6 +18,37 @@ import androidx.compose.animation.fadeOut
 import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.border
+import androidx.compose.foundation.focusable
+import androidx.compose.foundation.gestures.detectTapGestures
+import androidx.compose.foundation.gestures.rememberTransformableState
+import androidx.compose.foundation.gestures.transformable
+import androidx.compose.foundation.pager.HorizontalPager
+import androidx.compose.foundation.pager.rememberPagerState
+import androidx.compose.ui.draw.clipToBounds
+import androidx.compose.ui.focus.FocusRequester
+import androidx.compose.ui.focus.focusRequester
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.drawscope.translate
+import androidx.compose.ui.input.key.Key
+import androidx.compose.ui.input.key.KeyEventType
+import androidx.compose.ui.input.key.isAltPressed
+import androidx.compose.ui.input.key.isCtrlPressed
+import androidx.compose.ui.input.key.isMetaPressed
+import androidx.compose.ui.input.key.key
+import androidx.compose.ui.input.key.onKeyEvent
+import androidx.compose.ui.input.key.type
+import androidx.compose.ui.input.pointer.PointerEventType
+import androidx.compose.ui.input.pointer.isCtrlPressed
+import androidx.compose.ui.input.pointer.isMetaPressed
+import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.layout.onSizeChanged
+import androidx.compose.ui.unit.IntSize
+import com.pandulapeter.campfire.presentation.ui.platform.isDesktopPlatform
+import com.pandulapeter.campfire.presentation.ui.platform.isLaunchScreenWholeStartup
+import com.pandulapeter.campfire.presentation.ui.platform.verticalWheelNotches
+import kotlinx.coroutines.launch
+import kotlin.math.pow
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
@@ -68,6 +99,7 @@ internal fun PrintExportSheet(viewModel: CampfireViewModel, dialog: CampfireView
     var attempt by remember(dialog) { mutableIntStateOf(0) }
     var selected by remember(dialog) { mutableStateOf<Set<Int>?>(null) }
     var exporting by remember { mutableStateOf(false) }
+    var page by rememberSaveable(dialog) { mutableIntStateOf(0) }
     val filePicker = LocalFilePicker.current
     val fontResolver = LocalFontFamilyResolver.current
     val fontFamily = LocalMonospaceFontFamily.current
@@ -147,7 +179,7 @@ internal fun PrintExportSheet(viewModel: CampfireViewModel, dialog: CampfireView
                             PrintOptions(modifier, source!!, settings, selected.orEmpty(), onSelected = { selected = it }, onSettings = update)
                         }
                         val preview: @Composable (Modifier) -> Unit = { modifier ->
-                            PrintPreview(modifier, laidOut, isCurrent, renderer, selected.orEmpty().isEmpty())
+                            PrintPreview(modifier, laidOut, isCurrent, renderer, selected.orEmpty().isEmpty(), page = page, onPageSettled = { page = it })
                         }
                         when {
                             maxWidth >= 760.dp && stableHeight >= 480.dp -> Row(Modifier.fillMaxSize()) {
@@ -337,9 +369,20 @@ private sealed interface PreviewContent {
     data class Pages(val laidOut: LaidOutDocument) : PreviewContent
 }
 
+/**
+ * @param page The page asked for, which the sheet keeps rather than the pager: after a rotation the layout starts over and
+ *   there are no pages for a while, and a pager state restored on its own would clamp the saved page to the first one.
+ */
 @Composable
-private fun PrintPreview(modifier: Modifier, laidOut: LaidOutDocument?, isCurrent: Boolean, renderer: PrintRenderer, isEmpty: Boolean) {
-    var requestedPage by rememberSaveable { mutableIntStateOf(0) }
+private fun PrintPreview(
+    modifier: Modifier,
+    laidOut: LaidOutDocument?,
+    isCurrent: Boolean,
+    renderer: PrintRenderer,
+    isEmpty: Boolean,
+    page: Int,
+    onPageSettled: (Int) -> Unit,
+) {
     val content = when {
         isEmpty -> PreviewContent.Empty
         laidOut == null || laidOut.document.pages.isEmpty() -> PreviewContent.Loading
@@ -349,30 +392,168 @@ private fun PrintPreview(modifier: Modifier, laidOut: LaidOutDocument?, isCurren
         when (shown) {
             PreviewContent.Empty -> Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) { Text(stringResource(Res.string.print_no_songs)) }
             PreviewContent.Loading -> Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) { DelayedLoadingIndicator() }
-            is PreviewContent.Pages -> Column(Modifier.fillMaxSize(), horizontalAlignment = Alignment.CenterHorizontally) {
-                val pageCount = shown.laidOut.document.pages.size
-                val pageIndex = requestedPage.coerceIn(0, pageCount - 1)
-                val pageLabel = stringResource(Res.string.print_page, pageIndex + 1, pageCount)
-                Box(Modifier.weight(1f).fillMaxWidth(), contentAlignment = Alignment.Center) {
-                    // Keyed by the generation, not by the document, whose equality would compare every text on every page.
-                    AnimatedContent(shown.laidOut, Modifier.fillMaxSize(), transitionSpec = { fadeIn() togetherWith fadeOut() }, contentKey = { it.generation }) { faded ->
-                        val document = faded.document
-                        val page = document.pages[pageIndex.coerceAtMost(document.pages.size - 1)]
-                        val description = pageLabel + "\n" + page.texts.joinToString("\n") { it.text }
-                        BoxWithConstraints(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                            val pageWidth = minOf(maxWidth, maxHeight * (document.width / document.height))
-                            Canvas(Modifier.width(pageWidth).aspectRatio(document.width / document.height).border(1.dp, MaterialTheme.colorScheme.outlineVariant).semantics { contentDescription = description }) {
-                                renderer.draw(this, page, size.width / document.width)
-                            }
-                        }
+            is PreviewContent.Pages -> PrintPages(shown.laidOut, isCurrent, renderer, page, onPageSettled)
+        }
+    }
+}
+
+/**
+ * The pages side by side in a pager, turned by a swipe, by the buttons under them or, once the pane has the focus, by
+ * the arrow, Page Up / Page Down, Home and End keys, and zoomed by a pinch, a double tap, the zoom button or, on the
+ * desktop, Ctrl / Cmd and the scroll wheel. A zoomed page is drawn again at its new size rather than scaled up, so it
+ * stays sharp, and the pager does not take a swipe while it is zoomed, since the swipe is the pan.
+ */
+@Composable
+private fun PrintPages(laidOut: LaidOutDocument, isCurrent: Boolean, renderer: PrintRenderer, page: Int, onPageSettled: (Int) -> Unit) {
+    val pageCount = laidOut.document.pages.size
+    val pagerState = rememberPagerState(initialPage = page.coerceIn(0, pageCount - 1)) { pageCount }
+    val coroutineScope = rememberCoroutineScope()
+    val focusRequester = remember { FocusRequester() }
+    var zoom by remember { mutableFloatStateOf(1f) }
+    var pan by remember { mutableStateOf(Offset.Zero) }
+    var pageSize by remember { mutableStateOf(IntSize.Zero) }
+    // A new document keeps the page that was open, clamped to the pages it has.
+    LaunchedEffect(pageCount) { if (pageCount > 0) pagerState.scrollToPage(page.coerceIn(0, pageCount - 1)) }
+    LaunchedEffect(pagerState) {
+        snapshotFlow { pagerState.settledPage }.collect { settled ->
+            if (pagerState.pageCount > 0) onPageSettled(settled)
+            zoom = 1f
+            pan = Offset.Zero
+        }
+    }
+    // Only where a keyboard is the way the app is driven: on a touch screen it would bring the keyboard's focus ring up.
+    LaunchedEffect(Unit) { if (isDesktopPlatform) focusRequester.requestFocus() }
+    fun zoomTo(target: Float, pivot: Offset = Offset(pageSize.width / 2f, pageSize.height / 2f)) {
+        val clampedZoom = target.coerceIn(1f, MAX_ZOOM)
+        // The point of the page under the pivot stays under it.
+        pan = clampPan(pivot - (pivot - pan) * (clampedZoom / zoom), clampedZoom, pageSize)
+        zoom = clampedZoom
+    }
+    fun turnTo(target: Int) {
+        coroutineScope.launch { pagerState.animateScrollToPage(target.coerceIn(0, pageCount - 1)) }
+    }
+    val transformableState = rememberTransformableState { zoomChange, panChange, _ ->
+        zoomTo(zoom * zoomChange)
+        pan = clampPan(pan + panChange, zoom, pageSize)
+    }
+    Column(
+        modifier = Modifier
+            .fillMaxSize()
+            .focusRequester(focusRequester)
+            .focusable()
+            .onKeyEvent { event ->
+                // Alt + Left is the browser's Back, which on the web closes this sheet, and Cmd + Left and Right are Back
+                // and Forward on a Mac, so a press with any of those down is left to whoever sent it.
+                if (event.type != KeyEventType.KeyDown || event.isAltPressed || event.isCtrlPressed || event.isMetaPressed) return@onKeyEvent false
+                val target = when (event.key) {
+                    Key.DirectionLeft, Key.PageUp -> pagerState.currentPage - 1
+                    Key.DirectionRight, Key.PageDown -> pagerState.currentPage + 1
+                    Key.MoveHome -> 0
+                    Key.MoveEnd -> pageCount - 1
+                    else -> return@onKeyEvent false
+                }
+                turnTo(target)
+                true
+            },
+        horizontalAlignment = Alignment.CenterHorizontally,
+    ) {
+        Box(Modifier.weight(1f).fillMaxWidth(), contentAlignment = Alignment.Center) {
+            HorizontalPager(
+                state = pagerState,
+                modifier = Modifier.fillMaxSize(),
+                pageSpacing = 16.dp,
+                userScrollEnabled = zoom == 1f,
+            ) { index ->
+                val isShownPage = index == pagerState.currentPage
+                val pageLabel = stringResource(Res.string.print_page, index + 1, pageCount)
+                // Keyed by the generation, not by the document, whose equality would compare every text on every page.
+                AnimatedContent(laidOut, Modifier.fillMaxSize(), transitionSpec = { fadeIn() togetherWith fadeOut() }, contentKey = { it.generation }) { faded ->
+                    val document = faded.document
+                    val shownPage = document.pages.getOrNull(index) ?: return@AnimatedContent
+                    BoxWithConstraints(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                        val pageWidth = minOf(maxWidth, maxHeight * (document.width / document.height))
+                        PrintPageCanvas(
+                            modifier = Modifier
+                                .width(pageWidth)
+                                .aspectRatio(document.width / document.height)
+                                .then(
+                                    if (isShownPage) {
+                                        Modifier
+                                            .onSizeChanged { pageSize = it }
+                                            .transformable(transformableState, canPan = { zoom > 1f })
+                                            .pointerInput(Unit) { detectTapGestures(onDoubleTap = { zoomTo(if (zoom > 1f) 1f else DOUBLE_TAP_ZOOM, it) }) }
+                                            .wheelZoom { notches, position -> zoomTo(zoom * WHEEL_ZOOM_BASE.pow(-notches), position) }
+                                    } else {
+                                        Modifier
+                                    },
+                                ),
+                            document = document,
+                            page = shownPage,
+                            renderer = renderer,
+                            zoom = if (isShownPage) zoom else 1f,
+                            pan = if (isShownPage) pan else Offset.Zero,
+                            description = pageLabel + "\n" + shownPage.texts.joinToString("\n") { it.text },
+                        )
                     }
-                    LayoutIndicator(isVisible = !isCurrent)
                 }
-                Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                    TextButton(enabled = pageIndex > 0, onClick = { requestedPage = pageIndex - 1 }) { Text(stringResource(Res.string.print_previous)) }
-                    Text(pageLabel, style = MaterialTheme.typography.bodySmall)
-                    TextButton(enabled = pageIndex + 1 < pageCount, onClick = { requestedPage = pageIndex + 1 }) { Text(stringResource(Res.string.print_next)) }
-                }
+            }
+            LayoutIndicator(isVisible = !isCurrent)
+        }
+        Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+            IconButton(enabled = pagerState.currentPage > 0, onClick = { turnTo(pagerState.currentPage - 1) }) {
+                Icon(painterResource(Res.drawable.ic_previous), contentDescription = stringResource(Res.string.print_previous))
+            }
+            Text(stringResource(Res.string.print_page, pagerState.currentPage + 1, pageCount), style = MaterialTheme.typography.bodySmall)
+            IconButton(enabled = pagerState.currentPage + 1 < pageCount, onClick = { turnTo(pagerState.currentPage + 1) }) {
+                Icon(painterResource(Res.drawable.ic_next), contentDescription = stringResource(Res.string.print_next))
+            }
+            IconButton(onClick = { zoomTo(if (zoom > 1f) 1f else DOUBLE_TAP_ZOOM) }) {
+                Icon(
+                    painter = painterResource(if (zoom > 1f) Res.drawable.ic_subtract else Res.drawable.ic_add),
+                    contentDescription = stringResource(if (zoom > 1f) Res.string.print_zoom_out else Res.string.print_zoom_in),
+                )
+            }
+        }
+    }
+}
+
+/** One page, white under a hairline border, drawn at [zoom] times the size that fits and moved by [pan] inside its bounds. */
+@Composable
+private fun PrintPageCanvas(
+    modifier: Modifier,
+    document: PrintDocument,
+    page: PrintPage,
+    renderer: PrintRenderer,
+    zoom: Float,
+    pan: Offset,
+    description: String,
+) = Canvas(
+    modifier
+        .border(1.dp, MaterialTheme.colorScheme.outlineVariant)
+        .clipToBounds()
+        .semantics { contentDescription = description },
+) {
+    drawRect(Color.White)
+    translate(pan.x, pan.y) { renderer.draw(this, page, size.width * zoom / document.width) }
+}
+
+/** Keeps a page zoomed by [zoom] covering its whole box, so that no pan shows anything beyond its edges. */
+private fun clampPan(pan: Offset, zoom: Float, size: IntSize) = Offset(
+    x = pan.x.coerceIn(-(zoom - 1f) * size.width, 0f),
+    y = pan.y.coerceIn(-(zoom - 1f) * size.height, 0f),
+)
+
+/**
+ * Ctrl or Cmd and the scroll wheel, in the desktop application only: in a browser that chord is the page's own zoom,
+ * which the app leaves alone. [isLaunchScreenWholeStartup] is the one platform flag that is true there and nowhere else.
+ */
+private fun Modifier.wheelZoom(onZoom: (notches: Float, position: Offset) -> Unit) = if (!isLaunchScreenWholeStartup) this else pointerInput(Unit) {
+    awaitPointerEventScope {
+        while (true) {
+            val event = awaitPointerEvent()
+            if (event.type == PointerEventType.Scroll && (event.keyboardModifiers.isCtrlPressed || event.keyboardModifiers.isMetaPressed)) {
+                onZoom(event.verticalWheelNotches(), event.changes.first().position)
+                event.changes.forEach { it.consume() }
             }
         }
     }
@@ -384,6 +565,9 @@ private fun LayoutIndicator(isVisible: Boolean) = AnimatedVisibility(isVisible, 
     DelayedLoadingIndicator()
 }
 
+private const val MAX_ZOOM = 4f
+private const val DOUBLE_TAP_ZOOM = 2.5f
+private const val WHEEL_ZOOM_BASE = 1.15f // The zoom of one notch of the scroll wheel, towards the user zooming out.
 private const val PHONE_PREVIEW_HEIGHT_FRACTION = 0.42f
 private val LAYOUT_DEBOUNCE = 120.milliseconds
 private const val MIN_FONT_SIZE = 8
