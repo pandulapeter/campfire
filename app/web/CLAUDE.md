@@ -40,6 +40,11 @@ direction.
   handover. `DismissLoadingScreen` in `CampfireWebApplication.kt` waits two frames before reporting ready —
   `withFrameNanos` resumes while its own frame is still being assembled — so the fade uncovers the app rather than an
   empty page. The webpack output is named `campfire.js` (`outputModuleName` + `commonWebpackConfig`).
+- **The keyboard resizes the page.** Compose reports no IME inset on the web, so `KeyboardAwarePadding` in
+  `CampfireApp` is always zero here; the viewport's `interactive-widget=resizes-content` has Chrome and Firefox on
+  Android shorten the page, and with it the canvas, while the keyboard is up. Unlike the native builds the navigation
+  bar therefore stays above the keyboard, and the song details screen reflows when a dialog over it brings the
+  keyboard up and again when it goes. Safari ignores the key and keeps panning the visual viewport.
 - **The page is only ever loaded as the folder it lives in.** Every screen of the app has an address of its own
   (`…/app/song/…`, see `BrowserRoutes` in `:presentation`), which is not a file: GitHub Pages answers it with the
   site's `404.html` (in the `campfire-website` repository), which sends it on to `…/app/?/song/…` with the whole path —
