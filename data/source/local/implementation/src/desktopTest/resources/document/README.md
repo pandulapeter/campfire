@@ -26,6 +26,8 @@ The test does not regenerate them or require any producer application.
 | `protected.pdf` | pypdf encryption of the ReportLab sheet with an empty password; must be unreadable |
 | `campfire.pdf` | Campfire `PrintRendererTest`, page image plus invisible glyphless Type 3 text; Hungarian accents, styled title and proportional chord placement |
 | `campfire-columns.pdf` | Campfire `PrintRendererTest`, thirty numbered lyric/chord pairs flowing through both columns; song reading order and no page footer in the imported lyrics |
+| `campfire-columns-3-landscape.pdf`, `campfire-columns-4.pdf`, `campfire-columns-4-landscape.pdf` | Campfire `PrintRendererTest`, short numbered pairs through three and four columns, the last holding only a few (one in the three); every column in reading order |
+| `campfire-columns-dense.pdf` | Campfire `PrintRendererTest`, four portrait columns of 20-point text wrapped to their edges over three pages, so that the gutter is barely wider than the importer's band; reading order and every single bold chord over its syllable, a wrapped line being imported as the lines it was printed as |
 
 `generate_fixtures.py` creates the python-docx, ReportLab and pypdf files using those Python libraries. It sets
 stable ZIP entry dates and ReportLab's invariant mode. The Unicode fixture uses macOS's supplemental Arial font;
@@ -58,8 +60,8 @@ CAMPFIRE_PRINT_QA_DIR=/tmp/campfire-print-qa ./gradlew :presentation:desktopTest
   --tests '*PrintRendererTest' --rerun-tasks
 cp /tmp/campfire-print-qa/campfire.pdf \
   data/source/local/implementation/src/desktopTest/resources/document/campfire.pdf
-cp /tmp/campfire-print-qa/campfire-columns.pdf \
-  data/source/local/implementation/src/desktopTest/resources/document/campfire-columns.pdf
+cp /tmp/campfire-print-qa/campfire-columns*.pdf \
+  data/source/local/implementation/src/desktopTest/resources/document/
 ```
 
 `DocumentGoldenTest.campfireExportImportsAccentsAndChordsAtTheirPrintedPositions` checks the exported bytes through

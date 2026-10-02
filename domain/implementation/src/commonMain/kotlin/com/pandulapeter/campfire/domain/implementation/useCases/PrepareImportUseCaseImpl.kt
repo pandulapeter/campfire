@@ -9,6 +9,7 @@
  */
 package com.pandulapeter.campfire.domain.implementation.useCases
 
+import com.pandulapeter.campfire.chordpro.ChordProPrettifier
 import com.pandulapeter.campfire.chordpro.ChordProSplitter
 import com.pandulapeter.campfire.chordpro.ChordSheet
 import com.pandulapeter.campfire.chordpro.ChordNotation
@@ -151,17 +152,15 @@ class PrepareImportUseCaseImpl internal constructor(
                 if (isDocument) unreadableDocumentFileNames += file.name else skippedFileNames += file.name
                 return@flatMapIndexed emptyList()
             }
-            parts.map { part ->
+            val songs = parts.map { part ->
                 yield()
                 // Every song is named by its own header, whichever file it arrived in. The name a file came under is
                 // only worth anything where the song inside it declares no title: then it is what titles the song,
                 // and a collection's parts do not even have that, since the file they came from named none of them.
                 val fallbackTitle = if (parts.size == 1) file.name.substringBeforeLast('.') else ""
-                // The splitter trims the blank lines between the songs of a collection; the newline a text file ends
-                // with is not one of those, and without it an exported library does not import back byte for byte.
-                // The chords are brought into the standard notation every file is written in, which only changes a
-                // chart that used German's H or the musical sharp and flat signs.
-                val text = ChordProNotation.convertText(part, ChordNotation.STANDARD, ChordNotation.STANDARD) + "\n"
+                // All sources share the same formatter after conversion and splitting, and before naming or
+                // comparing. The editor's manual action uses it too. Notation conversion still precedes formatting.
+                val text = ChordProPrettifier.prettify(ChordProNotation.convertText(part, ChordNotation.STANDARD, ChordNotation.STANDARD))
                 ImportPlanner.IncomingSong(
                     fileName = songRepository.importFileName(fallbackTitle = fallbackTitle, text = text),
                     text = text,
@@ -169,6 +168,12 @@ class PrepareImportUseCaseImpl internal constructor(
                     isConverted = isConverted,
                 )
             }
+            // Formatting adds section separators and a final newline; keep the resulting text within the same
+            // limit as converted input, so a file at the boundary is not written too large to read back.
+            if (songs.sumOf { it.text.encodeToByteArray().size.toLong() } > ImportLimits.MAX_TEXT_FILE_SIZE) {
+                oversizedFileNames += file.name
+                emptyList()
+            } else songs
         }
         onProgress(ImportProgress(ImportProgress.Phase.READING, files.size + documents.size, files.size + documents.size))
         onProgress(ImportProgress(ImportProgress.Phase.COMPARING))

@@ -376,7 +376,7 @@ internal object ChordProSyntax {
      * made it, what record it came on and what its sleeve looks like, and how it is played, with the three repeatable ones at the end. It is what
      * decides where a directive added to a file lands, see [metadataInsertionIndex].
      */
-    private val metadataOrder = listOf(
+    val metadataOrder = listOf(
         "title", "subtitle", "artist", "composer", "lyricist", "album", COVER_NAME, "year", "key", "capo", "tempo", "time",
         "duration", TAG_NAME, LANGUAGE_NAME, LINK_NAME,
     )

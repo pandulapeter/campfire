@@ -38,6 +38,26 @@ class DocumentGoldenTest {
     }
 
     @Test
+    fun campfireExportsOfThreeAndFourColumnsImportAsOneSongInReadingOrder() = runBlocking {
+        for ((name, lineCount) in listOf("campfire-columns-3-landscape" to 28, "campfire-columns-4" to 68, "campfire-columns-4-landscape" to 44)) {
+            val document = assertNotNull(DocumentLocalSourceImpl().extract(ImportedFile("$name.pdf", resource("$name.pdf"))), name)
+            val expected = "{title: Column song}\n\n{start_of_verse: Verse 1}\n" +
+                (1..lineCount).joinToString("\n") { "[Am]Line ${it.toString().padStart(3, '0')} [F]sung." } + "\n{end_of_verse}\n"
+            assertEquals(listOf(expected), ChordSheetConverter.convert(document.sheet(), String::normalizedToNfc), name)
+        }
+    }
+
+    @Test
+    fun campfireExportOfFourFilledColumnsOfTheLargestTextImportsInReadingOrderWithItsChords() = runBlocking {
+        val document = assertNotNull(DocumentLocalSourceImpl().extract(ImportedFile("campfire-columns-dense.pdf", resource("campfire-columns-dense.pdf"))))
+        // A line wrapped in the column is imported as the lines it was printed as, each with its chord over its syllable.
+        val expected = "{title: Dense}\n\n{start_of_verse: Verse 1}\n" + (1..40).joinToString("\n") {
+            "[Am]Line ${it.toString().padStart(3, '0')}\nsinging all\nthe [F]words\nof a long\nline together"
+        } + "\n{end_of_verse}\n"
+        assertEquals(listOf(expected), ChordSheetConverter.convert(document.sheet(), String::normalizedToNfc))
+    }
+
+    @Test
     fun independentGeneratorFixturesMatchTheirChordProGoldenFiles() = runBlocking {
         for (name in listOf("python-docx.docx", "libreoffice.docx", "reportlab.pdf", "libreoffice.pdf", "chrome.pdf", "reportlab-unicode.pdf", "two-column.pdf", "songbook.pdf")) {
             val document = assertNotNull(DocumentLocalSourceImpl().extract(ImportedFile(name, resource(name))), name)

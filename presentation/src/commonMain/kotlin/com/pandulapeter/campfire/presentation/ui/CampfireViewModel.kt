@@ -59,6 +59,7 @@ import com.pandulapeter.campfire.domain.api.useCases.CancelSynchronizationUseCas
 import com.pandulapeter.campfire.domain.api.useCases.ClearCoverArtCacheUseCase
 import com.pandulapeter.campfire.domain.api.useCases.ConnectSyncProviderUseCase
 import com.pandulapeter.campfire.domain.api.useCases.ConvertChordProNotationUseCase
+import com.pandulapeter.campfire.domain.api.useCases.PrettifyChordProUseCase
 import com.pandulapeter.campfire.domain.api.useCases.ConvertChordProTextNotationUseCase
 import com.pandulapeter.campfire.domain.api.useCases.CreateSetlistUseCase
 import com.pandulapeter.campfire.domain.api.useCases.CreateSongUseCase
@@ -217,6 +218,7 @@ class CampfireViewModel(
     private val transposeChordProText: TransposeChordProTextUseCase,
     private val convertChordProNotation: ConvertChordProNotationUseCase,
     private val convertChordProTextNotation: ConvertChordProTextNotationUseCase,
+    private val prettifyChordPro: PrettifyChordProUseCase,
     /**
      * What survives the system killing the process while the app is in the background, which Android does whenever it
      * needs the memory: the back stack, the song filter and the two searches. Empty on every real start, and on the
@@ -2031,6 +2033,9 @@ class CampfireViewModel(
         val keyOnly = ChordProSong(metadata = ChordProMetadata(key = it), blocks = emptyList())
         convertChordProNotation(transposeChordPro(keyOnly, transpose + transposition, spelling.accidentals), spelling).metadata.key
     }
+
+    /** Formats the current editor draft without saving it or changing its chord notation. */
+    fun prettifyText(text: String) = prettifyChordPro(text)
 
     /**
      * Transposes the chords of the editor's text in place, leaving everything else exactly as it was. Unlike the

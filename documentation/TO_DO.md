@@ -8,7 +8,6 @@
  * https://mozilla.org/MPL/2.0/.
 -->
 # To do
-- PDF export: consider adding the option for 3 columns in landscape
 - What's new dialog
 - Global sync status display ?
 - Optional close confirmation dialog on relevant platforms

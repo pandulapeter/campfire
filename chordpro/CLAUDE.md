@@ -16,9 +16,11 @@ in `:domain:*`. `:data:source:local:implementation` uses it directly for the met
 - `ChordSheet` / `ChordSheetConverter` — the dependency-free input model and deterministic conversion shared by
   plain text, PDF and Word imports. The positions may be columns, exact PDF points or Word width estimates;
   conversion knows no file format. `ofPlainText` preserves the original string for ChordPro passthrough, and tabs
-  advance to multiples of eight. Recognized chord lines are aligned and snapped over lyrics, parenthesized or
-  bold/raised inline chords converted conservatively, English/Hungarian labels turned into sections and tab runs
-  wrapped. Styled titles and metadata become headers — a label without a colon only where its value has the
+  advance to multiples of eight. Recognized chord lines are aligned and snapped over lyrics (a line of a single chord
+  is one where another line holds two, or where it is bold and capitalised over plain lyrics of its size, which is
+  how a wrapped line of Campfire's export prints), parenthesized or bold/raised inline chords converted
+  conservatively, English/Hungarian labels turned into sections and tab runs wrapped. Styled titles and metadata become headers — a large title wrapped over the lines under it in its own type
+  (a narrow column of Campfire's PDF export) as one title, and a label without a colon only where its value has the
   field's shape (`Capo 2`, `Key G`, `Time 4/4`), since "By the rivers…" and "Time after time" are lyrics; repeated
   titled page starts can split a songbook. A text is passed through as ChordPro when any line is a directive ChordPro
   defines (`ChordProSyntax.isKnownDirective`) or holds a chord bracketed against a syllable (`[G]Hello`), and
@@ -26,6 +28,12 @@ in `:domain:*`. `:data:source:local:implementation` uses it directly for the met
   supplies NFC normalization. `ChordProLiteralText` rewrites prose brackets, directive braces and a leading hash so
   extracted text cannot silently become markup. No recognized song structure means escaped prose, not a guessed
   song. These rules and their near misses are pinned in `ChordSheetConverterTest`.
+
+- `ChordProPrettifier` — formats raw text directly: metadata groups follow `metadataOrder`, a blank line separates
+  the header and sections, outside blank runs collapse and line endings become LF with a final newline. Source
+  comments and settings anchor metadata groups; repeated directives keep their order, body key changes stay in
+  place, and environment interiors retain their whitespace. It preserves unsupported directives and delegated
+  notation instead of serializing a parsed model. The editor overflow action and every import use it.
 
 - `model/` — `ChordProSong` (metadata + blocks), `ChordProBlock` (`Section`, `ChorusRecall`, `Comment`, `Break`),
   `ChordProLine` (`Lyrics` with positioned chords and annotations, `Tab`, `Grid`, `Blank`) and `ChordProMetadata`,

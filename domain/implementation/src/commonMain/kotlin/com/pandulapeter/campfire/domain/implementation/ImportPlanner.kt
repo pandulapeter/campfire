@@ -9,6 +9,7 @@
  */
 package com.pandulapeter.campfire.domain.implementation
 
+import com.pandulapeter.campfire.chordpro.ChordProPrettifier
 import com.pandulapeter.campfire.chordpro.ChordProSplitter
 import com.pandulapeter.campfire.data.model.domain.ImportPlan
 import com.pandulapeter.campfire.data.model.domain.LibraryFiles
@@ -29,6 +30,9 @@ import kotlinx.coroutines.coroutineScope
  * re-import of an export, and offers to replace the first with it.
  */
 internal object ImportPlanner {
+
+    // Files imported before formatting was automatic must still match their formatted re-imports.
+    private fun formattedComparable(text: String) = ChordProSplitter.comparable(ChordProPrettifier.prettify(text))
 
     /** One song of the batch, already named by its own header (`SongRepository.importFileName`). */
     data class IncomingSong(
@@ -92,11 +96,11 @@ internal object ImportPlanner {
             val arrivedAs = arrivedAsNames[index]
             // Most songs of most imports are the only one of their name, and folding the text of every one of them
             // for a comparison nothing asks for would copy the whole batch once more.
-            val comparable = if (!family.hasLibraryTexts && arrivedAs == null) null else ChordProSplitter.comparable(song.text)
+            val comparable = if (!family.hasLibraryTexts && arrivedAs == null) null else formattedComparable(song.text)
             val libraryFileName = comparable?.let(family::libraryFileNameOf)
                 ?: arrivedAs?.takeIf { fileName ->
                     arrivedAsComparables.getOrPut(fileName) {
-                        (if (fileName in libraryTexts) libraryTexts[fileName] else readLibraryText(fileName))?.let(ChordProSplitter::comparable)
+                        (if (fileName in libraryTexts) libraryTexts[fileName] else readLibraryText(fileName))?.let(::formattedComparable)
                     } == comparable
                 }
             LibraryMatch(family = family, comparable = comparable, libraryFileName = libraryFileName)
@@ -108,7 +112,7 @@ internal object ImportPlanner {
                 return@mapIndexed song.toEntry(fileName = libraryFileName, status = ImportPlan.Status.IDENTICAL)
             }
             // Folded only once there is an earlier song of the family to hold it against.
-            val comparable = libraryComparable ?: if (family.hasPlannedSongs) ChordProSplitter.comparable(song.text) else null
+            val comparable = libraryComparable ?: if (family.hasPlannedSongs) formattedComparable(song.text) else null
             val repeatedEntryIndex = comparable?.let(family::plannedEntryIndexOf)
             if (repeatedEntryIndex != null) {
                 return@mapIndexed song.toEntry(status = ImportPlan.Status.IDENTICAL, repeatedEntryIndex = repeatedEntryIndex)
@@ -285,7 +289,7 @@ internal object ImportPlanner {
             // with nothing listed under any spelling of it, it is a file written since the scan, under its own name.
             val listedName = if (fileName == desired) listedDesired ?: desired else fileName
             if (fileName == desired) takenFileName = listedName
-            libraryFileNames.getOrPut(ChordProSplitter.comparable(text)) { listedName }
+            libraryFileNames.getOrPut(formattedComparable(text)) { listedName }
         }
         return SongFamily(takenFileName = takenFileName, libraryFileNames = libraryFileNames)
     }
@@ -321,7 +325,7 @@ internal object ImportPlanner {
         fun plannedEntryIndexOf(comparable: String): Int? {
             while (foldedSongCount < plannedSongs.size) {
                 val song = plannedSongs[foldedSongCount++]
-                plannedEntryIndices.getOrPut(ChordProSplitter.comparable(song.value)) { song.index }
+                plannedEntryIndices.getOrPut(formattedComparable(song.value)) { song.index }
             }
             return plannedEntryIndices[comparable]
         }

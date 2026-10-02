@@ -28,7 +28,7 @@ data class PrintSettings(
     val setlistMode: SetlistMode = SetlistMode.SONG_SHEETS,
     val includeSetlistOverview: Boolean = true,
 ) {
-    fun normalized() = copy(fontSize = fontSize.coerceIn(8, 20), marginMm = marginMm.coerceIn(10, 25), columns = columns.coerceIn(1, 2))
+    fun normalized() = copy(fontSize = fontSize.coerceIn(8, 20), marginMm = marginMm.coerceIn(10, 25), columns = columns.coerceIn(1, MAX_COLUMNS))
 
     /** [FILES] is what the library holds: a song's ChordPro file, or a setlist's zip of its manifest and its songs. */
     enum class Format(val id: String) {
@@ -44,5 +44,9 @@ data class PrintSettings(
     enum class SetlistMode(val id: String) {
         SONG_SHEETS("song_sheets"),
         RUNNING_ORDER("running_order"),
+    }
+
+    companion object {
+        const val MAX_COLUMNS = 4
     }
 }

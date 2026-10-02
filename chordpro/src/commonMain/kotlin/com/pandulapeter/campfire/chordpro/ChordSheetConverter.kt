@@ -172,6 +172,35 @@ object ChordSheetConverter {
             line.source.spans.isNotEmpty() && line.source.spans.all { it.isBold } && lines.any { chordTokens(it) != null }
     }
 
+    /**
+     * Whether a line of a single chord is one by its type, where no line of the song holds two to tell: set in bold
+     * over plain lyrics of the same size, the way Campfire's export and most songbook layouts set chords, and written
+     * with a capital, since a lowercase word is too often a word. A lyric line wrapped in a narrow column is printed
+     * as several of these, each with the one chord over its part. The size keeps a songbook index out of it, whose
+     * bold "A" over the titles starting with it is a heading set larger than they are.
+     */
+    private fun isStyledChordLine(line: Rendered, tokens: List<Token>, next: Rendered?): Boolean {
+        val spans = line.source.spans.filter { it.text.isNotBlank() }
+        val lyrics = next?.source?.spans.orEmpty().filter { it.text.isNotBlank() && !it.isBold }
+        return spans.isNotEmpty() && spans.all { it.isBold } && lyrics.isNotEmpty() &&
+            tokens.all { furniture(it.text) || it.text.first().isUpperCase() } &&
+            spans.all { span -> lyrics.all { abs(it.size - span.size) < span.size * 0.05 } }
+    }
+
+    /**
+     * Whether [line] is set in the type of a [title] that is larger than the body text, which is how a wrapped title
+     * continues; a title told apart only by being bold has no such type to recognize its continuation by.
+     */
+    private fun isTitleContinuation(line: Rendered, title: Rendered, lines: List<Rendered>): Boolean {
+        val titleSpans = title.source.spans.filter { it.text.isNotBlank() }
+        val titleSize = titleSpans.maxOfOrNull { it.size } ?: return false
+        val bodySizes = lines.filter { it !== title && it !== line }.flatMap { it.source.spans }.map { it.size }.sorted()
+        val median = bodySizes.getOrNull(bodySizes.size / 2) ?: return false
+        val spans = line.source.spans.filter { it.text.isNotBlank() }
+        return titleSize > median * 1.2 && spans.isNotEmpty() &&
+            spans.all { abs(it.size - titleSize) < titleSize * 0.05 && it.isBold == titleSpans.first().isBold }
+    }
+
     private fun convertSong(lines: List<Rendered>): String {
         val candidates = lines.map(::chordTokens)
         val hasUnambiguousChords = candidates.any { it != null && it.count { word -> chord(word.text) } > 1 }
@@ -184,7 +213,8 @@ object ChordSheetConverter {
                     lines.getOrNull(index + 1)?.let { tab.matches(it.text.trim()) } == true) -> Kind.TAB
                 section(line.text) != null -> Kind.SECTION
                 index < 15 && metadata(line.text) != null -> Kind.METADATA
-                candidates[index] != null && (candidates[index]!!.count { chord(it.text) } > 1 || hasUnambiguousChords &&
+                candidates[index] != null && (candidates[index]!!.count { chord(it.text) } > 1 ||
+                    (hasUnambiguousChords || isStyledChordLine(line, candidates[index]!!, lines.getOrNull(index + 1))) &&
                     lines.getOrNull(index + 1)?.let { it.text.isNotBlank() && chordTokens(it) == null && section(it.text) == null && metadata(it.text) == null } == true) -> Kind.CHORD
                 else -> Kind.LYRIC
             }
@@ -203,14 +233,18 @@ object ChordSheetConverter {
         val first = kinds.indexOfFirst { it != Kind.BLANK }
         if (first >= 0 && kinds[first] == Kind.LYRIC && !isChordLine(lines[first].text) && (isTitle(lines[first], lines) ||
                 kinds.getOrNull(first + 1) == Kind.BLANK && kinds.indexOf(Kind.CHORD) in (first + 2)..(first + 4))) {
-            val title = lines[first].text.trim()
+            // A title too long for its column is wrapped onto the lines under it, in the same type, which no line of the
+            // song is set in: those lines are the rest of the title rather than its credit or its first lyrics.
+            var last = first
+            while (kinds.getOrNull(last + 1) == Kind.LYRIC && isTitleContinuation(lines[last + 1], lines[first], lines)) last++
+            val title = (first..last).joinToString(" ") { lines[it].text.trim() }
             val split = title.split(Regex(" +[-\u2013\u2014] +"), limit = 2)
             if (split.size == 2) {
                 header.add(0, "{artist: ${headerValue(split[0])}}")
                 header.add(0, "{title: ${headerValue(split[1])}}")
             } else header.add(0, "{title: ${headerValue(title)}}")
-            omitted += first
-            val artist = first + 1
+            omitted += first..last
+            val artist = last + 1
             // Straight under the title, "by Someone" is the credit it reads as, which it is not as a line of lyrics.
             val credit = lines.getOrNull(artist)?.let { credit.matchEntire(it.text.trim()) }
             if (split.size == 1 && kinds.getOrNull(artist) == Kind.LYRIC && (credit != null || lines[artist].text.length < title.length &&

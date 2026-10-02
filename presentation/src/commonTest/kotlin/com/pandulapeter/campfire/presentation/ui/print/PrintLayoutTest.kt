@@ -29,22 +29,34 @@ internal class PrintLayoutTest {
 
     @Test fun longSongsKeepEveryLineAndChordWithinPrintableColumns() = runTest {
         val lines = (1..180).map { ChordProLine.Lyrics("Line $it " + "words ".repeat(14), listOf(ChordProLine.Lyrics.Chord(0, "D", false))) }
-        val settings = PrintSettings(columns = 2, fontSize = 20, marginMm = 25)
-        val document = layout(source(song(lines)), settings)
-        assertTrue(document.pages.size > 1)
-        val texts = document.pages.flatMap { it.texts }
-        assertEquals(180, texts.count { it.text == "D" })
-        val margin = settings.marginMm * 72f / 25.4f
-        val columnWidth = (document.width - 2 * margin - 18) / 2
-        texts.forEach { item ->
-            assertTrue(item.x >= margin)
-            assertTrue(item.x + measure(item.text, item.style) <= document.width - margin + 0.01f, item.toString())
-            assertTrue(item.y < document.height - margin + 0.01f)
-            if (item.text != "D" && item.style.size != 9) assertTrue(measure(item.text, item.style) <= columnWidth)
+        (2..PrintSettings.MAX_COLUMNS).forEach { columns ->
+            val settings = PrintSettings(columns = columns, fontSize = 20, marginMm = 25)
+            val document = layout(source(song(lines)), settings)
+            assertTrue(document.pages.size > 1)
+            val texts = document.pages.flatMap { it.texts }
+            assertEquals(180, texts.count { it.text == "D" })
+            val margin = settings.marginMm * 72f / 25.4f
+            val columnWidth = (document.width - 2 * margin - 18 * (columns - 1)) / columns
+            texts.forEach { item ->
+                assertTrue(item.x >= margin)
+                assertTrue(item.x + measure(item.text, item.style) <= document.width - margin + 0.01f, item.toString())
+                assertTrue(item.y < document.height - margin + 0.01f)
+                if (item.text != "D" && item.style.size != 9) assertTrue(measure(item.text, item.style) <= columnWidth)
+            }
+            document.pages.forEach { page ->
+                page.texts.filter { it.text == "D" }.forEach { chord ->
+                    assertTrue(page.texts.any { it.x == chord.x && it.y > chord.y && it.y < chord.y + 30 && !it.style.bold })
+                }
+            }
         }
-        document.pages.forEach { page ->
-            page.texts.filter { it.text == "D" }.forEach { chord ->
-                assertTrue(page.texts.any { it.x == chord.x && it.y > chord.y && it.y < chord.y + 30 && !it.style.bold })
+    }
+
+    @Test fun everyColumnCountIsLaidOutInBothOrientations() = runTest {
+        val song = song(lyrics(400))
+        listOf(false, true).forEach { isLandscape ->
+            (1..PrintSettings.MAX_COLUMNS).forEach { columns ->
+                val texts = layout(source(song), PrintSettings(isLandscape = isLandscape, columns = columns)).pages.first().texts
+                assertEquals(columns, texts.filter { it.text.startsWith("Line ") }.map { it.x }.distinct().size, "$columns, landscape: $isLandscape")
             }
         }
     }

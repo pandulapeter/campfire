@@ -277,8 +277,8 @@ localized in both languages.
   that collides gets a `_2`, `_3`… suffix (`FileNames.kt`). An **import decides before it writes**: every incoming
   file is held against the name it wants (`PrepareImportUseCase` -> `ImportPlan`), a song the library already holds
   under that name or a numbered sibling of it (`x_2.cho`) — or under the very name it arrived with, which is what an
-  export of a file named by an older rule carries — is disregarded rather than copied (for a song, line endings
-  and blank lines at either end of the file aside, `ChordProSplitter.comparable`), and two different files of one
+  export of a file named by an older rule carries — is disregarded rather than copied (for a song, comparing both
+  sides after `ChordProPrettifier` and notation normalization), and two different files of one
   batch that want the same name are never a question: the second is numbered like any other collision — the
   library's own file among them: a song or setlist the batch brings back unchanged is never offered up for
   replacement, so a different one wanting its name is numbered next to it. The names
@@ -295,7 +295,9 @@ localized in both languages.
 - **Documents are converted locally**, never rendered, uploaded or kept: `.pdf` and `.docx` pass through
   `DocumentRepository` to pure-Kotlin extractors, then `ChordSheetConverter` to ordinary ChordPro. Plain `.txt`
   and text shared on Android use the same converter; the ChordPro extension family never does. Recognized ChordPro
-  text passes through unchanged, apart from its chords being written in the standard notation (see below). Documents with no readable text (scans, encrypted PDFs and legacy `.doc`) are
+  text keeps its content, with chords written in the standard notation (see below) and raw formatting standardized
+  by `ChordProPrettifier`, also available from the editor overflow menu. All imported songs use that formatter after
+  conversion and splitting. Import comparisons format both sides so older library files still match. Documents with no readable text (scans, encrypted PDFs and legacy `.doc`) are
   reported separately from unsupported files. The input limit is 16 MiB per document, 8 MiB for the text produced,
   within the selection's existing 24 MiB budget. Positioned chords, English/Hungarian sections and styled headers
   are best attempts, and clearly titled page starts can split a songbook. Converted songs are named by the header

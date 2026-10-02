@@ -136,6 +136,37 @@ class ChordSheetConverterTest {
     }
 
     @Test
+    fun aTitleWrappedOverSeveralLinesOfItsTypeIsOneTitleAndTheSmallerLineUnderItItsArtist() {
+        val lines = listOf("A song with", "a long title").map { ChordSheet.Line(listOf(span(it, 0.0, 24.0, size = 2.0, bold = true))) } +
+            ChordSheet.Line(listOf(span("Someone", 0.0, 7.0, size = 1.0))) +
+            ChordSheet.ofPlainText("Am    C\nHello world").pages.single().lines
+        assertEquals(
+            "{title: A song with a long title}\n{artist: Someone}\n\n[Am]Hello [C]world\n",
+            ChordSheetConverter.convert(ChordSheet(listOf(ChordSheet.Page(lines)))).single(),
+        )
+    }
+
+    @Test
+    fun aBoldChordOverPlainLyricsOfItsSizeIsAChordWhereNoLineHoldsTwo() {
+        fun sheet(vararg lines: ChordSheet.Line) = ChordSheet(listOf(ChordSheet.Page(lines.toList())))
+        val wrapped = sheet(
+            ChordSheet.Line(listOf(span("Am", 0.0, 12.0, bold = true))),
+            ChordSheet.Line(listOf(span("Hello there", 0.0, 50.0))),
+            ChordSheet.Line(listOf(span("F", 15.0, 20.0, bold = true))),
+            ChordSheet.Line(listOf(span("the world", 0.0, 45.0))),
+        )
+        assertEquals("[Am]Hello there\nthe [F]world\n", ChordSheetConverter.convert(wrapped).single())
+        val index = sheet(
+            ChordSheet.Line(listOf(span("A", 0.0, 8.0, size = 14.0, bold = true))),
+            ChordSheet.Line(listOf(span("Amazing Grace", 0.0, 60.0))),
+            ChordSheet.Line(listOf(span("Auld Lang Syne", 0.0, 60.0))),
+        )
+        assertEquals("A\nAmazing Grace\nAuld Lang Syne\n", ChordSheetConverter.convert(index).single())
+        val word = sheet(ChordSheet.Line(listOf(span("a", 0.0, 5.0, bold = true))), ChordSheet.Line(listOf(span("little song", 0.0, 50.0))))
+        assertEquals("a\nlittle song\n", ChordSheetConverter.convert(word).single())
+    }
+
+    @Test
     fun derivesPlainTitleAndExpandsTabs() {
         assertTrue(convert("Someone - Song\n\nAm C\nHello world").startsWith("{title: Song}\n{artist: Someone}"))
         assertEquals("[Am]Hello   [C]world\n", convert("Am\tC\nHello   world"))

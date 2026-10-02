@@ -49,6 +49,52 @@ import kotlin.time.Clock
 class ImportFilesUseCaseImplTest {
 
     @Test
+    fun `ChordPro text and archives are prettified before they are written`() = runTest {
+        val raw = "{tag: Folk}\r\n{artist: Singer}\r\n{title: Song}\r\n{soc}\r\n[G]Sing\r\n{eoc}\r\n{sov}\r\n[C]Words\r\n{eov}"
+        val expected = "{title: Song}\n{artist: Singer}\n{tag: Folk}\n\n{soc}\n[G]Sing\n{eoc}\n\n{sov}\n[C]Words\n{eov}\n"
+        val archive = object : ArchiveRepository {
+            override suspend fun unpack(archive: ByteArray, maxSize: Long) = listOf(ImportedFile("source.cho", raw.encodeToByteArray()))
+            override suspend fun pack(files: Map<String, ByteArray>) = error("not used")
+        }
+        for (source in listOf("source.cho", "source.txt", "source.zip")) {
+            val songs = FakeSongRepository(mutableMapOf())
+            val plan = prepare(songs, archive = archive)(listOf(ImportedFile(source, raw.encodeToByteArray())))
+            assertEquals(expected, plan.songs.single().text)
+            assertFalse(plan.songs.single().isConverted)
+            ImportFilesUseCaseImpl(songs, FakeSetlistRepository()).invoke(plan, ImportConflictResolution.KEEP_BOTH)
+            assertEquals(expected, songs.files["song.cho"])
+        }
+    }
+
+    @Test
+    fun `formatted imports match older library files and repeated batch entries`() = runTest {
+        val raw = "{artist: Singer}\n{title: Song}\n{soc}\n[G]Sing\n{eoc}\n{sov}\n[C]Words\n{eov}"
+        val formatted = "{title: Song}\n{artist: Singer}\n\n{soc}\n[G]Sing\n{eoc}\n\n{sov}\n[C]Words\n{eov}\n"
+        val files = listOf(ImportedFile("source.cho", raw.encodeToByteArray()), ImportedFile("copy.cho", formatted.encodeToByteArray()))
+        val existing = prepare(FakeSongRepository(mutableMapOf("song.cho" to raw)))(files)
+        assertTrue(existing.songs.all { it.status == ImportPlan.Status.IDENTICAL })
+        assertFalse(existing.hasConflicts)
+        val batch = prepare(FakeSongRepository(mutableMapOf()))(files)
+        assertEquals(listOf(ImportPlan.Status.NEW, ImportPlan.Status.IDENTICAL), batch.songs.map { it.status })
+    }
+
+    @Test
+    fun `converted documents are prettified too`() = runTest {
+        val source = object : DocumentRepository {
+            override suspend fun extract(file: ImportedFile) = ExtractedDocument(listOf(ExtractedDocument.Page(listOf(
+                ExtractedDocument.Line(listOf(ExtractedDocument.Span("Song", 0.0, 80.0, 20.0)), isHeading = true),
+                ExtractedDocument.Line(listOf(ExtractedDocument.Span("Am", 0.0, 12.0, 10.0), ExtractedDocument.Span("C", 42.0, 48.0, 10.0))),
+                ExtractedDocument.Line(listOf(ExtractedDocument.Span("Hello world", 0.0, 66.0, 10.0))),
+            ))))
+        }
+        for (name in listOf("source.pdf", "source.docx")) {
+            val plan = prepare(FakeSongRepository(mutableMapOf()), source)(listOf(ImportedFile(name, byteArrayOf(1))))
+            assertEquals("{title: Song}\n\n[Am]Hello [C]world\n", plan.songs.single().text)
+            assertTrue(plan.songs.single().isConverted)
+        }
+    }
+
+    @Test
     fun `text conversion joins the ordinary planner and a second import is a duplicate`() = runTest {
         val songs = FakeSongRepository(mutableMapOf())
         val prepare = prepare(songs)

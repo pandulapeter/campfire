@@ -110,6 +110,45 @@ internal class PrintRendererTest {
         Unit
     }
 
+    @Test fun exportsEveryColumnOfAFullPageInSongReadingOrder() = runBlocking {
+        val renderer = PrintRenderer(TextMeasurer(createFontFamilyResolver(), Density(1f), LayoutDirection.Ltr))
+        // Short pairs that never wrap, as many as leave the last column with only a few of them (a single one in the
+        // three columns), the way the page a song ends on does.
+        listOf(Triple(3, true, 28), Triple(4, false, 68), Triple(4, true, 44)).forEach { (columns, isLandscape, lineCount) ->
+            val name = "campfire-columns-$columns${if (isLandscape) "-landscape" else ""}"
+            val parsed = ChordProParser.parse("{title: Column song}\n{start_of_verse: Verse 1}\n" +
+                (1..lineCount).joinToString("\n") { "[Am]Line ${it.toString().padStart(3, '0')} [F]sung." } + "\n{end_of_verse}")
+            val document = layoutPrintDocument(PrintSource("Column song", songs = listOf(
+                PrintSong("$name.cho", "Column song", null, song = parsed))), PrintSettings(isLandscape = isLandscape, columns = columns),
+                PrintLabels("Key", "Capo", "Tempo", "Time", "Missing", DefaultSectionLabels(verse = "Verse", chorus = "Chorus",
+                    bridge = "Bridge", tab = "Tab", grid = "Grid", intro = "Intro", preChorus = "Pre-chorus", solo = "Solo", outro = "Outro")), renderer::width)
+            val page = document.pages.single()
+            assertEquals(columns, page.texts.filter { it.text.startsWith("Line ") }.map { it.x }.distinct().size, name)
+            val bytes = renderer.pdf(document, "Column song")
+            System.getenv("CAMPFIRE_PRINT_QA_DIR")?.let { directory ->
+                File(directory).mkdirs()
+                File(directory, "$name.pdf").writeBytes(bytes)
+            }
+        }
+    }
+
+    @Test fun exportsFourColumnsOfTheLargestTextFilledToTheirEdges() = runBlocking {
+        val renderer = PrintRenderer(TextMeasurer(createFontFamilyResolver(), Density(1f), LayoutDirection.Ltr))
+        val parsed = ChordProParser.parse("{title: Dense}\n{start_of_verse: Verse 1}\n" +
+            (1..40).joinToString("\n") { "[Am]Line ${it.toString().padStart(3, '0')} singing all the [F]words of a long line together" } + "\n{end_of_verse}")
+        val document = layoutPrintDocument(PrintSource("Dense", songs = listOf(PrintSong("dense.cho", "Dense", null, song = parsed))),
+            PrintSettings(columns = 4, fontSize = 20, marginMm = 10),
+            PrintLabels("Key", "Capo", "Tempo", "Time", "Missing", DefaultSectionLabels(verse = "Verse", chorus = "Chorus",
+                bridge = "Bridge", tab = "Tab", grid = "Grid", intro = "Intro", preChorus = "Pre-chorus", solo = "Solo", outro = "Outro")), renderer::width)
+        assertTrue(document.pages.size > 1)
+        val bytes = renderer.pdf(document, "Dense")
+        System.getenv("CAMPFIRE_PRINT_QA_DIR")?.let { directory ->
+            File(directory).mkdirs()
+            File(directory, "campfire-columns-dense.pdf").writeBytes(bytes)
+        }
+        Unit
+    }
+
     @Test fun rendersAllPagesOfAMultilingualSetlist() = runBlocking {
         val renderer = PrintRenderer(TextMeasurer(createFontFamilyResolver(), Density(1f), LayoutDirection.Ltr))
         val parsed = ChordProParser.parse("""

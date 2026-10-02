@@ -46,6 +46,9 @@ paths, `Is*` for a question with a yes or no answer (`IsFirstRun`), or a verb fo
   values of a group combine (`tagMatchMode`, `languageMatchMode`) is a standing choice, and stays a preference.
 - `GetUserPreferencesUseCase` is separate from `ScreenData` on purpose: the theme and the language must reach the UI
   before the library has been scanned, and folding them into the aggregate would make the whole app wait for the songs.
+- `PrettifyChordProUseCase` formats raw ChordPro for the editor overflow action, retaining unsupported directives,
+  comments and literal environment interiors. Imports use the same formatter in `PrepareImportUseCaseImpl`.
+
 - `TransposeChordProUseCase` transposes the parsed model (what the viewer shows), `TransposeChordProTextUseCase` the raw
   text (what the editor's transpose action rewrites). Both take `UserPreferences.Accidentals` as well as the semitones,
   because how a black key is spelled is the reader's preference and not a property of the move.

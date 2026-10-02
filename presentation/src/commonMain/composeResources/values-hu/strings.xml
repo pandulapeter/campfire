@@ -344,6 +344,7 @@
     <string name="song_editor_insert_link">Hivatkozás</string>
     <string name="song_editor_transpose_text_up">Szöveg transzponálása fel</string>
     <string name="song_editor_transpose_text_down">Szöveg transzponálása le</string>
+    <string name="song_editor_prettify">ChordPro formázása</string>
     <string name="song_editor_revert">Minden módosítás visszavonása</string>
     <string name="song_editor_revert_confirmation">Szeretnél visszatérni a dal utoljára mentett változatához? Minden, amit azóta írtál, elveszik.</string>
     <string name="song_editor_unsaved_changes">Nem mentett módosítások</string>

@@ -940,7 +940,7 @@ private fun PrintOptions(
                 }
                 SettingsSectionTitle(text = stringResource(Res.string.print_columns))
                 SegmentedChoice(
-                    options = (1..2).map { it to it.toString() },
+                    options = (1..PrintSettings.MAX_COLUMNS).map { it to it.toString() },
                     selected = settings.columns,
                     onSelected = { onSettings(settings.copy(columns = it)) },
                 )

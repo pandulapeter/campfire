@@ -44,6 +44,10 @@ The ones that carry real logic:
   song book.
 - `LoadScreenDataUseCaseImpl` — fans the initial load (or a rescan) out across the repositories in parallel and waits
   for all of them, failures included: one unreadable part of the screen must not keep the rest empty.
+- All incoming songs are prettified after conversion, splitting and notation normalization. `ImportPlanner`
+  formats both sides of song comparisons so files imported before formatting was automatic remain duplicates.
+  The editor uses `PrettifyChordProUseCase` for the same raw formatting as a draft edit.
+
 - `PrepareImportUseCaseImpl` / `ImportPlanner` / `ImportFilesUseCaseImpl` — the import policy, split the way sync's
   is: one works out what would happen, the other carries it out. Preparing unpacks archives (recursively, path stripped, the archiving
   tool's own hidden files left where they were, and one that was picked directly counted as skipped), sorts each file into song / document / setlist / skipped by its extension, splits
@@ -115,7 +119,7 @@ The ones that carry real logic:
   view model says so after the save.
 - `CreateSongUseCaseImpl` — writes the new-song template (`{title}`, `{artist}`, `{key}` and an empty verse).
 - `TransposeChordProUseCaseImpl` / `TransposeChordProTextUseCaseImpl` / `ParseChordProUseCaseImpl` /
-  `ConvertChordProNotationUseCaseImpl` / `ConvertChordProTextNotationUseCaseImpl` — thin wrappers over `:chordpro`, so
+  `ConvertChordProNotationUseCaseImpl` / `ConvertChordProTextNotationUseCaseImpl` / `PrettifyChordProUseCaseImpl` — thin wrappers over `:chordpro`, so
   the presentation layer never calls the parser directly. `mapper/AccidentalsMappers.kt` and `mapper/NotationMappers.kt`
   are the whole of the translation: `:chordpro` depends on nothing and so knows no preferences, and takes the spelling
   as the nullable `preferFlats` and the notation as its own `ChordNotation`, which the preferences map onto.

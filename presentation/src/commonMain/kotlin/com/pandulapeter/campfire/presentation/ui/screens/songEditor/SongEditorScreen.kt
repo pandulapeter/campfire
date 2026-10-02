@@ -104,6 +104,7 @@ import com.pandulapeter.campfire.presentation.resources.ic_clear
 import com.pandulapeter.campfire.presentation.resources.ic_error
 import com.pandulapeter.campfire.presentation.resources.ic_redo
 import com.pandulapeter.campfire.presentation.resources.ic_refresh
+import com.pandulapeter.campfire.presentation.resources.ic_prettify
 import com.pandulapeter.campfire.presentation.resources.ic_save
 import com.pandulapeter.campfire.presentation.resources.ic_undo
 import com.pandulapeter.campfire.presentation.resources.retry
@@ -111,6 +112,7 @@ import com.pandulapeter.campfire.presentation.resources.save
 import com.pandulapeter.campfire.presentation.resources.song_details_no_data
 import com.pandulapeter.campfire.presentation.resources.song_details_no_data_hint
 import com.pandulapeter.campfire.presentation.resources.song_editor_edit
+import com.pandulapeter.campfire.presentation.resources.song_editor_prettify
 import com.pandulapeter.campfire.presentation.resources.song_editor_preview
 import com.pandulapeter.campfire.presentation.resources.song_editor_redo
 import com.pandulapeter.campfire.presentation.resources.song_editor_revert
@@ -317,6 +319,8 @@ private fun LoadedSongEditor(
     // The text as one string, copied once per edit and shared by everything that follows it: the draft, the summary
     // in the bar, the toolbar and the preview would otherwise each copy and scan the whole song on every keystroke.
     val text = remember(textFieldState) { derivedStateOf { textFieldState.text.toString() } }
+    // Compare with the same formatted draft the action applies, so the option follows typing, undo and revert.
+    val prettifiedText = remember(textFieldState, viewModel) { derivedStateOf { viewModel.prettifyText(text.value) } }
     ReportDraft(viewModel = viewModel, fileName = destination.fileName, text = text)
 
     val userPreferences by viewModel.userPreferences.collectAsStateWithLifecycle()
@@ -438,6 +442,11 @@ private fun LoadedSongEditor(
                         coverArtAction(viewModel = viewModel, song = editorSong, isEditorDraft = true)
                     } else {
                         null
+                    },
+                    canPrettify = !isSaving && text.value.isNotBlank() && prettifiedText.value != text.value,
+                    onPrettify = {
+                        val prettified = prettifiedText.value
+                        if (prettified != text.value) textFieldState.replaceAll(prettified)
                     },
                     canRevert = hasUnsavedChanges && hasSavedText && !isSaving,
                     onRevert = { viewModel.showDialog(CampfireViewModel.DialogType.RevertChanges) },
@@ -849,8 +858,8 @@ private fun SongPreview(
 /**
  * The actions of the editor that are neither writing the file nor undoing a keystroke, behind the same overflow button
  * the song details screen uses: the metadata editors of [editingActions] while the preview's card that has them as
- * buttons is out of sight, the cover art sheet, where covers are on, and the revert. They stay in the menu however much
- * room the bar has ([ActionsMenuItem.isAlwaysInMenu]), since throwing away everything typed since the last save is not
+ * buttons is out of sight, the cover art sheet, where covers are on, prettifying, and the revert. They stay in the
+ * menu however much room the bar has ([ActionsMenuItem.isAlwaysInMenu]), since throwing away everything typed since the last save is not
  * something to end up in by mistapping the button next to Save.
  */
 @Composable
@@ -858,12 +867,21 @@ private fun EditorMenu(
     modifier: Modifier = Modifier,
     editingActions: List<ActionsMenuItem>,
     coverArtAction: ActionsMenuItem?,
+    canPrettify: Boolean,
+    onPrettify: () -> Unit,
     canRevert: Boolean,
     onRevert: () -> Unit,
 ) = ActionsMenu(
     modifier = modifier,
     // The cover art is put next to Edit metadata, the other editor of the song's header, ahead of the chip groups.
     items = editingActions.take(1) + listOfNotNull(coverArtAction) + editingActions.drop(1) + listOf(
+        ActionsMenuItem(
+            title = stringResource(Res.string.song_editor_prettify),
+            icon = painterResource(Res.drawable.ic_prettify),
+            isEnabled = canPrettify,
+            isAlwaysInMenu = true,
+            onClick = onPrettify,
+        ),
         ActionsMenuItem(
             title = stringResource(Res.string.song_editor_revert),
             icon = painterResource(Res.drawable.ic_refresh),
