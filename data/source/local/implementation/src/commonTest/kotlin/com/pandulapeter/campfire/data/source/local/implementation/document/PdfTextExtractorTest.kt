@@ -201,6 +201,27 @@ class PdfTextExtractorTest {
     }
 
     @Test
+    fun manyFullWidthRowsSplitQuickly() = runTest {
+        val rows = 14_000
+        val height = rows * 12 + 100
+        val content = buildString {
+            append("BT /F1 10 Tf ")
+            for (row in 0 until rows) {
+                val y = height - 50 - row * 12
+                if (row % 6 == 0) append("1 0 0 1 50 $y Tm (${"W".repeat(80)}) Tj ")
+                else append("1 0 0 1 50 $y Tm (${"L".repeat(30)}) Tj 1 0 0 1 300 $y Tm (${"R".repeat(30)}) Tj ")
+            }
+            append("ET")
+        }
+        val bytes = PdfTestWriter.song(content).decodeToString().replace("/MediaBox [0 0 612 792]", "/MediaBox [0 0 612 $height]").encodeToByteArray()
+        lateinit var lines: List<String>
+        val elapsed = measureTime { lines = PdfTextExtractor.extract(bytes).pages.single().lines.map { line -> line.spans.joinToString("") { it.text } } }
+        assertTrue(elapsed < 3.seconds, "Took $elapsed")
+        assertEquals("W".repeat(80), lines.first())
+        assertEquals("L".repeat(30), lines[1])
+    }
+
+    @Test
     fun cachedReferenceChainsResolveEveryTimeAndCyclesAreRejected() {
         val writer = PdfTestWriter()
         writer.add("2 0 R")

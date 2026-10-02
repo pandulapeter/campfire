@@ -333,19 +333,25 @@ internal object PdfTextExtractor {
         val spanning = glyphs.filter { it.span.end > gutter - band && it.span.start < gutter }
             .map { it.y }.distinct().sorted()
         val result = mutableListOf<Line>()
-        var remaining = glyphs
         // Each side is searched for a gutter of its own, since a page of three or four columns is split at one of
         // its gutters first and still holds the others on either side of it.
         fun columns(items: List<Positioned>): List<Line> {
             val (first, second) = items.partition { it.span.start < gutter }
             return if (first.isEmpty() || second.isEmpty()) column(items) else buildLines(first, charge) + buildLines(second, charge)
         }
+        // The rows are cut out of one sorted pass rather than by filtering every glyph again for each of them, which is the
+        // same partition, since both thresholds grow with the row.
+        val sorted = glyphs.sortedBy { it.y }
+        val heights = sorted.map { it.y }
+        var from = 0
         for (y in spanning) {
-            result += columns(remaining.filter { it.y < y - size * 0.22 })
-            result += column(remaining.filter { abs(it.y - y) <= size * 0.22 })
-            remaining = remaining.filter { it.y > y + size * 0.22 }
+            val start = maxOf(from, heights.countBelow(y - size * 0.22))
+            val end = maxOf(start, heights.countAtMost(y + size * 0.22))
+            result += columns(sorted.subList(from, start))
+            result += column(sorted.subList(start, end))
+            from = end
         }
-        result += columns(remaining)
+        result += columns(sorted.subList(from, sorted.size))
         return result
     }
 
