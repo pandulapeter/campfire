@@ -8,8 +8,6 @@
  * https://mozilla.org/MPL/2.0/.
 -->
 # To do
-- Song details FAB touch target should be MUCH larger
-- Swipe between rows could be strictly paged
 - PDF export: consider adding the option for 3 columns in landscape
 - Mobile web IME keyboard handling
 - Clarify misunderstandings around the different notation systems, especially during saving

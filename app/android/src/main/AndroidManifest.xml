@@ -68,7 +68,19 @@
             android:name=".CampfireMainActivity"
             android:configChanges="orientation|screenSize|screenLayout|smallestScreenSize|density|fontScale|keyboard|keyboardHidden|navigation"
             android:exported="true"
-            android:launchMode="singleTask">
+            android:launchMode="singleTask" />
+
+        <!--
+          What other apps open Campfire with: a file, a share and the way back from the sync service's consent page.
+          These filters are on an alias rather than on the activity because since Android 15 an explicit intent from
+          another app (the shell included) has to match one of the target's filters. The activity has none, so
+          Android Studio's run configuration can start it with its MAIN / LAUNCHER intent. This alias is never one of
+          the launcher entries, and AppIconSwitcher never disables it.
+        -->
+        <activity-alias
+            android:name=".CampfireIntentActivity"
+            android:exported="true"
+            android:targetActivity=".CampfireMainActivity">
 
             <!--
               Opening a ChordPro file with Campfire. The pattern has to carry a MIME type to match a content URI at
@@ -186,7 +198,7 @@
                 <data android:mimeType="application/vnd.openxmlformats-officedocument.wordprocessingml.document" />
             </intent-filter>
 
-        </activity>
+        </activity-alias>
 
         <activity-alias
             android:name=".CampfireActivity"
