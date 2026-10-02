@@ -11,6 +11,7 @@ package com.pandulapeter.campfire.presentation.ui
 
 import androidx.compose.animation.AnimatedContentTransitionScope
 import androidx.compose.animation.ContentTransform
+import androidx.compose.animation.EnterExitState
 import androidx.compose.animation.EnterTransition
 import androidx.compose.animation.ExitTransition
 import androidx.compose.animation.ExperimentalAnimationApi
@@ -21,6 +22,7 @@ import androidx.compose.animation.core.LinearOutSlowInEasing
 import androidx.compose.animation.core.SpringSpec
 import androidx.compose.animation.core.VisibilityThreshold
 import androidx.compose.animation.core.animate
+import androidx.compose.animation.core.animateFloat
 import androidx.compose.animation.core.spring
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
@@ -84,6 +86,7 @@ import androidx.compose.runtime.withFrameNanos
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.drawBehind
+import androidx.compose.ui.draw.drawWithContent
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.graphics.graphicsLayer
@@ -607,6 +610,8 @@ private fun CampfireScreens(
     // What the screens' own lifecycles are compared with, see ScreenSurface.
     val hostLifecycle = LocalLifecycleOwner.current.lifecycle
     val exportTransition = remember { ExportTransition() }
+    val navigationScrim = remember { NavigationScrim() }
+    val scrimColor = MaterialTheme.colorScheme.scrim
     // The export screen is drawn in this layout rather than in a window of its own, which a screen reader would take for
     // modal, so the app under it is taken out of the semantics tree while it covers it - only once fully, so that the
     // screen a back gesture is revealing is not empty to an accessibility service halfway through the swipe. Derived,
@@ -621,6 +626,7 @@ private fun CampfireScreens(
             modifier = Modifier
                 .fillMaxSize()
                 .graphicsLayer { translationX = -backgroundSlideOffset((exportTransition.progress.value * size.width).roundToInt()).toFloat() }
+                .coveredScreenScrim(scrimColor) { exportTransition.progress.value }
                 .then(if (isExportCovering) Modifier.clearAndSetSemantics { } else Modifier),
             backStack = backStack,
             onBack = viewModel::navigateBack,
@@ -628,19 +634,15 @@ private fun CampfireScreens(
             // while the launch screen still covers the app: a place the app was asked to open on (the web build's
             // address, Settings after a consent page) is put on the stack behind it, and a screen still sliding in as
             // the launch screen fades would be the app arriving twice.
-            transitionSpec = { if (viewModel.hasShownApp) navigationTransition(motionScheme) else ContentTransform(EnterTransition.None, ExitTransition.None) },
-            popTransitionSpec = {
-                if (viewModel.hasShownApp) navigationTransition(motionScheme) else ContentTransform(
-                    EnterTransition.None,
-                    ExitTransition.None
-                )
-            },
-            predictivePopTransitionSpec = { predictivePopTransition() },
+            transitionSpec = { if (viewModel.hasShownApp) navigationTransition(motionScheme, navigationScrim) else instantTransition(navigationScrim) },
+            popTransitionSpec = { if (viewModel.hasShownApp) navigationTransition(motionScheme, navigationScrim) else instantTransition(navigationScrim) },
+            predictivePopTransitionSpec = { predictivePopTransition(navigationScrim) },
             // Stable string content keys, so that the transitions can recognize the top level destinations.
             entryProvider = entryProvider {
                 entry<CampfireDestination.Songs>(metadata = navigationMetadata, clazzContentKey = { it.contentKey }) { destination ->
                     ReportNavigationTransition(viewModel, onNavigationTransitionRunningChanged)
                     TopLevelScreenSurface(
+                        scrim = navigationScrim,
                         windowSize = windowSize,
                         railWidth = railWidth,
                         navigationBarHeight = navigationBarHeight,
@@ -656,6 +658,7 @@ private fun CampfireScreens(
                 entry<CampfireDestination.Setlists>(metadata = navigationMetadata, clazzContentKey = { it.contentKey }) { destination ->
                     ReportNavigationTransition(viewModel, onNavigationTransitionRunningChanged)
                     TopLevelScreenSurface(
+                        scrim = navigationScrim,
                         windowSize = windowSize,
                         railWidth = railWidth,
                         navigationBarHeight = navigationBarHeight,
@@ -671,6 +674,7 @@ private fun CampfireScreens(
                 entry<CampfireDestination.Settings>(metadata = navigationMetadata, clazzContentKey = { it.contentKey }) { destination ->
                     ReportNavigationTransition(viewModel, onNavigationTransitionRunningChanged)
                     TopLevelScreenSurface(
+                        scrim = navigationScrim,
                         windowSize = windowSize,
                         railWidth = railWidth,
                         navigationBarHeight = navigationBarHeight,
@@ -688,7 +692,7 @@ private fun CampfireScreens(
                 // These three cover the chrome, so they are the only ones laid out edge to edge.
                 entry<CampfireDestination.SongEditor>(metadata = navigationMetadata, clazzContentKey = { it.contentKey }) { destination ->
                     ReportNavigationTransition(viewModel, onNavigationTransitionRunningChanged)
-                    ScreenSurface(hostLifecycle) {
+                    ScreenSurface(hostLifecycle = hostLifecycle, scrim = navigationScrim) {
                         SongEditorScreen(
                             viewModel = viewModel,
                             destination = destination,
@@ -700,7 +704,7 @@ private fun CampfireScreens(
                 }
                 entry<CampfireDestination.ImportReport>(metadata = navigationMetadata, clazzContentKey = { it.contentKey }) {
                     ReportNavigationTransition(viewModel, onNavigationTransitionRunningChanged)
-                    ScreenSurface(hostLifecycle) {
+                    ScreenSurface(hostLifecycle = hostLifecycle, scrim = navigationScrim) {
                         ImportReportScreen(
                             viewModel = viewModel,
                             // Its search is typed into, so its list ends above the keyboard as the editor's text does.
@@ -711,7 +715,7 @@ private fun CampfireScreens(
                 }
                 entry<CampfireDestination.SongDetails>(metadata = navigationMetadata, clazzContentKey = { it.contentKey }) { destination ->
                     ReportNavigationTransition(viewModel, onNavigationTransitionRunningChanged)
-                    ScreenSurface(hostLifecycle) {
+                    ScreenSurface(hostLifecycle = hostLifecycle, scrim = navigationScrim) {
                         SongDetailsScreen(
                             viewModel = viewModel,
                             destination = destination,
@@ -1111,12 +1115,16 @@ private fun NavigationChrome(
 @Composable
 private fun ScreenSurface(
     hostLifecycle: Lifecycle,
+    scrim: NavigationScrim,
     content: @Composable () -> Unit,
 ) {
     val entryLifecycle = LocalLifecycleOwner.current.lifecycle
+    val scrimCoverage = rememberScrimCoverage(scrim)
+    val scrimColor = MaterialTheme.colorScheme.scrim
     Surface(
         modifier = Modifier
             .fillMaxSize()
+            .coveredScreenScrim(scrimColor) { scrimCoverage.value }
             .pointerInput(hostLifecycle, entryLifecycle) {
                 awaitEachGesture {
                     val down = awaitFirstDown(requireUnconsumed = false, pass = PointerEventPass.Initial)
@@ -1149,31 +1157,38 @@ private fun ScreenSurface(
 @OptIn(ExperimentalLayoutApi::class)
 @Composable
 private fun TopLevelScreenSurface(
+    scrim: NavigationScrim,
     windowSize: WindowSize,
     railWidth: Dp,
     navigationBarHeight: Dp,
     chrome: (@Composable () -> Unit)?,
     content: @Composable () -> Unit,
-) = Box(
-    modifier = Modifier.fillMaxSize(),
 ) {
-    if (chrome != null) {
-        Box(
-            modifier = Modifier.align(if (windowSize.usesNavigationRail) Alignment.TopStart else Alignment.BottomStart),
-        ) {
-            chrome()
-        }
-    }
-    Surface(
+    val scrimCoverage = rememberScrimCoverage(scrim)
+    val scrimColor = MaterialTheme.colorScheme.scrim
+    Box(
         modifier = Modifier
             .fillMaxSize()
-            .padding(start = railWidth, bottom = navigationBarHeight)
-            // The chrome covers the insets on its own edge, so nothing inside should apply them a second time.
-            .consumeWindowInsets(PaddingValues(start = railWidth, bottom = navigationBarHeight)),
-        color = MaterialTheme.colorScheme.background,
+            .coveredScreenScrim(scrimColor) { scrimCoverage.value },
     ) {
-        Box(modifier = Modifier.windowInsetsPadding(WindowInsets.contentEdges.only(WindowInsetsSides.Top))) {
-            content()
+        if (chrome != null) {
+            Box(
+                modifier = Modifier.align(if (windowSize.usesNavigationRail) Alignment.TopStart else Alignment.BottomStart),
+            ) {
+                chrome()
+            }
+        }
+        Surface(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(start = railWidth, bottom = navigationBarHeight)
+                // The chrome covers the insets on its own edge, so nothing inside should apply them a second time.
+                .consumeWindowInsets(PaddingValues(start = railWidth, bottom = navigationBarHeight)),
+            color = MaterialTheme.colorScheme.background,
+        ) {
+            Box(modifier = Modifier.windowInsetsPadding(WindowInsets.contentEdges.only(WindowInsetsSides.Top))) {
+                content()
+            }
         }
     }
 }
@@ -1194,18 +1209,32 @@ private fun TopLevelScreenSurface(
  * already updated back stack as the transition's starting point and animates a pop with the push spec. That leaves
  * the outgoing screen invisible but still covering (and swallowing clicks on) the screen underneath until the
  * animation ends. The same specs are used on every platform (the desktop default would be no animation at all).
+ *
+ * The decision is also handed to [scrim], which darkens the screen underneath for as long as a card covers any of it.
  */
 @OptIn(ExperimentalMaterial3ExpressiveApi::class)
 private fun AnimatedContentTransitionScope<Scene<CampfireDestination>>.navigationTransition(
     motionScheme: MotionScheme,
+    scrim: NavigationScrim,
 ): ContentTransform {
     val from = CampfireDestination.TopLevel.fromContentKey(initialState.entries.lastOrNull()?.contentKey)
     val to = CampfireDestination.TopLevel.fromContentKey(targetState.entries.lastOrNull()?.contentKey)
-    return when {
-        from != null && to != null -> tabTransition()
-        targetState.zIndex < initialState.zIndex -> popTransition(motionScheme)
-        else -> pushTransition(motionScheme)
+    scrim.motion = when {
+        from != null && to != null -> DeckMotion.None
+        targetState.zIndex < initialState.zIndex -> DeckMotion.Pop
+        else -> DeckMotion.Push
     }
+    return when (scrim.motion) {
+        DeckMotion.None -> tabTransition()
+        DeckMotion.Pop, DeckMotion.PredictivePop -> popTransition(motionScheme)
+        DeckMotion.Push -> pushTransition(motionScheme)
+    }
+}
+
+/** What the back stack changes with while the launch screen still covers the app: nothing moves, nothing is darkened. */
+private fun instantTransition(scrim: NavigationScrim): ContentTransform {
+    scrim.motion = DeckMotion.None
+    return ContentTransform(EnterTransition.None, ExitTransition.None)
 }
 
 /**
@@ -1286,10 +1315,11 @@ internal fun MotionScheme.slideFractionSpec() = when (val spec = defaultSpatialS
  * the middle of it.
  */
 @OptIn(ExperimentalAnimationApi::class)
-private fun AnimatedContentTransitionScope<Scene<CampfireDestination>>.predictivePopTransition(): ContentTransform {
+private fun AnimatedContentTransitionScope<Scene<CampfireDestination>>.predictivePopTransition(scrim: NavigationScrim): ContentTransform {
     if (CampfireDestination.TopLevel.fromContentKey(initialState.entries.lastOrNull()?.contentKey) != null &&
         CampfireDestination.TopLevel.fromContentKey(targetState.entries.lastOrNull()?.contentKey) != null
     ) {
+        scrim.motion = DeckMotion.None
         val spec = tween<Float>(PREDICTIVE_BACK_DURATION, easing = LinearEasing)
         return ContentTransform(
             targetContentEnter = fadeIn(spec),
@@ -1297,6 +1327,7 @@ private fun AnimatedContentTransitionScope<Scene<CampfireDestination>>.predictiv
             targetContentZIndex = targetState.zIndex,
         )
     }
+    scrim.motion = DeckMotion.PredictivePop
     val towards = AnimatedContentTransitionScope.SlideDirection.Right
     val spec = tween<IntOffset>(PREDICTIVE_BACK_DURATION, easing = LinearEasing)
     return ContentTransform(
@@ -1317,6 +1348,68 @@ private fun AnimatedContentTransitionScope<Scene<CampfireDestination>>.tabTransi
     initialContentExit = fadeOut(tween(TAB_FADE_OUT_DURATION, easing = FastOutLinearInEasing)),
     targetContentZIndex = targetState.zIndex,
 )
+
+/** How the deck is changing in the transition that is running, which decides which of its two screens is darkened. */
+private enum class DeckMotion {
+    /** A tab swap, or nothing animated at all: neither screen is under the other, so neither is darkened. */
+    None,
+
+    /** A card is dealt over the screen being left, which darkens as it is covered. */
+    Push,
+
+    /** The top card is taken off the screen being returned to, which starts darkened and clears as it is uncovered. */
+    Pop,
+
+    /** [Pop], following the back gesture rather than a spring. */
+    PredictivePop,
+}
+
+/**
+ * What the transition specs tell every entry's scrim about the transition they have just decided on. The specs are
+ * evaluated in the composition of each screen of a transition before that screen's own content, so the screen reads
+ * the motion of the transition it is part of, an interrupted one included.
+ */
+@Stable
+private class NavigationScrim {
+    var motion by mutableStateOf(DeckMotion.None)
+}
+
+/**
+ * How much of a dialog's scrim the screen this is called from is under, from 0 to 1. Only the screen underneath a
+ * moving card is ever darkened: fully once a card has been dealt over it, and from fully to not at all as the card is
+ * taken off it, in step with the card's slide - the same spring, or the back gesture's linear progress, which the
+ * transition seeks this along with the slides. The card on top, and either screen of a tab swap, stay clear.
+ *
+ * Animated on the screen's own enter and exit transition, so it settles exactly when the screen does and is read
+ * only while drawing.
+ */
+@OptIn(ExperimentalMaterial3ExpressiveApi::class)
+@Composable
+private fun rememberScrimCoverage(scrim: NavigationScrim): State<Float> {
+    val slideSpec = MaterialTheme.motionScheme.slideFractionSpec()
+    return LocalNavAnimatedContentScope.current.transition.animateFloat(
+        transitionSpec = { if (scrim.motion == DeckMotion.PredictivePop) tween(PREDICTIVE_BACK_DURATION, easing = LinearEasing) else slideSpec },
+        label = "navigationScrim",
+    ) { state ->
+        when (state) {
+            EnterExitState.PreEnter -> if (scrim.motion == DeckMotion.Pop || scrim.motion == DeckMotion.PredictivePop) 1f else 0f
+            EnterExitState.Visible -> 0f
+            EnterExitState.PostExit -> if (scrim.motion == DeckMotion.Push) 1f else 0f
+        }
+    }
+}
+
+/**
+ * Draws a dialog's scrim over everything this draws, as dark as [coverage] says it is covered. Clamped, since the
+ * spring it follows can overshoot either end.
+ */
+private fun Modifier.coveredScreenScrim(color: Color, coverage: () -> Float) = drawWithContent {
+    drawContent()
+    val alpha = coverage().coerceIn(0f, 1f) * COVERED_SCREEN_SCRIM_ALPHA
+    if (alpha > 0f) {
+        drawRect(color = color, alpha = alpha)
+    }
+}
 
 /**
  * Deeper screens are drawn above shallower ones, so that a pushed screen covers its parent and a popped screen
@@ -1369,6 +1462,9 @@ private const val TAB_FADE_OUT_DURATION = 90
 private const val TAB_FADE_IN_DURATION = 210
 private const val PREDICTIVE_BACK_DURATION = 350
 private const val BACKGROUND_SLIDE_FRACTION = 0.12f
+
+/** Material's scrim behind a dialog or a modal sheet, which is what a fully covered screen is darkened to. */
+private const val COVERED_SCREEN_SCRIM_ALPHA = 0.32f
 private const val SLIDE_FRACTION_THRESHOLD = 0.001f
 
 /** How many of the files an export left out its message names, the rest being counted rather than listed. */
