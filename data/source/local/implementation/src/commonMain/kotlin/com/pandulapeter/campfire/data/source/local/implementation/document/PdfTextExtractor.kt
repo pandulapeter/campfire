@@ -145,7 +145,7 @@ internal object PdfTextExtractor {
                         val end = point(transform.point(glyph.width * state.size / 1000 * state.scale, state.rise))
                         val top = point(transform.point(0.0, state.rise + state.size))
                         val size = hypot(top.x - start.x, top.y - start.y).coerceIn(0.1, 1000.0)
-                        if (!value.isNullOrEmpty() && value.none { it == '\u0000' || it == '\ufffd' } &&
+                        if (!value.isNullOrEmpty() && value.none { it == '\u0000' || it == '\ufffd' } && !hasLoneSurrogate(value) &&
                             end.x >= start.x && abs(end.y - start.y) <= maxOf(0.1, abs(end.x - start.x) * 0.03)) {
                             textBytes += value.length * 3
                             requireWithinLimit(textBytes <= ImportLimits.MAX_TEXT_FILE_SIZE && ++glyphCount <= MAX_GLYPHS) { "PDF text too large" }
@@ -427,6 +427,25 @@ internal object PdfTextExtractor {
         var high = size
         while (low < high) { val middle = (low + high) / 2; if (this[middle] < value) low = middle + 1 else high = middle }
         return low
+    }
+
+    /**
+     * Whether [text] holds half of a surrogate pair without the other half, which a broken font map can produce and
+     * which becomes a `?` once the song is written as UTF-8.
+     */
+    internal fun hasLoneSurrogate(text: String): Boolean {
+        var index = 0
+        while (index < text.length) {
+            val character = text[index]
+            if (character.isHighSurrogate()) {
+                if (index + 1 >= text.length || !text[index + 1].isLowSurrogate()) return true
+                index += 2
+            } else {
+                if (character.isLowSurrogate()) return true
+                index++
+            }
+        }
+        return false
     }
 
     private fun signature(line: Line, height: Double): String {

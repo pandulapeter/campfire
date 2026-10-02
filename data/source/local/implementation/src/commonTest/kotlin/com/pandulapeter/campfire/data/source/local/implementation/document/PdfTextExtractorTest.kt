@@ -18,6 +18,7 @@ import kotlinx.coroutines.test.runTest
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
+import kotlin.test.assertFalse
 import kotlin.test.assertNotNull
 import kotlin.test.assertNull
 import kotlin.test.assertTrue
@@ -219,6 +220,19 @@ class PdfTextExtractorTest {
         assertTrue(elapsed < 3.seconds, "Took $elapsed")
         assertEquals("W".repeat(80), lines.first())
         assertEquals("L".repeat(30), lines[1])
+    }
+
+    @Test
+    fun glyphsMappedToALoneSurrogateAreSkipped() = runTest {
+        suspend fun text(differences: String, content: String) = PdfTextExtractor.extract(
+            PdfTestWriter.song("BT /F1 10 Tf 50 700 Td $content Tj ET", "/Type /Font /Subtype /Type1 /BaseFont /Courier /Encoding << /BaseEncoding /WinAnsiEncoding /Differences [$differences] >>"),
+        ).pages.single().lines.single().spans.joinToString("") { it.text }
+        assertEquals("B", text("65 /uniD800 /B", "(AB)"))
+        assertEquals("\ud83d\ude00", text("65 /u1F600", "(A)"))
+        assertFalse(PdfTextExtractor.hasLoneSurrogate("a"))
+        assertFalse(PdfTextExtractor.hasLoneSurrogate("\ud83d\ude00"))
+        assertTrue(PdfTextExtractor.hasLoneSurrogate("\ud83d"))
+        assertTrue(PdfTextExtractor.hasLoneSurrogate("\ude00"))
     }
 
     @Test
