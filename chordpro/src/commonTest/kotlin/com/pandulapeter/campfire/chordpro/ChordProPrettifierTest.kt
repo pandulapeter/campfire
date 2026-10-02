@@ -9,6 +9,7 @@
  */
 package com.pandulapeter.campfire.chordpro
 
+import kotlin.random.Random
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertTrue
@@ -39,6 +40,34 @@ class ChordProPrettifierTest {
     fun `tab grid and nested environment interiors are untouched`() {
         val interior = "{sov}\n{sot}\n    G     C  \n\n\n e|--0--   \n{eot}\n{sog}\n | G . | C . |  \n\n{eog}\n{eov}"
         assertEquals("{title: Song}\n\n$interior\n", ChordProPrettifier.prettify("{title: Song}\n$interior"))
+    }
+
+    @Test
+    fun `tab and grid runs stay in the paragraph they open or continue`() {
+        for (raw in listOf(
+            "Hello [G]world\n{start_of_tab}\ne|--0--|\n{end_of_tab}\nMore [C]words",
+            "{sot}\ne|--0--|\n{eot}\nMore [C]words",
+            "Hello\n{sot}\ne|-0-|\n{eot}\nMore",
+        )) {
+            assertEquals("$raw\n", ChordProPrettifier.prettify(raw))
+            assertEquals(ChordProParser.parse(raw).blocks, ChordProParser.parse(ChordProPrettifier.prettify(raw)).blocks)
+        }
+    }
+
+    @Test
+    fun `balanced fragments preserve their sections and format idempotently`() {
+        val random = Random(1)
+        val fragments = listOf(
+            "Hello [G]world", "More [C]words", "", "{chorus}",
+            "{sot}\ne|--0--|\n{eot}", "{sot}\ne|--0--|\n\ne|-1-|\n{eot}",
+            "{sog}\n | G . | C . |\n{eog}", "{soc}\n[C]Sing\n{eoc}", "{sov}\nVerse\n{eov}",
+        )
+        repeat(2000) {
+            val raw = List(random.nextInt(1, 7)) { fragments[random.nextInt(fragments.size)] }.joinToString("\n")
+            val formatted = ChordProPrettifier.prettify(raw)
+            assertEquals(ChordProParser.parse(raw).blocks, ChordProParser.parse(formatted).blocks, raw)
+            assertEquals(formatted, ChordProPrettifier.prettify(formatted), raw)
+        }
     }
 
     @Test

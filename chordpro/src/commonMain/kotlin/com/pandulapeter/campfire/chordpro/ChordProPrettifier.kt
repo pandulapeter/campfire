@@ -77,7 +77,7 @@ object ChordProPrettifier {
                 if (end != null) {
                     val index = environments.indexOfLast { it == end }
                     if (index >= 0) environments.subList(index, environments.size).clear()
-                    if (environments.isEmpty()) gapBeforeNext = true
+                    if (environments.isEmpty() && end != "tab" && end != "grid") gapBeforeNext = true
                 }
                 continue
             }
@@ -86,7 +86,8 @@ object ChordProPrettifier {
                 gap()
                 continue
             }
-            if (gapBeforeNext || start != null || directive?.name in ChordProSyntax.blockNames ||
+            val isLineMode = start == "tab" || start == "grid"
+            if (gapBeforeNext || (start != null && !isLineMode) || directive?.name in ChordProSyntax.blockNames ||
                 directive?.name == "new_song" || directive?.name == "ns") gap()
             gapBeforeNext = false
             output += if (directive == null) rawLine else trimmed
