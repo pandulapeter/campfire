@@ -23,8 +23,10 @@ import io.ktor.client.request.HttpResponseData
 import io.ktor.http.HttpHeaders
 import io.ktor.http.HttpStatusCode
 import io.ktor.http.headersOf
+import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
+import kotlinx.coroutines.test.StandardTestDispatcher
 import kotlinx.coroutines.test.TestScope
 import kotlinx.coroutines.test.currentTime
 import kotlinx.coroutines.test.runTest
@@ -37,6 +39,7 @@ import kotlin.time.Duration.Companion.milliseconds
  * How the cover search keeps to MusicBrainz's pace. The service is a [MockEngine] and the waiting happens in virtual
  * time, so the spacing and the back-off are measured exactly.
  */
+@OptIn(ExperimentalCoroutinesApi::class)
 class MusicBrainzCoverArtSearchRemoteSourceTest {
 
     @Test
@@ -144,7 +147,12 @@ class MusicBrainzCoverArtSearchRemoteSourceTest {
     }
 
     private fun TestScope.source(handler: suspend MockRequestHandleScope.(HttpRequestData) -> HttpResponseData) = MusicBrainzCoverArtSearchRemoteSource(
-        httpClient = HttpClient(MockEngine(handler)) {
+        httpClient = HttpClient(MockEngine.create {
+            // The handler records virtual time, so it must run on that clock's scheduler too. An I/O thread can
+            // reach it only after runTest has already advanced to the next request's turn.
+            dispatcher = StandardTestDispatcher(testScheduler)
+            addHandler(handler)
+        }) {
             expectSuccess = false
             install(UserAgent) { agent = USER_AGENT }
         },

@@ -12,8 +12,11 @@ package com.pandulapeter.campfire.buildLogic.extensions
 import com.android.build.api.dsl.KotlinMultiplatformAndroidLibraryTarget
 import org.gradle.api.Project
 import org.gradle.api.plugins.BasePluginExtension
+import org.gradle.api.tasks.testing.Test
+import org.gradle.api.tasks.testing.logging.TestExceptionFormat
 import org.gradle.jvm.toolchain.JavaLanguageVersion
 import org.gradle.kotlin.dsl.configure
+import org.gradle.kotlin.dsl.withType
 import org.jetbrains.kotlin.gradle.ExperimentalWasmDsl
 import org.jetbrains.kotlin.gradle.dsl.KotlinMultiplatformExtension
 
@@ -30,6 +33,10 @@ internal fun Project.configureKotlinMultiplatform(
     // two of them claim the same identity and the klib loader has nothing to disambiguate.
     extensions.configure<BasePluginExtension> {
         archivesName.set(path.removePrefix(":").replace(":", "-"))
+    }
+    // A coroutine test's outer entry point often hides the failing assertion's line in Gradle's short output.
+    tasks.withType<Test>().configureEach {
+        testLogging.exceptionFormat = TestExceptionFormat.FULL
     }
     extension.apply {
         jvmToolchain {
