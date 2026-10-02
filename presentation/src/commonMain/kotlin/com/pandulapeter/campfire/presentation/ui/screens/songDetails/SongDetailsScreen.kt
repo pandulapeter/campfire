@@ -533,6 +533,7 @@ internal fun SongDetailsScreen(
                             currentPageScrollState?.isScrollInProgress == true && currentPageStepper?.isStepping != true ||
                                 pagerState.isScrollInProgress && !pageStepper.isStepping
                         },
+                        isStepping = { currentPageStepper?.isStepping == true },
                         stepOrigin = { currentPageStepper?.origin },
                         onStep = { direction, from -> if (direction < 0) stepBack(from) else stepForward(from) },
                     ),
