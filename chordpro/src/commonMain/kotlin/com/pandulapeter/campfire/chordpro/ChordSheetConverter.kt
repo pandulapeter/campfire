@@ -329,6 +329,8 @@ object ChordSheetConverter {
         }
         flushRun()
         val chordLine = isChordLine(line.text)
+        // Stacked chords are padded back over the glyphs before them, so positions are only searched by halving where
+        // they never go back; anywhere else the linear scan is the one that finds the right glyph.
         val isMonotone = line.positions.indices.drop(1).all { line.positions[it - 1] <= line.positions[it] }
         for (span in styledRuns) if (!chordLine && chord(span.text.trim())) {
             val start = if (isMonotone) {
@@ -341,6 +343,7 @@ object ChordSheetConverter {
         return buildString {
             var cursor = 0
             for ((start, end, value) in replacements.sortedBy { it.first }) {
+                // A replacement overlapping the one before it would rewrite text that is already a chord, so it is dropped.
                 if (start < cursor || end > text.length || splitsSurrogate(text, start) || splitsSurrogate(text, end)) continue
                 append(text, cursor, start)
                 append("[$value]")
@@ -354,6 +357,8 @@ object ChordSheetConverter {
         val insertions = mutableMapOf<Int, MutableList<String>>()
         val starts = tokens(lyrics.text).map { it.index }
         val positions = lyrics.positions
+        // The binary searches below need positions and spans that never go back, which padding stacked chords breaks;
+        // such a line keeps the linear searches, which are right for any order.
         val isMonotone = positions.indices.drop(1).all { positions[it - 1] <= positions[it] }
         val spans = lyrics.source.spans
         val spansSorted = spans.indices.drop(1).all { spans[it - 1].start <= spans[it].start }

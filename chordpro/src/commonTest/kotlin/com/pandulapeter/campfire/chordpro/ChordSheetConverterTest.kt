@@ -135,9 +135,9 @@ class ChordSheetConverterTest {
         var started = TimeSource.Monotonic.markNow()
         assertEquals("[C]la ".repeat(30_000).trimEnd() + "\n", convert("$chordRow\n$lyrics"))
         assertTrue(started.elapsedNow() < 5.seconds)
-        val inline = "(C) ".repeat(60_000).trimEnd()
+        val inline = "(C)la ".repeat(60_000).trimEnd()
         started = TimeSource.Monotonic.markNow()
-        assertEquals("[C] ".repeat(60_000).trimEnd() + "\n", convert(inline))
+        assertEquals("[C]la ".repeat(60_000).trimEnd() + "\n", convert(inline))
         assertTrue(started.elapsedNow() < 5.seconds)
     }
 
