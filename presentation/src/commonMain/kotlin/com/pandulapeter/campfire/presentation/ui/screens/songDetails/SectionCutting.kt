@@ -109,7 +109,7 @@ internal fun flowLikeAMagazine(
         val cut = lowestCap(heights, from, until, columns, cutsSections = true) ?: return null
         val whole = lowestCap(heights, from, until, columns, cutsSections = false)
         val cutsSections = whole == null || whole - cut >= minCutSaving
-        return fill(heights, from, until, if (cutsSections) cut else whole!!, cutsSections)
+        return fill(heights, from, until, if (cutsSections) cut else whole, cutsSections)
     }
 
     val rows = IntArray(unitCount)
