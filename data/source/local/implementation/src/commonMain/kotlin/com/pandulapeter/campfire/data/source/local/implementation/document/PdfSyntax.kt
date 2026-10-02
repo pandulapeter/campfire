@@ -112,7 +112,8 @@ internal class PdfSyntax(
         }
     }
     fun next(depth: Int = 0, references: Boolean = true): PdfValue? {
-        require(depth <= 64 && ++steps <= 2_000_000) { "PDF syntax limit" }
+        require(depth <= 64) { "PDF syntax limit" }
+        requireWithinLimit(++steps <= 2_000_000) { "PDF syntax limit" }
         skip()
         if (position >= bytes.size) return null
         return when (char()) {

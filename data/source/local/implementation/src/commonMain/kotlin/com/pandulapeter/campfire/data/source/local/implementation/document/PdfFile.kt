@@ -28,6 +28,7 @@ internal class PdfFile(private val bytes: ByteArray) {
     /** Where the recovery scan found each definition, so that a later one replaces an earlier one wherever it is. */
     private val definedAt = mutableMapOf<PdfReference, Int>()
     private var decodedSize = 0L
+    private var encodedSize = 0L
     private var scanned = false
     private var root: PdfValue? = null
     private var encrypted = false
@@ -67,7 +68,7 @@ internal class PdfFile(private val bytes: ByteArray) {
                 try { indirect(location.offset, value) } catch (_: IllegalArgumentException) { scan(); objects[value] }
                 catch (_: IllegalStateException) { scan(); objects[value] }
             } ?: return null
-            require(objects.size < MAX_OBJECTS)
+            requireWithinLimit(objects.size < MAX_OBJECTS) { "PDF object limit" }
             objects[value] = parsed
             return if (parsed is PdfReference) resolve(parsed) else parsed
         } finally { resolving.remove(value) }
@@ -83,9 +84,13 @@ internal class PdfFile(private val bytes: ByteArray) {
     fun stream(value: PdfValue?): ByteArray? = (resolve(value) as? PdfStream)?.let(::decode)
 
     fun decode(stream: PdfStream): ByteArray = decoded.getOrPut(stream) {
+        // The encoded range is copied before it is inflated, and many streams that fall back to one far endstream each
+        // have a range as long as the file while what they decode to stays small.
+        encodedSize += stream.length
+        requireWithinLimit(encodedSize <= PdfTextExtractor.MAX_INTERPRETED_BYTES) { "PDF stream input limit" }
         PdfFilters.decode(stream, ::resolve).also {
             decodedSize += it.size
-            require(decodedSize <= ImportLimits.MAX_IMPORT_SIZE) { "PDF decoded streams too large" }
+            requireWithinLimit(decodedSize <= ImportLimits.MAX_IMPORT_SIZE) { "PDF decoded streams too large" }
         }
     }
 
@@ -197,7 +202,7 @@ internal class PdfFile(private val bytes: ByteArray) {
                 if (objects.containsKey(contained)) continue
                 val actual = locations[contained]
                 if (actual != null && actual.stream != location.stream) continue
-                require(objects.size < MAX_OBJECTS)
+                requireWithinLimit(objects.size < MAX_OBJECTS) { "PDF object limit" }
                 objects[contained] = stream.parse(index)
             }
             parsedStreams += location.stream
@@ -248,7 +253,7 @@ internal class PdfFile(private val bytes: ByteArray) {
                 val reference = PdfReference(stream.numbers[index])
                 val previous = definedAt[reference]
                 if (previous == null && objects.containsKey(reference) || previous != null && previous > streamOffset) continue
-                require(objects.size < MAX_OBJECTS)
+                requireWithinLimit(objects.size < MAX_OBJECTS) { "PDF object limit" }
                 objects[reference] = stream.parse(index)
                 definedAt[reference] = streamOffset
             }

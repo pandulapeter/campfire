@@ -73,6 +73,72 @@ class PdfTextExtractorTest {
     }
 
     @Test
+    fun aFormInvokedManyTimesHitsTheWorkBudget() = runTest {
+        val writer = PdfTestWriter()
+        writer.add("<< /Type /Catalog /Pages 2 0 R >>")
+        writer.add("<< /Type /Pages /Kids [3 0 R] /MediaBox [0 0 612 792] /Resources << /Font << /F1 4 0 R >> /XObject << /X 6 0 R >> >> >>")
+        writer.add("<< /Type /Page /Parent 2 0 R /Contents 5 0 R >>")
+        writer.add("<< /Type /Font /Subtype /Type1 /BaseFont /Courier /Encoding /WinAnsiEncoding >>")
+        writer.stream("BT /F1 10 Tf 50 700 Td (hi) Tj ET " + "/X Do ".repeat(40))
+        writer.stream(" ".repeat(5_000_000), "/Type /XObject /Subtype /Form")
+        val bytes = writer.write()
+        val elapsed = measureTime { assertFailsWith<PdfLimitException> { PdfTextExtractor.extract(bytes) } }
+        assertTrue(elapsed < 5.seconds, "Took $elapsed")
+    }
+
+    @Test
+    fun aSmallFormUsedOnEveryPageIsFree() = runTest {
+        val writer = PdfTestWriter()
+        val pages = 300
+        writer.add("<< /Type /Catalog /Pages 2 0 R >>")
+        writer.add("<< /Type /Pages /Kids [${(1..pages).joinToString(" ") { "${it + 4} 0 R" }}] /MediaBox [0 0 612 792] /Resources << /Font << /F1 3 0 R >> /XObject << /X 4 0 R >> >> >>")
+        writer.add("<< /Type /Font /Subtype /Type1 /BaseFont /Courier /Encoding /WinAnsiEncoding >>")
+        writer.stream("BT /F1 10 Tf 50 400 Td (hi) Tj ET".padEnd(50_000), "/Type /XObject /Subtype /Form")
+        repeat(pages) { writer.add("<< /Type /Page /Parent 2 0 R /Contents ${pages + 5} 0 R >>") }
+        writer.stream("/X Do")
+        val extracted = PdfTextExtractor.extract(writer.write()).pages
+        assertEquals(pages, extracted.size)
+        assertTrue(extracted.all { page -> page.lines.single().spans.joinToString("") { it.text } == "hi" })
+    }
+
+    @Test
+    fun sharedContentsAreChargedBeforeTheyAreCopied() = runTest {
+        val writer = PdfTestWriter()
+        val pages = 50
+        writer.add("<< /Type /Catalog /Pages 2 0 R >>")
+        writer.add("<< /Type /Pages /Kids [${(1..pages).joinToString(" ") { "${it + 3} 0 R" }}] /MediaBox [0 0 612 792] /Resources << /Font << /F1 3 0 R >> >> >>")
+        writer.add("<< /Type /Font /Subtype /Type1 /BaseFont /Courier /Encoding /WinAnsiEncoding >>")
+        repeat(pages) { writer.add("<< /Type /Page /Parent 2 0 R /Contents ${pages + 4} 0 R >>") }
+        writer.stream("BT /F1 10 Tf 50 400 Td (hi) Tj ET".padEnd(3_000_000))
+        val bytes = writer.write()
+        val elapsed = measureTime { assertFailsWith<PdfLimitException> { PdfTextExtractor.extract(bytes) } }
+        assertTrue(elapsed < 5.seconds, "Took $elapsed")
+    }
+
+    @Test
+    fun manyStreamsSharingOneFarEndstreamHitTheInputBudget() = runTest {
+        val streams = 200
+        val objects = mutableListOf(
+            "<< /Type /Catalog /Pages 2 0 R >>",
+            "<< /Type /Pages /Kids [${(1..streams).joinToString(" ") { "${it + 2} 0 R" }}] /MediaBox [0 0 612 792] >>",
+        )
+        repeat(streams) { objects += "<< /Type /Page /Parent 2 0 R /Contents ${streams + 3 + it} 0 R >>" }
+        val builder = StringBuilder("%PDF-1.7\n")
+        val offsets = mutableListOf<Int>()
+        objects.forEachIndexed { index, item -> offsets += builder.length; builder.append("${index + 1} 0 obj\n$item\nendobj\n") }
+        // ASCIIHex stops at its '>', so every stream decodes to one byte while its range runs to the end of the file.
+        repeat(streams) { offsets += builder.length; builder.append("${objects.size + it + 1} 0 obj<</Length 999999999 /Filter /ASCIIHexDecode>>stream\n41>\n") }
+        builder.append(" ".repeat(1 shl 20)).append("\nendstream\nendobj\n")
+        val xref = builder.length
+        builder.append("xref\n0 ${offsets.size + 1}\n0000000000 65535 f \n")
+        offsets.forEach { builder.append("${it.toString().padStart(10, '0')} 00000 n \n") }
+        builder.append("trailer\n<< /Size ${offsets.size + 1} /Root 1 0 R >>\nstartxref\n$xref\n%%EOF\n")
+        val bytes = builder.toString().encodeToByteArray()
+        val elapsed = measureTime { assertFailsWith<PdfLimitException> { PdfTextExtractor.extract(bytes) } }
+        assertTrue(elapsed < 5.seconds, "Took $elapsed")
+    }
+
+    @Test
     fun cachedReferenceChainsResolveEveryTimeAndCyclesAreRejected() {
         val writer = PdfTestWriter()
         writer.add("2 0 R")

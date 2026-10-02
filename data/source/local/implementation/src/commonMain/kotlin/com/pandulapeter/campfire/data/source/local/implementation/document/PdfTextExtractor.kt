@@ -28,6 +28,12 @@ internal object PdfTextExtractor {
     internal const val MAX_GLYPHS = 1_000_000
     /** The glyphs shown at all, readable or not, which bounds the time a document can take. */
     internal const val MAX_SHOWN_GLYPHS = 2 * MAX_GLYPHS
+    /**
+     * The content interpreted and the stream input read in one document, re-reading included. Every distinct stream fits
+     * in the decoded cap of [ImportLimits.MAX_IMPORT_SIZE], so this leaves about three times that for header and footer
+     * forms and for contents shared between pages before the document is taken for a hostile one.
+     */
+    internal const val MAX_INTERPRETED_BYTES = 4L * ImportLimits.MAX_IMPORT_SIZE
     private data class Point(val x: Double, val y: Double)
     private data class Matrix(val a: Double = 1.0, val b: Double = 0.0, val c: Double = 0.0, val d: Double = 1.0, val e: Double = 0.0, val f: Double = 0.0) {
         fun point(x: Double, y: Double) = Point(a * x + c * y + e, b * x + d * y + f)
@@ -60,15 +66,24 @@ internal object PdfTextExtractor {
         var textBytes = 0L
         var operators = 0
         var glyphCount = 0
+        var interpretedBytes = 0L
         // The spaces that bridge a gap between glyphs are text too: a monospace font at a tenth of a point asks for a
         // thousand of them per glyph, which would turn the glyph budget into gigabytes of padding.
-        fun charge(characters: Int) {
+        fun chargeText(characters: Int) {
             textBytes += characters * 3L
-            require(textBytes <= ImportLimits.MAX_TEXT_FILE_SIZE) { "PDF text too large" }
+            requireWithinLimit(textBytes <= ImportLimits.MAX_TEXT_FILE_SIZE) { "PDF text too large" }
+        }
+        // A form invoked again and contents shared between pages are read again, so they are paid for every time. Whitespace
+        // and comments are no operators, so this is also where a long run of them yields.
+        suspend fun chargeWork(bytes: Long) {
+            val before = interpretedBytes
+            interpretedBytes += bytes
+            requireWithinLimit(interpretedBytes <= MAX_INTERPRETED_BYTES) { "PDF content work limit" }
+            if (interpretedBytes / WORK_YIELD_INTERVAL != before / WORK_YIELD_INTERVAL) yield()
         }
 
         suspend fun page(dictionary: PdfDictionary, resources: PdfDictionary?, box: List<PdfValue>, rotation: Int) {
-            require(pages.size < 2000)
+            requireWithinLimit(pages.size < 2000) { "PDF page limit" }
             val bounds = box.map { file.number(it) }
             require(bounds.size == 4 && bounds.all { it.isFinite() && abs(it) < 1_000_000 })
             val rotate = ((rotation % 360) + 360) % 360
@@ -103,7 +118,7 @@ internal object PdfTextExtractor {
                     if (font == null) { shown += string.bytes.size; unreadable += string.bytes.size; return }
                     for (glyph in font.decode(string.bytes)) {
                         shown++
-                        require(shown <= MAX_SHOWN_GLYPHS) { "PDF glyph limit" }
+                        requireWithinLimit(shown <= MAX_SHOWN_GLYPHS) { "PDF glyph limit" }
                         if (shown % 4096 == 0L) yield()
                         val value = glyph.text
                         if (value == null) unreadable++
@@ -115,7 +130,7 @@ internal object PdfTextExtractor {
                         if (!value.isNullOrEmpty() && value.none { it == '\u0000' || it == '\ufffd' } &&
                             end.x >= start.x && abs(end.y - start.y) <= maxOf(0.1, abs(end.x - start.x) * 0.03)) {
                             textBytes += value.length * 3
-                            require(textBytes <= ImportLimits.MAX_TEXT_FILE_SIZE && ++glyphCount <= MAX_GLYPHS)
+                            requireWithinLimit(textBytes <= ImportLimits.MAX_TEXT_FILE_SIZE && ++glyphCount <= MAX_GLYPHS) { "PDF text too large" }
                             require(start.x.isFinite() && start.y.isFinite() && end.x.isFinite() && abs(start.x) < 10_000_000 && abs(start.y) < 10_000_000)
                             glyphs += Positioned(ExtractedDocument.Span(value, start.x, end.x, size, font.bold, font.monospace, abs(state.rise) > state.size * 0.15), start.y)
                         }
@@ -130,7 +145,7 @@ internal object PdfTextExtractor {
                         operands += value
                         continue
                     }
-                    require(++operators < 2_000_000)
+                    requireWithinLimit(++operators < 2_000_000) { "PDF operator limit" }
                     if (operators % 4096 == 0) yield()
                     when (value.value) {
                         "q" -> { require(saved.size < 64); saved += state.copy() }
@@ -170,7 +185,9 @@ internal object PdfTextExtractor {
                             if (form?.dictionary?.get("Subtype").name() == "Form") {
                                 require(activeForms.add(form!!)) { "Cyclic PDF form" }
                                 val transform = if (form.dictionary["Matrix"] != null) matrix(file.array(form.dictionary["Matrix"])) else Matrix()
-                                interpret(file.decode(form), file.dictionary(form.dictionary["Resources"]) ?: resource, state.copy(ctm = state.ctm * transform), depth + 1)
+                                val formData = file.decode(form)
+                                chargeWork(formData.size.toLong())
+                                interpret(formData, file.dictionary(form.dictionary["Resources"]) ?: resource, state.copy(ctm = state.ctm * transform), depth + 1)
                                 activeForms.remove(form)
                             }
                         }
@@ -193,12 +210,13 @@ internal object PdfTextExtractor {
             val contents = file.resolve(dictionary["Contents"])
             val streams = if (contents is PdfArray) contents.values.mapNotNull(file::stream) else listOfNotNull(file.stream(contents))
             val length = streams.sumOf { it.size.toLong() + 1 }
-            require(length <= ImportLimits.MAX_IMPORT_SIZE)
+            requireWithinLimit(length <= ImportLimits.MAX_IMPORT_SIZE) { "PDF page content limit" }
+            chargeWork(length)
             val data = ByteArray(length.toInt())
             var at = 0
             for (stream in streams) { stream.copyInto(data, at); at += stream.size; data[at++] = 10 }
             interpret(data, resources, State())
-            pages += Page(buildLines(glyphs, ::charge), if (rotate in listOf(90, 270)) x1 - x0 else y1 - y0)
+            pages += Page(buildLines(glyphs, ::chargeText), if (rotate in listOf(90, 270)) x1 - x0 else y1 - y0)
             yield()
         }
 
@@ -386,4 +404,6 @@ internal object PdfTextExtractor {
 
     /** How many positions a gutter is looked for at, every half point up to this, which bounds the work on a wide page. */
     private const val MAX_GUTTER_POSITIONS = 4096.0
+
+    private const val WORK_YIELD_INTERVAL = 4L shl 20
 }
