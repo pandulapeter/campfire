@@ -57,7 +57,16 @@ them. If a change has no effect a user could notice, it is not in the notes.
    ```
    New or changed strings are almost always a new feature, a new setting or a new message worth a bullet.
 
-5. **Sort what you found into user-facing and not.** Keep: new features, new settings, changed behavior
+5. **Judge every change against the last release tag, not against the previous commit.** A user only knows what
+   was in the last published release. A fix for a bug introduced after that tag, for a feature or dialog that did
+   not exist in it, or for a rough edge of something still unreleased, is part of that new work and never gets a
+   bullet of its own: the feature's bullet already describes it as it now is. Test each candidate fix by asking
+   whether somebody running the last release could have hit the problem. Never pad the list with recent small
+   commits; if no fix qualifies, there is no fixes bullet. The same goes for polish of new features (layout
+   tweaks, accessibility labels, performance of code that is new): it belongs inside the feature's description or
+   nowhere.
+
+   Then sort what you found into user-facing and not. Keep: new features, new settings, changed behavior
    somebody relied on, fixed bugs a user could hit, visible design changes, new or improved platform
    support, new languages, performance a user can feel (loading, scrolling, sync speed). Drop: refactors,
    dependency bumps, Lint and warning cleanups, test changes, CI and build configuration, documentation
