@@ -126,10 +126,12 @@ import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.FlowPreview
 import kotlinx.coroutines.CoroutineStart
+import kotlinx.coroutines.Deferred
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.NonCancellable
 import kotlinx.coroutines.async
 import kotlinx.coroutines.cancelAndJoin
+import kotlinx.coroutines.currentCoroutineContext
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableSharedFlow
@@ -150,6 +152,7 @@ import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.runningFold
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
+import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
@@ -986,6 +989,17 @@ class CampfireViewModel(
      * to outlive whichever screen the import was started from. It never outlives the question: see [onImportReportLeft].
      */
     private var pendingImport: PendingImport? = null
+
+    /**
+     * The reading and comparing half of the import being run, which [cancelImportPreparation] can end. Touched only on the
+     * main thread, like [isPreparationCancelled]: [import] runs in [viewModelScope] and the dialog's click calls in there.
+     */
+    private var preparation: Deferred<ImportPlan>? = null
+
+    /**
+     * Whether the user asked for [preparation] to stop, which a cancellation of the view model itself is told apart from.
+     */
+    private var isPreparationCancelled = false
 
     /**
      * Every batch of files waiting to be imported, taken one at a time by the consumer launched in `init`. Files are
@@ -2399,17 +2413,33 @@ class CampfireViewModel(
         // kept so that a second caller could not start an import over a running one.
         if (request.files.isEmpty() || _isImporting.value || pendingImport != null) return
         _isImporting.update { true }
+        isPreparationCancelled = false
+        // A sibling of the consumer under the scope's supervisor rather than a child of it, so that the user's Cancel
+        // ends only the preparation and never the queue, and a failure inside it only reaches this through await().
+        val deferred = viewModelScope.async { prepareImport(request.files) { if (request.shouldAnnounceResult) _importProgress.value = it } }
+        preparation = deferred
         val plan = try {
-            prepareImport(request.files) { if (request.shouldAnnounceResult) _importProgress.value = it }
+            deferred.await()
         } catch (exception: CancellationException) {
             _importProgress.value = null
             _isImporting.value = false
+            // The user's Cancel cancels only the deferred; the consumer itself still being active is what tells the two apart.
+            if (isPreparationCancelled && currentCoroutineContext().isActive) return
             throw exception
         } catch (exception: Exception) {
             // Nothing has been written, so there is nothing to list either, and one line says all there is to say.
             println("Could not read the files to import: ${exception.message}")
             _importProgress.value = null
             if (request.shouldAnnounceResult) sendMessage(Message.ImportFailed)
+            _isImporting.value = false
+            return
+        } finally {
+            preparation = null
+        }
+        // A Cancel can land after the preparation finished but before this resumed (the resumption is dispatched to the
+        // main thread, behind a click already queued there): it was still pressed while the dialog said "reading", so it wins.
+        if (isPreparationCancelled) {
+            _importProgress.value = null
             _isImporting.value = false
             return
         }
@@ -2423,6 +2453,17 @@ class CampfireViewModel(
         } else {
             applyImportPlan(plan = plan, resolution = ImportConflictResolution.KEEP_BOTH, request = request, isReported = false)
         }
+    }
+
+    /**
+     * The progress dialog's Cancel, offered while the files are still being read and compared. Nothing has been written
+     * by then, so the library is exactly as it was and nothing is announced; the queue goes on to its next batch. Once
+     * the plan is being written or a question is up there is no preparation left to cancel, and a late click does nothing.
+     */
+    fun cancelImportPreparation() {
+        val deferred = preparation ?: return
+        isPreparationCancelled = true
+        deferred.cancel()
     }
 
     /**

@@ -289,8 +289,8 @@ localized in both languages.
   taken by something *different* are put to the user as one question about the whole batch — keep both, replace,
   skip, or cancel the import. Replacing is the
   only thing in the app that ever overwrites a library file, and it takes an answer to that question and a
-  confirmation after it. An import that takes a moment shows its phase and a processed-entry count in a dialog; one
-  that went the one happy way — everything written or already there, nothing left out — ends in a snackbar (with
+  confirmation after it. An import that takes a moment shows its phase and a processed-entry count in a dialog, and
+  can be cancelled until it starts writing; one that went the one happy way — everything written or already there, nothing left out — ends in a snackbar (with
   **Details** for a batch of more than one file). **Anything else is a screen of its own** (`CampfireDestination.ImportReport`),
   pushed on the back stack rather than told in dialogs following one another: the question, then the import it decides
   on being written, then every file of what it came to, grouped by what became of it and searchable, a song opened from

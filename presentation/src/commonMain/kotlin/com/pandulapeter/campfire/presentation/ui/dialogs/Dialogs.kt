@@ -238,7 +238,11 @@ internal fun CampfireDialogs(
     val importProgress by viewModel.importProgress.collectAsStateWithLifecycle()
     val importReport by viewModel.importReport.collectAsStateWithLifecycle()
     // The import screen shows the progress of the imports it reports on itself.
-    ImportProgressDialogHost(progress = importProgress.takeIf { importReport == null }, canShow = visibleDialog == null)
+    ImportProgressDialogHost(
+        progress = importProgress.takeIf { importReport == null },
+        canShow = visibleDialog == null,
+        onCancel = viewModel::cancelImportPreparation,
+    )
     when (val dialog = visibleDialog) {
         // Drawn by ExportHost, which deals it over the screens rather than in a window of its own.
         is CampfireViewModel.DialogType.Export -> Unit
