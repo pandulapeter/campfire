@@ -447,7 +447,12 @@ internal fun CampfireDialogs(
             viewModel = viewModel,
         )
 
-        CampfireViewModel.DialogType.WhatsNew -> WhatsNewDialog(onDismiss = viewModel::dismissDialog)
+        CampfireViewModel.DialogType.WhatsNew -> {
+            // Here rather than where the dialog is asked for, since that can be long before it is on screen, or never
+            // (see CampfireViewModel.showWhatsNewOnVersionChange).
+            LaunchedEffect(Unit) { viewModel.onWhatsNewShown() }
+            WhatsNewDialog(onDismiss = viewModel::dismissDialog)
+        }
 
         null -> Unit
     }
