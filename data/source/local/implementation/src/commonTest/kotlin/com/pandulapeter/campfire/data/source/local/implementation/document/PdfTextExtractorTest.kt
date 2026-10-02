@@ -248,6 +248,14 @@ class PdfTextExtractorTest {
     }
 
     @Test
+    fun aHeaderAfterJunkIsAccepted() = runTest {
+        val song = PdfTestWriter.song("BT /F1 10 Tf 50 700 Td (hi) Tj ET")
+        val extracted = PdfTextExtractor.extract("junk line\n".encodeToByteArray() + song)
+        assertEquals("hi", extracted.pages.single().lines.single().spans.joinToString("") { it.text })
+        assertFailsWith<IllegalArgumentException> { PdfFile(("x".repeat(1_999) + "\n").encodeToByteArray() + song) }
+    }
+
+    @Test
     fun cachedReferenceChainsResolveEveryTimeAndCyclesAreRejected() {
         val writer = PdfTestWriter()
         writer.add("2 0 R")

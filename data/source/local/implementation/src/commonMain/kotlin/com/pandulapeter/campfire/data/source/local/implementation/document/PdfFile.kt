@@ -13,7 +13,17 @@ import com.pandulapeter.campfire.data.model.domain.ImportLimits
 import com.pandulapeter.campfire.data.source.local.implementation.zip.ZipException
 
 /** Lazy indirect objects, with classic/stream cross references and a sequential recovery scan. */
-internal class PdfFile(private val bytes: ByteArray) {
+internal class PdfFile(input: ByteArray) {
+    /**
+     * The file from its header on, since a header may follow a line a mail gateway or a generator put in front of it and
+     * every offset in the file counts from the header. Declared first, since everything below is built over it.
+     */
+    private val bytes = run {
+        require(input.size <= ImportLimits.MAX_DOCUMENT_FILE_SIZE)
+        val header = headerOffset(input)
+        require(header >= 0)
+        if (header == 0) input else input.copyOfRange(header, input.size)
+    }
     private data class Location(val offset: Int = -1, val stream: Int = -1)
     /** An object stream's header, read once however many of its objects are asked for. */
     private class ObjectStream(val source: PdfStream, val data: ByteArray, val first: Int, val numbers: IntArray, val offsets: IntArray) {
@@ -37,7 +47,6 @@ internal class PdfFile(private val bytes: ByteArray) {
     private val streamEnds = PdfStreamEnds(bytes)
 
     init {
-        require(bytes.size <= ImportLimits.MAX_DOCUMENT_FILE_SIZE && bytes.latin1(0, minOf(5, bytes.size)) == "%PDF-")
         val tail = bytes.latin1(maxOf(0, bytes.size - 4096))
         val start = Regex("startxref\\s+([0-9]+)").findAll(tail).lastOrNull()?.groupValues?.get(1)?.toIntOrNull()
         try {
@@ -262,5 +271,17 @@ internal class PdfFile(private val bytes: ByteArray) {
         }
     }
 
-    private companion object { const val MAX_OBJECTS = 100_000 }
+    private companion object {
+        const val MAX_OBJECTS = 100_000
+        const val HEADER = "%PDF-"
+        /** How far into the file the header may start, as the specification and every other reader allow. */
+        const val MAX_HEADER_OFFSET = 1_024
+
+        fun headerOffset(bytes: ByteArray): Int {
+            for (index in 0..minOf(MAX_HEADER_OFFSET, bytes.size) - HEADER.length) {
+                if (HEADER.indices.all { bytes[index + it].toInt() and 255 == HEADER[it].code }) return index
+            }
+            return -1
+        }
+    }
 }
