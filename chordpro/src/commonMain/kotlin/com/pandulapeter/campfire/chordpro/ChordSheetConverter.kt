@@ -325,31 +325,61 @@ object ChordSheetConverter {
         }
         flushRun()
         val chordLine = isChordLine(line.text)
+        val isMonotone = line.positions.indices.drop(1).all { line.positions[it - 1] <= line.positions[it] }
         for (span in styledRuns) if (!chordLine && chord(span.text.trim())) {
-            val start = line.positions.indexOfFirst { abs(it - span.start) < 0.01 }
-            if (start >= 0 && replacements.none { start in it.first until it.second }) replacements += Triple(start, start + clean(span.text).length, ascii(span.text.trim()))
+            val start = if (isMonotone) {
+                firstIndex(line.positions.size) { line.positions[it] > span.start - 0.01 }
+                    .takeIf { it < line.positions.size && line.positions[it] < span.start + 0.01 } ?: -1
+            } else line.positions.indexOfFirst { abs(it - span.start) < 0.01 }
+            if (start >= 0) replacements += Triple(start, start + clean(span.text).length, ascii(span.text.trim()))
         }
-        var text = ChordProLiteralText.escape(line.text)
-        replacements.sortedByDescending { it.first }.forEach { (start, end, value) ->
-            if (end <= text.length) text = text.replaceRange(start, end, "[$value]")
+        val text = ChordProLiteralText.escape(line.text)
+        return buildString {
+            var cursor = 0
+            for ((start, end, value) in replacements.sortedBy { it.first }) {
+                if (start < cursor || end > text.length) continue
+                append(text, cursor, start)
+                append("[$value]")
+                cursor = end
+            }
+            append(text, cursor, text.length)
         }
-        return text
     }
 
     private fun merge(chords: Rendered, lyrics: Rendered, convertParentheses: Boolean): String {
         val insertions = mutableMapOf<Int, MutableList<String>>()
         val starts = tokens(lyrics.text).map { it.index }
+        val positions = lyrics.positions
+        val isMonotone = positions.indices.drop(1).all { positions[it - 1] <= positions[it] }
+        val spans = lyrics.source.spans
+        val spansSorted = spans.indices.drop(1).all { spans[it - 1].start <= spans[it].start }
+        val suffixMin = positions.copyOf()
+        for (index in suffixMin.lastIndex - 1 downTo 0) suffixMin[index] = minOf(suffixMin[index], suffixMin[index + 1])
+        val prefixMaxEnd = DoubleArray(spans.size)
+        for (index in spans.indices) prefixMaxEnd[index] = maxOf(spans[index].end, prefixMaxEnd.getOrNull(index - 1) ?: Double.NEGATIVE_INFINITY)
         var previous = 0
         for (word in chordTokens(chords).orEmpty().filter { chord(it.text) }) {
             val x = chords.positions.getOrNull(word.index) ?: 0.0
-            var at = lyrics.positions.indexOfLast { it <= x }.coerceAtLeast(0)
+            var at = (firstIndex(suffixMin.size) { suffixMin[it] > x } - 1).coerceAtLeast(0)
             if (lyrics.positions.isEmpty()) at = 0
             else {
                 val lastWidth = lyrics.source.spans.lastOrNull()?.let { (it.end - it.start) / it.text.length.coerceAtLeast(1) } ?: 1.0
                 if (x >= lyrics.positions.last() + lastWidth) at = lyrics.text.length
                 else {
-                    starts.minByOrNull { abs(lyrics.positions[it] - x) }?.let { start ->
-                        val span = lyrics.source.spans.firstOrNull { lyrics.positions[start] >= it.start && lyrics.positions[start] < it.end }
+                    val nearest = if (isMonotone) {
+                        val right = firstIndex(starts.size) { positions[starts[it]] >= x }
+                        val left = if (right > 0) firstIndex(starts.size) { positions[starts[it]] >= positions[starts[right - 1]] } else -1
+                        when {
+                            left < 0 -> starts.getOrNull(right)
+                            right == starts.size || abs(positions[starts[left]] - x) <= abs(positions[starts[right]] - x) -> starts[left]
+                            else -> starts[right]
+                        }
+                    } else starts.minByOrNull { abs(positions[it] - x) }
+                    nearest?.let { start ->
+                        val position = positions[start]
+                        val span = if (spansSorted) {
+                            spans.getOrNull(firstIndex(spans.size) { prefixMaxEnd[it] > position })?.takeIf { it.start <= position }
+                        } else spans.firstOrNull { position >= it.start && position < it.end }
                         val width = span?.let { (it.end - it.start) / it.text.length.coerceAtLeast(1) } ?: 1.0
                         if (abs(lyrics.positions[start] - x) <= width * 1.05 || lyrics.text.getOrNull(at) == ' ' && start == at + 1) at = start
                     }
@@ -371,6 +401,17 @@ object ChordSheetConverter {
         }
         // Inline conversion uses different offsets after insertion; convert those tokens in the merged string.
         return if (convertParentheses) parentheses.replace(merged) { if (chord(it.groupValues[1])) "[${ascii(it.groupValues[1])}]" else it.value } else merged
+    }
+
+    /** The first true element of a monotone predicate, or the size when none matches. */
+    private inline fun firstIndex(size: Int, matches: (Int) -> Boolean): Int {
+        var low = 0
+        var high = size
+        while (low < high) {
+            val middle = low + (high - low) / 2
+            if (matches(middle)) high = middle else low = middle + 1
+        }
+        return low
     }
 
     private fun headerValue(value: String) = value.replace('{', '(').replace('}', ')').replace('\n', ' ').trim()

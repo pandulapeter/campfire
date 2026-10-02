@@ -9,6 +9,7 @@
  */
 package com.pandulapeter.campfire.chordpro
 
+import kotlin.random.Random
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFalse
@@ -99,6 +100,45 @@ class ChordSheetConverterTest {
         assertTrue(started.elapsedNow() < 5.seconds)
         assertEquals("(".repeat(100_000) + "\nhello world\n", result)
         assertEquals("(a b (C)x\nplain words\nmore words\n", convert("[a b [C]x\nplain words\nmore words"))
+    }
+
+    @Test
+    fun seededSheetsKeepTheirChordPlacement() {
+        val expected = listOf(
+            "[D7]today [C]He[Am]llo si[D7]ng [F]sin[G]g wor[C]ld [C]to[Am]day Hello sing Hello\n",
+            "[C]Hel[G]lo [D7]today [Am]He[G]llo [Am]sing today sing\n",
+            "[G]Hell[G]o [C]worl[G]d [F]sing [D7]today world today\n",
+            "[C]sing [C]world\n", "[F]world [C]Hello\n", "[F]sing [C]sin[F]g tod[F]ay sing\n",
+            "[Am]sin[C]g [D7]sing [D7]world [Am]Hello [G][D7]Hello [C]si[F]ng sing sing Hello\n",
+            "[C]He[Am]llo [F]sing [Am]worl[F]d [Am]sing world Hello\n",
+            "[G]toda[C]y [C]worl[C]d [C]today [F]sing [C]wor[G]ld [C]today today world Hello\n",
+            "[G]to[D7]day si[Am]ng [G]sin[G]g Hello sing\n",
+            "[C]to[D7]day [G]Hell[D7]o [F]wor[D7]ld [C]sing sing Hello today\n",
+            "[C]Hel[Am]lo [G]to[D7]day [Am]worl[F]d sin[D7]g sing Hello today\n",
+        )
+        val random = Random(7)
+        repeat(12) { index ->
+            val count = random.nextInt(2, 10)
+            val chords = List(count) { listOf("Am", "C", "G", "F", "D7")[random.nextInt(5)] + " ".repeat(random.nextInt(1, 5)) }.joinToString("")
+            val lyrics = List(count) { listOf("Hello", "world", "sing", "today")[random.nextInt(4)] }.joinToString(" ")
+            assertEquals(expected[index], convert("$chords\n$lyrics"))
+        }
+        val chords = ChordSheet.Line(listOf(span("Am", 0.0, 10.0), span("C", 20.0, 25.0)))
+        val lyrics = ChordSheet.Line(listOf(span("Hello", 0.0, 25.0), span("world", 10.0, 35.0), span("today", 5.0, 30.0)))
+        assertEquals("[Am]Helloworldtod[C]ay\n", ChordSheetConverter.convert(ChordSheet(listOf(ChordSheet.Page(listOf(chords, lyrics))))).single())
+    }
+
+    @Test
+    fun longChordRowsAndInlineRunsConvertWithinTheWorkBound() {
+        val chordRow = "C  ".repeat(30_000)
+        val lyrics = "la ".repeat(30_000).trimEnd()
+        var started = TimeSource.Monotonic.markNow()
+        assertEquals("[C]la ".repeat(30_000).trimEnd() + "\n", convert("$chordRow\n$lyrics"))
+        assertTrue(started.elapsedNow() < 5.seconds)
+        val inline = "(C) ".repeat(60_000).trimEnd()
+        started = TimeSource.Monotonic.markNow()
+        assertEquals("[C] ".repeat(60_000).trimEnd() + "\n", convert(inline))
+        assertTrue(started.elapsedNow() < 5.seconds)
     }
 
     @Test
