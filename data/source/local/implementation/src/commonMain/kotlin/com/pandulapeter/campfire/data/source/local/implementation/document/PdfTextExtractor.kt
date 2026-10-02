@@ -11,6 +11,7 @@ package com.pandulapeter.campfire.data.source.local.implementation.document
 
 import com.pandulapeter.campfire.data.model.domain.ExtractedDocument
 import com.pandulapeter.campfire.data.model.domain.ImportLimits
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.yield
 import kotlin.math.abs
 import kotlin.math.ceil
@@ -60,6 +61,7 @@ internal object PdfTextExtractor {
         val file = PdfFile(bytes)
         val pages = mutableListOf<Page>()
         val fonts = mutableMapOf<PdfDictionary, PdfFont>()
+        val failedFonts = mutableSetOf<PdfDictionary>()
         val visited = mutableSetOf<PdfValue>()
         var shown = 0L
         var unreadable = 0L
@@ -67,6 +69,7 @@ internal object PdfTextExtractor {
         var operators = 0
         var glyphCount = 0
         var interpretedBytes = 0L
+        var failedPages = 0
         // The spaces that bridge a gap between glyphs are text too: a monospace font at a tenth of a point asks for a
         // thousand of them per glyph, which would turn the glyph budget into gigabytes of padding.
         fun chargeText(characters: Int) {
@@ -82,15 +85,30 @@ internal object PdfTextExtractor {
             if (interpretedBytes / WORK_YIELD_INTERVAL != before / WORK_YIELD_INTERVAL) yield()
         }
 
-        suspend fun page(dictionary: PdfDictionary, resources: PdfDictionary?, box: List<PdfValue>, rotation: Int) {
-            requireWithinLimit(pages.size < 2000) { "PDF page limit" }
+        // A malformed font costs the text shown in it, which counts as unreadable, and is not built again on every Tf.
+        fun font(dictionary: PdfDictionary): PdfFont? {
+            if (dictionary in failedFonts) return null
+            fonts[dictionary]?.let { return it }
+            return try {
+                PdfFont(file, dictionary).also { fonts[dictionary] = it }
+            } catch (exception: PdfLimitException) {
+                throw exception
+            } catch (exception: Exception) {
+                if (file.isEncrypted) throw exception
+                failedFonts += dictionary
+                null
+            }
+        }
+
+        suspend fun readPage(dictionary: PdfDictionary, resources: PdfDictionary?, box: List<PdfValue>, rotation: Int): Page {
             val bounds = box.map { file.number(it) }
             require(bounds.size == 4 && bounds.all { it.isFinite() && abs(it) < 1_000_000 })
-            val rotate = ((rotation % 360) + 360) % 360
+            // A producer that writes 359 means upright, so a rotation that is no multiple of 90 is read as the nearest one.
+            val rotate = (((rotation % 360) + 360) % 360 + 45) / 90 * 90 % 360
             // A rectangle may name any two opposite corners, in either order.
             val x0 = minOf(bounds[0], bounds[2]); val y0 = minOf(bounds[1], bounds[3])
             val x1 = maxOf(bounds[0], bounds[2]); val y1 = maxOf(bounds[1], bounds[3])
-            require(x1 > x0 && y1 > y0 && rotate % 90 == 0)
+            require(x1 > x0 && y1 > y0)
             fun point(point: Point) = when (rotate) {
                 90 -> Point(point.y - y0, point.x - x0)
                 180 -> Point(x1 - point.x, point.y - y0)
@@ -159,7 +177,7 @@ internal object PdfTextExtractor {
                         "Tf" -> {
                             val name = operands.firstOrNull().name()
                             val fontDictionary = file.dictionary(file.dictionary(resource?.get("Font"))?.get(name.orEmpty()))
-                            state.font = fontDictionary?.let { fonts.getOrPut(it) { PdfFont(file, it) } }
+                            state.font = fontDictionary?.let(::font)
                             state.size = abs(n(1, 12.0)).coerceIn(0.1, 1000.0)
                         }
                         "Tc" -> state.charSpace = n(0)
@@ -183,12 +201,24 @@ internal object PdfTextExtractor {
                             val objectValue = file.dictionary(resource?.get("XObject"))?.get(operands.firstOrNull().name().orEmpty())
                             val form = file.resolve(objectValue) as? PdfStream
                             if (form?.dictionary?.get("Subtype").name() == "Form") {
-                                require(activeForms.add(form!!)) { "Cyclic PDF form" }
-                                val transform = if (form.dictionary["Matrix"] != null) matrix(file.array(form.dictionary["Matrix"])) else Matrix()
-                                val formData = file.decode(form)
-                                chargeWork(formData.size.toLong())
-                                interpret(formData, file.dictionary(form.dictionary["Resources"]) ?: resource, state.copy(ctm = state.ctm * transform), depth + 1)
-                                activeForms.remove(form)
+                                // The cycle is tested outside the try, whose finally would otherwise remove the entry of the
+                                // invocation of the same form that is still running further up.
+                                if (!activeForms.add(form!!)) { shown++; unreadable++ }
+                                else try {
+                                    val transform = if (form.dictionary["Matrix"] != null) matrix(file.array(form.dictionary["Matrix"])) else Matrix()
+                                    val formData = file.decode(form)
+                                    chargeWork(formData.size.toLong())
+                                    interpret(formData, file.dictionary(form.dictionary["Resources"]) ?: resource, state.copy(ctm = state.ctm * transform), depth + 1)
+                                } catch (exception: CancellationException) {
+                                    throw exception
+                                } catch (exception: PdfLimitException) {
+                                    throw exception
+                                } catch (exception: Exception) {
+                                    if (file.isEncrypted) throw exception
+                                    shown++; unreadable++
+                                } finally {
+                                    activeForms.remove(form)
+                                }
                             }
                         }
                         "BI" -> {
@@ -216,7 +246,26 @@ internal object PdfTextExtractor {
             var at = 0
             for (stream in streams) { stream.copyInto(data, at); at += stream.size; data[at++] = 10 }
             interpret(data, resources, State())
-            pages += Page(buildLines(glyphs, ::chargeText), if (rotate in listOf(90, 270)) x1 - x0 else y1 - y0)
+            return Page(buildLines(glyphs, ::chargeText), if (rotate in listOf(90, 270)) x1 - x0 else y1 - y0)
+        }
+
+        // A malformed page costs only itself: its slot stays, empty, so that page numbers and the running lines still
+        // count it, and it counts as unreadable, so that a document of one bad page is still unreadable as a whole.
+        // Budgets and encryption are the document's, and the next page would only run into them again.
+        suspend fun page(dictionary: PdfDictionary, resources: PdfDictionary?, box: List<PdfValue>, rotation: Int) {
+            // A songbook whose tail is silently left out is worse than one that is reported as unreadable.
+            requireWithinLimit(pages.size < 2000) { "PDF page limit" }
+            pages += try {
+                readPage(dictionary, resources, box, rotation)
+            } catch (exception: CancellationException) {
+                throw exception
+            } catch (exception: PdfLimitException) {
+                throw exception
+            } catch (exception: Exception) {
+                if (file.isEncrypted) throw exception
+                shown++; unreadable++; failedPages++
+                Page(emptyList(), 792.0)
+            }
             yield()
         }
 
@@ -231,6 +280,7 @@ internal object PdfTextExtractor {
         }
         walk(file.catalog()["Pages"], null, listOf(PdfNumber(0.0), PdfNumber(0.0), PdfNumber(612.0), PdfNumber(792.0)), 0)
         require(shown > 0 && unreadable * 2 <= shown) { "PDF has no readable font mapping" }
+        require(failedPages * 2 <= pages.size) { "Most PDF pages are unreadable" }
         val repeated = runningLines(pages)
         return ExtractedDocument(pages.mapIndexed { index, page ->
             val lines = page.lines.filterNot { line ->

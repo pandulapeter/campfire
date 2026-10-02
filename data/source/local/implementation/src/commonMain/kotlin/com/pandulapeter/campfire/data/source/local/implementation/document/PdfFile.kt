@@ -32,6 +32,8 @@ internal class PdfFile(private val bytes: ByteArray) {
     private var scanned = false
     private var root: PdfValue? = null
     private var encrypted = false
+    /** Found by a lazy recovery scan too, from inside whatever page or font asked, which must not read on regardless. */
+    val isEncrypted get() = encrypted
     private val streamEnds = PdfStreamEnds(bytes)
 
     init {

@@ -170,7 +170,10 @@ holds the `@Module @ComponentScan object DataLocalSourceModule`, and every local
   Object, recursion, stream, page, operator, glyph, output and XML event (600,000, some 21,000 Word paragraphs, which
   also bounds the element tree at half that) limits bound untrusted input, and one work budget of 96 MiB of
   interpreted content and of stream input per document, so re-reading a form or a shared contents stream is paid for; a
-  budget running out is a `PdfLimitException`, told apart from a malformed object. Page, operator and work yields keep
+  budget running out is a `PdfLimitException`, told apart from a malformed object. A malformed page, font or form costs only
+  itself, and the document is unreadable only when more than half of its glyphs or pages are; budgets, encryption, a
+  broken page tree and more than 2,000 pages still fail it whole, the last because a songbook silently losing its tail
+  is worse than one reported as unreadable. A `/Rotate` that is no multiple of 90 is read as the nearest one. Page, operator and work yields keep
   the web responsive. Stream ends are found once per file (`PdfStreamEnds`, every `endstream` offset in one pass) rather
   than by searching the rest of the file for each object, and at most 1 KiB of whitespace is walked past a declared
   `/Length`, so a recovery scan over thousands of streams with no usable end stays linear. The spaces that bridge a gap

@@ -139,6 +139,68 @@ class PdfTextExtractorTest {
     }
 
     @Test
+    fun aMalformedSecondPageDoesNotCostTheFirst() = runTest {
+        val bytes = pages("BT /F1 10 Tf 50 700 Td (hi) Tj ET", "BT /F1 10 Tf 50 700 Td (bye) Tj ET", secondPage = "/MediaBox [0 0 0 0]")
+        val extracted = PdfTextExtractor.extract(bytes).pages
+        assertEquals(2, extracted.size)
+        assertEquals("hi", extracted.first().lines.single().spans.joinToString("") { it.text })
+        assertTrue(extracted.last().lines.isEmpty())
+    }
+
+    @Test
+    fun aStrayParenthesisInOnePageStreamOnlyLosesThatPage() = runTest {
+        val bytes = pages("BT /F1 10 Tf 50 700 Td (hi) Tj ET", "BT /F1 10 Tf 50 700 Td (bye) Tj ET ) q")
+        assertEquals("hi", PdfTextExtractor.extract(bytes).pages.first().lines.single().spans.joinToString("") { it.text })
+    }
+
+    @Test
+    fun aMalformedFontLosesOnlyTheTextShownInIt() = runTest {
+        val bytes = PdfTestWriter.song("BT /F1 10 Tf 50 700 Td (Readable text) Tj /F2 10 Tf <0001> Tj ET", extra = { writer ->
+            writer.add("<< /Type /Font /Subtype /Type0 /BaseFont /Broken /Encoding /Identity-H /DescendantFonts [7 0 R] >>")
+            writer.add("<< /Type /Font /Subtype /CIDFontType2 /W [70000 [500]] >>")
+        }).decodeToString().replace("/Font << /F1 4 0 R >>", "/Font << /F1 4 0 R /F2 6 0 R >>").encodeToByteArray()
+        assertEquals("Readable text", PdfTextExtractor.extract(bytes).pages.single().lines.single().spans.joinToString("") { it.text })
+    }
+
+    @Test
+    fun aDocumentWhoseOnlyPageIsMalformedIsStillUnreadable() = runTest {
+        val bytes = PdfTestWriter.song("BT /F1 10 Tf 50 700 Td (hi) Tj ET").decodeToString().replace("/MediaBox [0 0 612 792]", "/MediaBox [0 0 0 0]")
+        assertFailsWith<IllegalArgumentException> { PdfTextExtractor.extract(bytes.encodeToByteArray()) }
+    }
+
+    @Test
+    fun aDocumentOfMoreThanTwoThousandPagesIsStillRejected() = runTest {
+        val count = 2_100
+        val writer = PdfTestWriter()
+        writer.add("<< /Type /Catalog /Pages 2 0 R >>")
+        writer.add("<< /Type /Pages /Kids [${(1..count).joinToString(" ") { "${it + 4} 0 R" }}] /MediaBox [0 0 612 792] /Resources << /Font << /F1 3 0 R >> >> >>")
+        writer.add("<< /Type /Font /Subtype /Type1 /BaseFont /Courier /Encoding /WinAnsiEncoding >>")
+        writer.stream("BT /F1 10 Tf 50 700 Td (hi) Tj ET")
+        repeat(count) { writer.add("<< /Type /Page /Parent 2 0 R /Contents 4 0 R >>") }
+        assertFailsWith<PdfLimitException> { PdfTextExtractor.extract(writer.write()) }
+    }
+
+    @Test
+    fun aFormThatInvokesItselfIsSkipped() = runTest {
+        val writer = PdfTestWriter()
+        writer.add("<< /Type /Catalog /Pages 2 0 R >>")
+        writer.add("<< /Type /Pages /Kids [3 0 R] /MediaBox [0 0 612 792] /Resources << /Font << /F1 4 0 R >> /XObject << /X 6 0 R >> >> >>")
+        writer.add("<< /Type /Page /Parent 2 0 R /Contents 5 0 R >>")
+        writer.add("<< /Type /Font /Subtype /Type1 /BaseFont /Courier /Encoding /WinAnsiEncoding >>")
+        writer.stream("BT /F1 10 Tf 50 700 Td (page text) Tj ET /X Do")
+        writer.stream("BT /F1 10 Tf 50 650 Td (form) Tj ET /X Do", "/Type /XObject /Subtype /Form /Resources << /Font << /F1 4 0 R >> /XObject << /X 6 0 R >> >>")
+        val lines = PdfTextExtractor.extract(writer.write()).pages.single().lines.map { line -> line.spans.joinToString("") { it.text } }
+        assertEquals(listOf("page text", "form"), lines.filter { it.isNotEmpty() })
+    }
+
+    @Test
+    fun aRotationJustShortOfAQuarterTurnReadsAsTheNearestOne() = runTest {
+        val upright = PdfTestWriter.song("BT /F1 10 Tf 50 700 Td (Upright) Tj ET")
+        val nearly = upright.decodeToString().replace("<< /Type /Page /Parent 2 0 R", "<< /Type /Page /Rotate 359 /Parent 2 0 R").encodeToByteArray()
+        assertEquals(PdfTextExtractor.extract(upright), PdfTextExtractor.extract(nearly))
+    }
+
+    @Test
     fun cachedReferenceChainsResolveEveryTimeAndCyclesAreRejected() {
         val writer = PdfTestWriter()
         writer.add("2 0 R")
@@ -355,5 +417,17 @@ class PdfTextExtractorTest {
         assertEquals(PdfReference(12), value["Ref"])
         assertEquals(-2.5, value["List"].array()[1].number())
         assertFailsWith<IllegalArgumentException> { PdfSyntax(("[".repeat(66) + "]".repeat(66)).encodeToByteArray()).next() }
+    }
+
+    private fun pages(first: String, second: String, secondPage: String = ""): ByteArray {
+        val writer = PdfTestWriter()
+        writer.add("<< /Type /Catalog /Pages 2 0 R >>")
+        writer.add("<< /Type /Pages /Kids [3 0 R 4 0 R] /MediaBox [0 0 612 792] /Resources << /Font << /F1 5 0 R >> >> >>")
+        writer.add("<< /Type /Page /Parent 2 0 R /Contents 6 0 R >>")
+        writer.add("<< /Type /Page /Parent 2 0 R /Contents 7 0 R $secondPage >>")
+        writer.add("<< /Type /Font /Subtype /Type1 /BaseFont /Courier /Encoding /WinAnsiEncoding >>")
+        writer.stream(first)
+        writer.stream(second)
+        return writer.write()
     }
 }
