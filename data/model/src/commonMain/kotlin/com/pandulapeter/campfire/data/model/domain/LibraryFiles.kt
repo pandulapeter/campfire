@@ -35,12 +35,18 @@ object LibraryFiles {
 
     const val ARCHIVE_EXTENSION = ".zip"
 
+    /** Document inputs converted locally to ChordPro, never registered as system Open with file types. */
+    val DOCUMENT_EXTENSIONS = listOf(".pdf", ".docx")
+
+    /** Read only far enough to report the obsolete binary Word format as an unreadable document. */
+    const val LEGACY_DOCUMENT_EXTENSION = ".doc"
+
     /**
-     * Everything an import will look inside, whether or not Campfire registers itself for it. Plain text, zip and
-     * JSON belong to everyone: the app happily reads one that is handed to it, but claiming them system wide would
+     * Everything an import will look inside, whether or not Campfire registers itself for it. Documents, plain text,
+     * zip and JSON belong to everyone: the app happily reads one that is handed to it, but claiming them system wide would
      * put Campfire in the way of every archive and note on the device.
      */
-    val IMPORTABLE_EXTENSIONS = SONG_EXTENSIONS + listOf(TEXT_EXTENSION, ARCHIVE_EXTENSION, ".json")
+    val IMPORTABLE_EXTENSIONS = SONG_EXTENSIONS + DOCUMENT_EXTENSIONS + listOf(TEXT_EXTENSION, ARCHIVE_EXTENSION, ".json", LEGACY_DOCUMENT_EXTENSION)
 
     /**
      * Whether [name] is a file some tool wrote for itself rather than one somebody put there: macOS leaves an

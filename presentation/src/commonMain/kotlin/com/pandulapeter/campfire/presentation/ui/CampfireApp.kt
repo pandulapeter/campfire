@@ -58,6 +58,8 @@ import androidx.compose.material3.NavigationRailItem
 import androidx.compose.material3.Snackbar
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
+import androidx.compose.material3.SnackbarResult
+import androidx.compose.material3.SnackbarDuration
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.WideNavigationRail
@@ -128,6 +130,9 @@ import com.pandulapeter.campfire.presentation.resources.ic_settings
 import com.pandulapeter.campfire.presentation.resources.ic_songs
 import com.pandulapeter.campfire.presentation.resources.import_failed
 import com.pandulapeter.campfire.presentation.resources.import_oversized
+import com.pandulapeter.campfire.presentation.resources.import_converted
+import com.pandulapeter.campfire.presentation.resources.import_open
+import com.pandulapeter.campfire.presentation.resources.import_unreadable_documents
 import com.pandulapeter.campfire.presentation.resources.import_result
 import com.pandulapeter.campfire.presentation.resources.setlists
 import com.pandulapeter.campfire.presentation.resources.settings
@@ -748,13 +753,21 @@ private fun Messages(
     val queue by viewModel.messageQueue.collectAsStateWithLifecycle()
     val head = queue.firstOrNull()
     val text = when (val current = head?.value) {
-        is CampfireViewModel.Message.ImportFinished -> stringResource(
-            Res.string.import_result,
-            current.result.importedSongFileNames.size,
-            current.result.importedSetlistFileNames.size,
-            current.result.duplicateFileNames.size,
-            current.result.skippedFileNames.size,
-        )
+        is CampfireViewModel.Message.ImportFinished -> listOfNotNull(
+            stringResource(
+                Res.string.import_result,
+                current.result.importedSongFileNames.size,
+                current.result.importedSetlistFileNames.size,
+                current.result.duplicateFileNames.size,
+                current.result.skippedFileNames.size,
+            ),
+            if (current.result.convertedSongFileNames.isNotEmpty()) stringResource(Res.string.import_converted, current.result.convertedSongFileNames.size) else null,
+            if (current.result.unreadableDocumentFileNames.isNotEmpty()) pluralStringResource(
+                Res.plurals.import_unreadable_documents,
+                current.result.unreadableDocumentFileNames.size,
+                current.result.unreadableDocumentFileNames.size,
+            ) else null,
+        ).joinToString("\n")
 
         is CampfireViewModel.Message.ImportOversized -> pluralStringResource(Res.plurals.import_oversized, current.count, current.count)
         CampfireViewModel.Message.ImportFailed -> stringResource(Res.string.import_failed)
@@ -781,9 +794,16 @@ private fun Messages(
         is CampfireViewModel.Message.LinkNotOpened -> textResource(Res.string.error_link_not_opened, current.url)
         null -> null
     }
+    val songToOpen = (head?.value as? CampfireViewModel.Message.ImportFinished)?.result?.convertedSongToOpen
+    val actionLabel = if (songToOpen != null) stringResource(Res.string.import_open) else null
     LaunchedEffect(head?.index) {
         if (head != null && text != null) {
-            snackbarHostState.showSnackbar(text)
+            val result = snackbarHostState.showSnackbar(
+                message = text,
+                actionLabel = actionLabel,
+                duration = if (actionLabel != null || '\n' in text) SnackbarDuration.Long else SnackbarDuration.Short,
+            )
+            if (result == SnackbarResult.ActionPerformed && songToOpen != null) viewModel.openImportedSong(songToOpen)
             viewModel.onMessageShown(head)
         }
     }

@@ -9,6 +9,13 @@
 -->
 # :presentation
 
+Document imports (`.pdf`, `.docx`, plain `.txt` and Android shared text) become ordinary songs before the UI sees
+them. Import summaries report unreadable documents separately and append the number of converted songs actually
+written, in both English and Hungarian. A single converted song offers a snackbar **Open** action, handled by
+`CampfireViewModel.openImportedSong`; converted imports never navigate automatically. The existing behavior for
+an unconverted ChordPro file is unchanged. The conflict sheet carries the same unreadable-document note, and
+settings/empty-library import labels name documents too.
+
 The entire UI: all Compose components, plus the thin per-platform shells the `:app:*` modules call into. A single Kotlin Multiplatform module (`campfire-compose-library`) — `commonMain` must stay free of JVM-only APIs (`java.*`, `KoinJavaComponent`); use `kotlin.uuid.Uuid`, `androidx.compose.ui.text.intl.Locale` and `KoinPlatform.getKoin()` instead (`desktopMain` may use `java.*`). Depends on `:domain:api` and `:chordpro` (the song model it renders) — never on repositories or local sources. Koin wiring: `Module.kt` holds the `@Module @ComponentScan object PresentationModule`, and `CampfireViewModel` is a `@KoinViewModel` — the compiler plugin writes the constructor call, so its thirty-odd parameters are no concern of the wiring — obtained in Compose with `koinViewModel()`.
 
 The platform shells all live in the `ui` package next to `CampfireApp`, one per platform source set. They exist only to do what Compose cannot do in common code; anything non-trivial belongs in `commonMain` (platform-specific behavior such as scrollbars is done there with `expect`/`actual`, see `ui/platform/Platform.kt`). Each of them provides `LocalFilePicker` and passes on a `Flow` of files the operating system handed over ("open with", a share, a drop).

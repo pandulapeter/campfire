@@ -39,6 +39,7 @@ class ImportFilesUseCaseImpl internal constructor(
     override suspend operator fun invoke(plan: ImportPlan, resolution: ImportConflictResolution): ImportResult {
         val importedSongs = mutableListOf<Song>()
         val duplicateFileNames = mutableListOf<String>()
+        val convertedSongFileNames = mutableListOf<String>()
         // Where each imported file ended up, for the setlists below. Only files that held exactly one song are in
         // here: a file that held several has no single name a setlist could have been pointing at.
         val storedSongFileNames = mutableMapOf<String, String>()
@@ -66,7 +67,10 @@ class ImportFilesUseCaseImpl internal constructor(
                             fileName = if (shouldReplace) replacedFileName else entry.fileName,
                             text = entry.text,
                             shouldReplace = shouldReplace,
-                        ).also { importedSongs += it }.fileName
+                        ).also {
+                            importedSongs += it
+                            if (entry.isConverted) convertedSongFileNames += it.fileName
+                        }.fileName
                     }
 
                     // Already in the library, or already written by this import, so the name it arrived under points there.
@@ -136,6 +140,12 @@ class ImportFilesUseCaseImpl internal constructor(
             skippedFileNames = plan.skippedFileNames,
             duplicateFileNames = duplicateFileNames,
             oversizedFileNames = plan.oversizedFileNames,
+            unreadableDocumentFileNames = plan.unreadableDocumentFileNames,
+            convertedSongFileNames = convertedSongFileNames,
+            convertedSongToOpen = convertedSongFileNames.singleOrNull()?.takeIf {
+                plan.songs.size == 1 && plan.setlists.isEmpty() && plan.skippedFileNames.isEmpty() &&
+                    plan.oversizedFileNames.isEmpty() && plan.unreadableDocumentFileNames.isEmpty()
+            },
         )
     }
 

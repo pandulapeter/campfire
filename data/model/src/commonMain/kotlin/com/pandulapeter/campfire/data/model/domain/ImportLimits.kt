@@ -23,6 +23,9 @@ object ImportLimits {
     /** One song, setlist or collection of songs, picked or inside an archive: a few thousand songs in one file. */
     const val MAX_TEXT_FILE_SIZE = 8L shl 20
 
+    /** Documents may carry embedded fonts and images much larger than their extracted text. */
+    const val MAX_DOCUMENT_FILE_SIZE = 16L shl 20
+
     /**
      * One archive as it was picked, everything one selection reads, and everything one import unpacks to: more than
      * twice a library of three thousand songs of 4 KB. A library exports to an archive of its own size plus about 180
@@ -37,6 +40,7 @@ object ImportLimits {
      */
     fun maxSizeOf(name: String) = when {
         name.endsWith(LibraryFiles.ARCHIVE_EXTENSION, ignoreCase = true) -> MAX_IMPORT_SIZE
+        (LibraryFiles.DOCUMENT_EXTENSIONS + LibraryFiles.LEGACY_DOCUMENT_EXTENSION).any { name.endsWith(it, ignoreCase = true) } -> MAX_DOCUMENT_FILE_SIZE
         LibraryFiles.IMPORTABLE_EXTENSIONS.any { name.endsWith(it, ignoreCase = true) } -> MAX_TEXT_FILE_SIZE
         else -> 0L
     }

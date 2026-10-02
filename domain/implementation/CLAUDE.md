@@ -46,7 +46,7 @@ The ones that carry real logic:
   for all of them, failures included: one unreadable part of the screen must not keep the rest empty.
 - `PrepareImportUseCaseImpl` / `ImportPlanner` / `ImportFilesUseCaseImpl` — the import policy, split the way sync's
   is: one works out what would happen, the other carries it out. Preparing unpacks archives (recursively, path stripped, the archiving
-  tool's own hidden files left where they were, and one that was picked directly counted as skipped), sorts each file into song / setlist / skipped by its extension, splits
+  tool's own hidden files left where they were, and one that was picked directly counted as skipped), sorts each file into song / document / setlist / skipped by its extension, splits
   a file holding several songs at `{new_song}` with `:chordpro`, asks `SongRepository.importFileName` what each song's
   own header names it — the name the file arrived under is
   passed as a fallback *title*, for the songs that declare none, and is otherwise only used to recognise a library
@@ -73,6 +73,14 @@ The ones that carry real logic:
   comparisons would otherwise occupy the view model's main thread, and yields between songs so the web can paint and
   cancellation can stop it. Applying turns each entry plus the
   `ImportConflictResolution` into write / replace / disregard / leave alone, and only `REPLACE` ever overwrites.
+  Documents pass through `DocumentRepository`, `mapper/DocumentMappers.kt` and `ChordSheetConverter` before that
+  same planning. Plain text uses positioned columns and the converter too, but ChordPro extensions are untouched.
+  A multi-song document joins the ordinary collection path, with each song named by its own converted header and
+  no source filename. Extracted prose is a valid import; no readable text is `unreadableDocumentFileNames`, not an
+  unsupported file. Document input is capped at 16 MiB and converted text at 8 MiB. `isConverted` is transient
+  planning state, counted only for actual writes in `ImportResult.convertedSongFileNames`; duplicates and skipped
+  conflicts are never counted. `convertedSongToOpen` is set only for one converted song without other entries or
+  errors, for the presentation's explicit Open action. No origin information survives in the library.
   Songs are still written before setlists and the names they actually got are remembered, so that a setlist arriving in
   the same archive still points at its songs after a collision renamed one — a disregarded duplicate maps to the copy
   the library already had. The setlists are planned again on those names (`ImportPlanner.replanSetlists`), since the

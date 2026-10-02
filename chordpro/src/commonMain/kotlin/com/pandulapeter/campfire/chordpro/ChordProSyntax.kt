@@ -182,6 +182,12 @@ internal object ChordProSyntax {
     fun directiveValueStart(trimmedLine: String) = walkDirective(trimmedLine)?.second?.takeIf { it >= 0 }
 
     /**
+     * Whether [trimmedLine] is a directive ChordPro defines, or a custom `x_` one. Unlike [matchDirective] it refuses
+     * `{unknown: value}`, which is what tells a ChordPro file apart from a text that merely has braces in it.
+     */
+    fun isKnownDirective(trimmedLine: String) = walkDirective(trimmedLine)?.first?.let(::isKnownName) == true
+
+    /**
      * The lowercase name of the directive on [trimmedLine] and the index its value starts at, -1 where it has none.
      *
      * ChordPro separates a value from the name with a colon "and/or whitespace", and the spec's own examples use the

@@ -72,4 +72,13 @@ internal class ImportLimitsTest {
     fun theInflaterAllowsWhatAnImportDoes() {
         assertEquals(ImportLimits.MAX_IMPORT_SIZE, Inflater.MAX_ENTRY_SIZE.toLong())
     }
+
+    @Test
+    fun documentsHaveTheirOwnLimit() {
+        for (name in listOf("song.pdf", "song.DOCX", "song.doc")) {
+            assertEquals(ImportLimits.MAX_DOCUMENT_FILE_SIZE, ImportLimits.maxSizeOf(name))
+            assertTrue(ImportBudget().read(name, ImportLimits.MAX_DOCUMENT_FILE_SIZE + 1) { error("read") }!!.isTooLarge)
+        }
+        assertEquals(ImportLimits.MAX_TEXT_FILE_SIZE, ImportLimits.maxSizeOf("song.txt"))
+    }
 }

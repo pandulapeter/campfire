@@ -65,7 +65,7 @@ internal fun importSharedTexts(texts: List<String>, subject: String?) {
         val files = texts.ifEmpty { listOf("") }.mapIndexed { index, text ->
             val name = subject?.cleanedForFileName()?.let { if (texts.size > 1) "$it ${index + 1}" else it } ?: text.firstPlainLine()
             ImportedFile(
-                name = name.orEmpty().ifEmpty { UNTITLED } + LibraryFiles.SONG_EXTENSION,
+                name = name.orEmpty().ifEmpty { UNTITLED } + LibraryFiles.TEXT_EXTENSION,
                 // A link by itself is not a song. Importing it as one would leave a file to find and delete, and
                 // fetching what it points at is not something this app does.
                 bytes = if (text.isOnlyLinks()) ByteArray(0) else text.encodeToByteArray(),

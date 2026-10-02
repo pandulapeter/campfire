@@ -26,6 +26,17 @@ class ArchiveLocalSourceTest {
     private val archiveLocalSource = ArchiveLocalSourceImpl()
 
     @Test
+    fun `documents retain their bytes and docx is not unpacked as a nested archive`() = runBlocking {
+        val word = ZipWriter.write(listOf(ZipEntry("word/document.xml", "<document/>".encodeToByteArray())))
+        val pdf = "%PDF-1.7".encodeToByteArray()
+        val archive = ZipWriter.write(listOf(ZipEntry("sheets/song.docx", word), ZipEntry("sheets/song.pdf", pdf)))
+        val files = archiveLocalSource.unpack(archive, ImportLimits.MAX_IMPORT_SIZE)
+        assertEquals(listOf("song.docx", "song.pdf"), files.map { it.name })
+        assertContentEquals(word, files[0].bytes)
+        assertContentEquals(pdf, files[1].bytes)
+    }
+
+    @Test
     fun `strips backslash paths the way Windows PowerShell writes them`() = runBlocking {
         val archive = ZipWriter.write(
             listOf(
@@ -94,14 +105,14 @@ class ArchiveLocalSourceTest {
         val archive = ZipWriter.write(
             listOf(
                 ZipEntry("a.cho", "{title: A}".encodeToByteArray()),
-                ZipEntry("notes.pdf", byteArrayOf(37, 80, 68, 70)),
+                ZipEntry("notes.png", byteArrayOf(37, 80, 68, 70)),
                 ZipEntry("b.cho", "{title: B}".encodeToByteArray()),
             ),
         )
 
         val files = archiveLocalSource.unpack(archive = archive, maxSize = ImportLimits.MAX_IMPORT_SIZE)
 
-        assertEquals(listOf("a.cho", "b.cho", "notes.pdf"), files.map { it.name })
+        assertEquals(listOf("a.cho", "b.cho", "notes.png"), files.map { it.name })
         assertEquals(0, files.last().bytes.size)
         assertFalse(files.last().isTooLarge)
     }

@@ -24,6 +24,7 @@ data class ImportPlan(
     val skippedFileNames: List<String> = emptyList(),
     /** Files the import would have looked inside but did not read, because they are larger than [ImportLimits] allows. */
     val oversizedFileNames: List<String> = emptyList(),
+    val unreadableDocumentFileNames: List<String> = emptyList(),
 ) {
 
     /** True while nothing about this import needs answering, which is every import into an untouched name. */
@@ -39,6 +40,7 @@ data class ImportPlan(
             duplicateCount = songs.count { it.status == Status.IDENTICAL } + setlists.count { it.status == Status.IDENTICAL },
             skippedCount = skippedFileNames.size,
             oversizedCount = oversizedFileNames.size,
+            unreadableDocumentCount = unreadableDocumentFileNames.size,
             conflictingFileNames = songs.filter { it.status == Status.CONFLICTING }.map { it.replacesFileName ?: it.fileName } +
                 setlists.filter { it.status == Status.CONFLICTING }.map { it.fileName },
         )
@@ -70,6 +72,7 @@ data class ImportPlan(
          * both still writes under [fileName], the name the app gives the song, which the storage layer numbers.
          */
         val replacesFileName: String? = null,
+        val isConverted: Boolean = false,
     )
 
     data class SetlistEntry(
@@ -114,6 +117,7 @@ data class ImportPlan(
         val skippedCount: Int,
         val oversizedCount: Int,
         val conflictingFileNames: List<String>,
+        val unreadableDocumentCount: Int = 0,
     )
 }
 

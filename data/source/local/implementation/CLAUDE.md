@@ -152,6 +152,21 @@ holds the `@Module @ComponentScan object DataLocalSourceModule`, and every local
   after the known ones. A setlist's `date` is kept as text in the document and read as a `LocalDate`, so one that is
   not a date — or not text at all, which its own serializer reads as none — costs that date and not the setlist; the `priority` older versions ordered the list by is still declared,
   so that it is read and dropped rather than kept as an unknown field. No document type ever leaves this module.
+- **`document/`** — bounded, text-only PDF and Word readers in common Kotlin, with no platform parser or network.
+  `DocumentLocalSourceImpl` checks the 16 MiB input limit and dispatches by extension; damaged, scanned, encrypted
+  or otherwise unreadable documents return null, while cancellation is rethrown. The output is `ExtractedDocument`
+  with pages, lines and positioned/style-bearing spans, never the original bytes in storage. `DocxTextExtractor`
+  opens only `word/document.xml` and `word/styles.xml` through `ZipReader`; the bounded XML parser refuses DTDs,
+  supports entities and CDATA, and the walker reads paragraphs, tabs, styles, page breaks and chord-grid/layout
+  tables while leaving deleted text and external parts out. Proportional positions are estimates. The PDF reader
+  supports classic/stream xrefs, object streams, incremental saves and recovery scans, Flate/ASCIIHex/ASCII85/LZW
+  filters and predictors, inherited page resources, horizontal text operators and form XObjects. Fonts use
+  ToUnicode maps or WinAnsi/MacRoman/Standard encodings and Adobe glyph names; images and font programs are never
+  decoded. Positioned glyphs form lines and columns, with paragraph gaps and repeated edge furniture removed.
+  Object, recursion, stream, page, operator, glyph and output limits bound untrusted input, and page/operator yields
+  keep the web responsive. `commonTest` exercises syntax, filters, encodings, geometry and rejection paths;
+  `desktopTest/resources/document` holds independent-producer fixtures and adjacent ChordPro goldens, with their
+  provenance and remaining producer coverage in its README.
 - **`zip/`** — a dependency-free zip implementation: `ZipReader` (STORED + DEFLATE; a ZIP64 archive rejected, a ZIP64,
   encrypted or otherwise compressed entry left out),
   `ZipWriter` (STORED only — song text compresses badly enough not to be worth it), with every entry dated by its

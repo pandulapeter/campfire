@@ -32,6 +32,9 @@ platform types.
   to count them, decode them or report them. Every other entry that was not read — not something an import looks
   inside, over the size the caller allows, or unreadable — comes back as an `ImportedFile.unread`, so that it is
   reported rather than lost, and one bad entry never fails the archive around it.
+- `DocumentLocalSource` — local, bounded text extraction from PDF and Word bytes into positioned pages, lines and
+  styled spans (`ExtractedDocument`), on `Dispatchers.Default`. Null means unsupported, malformed, protected or
+  without readable text; cancellation still propagates. Original bytes are not stored and no network is involved.
 - `LibraryFileLocalSource` — the library as *bytes*, which is what sync moves around. Deliberately does not look
   inside the files at all, so a song Campfire cannot parse still travels between devices unchanged. Its listing uses
   the same rule as the library scan (`LibraryFiles.isSongFileName` / `isSetlistFileName`), so sync never moves a

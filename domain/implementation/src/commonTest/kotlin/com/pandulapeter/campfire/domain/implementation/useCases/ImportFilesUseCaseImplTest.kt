@@ -15,8 +15,16 @@ import com.pandulapeter.campfire.data.model.domain.ImportPlan
 import com.pandulapeter.campfire.data.model.domain.Setlist
 import com.pandulapeter.campfire.data.model.domain.Song
 import com.pandulapeter.campfire.data.model.domain.SongContent
+import com.pandulapeter.campfire.data.model.domain.ImportedFile
+import com.pandulapeter.campfire.data.model.domain.ExtractedDocument
+import com.pandulapeter.campfire.data.model.domain.LibraryFiles
+import com.pandulapeter.campfire.data.model.domain.ImportLimits
+import com.pandulapeter.campfire.chordpro.ChordProParser
 import com.pandulapeter.campfire.data.repository.api.SetlistRepository
 import com.pandulapeter.campfire.data.repository.api.SongRepository
+import com.pandulapeter.campfire.data.repository.api.SongContentRepository
+import com.pandulapeter.campfire.data.repository.api.ArchiveRepository
+import com.pandulapeter.campfire.data.repository.api.DocumentRepository
 import com.pandulapeter.campfire.domain.implementation.ImportPlanner
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.emptyFlow
@@ -28,6 +36,8 @@ import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
 import kotlin.test.assertFalse
+import kotlin.test.assertTrue
+import kotlin.test.assertNull
 import kotlin.time.Clock
 
 /**
@@ -35,6 +45,125 @@ import kotlin.time.Clock
  * as in the planner: never a song the same import brings back unchanged.
  */
 class ImportFilesUseCaseImplTest {
+
+    @Test
+    fun `text conversion joins the ordinary planner and a second import is a duplicate`() = runTest {
+        val songs = FakeSongRepository(mutableMapOf())
+        val prepare = prepare(songs)
+        val plain = ImportedFile("sheet.txt", "Am     C\nHello world".encodeToByteArray())
+        val plan = prepare(listOf(plain))
+        assertEquals("[Am]Hello [C]world\n", plan.songs.single().text)
+        assertTrue(plan.songs.single().isConverted)
+        val result = ImportFilesUseCaseImpl(songs, FakeSetlistRepository()).invoke(plan, ImportConflictResolution.KEEP_BOTH)
+        assertEquals(listOf("sheet.cho"), result.convertedSongFileNames)
+        assertEquals("sheet.cho", result.convertedSongToOpen)
+        assertEquals(ImportPlan.Status.IDENTICAL, prepare(listOf(plain)).songs.single().status)
+        val chordPro = ImportedFile("sheet.cho", "Am     C\nHello world".encodeToByteArray())
+        assertEquals("Am     C\nHello world\n", prepare(listOf(chordPro)).songs.single().text)
+        assertFalse(prepare(listOf(chordPro)).songs.single().isConverted)
+        val collection = "{title: A}\r\n[A]hello\r\n{new_song}\r\n{title: B}\r\n[B]hello\r\n"
+        assertTrue(prepare(listOf(ImportedFile("backup.txt", collection.encodeToByteArray()))).songs.all { !it.isConverted })
+    }
+
+    @Test
+    fun `documents use headers preserve source names and report unreadable ones separately`() = runTest {
+        val songs = FakeSongRepository(mutableMapOf())
+        val document = ExtractedDocument(listOf(ExtractedDocument.Page(listOf(
+            ExtractedDocument.Line(listOf(ExtractedDocument.Span("Title", 0.0, 80.0, 20.0)), isHeading = true),
+            ExtractedDocument.Line(listOf(ExtractedDocument.Span("Am", 0.0, 12.0, 10.0), ExtractedDocument.Span("C", 42.0, 48.0, 10.0))),
+            ExtractedDocument.Line(listOf(ExtractedDocument.Span("Hello world", 0.0, 66.0, 10.0))),
+        ))))
+        val source = object : DocumentRepository {
+            override suspend fun extract(file: ImportedFile) = document.takeIf { file.bytes.isNotEmpty() }
+        }
+        val files = listOf(ImportedFile("original.PDF", byteArrayOf(1)), ImportedFile.unread("scan.pdf"), ImportedFile.unread("old.doc"))
+        val plan = prepare(songs, source)(files)
+        assertEquals("title.cho", plan.songs.single().fileName)
+        assertEquals("original.PDF", plan.songs.single().sourceFileName)
+        assertEquals(listOf("scan.pdf", "old.doc"), plan.unreadableDocumentFileNames)
+        assertTrue(plan.skippedFileNames.isEmpty())
+        assertEquals(2, plan.summary.unreadableDocumentCount)
+        val result = ImportFilesUseCaseImpl(songs, FakeSetlistRepository()).invoke(plan, ImportConflictResolution.KEEP_BOTH)
+        assertEquals(listOf("title.cho"), result.convertedSongFileNames)
+        assertEquals(plan.unreadableDocumentFileNames, result.unreadableDocumentFileNames)
+        assertNull(result.convertedSongToOpen)
+        assertEquals(listOf("oversized.pdf"), prepare(songs, source)(listOf(ImportedFile.unread("oversized.pdf", isTooLarge = true))).oversizedFileNames)
+    }
+
+    @Test
+    fun `archive documents and text take the same conversion path and skipped conflicts are not counted as converted`() = runTest {
+        val songs = FakeSongRepository(mutableMapOf("sheet.cho" to "old text\n"))
+        val archive = object : ArchiveRepository {
+            override suspend fun unpack(archive: ByteArray, maxSize: Long): List<ImportedFile> {
+                assertEquals(ImportLimits.MAX_IMPORT_SIZE, maxSize)
+                return listOf(ImportedFile("sheet.txt", "Am C\nNew words".encodeToByteArray()), ImportedFile.unread("scan.docx"))
+            }
+            override suspend fun pack(files: Map<String, ByteArray>) = error("not used")
+        }
+        val plan = prepare(songs, archive = archive)(listOf(ImportedFile("archive.zip", byteArrayOf(1))))
+        assertTrue(plan.hasConflicts)
+        assertEquals(listOf("scan.docx"), plan.unreadableDocumentFileNames)
+        val result = ImportFilesUseCaseImpl(songs, FakeSetlistRepository()).invoke(plan, ImportConflictResolution.SKIP)
+        assertTrue(result.convertedSongFileNames.isEmpty())
+        assertNull(result.convertedSongToOpen)
+    }
+
+    @Test
+    fun `converted replacements are counted and already imported conversions are not`() = runTest {
+        val songs = FakeSongRepository(mutableMapOf("sheet.cho" to "old words\n"))
+        val plain = ImportedFile("sheet.txt", "Am     C\nHello world".encodeToByteArray())
+        val prepare = prepare(songs)
+        val result = ImportFilesUseCaseImpl(songs, FakeSetlistRepository()).invoke(prepare(listOf(plain)), ImportConflictResolution.REPLACE)
+        assertEquals(listOf("sheet.cho"), result.convertedSongFileNames)
+        assertEquals("sheet.cho", result.convertedSongToOpen)
+        assertEquals("[Am]Hello [C]world\n", songs.files["sheet.cho"])
+        val repeated = ImportFilesUseCaseImpl(songs, FakeSetlistRepository()).invoke(prepare(listOf(plain)), ImportConflictResolution.REPLACE)
+        assertEquals(listOf("sheet.cho"), repeated.duplicateFileNames)
+        assertTrue(repeated.convertedSongFileNames.isEmpty())
+        assertNull(repeated.convertedSongToOpen)
+    }
+
+    @Test
+    fun `multi song documents name each header and offer no single song open action`() = runTest {
+        val songs = FakeSongRepository(mutableMapOf())
+        val documents = object : DocumentRepository {
+            override suspend fun extract(file: ImportedFile) = ExtractedDocument(listOf("First", "Second").map { title ->
+                ExtractedDocument.Page(listOf(
+                    ExtractedDocument.Line(listOf(ExtractedDocument.Span(title, 0.0, 80.0, 20.0)), isHeading = true),
+                    ExtractedDocument.Line(listOf(ExtractedDocument.Span("Am", 0.0, 12.0, 10.0), ExtractedDocument.Span("C", 42.0, 48.0, 10.0))),
+                    ExtractedDocument.Line(listOf(ExtractedDocument.Span("Hello world", 0.0, 66.0, 10.0))),
+                ))
+            })
+        }
+        val plan = prepare(songs, documents)(listOf(ImportedFile("songbook.pdf", byteArrayOf(1))))
+        assertEquals(listOf("first.cho", "second.cho"), plan.songs.map { it.fileName })
+        assertTrue(plan.songs.all { it.sourceFileName == null && it.isConverted })
+        val result = ImportFilesUseCaseImpl(songs, FakeSetlistRepository()).invoke(plan, ImportConflictResolution.KEEP_BOTH)
+        assertEquals(listOf("first.cho", "second.cho"), result.convertedSongFileNames)
+        assertNull(result.convertedSongToOpen)
+    }
+
+    private fun prepare(
+        songs: FakeSongRepository,
+        documents: DocumentRepository = object : DocumentRepository {
+            override suspend fun extract(file: ImportedFile): ExtractedDocument? = null
+        },
+        archive: ArchiveRepository = object : ArchiveRepository {
+            override suspend fun unpack(archive: ByteArray, maxSize: Long) = emptyList<ImportedFile>()
+            override suspend fun pack(files: Map<String, ByteArray>) = error("not used")
+        },
+    ) = PrepareImportUseCaseImpl(
+        archiveRepository = archive,
+        songRepository = songs,
+        songContentRepository = object : SongContentRepository {
+            override val invalidations: Flow<Long> = emptyFlow()
+            override suspend fun loadSongContent(fileName: String, useCache: Boolean) = songs.files[fileName]?.let { SongContent(fileName, it) }
+            override suspend fun invalidate(fileName: String?) = Unit
+            override suspend fun invalidate(fileNames: Set<String>) = Unit
+        },
+        setlistRepository = FakeSetlistRepository(),
+        documentRepository = documents,
+    )
 
     @Test
     fun `replace never overwrites a song the import brings back`() = runTest {
@@ -247,7 +376,7 @@ class ImportFilesUseCaseImplTest {
         override suspend fun refresh(fileNames: Set<String>) = Unit
         override suspend fun saveSong(content: SongContent, expectedText: String?) = throw UnsupportedOperationException()
         override suspend fun createSong(title: String, artist: String, text: String) = throw UnsupportedOperationException()
-        override fun importFileName(fallbackTitle: String, text: String) = throw UnsupportedOperationException()
+        override fun importFileName(fallbackTitle: String, text: String) = LibraryFiles.normalizedName(ChordProParser.parseMetadata(text).title ?: fallbackTitle) + ".cho"
         override suspend fun importSong(fileName: String, text: String, shouldReplace: Boolean): Song {
             if (importCalls.size == failingImport) throw IllegalStateException("Full")
             importCalls += fileName to shouldReplace

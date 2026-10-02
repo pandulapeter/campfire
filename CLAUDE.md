@@ -12,7 +12,7 @@
 Kotlin Multiplatform app (Android + iOS + JVM desktop + wasmJs web) for viewing and editing song lyrics and chords.
 Compose UI is shared between all platforms. The app owns a library folder of plain
 [ChordPro](https://www.chordpro.org) files on every platform, which the user fills by writing songs in the built-in
-editor or by importing files and zip archives. **The only things that ever reach the network are sync, and the cover
+editor or by importing ChordPro, plain text, PDF and Word documents, and zip archives. **The only things that ever reach the network are sync, and the cover
 images and the cover search the user asks for.** Sync is off until the user connects a cloud folder of their own in
 Settings, and still involves no server of Campfire's own — see the Sync section below. A cover is fetched from the
 address a song's own file names, once, and kept on the device; the search asks MusicBrainz and the iTunes Search API,
@@ -43,13 +43,13 @@ app:android / app:desktop / app:ios / app:web   entry points, platform chrome, "
   domain:api / :implementation               use cases (single-method interfaces)
     data:repository:api / :implementation
       data:source:local:api  -> :implementation   files on Android/desktop/iOS, OPFS on web (see Web below);
-                                                  also holds the pure-Kotlin zip reader/writer
+                                                  also holds the pure-Kotlin zip reader/writer and PDF/Word text extractors
       data:source:remote:api -> :implementation   the sync contracts and the Dropbox provider, the cover download
                                                   and the MusicBrainz and iTunes searches; the only module in the project that
                                                   makes a network call (see Sync and Cover art below)
         data:model                           domain models, shared by everything
   chordpro                                   dependency-free ChordPro model, parser, serializer, transposer, tab
-                                             wrapper, tag editor and highlighter. Depends on nothing; used by
+                                             wrapper, tag editor, highlighter and positioned chord-sheet converter. Depends on nothing; used by
                                              :data:source:local:implementation (metadata for the song list),
                                              :domain:api and :presentation
 ```
@@ -274,6 +274,17 @@ localized in both languages.
   taken by something *different* are put to the user as one question about the whole batch — keep both, replace,
   skip, or cancel the import. Replacing is the
   only thing in the app that ever overwrites a library file, and it takes an answer to that dialog.
+- **Documents are converted locally**, never rendered, uploaded or kept: `.pdf` and `.docx` pass through
+  `DocumentRepository` to pure-Kotlin extractors, then `ChordSheetConverter` to ordinary ChordPro. Plain `.txt`
+  and text shared on Android use the same converter; the ChordPro extension family never does. Recognized ChordPro
+  text passes through unchanged. Documents with no readable text (scans, encrypted PDFs and legacy `.doc`) are
+  reported separately from unsupported files. The input limit is 16 MiB per document, 8 MiB for the text produced,
+  within the selection's existing 24 MiB budget. Positioned chords, English/Hungarian sections and styled headers
+  are best attempts, and clearly titled page starts can split a songbook. Converted songs are named by the header
+  the converter wrote, with the ordinary filename fallback when it wrote none; duplicate and conflict rules are
+  unchanged. The result counts only converted songs actually written and offers **Open** for a single converted
+  song, without navigating automatically. No new document Open with association is registered; Android adds only
+  PDF and Word share MIME types.
 - **Every name the app writes is normalized** — lowercase words joined with underscores, Latin letters without their
   accents and letters of every other script kept as they are (`катюша.cho`), capped at 120 UTF-8 bytes per half
   (`LibraryFiles.normalizedName`), a song's `artist` and `title` folded one at a time so the dash between them
@@ -311,8 +322,8 @@ localized in both languages.
 - A rename reaches **sync** as a deletion and a new file, since `SyncPlanner` is keyed by name and knows no moves. The
   "an edit beats a deletion" rule then applies: a device that edited the file under its old name since the last run
   puts that file back, leaving both.
-- Only pure logic is tested: `commonTest` unit tests in `:chordpro`, `:domain:implementation` (`ImportPlanner`),
-  `:data:source:local:implementation` (zip and the JVM file storage), `:data:source:remote:*` (hashing, encoders,
+- Only pure logic is tested: `commonTest` unit tests in `:chordpro` (including chord-sheet conversion), `:domain:implementation` (`ImportPlanner` and conversion import plumbing),
+  `:data:source:local:implementation` (zip, bounded PDF/Word readers and the JVM file storage, with independent-producer document goldens in `desktopTest`), `:data:source:remote:*` (hashing, encoders,
   the OAuth authorization URL, the cover search's queries, its `User-Agent` and its pace, the cover download),
   `:data:repository:implementation` (`SyncPlanner`, which decides what happens to every file in a sync run, and the
   cover cache) and

@@ -1386,7 +1386,7 @@ class CampfireViewModel(
      * the same, and the unsaved changes question is only ever asked of an editor on top, so the text would be one
      * closed window away from being lost without it.
      */
-    private fun openImportedSong(fileName: String) {
+    internal fun openImportedSong(fileName: String) {
         if (hasUnsavedEditorText() && backStack.any { it is CampfireDestination.SongEditor }) return
         val songFileNames = listOf(fileName)
         val current = backStack.lastOrNull()
@@ -2295,7 +2295,7 @@ class CampfireViewModel(
             // reason to leave an archive half imported - its setlists come after all of its songs - and the
             // repositories the files go into outlive it, so whatever screen comes back finds the whole import.
             val result = withContext(NonCancellable) { importFiles.invoke(plan, resolution) }
-            if (request.shouldOpenSong && plan.songs.size == 1 && plan.setlists.isEmpty()) {
+            if (request.shouldOpenSong && plan.songs.size == 1 && !plan.songs.single().isConverted && plan.setlists.isEmpty()) {
                 // A song that was already in the library is opened as well: it is still the song that was asked for,
                 // under the name the library has for it. One that the answer to the conflicts left out is in neither
                 // list, and the library's own file under that name is a different song.

@@ -39,6 +39,8 @@ Repository interfaces only. Consumed by `:domain:implementation`; implemented by
   service is involved: the screens see a `SyncState` and never learn which provider produced it.
 - `ArchiveRepository` — zip pack/unpack. It has no state to cache and exists only so that the use cases can reach the
   zip code without the domain layer having to see the local sources.
+- `DocumentRepository` — the same stateless boundary for text extraction from `.pdf` and `.docx`; answers
+  positioned `ExtractedDocument` or null, never retains bytes and never swallows cancellation.
 
 A `rescan()` is the only thing that re-reads the library folder. Everything else keeps the cached list in step by
 updating the one entry it changed, so writing a song does not cost a directory scan. The entry a setlist write puts in

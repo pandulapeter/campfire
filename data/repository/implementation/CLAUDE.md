@@ -13,6 +13,10 @@ Implements `:data:repository:api` on top of `:data:source:local:api` and — for
 `:data:source:remote:api`. Koin wiring: `Module.kt` holds the `@Module @ComponentScan object DataRepositoryModule`, and every
 repository is a `@Single`.
 
+`DocumentRepositoryImpl` is stateless, a pass-through to `DocumentLocalSource`, like `ArchiveRepositoryImpl`:
+extraction is a one-shot import operation, not another cached library. Conversion belongs to the domain/chordpro
+layers, and no original document enters the repository's stored state.
+
 `base/BaseLocalDataRepository<T>` holds all the caching logic — new repositories should extend it rather than
 reimplement state handling. It owns a `MutableStateFlow<DataState<T>>` that starts as `Loading(null)` (nothing has been
 read yet is not an error), reads the local source on the first `loadDataIfNeeded()`, and guards that read with a

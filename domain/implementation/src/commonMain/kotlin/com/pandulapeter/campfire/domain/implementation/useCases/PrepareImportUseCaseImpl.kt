@@ -10,17 +10,22 @@
 package com.pandulapeter.campfire.domain.implementation.useCases
 
 import com.pandulapeter.campfire.chordpro.ChordProSplitter
+import com.pandulapeter.campfire.chordpro.ChordSheet
+import com.pandulapeter.campfire.chordpro.ChordSheetConverter
 import com.pandulapeter.campfire.data.model.domain.ImportLimits
 import com.pandulapeter.campfire.data.model.domain.ImportPlan
 import com.pandulapeter.campfire.data.model.domain.ImportedFile
 import com.pandulapeter.campfire.data.model.domain.LibraryFiles
 import com.pandulapeter.campfire.data.model.domain.decodeLibraryText
+import com.pandulapeter.campfire.data.model.domain.normalizedToNfc
 import com.pandulapeter.campfire.data.repository.api.ArchiveRepository
+import com.pandulapeter.campfire.data.repository.api.DocumentRepository
 import com.pandulapeter.campfire.data.repository.api.SetlistRepository
 import com.pandulapeter.campfire.data.repository.api.SongContentRepository
 import com.pandulapeter.campfire.data.repository.api.SongRepository
 import com.pandulapeter.campfire.domain.api.useCases.PrepareImportUseCase
 import com.pandulapeter.campfire.domain.implementation.ImportPlanner
+import com.pandulapeter.campfire.domain.implementation.mapper.toChordSheet
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
@@ -33,6 +38,7 @@ class PrepareImportUseCaseImpl internal constructor(
     private val songRepository: SongRepository,
     private val songContentRepository: SongContentRepository,
     private val setlistRepository: SetlistRepository,
+    private val documentRepository: DocumentRepository,
 ) : PrepareImportUseCase {
 
     /**
@@ -44,6 +50,8 @@ class PrepareImportUseCaseImpl internal constructor(
     private suspend fun plan(files: List<ImportedFile>): ImportPlan {
         val songFiles = mutableListOf<ImportedFile>()
         val setlistFiles = mutableListOf<ImportedFile>()
+        val documentFiles = mutableListOf<ImportedFile>()
+        val unreadableDocumentFileNames = mutableListOf<String>()
         val skippedFileNames = mutableListOf<String>()
 
         val oversizedFileNames = mutableListOf<String>()
@@ -58,11 +66,15 @@ class PrepareImportUseCaseImpl internal constructor(
                 // Picked along with the songs it sits next to by a "select all" on a volume macOS has written to. It
                 // carries the extension of the file it belongs to, and decoded as a song it would be a screen of binary.
                 LibraryFiles.isHiddenFileName(file.name) -> skippedFileNames += file.name
-                extension !in SONG_EXTENSIONS && extension != SETLIST_EXTENSION -> skippedFileNames += file.name
-                file.isTooLarge || file.bytes.size > minOf(ImportLimits.MAX_TEXT_FILE_SIZE, remaining) -> oversizedFileNames += file.name
+                extension !in SONG_EXTENSIONS && extension !in DOCUMENT_EXTENSIONS && extension != SETLIST_EXTENSION -> skippedFileNames += file.name
+                file.isTooLarge || file.bytes.size > minOf(ImportLimits.maxSizeOf(file.name), remaining) -> oversizedFileNames += file.name
                 else -> {
                     remaining -= file.bytes.size
-                    if (extension == SETLIST_EXTENSION) setlistFiles += file else songFiles += file
+                    when (extension) {
+                        SETLIST_EXTENSION -> setlistFiles += file
+                        in DOCUMENT_EXTENSIONS -> documentFiles += file
+                        else -> songFiles += file
+                    }
                 }
             }
         }
@@ -82,24 +94,50 @@ class PrepareImportUseCaseImpl internal constructor(
             }
         }
 
-        val songs = planSongs(songFiles, skippedFileNames)
+        val songs = planSongs(songFiles, documentFiles, skippedFileNames, unreadableDocumentFileNames, oversizedFileNames)
         return ImportPlan(
             songs = songs,
             setlists = planSetlists(setlistFiles, skippedFileNames, ImportPlanner.plannedSongFileNames(songs)),
             skippedFileNames = skippedFileNames,
             oversizedFileNames = oversizedFileNames,
+            unreadableDocumentFileNames = unreadableDocumentFileNames,
         )
     }
 
     /** Every song of the batch under the name its own header gives it, held against the library by [ImportPlanner]. */
-    private suspend fun planSongs(files: List<ImportedFile>, skippedFileNames: MutableList<String>): List<ImportPlan.SongEntry> {
-        val incoming = files.flatMap { file ->
+    private suspend fun planSongs(
+        files: List<ImportedFile>,
+        documents: List<ImportedFile>,
+        skippedFileNames: MutableList<String>,
+        unreadableDocumentFileNames: MutableList<String>,
+        oversizedFileNames: MutableList<String>,
+    ): List<ImportPlan.SongEntry> {
+        val incoming = (files + documents).flatMap { file ->
             // The web's default dispatcher is a queue on its only thread, so yielding between files and songs keeps
             // the page painting and lets a preparation nobody awaits any more notice cancellation.
             yield()
-            val parts = ChordProSplitter.split(file.bytes.decodeLibraryText())
+            val isDocument = file in documents
+            val original = if (isDocument) null else file.bytes.decodeLibraryText()
+            val converted = when {
+                isDocument -> {
+                    val extracted = documentRepository.extract(file)
+                    if (extracted == null) {
+                        unreadableDocumentFileNames += file.name
+                        return@flatMap emptyList()
+                    }
+                    ChordSheetConverter.convert(extracted.toChordSheet(), String::normalizedToNfc)
+                }
+                file.name.endsWith(LibraryFiles.TEXT_EXTENSION, true) -> ChordSheetConverter.convert(ChordSheet.ofPlainText(original!!), String::normalizedToNfc)
+                else -> listOf(original!!)
+            }
+            if (converted.sumOf { it.encodeToByteArray().size.toLong() } > ImportLimits.MAX_TEXT_FILE_SIZE) {
+                oversizedFileNames += file.name
+                return@flatMap emptyList()
+            }
+            val isConverted = isDocument || converted != listOf(original)
+            val parts = converted.flatMap(ChordProSplitter::split)
             if (parts.isEmpty()) {
-                skippedFileNames += file.name
+                if (isDocument) unreadableDocumentFileNames += file.name else skippedFileNames += file.name
                 return@flatMap emptyList()
             }
             parts.map { part ->
@@ -115,6 +153,7 @@ class PrepareImportUseCaseImpl internal constructor(
                     fileName = songRepository.importFileName(fallbackTitle = fallbackTitle, text = text),
                     text = text,
                     sourceFileName = file.name.takeIf { parts.size == 1 },
+                    isConverted = isConverted,
                 )
             }
         }
@@ -154,6 +193,7 @@ class PrepareImportUseCaseImpl internal constructor(
     private companion object {
         /** The ChordPro family plus plain text, without the dots, which is how a file name is asked for its type. */
         val SONG_EXTENSIONS = (LibraryFiles.SONG_EXTENSIONS + LibraryFiles.TEXT_EXTENSION).mapTo(mutableSetOf()) { it.removePrefix(".") }
+        val DOCUMENT_EXTENSIONS = (LibraryFiles.DOCUMENT_EXTENSIONS + LibraryFiles.LEGACY_DOCUMENT_EXTENSION).mapTo(mutableSetOf()) { it.removePrefix(".") }
 
         /** ".setlist.json" ends in this, and a plain ".json" is worth trying to parse as a setlist too. */
         const val SETLIST_EXTENSION = "json"

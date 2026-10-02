@@ -9,9 +9,23 @@
 -->
 # :chordpro
 
-The [ChordPro](https://www.chordpro.org) format, and nothing else. A multiplatform library with **no dependencies at
+The [ChordPro](https://www.chordpro.org) format and conversion of positioned chord sheets into it. A multiplatform library with **no dependencies at
 all** — not even Koin: everything in it is a stateless `object`, reached from the rest of the app through the use cases
 in `:domain:*`. `:data:source:local:implementation` uses it directly for the metadata of the song list.
+
+- `ChordSheet` / `ChordSheetConverter` — the dependency-free input model and deterministic conversion shared by
+  plain text, PDF and Word imports. The positions may be columns, exact PDF points or Word width estimates;
+  conversion knows no file format. `ofPlainText` preserves the original string for ChordPro passthrough, and tabs
+  advance to multiples of eight. Recognized chord lines are aligned and snapped over lyrics, parenthesized or
+  bold/raised inline chords converted conservatively, English/Hungarian labels turned into sections and tab runs
+  wrapped. Styled titles and metadata become headers — a label without a colon only where its value has the
+  field's shape (`Capo 2`, `Key G`, `Time 4/4`), since "By the rivers…" and "Time after time" are lyrics; repeated
+  titled page starts can split a songbook. A text is passed through as ChordPro when any line is a directive ChordPro
+  defines (`ChordProSyntax.isKnownDirective`) or holds a chord bracketed against a syllable (`[G]Hello`), and
+  otherwise only when most of its lines hold bracketed chords. The caller
+  supplies NFC normalization. `ChordProLiteralText` rewrites prose brackets, directive braces and a leading hash so
+  extracted text cannot silently become markup. No recognized song structure means escaped prose, not a guessed
+  song. These rules and their near misses are pinned in `ChordSheetConverterTest`.
 
 - `model/` — `ChordProSong` (metadata + blocks), `ChordProBlock` (`Section`, `ChorusRecall`, `Comment`, `Break`),
   `ChordProLine` (`Lyrics` with positioned chords and annotations, `Tab`, `Grid`, `Blank`) and `ChordProMetadata`,

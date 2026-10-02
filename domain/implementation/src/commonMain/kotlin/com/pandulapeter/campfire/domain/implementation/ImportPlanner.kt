@@ -35,6 +35,7 @@ internal object ImportPlanner {
         val fileName: String,
         val text: String,
         val sourceFileName: String?,
+        val isConverted: Boolean = false,
     )
 
     /** One setlist of the batch, as `SetlistRepository.parseSetlist` named it, and the name of the file it arrived in. */
@@ -245,6 +246,7 @@ internal object ImportPlanner {
         sourceFileName = sourceFileName,
         repeatedEntryIndex = repeatedEntryIndex,
         replacesFileName = replacesFileName,
+        isConverted = isConverted,
     )
 
     private suspend fun readAll(
