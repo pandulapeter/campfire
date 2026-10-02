@@ -89,6 +89,7 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.pandulapeter.campfire.chordpro.ChordProPrettifier
 import com.pandulapeter.campfire.chordpro.ChordProSummaryCache
 import com.pandulapeter.campfire.chordpro.ChordProTransposer
 import com.pandulapeter.campfire.chordpro.model.ChordProSummary
@@ -446,7 +447,7 @@ private fun LoadedSongEditor(
                     canPrettify = !isSaving && text.value.isNotBlank() && prettifiedText.value != text.value,
                     onPrettify = {
                         val prettified = prettifiedText.value
-                        if (prettified != text.value) textFieldState.replaceAll(prettified)
+                        if (prettified != text.value) textFieldState.replaceWithPrettification(prettified)
                     },
                     canRevert = hasUnsavedChanges && hasSavedText && !isSaving,
                     onRevert = { viewModel.showDialog(CampfireViewModel.DialogType.RevertChanges) },
@@ -1028,6 +1029,20 @@ private fun TextFieldState.replaceWithTransposition(transposed: String) {
         val start = ChordProTransposer.transposedOffset(before, transposed, selection.start)
         val end = ChordProTransposer.transposedOffset(before, transposed, selection.end)
         replace(0, length, transposed)
+        selection = TextRange(start, end)
+    }
+}
+
+/** Keeps the selection next to its lines when formatting moves the header and changes the line breaks. */
+@OptIn(ExperimentalFoundationApi::class)
+private fun TextFieldState.replaceWithPrettification(prettified: String) {
+    val before = text.toString()
+    if (before == prettified) return
+    if (before.length > LONG_DOCUMENT_LENGTH) undoState.clearHistory()
+    edit {
+        val start = ChordProPrettifier.prettifiedOffset(before, prettified, selection.start)
+        val end = ChordProPrettifier.prettifiedOffset(before, prettified, selection.end)
+        replace(0, length, prettified)
         selection = TextRange(start, end)
     }
 }

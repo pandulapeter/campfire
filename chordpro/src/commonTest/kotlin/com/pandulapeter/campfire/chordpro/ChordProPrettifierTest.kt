@@ -13,6 +13,8 @@ import kotlin.random.Random
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertTrue
+import kotlin.time.TimeSource
+import kotlin.time.Duration.Companion.seconds
 
 class ChordProPrettifierTest {
 
@@ -107,6 +109,43 @@ class ChordProPrettifierTest {
     @Test
     fun `empty and whitespace only input stays empty`() {
         for (raw in listOf("", " ", "\r\n \r\n\t")) assertEquals("", ChordProPrettifier.prettify(raw))
+    }
+
+    @Test
+    fun `formatting maps the caret to its lyric line and removed blanks to the next line`() {
+        val before = "{artist: Singer}\n{title: Song}\n\n\nHello world"
+        val after = ChordProPrettifier.prettify(before)
+        assertEquals(after.indexOf("Hello") + 3, ChordProPrettifier.prettifiedOffset(before, after, before.indexOf("Hello") + 3))
+        assertEquals(after.indexOf("Hello"), ChordProPrettifier.prettifiedOffset(before, after, before.indexOf("\n\n\n") + 2))
+        for (offset in before.indices) assertEquals(offset, ChordProPrettifier.prettifiedOffset(before, before, offset))
+        val indented = "  {artist: Singer}\n {title: Song}\nWords"
+        val formatted = ChordProPrettifier.prettify(indented)
+        assertEquals(formatted.indexOf("Singer") + 2, ChordProPrettifier.prettifiedOffset(indented, formatted, indented.indexOf("Singer") + 2))
+    }
+
+    @Test
+    fun `formatting accepts arbitrary offsets and all supported line endings`() {
+        for (before in listOf("", "Words", "{artist: A}\r\n{title: T}\r\nWords\r\n", "One\rTwo", "One\n\nTwo")) {
+            for (after in listOf("", ChordProPrettifier.prettify(before))) {
+                for (offset in -3..before.length + 3) {
+                    assertTrue(ChordProPrettifier.prettifiedOffset(before, after, offset) in 0..after.length)
+                }
+            }
+        }
+        val before = "{artist: A}\r\n{title: T}\r\nWords"
+        val after = ChordProPrettifier.prettify(before)
+        assertEquals(after.indexOf("Words") + 2, ChordProPrettifier.prettifiedOffset(before, after, before.indexOf("Words") + 2))
+        assertEquals(after.indexOf("Words"), ChordProPrettifier.prettifiedOffset(before, after, before.indexOf("\r\n", before.indexOf("{title")) + 1))
+    }
+
+    @Test
+    fun `repeated lines map without searching their earlier matches again`() {
+        val before = "{c: Chorus}\n".repeat(50_000) + "Last lyric"
+        val after = ChordProPrettifier.prettify(before)
+        val started = TimeSource.Monotonic.markNow()
+        val mapped = ChordProPrettifier.prettifiedOffset(before, after, before.indexOf("Last lyric") + 4)
+        assertTrue(started.elapsedNow() < 2.seconds)
+        assertEquals(after.indexOf("Last lyric") + 4, mapped)
     }
 
     @Test

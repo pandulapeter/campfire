@@ -106,5 +106,62 @@ object ChordProPrettifier {
         return if (output.isEmpty()) "" else output.joinToString("\n") + "\n"
     }
 
+    /**
+     * Maps a caret through formatting, keeping its column on the same non-blank line after header reordering and
+     * spacing changes. Like [ChordProTransposer.transposedOffset], it clamps arbitrary offsets; a removed blank
+     * line or a line break moves to the next surviving line, or the end of the document.
+     */
+    fun prettifiedOffset(before: String, after: String, offset: Int): Int {
+        val caret = offset.coerceIn(0, before.length)
+        if (before == after) return caret
+        val oldLines = ChordProSyntax.splitLines(before)
+        val newLines = ChordProSyntax.splitLines(after)
+        val oldStarts = ChordProSyntax.lineStartOffsets(before)
+        val newStarts = ChordProSyntax.lineStartOffsets(after)
+        val indexed = HashMap<String, MutableList<Int>>()
+        newLines.forEachIndexed { index, line ->
+            if (line.isNotBlank()) indexed.getOrPut(line.trim()) { mutableListOf() }.add(index)
+        }
+        val available = indexed.mapValues { LineMatches(it.value.toIntArray()) }
+        val matches = IntArray(oldLines.size) { -1 }
+        var previous = 0
+        oldLines.forEachIndexed { index, line ->
+            if (line.isNotBlank()) available[line.trim()]?.take(previous)?.let { match ->
+                matches[index] = match
+                previous = match
+            }
+        }
+        val line = oldStarts.indexOfLast { it <= caret }.coerceAtLeast(0)
+        val column = caret - oldStarts[line]
+        val match = matches[line]
+        if (match >= 0 && (column < oldLines[line].length || column == oldLines[line].length && caret == before.length)) {
+            val oldIndent = oldLines[line].indexOfFirst { !it.isWhitespace() }.coerceAtLeast(0)
+            val newIndent = newLines[match].indexOfFirst { !it.isWhitespace() }.coerceAtLeast(0)
+            return (newStarts[match] + (column - oldIndent + newIndent).coerceIn(0, newLines[match].length)).coerceIn(0, after.length)
+        }
+        val next = ((line + 1)..matches.lastIndex).firstOrNull { matches[it] >= 0 }
+        return next?.let { newStarts[matches[it]] } ?: after.length
+    }
+
+    /** Equal lines keep their order through formatting; separate cursors retain reordered header lines for fallback. */
+    private class LineMatches(private val indices: IntArray) {
+        private val used = BooleanArray(indices.size)
+        private var first = 0
+        private var forward = 0
+        private var previousMinimum = 0
+
+        fun take(minimum: Int): Int? {
+            while (first < indices.size && used[first]) first++
+            if (first == indices.size) return null
+            if (minimum < previousMinimum) forward = first
+            previousMinimum = minimum
+            forward = maxOf(forward, first)
+            while (forward < indices.size && (used[forward] || indices[forward] < minimum)) forward++
+            val chosen = if (forward < indices.size) forward++ else first
+            used[chosen] = true
+            return indices[chosen]
+        }
+    }
+
     private val breakNames = setOf("chorus", "new_page", "np", "new_physical_page", "npp", "column_break", "colb")
 }

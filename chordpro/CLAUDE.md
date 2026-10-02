@@ -37,7 +37,8 @@ in `:domain:*`. `:data:source:local:implementation` uses it directly for the met
   continues the running paragraph, which a blank line would split. A library file formatted with those extra blanks
   by an older build is structurally different and asks about a conflict when the same source is imported again;
   existing files are not migrated. It preserves unsupported directives and delegated
-  notation instead of serializing a parsed model. The editor overflow action and every import use it.
+  notation instead of serializing a parsed model. The editor overflow action and every import use it. `prettifiedOffset` keeps the editor's caret and selection on
+  their matched lines through header reordering and spacing changes, accounting for the original line endings.
 
 - `model/` — `ChordProSong` (metadata + blocks), `ChordProBlock` (`Section`, `ChorusRecall`, `Comment`, `Break`),
   `ChordProLine` (`Lyrics` with positioned chords and annotations, `Tab`, `Grid`, `Blank`) and `ChordProMetadata`,
