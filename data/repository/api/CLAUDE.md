@@ -14,7 +14,7 @@ Repository interfaces only. Consumed by `:domain:implementation`; implemented by
 - `SongRepository` — an observable `songs: Flow<DataState<List<Song>>>` plus `loadSongsIfNeeded()`, `rescan()` (re-read
   the folder, which is what a refresh and the end of an import do), `saveSong`, `createSong`, `importFileName`, `importSong`, `deleteSong`.
 - `SetlistRepository` — the same shape over `*.setlist.json`, plus `parseSetlist` / `loadSetlistDocument` for the export
-  and import paths. A setlist that is already in the library is changed through `updateSetlist` (read the latest,
+  and import paths (the latter optionally narrowed to some of the setlist's songs, for a zip of only those). A setlist that is already in the library is changed through `updateSetlist` (read the latest,
   transform, write, one change at a time), never by saving a copy the caller read earlier: that copy lags a write
   behind, and two quick changes built on it would undo each other. `renameSetlist` is the same thing for the title and
   the description, the one change that may move the file: it takes the setlist's name and reads the rest of it itself.

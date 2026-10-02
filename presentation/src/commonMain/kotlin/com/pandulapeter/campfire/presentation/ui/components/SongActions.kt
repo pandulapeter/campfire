@@ -49,23 +49,18 @@ import com.pandulapeter.campfire.presentation.localization.stringResource
 import com.pandulapeter.campfire.presentation.resources.Res
 import com.pandulapeter.campfire.presentation.resources.ic_delete
 import com.pandulapeter.campfire.presentation.resources.ic_edit
-import com.pandulapeter.campfire.presentation.resources.ic_print
-import com.pandulapeter.campfire.presentation.resources.print_export
+import com.pandulapeter.campfire.presentation.resources.songs_export_song
 import com.pandulapeter.campfire.presentation.resources.ic_export
 import com.pandulapeter.campfire.presentation.resources.ic_more
 import com.pandulapeter.campfire.presentation.resources.ic_rename
 import com.pandulapeter.campfire.presentation.resources.ic_setlists
 import com.pandulapeter.campfire.presentation.resources.ic_setlists_outline
-import com.pandulapeter.campfire.presentation.resources.ic_share
 import com.pandulapeter.campfire.presentation.resources.songs_actions
 import com.pandulapeter.campfire.presentation.resources.songs_delete_song
 import com.pandulapeter.campfire.presentation.resources.songs_edit_song
-import com.pandulapeter.campfire.presentation.resources.songs_export_song
-import com.pandulapeter.campfire.presentation.resources.songs_share_song
 import com.pandulapeter.campfire.presentation.resources.songs_setlist_assignments
 import com.pandulapeter.campfire.presentation.resources.songs_update_file_name
 import com.pandulapeter.campfire.presentation.ui.CampfireViewModel
-import com.pandulapeter.campfire.presentation.ui.platform.LocalFilePicker
 import org.jetbrains.compose.resources.painterResource
 
 /**
@@ -138,7 +133,7 @@ internal fun ActionsMenu(
     ) {
         items.forEach { item ->
             // Keyed by what the action is rather than by its place, since an action that comes and goes (Update file
-            // name, Share song) moves every one after it along.
+            // name, Set cover art) moves every one after it along.
             key(item.title) {
                 AnimatedVisibility(
                     modifier = Modifier.overlappingAction(),
@@ -204,7 +199,7 @@ internal fun ActionsMenu(
  * wherever there is not, so its [title] is both the entry's text and the button's content description.
  *
  * @param isAlwaysInMenu Keeps the action in the menu however much room there is: one that deletes or throws something
- *   away, and one that is rarely wanted (archiving, duplicating, sharing, exporting), which a button would only advertise.
+ *   away, and one that is rarely wanted (archiving, duplicating, exporting), which a button would only advertise.
  */
 @Immutable
 internal class ActionsMenuItem(
@@ -291,7 +286,6 @@ internal fun SongActions(
     fileEditItems: List<ActionsMenuItem> = emptyList(),
     menuFooter: (@Composable () -> Unit)? = null,
 ) {
-    val filePicker = LocalFilePicker.current
     ActionsMenu(
         modifier = modifier,
         state = state,
@@ -316,28 +310,11 @@ internal fun SongActions(
             } else {
                 null
             },
-            // Only where sending a file is a different thing from saving one, which on desktop and the web it is not.
-            if (filePicker.canShare) {
-                ActionsMenuItem(
-                    title = stringResource(Res.string.songs_share_song),
-                    icon = painterResource(Res.drawable.ic_share),
-                    isAlwaysInMenu = true,
-                    onClick = { viewModel.shareSong(filePicker, song.fileName) },
-                )
-            } else {
-                null
-            },
             ActionsMenuItem(
                 title = stringResource(Res.string.songs_export_song),
                 icon = painterResource(Res.drawable.ic_export),
                 isAlwaysInMenu = true,
-                onClick = { viewModel.exportSong(filePicker, song.fileName) },
-            ),
-            ActionsMenuItem(
-                title = stringResource(Res.string.print_export),
-                icon = painterResource(Res.drawable.ic_print),
-                isAlwaysInMenu = true,
-                onClick = { viewModel.showDialog(CampfireViewModel.DialogType.PrintExport(song = song, songSetlistFileName = setlistFileName)) },
+                onClick = { viewModel.showDialog(CampfireViewModel.DialogType.Export(song = song, songSetlistFileName = setlistFileName)) },
             ),
             if (isDeletable) {
                 ActionsMenuItem(

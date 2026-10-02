@@ -126,13 +126,12 @@
     <string name="songs_new_song_artist">Artist</string>
     <string name="songs_artist_and_title">%1$s - %2$s</string>
     <string name="songs_actions">Song actions</string>
-    <string name="songs_edit_song">Edit song file</string>
+    <string name="songs_edit_song">Edit song</string>
     <string name="songs_setlist_assignments">Setlist assignments</string>
     <string name="songs_update_file_name">Update file name</string>
     <string name="songs_update_file_name_partly">The file was renamed, but a setlist or the saved transposition still points at the old name</string>
     <string name="songs_delete_song_partly">The song was deleted, but a setlist or the saved transposition still names it</string>
     <string name="songs_delete_song">Delete song</string>
-    <string name="songs_share_song">Share song</string>
     <string name="songs_export_song">Export song</string>
     <string name="songs_delete_song_confirmation">Delete \"%1$s\"? The file is removed from the library and from every setlist.</string>
     <string name="songs_all_hidden">Every song is hidden</string>
@@ -169,7 +168,7 @@
     <string name="setlists_move_up">Move up</string>
     <string name="setlists_move_down">Move down</string>
     <string name="setlists_actions">Setlist actions</string>
-    <string name="setlists_edit_details">Edit metadata</string>
+    <string name="setlists_edit_details">Edit setlist</string>
     <string name="setlists_song_assignments">Song assignments</string>
     <string name="setlists_add_songs">Add songs</string>
     <string name="setlists_description">Description (optional)</string>
@@ -194,7 +193,6 @@
     <string name="setlists_archive">Archive setlist</string>
     <string name="setlists_unarchive">Unarchive setlist</string>
     <string name="setlists_archived">Archived</string>
-    <string name="setlists_share">Share setlist</string>
     <string name="setlists_export">Export setlist</string>
     <string name="setlists_missing_song">File not found</string>
     <string name="setlists_delete_setlist">Delete setlist</string>
@@ -533,10 +531,22 @@
     <string name="app_update_required">Update required</string>
     <string name="app_update_required_hint">This version of Campfire can no longer be used. Your library stays exactly where it is.</string>
 
-    <!-- PDF export -->
-    <string name="print_export">Export to PDF</string>
-    <string name="print_save">Save PDF</string>
-    <string name="print_share">Share PDF</string>
+    <!-- Export -->
+    <string name="print_export">Export</string>
+    <string name="print_save">Save</string>
+    <string name="print_share">Share</string>
+    <string name="print_format">Format</string>
+    <string name="print_format_pdf">PDF</string>
+    <string name="print_format_chordpro">ChordPro</string>
+    <string name="print_format_zip">Zip</string>
+    <string name="print_format_pdf_description">Ideal for printing. It opens on any device, but cannot be edited or transposed afterwards.</string>
+    <string name="print_format_chordpro_song_description">Ideal for sharing with other Campfire users, who can import, edit and transpose the song.</string>
+    <string name="print_format_zip_description">Ideal for other Campfire users: the setlist manifest and its songs as ChordPro files.</string>
+    <string name="print_zip_contents">In the zip file</string>
+    <string name="print_zip_manifest">Setlist manifest</string>
+    <string name="print_zip_manifest_description">%1$s, with the running order and the key of every song</string>
+    <string name="print_zip_song_description">%1$s, as a ChordPro file</string>
+    <string name="print_zip_missing">Not included: the song file is missing or unreadable</string>
     <string name="print_paper">Paper size</string>
     <string name="print_a4">A4</string>
     <string name="print_letter">Letter</string>

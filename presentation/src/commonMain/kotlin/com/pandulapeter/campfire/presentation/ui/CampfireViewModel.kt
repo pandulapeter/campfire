@@ -401,7 +401,7 @@ class CampfireViewModel(
                 if (isUsable) setFontScale(touchpadFontScale.next(fontScale) { it * factor.pow(PINCH_SENSITIVITY) })
                 true
             }
-            visibleDialog.value is DialogType.PrintExport && !isAnyOverflowMenuOpen -> {
+            visibleDialog.value is DialogType.Export && !isAnyOverflowMenuOpen -> {
                 if (isUsable) _printPreviewMagnifications.tryEmit(factor)
                 true
             }
@@ -2094,8 +2094,8 @@ class CampfireViewModel(
     private var pdfExportJob: Job? = null
 
     /** Emitted with the screen an export was started from once its file is saved, for that screen, and no other, to close. */
-    private val _printExportSaved = MutableSharedFlow<DialogType.PrintExport>(extraBufferCapacity = 1)
-    val printExportSaved = _printExportSaved.asSharedFlow()
+    private val _exportSaved = MutableSharedFlow<DialogType.Export>(extraBufferCapacity = 1)
+    val exportSaved = _exportSaved.asSharedFlow()
 
     /**
      * Only as safe as the pickers are: every one of them has to answer on every way its screen can go away, since a
@@ -2453,7 +2453,7 @@ class CampfireViewModel(
         }
     }
 
-    internal suspend fun preparePrintSource(dialog: DialogType.PrintExport): PrintSource {
+    internal suspend fun preparePrintSource(dialog: DialogType.Export): PrintSource {
         val preferences = userPreferencesState.value.data
         val setlist = dialog.setlist
         val entries = setlist?.entries ?: listOf(Setlist.Entry(requireNotNull(dialog.song).fileName))
@@ -2469,7 +2469,7 @@ class CampfireViewModel(
                 renderSong(it.text, transposition, preferences?.chordSpelling ?: UserPreferences.ChordSpelling.Default)
             } }
             PrintSong(entry.songFileName, song?.title ?: entry.songFileName.substringBeforeLast('.'), song?.artist,
-                index = if (setlist == null) null else index + 1, song = rendered)
+                index = if (setlist == null) null else index + 1, song = rendered, text = content?.text)
         }
         return PrintSource(title = setlist?.title ?: requireNotNull(dialog.song).title,
             description = setlist?.description.orEmpty(), isSetlist = setlist != null, songs = printSongs)
@@ -2492,7 +2492,7 @@ class CampfireViewModel(
     internal fun exportPdf(
         filePicker: FilePicker,
         fileName: String,
-        dialog: DialogType.PrintExport,
+        dialog: DialogType.Export,
         pageCount: Int,
         isShare: Boolean,
         create: suspend (onPage: (done: Int) -> Unit) -> ByteArray,
@@ -2509,7 +2509,7 @@ class CampfireViewModel(
                     filePicker = filePicker,
                     savedMessage = Message.PdfSaved,
                     isShare = isShare,
-                    onSaved = { _printExportSaved.tryEmit(dialog) },
+                    onSaved = { _exportSaved.tryEmit(dialog) },
                 ) {
                     val bytes = try {
                         withContext(Dispatchers.Default) { create { done -> _pdfExportProgress.value = PdfExportProgress(done = done, total = pageCount) } }
@@ -2537,20 +2537,29 @@ class CampfireViewModel(
         if (_pdfExportProgress.value != null) pdfExportJob?.cancel()
     }
 
-    fun exportSong(filePicker: FilePicker, songFileName: String) = launchFileTransfer {
-        save(filePicker, savedMessage = Message.SongExported) { exportSongs(listOf(songFileName)) }
-    }
-
-    fun shareSong(filePicker: FilePicker, songFileName: String) = launchFileTransfer {
-        save(filePicker, savedMessage = Message.SongExported, isShare = true) { exportSongs(listOf(songFileName)) }
-    }
-
-    fun exportSetlist(filePicker: FilePicker, setlistFileName: String) = launchFileTransfer {
-        save(filePicker, savedMessage = Message.SetlistExported) { exportSetlist.invoke(setlistFileName) }
-    }
-
-    fun shareSetlist(filePicker: FilePicker, setlistFileName: String) = launchFileTransfer {
-        save(filePicker, savedMessage = Message.SetlistExported, isShare = true) { exportSetlist.invoke(setlistFileName) }
+    /**
+     * The export screen's other format: a song as the `.cho` file it already is, a setlist as a zip of its manifest and
+     * the songs it names, narrowed to [songFileNames] where some were left out (null being all of them). A saved file
+     * closes the screen, as a saved PDF does, and the same guard keeps a tap that lands while the screen slides away from
+     * bringing a picker up over whatever is under it.
+     */
+    fun exportFiles(filePicker: FilePicker, dialog: DialogType.Export, songFileNames: Set<String>?, isShare: Boolean) {
+        if (_visibleDialog.value != dialog) return
+        val setlist = dialog.setlist
+        launchFileTransfer {
+            save(
+                filePicker = filePicker,
+                savedMessage = if (setlist == null) Message.SongExported else Message.SetlistExported,
+                isShare = isShare,
+                onSaved = { _exportSaved.tryEmit(dialog) },
+            ) {
+                if (setlist == null) {
+                    exportSongs(listOf(requireNotNull(dialog.song).fileName))
+                } else {
+                    exportSetlist.invoke(setlist.fileName, songFileNames)
+                }
+            }
+        }
     }
 
     fun exportLibrary(filePicker: FilePicker) = launchFileTransfer {
@@ -2938,7 +2947,7 @@ class CampfireViewModel(
         // while it slides away, so its own disposal would be too late: its options are saved and its drawing cancelled
         // here, a screen opened again in the next moment finds the options it left, and its Save, Share and options do
         // nothing once it is no longer the dialog on screen.
-        if (previousDialog is DialogType.PrintExport && dialogType != previousDialog) {
+        if (previousDialog is DialogType.Export && dialogType != previousDialog) {
             _pendingPrintSettings.value?.let { viewModelScope.launch { savePrintSettings(it) } }
             // An export nobody is looking at any more would put its picker up over whatever is on screen by then.
             cancelPdfExport()
@@ -3320,7 +3329,7 @@ class CampfireViewModel(
     }
 
     sealed interface DialogType {
-        data class PrintExport(val song: Song? = null, val setlist: Setlist? = null, val songSetlistFileName: String? = null) : DialogType
+        data class Export(val song: Song? = null, val setlist: Setlist? = null, val songSetlistFileName: String? = null) : DialogType
         data object NewSetlist : DialogType
         data object NewSong : DialogType
         data object SongFilters : DialogType

@@ -46,6 +46,8 @@ internal data class PrintSong(
     val index: Int? = null,
     /** Null for an unreadable or missing file; its place remains visible in the running order. */
     val song: ChordProSong?,
+    /** The file as it is stored, which the export screen shows for a song exported as ChordPro, and null when it could not be read. */
+    val text: String? = null,
 )
 
 /**

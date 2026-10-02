@@ -22,6 +22,7 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
@@ -561,7 +562,10 @@ private fun SongSectionContent(
     fun foldToggle(key: String) = foldedRuns?.let { FoldToggle(isExpanded = !it.isCollapsed(key), onToggled = { it.toggle(key) }) }
     // A header over nothing (a recalled chorus with nothing left to show) has nothing to fold.
     val sectionToggle = if (section.parts.isNotEmpty() && (header != null || wholeSectionKind != null)) foldToggle(sectionFold) else null
-    val isHeaderShown = header != null && (header != UNNAMED_SECTION_HEADER || sectionToggle != null)
+    // An unnamed section is headed even where nothing folds (the editor's preview), by a pill as wide as the one with
+    // the chevron in it, so that the preview lays the song out the way the details screen will — unless it is nothing
+    // but tablature or a grid, which the toggle row named after that heads instead.
+    val isHeaderShown = header != null && (header != UNNAMED_SECTION_HEADER || wholeSectionKind == null)
     val hasBody = section.parts.isNotEmpty() && sectionToggle?.isExpanded != false
     val chevronSize = FOLD_CHEVRON_SIZE * fontScale
     val isFirstChunk = items.first == 0
@@ -798,7 +802,8 @@ private fun CardTitleRow(
 
 /**
  * A section's name, followed by the chevron that folds it where it can be folded; only the chevron for a section with
- * no name ([UNNAMED_SECTION_HEADER]). [chevronDescription] names the chevron instead of the default "Hide the section".
+ * no name ([UNNAMED_SECTION_HEADER]), or the room for it where it cannot. [chevronDescription] names the chevron instead
+ * of the default "Hide the section".
  */
 @Composable
 private fun SectionTitle(
@@ -820,6 +825,8 @@ private fun SectionTitle(
         style = style,
         color = MaterialTheme.colorScheme.primary,
     )
+    // The chevron's place is kept in an unnamed pill that has none, which would otherwise be a sliver.
+    if (toggle == null && header == UNNAMED_SECTION_HEADER) Spacer(modifier = Modifier.size(chevronSize))
     toggle?.let {
         FoldChevron(
             modifier = Modifier.padding(start = if (header == UNNAMED_SECTION_HEADER) 0.dp else FOLD_CHEVRON_GAP).size(chevronSize),
@@ -2267,10 +2274,12 @@ private fun ChordProSong.toRenderSections(
                 header?.let { sections += RenderSection.Lines(header = it, foldKey = recallFoldKey, parts = emptyList(), isOnCard = true) }
             }
 
-            // The rest of a section a comment or a break cut in two was headed where it started.
+            // The rest of a section a chorus recall cut in two was named where it started, so it is not named again,
+            // but it still folds on its own: every part of a song can be folded away, and its chevron is all it needs.
+            // Whatever else cuts a section was joined over by joinCutSections, and arrives here with its start.
             is ChordProBlock.Section -> addSection(
                 pieces = pieces,
-                header = if (block.isContinuation) null else block.header(defaultLabels),
+                header = if (block.isContinuation) UNNAMED_SECTION_HEADER else block.header(defaultLabels),
                 foldKey = foldNameCounts.nextFoldKey(block.foldName()),
             )
         }
@@ -2367,9 +2376,10 @@ private fun ChordProBlock.Section.header(defaultLabels: DefaultSectionLabels): S
 }
 
 /**
- * The header of a section the file gives no name and that has none of its own kind to fall back on, a paragraph of
- * lyrics: a pill with nothing in it but the chevron that folds it, which is drawn only where it can fold, since a
- * section that cannot be folded has no use for a heading that says nothing.
+ * The header of a section the file gives no name and that has none of its own kind to fall back on — a paragraph of
+ * lyrics, which is what a song pasted in as plain text with blank lines between its verses is made of, or the rest
+ * of a section a chorus recall cut in two: a pill with nothing in it but the chevron that folds it, so that every
+ * part of a song folds, and an empty one of the same size where nothing folds (the editor's preview).
  */
 internal const val UNNAMED_SECTION_HEADER = ""
 

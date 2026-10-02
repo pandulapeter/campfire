@@ -86,8 +86,11 @@ interface SetlistRepository {
     /** See `SetlistLocalSource.loadSetlistFileSizes`: every setlist file in the folder with its size, read or not. Never cached. */
     suspend fun loadSetlistFileSizes(): Map<String, Long>
 
-    /** The stored document of one setlist, for exporting it unchanged, whether it decodes or not. Null if it is missing. */
-    suspend fun loadSetlistDocument(fileName: String): String?
+    /**
+     * The stored document of one setlist, for exporting it unchanged, whether it decodes or not. Null if it is missing.
+     * See `SetlistLocalSource.loadSetlistDocument` for [songFileNames], which keeps only the entries naming those songs.
+     */
+    suspend fun loadSetlistDocument(fileName: String, songFileNames: Set<String>? = null): String?
 
     /** Waits for a change to the setlist that is being written, which would otherwise put the file back. */
     suspend fun deleteSetlist(fileName: String)

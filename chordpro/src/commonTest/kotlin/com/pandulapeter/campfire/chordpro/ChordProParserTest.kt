@@ -344,6 +344,21 @@ class ChordProParserTest {
     }
 
     @Test
+    fun `pasted lyrics are cut into a paragraph per block, whatever spaces their blank lines hold`() {
+        val blocks = ChordProParser.parse("one\r\ntwo\r\n \u00a0\t\r\nthree\r\nfour\r\n\r\n\r\nfive").blocks
+
+        assertEquals(
+            listOf(listOf("one", "two"), listOf("three", "four"), listOf("five")),
+            blocks.map { block ->
+                val section = block as ChordProBlock.Section
+                assertEquals(SectionType.Paragraph, section.type)
+                assertNull(section.label)
+                section.lines.map { (it as ChordProLine.Lyrics).text }
+            },
+        )
+    }
+
+    @Test
     fun `legacy comment headings open implicit sections`() {
         val blocks = ChordProParser.parse(
             """

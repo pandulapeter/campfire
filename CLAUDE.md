@@ -90,9 +90,17 @@ uninstall and nothing else does.
 
 ## Printing
 
-Song and setlist action menus offer a separate **Export to PDF** screen
-(`presentation/ui/dialogs/PrintExportScreen.kt`), full screen over the app with Save PDF as its floating action
-button. `PrintSettings` are local user preferences, mapped through
+Song and setlist action menus have one export entry each (**Export song**, **Export setlist**), which opens the **Export**
+screen (`presentation/ui/dialogs/ExportScreen.kt`), full screen over the app with Save as its floating action button and, on
+Android and iOS, Share in the app bar: there is no separate share or file export entry. Its first option is the format,
+with a line saying what each is for — a **PDF**, for printing, or the library's own files, for sharing with other
+Campfire users: **ChordPro** for a song, the `.cho` file as the library holds it, and **Zip** for a setlist, a setlist
+manifest (its `*.setlist.json`) next to its songs as ChordPro files. A setlist's songs are ticked off for either format
+alike, and a zip of only some of them carries a manifest naming only those (`ExportSetlistUseCase`'s `songFileNames`,
+everything else in the document kept), so that an import finds every song it names; with all of them ticked the
+manifest is the stored file unchanged. The library's own files take no other option and are previewed as the text or
+the files they write. The rest of this section is the PDF. `PrintSettings` (the format among
+them) are local user preferences, mapped through
 `PrintSettingsDocument`, saved once the options have settled and whatever way the screen closes, independent of the
 viewer's text size and folded sections. A setlist can export its running order or the selected song sheets, retaining
 the original slot numbers and the transposition of each entry; a lone song reached through a setlist uses that entry's

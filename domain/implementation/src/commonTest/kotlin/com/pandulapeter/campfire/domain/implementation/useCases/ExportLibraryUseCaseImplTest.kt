@@ -238,7 +238,7 @@ class ExportLibraryUseCaseImplTest {
         override suspend fun parseSetlist(document: String) = throw UnsupportedOperationException()
         override suspend fun importSetlist(setlist: Setlist, shouldReplace: Boolean) = throw UnsupportedOperationException()
         override suspend fun loadSetlistFileSizes() = folder
-        override suspend fun loadSetlistDocument(fileName: String) = if (fileName in unreadable) null else document
+        override suspend fun loadSetlistDocument(fileName: String, songFileNames: Set<String>?) = if (fileName in unreadable) null else document
         override suspend fun deleteSetlist(fileName: String) = throw UnsupportedOperationException()
         override suspend fun deleteAllSetlists() = throw UnsupportedOperationException()
     }

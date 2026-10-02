@@ -9,13 +9,11 @@
 -->
 # To do
 - Fab touch target should be MUCH larger
-- Export song -> export song file, Share song -> share song file
 - Swipe between rows could be strictly paged
 - PDF export: consider adding the option for 3 columns in landscape
 - PDF double tap and hold to zoom
 - Improve song info dialog and card
 - Mobile web IME keyboard handling
-- Line breaks could also separate sections as long as they donare not wrapped in sections already: they need to be foldable
 - Be more aggressive when breaking up sections within a row. Priority: reduce empty space
 - Clarify misunderstandings around the different notation systems, especially during saving
 - Editor feature: clean up chordPro that standardizes the order of tags, line breaks, etc. Apply it automatically to imported files

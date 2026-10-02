@@ -13,6 +13,10 @@ import com.pandulapeter.campfire.data.model.domain.ExportedFile
 
 interface ExportSetlistUseCase {
 
-    /** A zip of the setlist and the songs in it, so that importing it elsewhere restores both. */
-    suspend operator fun invoke(setlistFileName: String): ExportedFile?
+    /**
+     * A zip of the setlist and the songs in it, so that importing it elsewhere restores both. [songFileNames] narrows it
+     * to those songs, the setlist in the zip naming only them, so that an import of it finds every song it names; null
+     * exports the whole setlist with its document unchanged.
+     */
+    suspend operator fun invoke(setlistFileName: String, songFileNames: Set<String>? = null): ExportedFile?
 }

@@ -350,7 +350,7 @@ class SetlistRepositoryImplTest {
 
         override suspend fun loadSetlistFileSizes(): Map<String, Long> = throw UnsupportedOperationException()
 
-        override suspend fun loadSetlistDocument(fileName: String) = throw UnsupportedOperationException()
+        override suspend fun loadSetlistDocument(fileName: String, songFileNames: Set<String>?) = throw UnsupportedOperationException()
 
         override suspend fun deleteSetlist(fileName: String) {
             files.remove(fileName)

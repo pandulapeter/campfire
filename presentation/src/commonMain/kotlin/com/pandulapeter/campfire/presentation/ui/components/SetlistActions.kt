@@ -18,10 +18,8 @@ import com.pandulapeter.campfire.presentation.resources.ic_archive
 import com.pandulapeter.campfire.presentation.resources.ic_delete
 import com.pandulapeter.campfire.presentation.resources.ic_duplicate
 import com.pandulapeter.campfire.presentation.resources.ic_edit
-import com.pandulapeter.campfire.presentation.resources.ic_print
-import com.pandulapeter.campfire.presentation.resources.print_export
+import com.pandulapeter.campfire.presentation.resources.setlists_export
 import com.pandulapeter.campfire.presentation.resources.ic_export
-import com.pandulapeter.campfire.presentation.resources.ic_share
 import com.pandulapeter.campfire.presentation.resources.ic_songs
 import com.pandulapeter.campfire.presentation.resources.ic_unarchive
 import com.pandulapeter.campfire.presentation.resources.setlists_actions
@@ -29,18 +27,15 @@ import com.pandulapeter.campfire.presentation.resources.setlists_archive
 import com.pandulapeter.campfire.presentation.resources.setlists_delete_setlist
 import com.pandulapeter.campfire.presentation.resources.setlists_duplicate_setlist
 import com.pandulapeter.campfire.presentation.resources.setlists_edit_details
-import com.pandulapeter.campfire.presentation.resources.setlists_export
-import com.pandulapeter.campfire.presentation.resources.setlists_share
 import com.pandulapeter.campfire.presentation.resources.setlists_song_assignments
 import com.pandulapeter.campfire.presentation.resources.setlists_unarchive
 import com.pandulapeter.campfire.presentation.ui.CampfireViewModel
-import com.pandulapeter.campfire.presentation.ui.platform.LocalFilePicker
 import org.jetbrains.compose.resources.painterResource
 
 /**
  * Everything that can be done to one setlist, at the end of its [SectionHeader]: "Edit" and "Song assignments" as
  * buttons where the header has the room for them, and the rest behind its overflow button ([ActionsMenu]) whatever the
- * room - duplicating, archiving, sharing and exporting are rarely wanted, and deleting is not to be ended up in by accident. They
+ * room - duplicating, archiving and exporting are rarely wanted, and deleting is not to be ended up in by accident. They
  * start the way a song's actions do, with "Edit" and then the assignments, so that the two read alike. "Edit" is where
  * a setlist is renamed, and also the one place its description is written, since the two are the whole of what the
  * user gets to say about it.
@@ -60,13 +55,12 @@ internal fun SetlistActions(
     setlist: Setlist,
     isDecorative: Boolean = false,
 ) {
-    val filePicker = LocalFilePicker.current
     ActionsMenu(
         modifier = modifier,
         buttonModifier = buttonModifier,
         contentDescription = stringResource(Res.string.setlists_actions),
         isDecorative = isDecorative,
-        items = listOfNotNull(
+        items = listOf(
             ActionsMenuItem(
                 title = stringResource(Res.string.setlists_edit_details),
                 icon = painterResource(Res.drawable.ic_edit),
@@ -89,28 +83,11 @@ internal fun SetlistActions(
                 isAlwaysInMenu = true,
                 onClick = { viewModel.setSetlistArchived(setlist = setlist, isArchived = !setlist.isArchived) },
             ),
-            // Only where sending a file is a different thing from saving one, which on desktop and the web it is not.
-            if (filePicker.canShare) {
-                ActionsMenuItem(
-                    title = stringResource(Res.string.setlists_share),
-                    icon = painterResource(Res.drawable.ic_share),
-                    isAlwaysInMenu = true,
-                    onClick = { viewModel.shareSetlist(filePicker, setlist.fileName) },
-                )
-            } else {
-                null
-            },
             ActionsMenuItem(
                 title = stringResource(Res.string.setlists_export),
                 icon = painterResource(Res.drawable.ic_export),
                 isAlwaysInMenu = true,
-                onClick = { viewModel.exportSetlist(filePicker, setlist.fileName) },
-            ),
-            ActionsMenuItem(
-                title = stringResource(Res.string.print_export),
-                icon = painterResource(Res.drawable.ic_print),
-                isAlwaysInMenu = true,
-                onClick = { viewModel.showDialog(CampfireViewModel.DialogType.PrintExport(setlist = setlist)) },
+                onClick = { viewModel.showDialog(CampfireViewModel.DialogType.Export(setlist = setlist)) },
             ),
             ActionsMenuItem(
                 title = stringResource(Res.string.setlists_delete_setlist),

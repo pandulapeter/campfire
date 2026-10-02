@@ -128,7 +128,8 @@ internal class SetlistRepositoryImpl(
 
     override suspend fun loadSetlistFileSizes() = setlistLocalSource.loadSetlistFileSizes()
 
-    override suspend fun loadSetlistDocument(fileName: String) = setlistLocalSource.loadSetlistDocument(fileName)
+    override suspend fun loadSetlistDocument(fileName: String, songFileNames: Set<String>?) =
+        setlistLocalSource.loadSetlistDocument(fileName, songFileNames)
 
     override suspend fun deleteSetlist(fileName: String) = writing {
         setlistLocalSource.deleteSetlist(fileName)

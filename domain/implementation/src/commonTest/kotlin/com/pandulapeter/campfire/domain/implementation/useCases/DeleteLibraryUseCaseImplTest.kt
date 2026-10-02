@@ -125,7 +125,7 @@ class DeleteLibraryUseCaseImplTest {
         override suspend fun parseSetlist(document: String) = throw NotImplementedError()
         override suspend fun importSetlist(setlist: Setlist, shouldReplace: Boolean) = throw NotImplementedError()
         override suspend fun loadSetlistFileSizes(): Map<String, Long> = throw NotImplementedError()
-        override suspend fun loadSetlistDocument(fileName: String) = throw NotImplementedError()
+        override suspend fun loadSetlistDocument(fileName: String, songFileNames: Set<String>?) = throw NotImplementedError()
         override suspend fun deleteSetlist(fileName: String) = throw NotImplementedError()
 
         override suspend fun deleteAllSetlists() {

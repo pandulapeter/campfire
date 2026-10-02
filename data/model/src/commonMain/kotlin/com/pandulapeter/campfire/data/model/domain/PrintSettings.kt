@@ -9,8 +9,12 @@
  */
 package com.pandulapeter.campfire.data.model.domain
 
-/** Print choices are local preferences, independent of how a song is read on screen. */
+/**
+ * The export screen's choices, local preferences independent of how a song is read on screen: the [format] the file is
+ * written in, and the rest for how a PDF is laid out, which an export of the library's own files has no use for.
+ */
 data class PrintSettings(
+    val format: Format = Format.PDF,
     val paper: Paper = Paper.A4,
     val isLandscape: Boolean = false,
     val fontSize: Int = 12,
@@ -25,6 +29,12 @@ data class PrintSettings(
     val includeSetlistOverview: Boolean = true,
 ) {
     fun normalized() = copy(fontSize = fontSize.coerceIn(8, 20), marginMm = marginMm.coerceIn(10, 25), columns = columns.coerceIn(1, 2))
+
+    /** [FILES] is what the library holds: a song's ChordPro file, or a setlist's zip of its manifest and its songs. */
+    enum class Format(val id: String) {
+        PDF("pdf"),
+        FILES("files"),
+    }
 
     enum class Paper(val id: String, val width: Float, val height: Float) {
         A4("a4", 595.276f, 841.89f),

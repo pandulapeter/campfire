@@ -23,16 +23,19 @@ import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.snap
 import androidx.compose.animation.core.spring
 import androidx.compose.animation.core.updateTransition
+import androidx.compose.animation.expandVertically
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.scaleIn
 import androidx.compose.animation.scaleOut
+import androidx.compose.animation.shrinkVertically
 import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.focusable
 import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.gestures.rememberTransformableState
 import androidx.compose.foundation.gestures.transformable
+import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxWithConstraints
@@ -54,22 +57,29 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.rememberPagerState
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.selection.triStateToggleable
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.DatePickerDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExtendedFloatingActionButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.ListItem
+import androidx.compose.material3.ListItemDefaults
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.MotionScheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
+import androidx.compose.material3.TriStateCheckbox
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.Immutable
 import androidx.compose.runtime.LaunchedEffect
@@ -102,6 +112,7 @@ import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.drawscope.clipRect
 import androidx.compose.ui.graphics.drawscope.translate
 import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.graphics.painter.Painter
 import androidx.compose.ui.input.key.Key
 import androidx.compose.ui.input.key.KeyEventType
 import androidx.compose.ui.input.key.isAltPressed
@@ -124,6 +135,7 @@ import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.invisibleToUser
 import androidx.compose.ui.semantics.role
 import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.state.ToggleableState
 import androidx.compose.ui.text.TextMeasurer
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.style.TextOverflow
@@ -149,7 +161,9 @@ import com.pandulapeter.campfire.presentation.resources.ic_clear
 import com.pandulapeter.campfire.presentation.resources.ic_next
 import com.pandulapeter.campfire.presentation.resources.ic_previous
 import com.pandulapeter.campfire.presentation.resources.ic_save
+import com.pandulapeter.campfire.presentation.resources.ic_setlists
 import com.pandulapeter.campfire.presentation.resources.ic_share
+import com.pandulapeter.campfire.presentation.resources.ic_songs
 import com.pandulapeter.campfire.presentation.resources.ic_subtract
 import com.pandulapeter.campfire.presentation.resources.ic_text_decrease
 import com.pandulapeter.campfire.presentation.resources.ic_text_increase
@@ -159,6 +173,13 @@ import com.pandulapeter.campfire.presentation.resources.print_columns
 import com.pandulapeter.campfire.presentation.resources.print_comments
 import com.pandulapeter.campfire.presentation.resources.print_export
 import com.pandulapeter.campfire.presentation.resources.print_font_size
+import com.pandulapeter.campfire.presentation.resources.print_format
+import com.pandulapeter.campfire.presentation.resources.print_format_chordpro
+import com.pandulapeter.campfire.presentation.resources.print_format_chordpro_song_description
+import com.pandulapeter.campfire.presentation.resources.print_format_pdf
+import com.pandulapeter.campfire.presentation.resources.print_format_pdf_description
+import com.pandulapeter.campfire.presentation.resources.print_format_zip
+import com.pandulapeter.campfire.presentation.resources.print_format_zip_description
 import com.pandulapeter.campfire.presentation.resources.print_landscape
 import com.pandulapeter.campfire.presentation.resources.print_letter
 import com.pandulapeter.campfire.presentation.resources.print_load_failed
@@ -186,6 +207,11 @@ import com.pandulapeter.campfire.presentation.resources.print_share
 import com.pandulapeter.campfire.presentation.resources.print_song_sheets
 import com.pandulapeter.campfire.presentation.resources.print_songs
 import com.pandulapeter.campfire.presentation.resources.print_time
+import com.pandulapeter.campfire.presentation.resources.print_zip_contents
+import com.pandulapeter.campfire.presentation.resources.print_zip_manifest
+import com.pandulapeter.campfire.presentation.resources.print_zip_manifest_description
+import com.pandulapeter.campfire.presentation.resources.print_zip_missing
+import com.pandulapeter.campfire.presentation.resources.print_zip_song_description
 import com.pandulapeter.campfire.presentation.resources.retry
 import com.pandulapeter.campfire.presentation.resources.song_details_text_size
 import com.pandulapeter.campfire.presentation.resources.song_details_text_size_decrease
@@ -193,15 +219,16 @@ import com.pandulapeter.campfire.presentation.resources.song_details_text_size_i
 import com.pandulapeter.campfire.presentation.resources.song_editor_insert_capo
 import com.pandulapeter.campfire.presentation.resources.song_editor_insert_key
 import com.pandulapeter.campfire.presentation.resources.song_editor_insert_tempo
-import com.pandulapeter.campfire.presentation.resources.songs_tags_clear
 import com.pandulapeter.campfire.presentation.ui.CampfireViewModel
 import com.pandulapeter.campfire.presentation.ui.components.CampfireTopAppBar
 import com.pandulapeter.campfire.presentation.ui.components.CheckboxListItem
 import com.pandulapeter.campfire.presentation.ui.components.DelayedLoadingIndicator
 import com.pandulapeter.campfire.presentation.ui.components.SegmentedChoice
 import com.pandulapeter.campfire.presentation.ui.components.SettingsSectionTitle
+import com.pandulapeter.campfire.presentation.ui.components.fadingTopEdge
 import com.pandulapeter.campfire.presentation.ui.components.fadingUnderStartOverlay
 import com.pandulapeter.campfire.presentation.ui.components.fadingVerticalEdges
+import com.pandulapeter.campfire.presentation.ui.components.textResource
 import com.pandulapeter.campfire.presentation.ui.contentEdges
 import com.pandulapeter.campfire.presentation.ui.platform.LocalFilePicker
 import com.pandulapeter.campfire.presentation.ui.platform.calendarLocale
@@ -212,6 +239,7 @@ import com.pandulapeter.campfire.presentation.ui.print.PrintDocument
 import com.pandulapeter.campfire.presentation.ui.print.PrintLabels
 import com.pandulapeter.campfire.presentation.ui.print.PrintPage
 import com.pandulapeter.campfire.presentation.ui.print.PrintRenderer
+import com.pandulapeter.campfire.presentation.ui.print.PrintSong
 import com.pandulapeter.campfire.presentation.ui.print.PrintSource
 import com.pandulapeter.campfire.presentation.ui.print.layoutPrintDocument
 import com.pandulapeter.campfire.presentation.ui.print.pdfFileName
@@ -234,17 +262,17 @@ import kotlinx.datetime.atStartOfDayIn
 import org.jetbrains.compose.resources.painterResource
 
 /**
- * How far [PrintExportHost] has dealt the export screen over the app, which the screens under it follow the way they
+ * How far [ExportHost] has dealt the export screen over the app, which the screens under it follow the way they
  * follow a destination being pushed over them: 0 while it is away, 1 while it covers them.
  */
 @Stable
-internal class PrintExportTransition {
+internal class ExportTransition {
 
     val progress = Animatable(0f)
 }
 
 /**
- * Puts [PrintExportScreen] over the whole app for as long as the view model's dialog is an export, dealing it in from
+ * Puts [ExportScreen] over the whole app for as long as the view model's dialog is an export, dealing it in from
  * the right edge and taking it away again with the spring, the direction and the background slide of the app's own
  * navigation, and following a predictive back gesture as a destination's pop does. It is drawn inside the app's own
  * layout rather than in a window of its own, so that the snackbars of a failed export still show over it; it is still a
@@ -252,18 +280,18 @@ internal class PrintExportTransition {
  * place close it the way they close a sheet.
  */
 @Composable
-internal fun PrintExportHost(
+internal fun ExportHost(
     viewModel: CampfireViewModel,
-    transition: PrintExportTransition,
+    transition: ExportTransition,
 ) {
     val visibleDialog by viewModel.visibleDialog.collectAsStateWithLifecycle()
-    val target = visibleDialog as? CampfireViewModel.DialogType.PrintExport
+    val target = visibleDialog as? CampfireViewModel.DialogType.Export
     // The export on screen, which outlives the dialog for as long as the screen takes to slide away. One export
     // replacing another is the same screen with what it reads starting over, not a second one sliding in.
-    var shown by remember { mutableStateOf<CampfireViewModel.DialogType.PrintExport?>(null) }
+    var shown by remember { mutableStateOf<CampfireViewModel.DialogType.Export?>(null) }
     // The export a back gesture has just closed: the gesture ends a moment before the dialog does, and the screen
     // slides on away from wherever the finger left it rather than starting back towards the open position first.
-    var closedByGesture by remember { mutableStateOf<CampfireViewModel.DialogType.PrintExport?>(null) }
+    var closedByGesture by remember { mutableStateOf<CampfireViewModel.DialogType.Export?>(null) }
     val backGesture = rememberNavigationEventState(currentInfo = NavigationEventInfo.None)
     // Composed after the app, so that the dispatcher reaches this handler before the back stack's, and registered
     // whether or not the screen is up, since a handler that comes and goes changes the order the dispatcher picks in.
@@ -282,7 +310,7 @@ internal fun PrintExportHost(
                 ?.takeIf { it.direction == NavigationEventTransitionState.TRANSITIONING_BACK }
                 ?.latestEvent
                 ?.progress
-            (visibleDialog as? CampfireViewModel.DialogType.PrintExport)?.takeIf { it !== closedByGesture } to gestureProgress
+            (visibleDialog as? CampfireViewModel.DialogType.Export)?.takeIf { it !== closedByGesture } to gestureProgress
         }.collectLatest { (open, gestureProgress) ->
             when {
                 open == null -> {
@@ -305,25 +333,29 @@ internal fun PrintExportHost(
                 .fillMaxSize()
                 .graphicsLayer { translationX = ((1f - transition.progress.value) * size.width).roundToInt().toFloat() },
         ) {
-            PrintExportScreen(viewModel, dialog)
+            ExportScreen(viewModel, dialog)
         }
     }
 }
 
 /**
- * The Export to PDF screen of a song or a setlist: the options on one side, the preview of the pages they make on the
- * other, and Save as its floating action button (Share, where the platform has it, in the app bar). The preview and the
- * file are drawn from one layout by one [PrintRenderer], so what is saved is the preview at print resolution.
+ * The Export screen of a song or a setlist: the options on one side, the preview of what they make on the other, and Save
+ * as its floating action button (Share, where the platform has it, in the app bar). The first option is the format: a
+ * PDF, whose preview and file are drawn from one layout by one [PrintRenderer], so what is saved is the preview at print
+ * resolution, or the library's own files - a song's ChordPro file, or a setlist's zip of its manifest and its songs as
+ * ChordPro files - which take no option but the songs a setlist's zip holds, and are previewed as what is written. That
+ * one choice is what the menus offer as their single export entry, rather than one entry for every format and every way
+ * out of the app.
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-private fun PrintExportScreen(
+private fun ExportScreen(
     viewModel: CampfireViewModel,
-    dialog: CampfireViewModel.DialogType.PrintExport,
+    dialog: CampfireViewModel.DialogType.Export,
 ) {
     val preferences by viewModel.userPreferences.collectAsStateWithLifecycle()
     val initialSettings = preferences?.printSettings ?: return
-    val state = rememberPrintExportState(dialog) { viewModel.pendingPrintSettings.value ?: initialSettings }
+    val state = rememberExportState(dialog) { viewModel.pendingPrintSettings.value ?: initialSettings }
     val exportProgress by viewModel.pdfExportProgress.collectAsStateWithLifecycle()
     val isFileTransferActive by viewModel.isFileTransferActive.collectAsStateWithLifecycle()
     val filePicker = LocalFilePicker.current
@@ -380,6 +412,10 @@ private fun PrintExportScreen(
             value = null
             return@produceState
         }
+        // An export of the library's own files has no pages, and the ones laid out for the PDF are kept for the format being switched back,
+        // which then lays out nothing again.
+        if (inputSettings.format != PrintSettings.Format.PDF) return@produceState
+        if (value.let { it != null && it.source === input && it.settings == inputSettings && it.labels == labels }) return@produceState
         // A burst of steps is one layout, but the first one, with nothing on screen yet, starts at once.
         if (value != null) delay(LAYOUT_DEBOUNCE)
         try {
@@ -422,14 +458,31 @@ private fun PrintExportScreen(
             viewModel.setPrintSettings(normalized)
         }
     }
+    val isFiles = state.settings.format == PrintSettings.Format.FILES
+    // The songs a setlist's zip is narrowed to, by the same ticks a PDF is: null where every one of them is chosen, which
+    // hands the setlist's manifest out exactly as it is stored.
+    val chosenSongFileNames = state.source?.takeIf { it.isSetlist }?.let { source ->
+        val selected = state.selected.orEmpty()
+        if (source.songs.indices.all { it in selected }) null else source.songs.filterIndexed { index, _ -> index in selected }.mapTo(mutableSetOf()) { it.fileName }
+    }
+    // A song whose file could not be read has nothing to write, and a setlist's zip wants a song chosen unless it has
+    // none at all, in which case its manifest is all there is to share.
+    val canExportFiles = state.source.let { source ->
+        when {
+            source == null -> false
+            source.isSetlist -> source.songs.isEmpty() || state.selected.orEmpty().isNotEmpty()
+            else -> source.songs.firstOrNull()?.text != null
+        }
+    }
     val hasPages = laidOut?.document?.pages?.isNotEmpty() == true
     val canSave = isCurrent && hasPages && !isFileTransferActive
     // A tap while the pages are being laid out again for an option just changed is kept until they are, rather than
     // being refused: a floating action button has no disabled look to say it would be, and the layout takes a moment.
     var requestedExport by remember(dialog) { mutableStateOf<ExportRequest?>(null) }
-    LaunchedEffect(requestedExport, canSave, hasPages) {
+    LaunchedEffect(requestedExport, canSave, hasPages, isFiles) {
         val request = requestedExport ?: return@LaunchedEffect
-        if (!hasPages) {
+        // A PDF asked for before the format was switched away is not one to come up once it is switched back.
+        if (!hasPages || isFiles) {
             requestedExport = null
         } else if (canSave) {
             requestedExport = null
@@ -448,11 +501,15 @@ private fun PrintExportScreen(
         }
     }
     // Any import or export running would make the view model ignore the tap, so it is not even asked.
-    val requestExport = { request: ExportRequest -> if (isOpen && !isFileTransferActive) requestedExport = request }
+    val requestExport = { request: ExportRequest ->
+        if (isOpen && !isFileTransferActive) {
+            if (isFiles) viewModel.exportFiles(filePicker, dialog, chosenSongFileNames, isShare = request == ExportRequest.SHARE) else requestedExport = request
+        }
+    }
     val close = { viewModel.dismissSheet(dialog) }
-    LaunchedEffect(dialog) { viewModel.printExportSaved.collect { if (it == dialog) close() } }
+    LaunchedEffect(dialog) { viewModel.exportSaved.collect { if (it == dialog) close() } }
     val content = when {
-        state.failed || state.layoutFailed -> PrintScreenContent.FAILED
+        state.failed || state.layoutFailed && !isFiles -> PrintScreenContent.FAILED
         state.source == null -> PrintScreenContent.LOADING
         else -> PrintScreenContent.LOADED
     }
@@ -477,8 +534,9 @@ private fun PrintExportScreen(
             Column(Modifier.fillMaxSize()) {
                 PrintTopAppBar(
                     title = stringResource(Res.string.print_export),
-                    subtitle = dialog.setlist?.title ?: dialog.song?.title.orEmpty(),
-                    canShare = filePicker.canShare && content == PrintScreenContent.LOADED && hasPages && exportProgress == null,
+                    subtitle = dialog.setlist?.title ?: dialog.song?.let { songLabel(it) }.orEmpty(),
+                    canShare = filePicker.canShare && content == PrintScreenContent.LOADED && exportProgress == null &&
+                        if (isFiles) canExportFiles else hasPages,
                     onShare = { requestExport(ExportRequest.SHARE) },
                     onClose = close,
                 )
@@ -523,29 +581,42 @@ private fun PrintExportScreen(
                                     )
                                 }
                                 val preview: @Composable (Modifier) -> Unit = { modifier ->
-                                    val emptyMessage = when {
-                                        state.source!!.songs.isEmpty() -> stringResource(Res.string.print_setlist_empty)
-                                        state.selected.orEmpty().isEmpty() -> stringResource(Res.string.print_no_songs)
-                                        else -> null
+                                    AnimatedContent(isFiles, modifier, transitionSpec = { fadeIn() togetherWith fadeOut() }) { showsFiles ->
+                                        if (showsFiles) {
+                                            FilesPreview(
+                                                modifier = Modifier.fillMaxSize(),
+                                                source = state.source!!,
+                                                setlistFileName = dialog.setlist?.fileName,
+                                                selected = state.selected.orEmpty(),
+                                                // Beside the options the save button floats over the end of this pane.
+                                                bottomPadding = if (isSideBySide) bottomInset + SAVE_BUTTON_CLEARANCE else 8.dp,
+                                            )
+                                        } else {
+                                            val emptyMessage = when {
+                                                state.source!!.songs.isEmpty() -> stringResource(Res.string.print_setlist_empty)
+                                                state.selected.orEmpty().isEmpty() -> stringResource(Res.string.print_no_songs)
+                                                else -> null
+                                            }
+                                            PrintPreview(
+                                                modifier = Modifier.fillMaxSize(),
+                                                laidOut = laidOut,
+                                                isCurrent = isCurrent,
+                                                renderer = renderer,
+                                                emptyMessage = emptyMessage,
+                                                // Beside the options the preview reaches down under the navigation bar and
+                                                // the save button floats over it with the page buttons; stacked, it ends
+                                                // above the options, which the save button floats over instead.
+                                                bottomInset = if (isSideBySide) bottomInset else 0.dp,
+                                                areOptionsBelow = !isSideBySide,
+                                                saveButtonSize = if (isSideBySide) saveButtonSize else DpSize.Zero,
+                                                magnifications = viewModel.printPreviewMagnifications,
+                                                page = state.page,
+                                                onPageSettled = { state.page = it },
+                                                pageView = { state.pageView },
+                                                onPageViewChanged = { state.pageView = it },
+                                            )
+                                        }
                                     }
-                                    PrintPreview(
-                                        modifier = modifier,
-                                        laidOut = laidOut,
-                                        isCurrent = isCurrent,
-                                        renderer = renderer,
-                                        emptyMessage = emptyMessage,
-                                        // Beside the options the preview reaches down under the navigation bar and
-                                        // the save button floats over it with the page buttons; stacked, it ends
-                                        // above the options, which the save button floats over instead.
-                                        bottomInset = if (isSideBySide) bottomInset else 0.dp,
-                                        areOptionsBelow = !isSideBySide,
-                                        saveButtonSize = if (isSideBySide) saveButtonSize else DpSize.Zero,
-                                        magnifications = viewModel.printPreviewMagnifications,
-                                        page = state.page,
-                                        onPageSettled = { state.page = it },
-                                        pageView = { state.pageView },
-                                        onPageViewChanged = { state.pageView = it },
-                                    )
                                 }
                                 PrintPanes(
                                     optionsWidth = optionsWidth,
@@ -564,7 +635,7 @@ private fun PrintExportScreen(
                     .windowInsetsPadding(WindowInsets.contentEdges.only(WindowInsetsSides.Bottom + WindowInsetsSides.End))
                     .padding(16.dp)
                     .onSizeChanged { saveButtonSize = with(density) { DpSize(it.width.toDp(), it.height.toDp()) } },
-                isVisible = content == PrintScreenContent.LOADED && (hasPages || exportProgress != null),
+                isVisible = content == PrintScreenContent.LOADED && (exportProgress != null || if (isFiles) canExportFiles else hasPages),
                 progress = exportProgress,
                 onSave = { requestExport(ExportRequest.SAVE) },
                 onCancel = viewModel::cancelPdfExport,
@@ -669,8 +740,9 @@ private fun PrintTopAppBar(
 )
 
 /**
- * Save PDF, which while the pages are drawn counts them in a ring in place of its icon and cancels; once the picker is up
- * there is nothing to cancel, and a tap waits for it to answer. It leaves while there are no pages to save.
+ * Save, which while the pages of a PDF are drawn counts them in a ring in place of its icon and cancels; once the picker
+ * is up there is nothing to cancel, and a tap waits for it to answer. It leaves while there is nothing to save: no pages,
+ * or a song file that could not be read.
  */
 @Composable
 private fun SaveButton(
@@ -704,12 +776,12 @@ private fun SaveButton(
 private enum class PrintScreenContent { FAILED, LOADING, LOADED }
 
 /**
- * What the screen keeps while it is open, built by [rememberPrintExportState]. Each field is remembered on its own, as
+ * What the screen keeps while it is open, built by [rememberExportState]. Each field is remembered on its own, as
  * saveable or not as it has to be, rather than the holder being remembered whole, which could not be saved field by
  * field: the selection, the page and how it is zoomed outlive a rotation, while the options, the source and the attempt
  * are read again.
  */
-private class PrintExportState(
+private class ExportState(
     settings: MutableState<PrintSettings>,
     source: MutableState<PrintSource?>,
     failed: MutableState<Boolean>,
@@ -745,10 +817,10 @@ private class PrintExportState(
 }
 
 @Composable
-private fun rememberPrintExportState(
-    dialog: CampfireViewModel.DialogType.PrintExport,
+private fun rememberExportState(
+    dialog: CampfireViewModel.DialogType.Export,
     initialSettings: () -> PrintSettings,
-) = PrintExportState(
+) = ExportState(
     settings = remember(dialog) { mutableStateOf(initialSettings()) },
     source = remember(dialog) { mutableStateOf<PrintSource?>(null) },
     failed = remember(dialog) { mutableStateOf(false) },
@@ -786,8 +858,10 @@ private fun CrossfadedLabel(
 }
 
 /**
- * The options, in one list that scrolls on its own: the paper, the text and what is printed, then for a setlist what it
- * exports and which of its songs. [onSettings] takes every change, normalized and saved by the screen.
+ * The options, in one list that scrolls on its own: the format and what it is good for, then for a PDF the paper, the
+ * text and what is printed, and for a setlist what it exports, then for a setlist in either format which of its songs.
+ * The library's own files are the songs as the library holds them, so the PDF's options fold away under the format while
+ * it is chosen. [onSettings] takes every change, normalized and saved by the screen.
  */
 @Composable
 private fun PrintOptions(
@@ -800,122 +874,140 @@ private fun PrintOptions(
     onSettings: (PrintSettings) -> Unit,
 ) {
     val state = rememberLazyListState()
+    val isPdf = settings.format == PrintSettings.Format.PDF
     LazyColumn(modifier.fadingVerticalEdges(state), state = state, contentPadding = PaddingValues(top = 8.dp, bottom = bottomPadding)) {
         item {
-            SettingsSectionTitle(text = stringResource(Res.string.print_paper))
-            SegmentedChoice(
-                options = PrintSettings.Paper.entries.map { paper ->
-                    paper to stringResource(if (paper == PrintSettings.Paper.A4) Res.string.print_a4 else Res.string.print_letter)
-                },
-                selected = settings.paper,
-                onSelected = { onSettings(settings.copy(paper = it)) },
+            FormatChoice(
+                format = settings.format,
+                isSetlist = source.isSetlist,
+                onSelected = { onSettings(settings.copy(format = it)) },
             )
-            Spacer(Modifier.height(8.dp))
-            SegmentedChoice(
-                options = listOf(false to stringResource(Res.string.print_portrait), true to stringResource(Res.string.print_landscape)),
-                selected = settings.isLandscape,
-                onSelected = { onSettings(settings.copy(isLandscape = it)) },
-            )
-            Spacer(Modifier.height(8.dp))
-            PrintStepperRow(stringResource(Res.string.song_details_text_size)) {
-                Stepper(
-                    value = stringResource(Res.string.print_font_size, settings.fontSize),
-                    isDefault = true,
-                    decreaseIcon = painterResource(Res.drawable.ic_text_decrease),
-                    decreaseLabel = stringResource(Res.string.song_details_text_size_decrease),
-                    canDecrease = settings.fontSize > MIN_FONT_SIZE,
-                    onDecrease = { onSettings(settings.copy(fontSize = settings.fontSize - 1)) },
-                    increaseIcon = painterResource(Res.drawable.ic_text_increase),
-                    increaseLabel = stringResource(Res.string.song_details_text_size_increase),
-                    canIncrease = settings.fontSize < MAX_FONT_SIZE,
-                    onIncrease = { onSettings(settings.copy(fontSize = settings.fontSize + 1)) },
-                    resetLabel = null,
-                    onReset = null,
+        }
+        item {
+            PdfOption(isPdf) {
+                SettingsSectionTitle(text = stringResource(Res.string.print_paper))
+                SegmentedChoice(
+                    options = PrintSettings.Paper.entries.map { paper ->
+                        paper to stringResource(if (paper == PrintSettings.Paper.A4) Res.string.print_a4 else Res.string.print_letter)
+                    },
+                    selected = settings.paper,
+                    onSelected = { onSettings(settings.copy(paper = it)) },
+                )
+                Spacer(Modifier.height(8.dp))
+                SegmentedChoice(
+                    options = listOf(false to stringResource(Res.string.print_portrait), true to stringResource(Res.string.print_landscape)),
+                    selected = settings.isLandscape,
+                    onSelected = { onSettings(settings.copy(isLandscape = it)) },
+                )
+                Spacer(Modifier.height(8.dp))
+                PrintStepperRow(stringResource(Res.string.song_details_text_size)) {
+                    Stepper(
+                        value = stringResource(Res.string.print_font_size, settings.fontSize),
+                        isDefault = true,
+                        decreaseIcon = painterResource(Res.drawable.ic_text_decrease),
+                        decreaseLabel = stringResource(Res.string.song_details_text_size_decrease),
+                        canDecrease = settings.fontSize > MIN_FONT_SIZE,
+                        onDecrease = { onSettings(settings.copy(fontSize = settings.fontSize - 1)) },
+                        increaseIcon = painterResource(Res.drawable.ic_text_increase),
+                        increaseLabel = stringResource(Res.string.song_details_text_size_increase),
+                        canIncrease = settings.fontSize < MAX_FONT_SIZE,
+                        onIncrease = { onSettings(settings.copy(fontSize = settings.fontSize + 1)) },
+                        resetLabel = null,
+                        onReset = null,
+                    )
+                }
+                PrintStepperRow(stringResource(Res.string.print_margins)) {
+                    Stepper(
+                        value = stringResource(Res.string.print_margin, settings.marginMm),
+                        isDefault = true,
+                        decreaseIcon = painterResource(Res.drawable.ic_subtract),
+                        decreaseLabel = stringResource(Res.string.print_margin_decrease),
+                        canDecrease = settings.marginMm > MIN_MARGIN_MM,
+                        // To the next multiple of the step either way, so that a stored value off the steps joins them
+                        // rather than keeping its offset (12 goes to 10 or 15, never to 7 or 17); normalized() clamps it.
+                        onDecrease = { onSettings(settings.copy(marginMm = (settings.marginMm - 1) / MARGIN_STEP_MM * MARGIN_STEP_MM)) },
+                        increaseIcon = painterResource(Res.drawable.ic_add),
+                        increaseLabel = stringResource(Res.string.print_margin_increase),
+                        canIncrease = settings.marginMm < MAX_MARGIN_MM,
+                        onIncrease = { onSettings(settings.copy(marginMm = (settings.marginMm / MARGIN_STEP_MM + 1) * MARGIN_STEP_MM)) },
+                        resetLabel = null,
+                        onReset = null,
+                    )
+                }
+                SettingsSectionTitle(text = stringResource(Res.string.print_columns))
+                SegmentedChoice(
+                    options = (1..2).map { it to it.toString() },
+                    selected = settings.columns,
+                    onSelected = { onSettings(settings.copy(columns = it)) },
+                )
+                Spacer(Modifier.height(8.dp))
+                CheckboxListItem(
+                    title = stringResource(Res.string.print_chords),
+                    isChecked = settings.showChords,
+                    onCheckedChange = { onSettings(settings.copy(showChords = it)) },
+                )
+                CheckboxListItem(
+                    title = stringResource(Res.string.print_comments),
+                    isChecked = settings.showComments,
+                    onCheckedChange = { onSettings(settings.copy(showComments = it)) },
+                )
+                CheckboxListItem(
+                    title = stringResource(Res.string.print_metadata),
+                    isChecked = settings.showMetadata,
+                    onCheckedChange = { onSettings(settings.copy(showMetadata = it)) },
+                )
+                CheckboxListItem(
+                    title = stringResource(Res.string.print_page_numbers),
+                    isChecked = settings.showPageNumbers,
+                    onCheckedChange = { onSettings(settings.copy(showPageNumbers = it)) },
                 )
             }
-            PrintStepperRow(stringResource(Res.string.print_margins)) {
-                Stepper(
-                    value = stringResource(Res.string.print_margin, settings.marginMm),
-                    isDefault = true,
-                    decreaseIcon = painterResource(Res.drawable.ic_subtract),
-                    decreaseLabel = stringResource(Res.string.print_margin_decrease),
-                    canDecrease = settings.marginMm > MIN_MARGIN_MM,
-                    // To the next multiple of the step either way, so that a stored value off the steps joins them
-                    // rather than keeping its offset (12 goes to 10 or 15, never to 7 or 17); normalized() clamps it.
-                    onDecrease = { onSettings(settings.copy(marginMm = (settings.marginMm - 1) / MARGIN_STEP_MM * MARGIN_STEP_MM)) },
-                    increaseIcon = painterResource(Res.drawable.ic_add),
-                    increaseLabel = stringResource(Res.string.print_margin_increase),
-                    canIncrease = settings.marginMm < MAX_MARGIN_MM,
-                    onIncrease = { onSettings(settings.copy(marginMm = (settings.marginMm / MARGIN_STEP_MM + 1) * MARGIN_STEP_MM)) },
-                    resetLabel = null,
-                    onReset = null,
-                )
-            }
-            SettingsSectionTitle(text = stringResource(Res.string.print_columns))
-            SegmentedChoice(
-                options = (1..2).map { it to it.toString() },
-                selected = settings.columns,
-                onSelected = { onSettings(settings.copy(columns = it)) },
-            )
-            Spacer(Modifier.height(8.dp))
-            CheckboxListItem(
-                title = stringResource(Res.string.print_chords),
-                isChecked = settings.showChords,
-                onCheckedChange = { onSettings(settings.copy(showChords = it)) },
-            )
-            CheckboxListItem(
-                title = stringResource(Res.string.print_comments),
-                isChecked = settings.showComments,
-                onCheckedChange = { onSettings(settings.copy(showComments = it)) },
-            )
-            CheckboxListItem(
-                title = stringResource(Res.string.print_metadata),
-                isChecked = settings.showMetadata,
-                onCheckedChange = { onSettings(settings.copy(showMetadata = it)) },
-            )
-            CheckboxListItem(
-                title = stringResource(Res.string.print_page_numbers),
-                isChecked = settings.showPageNumbers,
-                onCheckedChange = { onSettings(settings.copy(showPageNumbers = it)) },
-            )
         }
         if (source.isSetlist) {
             item {
-                SettingsSectionTitle(text = stringResource(Res.string.print_setlist_content))
-                SegmentedChoice(
-                    options = PrintSettings.SetlistMode.entries.map { mode ->
-                        mode to stringResource(
-                            if (mode == PrintSettings.SetlistMode.SONG_SHEETS) {
-                                Res.string.print_song_sheets
-                            } else {
-                                Res.string.print_running_order
-                            },
+                PdfOption(isPdf) {
+                    SettingsSectionTitle(text = stringResource(Res.string.print_setlist_content))
+                    SegmentedChoice(
+                        options = PrintSettings.SetlistMode.entries.map { mode ->
+                            mode to stringResource(
+                                if (mode == PrintSettings.SetlistMode.SONG_SHEETS) {
+                                    Res.string.print_song_sheets
+                                } else {
+                                    Res.string.print_running_order
+                                },
+                            )
+                        },
+                        selected = settings.setlistMode,
+                        onSelected = { onSettings(settings.copy(setlistMode = it)) },
+                    )
+                    if (settings.setlistMode == PrintSettings.SetlistMode.SONG_SHEETS) {
+                        Spacer(Modifier.height(8.dp))
+                        CheckboxListItem(
+                            title = stringResource(Res.string.print_overview),
+                            isChecked = settings.includeSetlistOverview,
+                            onCheckedChange = { onSettings(settings.copy(includeSetlistOverview = it)) },
                         )
-                    },
-                    selected = settings.setlistMode,
-                    onSelected = { onSettings(settings.copy(setlistMode = it)) },
-                )
-                if (settings.setlistMode == PrintSettings.SetlistMode.SONG_SHEETS) {
-                    Spacer(Modifier.height(8.dp))
-                    CheckboxListItem(
-                        title = stringResource(Res.string.print_overview),
-                        isChecked = settings.includeSetlistOverview,
-                        onCheckedChange = { onSettings(settings.copy(includeSetlistOverview = it)) },
-                    )
-                    CheckboxListItem(
-                        title = stringResource(Res.string.print_new_page),
-                        isChecked = settings.startSongsOnNewPage,
-                        onCheckedChange = { onSettings(settings.copy(startSongsOnNewPage = it)) },
-                    )
-                }
-                if (source.songs.isNotEmpty()) {
-                    SettingsSectionTitle(text = stringResource(Res.string.print_songs))
-                    Row(Modifier.padding(horizontal = 4.dp)) {
-                        TextButton(onClick = { onSelected(source.songs.indices.toSet()) }) {
-                            Text(stringResource(Res.string.print_select_all))
-                        }
-                        TextButton(onClick = { onSelected(emptySet()) }) { Text(stringResource(Res.string.songs_tags_clear)) }
+                        CheckboxListItem(
+                            title = stringResource(Res.string.print_new_page),
+                            isChecked = settings.startSongsOnNewPage,
+                            onCheckedChange = { onSettings(settings.copy(startSongsOnNewPage = it)) },
+                        )
                     }
+                }
+            }
+            // Which songs go out is a question for either format, and one answer to both: the same ticks narrow the PDF and
+            // the zip, so switching between the two does not quietly put back the songs that were left out.
+            if (source.songs.isNotEmpty()) {
+                item {
+                    SettingsSectionTitle(text = stringResource(Res.string.print_songs))
+                    SelectAllListItem(
+                        state = when (selected.size) {
+                            0 -> ToggleableState.Off
+                            source.songs.size -> ToggleableState.On
+                            else -> ToggleableState.Indeterminate
+                        },
+                        onClick = { onSelected(if (selected.size == source.songs.size) emptySet() else source.songs.indices.toSet()) },
+                    )
                 }
             }
             itemsIndexed(source.songs) { index, entry ->
@@ -938,6 +1030,71 @@ private fun PrintOptions(
     }
 }
 
+/**
+ * The first of the options, PDF or the library's own files - ChordPro for a song, a zip for a setlist - and a line under
+ * it saying what the chosen one is for and, for the zip, what is in it, since the two are told apart by what the person
+ * receiving the file can do with it rather than by anything the names say.
+ */
+@Composable
+private fun FormatChoice(
+    format: PrintSettings.Format,
+    isSetlist: Boolean,
+    onSelected: (PrintSettings.Format) -> Unit,
+) = Column {
+    SettingsSectionTitle(text = stringResource(Res.string.print_format))
+    SegmentedChoice(
+        options = PrintSettings.Format.entries.map { option ->
+            option to stringResource(
+                when {
+                    option == PrintSettings.Format.PDF -> Res.string.print_format_pdf
+                    isSetlist -> Res.string.print_format_zip
+                    else -> Res.string.print_format_chordpro
+                },
+            )
+        },
+        selected = format,
+        onSelected = onSelected,
+    )
+    val description = when {
+        format == PrintSettings.Format.PDF -> stringResource(Res.string.print_format_pdf_description)
+        isSetlist -> stringResource(Res.string.print_format_zip_description)
+        else -> stringResource(Res.string.print_format_chordpro_song_description)
+    }
+    AnimatedContent(description, transitionSpec = { fadeIn() togetherWith fadeOut() }) { shown ->
+        Text(
+            text = shown,
+            modifier = Modifier.fillMaxWidth().padding(start = 16.dp, end = 16.dp, top = 8.dp),
+            style = MaterialTheme.typography.bodyMedium,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+        )
+    }
+}
+
+/** One group of the options that only a PDF has, folding away while the library's own files are the format. */
+@Composable
+private fun PdfOption(
+    isPdf: Boolean,
+    content: @Composable () -> Unit,
+) = AnimatedVisibility(isPdf, enter = expandVertically() + fadeIn(), exit = shrinkVertically() + fadeOut()) {
+    Column { content() }
+}
+
+/**
+ * One row standing for every song under it, its checkbox ticked when all of them are, empty when none is and a dash in
+ * between, and a tap ticking them all or, when they all are, none: a row like the ones it acts on rather than a pair of
+ * text buttons, which in the heading's color and size read as a second heading.
+ */
+@Composable
+private fun SelectAllListItem(
+    state: ToggleableState,
+    onClick: () -> Unit,
+) = ListItem(
+    modifier = Modifier.triStateToggleable(state = state, role = Role.Checkbox, onClick = onClick),
+    colors = ListItemDefaults.colors(containerColor = Color.Transparent),
+    headlineContent = { Text(stringResource(Res.string.print_select_all)) },
+    leadingContent = { TriStateCheckbox(state = state, onClick = null) },
+)
+
 /** A label and a stepper on one line, built like the overflow menus' `MenuStepperRow`, at the screen's own keyline. */
 @Composable
 private fun PrintStepperRow(
@@ -950,6 +1107,107 @@ private fun PrintStepperRow(
     Text(label, Modifier.weight(1f).padding(end = 16.dp), style = MaterialTheme.typography.bodyLarge)
     stepper()
 }
+
+/**
+ * What a song's ChordPro or a setlist's zip writes, in the preview's place: a song's file as the library holds it,
+ * unwrapped and in the monospaced font the editor shows it in, since only that keeps the columns of a tab lined up, or the
+ * files the zip holds (see [ZipContents]). A song whose file could not be read has nothing to show, and nothing to save
+ * either, and a setlist with none of its songs chosen says so, as the PDF's preview does.
+ */
+@Composable
+private fun FilesPreview(
+    modifier: Modifier,
+    source: PrintSource,
+    setlistFileName: String?,
+    selected: Set<Int>,
+    bottomPadding: Dp,
+) {
+    val text = source.songs.firstOrNull()?.text
+    when {
+        source.isSetlist && source.songs.isNotEmpty() && selected.isEmpty() -> FilesPreviewMessage(modifier, stringResource(Res.string.print_no_songs))
+        source.isSetlist -> ZipContents(
+            modifier = modifier,
+            setlistFileName = setlistFileName.orEmpty(),
+            songs = source.songs.filterIndexed { index, _ -> index in selected },
+            bottomPadding = bottomPadding,
+        )
+        text == null -> FilesPreviewMessage(modifier, stringResource(Res.string.print_missing))
+        else -> {
+            val scrollState = rememberScrollState()
+            Text(
+                text = text,
+                modifier = modifier
+                    .fadingTopEdge(scrollState, MaterialTheme.colorScheme.background)
+                    .verticalScroll(scrollState)
+                    .horizontalScroll(rememberScrollState())
+                    .padding(start = 16.dp, end = 16.dp, top = 8.dp, bottom = bottomPadding),
+                style = MaterialTheme.typography.bodyMedium.copy(fontFamily = LocalMonospaceFontFamily.current),
+                softWrap = false,
+            )
+        }
+    }
+}
+
+@Composable
+private fun FilesPreviewMessage(
+    modifier: Modifier,
+    message: String,
+) = Box(modifier.padding(PAGE_MARGIN), contentAlignment = Alignment.Center) { Text(message) }
+
+/**
+ * The files of a setlist's zip, as an import will find them: the setlist manifest under its own file name, which keeps
+ * the running order and every song's key and names only the [songs] that were chosen, and each of those as the ChordPro
+ * file it is in the library. A chosen song whose file is missing stays named by the manifest but has no file of its own,
+ * which its dimmed row says.
+ */
+@Composable
+private fun ZipContents(
+    modifier: Modifier,
+    setlistFileName: String,
+    songs: List<PrintSong>,
+    bottomPadding: Dp,
+) {
+    val state = rememberLazyListState()
+    LazyColumn(modifier.fadingVerticalEdges(state), state = state, contentPadding = PaddingValues(top = 8.dp, bottom = bottomPadding)) {
+        item {
+            SettingsSectionTitle(text = stringResource(Res.string.print_zip_contents))
+            ZipFileRow(
+                icon = painterResource(Res.drawable.ic_setlists),
+                title = stringResource(Res.string.print_zip_manifest),
+                description = textResource(Res.string.print_zip_manifest_description, setlistFileName),
+            )
+        }
+        // One list under one heading: the songs are in the zip as much as the manifest is, and a heading of their own
+        // read as if the first one held only the manifest.
+        items(songs) { entry ->
+            ZipFileRow(
+                icon = painterResource(Res.drawable.ic_songs),
+                title = "${entry.index}. ${entry.title}",
+                description = if (entry.text == null) {
+                    stringResource(Res.string.print_zip_missing)
+                } else {
+                    textResource(Res.string.print_zip_song_description, entry.fileName)
+                },
+                isIncluded = entry.text != null,
+            )
+        }
+    }
+}
+
+/** One file of a setlist's zip, dimmed where it is named by the setlist but left out of the zip, its file missing. */
+@Composable
+private fun ZipFileRow(
+    icon: Painter,
+    title: String,
+    description: String?,
+    isIncluded: Boolean = true,
+) = ListItem(
+    modifier = Modifier.alpha(if (isIncluded) 1f else 0.5f),
+    colors = ListItemDefaults.colors(containerColor = Color.Transparent),
+    headlineContent = { Text(title) },
+    supportingContent = description?.let { { Text(it) } },
+    leadingContent = { Icon(painter = icon, contentDescription = null) },
+)
 
 /** What the preview shows, which it fades between, keyed by its kind so that a new document does not count as a change. */
 private sealed interface PreviewContent {

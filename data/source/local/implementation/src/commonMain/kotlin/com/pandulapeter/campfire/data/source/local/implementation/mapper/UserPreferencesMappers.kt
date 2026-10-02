@@ -68,6 +68,7 @@ internal fun UserPreferences.toDocument() = UserPreferencesDocument(
 )
 
 internal fun PrintSettingsDocument.toModel() = PrintSettings(
+    format = PrintSettings.Format.entries.firstOrNull { it.id == format } ?: PrintSettings.Format.PDF,
     paper = PrintSettings.Paper.entries.firstOrNull { it.id == paper } ?: PrintSettings.Paper.A4,
     setlistMode = PrintSettings.SetlistMode.entries.firstOrNull { it.id == setlistMode } ?: PrintSettings.SetlistMode.SONG_SHEETS,
     isLandscape = isLandscape,
@@ -84,6 +85,7 @@ internal fun PrintSettingsDocument.toModel() = PrintSettings(
 
 internal fun PrintSettings.toDocument() = normalized().let { settings ->
     PrintSettingsDocument(
+        format = settings.format.id,
         paper = settings.paper.id,
         setlistMode = settings.setlistMode.id,
         isLandscape = settings.isLandscape,

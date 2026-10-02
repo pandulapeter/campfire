@@ -154,8 +154,8 @@ import com.pandulapeter.campfire.presentation.ui.components.hasRoomForSidePanel
 import com.pandulapeter.campfire.presentation.ui.components.pluralTextResource
 import com.pandulapeter.campfire.presentation.ui.components.textResource
 import com.pandulapeter.campfire.presentation.ui.dialogs.CampfireDialogs
-import com.pandulapeter.campfire.presentation.ui.dialogs.PrintExportHost
-import com.pandulapeter.campfire.presentation.ui.dialogs.PrintExportTransition
+import com.pandulapeter.campfire.presentation.ui.dialogs.ExportHost
+import com.pandulapeter.campfire.presentation.ui.dialogs.ExportTransition
 import com.pandulapeter.campfire.presentation.ui.navigation.CampfireDestination
 import com.pandulapeter.campfire.presentation.ui.platform.LocalSyncNotifier
 import com.pandulapeter.campfire.presentation.ui.platform.SyncNotification
@@ -606,12 +606,12 @@ private fun CampfireScreens(
     }
     // What the screens' own lifecycles are compared with, see ScreenSurface.
     val hostLifecycle = LocalLifecycleOwner.current.lifecycle
-    val printExportTransition = remember { PrintExportTransition() }
+    val exportTransition = remember { ExportTransition() }
     // The export screen is drawn in this layout rather than in a window of its own, which a screen reader would take for
     // modal, so the app under it is taken out of the semantics tree while it covers it - only once fully, so that the
     // screen a back gesture is revealing is not empty to an accessibility service halfway through the swipe. Derived,
     // so that the app is not recomposed on every frame of the slide.
-    val isPrintExportCovering by remember { derivedStateOf { printExportTransition.progress.value >= 1f } }
+    val isExportCovering by remember { derivedStateOf { exportTransition.progress.value >= 1f } }
 
     Box(
         modifier = Modifier.fillMaxSize()
@@ -620,8 +620,8 @@ private fun CampfireScreens(
             // The export screen is dealt over the screens the way a destination is, so they give way to it the same way.
             modifier = Modifier
                 .fillMaxSize()
-                .graphicsLayer { translationX = -backgroundSlideOffset((printExportTransition.progress.value * size.width).roundToInt()).toFloat() }
-                .then(if (isPrintExportCovering) Modifier.clearAndSetSemantics { } else Modifier),
+                .graphicsLayer { translationX = -backgroundSlideOffset((exportTransition.progress.value * size.width).roundToInt()).toFloat() }
+                .then(if (isExportCovering) Modifier.clearAndSetSemantics { } else Modifier),
             backStack = backStack,
             onBack = viewModel::navigateBack,
             // The same spec decides the direction for both parameters, see navigationTransition. Nothing is animated
@@ -723,9 +723,9 @@ private fun CampfireScreens(
                 }
             },
         )
-        PrintExportHost(
+        ExportHost(
             viewModel = viewModel,
-            transition = printExportTransition,
+            transition = exportTransition,
         )
         // Not while the update required screen covers the app: every one of these is a window of its own on Android,
         // which that screen, drawn inside the activity's content, cannot cover.

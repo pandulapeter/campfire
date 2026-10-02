@@ -68,8 +68,13 @@ interface SetlistLocalSource {
     /**
      * The setlist file exactly as it is stored, so that exporting it changes nothing, whether it decodes or not. Null
      * if it is missing.
+     *
+     * With [songFileNames], the same document with only the entries naming one of those songs, for an export that
+     * leaves some of its songs out: everything else in it - the order, the transpositions, the fields a later version
+     * wrote - is kept, but the file is written again rather than handed out as it is stored, so this one throws for a
+     * document that does not decode.
      */
-    suspend fun loadSetlistDocument(fileName: String): String?
+    suspend fun loadSetlistDocument(fileName: String, songFileNames: Set<String>? = null): String?
 
     suspend fun deleteSetlist(fileName: String)
 }

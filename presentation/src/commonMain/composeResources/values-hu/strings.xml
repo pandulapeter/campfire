@@ -126,13 +126,12 @@
     <string name="songs_new_song_artist">Előadó</string>
     <string name="songs_artist_and_title">%1$s - %2$s</string>
     <string name="songs_actions">Műveletek</string>
-    <string name="songs_edit_song">Dalfájl szerkesztése</string>
+    <string name="songs_edit_song">Dal szerkesztése</string>
     <string name="songs_setlist_assignments">Listákhoz rendelés</string>
     <string name="songs_update_file_name">Fájlnév frissítése</string>
     <string name="songs_update_file_name_partly">A fájl új nevet kapott, de egy lista vagy a mentett transzponálás még a régi névre hivatkozik</string>
     <string name="songs_delete_song_partly">A dal törlődött, de egy lista vagy a mentett transzponálás még hivatkozik rá</string>
     <string name="songs_delete_song">Dal törlése</string>
-    <string name="songs_share_song">Dal megosztása</string>
     <string name="songs_export_song">Dal exportálása</string>
     <string name="songs_delete_song_confirmation">Törlöd a(z) „%1$s” dalt? A fájl törlődik a könyvtárból és minden listából.</string>
     <string name="songs_all_hidden">Minden dal rejtve van</string>
@@ -169,7 +168,7 @@
     <string name="setlists_move_up">Mozgatás feljebb</string>
     <string name="setlists_move_down">Mozgatás lejjebb</string>
     <string name="setlists_actions">Műveletek</string>
-    <string name="setlists_edit_details">Meta-adatok szerkesztése</string>
+    <string name="setlists_edit_details">Lista szerkesztése</string>
     <string name="setlists_song_assignments">Dalok hozzárendelése</string>
     <string name="setlists_add_songs">Dalok hozzáadása</string>
     <string name="setlists_description">Leírás (nem kötelező)</string>
@@ -194,7 +193,6 @@
     <string name="setlists_archive">Lista archiválása</string>
     <string name="setlists_unarchive">Lista kivétele az archívumból</string>
     <string name="setlists_archived">Archivált</string>
-    <string name="setlists_share">Lista megosztása</string>
     <string name="setlists_export">Lista exportálása</string>
     <string name="setlists_missing_song">A fájl nem található</string>
     <string name="setlists_delete_setlist">Lista törlése</string>
@@ -533,10 +531,22 @@
     <string name="app_update_required">Frissítés szükséges</string>
     <string name="app_update_required_hint">A Campfire ezen verziója már nem használható. A könyvtárad pontosan ott marad, ahol van.</string>
 
-    <!-- PDF export -->
-    <string name="print_export">Exportálás PDF-be</string>
-    <string name="print_save">PDF mentése</string>
-    <string name="print_share">PDF megosztása</string>
+    <!-- Export -->
+    <string name="print_export">Exportálás</string>
+    <string name="print_save">Mentés</string>
+    <string name="print_share">Megosztás</string>
+    <string name="print_format">Formátum</string>
+    <string name="print_format_pdf">PDF</string>
+    <string name="print_format_chordpro">ChordPro</string>
+    <string name="print_format_zip">Zip</string>
+    <string name="print_format_pdf_description">Nyomtatáshoz ideális. Bármilyen eszközön megnyitható, de utólag nem szerkeszthető és nem transzponálható.</string>
+    <string name="print_format_chordpro_song_description">Más Campfire-felhasználóknak ideális: importálhatják, szerkeszthetik és transzponálhatják a dalt.</string>
+    <string name="print_format_zip_description">Más Campfire-felhasználóknak ideális: a lista-leírófájl és a dalok ChordPro-fájlként.</string>
+    <string name="print_zip_contents">A zip-fájl tartalma</string>
+    <string name="print_zip_manifest">Lista-leírófájl</string>
+    <string name="print_zip_manifest_description">%1$s, a sorrenddel és minden dal hangnemével</string>
+    <string name="print_zip_song_description">%1$s, ChordPro-fájlként</string>
+    <string name="print_zip_missing">Nem kerül bele: a dal fájlja hiányzik vagy olvashatatlan</string>
     <string name="print_paper">Papírméret</string>
     <string name="print_a4">A4</string>
     <string name="print_letter">Letter</string>

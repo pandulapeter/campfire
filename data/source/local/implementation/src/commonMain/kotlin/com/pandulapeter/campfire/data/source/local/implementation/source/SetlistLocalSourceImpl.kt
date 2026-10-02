@@ -145,7 +145,12 @@ internal class SetlistLocalSourceImpl(
         .filter { LibraryFiles.isSetlistFileName(it.name) }
         .associate { it.name to it.size }
 
-    override suspend fun loadSetlistDocument(fileName: String) = fileStorage.readText(StorageDirectory.SETLISTS, fileName)
+    override suspend fun loadSetlistDocument(fileName: String, songFileNames: Set<String>?): String? {
+        val text = fileStorage.readText(StorageDirectory.SETLISTS, fileName) ?: return null
+        if (songFileNames == null) return text
+        val document = SetlistDocumentFormat.decode(text)
+        return SetlistDocumentFormat.encode(document.copy(songs = document.songs.filter { it.file in songFileNames }))
+    }
 
     override suspend fun deleteSetlist(fileName: String) = fileStorage.delete(StorageDirectory.SETLISTS, fileName)
 }

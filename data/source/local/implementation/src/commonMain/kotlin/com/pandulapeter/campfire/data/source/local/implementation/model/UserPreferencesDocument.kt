@@ -45,6 +45,7 @@ internal data class UserPreferencesDocument(
 
 @Serializable
 internal data class PrintSettingsDocument(
+    val format: String = "pdf",
     val paper: String = "a4",
     val isLandscape: Boolean = false,
     val fontSize: Int = 12,

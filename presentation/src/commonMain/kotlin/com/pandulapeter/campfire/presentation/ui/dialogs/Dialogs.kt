@@ -235,8 +235,8 @@ internal fun CampfireDialogs(
     // The import screen shows the progress of the imports it reports on itself.
     ImportProgressDialogHost(progress = importProgress.takeIf { importReport == null }, canShow = visibleDialog == null)
     when (val dialog = visibleDialog) {
-        // Drawn by PrintExportHost, which deals it over the screens rather than in a window of its own.
-        is CampfireViewModel.DialogType.PrintExport -> Unit
+        // Drawn by ExportHost, which deals it over the screens rather than in a window of its own.
+        is CampfireViewModel.DialogType.Export -> Unit
         CampfireViewModel.DialogType.NewSetlist -> SetlistDetailsDialog(
             title = stringResource(Res.string.setlists_new_setlist),
             confirmLabel = stringResource(Res.string.create),
@@ -2032,8 +2032,9 @@ private fun SongInfoSheet(
 }
 
 /**
- * How a dialog or a sheet about one song names it under its title: the artist and the title, or the title alone for a
- * song that names no artist.
+ * How a dialog, a sheet or a screen about one song names it under its title: `Artist - Title (Subtitle)`, the subtitle
+ * being part of [Song.title] already, or the title alone for a song that names no artist. Every such subtitle goes
+ * through here, so that one song is named the same way wherever it is the subject.
  */
 @Composable
 internal fun songLabel(song: Song) = if (song.artist.isBlank()) song.title else textResource(Res.string.songs_artist_and_title, song.artist, song.title)
