@@ -97,7 +97,9 @@ with a line saying what each is for — a **PDF**, for printing, or the library'
 Campfire users: **ChordPro** for a song, the `.cho` file as the library holds it, and **Zip** for a setlist, a setlist
 manifest (its `*.setlist.json`) next to its songs as ChordPro files. A setlist's songs are ticked off for either format
 alike, and a zip of only some of them carries a manifest naming only those (`ExportSetlistUseCase`'s `songFileNames`,
-everything else in the document kept), so that an import finds every song it names; with all of them ticked the
+everything else in the document kept), so that the archive never names a song the user left out — a ticked song
+whose file is missing from the library is still named, and an import shows it as a missing song, as the setlist itself
+did; with all of them ticked the
 manifest is the stored file unchanged. The library's own files take no other option and are previewed as the text or
 the files they write. The rest of this section is the PDF. `PrintSettings` (the format among
 them) are local user preferences, mapped through

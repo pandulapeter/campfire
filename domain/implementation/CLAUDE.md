@@ -111,8 +111,9 @@ The ones that carry real logic:
   song's or setlist's own title otherwise); what is *inside* an archive keeps its library names, since a
   setlist points at its songs by file name and the import follows those names. A setlist exported with only some of its
   songs (`songFileNames`) packs only those, and the document beside them names only those
-  (`SetlistRepository.loadSetlistDocument`'s filter, which keeps the rest of the document), so that an import never finds
-  a setlist naming a song the archive left out; exported whole, the document is the stored file unchanged. A library export whose song or setlist
+  (`SetlistRepository.loadSetlistDocument`'s filter, which keeps the rest of the document), so that the archive never
+  names a song the user left out; a ticked song whose file is missing from the library is still named, and an import
+  shows it as a missing song, as the setlist itself did; exported whole, the document is the stored file unchanged. A library export whose song or setlist
   scan failed is a failed export (null), never an archive of what happened to be read; the songs are taken from the folder
   (`SongRepository.loadSongFileSizes`) rather than from the scan, so that a song written since the scan is in the
   archive and one the scan skipped is read again. The setlists are taken from the folder the same way
