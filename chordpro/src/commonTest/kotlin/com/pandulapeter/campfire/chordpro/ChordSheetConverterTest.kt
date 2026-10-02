@@ -154,6 +154,14 @@ class ChordSheetConverterTest {
     }
 
     @Test
+    fun extractedControlsCannotHideChordsButDirectionMarksSurvive() {
+        assertEquals("[C]Hello [G]world x\n", convert("\u202eC   G\nHello world\u0007 x"))
+        assertEquals("Hello   world next\n", convert("Hello\tworld\u00a0next"))
+        assertEquals("שלום\u200f!\u200e\u061c\n", convert("שלום\u200f!\u200e\u061c"))
+        assertEquals("Hello world\n", convert("\u0000Hello\u007f \u202aworld\u202c\u2066\u2069"))
+    }
+
+    @Test
     fun letterSpacingDoesNotSplitWords() {
         val spaced = ChordSheet.Line(listOf(span("T", 0.0, 6.7, 12.0), span("h", 7.7, 14.4, 12.0), span("i", 15.4, 18.4, 12.0), span("s", 19.4, 25.4, 12.0), span("i", 30.0, 33.0, 12.0), span("s", 34.0, 40.0, 12.0)))
         assertEquals("This is\n", ChordSheetConverter.convert(ChordSheet(listOf(ChordSheet.Page(listOf(spaced))))).single())

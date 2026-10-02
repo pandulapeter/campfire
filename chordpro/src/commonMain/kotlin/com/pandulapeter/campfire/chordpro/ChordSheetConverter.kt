@@ -57,14 +57,14 @@ object ChordSheetConverter {
 
     private fun clean(text: String): String = buildString {
         for (c in text) when (c) {
-            '\u00ad', '\u200b', '\u200c', '\u200d', '\ufeff' -> Unit
+            '\u00ad', '\u200b', '\u200c', '\u200d', '\ufeff', '\u007f', in '\u202a'..'\u202e', in '\u2066'..'\u2069' -> Unit
             '\ufb00' -> append("ff")
             '\ufb01' -> append("fi")
             '\ufb02' -> append("fl")
             '\ufb03' -> append("ffi")
             '\ufb04' -> append("ffl")
             '\ufb05', '\ufb06' -> append("st")
-            else -> append(if (c.isWhitespace() || c == '\u00a0' || c in '\u2000'..'\u200a' || c == '\u202f') ' ' else c)
+            else -> if (c.code >= 0x20 || c.isWhitespace()) append(if (c.isWhitespace() || c == '\u00a0' || c in '\u2000'..'\u200a' || c == '\u202f') ' ' else c)
         }
     }
 
