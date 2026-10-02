@@ -170,7 +170,9 @@ holds the `@Module @ComponentScan object DataLocalSourceModule`, and every local
   Object, recursion, stream, page, operator, glyph and output limits bound untrusted input, and page/operator yields
   keep the web responsive. Stream ends are found once per file (`PdfStreamEnds`, every `endstream` offset in one pass) rather
   than by searching the rest of the file for each object, and at most 1 KiB of whitespace is walked past a declared
-  `/Length`, so a recovery scan over thousands of streams with no usable end stays linear. `commonTest` exercises syntax, filters, encodings, geometry and rejection paths;
+  `/Length`, so a recovery scan over thousands of streams with no usable end stays linear. The spaces that bridge a gap
+  between glyphs (as many as the gap holds in a monospace font) are charged to the same text budget as the glyphs,
+  so a tiny monospace font cannot pad a page into hundreds of megabytes. `commonTest` exercises syntax, filters, encodings, geometry and rejection paths;
   `desktopTest/resources/document` holds independent-producer fixtures and adjacent ChordPro goldens, with their
   provenance and remaining producer coverage in its README.
 - **`zip/`** — a dependency-free zip implementation: `ZipReader` (STORED + DEFLATE; a ZIP64 archive rejected, a ZIP64,

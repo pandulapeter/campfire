@@ -21,6 +21,8 @@ import kotlin.test.assertFailsWith
 import kotlin.test.assertNotNull
 import kotlin.test.assertNull
 import kotlin.test.assertTrue
+import kotlin.time.Duration.Companion.seconds
+import kotlin.time.measureTime
 
 class PdfTextExtractorTest {
     @Test
@@ -34,6 +36,19 @@ class PdfTextExtractorTest {
         }
         cancelled.join()
         assertTrue(cancelled.isCancelled)
+    }
+
+    @Test
+    fun monospaceGapPaddingCountsAgainstTheTextBudget() = runTest {
+        val content = buildString {
+            for (y in 100..12_100 step 3_000) append("BT /F1 1000 Tf 1 0 0 1 0 $y Tm (${"A".repeat(3_400)}) Tj ET ")
+            append("BT /F1 0.1 Tf 1 0 0 1 0 -500 Tm ")
+            repeat(30_000) { append("[(A) -600000] TJ ") }
+            append("ET")
+        }
+        val bytes = PdfTestWriter.song(content)
+        val elapsed = measureTime { assertNull(DocumentLocalSourceImpl().extract(ImportedFile("padded.pdf", bytes))) }
+        assertTrue(elapsed < 2.seconds, "Took $elapsed")
     }
 
     @Test

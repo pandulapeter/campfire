@@ -60,6 +60,12 @@ internal object PdfTextExtractor {
         var textBytes = 0L
         var operators = 0
         var glyphCount = 0
+        // The spaces that bridge a gap between glyphs are text too: a monospace font at a tenth of a point asks for a
+        // thousand of them per glyph, which would turn the glyph budget into gigabytes of padding.
+        fun charge(characters: Int) {
+            textBytes += characters * 3L
+            require(textBytes <= ImportLimits.MAX_TEXT_FILE_SIZE) { "PDF text too large" }
+        }
 
         suspend fun page(dictionary: PdfDictionary, resources: PdfDictionary?, box: List<PdfValue>, rotation: Int) {
             require(pages.size < 2000)
@@ -192,7 +198,7 @@ internal object PdfTextExtractor {
             var at = 0
             for (stream in streams) { stream.copyInto(data, at); at += stream.size; data[at++] = 10 }
             interpret(data, resources, State())
-            pages += Page(buildLines(glyphs), if (rotate in listOf(90, 270)) x1 - x0 else y1 - y0)
+            pages += Page(buildLines(glyphs, ::charge), if (rotate in listOf(90, 270)) x1 - x0 else y1 - y0)
             yield()
         }
 
@@ -225,7 +231,7 @@ internal object PdfTextExtractor {
         })
     }
 
-    private fun buildLines(glyphs: List<Positioned>): List<Line> {
+    private fun buildLines(glyphs: List<Positioned>, charge: (Int) -> Unit): List<Line> {
         if (glyphs.isEmpty()) return emptyList()
         val size = glyphs.map { it.span.size }.sorted().let { it[it.size / 2] }
         val band = size * GUTTER_WIDTH
@@ -247,6 +253,7 @@ internal object PdfTextExtractor {
                     val gap = if (previous == null) 0.0 else span.start - previous.end
                     if (gap > span.size * 0.25 && previous?.text?.endsWith(' ') != true && !span.text.startsWith(' ')) {
                         val count = if (span.isMonospace) (gap / (span.size * 0.6)).roundToInt().coerceIn(1, 1000) else 1
+                        charge(count)
                         spans += ExtractedDocument.Span(" ".repeat(count), previous!!.end, span.start, span.size, isMonospace = span.isMonospace)
                     }
                     spans += span
@@ -263,7 +270,7 @@ internal object PdfTextExtractor {
         // its gutters first and still holds the others on either side of it.
         fun columns(items: List<Positioned>): List<Line> {
             val (first, second) = items.partition { it.span.start < gutter }
-            return if (first.isEmpty() || second.isEmpty()) column(items) else buildLines(first) + buildLines(second)
+            return if (first.isEmpty() || second.isEmpty()) column(items) else buildLines(first, charge) + buildLines(second, charge)
         }
         for (y in spanning) {
             result += columns(remaining.filter { it.y < y - size * 0.22 })
