@@ -131,16 +131,25 @@ internal data class XmlElement(val name: String, val attributes: Map<String, Str
 internal fun parseXml(xml: String): XmlElement {
     val reader = XmlPullParser(xml.removePrefix("\ufeff"))
     val stack = mutableListOf<XmlElement>()
+    // A comment or a CDATA section ends one text event and starts another, so an element's text may arrive in a great
+    // many pieces, and concatenating them one by one would copy it again for every piece.
+    val texts = mutableListOf<StringBuilder>()
     var root: XmlElement? = null
     while (true) when (val event = reader.next() ?: break) {
         is XmlPullParser.Event.Start -> {
             val element = XmlElement(event.name, event.attributes)
             if (stack.isEmpty()) { require(root == null); root = element } else stack.last().children += element
             stack += element
+            texts += StringBuilder()
         }
-        is XmlPullParser.Event.End -> { require(stack.last().name == event.name); stack.removeAt(stack.lastIndex) }
+        is XmlPullParser.Event.End -> {
+            require(stack.last().name == event.name)
+            val element = stack.removeAt(stack.lastIndex)
+            val text = texts.removeAt(texts.lastIndex)
+            if (text.isNotEmpty()) element.text = text.toString()
+        }
         is XmlPullParser.Event.Text -> {
-            if (stack.isEmpty()) require(event.value.isBlank()) else stack.last().text += event.value
+            if (stack.isEmpty()) require(event.value.isBlank()) else texts.last().append(event.value)
         }
     }
     return requireNotNull(root)
