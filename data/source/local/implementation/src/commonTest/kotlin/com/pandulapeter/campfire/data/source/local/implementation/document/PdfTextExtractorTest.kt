@@ -205,21 +205,30 @@ class PdfTextExtractorTest {
     fun manyFullWidthRowsSplitQuickly() = runTest {
         val rows = 14_000
         val height = rows * 12 + 100
-        val content = buildString {
-            append("BT /F1 10 Tf ")
-            for (row in 0 until rows) {
-                val y = height - 50 - row * 12
-                if (row % 6 == 0) append("1 0 0 1 50 $y Tm (${"W".repeat(80)}) Tj ")
-                else append("1 0 0 1 50 $y Tm (${"L".repeat(30)}) Tj 1 0 0 1 300 $y Tm (${"R".repeat(30)}) Tj ")
-            }
-            append("ET")
-        }
-        val bytes = PdfTestWriter.song(content).decodeToString().replace("/MediaBox [0 0 612 792]", "/MediaBox [0 0 612 $height]").encodeToByteArray()
-        lateinit var lines: List<String>
-        val elapsed = measureTime { lines = PdfTextExtractor.extract(bytes).pages.single().lines.map { line -> line.spans.joinToString("") { it.text } } }
-        assertTrue(elapsed < 3.seconds, "Took $elapsed")
-        assertEquals("W".repeat(80), lines.first())
-        assertEquals("L".repeat(30), lines[1])
+        fun page(fullWidthRows: Boolean) = PdfTestWriter.song(
+            buildString {
+                append("BT /F1 10 Tf ")
+                for (row in 0 until rows) {
+                    val y = height - 50 - row * 12
+                    if (fullWidthRows && row % 6 == 0) append("1 0 0 1 50 $y Tm (${"W".repeat(80)}) Tj ")
+                    else append("1 0 0 1 50 $y Tm (${"L".repeat(30)}) Tj 1 0 0 1 300 $y Tm (${"R".repeat(30)}) Tj ")
+                }
+                append("ET")
+            },
+        ).decodeToString().replace("/MediaBox [0 0 612 792]", "/MediaBox [0 0 612 $height]").encodeToByteArray()
+        val split = page(fullWidthRows = true)
+        val unsplit = page(fullWidthRows = false)
+        suspend fun lines(bytes: ByteArray) = PdfTextExtractor.extract(bytes).pages.single().lines.map { line -> line.spans.joinToString("") { it.text } }
+        // Measured against the same page without the full-width rows, on the same machine and in the same run, since a CI runner
+        // is several times slower than a developer's machine: re-filtering every glyph per full-width row made this page about
+        // twenty times slower than that one, the single pass about as slow.
+        lines(unsplit)
+        lateinit var splitLines: List<String>
+        val unsplitElapsed = measureTime { lines(unsplit) }
+        val splitElapsed = measureTime { splitLines = lines(split) }
+        assertTrue(splitElapsed < unsplitElapsed * 4, "Took $splitElapsed, against $unsplitElapsed without the full-width rows")
+        assertEquals("W".repeat(80), splitLines.first())
+        assertEquals("L".repeat(30), splitLines[1])
     }
 
     @Test
