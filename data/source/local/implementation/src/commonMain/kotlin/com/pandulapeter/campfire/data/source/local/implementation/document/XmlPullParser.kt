@@ -24,7 +24,7 @@ internal class XmlPullParser(private val xml: String) {
     init { require(xml.length <= 8 shl 20) { "XML too large" } }
 
     fun next(): Event? {
-        require(++count <= 200_000) { "Too many XML events" }
+        require(++count <= MAX_EVENTS) { "Too many XML events" }
         pendingEnd?.let { name -> pendingEnd = null; return Event.End(name) }
         while (position < xml.length) {
             if (xml[position] != '<') {
@@ -119,6 +119,16 @@ internal class XmlPullParser(private val xml: String) {
             }
             index = end + 1
         }
+    }
+
+    private companion object {
+        /**
+         * A measure of markup rather than of risk: a Word paragraph with its revision attributes and run properties is
+         * about 28 events, so this reads some 21,000 of them, past a songbook of a few hundred songs. It is also what bounds
+         * the tree [parseXml] builds, since every element is a start and an end event (a self-closing one too), so no
+         * document becomes more than half this many elements, some 60–75 MB.
+         */
+        const val MAX_EVENTS = 600_000
     }
 }
 

@@ -167,7 +167,8 @@ holds the `@Module @ComponentScan object DataLocalSourceModule`, and every local
   every half point rather than sampled, since Campfire's own export leaves only 18 points at its 20-point text; each
   side is searched again, which is what reads three and four columns, and a band nothing crosses splits off a short
   last column whose lines start at one edge.
-  Object, recursion, stream, page, operator, glyph and output limits bound untrusted input, and page/operator yields
+  Object, recursion, stream, page, operator, glyph, output and XML event (600,000, some 21,000 Word paragraphs, which
+  also bounds the element tree at half that) limits bound untrusted input, and page/operator yields
   keep the web responsive. Stream ends are found once per file (`PdfStreamEnds`, every `endstream` offset in one pass) rather
   than by searching the rest of the file for each object, and at most 1 KiB of whitespace is walked past a declared
   `/Length`, so a recovery scan over thousands of streams with no usable end stays linear. The spaces that bridge a gap

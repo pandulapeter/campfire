@@ -113,5 +113,18 @@ class DocxTextExtractorTest {
         assertFailsWith<IllegalArgumentException> { parseXml("<a>&external;</a>") }
     }
 
+    @Test
+    fun aWordShapedDocumentOfTenThousandParagraphsIsRead() = runTest {
+        val paragraph = "<w:p w:rsidR='00A1'><w:pPr><w:spacing w:after='0'/><w:rPr><w:rFonts w:ascii='Arial'/><w:sz w:val='22'/></w:rPr></w:pPr>" +
+            "<w:r><w:rPr><w:rFonts w:ascii='Arial'/><w:sz w:val='22'/><w:lang w:val='en-US'/></w:rPr><w:t xml:space='preserve'>hello </w:t></w:r></w:p>"
+        val lines = DocxTextExtractor.fromXml(document(paragraph.repeat(10_000))).pages.flatMap { it.lines }
+        assertEquals(10_000, lines.size)
+    }
+
+    @Test
+    fun pathologicallyManyEventsAreStillRejected() {
+        assertFailsWith<IllegalArgumentException> { parseXml("<r>" + "<a/>".repeat(350_000) + "</r>") }
+    }
+
     private fun document(body: String) = "<w:document xmlns:w='urn:test'><w:body>$body</w:body></w:document>"
 }
