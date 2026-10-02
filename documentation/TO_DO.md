@@ -9,6 +9,7 @@
 -->
 # To do
 - Optimize for the smallest screens, review dialog behavior (documentation/small-screen-review.md)
+- Implement optionally auto-indexing similar sections within a song
 - Metronome: documentation/metronome.md
 - Global sync status display ?
 - Fast scroller on the song details screen ?

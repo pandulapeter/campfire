@@ -17,6 +17,7 @@ import androidx.compose.animation.animateBounds
 import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.SpringSpec
 import androidx.compose.animation.core.VisibilityThreshold
+import androidx.compose.animation.core.animate
 import androidx.compose.animation.core.animateDpAsState
 import androidx.compose.animation.core.animateFloat
 import androidx.compose.animation.core.animateFloatAsState
@@ -256,6 +257,7 @@ import kotlin.math.roundToInt
 import kotlin.time.Duration.Companion.milliseconds
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.collectLatest
@@ -1331,6 +1333,8 @@ private fun PrintPages(
         animationSpec = MaterialTheme.motionScheme.defaultSpatialSpec(),
     )
     val fitBottom = pageButtonsBottom + PAGE_BUTTONS_HEIGHT + PAGE_MARGIN
+    val zoomAnimationSpec = MaterialTheme.motionScheme.defaultSpatialSpec<Float>()
+    var zoomAnimation by remember { mutableStateOf<Job?>(null) }
     fun fitArea() = with(density) { fitArea(viewportSize, PAGE_MARGIN.toPx(), fitBottom.toPx()) }
     // A new document keeps the page that was open, clamped to the pages it has.
     LaunchedEffect(pageCount) { if (pageCount > 0) pagerState.scrollToPage(page.coerceIn(0, pageCount - 1)) }
@@ -1340,7 +1344,10 @@ private fun PrintPages(
         var previous = pagerState.settledPage
         snapshotFlow { pagerState.settledPage }.collect { settled ->
             if (pagerState.pageCount > 0) onPageSettled(settled)
-            if (settled != previous) onPageViewChanged(PageView())
+            if (settled != previous) {
+                zoomAnimation?.cancel()
+                onPageViewChanged(PageView())
+            }
             previous = settled
         }
     }
@@ -1355,6 +1362,19 @@ private fun PrintPages(
         val topLeft = pivot - (pivot - shownPageBounds().topLeft) * (clampedZoom / view.zoom)
         val zoomedSize = fittedPageSize(area.size, aspectRatio) * clampedZoom
         onPageViewChanged(pageViewOf(clampedZoom, topLeft - centeredTopLeft(zoomedSize, area), area, zoomedSize, viewportSize))
+    }
+    // Stepping zoomTo through the values keeps the point under the pivot where it is on every frame, which a spring on
+    // the zoom and the focus apart would not: the two would travel on paths of their own and the page would swing. Any
+    // other gesture takes the page from wherever the animation has got it to.
+    fun animateZoomTo(target: Float, pivot: Offset) {
+        zoomAnimation?.cancel()
+        zoomAnimation = coroutineScope.launch {
+            animate(pageView().zoom, target, animationSpec = zoomAnimationSpec) { value, _ -> zoomTo(value, pivot) }
+        }
+    }
+    fun zoomBy(factor: Float, pivot: Offset) {
+        zoomAnimation?.cancel()
+        zoomTo(pageView().zoom * factor, pivot)
     }
     // How far a page has been moved past where it rests towards an edge of the pane, which is as strong as the fade
     // there is: a page at rest is drawn whole, and one zoomed, panned or turned fades out as it goes under the app bar
@@ -1381,7 +1401,7 @@ private fun PrintPages(
     // Around the pinch's centroid, which is in the pane's coordinates, so the part of the page between the fingers stays
     // between them, as a touchpad's pinch keeps the part under the pointer.
     val transformableState = rememberTransformableState { centroid, zoomChange, panChange, _ ->
-        zoomTo(pageView().zoom * zoomChange, centroid)
+        zoomBy(zoomChange, centroid)
         val view = pageView()
         if (view.zoom > 1f) {
             val area = fitArea()
@@ -1392,7 +1412,7 @@ private fun PrintPages(
     }
     // Around the pointer, where it is over the page, as the scroll wheel zooms; a pinch on a touchpad says nowhere.
     LaunchedEffect(magnifications) {
-        magnifications.collect { factor -> zoomTo(pageView().zoom * factor, pointerPosition ?: fitArea().center) }
+        magnifications.collect { factor -> zoomBy(factor, pointerPosition ?: fitArea().center) }
     }
     Box(
         modifier = Modifier
@@ -1449,11 +1469,11 @@ private fun PrintPages(
                                     .trackPointer { pointerPosition = it }
                                     .transformable(transformableState, canPan = { pageView().zoom > 1f })
                                     .doubleTapZoom(
-                                        onDoubleTap = { zoomTo(if (pageView().zoom > 1f) 1f else DOUBLE_TAP_ZOOM, it) },
-                                        onQuickZoom = { factor, pivot -> zoomTo(pageView().zoom * factor, pivot) },
+                                        onDoubleTap = { animateZoomTo(if (pageView().zoom > 1f) 1f else DOUBLE_TAP_ZOOM, it) },
+                                        onQuickZoom = ::zoomBy,
                                     )
                                     .wheelZoom { notches, position ->
-                                        zoomTo(pageView().zoom * WHEEL_ZOOM_BASE.pow(-notches), position)
+                                        zoomBy(WHEEL_ZOOM_BASE.pow(-notches), position)
                                     }
                             } else {
                                 Modifier
