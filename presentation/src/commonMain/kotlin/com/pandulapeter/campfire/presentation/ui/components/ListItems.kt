@@ -38,8 +38,8 @@ import androidx.compose.foundation.selection.selectable
 import androidx.compose.foundation.selection.toggleable
 import androidx.compose.material3.Button
 import androidx.compose.material3.Checkbox
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.RadioButton
-import androidx.compose.material3.ContainedLoadingIndicator
 import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
 import androidx.compose.material3.Icon
 import androidx.compose.material3.ListItem
@@ -939,7 +939,6 @@ internal fun ActionListItem(
  * @param onNewSetlist The same for the setlists. It is a parameter of its own rather than one "create" for whichever
  *   list is empty, because each list creates a different thing.
  */
-@OptIn(ExperimentalMaterial3ExpressiveApi::class)
 @Composable
 internal fun ListPlaceholder(
     modifier: Modifier = Modifier,
@@ -959,7 +958,7 @@ internal fun ListPlaceholder(
             modifier = Modifier.fillMaxWidth().padding(32.dp),
             contentAlignment = Alignment.Center,
         ) {
-            ContainedLoadingIndicator()
+            CircularProgressIndicator()
         }
 
         CampfireViewModel.Placeholder.ERROR -> EmptyState(

@@ -38,8 +38,7 @@ import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Button
-import androidx.compose.material3.ContainedLoadingIndicator
-import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
@@ -323,7 +322,6 @@ private fun CoverArtQueryField(
  * one after the other, so the grid is shown as soon as either has found something, the other's records joining it at
  * the end, with an indicator closing the grid for as long as one of them is still being waited for.
  */
-@OptIn(ExperimentalMaterial3ExpressiveApi::class)
 @Composable
 private fun CoverArtResults(
     modifier: Modifier = Modifier,
@@ -381,7 +379,7 @@ private fun CoverArtResults(
                                 modifier = Modifier.animateItem().fillMaxWidth().padding(vertical = 8.dp),
                                 contentAlignment = Alignment.Center,
                             ) {
-                                ContainedLoadingIndicator()
+                                CircularProgressIndicator()
                             }
                         }
                     }
@@ -391,7 +389,7 @@ private fun CoverArtResults(
             ResultsContent.LOADING, ResultsContent.BUSY -> CoverArtSearchMessage(
                 text = stringResource(if (content == ResultsContent.BUSY) Res.string.cover_art_search_busy else Res.string.cover_art_search_loading),
             ) {
-                ContainedLoadingIndicator()
+                CircularProgressIndicator()
             }
 
             ResultsContent.FAILED -> CoverArtSearchMessage(
@@ -456,7 +454,6 @@ private fun CoverArtAddress(
 }
 
 /** The image [url] names, the indicator while it loads, or a line saying why there is none. */
-@OptIn(ExperimentalMaterial3ExpressiveApi::class)
 @Composable
 private fun CoverArtAddressPreview(
     url: String?,
@@ -486,7 +483,7 @@ private fun CoverArtAddressPreview(
             )
 
             AddressPreviewContent.LOADING -> Box(contentAlignment = Alignment.Center) {
-                ContainedLoadingIndicator()
+                CircularProgressIndicator()
             }
 
             AddressPreviewContent.HINT, AddressPreviewContent.FAILED -> Box(

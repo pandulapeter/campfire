@@ -12,8 +12,7 @@ package com.pandulapeter.campfire.presentation.ui.components
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
-import androidx.compose.material3.ContainedLoadingIndicator
-import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -31,7 +30,6 @@ import kotlin.time.Duration.Companion.milliseconds
  * an indicator for the few frames it takes. The ones that are still there after it - a large library being scanned
  * on a slow device, the browser's storage waking up - fade in the way they otherwise would have.
  */
-@OptIn(ExperimentalMaterial3ExpressiveApi::class)
 @Composable
 internal fun DelayedLoadingIndicator(
     modifier: Modifier = Modifier,
@@ -47,7 +45,7 @@ internal fun DelayedLoadingIndicator(
         enter = fadeIn(),
         exit = fadeOut(),
     ) {
-        ContainedLoadingIndicator()
+        CircularProgressIndicator()
     }
 }
 
