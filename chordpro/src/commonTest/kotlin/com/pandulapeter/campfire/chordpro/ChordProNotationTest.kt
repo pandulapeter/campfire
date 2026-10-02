@@ -209,6 +209,36 @@ class ChordProNotationTest {
     }
 
     @Test
+    fun `the chords a song defines are renamed with its chords`() {
+        assertEquals(
+            "{define: H frets 1 1 3 3 3 1}\n{key: H}\n[H]x [B]y",
+            ChordProNotation.convertText("{define: B frets 1 1 3 3 3 1}\n{key: B}\n[B]x [Bb]y", ChordNotation.STANDARD, ChordNotation.GERMAN),
+        )
+        assertEquals(
+            "  {chord:  Bb7 base-fret 1}\n{define: B frets x 2 4 4 4 2}\n[B]x [Bb7]y",
+            ChordProNotation.convertText("  {chord:  B7 base-fret 1}\n{define: H frets x 2 4 4 4 2}\n[H]x [B7]y", ChordNotation.GERMAN, ChordNotation.STANDARD),
+        )
+    }
+
+    @Test
+    fun `a definition that names no chord or is delegated is left alone`() {
+        val text = "{define: Bridge frets 1 1 3 3 3 1}\n{start_of_textblock}\n{define: B frets 1 1 3 3 3 1}\n{end_of_textblock}\n[B]x"
+
+        assertEquals(
+            "{define: Bridge frets 1 1 3 3 3 1}\n{start_of_textblock}\n{define: B frets 1 1 3 3 3 1}\n{end_of_textblock}\n[H]x",
+            ChordProNotation.convertText(text, ChordNotation.STANDARD, ChordNotation.GERMAN),
+        )
+    }
+
+    @Test
+    fun `a text with definitions comes back from German notation as it was`() {
+        val text = "{define: B frets x 2 4 4 4 2}\n{chord: Bb}\n[B]x [Bb]y"
+        val german = ChordProNotation.convertText(text, ChordNotation.STANDARD, ChordNotation.GERMAN)
+
+        assertEquals(text, ChordProNotation.convertText(german, ChordNotation.GERMAN, ChordNotation.STANDARD))
+    }
+
+    @Test
     fun `a text parsed as German is German without an H`() {
         assertEquals(listOf("F", "Bb"), ChordProParser.parse("[F]a [B]b", ChordNotation.GERMAN).chordNames())
         assertEquals(listOf("F", "B"), ChordProParser.parse("[F]a [B]b").chordNames())

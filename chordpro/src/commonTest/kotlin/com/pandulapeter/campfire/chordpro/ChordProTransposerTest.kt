@@ -23,6 +23,11 @@ import kotlin.test.assertTrue
 class ChordProTransposerTest {
 
     @Test
+    fun `a transposition leaves the chords a song defines where they are`() {
+        assertEquals("{define: C frets x 3 2 0 1 0}\n[D]x", ChordProTransposer.transposeText("{define: C frets x 3 2 0 1 0}\n[C]x", 2))
+    }
+
+    @Test
     fun `a German-notated song is transposed in its own notation`() {
         val text = "{key: Dm}\n[Dm]a [B]b [C/H]c [A7]d"
         val up = ChordProTransposer.transposeText(text, 1)

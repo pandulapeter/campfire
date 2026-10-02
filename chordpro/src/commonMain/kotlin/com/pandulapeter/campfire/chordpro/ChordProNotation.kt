@@ -66,6 +66,7 @@ object ChordProNotation {
             text = text,
             rewriteTab = { lines -> ChordProTabTransposer.rewriteChordNames(lines, rename) },
             rename = rename,
+            renameDefinitions = true,
         )
     }
 

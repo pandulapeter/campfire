@@ -299,8 +299,16 @@ object ChordProTransposer {
      * Applies [rename] to every chord a raw document names - in brackets, in grids, in its key and in directives whose
      * value holds chords - and [rewriteTab] to each run of tablature as a whole, leaving every other character of the
      * text exactly where it was.
+     *
+     * With [renameDefinitions] the chord a `{define}` or `{chord}` directive names is renamed too. Only a change of
+     * notation asks for that: a transposition would rename a definition without moving the fingering that follows it.
      */
-    internal fun rewriteChordNamesInText(text: String, rewriteTab: (List<String>) -> List<String>, rename: (String) -> String): String {
+    internal fun rewriteChordNamesInText(
+        text: String,
+        rewriteTab: (List<String>) -> List<String>,
+        rename: (String) -> String,
+        renameDefinitions: Boolean = false,
+    ): String {
         val lines = ChordProSyntax.splitLines(text).toMutableList()
         val tabLineIndices = mutableListOf<Int>() // The tab environment being collected: it is rewritten as a whole.
         var environment: String? = null
@@ -335,6 +343,8 @@ object ChordProTransposer {
                     }
                     // The directive's name holds no brackets, so the line can be read as a line of lyrics whole.
                     if (ChordProSyntax.hasChordsInValue(directive.name)) lines[index] = rewriteLyricsLineChords(rawLine, rename)
+                    // A definition inside an environment handed to another program is that program's text.
+                    if (renameDefinitions && !isDelegated && directive.name in definitionDirectives) lines[index] = rewriteDefinitionLine(rawLine, trimmedLine, rename)
                 }
 
                 environment == TAB -> tabLineIndices += index
@@ -476,6 +486,18 @@ object ChordProTransposer {
         return rawLine.substring(0, valueEnd - key.length) + renameKey(key, rename) + rawLine.substring(valueEnd)
     }
 
+    /** Renames the first word of a `{define}` or `{chord}` value, which is the chord it defines, keeping the rest of [rawLine]. */
+    private fun rewriteDefinitionLine(rawLine: String, trimmedLine: String, rename: (String) -> String): String {
+        var start = ChordProSyntax.directiveValueStart(trimmedLine) ?: return rawLine
+        val closeIndex = trimmedLine.length - 1
+        while (start < closeIndex && trimmedLine[start].isWhitespace()) start++
+        var end = start
+        while (end < closeIndex && !trimmedLine[end].isWhitespace()) end++
+        if (end == start) return rawLine
+        val offset = rawLine.length - rawLine.trimStart().length
+        return rawLine.substring(0, offset + start) + rename(trimmedLine.substring(start, end)) + rawLine.substring(offset + end)
+    }
+
     /** Swaps the trimmed part of a line for [replacement], keeping the surrounding whitespace. */
     private fun String.replaceTrimmedPart(trimmedLine: String, replacement: String): String {
         val start = length - trimStart().length
@@ -492,6 +514,7 @@ object ChordProTransposer {
     private const val GRID = "grid"
     private const val BRACKET_OPEN = '['
     private const val BRACKET_CLOSE = ']'
+    private val definitionDirectives = setOf("define", "chord")
     private val keyWords = setOf("major", "minor", "maj", "min", "dur", "moll")
     private val sharpNames = listOf("C", "C#", "D", "D#", "E", "F", "F#", "G", "G#", "A", "A#", "B")
     private val flatNames = listOf("C", "Db", "D", "Eb", "E", "F", "Gb", "G", "Ab", "A", "Bb", "B")

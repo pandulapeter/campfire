@@ -248,7 +248,10 @@ in `:domain:*`. `:data:source:local:implementation` uses it directly for the met
   transposition, which works in the standard one; `convertText` rewrites a raw document from one notation to another,
   leaving every other character where it was (`ChordProTransposer.rewriteChordNamesInText`, with the tabs' chord rows
   renamed in their columns rather than transposed), which is how the editor shows a file in the reader's notation and
-  writes what was typed back. German notation writes the standard `B` as `H` and its `Bb` as `B`, and nothing else
+  writes what was typed back. `{define}` / `{chord}` names are converted with the chords (outside an environment
+  handed to another program); the fingerings are never transposed and a real transposition leaves the definitions
+  alone. Definitions do not vote on the notation, so a file whose only `H` is in a `{define: H …}` is read as
+  standard. German notation writes the standard `B` as `H` and its `Bb` as `B`, and nothing else
   moves — not the other letters, not the `#` and `b` signs, not the quality. (The classical German names spell every
   accidental out as `Cis` or `Es`; chord charts in those countries stop at the two letters, and so does this.) **A
   text is read in the notation it is declared to be in**, `parse`, `summarize`, `ChordProSummaryCache` and
