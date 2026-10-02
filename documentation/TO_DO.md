@@ -8,11 +8,11 @@
  * https://mozilla.org/MPL/2.0/.
 -->
 # To do
+- Metronome: documentation/metronome.md
 - Global sync status display ?
 - Optional close confirmation dialog on relevant platforms
 - Haptic effects
 - Simplify adding comments / annotations
-- Metronome
 - External monitor support for lyrics only...? Maybe as a new window on desktop
 - Add support for Latin and Nashville notations
 - Chord diagrams (guitar, ukulele, keyboard) - user library, variations
