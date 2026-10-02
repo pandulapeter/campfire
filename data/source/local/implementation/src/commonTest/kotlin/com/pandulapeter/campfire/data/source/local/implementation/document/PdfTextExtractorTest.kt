@@ -248,6 +248,42 @@ class PdfTextExtractorTest {
     }
 
     @Test
+    fun overlappingCidWidthRangesAreRejectedQuickly() {
+        val file = PdfFile(PdfTestWriter.song("BT /F1 10 Tf 50 700 Td (text) Tj ET"))
+        val dictionary = PdfSyntax(
+            "<< /Subtype /Type0 /DescendantFonts [<< /Subtype /CIDFontType2 /W [${"0 65535 500 ".repeat(33_000)}] >>] >>".encodeToByteArray(),
+        ).next() as PdfDictionary
+        val elapsed = measureTime { assertFailsWith<IllegalArgumentException> { PdfFont(file, dictionary) } }
+        assertTrue(elapsed < 2.seconds, "Took $elapsed")
+    }
+
+    @Test
+    fun manyFontsSharingOneWidthArrayHitTheDocumentBudget() = runTest {
+        val fonts = 20
+        val writer = PdfTestWriter()
+        writer.add("<< /Type /Catalog /Pages 2 0 R >>")
+        writer.add("<< /Type /Pages /Kids [3 0 R] /MediaBox [0 0 612 792] /Resources << /Font << ${(1..fonts).joinToString(" ") { "/F$it ${it + 4} 0 R" }} >> >> >>")
+        writer.add("<< /Type /Page /Parent 2 0 R /Contents 4 0 R >>")
+        writer.stream("BT 50 700 Td " + (1..fonts).joinToString(" ") { "/F$it 10 Tf <0001> Tj" } + " ET")
+        repeat(fonts) { writer.add("<< /Type /Font /Subtype /Type0 /BaseFont /Font$it /Encoding /Identity-H /DescendantFonts [${fonts + 5} 0 R] >>") }
+        writer.add("<< /Type /Font /Subtype /CIDFontType2 /W ${fonts + 6} 0 R >>")
+        writer.add("[0 65535 500]")
+        val bytes = writer.write()
+        val elapsed = measureTime { assertFailsWith<PdfLimitException> { PdfTextExtractor.extract(bytes) } }
+        assertTrue(elapsed < 5.seconds, "Took $elapsed")
+    }
+
+    @Test
+    fun cidWidthsReadExplicitListsAndRanges() {
+        val file = PdfFile(PdfTestWriter.song("BT /F1 10 Tf 50 700 Td (text) Tj ET"))
+        val font = PdfFont(
+            file,
+            PdfSyntax("<< /Subtype /Type0 /DescendantFonts [<< /Subtype /CIDFontType2 /W [0 [500 600] 10 20 700] >>] >>".encodeToByteArray()).next() as PdfDictionary,
+        )
+        assertEquals(listOf(500.0, 600.0, 700.0), font.decode(byteArrayOf(0, 0, 0, 1, 0, 15)).map { it.width }.toList())
+    }
+
+    @Test
     fun aHeaderAfterJunkIsAccepted() = runTest {
         val song = PdfTestWriter.song("BT /F1 10 Tf 50 700 Td (hi) Tj ET")
         val extracted = PdfTextExtractor.extract("junk line\n".encodeToByteArray() + song)

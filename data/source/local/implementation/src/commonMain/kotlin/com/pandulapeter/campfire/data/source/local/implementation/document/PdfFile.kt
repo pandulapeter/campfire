@@ -39,6 +39,7 @@ internal class PdfFile(input: ByteArray) {
     private val definedAt = mutableMapOf<PdfReference, Int>()
     private var decodedSize = 0L
     private var encodedSize = 0L
+    private var fontTableEntries = 0L
     private var scanned = false
     private var root: PdfValue? = null
     private var encrypted = false
@@ -103,6 +104,15 @@ internal class PdfFile(input: ByteArray) {
             decodedSize += it.size
             requireWithinLimit(decodedSize <= ImportLimits.MAX_IMPORT_SIZE) { "PDF decoded streams too large" }
         }
+    }
+
+    /**
+     * Charges map writes of a font's widths or ToUnicode table to the document rather than to the font: fonts are built
+     * once per dictionary, but thousands of tiny font dictionaries can all name one shared `/W` array or CMap stream.
+     */
+    fun chargeFontTables(entries: Int) {
+        fontTableEntries += entries
+        requireWithinLimit(fontTableEntries <= MAX_FONT_TABLE_ENTRIES) { "PDF font tables too large" }
     }
 
     private fun indirect(offset: Int, expected: PdfReference? = null): PdfValue {
@@ -273,6 +283,11 @@ internal class PdfFile(input: ByteArray) {
 
     private companion object {
         const val MAX_OBJECTS = 100_000
+        /**
+         * Every font is cached for the whole document and every entry it writes stays in memory, at about 80 bytes per
+         * boxed map entry, so this is roughly 80 MB at worst, while a real document with dozens of fonts writes far fewer.
+         */
+        const val MAX_FONT_TABLE_ENTRIES = 1 shl 20
         const val HEADER = "%PDF-"
         /** How far into the file the header may start, as the specification and every other reader allow. */
         const val MAX_HEADER_OFFSET = 1_024

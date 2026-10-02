@@ -80,8 +80,10 @@ internal class PdfFont(private val file: PdfFile, dictionary: PdfDictionary) {
     private fun simpleWidths() {
         val first = file.number(dictionaryValue("FirstChar")).toInt()
         val values = file.array(dictionaryValue("Widths"))
-        if (values.isNotEmpty()) values.forEachIndexed { index, value -> widths[first + index] = (file.number(value) * widthScale).coerceIn(0.0, 10_000.0) }
-        else if (isStandardFont()) {
+        if (values.isNotEmpty()) {
+            file.chargeFontTables(values.size)
+            values.forEachIndexed { index, value -> widths[first + index] = (file.number(value) * widthScale).coerceIn(0.0, 10_000.0) }
+        } else if (isStandardFont()) {
             val metrics = if (baseName.startsWith("Times-")) timesWidths else helveticaWidths
             for (code in 32..126) widths[code] = if (monospace) 600.0 else metrics[code - 32].toDouble()
         }
@@ -90,17 +92,27 @@ internal class PdfFont(private val file: PdfFile, dictionary: PdfDictionary) {
     private fun cidWidths() {
         val values = file.array(descendant["W"])
         var index = 0
+        var expanded = 0L
         while (index < values.size) {
             val first = file.number(values[index++]).toInt()
             require(first in 0..65535 && index < values.size)
             val next = file.resolve(values[index++])
-            if (next is PdfArray) next.values.forEachIndexed { offset, value ->
-                require(first + offset <= 65535)
-                widths[first + offset] = file.number(value).coerceIn(0.0, 10_000.0)
+            if (next is PdfArray) {
+                expanded += next.values.size
+                require(expanded <= MAX_EXPANDED_WIDTHS)
+                file.chargeFontTables(next.values.size)
+                next.values.forEachIndexed { offset, value ->
+                    require(first + offset <= 65535)
+                    widths[first + offset] = file.number(value).coerceIn(0.0, 10_000.0)
+                }
             } else {
                 val last = next.number().toInt()
                 require(last in first..65535 && index < values.size)
                 val width = file.number(values[index++]).coerceIn(0.0, 10_000.0)
+                // Charged before the range is written, so that the refusal comes before the writes.
+                expanded += last - first + 1
+                require(expanded <= MAX_EXPANDED_WIDTHS)
+                file.chargeFontTables(last - first + 1)
                 for (code in first..last) widths[code] = width
             }
         }
@@ -112,6 +124,7 @@ internal class PdfFont(private val file: PdfFile, dictionary: PdfDictionary) {
         fun string() = (parser.next(references = false) as? PdfString)?.bytes ?: error("Invalid ToUnicode CMap")
         fun insert(source: ByteArray, text: ByteArray) {
             require(source.size in 1..4 && text.size <= 128 && unicode.size < 100_000)
+            file.chargeFontTables(1)
             unicode[Code(code(source, 0, source.size), source.size)] = utf16(text)
             lengths += source.size
         }
@@ -162,6 +175,11 @@ internal class PdfFont(private val file: PdfFile, dictionary: PdfDictionary) {
     }
 
     companion object {
+        /**
+         * Twice the 65,536 codes a CID font can have: a real font's ranges do not overlap and stay at or under 65,536, so
+         * only a font that writes the same codes over and over is refused.
+         */
+        private const val MAX_EXPANDED_WIDTHS = 131_072
         internal fun utf16(bytes: ByteArray): String {
             require(bytes.size % 2 == 0)
             return buildString {

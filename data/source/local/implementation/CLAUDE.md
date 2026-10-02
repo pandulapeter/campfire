@@ -172,7 +172,10 @@ holds the `@Module @ComponentScan object DataLocalSourceModule`, and every local
   last column whose lines start at one edge.
   Object, recursion, stream, page, operator, glyph, output and XML event (600,000, some 21,000 Word paragraphs, which
   also bounds the element tree at half that) limits bound untrusted input, and one work budget of 96 MiB of
-  interpreted content and of stream input per document, so re-reading a form or a shared contents stream is paid for; a
+  interpreted content and of stream input per document, so re-reading a form or a shared contents stream is paid for, and
+  one of 2^20 font table entries (widths and ToUnicode mappings, which stay in memory with the cached fonts), so thousands
+  of font dictionaries naming one shared `/W` array or CMap are paid for too; a CID font whose `/W` ranges expand to more
+  than 131,072 widths (twice the codes it can have, so only overlapping ranges get there) is a malformed font. A
   budget running out is a `PdfLimitException`, told apart from a malformed object. A malformed page, font or form costs only
   itself, and the document is unreadable only when more than half of its glyphs or pages are; budgets, encryption, a
   broken page tree and more than 2,000 pages still fail it whole, the last because a songbook silently losing its tail
