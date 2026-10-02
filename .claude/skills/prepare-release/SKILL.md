@@ -83,23 +83,15 @@ them. If a change has no effect a user could notice, it is not in the notes.
    - `presentation/src/commonMain/composeResources/values/strings.xml` (English);
    - `presentation/src/commonMain/composeResources/values-hu/strings.xml` (Hungarian).
 
-   Write a **bulleted list of user-facing changes since the last release tag**, each bullet a **bold one-line
-   headline** (the feature as the app names it, at most about eight words) **followed by a short description** of
-   what it does and how it helps a musician (one or two sentences, with where to find it when that helps).
-   **Sort the bullets by importance from the user's perspective**, not by commit count or chronology: the changes
-   that alter how people use the app every day come first (reading and playing songs, getting songs in and out),
-   then new capabilities, then conveniences, then fixes. A feature built by many commits is one bullet; several
-   unrelated small fixes may share a final bullet only when they share the same practical benefit. Be friendly,
-   clear and professional, without hype, marketing adjectives, vague promises or developer details. Verify every
-   claim against the diffs, and qualify changes that affect only one platform. Before writing, list the
-   feature clusters from step 3 and check that each important one has a bullet.
+   Write the bullets by **Writing the changelog** below: at most six, each a bold headline and a one-sentence
+   description, sorted by importance. Before writing, list the feature clusters from step 3, rank them, and check
+   that the six (or fewer) that made it are the ones a user would miss most.
 
    Store each bullet on one line as `• **Headline** Description` (the literal `• `, the headline between `**`
    pairs, then a space and the description), and separate bullets with `\n` in the XML string (for example,
    `• **Print in up to four columns** Fit more of a song on each page.\n• **...** ...`). The dialog draws the
    headline bold on its own line with the description under it, as spaced rows in a scrollable area with fades at
-   the top and bottom; its title and **Get started** button stay visible. Do not cut useful explanations merely to
-   fit the dialog without scrolling. There is no store character limit on this in-app message. No other Markdown,
+   the top and bottom; its title and **Get started** button stay visible. No other Markdown,
    links, emoji, introductory paragraph or version number in the body.
    Translate the same bullets into natural Hungarian and escape XML correctly. Keep `whats_new_title` as the
    localized title with its `%1$s` version placeholder. Replace the previous message rather than appending history.
@@ -146,24 +138,64 @@ them. If a change has no effect a user could notice, it is not in the notes.
 10. **Do not create the tag, the release, or commit anything.** Leave the draft, resources and generated profiles
     ready for review. Their commit must be included in the version's tag before publishing.
 
+## Writing the changelog
+
+The in-app message, the GitHub notes and the stores' block are one changelog in three formats: the same
+bullets, in the same order, with the same wording (the stores' block may drop bullets to fit, never reword
+them longer). These rules apply to all three.
+
+**Six bullets at most**, however big the release. A patch has one to three. When there are more than six
+candidates, merge the related ones (one bullet per area, not per commit) and drop the least important rather than
+squeezing them in; a fix that is not worth its own bullet goes into the bullet of the feature it touches, or
+nowhere. Never pad a small release up to six.
+
+**Each bullet is a headline and one sentence.**
+- The **headline** names the change in at most six words, the way the app names it (a Settings row, a menu
+  entry, a screen): `Export a setlist as a zip`, not `Better sharing`.
+- The **description** is one sentence of **at most 25 words** (about 160 characters): what is different now,
+  then what that lets the user do or spares them — the concrete benefit, not an adjective. Add where to find it
+  only when it is not obvious from the headline, and only if it fits the limit. Count the words of every
+  description before writing it out; one over 25 is rewritten, not kept.
+
+**Say what changed and why it is better — no more, no less.**
+- Describe the change as a fact a user can check in the app: `Songs now open where you left off.` A claim
+  about quality (`faster`, `smoother`, `more reliable`) is allowed only when the diff gives it a concrete
+  meaning, and then states it: `Large libraries open without the long pause on the launch screen.`
+- **No marketing words**: never `powerful`, `seamless`, `effortless`, `amazing`, `brand-new`, `exciting`,
+  `revamped`, `supercharged`, `game-changing`, `beautiful`, `stunning`, `lightning-fast`, `enhanced experience`,
+  `take … to the next level`, `we're thrilled`, `you'll love`. No exclamation marks, no emoji.
+- **No vague bullets either**: never `various improvements`, `bug fixes and performance improvements`,
+  `minor tweaks`, `polish`. A fix is described by what used to go wrong and no longer does:
+  `Imported Word documents no longer lose their last page.` If that cannot be said in one sentence, the fix
+  does not get a bullet.
+- **Don't undersell**: a change that alters how people use the app every day is said plainly at the top,
+  with its real benefit, not buried as `small improvements to the editor`. A new capability is called new.
+- Address the user as `you` where it reads naturally; no `we`, no developer vocabulary, no version numbers.
+- Platform-only bullets name the platform (`On Android, …`, `… on the web.`).
+
+**Sort by importance from the user's perspective**, not by commit count or chronology: what changes how
+people read and play songs every day first, then getting songs in and out, then new capabilities, then
+conveniences, then fixes.
+
+Examples of the tone:
+
+| Too much | Too little | Right |
+|---|---|---|
+| **A stunning new reading experience**: Enjoy your songs like never before with our completely revamped song view! | **Song view changes**: Various improvements. | **Columns on wide screens**: Long songs are set in several columns, so a tablet shows a whole song without scrolling. |
+| **Lightning-fast sync**: Sync is now blazing fast and super reliable. | **Sync fixes**: Fixed some issues. | **Faster first sync**: Connecting a large library uploads several files at once instead of one by one. |
+
 ## Style — the GitHub release body
 
 Mirror the existing releases:
 
 - **A flat list of `-` bullets.** No sections, no grouping by type, no "Bug fixes" / "Features"
   headings.
-- **Each bullet is a bold one-line headline followed by a short description**, the same pair as the in-app
-  message: `- **Page through songs your way**: description…`. The headline is a short noun phrase with no trailing
-  period; the description is one or two plain sentences.
-- **Sorted by importance from the user's perspective** (daily reading and playing first, then getting songs in
-  and out, then new capabilities, conveniences and fixes), built from everything since the last release tag.
+- **The bullets of Writing the changelog**, at most six, in the same order and words as the in-app message,
+  each `- **Headline**: description.` — the headline with no trailing period, the description one sentence.
 - **Plain language, the user's vocabulary.** "Sync your library through your own Dropbox folder", not
   "Implement `SyncEngine` batching". Name features the way the app names them in Settings.
-- **Keep it focused.** Five to ten bullets for a feature release, one to three for a patch. Merge several
-  small fixes in one area into a single bullet rather than listing each commit.
 - **Link where a link helps** — the web build (`[here](https://campfire-songbook.com/app/)`), the
   ChordPro site, a contributor's profile — in the markdown style the existing notes use.
-- **No emoji, no marketing adjectives, no version numbers inside the bullets.**
 - **Thank outside contributors inline.** Find them with `git log <last tag>..HEAD --format='%an' | sort -u`
   and credit anyone who is not the maintainer (Pandula Péter).
 - **Say so plainly when something was removed or now works differently**, so nobody is surprised — e.g.
@@ -192,7 +224,7 @@ all of them are always written:
   as the "What's new in this version" of its submission — so nothing in it may
   be about one store or assume one platform unless the bullet itself is about that platform. The
   release's bullets, trimmed to the ones a store visitor would care about, in the same voice as the
-  GitHub notes, one per line.
+  GitHub notes, one per line as `- Headline: description.` (the same six-at-most bullets, without the bold).
 - **500 characters at most**, newlines included — Play's limit, the tightest of the stores. Check it with
   a real interpreter (e.g. Python's `len()` on the text between the comment's first line and its `-->`),
   not by eyeballing it, and report the count back. Shorten wording before dropping a bullet.
