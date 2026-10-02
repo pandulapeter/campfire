@@ -162,11 +162,12 @@ Everything else is `commonMain`:
   overflow menu where the bar has no room for it (`appBarButtons`: the transposition leaves the bar first, then the
   setlist assignments, then Info); outside performance mode for every song, in it only where the sheet has something in it, next to the
   text size. The
-  card and the sheet share `SongInfoBody` and its edit buttons (`SongInfoEditing`, built by `rememberSongInfoEditing`): album, year, composer, lyricist and duration in label/value rows, then a
+  card and the sheet share `SongInfoBody` and its edit buttons (`SongInfoEditing`, built by `rememberSongInfoEditing`): album, year, composer, lyricist and duration as label-over-value tiles flowing side by side, then a
   group of chips for each of the tags, the languages and the links the song has, titled in the singular or the plural
   (`<plurals>`) and counted where there are several. Outside performance mode the sheet passes `SongInfoEditing`, which
-  shows every group, an empty one saying "None", under a title ending in an `ic_edit` button that opens that group's
-  dialog in place of the sheet (Edit metadata, tags, languages, links) — which is why those four are not in the song
+  puts an `ic_edit` button at the end of each group's title and gathers the groups the song has nothing for into a last
+  "Add" group of outlined chips (`TagPill`'s `isAction`), so that a song nobody has described is one row of them rather
+  than four empty groups; either opens that group's dialog in place of the sheet (Edit metadata, tags, languages, links) — which is why those four are not in the song
   details overflow menu or in the editor's, which keep Set or Change cover art (`SongMetadataActions.kt`'s
   `coverArtAction`). The editor preview's card has the same buttons, always, editing the text being typed. Links open
   their page in the sheet, named by their optional label or by the host without `www.`

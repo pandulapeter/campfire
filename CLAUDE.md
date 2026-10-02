@@ -220,10 +220,10 @@ localized in both languages.
   song details' About the song sheet shows each as a chip named by its optional name or its host, opening the page in
   the browser. The sheet is opened from the song details app bar — a button where there is room, the first entry of the
   overflow menu where not — and holds what the song says about itself, each group with an edit button outside
-  performance mode; key, capo, tempo and time stay on the page as the song's first section. The editor's preview shows
+  performance mode, where the groups it has nothing for are one row of chips that add them; key, capo, tempo and time stay on the page as the song's first section. The editor's preview shows
   the same as a card that is the song's first section, flowing through its rows and columns and scaling with the
   lyrics, with the same edit buttons, which are entries of the editor's overflow menu while the preview is hidden.
-  Performance mode leaves the sheet's empty groups out, and the button that opens it where all of them are empty. The Edit links dialog edits addresses and optional names together,
+  Performance mode leaves that row out, and the button that opens it where all of them are empty. The Edit links dialog edits addresses and optional names together,
   and their order, written once on Save; the links are shown in that order, where tags and languages are always
   shown alphabetically.
   From the editor those buttons change the text being typed rather than the file, which only Save writes.

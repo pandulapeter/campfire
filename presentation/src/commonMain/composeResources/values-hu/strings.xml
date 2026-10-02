@@ -395,7 +395,7 @@
     <string name="song_details_metadata_edit">Meta-adatok szerkesztése</string>
     <string name="song_details_song_info">A dalról</string>
     <string name="song_details_info_details">Adatok</string>
-    <string name="song_details_info_none">Nincs</string>
+    <string name="song_details_info_add">Hozzáadás</string>
     <plurals name="song_details_info_tags">
         <item quantity="one">Címke</item>
         <item quantity="other">Címkék</item>

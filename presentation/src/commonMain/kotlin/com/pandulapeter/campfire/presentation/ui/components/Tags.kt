@@ -9,6 +9,7 @@
  */
 package com.pandulapeter.campfire.presentation.ui.components
 
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.ScrollState
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
@@ -175,6 +176,8 @@ internal fun TagFlowRow(
  * reserving that much would be taller than the song title above it.
  *
  * @param onClick Null where the pill is only read, which is what the editor's preview shows.
+ * @param isAction An outlined pill in the primary color, for one that adds something rather than showing it: the empty
+ *   groups of a song's info. The outline is drawn inside the pill, so it is exactly as tall as the tags next to it.
  * @param fontScale The song details' zoom, which the pills of its info card follow along with the lyrics; the text, the
  *   mark and the widest a pill may grow scale together, so that a zoomed tag is not ellipsized sooner than at rest.
  */
@@ -183,12 +186,22 @@ internal fun TagPill(
     modifier: Modifier = Modifier,
     text: String,
     isSelected: Boolean = false,
+    isAction: Boolean = false,
     onClick: (() -> Unit)? = null,
     leadingIcon: Painter? = null,
     fontScale: Float = 1f,
 ) {
-    val contentColor = if (isSelected) MaterialTheme.colorScheme.onSecondaryContainer else MaterialTheme.colorScheme.onSurfaceVariant
-    val containerColor = if (isSelected) MaterialTheme.colorScheme.secondaryContainer else MaterialTheme.colorScheme.surfaceContainerHighest
+    val contentColor = when {
+        isAction -> MaterialTheme.colorScheme.primary
+        isSelected -> MaterialTheme.colorScheme.onSecondaryContainer
+        else -> MaterialTheme.colorScheme.onSurfaceVariant
+    }
+    val containerColor = when {
+        isAction -> Color.Transparent
+        isSelected -> MaterialTheme.colorScheme.secondaryContainer
+        else -> MaterialTheme.colorScheme.surfaceContainerHighest
+    }
+    val border = if (isAction) BorderStroke(width = 1.dp, color = MaterialTheme.colorScheme.outlineVariant) else null
     val content = @Composable {
         Row(
             // The tag dialog caps what is typed, but a tag that arrives in a file (written in the editor, imported or
@@ -224,6 +237,7 @@ internal fun TagPill(
                 shape = MaterialTheme.shapes.small,
                 color = containerColor,
                 contentColor = contentColor,
+                border = border,
                 content = content,
             )
         } else {
@@ -233,6 +247,7 @@ internal fun TagPill(
                 shape = MaterialTheme.shapes.small,
                 color = containerColor,
                 contentColor = contentColor,
+                border = border,
                 content = content,
             )
         }

@@ -395,7 +395,7 @@
     <string name="song_details_metadata_edit">Edit metadata</string>
     <string name="song_details_song_info">About the song</string>
     <string name="song_details_info_details">Details</string>
-    <string name="song_details_info_none">None</string>
+    <string name="song_details_info_add">Add</string>
     <plurals name="song_details_info_tags">
         <item quantity="one">Tag</item>
         <item quantity="other">Tags</item>
