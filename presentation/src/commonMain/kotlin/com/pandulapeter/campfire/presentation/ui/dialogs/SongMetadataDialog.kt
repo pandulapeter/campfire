@@ -17,7 +17,6 @@ import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
@@ -28,6 +27,7 @@ import androidx.compose.runtime.saveable.listSaver
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardCapitalization
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
@@ -47,6 +47,7 @@ import com.pandulapeter.campfire.presentation.resources.song_editor_insert_title
 import com.pandulapeter.campfire.presentation.resources.song_editor_insert_year
 import com.pandulapeter.campfire.presentation.ui.CampfireViewModel
 import com.pandulapeter.campfire.presentation.ui.components.fadingVerticalEdges
+import com.pandulapeter.campfire.presentation.ui.components.rememberClearTextButton
 import org.jetbrains.compose.resources.StringResource
 
 /**
@@ -71,7 +72,7 @@ internal fun SongMetadataDialog(
             onValueChange = { value -> values = values + (field to value) },
         )
     }
-    AlertDialog(
+    TextFieldDialog(
         onDismissRequest = viewModel::dismissDialog,
         title = { SubjectDialogTitle(title = stringResource(Res.string.song_details_metadata_edit), subtitle = songLabel(dialog.song)) },
         text = {
@@ -82,13 +83,15 @@ internal fun SongMetadataDialog(
                 field(Modifier.fillMaxWidth(), Field.TITLE)
                 field(Modifier.fillMaxWidth(), Field.SUBTITLE)
                 field(Modifier.fillMaxWidth(), Field.ARTIST)
-                Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                    field(Modifier.weight(2f), Field.ALBUM)
-                    field(Modifier.weight(1f), Field.YEAR)
-                }
+                field(Modifier.fillMaxWidth(), Field.ALBUM)
                 field(Modifier.fillMaxWidth(), Field.COMPOSER)
                 field(Modifier.fillMaxWidth(), Field.LYRICIST)
-                field(Modifier.fillMaxWidth(), Field.DURATION)
+                // The two short values share a row, each with room for its clear button and what it holds: next to the
+                // album, a year was left two digits' room once the button was there.
+                Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                    field(Modifier.weight(1f), Field.YEAR)
+                    field(Modifier.weight(1f), Field.DURATION)
+                }
             }
         },
         confirmButton = {
@@ -116,12 +119,14 @@ private fun SongMetadataField(
     // in the song as lyrics.
     onValueChange = { newValue -> onValueChange(newValue.filterNot { it == '{' || it == '}' || it == '\n' || it == '\r' }) },
     label = { Text(stringResource(field.label)) },
+    trailingIcon = rememberClearTextButton(isVisible = value.isNotEmpty(), onClear = { onValueChange("") }),
     singleLine = true,
-    keyboardOptions = if (field == Field.YEAR) {
-        KeyboardOptions(keyboardType = KeyboardType.Number)
-    } else {
-        KeyboardOptions(capitalization = KeyboardCapitalization.Sentences)
-    },
+    // Next walks the form in the order it is laid out, and the last field's Done puts the keyboard away.
+    keyboardOptions = KeyboardOptions(
+        capitalization = if (field == Field.YEAR) KeyboardCapitalization.None else KeyboardCapitalization.Sentences,
+        keyboardType = if (field == Field.YEAR) KeyboardType.Number else KeyboardType.Text,
+        imeAction = if (field == Field.entries.last()) ImeAction.Done else ImeAction.Next,
+    ),
 )
 
 private val Field.label: StringResource

@@ -9,11 +9,6 @@
  */
 package com.pandulapeter.campfire.presentation.ui.dialogs
 
-import androidx.compose.animation.AnimatedVisibility
-import androidx.compose.animation.fadeIn
-import androidx.compose.animation.fadeOut
-import androidx.compose.animation.scaleIn
-import androidx.compose.animation.scaleOut
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.interaction.PressInteraction
@@ -80,6 +75,7 @@ import androidx.compose.runtime.saveable.listSaver
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.runtime.snapshotFlow
+import androidx.compose.runtime.withFrameNanos
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -166,7 +162,6 @@ import com.pandulapeter.campfire.presentation.resources.song_editor_revert_confi
 import com.pandulapeter.campfire.presentation.resources.song_editor_unsaved_changes
 import com.pandulapeter.campfire.presentation.resources.song_editor_unsaved_changes_confirmation
 import com.pandulapeter.campfire.presentation.resources.songs_artist_and_title
-import com.pandulapeter.campfire.presentation.resources.songs_clear
 import com.pandulapeter.campfire.presentation.resources.songs_delete_song
 import com.pandulapeter.campfire.presentation.resources.songs_delete_song_confirmation
 import com.pandulapeter.campfire.presentation.resources.songs_empty_title
@@ -210,6 +205,7 @@ import com.pandulapeter.campfire.presentation.ui.components.languageName
 import com.pandulapeter.campfire.presentation.ui.components.listItemAnimation
 import com.pandulapeter.campfire.presentation.ui.components.orderedBy
 import com.pandulapeter.campfire.presentation.ui.components.pickableLanguages
+import com.pandulapeter.campfire.presentation.ui.components.rememberClearTextButton
 import com.pandulapeter.campfire.presentation.ui.components.textResource
 import com.pandulapeter.campfire.presentation.ui.platform.calendarLocale
 import com.pandulapeter.campfire.presentation.ui.screens.settings.SettingsSubsection
@@ -762,6 +758,7 @@ private fun DeleteLibraryDialog(
     var value by rememberSaveable(stateSaver = TextFieldValue.Saver) { mutableStateOf(TextFieldValue()) }
     val isConfirmed = value.text.trim() == DELETE_LIBRARY_CONFIRMATION
     val focusRequester = rememberFirstFieldFocusRequester()
+    val keyboardController = LocalSoftwareKeyboardController.current
     val confirmOnce = rememberSingleConfirmation()
     val deleteLibrary = {
         confirmOnce {
@@ -769,7 +766,7 @@ private fun DeleteLibraryDialog(
             viewModel.dismissDialog()
         }
     }
-    AlertDialog(
+    TextFieldDialog(
         onDismissRequest = viewModel::dismissDialog,
         title = { Text(stringResource(Res.string.settings_library_delete)) },
         text = {
@@ -794,13 +791,14 @@ private fun DeleteLibraryDialog(
                         )
                     },
                     label = { Text(stringResource(Res.string.settings_library_delete_prompt, DELETE_LIBRARY_CONFIRMATION)) },
+                    trailingIcon = rememberClearTextButton(isVisible = value.text.isNotEmpty(), onClear = { value = TextFieldValue() }),
                     singleLine = true,
                     keyboardOptions = KeyboardOptions(
                         capitalization = KeyboardCapitalization.Characters,
                         autoCorrectEnabled = false,
                         imeAction = ImeAction.Done,
                     ),
-                    keyboardActions = KeyboardActions(onDone = { if (isConfirmed) deleteLibrary() }),
+                    keyboardActions = KeyboardActions(onDone = { if (isConfirmed) deleteLibrary() else keyboardController?.hide() }),
                 )
             }
         },
@@ -898,7 +896,7 @@ private fun SetlistDetailsDialog(
     val isValid = setlistTitle.text.isNotBlank()
     val focusRequester = rememberFirstFieldFocusRequester(isFocused = isTitleFocused)
     val confirmOnce = rememberSingleConfirmation()
-    AlertDialog(
+    TextFieldDialog(
         onDismissRequest = onDismiss,
         title = { if (subtitle.isBlank()) Text(title) else SubjectDialogTitle(title = title, subtitle = subtitle) },
         text = {
@@ -918,6 +916,7 @@ private fun SetlistDetailsDialog(
                         }
                     },
                     label = { Text(stringResource(Res.string.setlists_new_setlist_title)) },
+                    trailingIcon = rememberClearTextButton(isVisible = setlistTitle.text.isNotEmpty(), onClear = { setlistTitle = TextFieldValue() }),
                     singleLine = true,
                     keyboardOptions = KeyboardOptions(capitalization = KeyboardCapitalization.Sentences, imeAction = ImeAction.Next),
                 )
@@ -929,6 +928,7 @@ private fun SetlistDetailsDialog(
                     value = description,
                     onValueChange = { description = it.take(MAX_DESCRIPTION_LENGTH) },
                     label = { Text(stringResource(Res.string.setlists_description)) },
+                    trailingIcon = rememberClearTextButton(isVisible = description.isNotEmpty(), onClear = { description = "" }),
                     keyboardOptions = KeyboardOptions(capitalization = KeyboardCapitalization.Sentences),
                     minLines = DESCRIPTION_LINES,
                     maxLines = DESCRIPTION_LINES,
@@ -1121,9 +1121,10 @@ private fun NewSongDialog(
     var artist by rememberSaveable { mutableStateOf("") }
     val isValid = title.isNotBlank()
     val focusRequester = rememberFirstFieldFocusRequester()
+    val keyboardController = LocalSoftwareKeyboardController.current
     val confirmOnce = rememberSingleConfirmation()
     val create = { if (isValid) confirmOnce { onCreate(title, artist) } }
-    AlertDialog(
+    TextFieldDialog(
         onDismissRequest = onDismiss,
         title = { Text(stringResource(Res.string.songs_new_song)) },
         text = {
@@ -1133,6 +1134,7 @@ private fun NewSongDialog(
                     value = title,
                     onValueChange = { title = it.asSingleLine().take(MAX_TITLE_LENGTH) },
                     label = { Text(stringResource(Res.string.songs_new_song_title)) },
+                    trailingIcon = rememberClearTextButton(isVisible = title.isNotEmpty(), onClear = { title = "" }),
                     singleLine = true,
                     // Sentences rather than words for the title: only English capitalizes every word of one, and a
                     // letter the keyboard raised is one more to correct in every other language. An artist is a name.
@@ -1144,9 +1146,10 @@ private fun NewSongDialog(
                     value = artist,
                     onValueChange = { artist = it.asSingleLine().take(MAX_TITLE_LENGTH) },
                     label = { Text(stringResource(Res.string.songs_new_song_artist)) },
+                    trailingIcon = rememberClearTextButton(isVisible = artist.isNotEmpty(), onClear = { artist = "" }),
                     singleLine = true,
                     keyboardOptions = KeyboardOptions(capitalization = KeyboardCapitalization.Words, imeAction = ImeAction.Done),
-                    keyboardActions = KeyboardActions(onDone = { create() }),
+                    keyboardActions = KeyboardActions(onDone = { if (isValid) create() else keyboardController?.hide() }),
                 )
             }
         },
@@ -1204,9 +1207,19 @@ private fun SongTagsDialog(
     val spelledTag = offeredTags.firstOrNull { it.equals(typedTag, ignoreCase = true) }
     val focusRequester = rememberFirstFieldFocusRequester()
     val keyboardController = LocalSoftwareKeyboardController.current
+    // The keyboard is put away two frames after Done rather than straight from it: the web build focuses its text input
+    // again whenever the field's text changes, which entering a tag does, once at once and once more on the next frame,
+    // and either would bring the keyboard back up the moment it had gone.
+    var keyboardHideRequests by remember { mutableIntStateOf(0) }
+    LaunchedEffect(keyboardHideRequests) {
+        if (keyboardHideRequests > 0) {
+            repeat(2) { withFrameNanos { } }
+            keyboardController?.hide()
+        }
+    }
     val enterTypedTag = {
         when {
-            typedTag.isEmpty() -> keyboardController?.hide()
+            typedTag.isEmpty() -> Unit
             spelledTag != null -> if (spelledTag !in selectedTags) selectedTags = selectedTags + spelledTag
             else -> {
                 createdTags = createdTags + typedTag
@@ -1215,7 +1228,7 @@ private fun SongTagsDialog(
         }
         query = ""
     }
-    AlertDialog(
+    TextFieldDialog(
         onDismissRequest = viewModel::dismissDialog,
         title = {
             SubjectDialogTitle(
@@ -1236,10 +1249,17 @@ private fun SongTagsDialog(
                     value = query,
                     onValueChange = { query = it.asSingleLine().take(MAX_TAG_LENGTH) },
                     label = { Text(stringResource(Res.string.song_details_tags_search)) },
+                    trailingIcon = rememberClearTextButton(isVisible = query.isNotEmpty(), onClear = { query = "" }),
                     singleLine = true,
                     keyboardOptions = KeyboardOptions(imeAction = ImeAction.Done),
-                    // Handling Done keeps the keyboard up, which is what lets the next tag be typed straight away.
-                    keyboardActions = KeyboardActions(onDone = { enterTypedTag() }),
+                    // Done enters what is typed and puts the keyboard away, so that the list it narrowed is in view to
+                    // be ticked; the next tag is a tap on the field away.
+                    keyboardActions = KeyboardActions(
+                        onDone = {
+                            enterTypedTag()
+                            keyboardHideRequests++
+                        },
+                    ),
                 )
                 val isCreatable = typedTag.isNotEmpty() && spelledTag == null
                 if (isCreatable || matches.isNotEmpty()) {
@@ -1392,7 +1412,7 @@ private fun SongLanguagesDialog(
             languages.filter { it.code == queryCode || normalizedQuery in it.sortKey || it.code.startsWith(normalizedQuery) }
         }
     }
-    AlertDialog(
+    TextFieldDialog(
         onDismissRequest = viewModel::dismissDialog,
         title = {
             SubjectDialogTitle(
@@ -1413,6 +1433,7 @@ private fun SongLanguagesDialog(
                     value = query,
                     onValueChange = { query = it.replace("\n", "").take(MAX_SEARCH_QUERY_LENGTH) },
                     label = { Text(stringResource(Res.string.song_details_language_search)) },
+                    trailingIcon = rememberClearTextButton(isVisible = query.isNotEmpty(), onClear = { query = "" }),
                     singleLine = true,
                     // What is typed here is as often a code as a name, and autocorrect would make a word of either.
                     keyboardOptions = KeyboardOptions(autoCorrectEnabled = false, imeAction = ImeAction.Search),
@@ -1798,22 +1819,7 @@ private fun PickerSearchField(
                 contentDescription = null,
             )
         },
-        // Always given a slot, with the button fading in and out of it, so that the text is not pushed around by
-        // the slot itself appearing with the first character.
-        trailingIcon = {
-            AnimatedVisibility(
-                visible = query.isNotEmpty(),
-                enter = fadeIn() + scaleIn(),
-                exit = fadeOut() + scaleOut(),
-            ) {
-                IconButton(onClick = { onQueryChange("") }) {
-                    Icon(
-                        painter = painterResource(Res.drawable.ic_clear),
-                        contentDescription = stringResource(Res.string.songs_clear),
-                    )
-                }
-            }
-        },
+        trailingIcon = rememberClearTextButton(isVisible = query.isNotEmpty(), onClear = { onQueryChange("") }),
         singleLine = true,
         // Autocorrect is off for the reason it is off in the list screens' search, see SearchableTopAppBar.
         keyboardOptions = KeyboardOptions(autoCorrectEnabled = false, imeAction = ImeAction.Search),

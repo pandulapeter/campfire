@@ -128,8 +128,9 @@ internal fun SetlistsScreen(
     val listState = rememberRetainedLazyGridState(viewModel.setlistsScrollPosition)
     val isPerformanceModeEnabled by viewModel.isPerformanceModeEnabled.collectAsStateWithLifecycle()
     val setlistsPlaceholder by viewModel.setlistsPlaceholder.collectAsStateWithLifecycle()
+    val visibleDialog by viewModel.visibleDialog.collectAsStateWithLifecycle()
     val columnCount = layout.columnCount
-    HideKeyboardWhenScrolledDown(listState)
+    HideKeyboardWhenScrolledDown(listState, isEnabled = visibleDialog == null)
     LaunchedEffect(viewModel, listState) {
         viewModel.scrollToTopRequests.collect { if (it == CampfireDestination.Setlists) listState.animateScrollToItem(0) }
     }

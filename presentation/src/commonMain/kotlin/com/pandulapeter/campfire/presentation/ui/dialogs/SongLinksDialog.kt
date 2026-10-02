@@ -13,7 +13,6 @@ import androidx.compose.foundation.gestures.animateScrollBy
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
@@ -21,8 +20,8 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.lazy.rememberLazyListState
+import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
-import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -40,6 +39,8 @@ import androidx.compose.runtime.setValue
 import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalSoftwareKeyboardController
+import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import com.pandulapeter.campfire.chordpro.ChordProLinks
@@ -63,6 +64,7 @@ import com.pandulapeter.campfire.presentation.resources.song_details_link_remove
 import com.pandulapeter.campfire.presentation.resources.song_details_links_edit
 import com.pandulapeter.campfire.presentation.ui.CampfireViewModel
 import com.pandulapeter.campfire.presentation.ui.components.fadingVerticalEdges
+import com.pandulapeter.campfire.presentation.ui.components.rememberClearTextButton
 import com.pandulapeter.campfire.presentation.ui.components.textResource
 import com.pandulapeter.campfire.presentation.ui.screens.songDetails.linkLabel
 import kotlinx.coroutines.flow.first
@@ -100,7 +102,7 @@ internal fun SongLinksDialog(
     val links = rows.map { it.link }
     val urls = links.map { ChordProLinks.usableUrl(it.url) }
     val canSave = urls.all { it != null } && urls.distinct().size == urls.size
-    AlertDialog(
+    TextFieldDialog(
         onDismissRequest = viewModel::dismissDialog,
         title = { SubjectDialogTitle(title = stringResource(Res.string.song_details_links_edit), subtitle = songLabel(dialog.song)) },
         text = {
@@ -132,25 +134,23 @@ internal fun SongLinksDialog(
                 }
             }
         },
-        // The whole button row is one slot, since AlertDialog only lays its buttons out at its end edge, and Add link
-        // belongs at the start of it, apart from the two that close the dialog.
-        confirmButton = {
-            Row(modifier = Modifier.fillMaxWidth()) {
-                TextButton(onClick = ::add) {
-                    Icon(painter = painterResource(Res.drawable.ic_add), contentDescription = null)
-                    Text(modifier = Modifier.padding(start = 8.dp), text = stringResource(Res.string.song_details_link_add))
-                }
-                Spacer(modifier = Modifier.weight(1f))
-                TextButton(onClick = viewModel::dismissDialog) { Text(stringResource(Res.string.cancel)) }
-                TextButton(
-                    enabled = canSave,
-                    onClick = {
-                        viewModel.setSongLinks(fileName = dialog.song.fileName, isEditorDraft = dialog.isEditorDraft, links = links, offeredLinks = dialog.links)
-                        viewModel.dismissDialog()
-                    },
-                ) { Text(stringResource(Res.string.save)) }
+        // Add link stands at the start of the button row, apart from the two that close the dialog.
+        startButton = {
+            TextButton(onClick = ::add) {
+                Icon(painter = painterResource(Res.drawable.ic_add), contentDescription = null)
+                Text(modifier = Modifier.padding(start = 8.dp), text = stringResource(Res.string.song_details_link_add))
             }
         },
+        confirmButton = {
+            TextButton(
+                enabled = canSave,
+                onClick = {
+                    viewModel.setSongLinks(fileName = dialog.song.fileName, isEditorDraft = dialog.isEditorDraft, links = links, offeredLinks = dialog.links)
+                    viewModel.dismissDialog()
+                },
+            ) { Text(stringResource(Res.string.save)) }
+        },
+        dismissButton = { TextButton(onClick = viewModel::dismissDialog) { Text(stringResource(Res.string.cancel)) } },
     )
 }
 
@@ -189,6 +189,7 @@ private fun SongLinkFields(
     shape = MaterialTheme.shapes.medium,
     color = MaterialTheme.colorScheme.surfaceContainer,
 ) {
+    val keyboardController = LocalSoftwareKeyboardController.current
     Row(
         modifier = Modifier.padding(start = 12.dp, top = 12.dp, bottom = 12.dp, end = 4.dp),
         verticalAlignment = Alignment.CenterVertically,
@@ -203,17 +204,21 @@ private fun SongLinkFields(
                 onValueChange = { name -> onChange(link.copy(name = name.filterNot { it == '{' || it == '}' || it == '\n' || it == '\r' })) },
                 label = { Text(stringResource(Res.string.song_details_link_name)) },
                 placeholder = { Text(linkLabel(link.url)) },
+                trailingIcon = rememberClearTextButton(isVisible = !link.name.isNullOrEmpty(), onClear = { onChange(link.copy(name = null)) }),
                 singleLine = true,
+                keyboardOptions = KeyboardOptions(imeAction = ImeAction.Next),
             )
             OutlinedTextField(
                 modifier = Modifier.fillMaxWidth(),
                 value = link.url,
                 onValueChange = { url -> onChange(link.copy(url = url.filterNot { it == '\n' || it == '\r' })) },
                 label = { Text(stringResource(Res.string.song_details_link_address)) },
+                trailingIcon = rememberClearTextButton(isVisible = link.url.isNotEmpty(), onClear = { onChange(link.copy(url = "")) }),
                 singleLine = true,
                 isError = isDuplicate || (link.url.isNotBlank() && ChordProLinks.usableUrl(link.url) == null),
                 supportingText = if (isDuplicate) ({ Text(stringResource(Res.string.song_details_link_duplicate)) }) else null,
-                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Uri),
+                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Uri, imeAction = ImeAction.Done),
+                keyboardActions = KeyboardActions(onDone = { keyboardController?.hide() }),
             )
         }
         val label = linkLabel(link)

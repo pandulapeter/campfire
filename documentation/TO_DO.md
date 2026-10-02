@@ -8,6 +8,10 @@
  * https://mozilla.org/MPL/2.0/.
 -->
 # To do
+- What's new dialog didn't appear on Android after force update
+- PDF export loading indicator: use an indeterminate progress bar instead. Same for the cover art bottom sheet
+- Song cover art bottom sheet - too many sticky parts, scrolling part not visible on Fold with keyboard up
+- Web navigation bug: open Settings -> Any other tab besides General -> press back twice -> app is closed (should be on songs instead)
 - Metronome: documentation/metronome.md
 - Global sync status display ?
 - Optional close confirmation dialog on relevant platforms

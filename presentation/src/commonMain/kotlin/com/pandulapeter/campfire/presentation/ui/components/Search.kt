@@ -588,13 +588,20 @@ private fun SearchBackHandler(
  * Read from the list's own scroll state rather than from the gesture, so that every way the list is moved down counts
  * — a drag, the fling after it, the wheel, the fast scroller — and it fires once as a scroll down begins rather than
  * on every frame of it. The field keeps the focus and the caret, so a tap on it brings the keyboard straight back.
+ *
+ * @param isEnabled False while the list is covered by a dialog or a sheet, whose keyboard is not this list's to put
+ *   away. A list can still move down on its own under one: on the web the keyboard makes the page itself shorter, and
+ *   a list that shrinks past the item that opened the dialog scrolls down to keep that item in view, which would
+ *   otherwise close the keyboard the dialog has just brought up.
  */
 @Composable
 internal fun HideKeyboardWhenScrolledDown(
     scrollableState: ScrollableState,
+    isEnabled: Boolean = true,
 ) {
     val keyboardController = LocalSoftwareKeyboardController.current
-    LaunchedEffect(scrollableState, keyboardController) {
+    LaunchedEffect(scrollableState, keyboardController, isEnabled) {
+        if (!isEnabled) return@LaunchedEffect
         snapshotFlow { scrollableState.isScrollInProgress && scrollableState.lastScrolledForward }
             .distinctUntilChanged()
             .filter { it }

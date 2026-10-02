@@ -101,6 +101,7 @@ import com.pandulapeter.campfire.presentation.ui.components.CoverArt
 import com.pandulapeter.campfire.presentation.ui.components.MAX_SEARCH_QUERY_LENGTH
 import com.pandulapeter.campfire.presentation.ui.components.SegmentedChoice
 import com.pandulapeter.campfire.presentation.ui.components.fadingVerticalEdges
+import com.pandulapeter.campfire.presentation.ui.components.rememberClearTextButton
 import kotlin.time.Duration.Companion.milliseconds
 import kotlinx.coroutines.delay
 import org.jetbrains.compose.resources.painterResource
@@ -309,6 +310,7 @@ private fun CoverArtQueryField(
     value = value,
     onValueChange = { onValueChange(it.replace("\n", "").take(MAX_SEARCH_QUERY_LENGTH)) },
     label = { Text(label) },
+    trailingIcon = rememberClearTextButton(isVisible = value.isNotEmpty(), onClear = { onValueChange("") }),
     singleLine = true,
     // A name is searched for as it is spelled, so autocorrect is off for the reason it is off in the list screens' search.
     keyboardOptions = KeyboardOptions(autoCorrectEnabled = false, imeAction = ImeAction.Search),
@@ -440,6 +442,7 @@ private fun CoverArtAddress(
         value = address,
         onValueChange = { onAddressChange(it.replace("\n", "").take(MAX_ADDRESS_LENGTH)) },
         label = { Text(stringResource(Res.string.cover_art_address)) },
+        trailingIcon = rememberClearTextButton(isVisible = address.isNotEmpty(), onClear = { onAddressChange("") }),
         singleLine = true,
         keyboardOptions = KeyboardOptions(autoCorrectEnabled = false, keyboardType = KeyboardType.Uri, imeAction = ImeAction.Done),
         keyboardActions = KeyboardActions(onDone = { onDone() }),

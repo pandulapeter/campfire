@@ -133,7 +133,7 @@ internal fun SongsScreen(
     val listContentPadding = contentPadding.besideSidePanel(isSidePanelVisible)
     val columnCount = if (isSidePanelVisible) layout.columnCountBesideSidePanel else layout.columnCount
     val hasLoadedLibrary = rememberHasLoadedLibrary(isLoading)
-    HideKeyboardWhenScrolledDown(listState)
+    HideKeyboardWhenScrolledDown(listState, isEnabled = visibleDialog == null)
     LaunchedEffect(viewModel, listState) {
         viewModel.scrollToTopRequests.collect { if (it == CampfireDestination.Songs) listState.animateScrollToItem(0) }
     }
