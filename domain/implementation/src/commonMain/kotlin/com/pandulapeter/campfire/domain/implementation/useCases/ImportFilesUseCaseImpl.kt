@@ -64,6 +64,9 @@ class ImportFilesUseCaseImpl internal constructor(
             // Where each song of the plan ended up, by its place in the plan: a repeat of an earlier song of the batch
             // is wherever that one went, which was not known when the plan was made.
             val storedNames = arrayOfNulls<String>(plan.songs.size)
+            // The songs of the plan the answer left out, by their place in it: a repeat of one of them is left out with it
+            // rather than being the duplicate of the different library song whose name they both wanted.
+            val leftAloneIndices = mutableSetOf<Int>()
             val replacedSongFileNames = mutableSetOf<String>()
             // The planner never asks about a name whose library file this import brings back unchanged; held here too,
             // since this is the one place anything is overwritten and the song lost would be one the import carries.
@@ -92,8 +95,19 @@ class ImportFilesUseCaseImpl internal constructor(
                     }
 
                     // Already in the library, or already written by this import, so the name it arrived under points there.
-                    Action.DISREGARD -> (entry.repeatedEntryIndex?.let(storedNames::getOrNull) ?: entry.fileName).also { duplicateFileNames += it }
-                    Action.LEAVE_ALONE -> entry.fileName.also { skippedConflicts += it }
+                    Action.DISREGARD -> (entry.repeatedEntryIndex?.let(storedNames::getOrNull) ?: entry.fileName).also {
+                        if (entry.repeatedEntryIndex in leftAloneIndices) {
+                            leftAloneIndices += index
+                            skippedConflicts += entry.fileName
+                        } else {
+                            duplicateFileNames += it
+                        }
+                    }
+
+                    Action.LEAVE_ALONE -> entry.fileName.also {
+                        leftAloneIndices += index
+                        skippedConflicts += it
+                    }
                 }
                 storedNames[index] = storedName
                 entry.sourceFileName?.let { storedSongFileNames[it] = storedName }

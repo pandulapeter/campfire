@@ -242,6 +242,33 @@ class ImportFilesUseCaseImplTest {
     }
 
     @Test
+    fun `a repeat of a skipped conflicting song is skipped with it rather than a duplicate of the library song`() = runTest {
+        fun plan() = ImportPlan(
+            songs = listOf(
+                ImportPlan.SongEntry(fileName = "x.cho", text = B, status = ImportPlan.Status.CONFLICTING, sourceFileName = "first.cho"),
+                ImportPlan.SongEntry(
+                    fileName = "x.cho",
+                    text = B,
+                    status = ImportPlan.Status.IDENTICAL,
+                    sourceFileName = "second.cho",
+                    repeatedEntryIndex = 0,
+                ),
+            ),
+        )
+        val skipped = FakeSongRepository(files = mutableMapOf("x.cho" to A))
+        val skippedResult = ImportFilesUseCaseImpl(skipped, FakeSetlistRepository()).invoke(plan(), ImportConflictResolution.SKIP)
+        assertEquals(listOf("x.cho", "x.cho"), skippedResult.skippedConflictingFileNames)
+        assertTrue(skippedResult.duplicateFileNames.isEmpty())
+        assertEquals(mapOf("x.cho" to A), skipped.files)
+
+        val kept = FakeSongRepository(files = mutableMapOf("x.cho" to A))
+        val keptResult = ImportFilesUseCaseImpl(kept, FakeSetlistRepository()).invoke(plan(), ImportConflictResolution.KEEP_BOTH)
+        assertEquals(listOf("x_2.cho"), keptResult.importedSongFileNames)
+        assertEquals(listOf("x_2.cho"), keptResult.duplicateFileNames)
+        assertTrue(keptResult.skippedConflictingFileNames.isEmpty())
+    }
+
+    @Test
     fun `the applier refuses to replace a kept name even if the plan asks`() = runTest {
         val songs = FakeSongRepository(files = mutableMapOf("foo.cho" to A))
         val plan = ImportPlan(
