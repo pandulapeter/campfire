@@ -162,6 +162,15 @@ class ChordSheetConverterTest {
     }
 
     @Test
+    fun aCapitalizedLoneChordCanEndAHeadedSection() {
+        assertEquals("{comment: Outro}\n[C]\n", convert("[Outro]\nC"))
+        assertTrue(convert("[Verse 1]\nC   G\nHello\n\n[Outro]\nC").endsWith("{comment: Outro}\n[C]\n"))
+        assertEquals("{comment: Intro}\n[C]\n", convert("Intro: C"))
+        assertEquals("{start_of_verse: Verse 1}\nA\nday\n{end_of_verse}\n", convert("Verse 1\nA\nday"))
+        assertEquals("{start_of_verse: Verse 1}\na\n{end_of_verse}\n", convert("Verse 1\na"))
+    }
+
+    @Test
     fun letterSpacingDoesNotSplitWords() {
         val spaced = ChordSheet.Line(listOf(span("T", 0.0, 6.7, 12.0), span("h", 7.7, 14.4, 12.0), span("i", 15.4, 18.4, 12.0), span("s", 19.4, 25.4, 12.0), span("i", 30.0, 33.0, 12.0), span("s", 34.0, 40.0, 12.0)))
         assertEquals("This is\n", ChordSheetConverter.convert(ChordSheet(listOf(ChordSheet.Page(listOf(spaced))))).single())

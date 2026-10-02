@@ -222,6 +222,10 @@ object ChordSheetConverter {
                 section(line.text) != null -> Kind.SECTION
                 index < 15 && metadata(line.text) != null -> Kind.METADATA
                 candidates[index] != null && (candidates[index]!!.count { chord(it.text) } > 1 ||
+                    candidates[index]!!.count { chord(it.text) } == 1 &&
+                    candidates[index]!!.filter { chord(it.text) }.all { it.text.first().isUpperCase() } &&
+                    lines.getOrNull(index - 1)?.let { section(it.text) != null } == true &&
+                    lines.getOrNull(index + 1)?.let { it.text.isBlank() || section(it.text) != null } != false ||
                     (hasUnambiguousChords || isStyledChordLine(line, candidates[index]!!, lines.getOrNull(index + 1))) &&
                     lines.getOrNull(index + 1)?.let { it.text.isNotBlank() && chordTokens(it) == null && section(it.text) == null && metadata(it.text) == null } == true) -> Kind.CHORD
                 else -> Kind.LYRIC

@@ -18,7 +18,8 @@ in `:domain:*`. `:data:source:local:implementation` uses it directly for the met
   conversion knows no file format. `ofPlainText` preserves the original string for ChordPro passthrough, and tabs
   advance to multiples of eight. Recognized chord lines are aligned and snapped over lyrics (a line of a single chord
   is one where another line holds two, or where it is bold and capitalised over plain lyrics of its size, which is
-  how a wrapped line of Campfire's export prints), parenthesized or bold/raised inline chords converted
+  how a wrapped line of Campfire's export prints, or capitalised directly under a section heading with no lyrics
+  after it), parenthesized or bold/raised inline chords converted
   conservatively, English/Hungarian labels turned into sections with their heading brackets, parentheses and trailing
   colon removed, and tab runs wrapped. Styled titles and metadata become headers — a large title wrapped over the lines under it in its own type
   (a narrow column of Campfire's PDF export) as one title, and a label without a colon only where its value has the
