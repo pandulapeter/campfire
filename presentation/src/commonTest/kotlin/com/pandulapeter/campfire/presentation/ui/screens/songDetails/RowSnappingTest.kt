@@ -141,6 +141,36 @@ class RowSnappingTest {
     private fun previous(scroll: Int, rows: SongRows = rowsWithATallOne, maxValue: Int = 3300) =
         previousStepTarget(scroll = scroll, rows = rows, viewportHeight = 1000, window = window, maxValue = maxValue)
 
+    private fun capped(start: Float, target: Float) = oneStepCappedTarget(
+        start = start,
+        target = target,
+        rows = rowsWithATallOne,
+        viewportHeight = 1000,
+        window = window,
+        maxValue = 3300,
+    )
+
+    @Test
+    fun aFlingGoesNoFurtherThanOneStep() {
+        assertEquals(1300f, capped(start = 300f, target = 3300f))
+        assertEquals(300f, capped(start = 1300f, target = 0f))
+        // A tall row is flung through a page at a time, as it is stepped through.
+        assertEquals(2000f, capped(start = 1300f, target = 3300f))
+    }
+
+    @Test
+    fun aFlingShortOfTheNextStepIsLeftAlone() {
+        assertEquals(800f, capped(start = 300f, target = 800f))
+        assertEquals(900f, capped(start = 1300f, target = 900f))
+    }
+
+    @Test
+    fun aFlingWithNoStepsLeftItsWayIsLeftAlone() {
+        assertEquals(-200f, capped(start = 0f, target = -200f))
+        assertEquals(4000f, capped(start = 3300f, target = 4000f))
+        assertEquals(700f, oneStepCappedTarget(start = 0f, target = 700f, rows = SongRows(), viewportHeight = 1000, window = window, maxValue = 3300))
+    }
+
     @Test
     fun aRowTallerThanTheScreenIsPagedThroughBeforeTheNextOne() {
         assertEquals(300, next(scroll = 0))

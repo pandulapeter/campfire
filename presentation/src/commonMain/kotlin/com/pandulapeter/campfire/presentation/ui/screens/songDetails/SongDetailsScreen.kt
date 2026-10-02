@@ -269,10 +269,11 @@ internal fun SongDetailsScreen(
     val hasNextSongToStepTo = canPage && pagerState.targetPage < songs.lastIndex
     val canStepBackInSong = currentPageStepper?.canStepBack == true
     val canStepForwardInSong = currentPageStepper?.canStepForward == true
-    fun stepBack() {
+    // A tap the song was dragged under steps from where the drag began (from), the rest from where the song is.
+    fun stepBack(from: Int? = null) {
         val stepper = currentPageStepper
-        if (stepper?.canStepBack == true) {
-            coroutineScope.launch { stepper.step(-1) }
+        if (stepper?.canStep(-1, from) == true) {
+            coroutineScope.launch { stepper.step(-1, from) }
         } else if (pagerState.targetPage > 0) {
             // Going back from the top of a song is going back to the last lines of the one before it, and landing on its
             // top instead would have the next press skip that song whole. A page not laid out yet has nowhere to go but
@@ -281,9 +282,9 @@ internal fun SongDetailsScreen(
             pageStepper.step(-1)
         }
     }
-    fun stepForward() {
+    fun stepForward(from: Int? = null) {
         val stepper = currentPageStepper
-        if (stepper?.canStepForward == true) coroutineScope.launch { stepper.step(1) } else if (pagerState.targetPage < songs.lastIndex) pageStepper.step(1)
+        if (stepper?.canStep(1, from) == true) coroutineScope.launch { stepper.step(1, from) } else if (pagerState.targetPage < songs.lastIndex) pageStepper.step(1)
     }
 
     LaunchedEffect(currentSong?.fileName) { currentSong?.fileName?.let(viewModel::loadSongContent) }
@@ -304,8 +305,16 @@ internal fun SongDetailsScreen(
                 onScrollDown = { currentPageScrollState?.let { coroutineScope.launch { it.scrollByKeyStep(1f) } } },
                 // Whatever the step buttons would do where they are there, so that a pedal pressing Up and Down reads the
                 // song the way the buttons do; where they are not, the keys scroll.
-                onStepBack = if (canStepBackInSong || hasPreviousSongToStepTo) ::stepBack else null,
-                onStepForward = if (canStepForwardInSong || hasNextSongToStepTo) ::stepForward else null,
+                onStepBack = if (canStepBackInSong || hasPreviousSongToStepTo) {
+                    { stepBack() }
+                } else {
+                    null
+                },
+                onStepForward = if (canStepForwardInSong || hasNextSongToStepTo) {
+                    { stepForward() }
+                } else {
+                    null
+                },
                 isUncovered = visibleDialog == null && viewModel.backStack.lastOrNull() is CampfireDestination.SongDetails,
                 // The target page only decides whether the key does anything; the step itself is decided at the time of
                 // the press.
@@ -517,7 +526,16 @@ internal fun SongDetailsScreen(
             Box(
                 modifier = Modifier
                     .weight(1f)
-                    .fillMaxWidth(),
+                    .fillMaxWidth()
+                    .stepOnTap(
+                        pagerState = pagerState,
+                        isMovingFreely = {
+                            currentPageScrollState?.isScrollInProgress == true && currentPageStepper?.isStepping != true ||
+                                pagerState.isScrollInProgress && !pageStepper.isStepping
+                        },
+                        stepOrigin = { currentPageStepper?.origin },
+                        onStep = { direction, from -> if (direction < 0) stepBack(from) else stepForward(from) },
+                    ),
             ) {
                 HorizontalPager(
                     modifier = Modifier
@@ -610,8 +628,8 @@ internal fun SongDetailsScreen(
                         end = stepButtonsEnd,
                         bottom = stepButtonsBottom,
                     ),
-                    onStepBack = ::stepBack,
-                    onStepForward = ::stepForward,
+                    onStepBack = { stepBack() },
+                    onStepForward = { stepForward() },
                 )
             }
         }
@@ -1065,6 +1083,9 @@ private class PageStepper(
     private var request: Request? = null
 
     private class Request(val page: Int)
+
+    /** Whether the pager is being moved by a step rather than by a swipe. */
+    val isStepping get() = request != null
 
     fun step(delta: Int) {
         val from = request?.page ?: pagerState.targetPage

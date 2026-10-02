@@ -123,6 +123,20 @@ internal fun snappedScrollTarget(
 }
 
 /**
+ * Where a fling of the song that set off from [start] towards [target] may go: no further than a press of a step button
+ * would take it from there ([nextStepTarget], [previousStepTarget]). A song not laid out yet has no steps, and one already
+ * at the end it is flung towards has none left that way, so neither is held back.
+ */
+internal fun oneStepCappedTarget(start: Float, target: Float, rows: SongRows, viewportHeight: Int, window: ReadingWindow, maxValue: Int): Float {
+    val from = start.toInt()
+    return when {
+        target > start -> nextStepTarget(from, rows, viewportHeight, window, maxValue)?.let { minOf(target, it.toFloat()) } ?: target
+        target < start -> previousStepTarget(from, rows, viewportHeight, window, maxValue)?.let { maxOf(target, it.toFloat()) } ?: target
+        else -> target
+    }
+}
+
+/**
  * How much of the viewport a step reads the song through: all of it but what the top edge fades out ([top]) and what
  * the system bars cover at its bottom ([bottom]). A step that goes on within what did not fit on the screen moves the
  * song by that much less [overlap], the last line or two read, which the eye finds its place again by. [end] is the
@@ -333,6 +347,11 @@ internal fun stopProgress(scroll: Int, stops: List<Int>): Float {
  * resting offset is the top of the song. With none (a song laid out in a single column) the fling
  * is the ordinary one. They are state, since the buttons that step through the song are
  * shown from them; the layout writes them only when they change.
+ *
+ * However hard the song is flung, it goes no further than a press of a step button would take it from where the finger
+ * let go ([nextStepTarget], [previousStepTarget]): a guitarist reaching for the screen between two strums swipes as
+ * often as they tap, and a swipe that skipped a row would have them hunting for their place in the middle of the song.
+ * A drag is the finger's own, and still takes the song anywhere.
  */
 internal class RowSnapFlingBehavior(
     private val scrollState: ScrollState,
@@ -349,9 +368,17 @@ internal class RowSnapFlingBehavior(
         val start = scrollState.value.toFloat()
         val decayTarget = start + decay.calculateTargetValue(0f, initialVelocity)
         val currentRows = rows
-        val target = if (currentRows.restingOffsets.isEmpty()) decayTarget else snappedScrollTarget(
+        val cappedTarget = oneStepCappedTarget(
             start = start,
             target = decayTarget,
+            rows = currentRows,
+            viewportHeight = scrollState.viewportSize,
+            window = readingWindow,
+            maxValue = scrollState.maxValue,
+        )
+        val target = if (currentRows.restingOffsets.isEmpty()) cappedTarget else snappedScrollTarget(
+            start = start,
+            target = cappedTarget,
             rows = currentRows,
             viewportHeight = scrollState.viewportSize,
             maxValue = scrollState.maxValue,
@@ -578,25 +605,43 @@ internal class SongStepper(
     // a bit from wherever the first had got to.
     private var stepTarget: Int? = null
 
-    /** Scrolls to the previous stop where [direction] is negative and to the next one otherwise, if there is one. */
-    suspend fun step(direction: Int) {
-        val from = stepTarget ?: scrollState.value
-        val rows = flingBehavior.rows
-        val viewport = scrollState.viewportSize
-        val window = flingBehavior.readingWindow
-        val target = (
-            if (direction < 0) previousStepTarget(from, rows, viewport, window, scrollState.maxValue) else nextStepTarget(from, rows, viewport, window, scrollState.maxValue)
-            ) ?: return
+    /** Whether the song is being scrolled by a step rather than by a finger or a fling. */
+    val isStepping get() = stepTarget != null
+
+    /** Where the next step is counted from: where the one being animated is headed, or where the song is. */
+    val origin get() = stepTarget ?: scrollState.value
+
+    /** Whether there is anything to step to in [direction] from [from], or from [origin] where it is null. */
+    fun canStep(direction: Int, from: Int? = null) = when {
+        from != null -> stepTargetFrom(from, direction) != null
+        direction < 0 -> canStepBack
+        else -> canStepForward
+    }
+
+    /**
+     * Scrolls to the previous stop where [direction] is negative and to the next one otherwise, if there is one, counted
+     * from [from] - where a gesture the step stands in for began - or from [origin] where it is null.
+     */
+    suspend fun step(direction: Int, from: Int? = null) {
+        val target = stepTargetFrom(from ?: origin, direction) ?: return
         stepTarget = target
         try {
             // Slow and even, for a reader whose eyes are on the song while it moves: a screen's worth takes as long as
             // STEP_DURATION_PER_SCREEN, and no step is quicker than MIN_STEP_DURATION, so a short one is still seen to move.
             val distance = abs(target - scrollState.value)
+            val viewport = scrollState.viewportSize
             val duration = if (viewport > 0) (STEP_DURATION_PER_SCREEN * distance / viewport).coerceIn(MIN_STEP_DURATION, STEP_DURATION_PER_SCREEN) else MIN_STEP_DURATION
             scrollState.animateScrollTo(target, tween(durationMillis = duration, easing = FastOutSlowInEasing))
         } finally {
             if (stepTarget == target) stepTarget = null
         }
+    }
+
+    private fun stepTargetFrom(from: Int, direction: Int): Int? {
+        val rows = flingBehavior.rows
+        val viewport = scrollState.viewportSize
+        val window = flingBehavior.readingWindow
+        return if (direction < 0) previousStepTarget(from, rows, viewport, window, scrollState.maxValue) else nextStepTarget(from, rows, viewport, window, scrollState.maxValue)
     }
 }
 
