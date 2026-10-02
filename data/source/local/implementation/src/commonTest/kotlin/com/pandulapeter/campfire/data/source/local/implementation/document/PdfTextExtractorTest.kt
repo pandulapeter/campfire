@@ -153,6 +153,16 @@ class PdfTextExtractorTest {
             val bytes = writer.writeXrefStream(mapOf(4 to (6 to 0)), predictor)
             assertEquals("Compressed", PdfTextExtractor.extract(bytes).pages.single().lines.single().spans.joinToString("") { it.text })
         }
+        // An index that is off by one still finds the object by the number the header gives it.
+        val writer = PdfTestWriter()
+        writer.add("<< /Type /Catalog /Pages 2 0 R >>")
+        writer.add("<< /Type /Pages /Kids [3 0 R] /MediaBox [0 0 612 792] /Resources << /Font << /F1 4 0 R >> >> >>")
+        writer.add("<< /Type /Page /Contents 5 0 R >>")
+        writer.add("null")
+        writer.stream("BT /F1 10 Tf 50 700 Td (Compressed) Tj ET")
+        writer.stream("4 0 << /Type /Font /Subtype /Type1 /BaseFont /Courier /Encoding /WinAnsiEncoding >>", "/Type /ObjStm /N 1 /First 4")
+        val bytes = writer.writeXrefStream(mapOf(4 to (6 to 1)))
+        assertEquals("Compressed", PdfTextExtractor.extract(bytes).pages.single().lines.single().spans.joinToString("") { it.text })
     }
 
     @Test

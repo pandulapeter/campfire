@@ -14,11 +14,19 @@ import com.pandulapeter.campfire.data.source.local.implementation.zip.ZipExcepti
 
 /** Lazy indirect objects, with classic/stream cross references and a sequential recovery scan. */
 internal class PdfFile(private val bytes: ByteArray) {
-    private data class Location(val offset: Int = -1, val stream: Int = -1, val index: Int = -1)
+    private data class Location(val offset: Int = -1, val stream: Int = -1)
+    /** An object stream's header, read once however many of its objects are asked for. */
+    private class ObjectStream(val source: PdfStream, val data: ByteArray, val first: Int, val numbers: IntArray, val offsets: IntArray) {
+        fun parse(index: Int) = PdfSyntax(data, first + offsets[index]).next() ?: error("PDF compressed object")
+    }
     private val locations = mutableMapOf<PdfReference, Location>()
     private val objects = mutableMapOf<PdfReference, PdfValue>()
     private val resolving = mutableSetOf<PdfReference>()
     private val decoded = mutableMapOf<PdfStream, ByteArray>()
+    private val objectStreams = mutableMapOf<PdfReference, ObjectStream>()
+    private val parsedStreams = mutableSetOf<Int>()
+    /** Where the recovery scan found each definition, so that a later one replaces an earlier one wherever it is. */
+    private val definedAt = mutableMapOf<PdfReference, Int>()
     private var decodedSize = 0L
     private var scanned = false
     private var root: PdfValue? = null
@@ -55,7 +63,7 @@ internal class PdfFile(private val bytes: ByteArray) {
             var location = locations[value]
             if (location == null) { scan(); objects[value]?.let { return resolve(it) }; location = locations[value] }
             if (location == null) return null
-            val parsed = if (location.stream >= 0) compressed(location) else {
+            val parsed = if (location.stream >= 0) compressed(location, value) else {
                 try { indirect(location.offset, value) } catch (_: IllegalArgumentException) { scan(); objects[value] }
                 catch (_: IllegalStateException) { scan(); objects[value] }
             } ?: return null
@@ -145,7 +153,7 @@ internal class PdfFile(private val bytes: ByteArray) {
                     require(first <= Int.MAX_VALUE && second <= Int.MAX_VALUE)
                     when (type) {
                         1 -> locate(PdfReference(start + index, second.toInt()), Location(first.toInt()))
-                        2 -> locate(PdfReference(start + index), Location(stream = first.toInt(), index = second.toInt()))
+                        2 -> locate(PdfReference(start + index), Location(stream = first.toInt()))
                     }
                 }
                 require(locations.size <= MAX_OBJECTS)
@@ -157,26 +165,44 @@ internal class PdfFile(private val bytes: ByteArray) {
         dictionary["Prev"]?.number()?.toInt()?.let { xref(it, seen) }
     }
 
-    private fun compressed(location: Location): PdfValue {
-        val stream = resolve(PdfReference(location.stream)) as? PdfStream ?: error("PDF object stream")
+    private fun objectStream(reference: PdfReference): ObjectStream {
+        val stream = resolve(reference) as? PdfStream ?: error("PDF object stream")
+        objectStreams[reference]?.takeIf { it.source === stream }?.let { return it }
         require(stream.dictionary["Type"].name() == "ObjStm")
         val count = number(stream.dictionary["N"]).toInt()
         val first = number(stream.dictionary["First"]).toInt()
         val data = decode(stream)
-        require(count in 1..MAX_OBJECTS && location.index in 0 until count && first in data.indices)
+        require(count in 1..MAX_OBJECTS && first in data.indices)
         val header = PdfSyntax(data)
-        val entries = List(count) { header.word().toInt() to header.word().toInt() }
-        require(header.position <= first)
-        for ((number, offset) in entries) {
-            require(offset >= 0 && first.toLong() + offset < data.size && number > 0)
-            val reference = PdfReference(number)
-            if (objects.containsKey(reference)) continue
-            val actual = locations[reference]
-            if (actual != null && actual.stream != location.stream) continue
-            require(objects.size < MAX_OBJECTS)
-            objects[reference] = PdfSyntax(data, first + offset).next() ?: error("PDF compressed object")
+        val numbers = IntArray(count)
+        val offsets = IntArray(count)
+        for (index in 0 until count) {
+            numbers[index] = header.word().toInt()
+            offsets[index] = header.word().toInt()
+            require(offsets[index] >= 0 && first.toLong() + offsets[index] < data.size && numbers[index] > 0)
         }
-        return objects[PdfReference(entries[location.index].first)] ?: error("Missing compressed object")
+        require(header.position <= first)
+        return ObjectStream(stream, data, first, numbers, offsets).also { objectStreams[reference] = it }
+    }
+
+    /**
+     * The object [reference] names, found by its number wherever the stream's header lists it: an xref entry whose
+     * index names another object is either dead or off by one, and in neither case is that other object the answer.
+     */
+    private fun compressed(location: Location, reference: PdfReference): PdfValue? {
+        if (location.stream !in parsedStreams) {
+            val stream = objectStream(PdfReference(location.stream))
+            for (index in stream.numbers.indices) {
+                val contained = PdfReference(stream.numbers[index])
+                if (objects.containsKey(contained)) continue
+                val actual = locations[contained]
+                if (actual != null && actual.stream != location.stream) continue
+                require(objects.size < MAX_OBJECTS)
+                objects[contained] = stream.parse(index)
+            }
+            parsedStreams += location.stream
+        }
+        return objects[reference]
     }
 
     private fun scan() {
@@ -196,6 +222,7 @@ internal class PdfFile(private val bytes: ByteArray) {
                 if (match.groupValues[1].isNotEmpty() && value != null) {
                     val reference = PdfReference(match.groupValues[1].toInt(), match.groupValues[2].toInt())
                     objects[reference] = value
+                    definedAt[reference] = match.range.first
                     locations[reference] = Location(match.range.first)
                     if (value is PdfStream && value.dictionary["Type"].name() == "XRef") trailer(value.dictionary)
                 } else if (value is PdfDictionary) {
@@ -207,10 +234,24 @@ internal class PdfFile(private val bytes: ByteArray) {
             catch (_: IllegalStateException) { at = after }
         }
         require(!encrypted) { "Encrypted PDF" }
-        // Recovery also discovers compressed objects; unreferenced image streams are never decoded.
-        for ((reference, value) in objects.toMap()) if (value is PdfStream && value.dictionary["Type"].name() == "ObjStm") {
-            val countInStream = value.dictionary["N"].number().toInt()
-            if (countInStream > 0) compressed(Location(stream = reference.number, index = 0))
+        // Recovery also discovers compressed objects; unreferenced image streams are never decoded. The streams are read in
+        // the order they appear, and a definition replaces whatever was found before it, as the plain objects do, since an
+        // incremental update appends its objects after the ones it supersedes. An object resolved through the xref before
+        // this scan ran is left as it is.
+        val streams = definedAt.entries.filter { (reference, _) ->
+            val value = objects[reference]
+            value is PdfStream && value.dictionary["Type"].name() == "ObjStm" && value.dictionary["N"].number() > 0
+        }.map { it.key to it.value }.sortedBy { it.second }
+        for ((streamReference, streamOffset) in streams) {
+            val stream = objectStream(streamReference)
+            for (index in stream.numbers.indices) {
+                val reference = PdfReference(stream.numbers[index])
+                val previous = definedAt[reference]
+                if (previous == null && objects.containsKey(reference) || previous != null && previous > streamOffset) continue
+                require(objects.size < MAX_OBJECTS)
+                objects[reference] = stream.parse(index)
+                definedAt[reference] = streamOffset
+            }
         }
     }
 
