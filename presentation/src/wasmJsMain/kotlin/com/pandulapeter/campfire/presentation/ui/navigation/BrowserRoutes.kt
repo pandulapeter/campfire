@@ -24,9 +24,10 @@ import kotlin.js.ExperimentalWasmJsInterop
  *
  * - `` — the songs, and `search` over them while their search is open;
  * - `setlists`, and `setlists/search`;
- * - `settings/general`, `settings/songs`, `settings/library`, `settings/about` — one per tab, and always directly
- *   on top of the songs, since picking a tab replaces the entry rather than adding one (`settings` alone opens the tab
- *   that was open last);
+ * - `settings/general`, directly on top of the songs, and `settings/songs`, `settings/library` or `settings/about`
+ *   on top of that while another tab is open — a Back from any other tab goes to General before it leaves the screen,
+ *   so General is a step of its own, while one tab picked after another replaces the entry rather than adding one
+ *   (`settings` alone opens the tab that was open last);
  * - `song/{song}`, and `song/{song}/edit` for its editor;
  * - `setlist/{setlist}/{song}` — a song read from a setlist, which follows the pager from song to song;
  * - `import` — the import screen, which an address opened on its own names nothing for, since what it shows is an
@@ -55,7 +56,10 @@ internal object BrowserRoutes {
                     if (viewModel.setlistsSearch.isOpen.value) add("$SETLISTS/$SEARCH")
                 }
 
-                CampfireDestination.Settings -> add("$SETTINGS/${viewModel.settingsTab.pathSegment}")
+                CampfireDestination.Settings -> {
+                    add("$SETTINGS/${SettingsTab.GENERAL.pathSegment}")
+                    if (viewModel.settingsTab != SettingsTab.GENERAL) add("$SETTINGS/${viewModel.settingsTab.pathSegment}")
+                }
                 is CampfireDestination.SongDetails -> {
                     val song = viewModel.currentSongFileName(destination)?.let(::songPathSegment).orEmpty()
                     add(destination.setlistFileName?.let { "$SETLIST/${setlistPathSegment(it)}/$song" } ?: "$SONG/$song")
@@ -69,10 +73,13 @@ internal object BrowserRoutes {
 
     /**
      * How many history entries [state] makes, which is the size [paths] has once the app is there: one per screen of
-     * the back stack, and one more for each list screen whose search is open.
+     * the back stack, one more for each list screen whose search is open, and one more for a settings screen open on a
+     * tab other than General.
      */
     fun entryCount(state: NavigationState) = state.backStack.size + state.backStack.count { destination ->
-        destination == CampfireDestination.Songs && state.isSongsSearchOpen || destination == CampfireDestination.Setlists && state.isSetlistsSearchOpen
+        destination == CampfireDestination.Songs && state.isSongsSearchOpen ||
+                destination == CampfireDestination.Setlists && state.isSetlistsSearchOpen ||
+                destination == CampfireDestination.Settings && state.settingsTab != SettingsTab.GENERAL
     }
 
     /**

@@ -27,12 +27,16 @@ The platform shells all live in the `ui` package next to `CampfireApp`, one per 
 - `wasmJsMain/ui/navigation/` — the web build's addresses. `BrowserRoutes` maps where the user is to the path of
   every history entry that should exist (one per step a back gesture would take: a screen of the back stack, or an open
   search), and a path back to a `NavigationState` against the library, a missing song or setlist resolving to nothing.
+  A settings tab other than General is an entry of its own on top of `settings/general`, since a Back from it goes to
+  General first (`isSettingsBackToGeneral`): the Back then lands on an entry that is already there, where a General
+  pushed again after it would have been an entry added without a user gesture, which Chrome's Back skips — taking the
+  next Back off the page rather than to the songs.
   Performance mode leaves no way into the editor, an address included: `song/{song}/edit` opens the song alone while it
   is on (the history then writes `song/{song}` over it), and Forward to an editor's entry stops at the song under it.
   A song is named by its file name without `.cho` (a file with another extension keeps it), a setlist without
   `.setlist.json`, both percent-encoded with `~` escaped too, since the site's 404 page carries `&` as `~and~`.
   `BrowserHistoryEffect` keeps the history in step with the app, which decides: a change of the app is written as a
-  `pushState`, a `replaceState` (a settings tab, a song paged to in a setlist, a renamed file) or a `history.go` back to
+  `pushState`, a `replaceState` (one settings tab after another, a song paged to in a setlist, a renamed file) or a `history.go` back to
   the depth wanted, and every entry is stamped with its depth, which is how a `popstate` says where the browser went. A
   `popstate` to a shallower entry is sent into the navigation event dispatcher through a `DirectNavigationEventInput`,
   exactly as Escape is, so a dialog, a menu, a sheet, a search or the editor's unsaved changes question answers it
