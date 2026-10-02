@@ -153,6 +153,13 @@ localized in both languages.
   nothing over a short gradient instead (`fadingTopEdge` / `fadingVerticalEdges` in `:presentation`'s
   `components/EdgeFade.kt`, and `ListTopFade` for the list screens' cards), and the bars stay flat in the background
   color. A new scrolling container gets the same treatment, not Material's scrolled-under elevation.
+- **A sheet or a dialog holds as little still as it can, and the rest scrolls**: on a small phone with the keyboard
+  up (360 × 640 dp leaves about 330 dp above it) every pinned row — a header, tabs, a field, a row of chips, a bar of
+  buttons under the content — is taken from the one scrolling part, and a few of them leave it no room at all. What is
+  only set once (filters, query fields that a search button runs, a credit line) goes into the scrolling content as
+  its first or last item; what finishes the sheet (Save, Remove) goes into its header (`CampfireBottomSheet`'s
+  `actions`); only the header and what is typed into throughout (a search field) or switches the whole content (tabs)
+  stay pinned. Count the pinned height against that screen before adding anything that does not scroll.
 - `:app:android` and `:app:baselineprofile` are plain Android modules, `:app:desktop` a plain JVM one, `:app:ios`
   Kotlin/Native-only and `:app:web` Kotlin/Wasm-only; every other module (`:presentation` and `:chordpro` included) is
   a multiplatform library.

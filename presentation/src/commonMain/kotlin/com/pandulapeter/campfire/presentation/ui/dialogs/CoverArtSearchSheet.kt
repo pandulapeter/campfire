@@ -21,7 +21,6 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -40,12 +39,12 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Button
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
@@ -56,7 +55,6 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
@@ -88,6 +86,7 @@ import com.pandulapeter.campfire.presentation.resources.cover_art_search_loading
 import com.pandulapeter.campfire.presentation.resources.cover_art_search_no_results
 import com.pandulapeter.campfire.presentation.resources.cover_art_search_remove
 import com.pandulapeter.campfire.presentation.resources.ic_check
+import com.pandulapeter.campfire.presentation.resources.ic_delete
 import com.pandulapeter.campfire.presentation.resources.retry
 import com.pandulapeter.campfire.presentation.resources.save
 import com.pandulapeter.campfire.presentation.resources.song_details_change_cover_art
@@ -97,6 +96,7 @@ import com.pandulapeter.campfire.presentation.resources.songs_new_song_artist
 import com.pandulapeter.campfire.presentation.resources.songs_new_song_title
 import com.pandulapeter.campfire.presentation.ui.CampfireViewModel
 import com.pandulapeter.campfire.presentation.ui.components.CoverArt
+import com.pandulapeter.campfire.presentation.ui.components.HideKeyboardWhenScrolledDown
 import com.pandulapeter.campfire.presentation.ui.components.MAX_SEARCH_QUERY_LENGTH
 import com.pandulapeter.campfire.presentation.ui.components.SegmentedChoice
 import com.pandulapeter.campfire.presentation.ui.components.fadingVerticalEdges
@@ -154,6 +154,29 @@ internal fun CoverArtSearchSheet(
         title = stringResource(if (dialog.song.coverArtUrl == null) Res.string.song_details_set_cover_art else Res.string.song_details_change_cover_art),
         subtitle = songLabel(dialog.song),
         sheetMaxWidth = SHEET_MAX_WIDTH,
+        actions = { close ->
+            CoverArtSearchActions(
+                canRemove = dialog.song.coverArtUrl != null,
+                canSave = when (mode) {
+                    CoverArtSheetMode.SEARCH -> selectedUrl != null
+                    CoverArtSheetMode.ADDRESS -> usableAddress != null && usableAddress != dialog.song.coverArtUrl
+                },
+                onRemove = {
+                    viewModel.showDialog(CampfireViewModel.DialogType.RemoveSongCoverArt(song = dialog.song, isEditorDraft = dialog.isEditorDraft))
+                },
+                onSave = {
+                    viewModel.setSongCoverArt(
+                        fileName = dialog.song.fileName,
+                        isEditorDraft = dialog.isEditorDraft,
+                        url = when (mode) {
+                            CoverArtSheetMode.SEARCH -> selectedUrl
+                            CoverArtSheetMode.ADDRESS -> usableAddress
+                        },
+                    )
+                    close()
+                },
+            )
+        },
         onDismiss = { viewModel.dismissSheet(dialog) },
     ) { contentPadding ->
         SegmentedChoice(
@@ -174,7 +197,21 @@ internal fun CoverArtSearchSheet(
             transitionSpec = { fadeIn() togetherWith fadeOut() },
         ) { currentMode ->
             when (currentMode) {
-                CoverArtSheetMode.SEARCH -> Column(modifier = Modifier.fillMaxSize()) {
+                CoverArtSheetMode.SEARCH -> CoverArtResults(
+                    modifier = Modifier.fillMaxSize(),
+                    contentPadding = contentPadding,
+                    state = searchState,
+                    unavailableKeys = unavailableKeys,
+                    selectedUrl = selectedUrl,
+                    onSelected = { selectedUrl = it.coverArtUrl.takeUnless { url -> url == selectedUrl } },
+                    onUnavailable = { candidate ->
+                        unavailableKeys += candidate.key
+                        if (candidate.coverArtUrl == selectedUrl) {
+                            selectedUrl = null
+                        }
+                    },
+                    onRetry = search,
+                ) {
                     CoverArtQueryFields(
                         artist = artist,
                         album = album,
@@ -185,24 +222,11 @@ internal fun CoverArtSearchSheet(
                         canSearch = query.isSearchable,
                         onSearch = search,
                     )
-                    CoverArtResults(
-                        modifier = Modifier.weight(1f),
-                        state = searchState,
-                        unavailableKeys = unavailableKeys,
-                        selectedUrl = selectedUrl,
-                        onSelected = { selectedUrl = it.coverArtUrl.takeUnless { url -> url == selectedUrl } },
-                        onUnavailable = { candidate ->
-                            unavailableKeys += candidate.key
-                            if (candidate.coverArtUrl == selectedUrl) {
-                                selectedUrl = null
-                            }
-                        },
-                        onRetry = search,
-                    )
                 }
 
                 CoverArtSheetMode.ADDRESS -> CoverArtAddress(
                     modifier = Modifier.fillMaxSize(),
+                    contentPadding = contentPadding,
                     address = address,
                     usableAddress = usableAddress,
                     onAddressChange = { address = it },
@@ -210,29 +234,6 @@ internal fun CoverArtSearchSheet(
                 )
             }
         }
-        CoverArtSearchActions(
-            contentPadding = contentPadding,
-            canRemove = dialog.song.coverArtUrl != null,
-            canSave = when (mode) {
-                CoverArtSheetMode.SEARCH -> selectedUrl != null
-                CoverArtSheetMode.ADDRESS -> usableAddress != null && usableAddress != dialog.song.coverArtUrl
-            },
-            shouldShowAttribution = mode == CoverArtSheetMode.SEARCH,
-            onRemove = {
-                viewModel.showDialog(CampfireViewModel.DialogType.RemoveSongCoverArt(song = dialog.song, isEditorDraft = dialog.isEditorDraft))
-            },
-            onSave = {
-                viewModel.setSongCoverArt(
-                    fileName = dialog.song.fileName,
-                    isEditorDraft = dialog.isEditorDraft,
-                    url = when (mode) {
-                        CoverArtSheetMode.SEARCH -> selectedUrl
-                        CoverArtSheetMode.ADDRESS -> usableAddress
-                    },
-                )
-                close()
-            },
-        )
     }
 }
 
@@ -245,6 +246,10 @@ private enum class CoverArtSheetMode {
 /**
  * The three things a record is found by. Artist and album share a row, since those two name a record, with the title
  * and the button under them, since the title is what is searched by only where the album is left empty.
+ *
+ * They are the first item of the results rather than held still above them: with the keyboard up on a small phone the
+ * sheet's header, its tabs and these two rows left the covers no room at all, and the fields are done with once the
+ * search has run, which is when the covers are wanted.
  */
 @Composable
 private fun CoverArtQueryFields(
@@ -257,7 +262,7 @@ private fun CoverArtQueryFields(
     canSearch: Boolean,
     onSearch: () -> Unit,
 ) = Column(
-    modifier = Modifier.fillMaxWidth().padding(start = 16.dp, end = 16.dp, top = 8.dp),
+    modifier = Modifier.fillMaxWidth(),
     verticalArrangement = Arrangement.spacedBy(8.dp),
 ) {
     Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
@@ -321,88 +326,120 @@ private fun CoverArtQueryField(
  * running or waiting for the service, that it failed, or that it found nothing worth showing. The catalogues answer
  * one after the other, so the grid is shown as soon as either has found something, the other's records joining it at
  * the end, with an indicator closing the grid for as long as one of them is still being waited for.
+ *
+ * Everything on the search tab is one scrolling grid — the [fields] first, as an item across its whole width, and the
+ * credit to the services last — since the only parts of the sheet held still are its header and its tabs. Whatever
+ * stands in place of the records is an item of the grid too, so it fades in and out with them as they arrive.
  */
 @Composable
 private fun CoverArtResults(
     modifier: Modifier = Modifier,
+    contentPadding: PaddingValues,
     state: CampfireViewModel.CoverArtSearchState,
     unavailableKeys: Set<String>,
     selectedUrl: String?,
     onSelected: (CoverArtCandidate) -> Unit,
     onUnavailable: (CoverArtCandidate) -> Unit,
     onRetry: () -> Unit,
+    fields: @Composable () -> Unit,
 ) {
     val results = (state as? CampfireViewModel.CoverArtSearchState.Active)?.results
     val candidates = remember(results, unavailableKeys) { results?.candidates?.filterNot { it.key in unavailableKeys }.orEmpty() }
-    AnimatedContent(
-        modifier = modifier,
-        targetState = when {
-            results == null -> ResultsContent.HINT
-            candidates.isNotEmpty() -> ResultsContent.GRID
-            // Only MusicBrainz ever asks to be waited for, so the line saying so is only true once nothing else is left.
-            !results.isComplete -> if (results.busy.containsAll(results.pending)) ResultsContent.BUSY else ResultsContent.LOADING
-            results.failed.isNotEmpty() -> ResultsContent.FAILED
-            else -> ResultsContent.NO_RESULTS
-        },
-        transitionSpec = { fadeIn() togetherWith fadeOut() },
-        contentAlignment = Alignment.TopCenter,
-    ) { content ->
-        when (content) {
-            ResultsContent.GRID -> {
-                val gridState = rememberLazyGridState()
-                LazyVerticalGrid(
-                    modifier = Modifier.fillMaxSize().fadingVerticalEdges(gridState),
-                    state = gridState,
-                    columns = GridCells.Adaptive(TILE_MIN_WIDTH),
-                    contentPadding = PaddingValues(16.dp),
-                    horizontalArrangement = Arrangement.spacedBy(12.dp),
-                    verticalArrangement = Arrangement.spacedBy(12.dp),
+    val content = when {
+        results == null -> ResultsContent.HINT
+        candidates.isNotEmpty() -> ResultsContent.GRID
+        // Only MusicBrainz ever asks to be waited for, so the line saying so is only true once nothing else is left.
+        !results.isComplete -> if (results.busy.containsAll(results.pending)) ResultsContent.BUSY else ResultsContent.LOADING
+        results.failed.isNotEmpty() -> ResultsContent.FAILED
+        else -> ResultsContent.NO_RESULTS
+    }
+    val gridState = rememberLazyGridState()
+    HideKeyboardWhenScrolledDown(gridState)
+    LazyVerticalGrid(
+        modifier = modifier.fadingVerticalEdges(gridState),
+        state = gridState,
+        columns = GridCells.Adaptive(TILE_MIN_WIDTH),
+        contentPadding = PaddingValues(
+            start = 16.dp,
+            end = 16.dp,
+            top = 16.dp,
+            bottom = contentPadding.calculateBottomPadding(),
+        ),
+        horizontalArrangement = Arrangement.spacedBy(12.dp),
+        verticalArrangement = Arrangement.spacedBy(12.dp),
+    ) {
+        item(
+            key = FIELDS_ITEM_KEY,
+            span = { GridItemSpan(maxLineSpan) },
+        ) {
+            fields()
+        }
+        if (content == ResultsContent.GRID) {
+            items(
+                items = candidates,
+                key = { it.key },
+            ) { candidate ->
+                CoverArtTile(
+                    modifier = Modifier.animateItem(),
+                    candidate = candidate,
+                    isSelected = candidate.coverArtUrl == selectedUrl,
+                    onClick = { onSelected(candidate) },
+                    onUnavailable = { onUnavailable(candidate) },
+                )
+            }
+            if (results?.isComplete == false) {
+                item(
+                    key = LOADING_ITEM_KEY,
+                    span = { GridItemSpan(maxLineSpan) },
                 ) {
-                    items(
-                        items = candidates,
-                        key = { it.key },
-                    ) { candidate ->
-                        CoverArtTile(
-                            modifier = Modifier.animateItem(),
-                            candidate = candidate,
-                            isSelected = candidate.coverArtUrl == selectedUrl,
-                            onClick = { onSelected(candidate) },
-                            onUnavailable = { onUnavailable(candidate) },
-                        )
+                    Box(
+                        modifier = Modifier.animateItem().fillMaxWidth().padding(vertical = 8.dp),
+                        contentAlignment = Alignment.Center,
+                    ) {
+                        CircularProgressIndicator()
                     }
-                    if (results?.isComplete == false) {
-                        item(
-                            key = LOADING_ITEM_KEY,
-                            span = { GridItemSpan(maxLineSpan) },
-                        ) {
-                            Box(
-                                modifier = Modifier.animateItem().fillMaxWidth().padding(vertical = 8.dp),
-                                contentAlignment = Alignment.Center,
-                            ) {
-                                CircularProgressIndicator()
-                            }
+                }
+            }
+        } else {
+            item(
+                // Keyed by what it says, so that one message fades out as the next fades in rather than being swapped.
+                key = content.name,
+                span = { GridItemSpan(maxLineSpan) },
+            ) {
+                when (content) {
+                    ResultsContent.LOADING, ResultsContent.BUSY -> CoverArtSearchMessage(
+                        modifier = Modifier.animateItem(),
+                        text = stringResource(if (content == ResultsContent.BUSY) Res.string.cover_art_search_busy else Res.string.cover_art_search_loading),
+                    ) {
+                        CircularProgressIndicator()
+                    }
+
+                    ResultsContent.FAILED -> CoverArtSearchMessage(
+                        modifier = Modifier.animateItem(),
+                        text = stringResource(Res.string.cover_art_search_failed),
+                    ) {
+                        OutlinedButton(onClick = onRetry) {
+                            Text(stringResource(Res.string.retry))
                         }
                     }
+
+                    ResultsContent.NO_RESULTS -> CoverArtSearchMessage(
+                        modifier = Modifier.animateItem(),
+                        text = stringResource(Res.string.cover_art_search_no_results),
+                    )
+
+                    ResultsContent.HINT, ResultsContent.GRID -> CoverArtSearchMessage(
+                        modifier = Modifier.animateItem(),
+                        text = stringResource(Res.string.cover_art_search_hint),
+                    )
                 }
             }
-
-            ResultsContent.LOADING, ResultsContent.BUSY -> CoverArtSearchMessage(
-                text = stringResource(if (content == ResultsContent.BUSY) Res.string.cover_art_search_busy else Res.string.cover_art_search_loading),
-            ) {
-                CircularProgressIndicator()
-            }
-
-            ResultsContent.FAILED -> CoverArtSearchMessage(
-                text = stringResource(Res.string.cover_art_search_failed),
-            ) {
-                OutlinedButton(onClick = onRetry) {
-                    Text(stringResource(Res.string.retry))
-                }
-            }
-
-            ResultsContent.NO_RESULTS -> CoverArtSearchMessage(text = stringResource(Res.string.cover_art_search_no_results))
-
-            ResultsContent.HINT -> CoverArtSearchMessage(text = stringResource(Res.string.cover_art_search_hint))
+        }
+        item(
+            key = ATTRIBUTION_ITEM_KEY,
+            span = { GridItemSpan(maxLineSpan) },
+        ) {
+            CoverArtAttribution(modifier = Modifier.animateItem())
         }
     }
 }
@@ -425,13 +462,18 @@ private enum class ResultsContent {
 @Composable
 private fun CoverArtAddress(
     modifier: Modifier = Modifier,
+    contentPadding: PaddingValues,
     address: String,
     usableAddress: String?,
     onAddressChange: (String) -> Unit,
     onDone: () -> Unit,
     scrollState: ScrollState = rememberScrollState(),
 ) = Column(
-    modifier = modifier.fadingVerticalEdges(scrollState).verticalScroll(scrollState).padding(16.dp),
+    modifier = modifier
+        .fadingVerticalEdges(scrollState)
+        .verticalScroll(scrollState)
+        .padding(start = 16.dp, end = 16.dp, top = 16.dp)
+        .padding(contentPadding),
     horizontalAlignment = Alignment.CenterHorizontally,
     verticalArrangement = Arrangement.spacedBy(16.dp),
 ) {
@@ -510,10 +552,11 @@ private enum class AddressPreviewContent {
 
 @Composable
 private fun CoverArtSearchMessage(
+    modifier: Modifier = Modifier,
     text: String,
     action: (@Composable () -> Unit)? = null,
 ) = Column(
-    modifier = Modifier.fillMaxWidth().padding(horizontal = 24.dp, vertical = 32.dp),
+    modifier = modifier.fillMaxWidth().padding(horizontal = 8.dp, vertical = 32.dp),
     horizontalAlignment = Alignment.CenterHorizontally,
     verticalArrangement = Arrangement.spacedBy(16.dp),
 ) {
@@ -595,45 +638,51 @@ private fun CoverArtTile(
 }
 
 /**
- * Save and, where the song has a cover to take off, Remove, with the credit to the services under them while their
- * records are on screen: the records and the covers are theirs, and naming them is what they ask of an app that shows
- * them.
+ * Save and, where the song has a cover to take off, Remove, at the end of the sheet's header rather than in a bar of
+ * their own under the results: a bar held at the bottom of the sheet sat on the keyboard and took the room the covers
+ * had left. Remove is the bin rather than a labelled button, since it is the rare one of the two and asks before it
+ * does anything.
  */
 @Composable
 private fun CoverArtSearchActions(
-    contentPadding: PaddingValues,
     canRemove: Boolean,
     canSave: Boolean,
-    shouldShowAttribution: Boolean,
     onRemove: () -> Unit,
     onSave: () -> Unit,
-) = Column(
-    modifier = Modifier.fillMaxWidth().padding(start = 16.dp, end = 16.dp, top = 8.dp).padding(contentPadding),
+) = Row(
+    verticalAlignment = Alignment.CenterVertically,
 ) {
-    Row(
-        verticalAlignment = Alignment.CenterVertically,
-    ) {
-        if (canRemove) {
-            TextButton(onClick = onRemove) {
-                Text(stringResource(Res.string.cover_art_search_remove))
-            }
-        }
-        Spacer(modifier = Modifier.weight(1f))
-        Button(
-            enabled = canSave,
-            onClick = onSave,
-        ) {
-            Text(stringResource(Res.string.save))
+    if (canRemove) {
+        IconButton(onClick = onRemove) {
+            Icon(
+                painter = painterResource(Res.drawable.ic_delete),
+                contentDescription = stringResource(Res.string.cover_art_search_remove),
+            )
         }
     }
-    // Kept in the layout on the address tab, only unseen, so that switching tabs does not move the buttons above it.
-    Text(
-        modifier = Modifier.padding(top = 8.dp).alpha(if (shouldShowAttribution) 1f else 0f),
-        text = stringResource(Res.string.cover_art_search_attribution),
-        style = MaterialTheme.typography.labelSmall,
-        color = MaterialTheme.colorScheme.onSurfaceVariant,
-    )
+    Button(
+        modifier = Modifier.padding(start = 4.dp, end = 8.dp),
+        enabled = canSave,
+        onClick = onSave,
+    ) {
+        Text(stringResource(Res.string.save))
+    }
 }
+
+/**
+ * The credit to the services, closing the search tab's grid: the records and the covers are theirs, and naming them is
+ * what they ask of an app that shows them.
+ */
+@Composable
+private fun CoverArtAttribution(
+    modifier: Modifier = Modifier,
+) = Text(
+    modifier = modifier.fillMaxWidth().padding(top = 4.dp),
+    text = stringResource(Res.string.cover_art_search_attribution),
+    style = MaterialTheme.typography.labelSmall,
+    color = MaterialTheme.colorScheme.onSurfaceVariant,
+    textAlign = TextAlign.Center,
+)
 
 /** Wide enough for four or five covers side by side on a tablet or a desktop window, where a sheet is otherwise 640dp. */
 private val SHEET_MAX_WIDTH = 840.dp
@@ -643,4 +692,6 @@ private val ADDRESS_PREVIEW_DELAY = 500.milliseconds
 
 /** Longer than any address a cover is found at, and short enough that the field's saved state stays small. */
 private const val MAX_ADDRESS_LENGTH = 2048
+private const val FIELDS_ITEM_KEY = "fields"
 private const val LOADING_ITEM_KEY = "loading"
+private const val ATTRIBUTION_ITEM_KEY = "attribution"

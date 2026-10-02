@@ -1683,17 +1683,6 @@ private fun SongPicker(
             placeholder = stringResource(Res.string.songs_search),
             onQueryChange = { query = it },
         )
-        PickerFilters(
-            filters = filters,
-            selectedTags = activeTags,
-            selectedLanguages = activeLanguages,
-            tagSortingMode = userPreferences?.tagSortingMode ?: UserPreferences.LabelSortingMode.BY_USAGE,
-            languageSortingMode = userPreferences?.languageSortingMode ?: UserPreferences.LabelSortingMode.BY_USAGE,
-            onTagClicked = { tag -> selectedTags = if (tag in activeTags) selectedTags - tag else selectedTags + tag },
-            onLanguageClicked = { code -> selectedLanguages = if (code in activeLanguages) selectedLanguages - code else selectedLanguages + code },
-            onTagSortingModeSelected = viewModel::setTagSortingMode,
-            onLanguageSortingModeSelected = viewModel::setLanguageSortingMode,
-        )
         PickerList(
             contentPadding = contentPadding,
             sortingMode = userPreferences?.sortingMode,
@@ -1703,6 +1692,24 @@ private fun SongPicker(
                 songs.isEmpty() -> stringResource(Res.string.songs_empty_title)
                 matches.isEmpty() && (query.isNotBlank() || isFiltered) -> stringResource(Res.string.songs_no_search_results)
                 else -> null
+            },
+            revealRowsKey = query.takeIf { it.isNotBlank() },
+            header = if (filters.tags.isEmpty() && filters.languages.isEmpty()) null else {
+                {
+                    PickerFilters(
+                        filters = filters,
+                        selectedTags = activeTags,
+                        selectedLanguages = activeLanguages,
+                        tagSortingMode = userPreferences?.tagSortingMode ?: UserPreferences.LabelSortingMode.BY_USAGE,
+                        languageSortingMode = userPreferences?.languageSortingMode ?: UserPreferences.LabelSortingMode.BY_USAGE,
+                        onTagClicked = { tag -> selectedTags = if (tag in activeTags) selectedTags - tag else selectedTags + tag },
+                        onLanguageClicked = { code ->
+                            selectedLanguages = if (code in activeLanguages) selectedLanguages - code else selectedLanguages + code
+                        },
+                        onTagSortingModeSelected = viewModel::setTagSortingMode,
+                        onLanguageSortingModeSelected = viewModel::setLanguageSortingMode,
+                    )
+                }
             },
         ) { listState ->
             items(
@@ -1726,14 +1733,15 @@ private fun SongPicker(
 }
 
 /**
- * The tags of the library as a row of chips under the [SongPicker]'s search field, and its languages as a second row
+ * The tags of the library as a row of chips at the top of the [SongPicker]'s list, and its languages as a second row
  * under them, each where there are any to offer. Rows that scroll sideways rather than the wrapping groups of the songs
  * screen's filters: a library can carry a hundred tags, and the sheet is there for the songs under them, which a
  * wrapping block of chips would push off the screen. The languages carry their mark the way they do under a song in
  * the lists, since neither row has a section title to name it.
  *
- * The list's rows fade out under them as they scroll up. A library with nothing to filter by gets neither row, and its
- * list starts right under the search field.
+ * They are the first item of the list rather than pinned under the search field: with the keyboard up on a small
+ * phone, the header, the field and two rows of chips held still left the list itself no room at all, and a chip is
+ * picked once where the field is typed into throughout. A library with nothing to filter by gets neither row.
  *
  * Selected chips stay where they are rather than moving to the front, for the reason the picker's rows do: a chip that
  * jumped away from under the finger that had just tapped it would have to be found again to be turned off. The order
@@ -1753,14 +1761,13 @@ private fun PickerFilters(
     onTagSortingModeSelected: (UserPreferences.LabelSortingMode) -> Unit,
     onLanguageSortingModeSelected: (UserPreferences.LabelSortingMode) -> Unit,
 ) {
-    if (filters.languages.isEmpty() && filters.tags.isEmpty()) return
     val appLanguageCode = currentLanguage.value.code
     val tags = remember(filters.tags, tagSortingMode) { filters.tags.orderedBy(tagSortingMode) }
     val languages = remember(filters.languages, languageSortingMode, appLanguageCode) {
         filters.languages.orderedBy(languageSortingMode) { code -> languageName(code = code, appLanguageCode = appLanguageCode) ?: code.uppercase() }
     }
     Column(
-        modifier = modifier.fillMaxWidth().padding(top = CHIP_GAP),
+        modifier = modifier.fillMaxWidth(),
         verticalArrangement = Arrangement.spacedBy(CHIP_GAP),
     ) {
         if (filters.tags.isNotEmpty()) {
@@ -1844,6 +1851,10 @@ private fun PickerSearchField(
  * @param sortingMode The order the rows are in, a change of which sends the list back to its first row once the
  *   reordered [contents] arrive ([ScrollToStartWhenChanged]).
  * @param noResultsText What to say in place of the rows, null while there is nothing to say.
+ * @param header What the list starts with and scrolls away with the rows, above what it says in their place, so that a
+ *   filter that left nothing can still be turned off.
+ * @param revealRowsKey Scrolls the [header] out of the way whenever it changes to something other than null - the
+ *   search being typed, since the keyboard is up then and the rows it finds are what there is room for.
  */
 @Composable
 private fun ColumnScope.PickerList(
@@ -1851,11 +1862,19 @@ private fun ColumnScope.PickerList(
     sortingMode: Any?,
     contents: Any?,
     noResultsText: String?,
+    revealRowsKey: Any? = null,
+    header: (@Composable () -> Unit)? = null,
     content: LazyListScope.(LazyListState) -> Unit,
 ) {
     val density = LocalDensity.current
     var tallestHeight by remember { mutableIntStateOf(0) }
     val listState = rememberLazyListState()
+    val hasHeader = header != null
+    LaunchedEffect(revealRowsKey, hasHeader) {
+        if (revealRowsKey != null && hasHeader) {
+            listState.scrollToItem(1)
+        }
+    }
     HideKeyboardWhenScrolledDown(listState)
     ScrollToStartWhenChanged(
         listState = listState,
@@ -1867,8 +1886,8 @@ private fun ColumnScope.PickerList(
             .weight(1f, fill = false)
             .heightIn(min = with(density) { tallestHeight.toDp() })
             .onSizeChanged { tallestHeight = maxOf(tallestHeight, it.height) }
-            // The rows fade out as they scroll up under the search field and the filter chips, which is the edge
-            // between the two everywhere else in the app too.
+            // The rows fade out as they scroll up under the search field, which is the edge between the two
+            // everywhere else in the app too.
             .fadingTopEdge(listState),
         state = listState,
         // The gap under the search field is the list's own content padding rather than a padding around the list, so
@@ -1878,6 +1897,13 @@ private fun ColumnScope.PickerList(
             bottom = contentPadding.calculateBottomPadding(),
         ),
     ) {
+        if (header != null) {
+            item(key = "header") {
+                Column(modifier = Modifier.padding(bottom = PICKER_LIST_TOP_PADDING)) {
+                    header()
+                }
+            }
+        }
         if (noResultsText != null) {
             item(key = "no_results") {
                 Text(
@@ -1902,7 +1928,8 @@ private fun ColumnScope.PickerList(
  *
  * @param title What the sheet is about, named in its [SheetHeader].
  * @param subtitle What the sheet acts on, under [title]: the song or the setlist it was opened for. Left out when blank.
- * @param actions Buttons at the end of the [SheetHeader], across from the close button, such as the order of a list.
+ * @param actions Buttons at the end of the [SheetHeader], across from the close button, such as the order of a list or
+ *   the button that finishes what the sheet is for. They are handed the same close the header's close button runs.
  * @param onDismiss Has to dismiss this sheet's own dialog and nothing else (`CampfireViewModel.dismissSheet`): it is
  *   called from the end of a hide animation, by which time another dialog may have taken the sheet's place.
  * @param content Can close the sheet the way its close button does ([BottomSheetContentScope.close]), for a sheet
@@ -1914,7 +1941,7 @@ internal fun CampfireBottomSheet(
     title: String,
     subtitle: String = "",
     sheetMaxWidth: Dp = BottomSheetDefaults.SheetMaxWidth,
-    actions: (@Composable RowScope.() -> Unit)? = null,
+    actions: (@Composable RowScope.(close: () -> Unit) -> Unit)? = null,
     onDismiss: () -> Unit,
     content: @Composable BottomSheetContentScope.(contentPadding: PaddingValues) -> Unit,
 ) {
@@ -1998,7 +2025,7 @@ internal class BottomSheetContentScope(
 private fun SheetHeader(
     title: String,
     subtitle: String,
-    actions: (@Composable RowScope.() -> Unit)?,
+    actions: (@Composable RowScope.(close: () -> Unit) -> Unit)?,
     onClose: () -> Unit,
 ) = Row(
     // An action at the end sits as far from the edge as the close button does from the start.
@@ -2030,7 +2057,7 @@ private fun SheetHeader(
             )
         }
     }
-    actions?.invoke(this)
+    actions?.invoke(this, onClose)
 }
 
 private val SHEET_BOTTOM_PADDING = 16.dp

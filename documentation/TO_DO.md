@@ -8,9 +8,10 @@
  * https://mozilla.org/MPL/2.0/.
 -->
 # To do
-- Song cover art bottom sheet - too many sticky parts, scrolling part not visible on Fold with keyboard up
 - Metronome: documentation/metronome.md
 - Global sync status display ?
+- Dynamic scrim over backstacked screens during transitions
+- Fast scroller on the song details screen ?
 - Optional close confirmation dialog on relevant platforms
 - Haptic effects
 - Simplify adding comments / annotations
