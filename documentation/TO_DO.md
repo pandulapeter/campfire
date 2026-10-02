@@ -8,6 +8,12 @@
  * https://mozilla.org/MPL/2.0/.
 -->
 # To do
+- Multi-select for export (for example all songs by a tag)
+- Song selection bottom sheet should persist the tag selection. On start, the pre-selected chips should come first
+- Edit song screen padding between header components
+- Full-screen dialog appearance
+- Issues around auto-expanding dialogs, including web navigation and keyboard glitching
+- Edit screen fling issue on mobile (scroll snaps back to caret position)
 - Auto-add the first link card when opening the Add link dialog
 - Implement optionally auto-indexing similar sections within a song
 - Metronome: documentation/plans/metronome.md

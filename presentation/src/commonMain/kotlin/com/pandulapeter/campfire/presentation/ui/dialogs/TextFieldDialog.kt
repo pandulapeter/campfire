@@ -41,9 +41,15 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.input.nestedscroll.NestedScrollConnection
+import androidx.compose.ui.input.nestedscroll.NestedScrollSource
+import androidx.compose.ui.input.nestedscroll.nestedScroll
+import androidx.compose.ui.input.pointer.PointerEventPass
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.layout.Layout
 import androidx.compose.ui.platform.LocalDensity
@@ -62,19 +68,23 @@ import com.pandulapeter.campfire.presentation.ui.platform.CompactKeyboardEffect
 import com.pandulapeter.campfire.presentation.ui.platform.isTextFieldDialogWindowFullSize
 import com.pandulapeter.campfire.presentation.ui.platform.textFieldDialogInsetsPadding
 import com.pandulapeter.campfire.presentation.ui.platform.textFieldDialogProperties
+import kotlin.time.Duration.Companion.milliseconds
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.flow.first
 import org.jetbrains.compose.resources.painterResource
 
 /**
  * Material's `AlertDialog`, for every dialog that is typed into, which grows into a full screen one once the window
- * is too short for it and stays that way until it closes.
+ * is too short for it and shrinks back once there is room again.
  *
  * The window gets that short when the keyboard comes up in the web build, where it makes the page itself shorter (see
  * `app/web`), or in a phone held sideways: a centered dialog then keeps its title, its padding and its buttons and
  * squeezes what is between them, the field and the list being typed into, down to nothing. The full screen form puts
  * the close button, the title and the confirming button in one bar, the way a sheet's header does, and gives the rest
- * of the window to the content. It does not shrink back when the window grows again, which is what the keyboard going
- * away looks like: a list scrolled down puts it away ([HideKeyboardWhenScrolledDown]), and a dialog that turned back
- * into a small one under the finger scrolling it would move the very rows being read.
+ * of the window to the content. It shrinks back only once the window has grown clearly past the height it grew at, so
+ * that a window near that height does not switch it back and forth, and only once nothing is moving the content: a
+ * list scrolled down puts the keyboard away ([HideKeyboardWhenScrolledDown]), and a dialog that turned back into a
+ * small one under the finger scrolling it would move the very rows being read ([DialogGestureTracker]).
  *
  * Both forms are one layout whose parts move, rather than two dialogs: the content, with the focused field in it, is
  * the same node either way, so the field keeps its focus, and with it the keyboard, as the dialog grows around it. A
@@ -103,12 +113,15 @@ internal fun TextFieldDialog(
         (initialInsets.getTop(this) + initialInsets.getBottom(this)).toDp()
     }
     var isFullScreen by remember { mutableStateOf(initialAvailableHeight < FULL_SCREEN_HEIGHT) }
+    val gestureTracker = remember { DialogGestureTracker() }
     Dialog(
         onDismissRequest = onDismissRequest,
         properties = textFieldDialogProperties(isFullScreen),
     ) {
         BoxWithConstraints(
-            modifier = if (isFullScreen || isTextFieldDialogWindowFullSize) Modifier.fillMaxSize() else Modifier,
+            modifier = Modifier
+                .trackingGestures(gestureTracker)
+                .then(if (isFullScreen || isTextFieldDialogWindowFullSize) Modifier.fillMaxSize() else Modifier),
             contentAlignment = Alignment.Center,
         ) {
             if (isTextFieldDialogWindowFullSize && !isFullScreen) {
@@ -122,8 +135,16 @@ internal fun TextFieldDialog(
             // off twice.
             val imeHeight = with(density) { WindowInsets.ime.getBottom(this).toDp() }
             val coveredHeight = with(density) { (WindowInsets.safeDrawing.getTop(this) + WindowInsets.safeDrawing.getBottom(this)).toDp() }
+            // Restarted by every frame of the keyboard's slide, so the full screen form also waits for the keyboard
+            // to be gone before it shrinks back.
             LaunchedEffect(maxHeight, coveredHeight) {
-                if (maxHeight - coveredHeight < FULL_SCREEN_HEIGHT) isFullScreen = true
+                val availableHeight = maxHeight - coveredHeight
+                if (availableHeight < FULL_SCREEN_HEIGHT) {
+                    isFullScreen = true
+                } else if (isFullScreen && availableHeight >= FULL_SCREEN_HEIGHT + SHRINK_BACK_MARGIN) {
+                    gestureTracker.awaitSettled()
+                    isFullScreen = false
+                }
             }
             val isShortWindow = windowHeight < SHORT_WINDOW_HEIGHT
             CompactKeyboardEffect(isEnabled = isFullScreen && isShortWindow && imeHeight > 0.dp)
@@ -252,6 +273,42 @@ private fun FullScreenDialogBar(
     DialogButtonFlow(content = confirmButton)
 }
 
+/**
+ * Whether anything is moving the dialog's content, which the full screen form waits out before it shrinks back: a
+ * finger or a mouse button held down anywhere on it, or a list in it still scrolling, the fling after a drag and the
+ * mouse wheel included. The scrolling is counted rather than kept as state, since it changes on every frame of a
+ * scroll and only matters once the dialog is waiting.
+ */
+private class DialogGestureTracker : NestedScrollConnection {
+    var isPressed by mutableStateOf(false)
+    private var scrollCount = 0
+
+    override fun onPostScroll(consumed: Offset, available: Offset, source: NestedScrollSource): Offset {
+        if (consumed != Offset.Zero) scrollCount++
+        return Offset.Zero
+    }
+
+    /** Returns once nothing has been pressed or scrolled for [SETTLE_DURATION]. */
+    suspend fun awaitSettled() {
+        while (true) {
+            snapshotFlow { isPressed }.first { !it }
+            val scrollCountBefore = scrollCount
+            delay(SETTLE_DURATION)
+            if (!isPressed && scrollCount == scrollCountBefore) return
+        }
+    }
+}
+
+/** Reports what [tracker] waits out, watching the events on their way down without taking any of them. */
+private fun Modifier.trackingGestures(tracker: DialogGestureTracker) = nestedScroll(tracker)
+    .pointerInput(tracker) {
+        awaitPointerEventScope {
+            while (true) {
+                tracker.isPressed = awaitPointerEvent(PointerEventPass.Initial).changes.any { it.pressed }
+            }
+        }
+    }
+
 /** The row along the bottom of the dialog, in the color and the text style Material gives a dialog's buttons. */
 @Composable
 private fun DialogButtons(
@@ -333,6 +390,16 @@ private fun ProvideContentColorTextStyle(
  * and a centered dialog that is about one song spends half of it on its title, its padding and its buttons.
  */
 private val FULL_SCREEN_HEIGHT = 320.dp
+
+/**
+ * How far past [FULL_SCREEN_HEIGHT] the room has to grow before the full screen form shrinks back. The two forms do not
+ * measure the room alike on every platform (on iOS the small form's window keeps clear of the safe area as well), and a
+ * small form that measured itself under the height again would grow straight back.
+ */
+private val SHRINK_BACK_MARGIN = 48.dp
+
+/** How long nothing has to move the content before the full screen form shrinks back. */
+private val SETTLE_DURATION = 300.milliseconds
 private val FULL_SCREEN_BAR_HEIGHT = 64.dp
 
 /** The full screen form's bar in a short window, as tall as a touch target and no taller. */
