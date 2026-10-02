@@ -100,5 +100,41 @@ internal class PrintPdfWriterTest {
         assertFailsWith<IllegalArgumentException> { printPdfNumber(Float.NaN) }
     }
 
+    @Test fun rightToLeftRunsAreFoundWhole() {
+        fun glyph(run: Int, isRtl: Boolean = false) = PrintPdfText("x", 0f, 0f, 1f, 1f, PrintStyle(12), run, isRtl)
+        val glyphs = listOf(
+            glyph(0), glyph(0),
+            glyph(1, isRtl = true), glyph(1, isRtl = true),
+            glyph(2, isRtl = true), glyph(2), glyph(2), glyph(2, isRtl = true),
+            glyph(3, isRtl = true),
+        )
+        assertEquals(listOf(2..3, 4..7, 8..8), rtlRuns(glyphs))
+        assertEquals(emptyList(), rtlRuns(glyphs.take(2)))
+    }
+
+    @Test fun aRightToLeftRunCarriesItsLogicalTextAndLatinPagesAreUnchanged() = runTest {
+        suspend fun content(glyphs: List<PrintPdfText>): ByteArray {
+            val writer = PrintPdfWriter(100f, 100f, "Text")
+            writer.addPage(2, 2, ByteArray(2) { -1 }, glyphs)
+            val bytes = writer.finish()
+            val text = CharArray(bytes.size) { (bytes[it].toInt() and 255).toChar() }.concatToString()
+            val match = Regex("""<< /Filter /FlateDecode /Length (\d+) >>\nstream\n""").find(text)!!
+            val start = match.range.last + 1
+            return bytes.copyOfRange(start, start + match.groupValues[1].toInt())
+        }
+        val style = PrintStyle(12)
+        val image = "q 100 0 0 100 0 0 cm /Im0 Do Q\nBT 3 Tr\n/F0 12 Tf\n1 0 0 1 10 68 Tm [<01>"
+        val latin = listOf(PrintPdfText("a", 10f, 20f, 6f, 12f, style, 0), PrintPdfText("b", 50f, 20f, 6f, 12f, style, 1))
+        assertContentEquals(deflated("$image -2833.333 <02>] TJ\nET\n".encodeToByteArray()), content(latin))
+        val mixed = listOf(
+            PrintPdfText("a", 10f, 20f, 6f, 12f, style, 0),
+            PrintPdfText("\u05d0", 40f, 20f, 6f, 12f, style, 1, isRtl = true),
+            PrintPdfText("\u05d1", 34f, 20f, 6f, 12f, style, 1, isRtl = true),
+            PrintPdfText("b", 50f, 20f, 6f, 12f, style, 2),
+        )
+        val expected = "$image] TJ\n/Span << /ActualText <FEFF05d005d1> >> BDC\n[ -2000 <02> 1000 <03>] TJ\nEMC\n[ -833.333 <04>] TJ\nET\n"
+        assertContentEquals(deflated(expected.encodeToByteArray()), content(mixed))
+    }
+
     private suspend fun deflated(input: ByteArray) = PrintBytes().also { PrintDeflater().deflate(input, it) }.result()
 }

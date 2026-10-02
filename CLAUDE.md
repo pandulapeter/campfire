@@ -113,7 +113,7 @@ the file after the song or setlist, compressed with Flate by `PrintDeflater`, a 
 PDFs retain those page images and add invisible selectable text positioned from the same Compose shaping, with
 small glyphless Type 3 fonts and explicit ToUnicode maps. Only the printed content is included, in its printed key
 and with the chosen options; no original ChordPro or excluded metadata is embedded. New exports can be searched,
-copied and reimported without OCR; older image-only exports remain unreadable to the importer. Saving uses the existing `FilePicker` on every
+copied and reimported without OCR, a right-to-left run in its logical order through `ActualText`; older image-only exports remain unreadable to the importer. Saving uses the existing `FilePicker` on every
 platform, and Android and iOS offer Share in the app bar; the save button counts the pages as they are drawn, and is
 Cancel until the picker is up. The file is named from the song's header or the setlist's title, the way
 `ExportFileNames.kt` names a song (see `presentation/CLAUDE.md`). New controls and text written into PDFs are

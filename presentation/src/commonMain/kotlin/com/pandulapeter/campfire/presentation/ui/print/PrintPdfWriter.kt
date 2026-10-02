@@ -98,6 +98,11 @@ internal class PrintPdfWriter(
         val pageFonts = linkedSetOf<TextFont>()
         if (text.isNotEmpty()) {
             scratch.text("BT 3 Tr\n")
+            // A right-to-left run is written in logical order, so its clusters move leftwards and a reader that orders text
+            // by position would read it backwards: its logical text goes along as ActualText, around the whole run.
+            val marked = rtlRuns(text).associateBy { it.first }
+            val markedEnds = marked.values.mapTo(mutableSetOf()) { it.last }
+            var isArrayOpen = false
             var current: TextFont? = null
             var currentSize = 0f
             var currentRun = -1
@@ -109,16 +114,27 @@ internal class PrintPdfWriter(
                 val font = textFont(glyph)
                 val character = character(glyph)
                 pageFonts += font
+                marked[index]?.let { range ->
+                    if (isArrayOpen) scratch.text("] TJ\n")
+                    isArrayOpen = false
+                    val logical = text.subList(range.first, range.last + 1).joinToString("") { it.text }
+                    scratch.text("/Span << /ActualText <FEFF${printUtf16Hex(logical)}> >> BDC\n")
+                }
                 val startsAnotherRow = currentRun != glyph.run && glyph.x < nextX - 0.001f
                 if (current !== font || currentSize != glyph.height || currentY != glyph.y || startsAnotherRow) {
-                    if (current != null) scratch.text("] TJ\n")
+                    if (isArrayOpen) scratch.text("] TJ\n")
                     scratch.text("/${font.name} ${printPdfNumber(glyph.height)} Tf\n")
                     scratch.text("1 0 0 1 ${printPdfNumber(glyph.x)} ${printPdfNumber(height - glyph.y - glyph.height)} Tm [")
+                    isArrayOpen = true
                     current = font
                     currentSize = glyph.height
                     currentRun = glyph.run
                     currentY = glyph.y
                     nextX = glyph.x
+                } else if (!isArrayOpen) {
+                    // TJ has already moved the text matrix to where nextX says, so no Tm is needed after marked content.
+                    scratch.text("[")
+                    isArrayOpen = true
                 }
                 // TJ keeps a whole shaped run, and the runs that follow it along the same baseline, in one PDF text object,
                 // while retaining exact kerning and chord anchors.
@@ -127,8 +143,13 @@ internal class PrintPdfWriter(
                 scratch.text("<${font.codes.getValue(character).toString(16).padStart(2, '0')}>")
                 nextX = glyph.x + character.width * glyph.height / 1000
                 currentRun = glyph.run
+                if (index in markedEnds) {
+                    scratch.text("] TJ\nEMC\n")
+                    isArrayOpen = false
+                }
             }
-            scratch.text("] TJ\nET\n")
+            if (isArrayOpen) scratch.text("] TJ\n")
+            scratch.text("ET\n")
         }
         val uncompressed = scratch.result()
         scratch.reset()

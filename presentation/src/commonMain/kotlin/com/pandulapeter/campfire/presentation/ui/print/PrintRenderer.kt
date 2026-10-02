@@ -24,6 +24,7 @@ import androidx.compose.ui.text.drawText
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.ResolvedTextDirection
 import androidx.compose.ui.unit.Density
 import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.sp
@@ -116,7 +117,8 @@ internal class PrintRenderer(
                 // The chord layout adds invisible wrap opportunities and non-breaking padding, not song content.
                 val value = item.text.substring(start, offset).replace("\u200B", "").replace('\u00A0', ' ')
                 if (value.isNotEmpty()) add(PrintPdfText(value, item.x + box.left, item.y + box.top,
-                    box.width.coerceAtLeast(0.001f), box.height.coerceAtLeast(0.001f), item.style, run))
+                    box.width.coerceAtLeast(0.001f), box.height.coerceAtLeast(0.001f), item.style, run,
+                    isRtl = layout.getBidiRunDirection(start) == ResolvedTextDirection.Rtl))
             }
         }
     }

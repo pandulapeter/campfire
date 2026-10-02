@@ -117,12 +117,41 @@ internal object PdfTextExtractor {
             }
             val glyphs = mutableListOf<Positioned>()
             val activeForms = mutableSetOf<PdfStream>()
+            /**
+             * The glyphs shown since [from] (forms run inside the marked content included) replaced by the [actual] text a
+             * producer gave them, which is how a right-to-left run written in logical order reads in the right order. Text
+             * over glyphs on more than one baseline is left alone: Word and InDesign put a whole word over one hyphenated
+             * across a line break, and a span at the first line's baseline reaching back to the second line's margin would
+             * garble both lines.
+             */
+            fun replace(from: Int, actual: PdfString) {
+                if (from >= glyphs.size) return
+                val replaced = glyphs.subList(from, glyphs.size)
+                if (replaced.maxOf { it.y } - replaced.minOf { it.y } > replaced.minOf { it.span.size } * 0.22) return
+                val bytes = actual.bytes
+                if (bytes.size > MAX_ACTUAL_TEXT_BYTES) return
+                val isUtf16 = bytes.size >= 2 && bytes[0] == 0xfe.toByte() && bytes[1] == 0xff.toByte()
+                if (isUtf16 && bytes.size % 2 != 0) return
+                val text = if (isUtf16) PdfFont.utf16(bytes) else bytes.latin1()
+                // An empty replacement is how a producer marks a hyphen or a decoration as not being text.
+                if (text.isEmpty()) { replaced.clear(); return }
+                if (text.any { it == '\u0000' || it == '\ufffd' } || hasLoneSurrogate(text)) return
+                // The glyphs replaced stay charged, so a replacement around every glyph costs at most twice the text.
+                textBytes += text.length * 3
+                requireWithinLimit(textBytes <= ImportLimits.MAX_TEXT_FILE_SIZE && ++glyphCount <= MAX_GLYPHS) { "PDF text too large" }
+                val first = replaced.first()
+                val span = first.span.copy(text = text, start = replaced.minOf { it.span.start }, end = replaced.maxOf { it.span.end })
+                replaced.clear()
+                glyphs += Positioned(span, first.y)
+            }
             suspend fun interpret(data: ByteArray, resource: PdfDictionary?, initial: State, depth: Int = 0) {
                 require(depth <= 32)
                 val parser = PdfSyntax(data)
                 var state = initial.copy()
                 val saved = mutableListOf<State>()
                 val operands = mutableListOf<PdfValue>()
+                // Where each marked-content sequence open in this content began, and the text that stands for it, if any.
+                val marked = mutableListOf<Pair<Int, PdfString?>>()
                 fun n(index: Int, fallback: Double = 0.0) = operands.getOrNull(index).number(fallback)
                 fun matrix(values: List<PdfValue>): Matrix {
                     require(values.all { it.number().isFinite() && abs(it.number()) <= 1_000_000 })
@@ -174,6 +203,13 @@ internal object PdfTextExtractor {
                         "cm" -> state.ctm = state.ctm * matrix(operands)
                         "BT" -> { state.text = Matrix(); state.line = Matrix(); state.inText = true }
                         "ET" -> state.inText = false
+                        "BMC" -> marked += glyphs.size to null
+                        // A property list named rather than written inline is ordinary marked content.
+                        "BDC" -> marked += glyphs.size to ((operands.getOrNull(1) as? PdfDictionary)?.get("ActualText") as? PdfString)
+                        "EMC" -> if (marked.isNotEmpty()) {
+                            val (from, actual) = marked.removeAt(marked.lastIndex)
+                            if (actual != null) replace(from, actual)
+                        }
                         "Tf" -> {
                             val name = operands.firstOrNull().name()
                             val fontDictionary = file.dictionary(file.dictionary(resource?.get("Font"))?.get(name.orEmpty()))
@@ -481,4 +517,6 @@ internal object PdfTextExtractor {
     private const val MAX_GUTTER_POSITIONS = 4096.0
 
     private const val WORK_YIELD_INTERVAL = 4L shl 20
+
+    private const val MAX_ACTUAL_TEXT_BYTES = 64 shl 10
 }

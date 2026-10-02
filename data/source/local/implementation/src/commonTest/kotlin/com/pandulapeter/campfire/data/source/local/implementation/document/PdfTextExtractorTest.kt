@@ -256,6 +256,19 @@ class PdfTextExtractorTest {
     }
 
     @Test
+    fun actualTextOnOneBaselineReplacesItsGlyphs() = runTest {
+        suspend fun lines(content: String) = PdfTextExtractor.extract(PdfTestWriter.song(content)).pages.single().lines
+            .map { line -> line.spans.joinToString("") { it.text } }.filter { it.isNotEmpty() }
+        val shown = "BT /F1 10 Tf 1 0 0 1 60 700 Tm (b) Tj 1 0 0 1 50 700 Tm (a) Tj ET"
+        assertEquals(listOf("\u05d0\u05d1"), lines("/Span << /ActualText <FEFF05D005D1> >> BDC $shown EMC"))
+        val twoBaselines = "BT /F1 10 Tf 1 0 0 1 60 700 Tm (b) Tj 1 0 0 1 50 680 Tm (a) Tj ET"
+        assertEquals(listOf("b", "a"), lines("/Span << /ActualText <FEFF05D005D1> >> BDC $twoBaselines EMC"))
+        assertEquals(listOf("kept"), lines("/Span << /ActualText () >> BDC $shown EMC BT /F1 10 Tf 1 0 0 1 50 650 Tm (kept) Tj ET"))
+        assertEquals(listOf("a b"), lines("/P << /MCID 0 >> BDC $shown EMC EMC"))
+        assertEquals(listOf("a b"), lines("/Artifact BMC $shown EMC"))
+    }
+
+    @Test
     fun cachedReferenceChainsResolveEveryTimeAndCyclesAreRejected() {
         val writer = PdfTestWriter()
         writer.add("2 0 R")

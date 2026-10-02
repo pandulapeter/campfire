@@ -267,7 +267,10 @@ The PDF pipeline has four steps, each its own:
   `/Title` and a binary header line. Each page also carries invisible text (`3 Tr`) at the shaped rectangles, backed
   by tiny Type 3 fonts with empty glyph procedures, measured widths and ToUnicode maps. Consecutive shaped runs on one
   baseline, in one font and size and moving left to right, share one `TJ` text object with explicit advance adjustments, so dense columns do not look like vertical text to PDFium. Fonts preserve bold and
-  monospace classification for import and split after 255 distinct clusters. Content streams are compressed too;
+  monospace classification for import and split after 255 distinct clusters. A shaped run holding any right-to-left
+  cluster (`rtlRuns`, the whole run, so a number or a Latin word inside Hebrew stays in it) is wrapped in a `/Span`
+  with its logical text as `ActualText`, since its clusters move leftwards and a reader ordering text by position would
+  read it backwards; the importer honours that. Content streams are compressed too;
   no display fonts or font programs are embedded, and no visible glyph can differ from the preview.
 
 Only what is printed is included: the printed key, selected songs and visible options, not an attachment of the
