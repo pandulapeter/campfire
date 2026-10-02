@@ -9,7 +9,9 @@
  */
 package com.pandulapeter.campfire.presentation.ui.screens.setlists
 
+import androidx.compose.animation.animateContentSize
 import androidx.compose.animation.core.animateDpAsState
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Row
@@ -29,9 +31,12 @@ import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
+import androidx.compose.ui.platform.LocalWindowInfo
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.platform.LocalLayoutDirection
@@ -80,6 +85,7 @@ import com.pandulapeter.campfire.presentation.ui.components.ListUnderAppBar
 import com.pandulapeter.campfire.presentation.ui.components.NewItemMenu
 import com.pandulapeter.campfire.presentation.ui.components.HideKeyboardWhenScrolledDown
 import com.pandulapeter.campfire.presentation.ui.components.ListLayout
+import com.pandulapeter.campfire.presentation.ui.components.SHORT_WINDOW_HEIGHT
 import com.pandulapeter.campfire.presentation.ui.components.ScrollToTopWhenChanged
 import com.pandulapeter.campfire.presentation.ui.components.SearchableTopAppBar
 import com.pandulapeter.campfire.presentation.ui.components.SectionHeader
@@ -347,8 +353,17 @@ private fun SetlistList(
                             span = { GridItemSpan(maxLineSpan) },
                             contentType = "setlist_description",
                         ) {
+                            // A description of four lines is most of what a short window shows, and with the keyboard
+                            // of a search up it pushes the setlist's songs out of sight, so there it starts at two
+                            // lines and opens on a tap. The keyboard counts, since that is when the room runs out.
+                            var isExpanded by rememberSaveable { mutableStateOf(false) }
+                            val isCompactHeight = LocalWindowInfo.current.containerDpSize.height - contentPadding.calculateBottomPadding() < SHORT_WINDOW_HEIGHT
                             Text(
-                                modifier = listItemAnimation(listState, hasLoadedLibrary).fadingUnderListTop(topFade).padding(horizontal = 24.dp, vertical = 8.dp),
+                                modifier = listItemAnimation(listState, hasLoadedLibrary).fadingUnderListTop(topFade)
+                                    .animateContentSize().clickable(enabled = isCompactHeight) { isExpanded = !isExpanded }
+                                    .padding(horizontal = 24.dp, vertical = 8.dp),
+                                maxLines = if (isCompactHeight && !isExpanded) 2 else Int.MAX_VALUE,
+                                overflow = TextOverflow.Ellipsis,
                                 text = setlistWithSongs.setlist.description,
                                 style = MaterialTheme.typography.bodyMedium,
                                 color = MaterialTheme.colorScheme.onSurfaceVariant,

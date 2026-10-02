@@ -91,11 +91,12 @@ uninstall and nothing else does.
 ## Printing
 
 Song and setlist action menus have one export entry each (**Export song**, **Export setlist**), which opens the export
-screen titled the same (`presentation/ui/dialogs/ExportScreen.kt`), full screen over the app with Save as its floating action button and, on
-Android and iOS, Share in the app bar: there is no separate share or file export entry. Its first option is the format,
-with a line saying what each is for — a **PDF**, for printing, or the library's own files, for sharing with other
-Campfire users: **ChordPro** for a song, the `.cho` file as the library holds it, and **Zip** for a setlist, a setlist
-manifest (its `*.setlist.json`) next to its songs as ChordPro files. A setlist's songs are ticked off for either format
+screen titled the same (`presentation/ui/dialogs/ExportScreen.kt`), full screen over the app with Save as its floating
+action button (on a phone the options end above it and the preview is their first item, scrolling away with them; from
+520dp of width it stands beside them) and, on Android and iOS, Share in the app bar: there is no separate share or
+file export entry. Its first option is the format, with a line saying what each is for — a **PDF**, for printing, or
+the library's own files, for sharing with other Campfire users: **ChordPro** for a song, the `.cho` file as the library
+holds it, and **Zip** for a setlist, a setlist manifest (its `*.setlist.json`) next to its songs as ChordPro files. A setlist's songs are ticked off for either format
 alike, and a zip of only some of them carries a manifest naming only those (`ExportSetlistUseCase`'s `songFileNames`,
 everything else in the document kept), so that the archive never names a song the user left out — a ticked song
 whose file is missing from the library is still named, and an import shows it as a missing song, as the setlist itself
@@ -160,6 +161,18 @@ localized in both languages.
   its first or last item; what finishes the sheet (Save, Remove) goes into its header (`CampfireBottomSheet`'s
   `actions`); only the header and what is typed into throughout (a search field) or switches the whole content (tabs)
   stay pinned. Count the pinned height against that screen before adding anything that does not scroll.
+- **A short window gives the keyboard everything it can** (`SHORT_WINDOW_HEIGHT`, 480dp: a phone on its side, or the
+  smallest one with the keyboard up). There a sheet's header and pinned controls scroll away with its content, above
+  the keyboard; a dialog that is typed into grows into its full screen form once what the bars and the keyboard leave
+  of the window is under 320dp, its content-of-its-own action (Add link) moving into its slimmer bar beside the
+  confirming one; the editor's second control row and Shortcuts leave while the keyboard is up, its title row is
+  48dp and its lines closer together, so three lines of text stay above a landscape keyboard; the song picker opens
+  without the keyboard; and the song details app bar hides as the song is scrolled down and comes back as it is
+  scrolled up. On Android, typing in a short window also takes the status bar away until the keyboard goes
+  (`CompactKeyboardEffect`, swiped back as a transient bar) — the only way a landscape keyboard leaves room for a
+  field, a title row and three lines. A phone held upright gives song cards two title lines and narrower padding, and
+  a setlist's description starts at two lines in a short window, opening on a tap. Song lists keep their 360dp
+  minimum column, so a phone on its side stays one column: two would each be narrower than the portrait one.
 - `:app:android` and `:app:baselineprofile` are plain Android modules, `:app:desktop` a plain JVM one, `:app:ios`
   Kotlin/Native-only and `:app:web` Kotlin/Wasm-only; every other module (`:presentation` and `:chordpro` included) is
   a multiplatform library.

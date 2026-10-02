@@ -26,6 +26,8 @@ import androidx.compose.foundation.layout.asPaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.ime
+import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.only
 import androidx.compose.foundation.layout.padding
@@ -80,10 +82,12 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.focus.FocusRequester
+import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.graphics.luminance
 import androidx.compose.ui.layout.layout
 import androidx.compose.ui.layout.onSizeChanged
+import androidx.compose.ui.platform.LocalWindowInfo
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.semantics.Role
@@ -181,6 +185,7 @@ import com.pandulapeter.campfire.presentation.resources.welcome_title
 import com.pandulapeter.campfire.presentation.resources.whats_new_title
 import com.pandulapeter.campfire.presentation.resources.whats_new_message
 import com.pandulapeter.campfire.presentation.CAMPFIRE_VERSION_NAME
+import com.pandulapeter.campfire.presentation.ui.contentEdges
 import com.pandulapeter.campfire.presentation.ui.CampfireViewModel
 import com.pandulapeter.campfire.presentation.ui.PickerFilterOptions
 import com.pandulapeter.campfire.presentation.ui.components.ActionListItem
@@ -190,6 +195,7 @@ import com.pandulapeter.campfire.presentation.ui.components.CountedFilterChip
 import com.pandulapeter.campfire.presentation.ui.components.HideKeyboardWhenScrolledDown
 import com.pandulapeter.campfire.presentation.ui.components.LabelSortingToggle
 import com.pandulapeter.campfire.presentation.ui.components.MAX_SEARCH_QUERY_LENGTH
+import com.pandulapeter.campfire.presentation.ui.components.SHORT_WINDOW_HEIGHT
 import com.pandulapeter.campfire.presentation.ui.components.SortableChipRow
 import com.pandulapeter.campfire.presentation.ui.components.ScrollToStartWhenChanged
 import com.pandulapeter.campfire.presentation.ui.components.SetlistSortMenu
@@ -218,6 +224,7 @@ import kotlinx.datetime.atStartOfDayIn
 import kotlinx.datetime.number
 import kotlinx.datetime.toLocalDateTime
 import kotlinx.datetime.todayIn
+import com.pandulapeter.campfire.presentation.ui.platform.CompactKeyboardEffect
 import org.jetbrains.compose.resources.painterResource
 import kotlin.time.Clock
 import kotlin.time.Instant
@@ -764,6 +771,7 @@ private fun DeleteLibraryDialog(
     val isConfirmed = value.text.trim() == DELETE_LIBRARY_CONFIRMATION
     val focusRequester = rememberFirstFieldFocusRequester()
     val keyboardController = LocalSoftwareKeyboardController.current
+    val scrollState = rememberScrollState()
     val confirmOnce = rememberSingleConfirmation()
     val deleteLibrary = {
         confirmOnce {
@@ -775,7 +783,10 @@ private fun DeleteLibraryDialog(
         onDismissRequest = viewModel::dismissDialog,
         title = { Text(stringResource(Res.string.settings_library_delete)) },
         text = {
-            Column(verticalArrangement = Arrangement.spacedBy(16.dp)) {
+            Column(
+                modifier = Modifier.fadingVerticalEdges(scrollState).verticalScroll(scrollState),
+                verticalArrangement = Arrangement.spacedBy(16.dp),
+            ) {
                 Text(stringResource(Res.string.settings_library_delete_confirmation))
                 if (syncState is SyncState.Connected) {
                     Text(
@@ -891,7 +902,7 @@ private fun SetlistDetailsDialog(
     // caret where it was aimed. The description is opened on for editing rather than for replacing, so its caret goes
     // to the end of what is already written instead.
     var setlistTitle by rememberSaveable(stateSaver = TextFieldValue.Saver) {
-        mutableStateOf(TextFieldValue(text = initialTitle, selection = TextRange(0, initialTitle.length)))
+        mutableStateOf(TextFieldValue(text = initialTitle, selection = TextRange(initialTitle.length)))
     }
     var description by rememberSaveable { mutableStateOf(initialDescription) }
     // Saved as its ISO text, since a LocalDate is nothing the saved instance state of every platform can hold.
@@ -899,15 +910,22 @@ private fun SetlistDetailsDialog(
     val date = LocalDate.parse(dateText)
     var isCountdownShown by rememberSaveable { mutableStateOf(initialIsCountdownShown) }
     val isValid = setlistTitle.text.isNotBlank()
+    var hasTitleBeenFocused by rememberSaveable { mutableStateOf(false) }
+    val scrollState = rememberScrollState()
     val focusRequester = rememberFirstFieldFocusRequester(isFocused = isTitleFocused)
     val confirmOnce = rememberSingleConfirmation()
     TextFieldDialog(
         onDismissRequest = onDismiss,
         title = { if (subtitle.isBlank()) Text(title) else SubjectDialogTitle(title = title, subtitle = subtitle) },
         text = {
-            Column {
+            Column(modifier = Modifier.fadingVerticalEdges(scrollState).verticalScroll(scrollState)) {
                 OutlinedTextField(
-                    modifier = Modifier.fillMaxWidth().focusRequester(focusRequester),
+                    modifier = Modifier.fillMaxWidth().focusRequester(focusRequester).onFocusChanged {
+                        if (it.isFocused && !hasTitleBeenFocused) {
+                            hasTitleBeenFocused = true
+                            setlistTitle = setlistTitle.copy(selection = TextRange(0, setlistTitle.text.length))
+                        }
+                    },
                     value = setlistTitle,
                     onValueChange = { newValue ->
                         val text = newValue.text.replace("\n", "").take(MAX_TITLE_LENGTH)
@@ -1127,13 +1145,14 @@ private fun NewSongDialog(
     val isValid = title.isNotBlank()
     val focusRequester = rememberFirstFieldFocusRequester()
     val keyboardController = LocalSoftwareKeyboardController.current
+    val scrollState = rememberScrollState()
     val confirmOnce = rememberSingleConfirmation()
     val create = { if (isValid) confirmOnce { onCreate(title, artist) } }
     TextFieldDialog(
         onDismissRequest = onDismiss,
         title = { Text(stringResource(Res.string.songs_new_song)) },
         text = {
-            Column {
+            Column(modifier = Modifier.fadingVerticalEdges(scrollState).verticalScroll(scrollState)) {
                 OutlinedTextField(
                     modifier = Modifier.fillMaxWidth().focusRequester(focusRequester),
                     value = title,
@@ -1678,7 +1697,9 @@ private fun SongPicker(
         onDismiss = { viewModel.dismissSheet(dialog) },
     ) { contentPadding ->
         PickerSearchField(
-            modifier = Modifier.focusRequester(rememberFirstFieldFocusRequester()),
+            modifier = Modifier.focusRequester(
+                rememberFirstFieldFocusRequester(isFocused = LocalWindowInfo.current.containerDpSize.height >= SHORT_WINDOW_HEIGHT),
+            ),
             query = query,
             placeholder = stringResource(Res.string.songs_search),
             onQueryChange = { query = it },
@@ -1810,7 +1831,8 @@ private fun PickerFilters(
  * The search field of a picker sheet. The setlist picker leaves it unfocused as the sheet opens, since the handful of
  * setlists under it is what that sheet is opened for and is ticked by sight. The song picker opens with the caret in
  * it, since a song is looked for in a library of hundreds by typing its name; the keyboard that comes up with it goes
- * away again as soon as the list is scrolled down ([HideKeyboardWhenScrolledDown] in [PickerList]).
+ * away again as soon as the list is scrolled down ([HideKeyboardWhenScrolledDown] in [PickerList]). It does not in a
+ * short window ([SHORT_WINDOW_HEIGHT]), where a keyboard nobody asked for would hide every row of the list.
  */
 @Composable
 private fun PickerSearchField(
@@ -1951,6 +1973,9 @@ internal fun CampfireBottomSheet(
         enabledValues = setOf(SheetValue.Hidden, SheetValue.Expanded),
     )
     val coroutineScope = rememberCoroutineScope()
+    val windowHeight = LocalWindowInfo.current.containerDpSize.height
+    val isShortWindow = windowHeight < SHORT_WINDOW_HEIGHT
+    val scrollState = rememberScrollState()
     ModalBottomSheet(
         onDismissRequest = onDismiss,
         sheetState = sheetState,
@@ -1965,34 +1990,52 @@ internal fun CampfireBottomSheet(
         dragHandle = null,
         contentWindowInsets = { WindowInsets.safeDrawing.only(WindowInsetsSides.Top) },
     ) {
+        CompactKeyboardEffect(isEnabled = isShortWindow && WindowInsets.ime.getBottom(LocalDensity.current) > 0)
         // Hiding the sheet by hand does not count as dismissing it, so the dialog state is cleared once it is gone: left
         // as it was, the invisible sheet's modal layer would stay over the screen, swallowing the next tap. Only a hide
         // that ran to its end counts: one cut short by a finger taking hold of the sheet leaves the sheet where Material
         // settles it, and one cut short by another dialog replacing the sheet has nothing left to dismiss.
         val close = { coroutineScope.launch { sheetState.hide() }.invokeOnCompletion { cause -> if (cause == null) onDismiss() }; Unit }
-        SheetHeader(
-            title = title,
-            subtitle = subtitle,
-            actions = actions,
-            onClose = close,
-        )
-        // Read inside the sheet, which is a window of its own on Android and gets the insets of that window.
-        val bottomInset = WindowInsets.safeDrawing.only(WindowInsetsSides.Bottom).asPaddingValues().calculateBottomPadding()
-        val topInset = WindowInsets.safeDrawing.only(WindowInsetsSides.Top)
-        val density = LocalDensity.current
-        // Material pads the sheet by as much of the top inset as its offset has not taken up yet (an offset not
-        // decided yet takes up none of it).
-        val uncoveredTopInset = remember(sheetState, topInset, density) {
-            derivedStateOf {
-                val offset = runCatching { sheetState.requireOffset() }.getOrDefault(0f)
-                with(density) { offset.coerceIn(0f, topInset.getTop(density).toFloat()).toDp() }
+        // A keyboard in a short window leaves less height than the header and a field take together, so there the
+        // header and the pinned controls scroll with the rest, above the keyboard, and bringing the caret into view can
+        // move them out of its way. The content keeps the window's height inside that scroll, which is what bounds
+        // the lists in it that would otherwise be measured against an infinite one.
+        Column(
+            modifier = Modifier.fillMaxWidth().then(
+                if (isShortWindow) {
+                    Modifier.heightIn(max = windowHeight).imePadding().fadingVerticalEdges(scrollState).verticalScroll(scrollState)
+                } else {
+                    Modifier
+                },
+            ),
+        ) {
+            Column(modifier = if (isShortWindow) Modifier.height(windowHeight) else Modifier) {
+                SheetHeader(
+                    title = title,
+                    subtitle = subtitle,
+                    actions = actions,
+                    onClose = close,
+                )
+                // Read inside the sheet, which is a window of its own on Android and gets the insets of that window.
+                val bottomInset = (if (isShortWindow) WindowInsets.contentEdges else WindowInsets.safeDrawing)
+                    .only(WindowInsetsSides.Bottom).asPaddingValues().calculateBottomPadding()
+                val topInset = WindowInsets.safeDrawing.only(WindowInsetsSides.Top)
+                val density = LocalDensity.current
+                // Material pads the sheet by as much of the top inset as its offset has not taken up yet (an offset not
+                // decided yet takes up none of it).
+                val uncoveredTopInset = remember(sheetState, topInset, density) {
+                    derivedStateOf {
+                        val offset = runCatching { sheetState.requireOffset() }.getOrDefault(0f)
+                        with(density) { offset.coerceIn(0f, topInset.getTop(density).toFloat()).toDp() }
+                    }
+                }
+                BottomSheetContentScope(
+                    columnScope = this,
+                    close = close,
+                    uncoveredTopInset = { uncoveredTopInset.value },
+                ).content(PaddingValues(bottom = bottomInset + SHEET_BOTTOM_PADDING))
             }
         }
-        BottomSheetContentScope(
-            columnScope = this,
-            close = close,
-            uncoveredTopInset = { uncoveredTopInset.value },
-        ).content(PaddingValues(bottom = bottomInset + SHEET_BOTTOM_PADDING))
     }
 }
 

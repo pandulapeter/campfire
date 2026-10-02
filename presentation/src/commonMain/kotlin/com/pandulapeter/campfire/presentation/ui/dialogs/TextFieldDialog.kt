@@ -11,16 +11,20 @@ package com.pandulapeter.campfire.presentation.ui.dialogs
 
 import androidx.compose.animation.animateContentSize
 import androidx.compose.animation.core.animateDpAsState
+import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.heightIn
+import androidx.compose.foundation.layout.ime
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.safeDrawing
 import androidx.compose.foundation.layout.sizeIn
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.AlertDialogDefaults
@@ -40,18 +44,24 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.layout.Layout
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.platform.LocalWindowInfo
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
-import androidx.compose.ui.window.DialogProperties
 import com.pandulapeter.campfire.presentation.localization.stringResource
 import com.pandulapeter.campfire.presentation.resources.Res
 import com.pandulapeter.campfire.presentation.resources.close
 import com.pandulapeter.campfire.presentation.resources.ic_clear
+import com.pandulapeter.campfire.presentation.ui.components.SHORT_WINDOW_HEIGHT
+import com.pandulapeter.campfire.presentation.ui.platform.CompactKeyboardEffect
+import com.pandulapeter.campfire.presentation.ui.platform.isTextFieldDialogWindowFullSize
+import com.pandulapeter.campfire.presentation.ui.platform.textFieldDialogInsetsPadding
+import com.pandulapeter.campfire.presentation.ui.platform.textFieldDialogProperties
 import org.jetbrains.compose.resources.painterResource
 
 /**
@@ -71,7 +81,7 @@ import org.jetbrains.compose.resources.painterResource
  * field that was rebuilt would lose both, the window would grow back, and the dialog would be where it started.
  *
  * @param startButton An action of the content's own, kept at the start of the button row apart from the two that
- *   close the dialog, and under the content in the full screen form.
+ *   close the dialog, under the content in the full screen form, or beside the confirming action in a short window.
  * @param dismissButton What cancels the dialog; the full screen form has its close button in its place.
  */
 @Composable
@@ -87,21 +97,51 @@ internal fun TextFieldDialog(
     // The window's height stands in for the dialog's own on the first frame, which is only measured once it is
     // composed, so that a dialog opened in a window that is already too short is never drawn small first.
     val windowHeight = LocalWindowInfo.current.containerDpSize.height
-    var isFullScreen by remember { mutableStateOf(windowHeight < FULL_SCREEN_HEIGHT) }
+    val density = LocalDensity.current
+    val initialInsets = WindowInsets.safeDrawing
+    val initialAvailableHeight = windowHeight - with(density) {
+        (initialInsets.getTop(this) + initialInsets.getBottom(this)).toDp()
+    }
+    var isFullScreen by remember { mutableStateOf(initialAvailableHeight < FULL_SCREEN_HEIGHT) }
     Dialog(
         onDismissRequest = onDismissRequest,
-        properties = DialogProperties(usePlatformDefaultWidth = !isFullScreen),
+        properties = textFieldDialogProperties(isFullScreen),
     ) {
         BoxWithConstraints(
+            modifier = if (isFullScreen || isTextFieldDialogWindowFullSize) Modifier.fillMaxSize() else Modifier,
             contentAlignment = Alignment.Center,
         ) {
-            LaunchedEffect(maxHeight) {
-                if (maxHeight < FULL_SCREEN_HEIGHT) isFullScreen = true
+            if (isTextFieldDialogWindowFullSize && !isFullScreen) {
+                // The window fills the screen, so the platform takes every tap for one on the dialog, the scrim's
+                // included; this is what is around the small form.
+                Box(modifier = Modifier.fillMaxSize().pointerInput(onDismissRequest) { detectTapGestures { onDismissRequest() } })
             }
+            // The Android dialog window reaches under the bars and the keyboard rather than being resized for them, so
+            // its measured height alone does not say how much of it can be used: what the bars and the keyboard cover
+            // is taken off it. The web already shortens the page and reports no insets, so there nothing is taken
+            // off twice.
+            val imeHeight = with(density) { WindowInsets.ime.getBottom(this).toDp() }
+            val coveredHeight = with(density) { (WindowInsets.safeDrawing.getTop(this) + WindowInsets.safeDrawing.getBottom(this)).toDp() }
+            LaunchedEffect(maxHeight, coveredHeight) {
+                if (maxHeight - coveredHeight < FULL_SCREEN_HEIGHT) isFullScreen = true
+            }
+            val isShortWindow = windowHeight < SHORT_WINDOW_HEIGHT
+            CompactKeyboardEffect(isEnabled = isFullScreen && isShortWindow && imeHeight > 0.dp)
             val cornerRadius by animateDpAsState(if (isFullScreen) 0.dp else DIALOG_CORNER_RADIUS)
             Surface(
                 modifier = modifier
-                    .sizeIn(minWidth = DIALOG_MIN_WIDTH, maxWidth = if (isFullScreen) maxWidth else DIALOG_MAX_WIDTH)
+                    // The small form is centered in what the bars and the keyboard leave, never behind them.
+                    .then(if (isFullScreen) Modifier else Modifier.textFieldDialogInsetsPadding(isFullScreen = false))
+                    .then(if (isFullScreen || !isTextFieldDialogWindowFullSize) Modifier else Modifier.padding(DIALOG_WINDOW_MARGIN))
+                    .sizeIn(
+                        minWidth = DIALOG_MIN_WIDTH,
+                        maxWidth = when {
+                            isFullScreen -> maxWidth
+                            // The width a platform dialog window keeps to on a phone, which this one no longer has.
+                            isTextFieldDialogWindowFullSize && maxWidth < PHONE_WINDOW_MAX_WIDTH -> PHONE_DIALOG_MAX_WIDTH
+                            else -> DIALOG_MAX_WIDTH
+                        },
+                    )
                     .animateContentSize()
                     .then(if (isFullScreen) Modifier.fillMaxSize() else Modifier),
                 shape = RoundedCornerShape(cornerRadius),
@@ -109,16 +149,20 @@ internal fun TextFieldDialog(
                 tonalElevation = AlertDialogDefaults.TonalElevation,
             ) {
                 Column(
-                    // In the full screen form the content runs on to the bottom edge, where the lists fade out, unless
-                    // a button stands under it.
-                    modifier = Modifier.padding(
-                        top = if (isFullScreen) 0.dp else DIALOG_PADDING,
-                        bottom = if (isFullScreen && startButton == null) 0.dp else DIALOG_PADDING,
-                    ),
+                    // The full screen form's surface covers the whole window, bars included, while its content keeps
+                    // clear of them. Safe drawing already includes the keyboard, so it is not padded by the IME again.
+                    modifier = Modifier
+                        .then(if (isFullScreen) Modifier.textFieldDialogInsetsPadding(isFullScreen = true) else Modifier)
+                        .padding(
+                            top = if (isFullScreen) 0.dp else DIALOG_PADDING,
+                            bottom = if (isFullScreen) 0.dp else DIALOG_PADDING,
+                        ),
                 ) {
                     if (isFullScreen) {
                         FullScreenDialogBar(
                             title = title,
+                            startButton = startButton.takeIf { isShortWindow },
+                            isCompact = isShortWindow,
                             confirmButton = confirmButton,
                             onClose = onDismissRequest,
                         )
@@ -140,13 +184,13 @@ internal fun TextFieldDialog(
                             modifier = Modifier
                                 .weight(weight = 1f, fill = isFullScreen)
                                 .padding(horizontal = DIALOG_PADDING)
-                                .padding(bottom = if (isFullScreen && startButton == null) 0.dp else TEXT_PADDING),
+                                .padding(bottom = if (isFullScreen) 0.dp else TEXT_PADDING),
                         ) {
                             text()
                         }
                     }
                     if (isFullScreen) {
-                        if (startButton != null) {
+                        if (startButton != null && !isShortWindow) {
                             DialogButtons(modifier = Modifier.fillMaxWidth().padding(horizontal = DIALOG_PADDING)) {
                                 startButton()
                             }
@@ -174,14 +218,20 @@ internal fun TextFieldDialog(
     }
 }
 
-/** The full screen form's top: the close button, the title, and the button that confirms the dialog. */
+/**
+ * The full screen form's top: the close button, the title and the button that confirms the dialog. In a short window
+ * the bar is slimmer and also holds the content's own action, which would otherwise take a row of its own from the
+ * little the keyboard leaves to the field.
+ */
 @Composable
 private fun FullScreenDialogBar(
     title: @Composable () -> Unit,
+    startButton: (@Composable () -> Unit)?,
+    isCompact: Boolean,
     confirmButton: @Composable () -> Unit,
     onClose: () -> Unit,
 ) = Row(
-    modifier = Modifier.fillMaxWidth().heightIn(min = FULL_SCREEN_BAR_HEIGHT).padding(start = 4.dp, end = 12.dp),
+    modifier = Modifier.fillMaxWidth().heightIn(min = if (isCompact) COMPACT_FULL_SCREEN_BAR_HEIGHT else FULL_SCREEN_BAR_HEIGHT).padding(start = 4.dp, end = 12.dp),
     verticalAlignment = Alignment.CenterVertically,
 ) {
     IconButton(onClick = onClose) {
@@ -198,6 +248,7 @@ private fun FullScreenDialogBar(
             title()
         }
     }
+    startButton?.invoke()
     DialogButtonFlow(content = confirmButton)
 }
 
@@ -284,9 +335,19 @@ private fun ProvideContentColorTextStyle(
 private val FULL_SCREEN_HEIGHT = 320.dp
 private val FULL_SCREEN_BAR_HEIGHT = 64.dp
 
+/** The full screen form's bar in a short window, as tall as a touch target and no taller. */
+private val COMPACT_FULL_SCREEN_BAR_HEIGHT = 48.dp
+
 /** Material's own measurements of an `AlertDialog`, which the small form has to match the other dialogs in. */
 private val DIALOG_MIN_WIDTH = 280.dp
 private val DIALOG_MAX_WIDTH = 560.dp
+
+/** How far the small form keeps from the screen's edges, the bars and the keyboard where its window fills the screen. */
+private val DIALOG_WINDOW_MARGIN = 24.dp
+
+/** Below this window width a dialog is as wide as Android's own dialog windows are on a phone. */
+private val PHONE_WINDOW_MAX_WIDTH = 600.dp
+private val PHONE_DIALOG_MAX_WIDTH = 320.dp
 private val DIALOG_CORNER_RADIUS = 28.dp
 private val DIALOG_PADDING = 24.dp
 private val TITLE_PADDING = 16.dp

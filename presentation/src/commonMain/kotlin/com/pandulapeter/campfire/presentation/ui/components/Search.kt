@@ -29,6 +29,8 @@ import androidx.compose.animation.scaleIn
 import androidx.compose.animation.scaleOut
 import androidx.compose.animation.shrinkHorizontally
 import androidx.compose.foundation.gestures.ScrollableState
+import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.ime
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
@@ -91,6 +93,7 @@ import androidx.compose.ui.layout.LookaheadScope
 import androidx.compose.ui.layout.layout
 import androidx.compose.ui.layout.onPlaced
 import androidx.compose.ui.layout.onSizeChanged
+import androidx.compose.ui.platform.LocalWindowInfo
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
@@ -116,6 +119,7 @@ import com.pandulapeter.campfire.presentation.resources.Res
 import com.pandulapeter.campfire.presentation.resources.close
 import com.pandulapeter.campfire.presentation.resources.ic_clear
 import com.pandulapeter.campfire.presentation.resources.songs_clear
+import com.pandulapeter.campfire.presentation.ui.platform.CompactKeyboardEffect
 import org.jetbrains.compose.resources.painterResource
 
 /**
@@ -225,6 +229,7 @@ internal fun SearchableTopAppBar(
     }
     val layoutDirection = LocalLayoutDirection.current
     val density = LocalDensity.current
+    CompactKeyboardEffect(isEnabled = isOpen && LocalWindowInfo.current.containerDpSize.height < SHORT_WINDOW_HEIGHT && WindowInsets.ime.getBottom(density) > 0)
     val endPadding = contentPadding.calculateEndPadding(layoutDirection) + APP_BAR_END_PADDING
     val containerColor = MaterialTheme.colorScheme.background
     val pillColor = MaterialTheme.colorScheme.surfaceContainerHigh

@@ -46,6 +46,7 @@ import androidx.compose.foundation.pager.PagerState
 import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -67,6 +68,8 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Alignment
+import androidx.compose.ui.input.nestedscroll.nestedScroll
+import androidx.compose.ui.platform.LocalWindowInfo
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clipToBounds
 import androidx.compose.ui.draw.rotate
@@ -122,6 +125,7 @@ import com.pandulapeter.campfire.presentation.ui.components.DelayedLoadingIndica
 import com.pandulapeter.campfire.presentation.ui.components.EDGE_FADE_SIZE
 import com.pandulapeter.campfire.presentation.ui.components.EmptyState
 import com.pandulapeter.campfire.presentation.ui.components.EmptyStateAction
+import com.pandulapeter.campfire.presentation.ui.components.SHORT_WINDOW_HEIGHT
 import com.pandulapeter.campfire.presentation.ui.components.fadingTopEdge
 import com.pandulapeter.campfire.presentation.ui.components.overlappingAction
 import com.pandulapeter.campfire.presentation.ui.components.SetlistAssignmentsButton
@@ -296,9 +300,12 @@ internal fun SongDetailsScreen(
             .forEach { viewModel.loadSongContent(it.fileName) }
     }
 
+    val isCompactHeight = LocalWindowInfo.current.containerDpSize.height < SHORT_WINDOW_HEIGHT
+    val appBarScrollBehavior = TopAppBarDefaults.enterAlwaysScrollBehavior(canScroll = { isCompactHeight })
     Column(
         modifier = modifier
             .fillMaxSize()
+            .nestedScroll(appBarScrollBehavior.nestedScrollConnection)
             .keepScreenOn()
             .songKeyboardShortcuts(
                 onScrollUp = { currentPageScrollState?.let { coroutineScope.launch { it.scrollByKeyStep(-1f) } } },
@@ -331,6 +338,7 @@ internal fun SongDetailsScreen(
             )
     ) {
         CampfireTopAppBar(
+            scrollBehavior = if (isCompactHeight) appBarScrollBehavior else null,
             navigationIcon = {
                 IconButton(onClick = onBack) {
                     Icon(

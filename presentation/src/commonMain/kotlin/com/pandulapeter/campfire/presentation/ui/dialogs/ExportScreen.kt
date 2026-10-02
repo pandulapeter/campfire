@@ -569,23 +569,10 @@ private fun ExportScreen(
                                 val optionsWidth = when {
                                     bodyWidth >= 760.dp && bodyHeight >= 480.dp -> 330.dp
                                     // A phone on its side: too short to stack the two, wide enough to put them side by side.
-                                    bodyWidth >= 600.dp -> 300.dp
+                                    bodyWidth >= 520.dp -> 260.dp
                                     else -> null
                                 }
                                 val isSideBySide = optionsWidth != null
-                                val options: @Composable (Modifier) -> Unit = { modifier ->
-                                    PrintOptions(
-                                        modifier = modifier,
-                                        source = state.source!!,
-                                        settings = state.settings,
-                                        selected = state.selected.orEmpty(),
-                                        // Stacked under the preview, the list ends under the button, so its last row
-                                        // can be scrolled clear of it; beside the preview the button is not over it.
-                                        bottomPadding = bottomInset + if (isSideBySide) 8.dp else SAVE_BUTTON_CLEARANCE,
-                                        onSelected = { if (isOpen) state.selected = it },
-                                        onSettings = update,
-                                    )
-                                }
                                 val preview: @Composable (Modifier) -> Unit = { modifier ->
                                     AnimatedContent(isFiles, modifier, transitionSpec = { fadeIn() togetherWith fadeOut() }) { showsFiles ->
                                         if (showsFiles) {
@@ -624,9 +611,23 @@ private fun ExportScreen(
                                         }
                                     }
                                 }
+                                val options: @Composable (Modifier) -> Unit = { modifier ->
+                                    PrintOptions(
+                                        modifier = modifier.then(
+                                            if (isSideBySide) Modifier else Modifier.padding(bottom = bottomInset + SAVE_BUTTON_CLEARANCE),
+                                        ),
+                                        source = state.source!!,
+                                        settings = state.settings,
+                                        selected = state.selected.orEmpty(),
+                                        // The stacked list ends above Save, so even an option at rest cannot be covered.
+                                        bottomPadding = if (isSideBySide) bottomInset + 8.dp else 8.dp,
+                                        header = if (isSideBySide) null else { { preview(Modifier.fillMaxWidth().height(360.dp)) } },
+                                        onSelected = { if (isOpen) state.selected = it },
+                                        onSettings = update,
+                                    )
+                                }
                                 PrintPanes(
                                     optionsWidth = optionsWidth,
-                                    previewHeight = bodyHeight * PHONE_PREVIEW_HEIGHT_FRACTION,
                                     options = options,
                                     preview = preview,
                                 )
@@ -651,17 +652,13 @@ private fun ExportScreen(
 }
 
 /**
- * The options beside the preview, [optionsWidth] wide at its start, or under it where that is null, the preview then
- * [previewHeight] tall. Both panes stay where they are in the composition whichever way they are arranged, so the zoom,
- * the scroll of the options and everything else they remember is kept across a window crossing from one arrangement to
- * the other, and they travel to their new places on the spatial spring rather than being laid out again from scratch. A
- * window being resized within one arrangement is followed as it comes, since a spring after every frame of it would only
- * make the panes trail behind the edge being dragged.
+ * The options beside the preview, [optionsWidth] wide at its start, or filling the width where that is null,
+ * with the preview as their first scrolling item. The options keep their scroll across arrangements and their bounds
+ * animate when the arrangement changes, while a resize within one arrangement is followed as it comes.
  */
 @Composable
 private fun PrintPanes(
     optionsWidth: Dp?,
-    previewHeight: Dp,
     options: @Composable (Modifier) -> Unit,
     preview: @Composable (Modifier) -> Unit,
 ) {
@@ -678,22 +675,17 @@ private fun PrintPanes(
     }
     LookaheadScope {
         val paneBounds = Modifier.animateBounds(lookaheadScope = this, boundsTransform = boundsTransform)
-        // One call of each pane whatever the arrangement, since a call in another branch would be another pane.
         Box(Modifier.fillMaxSize()) {
             options(
                 if (optionsWidth != null) {
                     Modifier.width(optionsWidth).fillMaxHeight()
                 } else {
-                    Modifier.fillMaxSize().padding(top = previewHeight)
+                    Modifier.fillMaxSize()
                 }.then(paneBounds),
             )
-            preview(
-                if (optionsWidth != null) {
-                    Modifier.fillMaxSize().padding(start = optionsWidth)
-                } else {
-                    Modifier.fillMaxWidth().height(previewHeight)
-                }.then(paneBounds),
-            )
+            if (optionsWidth != null) {
+                preview(Modifier.fillMaxSize().padding(start = optionsWidth).then(paneBounds))
+            }
         }
     }
 }
@@ -876,12 +868,16 @@ private fun PrintOptions(
     settings: PrintSettings,
     selected: Set<Int>,
     bottomPadding: Dp,
+    header: (@Composable () -> Unit)? = null,
     onSelected: (Set<Int>) -> Unit,
     onSettings: (PrintSettings) -> Unit,
 ) {
     val state = rememberLazyListState()
     val isPdf = settings.format == PrintSettings.Format.PDF
     LazyColumn(modifier.fadingVerticalEdges(state), state = state, contentPadding = PaddingValues(top = 8.dp, bottom = bottomPadding)) {
+        if (header != null) {
+            item(key = "preview") { header() }
+        }
         item {
             FormatChoice(
                 format = settings.format,
@@ -1743,11 +1739,8 @@ private val PAGE_BUTTONS_HEIGHT = 48.dp
 /** Half the widest the page buttons get, two buttons around "Page 88 of 88", which they are kept that clear of the save button by. */
 private val PAGE_BUTTONS_HALF_WIDTH = 110.dp
 
-/** The room a list under the save button leaves after its last row, so that the row can be scrolled clear of it. */
+/** The room the stacked options leave under themselves for the save button, so that it never rests on one of them. */
 private val SAVE_BUTTON_CLEARANCE = 88.dp
-
-/** The share of a phone's screen the preview takes over the options, enough to read a page by and to leave the options a list. */
-private const val PHONE_PREVIEW_HEIGHT_FRACTION = 0.42f
 
 /** How long the options have to hold still before the pages are laid out again, so that a burst of steps is one layout. */
 private val LAYOUT_DEBOUNCE = 120.milliseconds

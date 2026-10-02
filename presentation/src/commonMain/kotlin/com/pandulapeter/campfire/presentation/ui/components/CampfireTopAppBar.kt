@@ -9,6 +9,7 @@
  */
 package com.pandulapeter.campfire.presentation.ui.components
 
+import androidx.compose.animation.core.animateDpAsState
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ColumnScope
 import androidx.compose.foundation.layout.RowScope
@@ -17,9 +18,11 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
+import androidx.compose.material3.TopAppBarScrollBehavior
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.unit.dp
 
 /**
  * The app bar of the song details and the editor: flat, in the screen's background color, whatever is scrolled
@@ -33,6 +36,11 @@ import androidx.compose.ui.graphics.Color
  * The background is drawn by the wrapping [Surface] and the bar itself is transparent, because [TopAppBar] cross
  * fades its own container color with a spring of its own. That spring would chase the color scheme while it is
  * animating between the light and the dark theme, leaving the bar visibly trailing behind the rest of the screen.
+ *
+ * @param scrollBehavior How the bar leaves with the content scrolled under it, where a short window cannot spare its
+ *   height for the whole of the reading; null keeps it in place.
+ * @param isCompact Whether the title row comes down to a touch target's height, while the keyboard leaves a short
+ *   window too little room for a taller one.
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -42,6 +50,8 @@ internal fun CampfireTopAppBar(
     navigationIcon: @Composable () -> Unit = {},
     actions: @Composable RowScope.() -> Unit = {},
     bottomContent: @Composable ColumnScope.() -> Unit = {},
+    scrollBehavior: TopAppBarScrollBehavior? = null,
+    isCompact: Boolean = false,
 ) = Surface(
     modifier = modifier,
     color = MaterialTheme.colorScheme.background,
@@ -49,6 +59,8 @@ internal fun CampfireTopAppBar(
     Column {
         TopAppBar(
             title = title,
+            scrollBehavior = scrollBehavior,
+            expandedHeight = animateDpAsState(if (isCompact) 48.dp else TopAppBarDefaults.TopAppBarExpandedHeight).value,
             navigationIcon = navigationIcon,
             actions = actions,
             colors = TopAppBarDefaults.topAppBarColors(

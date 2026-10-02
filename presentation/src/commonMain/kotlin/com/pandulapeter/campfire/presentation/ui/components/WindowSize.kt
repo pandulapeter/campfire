@@ -28,3 +28,10 @@ internal enum class WindowSize {
         }
     }
 }
+
+/**
+ * Below this height a window is short: a phone on its side, or the smallest phone with the keyboard up. Short windows
+ * let headers scroll away, slim their bars and take the status bar back while typing, since what they would pin
+ * otherwise leaves no room for the field or the list it is there for.
+ */
+internal val SHORT_WINDOW_HEIGHT = 480.dp

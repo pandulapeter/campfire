@@ -8,9 +8,9 @@
  * https://mozilla.org/MPL/2.0/.
 -->
 # To do
-- Optimize for the smallest screens, review dialog behavior (documentation/small-screen-review.md)
+- Auto-add the first link card when opening the Add link dialog
 - Implement optionally auto-indexing similar sections within a song
-- Metronome: documentation/metronome.md
+- Metronome: documentation/plans/metronome.md
 - Global sync status display ?
 - Fast scroller on the song details screen ?
 - Optional close confirmation dialog on relevant platforms

@@ -245,9 +245,11 @@ internal fun SongListItem(
                                     // nothing. Neither it nor the note carries padding of its own: the glyph is a
                                     // 4dp dot in the middle of a 24dp icon, so the box it sits in is the gap
                                     // already, and the same gap on both sides of it - anything added here is
-                                    // added to one side only.
+                                    // added to one side only. A narrow window shrinks the box, and with it both gaps,
+                                    // since there every dp of the line is one more letter of the artist.
                                     if (song.artist.isNotBlank()) {
                                         Icon(
+                                            modifier = Modifier.size(if (isNarrowSongCardWindow) NARROW_DOT_SIZE else DOT_SIZE),
                                             painter = painterResource(Res.drawable.ic_dot),
                                             contentDescription = null,
                                         )
@@ -378,7 +380,10 @@ private fun CenteredSongCardContent(
             Box(
                 modifier = Modifier
                     .heightIn(min = if (supportingContent == null && labelsContent == null) SONG_CARD_ONE_LINE_MIN_HEIGHT else SONG_CARD_TWO_LINE_MIN_HEIGHT)
-                    .padding(horizontal = LIST_ITEM_KEYLINE, vertical = SONG_CARD_VERTICAL_CONTENT_PADDING),
+                    .padding(
+                        horizontal = if (isNarrowSongCardWindow) NARROW_SONG_CARD_CONTENT_PADDING else LIST_ITEM_KEYLINE,
+                        vertical = SONG_CARD_VERTICAL_CONTENT_PADDING,
+                    ),
                 contentAlignment = Alignment.CenterStart,
             ) {
                 Column {
@@ -456,12 +461,18 @@ private fun ListItemActions(
 }
 
 /**
- * The title remains one line even when its setlist number has grown to three digits.
+ * The title remains one line even when its setlist number has grown to three digits, except in a narrow window: there
+ * the cover and the trailing buttons leave a phone's card so little of its width that a title cut to one line often
+ * could not be told from the next song's, so it may take a second.
  */
 @Composable
 private fun ListItemHeadline(
     text: String,
-) = Text(text = text, maxLines = 1, overflow = TextOverflow.Ellipsis)
+) = Text(text = text, maxLines = if (isNarrowSongCardWindow) 2 else 1, overflow = TextOverflow.Ellipsis)
+
+/** Whether the window is a phone held upright, whose song cards give their text every dp they can spare. */
+private val isNarrowSongCardWindow: Boolean
+    @Composable get() = LocalWindowInfo.current.containerDpSize.width < NARROW_SONG_CARD_WINDOW_WIDTH
 
 /** A setlist's zero-based position is shown to players as a one-based prefix. */
 private fun songCardTitle(title: String, index: Int?): String = if (index == null) title else "${index + 1} - $title"
@@ -1162,6 +1173,12 @@ private val EMPTY_STATE_ACTION_WIDTH = 280.dp
  * The x position the text of a [ListItem] starts at, before the card's own outer inset.
  */
 private val LIST_ITEM_KEYLINE = 16.dp
+
+/** Below this window width a song card's text gets the narrower padding, the smaller dot and a second title line. */
+private val NARROW_SONG_CARD_WINDOW_WIDTH = 480.dp
+private val NARROW_SONG_CARD_CONTENT_PADDING = 8.dp
+private val DOT_SIZE = 24.dp
+private val NARROW_DOT_SIZE = 16.dp
 
 /**
  * How far a card's trailing controls move toward its edge from the inset `ListItem` gives them: far enough that the
