@@ -28,17 +28,59 @@ internal fun ByteArray.latin1(start: Int = 0, end: Int = size) = buildString(end
     for (index in start until end) append((this@latin1[index].toInt() and 255).toChar())
 }
 
+/**
+ * Every offset where `endstream` starts in [bytes], found in one pass the first time a stream asks. A recovery scan parses
+ * thousands of objects over the same file, and searching the rest of the file for the end of each of them is quadratic
+ * when no `endstream` follows: the word has no border with itself, so occurrences never overlap and one walk finds them all.
+ */
+internal class PdfStreamEnds(private val bytes: ByteArray) {
+    private val offsets by lazy {
+        val found = mutableListOf<Int>()
+        var index = 0
+        val last = bytes.size - KEYWORD.length
+        while (index <= last) {
+            if (bytes[index] == 'e'.code.toByte() && matches(index)) {
+                found += index
+                index += KEYWORD.length
+            } else index++
+        }
+        found.toIntArray()
+    }
+
+    /** The first `endstream` at or after [start], or -1 when there is none. */
+    fun firstAtOrAfter(start: Int): Int {
+        var low = 0
+        var high = offsets.size
+        while (low < high) {
+            val middle = (low + high) ushr 1
+            if (offsets[middle] < start) low = middle + 1 else high = middle
+        }
+        return if (low < offsets.size) offsets[low] else -1
+    }
+
+    private fun matches(index: Int): Boolean {
+        for (offset in 1 until KEYWORD.length) if (bytes[index + offset].toInt() and 255 != KEYWORD[offset].code) return false
+        return true
+    }
+
+    private companion object {
+        const val KEYWORD = "endstream"
+    }
+}
+
 /** PDF lexical syntax, including binary strings. Streams retain a range of the input until actually needed. */
 internal class PdfSyntax(
     val bytes: ByteArray,
     var position: Int = 0,
+    private val streamEnds: PdfStreamEnds = PdfStreamEnds(bytes),
     private val lengthOf: (PdfValue?) -> Int? = { (it as? PdfNumber)?.value?.toInt() },
 ) {
     private var steps = 0
-    fun skip() {
-        while (position < bytes.size) when (char()) {
+    fun skip(limit: Int = bytes.size) {
+        val stop = position + minOf(limit, bytes.size - position)
+        while (position < stop) when (char()) {
             '\u0000', '\t', '\n', '\u000c', '\r', ' ' -> position++
-            '%' -> { while (position < bytes.size && char() !in "\r\n") position++ }
+            '%' -> { while (position < stop && char() !in "\r\n") position++ }
             else -> return
         }
     }
@@ -69,15 +111,17 @@ internal class PdfSyntax(
                     if (char() == '\r') position++
                     if (char() == '\n') position++
                     val start = position
+                    // Every stream ends at an endstream at or after its data, so one that has none fails before anything is walked.
+                    val first = streamEnds.firstAtOrAfter(start)
+                    require(first >= 0)
                     val declared = lengthOf(dictionary["Length"])
-                    val end = if (declared != null && declared >= 0 && start.toLong() + declared <= bytes.size) start + declared
-                    else indexOf("endstream", start).also { require(it >= start) }
+                    val end = if (declared != null && declared >= 0 && start.toLong() + declared <= bytes.size) start + declared else first
                     position = end
-                    skip()
-                    if (!keywordAt("endstream")) {
-                        position = indexOf("endstream", start).also { require(it >= start) }
-                    }
-                    val actualEnd = if (position == end || declared != null && end < position && bytes.sliceArray(end until position).all { it.toInt().toChar().isWhitespace() }) end else position
+                    // A producer puts an end of line between the data and endstream; a declared length pointing into a long run of
+                    // whitespace shared by many objects would otherwise make each of them walk it.
+                    skip(MAX_GAP_BEFORE_END)
+                    if (!keywordAt("endstream")) position = first
+                    val actualEnd = if (position == end || declared != null && end < position && isWhitespace(end, position)) end else position
                     position += 9
                     PdfStream(dictionary, bytes, start, actualEnd - start)
                 } else { position = after; dictionary }
@@ -116,8 +160,19 @@ internal class PdfSyntax(
         return bytes.latin1(start, position)
     }
     fun indexOf(value: String, start: Int): Int {
-        for (index in start..bytes.size - value.length) if (value.indices.all { bytes[index + it].toInt() and 255 == value[it].code }) return index
+        val head = value[0].code
+        for (index in start..bytes.size - value.length) {
+            if (bytes[index].toInt() and 255 != head) continue
+            var offset = 1
+            while (offset < value.length && bytes[index + offset].toInt() and 255 == value[offset].code) offset++
+            if (offset == value.length) return index
+        }
         return -1
+    }
+    private fun isWhitespace(start: Int, end: Int): Boolean {
+        if (end - start > MAX_GAP_BEFORE_END) return false
+        for (index in start until end) if (!(bytes[index].toInt() and 255).toChar().isWhitespace()) return false
+        return true
     }
     private fun keywordAt(value: String) = position + value.length <= bytes.size &&
         value.indices.all { char(it) == value[it] } && (position + value.length == bytes.size || delimiter(char(value.length)))
@@ -174,4 +229,8 @@ internal class PdfSyntax(
         error("Truncated PDF hex string")
     }
     private fun digit(c: Char) = c.digitToIntOrNull(16) ?: error("Invalid PDF hex digit")
+
+    private companion object {
+        const val MAX_GAP_BEFORE_END = 1_024
+    }
 }

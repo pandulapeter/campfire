@@ -23,6 +23,7 @@ internal class PdfFile(private val bytes: ByteArray) {
     private var scanned = false
     private var root: PdfValue? = null
     private var encrypted = false
+    private val streamEnds = PdfStreamEnds(bytes)
 
     init {
         require(bytes.size <= ImportLimits.MAX_DOCUMENT_FILE_SIZE && bytes.latin1(0, minOf(5, bytes.size)) == "%PDF-")
@@ -82,7 +83,7 @@ internal class PdfFile(private val bytes: ByteArray) {
 
     private fun indirect(offset: Int, expected: PdfReference? = null): PdfValue {
         require(offset in bytes.indices)
-        val parser = PdfSyntax(bytes, offset) { number(it, -1.0).toInt().takeIf { length -> length >= 0 } }
+        val parser = PdfSyntax(bytes, offset, streamEnds) { number(it, -1.0).toInt().takeIf { length -> length >= 0 } }
         val number = parser.word().toInt()
         val generation = parser.word().toInt()
         require(parser.word() == "obj" && (expected == null || expected == PdfReference(number, generation)))
@@ -100,7 +101,7 @@ internal class PdfFile(private val bytes: ByteArray) {
 
     private fun xref(offset: Int, seen: MutableSet<Int>) {
         require(seen.size < 64 && seen.add(offset) && offset in bytes.indices) { "PDF xref chain" }
-        val parser = PdfSyntax(bytes, offset)
+        val parser = PdfSyntax(bytes, offset, streamEnds)
         val dictionary: PdfDictionary
         if (parser.word() == "xref") {
             while (true) {
@@ -189,7 +190,7 @@ internal class PdfFile(private val bytes: ByteArray) {
             val match = marker.find(text, at) ?: break
             require(++count <= MAX_OBJECTS)
             val after = match.range.last + 1
-            val parser = PdfSyntax(bytes, after)
+            val parser = PdfSyntax(bytes, after, streamEnds)
             try {
                 val value = parser.next()
                 if (match.groupValues[1].isNotEmpty() && value != null) {
