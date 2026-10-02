@@ -13,7 +13,7 @@ androidx-activity = "1.13.0" # https://developer.android.com/jetpack/androidx/re
 androidx-benchmark = "1.5.0" # https://developer.android.com/jetpack/androidx/releases/benchmark
 androidx-browser = "1.10.0" # https://developer.android.com/jetpack/androidx/releases/browser
 androidx-lifecycle = "2.11.0" # https://github.com/JetBrains/compose-multiplatform-core/releases (org.jetbrains.androidx.lifecycle)
-androidx-navigation3 = "1.1.1" # https://github.com/JetBrains/compose-multiplatform-core/releases (org.jetbrains.androidx.navigation3)
+androidx-navigation3 = "1.1.2" # https://github.com/JetBrains/compose-multiplatform-core/releases (org.jetbrains.androidx.navigation3)
 androidx-profileinstaller = "1.4.1" # https://developer.android.com/jetpack/androidx/releases/profileinstaller
 androidx-test-junit = "1.3.0" # https://developer.android.com/jetpack/androidx/releases/test
 androidx-test-uiautomator = "2.4.0" # https://developer.android.com/jetpack/androidx/releases/test-uiautomator
@@ -23,7 +23,7 @@ google-playAppUpdate = "2.1.0" # https://developer.android.com/guide/playcore/in
 gradle = "9.4.1" # https://developer.android.com/studio/releases/gradle-plugin
 hyperether-localization = "2.0.1" # https://github.com/hyperether/compose-multiplatform-localize/releases
 jbr-api = "1.10.1" # https://github.com/JetBrains/JetBrainsRuntimeApi/releases
-jetbrains-compose = "1.12.0" # https://github.com/JetBrains/compose-jb/releases
+jetbrains-compose = "1.12.1" # https://github.com/JetBrains/compose-jb/releases
 jetbrains-compose-material3 = "1.12.0-alpha03" # https://github.com/JetBrains/compose-multiplatform-core/releases (org.jetbrains.compose.material3)
 jvmTarget = "21" # https://kotlinlang.org/docs/gradle.html
 koin = "4.2.2" # https://github.com/InsertKoinIO/koin/tags
@@ -33,7 +33,7 @@ kotlin-browser = "0.5.0" # https://github.com/Kotlin/kotlinx-browser/releases
 kotlin-coroutines = "1.11.0" # https://github.com/Kotlin/kotlinx.coroutines/releases
 kotlin-datetime = "0.8.0" # https://github.com/Kotlin/kotlinx-datetime/releases
 kotlin-serialization = "1.11.0" # https://github.com/Kotlin/kotlinx.serialization/releases
-ktor = "3.5.2" # https://github.com/ktorio/ktor/releases
+ktor = "3.6.0" # https://github.com/ktorio/ktor/releases
 
 [libraries]
 androidx-activity-compose = { module = "androidx.activity:activity-compose", version.ref = "androidx-activity" }
