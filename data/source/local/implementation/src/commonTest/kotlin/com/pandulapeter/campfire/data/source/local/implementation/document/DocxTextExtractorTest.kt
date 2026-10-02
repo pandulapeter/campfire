@@ -126,5 +126,21 @@ class DocxTextExtractorTest {
         assertFailsWith<IllegalArgumentException> { parseXml("<r>" + "<a/>".repeat(350_000) + "</r>") }
     }
 
+    @Test
+    fun aTableInsideAContentControlIsRead() = runTest {
+        fun control(content: String) = "<w:sdt><w:sdtPr/><w:sdtContent>$content</w:sdtContent></w:sdt>"
+        fun cell(text: String) = "<w:tc><w:p><w:r><w:t>$text</w:t></w:r></w:p></w:tc>"
+        val rows = "<w:tr>${cell("C")}</w:tr><w:tr>${cell("lyric")}</w:tr>"
+        suspend fun lines(body: String) = DocxTextExtractor.fromXml(document(body)).pages.flatMap { it.lines }.map { line -> line.spans.joinToString("") { it.text } }
+        val expected = listOf("C", "lyric")
+        assertEquals(expected, lines(control("<w:tbl>$rows</w:tbl>")))
+        assertEquals(expected, lines("<w:tbl>${control(rows)}</w:tbl>"))
+        assertEquals(expected, lines("<w:tbl><w:tr>${control(cell("C"))}</w:tr><w:tr>${control(cell("lyric"))}</w:tr></w:tbl>"))
+        assertEquals(expected, lines(control(control("<w:tbl>$rows</w:tbl>"))))
+        var nested = "<w:p><w:r><w:t>deep</w:t></w:r></w:p>"
+        repeat(17) { nested = control(nested) }
+        assertEquals(emptyList(), lines(nested))
+    }
+
     private fun document(body: String) = "<w:document xmlns:w='urn:test'><w:body>$body</w:body></w:document>"
 }

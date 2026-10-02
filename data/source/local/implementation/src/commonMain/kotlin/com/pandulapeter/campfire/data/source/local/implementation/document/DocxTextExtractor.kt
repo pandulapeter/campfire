@@ -92,10 +92,11 @@ internal object DocxTextExtractor {
         }
 
         suspend fun table(table: XmlElement) {
-            val rows = table.children.filter { it.localName == "tr" }.map { row ->
-                row.children.filter { it.localName == "tc" }.map { cell ->
+            val cells = table.unwrapped().filter { it.localName == "tr" }.map { row -> row.unwrapped().filter { it.localName == "tc" } }
+            val rows = cells.map { row ->
+                row.map { cell ->
                     val lines = mutableListOf<ExtractedDocument.Line>()
-                    cell.children.filter { it.localName == "p" }.forEach { paragraph(it, lines::add, {}) }
+                    cell.unwrapped().filter { it.localName == "p" }.forEach { paragraph(it, lines::add, {}) }
                     lines
                 }
             }
@@ -127,8 +128,8 @@ internal object DocxTextExtractor {
                 append(ExtractedDocument.Line(chords)); append(ExtractedDocument.Line(lyrics))
                 yield()
             } else {
-                for (row in table.children.filter { it.localName == "tr" }) for (cell in row.children.filter { it.localName == "tc" }) {
-                    for (element in cell.children) when (element.localName) {
+                for (row in cells) for (cell in row) {
+                    for (element in cell.unwrapped()) when (element.localName) {
                         "p" -> paragraph(element, ::append, ::page)
                         "tbl" -> table(element)
                     }
@@ -136,16 +137,30 @@ internal object DocxTextExtractor {
                 }
             }
         }
-        for (element in body.children) {
+        for (element in body.unwrapped()) {
             when (element.localName) {
                 "p" -> paragraph(element, ::append, ::page)
                 "tbl" -> table(element)
-                "sdt" -> element.child("sdtContent")?.children?.filter { it.localName == "p" }?.forEach { paragraph(it, ::append, ::page) }
             }
             yield()
         }
         return ExtractedDocument(pages.filter { it.isNotEmpty() }.map { ExtractedDocument.Page(it.toList()) })
     }
+
+    /**
+     * The children with every content control replaced by what it holds: Word wraps paragraphs, tables, table rows and
+     * cells in them (cover pages, tables of contents, repeating sections). Controls nested deeper than
+     * [MAX_CONTENT_CONTROL_DEPTH] are left out, which keeps the recursion bounded whatever the XML's own depth limit.
+     */
+    private fun XmlElement.unwrapped(depth: Int = 0): List<XmlElement> = children.flatMap { child ->
+        when {
+            child.localName != "sdt" -> listOf(child)
+            depth >= MAX_CONTENT_CONTROL_DEPTH -> emptyList()
+            else -> child.child("sdtContent")?.unwrapped(depth + 1).orEmpty()
+        }
+    }
+
+    private const val MAX_CONTENT_CONTROL_DEPTH = 16
 
     private data class Style(val size: Double = 12.0, val bold: Boolean = false, val font: String = "", val raised: Boolean = false) {
         val monospace get() = listOf("courier", "consolas", "monaco", "menlo", "liberation mono", "dejavu sans mono", "lucida console").any { font.contains(it, true) }
