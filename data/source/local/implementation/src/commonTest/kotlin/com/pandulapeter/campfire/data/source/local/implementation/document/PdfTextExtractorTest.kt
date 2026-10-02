@@ -52,6 +52,27 @@ class PdfTextExtractorTest {
     }
 
     @Test
+    fun manyFontSelectionsOfALargeFontAreFast() = runTest {
+        val font = "/Type /Font /Subtype /Type1 /BaseFont /Courier /Encoding /WinAnsiEncoding /FirstChar 0 /Widths [${"600 ".repeat(90_000)}]"
+        val bytes = PdfTestWriter.song("BT 50 700 Td " + "/F1 10 Tf ".repeat(100_000) + "(hi) Tj ET", font)
+        lateinit var text: String
+        val elapsed = measureTime { text = PdfTextExtractor.extract(bytes).pages.single().lines.single().spans.joinToString("") { it.text } }
+        assertEquals("hi", text)
+        assertTrue(elapsed < 3.seconds, "Took $elapsed")
+    }
+
+    @Test
+    fun equalValuesParsedSeparatelyHashAlike() {
+        fun parse(text: String) = PdfSyntax(text.encodeToByteArray()).next()
+        val first = parse("<< /Widths [1 2 3] /Name /A >>")
+        val second = parse("<< /Widths [1 2 3] /Name /A >>")
+        val different = parse("<< /Widths [1 2 4] /Name /A >>")
+        assertEquals(first, second)
+        assertEquals(first.hashCode(), second.hashCode())
+        assertTrue(first != different)
+    }
+
+    @Test
     fun cachedReferenceChainsResolveEveryTimeAndCyclesAreRejected() {
         val writer = PdfTestWriter()
         writer.add("2 0 R")

@@ -13,13 +13,40 @@ internal sealed interface PdfValue
 internal data class PdfNumber(val value: Double) : PdfValue
 internal data class PdfName(val value: String) : PdfValue
 internal data class PdfString(val bytes: ByteArray) : PdfValue
-internal data class PdfArray(val values: List<PdfValue>) : PdfValue
+
+/**
+ * Fonts, decoded streams and active forms are cached by value, and a data class over a list hashes everything under it,
+ * which a font with a hundred thousand widths pays on every font selection; the hash is therefore computed once. Never
+ * mutate [values] after construction.
+ */
+internal data class PdfArray(val values: List<PdfValue>) : PdfValue {
+    private var hash = 0
+    override fun hashCode(): Int {
+        if (hash == 0) hash = values.hashCode().takeIf { it != 0 } ?: 1
+        return hash
+    }
+}
+
+/** Hashed once, like [PdfArray]. Never mutate [values] after construction. */
 internal data class PdfDictionary(val values: Map<String, PdfValue>) : PdfValue {
+    private var hash = 0
     operator fun get(name: String) = values[name]
+    override fun hashCode(): Int {
+        if (hash == 0) hash = values.hashCode().takeIf { it != 0 } ?: 1
+        return hash
+    }
 }
 internal data class PdfReference(val number: Int, val generation: Int = 0) : PdfValue
 internal data class PdfKeyword(val value: String) : PdfValue
-internal data class PdfStream(val dictionary: PdfDictionary, val bytes: ByteArray, val offset: Int, val length: Int) : PdfValue
+
+/** Hashed once, like [PdfArray]; the bytes it is a range of count by identity, as a data class compares them. */
+internal data class PdfStream(val dictionary: PdfDictionary, val bytes: ByteArray, val offset: Int, val length: Int) : PdfValue {
+    private var hash = 0
+    override fun hashCode(): Int {
+        if (hash == 0) hash = (((dictionary.hashCode() * 31 + bytes.hashCode()) * 31 + offset) * 31 + length).takeIf { it != 0 } ?: 1
+        return hash
+    }
+}
 
 internal fun PdfValue?.number(default: Double = 0.0) = (this as? PdfNumber)?.value ?: default
 internal fun PdfValue?.name() = (this as? PdfName)?.value
