@@ -201,7 +201,7 @@ Everything else is `commonMain`:
 
 ## Export
 
-`ui/dialogs/ExportScreen.kt` and `ui/print/`, opened as `DialogType.Export` from the one export entry of a song's actions ("Export song") (with the
+`ui/dialogs/ExportScreen.kt` and `ui/print/`, opened as `DialogType.Export` from the one export entry of a song's actions ("Export song", which also titles the screen) (with the
 setlist it was reached through, whose key it then prints in) and a setlist's ("Export setlist"). It is a dialog to the view model and a
 screen to the user: `ExportHost`, composed by `CampfireScreens` after the `NavDisplay` and before the dialogs and
 the snackbars, deals it in over everything and takes it away again however the dialog goes, exactly as a destination is
@@ -274,8 +274,10 @@ which scroll clear of the save button. **The preview is the whole of its pane** 
 buttons are a pill centered under the page, level with the save button beside the options and lifted over it where the
 pane is too narrow for both, and at a zoom of 1 the page fits what they leave (`fitArea`), so a zoomed page grows out to
 the pane's edges and under them, which is what says that the sheet of paper is what grew.
-Pages are turned by a swipe, the buttons, or the arrow, Page Up / Down, Home and End keys, and zoomed by a pinch, a
-double tap or a touchpad pinch (`magnifyByTouchpad`, the song details screen's path, around the pointer while it is over
+Pages are turned by a swipe, the buttons, or the arrow, Page Up / Down, Home and End keys, and zoomed by a pinch (around
+its centroid), a double tap, on a touch screen the second tap held and dragged (`doubleTapZoom`: down zooms in, up out,
+doubling every 120dp, around where it landed; the second press is consumed so neither the pager nor the pan moves under
+it) or a touchpad pinch (`magnifyByTouchpad`, the song details screen's path, around the pointer while it is over
 the page); Ctrl / Cmd and the scroll wheel zoom in the desktop application only, which
 `isLaunchScreenWholeStartup` stands in for, since in a browser that chord is the page's own zoom. Zooming grows the whole
 sheet, edges and all, past the pane that cuts it off, as a document viewer does: content growing inside a page that kept

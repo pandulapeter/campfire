@@ -532,7 +532,6 @@
     <string name="app_update_required_hint">This version of Campfire can no longer be used. Your library stays exactly where it is.</string>
 
     <!-- Export -->
-    <string name="print_export">Export</string>
     <string name="print_save">Save</string>
     <string name="print_share">Share</string>
     <string name="print_format">Format</string>

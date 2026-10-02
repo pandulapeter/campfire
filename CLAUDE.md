@@ -90,8 +90,8 @@ uninstall and nothing else does.
 
 ## Printing
 
-Song and setlist action menus have one export entry each (**Export song**, **Export setlist**), which opens the **Export**
-screen (`presentation/ui/dialogs/ExportScreen.kt`), full screen over the app with Save as its floating action button and, on
+Song and setlist action menus have one export entry each (**Export song**, **Export setlist**), which opens the export
+screen titled the same (`presentation/ui/dialogs/ExportScreen.kt`), full screen over the app with Save as its floating action button and, on
 Android and iOS, Share in the app bar: there is no separate share or file export entry. Its first option is the format,
 with a line saying what each is for — a **PDF**, for printing, or the library's own files, for sharing with other
 Campfire users: **ChordPro** for a song, the `.cho` file as the library holds it, and **Zip** for a setlist, a setlist

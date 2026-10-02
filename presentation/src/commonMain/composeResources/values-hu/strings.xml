@@ -532,7 +532,6 @@
     <string name="app_update_required_hint">A Campfire ezen verziója már nem használható. A könyvtárad pontosan ott marad, ahol van.</string>
 
     <!-- Export -->
-    <string name="print_export">Exportálás</string>
     <string name="print_save">Mentés</string>
     <string name="print_share">Megosztás</string>
     <string name="print_format">Formátum</string>

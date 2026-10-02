@@ -32,9 +32,11 @@ import androidx.compose.animation.shrinkVertically
 import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.focusable
-import androidx.compose.foundation.gestures.detectTapGestures
+import androidx.compose.foundation.gestures.awaitEachGesture
+import androidx.compose.foundation.gestures.awaitFirstDown
 import androidx.compose.foundation.gestures.rememberTransformableState
 import androidx.compose.foundation.gestures.transformable
+import androidx.compose.foundation.gestures.waitForUpOrCancellation
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -122,6 +124,7 @@ import androidx.compose.ui.input.key.key
 import androidx.compose.ui.input.key.onKeyEvent
 import androidx.compose.ui.input.key.type
 import androidx.compose.ui.input.pointer.PointerEventType
+import androidx.compose.ui.input.pointer.PointerType
 import androidx.compose.ui.input.pointer.isCtrlPressed
 import androidx.compose.ui.input.pointer.isMetaPressed
 import androidx.compose.ui.input.pointer.pointerInput
@@ -132,7 +135,7 @@ import androidx.compose.ui.platform.LocalFontFamilyResolver
 import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.contentDescription
-import androidx.compose.ui.semantics.invisibleToUser
+import androidx.compose.ui.semantics.hideFromAccessibility
 import androidx.compose.ui.semantics.role
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.state.ToggleableState
@@ -171,7 +174,6 @@ import com.pandulapeter.campfire.presentation.resources.print_a4
 import com.pandulapeter.campfire.presentation.resources.print_chords
 import com.pandulapeter.campfire.presentation.resources.print_columns
 import com.pandulapeter.campfire.presentation.resources.print_comments
-import com.pandulapeter.campfire.presentation.resources.print_export
 import com.pandulapeter.campfire.presentation.resources.print_font_size
 import com.pandulapeter.campfire.presentation.resources.print_format
 import com.pandulapeter.campfire.presentation.resources.print_format_chordpro
@@ -213,12 +215,14 @@ import com.pandulapeter.campfire.presentation.resources.print_zip_manifest_descr
 import com.pandulapeter.campfire.presentation.resources.print_zip_missing
 import com.pandulapeter.campfire.presentation.resources.print_zip_song_description
 import com.pandulapeter.campfire.presentation.resources.retry
+import com.pandulapeter.campfire.presentation.resources.setlists_export
 import com.pandulapeter.campfire.presentation.resources.song_details_text_size
 import com.pandulapeter.campfire.presentation.resources.song_details_text_size_decrease
 import com.pandulapeter.campfire.presentation.resources.song_details_text_size_increase
 import com.pandulapeter.campfire.presentation.resources.song_editor_insert_capo
 import com.pandulapeter.campfire.presentation.resources.song_editor_insert_key
 import com.pandulapeter.campfire.presentation.resources.song_editor_insert_tempo
+import com.pandulapeter.campfire.presentation.resources.songs_export_song
 import com.pandulapeter.campfire.presentation.ui.CampfireViewModel
 import com.pandulapeter.campfire.presentation.ui.components.CampfireTopAppBar
 import com.pandulapeter.campfire.presentation.ui.components.CheckboxListItem
@@ -533,7 +537,7 @@ private fun ExportScreen(
         Box(Modifier.fillMaxSize()) {
             Column(Modifier.fillMaxSize()) {
                 PrintTopAppBar(
-                    title = stringResource(Res.string.print_export),
+                    title = stringResource(if (dialog.setlist != null) Res.string.setlists_export else Res.string.songs_export_song),
                     subtitle = dialog.setlist?.title ?: dialog.song?.let { songLabel(it) }.orEmpty(),
                     canShare = filePicker.canShare && content == PrintScreenContent.LOADED && exportProgress == null &&
                         if (isFiles) canExportFiles else hasPages,
@@ -853,8 +857,8 @@ private fun CrossfadedLabel(
     isSecondShown: Boolean,
 ) = Box(contentAlignment = Alignment.Center) {
     val secondAlpha by animateFloatAsState(if (isSecondShown) 1f else 0f)
-    Text(first, Modifier.alpha(1f - secondAlpha).semantics { if (isSecondShown) invisibleToUser() })
-    Text(second, Modifier.alpha(secondAlpha).semantics { if (!isSecondShown) invisibleToUser() })
+    Text(first, Modifier.alpha(1f - secondAlpha).semantics { if (isSecondShown) hideFromAccessibility() })
+    Text(second, Modifier.alpha(secondAlpha).semantics { if (!isSecondShown) hideFromAccessibility() })
 }
 
 /**
@@ -1374,8 +1378,10 @@ private fun PrintPages(
     fun turnTo(target: Int) {
         coroutineScope.launch { pagerState.animateScrollToPage(target.coerceIn(0, pageCount - 1)) }
     }
-    val transformableState = rememberTransformableState { zoomChange, panChange, _ ->
-        zoomTo(pageView().zoom * zoomChange)
+    // Around the pinch's centroid, which is in the pane's coordinates, so the part of the page between the fingers stays
+    // between them, as a touchpad's pinch keeps the part under the pointer.
+    val transformableState = rememberTransformableState { centroid, zoomChange, panChange, _ ->
+        zoomTo(pageView().zoom * zoomChange, centroid)
         val view = pageView()
         if (view.zoom > 1f) {
             val area = fitArea()
@@ -1442,11 +1448,10 @@ private fun PrintPages(
                                     .onSizeChanged { viewportSize = it.toSize() }
                                     .trackPointer { pointerPosition = it }
                                     .transformable(transformableState, canPan = { pageView().zoom > 1f })
-                                    .pointerInput(Unit) {
-                                        detectTapGestures(
-                                            onDoubleTap = { zoomTo(if (pageView().zoom > 1f) 1f else DOUBLE_TAP_ZOOM, it) },
-                                        )
-                                    }
+                                    .doubleTapZoom(
+                                        onDoubleTap = { zoomTo(if (pageView().zoom > 1f) 1f else DOUBLE_TAP_ZOOM, it) },
+                                        onQuickZoom = { factor, pivot -> zoomTo(pageView().zoom * factor, pivot) },
+                                    )
                                     .wheelZoom { notches, position ->
                                         zoomTo(pageView().zoom * WHEEL_ZOOM_BASE.pow(-notches), position)
                                     }
@@ -1620,6 +1625,52 @@ private fun clampPan(pan: Offset, area: Rect, pageSize: Size, viewport: Size): O
 }
 
 /**
+ * A double tap, which toggles the zoom around where it landed, and on a touch screen the second tap held and dragged,
+ * which zooms by as much as the finger travels - down to zoom in, up to zoom out, the way the maps and photo viewers of
+ * both phone platforms do - for zooming with the one thumb that holds the phone. A second tap that lifts without having
+ * moved past the touch slop is the ordinary double tap. The second press is consumed from its first event, since it
+ * belongs to this gesture whichever it turns out to be: left alone, the pager would turn the page under a drag that
+ * started sideways and the pan would move a zoomed page under it, and a second finger joining in hands the pinch over
+ * to `transformable`, which takes it from there.
+ */
+private fun Modifier.doubleTapZoom(
+    onDoubleTap: (Offset) -> Unit,
+    onQuickZoom: (factor: Float, pivot: Offset) -> Unit,
+) = pointerInput(Unit) {
+    awaitEachGesture {
+        awaitFirstDown()
+        // A press that turned into a drag of the pager or of a zoomed page is consumed by them, which ends it here.
+        waitForUpOrCancellation() ?: return@awaitEachGesture
+        val second = withTimeoutOrNull(viewConfiguration.doubleTapTimeoutMillis) { awaitFirstDown() } ?: return@awaitEachGesture
+        second.consume()
+        val canDrag = second.type == PointerType.Touch || second.type == PointerType.Stylus
+        val doublingDistance = QUICK_ZOOM_DOUBLING_DISTANCE.toPx()
+        var isDragging = false
+        var previousY = second.position.y
+        while (true) {
+            val event = awaitPointerEvent()
+            if (event.changes.count { it.pressed } > 1) return@awaitEachGesture
+            val change = event.changes.firstOrNull { it.id == second.id } ?: return@awaitEachGesture
+            if (!change.pressed) {
+                change.consume()
+                if (!isDragging) onDoubleTap(second.position)
+                return@awaitEachGesture
+            }
+            if (canDrag && !isDragging && (change.position - second.position).getDistance() > viewConfiguration.touchSlop) {
+                isDragging = true
+                // From where the slop was crossed rather than from the press, so the zoom does not jump by the slop.
+                previousY = change.position.y
+            }
+            if (isDragging) {
+                onQuickZoom(2f.pow((change.position.y - previousY) / doublingDistance), second.position)
+                previousY = change.position.y
+            }
+            change.consume()
+        }
+    }
+}
+
+/**
  * Ctrl or Cmd and the scroll wheel, in the desktop application only: in a browser that chord is the page's own zoom,
  * which the app leaves alone. [isLaunchScreenWholeStartup] is the one platform flag that is true there and nowhere else.
  */
@@ -1656,6 +1707,9 @@ private val PAGE_VIEW_SAVER = Saver<PageView, List<Float>>(
 
 private const val MAX_ZOOM = 4f
 private const val DOUBLE_TAP_ZOOM = 2.5f
+
+/** How far the finger of a double tap held and dragged travels to double the zoom, or to halve it going the other way. */
+private val QUICK_ZOOM_DOUBLING_DISTANCE = 120.dp
 
 /** The zoom of one notch of the scroll wheel, towards the user zooming out. */
 private const val WHEEL_ZOOM_BASE = 1.15f

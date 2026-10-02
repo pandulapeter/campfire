@@ -11,7 +11,6 @@
 - Fab touch target should be MUCH larger
 - Swipe between rows could be strictly paged
 - PDF export: consider adding the option for 3 columns in landscape
-- PDF double tap and hold to zoom
 - Improve song info dialog and card
 - Mobile web IME keyboard handling
 - Be more aggressive when breaking up sections within a row. Priority: reduce empty space
