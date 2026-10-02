@@ -7,36 +7,41 @@
 # https://mozilla.org/MPL/2.0/.
 
 """
-Signing identities that last one workflow run, and until the next one where that run uploaded a build.
+The signing identities of the App Store builds: one certificate of each type for the team's signing key, which every run
+finds again, and renews before it expires, through the App Store Connect API.
 
 Apple's distribution certificates expire after a year, and a certificate kept in a repository secret is a release that
-fails on the day it does. The App Store Connect API key does not expire, and an Admin key may create certificates and
-provisioning profiles - so a run makes its own: a private key that never leaves the runner, a certificate for it,
-the profiles that name that certificate. A build has to stay signed by a valid certificate until App Review has
-approved it, not only until it is uploaded or processed: one whose certificate is revoked in the meantime is refused as
-an invalid binary (ITMS-90238, CSSMERR_TP_CERT_REVOKED), even after it has been attached and submitted. So a run that
-uploaded a build notes which build it was in the state file (`record-build`) and keeps its identities, and the workflow
-hands the state file on as an artifact, which the next run of the same workflow revokes before it makes its own
-(`cleanup-earlier`) - unless App Store Connect says the build is attached to a version that is still waiting for review,
-in review or not on the store yet, in which case it is left alone and the artifact kept, to be asked about again by the
-run after. A state file from before builds were recorded is kept for as long as any version of the platform is waiting
-for Apple. A build that was uploaded and not submitted is revoked by the next run, whose own build replaces it. A run
-that uploaded nothing revokes its own at the end. Revoking a distribution certificate does not touch what Apple has
-already released, which it signs again. Apple tells certificates made here and certificates made by hand apart in no way the API
-shows, so what a run made is known only from its state file: an artifact that expires before the next run leaves its
-certificates to expire on their own after a year. Never use this for a Developer ID certificate: an app signed outside
-the store is checked against it on every Mac that opens it, and revoking it breaks every copy already downloaded.
+fails on the day it does. The private key it was made for does not expire, and the App Store Connect API key may create
+certificates and provisioning profiles - so the APPLE_SIGNING_KEY secret holds the key alone, and a run asks the API for
+the certificates of the type it needs, takes the one made for that key that expires last (`certificate`), and creates a
+new one for the same key where there is none, or where that one has less than RENEWAL_DAYS left. A certificate is never
+revoked: a build has to stay signed by a valid certificate until App Review has approved it, and one whose certificate
+is revoked in the meantime is refused as an invalid binary (ITMS-90238, CSSMERR_TP_CERT_REVOKED), even after it was
+attached and submitted. The old one is left to expire instead, months after the last build it signed was decided. The
+renewal is early enough that no build is ever signed with a certificate that could expire while it is in review.
 
-Everything this creates is written into a state file first, and `cleanup` removes exactly that and nothing else, so an
-identity somebody made by hand is never touched. It only needs the Python standard library and the system's openssl.
+Kubriko's pipeline signs with the same key and so with the same certificates, which matters because Apple allows a team
+only two Apple Distribution certificates: the two pipelines hold one between them, and the other place is the renewal's.
+A certificate somebody made by hand in Xcode takes a place too, which is what a creation refused with 409 means.
+
+The Mac App Store profiles (`profile`) are found the same way: the active one of the type for the bundle ID that names
+the certificate is used again, and one is created where there is none. A profile expires with its certificate, so
+nothing ever deletes one either.
+
+Identities a run made for a key of its own, named by the state files in the app-store-signing-* artifacts of earlier
+runs, are revoked by `cleanup-earlier` - unless App Store Connect says the build they signed is attached to a version
+that is still waiting for review, in review or not on the store yet, in which case they are left alone and the artifact
+kept, to be asked about again by the run after. A state file that names no build is kept for as long as any version of
+the platform is waiting for Apple. Revoking those does not touch what Apple has already released, which it signs again.
+
+Never use this for a Developer ID certificate: an app signed outside the store is checked against it on every Mac that
+opens it. It only needs the Python standard library and the system's openssl.
 
     app_store_signing.py certificate <certificateType> <keychain>
     app_store_signing.py profile <profileType> <bundle identifier> <certificateType> <output file>
-    app_store_signing.py record-build <IOS | MAC_OS> <version> <build number>
-    app_store_signing.py cleanup
     app_store_signing.py cleanup-earlier <artifact name> <bundle identifier> <IOS | MAC_OS>
 
-Reads ASC_KEY_ID, ASC_ISSUER_ID and ASC_KEY_PATH (the .p8 file), and APP_STORE_SIGNING_STATE, the state file;
+Reads ASC_KEY_ID, ASC_ISSUER_ID and ASC_KEY_PATH (the .p8 file), and APPLE_SIGNING_KEY_PATH, the signing key as PEM;
 `cleanup-earlier` also GITHUB_REPOSITORY and GH_TOKEN, for the gh command line tool, with the actions: write permission.
 """
 
@@ -50,11 +55,15 @@ import tempfile
 import time
 import urllib.error
 import urllib.request
+from datetime import datetime, timedelta, timezone
 
 API = "https://api.appstoreconnect.apple.com/v1"
 # LibreSSL, which every macOS has: it signs the token the same way everywhere, and it is not whatever a runner image
 # happens to put first on the PATH.
 OPENSSL = "/usr/bin/openssl"
+# Two months: far longer than any review takes, so a build is never signed with a certificate that could expire before
+# App Review has decided it, and long enough that a release in the last weeks is not the only chance to renew.
+RENEWAL_DAYS = 60
 # The states of a version that has been submitted and is not on the store yet: the build attached to one is still checked
 # against its certificate. An approved one counts until it is on the store: keeping a certificate one run longer costs
 # nothing, and revoking it early gets the build refused.
@@ -96,7 +105,7 @@ def token():
     return (message + b"." + encode(signature)).decode()
 
 
-def request(method, path, body=None, missing_ok=False):
+def request(method, path, body=None, missing_ok=False, conflict_ok=False):
     data = json.dumps(body).encode() if body is not None else None
     headers = {"Authorization": f"Bearer {token()}", "Content-Type": "application/json"}
     try:
@@ -104,90 +113,168 @@ def request(method, path, body=None, missing_ok=False):
             content = response.read()
             return json.loads(content) if content else None
     except urllib.error.HTTPError as error:
-        if missing_ok and error.code == 404:
-            return None
         details = error.read().decode()
         try:
             details = "; ".join(item.get("detail") or item.get("title", "") for item in json.loads(details)["errors"])
         except (ValueError, KeyError):
             pass
+        if missing_ok and error.code == 404:
+            return None
+        if conflict_ok and error.code == 409:
+            print(f"{method} {path} answered 409: {details}", file=sys.stderr)
+            return None
         fail(f"{method} {path} answered {error.code}: {details}")
 
 
-def state_path():
-    return os.environ.get("APP_STORE_SIGNING_STATE") or os.path.join(os.environ.get("RUNNER_TEMP", "."), "app-store-signing.json")
+def run(*command, input=None):
+    return subprocess.run(command, input=input, check=True, capture_output=True).stdout
 
 
-def read_state():
-    try:
-        with open(state_path()) as file:
-            return json.load(file)
-    except FileNotFoundError:
-        return {"certificates": {}, "profiles": []}
+def parse_expiration(text):
+    """The API's expirationDate, such as 2027-09-29T19:26:01.000+00:00, as an aware datetime."""
+    return datetime.fromisoformat(text.replace("Z", "+00:00"))
 
 
-def write_state(state):
-    with open(state_path(), "w") as file:
-        json.dump(state, file)
+def newest_valid(certificates, now):
+    """The certificate of the list that expires last, of those that have not expired yet, or None."""
+    valid = [item for item in certificates if item["expiration"] > now]
+    return max(valid, key=lambda item: item["expiration"], default=None)
 
 
-def run(*command):
-    subprocess.run(command, check=True, capture_output=True)
+def needs_renewal(certificate, now):
+    return certificate["expiration"] - now < timedelta(days=RENEWAL_DAYS)
 
 
-def create_certificate(certificate_type, keychain):
-    """Creates a key and a certificate of the given type for it, and imports both into the keychain."""
+def key_modulus():
+    return run(OPENSSL, "rsa", "-in", os.environ["APPLE_SIGNING_KEY_PATH"], "-noout", "-modulus").strip()
+
+
+def certificates_for_key(certificate_type):
+    """Every certificate of the type that was made for the signing key, expired ones included."""
+    listed = request(
+        "GET", f"/certificates?filter[certificateType]={certificate_type}&limit=200"
+        "&fields[certificates]=name,certificateContent,expirationDate",
+    )["data"]
+    modulus = key_modulus()
+    found = []
+    for item in listed:
+        content = base64.b64decode(item["attributes"]["certificateContent"])
+        # The public key is all that ties a certificate to the key: the API says nothing else about which key it was for.
+        if run(OPENSSL, "x509", "-inform", "DER", "-noout", "-modulus", input=content).strip() == modulus:
+            found.append({
+                "id": item["id"],
+                "name": item["attributes"].get("name"),
+                "content": content,
+                "expiration": parse_expiration(item["attributes"]["expirationDate"]),
+            })
+    return found
+
+
+def create_certificate(certificate_type):
+    """A new certificate of the type for the signing key, or None where Apple refuses one because the team has its most."""
     with tempfile.TemporaryDirectory() as directory:
-        key = os.path.join(directory, "key.pem")
         csr = os.path.join(directory, "request.csr")
-        certificate = os.path.join(directory, "certificate.cer")
-        run(OPENSSL, "genrsa", "-out", key, "2048")
-        run(OPENSSL, "req", "-new", "-key", key, "-out", csr, "-subj", "/CN=GitHub Actions")
+        run(OPENSSL, "req", "-new", "-key", os.environ["APPLE_SIGNING_KEY_PATH"], "-out", csr, "-subj", "/CN=GitHub Actions")
         with open(csr) as file:
             csr_content = file.read()
-        created = request("POST", "/certificates", {"data": {
-            "type": "certificates",
-            "attributes": {"certificateType": certificate_type, "csrContent": csr_content},
-        }})["data"]
-        # Recorded before anything else can fail, so that cleanup revokes it whatever happens next.
-        state = read_state()
-        state["certificates"][certificate_type] = created["id"]
-        write_state(state)
+    created = request("POST", "/certificates", {"data": {
+        "type": "certificates",
+        "attributes": {"certificateType": certificate_type, "csrContent": csr_content},
+    }}, conflict_ok=True)
+    if created is None:
+        return None
+    attributes = created["data"]["attributes"]
+    print(f"Created {certificate_type} certificate {created['data']['id']} ({attributes.get('name')}), "
+          f"expiring {attributes['expirationDate']}")
+    return {
+        "id": created["data"]["id"],
+        "name": attributes.get("name"),
+        "content": base64.b64decode(attributes["certificateContent"]),
+        "expiration": parse_expiration(attributes["expirationDate"]),
+    }
+
+
+def current_certificate(certificate_type):
+    current = newest_valid(certificates_for_key(certificate_type), datetime.now(timezone.utc))
+    if current is None:
+        fail(f"There is no {certificate_type} certificate for the signing key: run `certificate` first.")
+    return current
+
+
+def import_certificate(certificate_type, keychain):
+    """Finds or renews the certificate of the type for the signing key, and imports both into the keychain."""
+    now = datetime.now(timezone.utc)
+    current = newest_valid(certificates_for_key(certificate_type), now)
+    if current is None or needs_renewal(current, now):
+        created = create_certificate(certificate_type)
+        if created is not None:
+            current = created
+        elif current is not None:
+            print(f"::warning::The {certificate_type} certificate {current['id']} expires on {current['expiration']:%Y-%m-%d} "
+                  "and Apple refused a new one, since the team already has as many of the type as it may: revoke one that "
+                  "is not this signing key's in the developer account, and the next run renews it.")
+        else:
+            fail(f"Apple refused a {certificate_type} certificate for the signing key, since the team already has as many "
+                 "of the type as it may. Revoke one in the developer account that no build waiting for App Review was "
+                 "signed with, and run this again.")
+    else:
+        print(f"Using {certificate_type} certificate {current['id']} ({current['name']}), "
+              f"expiring {current['expiration']:%Y-%m-%d}")
+    with tempfile.TemporaryDirectory() as directory:
+        # The format `security` imports with -f openssl, whichever one the secret was written in.
+        key = os.path.join(directory, "key.pem")
+        certificate = os.path.join(directory, "certificate.cer")
+        run(OPENSSL, "rsa", "-in", os.environ["APPLE_SIGNING_KEY_PATH"], "-out", key)
         with open(certificate, "wb") as file:
-            file.write(base64.b64decode(created["attributes"]["certificateContent"]))
+            file.write(current["content"])
         tools = ["-T", "/usr/bin/codesign", "-T", "/usr/bin/productbuild", "-T", "/usr/bin/security"]
-        run("security", "import", key, "-k", keychain, "-t", "priv", "-f", "openssl", *tools)
+        imported = subprocess.run(
+            ["security", "import", key, "-k", keychain, "-t", "priv", "-f", "openssl", *tools], capture_output=True, text=True,
+        )
+        # The Mac build imports a certificate of each of its two types, and both are for this one key.
+        if imported.returncode != 0 and "already exists" not in imported.stderr:
+            fail(f"security could not import the signing key: {imported.stderr.strip()}")
         run("security", "import", certificate, "-k", keychain, "-t", "cert", "-f", "x509")
-    attributes = created["attributes"]
-    print(f"Created {certificate_type} certificate {created['id']} ({attributes.get('name')}), expiring {attributes.get('expirationDate')}")
 
 
-def create_profile(profile_type, bundle_identifier, certificate_type, output):
-    """Creates a profile of the given type for the bundle ID and the certificate this run created, and saves it."""
-    certificate = read_state()["certificates"].get(certificate_type)
-    if not certificate:
-        fail(f"This run has created no {certificate_type} certificate to make a profile for.")
+def find_bundle_id(bundle_identifier):
     matches = request("GET", f"/bundleIds?filter[identifier]={bundle_identifier}&limit=200")["data"]
     # The filter matches prefixes as well, so com.example.app also finds com.example.app.widget.
     bundle = next((item for item in matches if item["attributes"]["identifier"] == bundle_identifier), None)
     if bundle is None:
         fail(f"There is no App ID {bundle_identifier} in the developer account.")
-    # Profile names are unique in an account; the run's id keeps two runs of the same workflow apart.
-    name = f"CI {bundle_identifier} {os.environ.get('GITHUB_RUN_ID', int(time.time()))}"
-    created = request("POST", "/profiles", {"data": {
-        "type": "profiles",
-        "attributes": {"name": name, "profileType": profile_type},
-        "relationships": {
-            "bundleId": {"data": {"type": "bundleIds", "id": bundle["id"]}},
-            "certificates": {"data": [{"type": "certificates", "id": certificate}]},
-        },
-    }})["data"]
-    state = read_state()
-    state["profiles"].append(created["id"])
-    write_state(state)
+    return bundle["id"]
+
+
+def save_profile(profile_type, bundle_identifier, certificate_type, output):
+    """Saves the active profile of the type for the bundle ID and the current certificate, creating it where there is none."""
+    certificate = current_certificate(certificate_type)
+    bundle = find_bundle_id(bundle_identifier)
+    profiles = request(
+        "GET", f"/profiles?filter[profileType]={profile_type}&filter[profileState]=ACTIVE&limit=200"
+        "&include=bundleId,certificates&limit[certificates]=50&fields[profiles]=name,profileContent,bundleId,certificates",
+    )["data"]
+    profile = next((
+        item for item in profiles
+        if item["relationships"]["bundleId"]["data"]["id"] == bundle
+        and certificate["id"] in [entry["id"] for entry in item["relationships"]["certificates"]["data"]]
+    ), None)
+    if profile is None:
+        # Profile names are unique in an account, the expired and invalid ones included.
+        name = f"CI {bundle_identifier} {os.environ.get('GITHUB_RUN_ID', int(time.time()))}"
+        profile = request("POST", "/profiles", {"data": {
+            "type": "profiles",
+            "attributes": {"name": name, "profileType": profile_type},
+            "relationships": {
+                "bundleId": {"data": {"type": "bundleIds", "id": bundle}},
+                "certificates": {"data": [{"type": "certificates", "id": certificate["id"]}]},
+            },
+        }})["data"]
+        print(f"Created {profile_type} profile {profile['id']} ({name}) for {bundle_identifier}")
+    else:
+        print(f"Using {profile_type} profile {profile['id']} ({profile['attributes']['name']}) for {bundle_identifier}")
     with open(output, "wb") as file:
-        file.write(base64.b64decode(created["attributes"]["profileContent"]))
-    print(f"Created {profile_type} profile {created['id']} ({name}) for {bundle_identifier}")
+        file.write(base64.b64decode(profile["attributes"]["profileContent"]))
 
 
 def remove(state):
@@ -200,21 +287,8 @@ def remove(state):
         print(f"Revoked {certificate_type} certificate {certificate}")
 
 
-def cleanup():
-    """Deletes the profiles and revokes the certificates this run created, and nothing else."""
-    remove(read_state())
-    write_state({"certificates": {}, "profiles": []})
-
-
 def gh(*arguments):
     return subprocess.run(["gh", *arguments], check=True, capture_output=True, text=True).stdout
-
-
-def record_build(platform, version, build_number):
-    """Notes in the state file which build its identities signed, which is what `cleanup-earlier` asks Apple about."""
-    state = read_state()
-    state["build"] = {"platform": platform, "version": version, "number": build_number}
-    write_state(state)
 
 
 def find_app_id(bundle_identifier):
@@ -266,8 +340,8 @@ def still_needed(app_id, platform, state):
 
 def cleanup_earlier(artifact_name, bundle_identifier, platform):
     """
-    Revokes what earlier runs kept for their builds, except for a build that is still waiting for Apple, and deletes each
-    artifact once nothing in it is kept any more - so identities that are kept are asked about again by the next run.
+    Revokes what the state files of earlier runs name, except for a build that is still waiting for Apple, and deletes
+    each artifact once nothing in it is kept any more - so identities that are kept are asked about again by the next run.
     """
     repository = os.environ["GITHUB_REPOSITORY"]
     artifacts = json.loads(gh("api", f"repos/{repository}/actions/artifacts?name={artifact_name}&per_page=100"))["artifacts"]
@@ -297,14 +371,10 @@ def cleanup_earlier(artifact_name, bundle_identifier, platform):
 if __name__ == "__main__":
     command, arguments = (sys.argv[1], sys.argv[2:]) if len(sys.argv) > 1 else (None, [])
     if command == "certificate" and len(arguments) == 2:
-        create_certificate(*arguments)
+        import_certificate(*arguments)
     elif command == "profile" and len(arguments) == 4:
-        create_profile(*arguments)
-    elif command == "cleanup" and not arguments:
-        cleanup()
-    elif command == "record-build" and len(arguments) == 3:
-        record_build(*arguments)
+        save_profile(*arguments)
     elif command == "cleanup-earlier" and len(arguments) == 3:
         cleanup_earlier(*arguments)
     else:
-        fail(__doc__.strip().split("\n\n")[3])
+        fail(next(part for part in __doc__.split("\n\n") if part.lstrip().startswith("app_store_signing.py")))

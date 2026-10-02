@@ -172,7 +172,7 @@ jobs:
     name: iOS
     needs: [prepare, test]
     uses: ./.github/workflows/publish-ios.yml
-    # The signing identities of the last upload are kept in an artifact until this run revokes them (see
+    # The signing identities earlier runs kept for their builds are revoked by this one once those are decided (see
     # app_store_signing.py).
     permissions:
       contents: read
@@ -187,7 +187,7 @@ jobs:
     name: macOS
     needs: [prepare, test]
     uses: ./.github/workflows/publish-macos.yml
-    # The signing identities of the last upload are kept in an artifact until this run revokes them (see
+    # The signing identities earlier runs kept for their builds are revoked by this one once those are decided (see
     # app_store_signing.py).
     permissions:
       contents: read

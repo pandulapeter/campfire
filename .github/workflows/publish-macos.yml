@@ -18,13 +18,13 @@
 # arm64-only Mac app from macOS 12 on. Asking for the .pkg is what signs and sandboxes it; the donation link is left
 # out of every build that runs on an Apple platform (guideline 3.1.1).
 #
-# Nothing it signs with is stored anywhere, so nothing of it can expire: the run creates a Mac App Distribution and a
-# Mac Installer Distribution certificate for a key made on the runner, and the two Mac App Store provisioning profiles
-# (the app's and the bundled Java runtime's) that name them, through the App Store Connect API
-# (.github/scripts/app_store_signing.py). A later run revokes and deletes all of it once the build it signed is no
-# longer waiting for Apple, since that build is refused if it is revoked before App Review approves it (this one does, at
-# its end, if it uploaded nothing). That takes
-# an API key with the Admin role, and actions: write for the artifact that carries the ids from one run to the next.
+# Nothing it signs with can expire: the APPLE_SIGNING_KEY secret holds the team's signing key alone, and the run finds
+# the Mac App Distribution and the Mac Installer Distribution certificate made for it, and the two Mac App Store
+# provisioning profiles (the app's and the bundled Java runtime's) that name them, through the App Store Connect API -
+# creating each where there is none, and a new certificate two months before one expires
+# (.github/scripts/app_store_signing.py). Nothing is ever revoked, since a build whose certificate is revoked before App
+# Review approves it is refused. That takes an API key with the Admin role, and actions: write for the artifacts in which
+# earlier runs kept identities of their own until their builds were decided.
 #
 # Called by publish-all.yml for every release; dispatched by hand to upload a release again, which App Store Connect only
 # accepts under a build number it has not seen yet — hence the override, which leaves gradle.properties as it was.
@@ -64,7 +64,7 @@ on:
 
 permissions:
   contents: read
-  # To find, read and delete the signing identities an earlier run kept for its build (app_store_signing.py).
+  # To find, read and delete the signing identities earlier runs kept for their builds (app_store_signing.py).
   actions: write
 
 jobs:
@@ -80,6 +80,7 @@ jobs:
           ASC_KEY_ID: ${{ secrets.APP_STORE_CONNECT_KEY_ID }}
           ASC_ISSUER_ID: ${{ secrets.APP_STORE_CONNECT_ISSUER_ID }}
           ASC_PRIVATE_KEY: ${{ secrets.APP_STORE_CONNECT_PRIVATE_KEY }}
+          APPLE_SIGNING_KEY: ${{ secrets.APPLE_SIGNING_KEY }}
         run: |
           PROBLEMS=0
           problem() {
@@ -103,6 +104,11 @@ jobs:
             problem APP_STORE_CONNECT_PRIVATE_KEY "empty or unset"
           elif ! printf '%s' "$ASC_PRIVATE_KEY" | grep -q 'BEGIN PRIVATE KEY'; then
             problem APP_STORE_CONNECT_PRIVATE_KEY "expected the text of the AuthKey_<id>.p8 file, BEGIN PRIVATE KEY line included, not base64"
+          fi
+          if [ -z "$APPLE_SIGNING_KEY" ]; then
+            problem APPLE_SIGNING_KEY "empty or unset"
+          elif ! printf '%s' "$APPLE_SIGNING_KEY" | grep -q -- '-----BEGIN \(RSA \)\{0,1\}PRIVATE KEY-----'; then
+            problem APPLE_SIGNING_KEY "expected an unencrypted RSA private key as PEM text, BEGIN PRIVATE KEY line included"
           fi
           if [ "$PROBLEMS" -gt 0 ]; then
             echo "Set them from a terminal that can prompt for hidden input: gh secret set <name> --repo $GITHUB_REPOSITORY" >&2
@@ -132,6 +138,7 @@ jobs:
           ASC_KEY_ID: ${{ secrets.APP_STORE_CONNECT_KEY_ID }}
           ASC_ISSUER_ID: ${{ secrets.APP_STORE_CONNECT_ISSUER_ID }}
           ASC_PRIVATE_KEY: ${{ secrets.APP_STORE_CONNECT_PRIVATE_KEY }}
+          APPLE_SIGNING_KEY: ${{ secrets.APPLE_SIGNING_KEY }}
           GH_TOKEN: ${{ github.token }}
         run: |
           # altool finds the key by its name in this directory; the signing script is given the path.
@@ -141,8 +148,10 @@ jobs:
           chmod 600 "$ASC_KEY_PATH"
           echo "ASC_KEY_PATH=$ASC_KEY_PATH" >> "$GITHUB_ENV"
           export ASC_KEY_PATH
-          # What earlier runs kept for the builds they uploaded, revoked before this one makes its own - except for a
-          # build that is still waiting for Apple, which would be refused without it.
+          export APPLE_SIGNING_KEY_PATH="$RUNNER_TEMP/apple-signing-key.pem"
+          (umask 077 && printf '%s\n' "$APPLE_SIGNING_KEY" > "$APPLE_SIGNING_KEY_PATH")
+          # What earlier runs kept for the builds they uploaded, revoked once those builds are no longer waiting for
+          # Apple, since they would be refused without it.
           python3 .github/scripts/app_store_signing.py cleanup-earlier app-store-signing-macos com.pandulapeter.campfire MAC_OS
           KEYCHAIN_PATH="$RUNNER_TEMP/signing.keychain-db"
           KEYCHAIN_PASSWORD=$(uuidgen)
@@ -164,7 +173,7 @@ jobs:
           IDENTITY=$(security find-identity -v "$KEYCHAIN_PATH" | sed -n 's/.*"3rd Party Mac Developer Application: \(.*\)"$/\1/p' | head -n 1)
           if [ -z "$IDENTITY" ] || ! security find-identity -v "$KEYCHAIN_PATH" | grep -qF "3rd Party Mac Developer Installer: $IDENTITY"; then
             security find-identity -v "$KEYCHAIN_PATH"
-            echo "::error::The keychain does not hold both signing identities the certificates were created for." >&2
+            echo "::error::The keychain does not hold both signing identities of the signing key's certificates." >&2
             exit 1
           fi
           echo "MAC_SIGNING_IDENTITY=$IDENTITY" >> "$GITHUB_ENV"
@@ -261,7 +270,6 @@ jobs:
           cat "$LOG"
           echo "The release build started in the sandbox and wrote: $(ls "$DATA/library/songs")"
       - name: Upload to App Store Connect
-        id: upload
         env:
           ASC_KEY_ID: ${{ secrets.APP_STORE_CONNECT_KEY_ID }}
           ASC_ISSUER_ID: ${{ secrets.APP_STORE_CONNECT_ISSUER_ID }}
@@ -271,8 +279,6 @@ jobs:
             echo "::error::No .pkg was built." >&2
             exit 1
           fi
-          # Before the upload, since a step that fails after it would revoke the certificate of the build it uploaded.
-          python3 .github/scripts/app_store_signing.py record-build MAC_OS "${{ steps.version.outputs.name }}" "${{ steps.version.outputs.build }}"
           xcrun altool --upload-app --type macos --file "$PACKAGE" --apiKey "$ASC_KEY_ID" --apiIssuer "$ASC_ISSUER_ID"
           echo "Uploaded ${{ steps.version.outputs.name }} (${{ steps.version.outputs.build }}). It appears in TestFlight once App Store Connect has processed it."
       # Waits for App Store Connect to process the build, which can take half an hour, and submits it with the release's
@@ -297,30 +303,10 @@ jobs:
           fi
           python3 .github/scripts/app_store_submission.py com.pandulapeter.campfire MAC_OS \
             "${{ steps.version.outputs.name }}" "${{ steps.version.outputs.build }}" "$RUNNER_TEMP/release-notes.txt" "${PREPARE[@]}"
-      # A build has to stay signed by a valid certificate until it is approved, so a run that uploaded one leaves what it
-      # created to the later runs of this workflow, which revoke it before they make their own once the build is no
-      # longer waiting for Apple.
-      - name: Keep the signing identities for the build under review
-        if: always() && steps.upload.outcome == 'success'
-        uses: actions/upload-artifact@v4
-        with:
-          name: app-store-signing-macos
-          path: ${{ runner.temp }}/app-store-signing.json
-          retention-days: 90
-      # Whatever the run got as far as creating, and nothing else, when the build did not get as far as App Store Connect.
-      - name: Revoke the signing identities
-        if: always() && steps.upload.outcome != 'success'
-        env:
-          ASC_KEY_ID: ${{ secrets.APP_STORE_CONNECT_KEY_ID }}
-          ASC_ISSUER_ID: ${{ secrets.APP_STORE_CONNECT_ISSUER_ID }}
-        run: |
-          if [ -f "$RUNNER_TEMP/app-store-signing.json" ]; then
-            python3 .github/scripts/app_store_signing.py cleanup
-          fi
       - name: Clean up credentials
         if: always()
         run: |
           if [ -n "$KEYCHAIN_PATH" ] && [ -f "$KEYCHAIN_PATH" ]; then
             security delete-keychain "$KEYCHAIN_PATH"
           fi
-          rm -f "$HOME/.appstoreconnect/private_keys/"*.p8 "$RUNNER_TEMP/"*.provisionprofile local.properties
+          rm -f "$HOME/.appstoreconnect/private_keys/"*.p8 "$RUNNER_TEMP/apple-signing-key.pem" "$RUNNER_TEMP/"*.provisionprofile local.properties
