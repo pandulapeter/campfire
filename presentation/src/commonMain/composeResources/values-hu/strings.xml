@@ -238,8 +238,6 @@
     <string name="settings_performance_mode_description">Előadás közben csak olvashatóvá teszi az alkalmazást: a szerkesztés, a törlés, az átrendezés és a transzponálás eltűnik, így egy véletlen érintés sem változtat meg semmit</string>
     <string name="settings_lyrics_only_mode">Csak dalszöveg</string>
     <string name="settings_lyrics_only_mode_description">Az akkordok elrejtése, hogy csak a szöveg maradjon</string>
-    <string name="settings_one_row_at_a_time">Egyszerre egy sor</string>
-    <string name="settings_one_row_at_a_time_description">Üres hely minden sor alatt, így minden sort egymagában, a képernyő közepén olvashatsz</string>
     <string name="settings_cover_art">Borítóképek</string>
     <string name="settings_cover_art_description">A dalokban megadott albumborítók megjelenítése, amelyeket az alkalmazás egyszer letölt, majd ezen az eszközön tárol</string>
     <string name="settings_german_notation">Német hangjelölés</string>

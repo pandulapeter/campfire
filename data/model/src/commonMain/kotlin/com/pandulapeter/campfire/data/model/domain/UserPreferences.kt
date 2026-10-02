@@ -24,11 +24,6 @@ data class UserPreferences(
     val shouldShowArchivedSetlists: Boolean,
     val isLyricsOnlyModeEnabled: Boolean,
     /**
-     * Whether a song leaves empty space under every row of columns shorter than the screen, so that a scroll resting on
-     * a row shows that row and no other. On by default.
-     */
-    val isOneRowAtATimeEnabled: Boolean,
-    /**
      * Multiplier applied to the text size of the song details screen, [DEFAULT_FONT_SCALE] being the default, and
      * never outside [MIN_FONT_SCALE] to [MAX_FONT_SCALE].
      */

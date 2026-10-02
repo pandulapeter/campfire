@@ -2766,8 +2766,6 @@ class CampfireViewModel(
 
     fun setLyricsOnlyModeEnabled(value: Boolean) = changeUserPreferences { copy(isLyricsOnlyModeEnabled = value) }
 
-    fun setOneRowAtATimeEnabled(value: Boolean) = changeUserPreferences { copy(isOneRowAtATimeEnabled = value) }
-
     /**
      * Folds or unfolds one section of a song (or one tab or grid inside it), [key] being the name the song details
      * screen gives it. One set per song, wherever it is opened from, and kept in the preferences rather than in a

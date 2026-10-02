@@ -226,7 +226,6 @@ internal fun SongDetailsScreen(
     // caught up with a change to it yet - so that two numberings are never mixed in one bar.
     val setlistSlots = remember(setlist, songs) { setlist?.let { buildSetlistSlots(it.entries, songs.map { song -> song.fileName }) } }
     val shouldShowChords = userPreferences?.isLyricsOnlyModeEnabled != true
-    val isOneRowAtATimeEnabled = userPreferences?.isOneRowAtATimeEnabled == true
     val isCoverArtEnabled = userPreferences?.isCoverArtEnabled == true
     val currentSongText = currentSong?.let { songTexts[it.fileName] }
     // Performance mode edits nothing, so the sheet of what the song is is only offered there where it has something in it.
@@ -569,7 +568,6 @@ internal fun SongDetailsScreen(
                         fontScale = if (isFollowingGesture) ({ viewModel.fontScale }) else ({ viewModel.settledFontScale }),
                         // In a setlist the step buttons page to the songs beside every song, whether it scrolls or not.
                         keepsStepButtonInset = canPage,
-                        isOneRowAtATimeEnabled = isOneRowAtATimeEnabled,
                         // One set per song, wherever it is opened from: folding is how this reader reads it, not how the
                         // setlist has the band play it.
                         foldedSections = userPreferences?.foldedSections?.get(song.fileName).orEmpty(),
@@ -746,7 +744,6 @@ private fun SongDetailsPage(
     shouldShowChords: Boolean,
     fontScale: () -> Float,
     keepsStepButtonInset: Boolean,
-    isOneRowAtATimeEnabled: Boolean,
     foldedSections: Set<String>,
     onFoldToggled: (key: String) -> Unit,
     chordSpelling: UserPreferences.ChordSpelling,
@@ -859,7 +856,6 @@ private fun SongDetailsPage(
                     if (offsetRows != flingBehavior.rows) flingBehavior.rows = offsetRows
                 },
                 rowViewportHeight = maxHeight,
-                isOneRowAtATime = isOneRowAtATimeEnabled,
                 rowViewportBottomPadding = bottomPadding,
                 // The buttons are as far from the end of the screen as the text is, so the text only has to leave
                 // them their own width and a gap.

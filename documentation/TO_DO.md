@@ -8,12 +8,10 @@
  * https://mozilla.org/MPL/2.0/.
 -->
 # To do
-- Fab touch target should be MUCH larger
+- Song details FAB touch target should be MUCH larger
 - Swipe between rows could be strictly paged
 - PDF export: consider adding the option for 3 columns in landscape
-- Improve song info dialog and card
 - Mobile web IME keyboard handling
-- Be more aggressive when breaking up sections within a row. Priority: reduce empty space
 - Clarify misunderstandings around the different notation systems, especially during saving
 - Editor feature: clean up chordPro that standardizes the order of tags, line breaks, etc. Apply it automatically to imported files
 - What's new dialog

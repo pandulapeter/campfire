@@ -18,7 +18,7 @@ import kotlin.math.max
  *
  * The layout places the chunks sections are composed as (see [sectionChunkStarts]) rather than whole sections, so the
  * grid it places is one of chunks, every chunk of a section in its section's cell ([expandedTo]) unless the section was
- * cut into pieces side by side (see [flowIntoRowsCuttingSections]).
+ * cut into pieces (see [flowLikeAMagazine]).
  *
  * This is what is decided for the settled width, while the positions are only worked out by [arrange] from the
  * heights the sections have at the width the layout is actually given.
@@ -480,6 +480,15 @@ internal inline fun forEachWideRow(
  */
 internal fun pagesOf(height: Int, maxRowHeight: Int) =
     if (height <= maxRowHeight) 1 else ((height - 1L) / maxRowHeight.coerceAtLeast(1) + 1).toInt()
+
+/**
+ * How many pages this grid takes on a screen [maxRowHeight] high, every row read on pages of its own (see [pagesOf]),
+ * given the [heights] of what it places, as [arrange] takes them.
+ */
+internal fun SectionGrid.pageCount(heights: IntArray, sectionGap: Int, maxRowHeight: Int, unitSections: IntArray? = null, piecePadding: IntArray? = null): Int {
+    val rowBottoms = arrange(heights, sectionGap, rowGap = 0, unitSections = unitSections, piecePadding = piecePadding).rowBottoms
+    return rowBottoms.indices.sumOf { row -> pagesOf(rowBottoms[row] - (rowBottoms.getOrNull(row - 1) ?: 0), maxRowHeight) }
+}
 
 /**
  * Whether a first row ending at [end], [height] tall and leaving the song [pageCount] pages in all, is a better start

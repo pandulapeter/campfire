@@ -60,75 +60,102 @@ class SectionCuttingTest {
 
     @Test
     fun aSectionTallerThanTheScreenIsCutIntoTheColumnsOfItsRow() {
-        val grid = cut(sectionUnits = listOf(listOf(100, 100, 100, 100)), maxColumnCount = 2, maxRowHeight = 300)
+        val grid = flow(sectionUnits = listOf(listOf(100, 100, 100, 100)), columnCount = 2, maxRowHeight = 300)
         assertContentEquals(intArrayOf(2), grid.columnCounts)
         assertContentEquals(intArrayOf(0, 0, 1, 1), grid.columns)
     }
 
     @Test
-    fun aSectionThatFitsTheScreenIsOnlyCutWhereEverySectionMayBe() {
-        val sections = listOf(listOf(100, 100, 100, 100))
-        assertFalse(cutsAnySection(cut(sectionUnits = sections, maxColumnCount = 2, maxRowHeight = 500), unitSections(sections)))
-        assertTrue(cutsAnySection(cut(sectionUnits = sections, maxColumnCount = 2, maxRowHeight = 500, cutsEverySection = true), unitSections(sections)))
-    }
-
-    @Test
     fun aSectionIsOnlyCutWhereItMayBe() {
         // Six lines, which may only be cut in front of the fifth: the two columns are four lines and two.
-        val grid = cut(sectionUnits = listOf(List(6) { 100 }), maxColumnCount = 2, maxRowHeight = 500, isCuttableBefore = { it == 4 })
+        val grid = flow(sectionUnits = listOf(List(6) { 100 }), columnCount = 2, maxRowHeight = 500, isCuttableBefore = { it == 4 })
         assertContentEquals(intArrayOf(0, 0, 0, 0, 1, 1), grid.columns)
     }
 
     @Test
     fun sectionsThatFitTheColumnsWholeAreNotCut() {
         val sections = listOf(listOf(100), listOf(100), listOf(100), listOf(100))
-        listOf(false, true).forEach { cutsEverySection ->
-            val grid = cut(sectionUnits = sections, maxColumnCount = 2, maxRowHeight = 300, cutsEverySection = cutsEverySection)
-            assertFalse(cutsAnySection(grid, unitSections(sections)))
-        }
+        assertFalse(cutsAnySection(flow(sectionUnits = sections, columnCount = 2, maxRowHeight = 300), unitSections(sections)))
     }
 
     @Test
     fun aCutThatSavesLittleIsNotMade() {
-        // Cutting the first section would even the two columns out by a few pixels.
-        val sections = listOf(listOf(100, 100), listOf(150))
-        val grid = cut(sectionUnits = sections, maxColumnCount = 2, maxRowHeight = 1000, cutsEverySection = true)
+        // Cutting the second section after its first line would even the two columns out by a few pixels.
+        val sections = listOf(listOf(250), listOf(100, 100, 100, 100))
+        val grid = flow(sectionUnits = sections, columnCount = 2, maxRowHeight = 500)
         assertFalse(cutsAnySection(grid, unitSections(sections)))
         assertContentEquals(intArrayOf(2), grid.columnCounts)
     }
 
     @Test
-    fun cutRowsAreNeverTallerThanTheScreenAndNoPieceLeavesItsRow() {
+    fun aSectionRunsOnFromTheLastColumnOfARowIntoTheNextRow() {
+        val sections = List(3) { List(4) { 100 } }
+        val grid = flow(sectionUnits = sections, columnCount = 2, maxRowHeight = 300)
+        val units = unitSections(sections)
+        assertTrue((1 until units.size).any { units[it] == units[it - 1] && grid.rows[it] != grid.rows[it - 1] })
+    }
+
+    @Test
+    fun pagesAreFilledRatherThanEndedWithASection() {
+        // Six sections of five lines, of which a column holds one and a half: whole, a row holds two of them, three pages
+        // in all, while running them on from column to column holds the song on two.
+        val sections = List(6) { List(5) { 60 } }
+        val grid = flow(sectionUnits = sections, columnCount = 2, maxRowHeight = 500)
+        assertEquals(2, grid.columnCounts.size)
+        assertEquals(2, grid.pageCount(sections.flatten().toIntArray(), SECTION_GAP, 500, unitSections(sections), IntArray(sections.size)))
+    }
+
+    @Test
+    fun theLastRowTakesTheFewestColumnsThatHoldIt() {
+        // Two full rows of two columns, and a short section left over, which is not split across two columns.
+        val sections = List(4) { List(3) { 100 } } + listOf(listOf(100))
+        val grid = flow(sectionUnits = sections, columnCount = 2, maxRowHeight = 300)
+        assertEquals(1, grid.columnCounts.last())
+    }
+
+    @Test
+    fun anUncuttableStretchTallerThanTheScreenHasARowOfItsOwn() {
+        val sections = listOf(listOf(100), listOf(800), listOf(100))
+        val grid = flow(sectionUnits = sections, columnCount = 2, maxRowHeight = 500)
+        val row = grid.rows[1]
+        assertEquals(listOf(1), sections.indices.filter { grid.rows[it] == row })
+        assertEquals(1, grid.columnCounts[row])
+    }
+
+    @Test
+    fun rowsAreNeverTallerThanTheScreenAndHoldTheSongInItsOrder() {
         val random = Random(7)
         repeat(300) {
             val sections = List(random.nextInt(1, 12)) { List(random.nextInt(1, 6)) { random.nextInt(40, 200) } }
             val maxRowHeight = random.nextInt(250, 700)
-            val maxColumnCount = random.nextInt(2, 4)
+            val columnCount = random.nextInt(2, 4)
             val padding = IntArray(sections.size) { if (random.nextBoolean()) 12 else 0 }
-            val grid = cut(sections, maxColumnCount, maxRowHeight, padding, cutsEverySection = random.nextBoolean())
-            assertRowsFitAndHoldWholeSections(grid, sections, maxRowHeight, padding)
+            val grid = flow(sections, columnCount, maxRowHeight, padding)
+            assertRowsFitInOrder(grid, sections, maxRowHeight, padding)
         }
     }
 
     @Test
-    fun aSongbookSizedFileIsCutByTheSameRules() {
+    fun aSongbookSizedFileIsFlowedByTheSameRules() {
         val random = Random(11)
         val sections = List(1000) { List(3) { random.nextInt(40, 200) } }
         val padding = IntArray(sections.size)
-        val grid = cut(sections, maxColumnCount = 4, maxRowHeight = 500, piecePadding = padding, cutsEverySection = true)
-        assertRowsFitAndHoldWholeSections(grid, sections, maxRowHeight = 500, padding = padding)
-        val rowOfUnit = grid.rows.toList()
-        assertEquals(rowOfUnit.sorted(), rowOfUnit)
+        val grid = flow(sections, columnCount = 4, maxRowHeight = 500, piecePadding = padding)
+        assertRowsFitInOrder(grid, sections, maxRowHeight = 500, padding = padding)
     }
 
-    /** No row of several columns is taller than [maxRowHeight], every row fills its columns, and no section crosses a row. */
-    private fun assertRowsFitAndHoldWholeSections(grid: SectionGrid, sections: List<List<Int>>, maxRowHeight: Int, padding: IntArray) {
+    /**
+     * No row of several columns is taller than [maxRowHeight], every row fills its columns, and the song is read in its
+     * order, row after row and column after column.
+     */
+    private fun assertRowsFitInOrder(grid: SectionGrid, sections: List<List<Int>>, maxRowHeight: Int, padding: IntArray) {
         val units = unitSections(sections)
         val heights = sections.flatten().toIntArray()
         val unitsByRow = units.indices.groupBy { grid.rows[it] }
         grid.columnCounts.forEachIndexed { row, columnCount ->
             val rowUnits = unitsByRow[row].orEmpty()
             assertEquals((0 until columnCount).toList(), rowUnits.map { grid.columns[it] }.distinct())
+            assertEquals(rowUnits.map { grid.columns[it] }.sorted(), rowUnits.map { grid.columns[it] })
             if (columnCount > 1) {
                 val rowGrid = SectionGrid(IntArray(rowUnits.size), IntArray(rowUnits.size) { grid.columns[rowUnits[it]] }, intArrayOf(columnCount))
                 val height = rowGrid.arrange(
@@ -141,45 +168,36 @@ class SectionCuttingTest {
                 assertTrue(height <= maxRowHeight, "Row $row of $columnCount columns is $height tall, more than $maxRowHeight")
             }
         }
-        // Every section is in one row.
-        val rowsBySection = units.indices.groupBy({ units[it] }, { grid.rows[it] })
-        sections.indices.forEach { section -> assertEquals(1, rowsBySection[section].orEmpty().distinct().size) }
+        assertEquals(grid.rows.sorted(), grid.rows.toList())
+    }
+
+    /** Whether [grid], a grid of chunks, puts any section into more than one cell. */
+    private fun cutsAnySection(grid: SectionGrid, unitSections: IntArray) = (1 until unitSections.size).any { unit ->
+        unitSections[unit] == unitSections[unit - 1] && (grid.rows[unit] != grid.rows[unit - 1] || grid.columns[unit] != grid.columns[unit - 1])
     }
 
     private fun unitSections(sectionUnits: List<List<Int>>) = sectionUnits.flatMapIndexed { section, units -> List(units.size) { section } }.toIntArray()
 
-    @Test
-    fun shortSectionSharesTheWideRowOfTheSectionAfterIt() {
-        val grid = cut(listOf(listOf(200), listOf(900), listOf(300), listOf(300)), maxColumnCount = 2, maxRowHeight = 600, wideHeights = mapOf(1 to 250))
-        assertContentEquals(intArrayOf(0, 0, 1, 1), grid.rows)
-        assertContentEquals(intArrayOf(1, 2), grid.columnCounts)
-        assertContentEquals(booleanArrayOf(true, false), grid.wideRows)
-    }
-
-    private fun cut(
+    private fun flow(
         sectionUnits: List<List<Int>>,
-        maxColumnCount: Int,
+        columnCount: Int,
         maxRowHeight: Int,
         piecePadding: IntArray = IntArray(sectionUnits.size),
-        cutsEverySection: Boolean = false,
         isCuttableBefore: (Int) -> Boolean = { true },
-        wideHeights: Map<Int, Int> = emptyMap(),
     ): SectionGrid {
         val heights = sectionUnits.flatten()
         val sectionStarts = IntArray(sectionUnits.size + 1).also { starts ->
             sectionUnits.forEachIndexed { section, units -> starts[section + 1] = starts[section] + units.size }
         }
-        return flowIntoRowsCuttingSections(
+        return flowLikeAMagazine(
             sectionStarts = sectionStarts,
-            maxColumnCount = maxColumnCount,
+            columnCount = columnCount,
             heightAt = { unit, _ -> heights[unit] },
             isCuttableBefore = isCuttableBefore,
-            wideHeightAt = { wideHeights[it] },
             piecePadding = piecePadding,
             sectionGap = SECTION_GAP,
             maxRowHeight = maxRowHeight,
             minCutSaving = 50,
-            cutsEverySection = cutsEverySection,
         )
     }
 }

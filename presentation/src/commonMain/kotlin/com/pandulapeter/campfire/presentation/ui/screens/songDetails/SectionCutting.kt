@@ -10,235 +10,140 @@
 package com.pandulapeter.campfire.presentation.ui.screens.songDetails
 
 /**
- * [flowIntoRows] for a song it could not fit the screen, where a section may be cut into pieces put side by side in
- * the columns of one row, the way a newspaper runs an article on from the bottom of one column to the top of the next.
- * It is the last resort, since a cut asks the reader to find their way from one column into the next in the middle of a
- * verse, so the layout only asks for it once the song has to be scrolled without it (see `SongSectionsLayout`), and
- * only two things are worth one: a section taller than the screen, which is cut wherever it is found, and - only where
- * [cutsEverySection] - a song that fits the screen once something is cut, and not before.
- *
- * A piece never continues in another row: a section cut across rows would be split by a divider and a scroll, and read
- * no better than one scrolled through whole. What a cut buys is a section that did not fit the screen fitting it in
- * several columns - a verse a little taller than a phone held sideways, which would otherwise have a row to itself
- * with the rest of the width empty - or a row of sections that only balance into its columns once one of them is cut.
+ * The song flowed into rows of [columnCount] columns the way a magazine sets an article: every column filled down to
+ * [maxRowHeight], the height of the screen, a section that does not fit what is left of a column running on at the top
+ * of the next one - and from the last column of a row into the first one of the next row. A row is a page wherever the
+ * rows are read one at a time, and turning one is the thing a reader without a pedal has to reach for the screen to do
+ * and a reader with one has to keep up with, so every page is made to hold as much of the song as it can, and the empty
+ * space is left where it does the least harm: at the end of the song.
  *
  * The grid is one of chunks: the units of section `s` are `sectionStarts[s]` to `sectionStarts[s + 1]`, [heightAt] the
  * height of a unit in a row of a given number of columns, and a section may only be cut in front of a unit
- * [isCuttableBefore] says so of. A
- * section on a card has [piecePadding] at both sides of every cut, as [arrange] places them. Within a row the cells are filled in their order, each piece as tall as the height of the
- * row allows, the lowest such height being searched for. A row prefers no cut at all, and then cuts only the
- * sections taller than [maxRowHeight], unless cutting more saves at least [minCutSaving] of its height. The rows are
- * chosen the way [flowIntoRows] chooses them - the fewest pages, then the first rows as full as possible, then the
- * lowest - a row with a cut in it counting that much taller there, so that of two ways of laying out the same sections
- * the one without a cut wins unless the cut saves that much. Everything else - how many columns each row has, the
- * ties, the wide rows ([wideHeightAt]) - is decided the way [flowIntoRows] decides it, a row of several columns never
- * being taller than [maxRowHeight].
+ * [isCuttableBefore] says so of (see [sectionChunkStarts], which keeps two lines on either side of every cut). A section
+ * on a card has [piecePadding] at both sides of every cut, as [arrange] places them.
+ *
+ * Where the rows end is decided by filling the columns as full as they go, which is what makes the first pages as full
+ * as they can be. What is in a row is then shared out between its columns again, as evenly as it goes, so that their
+ * bottoms line up rather than the last one ending short: under the lowest height that still holds the row in its
+ * columns, keeping every section whole wherever that is no more than [minCutSaving] taller than cutting them. The last
+ * row, and a row that ends early because what follows it cannot be cut to fit a column, gets the fewest columns that
+ * hold it, which wrap the least, as a song that fits the screen does. A stretch of a section that cannot be cut and is
+ * taller than the screen on its own - a long staff of tablature - is a single column row of its own, paged through.
  */
-internal fun flowIntoRowsCuttingSections(
+internal fun flowLikeAMagazine(
     sectionStarts: IntArray,
-    maxColumnCount: Int,
+    columnCount: Int,
     heightAt: (unit: Int, columnCount: Int) -> Int,
     isCuttableBefore: (unit: Int) -> Boolean,
-    wideHeightAt: (section: Int) -> Int?,
     piecePadding: IntArray,
     sectionGap: Int,
     maxRowHeight: Int,
     minCutSaving: Int,
-    cutsEverySection: Boolean,
 ): SectionGrid {
     val sectionCount = sectionStarts.size - 1
     if (sectionCount <= 0) return emptyGrid()
     val unitCount = sectionStarts[sectionCount]
-    // Looked up for every unit of every row tried, which a scan of the section starts made quadratic in a long song.
+    // Looked up for every unit of every column tried, which a scan of the section starts would make quadratic.
     val unitSections = IntArray(unitCount).also { table ->
         for (section in 0 until sectionCount) table.fill(section, sectionStarts[section], sectionStarts[section + 1])
     }
-    val heights = Array(maxColumnCount) { column -> IntArray(unitCount) { heightAt(it, column + 1) } }
-    val sectionHeights = Array(maxColumnCount) { column ->
-        IntArray(sectionCount) { section -> (sectionStarts[section] until sectionStarts[section + 1]).sumOf { heights[column][it] } }
-    }
+    // Measured only for the column counts a row is actually tried in, since every width is a pass over the song.
+    val heightsByColumnCount = arrayOfNulls<IntArray>(columnCount)
+    fun heightsAt(columns: Int) = heightsByColumnCount[columns - 1] ?: IntArray(unitCount) { heightAt(it, columns) }.also { heightsByColumnCount[columns - 1] = it }
+    fun isSectionStart(unit: Int) = unit >= unitCount || sectionStarts[unitSections[unit]] == unit
+    fun isBreak(unit: Int, cutsSections: Boolean) = isSectionStart(unit) || cutsSections && isCuttableBefore(unit)
 
-    fun stackedHeight(columnCount: Int, start: Int, end: Int) =
-        (start until end).sumOf { sectionHeights[columnCount - 1][it].toLong() } + sectionGap.toLong() * (end - start - 1)
-
-    // The cell of every unit of the sections in [start, end) when the cells are filled in their order under cap, and how
-    // many cells that takes, or null where something does not fit an empty cell at all. A section that is not cut goes
-    // whole into the next cell once it no longer fits the one being filled.
-    fun fill(columnCount: Int, start: Int, end: Int, cap: Int, cuts: Cuts): Pair<IntArray, Int>? {
-        val unitHeights = heights[columnCount - 1]
-        val firstUnit = sectionStarts[start]
-        val cells = IntArray(sectionStarts[end] - firstUnit)
-        var cell = 0
-        var used = 0
-        var isEmpty = true
-        for (section in start until end) {
-            val padding = piecePadding[section]
-            val sectionHeight = sectionHeights[columnCount - 1][section]
-            val isCut = when (cuts) {
-                Cuts.NONE -> false
-                Cuts.OVERSIZED -> sectionHeight > maxRowHeight
-                Cuts.EVERY -> true
-            }
-            if (!isCut && sectionHeight > cap) return null
-            var from = sectionStarts[section]
-            val until = sectionStarts[section + 1]
-            var isContinuation = false
-            while (from < until) {
-                val base = if (isEmpty) 0 else used + sectionGap
-                val top = if (isContinuation) padding else 0
-                // The longest piece that fits, ending where the section ends or where it may be cut; one that ends before
-                // the section does ends in the padding of the cut.
-                var to = from
-                var height = 0
-                var end = from
-                var stackedHeight = 0
-                while (end < until && base + top + stackedHeight + unitHeights[end] <= cap) {
-                    stackedHeight += unitHeights[end]
-                    end++
-                    val endsSection = end == until
-                    if ((endsSection || (isCut && isCuttableBefore(end))) && base + top + stackedHeight + (if (endsSection) 0 else padding) <= cap) {
-                        to = end
-                        height = stackedHeight
-                    }
-                }
-                if (to == from || (to < until && !isCut && !isEmpty)) {
-                    if (isEmpty) return null
-                    cell++
-                    used = 0
-                    isEmpty = true
-                    continue
-                }
-                for (unit in from until to) cells[unit - firstUnit] = cell
-                if (to < until) {
-                    cell++
-                    used = 0
-                    isEmpty = true
-                    isContinuation = true
-                } else {
-                    used = base + top + height
-                    isEmpty = false
-                }
-                from = to
+    // Where the column that starts at from ends when it is filled as far as cap allows, no further than until, or from
+    // itself where not even the first piece fits. A column that starts inside a section starts with the padding of its
+    // card, and one that ends inside a section ends with it.
+    fun columnEnd(heights: IntArray, from: Int, until: Int, cap: Int, cutsSections: Boolean): Int {
+        var used = if (isSectionStart(from)) 0L else piecePadding[unitSections[from]].toLong()
+        var end = from
+        for (unit in from until until) {
+            if (unit > from && isSectionStart(unit)) used += sectionGap
+            used += heights[unit]
+            if (used > cap) break
+            val next = unit + 1
+            if (next == until || isBreak(next, cutsSections)) {
+                val bottomPadding = if (isSectionStart(next)) 0 else piecePadding[unitSections[unit]]
+                if (used + bottomPadding <= cap) end = next
             }
         }
-        return cells to cell + 1
+        return end
     }
 
-    // The lowest cap under which filling [start, end) takes no more than columnCount cells, or null where not even the
-    // highest row allowed does.
-    fun lowestCap(columnCount: Int, start: Int, end: Int, cuts: Cuts): Int? {
-        val highest = minOf(maxRowHeight.toLong(), stackedHeight(columnCount, start, end)).toInt()
-        val highestFill = fill(columnCount, start, end, highest, cuts) ?: return null
-        if (highestFill.second > columnCount) return null
+    // The column of every unit in [from, until) when the columns are filled in their order under cap, and how many
+    // columns that takes, or null where something does not fit an empty column at all.
+    fun fill(heights: IntArray, from: Int, until: Int, cap: Int, cutsSections: Boolean): Pair<IntArray, Int>? {
+        val cells = IntArray(until - from)
+        var start = from
+        var cell = 0
+        while (start < until) {
+            val end = columnEnd(heights, start, until, cap, cutsSections)
+            if (end == start) return null
+            for (unit in start until end) cells[unit - from] = cell
+            cell++
+            start = end
+        }
+        return cells to cell
+    }
+
+    // The lowest cap under which [from, until) fills no more than columns columns, or null where not even the screen does.
+    fun lowestCap(heights: IntArray, from: Int, until: Int, columns: Int, cutsSections: Boolean): Int? {
+        val highestFill = fill(heights, from, until, maxRowHeight, cutsSections) ?: return null
+        if (highestFill.second > columns) return null
         var tooLow = 0
-        var enough = highest
+        var enough = maxRowHeight
         while (enough - tooLow > 1) {
             val cap = tooLow + (enough - tooLow) / 2
-            val cells = fill(columnCount, start, end, cap, cuts)?.second
-            if (cells != null && cells <= columnCount) enough = cap else tooLow = cap
+            val cells = fill(heights, from, until, cap, cutsSections)?.second
+            if (cells != null && cells <= columns) enough = cap else tooLow = cap
         }
         return enough
     }
 
-    // How a row of [start, end) in columnCount columns is laid out, how tall it is and whether it cuts a section: the
-    // cell of every unit, or null where no such row fits.
-    fun rowOf(columnCount: Int, start: Int, end: Int): Triple<IntArray, Int, Boolean>? {
-        val units = sectionStarts[end] - sectionStarts[start]
-        if (columnCount == 1) {
-            val height = stackedHeight(1, start, end)
-            return if (end - start == 1 || height <= maxRowHeight) Triple(IntArray(units), height.toInt(), false) else null
-        }
-        val sectionHeightsAtWidth = sectionHeights[columnCount - 1]
-        // A row has exactly as many columns as it fills, as in flowIntoRows, so a way of filling it that leaves one empty
-        // is no way of laying it out in that many columns.
-        fun lowestFullCap(cuts: Cuts) = lowestCap(columnCount, start, end, cuts)?.takeIf { fill(columnCount, start, end, it, cuts)?.second == columnCount }
-        val whole = if (end - start >= columnCount) lowestFullCap(Cuts.NONE) else null
-        val oversizedCut = lowestFullCap(Cuts.OVERSIZED)
-        val everyCut = if (cutsEverySection) lowestFullCap(Cuts.EVERY) else null
-        val lowest = listOfNotNull(whole, oversizedCut, everyCut).minOrNull() ?: return null
-        if (whole != null && whole - lowest < minCutSaving) {
-            val sectionCells = sectionHeightsAtWidth.balanceIntoCells(start, end, columnCount, sectionGap, whole)
-            return Triple(IntArray(units) { unit -> sectionCells[unitSections[sectionStarts[start] + unit] - start] }, whole, false)
-        }
-        val (cuts, cap) = if (oversizedCut != null && oversizedCut - lowest < minCutSaving) Cuts.OVERSIZED to oversizedCut else Cuts.EVERY to everyCut!!
-        val cells = fill(columnCount, start, end, cap, cuts)!!.first
-        val isCut = (1 until units).any { unit ->
-            val first = sectionStarts[start]
-            cells[unit] != cells[unit - 1] && unitSections[first + unit] == unitSections[first + unit - 1]
-        }
-        return Triple(cells, cap, isCut)
+    // The columns of [from, until) laid out in at most columns columns of that width, evened out, and how many columns
+    // that is, or null where they do not fit the screen in that many.
+    fun rowOf(from: Int, until: Int, columns: Int): Pair<IntArray, Int>? {
+        val heights = heightsAt(columns)
+        val cut = lowestCap(heights, from, until, columns, cutsSections = true) ?: return null
+        val whole = lowestCap(heights, from, until, columns, cutsSections = false)
+        val cutsSections = whole == null || whole - cut >= minCutSaving
+        return fill(heights, from, until, if (cutsSections) cut else whole!!, cutsSections)
     }
 
-    // As in flowIntoRows: pageCounts[i] is the fewest pages the sections from i onwards fit, and the rest describes the
-    // first row of that, rowCosts[i] being its height with what a cut in it counts for.
-    val pageCounts = IntArray(sectionCount + 1)
-    val rowEnds = IntArray(sectionCount + 1)
-    val rowCosts = IntArray(sectionCount + 1)
-    val rowColumnCounts = IntArray(sectionCount + 1)
-    val rowCells = arrayOfNulls<IntArray>(sectionCount + 1)
-    val isRowWide = BooleanArray(sectionCount + 1)
-    for (start in sectionCount - 1 downTo 0) {
-        var bestPageCount = Int.MAX_VALUE
-        for (end in start + 1..sectionCount) {
-            // The lowest the sections could be stacked in is the widest single column, and no row holds more than the
-            // screen in every column: a longer row only holds more.
-            if (end - start > 1 && stackedHeight(1, start, end) > maxRowHeight.toLong() * maxColumnCount) break
-            for (columnCount in 1..maxColumnCount) {
-                val (cells, height, isCut) = rowOf(columnCount, start, end) ?: continue
-                val pageCount = pagesOf(height, maxRowHeight) + pageCounts[end]
-                val cost = height + if (isCut) minCutSaving else 0
-                if (isBetterRow(pageCount, end, cost, bestPageCount, rowEnds[start], rowCosts[start])) {
-                    bestPageCount = pageCount
-                    rowEnds[start] = end
-                    rowCosts[start] = cost
-                    rowColumnCounts[start] = columnCount
-                    rowCells[start] = cells
-                    isRowWide[start] = false
-                }
-            }
-        }
-        forEachWideRow(start, sectionCount, sectionHeights[0], wideHeightAt, sectionGap, maxRowHeight) { end, height ->
-            val pageCount = pagesOf(height, maxRowHeight) + pageCounts[end]
-            if (isBetterRow(pageCount, end, height, bestPageCount, rowEnds[start], rowCosts[start])) {
-                bestPageCount = pageCount
-                rowEnds[start] = end
-                rowCosts[start] = height
-                rowColumnCounts[start] = 1
-                rowCells[start] = IntArray(sectionStarts[end] - sectionStarts[start])
-                isRowWide[start] = true
-            }
-        }
-        pageCounts[start] = bestPageCount
-    }
     val rows = IntArray(unitCount)
     val columns = IntArray(unitCount)
     val columnCounts = mutableListOf<Int>()
-    val wideRows = mutableListOf<Boolean>()
+    val fullHeights = heightsAt(columnCount)
     var start = 0
-    while (start < sectionCount) {
-        val row = columnCounts.size
-        val cells = rowCells[start]!!
-        for (unit in sectionStarts[start] until sectionStarts[rowEnds[start]]) {
-            rows[unit] = row
-            columns[unit] = cells[unit - sectionStarts[start]]
+    while (start < unitCount) {
+        var end = start
+        var filledColumns = 0
+        while (filledColumns < columnCount && end < unitCount) {
+            val next = columnEnd(fullHeights, end, unitCount, maxRowHeight, cutsSections = true)
+            if (next == end) break
+            end = next
+            filledColumns++
         }
-        columnCounts += rowColumnCounts[start]
-        wideRows += isRowWide[start]
-        start = rowEnds[start]
+        val (cells, rowColumnCount) = when {
+            filledColumns == 0 -> {
+                end = (start + 1 until unitCount).firstOrNull { isBreak(it, cutsSections = true) } ?: unitCount
+                IntArray(end - start) to 1
+            }
+            filledColumns == columnCount && end < unitCount -> rowOf(start, end, columnCount)!!
+            // A row of the same columns as the rest would leave a hole where its last ones go, so it takes as few as hold
+            // it, which are wider. A lower count only makes its sections shorter, so the one the columns were filled in
+            // always fits.
+            else -> (1..filledColumns).firstNotNullOfOrNull { rowOf(start, end, it) } ?: rowOf(start, end, columnCount)!!
+        }
+        val row = columnCounts.size
+        for (unit in start until end) {
+            rows[unit] = row
+            columns[unit] = cells[unit - start]
+        }
+        columnCounts += rowColumnCount
+        start = end
     }
-    return SectionGrid(rows = rows, columns = columns, columnCounts = columnCounts.toIntArray(), wideRows = wideRows.toBooleanArray())
-}
-
-/** Which sections [flowIntoRowsCuttingSections] may cut while it fills a row. */
-private enum class Cuts {
-    NONE,
-
-    /** Only a section taller than the screen, which does not fit a row whole however the row is laid out. */
-    OVERSIZED,
-    EVERY,
-}
-
-/** Whether [grid], a grid of chunks, puts any section into more than one cell. */
-internal fun cutsAnySection(grid: SectionGrid, unitSections: IntArray) = (1 until unitSections.size).any { unit ->
-    unitSections[unit] == unitSections[unit - 1] && grid.columns[unit] != grid.columns[unit - 1]
+    return SectionGrid(rows = rows, columns = columns, columnCounts = columnCounts.toIntArray())
 }

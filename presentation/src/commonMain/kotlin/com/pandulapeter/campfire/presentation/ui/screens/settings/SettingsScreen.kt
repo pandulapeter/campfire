@@ -107,8 +107,6 @@ import com.pandulapeter.campfire.presentation.resources.settings_git_hub
 import com.pandulapeter.campfire.presentation.resources.settings_git_hub_description
 import com.pandulapeter.campfire.presentation.resources.settings_help
 import com.pandulapeter.campfire.presentation.resources.settings_help_description
-import com.pandulapeter.campfire.presentation.resources.settings_one_row_at_a_time
-import com.pandulapeter.campfire.presentation.resources.settings_one_row_at_a_time_description
 import com.pandulapeter.campfire.presentation.resources.settings_import
 import com.pandulapeter.campfire.presentation.resources.settings_library
 import com.pandulapeter.campfire.presentation.resources.settings_library_cover_art_cache
@@ -484,12 +482,6 @@ private fun SongDisplaySection(
         description = stringResource(Res.string.settings_lyrics_only_mode_description),
         isChecked = userPreferences?.isLyricsOnlyModeEnabled == true,
         onCheckedChange = viewModel::setLyricsOnlyModeEnabled,
-    )
-    SwitchListItem(
-        title = stringResource(Res.string.settings_one_row_at_a_time),
-        description = stringResource(Res.string.settings_one_row_at_a_time_description),
-        isChecked = userPreferences?.isOneRowAtATimeEnabled == true,
-        onCheckedChange = viewModel::setOneRowAtATimeEnabled,
     )
     // The one switch here that decides whether the app reaches the network on its own: off, no cover is fetched from
     // anywhere, which is what somebody who does not want a song file to make the app contact a host turns it off for.

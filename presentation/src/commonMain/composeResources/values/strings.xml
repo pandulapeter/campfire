@@ -238,8 +238,6 @@
     <string name="settings_performance_mode_description">Makes the app read-only while you play: editing, deleting, reordering and transposing are hidden, so an accidental tap can\'t change anything</string>
     <string name="settings_lyrics_only_mode">Lyrics only</string>
     <string name="settings_lyrics_only_mode_description">Hide every chord and show the words on their own</string>
-    <string name="settings_one_row_at_a_time">One row at a time</string>
-    <string name="settings_one_row_at_a_time_description">Leave empty space under every row, so that each one is read on its own in the middle of the screen</string>
     <string name="settings_cover_art">Cover art</string>
     <string name="settings_cover_art_description">Show the album cover a song names next to it, downloading it once and keeping a copy on this device</string>
     <string name="settings_german_notation">German notation</string>
