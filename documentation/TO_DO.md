@@ -8,6 +8,8 @@
  * https://mozilla.org/MPL/2.0/.
 -->
 # To do
+- Optimize for the smallest screens
+- Review dialog behavior on small screens (documentation/small-screen-review.md)
 - Metronome: documentation/metronome.md
 - Global sync status display ?
 - Dynamic scrim over backstacked screens during transitions
