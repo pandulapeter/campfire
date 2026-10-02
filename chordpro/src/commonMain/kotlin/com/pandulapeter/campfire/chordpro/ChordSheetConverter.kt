@@ -118,7 +118,10 @@ object ChordSheetConverter {
     private fun chordTokens(line: Rendered): List<Token>? = tokens(line.text).takeIf { words ->
         words.any { chord(it.text) } && words.all { chord(it.text) || furniture(it.text) }
     }
-    private fun section(text: String): String? = section.find(text.trim().removeSurrounding("[", "]").removeSurrounding("(", ")").removeSuffix(":"))
+    /** The punctuation that marks an extracted heading is not part of the section's name. */
+    private fun headingLabel(text: String) = text.trim().removeSurrounding("[", "]").removeSurrounding("(", ")").removeSuffix(":").trim()
+
+    private fun section(text: String): String? = section.find(headingLabel(text))
         ?.takeIf { it.range.first == 0 }?.groupValues?.get(1)?.lowercase()
     private fun sectionType(text: String): String? = when (section(text)) {
         "verse", "versszak" -> "verse"
@@ -266,11 +269,12 @@ object ChordSheetConverter {
             when (kinds[index]) {
                 Kind.SECTION -> {
                     closeSection()
+                    val label = headerValue(headingLabel(line.text))
                     val type = sectionType(line.text)
                     val next = ((index + 1)..lines.lastIndex).firstOrNull { kinds[it] != Kind.BLANK }
                     if (type == "chorus" && (next == null || kinds[next] == Kind.SECTION)) output += "{chorus}"
-                    else if (type != null) { output += "{start_of_$type: ${headerValue(line.text.trim())}}"; environment = type }
-                    else output += "{comment: ${headerValue(line.text.trim())}}"
+                    else if (type != null) { output += "{start_of_$type: ${label}}"; environment = type }
+                    else output += "{comment: ${label}}"
                 }
                 Kind.TAB -> { if (!inTab) { output += "{start_of_tab}"; inTab = true }; output += line.text }
                 Kind.CHORD -> {

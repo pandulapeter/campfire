@@ -54,10 +54,21 @@ class ChordSheetConverterTest {
         val text = "Capo: 3rd fret\nHangnem: G\n120 BPM\nTime: 4/4\nEl\u0151ad\u00f3: Someone\n\u00a9 1900\nVerse 2:\nAm C\nHello world\n[Refr\u00e9n]\nAm F\nSing along\n\nRef."
         val result = convert(text)
         assertTrue(result.contains("{capo: 3}\n{key: G}\n{tempo: 120}\n{time: 4/4}\n{artist: Someone}\n{copyright: 1900}"))
-        assertTrue(result.contains("{start_of_verse: Verse 2:}"))
-        assertTrue(result.contains("{end_of_verse}\n{start_of_chorus: [Refr\u00e9n]}"))
+        assertTrue(result.contains("{start_of_verse: Verse 2}"))
+        assertTrue(result.contains("{end_of_verse}\n{start_of_chorus: Refr\u00e9n}"))
         assertTrue(result.endsWith("{end_of_chorus}\n{chorus}\n"))
         assertEquals("{comment: Intro}\n[Am] [F] [C] [G]\n", convert("Intro: Am F C G"))
+    }
+
+    @Test
+    fun headingDecorationIsLeftOutOfSectionNames() {
+        val result = convert("[Verse 1]\nC   G\nHello world\n\n[Intro]\nC G\n\n[Chorus]\nAm F\nLa la")
+        assertTrue(result.contains("{start_of_verse: Verse 1}"))
+        assertTrue(result.contains("{comment: Intro}"))
+        assertTrue(result.contains("{start_of_chorus: Chorus}"))
+        assertEquals(convert("Verse 1\nC G\nHello world"), convert("Verse 1:\nC G\nHello world"))
+        assertEquals(convert("Chorus\nAm F\nLa la"), convert("(Chorus)\nAm F\nLa la"))
+        assertEquals("{start_of_verse: Verse 1}\nHello world\n{end_of_verse}\n", convert("Verse 1\nHello world"))
     }
 
     @Test

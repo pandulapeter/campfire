@@ -19,7 +19,8 @@ in `:domain:*`. `:data:source:local:implementation` uses it directly for the met
   advance to multiples of eight. Recognized chord lines are aligned and snapped over lyrics (a line of a single chord
   is one where another line holds two, or where it is bold and capitalised over plain lyrics of its size, which is
   how a wrapped line of Campfire's export prints), parenthesized or bold/raised inline chords converted
-  conservatively, English/Hungarian labels turned into sections and tab runs wrapped. Styled titles and metadata become headers — a large title wrapped over the lines under it in its own type
+  conservatively, English/Hungarian labels turned into sections with their heading brackets, parentheses and trailing
+  colon removed, and tab runs wrapped. Styled titles and metadata become headers — a large title wrapped over the lines under it in its own type
   (a narrow column of Campfire's PDF export) as one title, and a label without a colon only where its value has the
   field's shape (`Capo 2`, `Key G`, `Time 4/4`), since "By the rivers…" and "Time after time" are lyrics; repeated
   titled page starts can split a songbook. A text is passed through as ChordPro when any line is a directive ChordPro
