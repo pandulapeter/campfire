@@ -2434,7 +2434,8 @@ class CampfireViewModel(
         isPreparationCancelled = false
         // A sibling of the consumer under the scope's supervisor rather than a child of it, so that the user's Cancel
         // ends only the preparation and never the queue, and a failure inside it only reaches this through await().
-        val deferred = viewModelScope.async { prepareImport(request.files) { if (request.shouldAnnounceResult) _importProgress.value = it } }
+        val files = request.files
+        val deferred = viewModelScope.async { prepareImport(files) { if (request.shouldAnnounceResult) _importProgress.value = it } }
         preparation = deferred
         val plan = try {
             deferred.await()
@@ -2453,6 +2454,7 @@ class CampfireViewModel(
             return
         } finally {
             preparation = null
+            request.files = emptyList()
         }
         // A Cancel can land after the preparation finished but before this resumed (the resumption is dispatched to the
         // main thread, behind a click already queued there): it was still pressed while the dialog said "reading", so it wins.
@@ -3228,9 +3230,12 @@ class CampfireViewModel(
      *   the library the user is about to be shown, and a progress dialog, a snackbar or a result counting the files
      *   of it would be the app reporting on something that, as far as anyone can tell, simply came with it.
      * @param shouldOpenSong True for files the system handed over, see [importFiles].
+     * @param files Emptied by [import] once the preparation is over: the plan carries everything the rest of the import
+     *   needs, while the request lives for as long as a conflicts question does, which would otherwise keep up to the
+     *   whole selection's bytes reachable for nothing.
      */
     private class ImportRequest(
-        val files: List<ImportedFile>,
+        var files: List<ImportedFile>,
         val shouldAnnounceResult: Boolean,
         val shouldOpenSong: Boolean,
         val settled: CompletableDeferred<Unit> = CompletableDeferred(),
