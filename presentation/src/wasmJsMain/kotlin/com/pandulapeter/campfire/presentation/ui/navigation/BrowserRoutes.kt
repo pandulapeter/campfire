@@ -15,6 +15,7 @@ import com.pandulapeter.campfire.data.model.domain.LibraryFiles
 import com.pandulapeter.campfire.data.model.domain.Setlist
 import com.pandulapeter.campfire.data.model.domain.Song
 import com.pandulapeter.campfire.presentation.ui.CampfireViewModel
+import com.pandulapeter.campfire.presentation.ui.components.isAnyOverflowMenuOpen
 import com.pandulapeter.campfire.presentation.ui.screens.settings.SettingsTab
 import kotlin.js.ExperimentalWasmJsInterop
 
@@ -31,7 +32,8 @@ import kotlin.js.ExperimentalWasmJsInterop
  * - `song/{song}`, and `song/{song}/edit` for its editor;
  * - `setlist/{setlist}/{song}` — a song read from a setlist, which follows the pager from song to song;
  * - `import` — the import screen, which an address opened on its own names nothing for, since what it shows is an
- *   import running in the page that is gone.
+ *   import running in the page that is gone;
+ * - and, on top of any of them, the same address again while a dialog, a sheet or a menu is open over it.
  *
  * A song is named by its file name without the `.cho` every song the app writes ends in, and a setlist without its
  * `.setlist.json`; a song file with one of the other extensions keeps it, since the name has to find the file again.
@@ -40,8 +42,8 @@ internal object BrowserRoutes {
 
     /**
      * The path of every history entry the app should have, in order, from the songs at the bottom to the screen on
-     * top: one per step a back gesture would take, which is a screen of the back stack or an open search. A pure
-     * function of states, so that it can be observed.
+     * top: one per step a back gesture would take, which is a screen of the back stack, an open search, or a dialog, a
+     * sheet or a menu open over them all. A pure function of states, so that it can be observed.
      */
     fun paths(viewModel: CampfireViewModel) = buildList {
         viewModel.backStack.forEach { destination ->
@@ -69,12 +71,16 @@ internal object BrowserRoutes {
                 CampfireDestination.ImportReport -> add(IMPORT)
             }
         }
+        // Without an entry of its own, a Back on a screen with nothing under it in the history leaves the page rather
+        // than closing what is open over the screen. It keeps the screen's address, since nothing could open it again.
+        if (viewModel.visibleDialog.value != null || isAnyOverflowMenuOpen) lastOrNull()?.let(::add)
     }
 
     /**
      * How many history entries [state] makes, which is the size [paths] has once the app is there: one per screen of
      * the back stack, one more for each list screen whose search is open, and one more for a settings screen open on a
-     * tab other than General.
+     * tab other than General. A dialog is never part of [state], so Forward to the entry of one that was closed is
+     * refused, and the browser is taken back to the screen under it.
      */
     fun entryCount(state: NavigationState) = state.backStack.size + state.backStack.count { destination ->
         destination == CampfireDestination.Songs && state.isSongsSearchOpen ||

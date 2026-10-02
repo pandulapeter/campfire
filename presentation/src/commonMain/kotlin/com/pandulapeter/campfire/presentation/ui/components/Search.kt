@@ -595,9 +595,9 @@ private fun SearchBackHandler(
  * on every frame of it. The field keeps the focus and the caret, so a tap on it brings the keyboard straight back.
  *
  * @param isEnabled False while the list is covered by a dialog or a sheet, whose keyboard is not this list's to put
- *   away. A list can still move down on its own under one: on the web the keyboard makes the page itself shorter, and
- *   a list that shrinks past the item that opened the dialog scrolls down to keep that item in view, which would
- *   otherwise close the keyboard the dialog has just brought up.
+ *   away. A list can still move down on its own under one: in a browser that makes the page itself shorter for the
+ *   keyboard (Firefox), a list that shrinks past the item that opened the dialog scrolls down to keep that item in
+ *   view, which would otherwise close the keyboard the dialog has just brought up.
  */
 @Composable
 internal fun HideKeyboardWhenScrolledDown(

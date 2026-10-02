@@ -108,11 +108,11 @@
             };
         })();
     </script>
-    <!-- Compose reports no keyboard inset on the web, so the app's own keyboard padding is always zero here. With
-         resizes-content a mobile browser makes the page itself shorter while the keyboard is up, and the canvas is laid
-         out above it the way Android's adjustResize does it; by default only the visual viewport shrinks, leaving the
-         bottom of the app under the keyboard and the whole canvas panned up to keep the focused field in view. Safari
-         ignores the key. -->
+    <!-- The fallback for a browser without the VirtualKeyboard API, which the app uses to lay the keyboard over the
+         page and keep clear of it as an inset (ProvideKeyboardInsets): with resizes-content Firefox makes the page
+         itself shorter while the keyboard is up, and the canvas is laid out above it the way Android's adjustResize
+         does it; by default only the visual viewport shrinks, leaving the bottom of the app under the keyboard and the
+         whole canvas panned up to keep the focused field in view. Safari ignores the key. -->
     <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover, interactive-widget=resizes-content">
     <!-- The two schemes of the app's own color: the dark background, and the light surfaceContainerHigh, since Chrome
          ignores a theme-color as light as the light background. Once the preferences are read the app writes the

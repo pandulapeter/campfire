@@ -74,15 +74,15 @@ import kotlinx.coroutines.flow.first
 import org.jetbrains.compose.resources.painterResource
 
 /**
- * Material's `AlertDialog`, for every dialog that is typed into, which grows into a full screen one once the window
- * is too short for it and shrinks back once there is room again.
+ * Material's `AlertDialog`, for every dialog that is typed into, which grows into a full screen one once what the bars
+ * and the keyboard leave of the window is too short for it, and shrinks back once there is room again.
  *
- * The window gets that short when the keyboard comes up in the web build, where it makes the page itself shorter (see
- * `app/web`), or in a phone held sideways: a centered dialog then keeps its title, its padding and its buttons and
- * squeezes what is between them, the field and the list being typed into, down to nothing. The full screen form puts
- * the close button, the title and the confirming button in one bar, the way a sheet's header does, and gives the rest
- * of the window to the content. It shrinks back only once the window has grown clearly past the height it grew at, so
- * that a window near that height does not switch it back and forth, and only once nothing is moving the content: a
+ * That room gets that short when the keyboard comes up on a small phone, or in a phone held sideways: a centered dialog
+ * then keeps its title, its padding and its buttons and squeezes what is between them, the field and the list being
+ * typed into, down to nothing. The full screen form puts the close button, the title and the confirming button in one
+ * bar, the way a sheet's header does, and gives the rest of the window to the content. It shrinks back only once the
+ * room has grown clearly past the height it grew at, so that a window near that height does not switch it back and
+ * forth, and only once nothing is moving the content: a
  * list scrolled down puts the keyboard away ([HideKeyboardWhenScrolledDown]), and a dialog that turned back into a
  * small one under the finger scrolling it would move the very rows being read ([DialogGestureTracker]).
  *
@@ -131,8 +131,8 @@ internal fun TextFieldDialog(
             }
             // The Android dialog window reaches under the bars and the keyboard rather than being resized for them, so
             // its measured height alone does not say how much of it can be used: what the bars and the keyboard cover
-            // is taken off it. The web already shortens the page and reports no insets, so there nothing is taken
-            // off twice.
+            // is taken off it. Elsewhere the dialog is placed clear of both already, and the insets it reports inside
+            // leave them out, so nothing is taken off twice.
             val imeHeight = with(density) { WindowInsets.ime.getBottom(this).toDp() }
             val coveredHeight = with(density) { (WindowInsets.safeDrawing.getTop(this) + WindowInsets.safeDrawing.getBottom(this)).toDp() }
             // Restarted by every frame of the keyboard's slide, so the full screen form also waits for the keyboard
@@ -386,8 +386,8 @@ private fun ProvideContentColorTextStyle(
 }
 
 /**
- * Below this the dialog goes full screen: a phone's page in the web build with the keyboard up is about this tall,
- * and a centered dialog that is about one song spends half of it on its title, its padding and its buttons.
+ * Below this the dialog goes full screen: what a small phone leaves above its keyboard is about this tall, and a
+ * centered dialog that is about one song spends half of it on its title, its padding and its buttons.
  */
 private val FULL_SCREEN_HEIGHT = 320.dp
 

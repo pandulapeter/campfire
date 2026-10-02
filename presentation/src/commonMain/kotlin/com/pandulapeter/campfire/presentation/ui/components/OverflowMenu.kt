@@ -15,6 +15,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.Stable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
@@ -96,7 +97,10 @@ internal class OverflowMenuState {
 @Composable
 internal fun rememberOverflowMenuState() = remember { OverflowMenuState() }
 
-/** True while any [OverflowMenu] is open, for the platform shells that have to know that before they act on a key. */
+/**
+ * True while any [OverflowMenu] is open, for the platform shells that have to know that before they act on a key, and
+ * for the web build's history, which gives an open menu an entry of its own (which is why it is a snapshot state).
+ */
 internal val isAnyOverflowMenuOpen get() = openOverflowMenuCount > 0
 
-private var openOverflowMenuCount = 0
+private var openOverflowMenuCount by mutableIntStateOf(0)

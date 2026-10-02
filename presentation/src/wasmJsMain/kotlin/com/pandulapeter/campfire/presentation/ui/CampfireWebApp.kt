@@ -22,6 +22,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.pandulapeter.campfire.presentation.ui.navigation.BrowserHistoryEffect
 import com.pandulapeter.campfire.presentation.ui.navigation.navigateToBrowserAddress
 import com.pandulapeter.campfire.presentation.ui.platform.LocalFilePicker
+import com.pandulapeter.campfire.presentation.ui.platform.ProvideKeyboardInsets
 import com.pandulapeter.campfire.presentation.ui.platform.WebFilePicker
 import com.pandulapeter.campfire.presentation.ui.platform.appIconColor
 import com.pandulapeter.campfire.presentation.ui.platform.appIconThemeColor
@@ -46,7 +47,9 @@ import org.koin.compose.viewmodel.koinViewModel
  * find bar ([SearchShortcutEffect]). The browser's zoom shortcuts change the text size of the song details screen
  * instead of zooming the page ([SongTextZoomEffect]). Every screen has an address of its own, and the browser's
  * history follows the app's back stack ([BrowserHistoryEffect]). The browser's own toolbar is painted in the palette
- * the user chose ([BrowserThemeColorEffect]), and the favicon is the icon of that palette ([FaviconEffect]).
+ * the user chose ([BrowserThemeColorEffect]), and the favicon is the icon of that palette ([FaviconEffect]). The
+ * on-screen keyboard is laid over the page and reported as an inset where the browser can say where it is
+ * ([ProvideKeyboardInsets]), rather than shortening the page under the app.
  */
 @Composable
 fun CampfireWebApp(
@@ -80,12 +83,14 @@ fun CampfireWebApp(
     DisposableEffect(Unit) {
         onDispose { stopWarningBeforeUnload() }
     }
-    CampfireApp(
-        viewModel = viewModel,
-        urlOpener = ::openInNewTab,
-        filesToImport = remember { droppedFiles() },
-        onAppReady = ::dismissLoadingScreen,
-    )
+    ProvideKeyboardInsets {
+        CampfireApp(
+            viewModel = viewModel,
+            urlOpener = ::openInNewTab,
+            filesToImport = remember { droppedFiles() },
+            onAppReady = ::dismissLoadingScreen,
+        )
+    }
 }
 
 /**

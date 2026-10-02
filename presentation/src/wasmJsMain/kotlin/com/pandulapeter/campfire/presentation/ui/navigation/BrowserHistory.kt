@@ -53,8 +53,9 @@ internal fun CampfireViewModel.navigateToBrowserAddress() {
  * **The browser's Back is the app's own back.** A `popstate` to a shallower entry is not taken as an address to show:
  * it is sent into the navigation event dispatcher, exactly like Escape and the system gesture of the other platforms,
  * and whatever answers it answers it - a dialog, a menu, a sheet, a search, the editor asking about unsaved text, or
- * the back stack. The history is then made to match what the app did, so a back that only closed a dialog, or that
- * the editor turned into a question, puts the entry the browser had already left back on top. A Back that skipped
+ * the back stack. The history is then made to match what the app did, so a back that the editor turned into a
+ * question, or that closed something with no entry of its own (the dialog the setlist picker names a setlist in, over
+ * the picker's entry), puts the entry the browser had already left back on top. A Back that skipped
  * several entries at once (the long press menu) is taken one step at a time, stopping at the first that did not
  * simply leave a screen.
  *
@@ -84,8 +85,13 @@ internal fun BrowserHistoryEffect(viewModel: CampfireViewModel) {
         window.addEventListener(EVENT_POP_STATE, listener)
         try {
             launch {
-                // The searches are flows rather than snapshot states, so they are combined in rather than read.
-                combine(snapshotFlow { BrowserRoutes.paths(viewModel) }, viewModel.songsSearch.isOpen, viewModel.setlistsSearch.isOpen) { _, _, _ -> BrowserRoutes.paths(viewModel) }
+                // The searches and the dialog are flows rather than snapshot states, so they are combined in rather than read.
+                combine(
+                    snapshotFlow { BrowserRoutes.paths(viewModel) },
+                    viewModel.songsSearch.isOpen,
+                    viewModel.setlistsSearch.isOpen,
+                    viewModel.visibleDialog,
+                ) { _, _, _, _ -> BrowserRoutes.paths(viewModel) }
                     .distinctUntilChanged()
                     .collect { events.send(HistoryEvent.Changed) }
             }
@@ -223,10 +229,10 @@ private class BrowserHistory(
      * where the address of a file renamed further down the stack is brought up to date.
      *
      * Entries above the current one that already hold the addresses wanted are gone forward to rather than written
-     * again, which is what happens after a Back the app answered without leaving anything (a dialog closed, the
-     * editor's question asked): Chrome marks an entry that added another without a user gesture as one its Back
-     * button skips, so pushing the entry that was just left would have the next Back jump over the one under it -
-     * off the page, where nothing was pushed from under it. A traversal adds nothing and marks nothing.
+     * again, which is what happens after a Back the app answered without leaving anything (the editor's question
+     * asked): Chrome marks an entry that added another without a user gesture as one its Back button skips, so pushing
+     * the entry that was just left would have the next Back jump over the one under it - off the page, where nothing
+     * was pushed from under it. A traversal adds nothing and marks nothing.
      */
     private suspend fun synchronize() {
         repeat(MAX_TRAVERSALS) {
