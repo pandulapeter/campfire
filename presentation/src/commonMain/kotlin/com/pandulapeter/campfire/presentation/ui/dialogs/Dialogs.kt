@@ -458,8 +458,10 @@ internal fun CampfireDialogs(
 }
 
 /**
- * Each change gets its own row so wrapped lines stay aligned with the words rather than the bullet. Only the list
- * scrolls: the title and the way back to the songbook stay visible, even with a long release or larger interface text.
+ * Each change gets its own row so wrapped lines stay aligned with the words rather than the bullet, a bold headline
+ * with its description under it (`• **Headline** Description` in the resource; a row without the bold part is all
+ * description). Only the list scrolls: the title and the way back to the songbook stay visible, even with a long
+ * release or larger interface text.
  */
 @Composable
 private fun WhatsNewDialog(
@@ -472,7 +474,10 @@ private fun WhatsNewDialog(
         val scrollState = rememberScrollState()
         val message = stringResource(Res.string.whats_new_message)
         val changes = remember(message) {
-            message.lineSequence().map { it.trim().removePrefix("•").trim() }.filter { it.isNotBlank() }.toList()
+            message.lineSequence().map { it.trim().removePrefix("•").trim() }.filter { it.isNotBlank() }.map { change ->
+                val headline = WHATS_NEW_HEADLINE.matchEntire(change)
+                if (headline == null) null to change else headline.groupValues[1] to headline.groupValues[2]
+            }.toList()
         }
         val bulletColor = MaterialTheme.colorScheme.primary
         Column(
@@ -484,7 +489,7 @@ private fun WhatsNewDialog(
                 .padding(vertical = 4.dp),
             verticalArrangement = Arrangement.spacedBy(16.dp),
         ) {
-            changes.forEach { change ->
+            changes.forEach { (headline, description) ->
                 Row(
                     modifier = Modifier.fillMaxWidth().semantics(mergeDescendants = true) {},
                     horizontalArrangement = Arrangement.spacedBy(12.dp),
@@ -492,20 +497,35 @@ private fun WhatsNewDialog(
                     Canvas(modifier = Modifier.padding(top = 10.dp).size(5.dp)) {
                         drawCircle(color = bulletColor)
                     }
-                    Text(
+                    Column(
                         modifier = Modifier.weight(1f),
-                        text = change,
-                        style = MaterialTheme.typography.bodyLarge,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    )
+                        verticalArrangement = Arrangement.spacedBy(2.dp),
+                    ) {
+                        if (headline != null) {
+                            Text(
+                                text = headline,
+                                style = MaterialTheme.typography.titleMedium,
+                                color = MaterialTheme.colorScheme.onSurface,
+                            )
+                        }
+                        if (description.isNotEmpty()) {
+                            Text(
+                                text = description,
+                                style = MaterialTheme.typography.bodyMedium,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            )
+                        }
+                    }
                 }
             }
         }
     },
     confirmButton = {
-        Button(onClick = onDismiss) { Text(stringResource(Res.string.done)) }
+        Button(onClick = onDismiss) { Text(stringResource(Res.string.welcome_get_started)) }
     },
 )
+
+private val WHATS_NEW_HEADLINE = Regex("""^\*\*(.+?)\*\*\s*(.*)$""")
 
 /**
  * The first run's one screen of its own: a line about what the app is, the two choices that decide how all of it

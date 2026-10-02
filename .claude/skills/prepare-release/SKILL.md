@@ -25,18 +25,24 @@ them. If a change has no effect a user could notice, it is not in the notes.
    GitHub tag is that number without the `v` prefix (`4.0.1`), even though the bump commit spells it
    with one.
 
-2. **Find the previous release boundary** — the version bump *before* the current one:
+2. **Find the previous release boundary** — the last release **tag**, never a version bump commit (a bump can
+   land for a version that was never published, and a release is what the tag marks):
    ```bash
    grep -n 'campfire.versionName' gradle.properties
-   git log --format='%H %ad %s' --date=short | grep 'Update version name' | head -3
+   git tag --sort=-v:refname | head -3
    ```
-   The range is `<previous bump>..HEAD`. If the current version has not been bumped yet, the range still
-   starts at the last bump that happened.
+   The range is `<last tag>..HEAD`, for the GitHub notes, the stores' blurb and the in-app message alike: every
+   change since the last published release is in scope, whatever else was prepared or reverted in between.
 
-3. **List the commits in the range:**
+3. **List the commits in the range and group them by feature.** Many commits usually build one feature (a PDF
+   export is dozens), so cluster them by the user-visible capability before judging importance:
    ```bash
-   git log <previous-bump>..HEAD --format='%H %s'
+   git log <last tag>..HEAD --format='%H %s'
+   git diff <last tag>..HEAD --stat -- presentation domain data chordpro app | tail -40
    ```
+   Do not stop at the strings diff: a feature that rebuilds an existing screen (a new reading layout, new ways to
+   page through a song) adds few strings and is easy to miss. Check which screens and `CLAUDE.md` sections
+   changed most, and read those diffs.
 
 4. **Read the actual diffs — never summarize from commit subjects.** Subjects are lossy and often name
    the mechanism rather than the effect. For each commit:
@@ -46,8 +52,8 @@ them. If a change has no effect a user could notice, it is not in the notes.
    ```
    Pay particular attention to two files, because they say what a user will *see*:
    ```bash
-   git diff <previous-bump>..HEAD -- presentation/src/commonMain/composeResources/values/strings.xml
-   git diff <previous-bump>..HEAD --stat -- presentation domain data chordpro app
+   git diff <last tag>..HEAD -- presentation/src/commonMain/composeResources/values/strings.xml
+   git diff <last tag>..HEAD --stat -- presentation domain data chordpro app
    ```
    New or changed strings are almost always a new feature, a new setting or a new message worth a bullet.
 
@@ -68,20 +74,24 @@ them. If a change has no effect a user could notice, it is not in the notes.
    - `presentation/src/commonMain/composeResources/values/strings.xml` (English);
    - `presentation/src/commonMain/composeResources/values-hu/strings.xml` (Hungarian).
 
-   Write a **bulleted list of user-facing changes**, ordered by what matters most to musicians. Give each new
-   feature or meaningful improvement its own bullet, with one or two concise sentences explaining **what it does
-   and how it helps**. Name the feature as it appears in the app and say where to find it when that helps somebody
-   use it. Combine related small fixes only when they share the same practical benefit. Be friendly, clear and
-   professional: explain the value confidently, without hype, marketing adjectives, vague promises or developer
-   details. Full sentences are welcome; a list of feature names alone undersells the release. Verify every claim
-   against the diffs, and qualify changes that affect only one platform.
+   Write a **bulleted list of user-facing changes since the last release tag**, each bullet a **bold one-line
+   headline** (the feature as the app names it, at most about eight words) **followed by a short description** of
+   what it does and how it helps a musician (one or two sentences, with where to find it when that helps).
+   **Sort the bullets by importance from the user's perspective**, not by commit count or chronology: the changes
+   that alter how people use the app every day come first (reading and playing songs, getting songs in and out),
+   then new capabilities, then conveniences, then fixes. A feature built by many commits is one bullet; several
+   unrelated small fixes may share a final bullet only when they share the same practical benefit. Be friendly,
+   clear and professional, without hype, marketing adjectives, vague promises or developer details. Verify every
+   claim against the diffs, and qualify changes that affect only one platform. Before writing, list the
+   feature clusters from step 3 and check that each important one has a bullet.
 
-   Store each bullet on one line, starting with the literal `• `, and separate bullets with `\n` in the XML string
-   (for example, `• Print song sheets in up to four columns to fit more on each page.\n• ...`). The dialog renders
-   these as spaced rows with aligned wrapped text, in a scrollable area with fades at the top and bottom; its title
-   and Done button stay visible. Keep every bullet focused, but do not cut useful explanations merely to fit the
-   dialog without scrolling. There is no store character limit on this in-app message. No Markdown, links, emoji,
-   introductory paragraph or version number in the body.
+   Store each bullet on one line as `• **Headline** Description` (the literal `• `, the headline between `**`
+   pairs, then a space and the description), and separate bullets with `\n` in the XML string (for example,
+   `• **Print in up to four columns** Fit more of a song on each page.\n• **...** ...`). The dialog draws the
+   headline bold on its own line with the description under it, as spaced rows in a scrollable area with fades at
+   the top and bottom; its title and **Get started** button stay visible. Do not cut useful explanations merely to
+   fit the dialog without scrolling. There is no store character limit on this in-app message. No other Markdown,
+   links, emoji, introductory paragraph or version number in the body.
    Translate the same bullets into natural Hungarian and escape XML correctly. Keep `whats_new_title` as the
    localized title with its `%1$s` version placeholder. Replace the previous message rather than appending history.
    **Empty notes are valid:** when the user wants no notes for a very small release, or there is no user-facing
@@ -89,7 +99,10 @@ them. If a change has no effect a user could notice, it is not in the notes.
    the previous release's text behind. Blank or whitespace-only messages suppress the dialog; the app still records
    the version as handled. The first installed version is always skipped, whatever its message contains.
 
-8. **Always regenerate Android baseline profiles.** Follow `app/baselineprofile/CLAUDE.md`'s recording procedure:
+8. **Always regenerate Android baseline profiles, and only once every other source change is in place** — the
+   in-app message and any code or resource edit made while preparing the release (step 7 included), since the
+   profile is recorded from the built app and a later change would leave it stale. If anything under `presentation`,
+   `app` or the shared modules changes after a recording, record it again. Follow `app/baselineprofile/CLAUDE.md`'s recording procedure:
    use an English emulator (boot `Resizable_Experimental` if needed), wait for it to finish booting, and select it
    explicitly with `ANDROID_SERIAL` when several devices are connected. Uninstall `com.pandulapeter.campfire` only
    from that recording emulator if present, to start with a fresh library and avoid signing conflicts; never
@@ -129,21 +142,20 @@ them. If a change has no effect a user could notice, it is not in the notes.
 Mirror the existing releases:
 
 - **A flat list of `-` bullets.** No sections, no grouping by type, no "Bug fixes" / "Features"
-  headings. A release with a great deal in it may use a handful of bold lead-ins, but the default is a
-  plain list.
-- **Ordered by what a user cares about most:** the headline feature first, then the smaller additions,
-  then the fixes.
-- **Each bullet is a short noun phrase or a plain sentence with no trailing period** — the way the
-  existing notes read (`Complete Material You redesign`, `Option to change font size`,
-  `Support for wasmJs target`).
+  headings.
+- **Each bullet is a bold one-line headline followed by a short description**, the same pair as the in-app
+  message: `- **Page through songs your way**: description…`. The headline is a short noun phrase with no trailing
+  period; the description is one or two plain sentences.
+- **Sorted by importance from the user's perspective** (daily reading and playing first, then getting songs in
+  and out, then new capabilities, conveniences and fixes), built from everything since the last release tag.
 - **Plain language, the user's vocabulary.** "Sync your library through your own Dropbox folder", not
   "Implement `SyncEngine` batching". Name features the way the app names them in Settings.
-- **Keep it short.** Five to ten bullets for a feature release, one to three for a patch. Merge several
+- **Keep it focused.** Five to ten bullets for a feature release, one to three for a patch. Merge several
   small fixes in one area into a single bullet rather than listing each commit.
 - **Link where a link helps** — the web build (`[here](https://campfire-songbook.com/app/)`), the
   ChordPro site, a contributor's profile — in the markdown style the existing notes use.
 - **No emoji, no marketing adjectives, no version numbers inside the bullets.**
-- **Thank outside contributors inline.** Find them with `git log <previous-bump>..HEAD --format='%an' | sort -u`
+- **Thank outside contributors inline.** Find them with `git log <last tag>..HEAD --format='%an' | sort -u`
   and credit anyone who is not the maintainer (Pandula Péter).
 - **Say so plainly when something was removed or now works differently**, so nobody is surprised — e.g.
   the editor's auto save being taken out.
