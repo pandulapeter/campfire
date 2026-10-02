@@ -203,14 +203,22 @@ at rest is drawn whole. The pipeline has four steps, each its own:
   and the layout yields after each song and every 50 placed blocks: on the web it shares the page's one thread.
 - **Renderer.** `PrintRenderer` draws a page for the preview and for the file alike, and measures for the layout with the
   same fonts, so the file is the preview at 216 dpi. An export draws every page into one reused bitmap and
-  reads it back in bands of rows, checking for cancellation between them.
+  reads it back in bands of rows, checking for cancellation between them. `selectableText` takes each shaped character
+  or cluster's selection rectangle from that same `TextLayoutResult`, preserving surrogate pairs and combining
+  characters. Layout-only zero-width wrap opportunities are omitted and non-breaking padding copies as ordinary spaces.
 - **Writer.** `PrintPdfWriter` turns each page into a 4-bit gray image (luminance rounded to sixteen levels, which print
   no differently from 256), compressed by `PrintDeflater`, a pure-Kotlin zlib encoder of one fixed-Huffman block, since
   no platform offers common code a compressor. The streams go straight into one growing buffer, and the file carries a
-  `/Title` and a binary header line.
+  `/Title` and a binary header line. Each page also carries invisible text (`3 Tr`) at the shaped rectangles, backed
+  by tiny Type 3 fonts with empty glyph procedures, measured widths and ToUnicode maps. Consecutive shaped runs on one
+  baseline, in one font and size and moving left to right, share one `TJ` text object with explicit advance adjustments, so dense columns do not look like vertical text to PDFium. Fonts preserve bold and
+  monospace classification for import and split after 255 distinct clusters. Content streams are compressed too;
+  no display fonts or font programs are embedded, and no visible glyph can differ from the preview.
 
-Deliberately not done: no selectable text (the pages are images, which is what keeps every glyph and fallback font the
-preview shows) and no platform print service — the file is saved or shared and printed from there.
+Only what is printed is included: the printed key, selected songs and visible options, not an attachment of the
+original source or excluded metadata. Old image-only exports still require external OCR. There is no platform print
+service: the file is saved or shared and printed from there. Browser selection/search should be checked in Chrome,
+particularly accents, chords, columns and the absence of duplicate OCR text; engine checks alone are not UI checks.
 
 The screen's state is a `PrintExportState` from `rememberPrintExportState(dialog)`, which remembers each field on its own:
 the selection, the preview's page and how it is zoomed are `rememberSaveable`, so a rotation keeps them; the options, the source and the
@@ -244,8 +252,10 @@ it; a share leaves it open. Share is an app bar action where `FilePicker.canShar
 `-running_order` suffix so the two exports of one setlist do not collide.
 
 The tests pin the layout (`PrintLayoutTest`: columns, keeping together, styles, wrapping, the measurement counts), the
-file name, the writer's cross-reference offsets and gray packing, and the deflater (`PrintDeflaterTest`, and a round
-trip through `java.util.zip.Inflater` in `desktopTest`, where `PrintRendererTest` also draws real pages).
+file name, the writer's cross-reference offsets, Unicode maps, font splitting and gray packing, and the deflater
+(`PrintDeflaterTest`, and a round trip through `java.util.zip.Inflater` in `desktopTest`, where `PrintRendererTest`
+also draws real pages and checks selection rectangles). `CAMPFIRE_PRINT_QA_DIR` makes renderer tests save QA PDFs;
+its `campfire.pdf` is also the document importer's positioned export/reimport fixture, documented beside that fixture.
 
 ## Scrolling performance
 

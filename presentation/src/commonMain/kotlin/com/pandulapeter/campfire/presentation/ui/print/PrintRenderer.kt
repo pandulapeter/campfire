@@ -93,8 +93,36 @@ internal class PrintRenderer(
         }
     }
 
+    /** The same shaping as drawText, including fallback glyphs, surrogate pairs and combining characters. */
+    internal suspend fun selectableText(page: PrintPage): List<PrintPdfText> = buildList {
+        var characters = 0
+        for ((run, item) in page.texts.withIndex()) {
+            val layout = text(item.text, item.style)
+            var offset = 0
+            while (offset < item.text.length) {
+                if (++characters % 256 == 0) yield()
+                val start = offset
+                val box = layout.getBoundingBox(offset)
+                fun next() {
+                    offset += if (item.text[offset].isHighSurrogate() && item.text.getOrNull(offset + 1)?.isLowSurrogate() == true) 2 else 1
+                }
+                next()
+                // A shaped cluster shares a rectangle. Keep it as one Unicode mapping rather than overlaying copies.
+                while (offset < item.text.length && offset - start < 62) {
+                    val following = layout.getBoundingBox(offset)
+                    if (following != box && following.width != 0f) break
+                    next()
+                }
+                // The chord layout adds invisible wrap opportunities and non-breaking padding, not song content.
+                val value = item.text.substring(start, offset).replace("\u200B", "").replace('\u00A0', ' ')
+                if (value.isNotEmpty()) add(PrintPdfText(value, item.x + box.left, item.y + box.top,
+                    box.width.coerceAtLeast(0.001f), box.height.coerceAtLeast(0.001f), item.style, run))
+            }
+        }
+    }
+
     /**
-     * The PDF file of [document], each page drawn as an image, checking for cancellation between bands of rows.
+     * The PDF file of [document], each page drawn as an image with matching invisible, selectable text.
      *
      * @param onPage Called with the number of pages done after each page is added to the file.
      */
@@ -123,7 +151,7 @@ internal class PrintRenderer(
                 bitmap.readPixels(pixels, startY = top, width = width, height = rows)
                 packPrintRows(pixels, width, rows, packed, firstRow = top)
             }
-            writer.addPage(width, height, packed)
+            writer.addPage(width, height, packed, selectableText(page))
             onPage(index + 1)
             yield()
         }

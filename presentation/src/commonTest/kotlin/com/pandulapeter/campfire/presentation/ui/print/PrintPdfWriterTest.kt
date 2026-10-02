@@ -58,5 +58,47 @@ internal class PrintPdfWriterTest {
         assertContentEquals(streams[1], streams[2])
     }
 
+    @Test fun invisibleFontsCarryUnicodeClustersAndPrintedStylesAcrossPages() = runTest {
+        val writer = PrintPdfWriter(100f, 100f, "Unicode")
+        val glyphs = listOf(
+            PrintPdfText("Ő", 10f, 20f, 8f, 12f, PrintStyle(12, bold = true)),
+            PrintPdfText("\uD83D\uDE42", 18f, 20f, 12f, 12f, PrintStyle(12)),
+            PrintPdfText("e\u0301", 30f, 20f, 6f, 12f, PrintStyle(12, monospace = true)),
+        )
+        repeat(2) { writer.addPage(2, 2, ByteArray(2) { -1 }, glyphs) }
+        val text = writer.finish().decodeToString()
+        assertEquals(3, Regex("/Subtype /Type3").findAll(text).count())
+        assertTrue(text.contains("<01> <0150>"))
+        assertTrue(text.contains("<01> <d83dde42>"))
+        assertTrue(text.contains("<01> <00650301>"))
+        assertTrue(text.contains("/FontWeight 700"))
+        assertTrue(text.contains("/FontName /CampfireTextMonoF2 /Flags 5"))
+        assertEquals(2, Regex("/Font << /F0 \\d+ 0 R /F1 \\d+ 0 R /F2 \\d+ 0 R >>").findAll(text).count())
+    }
+
+    @Test fun aFontSplitsAfter255DistinctCharactersWithoutTruncatingItsUnicodeMap() = runTest {
+        val writer = PrintPdfWriter(1000f, 100f, "Many characters")
+        val glyphs = (0x400..0x500).mapIndexed { index, code ->
+            PrintPdfText(code.toChar().toString(), index * 2f, 10f, 2f, 12f, PrintStyle(12))
+        }
+        writer.addPage(2, 2, ByteArray(2) { -1 }, glyphs)
+        val text = writer.finish().decodeToString()
+        assertEquals(2, Regex("/Subtype /Type3").findAll(text).count())
+        assertTrue(text.contains("/LastChar 255"))
+        assertTrue(text.contains("/LastChar 2"))
+        assertTrue(text.contains("<ff> <04fe>"))
+        assertTrue(text.contains("<01> <04ff>"))
+        assertTrue(text.contains("<02> <0500>"))
+        assertTrue(Regex("(\\d+) beginbfchar").findAll(text).all { it.groupValues[1].toInt() <= 100 })
+    }
+
+    @Test fun pdfNumbersAreFiniteDecimalNumbersEvenForSmallAdvances() {
+        assertEquals("0.001", printPdfNumber(0.001f))
+        assertEquals("-0.125", printPdfNumber(-0.125f))
+        assertEquals("595.276", printPdfNumber(595.276f))
+        assertEquals("10", printPdfNumber(10f))
+        assertFailsWith<IllegalArgumentException> { printPdfNumber(Float.NaN) }
+    }
+
     private suspend fun deflated(input: ByteArray) = PrintBytes().also { PrintDeflater().deflate(input, it) }.result()
 }

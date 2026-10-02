@@ -206,10 +206,11 @@ internal object PdfTextExtractor {
         walk(file.catalog()["Pages"], null, listOf(PdfNumber(0.0), PdfNumber(0.0), PdfNumber(612.0), PdfNumber(792.0)), 0)
         require(shown > 0 && unreadable * 2 <= shown) { "PDF has no readable font mapping" }
         val repeated = runningLines(pages)
-        return ExtractedDocument(pages.map { page ->
+        return ExtractedDocument(pages.mapIndexed { index, page ->
             val lines = page.lines.filterNot { line ->
                 val edge = line.y < page.height * 0.08 || line.y > page.height * 0.92
-                edge && (line.text.trim().all { it.isDigit() } || signature(line, page.height) in repeated)
+                val text = line.text.trim()
+                edge && (text.all { it.isDigit() } || isPageCount(text, index + 1, pages.size) || signature(line, page.height) in repeated)
             }
             val paragraphs = mutableListOf<ExtractedDocument.Line>()
             lines.forEachIndexed { index, line ->
@@ -293,4 +294,13 @@ internal object PdfTextExtractor {
             .map { signature(it, page.height) }.toSet().forEach { counts[it] = (counts[it] ?: 0) + 1 }
         return counts.filterValues { it >= 2 && it * 2 >= pages.size }.keys
     }
+
+    /**
+     * A footer like `2 / 3` is only taken for a page number when both numbers are this page's own: a chord sheet's first
+     * line near the top of the page is often a bare time signature (`3/4`, `6/8`), which a looser match would drop.
+     */
+    private fun isPageCount(text: String, page: Int, pageCount: Int) =
+        pageCountPattern.matchEntire(text)?.destructured?.let { (number, total) -> number == "$page" && total == "$pageCount" } ?: false
+
+    private val pageCountPattern = Regex("([0-9]+)\\s*/\\s*([0-9]+)")
 }

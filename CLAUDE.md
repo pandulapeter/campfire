@@ -102,7 +102,10 @@ lyrics in the app's text font, tablature and grids in its monospace one — keep
 together, and flowing long songs across columns and pages. `PrintRenderer` draws both the preview and the page images
 (216 dpi, sixteen grays, which print no differently from 256) embedded by the common `PrintPdfWriter`, which titles
 the file after the song or setlist, compressed with Flate by `PrintDeflater`, a small pure-Kotlin zlib encoder. These
-PDFs are for printing: they contain page images, not selectable text. Saving uses the existing `FilePicker` on every
+PDFs retain those page images and add invisible selectable text positioned from the same Compose shaping, with
+small glyphless Type 3 fonts and explicit ToUnicode maps. Only the printed content is included, in its printed key
+and with the chosen options; no original ChordPro or excluded metadata is embedded. New exports can be searched,
+copied and reimported without OCR; older image-only exports remain unreadable to the importer. Saving uses the existing `FilePicker` on every
 platform, and Android and iOS offer Share in the app bar; the save button counts the pages as they are drawn, and is
 Cancel until the picker is up. The file is named from the song's header or the setlist's title, the way
 `ExportFileNames.kt` names a song (see `presentation/CLAUDE.md`). New controls and text written into PDFs are
@@ -446,27 +449,24 @@ localized in both languages.
     `repo:pandulapeter/campfire:environment:microsoft-store` — which is why the job runs in the `microsoft-store`
     environment and why `publish-all.yml` grants it `id-token: write` — so, like everything Apple's workflows use, nothing
     it signs in with expires (a client secret would, after two years at most). The package is unsigned, since the
-    Store signs what it certifies with a certificate of its own, so unlike the Apple workflows nothing is revoked after
-    a run and nothing a later run does can invalidate a build still in certification; nothing is attached to the
-    release.
+    Store signs what it certifies with a certificate of its own, so nothing a later run does can invalidate a build
+    still in certification; nothing is attached to the release.
   - `publish-macos.yml` builds `packageReleasePkg` on an Apple silicon runner — asking for the `.pkg` is what signs
     and sandboxes it — signed with a Mac App
     Distribution and a Mac Installer Distribution certificate and the two Mac App Store provisioning profiles (the
-    app's and the bundled Java runtime's) that the run creates for itself and revokes at the end (see below), all of
-    them written into `local.properties` as a developer's machine keeps them. A build signed for
+    app's and the bundled Java runtime's) that the run finds for the signing key (see below), all of them written into
+    `local.properties` as a developer's machine keeps them. A build signed for
     the store does not start outside TestFlight, so the start check of the other desktop legs is made on a copy
     signed ad hoc with the same entitlements less the two that name the App ID — the demo library has to appear in
     the fresh sandbox container. It uploads the `.pkg` with `altool` and the same App Store Connect API key as iOS,
     and submits it for review the way iOS does (below); its `build_number` input uploads a release again under a
     number App Store Connect has not seen.
-  - `publish-ios.yml` archives the app signed with an Apple Distribution certificate the run creates for itself (and a
-    later run revokes, see below), lets xcodebuild make the App Store profile for it with the App Store Connect API key, and
-    uploads the exported
+  - `publish-ios.yml` archives the app signed with the Apple Distribution certificate of the signing key (see below),
+    lets xcodebuild make the App Store profile for it with the App Store Connect API key, and uploads the exported
     `.ipa` to App Store Connect, where it lands in TestFlight. Nothing is attached to the release.
   - **Both Apple workflows submit what they upload for review** (dispatched by hand with `submit` off, they stop short
     of the submission and leave the version prepared, for new screenshots to be added and submitted in App Store
-    Connect — and the certificate of a build attached to a version that is prepared or rejected is kept too, since that
-    build may still be submitted): `.github/scripts/app_store_submission.py` waits for
+    Connect): `.github/scripts/app_store_submission.py` waits for
     App Store Connect to process the build, takes the platform's version for `campfire.versionName` — the existing one, the
     editable one renamed, or a new one set to be released as soon as it is approved — attaches the build, writes
     the release's `whats-new` notes as its "What's New" (all but a platform's first version) and submits it. A
@@ -484,25 +484,24 @@ localized in both languages.
     which the version build phase reads too, after `gradle.properties` and with the last value winning, which is how
     the hand-dispatched form's `build_number` uploads a release again under a number App Store Connect has not seen
     without a commit. The archived `Info.plist` is checked against the expected version before anything is uploaded.
-  - **Nothing Apple signs with is stored, so nothing expires.** A distribution certificate lasts a year; the App Store
-    Connect API key (`APP_STORE_CONNECT_KEY_ID`, `_ISSUER_ID` and `_PRIVATE_KEY`, the last one the `.p8` file's text
-    rather than base64, an Admin key shared with Kubriko) does not. So the two Apple workflows make their own
-    identities with `.github/scripts/app_store_signing.py`: a key generated on the runner, a certificate for it and the
-    profiles that name it, created through the API into a keychain of the run's own, and revoked and deleted by a later
-    run — exactly what a run created, recorded in a state file, and never anything made by hand. **Not at the end of
-    the run that made it**: a build whose certificate is revoked before App Review approves it is refused as an
-    invalid binary (ITMS-90238), even after it was processed, attached and submitted. So a run that uploaded a build
-    records the build in its state file, which it keeps as an artifact (`app-store-signing-ios` / `-macos`, 90 days),
-    and a later run of the same workflow revokes what it names before making its own — **unless App Store Connect says
-    that build is attached to a version still waiting for Apple**, in which case it is left alone and the artifact kept
-    for the run after to ask about again (a state file that names no build is kept while any version of the platform
-    is waiting). A build uploaded and never attached to a version is revoked by the next run, whose build replaces it; one attached
-    to a version still being prepared, or rejected, is kept like a waiting one. A run that
-    uploaded nothing revokes its own in an `always()` step, and the build is recorded before the upload rather than
-    after it, so that no failure after an upload revokes the certificate of what went up. The API shows nothing that tells these certificates from ones made by hand, so an artifact that expires
-    leaves its certificates to expire on their own. Revoking after approval does not touch builds on the store, which
-    Apple signs again. It must never be used for a Developer ID certificate, whose revocation breaks every copy of an app
-    already downloaded.
+  - **Nothing Apple signs with expires.** A distribution certificate lasts a year; the private
+    key it is made for and the App Store Connect API key (`APP_STORE_CONNECT_KEY_ID`, `_ISSUER_ID` and `_PRIVATE_KEY`,
+    the last one the `.p8` file's text rather than base64, an Admin key) do not. So the secrets hold the two keys alone
+    — the signing key in `APPLE_SIGNING_KEY`, as unencrypted PEM text — and `.github/scripts/app_store_signing.py`
+    asks the API for the certificate of each type made for that key, matching it by its public key, and imports it into
+    a keychain of the run's own. Where there is none, or the newest has less than two months left, it creates one for
+    the same key; Mac App Store profiles are found or made for it the same way. **Kubriko signs with the same key and
+    the same secrets**, since Apple allows the team only two Apple Distribution certificates: the two pipelines share
+    one, and the other place is the renewal's (a certificate made by hand in Xcode takes one too, which is what a
+    creation refused with 409 means). **The signing key's certificates are never revoked**: a build whose certificate is revoked before
+    App Review approves it is refused as an invalid binary (ITMS-90238), even after it was processed, attached and
+    submitted; the old one is left to expire, by which time everything it signed has long been decided, and the
+    renewal comes early enough that no build waiting for review is ever signed with one about to expire. The
+    `app-store-signing-ios` / `-macos` artifacts hold what runs made for keys of their own: each run revokes what one
+    names once App Store Connect says the build it signed is not attached to a version still waiting for Apple, being
+    prepared or rejected (one that names no build is kept while any version of the platform is waiting), and deletes
+    the artifact; an artifact that expires leaves its certificates to expire on their own. It must never be used for a
+    Developer ID certificate, whose revocation breaks every copy of an app already downloaded.
   - `publish-android.yml` writes the keystore out of `ANDROID_KEYSTORE_BASE64`, builds `assembleRelease` signed with
     the other three `ANDROID_*` secrets and uploads it and its mapping file to the production track with
     `PLAY_SERVICE_ACCOUNT_JSON` (as a draft there when dispatched by hand with `submit` off, rolled out from the Play

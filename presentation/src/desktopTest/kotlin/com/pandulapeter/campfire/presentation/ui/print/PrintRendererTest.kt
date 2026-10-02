@@ -17,6 +17,7 @@ import androidx.compose.ui.text.TextMeasurer
 import androidx.compose.ui.text.font.createFontFamilyResolver
 import androidx.compose.ui.unit.Density
 import androidx.compose.ui.unit.LayoutDirection
+import androidx.compose.ui.unit.sp
 import com.pandulapeter.campfire.chordpro.ChordProParser
 import com.pandulapeter.campfire.data.model.domain.PrintSettings
 import com.pandulapeter.campfire.presentation.ui.screens.songDetails.DefaultSectionLabels
@@ -29,9 +30,86 @@ import kotlin.test.Test
 import kotlin.test.assertContentEquals
 import kotlin.test.assertEquals
 import kotlin.test.assertTrue
+import kotlin.test.assertNotNull
 
 /** Exercises real shaping, canvas rasterization and PDF encoding, including Hungarian and musical symbols. */
 internal class PrintRendererTest {
+    @Test fun selectableRectanglesComeFromTheSameShapingAsThePageImage() = runBlocking {
+        val measurer = TextMeasurer(createFontFamilyResolver(), Density(1f), LayoutDirection.Ltr)
+        val renderer = PrintRenderer(measurer)
+        val content = "Árvíztűrő e\u0301 \uD83D\uDE42 ♯ ♭ \u200Bpadding\u00A0"
+        val page = PrintPage(listOf(PrintText(content, 23f, 31f, PrintStyle(14)),
+            PrintText("Am/G", 78f, 10f, PrintStyle(14, bold = true))))
+        val glyphs = renderer.selectableText(page)
+        assertEquals(content.replace("\u200B", "").replace('\u00A0', ' ') + "Am/G", glyphs.joinToString("") { it.text })
+        assertTrue(glyphs.all { it.width > 0 && it.height > 0 })
+        assertTrue(glyphs.none { it.text.length == 1 && it.text.single().isSurrogate() })
+        assertTrue(glyphs.first().x >= 23f && glyphs.first().y >= 31f)
+        assertEquals(78f, glyphs.first { it.style.bold }.x)
+        val expected = measurer.measure(content, androidx.compose.ui.text.TextStyle(fontSize = 14.sp),
+            softWrap = false, density = Density(1f), layoutDirection = LayoutDirection.Ltr).getBoundingBox(0)
+        assertEquals(expected.width, glyphs.first().width)
+        System.getenv("CAMPFIRE_PRINT_QA_DIR")?.let { directory ->
+            File(directory).mkdirs()
+            File(directory, "unicode.pdf").writeBytes(renderer.pdf(PrintDocument(300f, 120f, listOf(page)), "Unicode"))
+        }
+        Unit
+    }
+
+    @Test fun exportsAPositionedSongForTheImporterRegressionFixture() = runBlocking {
+        val renderer = PrintRenderer(TextMeasurer(createFontFamilyResolver(), Density(1f), LayoutDirection.Ltr))
+        val parsed = ChordProParser.parse("""
+            {title: Árvíztűrő dal}
+            {artist: Péter}
+            {key: Am}
+            {start_of_verse: Verse 1}
+            [Am]Őrizzük a [F]dalt!
+            [C]Words and [G/B]chords.
+            {end_of_verse}
+        """.trimIndent())
+        val document = layoutPrintDocument(PrintSource("Árvíztűrő dal", songs = listOf(
+            PrintSong("round-trip.cho", "Árvíztűrő dal", "Péter", song = parsed))),
+            PrintSettings(columns = 2), PrintLabels("Key", "Capo", "Tempo", "Time", "Missing",
+                DefaultSectionLabels(verse = "Verse", chorus = "Chorus", bridge = "Bridge", tab = "Tab", grid = "Grid",
+                    intro = "Intro", preChorus = "Pre-chorus", solo = "Solo", outro = "Outro")), renderer::width)
+        val glyphs = renderer.selectableText(document.pages.single())
+        assertTrue(glyphs.any { it.style.bold })
+        val lyric = assertNotNull(document.pages.single().texts.firstOrNull { it.text.startsWith("Őrizzük") })
+        val chord = document.pages.single().texts.first { it.text == "Am" }
+        assertEquals(lyric.x, chord.x)
+        assertTrue(chord.y < lyric.y)
+        val bytes = renderer.pdf(document, "Árvíztűrő dal")
+        assertTrue(bytes.decodeToString().contains("/ToUnicode"))
+        System.getenv("CAMPFIRE_PRINT_QA_DIR")?.let { directory ->
+            File(directory).mkdirs()
+            File(directory, "campfire.pdf").writeBytes(bytes)
+        }
+        Unit
+    }
+
+    @Test fun exportsBothColumnsInSongReadingOrder() = runBlocking {
+        val renderer = PrintRenderer(TextMeasurer(createFontFamilyResolver(), Density(1f), LayoutDirection.Ltr))
+        val parsed = ChordProParser.parse("{title: Column song}\n{start_of_verse: Verse 1}\n" +
+            (1..30).joinToString("\n") { "[Am]Line ${it.toString().padStart(2, '0')} singing [F]together." } + "\n{end_of_verse}")
+        val document = layoutPrintDocument(PrintSource("Column song", songs = listOf(
+            PrintSong("columns.cho", "Column song", null, song = parsed))), PrintSettings(columns = 2),
+            PrintLabels("Key", "Capo", "Tempo", "Time", "Missing", DefaultSectionLabels(verse = "Verse", chorus = "Chorus",
+                bridge = "Bridge", tab = "Tab", grid = "Grid", intro = "Intro", preChorus = "Pre-chorus", solo = "Solo", outro = "Outro")), renderer::width)
+        val page = document.pages.single()
+        assertTrue(page.texts.first { it.text.startsWith("Line 01") }.x < document.width / 2)
+        assertTrue(page.texts.first { it.text.startsWith("Line 30") }.x > document.width / 2)
+        val lines = renderer.selectableText(page).joinToString("") { it.text }
+        assertTrue(lines.indexOf("Line 01") < lines.indexOf("Line 30"))
+        val bytes = renderer.pdf(document, "Column song")
+        val content = contentStreams(bytes).single().let(::inflate).decodeToString()
+        assertEquals(63, Regex("] TJ").findAll(content).count(), "Each chord row and lyric row must be one text object, not isolated letters.")
+        System.getenv("CAMPFIRE_PRINT_QA_DIR")?.let { directory ->
+            File(directory).mkdirs()
+            File(directory, "campfire-columns.pdf").writeBytes(bytes)
+        }
+        Unit
+    }
+
     @Test fun rendersAllPagesOfAMultilingualSetlist() = runBlocking {
         val renderer = PrintRenderer(TextMeasurer(createFontFamilyResolver(), Density(1f), LayoutDirection.Ltr))
         val parsed = ChordProParser.parse("""
@@ -107,6 +185,13 @@ internal class PrintRendererTest {
     private fun imageStreams(bytes: ByteArray): List<ByteArray> {
         val text = String(bytes, Charsets.ISO_8859_1)
         return Regex("""/Subtype /Image [^>]*/Length (\d+) >>\nstream\n""").findAll(text).map { match ->
+            bytes.copyOfRange(match.range.last + 1, match.range.last + 1 + match.groupValues[1].toInt())
+        }.toList()
+    }
+
+    private fun contentStreams(bytes: ByteArray): List<ByteArray> {
+        val text = String(bytes, Charsets.ISO_8859_1)
+        return Regex("""<< /Filter /FlateDecode /Length (\d+) >>\nstream\n""").findAll(text).map { match ->
             bytes.copyOfRange(match.range.last + 1, match.range.last + 1 + match.groupValues[1].toInt())
         }.toList()
     }
