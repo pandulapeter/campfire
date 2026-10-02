@@ -58,6 +58,9 @@ RELEASE_NOTES_LIMIT = 1500
 # The largest block every version of the blob service accepts, whichever one the upload URL was signed for.
 UPLOAD_BLOCK_BYTES = 4 * 1024 * 1024
 COMMIT_TIMEOUT_SECONDS = 30 * 60
+# Warnings Partner Center attaches to every commit and that ask nothing of a release: the sales resource was retired,
+# and every submission copied from one made before that still names it.
+IGNORED_COMMIT_WARNINGS = {"SalesUnsupportedWarning"}
 POLL_INTERVAL_SECONDS = 30
 # The states of a submission that has not been committed yet: a draft started in Partner Center, which the API cannot
 # change, or one this script made whose commit Partner Center refused.
@@ -210,12 +213,18 @@ def blob_request(url, data, attempts=3):
 
 def wait_for_commit(app_id, submission_id):
     deadline = time.time() + COMMIT_TIMEOUT_SECONDS
+    # The status repeats its warnings on every poll, and a warning in the run's summary should be there once.
+    reported = set()
     while True:
         answer = request("GET", f"/applications/{app_id}/submissions/{submission_id}/status")
         status = answer.get("status")
         details = answer.get("statusDetails") or {}
         for warning in details.get("warnings", []):
-            print(f"::warning::{warning.get('code')}: {warning.get('details')}")
+            text = f"{warning.get('code')}: {warning.get('details')}"
+            if text in reported:
+                continue
+            reported.add(text)
+            print(text if warning.get("code") in IGNORED_COMMIT_WARNINGS else f"::warning::{text}")
         if status in SUBMITTED_STATES:
             return status
         if status != "CommitStarted":
