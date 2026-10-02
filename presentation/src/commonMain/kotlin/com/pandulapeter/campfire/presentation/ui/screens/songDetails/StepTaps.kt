@@ -19,6 +19,8 @@ import androidx.compose.runtime.snapshotFlow
 import androidx.compose.runtime.withFrameNanos
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.input.pointer.PointerInputChange
+import androidx.compose.ui.input.pointer.PointerType
+import androidx.compose.ui.input.pointer.isPrimaryPressed
 import androidx.compose.ui.input.pointer.pointerInput
 import kotlin.math.abs
 import kotlinx.coroutines.coroutineScope
@@ -58,7 +60,11 @@ internal fun Modifier.stepOnTap(
         coroutineScope {
             awaitEachGesture {
                 val down = awaitFirstDown(requireUnconsumed = false)
-                if (down.isConsumed || currentIsMovingFreely()) return@awaitEachGesture
+                // A right or middle click is a context menu or a paste, not a reach for the next line. Touch and stylus
+                // presses report no mouse buttons (Android's button state is 0 for a finger), so only a mouse is asked
+                // which one it was; currentEvent is the event the down came in.
+                val isOtherMouseButton = down.type == PointerType.Mouse && !currentEvent.buttons.isPrimaryPressed
+                if (isOtherMouseButton || down.isConsumed || currentIsMovingFreely()) return@awaitEachGesture
                 val origin = currentStepOrigin()
                 val page = pagerState.currentPage
                 var isDragged = false
