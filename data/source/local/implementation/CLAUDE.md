@@ -110,7 +110,10 @@ holds the `@Module @ComponentScan object DataLocalSourceModule`, and every local
 - **`FileNames.kt`** owns everything about what a file is called. Every name the app writes itself is normalized
   (`LibraryFiles.normalizedName`): `tukorfurogep-arviz.cho` for a song, each half of `artist - title` folded on its
   own so the dash between them survives, and `summer_set.setlist.json` for a setlist. `uniqueName` suffixes until the
-  name is free, `_2` by default — the same rule written in the alphabet every name it numbers is already in. The
+  name is free, `_2` by default — the same rule written in the alphabet every name it numbers is already in — asking
+  `exists` of the name and of `_2`, and listing the directory once only where `_2` is taken too, so that a family
+  numbered far (a songbook whose songs all fall back to one name) costs one listing rather than a probe per number;
+  a name the listing does not show is still asked of `exists`, which knows the file system's folding. The
   bracketed ` (2)` is left to `arrivingCollisionSuffix` and the one caller that writes a file under a name it did not
   invent: the copy sync brings down of a file changed on both sides, whose name is whatever the other device called
   it. `isNamed` reads `LibraryFiles.withoutCollisionSuffix` to answer whether a file already carries the name it would

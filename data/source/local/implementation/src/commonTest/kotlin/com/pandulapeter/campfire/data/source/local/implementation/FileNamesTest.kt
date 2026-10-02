@@ -175,6 +175,37 @@ internal class FileNamesTest {
     }
 
     @Test
+    fun aFamilyNumberedFarIsListedOnceRatherThanProbedNumberByNumber() = runSuspending {
+        val storage = InMemoryFileStorage(foldsNames = false)
+        storage.writeText(StorageDirectory.SONGS, "a.cho", "")
+        (2..50).forEach { storage.writeText(StorageDirectory.SONGS, "a_$it.cho", "") }
+
+        assertEquals("a_51.cho", storage.uniqueName(StorageDirectory.SONGS, "a.cho"))
+        assertTrue(storage.existsCalls <= 3, "${storage.existsCalls} exists calls")
+        assertEquals(1, storage.listCalls)
+    }
+
+    @Test
+    fun aSingleCollisionIsNumberedWithoutAListing() = runSuspending {
+        val storage = InMemoryFileStorage(foldsNames = false)
+        storage.writeText(StorageDirectory.SONGS, "a.cho", "")
+
+        assertEquals("a_2.cho", storage.uniqueName(StorageDirectory.SONGS, "a.cho"))
+        assertEquals(2, storage.existsCalls)
+        assertEquals(0, storage.listCalls)
+    }
+
+    @Test
+    fun aNumberListedInAnotherCaseIsStillTakenOnAFoldingFileSystem() = runSuspending {
+        val storage = InMemoryFileStorage(foldsNames = true)
+        storage.writeText(StorageDirectory.SONGS, "A.cho", "")
+        storage.writeText(StorageDirectory.SONGS, "A_2.cho", "")
+        storage.writeText(StorageDirectory.SONGS, "A_3.cho", "")
+
+        assertEquals("a_4.cho", storage.uniqueName(StorageDirectory.SONGS, "a.cho"))
+    }
+
+    @Test
     fun lettersWithNoDecompositionAreSpelledOut() {
         mapOf("Gəl" to "gel", "Ɛdwoa" to "edwoa", "Ɔkɔm" to "okom", "Ŋgɔnɔ" to "ngono").forEach { (title, name) ->
             assertEquals(name, LibraryFiles.normalizedName(title))
@@ -266,16 +297,18 @@ internal class FileNamesTest {
     private class InMemoryFileStorage(private val foldsNames: Boolean) : FileStorage {
 
         private val files = mutableMapOf<String, Pair<String, String>>()
+        var existsCalls = 0
+        var listCalls = 0
 
         private fun key(name: String) = if (foldsNames) name.normalizedToNfc().lowercase() else name
 
         override suspend fun list(directory: StorageDirectory): List<StoredFileInfo> = TODO()
 
-        override suspend fun listNames(directory: StorageDirectory) = files.values.map { it.first }
+        override suspend fun listNames(directory: StorageDirectory) = files.values.map { it.first }.also { listCalls++ }
 
         override suspend fun info(directory: StorageDirectory, name: String): StoredFileInfo? = TODO()
 
-        override suspend fun exists(directory: StorageDirectory, name: String) = key(name) in files
+        override suspend fun exists(directory: StorageDirectory, name: String) = (key(name) in files).also { existsCalls++ }
 
         override suspend fun readText(directory: StorageDirectory, name: String) = files[key(name)]?.second
 

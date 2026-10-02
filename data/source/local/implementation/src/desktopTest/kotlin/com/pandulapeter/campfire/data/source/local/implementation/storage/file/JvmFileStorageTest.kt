@@ -301,12 +301,11 @@ class JvmFileStorageTest {
     @Test
     fun `numbers a collision without listing the directory`() = runBlocking {
         fileStorage.writeText(StorageDirectory.SONGS, "a.cho", "first")
-        fileStorage.writeText(StorageDirectory.SONGS, "a_2.cho", "second")
         val unlisted = object : FileStorage by fileStorage {
             override suspend fun listNames(directory: StorageDirectory): List<String> = fail("The directory was listed.")
         }
 
-        assertEquals("a_3.cho", unlisted.uniqueName(StorageDirectory.SONGS, "a.cho"))
+        assertEquals("a_2.cho", unlisted.uniqueName(StorageDirectory.SONGS, "a.cho"))
     }
 
     @Test
