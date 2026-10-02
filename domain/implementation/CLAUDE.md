@@ -73,6 +73,10 @@ The ones that carry real logic:
   comparisons would otherwise occupy the view model's main thread, and yields between songs so the web can paint and
   cancellation can stop it. Applying turns each entry plus the
   `ImportConflictResolution` into write / replace / disregard / leave alone, and only `REPLACE` ever overwrites.
+  Both halves report `ImportProgress` phases; unpacking and conversion count input files, applying counts all
+  entries including duplicates and skipped conflicts, and comparison and final adoption are indeterminate. A write
+  failure stops the batch before any dependent setlist is written and returns the successful names, the failed source
+  and the unprocessed remainder; cancellation still propagates. Skipped conflicts have their own result list.
   Documents pass through `DocumentRepository`, `mapper/DocumentMappers.kt` and `ChordSheetConverter` before that
   same planning. Plain text uses positioned columns and the converter too, but ChordPro extensions are untouched.
   A multi-song document joins the ordinary collection path, with each song named by its own converted header and

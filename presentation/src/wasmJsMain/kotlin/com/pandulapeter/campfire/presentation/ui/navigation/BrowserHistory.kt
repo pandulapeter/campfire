@@ -182,7 +182,16 @@ private class BrowserHistory(
         val songs = viewModel.allSongs.value
         val setlists = viewModel.setlists.value
         val isPerformanceModeEnabled = viewModel.isPerformanceModeEnabled.value
-        val state = entry?.state?.let { BrowserRoutes.validate(state = it, songs = songs, setlists = setlists, isPerformanceModeEnabled = isPerformanceModeEnabled) }
+        val state = entry?.state
+            ?.let {
+                BrowserRoutes.validate(
+                    state = it,
+                    songs = songs,
+                    setlists = setlists,
+                    isPerformanceModeEnabled = isPerformanceModeEnabled,
+                    hasImportReport = viewModel.importReport.value != null,
+                )
+            }
             ?: (path ?: entry?.path)
                 ?.let {
                     BrowserRoutes.resolve(

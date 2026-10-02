@@ -11,6 +11,7 @@ package com.pandulapeter.campfire.domain.implementation.useCases
 
 import com.pandulapeter.campfire.data.model.DataState
 import com.pandulapeter.campfire.data.model.domain.ImportConflictResolution
+import com.pandulapeter.campfire.data.model.domain.ImportProgress
 import com.pandulapeter.campfire.data.model.domain.ImportPlan
 import com.pandulapeter.campfire.data.model.domain.Setlist
 import com.pandulapeter.campfire.data.model.domain.Song
@@ -26,6 +27,7 @@ import com.pandulapeter.campfire.data.repository.api.SongContentRepository
 import com.pandulapeter.campfire.data.repository.api.ArchiveRepository
 import com.pandulapeter.campfire.data.repository.api.DocumentRepository
 import com.pandulapeter.campfire.domain.implementation.ImportPlanner
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.emptyFlow
 import kotlinx.coroutines.test.runTest
@@ -343,12 +345,111 @@ class ImportFilesUseCaseImplTest {
             },
         )
 
-        assertFailsWith<IllegalStateException> {
-            ImportFilesUseCaseImpl(songRepository = songs, setlistRepository = FakeSetlistRepository()).invoke(plan, ImportConflictResolution.KEEP_BOTH)
-        }
+        val result = ImportFilesUseCaseImpl(songRepository = songs, setlistRepository = FakeSetlistRepository())
+            .invoke(plan, ImportConflictResolution.KEEP_BOTH)
 
+        assertTrue(result.isFailed)
+        assertEquals(listOf("one.cho", "two.cho"), result.importedSongFileNames)
+        assertEquals(listOf("three.cho"), result.failedFileNames)
+        assertTrue(result.unprocessedFileNames.isEmpty())
         assertEquals(listOf("one.cho", "two.cho"), songs.adopted)
         assertEquals(0, songs.rescanCount)
+    }
+
+    @Test
+    fun `a stopped bulk import reports the failed source and every unprocessed entry`() = runTest {
+        val songs = FakeSongRepository(mutableMapOf(), failingImport = 1)
+        val setlists = FakeSetlistRepository()
+        val plan = ImportPlan(
+            songs = (1..4).map {
+                ImportPlan.SongEntry("$it.cho", A, ImportPlan.Status.NEW, "source$it.txt", isConverted = true)
+            },
+            setlists = listOf(ImportPlan.SetlistEntry("set.setlist.json", setlist(listOf("source1.txt")), ImportPlan.Status.NEW, "source.json")),
+        )
+        val result = ImportFilesUseCaseImpl(songs, setlists).invoke(plan, ImportConflictResolution.KEEP_BOTH)
+        assertTrue(result.isFailed)
+        assertEquals(listOf("1.cho"), result.importedSongFileNames)
+        assertEquals(listOf("1.cho"), result.convertedSongFileNames)
+        assertEquals(listOf("source2.txt"), result.failedFileNames)
+        assertEquals(listOf("source3.txt", "source4.txt", "source.json"), result.unprocessedFileNames)
+        assertTrue(setlists.files.isEmpty())
+        assertNull(result.convertedSongToOpen)
+    }
+
+    @Test
+    fun `progress counts duplicates and skipped conflicts without counting them as imported`() = runTest {
+        val songs = FakeSongRepository(mutableMapOf("duplicate.cho" to A, "conflict.cho" to B))
+        val events = mutableListOf<ImportProgress>()
+        val plan = ImportPlan(songs = listOf(
+            ImportPlan.SongEntry("new.cho", A, ImportPlan.Status.NEW, null),
+            ImportPlan.SongEntry("duplicate.cho", A, ImportPlan.Status.IDENTICAL, null),
+            ImportPlan.SongEntry("conflict.cho", A, ImportPlan.Status.CONFLICTING, null),
+        ))
+        val result = ImportFilesUseCaseImpl(songs, FakeSetlistRepository()).invoke(plan, ImportConflictResolution.SKIP, events::add)
+        val importing = events.filter { it.phase == ImportProgress.Phase.IMPORTING }
+        assertEquals(listOf(0, 1, 2, 3), importing.map { it.completed })
+        assertTrue(importing.all { it.total == 3 })
+        assertEquals(ImportProgress.Phase.FINISHING, events.last().phase)
+        assertEquals(listOf("new.cho"), result.importedSongFileNames)
+        assertEquals(listOf("duplicate.cho"), result.duplicateFileNames)
+        assertEquals(listOf("conflict.cho"), result.skippedConflictingFileNames)
+        assertTrue(result.skippedFileNames.isEmpty())
+        assertFalse(result.isFailed)
+    }
+
+    @Test
+    fun `preparation reports expanded archive files and compares before writing`() = runTest {
+        val songs = FakeSongRepository(mutableMapOf())
+        val events = mutableListOf<ImportProgress>()
+        val archive = object : ArchiveRepository {
+            override suspend fun unpack(archive: ByteArray, maxSize: Long) = listOf(
+                ImportedFile("one.cho", A.encodeToByteArray()),
+                ImportedFile("two.cho", B.encodeToByteArray()),
+            )
+            override suspend fun pack(files: Map<String, ByteArray>) = error("not used")
+        }
+        val plan = prepare(songs, archive = archive).invoke(listOf(ImportedFile("bulk.zip", byteArrayOf(1))), events::add)
+        assertEquals(2, plan.songs.size)
+        assertEquals("bulk.zip", events.first().fileName)
+        assertEquals(1, events.first().total)
+        val reading = events.filter { it.phase == ImportProgress.Phase.READING }
+        assertEquals(listOf(0, 1, 2), reading.map { it.completed })
+        assertTrue(reading.all { it.total == 2 })
+        assertEquals(ImportProgress.Phase.COMPARING, events.last().phase)
+        assertTrue(songs.importCalls.isEmpty())
+    }
+
+    @Test
+    fun `a setlist failure reports completed songs and setlists without attempting the remainder`() = runTest {
+        val songs = FakeSongRepository(mutableMapOf())
+        val setlists = FakeSetlistRepository(failingImport = 1)
+        val plan = ImportPlan(
+            songs = listOf(ImportPlan.SongEntry("song.cho", A, ImportPlan.Status.NEW, "source.cho")),
+            setlists = (1..3).map { index ->
+                val incoming = setlist(listOf("source.cho")).copy(fileName = "set$index.setlist.json", title = "Set $index")
+                ImportPlan.SetlistEntry(incoming.fileName, incoming, ImportPlan.Status.NEW, "source$index.json")
+            },
+        )
+        val result = ImportFilesUseCaseImpl(songs, setlists).invoke(plan, ImportConflictResolution.KEEP_BOTH)
+        assertTrue(result.isFailed)
+        assertEquals(listOf("song.cho"), result.importedSongFileNames)
+        assertEquals(listOf("set1.setlist.json"), result.importedSetlistFileNames)
+        assertEquals(listOf("source2.json"), result.failedFileNames)
+        assertEquals(listOf("source3.json"), result.unprocessedFileNames)
+        assertEquals(listOf("set1.setlist.json"), setlists.adopted)
+        assertEquals("song.cho", setlists.files.values.single().entries.single().songFileName)
+    }
+
+    @Test
+    fun `cancellation still propagates and adopts the files already written`() = runTest {
+        val songs = FakeSongRepository(mutableMapOf(), failingImport = 1, importFailure = CancellationException())
+        val plan = ImportPlan(songs = listOf("one.cho", "two.cho").map {
+            ImportPlan.SongEntry(it, A, ImportPlan.Status.NEW, null)
+        })
+        assertFailsWith<CancellationException> {
+            ImportFilesUseCaseImpl(songs, FakeSetlistRepository()).invoke(plan, ImportConflictResolution.KEEP_BOTH)
+        }
+        assertEquals(listOf("one.cho"), songs.adopted)
     }
 
     /** Numbers a taken name the way the storage layer does, `x_2`, `x_3`…, unless told to replace it. */
@@ -362,6 +463,7 @@ class ImportFilesUseCaseImplTest {
     private inner class FakeSongRepository(
         val files: MutableMap<String, String>,
         private val failingImport: Int? = null,
+        private val importFailure: Exception = IllegalStateException("Full"),
     ) : SongRepository {
         val importCalls = mutableListOf<Pair<String, Boolean>>()
         val adopted = mutableListOf<String>()
@@ -378,7 +480,7 @@ class ImportFilesUseCaseImplTest {
         override suspend fun createSong(title: String, artist: String, text: String) = throw UnsupportedOperationException()
         override fun importFileName(fallbackTitle: String, text: String) = LibraryFiles.normalizedName(ChordProParser.parseMetadata(text).title ?: fallbackTitle) + ".cho"
         override suspend fun importSong(fileName: String, text: String, shouldReplace: Boolean): Song {
-            if (importCalls.size == failingImport) throw IllegalStateException("Full")
+            if (importCalls.size == failingImport) throw importFailure
             importCalls += fileName to shouldReplace
             val storedName = if (shouldReplace) fileName else files.freeName(fileName, ".cho")
             files[storedName] = text
@@ -394,7 +496,7 @@ class ImportFilesUseCaseImplTest {
         override suspend fun deleteAllSongs() = throw UnsupportedOperationException()
     }
 
-    private inner class FakeSetlistRepository : SetlistRepository {
+    private inner class FakeSetlistRepository(private val failingImport: Int? = null) : SetlistRepository {
         val files = mutableMapOf<String, Setlist>()
         override val setlists: Flow<DataState<List<Setlist>>> = emptyFlow()
         val adopted = mutableListOf<String>()
@@ -408,6 +510,7 @@ class ImportFilesUseCaseImplTest {
         override suspend fun renameSetlist(fileName: String, title: String, description: String, date: LocalDate, isCountdownShown: Boolean) = throw UnsupportedOperationException()
         override suspend fun parseSetlist(document: String) = throw UnsupportedOperationException()
         override suspend fun importSetlist(setlist: Setlist, shouldReplace: Boolean): Setlist {
+            if (files.size == failingImport) throw IllegalStateException("Full")
             val storedName = if (shouldReplace) setlist.fileName else files.freeName(setlist.fileName, ".setlist.json")
             return setlist.copy(fileName = storedName).also { files[storedName] = it }
         }

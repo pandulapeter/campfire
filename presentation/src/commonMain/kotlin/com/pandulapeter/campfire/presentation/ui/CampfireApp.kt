@@ -112,7 +112,6 @@ import androidx.navigation3.ui.NavDisplay
 import com.pandulapeter.campfire.data.model.domain.ImportedFile
 import com.pandulapeter.campfire.data.model.domain.SyncProgress
 import com.pandulapeter.campfire.data.model.domain.SyncState
-import com.pandulapeter.campfire.presentation.localization.pluralStringResource
 import com.pandulapeter.campfire.presentation.localization.stringResource
 import com.pandulapeter.campfire.presentation.resources.Res
 import com.pandulapeter.campfire.presentation.resources.error_link_not_opened
@@ -129,10 +128,10 @@ import com.pandulapeter.campfire.presentation.resources.ic_setlists
 import com.pandulapeter.campfire.presentation.resources.ic_settings
 import com.pandulapeter.campfire.presentation.resources.ic_songs
 import com.pandulapeter.campfire.presentation.resources.import_failed
-import com.pandulapeter.campfire.presentation.resources.import_oversized
 import com.pandulapeter.campfire.presentation.resources.import_converted
+import com.pandulapeter.campfire.presentation.resources.import_details
 import com.pandulapeter.campfire.presentation.resources.import_open
-import com.pandulapeter.campfire.presentation.resources.import_unreadable_documents
+import com.pandulapeter.campfire.presentation.resources.import_status_stopped
 import com.pandulapeter.campfire.presentation.resources.import_result
 import com.pandulapeter.campfire.presentation.resources.setlists
 import com.pandulapeter.campfire.presentation.resources.settings
@@ -166,6 +165,7 @@ import com.pandulapeter.campfire.presentation.ui.platform.isLaunchScreenWholeSta
 import com.pandulapeter.campfire.presentation.ui.platform.isLibraryEditableOutsideApp
 import com.pandulapeter.campfire.presentation.ui.platform.isStartupScreenHeldUntilAppReady
 import com.pandulapeter.campfire.presentation.ui.screens.setlists.SetlistsScreen
+import com.pandulapeter.campfire.presentation.ui.screens.importReport.ImportReportScreen
 import com.pandulapeter.campfire.presentation.ui.screens.settings.SettingsScreen
 import com.pandulapeter.campfire.presentation.ui.screens.settings.SettingsWidthLayout
 import com.pandulapeter.campfire.presentation.ui.screens.songDetails.SongDetailsScreen
@@ -685,7 +685,7 @@ private fun CampfireScreens(
                         )
                     }
                 }
-                // These two cover the chrome, so they are the only ones laid out edge to edge.
+                // These three cover the chrome, so they are the only ones laid out edge to edge.
                 entry<CampfireDestination.SongEditor>(metadata = navigationMetadata, clazzContentKey = { it.contentKey }) { destination ->
                     ReportNavigationTransition(viewModel, onNavigationTransitionRunningChanged)
                     ScreenSurface(hostLifecycle) {
@@ -693,6 +693,17 @@ private fun CampfireScreens(
                             viewModel = viewModel,
                             destination = destination,
                             windowSize = windowSize,
+                            contentPadding = songEditorContentPadding,
+                            onBack = viewModel::navigateBack,
+                        )
+                    }
+                }
+                entry<CampfireDestination.ImportReport>(metadata = navigationMetadata, clazzContentKey = { it.contentKey }) {
+                    ReportNavigationTransition(viewModel, onNavigationTransitionRunningChanged)
+                    ScreenSurface(hostLifecycle) {
+                        ImportReportScreen(
+                            viewModel = viewModel,
+                            // Its search is typed into, so its list ends above the keyboard as the editor's text does.
                             contentPadding = songEditorContentPadding,
                             onBack = viewModel::navigateBack,
                         )
@@ -754,6 +765,7 @@ private fun Messages(
     val head = queue.firstOrNull()
     val text = when (val current = head?.value) {
         is CampfireViewModel.Message.ImportFinished -> listOfNotNull(
+            if (current.result.isFailed) stringResource(Res.string.import_status_stopped) else null,
             stringResource(
                 Res.string.import_result,
                 current.result.importedSongFileNames.size,
@@ -762,14 +774,8 @@ private fun Messages(
                 current.result.skippedFileNames.size,
             ),
             if (current.result.convertedSongFileNames.isNotEmpty()) stringResource(Res.string.import_converted, current.result.convertedSongFileNames.size) else null,
-            if (current.result.unreadableDocumentFileNames.isNotEmpty()) pluralStringResource(
-                Res.plurals.import_unreadable_documents,
-                current.result.unreadableDocumentFileNames.size,
-                current.result.unreadableDocumentFileNames.size,
-            ) else null,
         ).joinToString("\n")
 
-        is CampfireViewModel.Message.ImportOversized -> pluralStringResource(Res.plurals.import_oversized, current.count, current.count)
         CampfireViewModel.Message.ImportFailed -> stringResource(Res.string.import_failed)
         CampfireViewModel.Message.ExportFailed -> stringResource(Res.string.export_failed)
         CampfireViewModel.Message.PdfSaved -> stringResource(Res.string.export_pdf_saved)
@@ -794,8 +800,13 @@ private fun Messages(
         is CampfireViewModel.Message.LinkNotOpened -> textResource(Res.string.error_link_not_opened, current.url)
         null -> null
     }
-    val songToOpen = (head?.value as? CampfireViewModel.Message.ImportFinished)?.result?.convertedSongToOpen
-    val actionLabel = if (songToOpen != null) stringResource(Res.string.import_open) else null
+    val importFinished = head?.value as? CampfireViewModel.Message.ImportFinished
+    val songToOpen = importFinished?.result?.convertedSongToOpen
+    val actionLabel = when {
+        songToOpen != null -> stringResource(Res.string.import_open)
+        importFinished?.hasDetails == true -> stringResource(Res.string.import_details)
+        else -> null
+    }
     LaunchedEffect(head?.index) {
         if (head != null && text != null) {
             val result = snackbarHostState.showSnackbar(
@@ -803,7 +814,12 @@ private fun Messages(
                 actionLabel = actionLabel,
                 duration = if (actionLabel != null || '\n' in text) SnackbarDuration.Long else SnackbarDuration.Short,
             )
-            if (result == SnackbarResult.ActionPerformed && songToOpen != null) viewModel.openImportedSong(songToOpen)
+            if (result == SnackbarResult.ActionPerformed) {
+                when {
+                    songToOpen != null -> viewModel.openImportedSong(songToOpen)
+                    importFinished != null -> viewModel.openImportReport(importFinished.result)
+                }
+            }
             viewModel.onMessageShown(head)
         }
     }

@@ -10,6 +10,7 @@
 package com.pandulapeter.campfire.domain.implementation.useCases
 
 import com.pandulapeter.campfire.data.model.domain.ImportConflictResolution
+import com.pandulapeter.campfire.data.model.domain.ImportProgress
 import com.pandulapeter.campfire.data.model.domain.ImportPlan
 import com.pandulapeter.campfire.data.model.domain.ImportResult
 import com.pandulapeter.campfire.data.model.domain.Setlist
@@ -19,7 +20,9 @@ import com.pandulapeter.campfire.data.repository.api.SongRepository
 import com.pandulapeter.campfire.domain.api.useCases.ImportFilesUseCase
 import com.pandulapeter.campfire.domain.implementation.ImportPlanner
 import com.pandulapeter.campfire.domain.implementation.ImportPlanner.withSongFileNames
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.NonCancellable
+import kotlinx.coroutines.yield
 import kotlinx.coroutines.withContext
 import kotlinx.datetime.TimeZone
 import kotlinx.datetime.todayIn
@@ -36,7 +39,11 @@ class ImportFilesUseCaseImpl internal constructor(
      * Songs first, setlists second: a setlist points at songs by file name, and a song that had to be renamed to
      * avoid a collision has to be followed to its new name before the setlist next to it in the archive is written.
      */
-    override suspend operator fun invoke(plan: ImportPlan, resolution: ImportConflictResolution): ImportResult {
+    override suspend operator fun invoke(
+        plan: ImportPlan,
+        resolution: ImportConflictResolution,
+        onProgress: (ImportProgress) -> Unit,
+    ): ImportResult {
         val importedSongs = mutableListOf<Song>()
         val duplicateFileNames = mutableListOf<String>()
         val convertedSongFileNames = mutableListOf<String>()
@@ -45,6 +52,14 @@ class ImportFilesUseCaseImpl internal constructor(
         val storedSongFileNames = mutableMapOf<String, String>()
 
         val importedSetlists = mutableListOf<Setlist>()
+        val skippedConflicts = mutableListOf<String>()
+        val total = plan.songs.size + plan.setlists.size
+        var processedSongs = 0
+        var processedSetlists = 0
+        var currentFileName: String? = null
+        var isFailed = false
+        var failedFileNames = emptyList<String>()
+        var unprocessedFileNames = emptyList<String>()
         try {
             // Where each song of the plan ended up, by its place in the plan: a repeat of an earlier song of the batch
             // is wherever that one went, which was not known when the plan was made.
@@ -56,6 +71,9 @@ class ImportFilesUseCaseImpl internal constructor(
                 .filter { it.status == ImportPlan.Status.IDENTICAL && it.repeatedEntryIndex == null }
                 .mapTo(hashSetOf()) { it.fileName }
             plan.songs.forEachIndexed { index, entry ->
+                currentFileName = entry.sourceFileName ?: entry.fileName
+                onProgress(ImportProgress(ImportProgress.Phase.IMPORTING, processedSongs, total, currentFileName))
+                yield()
                 val storedName = when (val action = entry.action(resolution)) {
                     Action.WRITE, Action.REPLACE -> {
                         // A replacement goes over the file as the library lists it; anything else is written under the
@@ -75,10 +93,12 @@ class ImportFilesUseCaseImpl internal constructor(
 
                     // Already in the library, or already written by this import, so the name it arrived under points there.
                     Action.DISREGARD -> (entry.repeatedEntryIndex?.let(storedNames::getOrNull) ?: entry.fileName).also { duplicateFileNames += it }
-                    Action.LEAVE_ALONE -> entry.fileName
+                    Action.LEAVE_ALONE -> entry.fileName.also { skippedConflicts += it }
                 }
                 storedNames[index] = storedName
                 entry.sourceFileName?.let { storedSongFileNames[it] = storedName }
+                processedSongs++
+                currentFileName = null
             }
 
             val librarySetlists = setlistRepository.loadSetlistsIfNeeded().orEmpty()
@@ -95,6 +115,9 @@ class ImportFilesUseCaseImpl internal constructor(
             )
             val keptSetlistFileNames = setlists.filter { it.status == ImportPlan.Status.IDENTICAL }.mapTo(hashSetOf()) { it.fileName }
             plan.setlists.zip(setlists).forEach { (planned, entry) ->
+                currentFileName = planned.sourceFileName
+                onProgress(ImportProgress(ImportProgress.Phase.IMPORTING, processedSongs + processedSetlists, total, currentFileName))
+                yield()
                 // A setlist the question was not about goes in numbered rather than being replaced or left out by it.
                 val action = if (entry.status == ImportPlan.Status.CONFLICTING && planned.status != ImportPlan.Status.CONFLICTING) {
                     Action.WRITE
@@ -121,14 +144,28 @@ class ImportFilesUseCaseImpl internal constructor(
                     }
 
                     Action.DISREGARD -> duplicateFileNames += entry.fileName
-                    Action.LEAVE_ALONE -> Unit
+                    Action.LEAVE_ALONE -> skippedConflicts += entry.fileName
                 }
+                processedSetlists++
+                currentFileName = null
             }
+            onProgress(ImportProgress(ImportProgress.Phase.IMPORTING, total, total))
+        } catch (exception: CancellationException) {
+            throw exception
+        } catch (exception: Exception) {
+            // Stop at the first write failure: setlists must never be remapped to songs that did not reach storage.
+            println("Could not import ${currentFileName ?: "the batch"}: ${exception.message}")
+            isFailed = true
+            failedFileNames = listOfNotNull(currentFileName)
+            val remaining = plan.songs.drop(processedSongs).map { it.sourceFileName ?: it.fileName } +
+                plan.setlists.drop(processedSetlists).map { it.sourceFileName }
+            unprocessedFileNames = if (currentFileName == null) remaining else remaining.drop(1)
         } finally {
             // One change to each list at the end rather than one per file, each of which would rebuild the lists
             // downstream, and no read of the directory at all: every file written is in hand as what it became. It runs
             // even when a write failed or the import was cancelled halfway, since the files written before that are on
             // disk and would otherwise be missing from the lists until something else rescanned them.
+            onProgress(ImportProgress(ImportProgress.Phase.FINISHING))
             withContext(NonCancellable) {
                 songRepository.adoptImported(importedSongs)
                 setlistRepository.adoptImported(importedSetlists)
@@ -138,12 +175,16 @@ class ImportFilesUseCaseImpl internal constructor(
             importedSongFileNames = importedSongs.map { it.fileName },
             importedSetlistFileNames = importedSetlists.map { it.fileName },
             skippedFileNames = plan.skippedFileNames,
+            skippedConflictingFileNames = skippedConflicts,
+            isFailed = isFailed,
+            failedFileNames = failedFileNames,
+            unprocessedFileNames = unprocessedFileNames,
             duplicateFileNames = duplicateFileNames,
             oversizedFileNames = plan.oversizedFileNames,
             unreadableDocumentFileNames = plan.unreadableDocumentFileNames,
             convertedSongFileNames = convertedSongFileNames,
             convertedSongToOpen = convertedSongFileNames.singleOrNull()?.takeIf {
-                plan.songs.size == 1 && plan.setlists.isEmpty() && plan.skippedFileNames.isEmpty() &&
+                !isFailed && plan.songs.size == 1 && plan.setlists.isEmpty() && plan.skippedFileNames.isEmpty() &&
                     plan.oversizedFileNames.isEmpty() && plan.unreadableDocumentFileNames.isEmpty()
             },
         )

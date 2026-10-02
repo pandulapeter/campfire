@@ -13,6 +13,7 @@ import com.pandulapeter.campfire.chordpro.ChordProSplitter
 import com.pandulapeter.campfire.chordpro.ChordSheet
 import com.pandulapeter.campfire.chordpro.ChordSheetConverter
 import com.pandulapeter.campfire.data.model.domain.ImportLimits
+import com.pandulapeter.campfire.data.model.domain.ImportProgress
 import com.pandulapeter.campfire.data.model.domain.ImportPlan
 import com.pandulapeter.campfire.data.model.domain.ImportedFile
 import com.pandulapeter.campfire.data.model.domain.LibraryFiles
@@ -45,9 +46,12 @@ class PrepareImportUseCaseImpl internal constructor(
      * Planned on [Dispatchers.Default] rather than wherever it was asked for, which for the view model is the main
      * thread. Decoding, splitting collections, reading every song header and folding comparable texts is computation.
      */
-    override suspend operator fun invoke(files: List<ImportedFile>): ImportPlan = withContext(Dispatchers.Default) { plan(files) }
+    override suspend operator fun invoke(
+        files: List<ImportedFile>,
+        onProgress: (ImportProgress) -> Unit,
+    ): ImportPlan = withContext(Dispatchers.Default) { plan(files, onProgress) }
 
-    private suspend fun plan(files: List<ImportedFile>): ImportPlan {
+    private suspend fun plan(files: List<ImportedFile>, onProgress: (ImportProgress) -> Unit): ImportPlan {
         val songFiles = mutableListOf<ImportedFile>()
         val setlistFiles = mutableListOf<ImportedFile>()
         val documentFiles = mutableListOf<ImportedFile>()
@@ -79,7 +83,9 @@ class PrepareImportUseCaseImpl internal constructor(
             }
         }
 
-        files.forEach { file ->
+        files.forEachIndexed { index, file ->
+            yield()
+            onProgress(ImportProgress(ImportProgress.Phase.UNPACKING, index, files.size, file.name))
             when {
                 !file.name.endsWith(ARCHIVE_EXTENSION, ignoreCase = true) -> sort(file)
                 file.isTooLarge || file.bytes.size > ImportLimits.MAX_IMPORT_SIZE -> oversizedFileNames += file.name
@@ -94,7 +100,8 @@ class PrepareImportUseCaseImpl internal constructor(
             }
         }
 
-        val songs = planSongs(songFiles, documentFiles, skippedFileNames, unreadableDocumentFileNames, oversizedFileNames)
+        onProgress(ImportProgress(ImportProgress.Phase.UNPACKING, files.size, files.size))
+        val songs = planSongs(songFiles, documentFiles, skippedFileNames, unreadableDocumentFileNames, oversizedFileNames, onProgress)
         return ImportPlan(
             songs = songs,
             setlists = planSetlists(setlistFiles, skippedFileNames, ImportPlanner.plannedSongFileNames(songs)),
@@ -111,8 +118,10 @@ class PrepareImportUseCaseImpl internal constructor(
         skippedFileNames: MutableList<String>,
         unreadableDocumentFileNames: MutableList<String>,
         oversizedFileNames: MutableList<String>,
+        onProgress: (ImportProgress) -> Unit,
     ): List<ImportPlan.SongEntry> {
-        val incoming = (files + documents).flatMap { file ->
+        val incoming = (files + documents).flatMapIndexed { index, file ->
+            onProgress(ImportProgress(ImportProgress.Phase.READING, index, files.size + documents.size, file.name))
             // The web's default dispatcher is a queue on its only thread, so yielding between files and songs keeps
             // the page painting and lets a preparation nobody awaits any more notice cancellation.
             yield()
@@ -123,7 +132,7 @@ class PrepareImportUseCaseImpl internal constructor(
                     val extracted = documentRepository.extract(file)
                     if (extracted == null) {
                         unreadableDocumentFileNames += file.name
-                        return@flatMap emptyList()
+                        return@flatMapIndexed emptyList()
                     }
                     ChordSheetConverter.convert(extracted.toChordSheet(), String::normalizedToNfc)
                 }
@@ -132,13 +141,13 @@ class PrepareImportUseCaseImpl internal constructor(
             }
             if (converted.sumOf { it.encodeToByteArray().size.toLong() } > ImportLimits.MAX_TEXT_FILE_SIZE) {
                 oversizedFileNames += file.name
-                return@flatMap emptyList()
+                return@flatMapIndexed emptyList()
             }
             val isConverted = isDocument || converted != listOf(original)
             val parts = converted.flatMap(ChordProSplitter::split)
             if (parts.isEmpty()) {
                 if (isDocument) unreadableDocumentFileNames += file.name else skippedFileNames += file.name
-                return@flatMap emptyList()
+                return@flatMapIndexed emptyList()
             }
             parts.map { part ->
                 yield()
@@ -157,6 +166,8 @@ class PrepareImportUseCaseImpl internal constructor(
                 )
             }
         }
+        onProgress(ImportProgress(ImportProgress.Phase.READING, files.size + documents.size, files.size + documents.size))
+        onProgress(ImportProgress(ImportProgress.Phase.COMPARING))
         return ImportPlanner.planSongs(
             incoming = incoming,
             // The names come from the scan the app already made, so finding numbered siblings needs no directory

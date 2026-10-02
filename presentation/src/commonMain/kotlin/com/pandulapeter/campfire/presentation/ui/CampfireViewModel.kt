@@ -10,6 +10,7 @@
 package com.pandulapeter.campfire.presentation.ui
 
 import androidx.compose.foundation.text.input.TextFieldState
+import androidx.compose.foundation.text.input.clearText
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableIntStateOf
@@ -32,6 +33,7 @@ import com.pandulapeter.campfire.data.model.domain.CoverArtSearchResults
 import com.pandulapeter.campfire.data.model.domain.ExportedFile
 import com.pandulapeter.campfire.data.model.domain.ImportConflictResolution
 import com.pandulapeter.campfire.data.model.domain.ImportLimits
+import com.pandulapeter.campfire.data.model.domain.ImportProgress
 import com.pandulapeter.campfire.data.model.domain.ImportPlan
 import com.pandulapeter.campfire.data.model.domain.ImportResult
 import com.pandulapeter.campfire.data.model.domain.ImportedFile
@@ -248,7 +250,14 @@ class CampfireViewModel(
     // Navigation
     /** Written into [savedStateHandle] on every change, see [persistBackStack], and read back from it here. */
     val backStack: SnapshotStateList<CampfireDestination> = mutableStateListOf<CampfireDestination>().apply {
-        addAll(restore<List<CampfireDestination>>(BACK_STACK_KEY)?.takeIf { it.isNotEmpty() } ?: listOf(CampfireDestination.Songs))
+        // The import screen shows what an import running in this process is doing or did, so a new process has
+        // nothing to put on it and comes back on the screen under it.
+        addAll(
+            restore<List<CampfireDestination>>(BACK_STACK_KEY)
+                ?.filterNot { it == CampfireDestination.ImportReport }
+                ?.takeIf { it.isNotEmpty() }
+                ?: listOf(CampfireDestination.Songs),
+        )
     }
 
     /**
@@ -300,9 +309,16 @@ class CampfireViewModel(
     internal val setlistsSearch = restoreSearch(SETLISTS_SEARCH_KEY)
 
     /**
+     * Open for good, since its field is part of the import screen's list rather than something the screen opens, and
+     * emptied whenever that screen is left. Not restored, since the screen it belongs to never is, see [backStack].
+     */
+    internal val importReportSearch = SearchState(isInitiallyOpen = true)
+
+    /**
      * The search a back gesture is about, which is the one belonging to the screen that is on top. Only the two list
-     * screens have one at all, and a search left open on a list screen is no business of the song that was opened
-     * from it: there, back is back.
+     * screens have one that opens and closes, and a search left open on a list screen is no business of the song that
+     * was opened from it: there, back is back. The import screen's field is always there, so there is nothing for a
+     * back gesture to close before the screen.
      *
      * The screens answer their own back gesture with a navigation event handler registered inside them, which is
      * composed after the navigation's own and therefore wins on its own; this is here for the desktop, whose window
@@ -319,13 +335,16 @@ class CampfireViewModel(
      * Answers Ctrl / Cmd + F, which the desktop window and the web page both hear before anything in the composition
      * does: nothing on a list screen is focused while its search is closed, and a key event only travels along the
      * focus path. It opens the search of the list screen that is on top, or brings the caret back into it if it is
-     * open already, and answers whether it did, so that the key is left to whoever else wants it everywhere else - the
+     * open already - the import screen's field, which is always there, being given the caret the same way - and
+     * answers whether it did, so that the key is left to whoever else wants it everywhere else - the
      * browser's own find bar among them. A dialog, a sheet or an overflow menu keeps it from reaching the screen under
      * it, the way it keeps Escape from reaching it.
      */
     internal fun openCurrentSearch(): Boolean {
         if (visibleDialog.value != null || isAnyOverflowMenuOpen) return false
-        val search = currentSearch ?: return false
+        val search = currentSearch
+            ?: importReportSearch.takeIf { backStack.lastOrNull() == CampfireDestination.ImportReport }
+            ?: return false
         search.openOrFocus()
         return true
     }
@@ -790,6 +809,24 @@ class CampfireViewModel(
     /** True while an import is running, which the screens that can start one show as a progress bar. */
     private val _isImporting = MutableStateFlow(false)
     val isImporting: StateFlow<Boolean> = _isImporting.asStateFlow()
+    /**
+     * The phase of an import the user asked for and how far into it it is, shown by a dialog while nothing else is
+     * reporting on it, and by the import screen while that is open.
+     */
+    private val _importProgress = MutableStateFlow<ImportProgress?>(null)
+    val importProgress: StateFlow<ImportProgress?> = _importProgress.asStateFlow()
+
+    /**
+     * What [CampfireDestination.ImportReport] shows, which is everything about an import that went anywhere but the
+     * one way that needs no more than a snackbar: a question about names that are taken, the import it decides on
+     * being written, and what an import that left something out came to. Null while no import has anything to report,
+     * and an import that has one keeps the next batch waiting until the screen is left, see [awaitImportSettled].
+     */
+    private val _importReport = MutableStateFlow<ImportReport?>(null)
+    val importReport: StateFlow<ImportReport?> = _importReport.asStateFlow()
+
+    /** Whether the last change to [backStack] left [CampfireDestination.ImportReport] on it, see [onImportReportLeft]. */
+    private var isImportReportOnBackStack = false
 
     /** True from the moment the demo library is asked for until the offer has caught up with the outcome, see [importDemoLibrary]. */
     private val isAddingDemoLibrary = MutableStateFlow(false)
@@ -934,10 +971,9 @@ class CampfireViewModel(
     val settledFontScale: Float get() = settledFontScaleState.floatValue
 
     /**
-     * The import that has been worked out but not carried out, waiting for the user to answer
-     * [DialogType.ImportConflicts]. Not part of the dialog itself, which holds only what it draws: this is the work,
-     * and it has to outlive whichever screen the import was started from. It never outlives that dialog: see
-     * [setVisibleDialog].
+     * The import that has been worked out but not carried out, waiting for the user to answer the question
+     * [ImportReport.Review] asks. Not part of the screen, which holds only what it draws: this is the work, and it has
+     * to outlive whichever screen the import was started from. It never outlives the question: see [onImportReportLeft].
      */
     private var pendingImport: PendingImport? = null
 
@@ -1206,6 +1242,9 @@ class CampfireViewModel(
         backStack.update()
         if (backStack.none { it is CampfireDestination.SongEditor }) retainedEditorField = null
         songDetailsCurrentSongs.keys.retainAll(backStack.mapNotNullTo(mutableSetOf()) { (it as? CampfireDestination.SongDetails)?.id })
+        val hadImportReport = isImportReportOnBackStack
+        isImportReportOnBackStack = backStack.any { it == CampfireDestination.ImportReport }
+        if (hadImportReport && !isImportReportOnBackStack) onImportReportLeft()
         persistBackStack()
     }
 
@@ -1396,6 +1435,14 @@ class CampfireViewModel(
             add(CampfireDestination.SongDetails(songFileNames = songFileNames, setlistFileName = null, initialIndex = 0))
         }
     }
+
+    /**
+     * A song of the import screen's list, opened in a pager over the songs of the group it was listed in, so that what an
+     * import brought can be read through one after the other and Back returns to the list.
+     */
+    internal fun openReportedSong(songFileNames: List<String>, index: Int) = openSongDetails(
+        CampfireDestination.SongDetails(songFileNames = songFileNames, setlistFileName = null, initialIndex = index),
+    )
 
     /**
      * Every way out of a screen ends up here - the app bar's button, the system's back gesture and the desktop
@@ -2098,7 +2145,7 @@ class CampfireViewModel(
 
     /**
      * Puts a batch at the end of [importQueue] and returns what completes once it is over, its conflicts question
-     * answered and the import that answer decided on written. An empty batch is not queued at all.
+     * answered, the import that answer decided on written, and its result dismissed. An empty batch is not queued at all.
      */
     private fun enqueueImport(
         files: List<ImportedFile>,
@@ -2115,12 +2162,12 @@ class CampfireViewModel(
     }
 
     /**
-     * Suspends until no import is running and none is waiting for an answer. A conflict leaves its question on screen
-     * when [import] returns, and the import the answer decides on only starts after that, so an import is over once
-     * there is neither.
+     * Suspends until no import is running and none has anything left to report. A conflict leaves its question on
+     * the import screen when [import] returns, and the import the answer decides on only starts after that; whatever
+     * the screen shows is the one import it is about, so the next batch also waits for it to be left.
      */
     private suspend fun awaitImportSettled() {
-        combine(_visibleDialog, _isImporting) { dialog, isImporting -> dialog is DialogType.ImportConflicts || isImporting }.first { !it }
+        combine(_importReport, _isImporting) { report, isImporting -> report != null || isImporting }.first { !it }
     }
 
     /**
@@ -2238,7 +2285,8 @@ class CampfireViewModel(
     /**
      * The first half of an import only works out what it would do. Nothing is written until the plan turns out to
      * have nothing worth asking about, or until the user has answered the question it does raise - which is why the
-     * plan is kept here rather than in the dialog: the answer can arrive long after the screen that started this.
+     * plan is kept here rather than on the screen that asks: the answer can arrive long after the screen that started
+     * this was left.
      */
     private suspend fun import(request: ImportRequest) {
         // Only ever called by the consumer of importQueue, which waits for each import to settle before the next, and
@@ -2247,73 +2295,161 @@ class CampfireViewModel(
         if (request.files.isEmpty() || _isImporting.value || pendingImport != null) return
         _isImporting.update { true }
         val plan = try {
-            prepareImport(request.files)
+            prepareImport(request.files) { if (request.shouldAnnounceResult) _importProgress.value = it }
         } catch (exception: CancellationException) {
+            _importProgress.value = null
+            _isImporting.value = false
             throw exception
         } catch (exception: Exception) {
+            // Nothing has been written, so there is nothing to list either, and one line says all there is to say.
             println("Could not read the files to import: ${exception.message}")
-            sendMessage(Message.ImportFailed)
-            _isImporting.update { false }
+            _importProgress.value = null
+            if (request.shouldAnnounceResult) sendMessage(Message.ImportFailed)
+            _isImporting.value = false
             return
         }
         if (plan.hasConflicts) {
-            // Nothing is happening while the question is on screen, and a progress bar under it would say otherwise.
-            _isImporting.update { false }
-            // Asked once nothing else is: the user may be in the middle of another dialog, and whatever they had typed
-            // into it would go with it. The plan waits with the queue, which is waiting for this question anyway. The
-            // question goes up past setVisibleDialog, which is right since it only ever replaces no dialog, and the
-            // pending import is only set once it is up, since any dialog shown meanwhile would have cleared it.
-            val question = DialogType.ImportConflicts(plan.summary)
-            while (!_visibleDialog.compareAndSet(expect = null, update = question)) {
-                _visibleDialog.first { it == null }
-            }
+            _importProgress.value = null
             pendingImport = PendingImport(plan = plan, request = request)
+            // Nothing is happening while the question is on screen, and a progress bar under it would say otherwise.
+            // The report, which is set first, is what keeps the next batch waiting from here on.
+            showImportReport(ImportReport.Review(plan.summary))
+            _isImporting.value = false
         } else {
-            applyImportPlan(plan = plan, resolution = ImportConflictResolution.KEEP_BOTH, request = request)
+            applyImportPlan(plan = plan, resolution = ImportConflictResolution.KEEP_BOTH, request = request, isReported = false)
         }
     }
 
-    /** The answer to [DialogType.ImportConflicts], which is the only thing that ever overwrites a library file. */
+    /**
+     * The answer to [ImportReport.Review], which is the only thing that ever overwrites a library file. The import
+     * screen stays where it is and shows the import being written, and then what it came to.
+     */
     fun resolveImport(resolution: ImportConflictResolution) {
         val pending = pendingImport ?: return
+        pendingImport = null
         // Claimed before the question goes away rather than once the import has started, so that nothing waiting for
         // the two of them to be over (see importDemoLibrary) sees a moment with neither.
         _isImporting.update { true }
-        dismissDialog()
-        viewModelScope.launch { applyImportPlan(plan = pending.plan, resolution = resolution, request = pending.request) }
+        _importReport.value = ImportReport.Importing
+        viewModelScope.launch { applyImportPlan(plan = pending.plan, resolution = resolution, request = pending.request, isReported = true) }
     }
-
-    /** Cancelling leaves the library exactly as it was: the plan is what is thrown away, not a half written import. */
-    fun cancelImport() = dismissDialog()
 
     /**
      * Expects [isImporting] to have been claimed by the caller, which both of them do before anything can observe the gap.
+     *
+     * @param isReported Whether the import screen was put up for this import before it started writing, which is
+     *   where its outcome goes for as long as that screen has not been left. Otherwise the outcome is a snackbar, unless
+     *   something was left out or went wrong, which is what the import screen is put up for.
      */
-    private suspend fun applyImportPlan(plan: ImportPlan, resolution: ImportConflictResolution, request: ImportRequest) {
+    private suspend fun applyImportPlan(
+        plan: ImportPlan,
+        resolution: ImportConflictResolution,
+        request: ImportRequest,
+        isReported: Boolean,
+    ) {
         try {
             // Not cancellable once it has started writing: the view model going away with the Android activity is no
             // reason to leave an archive half imported - its setlists come after all of its songs - and the
             // repositories the files go into outlive it, so whatever screen comes back finds the whole import.
-            val result = withContext(NonCancellable) { importFiles.invoke(plan, resolution) }
-            if (request.shouldOpenSong && plan.songs.size == 1 && !plan.songs.single().isConverted && plan.setlists.isEmpty()) {
-                // A song that was already in the library is opened as well: it is still the song that was asked for,
-                // under the name the library has for it. One that the answer to the conflicts left out is in neither
-                // list, and the library's own file under that name is a different song.
-                (result.importedSongFileNames + result.duplicateFileNames).singleOrNull()?.let(::openImportedSong)
+            val result = withContext(NonCancellable) {
+                importFiles.invoke(plan, resolution) { if (request.shouldAnnounceResult) _importProgress.value = it }
             }
-            if (request.shouldAnnounceResult) {
-                sendMessage(Message.ImportFinished(result))
-                if (result.oversizedFileNames.isNotEmpty()) {
-                    sendMessage(Message.ImportOversized(result.oversizedFileNames.size))
+            _importProgress.value = null
+            // A song that was already in the library is opened as well: it is still the song that was asked for, under
+            // the name the library has for it. One that the answer to the conflicts left out is in neither list, and
+            // the library's own file under that name is a different song.
+            val songToOpen = if (request.shouldOpenSong && plan.songs.size == 1 && !plan.songs.single().isConverted && plan.setlists.isEmpty()) {
+                (result.importedSongFileNames + result.duplicateFileNames).singleOrNull()
+            } else {
+                null
+            }
+            val isReportShown = isReported && isImportReportOnBackStack
+            when {
+                // The one song the system handed over is what the user was after, and the question about its name has
+                // been answered: the import screen gives way to it rather than reporting on one file.
+                songToOpen != null -> {
+                    // Let go of first, since a report that still says it is being written outlives its screen.
+                    if (isReported) _importReport.value = null
+                    if (isReportShown) closeImportReport()
+                    openImportedSong(songToOpen)
+                    if (request.shouldAnnounceResult) sendMessage(Message.ImportFinished(result, hasDetails = false))
                 }
+
+                isReportShown -> _importReport.value = ImportReport.Finished(result)
+                // Left while it was being written, which is a choice to hear about it the short way.
+                isReported -> {
+                    _importReport.value = null
+                    sendMessage(Message.ImportFinished(result, hasDetails = true))
+                }
+
+                !request.shouldAnnounceResult -> Unit
+                result.isClean -> sendMessage(Message.ImportFinished(result, hasDetails = plan.entryCount > 1))
+                else -> showImportReport(ImportReport.Finished(result))
             }
         } catch (exception: CancellationException) {
             throw exception
         } catch (exception: Exception) {
             println("Could not import the files: ${exception.message}")
-            sendMessage(Message.ImportFailed)
+            _importProgress.value = null
+            if (isReported && isImportReportOnBackStack) {
+                _importReport.value = ImportReport.Finished(null)
+            } else {
+                if (isReported) _importReport.value = null
+                if (request.shouldAnnounceResult) sendMessage(Message.ImportFailed)
+            }
         } finally {
+            _importProgress.value = null
             _isImporting.update { false }
+        }
+    }
+
+    /**
+     * Sets [report] at once, which is what keeps the next batch waiting, and puts the import screen on top of whatever
+     * is on screen once nothing else is in its way: a dialog, whose input would otherwise be left under the screen, or
+     * an editor holding unsaved text, which is only ever asked about while it is on top (see [navigateBack]) and would
+     * be one closed window away from being lost under it. Launched rather than awaited, so that the import that asked
+     * can finish meanwhile.
+     */
+    private fun showImportReport(report: ImportReport) {
+        _importReport.value = report
+        viewModelScope.launch {
+            combine(_visibleDialog, _editorDraft, _songTexts, snapshotFlow { backStack.toList() }) { dialog, _, _, stack ->
+                dialog == null && !(hasUnsavedEditorText() && stack.any { it is CampfireDestination.SongEditor })
+            }.first { it }
+            if (_importReport.value == report && !isImportReportOnBackStack) {
+                updateBackStack { add(CampfireDestination.ImportReport) }
+            }
+        }
+    }
+
+    /** The snackbar's way into the import screen, for an outcome that did not need it but has more to it than one line. */
+    internal fun openImportReport(result: ImportResult) {
+        if (_importReport.value != null || _isImporting.value) return
+        showImportReport(ImportReport.Finished(result))
+    }
+
+    /** Takes the import screen off the back stack, with whatever is on top of it, see [onImportReportLeft]. */
+    private fun closeImportReport() {
+        val index = backStack.indexOf(CampfireDestination.ImportReport)
+        if (index >= 0) updateBackStack { while (size > index) removeAt(lastIndex) }
+    }
+
+    /**
+     * However the import screen went - Back, its Close, Done, or the stack rebuilt under it - a question it asked is
+     * answered by cancelling, which leaves the library exactly as it was: the plan is what is thrown away. An import
+     * that is being written carries on, and is reported with a snackbar once it is done (see [applyImportPlan]); what
+     * a finished one came to has been seen.
+     */
+    private fun onImportReportLeft() {
+        importReportSearch.textFieldState.clearText()
+        when (_importReport.value) {
+            is ImportReport.Review -> {
+                pendingImport = null
+                _importReport.value = null
+            }
+
+            ImportReport.Importing -> Unit
+            is ImportReport.Finished, null -> _importReport.value = null
         }
     }
 
@@ -2785,15 +2921,12 @@ class CampfireViewModel(
     // Dialogs
 
     /**
-     * The one place [visibleDialog] is given a value, because two dialogs have work parked behind them that nothing
-     * else can answer for: the plan behind [DialogType.ImportConflicts] and the exit behind
-     * [DialogType.UnsavedChanges]. Either goes with its dialog, however that leaves the screen - answered, dismissed,
-     * or replaced, the way the desktop's close button puts the unsaved changes question over anything. A question
-     * nobody can answer any more must not keep every later import from starting, and dropping its plan leaves the
-     * library exactly as cancelling would have.
+     * The one place [visibleDialog] is given a value, because a dialog can have work parked behind it that nothing
+     * else can answer for: the exit behind [DialogType.UnsavedChanges]. It goes with its dialog, however that leaves
+     * the screen - answered, dismissed, or replaced, the way the desktop's close button puts the unsaved changes
+     * question over anything.
      */
     private fun setVisibleDialog(dialogType: DialogType?) {
-        if (dialogType !is DialogType.ImportConflicts) pendingImport = null
         // An exit the question was asked for and that is not being run is an exit that was cancelled: its caller
         // may be waiting to hear so (the macOS quit request is).
         if (dialogType != DialogType.UnsavedChanges) takePendingExit()?.onCancelled?.invoke()
@@ -2921,8 +3054,8 @@ class CampfireViewModel(
      * One batch in [importQueue].
      *
      * @param shouldAnnounceResult False for the import nobody asked for: the demo library planted on a first run is
-     *   the library the user is about to be shown, and a snackbar counting the files of it would be the app
-     *   reporting on something that, as far as anyone can tell, simply came with it.
+     *   the library the user is about to be shown, and a progress dialog, a snackbar or a result counting the files
+     *   of it would be the app reporting on something that, as far as anyone can tell, simply came with it.
      * @param shouldOpenSong True for files the system handed over, see [importFiles].
      */
     private class ImportRequest(
@@ -2938,7 +3071,19 @@ class CampfireViewModel(
         val hasBeenRead: Boolean,
     )
 
-    /** An import waiting for the answer to [DialogType.ImportConflicts], see [pendingImport]. */
+    /**
+     * Whether an import went the one way a snackbar is enough for: everything written, nothing left out and nothing
+     * stopped. Files that were already in the library count as written, since nothing of them is lost.
+     */
+    private val ImportResult.isClean
+        get() = !isFailed && skippedFileNames.isEmpty() && skippedConflictingFileNames.isEmpty() &&
+            oversizedFileNames.isEmpty() && unreadableDocumentFileNames.isEmpty()
+
+    /** How many files the plan has something to say about, which is what makes an import more than one file's. */
+    private val ImportPlan.entryCount
+        get() = songs.size + setlists.size + skippedFileNames.size + oversizedFileNames.size + unreadableDocumentFileNames.size
+
+    /** An import waiting for the answer to [ImportReport.Review], see [pendingImport]. */
     private class PendingImport(
         val plan: ImportPlan,
         val request: ImportRequest,
@@ -2971,15 +3116,28 @@ class CampfireViewModel(
         data class Active(val query: CoverArtQuery, val results: CoverArtSearchResults) : CoverArtSearchState
     }
 
+    /** What [CampfireDestination.ImportReport] shows, see [importReport]. */
+    sealed interface ImportReport {
+
+        /** Names the library has given to other files, and the question of what to do about them, see [resolveImport]. */
+        data class Review(val summary: ImportPlan.Summary) : ImportReport
+
+        /** The answer being carried out, with [importProgress] saying how far. */
+        data object Importing : ImportReport
+
+        /** What the import came to; null for one that failed before it could say. */
+        data class Finished(val result: ImportResult?) : ImportReport
+    }
+
     /** Something that has happened and is worth one line of text at the bottom of the screen. */
     sealed interface Message {
-        data class ImportFinished(val result: ImportResult) : Message
-
         /**
-         * Files an import left out for their size, a message of its own rather than one more number in
-         * [ImportFinished], which already reads as a row of counts.
+         * @param hasDetails Whether the snackbar offers the import screen, for an outcome that needed none but has
+         *   more to it than the counts fit into one line: a batch of more than one file, or one whose screen was left
+         *   while it was being written.
          */
-        data class ImportOversized(val count: Int) : Message
+        data class ImportFinished(val result: ImportResult, val hasDetails: Boolean) : Message
+
         data object ImportFailed : Message
         data object ExportFailed : Message
         data object PdfSaved : Message
@@ -3230,10 +3388,10 @@ class CampfireViewModel(
         data object UnsavedChanges : DialogType
 
         /**
-         * Asked when an import would land on names the library has given to other files, see [import]. The plan
-         * itself stays in the view model; this carries only what the dialog puts on screen.
+         * Asked over the import screen before its answer overwrites [count] files of the library, which is the one
+         * answer to its question that cannot be taken back.
          */
-        data class ImportConflicts(val summary: ImportPlan.Summary) : DialogType
+        data class ConfirmImportReplace(val count: Int) : DialogType
         /** Asked before the editor throws away everything typed since the last save, see [revertEditorChanges]. */
         data object RevertChanges : DialogType
 

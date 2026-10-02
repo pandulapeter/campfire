@@ -21,6 +21,39 @@
     <string name="add_demo_songs">Add the demo songs</string>
 
     <!-- Import and export -->
+    <string name="import_progress_title">Importing files</string>
+    <string name="import_progress_unpacking">Opening selected files and archives</string>
+    <string name="import_progress_reading">Reading and converting songs</string>
+    <string name="import_progress_comparing">Checking for duplicates and conflicts</string>
+    <string name="import_progress_importing">Adding files to your library</string>
+    <string name="import_progress_finishing">Updating your library</string>
+    <string name="import_progress_count">%1$d of %2$d processed</string>
+    <string name="import_progress_wait">Please keep Campfire open until the import finishes.</string>
+    <string name="import_status_title">Import complete</string>
+    <string name="import_status_stopped">Import stopped</string>
+    <string name="import_status_partial">The import stopped after a failure. Files already imported are in your library; the remaining files were not processed.</string>
+    <string name="import_status_unknown_failure">The import could not finish. Check your library before trying again.</string>
+    <string name="import_status_songs">Songs imported</string>
+    <string name="import_status_setlists">Setlists imported</string>
+    <string name="import_status_duplicates">Already in the library</string>
+    <string name="import_status_skipped_conflicts">Conflicts skipped by your choice</string>
+    <string name="import_status_skipped">Unsupported or invalid files</string>
+    <string name="import_status_oversized">Files over the import size limit</string>
+    <string name="import_status_unreadable">Documents without readable text</string>
+    <string name="import_status_failed">Files that could not be imported</string>
+    <string name="import_status_unprocessed">Files not processed</string>
+    <string name="import_report_search">Search files</string>
+    <string name="import_files_empty">No matching files</string>
+    <string name="import_report_clean">Nothing was left out.</string>
+    <string name="import_report_left_out">Some of the files were not imported. Each one is listed below, under the reason.</string>
+    <string name="import_report_converted">Converted, worth a look in the editor</string>
+    <string name="import_report_edit">Open in the editor</string>
+    <string name="import_details">Details</string>
+    <plurals name="import_replace_title">
+        <item quantity="one">Replace %1$d file?</item>
+        <item quantity="other">Replace %1$d files?</item>
+    </plurals>
+    <string name="import_conflicts_apply_all">This choice applies to every conflicting file in this import.</string>
     <string name="import_files">Import files</string>
     <string name="import_result">Songs imported: %1$d · Setlists: %2$d · Already there: %3$d · Skipped: %4$d</string>
     <string name="import_converted">Converted: %1$d — worth a look in the editor.</string>
@@ -59,7 +92,6 @@
         <item quantity="other">%1$d files are too large and cannot be imported.</item>
     </plurals>
     <string name="import_conflicts_files">The names that are taken</string>
-    <string name="import_conflicts_more">and %1$d more</string>
     <string name="import_conflicts_question">What should happen to those?</string>
     <string name="import_conflicts_keep_both">Keep both</string>
     <string name="import_conflicts_keep_both_description">Import them next to the files they collide with, numbered \"_2\"</string>

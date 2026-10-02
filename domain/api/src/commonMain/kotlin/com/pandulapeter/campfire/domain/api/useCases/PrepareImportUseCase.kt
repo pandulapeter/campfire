@@ -9,6 +9,7 @@
  */
 package com.pandulapeter.campfire.domain.api.useCases
 
+import com.pandulapeter.campfire.data.model.domain.ImportProgress
 import com.pandulapeter.campfire.data.model.domain.ImportPlan
 import com.pandulapeter.campfire.data.model.domain.ImportedFile
 
@@ -21,5 +22,9 @@ import com.pandulapeter.campfire.data.model.domain.ImportedFile
  */
 interface PrepareImportUseCase {
 
-    suspend operator fun invoke(files: List<ImportedFile>): ImportPlan
+    /** Reports phases from the worker dispatcher; the observer must be safe to call off the main thread. */
+    suspend operator fun invoke(
+        files: List<ImportedFile>,
+        onProgress: (ImportProgress) -> Unit = {},
+    ): ImportPlan
 }

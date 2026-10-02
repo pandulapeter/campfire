@@ -101,7 +101,6 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.offset
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.pandulapeter.campfire.data.model.domain.ImportConflictResolution
-import com.pandulapeter.campfire.data.model.domain.ImportPlan
 import com.pandulapeter.campfire.data.model.domain.Song
 import com.pandulapeter.campfire.data.model.domain.SongLanguage
 import com.pandulapeter.campfire.data.model.domain.SyncState
@@ -123,23 +122,9 @@ import com.pandulapeter.campfire.presentation.resources.ic_clear
 import com.pandulapeter.campfire.presentation.resources.ic_label
 import com.pandulapeter.campfire.presentation.resources.ic_language
 import com.pandulapeter.campfire.presentation.resources.ic_search
-import com.pandulapeter.campfire.presentation.resources.import_conflicts
-import com.pandulapeter.campfire.presentation.resources.import_conflicts_confirm
-import com.pandulapeter.campfire.presentation.resources.import_conflicts_duplicates
-import com.pandulapeter.campfire.presentation.resources.import_conflicts_files
-import com.pandulapeter.campfire.presentation.resources.import_conflicts_keep_both
-import com.pandulapeter.campfire.presentation.resources.import_conflicts_keep_both_description
-import com.pandulapeter.campfire.presentation.resources.import_conflicts_more
-import com.pandulapeter.campfire.presentation.resources.import_conflicts_new
-import com.pandulapeter.campfire.presentation.resources.import_conflicts_question
 import com.pandulapeter.campfire.presentation.resources.import_conflicts_replace
 import com.pandulapeter.campfire.presentation.resources.import_conflicts_replace_description
-import com.pandulapeter.campfire.presentation.resources.import_conflicts_skip
-import com.pandulapeter.campfire.presentation.resources.import_conflicts_skip_description
-import com.pandulapeter.campfire.presentation.resources.import_conflicts_skipped
-import com.pandulapeter.campfire.presentation.resources.import_conflicts_summary
-import com.pandulapeter.campfire.presentation.resources.import_oversized
-import com.pandulapeter.campfire.presentation.resources.import_unreadable_documents
+import com.pandulapeter.campfire.presentation.resources.import_replace_title
 import com.pandulapeter.campfire.presentation.resources.save
 import com.pandulapeter.campfire.presentation.resources.setlists_delete_setlist
 import com.pandulapeter.campfire.presentation.resources.setlists_delete_setlist_confirmation
@@ -205,7 +190,6 @@ import com.pandulapeter.campfire.presentation.ui.components.CountedFilterChip
 import com.pandulapeter.campfire.presentation.ui.components.HideKeyboardWhenScrolledDown
 import com.pandulapeter.campfire.presentation.ui.components.LabelSortingToggle
 import com.pandulapeter.campfire.presentation.ui.components.MAX_SEARCH_QUERY_LENGTH
-import com.pandulapeter.campfire.presentation.ui.components.RadioListItem
 import com.pandulapeter.campfire.presentation.ui.components.SortableChipRow
 import com.pandulapeter.campfire.presentation.ui.components.ScrollToStartWhenChanged
 import com.pandulapeter.campfire.presentation.ui.components.SetlistSortMenu
@@ -246,6 +230,10 @@ internal fun CampfireDialogs(
     urlOpener: (String) -> Unit,
 ) {
     val visibleDialog by viewModel.visibleDialog.collectAsStateWithLifecycle()
+    val importProgress by viewModel.importProgress.collectAsStateWithLifecycle()
+    val importReport by viewModel.importReport.collectAsStateWithLifecycle()
+    // The import screen shows the progress of the imports it reports on itself.
+    ImportProgressDialogHost(progress = importProgress.takeIf { importReport == null }, canShow = visibleDialog == null)
     when (val dialog = visibleDialog) {
         // Drawn by PrintExportHost, which deals it over the screens rather than in a window of its own.
         is CampfireViewModel.DialogType.PrintExport -> Unit
@@ -432,10 +420,15 @@ internal fun CampfireDialogs(
             onConfirm = viewModel::revertEditorChanges,
         )
 
-        is CampfireViewModel.DialogType.ImportConflicts -> ImportConflictsDialog(
-            summary = dialog.summary,
-            onCancel = viewModel::cancelImport,
-            onConfirm = viewModel::resolveImport,
+        is CampfireViewModel.DialogType.ConfirmImportReplace -> ConfirmationDialog(
+            title = pluralStringResource(Res.plurals.import_replace_title, dialog.count, dialog.count),
+            text = stringResource(Res.string.import_conflicts_replace_description),
+            confirmLabel = stringResource(Res.string.import_conflicts_replace),
+            onDismiss = viewModel::dismissDialog,
+            onConfirm = {
+                viewModel.dismissDialog()
+                viewModel.resolveImport(ImportConflictResolution.REPLACE)
+            },
         )
 
         CampfireViewModel.DialogType.UnsavedChanges -> UnsavedChangesDialog(
@@ -647,128 +640,6 @@ private fun UnsavedChangesDialog(
         }
     },
 )
-
-/**
- * The one question an import can raise, asked once for the whole batch: the file name is a song's identity, so a
- * file arriving under a name the library has already given to something else is either a second copy of it or a
- * different song, and only the user can say which. Files that are new, and files the library already holds
- * unchanged, are decided without asking and are summarised here only so that the answer is given in full sight of
- * what the import is otherwise about to do.
- *
- * One answer covers every conflict rather than one question per file, because the batch this exists for is an
- * archive of hundreds - being asked three hundred times is not a choice, it is an obstacle.
- */
-@Composable
-private fun ImportConflictsDialog(
-    summary: ImportPlan.Summary,
-    onCancel: () -> Unit,
-    onConfirm: (ImportConflictResolution) -> Unit,
-) {
-    var resolution by rememberSaveable { mutableStateOf(ImportConflictResolution.KEEP_BOTH) }
-    AlertDialog(
-        onDismissRequest = onCancel,
-        title = { Text(stringResource(Res.string.import_conflicts)) },
-        text = {
-            Column(
-                modifier = Modifier.verticalScroll(rememberScrollState())
-            ) {
-                Text(
-                    pluralStringResource(
-                        Res.plurals.import_conflicts_summary,
-                        summary.conflictingFileNames.size,
-                        summary.conflictingFileNames.size,
-                    ),
-                )
-                Spacer(modifier = Modifier.height(8.dp))
-                ImportConflictsFileNames(fileNames = summary.conflictingFileNames)
-                if (summary.newSongCount > 0 || summary.newSetlistCount > 0) {
-                    ImportConflictsNote(stringResource(Res.string.import_conflicts_new, summary.newSongCount, summary.newSetlistCount))
-                }
-                if (summary.duplicateCount > 0) {
-                    ImportConflictsNote(pluralStringResource(Res.plurals.import_conflicts_duplicates, summary.duplicateCount, summary.duplicateCount))
-                }
-                if (summary.skippedCount > 0) {
-                    ImportConflictsNote(pluralStringResource(Res.plurals.import_conflicts_skipped, summary.skippedCount, summary.skippedCount))
-                }
-                if (summary.oversizedCount > 0) {
-                    ImportConflictsNote(pluralStringResource(Res.plurals.import_oversized, summary.oversizedCount, summary.oversizedCount))
-                }
-                if (summary.unreadableDocumentCount > 0) {
-                    ImportConflictsNote(pluralStringResource(Res.plurals.import_unreadable_documents, summary.unreadableDocumentCount, summary.unreadableDocumentCount))
-                }
-                Spacer(modifier = Modifier.height(16.dp))
-                Text(
-                    text = stringResource(Res.string.import_conflicts_question),
-                    style = MaterialTheme.typography.titleSmall,
-                )
-                ImportConflictResolution.entries.forEach { option ->
-                    RadioListItem(
-                        title = stringResource(option.label),
-                        description = stringResource(option.description),
-                        isSelected = option == resolution,
-                        onSelected = { resolution = option },
-                    )
-                }
-            }
-        },
-        confirmButton = {
-            TextButton(onClick = { onConfirm(resolution) }) { Text(stringResource(Res.string.import_conflicts_confirm)) }
-        },
-        dismissButton = {
-            TextButton(onClick = onCancel) { Text(stringResource(Res.string.cancel)) }
-        },
-    )
-}
-
-/**
- * The conflicting names themselves, capped: the point is to recognise what is about to be decided about, and a list
- * of three hundred file names inside a dialog is not something anybody reads.
- */
-@Composable
-private fun ImportConflictsFileNames(fileNames: List<String>) = Column {
-    Text(
-        text = stringResource(Res.string.import_conflicts_files),
-        style = MaterialTheme.typography.labelLarge,
-        color = MaterialTheme.colorScheme.onSurfaceVariant,
-    )
-    fileNames.take(MAXIMUM_LISTED_CONFLICTS).forEach { fileName ->
-        Text(
-            text = fileName,
-            style = MaterialTheme.typography.bodyMedium,
-        )
-    }
-    if (fileNames.size > MAXIMUM_LISTED_CONFLICTS) {
-        Text(
-            text = stringResource(Res.string.import_conflicts_more, fileNames.size - MAXIMUM_LISTED_CONFLICTS),
-            style = MaterialTheme.typography.bodyMedium,
-            color = MaterialTheme.colorScheme.onSurfaceVariant,
-        )
-    }
-}
-
-@Composable
-private fun ImportConflictsNote(text: String) = Text(
-    modifier = Modifier.padding(top = 8.dp),
-    text = text,
-    style = MaterialTheme.typography.bodyMedium,
-    color = MaterialTheme.colorScheme.onSurfaceVariant,
-)
-
-private val ImportConflictResolution.label
-    get() = when (this) {
-        ImportConflictResolution.KEEP_BOTH -> Res.string.import_conflicts_keep_both
-        ImportConflictResolution.REPLACE -> Res.string.import_conflicts_replace
-        ImportConflictResolution.SKIP -> Res.string.import_conflicts_skip
-    }
-
-private val ImportConflictResolution.description
-    get() = when (this) {
-        ImportConflictResolution.KEEP_BOTH -> Res.string.import_conflicts_keep_both_description
-        ImportConflictResolution.REPLACE -> Res.string.import_conflicts_replace_description
-        ImportConflictResolution.SKIP -> Res.string.import_conflicts_skip_description
-    }
-
-private const val MAXIMUM_LISTED_CONFLICTS = 5
 
 @Composable
 private fun ConfirmationDialog(

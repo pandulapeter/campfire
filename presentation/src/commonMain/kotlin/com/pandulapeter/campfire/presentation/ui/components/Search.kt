@@ -786,7 +786,7 @@ private fun SearchField(
 }
 
 /** Keeps what fits of a paste rather than refusing all of it, which is what `InputTransformation.maxLength` does. */
-private object TruncateSearchQuery : InputTransformation {
+internal object TruncateSearchQuery : InputTransformation {
     override fun TextFieldBuffer.transformInput() {
         if (length > MAX_SEARCH_QUERY_LENGTH) replace(MAX_SEARCH_QUERY_LENGTH, length, "")
     }

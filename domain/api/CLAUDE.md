@@ -93,3 +93,7 @@ whole library to say whether an account is connected. `ConnectSyncProviderUseCas
 `AuthorizationCompletionPage` along with the provider, because the page the desktop's browser lands on after consent
 is the one piece of Campfire's text rendered outside the app and the data layer can see neither the translations nor
 the chosen language — so the words travel down from the UI like any other string the user reads.
+
+Import preparation and application accept an optional `ImportProgress` observer, which may run on the worker dispatcher.
+Application counts duplicates and skipped conflicts as processed entries, stops on a write failure, and returns the
+partial `ImportResult` with failed and unprocessed names rather than losing the successful ones; cancellation still throws.

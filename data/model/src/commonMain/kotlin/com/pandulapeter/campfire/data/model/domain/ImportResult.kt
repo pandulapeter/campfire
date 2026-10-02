@@ -25,6 +25,12 @@ data class ImportResult(
     /** Files the import would have looked inside but did not read, see [ImportPlan.oversizedFileNames]. */
     val oversizedFileNames: List<String> = emptyList(),
     val unreadableDocumentFileNames: List<String> = emptyList(),
+    /** Conflicts explicitly left out by the user's batch decision, separate from unsupported files. */
+    val skippedConflictingFileNames: List<String> = emptyList(),
+    /** A stopped import retains the names it wrote, so a failure never hides a partial success. */
+    val isFailed: Boolean = false,
+    val failedFileNames: List<String> = emptyList(),
+    val unprocessedFileNames: List<String> = emptyList(),
     /** Stored names of converted songs that were actually written by this import. */
     val convertedSongFileNames: List<String> = emptyList(),
     /** The only converted song of a selection, eligible for the result's explicit Open action. */

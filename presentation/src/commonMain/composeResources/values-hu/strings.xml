@@ -21,6 +21,39 @@
     <string name="add_demo_songs">Bemutató dalok hozzáadása</string>
 
     <!-- Import and export -->
+    <string name="import_progress_title">Fájlok importálása</string>
+    <string name="import_progress_unpacking">Kijelölt fájlok és archívumok megnyitása</string>
+    <string name="import_progress_reading">Dalok beolvasása és átalakítása</string>
+    <string name="import_progress_comparing">Egyezések és névütközések ellenőrzése</string>
+    <string name="import_progress_importing">Fájlok hozzáadása a könyvtáradhoz</string>
+    <string name="import_progress_finishing">Könyvtár frissítése</string>
+    <string name="import_progress_count">%1$d / %2$d feldolgozva</string>
+    <string name="import_progress_wait">Kérjük, hagyd nyitva a Campfire-t az importálás végéig.</string>
+    <string name="import_status_title">Importálás kész</string>
+    <string name="import_status_stopped">Importálás megszakadt</string>
+    <string name="import_status_partial">Az importálás egy hiba miatt megszakadt. A már importált fájlok a könyvtáradban vannak; a hátralévő fájlok nem lettek feldolgozva.</string>
+    <string name="import_status_unknown_failure">Az importálás nem sikerült. Újabb próbálkozás előtt ellenőrizd a könyvtáradat.</string>
+    <string name="import_status_songs">Importált dalok</string>
+    <string name="import_status_setlists">Importált listák</string>
+    <string name="import_status_duplicates">Már a könyvtárban</string>
+    <string name="import_status_skipped_conflicts">Döntésed alapján kihagyott ütközések</string>
+    <string name="import_status_skipped">Nem támogatott vagy érvénytelen fájlok</string>
+    <string name="import_status_oversized">Importálási méretkorlátot túllépő fájlok</string>
+    <string name="import_status_unreadable">Olvasható szöveg nélküli dokumentumok</string>
+    <string name="import_status_failed">Nem importálható fájlok</string>
+    <string name="import_status_unprocessed">Fel nem dolgozott fájlok</string>
+    <string name="import_report_search">Fájlok keresése</string>
+    <string name="import_files_empty">Nincs egyező fájl</string>
+    <string name="import_report_clean">Semmi sem maradt ki.</string>
+    <string name="import_report_left_out">Néhány fájl nem lett importálva. Mindegyik szerepel lent, az okánál.</string>
+    <string name="import_report_converted">Átalakítva, érdemes átnézni a szerkesztőben</string>
+    <string name="import_report_edit">Megnyitás a szerkesztőben</string>
+    <string name="import_details">Részletek</string>
+    <plurals name="import_replace_title">
+        <item quantity="one">%1$d fájl cseréje?</item>
+        <item quantity="other">%1$d fájl cseréje?</item>
+    </plurals>
+    <string name="import_conflicts_apply_all">Ez a döntés az importálás minden ütköző fájljára vonatkozik.</string>
     <string name="import_files">Fájlok importálása</string>
     <string name="import_result">%1$d dal és %2$d lista importálva · %3$d már megvolt · %4$d kihagyva</string>
     <string name="import_converted">Átalakítva: %1$d — érdemes átnézni a szerkesztőben.</string>
@@ -59,7 +92,6 @@
         <item quantity="other">%1$d fájl túl nagy, ezeket nem lehet importálni.</item>
     </plurals>
     <string name="import_conflicts_files">A foglalt nevek</string>
-    <string name="import_conflicts_more">és még %1$d</string>
     <string name="import_conflicts_question">Mi legyen velük?</string>
     <string name="import_conflicts_keep_both">Maradjon mindkettő</string>
     <string name="import_conflicts_keep_both_description">Importálás a meglévő fájlok mellé, \"_2\" számozással</string>

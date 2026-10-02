@@ -28,7 +28,9 @@ import kotlin.js.ExperimentalWasmJsInterop
  *   on top of the songs, since picking a tab replaces the entry rather than adding one (`settings` alone opens the tab
  *   that was open last);
  * - `song/{song}`, and `song/{song}/edit` for its editor;
- * - `setlist/{setlist}/{song}` — a song read from a setlist, which follows the pager from song to song.
+ * - `setlist/{setlist}/{song}` — a song read from a setlist, which follows the pager from song to song;
+ * - `import` — the import screen, which an address opened on its own names nothing for, since what it shows is an
+ *   import running in the page that is gone.
  *
  * A song is named by its file name without the `.cho` every song the app writes ends in, and a setlist without its
  * `.setlist.json`; a song file with one of the other extensions keeps it, since the name has to find the file again.
@@ -60,6 +62,7 @@ internal object BrowserRoutes {
                 }
 
                 is CampfireDestination.SongEditor -> add("$SONG/${songPathSegment(destination.fileName)}/$EDIT")
+                CampfireDestination.ImportReport -> add(IMPORT)
             }
         }
     }
@@ -152,13 +155,15 @@ internal object BrowserRoutes {
      * holds, which is what a history entry the browser returns to may do: the library changes while the entry waits.
      * A song read from a setlist pages through what the setlist holds now, as it does when the setlist's row is tapped
      * or its address is opened ([resolve]), and it is cut short too once the song it was on is gone from the setlist.
-     * An editor is cut off as well while performance mode is on, which may have been turned on since.
+     * An editor is cut off as well while performance mode is on, which may have been turned on since, and the import
+     * screen once there is no import to report on ([hasImportReport]): the one it was about has been left.
      */
     fun validate(
         state: NavigationState,
         songs: List<Song>,
         setlists: List<Setlist>,
         isPerformanceModeEnabled: Boolean,
+        hasImportReport: Boolean,
     ): NavigationState {
         val songFileNames = songs.mapTo(mutableSetOf()) { it.fileName }
         val setlistsByFileName = setlists.associateBy { it.fileName }
@@ -174,6 +179,7 @@ internal object BrowserRoutes {
                 }
 
                 is CampfireDestination.SongEditor -> destination.takeIf { !isPerformanceModeEnabled && it.fileName in songFileNames }
+                CampfireDestination.ImportReport -> destination.takeIf { hasImportReport }
                 else -> destination
             } ?: break
         }
@@ -198,6 +204,7 @@ internal object BrowserRoutes {
     private const val SONG = "song"
     private const val SETLIST = "setlist"
     private const val EDIT = "edit"
+    private const val IMPORT = "import"
 }
 
 /**

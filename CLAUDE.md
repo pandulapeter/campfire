@@ -276,7 +276,14 @@ localized in both languages.
   replacement, so a different one wanting its name is numbered next to it. The names
   taken by something *different* are put to the user as one question about the whole batch — keep both, replace,
   skip, or cancel the import. Replacing is the
-  only thing in the app that ever overwrites a library file, and it takes an answer to that dialog.
+  only thing in the app that ever overwrites a library file, and it takes an answer to that question and a
+  confirmation after it. An import that takes a moment shows its phase and a processed-entry count in a dialog; one
+  that went the one happy way — everything written or already there, nothing left out — ends in a snackbar (with
+  **Details** for a batch of more than one file). **Anything else is a screen of its own** (`CampfireDestination.ImportReport`),
+  pushed on the back stack rather than told in dialogs following one another: the question, then the import it decides
+  on being written, then every file of what it came to, grouped by what became of it and searchable, a song opened from
+  it coming back to it. A write failure stops the batch and reports its partial success, the failed source and every
+  unprocessed entry there; an import that could not be read at all is one "Import failed" snackbar.
 - **Documents are converted locally**, never rendered, uploaded or kept: `.pdf` and `.docx` pass through
   `DocumentRepository` to pure-Kotlin extractors, then `ChordSheetConverter` to ordinary ChordPro. Plain `.txt`
   and text shared on Android use the same converter; the ChordPro extension family never does. Recognized ChordPro
@@ -672,7 +679,7 @@ start, which is what the rest of `app/web` is about — see its `CLAUDE.md`.
   app's cached repositories.
 - **Every screen has an address, and the browser's history is the app's back stack**: `/` is the songs, then
   `search`, `setlists`, `setlists/search`, `settings/{general,songs,library,about}`, `song/{song}`, `song/{song}/edit`
-  and `setlist/{setlist}/{song}`, one history entry per step a back gesture would take (`:presentation`'s
+  `setlist/{setlist}/{song}` and `import`, one history entry per step a back gesture would take (`:presentation`'s
   `ui/navigation/BrowserHistory.kt`). The app decides and the history follows — pushed, replaced or gone back through
   to match — and the browser's Back is sent into the navigation event dispatcher like Escape, so it closes a dialog
   or asks about unsaved text before it leaves a screen. An address that is opened is resolved once the library has

@@ -10,6 +10,7 @@
 package com.pandulapeter.campfire.domain.api.useCases
 
 import com.pandulapeter.campfire.data.model.domain.ImportConflictResolution
+import com.pandulapeter.campfire.data.model.domain.ImportProgress
 import com.pandulapeter.campfire.data.model.domain.ImportPlan
 import com.pandulapeter.campfire.data.model.domain.ImportResult
 
@@ -18,7 +19,14 @@ interface ImportFilesUseCase {
     /**
      * Carries out what [PrepareImportUseCase] worked out. A file the library already has under the same name and
      * with the same content is never written a second time; [resolution] decides what happens to the ones whose
-     * name is taken by something else, and is the answer the user gave to that question.
+     * name is taken by something else, and is the answer the user gave to that question. Progress counts every
+     * processed entry, including duplicates and skipped conflicts. A write failure stops the batch and returns
+     * its partial result with the failed and unprocessed names; cancellation still throws. The observer must not
+     * throw or perform blocking work.
      */
-    suspend operator fun invoke(plan: ImportPlan, resolution: ImportConflictResolution): ImportResult
+    suspend operator fun invoke(
+        plan: ImportPlan,
+        resolution: ImportConflictResolution,
+        onProgress: (ImportProgress) -> Unit = {},
+    ): ImportResult
 }
