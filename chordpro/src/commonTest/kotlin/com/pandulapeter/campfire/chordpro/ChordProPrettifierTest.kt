@@ -118,6 +118,10 @@ class ChordProPrettifierTest {
         assertEquals(after.indexOf("Hello") + 3, ChordProPrettifier.prettifiedOffset(before, after, before.indexOf("Hello") + 3))
         assertEquals(after.indexOf("Hello"), ChordProPrettifier.prettifiedOffset(before, after, before.indexOf("\n\n\n") + 2))
         for (offset in before.indices) assertEquals(offset, ChordProPrettifier.prettifiedOffset(before, before, offset))
+        val lines = "{title: T}\n{artist: A}\nHello\nWorld"
+        val sorted = ChordProPrettifier.prettify(lines)
+        val end = lines.indexOf("Hello") + "Hello".length
+        assertEquals(sorted.indexOf("Hello") + "Hello".length, ChordProPrettifier.prettifiedOffset(lines, sorted, end))
         val indented = "  {artist: Singer}\n {title: Song}\nWords"
         val formatted = ChordProPrettifier.prettify(indented)
         assertEquals(formatted.indexOf("Singer") + 2, ChordProPrettifier.prettifiedOffset(indented, formatted, indented.indexOf("Singer") + 2))

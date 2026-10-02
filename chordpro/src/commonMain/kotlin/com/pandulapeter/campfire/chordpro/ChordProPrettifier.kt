@@ -108,8 +108,9 @@ object ChordProPrettifier {
 
     /**
      * Maps a caret through formatting, keeping its column on the same non-blank line after header reordering and
-     * spacing changes. Like [ChordProTransposer.transposedOffset], it clamps arbitrary offsets; a removed blank
-     * line or a line break moves to the next surviving line, or the end of the document.
+     * spacing changes. Like [ChordProTransposer.transposedOffset], it clamps arbitrary offsets; the end of a line stays at
+     * the end of it, while a removed blank line or an offset inside a CRLF break moves to the next surviving line, or the
+     * end of the document.
      */
     fun prettifiedOffset(before: String, after: String, offset: Int): Int {
         val caret = offset.coerceIn(0, before.length)
@@ -134,7 +135,7 @@ object ChordProPrettifier {
         val line = oldStarts.indexOfLast { it <= caret }.coerceAtLeast(0)
         val column = caret - oldStarts[line]
         val match = matches[line]
-        if (match >= 0 && (column < oldLines[line].length || column == oldLines[line].length && caret == before.length)) {
+        if (match >= 0 && column <= oldLines[line].length) {
             val oldIndent = oldLines[line].indexOfFirst { !it.isWhitespace() }.coerceAtLeast(0)
             val newIndent = newLines[match].indexOfFirst { !it.isWhitespace() }.coerceAtLeast(0)
             return (newStarts[match] + (column - oldIndent + newIndent).coerceIn(0, newLines[match].length)).coerceIn(0, after.length)
