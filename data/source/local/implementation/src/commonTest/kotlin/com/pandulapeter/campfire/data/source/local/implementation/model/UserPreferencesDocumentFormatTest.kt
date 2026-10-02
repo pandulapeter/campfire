@@ -35,7 +35,7 @@ internal class UserPreferencesDocumentFormatTest {
             isCoverArtEnabled = false,
             language = "hu",
             accidentals = "flats",
-            isGermanNotationEnabled = true,
+            notation = "german",
             transpositions = mapOf("a.cho" to 2, "b.cho" to -3),
             foldedSections = mapOf("a.cho" to listOf("chorus#1", "intro#1/tab#1")),
             tagMatchMode = "all",

@@ -11,6 +11,8 @@ package com.pandulapeter.campfire.domain.implementation.useCases
 
 import com.pandulapeter.campfire.chordpro.ChordProSplitter
 import com.pandulapeter.campfire.chordpro.ChordSheet
+import com.pandulapeter.campfire.chordpro.ChordNotation
+import com.pandulapeter.campfire.chordpro.ChordProNotation
 import com.pandulapeter.campfire.chordpro.ChordSheetConverter
 import com.pandulapeter.campfire.data.model.domain.ImportLimits
 import com.pandulapeter.campfire.data.model.domain.ImportProgress
@@ -157,7 +159,9 @@ class PrepareImportUseCaseImpl internal constructor(
                 val fallbackTitle = if (parts.size == 1) file.name.substringBeforeLast('.') else ""
                 // The splitter trims the blank lines between the songs of a collection; the newline a text file ends
                 // with is not one of those, and without it an exported library does not import back byte for byte.
-                val text = part + "\n"
+                // The chords are brought into the standard notation every file is written in, which only changes a
+                // chart that used German's H or the musical sharp and flat signs.
+                val text = ChordProNotation.convertText(part, ChordNotation.STANDARD, ChordNotation.STANDARD) + "\n"
                 ImportPlanner.IncomingSong(
                     fileName = songRepository.importFileName(fallbackTitle = fallbackTitle, text = text),
                     text = text,

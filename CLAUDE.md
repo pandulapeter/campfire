@@ -295,7 +295,7 @@ localized in both languages.
 - **Documents are converted locally**, never rendered, uploaded or kept: `.pdf` and `.docx` pass through
   `DocumentRepository` to pure-Kotlin extractors, then `ChordSheetConverter` to ordinary ChordPro. Plain `.txt`
   and text shared on Android use the same converter; the ChordPro extension family never does. Recognized ChordPro
-  text passes through unchanged. Documents with no readable text (scans, encrypted PDFs and legacy `.doc`) are
+  text passes through unchanged, apart from its chords being written in the standard notation (see below). Documents with no readable text (scans, encrypted PDFs and legacy `.doc`) are
   reported separately from unsupported files. The input limit is 16 MiB per document, 8 MiB for the text produced,
   within the selection's existing 24 MiB budget. Positioned chords, English/Hungarian sections and styled headers
   are best attempts, and clearly titled page starts can split a songbook. Converted songs are named by the header
@@ -303,6 +303,15 @@ localized in both languages.
   unchanged. The result counts only converted songs actually written and offers **Open** for a single converted
   song, without navigating automatically. No new document Open with association is registered; Android adds only
   PDF and Word share MIME types.
+- **Every file is in the standard chord notation** (`C D E F G A B`, `#` and `b`), whatever notation its reader
+  prefers: the German one (`H` for B, `B` for B flat) is a way of showing chords and of typing them, converted on the
+  way to the screen and in and out of the editor's field (`:chordpro`'s `ChordProNotation`), so a library reads the
+  same in every app and on every device, and a notation added later (Latin, Nashville) needs no change to any file. An
+  import writes every song's chords that way, which only changes a chart that used an `H` or the `♯` and `♭` signs; a
+  file that arrives otherwise (a sync run, the library folder edited by hand) is read the same way — an `H` anywhere
+  marks it German — and brought into the standard notation the next time the editor saves it. The one chart nothing
+  can tell apart is a German one in a flat key, which never needs an `H`: it is read as standard. The editor's field
+  is in the reader's notation, so what they type is never ambiguous.
 - **Every name the app writes is normalized** — lowercase words joined with underscores, Latin letters without their
   accents and letters of every other script kept as they are (`катюша.cho`), capped at 120 UTF-8 bytes per half
   (`LibraryFiles.normalizedName`), a song's `artist` and `title` folded one at a time so the dash between them

@@ -36,8 +36,11 @@ object ChordProParser {
         "outro" to SectionType.Custom("outro"),
     )
 
-    /** The song in the notation the app works in, whichever one its file is written in. */
-    fun parse(text: String) = ChordProNotation.normalized(parseAsWritten(text))
+    /**
+     * The song in the notation the app works in, [text] being written in [notation]: a file is in the standard one,
+     * which an `H` chord anywhere in it overrules (see [ChordNotation]), and the editor's field in the reader's own.
+     */
+    fun parse(text: String, notation: ChordNotation = ChordNotation.STANDARD) = ChordProNotation.normalized(parseAsWritten(text), notation)
 
     /** The song with every chord spelled the way its file spells it. */
     internal fun parseAsWritten(text: String): ChordProSong {
@@ -152,13 +155,14 @@ object ChordProParser {
         .filterIsInstance<ChordProBlock.Comment>()
 
     /** Only scans directive lines, so that it is cheap enough for a caller that has no interest in the body. */
-    fun parseMetadata(text: String) = scan(text, shouldDetectChords = false).metadata
+    fun parseMetadata(text: String) = scan(text, shouldDetectChords = false, notation = ChordNotation.STANDARD).metadata
 
     /**
      * The directives of a song and whether it has any chords, from a single walk over the text. The library scan
-     * wants both for every file it reads, and asking for them separately walks each file twice.
+     * wants both for every file it reads, and asking for them separately walks each file twice. [notation] is the one
+     * [text] is written in, as for [parse].
      */
-    fun summarize(text: String) = scan(text, shouldDetectChords = true)
+    fun summarize(text: String, notation: ChordNotation = ChordNotation.STANDARD) = scan(text, shouldDetectChords = true, notation = notation)
 
     /**
      * @param shouldDetectChords Whether the lines that are not directives are looked at as well. A real chord (not an
@@ -166,12 +170,12 @@ object ChordProParser {
      *   in a tab environment, since the transposition moves those too; once one has been found the rest of the body is
      *   skipped, since nothing later in the file can change the answer.
      */
-    private fun scan(text: String, shouldDetectChords: Boolean): ChordProSummary {
+    private fun scan(text: String, shouldDetectChords: Boolean, notation: ChordNotation): ChordProSummary {
         val metadata = MetadataBuilder()
         val transposition = Transposition()
         var hasChords = false
         var environment: String? = null
-        var isGermanNotated = false
+        var isGermanNotated = notation == ChordNotation.GERMAN
         ChordProSyntax.splitLines(text).forEach { rawLine ->
             val trimmedLine = rawLine.trim()
             val isDelegated = environment in ChordProSyntax.delegateEnvironments

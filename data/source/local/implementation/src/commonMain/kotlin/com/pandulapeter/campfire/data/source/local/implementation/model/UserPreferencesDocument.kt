@@ -31,6 +31,8 @@ internal data class UserPreferencesDocument(
     val isCoverArtEnabled: Boolean = true,
     val language: String = "",
     val accidentals: String = "",
+    val notation: String = "",
+    // What the notation was before there could be more than two: only read, for a document that has no notation yet.
     val isGermanNotationEnabled: Boolean = false,
     val transpositions: Map<String, Int> = emptyMap(),
     val foldedSections: Map<String, List<String>> = emptyMap(),

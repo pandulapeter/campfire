@@ -85,4 +85,9 @@ class ChordProSplitterTest {
     fun `a blank line inside a song still counts`() {
         assertNotEquals(ChordProSplitter.comparable("{title: T}\n[Am]a"), ChordProSplitter.comparable("{title: T}\n\n[Am]a"))
     }
+
+    @Test
+    fun `a German chart is the same song as its standard copy`() {
+        assertEquals(ChordProSplitter.comparable("{title: T}\n[H7]a [B]b"), ChordProSplitter.comparable("{title: T}\n[B7]a [Bb]b"))
+    }
 }

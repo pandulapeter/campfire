@@ -146,25 +146,31 @@ data class UserPreferences(
     }
 
     /**
-     * How a chord is written on screen, and only there: neither half of this ever reaches a file. The library, and
-     * everything that is synced, exported or opened in the editor, stays in the one notation the app writes.
+     * How a chord is written for the reader, and never in a file: the library, and everything that is synced or
+     * exported, stays in [Notation.STANDARD]. The editor shows its text in [notation] too, and writes it back in the
+     * standard one.
      *
      * They are one value because the viewer needs them as one: it re-parses a song whenever the spelling changes, and
      * two separate flags would mean two things to keep in step at every call site.
      */
     data class ChordSpelling(
         val accidentals: Accidentals,
-        /**
-         * German notation, where the note written `B` here is written `H`, and the one written `Bb` here is written
-         * `B`. It is what a reader in Central Europe or Scandinavia grew up with, and it is applied after the
-         * accidentals, on the result they produce.
-         */
-        val isGermanNotationEnabled: Boolean,
+        /** Applied after the accidentals, on the result they produce. */
+        val notation: Notation,
     ) {
 
         companion object {
-            val Default = ChordSpelling(accidentals = Accidentals.ORIGINAL, isGermanNotationEnabled = false)
+            val Default = ChordSpelling(accidentals = Accidentals.ORIGINAL, notation = Notation.STANDARD)
         }
+    }
+
+    /**
+     * The names the notes of a chord are written with. [GERMAN] writes the note [STANDARD] calls `B` as `H`, and its
+     * `Bb` as `B`, which is what a reader in Central Europe or Scandinavia grew up with.
+     */
+    enum class Notation(val id: String) {
+        STANDARD("standard"),
+        GERMAN("german"),
     }
 
     /**

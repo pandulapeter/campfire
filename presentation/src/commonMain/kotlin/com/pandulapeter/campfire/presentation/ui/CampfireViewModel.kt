@@ -23,7 +23,9 @@ import androidx.compose.runtime.snapshots.SnapshotStateList
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.pandulapeter.campfire.chordpro.ChordNotation
 import com.pandulapeter.campfire.chordpro.ChordProMetadataFields
+import com.pandulapeter.campfire.chordpro.ChordProSummaryCache
 import com.pandulapeter.campfire.chordpro.model.ChordProLink
 import com.pandulapeter.campfire.chordpro.model.ChordProMetadata
 import com.pandulapeter.campfire.chordpro.model.ChordProSong
@@ -57,6 +59,7 @@ import com.pandulapeter.campfire.domain.api.useCases.CancelSynchronizationUseCas
 import com.pandulapeter.campfire.domain.api.useCases.ClearCoverArtCacheUseCase
 import com.pandulapeter.campfire.domain.api.useCases.ConnectSyncProviderUseCase
 import com.pandulapeter.campfire.domain.api.useCases.ConvertChordProNotationUseCase
+import com.pandulapeter.campfire.domain.api.useCases.ConvertChordProTextNotationUseCase
 import com.pandulapeter.campfire.domain.api.useCases.CreateSetlistUseCase
 import com.pandulapeter.campfire.domain.api.useCases.CreateSongUseCase
 import com.pandulapeter.campfire.domain.api.useCases.DeleteLibraryUseCase
@@ -213,6 +216,7 @@ class CampfireViewModel(
     private val transposeChordPro: TransposeChordProUseCase,
     private val transposeChordProText: TransposeChordProTextUseCase,
     private val convertChordProNotation: ConvertChordProNotationUseCase,
+    private val convertChordProTextNotation: ConvertChordProTextNotationUseCase,
     /**
      * What survives the system killing the process while the app is in the background, which Android does whenever it
      * needs the memory: the back stack, the song filter and the two searches. Empty on every real start, and on the
@@ -637,8 +641,8 @@ class CampfireViewModel(
     val editorTextEdits = _editorTextEdits.asSharedFlow()
 
     /** True while the editor's text differs from what is on disk, which is what [navigateBack] asks before it leaves. */
-    val hasUnsavedEditorChanges = combine(_editorDraft, _songTexts) { draft, songTexts ->
-        draft != null && draft.text != songTexts[draft.fileName]
+    val hasUnsavedEditorChanges = combine(_editorDraft, _songTexts, userPreferences) { draft, songTexts, _ ->
+        draft != null && draft.text != songTexts[draft.fileName]?.let(::editorTextOf)
     }.asState(false)
 
     /**
@@ -1510,7 +1514,7 @@ class CampfireViewModel(
     }
 
     /** [hasUnsavedEditorChanges] as of this moment, for a decision taken right after a write rather than drawn. */
-    private fun hasUnsavedEditorText() = _editorDraft.value?.let { it.text != _songTexts.value[it.fileName] } == true
+    private fun hasUnsavedEditorText() = _editorDraft.value?.let { it.text != _songTexts.value[it.fileName]?.let(::editorTextOf) } == true
 
     private fun popBackStack() {
         if (backStack.size > 1) {
@@ -1819,7 +1823,9 @@ class CampfireViewModel(
     fun onAppPaused(): SyncProgress? {
         val syncProgress = startScheduledSynchronization()
         if (!_isEditorDraftRecoveryPending.value) {
-            val draft = _editorDraft.value?.takeIf { hasUnsavedEditorText() }
+            // Stored as the file would hold it rather than as the field shows it, so that it means the same chords
+            // whatever the notation is by the time it is reopened.
+            val draft = _editorDraft.value?.takeIf { hasUnsavedEditorText() }?.let { it.copy(text = fileTextOf(it.text)) }
             viewModelScope.launch { storeEditorDraft(draft) }
         }
         return syncProgress
@@ -1858,17 +1864,20 @@ class CampfireViewModel(
         editorDraftStoreMutex.withLock { storedEditorDraft = draft }
         if (draft == null || backStack.any { it is CampfireDestination.SongEditor }) return false
         val content = getSongContent(draft.fileName)
-        if (content?.text == draft.text) {
+        // The draft is in the file's notation and the field shows the reader's, which only the preferences can say.
+        arePreferencesLoaded.first { it }
+        val text = editorTextOf(draft.text)
+        if (content != null && editorTextOf(content.text) == text) {
             storeEditorDraft(null)
             return false
         }
         content?.let { _songTexts.update { texts -> texts + (it.fileName to it.text) } }
         // The draft is the editor's before the editor exists, so that nothing asking whether there is unsaved text in
         // the moments before it composes - a pause, the update gate - hears "no".
-        onEditorTextChanged(fileName = draft.fileName, text = draft.text)
+        onEditorTextChanged(fileName = draft.fileName, text = text)
         updateBackStack { add(CampfireDestination.SongEditor(fileName = draft.fileName)) }
         // Taken by the editor as its field, see LoadedSongEditor, the same way a field it retained across a rotation is.
-        retainedEditorField = draft.fileName to TextFieldState(initialText = draft.text)
+        retainedEditorField = draft.fileName to TextFieldState(initialText = text)
         sendMessage(Message.EditorDraftRestored)
         if (content == null) sendMessage(Message.EditedSongFileGone)
         return true
@@ -1936,8 +1945,16 @@ class CampfireViewModel(
      */
     private suspend fun writeEditorText(fileName: String, text: String) = try {
         _isSavingSong.update { true }
+        val fileText = fileTextOf(text)
         withContext(NonCancellable) {
-            songWriteMutex.withLock { writeSongContent(fileName = fileName, text = text) }
+            songWriteMutex.withLock { writeSongContent(fileName = fileName, text = fileText) }
+        }.also { isWritten ->
+            // A chord typed in a spelling the notation has a second one for (a German Bb, a ♭) is written the one way
+            // the file holds it, so the field is brought to what was written, or it would never stop being unsaved.
+            val writtenText = editorTextOf(fileText)
+            if (isWritten && writtenText != text) {
+                _editorTextEdits.tryEmit(EditorTextEdit(fileName = fileName) { current -> if (current == text) writtenText else current })
+            }
         }
     } catch (exception: CancellationException) {
         throw exception
@@ -1979,12 +1996,17 @@ class CampfireViewModel(
      * touches nothing but its arguments and stateless use cases, so it may run on a background thread, and it does:
      * see `rememberSongLyricsModel`.
      */
-    fun renderSong(text: String, transposition: Int, spelling: UserPreferences.ChordSpelling): ChordProSong {
-        val parsed = parseChordPro(text)
+    fun renderSong(
+        text: String,
+        transposition: Int,
+        spelling: UserPreferences.ChordSpelling,
+        writtenIn: UserPreferences.Notation = UserPreferences.Notation.STANDARD,
+    ): ChordProSong {
+        val parsed = parseChordPro(text, writtenIn)
         // The file's own {transpose} (the one it opens with), the reader's, and the modulations further down: all
         // three are the transposition's to apply, and it leaves a song none of them move exactly as it is.
         val transposed = transposeChordPro(parsed, parsed.metadata.transpose + transposition, spelling.accidentals)
-        // Last, and on the model only: the file, and the editor's transposition below, stay in the app's own notation.
+        // Last, and on the model only: the file stays in the standard notation, which the transposition works in.
         return convertChordProNotation(transposed, spelling)
     }
 
@@ -2011,11 +2033,55 @@ class CampfireViewModel(
     }
 
     /**
-     * Transposes the chords of a document in place, leaving everything else exactly as it was. Unlike the viewer's
-     * transposition this rewrites the file: it is what the editor's "transpose text" does.
+     * Transposes the chords of the editor's text in place, leaving everything else exactly as it was. Unlike the
+     * viewer's transposition this rewrites the file: it is what the editor's "transpose text" does. The text is in the
+     * editor's notation, and is transposed in the standard one, which is the only one a semitone means anything in.
      */
-    fun transposeText(text: String, semitones: Int, accidentals: UserPreferences.Accidentals) =
-        transposeChordProText(text, semitones, accidentals)
+    fun transposeText(text: String, semitones: Int, accidentals: UserPreferences.Accidentals) = convertChordProTextNotation(
+        text = transposeChordProText(fileTextOf(text), semitones, accidentals),
+        from = UserPreferences.Notation.STANDARD,
+        to = editorNotation,
+    )
+
+    /**
+     * The notation the editor's field is written in, the reader's own: the file is converted out of the standard one
+     * as it is opened ([editorTextOf]) and back into it as it is saved ([fileTextOf]). It never changes under an open
+     * editor, since Settings is only reached by selecting a top level screen, which takes the editor off the stack.
+     */
+    val editorNotation get() = userPreferences.value?.chordSpelling?.notation ?: UserPreferences.Notation.STANDARD
+
+    /**
+     * The text of a file as the editor shows it: in [editorNotation], a file written before every file was in the
+     * standard notation brought into it on the way. The last answer is kept, since [hasUnsavedEditorChanges] asks
+     * again about the same file on every keystroke.
+     */
+    fun editorTextOf(fileText: String): String {
+        val notation = editorNotation
+        lastEditorText?.takeIf { it.fileText == fileText && it.notation == notation }?.let { return it.text }
+        return convertChordProTextNotation(text = fileText, from = UserPreferences.Notation.STANDARD, to = notation).also { text ->
+            lastEditorText = EditorText(fileText = fileText, notation = notation, text = text)
+        }
+    }
+
+    private var lastEditorText: EditorText? = null
+
+    /** Follows the editor's text as it is typed, see `ChordProSummaryCache`; its key comes out in the standard notation. */
+    fun editorSummaryCache() = ChordProSummaryCache(
+        when (editorNotation) {
+            UserPreferences.Notation.STANDARD -> ChordNotation.STANDARD
+            UserPreferences.Notation.GERMAN -> ChordNotation.GERMAN
+        }
+    )
+
+    /** A key in the standard notation, as the editor's field would write it. */
+    fun editorKeyOf(key: String) = convertChordProNotation(
+        song = ChordProSong(metadata = ChordProMetadata(key = key), blocks = emptyList()),
+        spelling = UserPreferences.ChordSpelling.Default.copy(notation = editorNotation),
+    ).metadata.key
+
+    /** The editor's text as the file is to hold it, in the standard notation. */
+    private fun fileTextOf(editorText: String) =
+        convertChordProTextNotation(text = editorText, from = editorNotation, to = UserPreferences.Notation.STANDARD)
 
     /**
      * One step of the transposition stepper. A song opened from a setlist transposes inside that setlist; one opened from
@@ -2870,7 +2936,7 @@ class CampfireViewModel(
 
     fun setAccidentals(value: UserPreferences.Accidentals) = changeUserPreferences { copy(chordSpelling = chordSpelling.copy(accidentals = value)) }
 
-    fun setGermanNotationEnabled(value: Boolean) = changeUserPreferences { copy(chordSpelling = chordSpelling.copy(isGermanNotationEnabled = value)) }
+    fun setNotation(notation: UserPreferences.Notation) = changeUserPreferences { copy(chordSpelling = chordSpelling.copy(notation = notation)) }
 
     private fun changeUserPreferences(change: UserPreferences.() -> UserPreferences) {
         viewModelScope.launch { updateUserPreferences { it.change() } }
@@ -3112,6 +3178,9 @@ class CampfireViewModel(
 
     /** One change of [editorTextEdits]: [edit] applied to the text the editor of [fileName] holds when it arrives. */
     class EditorTextEdit(val fileName: String, val edit: (String) -> String)
+
+    /** [text] is [fileText] as an editor showing [notation] shows it, see [editorTextOf]. */
+    private class EditorText(val fileText: String, val notation: UserPreferences.Notation, val text: String)
 
     /** What the cover search sheet shows under its fields, see [coverArtSearch]. */
     sealed interface CoverArtSearchState {

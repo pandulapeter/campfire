@@ -219,7 +219,7 @@ object ChordProTransposer {
      * [rename] for a chord as the file writes it: a lowercase minor is spelled out for it and folded back afterwards,
      * so that the file keeps its own convention.
      */
-    private fun keepingLowercaseMinors(rename: (String) -> String) = { name: String ->
+    internal fun keepingLowercaseMinors(rename: (String) -> String) = { name: String ->
         ChordProChordNames.lowercaseMinorExpanded(name)?.let { ChordProChordNames.lowercaseMinorFolded(rename(it)) } ?: rename(name)
     }
 
@@ -292,9 +292,17 @@ object ChordProTransposer {
         }
     }
 
-    private fun rewriteText(text: String, semitones: Int, rename: (String) -> String): String {
+    private fun rewriteText(text: String, semitones: Int, rename: (String) -> String) =
+        rewriteChordNamesInText(text, rewriteTab = { lines -> ChordProTabTransposer.transpose(lines, semitones, rename) }, rename = rename)
+
+    /**
+     * Applies [rename] to every chord a raw document names - in brackets, in grids, in its key and in directives whose
+     * value holds chords - and [rewriteTab] to each run of tablature as a whole, leaving every other character of the
+     * text exactly where it was.
+     */
+    internal fun rewriteChordNamesInText(text: String, rewriteTab: (List<String>) -> List<String>, rename: (String) -> String): String {
         val lines = ChordProSyntax.splitLines(text).toMutableList()
-        val tabLineIndices = mutableListOf<Int>() // The tab environment being collected: it is transposed as a whole.
+        val tabLineIndices = mutableListOf<Int>() // The tab environment being collected: it is rewritten as a whole.
         var environment: String? = null
         lines.forEachIndexed { index, rawLine ->
             val trimmedLine = rawLine.trim()
@@ -310,32 +318,32 @@ object ChordProTransposer {
                 isSourceComment -> Unit
                 directive != null -> if (!ChordProSyntax.hasSelectorSuffix(directive.name)) {
                     ChordProSyntax.startOfEnvironment(directive.name)?.let {
-                        lines.transposeTab(tabLineIndices, semitones, rename)
+                        lines.rewriteTab(tabLineIndices, rewriteTab)
                         environment = it.lowercase()
                     }
                     ChordProSyntax.endOfEnvironment(directive.name)?.let {
-                        lines.transposeTab(tabLineIndices, semitones, rename)
+                        lines.rewriteTab(tabLineIndices, rewriteTab)
                         environment = null
                     }
                     if (directive.name in ChordProSyntax.blockNames || directive.name == TRANSPOSE) {
                         // The parser cuts the section in two here, and each half of the tab is a run of its own in the model;
                         // moving them as one fingerboard would let the viewer and the editor disagree about the octave.
-                        lines.transposeTab(tabLineIndices, semitones, rename)
+                        lines.rewriteTab(tabLineIndices, rewriteTab)
                     }
                     (ChordProSyntax.standardMeta(directive) ?: directive).takeIf { it.name == KEY }?.value?.takeIf { it.isNotEmpty() }?.let { key ->
-                        lines[index] = transposeKeyLine(rawLine, key, rename)
+                        lines[index] = rewriteKeyLine(rawLine, key, rename)
                     }
                     // The directive's name holds no brackets, so the line can be read as a line of lyrics whole.
                     if (ChordProSyntax.hasChordsInValue(directive.name)) lines[index] = rewriteLyricsLineChords(rawLine, rename)
                 }
 
                 environment == TAB -> tabLineIndices += index
-                environment == GRID -> lines[index] = transposeGridLine(rawLine, trimmedLine, rename)
+                environment == GRID -> lines[index] = rewriteGridLine(rawLine, trimmedLine, rename)
                 environment in ChordProSyntax.delegateEnvironments -> Unit
                 else -> lines[index] = rewriteLyricsLineChords(rawLine, rename)
             }
         }
-        lines.transposeTab(tabLineIndices, semitones, rename) // An environment the file never closes.
+        lines.rewriteTab(tabLineIndices, rewriteTab) // An environment the file never closes.
         return ChordProSyntax.joinLines(lines, text)
     }
 
@@ -374,10 +382,10 @@ object ChordProTransposer {
         return flats > sharps
     }
 
-    /** Transposes the collected lines of one tab environment in place and starts collecting the next one. */
-    private fun MutableList<String>.transposeTab(indices: MutableList<Int>, semitones: Int, rename: (String) -> String) {
+    /** Rewrites the collected lines of one tab environment in place and starts collecting the next one. */
+    private fun MutableList<String>.rewriteTab(indices: MutableList<Int>, rewriteTab: (List<String>) -> List<String>) {
         if (indices.isEmpty()) return
-        val transposed = ChordProTabTransposer.transpose(indices.map { this[it] }, semitones, rename)
+        val transposed = rewriteTab(indices.map { this[it] })
         indices.forEachIndexed { index, lineIndex -> this[lineIndex] = transposed[index] }
         indices.clear()
     }
@@ -435,7 +443,7 @@ object ChordProTransposer {
         }
     }
 
-    private fun transposeGridLine(rawLine: String, trimmedLine: String, rename: (String) -> String): String {
+    private fun rewriteGridLine(rawLine: String, trimmedLine: String, rename: (String) -> String): String {
         // The ranges and the tokens are zipped by index, which is only safe because both are the same list of words:
         // parseGridTokens reads the line through ChordProSyntax.words as well.
         val matches = ChordProSyntax.words(trimmedLine)
@@ -463,7 +471,7 @@ object ChordProTransposer {
      * keeps the spelling and the spacing the file gives it; the value is the last thing before the closing brace, give
      * or take whitespace, however the directive is written.
      */
-    private fun transposeKeyLine(rawLine: String, key: String, rename: (String) -> String): String {
+    private fun rewriteKeyLine(rawLine: String, key: String, rename: (String) -> String): String {
         val valueEnd = rawLine.substring(0, rawLine.trimEnd().lastIndex).trimEnd().length
         return rawLine.substring(0, valueEnd - key.length) + renameKey(key, rename) + rawLine.substring(valueEnd)
     }

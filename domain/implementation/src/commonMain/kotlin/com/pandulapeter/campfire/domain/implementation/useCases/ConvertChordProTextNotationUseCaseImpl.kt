@@ -9,14 +9,15 @@
  */
 package com.pandulapeter.campfire.domain.implementation.useCases
 
-import com.pandulapeter.campfire.chordpro.ChordProParser
+import com.pandulapeter.campfire.chordpro.ChordProNotation
 import com.pandulapeter.campfire.data.model.domain.UserPreferences
-import com.pandulapeter.campfire.domain.api.useCases.ParseChordProUseCase
+import com.pandulapeter.campfire.domain.api.useCases.ConvertChordProTextNotationUseCase
 import com.pandulapeter.campfire.domain.implementation.mapper.toChordNotation
 import org.koin.core.annotation.Factory
 
 @Factory
-class ParseChordProUseCaseImpl internal constructor() : ParseChordProUseCase {
+class ConvertChordProTextNotationUseCaseImpl internal constructor() : ConvertChordProTextNotationUseCase {
 
-    override operator fun invoke(text: String, notation: UserPreferences.Notation) = ChordProParser.parse(text, notation.toChordNotation())
+    override operator fun invoke(text: String, from: UserPreferences.Notation, to: UserPreferences.Notation) =
+        ChordProNotation.convertText(text, from.toChordNotation(), to.toChordNotation())
 }

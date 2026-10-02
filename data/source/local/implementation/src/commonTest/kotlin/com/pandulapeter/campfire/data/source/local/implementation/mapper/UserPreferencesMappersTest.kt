@@ -71,4 +71,15 @@ internal class UserPreferencesMappersTest {
         assertEquals(UserPreferences.DEFAULT_FONT_SCALE, UserPreferencesDocument(fontScale = Float.NaN).toModel().fontScale)
         assertEquals(UserPreferences.DEFAULT_FONT_SCALE, UserPreferencesDocument(fontScale = Float.POSITIVE_INFINITY).toModel().fontScale)
     }
+
+    @Test
+    fun aDocumentFromBeforeTheNotationKeepsItsGermanNotation() {
+        assertEquals(UserPreferences.Notation.GERMAN, UserPreferencesDocument(isGermanNotationEnabled = true).toModel().chordSpelling.notation)
+        assertEquals(UserPreferences.Notation.STANDARD, UserPreferencesDocument().toModel().chordSpelling.notation)
+        assertEquals(
+            UserPreferences.Notation.STANDARD,
+            UserPreferencesDocument(notation = "standard", isGermanNotationEnabled = true).toModel().chordSpelling.notation,
+        )
+        assertEquals("german", UserPreferencesDocument(isGermanNotationEnabled = true).toModel().toDocument().notation)
+    }
 }

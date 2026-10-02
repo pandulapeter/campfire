@@ -241,7 +241,7 @@
     <string name="settings_cover_art">Cover art</string>
     <string name="settings_cover_art_description">Show the album cover a song names next to it, downloading it once and keeping a copy on this device</string>
     <string name="settings_german_notation">German notation</string>
-    <string name="settings_german_notation_description">Writes the note called B as H, and the one called Bb as B, the way chord charts do in Central Europe and Scandinavia. Only what you read changes: the song files keep their own spelling.</string>
+    <string name="settings_german_notation_description">Writes the note called B as H, and the one called Bb as B, the way chord charts do in Central Europe and Scandinavia. The editor uses it too, but songs are always saved in standard notation, so they read the same in every app.</string>
     <string name="settings_accidentals">Accidentals</string>
     <string name="settings_accidentals_description">Whether a chord on a black key is written as a flat (Bb) or as a sharp (A#). Left as written, Campfire picks whichever fits the key of the song.</string>
     <string name="settings_accidentals_original">As written</string>

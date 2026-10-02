@@ -115,10 +115,10 @@ The ones that carry real logic:
   view model says so after the save.
 - `CreateSongUseCaseImpl` — writes the new-song template (`{title}`, `{artist}`, `{key}` and an empty verse).
 - `TransposeChordProUseCaseImpl` / `TransposeChordProTextUseCaseImpl` / `ParseChordProUseCaseImpl` /
-  `ConvertChordProNotationUseCaseImpl` — thin wrappers over `:chordpro`, so the presentation layer never calls the
-  parser directly. `mapper/AccidentalsMappers.kt` is the whole of the translation: `:chordpro` depends on nothing and
-  so knows no preferences, and takes the spelling as the nullable `preferFlats` the preference maps onto. The notation
-  one needs no mapper — the preference is a flag, and `ChordProNotation` either runs or does not.
+  `ConvertChordProNotationUseCaseImpl` / `ConvertChordProTextNotationUseCaseImpl` — thin wrappers over `:chordpro`, so
+  the presentation layer never calls the parser directly. `mapper/AccidentalsMappers.kt` and `mapper/NotationMappers.kt`
+  are the whole of the translation: `:chordpro` depends on nothing and so knows no preferences, and takes the spelling
+  as the nullable `preferFlats` and the notation as its own `ChordNotation`, which the preferences map onto.
   `SetChordProLinksUseCaseImpl` is the same thin wrapper for the link editor's whole draft, including optional names,
   and `SetChordProMetadataUseCaseImpl` for the fields the metadata dialog changed.
 - `NormalizeTextUseCaseImpl` — accent-insensitive, case-insensitive text for sorting and searching, over

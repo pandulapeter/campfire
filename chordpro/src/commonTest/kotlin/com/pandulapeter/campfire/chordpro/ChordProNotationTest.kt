@@ -22,7 +22,7 @@ class ChordProNotationTest {
 
     @Test
     fun `a key spelled out in words is written in German notation`() {
-        assertEquals("H major", ChordProNotation.toGerman(ChordProParser.parse("{key: B major}\n[B]a")).metadata.key)
+        assertEquals("H major", ChordProNotation.toNotation(ChordProParser.parse("{key: B major}\n[B]a"), ChordNotation.GERMAN).metadata.key)
         assertEquals("B major", ChordProParser.parse("{key: H major}\n[H]a").metadata.key)
         assertEquals(ChordProParser.parse("{key: H major}\n[H]a").metadata.key, ChordProParser.summarize("{key: H major}\n[H]a").metadata.key)
     }
@@ -73,7 +73,7 @@ class ChordProNotationTest {
 
     @Test
     fun `every chord of a grid cell is respelled`() {
-        assertEquals(listOf("H~B"), ChordProNotation.toGerman(ChordProParser.parse("{sog}\n| B~Bb |\n{eog}")).chordNames())
+        assertEquals(listOf("H~B"), ChordProNotation.toNotation(ChordProParser.parse("{sog}\n| B~Bb |\n{eog}"), ChordNotation.GERMAN).chordNames())
     }
 
     @Test
@@ -82,7 +82,7 @@ class ChordProNotationTest {
 
         assertEquals("Bb", song.metadata.key)
         assertEquals(listOf("Bb", "B7", "Bb"), song.chordNames())
-        assertEquals(listOf("B", "H7", "B"), ChordProNotation.toGerman(song).chordNames())
+        assertEquals(listOf("B", "H7", "B"), ChordProNotation.toNotation(song, ChordNotation.GERMAN).chordNames())
     }
 
     @Test
@@ -138,7 +138,7 @@ class ChordProNotationTest {
 
     @Test
     fun `the key the chords and the grid are rewritten but the annotations are not`() {
-        val song = ChordProNotation.toGerman(ChordProParser.parse("{key: Bb}\n\n[B]a [Bb]b [*hold B]c\n\n{sog}\n| B . | Bb . |\n{eog}"))
+        val song = ChordProNotation.toNotation(ChordProParser.parse("{key: Bb}\n\n[B]a [Bb]b [*hold B]c\n\n{sog}\n| B . | Bb . |\n{eog}"), ChordNotation.GERMAN)
 
         assertEquals("B", song.metadata.key)
         assertEquals(listOf("H", "B", "H", "B"), song.chordNames())
@@ -147,14 +147,14 @@ class ChordProNotationTest {
 
     @Test
     fun `the chords above a tab are rewritten and the tablature is not`() {
-        val song = ChordProNotation.toGerman(ChordProParser.parse("{sot}\n  B     Bm\ne|--0--11-|\nB|--1--2--|\n{eot}"))
+        val song = ChordProNotation.toNotation(ChordProParser.parse("{sot}\n  B     Bm\ne|--0--11-|\nB|--1--2--|\n{eot}"), ChordNotation.GERMAN)
 
         assertEquals(listOf("  H     Hm", "e|--0--11-|", "B|--1--2--|"), song.tabLines())
     }
 
     @Test
     fun `a comment inside a grid does not hide the chords after it from the notation`() {
-        val song = ChordProNotation.toGerman(ChordProParser.parse("{sog}\n| Am . |\n{c: x}\n| B . |\n{eog}"))
+        val song = ChordProNotation.toNotation(ChordProParser.parse("{sog}\n| Am . |\n{c: x}\n| B . |\n{eog}"), ChordNotation.GERMAN)
 
         assertEquals(listOf("Am", "H"), song.chordNames())
     }
@@ -162,9 +162,58 @@ class ChordProNotationTest {
     @Test
     fun `a shorter chord name keeps the columns of a tab`() {
         // Bb is a character wider than the B it becomes, so the space it leaves behind is put back after it.
-        val song = ChordProNotation.toGerman(ChordProParser.parse("{sot}\n  Bb    Bb\ne|--0--3--|\n{eot}"))
+        val song = ChordProNotation.toNotation(ChordProParser.parse("{sot}\n  Bb    Bb\ne|--0--3--|\n{eot}"), ChordNotation.GERMAN)
 
         assertEquals(listOf("  B     B ", "e|--0--3--|"), song.tabLines())
+    }
+
+    @Test
+    fun `a text typed in German notation is written in the standard one even without an H`() {
+        // An F major chart: nothing in it says German, but the B its writer typed is a B flat all the same.
+        assertEquals("{key: F}\n[F]a [Bb]b [C7]c", ChordProNotation.convertText("{key: F}\n[F]a [B]b [C7]c", ChordNotation.GERMAN, ChordNotation.STANDARD))
+    }
+
+    @Test
+    fun `a standard text is shown in German notation everywhere it names a chord`() {
+        val text = "{key: Bb}\n[B]a [Bb7/F]b [*hold B]c\n{sog}\n| B . | Bb . |\n{eog}"
+
+        assertEquals(
+            "{key: B}\n[H]a [B7/F]b [*hold B]c\n{sog}\n| H . | B . |\n{eog}",
+            ChordProNotation.convertText(text, ChordNotation.STANDARD, ChordNotation.GERMAN),
+        )
+    }
+
+    @Test
+    fun `a standard text comes back from German notation as it was`() {
+        val text = "{title: T}\n{key: Bm}\n\n[Bm]a [b]b [Bb]c [D/b]d [A#]e\n{sot}\n  Bb    B\ne|--0--3--|\n{eot}\n"
+        val german = ChordProNotation.convertText(text, ChordNotation.STANDARD, ChordNotation.GERMAN)
+
+        assertEquals("[Hm]a [h]b [B]c [D/h]d [A#]e", german.lines()[3])
+        assertEquals(text, ChordProNotation.convertText(german, ChordNotation.GERMAN, ChordNotation.STANDARD))
+    }
+
+    @Test
+    fun `a standard text is returned as it is`() {
+        val text = "{title: Hello}\n[Am]Hello [B]there [*Hm?]\n"
+
+        assertEquals(text, ChordProNotation.convertText(text, ChordNotation.STANDARD, ChordNotation.STANDARD))
+    }
+
+    @Test
+    fun `a file with an H is brought into the standard notation`() {
+        assertEquals(
+            "[Bb]a [B7]b [b]c",
+            ChordProNotation.convertText("[B]a [H7]b [h]c", ChordNotation.STANDARD, ChordNotation.STANDARD),
+        )
+        assertEquals("[Bb]a [C#]b", ChordProNotation.convertText("[B♭]a [C♯]b", ChordNotation.STANDARD, ChordNotation.STANDARD))
+    }
+
+    @Test
+    fun `a text parsed as German is German without an H`() {
+        assertEquals(listOf("F", "Bb"), ChordProParser.parse("[F]a [B]b", ChordNotation.GERMAN).chordNames())
+        assertEquals(listOf("F", "B"), ChordProParser.parse("[F]a [B]b").chordNames())
+        assertEquals("Bb", ChordProParser.summarize("{key: B}\n[F]a", ChordNotation.GERMAN).metadata.key)
+        assertEquals("Bb", ChordProSummaryCache(ChordNotation.GERMAN).summaryOf("{key: B}\n[F]a").metadata.key)
     }
 
     private fun ChordProSong.lines() = blocks.filterIsInstance<ChordProBlock.Section>().flatMap { it.lines }

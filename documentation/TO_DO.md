@@ -9,9 +9,6 @@
 -->
 # To do
 - PDF export: consider adding the option for 3 columns in landscape
-- Mobile web IME keyboard handling
-- Clarify misunderstandings around the different notation systems, especially during saving
-- Editor feature: clean up chordPro that standardizes the order of tags, line breaks, etc. Apply it automatically to imported files
 - What's new dialog
 - Global sync status display ?
 - Optional close confirmation dialog on relevant platforms

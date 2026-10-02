@@ -15,12 +15,11 @@ import com.pandulapeter.campfire.data.model.domain.UserPreferences
 interface ConvertChordProNotationUseCase {
 
     /**
-     * Rewrites the chords of a parsed song in the notation the reader prefers, which today means German notation or
-     * nothing: with [UserPreferences.ChordSpelling.isGermanNotationEnabled] off, the song comes back untouched.
+     * Rewrites the chords of a parsed song, which is in [UserPreferences.Notation.STANDARD], in the notation of
+     * [spelling]; in the standard one, the song comes back untouched.
      *
-     * The last step of rendering, run after [TransposeChordProUseCase]: transposing works in the notation the file is
-     * written in, and this is what its result is then read as. There is deliberately no text-level counterpart to
-     * [TransposeChordProTextUseCase] — that one rewrites the file, and the file stays in the app's own notation.
+     * The last step of rendering, run after [TransposeChordProUseCase], which works in the standard notation. Its
+     * text-level counterpart is [ConvertChordProTextNotationUseCase].
      */
     operator fun invoke(song: ChordProSong, spelling: UserPreferences.ChordSpelling): ChordProSong
 }

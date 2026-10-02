@@ -25,7 +25,8 @@ import com.pandulapeter.campfire.chordpro.model.ChordProSummary
 class ChordProSummaryCache internal constructor(
     private val summarize: (String) -> ChordProSummary,
 ) {
-    constructor() : this(ChordProParser::summarize)
+    /** Follows a text written in [notation], see [ChordProParser.summarize]. */
+    constructor(notation: ChordNotation = ChordNotation.STANDARD) : this({ text -> ChordProParser.summarize(text, notation) })
 
     private var previousText: String? = null
     private var previousSummary: ChordProSummary? = null

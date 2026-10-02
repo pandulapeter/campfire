@@ -32,8 +32,10 @@ object ChordProSplitter {
      * [text] folded the way [split] folds a song, and the way the text editors of this module keep a file's own line
      * endings: LF throughout, and no blank lines at either end. Two texts with the same comparable form are the same
      * song as a file, which is the question an import asks of a part [split] handed it and the file already on disk.
+     * The chords are folded into the standard notation as well, since an import writes them that way: a German chart
+     * imported again is the file it became the first time, and the same as one written before that was so.
      */
-    fun comparable(text: String) = ChordProSyntax.splitLines(text.withoutByteOrderMarks())
+    fun comparable(text: String) = ChordProSyntax.splitLines(ChordProNotation.convertText(text.withoutByteOrderMarks(), ChordNotation.STANDARD, ChordNotation.STANDARD))
         .dropWhile { it.isBlank() }
         .dropLastWhile { it.isBlank() }
         .joinToString("\n")

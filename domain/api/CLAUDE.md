@@ -16,7 +16,8 @@ the parser itself.
 Conventions: one interface per use case, a single `operator fun invoke(...)`, named `Get*` (observe a flow or read one
 value), `Load*` (trigger a read), `Save*` / `Create*` / `Update*` / `Rename*` / `Delete*` (change something), `Import*` / `Export*` for the file
 paths, `Is*` for a question with a yes or no answer (`IsFirstRun`), or a verb for pure transforms (`NormalizeText`,
-`NormalizeSearchText`, `ParseChordPro`, `TransposeChordPro`, `TransposeChordProText`, `ConvertChordProNotation`).
+`NormalizeSearchText`, `ParseChordPro`, `TransposeChordPro`, `TransposeChordProText`, `ConvertChordProNotation`,
+`ConvertChordProTextNotation`).
 
 - `ScreenData` bundles what the song and setlist screens need in one object: the setlists (every one of them, archived
   included, in the order `UserPreferences.SetlistSortingMode` asks for), the songs filtered and sorted the way the
@@ -73,10 +74,12 @@ paths, `Is*` for a question with a yes or no answer (`IsFirstRun`), or a verb fo
 - `NormalizeLanguageCodeUseCase` answers what language a piece of text names, under the code the library files it by:
   the same normalization `SetChordProLanguagesUseCase` puts a code through on its way into a file, offered to the UI so
   that a search field can be typed into with a code rather than a name.
-- `ConvertChordProNotationUseCase` is the last step of rendering: it writes the transposed model in German notation
-  when `UserPreferences.ChordSpelling` asks for it, and hands the song back untouched when it does not. There is no
-  text-level counterpart on purpose — that one rewrites the file, and a file is always written in the app's own
-  notation, which is why the two halves of `ChordSpelling` do not travel together everywhere.
+- `ConvertChordProNotationUseCase` is the last step of rendering: it writes the transposed model in the notation of
+  `UserPreferences.ChordSpelling`, and hands the song back untouched for the standard one.
+  `ConvertChordProTextNotationUseCase` is its text-level counterpart, the editor's two boundaries: a file is shown in
+  the reader's notation and what is typed is written back in `UserPreferences.Notation.STANDARD`, the only notation a
+  file is ever in. `ParseChordProUseCase` takes the notation its text is written in, the standard one for a file and
+  the reader's for the editor's field. See `:chordpro`'s `ChordProNotation` for how each is read.
 
 `GetEditorDraftUseCase` and `SaveEditorDraftUseCase` read and replace the editor's unsaved text kept outside the
 library, which is what reopens an editor the system ended the app under; the stored draft is a copy against the process

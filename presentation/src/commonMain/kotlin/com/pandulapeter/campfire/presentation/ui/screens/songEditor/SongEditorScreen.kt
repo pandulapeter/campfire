@@ -196,14 +196,19 @@ internal fun SongEditorScreen(
     // same reason: in a new process that flag is all there is to tell a draft worth restoring from a song that was
     // never loaded. The empty text it opens with is only what the field is compared with, which is what the file
     // holds now.
+    //
+    // The field is in the reader's notation, so every text of the file it is compared with or replaced by is too.
     var hasOpened by rememberSaveable(destination.fileName) { mutableStateOf(false) }
     var initialText by remember(destination.fileName) {
-        mutableStateOf(viewModel.songTexts.value[destination.fileName] ?: viewModel.retainedEditorField(destination.fileName)?.let { "" })
+        mutableStateOf(
+            viewModel.songTexts.value[destination.fileName]?.let(viewModel::editorTextOf)
+                ?: viewModel.retainedEditorField(destination.fileName)?.let { "" }
+        )
     }
     LaunchedEffect(destination.fileName) {
         viewModel.loadSongContent(destination.fileName).join()
-        if (initialText == null && hasOpened) initialText = viewModel.songTexts.value[destination.fileName] ?: ""
-        initialText = initialText ?: viewModel.songTexts.mapNotNull { it[destination.fileName] }.first()
+        if (initialText == null && hasOpened) initialText = viewModel.songTexts.value[destination.fileName]?.let(viewModel::editorTextOf) ?: ""
+        initialText = initialText ?: viewModel.songTexts.mapNotNull { it[destination.fileName] }.first().let(viewModel::editorTextOf)
         hasOpened = true
     }
     AnimatedContent(
@@ -321,7 +326,7 @@ private fun LoadedSongEditor(
     // comes from the parser rather than from a regex of this screen's own, so that it is the same title, artist and
     // key the rest of the app will show once the file is written - the fallback to the file name included. One
     // summary rather than a parse per field: it also answers whether there is anything left to transpose.
-    val summaryCache = remember(textFieldState) { ChordProSummaryCache() }
+    val summaryCache = remember(textFieldState) { viewModel.editorSummaryCache() }
     val summary by remember(textFieldState) { derivedStateOf { summaryCache.summaryOf(text.value) } }
     val hasUnsavedChanges by viewModel.hasUnsavedEditorChanges.collectAsStateWithLifecycle()
     RevertOnRequest(viewModel = viewModel, fileName = destination.fileName, textFieldState = textFieldState, summaryCache = summaryCache)
@@ -450,7 +455,8 @@ private fun LoadedSongEditor(
                     verticalAlignment = Alignment.CenterVertically,
                 ) {
                     TextTranspositionControls(
-                        key = summary.metadata.key,
+                        // The summary reads the key into the standard notation, and the field is in the reader's.
+                        key = summary.metadata.key?.let(viewModel::editorKeyOf),
                         // A key is enough on its own: it says what the song is in, and moving it is a transposition
                         // even before a chord has been written under it.
                         isEnabled = summary.hasChords || !summary.metadata.key.isNullOrBlank(),
@@ -800,7 +806,7 @@ private fun SongPreview(
         labels = labels,
     )
     fun prepare(inputs: SongLyricsInputs) = prepareSongLyrics(
-        song = viewModel.renderSong(inputs.text, inputs.transposition, inputs.spelling),
+        song = viewModel.renderSong(inputs.text, inputs.transposition, inputs.spelling, writtenIn = viewModel.editorNotation),
         shouldShowChords = inputs.shouldShowChords,
         labels = inputs.labels,
     )
@@ -901,7 +907,7 @@ private fun RevertOnRequest(
     viewModel.editorRevertRequests.collect {
         viewModel.songTexts.value[fileName]?.let { text ->
             summaryCache.clear()
-            textFieldState.replaceAll(text)
+            textFieldState.replaceAll(viewModel.editorTextOf(text))
         }
     }
 }
@@ -963,8 +969,8 @@ private fun FollowFileWhileUntouched(
     textFieldState: TextFieldState,
     summaryCache: ChordProSummaryCache,
 ) = LaunchedEffect(textFieldState, fileName) {
-    var previous = viewModel.songTexts.value[fileName]
-    viewModel.songTexts.map { it[fileName] }.distinctUntilChanged().collect { current ->
+    var previous = viewModel.songTexts.value[fileName]?.let(viewModel::editorTextOf)
+    viewModel.songTexts.map { it[fileName]?.let(viewModel::editorTextOf) }.distinctUntilChanged().collect { current ->
         val base = previous
         previous = current
         if (current != null && base != null && current != base && textFieldState.text.contentEquals(base)) {

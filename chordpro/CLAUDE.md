@@ -227,23 +227,31 @@ in `:domain:*`. `:data:source:local:implementation` uses it directly for the met
   song may be read with a pedal that only scrolls it up and down. Nothing in it is a measurement: it
   is asked for a number of characters, and the viewer works that out from its font. A run that would wrap into more
   row lines than half its characters, which only a crafted file does, is returned whole.
-- `ChordProNotation` — German notation, and the one thing in here that is about how a song is *read* rather than what
-  it *is*: the note written `B` becomes `H`, the one written `Bb` becomes `B`, and nothing else moves — not the other
-  letters, not the `#` and `b` signs, not the quality. (The classical German names spell every accidental out as
-  `Cis` or `Es`; chord charts in those countries stop at the two letters, and so does this — a German chord chart
-  writes `B` for what an English one calls `Bb`, but never `Ais`.) It runs after the
-  transposition, never before, because the transposition works in the notation the file is written in. A file is taken
-  for German-notated when one of its chords uses `H` (a key counts too), and for nothing else, since the file carries no
-  marker: a German chart in a flat key, which never needs an `H`, reads as English, so the `B` in it is B natural —
-  drawn as `H` with the German notation preference on and transposed as B. Writing that chord `Bb`, or any `H` chord in
-  the song, is what tells the two apart. Nothing that goes back to disk passes through it:
-  `ChordProTransposer.transposeText`, the editor's action, has no counterpart here on purpose. The same charts often
-  write a minor chord as its root in lowercase (`a` for `Am`, `h` for `Hm`), and that is read as the minor chord it
-  stands for, in either notation; a lowercase `h` marks a song as German like an uppercase one. The model spells them
-  out; the editor's transposition keeps the file's lowercase. The note after a `/` may be lowercase for the same
-  reason (`D/f#`, `C/h`): it is transposed and respelled like any other note and folded back to the case the file
-  used, and a lowercase `h` there marks a song as German as well. Only there: a lowercase root is still read as a
-  minor chord and never as a note.
+- `ChordNotation` / `ChordProNotation` — the notations a chord can be written in, and the conversion between them.
+  **Every file is in `ChordNotation.STANDARD`, and so is the model**; any other notation (German today, room for
+  Latin and Nashville) is only a way of showing that or of typing it, and is converted at exactly those two
+  boundaries: `toNotation` writes a parsed song in the reader's notation as the last step of rendering, after the
+  transposition, which works in the standard one; `convertText` rewrites a raw document from one notation to another,
+  leaving every other character where it was (`ChordProTransposer.rewriteChordNamesInText`, with the tabs' chord rows
+  renamed in their columns rather than transposed), which is how the editor shows a file in the reader's notation and
+  writes what was typed back. German notation writes the standard `B` as `H` and its `Bb` as `B`, and nothing else
+  moves — not the other letters, not the `#` and `b` signs, not the quality. (The classical German names spell every
+  accidental out as `Cis` or `Es`; chord charts in those countries stop at the two letters, and so does this.) **A
+  text is read in the notation it is declared to be in**, `parse`, `summarize`, `ChordProSummaryCache` and
+  `convertText` all taking one: a text declared German is German whatever it looks like, which is what makes the
+  editor unambiguous, since a German chart in a flat key never needs an `H` and its `B` is a B flat all the same. A
+  text declared standard is still read as German where one of its chords (a key counts too) uses `H` or `h`, since no
+  standard chord does and a file written before there was one notation may; that one German chart in a flat key is
+  the case nothing can tell apart, and it reads as standard. Converted to the standard notation, chords get ASCII
+  accidentals, so `convertText(text, STANDARD, STANDARD)` is what brings such a file into the standard notation (the
+  import does it to every song, and `ChordProSplitter.comparable` folds it, so a German file imported again is the same
+  song), and returns any other text unchanged. A text converted out of a notation and back is returned as it was, but
+  for those accidentals and a German `Bb`, which is read as the B flat its writer meant. The same charts often write a
+  minor chord as its root in lowercase (`a` for `Am`, `h` for `Hm`); that is a spelling rather than a notation, read
+  as the minor chord it stands for in either one and kept lowercase by every conversion and by the editor's
+  transposition. The note after a `/` may be lowercase for the same reason (`D/f#`, `C/h`): it is transposed and
+  respelled like any other note and folded back to the case the file used, and a lowercase `h` there marks a song as
+  German as well. Only there: a lowercase root is still read as a minor chord and never as a note.
 - `ChordProHighlighter` — the typed spans an editor wants to colour (directive name, directive value, chord,
   annotation, comment). It lives here rather than in the UI so that what counts as a chord is decided in exactly one
   place; only what those look like on screen is the caller's business. It reads the file's lines through

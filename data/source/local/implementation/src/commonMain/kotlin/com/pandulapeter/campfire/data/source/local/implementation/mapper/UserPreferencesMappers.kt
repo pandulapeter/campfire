@@ -31,7 +31,8 @@ internal fun UserPreferencesDocument.toModel() = UserPreferences(
     language = UserPreferences.Language.entries.firstOrNull { it.id == language } ?: UserPreferences.Language.SYSTEM_DEFAULT,
     chordSpelling = UserPreferences.ChordSpelling(
         accidentals = UserPreferences.Accidentals.entries.firstOrNull { it.id == accidentals } ?: UserPreferences.Accidentals.ORIGINAL,
-        isGermanNotationEnabled = isGermanNotationEnabled,
+        notation = UserPreferences.Notation.entries.firstOrNull { it.id == notation }
+            ?: if (isGermanNotationEnabled) UserPreferences.Notation.GERMAN else UserPreferences.Notation.STANDARD,
     ),
     transpositions = transpositions,
     foldedSections = foldedSections.mapValues { (_, keys) -> keys.toSet() }.filterValues { it.isNotEmpty() },
@@ -55,7 +56,7 @@ internal fun UserPreferences.toDocument() = UserPreferencesDocument(
     isCoverArtEnabled = isCoverArtEnabled,
     language = language.id,
     accidentals = chordSpelling.accidentals.id,
-    isGermanNotationEnabled = chordSpelling.isGermanNotationEnabled,
+    notation = chordSpelling.notation.id,
     transpositions = transpositions,
     foldedSections = foldedSections.mapValues { (_, keys) -> keys.toList() },
     tagMatchMode = tagMatchMode.id,

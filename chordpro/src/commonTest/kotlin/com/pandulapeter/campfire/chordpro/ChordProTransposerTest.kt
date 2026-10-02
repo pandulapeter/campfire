@@ -189,7 +189,7 @@ class ChordProTransposerTest {
 
     @Test
     fun `a recalled chorus is respelled in German notation`() {
-        val song = ChordProNotation.toGerman(ChordProParser.parse(CUT_CHORUS_AND_RECALL.replace("[G]", "[B]")))
+        val song = ChordProNotation.toNotation(ChordProParser.parse(CUT_CHORUS_AND_RECALL.replace("[G]", "[B]")), ChordNotation.GERMAN)
 
         assertEquals(listOf("C", "H"), (song.blocks.last() as ChordProBlock.ChorusRecall).blocks.recalledChordNames())
     }
@@ -454,7 +454,7 @@ class ChordProTransposerTest {
     @Test
     fun `the chords of a comment are respelled in German notation but do not make a song German`() {
         val english = ChordProParser.parse("{c: Intro: [B]}\n\n[B]a")
-        assertEquals(ChordProBlock.Comment("Intro: [H]", CommentStyle.PLAIN), ChordProNotation.toGerman(english).blocks.first())
+        assertEquals(ChordProBlock.Comment("Intro: [H]", CommentStyle.PLAIN), ChordProNotation.toNotation(english, ChordNotation.GERMAN).blocks.first())
 
         val onlyTheCommentIsGerman = ChordProParser.parse("{c: Intro: [H]}\n\n[B]a")
         assertFalse(ChordProNotation.isGermanNotated(onlyTheCommentIsGerman))

@@ -498,9 +498,9 @@ private fun SongDisplaySection(
     SwitchListItem(
         title = stringResource(Res.string.settings_german_notation),
         description = stringResource(Res.string.settings_german_notation_description),
-        isChecked = userPreferences?.chordSpelling?.isGermanNotationEnabled == true,
+        isChecked = userPreferences?.chordSpelling?.notation == UserPreferences.Notation.GERMAN,
         isEnabled = isChordSpellingEnabled,
-        onCheckedChange = viewModel::setGermanNotationEnabled,
+        onCheckedChange = { isChecked -> viewModel.setNotation(if (isChecked) UserPreferences.Notation.GERMAN else UserPreferences.Notation.STANDARD) },
     )
     SettingsSubsection(
         title = stringResource(Res.string.settings_accidentals),

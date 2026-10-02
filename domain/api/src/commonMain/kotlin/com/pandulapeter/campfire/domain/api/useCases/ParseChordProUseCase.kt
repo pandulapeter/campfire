@@ -10,8 +10,14 @@
 package com.pandulapeter.campfire.domain.api.useCases
 
 import com.pandulapeter.campfire.chordpro.model.ChordProSong
+import com.pandulapeter.campfire.data.model.domain.UserPreferences
 
 interface ParseChordProUseCase {
 
-    operator fun invoke(text: String): ChordProSong
+    /**
+     * The song [text] describes, its chords in [UserPreferences.Notation.STANDARD] whichever [notation] the text is
+     * written in: a file's is the standard one, the editor's field the reader's own (see
+     * [ConvertChordProTextNotationUseCase] for how the two are read).
+     */
+    operator fun invoke(text: String, notation: UserPreferences.Notation = UserPreferences.Notation.STANDARD): ChordProSong
 }
