@@ -1010,6 +1010,12 @@ class CampfireViewModel(
     private val importQueue = Channel<ImportRequest>(Channel.UNLIMITED)
 
     /**
+     * How many batches have been put into [importQueue] and not yet settled, so that What's new can tell a file opened
+     * with the app a moment ago, which no import has taken yet, from a launch with nothing to import.
+     */
+    private val _queuedImportCount = MutableStateFlow(0)
+
+    /**
      * The last write of the editor's text, from its Save action or from the `UnsavedChanges` dialog, which closing the
      * application waits for, see [requestExit].
      */
@@ -1139,6 +1145,9 @@ class CampfireViewModel(
                     // The next batch waits for this one's conflicts question too: it would have nowhere to be asked.
                     awaitImportSettled()
                 } finally {
+                    // Here rather than in import, so that the count is honest whatever that did: returned after the
+                    // preparation was cancelled, failed, or left a question that was answered or abandoned.
+                    _queuedImportCount.update { it - 1 }
                     request.settled.complete(Unit)
                 }
             }
@@ -2246,6 +2255,7 @@ class CampfireViewModel(
         if (files.isEmpty()) {
             request.settled.complete(Unit)
         } else {
+            _queuedImportCount.update { it + 1 }
             importQueue.trySend(request)
         }
         return request.settled
@@ -2351,8 +2361,9 @@ class CampfireViewModel(
 
     /**
      * The first installed version belongs to the welcome, so it is recorded by [plantDemoLibraryOnFirstRun] instead.
-     * Later versions wait for the app and any startup import question before opening, and are recorded as they open
-     * rather than as they close: ending the process with the dialog up must not introduce the same version again.
+     * Later versions wait for the app and for every import queued, running or reported on before opening (see
+     * [canShowWhatsNew]), and are recorded as they open rather than as they close: ending the process with the dialog up
+     * must not introduce the same version again.
      * Keeping every introduced version also makes rolling back and returning to a version silent.
      * An empty release message is recorded too, so a small release introduces nothing.
      */
@@ -2362,7 +2373,14 @@ class CampfireViewModel(
         if (CAMPFIRE_VERSION_NAME in preferences.seenWhatsNewVersions) return
         isAppOnScreen.first { it }
         if (LocalizedStrings.get(Res.string.whats_new_message).isNotBlank()) {
-            combine(_visibleDialog, _isImporting) { dialog, isImporting -> dialog == null && !isImporting }.first { it }
+            combine(_visibleDialog, _isImporting, _importReport, _queuedImportCount) { dialog, isImporting, report, queuedImportCount ->
+                canShowWhatsNew(
+                    hasDialog = dialog != null,
+                    isImporting = isImporting,
+                    hasImportReport = report != null,
+                    queuedImportCount = queuedImportCount,
+                )
+            }.first { it }
             if (!_visibleDialog.compareAndSet(null, DialogType.WhatsNew)) return
         }
         try {
