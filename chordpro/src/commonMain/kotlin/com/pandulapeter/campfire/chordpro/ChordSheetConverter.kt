@@ -337,7 +337,7 @@ object ChordSheetConverter {
         return buildString {
             var cursor = 0
             for ((start, end, value) in replacements.sortedBy { it.first }) {
-                if (start < cursor || end > text.length) continue
+                if (start < cursor || end > text.length || splitsSurrogate(text, start) || splitsSurrogate(text, end)) continue
                 append(text, cursor, start)
                 append("[$value]")
                 cursor = end
@@ -391,10 +391,14 @@ object ChordSheetConverter {
         }
         val escaped = ChordProLiteralText.escape(lyrics.text)
         val merged = buildString {
+            var carried: List<String> = emptyList()
             for (index in 0..escaped.length) {
-                insertions[index]?.let { values ->
+                val due = insertions[index].orEmpty()
+                if (splitsSurrogate(escaped, index)) carried = due
+                else (carried + due).takeIf { it.isNotEmpty() }?.let { values ->
                     if (index == escaped.length && isNotEmpty() && last() != ' ') append(' ')
                     append(values.joinToString(if (index == escaped.length) " " else ""))
+                    carried = emptyList()
                 }
                 if (index < escaped.length) append(escaped[index])
             }
@@ -402,6 +406,10 @@ object ChordSheetConverter {
         // Inline conversion uses different offsets after insertion; convert those tokens in the merged string.
         return if (convertParentheses) parentheses.replace(merged) { if (chord(it.groupValues[1])) "[${ascii(it.groupValues[1])}]" else it.value } else merged
     }
+
+    /** An insertion or replacement must leave a supplementary character whole. */
+    private fun splitsSurrogate(text: String, index: Int) = index > 0 && index < text.length &&
+        text[index - 1].isHighSurrogate() && text[index].isLowSurrogate()
 
     /** The first true element of a monotone predicate, or the size when none matches. */
     private inline fun firstIndex(size: Int, matches: (Int) -> Boolean): Int {

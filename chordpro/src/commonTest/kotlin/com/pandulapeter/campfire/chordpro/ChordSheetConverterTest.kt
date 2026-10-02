@@ -142,6 +142,18 @@ class ChordSheetConverterTest {
     }
 
     @Test
+    fun chordsNeverSplitSupplementaryCharacters() {
+        assertEquals("[C]Hel😀[G]lo wor\n", convert("C   G\nHel😀lo wor"))
+        for (text in listOf("C   G\nHel😀lo wor", "C G\n😀hello😀", "C      G\n😀hello😀")) {
+            val result = convert(text)
+            for (index in result.indices) {
+                if (result[index].isHighSurrogate()) assertTrue(result.getOrNull(index + 1)?.isLowSurrogate() == true)
+                if (result[index].isLowSurrogate()) assertTrue(result.getOrNull(index - 1)?.isHighSurrogate() == true)
+            }
+        }
+    }
+
+    @Test
     fun letterSpacingDoesNotSplitWords() {
         val spaced = ChordSheet.Line(listOf(span("T", 0.0, 6.7, 12.0), span("h", 7.7, 14.4, 12.0), span("i", 15.4, 18.4, 12.0), span("s", 19.4, 25.4, 12.0), span("i", 30.0, 33.0, 12.0), span("s", 34.0, 40.0, 12.0)))
         assertEquals("This is\n", ChordSheetConverter.convert(ChordSheet(listOf(ChordSheet.Page(listOf(spaced))))).single())
