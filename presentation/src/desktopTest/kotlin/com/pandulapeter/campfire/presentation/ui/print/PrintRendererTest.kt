@@ -14,6 +14,10 @@ import androidx.compose.ui.graphics.Canvas
 import androidx.compose.ui.graphics.ImageBitmap
 import androidx.compose.ui.graphics.drawscope.CanvasDrawScope
 import androidx.compose.ui.text.TextMeasurer
+import androidx.compose.ui.text.TextStyle
+import androidx.compose.ui.text.font.FontFamily
+import androidx.compose.ui.text.font.FontStyle
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.font.createFontFamilyResolver
 import androidx.compose.ui.unit.Density
 import androidx.compose.ui.unit.LayoutDirection
@@ -44,11 +48,24 @@ internal class PrintRendererTest {
         assertEquals(content.replace("\u200B", "").replace('\u00A0', ' ') + "Am/G", glyphs.joinToString("") { it.text })
         assertTrue(glyphs.all { it.width > 0 && it.height > 0 })
         assertTrue(glyphs.none { it.text.length == 1 && it.text.single().isSurrogate() })
-        assertTrue(glyphs.first().x >= 23f && glyphs.first().y >= 31f)
-        assertEquals(78f, glyphs.first { it.style.bold }.x)
-        val expected = measurer.measure(content, androidx.compose.ui.text.TextStyle(fontSize = 14.sp),
+        val textStyle = TextStyle(fontFamily = FontFamily.Default, fontSize = 14.sp,
+            fontWeight = FontWeight.Normal, fontStyle = FontStyle.Normal, fontFeatureSettings = "liga=0")
+        val expected = measurer.measure(content, textStyle,
             softWrap = false, density = Density(1f), layoutDirection = LayoutDirection.Ltr).getBoundingBox(0)
-        assertEquals(expected.width, glyphs.first().width)
+        // Fallback font metrics can put the rectangle above the text's origin, notably on Linux with emoji.
+        // Selection must follow the actual shaping, including that offset, rather than assume the origin is a corner.
+        val first = glyphs.first()
+        assertEquals(23f + expected.left, first.x, "First glyph's horizontal placement")
+        assertEquals(31f + expected.top, first.y, "First glyph's vertical placement")
+        assertEquals(expected.width, first.width, "First glyph's width")
+        assertEquals(expected.height, first.height, "First glyph's height")
+        val expectedBold = measurer.measure("Am/G", textStyle.copy(fontWeight = FontWeight.Bold),
+            softWrap = false, density = Density(1f), layoutDirection = LayoutDirection.Ltr).getBoundingBox(0)
+        val bold = glyphs.first { it.style.bold }
+        assertEquals(78f + expectedBold.left, bold.x, "Bold glyph's horizontal placement")
+        assertEquals(10f + expectedBold.top, bold.y, "Bold glyph's vertical placement")
+        assertEquals(expectedBold.width, bold.width, "Bold glyph's width")
+        assertEquals(expectedBold.height, bold.height, "Bold glyph's height")
         System.getenv("CAMPFIRE_PRINT_QA_DIR")?.let { directory ->
             File(directory).mkdirs()
             File(directory, "unicode.pdf").writeBytes(renderer.pdf(PrintDocument(300f, 120f, listOf(page)), "Unicode"))
