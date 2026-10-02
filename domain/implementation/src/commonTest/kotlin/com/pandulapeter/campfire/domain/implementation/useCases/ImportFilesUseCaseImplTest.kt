@@ -269,6 +269,26 @@ class ImportFilesUseCaseImplTest {
     }
 
     @Test
+    fun `an identical song whose library file is gone by the answer is written under its own name`() = runTest {
+        val text = "{title: Song}\n"
+        fun plan() = ImportPlan(
+            songs = listOf(ImportPlan.SongEntry(fileName = "song_2.cho", text = text, status = ImportPlan.Status.IDENTICAL, sourceFileName = "song_2.cho")),
+        )
+        val gone = FakeSongRepository(files = mutableMapOf())
+        val goneResult = ImportFilesUseCaseImpl(gone, FakeSetlistRepository()).invoke(plan(), ImportConflictResolution.SKIP)
+        assertEquals(listOf("song.cho" to false), gone.importCalls)
+        assertEquals(listOf("song.cho"), goneResult.importedSongFileNames)
+        assertTrue(goneResult.duplicateFileNames.isEmpty())
+
+        for (libraryName in listOf("song_2.cho", "Song_2.cho")) {
+            val there = FakeSongRepository(files = mutableMapOf(libraryName to text))
+            val thereResult = ImportFilesUseCaseImpl(there, FakeSetlistRepository()).invoke(plan(), ImportConflictResolution.SKIP)
+            assertTrue(there.importCalls.isEmpty(), libraryName)
+            assertEquals(listOf("song_2.cho"), thereResult.duplicateFileNames, libraryName)
+        }
+    }
+
+    @Test
     fun `the applier refuses to replace a kept name even if the plan asks`() = runTest {
         val songs = FakeSongRepository(files = mutableMapOf("foo.cho" to A))
         val plan = ImportPlan(

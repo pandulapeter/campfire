@@ -15,6 +15,7 @@ import com.pandulapeter.campfire.data.model.domain.ImportPlan
 import com.pandulapeter.campfire.data.model.domain.ImportResult
 import com.pandulapeter.campfire.data.model.domain.Setlist
 import com.pandulapeter.campfire.data.model.domain.Song
+import com.pandulapeter.campfire.data.model.domain.normalizedToNfc
 import com.pandulapeter.campfire.data.repository.api.SetlistRepository
 import com.pandulapeter.campfire.data.repository.api.SongRepository
 import com.pandulapeter.campfire.domain.api.useCases.ImportFilesUseCase
@@ -73,19 +74,40 @@ class ImportFilesUseCaseImpl internal constructor(
             val keptSongFileNames = plan.songs
                 .filter { it.status == ImportPlan.Status.IDENTICAL && it.repeatedEntryIndex == null }
                 .mapTo(hashSetOf()) { it.fileName }
+            // A plan is held against the library as it was when the question was asked; a sync run may have deleted, since
+            // then, the file an identical song was going to be left as. The names come from the same list the planner used,
+            // folded the way the storage layer compares names, so a file another device re-spelt in case only is still there.
+            val libraryNames = if (plan.songs.any { it.isIdenticalToLibraryFile }) {
+                songRepository.loadSongsIfNeeded()?.mapTo(hashSetOf()) { it.fileName.normalizedToNfc().lowercase() }
+            } else {
+                null
+            }
             plan.songs.forEachIndexed { index, entry ->
                 currentFileName = entry.sourceFileName ?: entry.fileName
                 onProgress(ImportProgress(ImportProgress.Phase.IMPORTING, processedSongs, total, currentFileName))
                 yield()
-                val storedName = when (val action = entry.action(resolution)) {
+                val isLibraryFileGone = entry.isIdenticalToLibraryFile && libraryNames != null &&
+                    entry.fileName.normalizedToNfc().lowercase() !in libraryNames
+                val storedName = when (val action = if (isLibraryFileGone) Action.WRITE else entry.action(resolution)) {
                     Action.WRITE, Action.REPLACE -> {
                         // A replacement goes over the file as the library lists it; anything else is written under the
-                        // name the app gives the song, which the storage layer numbers if it is taken.
+                        // name the app gives the song, which the storage layer numbers if it is taken. An identical
+                        // song's name is the library file it matched, which may be a numbered sibling or a name of an
+                        // older rule, so one written because that file has gone is named by its own header, the way the
+                        // preparation named it.
                         val replacedFileName = entry.replacesFileName ?: entry.fileName
                         val shouldReplace = action == Action.REPLACE && replacedFileName !in keptSongFileNames &&
                             replacedSongFileNames.add(replacedFileName)
                         songRepository.importSong(
-                            fileName = if (shouldReplace) replacedFileName else entry.fileName,
+                            fileName = when {
+                                shouldReplace -> replacedFileName
+                                isLibraryFileGone -> songRepository.importFileName(
+                                    fallbackTitle = entry.sourceFileName?.substringBeforeLast('.').orEmpty(),
+                                    text = entry.text,
+                                )
+
+                                else -> entry.fileName
+                            },
                             text = entry.text,
                             shouldReplace = shouldReplace,
                         ).also {
@@ -213,6 +235,9 @@ class ImportFilesUseCaseImpl internal constructor(
     }
 
     private fun ImportPlan.SongEntry.action(resolution: ImportConflictResolution) = action(status, resolution)
+
+    /** An identical song that matched a library file rather than an earlier song of the same batch. */
+    private val ImportPlan.SongEntry.isIdenticalToLibraryFile get() = status == ImportPlan.Status.IDENTICAL && repeatedEntryIndex == null
 
     private fun ImportPlan.SetlistEntry.action(resolution: ImportConflictResolution) = action(status, resolution)
 

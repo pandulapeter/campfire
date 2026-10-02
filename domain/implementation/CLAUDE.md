@@ -61,7 +61,10 @@ The ones that carry real logic:
   itself brings back unchanged, which the planner finds in a first pass over the whole batch before it plans in
   arriving order, since the unchanged copy may come after the song that wants its name — and leaves numbering to the
   write that can see the directory. `ImportFilesUseCaseImpl` holds the same rule once more at the one place a file is
-  overwritten. The names it records are the library's own spellings: where the file system answers the derived name
+  overwritten. A plan is held against the library as it was when it was prepared, which a conflicts question can leave
+  open for as long as the user takes; only two things are checked again as it is written: the setlists, planned again
+  on the names the songs got, and an identical song whose library file a sync run deleted meanwhile, which is written
+  after all, under the name its own header gives it. A replacement is not: the user confirmed it naming the file. The names it records are the library's own spellings: where the file system answers the derived name
   with a file listed under another spelling of it (another case on macOS and Windows, the other Unicode form on APFS),
   the listed one is what an identical song maps to and what a replacement writes over
   (`ImportPlan.SongEntry.replacesFileName`), so that no setlist of the batch is pointed at a name the song list does
