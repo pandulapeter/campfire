@@ -13,6 +13,8 @@ import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFalse
 import kotlin.test.assertTrue
+import kotlin.time.TimeSource
+import kotlin.time.Duration.Companion.seconds
 
 class ChordSheetConverterTest {
     private fun convert(text: String) = ChordSheetConverter.convert(ChordSheet.ofPlainText(text)).single()
@@ -87,6 +89,16 @@ class ChordSheetConverterTest {
         val recall = "First [G] line\nsecond line\nthird line\n{chorus}\n"
         assertEquals(recall, convert(recall))
         assertEquals("A footnote (C) here\nand more\nand more\n", convert("A footnote [C] here\nand more\nand more"))
+    }
+
+    @Test
+    fun unclosedBracketsAreEscapedInLinearTime() {
+        val text = "[".repeat(100_000) + "\nhello world"
+        val started = TimeSource.Monotonic.markNow()
+        val result = convert(text)
+        assertTrue(started.elapsedNow() < 5.seconds)
+        assertEquals("(".repeat(100_000) + "\nhello world\n", result)
+        assertEquals("(a b (C)x\nplain words\nmore words\n", convert("[a b [C]x\nplain words\nmore words"))
     }
 
     @Test

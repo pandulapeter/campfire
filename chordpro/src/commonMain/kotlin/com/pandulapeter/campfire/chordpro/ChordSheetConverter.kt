@@ -101,9 +101,14 @@ object ChordSheetConverter {
     private fun isChordPro(text: String): Boolean {
         val lines = text.lines().filter { it.isNotBlank() }
         if (lines.any { line ->
-                ChordProSyntax.isKnownDirective(line.trim()) || attachedChord.findAll(line).any { ChordProChordNames.isChordName(it.groupValues[1]) }
+                ChordProSyntax.isKnownDirective(line.trim()) || ChordProSyntax.brackets(line).any {
+                    it.content.none(Char::isWhitespace) && ChordProChordNames.isChordName(it.content) &&
+                        line.getOrNull(it.range.last + 1)?.let { next ->
+                            next in 'A'..'Z' || next in 'a'..'z' || next in '\u00c0'..'\u024f' || next in '\u0370'..'\u04ff'
+                        } == true
+                }
             }) return true
-        val inline = lines.count { line -> brackets.findAll(line).any { chord(it.groupValues[1]) } }
+        val inline = lines.count { line -> ChordProSyntax.brackets(line).any { chord(it.content) } }
         return inline > 0 && inline * 2 >= lines.size
     }
 
@@ -377,8 +382,6 @@ object ChordSheetConverter {
 
     private val token = Regex("\\|:?|:\\||[^\\s|]+")
     private val parentheses = Regex("\\(([^()]+)\\)")
-    private val brackets = Regex("\\[([^\\]]+)\\]")
-    private val attachedChord = Regex("\\[([^\\]\\s]+)\\][A-Za-z\u00c0-\u024f\u0370-\u04ff]")
     private val repeat = Regex("\\(?([0-9]+x|x[0-9]+)\\)?", RegexOption.IGNORE_CASE)
     private val section = Regex("^(Verse|Chorus|Refrain|Bridge|Pre-Chorus|Intro|Outro|Solo|Interlude|Instrumental|Versszak|Refr\u00e9n|Ref\\.|R\\.)(?:\\s*[0-9]+)?$", RegexOption.IGNORE_CASE)
     private val metadata = Regex("^(Capo|Key|Hangnem|Tempo|Time|Artist|El\u0151ad\u00f3|words and music by|by)\\s*:\\s*(.+)$", RegexOption.IGNORE_CASE)
