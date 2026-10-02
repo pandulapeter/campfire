@@ -24,11 +24,12 @@ internal object PdfFilters {
             val params = resolve(parameters.getOrNull(index)) as? PdfDictionary
             bytes = when (resolve(filter).name()) {
                 "FlateDecode", "Fl" -> {
-                    require(bytes.size >= 6)
+                    require(bytes.size >= 4)
                     val cmf = bytes[0].toInt() and 255
                     val flags = bytes[1].toInt() and 255
                     require(cmf and 15 == 8 && cmf shr 4 <= 7 && (cmf * 256 + flags) % 31 == 0 && flags and 32 == 0)
-                    predictor(Inflater.inflate(bytes, offset = 2, length = bytes.size - 6), params)
+                    // The inflater stops at the final block, so the Adler-32 trailer, which is never checked, may be cut off.
+                    predictor(Inflater.inflate(bytes, offset = 2, length = bytes.size - 2), params)
                 }
                 "ASCIIHexDecode", "AHx" -> asciiHex(bytes)
                 "ASCII85Decode", "A85" -> ascii85(bytes)

@@ -32,6 +32,15 @@ class PdfFiltersTest {
     }
 
     @Test
+    fun readsFlateWithAMissingOrTrailingChecksum() {
+        val encoded = PdfTestWriter.storedZlib("Readable".encodeToByteArray())
+        assertEquals("Readable", decode(encoded, "FlateDecode").decodeToString())
+        assertEquals("Readable", decode(encoded.copyOf(encoded.size - 4), "FlateDecode").decodeToString())
+        assertEquals("Readable", decode(encoded + byteArrayOf(1, 2, 3, 4), "FlateDecode").decodeToString())
+        assertFailsWith<IllegalArgumentException> { decode(encoded.copyOf(3), "FlateDecode") }
+    }
+
+    @Test
     fun supportsLzwClearEndAndTheRepeatedPrefixCase() {
         val codes = listOf(256, 65, 66, 258, 260, 257)
         val bytes = ByteArray((codes.size * 9 + 7) / 8)
