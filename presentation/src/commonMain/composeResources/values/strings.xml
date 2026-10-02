@@ -511,6 +511,10 @@
     <string name="settings_sync_redirect_page_title">Campfire is connected</string>
     <string name="settings_sync_redirect_page_message">You can close this tab and go back to the app.</string>
 
+    <!-- What's new, shown once per version after the first installed version -->
+    <string name="whats_new_title">What's new in Campfire %1$s</string>
+    <string name="whats_new_message">Bring in more songs with improved PDF importing, print song sheets in up to four columns, and tidy your songs with Prettify ChordPro in the editor.</string>
+
     <!-- Welcome sheet, shown once on the first run -->
     <string name="welcome_title">Welcome to Campfire!</string>
     <string name="welcome_message">Pick a look you like to begin with, you can always change it later.</string>

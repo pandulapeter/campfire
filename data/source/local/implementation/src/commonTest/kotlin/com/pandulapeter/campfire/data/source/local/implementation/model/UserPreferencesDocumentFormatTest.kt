@@ -42,6 +42,7 @@ internal class UserPreferencesDocumentFormatTest {
             languageMatchMode = "all",
             tagSortingMode = "alphabetical",
             languageSortingMode = "alphabetical",
+            seenWhatsNewVersions = setOf("4.5.1", "4.6.0"),
         )
 
         val decoded = UserPreferencesDocumentFormat.decode(UserPreferencesDocumentFormat.encode(document))

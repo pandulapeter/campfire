@@ -106,6 +106,10 @@ import com.pandulapeter.campfire.domain.api.useCases.TransposeChordProTextUseCas
 import com.pandulapeter.campfire.domain.api.useCases.TransposeChordProUseCase
 import com.pandulapeter.campfire.domain.api.useCases.UpdateSetlistUseCase
 import com.pandulapeter.campfire.domain.api.useCases.UpdateUserPreferencesUseCase
+import com.pandulapeter.campfire.presentation.CAMPFIRE_VERSION_NAME
+import com.pandulapeter.campfire.presentation.localization.LocalizedStrings
+import com.pandulapeter.campfire.presentation.resources.Res
+import com.pandulapeter.campfire.presentation.resources.whats_new_message
 import com.pandulapeter.campfire.presentation.ui.components.ScrollPosition
 import com.pandulapeter.campfire.presentation.ui.components.SearchState
 import com.pandulapeter.campfire.presentation.ui.components.isAnyOverflowMenuOpen
@@ -1078,6 +1082,7 @@ class CampfireViewModel(
         viewModelScope.launch { loadScreenData(false) }
         viewModelScope.launch { plantDemoLibraryOnFirstRun() }
         viewModelScope.launch { showWelcomeOnFirstRun() }
+        viewModelScope.launch { showWhatsNewOnVersionChange() }
         // Picks a connected account back up, finishes a consent the app was closed in the middle of, and runs a
         // first sync. Its own coroutine, so that a slow network never holds up the library appearing on screen.
         viewModelScope.launch {
@@ -2302,7 +2307,9 @@ class CampfireViewModel(
                 // a refresh, which may never come, and waiting for its value could wait for good. With nothing read there
                 // is nothing to write either, and the next start is a first run again - which plants nothing into a
                 // library that has songs in it.
-                userPreferencesState.first { it !is DataState.Loading }.data?.let { saveUserPreferences(it) }
+                userPreferencesState.first { it !is DataState.Loading }.data?.let {
+                    saveUserPreferences(it.copy(seenWhatsNewVersions = it.seenWhatsNewVersions + CAMPFIRE_VERSION_NAME))
+                }
             }
         } finally {
             // In a finally rather than at the end: whatever went wrong, the app is no longer waiting for this, and
@@ -2326,6 +2333,33 @@ class CampfireViewModel(
         if (!isFirstLaunch.await()) return
         isAppOnScreen.first { it }
         _visibleDialog.compareAndSet(null, DialogType.Welcome)
+    }
+
+    /**
+     * The first installed version belongs to the welcome, so it is recorded by [plantDemoLibraryOnFirstRun] instead.
+     * Later versions wait for the app and any startup import question before opening, and are recorded as they open
+     * rather than as they close: ending the process with the dialog up must not introduce the same version again.
+     * Keeping every introduced version also makes rolling back and returning to a version silent.
+     * An empty release message is recorded too, so a small release introduces nothing.
+     */
+    private suspend fun showWhatsNewOnVersionChange() {
+        if (isFirstLaunch.await()) return
+        val preferences = userPreferencesState.first { it !is DataState.Loading }.data ?: return
+        if (CAMPFIRE_VERSION_NAME in preferences.seenWhatsNewVersions) return
+        isAppOnScreen.first { it }
+        if (LocalizedStrings.get(Res.string.whats_new_message).isNotBlank()) {
+            combine(_visibleDialog, _isImporting) { dialog, isImporting -> dialog == null && !isImporting }.first { it }
+            if (!_visibleDialog.compareAndSet(null, DialogType.WhatsNew)) return
+        }
+        try {
+            withContext(NonCancellable) {
+                updateUserPreferences { it.copy(seenWhatsNewVersions = it.seenWhatsNewVersions + CAMPFIRE_VERSION_NAME) }
+            }
+        } catch (exception: CancellationException) {
+            throw exception
+        } catch (exception: Exception) {
+            println("Could not remember the introduced version: ${exception.message}")
+        }
     }
 
     /**
@@ -3478,6 +3512,8 @@ class CampfireViewModel(
 
         /** Shown once, over the first run of an installation, see [showWelcomeOnFirstRun]. */
         data object Welcome : DialogType
+        /** The current version's introduction, shown once after the first installed version. */
+        data object WhatsNew : DialogType
     }
 
     companion object {

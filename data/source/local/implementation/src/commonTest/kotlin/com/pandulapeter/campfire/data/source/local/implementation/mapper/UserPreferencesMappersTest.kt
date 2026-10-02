@@ -21,6 +21,18 @@ import kotlin.test.assertEquals
 internal class UserPreferencesMappersTest {
 
     @Test
+    fun introducedVersionsSurviveOtherPreferenceChangesAndReloading() {
+        val legacy = UserPreferencesDocumentFormat.decode("""{"uiMode":"dark"}""").document.toModel()
+        assertEquals(emptySet(), legacy.seenWhatsNewVersions)
+        val versions = setOf("4.5.1", "4.6.0", "4.6.1")
+        val saved = legacy.copy(seenWhatsNewVersions = versions).copy(fontScale = 1.2f).toDocument()
+        val reloaded = UserPreferencesDocumentFormat.decode(UserPreferencesDocumentFormat.encode(saved)).document.toModel()
+        assertEquals(versions, reloaded.seenWhatsNewVersions)
+        assertEquals(UserPreferences.UiMode.DARK, reloaded.uiMode)
+        assertEquals(1.2f, reloaded.fontScale)
+    }
+
+    @Test
     fun printSettingsSurviveSavingAndReloadingPreferences() {
         val settings = PrintSettings(format = PrintSettings.Format.FILES, paper = PrintSettings.Paper.LETTER, isLandscape = true, fontSize = 18,
             marginMm = 20, columns = 4, showChords = false, showComments = false, showMetadata = false,

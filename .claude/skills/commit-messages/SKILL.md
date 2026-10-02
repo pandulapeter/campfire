@@ -28,7 +28,7 @@ description: Commit message conventions for the Campfire repo. MANDATORY — inv
   editor.`, `Implement support for German notation.`); internal-only work can stay technical
   (`Fix Lint warnings.`, `Move iOS build number to gradle.properties.`).
 
-Version bumps have a fixed wording, and the `release-notes` skill looks for it — do not vary it:
+Version bumps have a fixed wording, and the `prepare-release` skill looks for it — do not vary it:
 
 ```
 Update version name to "v4.0.1".

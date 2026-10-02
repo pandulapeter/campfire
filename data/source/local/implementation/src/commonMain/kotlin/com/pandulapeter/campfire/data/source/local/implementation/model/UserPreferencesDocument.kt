@@ -41,6 +41,7 @@ internal data class UserPreferencesDocument(
     val tagSortingMode: String = "",
     val languageSortingMode: String = "",
     val printSettings: PrintSettingsDocument = PrintSettingsDocument(),
+    val seenWhatsNewVersions: Set<String> = emptySet(),
 )
 
 

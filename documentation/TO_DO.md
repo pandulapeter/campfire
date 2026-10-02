@@ -8,7 +8,6 @@
  * https://mozilla.org/MPL/2.0/.
 -->
 # To do
-- What's new dialog
 - Global sync status display ?
 - Optional close confirmation dialog on relevant platforms
 - Haptic effects

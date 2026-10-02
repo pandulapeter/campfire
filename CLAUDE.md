@@ -243,6 +243,10 @@ localized in both languages.
   naming Dropbox sync where the build has it — short on purpose, since the demo songs behind it say the rest. Each file is named exactly as the library would
   name the song inside it, which is what lets one list both read the resources and answer whether they are already
   there.
+- **What's new** introduces each version once, after the app is on screen and startup import questions have finished.
+  `UserPreferences.seenWhatsNewVersions` remembers every introduced version and the first installed version, which
+  is skipped in favor of the welcome. Empty `whats_new_message` resources suppress the dialog and still record the
+  version; the prepare-release skill replaces or clears that message in both languages for every release.
 - **The app icon follows the theme color** wherever the platform lets an app change it: the launcher entry on Android
   (one `activity-alias` per color, see `app/android`), an alternate icon on iOS, the favicon on the web, and the
   window, taskbar and Dock icons of a running desktop app — unless the user turned that off
@@ -410,7 +414,8 @@ localized in both languages.
 - `./gradlew :app:android:generateBaselineProfile` — records the Android app's Baseline Profile and startup profile on
   the connected emulator into `app/android/src/main/generated/baselineProfiles`, which is committed; a release build,
   CI's included, only packages those files and needs no device (see `app/baselineprofile`). Regenerate it when the
-  startup path or the main screens change noticeably; a stale profile is only less useful, never wrong.
+  startup path or the main screens change noticeably; the prepare-release skill also records it before every release,
+  even one with empty notes. A stale profile is only less useful, never wrong.
 - **`.run/` holds the four shared run configurations** — Android, Desktop, Web and iOS — and the IDE writes them itself,
   which is why they carry no license header: one would be gone on the next save. Desktop and Web are the Gradle tasks
   below. iOS is the Kotlin Multiplatform plugin's own kind, which an IDE without it (any on Windows or Linux) lists as

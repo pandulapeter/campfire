@@ -1,15 +1,18 @@
 ---
-name: release-notes
-description: Write a paste-ready GitHub release-notes draft (with the stores' "what's new" blurb and Play's update priority embedded in it) for Campfire, summarizing what changed for users since the last version bump. Invoke this skill WHENEVER the task involves Campfire release notes — cutting a release, bumping `campfire.versionName`, or any request to draft, write, summarize or update release notes / a changelog / "what's new" / "what changed since the last version". This is the ONLY correct way to produce these notes; never summarize the changes by hand instead. Not triggered by ordinary code edits — only by release work.
+name: prepare-release
+description: Prepare a Campfire release by writing a paste-ready GitHub release-notes draft (with the stores' "what's new" blurb and Play's update priority embedded in it), updating the localized in-app update message, and regenerating Android baseline profiles. Invoke this skill WHENEVER the task involves Campfire release preparation or release notes — cutting a release, bumping `campfire.versionName`, or any request to draft, write, summarize or update release notes / a changelog / "what's new" / "what changed since the last version". This is the ONLY correct way to produce these notes; never summarize the changes by hand instead. Not triggered by ordinary code edits — only by release work.
 ---
 
-# Campfire release notes
+# Campfire release preparation
 
 Produce **one** throwaway markdown file whose whole contents the user pastes into the description of a
 new GitHub release: the notes people read, followed by the hidden block `publish-all.yml` reads. Publishing
 that release is the entire release process, so the file has to be complete as it is — nothing to fill
 in, nothing to cut before pasting. Match the style of the existing notes at
 https://github.com/pandulapeter/campfire/releases.
+
+Also update the tracked in-app message resources and regenerate the tracked Android profiles before the release
+is tagged. These are part of preparing every release, including a small release with empty notes.
 
 **Campfire is an app, not a library.** The notes are for the people who use it — musicians — not for
 developers reading the source. Nothing about modules, classes, Gradle, Koin or the build belongs in
@@ -60,11 +63,55 @@ them. If a change has no effect a user could notice, it is not in the notes.
    `commonMain` is everywhere and needs no qualifier; a change under `app/<platform>` or in a
    `<platform>Main` source set usually needs one.
 
-7. **Write the draft** to `.release-notes/<version>.md` (create the directory; `/.release-notes/` is
+7. **Always update the in-app message.** Follow `.claude/skills/code-style/SKILL.md` before editing resources.
+   Set `whats_new_message` in both:
+   - `presentation/src/commonMain/composeResources/values/strings.xml` (English);
+   - `presentation/src/commonMain/composeResources/values-hu/strings.xml` (Hungarian).
+
+   Write a **bulleted list of user-facing changes**, ordered by what matters most to musicians. Give each new
+   feature or meaningful improvement its own bullet, with one or two concise sentences explaining **what it does
+   and how it helps**. Name the feature as it appears in the app and say where to find it when that helps somebody
+   use it. Combine related small fixes only when they share the same practical benefit. Be friendly, clear and
+   professional: explain the value confidently, without hype, marketing adjectives, vague promises or developer
+   details. Full sentences are welcome; a list of feature names alone undersells the release. Verify every claim
+   against the diffs, and qualify changes that affect only one platform.
+
+   Store each bullet on one line, starting with the literal `• `, and separate bullets with `\n` in the XML string
+   (for example, `• Print song sheets in up to four columns to fit more on each page.\n• ...`). The dialog renders
+   these as spaced rows with aligned wrapped text, in a scrollable area with fades at the top and bottom; its title
+   and Done button stay visible. Keep every bullet focused, but do not cut useful explanations merely to fit the
+   dialog without scrolling. There is no store character limit on this in-app message. No Markdown, links, emoji,
+   introductory paragraph or version number in the body.
+   Translate the same bullets into natural Hungarian and escape XML correctly. Keep `whats_new_title` as the
+   localized title with its `%1$s` version placeholder. Replace the previous message rather than appending history.
+   **Empty notes are valid:** when the user wants no notes for a very small release, or there is no user-facing
+   change to announce, explicitly set `<string name="whats_new_message"></string>` in **both** files. Never leave
+   the previous release's text behind. Blank or whitespace-only messages suppress the dialog; the app still records
+   the version as handled. The first installed version is always skipped, whatever its message contains.
+
+8. **Always regenerate Android baseline profiles.** Follow `app/baselineprofile/CLAUDE.md`'s recording procedure:
+   use an English emulator (boot `Resizable_Experimental` if needed), wait for it to finish booting, and select it
+   explicitly with `ANDROID_SERIAL` when several devices are connected. Uninstall `com.pandulapeter.campfire` only
+   from that recording emulator if present, to start with a fresh library and avoid signing conflicts; never
+   uninstall the `.debug` app or touch a user's physical device. Run:
+   ```bash
+   ./gradlew :app:android:generateBaselineProfile
+   ```
+   Verify that both `baseline-prof.txt` and `startup-prof.txt` in
+   `app/android/src/main/generated/baselineProfiles` are nonempty and include app rules; the baseline profile must
+   also contain `androidx/navigation3` and `org/koin` rules. Leave both generated files in the working tree for
+   review with the localized messages. Run this even for empty notes and releases without startup changes; never
+   move generation into publishing CI. If recording is blocked, finish the resources and draft, report the exact
+   blocker and command still needed, and do not claim the release preparation is complete.
+
+9. **Write the draft** to `.release-notes/<version>.md` (create the directory; `/.release-notes/` is
    gitignored, so these scratch files stay untracked). The file's contents are the release body and
    nothing else — no preamble, no headings above the bullets, no "generated by", no meta commentary —
-   ending in the hidden store block described below. Never write a second file. Then tell the
+   ending in the hidden store block described below. For empty notes omit the visible bullets and leave the
+   `whats-new en-US` block empty; still include every store-control comment. Never write a second draft file.
+   The tracked resources and generated profiles above are required changes, not extra drafts. Then tell the
    user, briefly:
+   - whether the in-app message was updated or cleared, and whether both Android profiles were regenerated;
    - the path, and that the file is a throwaway to delete after pasting;
    - to paste **all of it** into the description of a new release tagged `<version>` on the commit
      that carries that `campfire.versionName` (`publish-all.yml` refuses a tag that disagrees with it), with
@@ -74,7 +121,8 @@ them. If a change has no effect a user could notice, it is not in the notes.
      certification (each published as soon as it passes), and attaches the Linux packages to the release
      itself — so the notes never list or link downloads.
 
-8. **Do not create the tag, the release, or commit anything.** Drafting the notes is the whole job.
+10. **Do not create the tag, the release, or commit anything.** Leave the draft, resources and generated profiles
+    ready for review. Their commit must be included in the version's tag before publishing.
 
 ## Style — the GitHub release body
 
@@ -127,6 +175,7 @@ all of them are always written:
 - **500 characters at most**, newlines included — Play's limit, the tightest of the stores. Check it with
   a real interpreter (e.g. Python's `len()` on the text between the comment's first line and its `-->`),
   not by eyeballing it, and report the count back. Shorten wording before dropping a bullet.
+- **An empty block is valid** for a small release with no notes. It has zero characters and no placeholder bullet.
 - **No markdown**: no links, no bold, no backticks. Plain `-` bullets and plain text only. Nothing in the
   block may contain `-->`.
 - **`play-store update-priority`** is Play's in-app update priority. Always write it, with **0** unless the user asked for something else, so the user can see

@@ -69,6 +69,8 @@ data class UserPreferences(
     /** The order the library's languages are offered in, a standing choice of its own like [tagSortingMode]. */
     val languageSortingMode: LabelSortingMode,
     val printSettings: PrintSettings = PrintSettings(),
+    /** Versions already introduced here, including the first installed version whose introduction is skipped. */
+    val seenWhatsNewVersions: Set<String> = emptySet(),
 ) {
 
     companion object {

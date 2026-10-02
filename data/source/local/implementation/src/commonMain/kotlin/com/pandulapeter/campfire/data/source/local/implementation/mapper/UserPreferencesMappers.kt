@@ -41,6 +41,7 @@ internal fun UserPreferencesDocument.toModel() = UserPreferences(
     tagSortingMode = UserPreferences.LabelSortingMode.entries.firstOrNull { it.id == tagSortingMode } ?: UserPreferences.LabelSortingMode.BY_USAGE,
     languageSortingMode = UserPreferences.LabelSortingMode.entries.firstOrNull { it.id == languageSortingMode } ?: UserPreferences.LabelSortingMode.BY_USAGE,
     printSettings = printSettings.toModel(),
+    seenWhatsNewVersions = seenWhatsNewVersions,
 )
 
 internal fun UserPreferences.toDocument() = UserPreferencesDocument(
@@ -64,6 +65,7 @@ internal fun UserPreferences.toDocument() = UserPreferencesDocument(
     tagSortingMode = tagSortingMode.id,
     languageSortingMode = languageSortingMode.id,
     printSettings = printSettings.toDocument(),
+    seenWhatsNewVersions = seenWhatsNewVersions,
 )
 
 internal fun PrintSettingsDocument.toModel() = PrintSettings(

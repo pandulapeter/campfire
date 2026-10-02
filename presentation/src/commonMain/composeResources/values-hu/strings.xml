@@ -511,6 +511,10 @@
     <string name="settings_sync_redirect_page_title">A Campfire csatlakozott</string>
     <string name="settings_sync_redirect_page_message">Bezárhatod ezt a lapot, és visszatérhetsz az alkalmazásba.</string>
 
+    <!-- What's new, shown once per version after the first installed version -->
+    <string name="whats_new_title">Újdonságok a Campfire %1$s verziójában</string>
+    <string name="whats_new_message">Importálj még több dalt a továbbfejlesztett PDF-importálással, nyomtass dalokat akár négy oszlopban, és tedd rendezettebbé a dalaidat a szerkesztő ChordPro formázása funkciójával.</string>
+
     <!-- Welcome sheet, shown once on the first run -->
     <string name="welcome_title">Üdv a Campfire-ben!</string>
     <string name="welcome_message">Kezdésnek válassz egy neked tetsző megjelenést, később bármikor módosíthatod.</string>

@@ -14,6 +14,7 @@ import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.scaleIn
 import androidx.compose.animation.scaleOut
+import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.interaction.PressInteraction
 import androidx.compose.foundation.layout.Arrangement
@@ -34,6 +35,7 @@ import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.only
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.safeDrawing
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.lazy.LazyColumn
@@ -181,6 +183,9 @@ import com.pandulapeter.campfire.presentation.resources.welcome_open_settings
 import com.pandulapeter.campfire.presentation.resources.welcome_settings_hint
 import com.pandulapeter.campfire.presentation.resources.welcome_settings_hint_sync
 import com.pandulapeter.campfire.presentation.resources.welcome_title
+import com.pandulapeter.campfire.presentation.resources.whats_new_title
+import com.pandulapeter.campfire.presentation.resources.whats_new_message
+import com.pandulapeter.campfire.presentation.CAMPFIRE_VERSION_NAME
 import com.pandulapeter.campfire.presentation.ui.CampfireViewModel
 import com.pandulapeter.campfire.presentation.ui.PickerFilterOptions
 import com.pandulapeter.campfire.presentation.ui.components.ActionListItem
@@ -442,9 +447,61 @@ internal fun CampfireDialogs(
             viewModel = viewModel,
         )
 
+        CampfireViewModel.DialogType.WhatsNew -> WhatsNewDialog(onDismiss = viewModel::dismissDialog)
+
         null -> Unit
     }
 }
+
+/**
+ * Each change gets its own row so wrapped lines stay aligned with the words rather than the bullet. Only the list
+ * scrolls: the title and the way back to the songbook stay visible, even with a long release or larger interface text.
+ */
+@Composable
+private fun WhatsNewDialog(
+    onDismiss: () -> Unit,
+) = AlertDialog(
+    modifier = Modifier.widthIn(max = 480.dp),
+    onDismissRequest = onDismiss,
+    title = { Text(stringResource(Res.string.whats_new_title, CAMPFIRE_VERSION_NAME)) },
+    text = {
+        val scrollState = rememberScrollState()
+        val message = stringResource(Res.string.whats_new_message)
+        val changes = remember(message) {
+            message.lineSequence().map { it.trim().removePrefix("•").trim() }.filter { it.isNotBlank() }.toList()
+        }
+        val bulletColor = MaterialTheme.colorScheme.primary
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .heightIn(max = 420.dp)
+                .fadingVerticalEdges(scrollState)
+                .verticalScroll(scrollState)
+                .padding(vertical = 4.dp),
+            verticalArrangement = Arrangement.spacedBy(16.dp),
+        ) {
+            changes.forEach { change ->
+                Row(
+                    modifier = Modifier.fillMaxWidth().semantics(mergeDescendants = true) {},
+                    horizontalArrangement = Arrangement.spacedBy(12.dp),
+                ) {
+                    Canvas(modifier = Modifier.padding(top = 10.dp).size(5.dp)) {
+                        drawCircle(color = bulletColor)
+                    }
+                    Text(
+                        modifier = Modifier.weight(1f),
+                        text = change,
+                        style = MaterialTheme.typography.bodyLarge,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    )
+                }
+            }
+        }
+    },
+    confirmButton = {
+        Button(onClick = onDismiss) { Text(stringResource(Res.string.done)) }
+    },
+)
 
 /**
  * The first run's one screen of its own: a line about what the app is, the two choices that decide how all of it
