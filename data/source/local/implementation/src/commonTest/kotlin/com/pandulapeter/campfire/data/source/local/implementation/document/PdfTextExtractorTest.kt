@@ -236,6 +236,18 @@ class PdfTextExtractorTest {
     }
 
     @Test
+    fun type3WidthsUseTheFontMatrix() {
+        val file = PdfFile(PdfTestWriter.song("BT /F1 10 Tf 50 700 Td (text) Tj ET"))
+        fun font(matrix: String) = PdfFont(
+            file,
+            PdfSyntax("<< /Subtype /Type3 /FontMatrix [$matrix 0 0 $matrix 0 0] /FirstChar 65 /Widths [100] /Encoding << /Differences [65 /A] >> >>".encodeToByteArray()).next() as PdfDictionary,
+        )
+        assertEquals(1000.0, font("0.01").decode(byteArrayOf(65)).first().width, 1e-9)
+        assertEquals(100.0, font("0.001").decode(byteArrayOf(65)).first().width)
+        assertEquals(500.0, font("0.01").decode(byteArrayOf(66)).first().width)
+    }
+
+    @Test
     fun cachedReferenceChainsResolveEveryTimeAndCyclesAreRejected() {
         val writer = PdfTestWriter()
         writer.add("2 0 R")

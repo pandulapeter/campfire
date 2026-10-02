@@ -22,7 +22,16 @@ internal class PdfFont(private val file: PdfFile, dictionary: PdfDictionary) {
     private val lengths = mutableSetOf<Int>()
     private val encoding: Array<String?> = arrayOfNulls(256)
     private val widths = mutableMapOf<Int, Double>()
-    private val defaultWidth = if (cid) file.number(descendant["DW"], 1000.0) else file.number(descriptor?.get("MissingWidth"), if (monospace) 600.0 else 500.0)
+    /**
+     * A Type 3 font's widths are in glyph space, which its matrix maps to text space; every other simple font's are in
+     * thousandths of an em already. Declared before [defaultWidth], which reads it while the font is being constructed.
+     */
+    private val widthScale = if (dictionary["Subtype"].name() == "Type3") {
+        file.array(dictionary["FontMatrix"]).firstOrNull()?.let { file.number(it) }?.takeIf { it.isFinite() && it > 0.0 }?.times(1000.0) ?: 1.0
+    } else 1.0
+    /** Only a width the font gives is scaled: the fallback is a guess in thousandths of an em already. */
+    private val defaultWidth = if (cid) file.number(descendant["DW"], 1000.0)
+    else (file.resolve(descriptor?.get("MissingWidth")) as? PdfNumber)?.value?.times(widthScale) ?: if (monospace) 600.0 else 500.0
     private var encodedLength = if (cid) 2 else 1
 
     init {
@@ -71,7 +80,7 @@ internal class PdfFont(private val file: PdfFile, dictionary: PdfDictionary) {
     private fun simpleWidths() {
         val first = file.number(dictionaryValue("FirstChar")).toInt()
         val values = file.array(dictionaryValue("Widths"))
-        if (values.isNotEmpty()) values.forEachIndexed { index, value -> widths[first + index] = file.number(value).coerceIn(0.0, 10_000.0) }
+        if (values.isNotEmpty()) values.forEachIndexed { index, value -> widths[first + index] = (file.number(value) * widthScale).coerceIn(0.0, 10_000.0) }
         else if (isStandardFont()) {
             val metrics = if (baseName.startsWith("Times-")) timesWidths else helveticaWidths
             for (code in 32..126) widths[code] = if (monospace) 600.0 else metrics[code - 32].toDouble()
