@@ -16,11 +16,22 @@ object ChordProSplitter {
 
     fun split(text: String): List<String> {
         val parts = mutableListOf<MutableList<String>>(mutableListOf())
+        var delegatedEnvironment: String? = null
         ChordProSyntax.splitLines(text.withoutByteOrderMarks()).forEach { rawLine ->
-            val directive = ChordProSyntax.matchDirective(rawLine.trim())
+            val trimmedLine = rawLine.trim()
+            // Inside an environment handed to another program a `{ns}` is that program's text, as the parser reads it, and
+            // only its own end closes it; one the file never closes takes the rest of the file, which the parser does too.
+            if (delegatedEnvironment != null) {
+                val end = ChordProSyntax.matchDelegatedDirective(trimmedLine)?.name?.let(ChordProSyntax::endOfEnvironment)
+                if (end == delegatedEnvironment) delegatedEnvironment = null
+                parts.last() += rawLine
+                return@forEach
+            }
+            val directive = ChordProSyntax.matchDirective(trimmedLine)
             if (directive != null && (directive.name == "new_song" || directive.name == "ns")) {
                 parts += mutableListOf<String>()
             } else {
+                delegatedEnvironment = directive?.name?.let(ChordProSyntax::startOfEnvironment)?.takeIf { it in ChordProSyntax.delegateEnvironments }
                 parts.last() += rawLine
             }
         }

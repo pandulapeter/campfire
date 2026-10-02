@@ -35,6 +35,30 @@ class ChordProSplitterTest {
     }
 
     @Test
+    fun `new_song inside a delegated environment is part of it`() {
+        listOf("abc", "ly", "svg", "textblock").forEach { environment ->
+            val text = "{title: A}\n{start_of_$environment}\nx\n{ns}\n{new_song}\ny\n{end_of_$environment}"
+
+            assertEquals(listOf(text), ChordProSplitter.split(text), environment)
+        }
+    }
+
+    @Test
+    fun `new_song after a delegated environment still splits the file`() {
+        assertEquals(
+            listOf("{title: A}\n{start_of_textblock}\nx\n{end_of_textblock}", "{title: B}"),
+            ChordProSplitter.split("{title: A}\n{start_of_textblock}\nx\n{end_of_textblock}\n{ns}\n{title: B}"),
+        )
+    }
+
+    @Test
+    fun `an unclosed delegated environment takes the rest of the file`() {
+        val text = "{title: A}\n{start_of_ly}\nx\n{ns}\n{title: B}"
+
+        assertEquals(listOf(text), ChordProSplitter.split(text))
+    }
+
+    @Test
     fun `parts without any content are dropped`() {
         assertEquals(listOf("{title: Only One}"), ChordProSplitter.split("{ns}\n\n{title: Only One}\n\n{ns}\n \n{ns}"))
     }
