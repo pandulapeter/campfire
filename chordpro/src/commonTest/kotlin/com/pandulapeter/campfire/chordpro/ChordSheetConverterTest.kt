@@ -144,6 +144,8 @@ class ChordSheetConverterTest {
     @Test
     fun chordsNeverSplitSupplementaryCharacters() {
         assertEquals("[C]Hel😀[G]lo wor\n", convert("C   G\nHel😀lo wor"))
+        assertEquals("[A]x😀[G]hello\n", convert("A G\nx😀hello"))
+        assertEquals("[C]😀hello😀[G]\n", convert("C       G\n😀hello😀"))
         for (text in listOf("C   G\nHel😀lo wor", "C G\n😀hello😀", "C      G\n😀hello😀")) {
             val result = convert(text)
             for (index in result.indices) {

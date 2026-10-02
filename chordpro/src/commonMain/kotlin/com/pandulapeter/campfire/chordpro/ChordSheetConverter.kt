@@ -405,7 +405,8 @@ object ChordSheetConverter {
                 val due = insertions[index].orEmpty()
                 if (splitsSurrogate(escaped, index)) carried = due
                 else (carried + due).takeIf { it.isNotEmpty() }?.let { values ->
-                    if (index == escaped.length && isNotEmpty() && last() != ' ') append(' ')
+                    // A chord carried past a final emoji belongs to it, so only a chord beyond the lyrics is set apart.
+                    if (index == escaped.length && carried.isEmpty() && isNotEmpty() && last() != ' ') append(' ')
                     append(values.joinToString(if (index == escaped.length) " " else ""))
                     carried = emptyList()
                 }
