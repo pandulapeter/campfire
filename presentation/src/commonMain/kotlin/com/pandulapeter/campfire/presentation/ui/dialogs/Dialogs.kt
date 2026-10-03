@@ -827,9 +827,12 @@ private fun DeleteLibraryDialog(
             }
         },
         confirmButton = {
-            TextButton(
+            BottomSheetConfirmButton(
                 enabled = isConfirmed,
-                colors = ButtonDefaults.textButtonColors(contentColor = MaterialTheme.colorScheme.error),
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = MaterialTheme.colorScheme.error,
+                    contentColor = MaterialTheme.colorScheme.onError,
+                ),
                 onClick = deleteLibrary,
             ) { Text(stringResource(Res.string.delete)) }
         },
@@ -911,10 +914,13 @@ private fun SetlistDetailsDialog(
     }
     var description by rememberSaveable { mutableStateOf(initialDescription) }
     // Saved as its ISO text, since a LocalDate is nothing the saved instance state of every platform can hold.
-    var dateText by rememberSaveable { mutableStateOf((initialDate ?: today()).toString()) }
+    val startingDateText = rememberSaveable { (initialDate ?: today()).toString() }
+    var dateText by rememberSaveable { mutableStateOf(startingDateText) }
     val date = LocalDate.parse(dateText)
     var isCountdownShown by rememberSaveable { mutableStateOf(initialIsCountdownShown) }
     val isValid = setlistTitle.text.isNotBlank()
+    val hasChanges = setlistTitle.text.trim() != initialTitle.trim() || description.trim() != initialDescription.trim() ||
+        dateText != startingDateText || isCountdownShown != initialIsCountdownShown
     var hasTitleBeenFocused by rememberSaveable { mutableStateOf(false) }
     val scrollState = rememberScrollState()
     val focusRequester = rememberFirstFieldFocusRequester(isFocused = isTitleFocused)
@@ -972,8 +978,8 @@ private fun SetlistDetailsDialog(
             }
         },
         confirmButton = {
-            TextButton(
-                enabled = isValid,
+            BottomSheetConfirmButton(
+                enabled = isValid && hasChanges,
                 onClick = { confirmOnce { onConfirm(setlistTitle.text, description, date, isCountdownShown) } },
             ) { Text(confirmLabel) }
         },
@@ -1093,8 +1099,9 @@ private fun SetlistDateField(
             title = stringResource(Res.string.setlists_pick_date),
             onDismiss = dismiss,
             actions = {
-                TextButton(
-                    enabled = state.selectedDateMillis != null,
+                BottomSheetConfirmButton(
+                    enabled = state.selectedDateMillis != null &&
+                        state.selectedDateMillis != date.atStartOfDayIn(TimeZone.UTC).toEpochMilliseconds(),
                     onClick = {
                         state.selectedDateMillis?.let { onDateChange(Instant.fromEpochMilliseconds(it).toLocalDateTime(TimeZone.UTC).date) }
                         dismiss()
@@ -1179,7 +1186,7 @@ private fun NewSongDialog(
             }
         },
         confirmButton = {
-            TextButton(enabled = isValid, onClick = create) { Text(stringResource(Res.string.create)) }
+            BottomSheetConfirmButton(enabled = isValid, onClick = create) { Text(stringResource(Res.string.create)) }
         },
     )
 }
@@ -1229,6 +1236,13 @@ private fun SongTagsDialog(
     val orderedMatches = remember(matches, tagOrder) { tagOrder.ordered(matches) { it } }
     val typedTag = query.trim()
     val spelledTag = offeredTags.firstOrNull { it.equals(typedTag, ignoreCase = true) }
+    // Include a tag still in the field, since Save commits it too.
+    val tagsToSave = when {
+        typedTag.isEmpty() -> selectedTags
+        spelledTag != null -> if (spelledTag in selectedTags) selectedTags else selectedTags + spelledTag
+        else -> selectedTags + typedTag
+    }
+    val hasTagChanges = tagsToSave.map { it.lowercase() }.toSet() != dialog.song.tags.map { it.lowercase() }.toSet()
     val focusRequester = rememberFirstFieldFocusRequester()
     val keyboardController = LocalSoftwareKeyboardController.current
     // The keyboard is put away two frames after Done rather than straight from it: the web build focuses its text input
@@ -1337,16 +1351,10 @@ private fun SongTagsDialog(
             }
         },
         confirmButton = {
-            TextButton(
+            BottomSheetConfirmButton(
+                enabled = hasTagChanges,
                 onClick = {
-                    // A tag typed but not entered yet is still one the user meant to put on the song, spelled as the library
-                    // spells it.
-                    val tags = when {
-                        typedTag.isEmpty() -> selectedTags
-                        spelledTag != null -> if (spelledTag in selectedTags) selectedTags else selectedTags + spelledTag
-                        else -> selectedTags + typedTag
-                    }
-                    viewModel.setSongTags(fileName = dialog.song.fileName, isEditorDraft = dialog.isEditorDraft, tags = tags, offeredTags = offeredTags)
+                    viewModel.setSongTags(fileName = dialog.song.fileName, isEditorDraft = dialog.isEditorDraft, tags = tagsToSave, offeredTags = offeredTags)
                     viewModel.dismissDialog()
                 },
             ) { Text(stringResource(Res.string.save)) }
@@ -1485,7 +1493,8 @@ private fun SongLanguagesDialog(
             }
         },
         confirmButton = {
-            TextButton(
+            BottomSheetConfirmButton(
+                enabled = selectedCodes != dialog.song.languages.toSet(),
                 onClick = {
                     viewModel.setSongLanguages(fileName = dialog.song.fileName, isEditorDraft = dialog.isEditorDraft, codes = selectedCodes.toList())
                     viewModel.dismissDialog()

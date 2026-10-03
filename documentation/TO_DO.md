@@ -8,10 +8,8 @@
  * https://mozilla.org/MPL/2.0/.
 -->
 # To do
-- Songs search: glitchy return transition if the song card is partially covered
 - Window inset handling issues related to bottom sheets
 - Edit setlist button is too prominent
-- Save / Create / CTA button on bottom sheets should match the look from the cover art bottom sheet
 - Metadata / tags / languages / links Save button is confusing in the Editor. Also, they should open with the most recent data from the Editor
 - Edit metadata icon could be moved to the header of the Song details bottom sheet, empty state would be simpler this way . Set cover art button as well, maybe the sheet could repeat the cover art
 - Maybe all bottom sheets with song names in their headers could show the thumbail

@@ -163,7 +163,7 @@ internal fun CoverArtSearchSheet(
             CoverArtSearchActions(
                 canRemove = dialog.song.coverArtUrl != null,
                 canSave = when (mode) {
-                    CoverArtSheetMode.SEARCH -> selectedUrl != null
+                    CoverArtSheetMode.SEARCH -> selectedUrl != null && selectedUrl != dialog.song.coverArtUrl
                     CoverArtSheetMode.ADDRESS -> usableAddress != null && usableAddress != dialog.song.coverArtUrl
                 },
                 onRemove = {
@@ -721,8 +721,7 @@ private fun CoverArtSearchActions(
             )
         }
     }
-    Button(
-        modifier = Modifier.padding(start = 4.dp, end = 8.dp),
+    BottomSheetConfirmButton(
         enabled = canSave,
         onClick = onSave,
     ) {

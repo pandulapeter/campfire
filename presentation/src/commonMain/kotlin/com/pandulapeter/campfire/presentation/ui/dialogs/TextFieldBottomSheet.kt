@@ -12,6 +12,9 @@ package com.pandulapeter.campfire.presentation.ui.dialogs
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.padding
+import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonColors
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ProvideTextStyle
 import androidx.compose.runtime.Composable
@@ -83,3 +86,17 @@ internal fun Modifier.retainSheetContentHeight(contentPadding: PaddingValues): M
         layout(placeable.width, placeable.height) { placeable.placeRelative(0, 0) }
     }
 }
+
+/** The filled confirmation action shared by forms in a sheet's header. */
+@Composable
+internal fun BottomSheetConfirmButton(
+    onClick: () -> Unit,
+    enabled: Boolean = true,
+    colors: ButtonColors = ButtonDefaults.buttonColors(),
+    content: @Composable () -> Unit,
+) = Button(
+    modifier = Modifier.padding(start = 4.dp, end = 8.dp),
+    onClick = onClick,
+    enabled = enabled,
+    colors = colors,
+) { content() }

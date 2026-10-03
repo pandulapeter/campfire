@@ -27,7 +27,6 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -101,7 +100,9 @@ internal fun SongLinksDialog(
     }
     val links = rows.map { it.link }
     val urls = links.map { ChordProLinks.usableUrl(it.url) }
-    val canSave = urls.all { it != null } && urls.distinct().size == urls.size
+    val normalizedLinks = links.map { it.normalized() }
+    val canSave = urls.all { it != null } && urls.distinct().size == urls.size &&
+        normalizedLinks != dialog.links.map { it.normalized() }
     TextFieldBottomSheet(
         onDismissRequest = { viewModel.dismissSheet(dialog) },
         title = stringResource(Res.string.song_details_links_edit),
@@ -147,7 +148,7 @@ internal fun SongLinksDialog(
             }
         },
         confirmButton = {
-            TextButton(
+            BottomSheetConfirmButton(
                 enabled = canSave,
                 onClick = {
                     viewModel.setSongLinks(fileName = dialog.song.fileName, isEditorDraft = dialog.isEditorDraft, links = links, offeredLinks = dialog.links)
@@ -297,4 +298,10 @@ private fun <T> List<T>.swapped(first: Int, second: Int) = toMutableList().apply
 private val songLinkRowsSaver = listSaver<List<SongLinkRow>, String>(
     save = { rows -> rows.flatMap { listOf(it.link.url, it.link.name.orEmpty()) } },
     restore = { values -> values.chunked(2).map { ChordProLink(url = it[0], name = it[1].takeIf(String::isNotEmpty)) }.toRows() },
+)
+
+/** Compare the address and label as they will be written, keeping link order significant. */
+private fun ChordProLink.normalized() = copy(
+    url = ChordProLinks.usableUrl(url).orEmpty(),
+    name = name?.filterNot { it == '{' || it == '}' }?.replace(Regex("\\s+"), " ")?.trim()?.takeIf { it.isNotEmpty() },
 )

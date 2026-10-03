@@ -20,7 +20,6 @@ import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -98,7 +97,8 @@ internal fun SongMetadataDialog(
             }
         },
         confirmButton = {
-            TextButton(
+            BottomSheetConfirmButton(
+                enabled = Field.entries.any { values[it].orEmpty().trim() != dialog.values[it].orEmpty().trim() },
                 onClick = {
                     viewModel.setSongMetadata(fileName = dialog.song.fileName, isEditorDraft = dialog.isEditorDraft, values = values, offeredValues = dialog.values)
                     viewModel.dismissDialog()
