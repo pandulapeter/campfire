@@ -365,14 +365,18 @@ private fun LoadedSongEditor(
     // least height of all.
     val windowContainerSize = LocalWindowInfo.current.containerSize
     val density = LocalDensity.current
+    val isSmallScreen = with(density) { minOf(windowContainerSize.width, windowContainerSize.height).toDp() } < SMALL_SCREEN_SIZE
     val imeHeight = with(density) { WindowInsets.ime.getBottom(this).toDp() }
-    // With the keyboard up in a short window the second control row and the insertion rows would leave the field
-    // fewer than three lines on the smallest phone, so they leave while it is up. Only their visibility follows the
-    // keyboard: the fold and the pane the user chose are untouched, and are what comes back when it goes.
-    val isTypingInShortWindow = imeHeight > 0.dp && with(density) { windowContainerSize.height.toDp() } - imeHeight < SHORT_WINDOW_HEIGHT
+    val isKeyboardVisible = imeHeight > 0.dp
+    val isTypingInShortWindow = isKeyboardVisible && with(density) { windowContainerSize.height.toDp() } - imeHeight < SHORT_WINDOW_HEIGHT
     CompactKeyboardEffect(isEnabled = isTypingInShortWindow && LocalWindowInfo.current.containerDpSize.height < SHORT_WINDOW_HEIGHT)
     var isToolbarExpanded by rememberSaveable {
-        mutableStateOf(with(density) { minOf(windowContainerSize.width, windowContainerSize.height).toDp() } >= SMALL_SCREEN_SIZE)
+        mutableStateOf(!isSmallScreen)
+    }
+    // Collapse once when the keyboard appears. The user can reopen the shortcuts while typing, and closing
+    // the keyboard leaves their current choice intact.
+    LaunchedEffect(isKeyboardVisible) {
+        if (isKeyboardVisible && (isSmallScreen || isTypingInShortWindow)) isToolbarExpanded = false
     }
     // Key events only travel along the focus path, and nothing in the editor is focused until the text is clicked,
     // nor at all while the preview is the only pane - or after the panes change places, which composes the field
@@ -468,52 +472,50 @@ private fun LoadedSongEditor(
             bottomContent = {
                 // Transposing, switching pane and folding the insertions away are the things here that do not write at
                 // the caret, so they are the ones that stay when the insertions leave.
-                AnimatedVisibility(visible = !isTypingInShortWindow) {
-                    Row(
-                        modifier = Modifier.padding(
-                            start = contentPadding.calculateStartPadding(layoutDirection) + 16.dp,
-                            end = contentPadding.calculateEndPadding(layoutDirection) + 4.dp,
-                            bottom = 8.dp,
+                Row(
+                    modifier = Modifier.padding(
+                        start = contentPadding.calculateStartPadding(layoutDirection) + 16.dp,
+                        end = contentPadding.calculateEndPadding(layoutDirection) + 4.dp,
+                        bottom = 8.dp,
+                    ),
+                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+                    verticalAlignment = Alignment.CenterVertically,
+                ) {
+                    TextTranspositionControls(
+                        // The summary reads the key into the standard notation, and the field is in the reader's.
+                        key = summary.metadata.key?.let(viewModel::editorKeyOf),
+                        // A key is enough on its own: it says what the song is in, and moving it is a transposition
+                        // even before a chord has been written under it.
+                        isEnabled = summary.hasChords || !summary.metadata.key.isNullOrBlank(),
+                        onTransposed = { semitones ->
+                            textFieldState.replaceWithTransposition(viewModel.transposeText(textFieldState.text.toString(), semitones, chordSpelling.accidentals))
+                        },
+                    )
+                    SegmentedChoice(
+                        // Not the whole of a desktop window's width: the row is a pair of controls rather than a
+                        // tab bar, and the stepper next to it would be lost at the end of a metre of segments.
+                        modifier = Modifier.weight(1f, fill = false).widthIn(max = PANE_CHOICE_MAX_WIDTH),
+                        options = listOfNotNull(
+                            EditorPanes.EDIT to stringResource(Res.string.song_editor_edit),
+                            EditorPanes.PREVIEW to stringResource(Res.string.song_editor_preview),
+                            if (hasRoomForSplitPanes) EditorPanes.SPLIT to stringResource(Res.string.song_editor_split) else null,
                         ),
-                        horizontalArrangement = Arrangement.spacedBy(8.dp),
-                        verticalAlignment = Alignment.CenterVertically,
-                    ) {
-                        TextTranspositionControls(
-                            // The summary reads the key into the standard notation, and the field is in the reader's.
-                            key = summary.metadata.key?.let(viewModel::editorKeyOf),
-                            // A key is enough on its own: it says what the song is in, and moving it is a transposition
-                            // even before a chord has been written under it.
-                            isEnabled = summary.hasChords || !summary.metadata.key.isNullOrBlank(),
-                            onTransposed = { semitones ->
-                                textFieldState.replaceWithTransposition(viewModel.transposeText(textFieldState.text.toString(), semitones, chordSpelling.accidentals))
-                            },
-                        )
-                        SegmentedChoice(
-                            // Not the whole of a desktop window's width: the row is a pair of controls rather than a
-                            // tab bar, and the stepper next to it would be lost at the end of a metre of segments.
-                            modifier = Modifier.weight(1f, fill = false).widthIn(max = PANE_CHOICE_MAX_WIDTH),
-                            options = listOfNotNull(
-                                EditorPanes.EDIT to stringResource(Res.string.song_editor_edit),
-                                EditorPanes.PREVIEW to stringResource(Res.string.song_editor_preview),
-                                if (hasRoomForSplitPanes) EditorPanes.SPLIT to stringResource(Res.string.song_editor_split) else null,
-                            ),
-                            selected = panes,
-                            isInline = true,
-                            shouldApplyPadding = false,
-                            onSelected = { selectedPanes = it },
-                        )
-                        // Disabled rather than hidden over a preview, so that the segments next to it do not change
-                        // width under the finger that has just picked one of them.
-                        EditorToolbarToggle(
-                            isExpanded = isToolbarExpanded,
-                            isLabeled = windowSize != WindowSize.COMPACT,
-                            isEnabled = panes != EditorPanes.PREVIEW,
-                            onToggled = { isToolbarExpanded = !isToolbarExpanded },
-                        )
-                    }
+                        selected = panes,
+                        isInline = true,
+                        shouldApplyPadding = false,
+                        onSelected = { selectedPanes = it },
+                    )
+                    // Disabled rather than hidden over a preview, so that the segments next to it do not change
+                    // width under the finger that has just picked one of them.
+                    EditorToolbarToggle(
+                        isExpanded = isToolbarExpanded,
+                        isLabeled = windowSize != WindowSize.COMPACT,
+                        isEnabled = panes != EditorPanes.PREVIEW,
+                        onToggled = { isToolbarExpanded = !isToolbarExpanded },
+                    )
                 }
                 // Nothing below can act on a preview, so the insertions leave with the field they write into.
-                AnimatedVisibility(visible = isToolbarExpanded && panes != EditorPanes.PREVIEW && !isTypingInShortWindow) {
+                AnimatedVisibility(visible = isToolbarExpanded && panes != EditorPanes.PREVIEW) {
                     EditorToolbar(
                         textFieldState = textFieldState,
                         text = text,

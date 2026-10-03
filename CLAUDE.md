@@ -172,8 +172,8 @@ localized in both languages.
 - **A short window gives the keyboard everything it can** (`SHORT_WINDOW_HEIGHT`, 480dp: a phone on its side, or the
   smallest one with the keyboard up). There a sheet's header and pinned controls scroll away with its content, above
   the keyboard; forms with text inputs use the same sheet layout, with their actions in the header; the editor's
-  second control row and Shortcuts leave while the keyboard is up, its title row is 48dp and its lines closer together,
-  so three lines of text stay above a landscape keyboard; both assignment sheets open without the keyboard; and the
+  Shortcuts collapse once when the keyboard appears, with the control row kept available to reopen them while typing;
+  its title row is 48dp and its lines closer together; both assignment sheets open without the keyboard; and the
   song details app bar hides as the song is scrolled down and comes back as it is scrolled up. On Android, typing in a short window also takes the status bar away until the keyboard goes
   (`CompactKeyboardEffect`, swiped back as a transient bar) — the only way a landscape keyboard leaves room for a
   field, a title row and three lines. A phone held upright gives song cards two title lines and narrower padding, and
