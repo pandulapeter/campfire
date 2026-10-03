@@ -117,7 +117,6 @@ import com.pandulapeter.campfire.presentation.resources.cancel
 import com.pandulapeter.campfire.presentation.resources.close
 import com.pandulapeter.campfire.presentation.resources.create
 import com.pandulapeter.campfire.presentation.resources.delete
-import com.pandulapeter.campfire.presentation.resources.done
 import com.pandulapeter.campfire.presentation.resources.ic_add
 import com.pandulapeter.campfire.presentation.resources.ic_calendar
 import com.pandulapeter.campfire.presentation.resources.ic_clear
@@ -1089,7 +1088,7 @@ private fun SetlistDateField(
                         state.selectedDateMillis?.let { onDateChange(Instant.fromEpochMilliseconds(it).toLocalDateTime(TimeZone.UTC).date) }
                         dismiss()
                     },
-                ) { Text(stringResource(Res.string.done)) }
+                ) { Text(stringResource(Res.string.save)) }
             },
         ) { contentPadding ->
             val calendarScrollState = rememberScrollState()
@@ -1198,7 +1197,7 @@ private fun SongTagsDialog(
     val userPreferences by viewModel.userPreferences.collectAsStateWithLifecycle()
     val sortingMode = userPreferences?.tagSortingMode ?: UserPreferences.LabelSortingMode.BY_USAGE
     var query by rememberSaveable { mutableStateOf("") }
-    // Saved, since the dialog outlives a recreated Activity and Done writes whatever is ticked at that moment.
+    // Saved, since the dialog outlives a recreated Activity and Save writes whatever is ticked at that moment.
     var selectedTags by rememberSaveable(dialog.song.fileName, stateSaver = stringListSaver) { mutableStateOf(dialog.song.tags) }
     var createdTags by rememberSaveable(dialog.song.fileName, stateSaver = stringListSaver) { mutableStateOf(emptyList()) }
     // The song's own tags first, in the order its file lists them, then the ones created here, then the rest of the
@@ -1325,7 +1324,7 @@ private fun SongTagsDialog(
                     viewModel.setSongTags(fileName = dialog.song.fileName, isEditorDraft = dialog.isEditorDraft, tags = tags, offeredTags = offeredTags)
                     viewModel.dismissDialog()
                 },
-            ) { Text(stringResource(Res.string.done)) }
+            ) { Text(stringResource(Res.string.save)) }
         },
     )
 }
@@ -1356,7 +1355,7 @@ private fun SongLanguagesDialog(
     val userPreferences by viewModel.userPreferences.collectAsStateWithLifecycle()
     val sortingMode = userPreferences?.languageSortingMode ?: UserPreferences.LabelSortingMode.BY_USAGE
     var query by rememberSaveable { mutableStateOf("") }
-    // Saved, since the dialog outlives a recreated Activity and Done writes whatever is ticked at that moment.
+    // Saved, since the dialog outlives a recreated Activity and Save writes whatever is ticked at that moment.
     var selectedCodes by rememberSaveable(
         dialog.song.fileName,
         stateSaver = listSaver<Set<String>, String>(save = { it.toList() }, restore = { it.toSet() }),
@@ -1458,7 +1457,7 @@ private fun SongLanguagesDialog(
                     viewModel.setSongLanguages(fileName = dialog.song.fileName, isEditorDraft = dialog.isEditorDraft, codes = selectedCodes.toList())
                     viewModel.dismissDialog()
                 },
-            ) { Text(stringResource(Res.string.done)) }
+            ) { Text(stringResource(Res.string.save)) }
         },
     )
 }

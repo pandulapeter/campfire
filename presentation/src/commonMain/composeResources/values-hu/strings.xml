@@ -392,9 +392,9 @@
     <string name="song_details_tags_manage">Címkék szerkesztése</string>
     <string name="song_details_tags_search">Címke keresése vagy létrehozása</string>
     <string name="song_details_tag_create">A(z) „%1$s” címke létrehozása</string>
-    <string name="song_details_metadata_edit">Meta-adatok szerkesztése</string>
+    <string name="song_details_metadata_edit">Daladatok szerkesztése</string>
     <string name="song_details_song_info">A dalról</string>
-    <string name="song_details_info_details">Adatok</string>
+    <string name="song_details_info_details">Daladatok</string>
     <string name="song_details_info_add">Hozzáadás</string>
     <plurals name="song_details_info_tags">
         <item quantity="one">Címke</item>

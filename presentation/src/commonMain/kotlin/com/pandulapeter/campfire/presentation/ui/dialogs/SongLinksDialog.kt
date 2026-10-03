@@ -83,7 +83,9 @@ internal fun SongLinksDialog(
     viewModel: CampfireViewModel,
     dialog: CampfireViewModel.DialogType.SongLinks,
 ) {
-    var rows by rememberSaveable(dialog.song.fileName, stateSaver = songLinkRowsSaver) { mutableStateOf(dialog.links.toRows()) }
+    var rows by rememberSaveable(dialog.song.fileName, stateSaver = songLinkRowsSaver) {
+        mutableStateOf(dialog.links.ifEmpty { listOf(ChordProLink(url = "")) }.toRows())
+    }
     val listState = rememberLazyListState()
     val coroutineScope = rememberCoroutineScope()
     fun move(index: Int, target: Int) {
