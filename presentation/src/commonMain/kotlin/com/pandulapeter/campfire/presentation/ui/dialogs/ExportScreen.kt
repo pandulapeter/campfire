@@ -18,7 +18,6 @@ import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.SpringSpec
 import androidx.compose.animation.core.VisibilityThreshold
 import androidx.compose.animation.core.animate
-import androidx.compose.animation.core.animateDpAsState
 import androidx.compose.animation.core.animateFloat
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.snap
@@ -64,6 +63,7 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.pager.HorizontalPager
+import androidx.compose.foundation.pager.PagerState
 import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.selection.triStateToggleable
@@ -145,7 +145,6 @@ import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.Density
 import androidx.compose.ui.unit.Dp
-import androidx.compose.ui.unit.DpSize
 import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.toSize
@@ -228,6 +227,7 @@ import com.pandulapeter.campfire.presentation.ui.CampfireViewModel
 import com.pandulapeter.campfire.presentation.ui.components.CampfireTopAppBar
 import com.pandulapeter.campfire.presentation.ui.components.CheckboxListItem
 import com.pandulapeter.campfire.presentation.ui.components.DelayedLoadingIndicator
+import com.pandulapeter.campfire.presentation.ui.components.LIST_ITEM_KEYLINE
 import com.pandulapeter.campfire.presentation.ui.components.SegmentedChoice
 import com.pandulapeter.campfire.presentation.ui.components.SettingsSectionTitle
 import com.pandulapeter.campfire.presentation.ui.components.fadingTopEdge
@@ -481,6 +481,36 @@ private fun ExportScreen(
         }
     }
     val hasPages = laidOut?.document?.pages?.isNotEmpty() == true
+    val pageCount = laidOut?.document?.pages?.size ?: 0
+    val pagerState = rememberPagerState(initialPage = state.page.coerceIn(0, maxOf(0, pageCount - 1))) { pageCount }
+    val pageScope = rememberCoroutineScope()
+    val pageResetSpec = MaterialTheme.motionScheme.defaultSpatialSpec<Float>()
+    var pageResetAnimation by remember { mutableStateOf<Job?>(null) }
+    // Keep paging alive even when the preview scrolls out of the portrait list.
+    LaunchedEffect(pageCount) {
+        if (pageCount > 0) pagerState.scrollToPage(state.page.coerceIn(0, pageCount - 1))
+    }
+    LaunchedEffect(pagerState) {
+        snapshotFlow { pagerState.settledPage }.collect { settled ->
+            if (pagerState.pageCount > 0) {
+                if (state.page != settled) {
+                    pageResetAnimation?.cancel()
+                    val initialView = state.pageView
+                    pageResetAnimation = pageScope.launch {
+                        // One spring moves zoom and focus together, returning the page smoothly to its fitted position.
+                        animate(0f, 1f, animationSpec = pageResetSpec) { value, _ ->
+                            val progress = value.coerceIn(0f, 1f)
+                            state.pageView = PageView(
+                                zoom = initialView.zoom + (1f - initialView.zoom) * progress,
+                                focus = initialView.focus + (Offset(0.5f, 0.5f) - initialView.focus) * progress,
+                            )
+                        }
+                    }
+                }
+                state.page = settled
+            }
+        }
+    }
     val canSave = isCurrent && hasPages && !isFileTransferActive
     // A tap while the pages are being laid out again for an option just changed is kept until they are, rather than
     // being refused: a floating action button has no disabled look to say it would be, and the layout takes a moment.
@@ -534,8 +564,6 @@ private fun ExportScreen(
         color = MaterialTheme.colorScheme.background,
     ) {
         val bottomInset = WindowInsets.contentEdges.only(WindowInsetsSides.Bottom).asPaddingValues().calculateBottomPadding()
-        var saveButtonSize by remember { mutableStateOf(DpSize.Zero) }
-        val density = LocalDensity.current
         Box(Modifier.fillMaxSize()) {
             Column(Modifier.fillMaxSize()) {
                 PrintTopAppBar(
@@ -596,31 +624,29 @@ private fun ExportScreen(
                                                 isCurrent = isCurrent,
                                                 renderer = renderer,
                                                 emptyMessage = emptyMessage,
-                                                // Beside the options the preview reaches down under the navigation bar and
-                                                // the save button floats over it with the page buttons; stacked, it ends
-                                                // above the options, which the save button floats over instead.
+                                                // Only the full-height preview needs room to fit a page above the floating controls.
                                                 bottomInset = if (isSideBySide) bottomInset else 0.dp,
                                                 areOptionsBelow = !isSideBySide,
-                                                saveButtonSize = if (isSideBySide) saveButtonSize else DpSize.Zero,
+                                                pagerState = pagerState,
                                                 magnifications = viewModel.printPreviewMagnifications,
-                                                page = state.page,
-                                                onPageSettled = { state.page = it },
                                                 pageView = { state.pageView },
-                                                onPageViewChanged = { state.pageView = it },
+                                                onPageViewChanged = {
+                                                    // A new zoom or pan gesture takes over from the automatic reset.
+                                                    pageResetAnimation?.cancel()
+                                                    state.pageView = it
+                                                },
                                             )
                                         }
                                     }
                                 }
                                 val options: @Composable (Modifier) -> Unit = { modifier ->
                                     PrintOptions(
-                                        modifier = modifier.then(
-                                            if (isSideBySide) Modifier else Modifier.padding(bottom = bottomInset + SAVE_BUTTON_CLEARANCE),
-                                        ),
+                                        modifier = modifier,
                                         source = state.source!!,
                                         settings = state.settings,
                                         selected = state.selected.orEmpty(),
-                                        // The stacked list ends above Save, so even an option at rest cannot be covered.
-                                        bottomPadding = if (isSideBySide) bottomInset + 8.dp else 8.dp,
+                                        // Scroll under the controls, with enough trailing space to bring the last option above them.
+                                        bottomPadding = bottomInset + if (isSideBySide) 8.dp else SAVE_BUTTON_CLEARANCE,
                                         header = if (isSideBySide) null else { { preview(Modifier.fillMaxWidth().height(360.dp)) } },
                                         onSelected = { if (isOpen) state.selected = it },
                                         onSettings = update,
@@ -634,14 +660,21 @@ private fun ExportScreen(
                             }
                         }
                     }
+                    if (content == PrintScreenContent.LOADED && !isFiles && hasPages) {
+                        PageButtons(
+                            modifier = Modifier.align(Alignment.TopEnd).padding(PAGE_MARGIN),
+                            page = pagerState.currentPage,
+                            pageCount = pageCount,
+                            onTurn = { target -> pageScope.launch { pagerState.animateScrollToPage(target.coerceIn(0, pageCount - 1)) } },
+                        )
+                    }
                 }
             }
             SaveButton(
                 modifier = Modifier
                     .align(Alignment.BottomEnd)
                     .windowInsetsPadding(WindowInsets.contentEdges.only(WindowInsetsSides.Bottom + WindowInsetsSides.End))
-                    .padding(16.dp)
-                    .onSizeChanged { saveButtonSize = with(density) { DpSize(it.width.toDp(), it.height.toDp()) } },
+                    .padding(16.dp),
                 isVisible = content == PrintScreenContent.LOADED && (exportProgress != null || if (isFiles) canExportFiles else hasPages),
                 progress = exportProgress,
                 onSave = { requestExport(ExportRequest.SAVE) },
@@ -1043,7 +1076,10 @@ private fun FormatChoice(
     isSetlist: Boolean,
     onSelected: (PrintSettings.Format) -> Unit,
 ) = Column {
-    SettingsSectionTitle(text = stringResource(Res.string.print_format))
+    SettingsSectionTitle(
+        text = stringResource(Res.string.print_format),
+        contentPadding = PaddingValues(start = LIST_ITEM_KEYLINE, end = LIST_ITEM_KEYLINE, top = 8.dp, bottom = 8.dp),
+    )
     SegmentedChoice(
         options = PrintSettings.Format.entries.map { option ->
             option to stringResource(
@@ -1226,10 +1262,8 @@ private sealed interface PreviewContent {
  *   of them chosen.
  * @param bottomInset What of the bottom of the pane the system bars take.
  * @param areOptionsBelow Whether the options are under the pane rather than beside it, at its start.
- * @param saveButtonSize The save button's, where it floats over the bottom of the pane too; zero where it does not.
+ * @param pagerState The pager shared with the page selector floating over the screen.
  * @param magnifications The touchpad pinches the window hears, see [CampfireViewModel.magnifyByTouchpad].
- * @param page The page asked for, which the screen keeps rather than the pager: after a rotation the layout starts over and
- *   there are no pages for a while, and a pager state restored on its own would clamp the saved page to the first one.
  * @param pageView How that page is zoomed and panned, kept by the screen for the same reason, and read where it is used,
  *   since the gestures that change it read it again before the next composition.
  */
@@ -1242,10 +1276,8 @@ private fun PrintPreview(
     emptyMessage: String?,
     bottomInset: Dp,
     areOptionsBelow: Boolean,
-    saveButtonSize: DpSize,
+    pagerState: PagerState,
     magnifications: Flow<Float>,
-    page: Int,
-    onPageSettled: (Int) -> Unit,
     pageView: () -> PageView,
     onPageViewChanged: (PageView) -> Unit,
 ) {
@@ -1271,10 +1303,8 @@ private fun PrintPreview(
                 renderer = renderer,
                 bottomInset = bottomInset,
                 areOptionsBelow = areOptionsBelow,
-                saveButtonSize = saveButtonSize,
+                pagerState = pagerState,
                 magnifications = magnifications,
-                page = page,
-                onPageSettled = onPageSettled,
                 pageView = pageView,
                 onPageViewChanged = onPageViewChanged,
             )
@@ -1300,15 +1330,12 @@ private fun PrintPages(
     renderer: PrintRenderer,
     bottomInset: Dp,
     areOptionsBelow: Boolean,
-    saveButtonSize: DpSize,
+    pagerState: PagerState,
     magnifications: Flow<Float>,
-    page: Int,
-    onPageSettled: (Int) -> Unit,
     pageView: () -> PageView,
     onPageViewChanged: (PageView) -> Unit,
 ) = BoxWithConstraints(Modifier.fillMaxSize()) {
     val pageCount = laidOut.document.pages.size
-    val pagerState = rememberPagerState(initialPage = page.coerceIn(0, pageCount - 1)) { pageCount }
     val coroutineScope = rememberCoroutineScope()
     val focusRequester = remember { FocusRequester() }
     val density = LocalDensity.current
@@ -1316,33 +1343,16 @@ private fun PrintPages(
     var viewportSize by remember { mutableStateOf(Size.Zero) }
     var pointerPosition by remember { mutableStateOf<Offset?>(null) }
     val aspectRatio = laidOut.document.width / laidOut.document.height
-    // The buttons are centered under the page. Where the pane is too narrow for them beside the save button, they are
-    // lifted over it rather than pushed off the middle; beside it they are level with it.
-    val hasSaveButton = saveButtonSize.width > 0.dp
-    val isBesideSaveButton = maxWidth / 2 + PAGE_BUTTONS_HALF_WIDTH + 8.dp <= maxWidth - PAGE_MARGIN - saveButtonSize.width
-    val pageButtonsBottom by animateDpAsState(
-        targetValue = bottomInset + PAGE_MARGIN + when {
-            !hasSaveButton -> 0.dp
-            isBesideSaveButton -> (saveButtonSize.height - PAGE_BUTTONS_HEIGHT) / 2
-            else -> saveButtonSize.height + PAGE_MARGIN
-        },
-        animationSpec = MaterialTheme.motionScheme.defaultSpatialSpec(),
-    )
-    val fitBottom = pageButtonsBottom + PAGE_BUTTONS_HEIGHT + PAGE_MARGIN
+    val fitBottom = if (areOptionsBelow) PAGE_MARGIN else bottomInset + SAVE_BUTTON_CLEARANCE
     val zoomAnimationSpec = MaterialTheme.motionScheme.defaultSpatialSpec<Float>()
     var zoomAnimation by remember { mutableStateOf<Job?>(null) }
     fun fitArea() = with(density) { fitArea(viewportSize, PAGE_MARGIN.toPx(), fitBottom.toPx()) }
-    // A new document keeps the page that was open, clamped to the pages it has.
-    LaunchedEffect(pageCount) { if (pageCount > 0) pagerState.scrollToPage(page.coerceIn(0, pageCount - 1)) }
-    // A page turned to opens whole. The page the pager starts on is the one the screen kept, zoomed as it was left, which
-    // is what the pager being composed again in another pane, or after a rotation, comes back to.
+    // Stop a double-tap zoom when paging hands control to the screen's animated reset.
     LaunchedEffect(pagerState) {
         var previous = pagerState.settledPage
         snapshotFlow { pagerState.settledPage }.collect { settled ->
-            if (pagerState.pageCount > 0) onPageSettled(settled)
             if (settled != previous) {
                 zoomAnimation?.cancel()
-                onPageViewChanged(PageView())
             }
             previous = settled
         }
@@ -1485,16 +1495,10 @@ private fun PrintPages(
             }
         }
         LayoutIndicator(isVisible = !isCurrent)
-        PageButtons(
-            modifier = Modifier.align(Alignment.BottomCenter).padding(bottom = pageButtonsBottom),
-            page = pagerState.currentPage,
-            pageCount = pageCount,
-            onTurn = ::turnTo,
-        )
     }
 }
 
-/** The page buttons and the count between them, on a pill of their own floating over the bottom of the page. */
+/** The page buttons and the count between them, on a pill floating below the toolbar. */
 @Composable
 private fun PageButtons(
     modifier: Modifier,
@@ -1505,6 +1509,7 @@ private fun PageButtons(
     modifier = modifier.height(PAGE_BUTTONS_HEIGHT),
     shape = CircleShape,
     color = MaterialTheme.colorScheme.surfaceContainerHigh,
+    shadowElevation = 6.dp,
 ) {
     Row(
         verticalAlignment = Alignment.CenterVertically,
@@ -1733,13 +1738,10 @@ private const val WHEEL_ZOOM_BASE = 1.15f
 /** The room around a page at a zoom of 1, and between two pages of the pager. */
 private val PAGE_MARGIN = 16.dp
 
-/** The height of the floating page buttons, fixed so that the page fits what they leave from the first frame. */
+/** The height of the floating page buttons. */
 private val PAGE_BUTTONS_HEIGHT = 48.dp
 
-/** Half the widest the page buttons get, two buttons around "Page 88 of 88", which they are kept that clear of the save button by. */
-private val PAGE_BUTTONS_HALF_WIDTH = 110.dp
-
-/** The room the stacked options leave under themselves for the save button, so that it never rests on one of them. */
+/** Trailing scroll space to bring the last item above the floating controls. */
 private val SAVE_BUTTON_CLEARANCE = 88.dp
 
 /** How long the options have to hold still before the pages are laid out again, so that a burst of steps is one layout. */

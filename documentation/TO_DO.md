@@ -12,7 +12,6 @@
 - Edit song screen fling issue on mobile (scroll snaps back to caret position)
 - Cover art bottom sheet: pinned header does not get updated by keyboard IME. Do we even need search input fields here?
 - Edit song screen should automatically hide the shortcuts section if the keyboard is visible on small screens
-- On th PDF export screen the FAB should float above the UI. Currently in portrait mode the scrollable content is unnecessarily padded below it. Also make the page selector / indicator float above the content too, center-aligned to the bottom of the screen (or to the left of the FAB)
 - Multi-select songs for bulk export or bulk edit (assign tags, languages, setlists)
 - Implement optionally auto-indexing similar sections within a song
 - Metronome: documentation/plans/metronome.md
