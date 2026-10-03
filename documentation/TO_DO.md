@@ -9,7 +9,6 @@
 -->
 # To do
 ## Bugs
-- Issue on touchscreen devices, Edit song screen: after placing the cursor somewhere in the text then performing a scroll / fling gesture on mobile, the scroll position jumps back to caret position
 - Window inset handling issues related to bottom sheets
 
 ## Improvements

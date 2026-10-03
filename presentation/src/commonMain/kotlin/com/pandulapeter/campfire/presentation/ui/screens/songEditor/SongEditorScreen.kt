@@ -710,30 +710,12 @@ private fun ChordProTextField(
         )
     }
     val bodyLarge = MaterialTheme.typography.bodyLarge
-    val density = LocalDensity.current
-    // The bottom of the padding this screen was handed is the navigation bar, or the keyboard wherever that reaches
-    // higher, and the two are spent differently here. The keyboard covers the bottom of the field whatever it is
-    // scrolled to, so what it covers beyond the bar is always taken off the field: the field then ends at the top of
-    // the keyboard, and keeping the caret in view - which it does whenever its size changes - keeps it above it. The
-    // bar and the room after the last line only mean anything once scrolled past, so they are spent at the end alone.
     val restingBottomInset = WindowInsets.contentEdges.asPaddingValues().calculateBottomPadding()
-    val endPadding = restingBottomInset + 32.dp
-    val endPaddingPx = with(density) { endPadding.roundToPx() }
-    // Unlike SongPreview's bottom padding, which sits inside its own verticalScroll and is therefore only ever
-    // spent once scrolled past the last line, this field's padding is outside the scrolling BasicTextField manages
-    // internally - there is no way to hand it a padding that only counts once the content runs out. Applying it
-    // unconditionally reserved that space at all times, edge-to-edge or not. Toggling it off is not simply a matter
-    // of asking whether the field is scrolled to its end, either: the padding being decided is also what the field
-    // measures its own scrollable height against, so removing it right at the end immediately makes the field think
-    // there is further to scroll, which puts the padding straight back - the two states chase each other forever.
-    // Requiring the field to have scrolled back up by at least the padding's own height before giving it up is what
-    // breaks that loop.
-    val respectsBottomInset = remember { mutableStateOf(false) }
-    LaunchedEffect(scrollState, endPaddingPx) {
-        snapshotFlow { scrollState.value to scrollState.maxValue }.collect { (value, maxValue) ->
-            respectsBottomInset.value = if (respectsBottomInset.value) value >= maxValue - endPaddingPx else value >= maxValue
-        }
-    }
+    // BasicTextField follows the caret whenever its viewport height changes. Keep the bottom spacing independent
+    // of the scroll position: adding or removing it at the end of a touch drag resizes the focused field and sends
+    // the scroll position back to the caret, interrupting the fling. Keyboard insets still resize it deliberately
+    // so that typing stays visible above the keyboard.
+    val endPadding = if (isCompactTyping) 0.dp else restingBottomInset + 32.dp
     BasicTextField(
         modifier = modifier
             // The field only ever scrolls along one axis of its own, the vertical one when it holds more than a line,
@@ -746,16 +728,15 @@ private fun ChordProTextField(
             .horizontalScroll(horizontalScrollState)
             // The keyboard reaches the field only through the content padding this screen was handed, see CampfireApp,
             // and only the part of it that covers the field is applied, once: applying the whole inset a second time
-            // shrinks the field to a couple of lines as soon as the keyboard comes up. There is no top padding for the
-            // same reason the bottom one is split: it would sit outside the field's own scrolling, so the text would
-            // scroll under a strip of nothing below the toolbar rather than up to its edge. The toolbar's own bottom
+            // shrinks the field to a couple of lines as soon as the keyboard comes up. Top padding would sit outside
+            // the field's own scrolling, so the text would scroll under a strip of nothing below the toolbar rather
+            // than up to its edge. The toolbar's own bottom
             // padding is the space between the two at rest.
             .padding(
                 EditorFieldPadding(
                     contentPadding = contentPadding,
                     restingBottomInset = restingBottomInset,
-                    endPadding = if (isCompactTyping) 0.dp else endPadding,
-                    respectsBottomInset = respectsBottomInset,
+                    endPadding = endPadding,
                 )
             ),
         state = textFieldState,
@@ -779,9 +760,9 @@ private fun ChordProTextField(
 
 /**
  * The padding around the editor's field, every side of it asked for while the field is laid out rather than while it
- * is composed: the bottom follows the keyboard, whose inset changes on every frame it slides for, and so does whether
- * the room after the last line is spent, which the field's own scrolling decides. Read while composing, either would
- * compose the whole field again on each of those frames.
+ * is composed: the bottom follows the keyboard, whose inset changes on every frame it slides for. Reading it while
+ * composing would compose the whole field again on each of those frames. Scrolling does not change this padding,
+ * so the field can keep its viewport height and let the caret move out of view during a drag or fling.
  *
  * Only the part of the handed padding that reaches higher than the resting inset is taken off the field, see
  * [ChordProTextField].
@@ -791,7 +772,6 @@ private class EditorFieldPadding(
     private val contentPadding: PaddingValues,
     private val restingBottomInset: Dp,
     private val endPadding: Dp,
-    private val respectsBottomInset: State<Boolean>,
 ) : PaddingValues {
 
     override fun calculateLeftPadding(layoutDirection: LayoutDirection) = contentPadding.calculateLeftPadding(layoutDirection) + 16.dp
@@ -801,7 +781,7 @@ private class EditorFieldPadding(
     override fun calculateRightPadding(layoutDirection: LayoutDirection) = contentPadding.calculateRightPadding(layoutDirection) + 16.dp
 
     override fun calculateBottomPadding() = (contentPadding.calculateBottomPadding() - restingBottomInset).coerceAtLeast(0.dp) +
-            if (respectsBottomInset.value) endPadding else 0.dp
+            endPadding
 }
 
 /**
