@@ -8,7 +8,8 @@
  * https://mozilla.org/MPL/2.0/.
 -->
 # To do
-- Triggering the search open / close transition while scrolling on the Songs screen makes the list jump
+- Songs search: glitchy return transition if the song card is partially covered
+- Window inset handling issues related to bottom sheets
 - Edit setlist button is too prominent
 - Save / Create / CTA button on bottom sheets should match the look from the cover art bottom sheet
 - Metadata / tags / languages / links Save button is confusing in the Editor. Also, they should open with the most recent data from the Editor

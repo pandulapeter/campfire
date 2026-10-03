@@ -310,7 +310,22 @@ private fun SongList(
     val appBarHeightPx = with(LocalDensity.current) { LIST_APP_BAR_HEIGHT.toPx() }
     val searchScroll = remember(listState, columnCount, appBarHeightPx) { SongSearchScrollAnchor(isSearchOpen) }
     SideEffect {
-        searchScroll.update(isSearchOpen, songGroups, listState, (appBarHeightPx * (1f - appBarOverlap().coverage)).roundToInt())
+        searchScroll.update(
+            open = isSearchOpen,
+            contents = songGroups,
+            isScrolling = listState.isScrollInProgress,
+            inset = (appBarHeightPx * (1f - appBarOverlap().coverage)).roundToInt(),
+        ) {
+            listState.layoutInfo.visibleItemsInfo.firstOrNull { it.contentType == "song" }?.let { card ->
+                val activeGroup = groups.indexOfFirst { group -> group.songs.any { songItemKey(it) == card.key } }
+                SongSearchScrollAnchor.Snapshot(
+                    cardIndex = card.index,
+                    cardTop = card.offset.y,
+                    position = SongSearchScrollAnchor.Position(listState.firstVisibleItemIndex, listState.firstVisibleItemScrollOffset),
+                    trailingHeaderCount = groups.drop(activeGroup + 1).count { it.header != null },
+                )
+            }
+        }
     }
     LaunchedEffect(listState, searchScroll) {
         snapshotFlow { listState.isScrollInProgress }.filter { it }.collect { searchScroll.cancel() }
@@ -351,7 +366,9 @@ private fun SongList(
     val gridModifier = remember(topFade, searchScroll, listState, appBarOverlap) {
         Modifier.fillMaxSize().layout { measurable, constraints ->
             val inset = LIST_APP_BAR_HEIGHT.toPx() * (1f - appBarOverlap().coverage)
-            searchScroll.keepCardInPlace(listState, inset.roundToInt())
+            searchScroll.positionFor(inset.roundToInt(), isScrolling = listState.isScrollInProgress)?.let { position ->
+                listState.requestScrollToItem(position.index, position.offset)
+            }
             val placeable = measurable.measure(constraints)
             layout(placeable.width, placeable.height) { placeable.placeRelative(0, 0) }
         }.listTopFadeViewport(topFade)
@@ -662,51 +679,4 @@ private fun Modifier.collapseSearchHeader(fraction: () -> Float) = clipToBounds(
     val removedHeight = (LIST_APP_BAR_HEIGHT.toPx() * (1f - fraction().coerceIn(0f, 1f))).roundToInt()
     val height = (placeable.height - removedHeight).coerceAtLeast(0)
     layout(placeable.width, height) { placeable.placeRelative(0, 0) }
-}
-
-/** Holds a visible card in screen coordinates, rather than matching two independent placement springs. */
-private class SongSearchScrollAnchor(private var isOpen: Boolean) {
-    private var contents: CampfireViewModel.SongGroups? = null
-    private var index: Int? = null
-    private var screenTop = 0
-    private var originalPosition: Pair<Int, Int>? = null
-    private var lastInset: Int? = null
-    var trailingHeaderCount = 0
-        private set
-
-    fun update(open: Boolean, groups: CampfireViewModel.SongGroups, state: LazyGridState, inset: Int) {
-        if (contents != null && contents != groups) cancel()
-        if (open == isOpen) return
-        isOpen = open
-        if (index == null) {
-            val card = state.layoutInfo.visibleItemsInfo.firstOrNull { it.contentType == "song" } ?: return
-            index = card.index
-            screenTop = card.offset.y + inset
-            contents = groups
-            val activeGroup = groups.groups.indexOfFirst { group -> group.songs.any { songItemKey(it) == card.key } }
-            trailingHeaderCount = groups.groups.drop(activeGroup + 1).count { it.header != null }
-            originalPosition = if (open) state.firstVisibleItemIndex to state.firstVisibleItemScrollOffset else null
-        }
-        lastInset = null
-    }
-
-    fun keepCardInPlace(state: LazyGridState, inset: Int) {
-        val cardIndex = index ?: return
-        if (lastInset == inset || state.isScrollInProgress) return
-        lastInset = inset
-        val original = originalPosition
-        if (!isOpen && inset == 0 && original != null) {
-            state.requestScrollToItem(original.first, original.second)
-        } else {
-            state.requestScrollToItem(cardIndex, inset - screenTop)
-        }
-    }
-
-    fun cancel() {
-        contents = null
-        index = null
-        originalPosition = null
-        lastInset = null
-        trailingHeaderCount = 0
-    }
 }
