@@ -9,7 +9,6 @@
 -->
 # To do
 - Bottom sheet keyboard handling inconsistencies: when the keyboard disappears, some remain large (with empty space on the bottom), others shrink.
-- Bottom sheet keyboard handling: a back gesture should always hide the keyboard before the bottom sheet
 - Checkbox lists: always put the checked items first, recently unchecked items should also remain at top until something changes
 - Edit song screen fling issue on mobile (scroll snaps back to caret position)
 - Cover art bottom sheet: pinned header does not get updated by keyboard IME. Do we even need search input fields here?

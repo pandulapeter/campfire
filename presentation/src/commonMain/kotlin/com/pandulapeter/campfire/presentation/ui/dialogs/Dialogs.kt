@@ -88,6 +88,7 @@ import androidx.compose.ui.layout.layout
 import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.ui.platform.LocalWindowInfo
 import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.contentDescription
@@ -101,6 +102,9 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.offset
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.navigationevent.NavigationEventInfo
+import androidx.navigationevent.compose.NavigationBackHandler
+import androidx.navigationevent.compose.rememberNavigationEventState
 import com.pandulapeter.campfire.data.model.domain.ImportConflictResolution
 import com.pandulapeter.campfire.data.model.domain.Song
 import com.pandulapeter.campfire.data.model.domain.SongLanguage
@@ -1932,7 +1936,21 @@ internal fun CampfireBottomSheet(
         dragHandle = null,
         contentWindowInsets = { WindowInsets.safeDrawing.only(WindowInsetsSides.Top) },
     ) {
-        val isCompactKeyboard = windowHeight < SHORT_WINDOW_HEIGHT && WindowInsets.ime.getBottom(LocalDensity.current) > 0
+        val isKeyboardVisible = WindowInsets.ime.getBottom(LocalDensity.current) > 0
+        val keyboardController = LocalSoftwareKeyboardController.current
+        val focusManager = LocalFocusManager.current
+        // Handle back inside this modal window, before Material starts hiding the sheet. Keep the handler registered
+        // even with the keyboard down so its priority stays below any nested sheet composed in the content below.
+        NavigationBackHandler(
+            state = rememberNavigationEventState(currentInfo = NavigationEventInfo.None),
+            isBackEnabled = isKeyboardVisible,
+            onBackCompleted = {
+                keyboardController?.hide()
+                // Release the focused text input too, so hiding the web keyboard also ends the editing session.
+                focusManager.clearFocus(force = true)
+            },
+        )
+        val isCompactKeyboard = windowHeight < SHORT_WINDOW_HEIGHT && isKeyboardVisible
         CompactKeyboardEffect(isEnabled = isCompactKeyboard)
         // Hiding the sheet by hand does not count as dismissing it, so the dialog state is cleared once it is gone: left
         // as it was, the invisible sheet's modal layer would stay over the screen, swallowing the next tap. Only a hide
