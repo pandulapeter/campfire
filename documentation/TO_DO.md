@@ -8,7 +8,7 @@
  * https://mozilla.org/MPL/2.0/.
 -->
 # To do
-- Web: scroll gestures originating from text input are cancelled
+- Web: scroll gestures originating from text input are canceled
 - Export PDF screen: the FAB should float. Currently, in portrait mode the scrollable content is unnecessarily padded below it
 - Cover art picker: input fields should be sticky on larger screens
 - Edit song screen fling issue on mobile (scroll snaps back to caret position)

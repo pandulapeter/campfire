@@ -1079,6 +1079,10 @@ class CampfireViewModel(
     private val _visibleDialog = MutableStateFlow<DialogType?>(null)
     val visibleDialog: StateFlow<DialogType?> = _visibleDialog.asStateFlow()
 
+    // Kept mounted beneath an editor so its sheet and scroll position survive opening and closing that editor.
+    private val _underlyingSongInfo = MutableStateFlow<DialogType.SongInfo?>(null)
+    val underlyingSongInfo = _underlyingSongInfo.asStateFlow()
+
     /**
      * Whether this is the first launch of this installation, asked once and shared. It stops being true the moment
      * the preferences are written, which is the last thing the demo library planting does, so a second caller
@@ -1161,7 +1165,10 @@ class CampfireViewModel(
             combine(_visibleDialog, allSongs, isLoading, _songsBeingRenamed) { dialog, songs, isLoading, songsBeingRenamed ->
                 val fileName = dialog?.songFileName
                 dialog?.takeIf { fileName != null && !isLoading && fileName !in songsBeingRenamed && songs.none { it.fileName == fileName } }
-            }.filterNotNull().collect(::dismissSheet)
+            }.filterNotNull().collect { dialog ->
+                // The song disappearing closes both the editor and the sheet underneath it.
+                if (_visibleDialog.value == dialog) setVisibleDialog(null)
+            }
         }
         // The editor's unsaved text as a previous run left it, when the process ended in the background (see
         // onAppPaused). Once that is settled, whatever leaves the editor with nothing unsaved takes the stored
@@ -3125,6 +3132,11 @@ class CampfireViewModel(
         // service's one request a second.
         if (dialogType !is DialogType.CoverArtSearch) clearCoverArtSearch()
         val previousDialog = _visibleDialog.value
+        _underlyingSongInfo.value = (previousDialog as? DialogType.SongInfo)?.takeIf { parent ->
+            dialogType is DialogType.SongEdit && !dialogType.isEditorDraft && dialogType.song.fileName == parent.song.fileName &&
+                (dialogType is DialogType.SongMetadata || dialogType is DialogType.SongTags ||
+                    dialogType is DialogType.SongLinks || dialogType is DialogType.SongLanguages)
+        }
         // However the export screen goes - closed, Escape, the web's Back, another dialog put over it - it stays drawn
         // while it slides away, so its own disposal would be too late: its options are saved and its drawing cancelled
         // here, a screen opened again in the next moment finds the options it left, and its Save, Share and options do
@@ -3142,7 +3154,7 @@ class CampfireViewModel(
 
     fun showDialog(dialogType: DialogType) = setVisibleDialog(dialogType)
 
-    fun dismissDialog() = setVisibleDialog(null)
+    fun dismissDialog() = setVisibleDialog(_underlyingSongInfo.value)
 
     /**
      * What a bottom sheet dismisses itself with: [dialogType] goes only while it is still the dialog on screen. A

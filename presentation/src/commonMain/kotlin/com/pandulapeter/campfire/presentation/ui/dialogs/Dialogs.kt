@@ -235,6 +235,7 @@ internal fun CampfireDialogs(
     urlOpener: (String) -> Unit,
 ) {
     val visibleDialog by viewModel.visibleDialog.collectAsStateWithLifecycle()
+    val underlyingSongInfo by viewModel.underlyingSongInfo.collectAsStateWithLifecycle()
     val importProgress by viewModel.importProgress.collectAsStateWithLifecycle()
     val importReport by viewModel.importReport.collectAsStateWithLifecycle()
     // The import screen shows the progress of the imports it reports on itself.
@@ -243,6 +244,11 @@ internal fun CampfireDialogs(
         canShow = visibleDialog == null,
         onCancel = viewModel::cancelImportPreparation,
     )
+    // A stable composition slot keeps the parent sheet mounted while its editor opens in another modal window.
+    val songInfo = underlyingSongInfo ?: (visibleDialog as? CampfireViewModel.DialogType.SongInfo)
+    if (songInfo != null) {
+        SongInfoSheet(viewModel = viewModel, dialog = songInfo, urlOpener = urlOpener)
+    }
     when (val dialog = visibleDialog) {
         // Drawn by ExportHost, which deals it over the screens rather than in a window of its own.
         is CampfireViewModel.DialogType.Export -> Unit
@@ -321,11 +327,7 @@ internal fun CampfireDialogs(
             )
         }
 
-        is CampfireViewModel.DialogType.SongInfo -> SongInfoSheet(
-            viewModel = viewModel,
-            dialog = dialog,
-            urlOpener = urlOpener,
-        )
+        is CampfireViewModel.DialogType.SongInfo -> Unit
 
         is CampfireViewModel.DialogType.SetlistPicker -> SetlistPicker(
             viewModel = viewModel,
@@ -2093,7 +2095,7 @@ private fun Modifier.reachingDialogEdges() = layout { measurable, constraints ->
 
 /**
  * What a song says about itself beyond how it is played, read from its text as it is now. Outside performance mode every
- * group is there with a button that edits it, which opens that group's dialog in place of the sheet; in performance
+ * group is there with a button that edits it, which opens that group's dialog on top of the sheet; in performance
  * mode, which edits nothing, only what the song has.
  */
 @Composable
@@ -2101,30 +2103,34 @@ private fun SongInfoSheet(
     viewModel: CampfireViewModel,
     dialog: CampfireViewModel.DialogType.SongInfo,
     urlOpener: (String) -> Unit,
-) = CampfireBottomSheet(
-    title = stringResource(Res.string.song_details_song_info),
-    subtitle = songLabel(dialog.song),
-    onDismiss = { viewModel.dismissSheet(dialog) },
-) { contentPadding ->
-    val songTexts by viewModel.songTexts.collectAsStateWithLifecycle()
-    val isPerformanceModeEnabled by viewModel.isPerformanceModeEnabled.collectAsStateWithLifecycle()
-    val text = songTexts[dialog.song.fileName]
-    val metadata = remember(text) { text?.let(viewModel::songMetadataOf) }
-    val editing = rememberSongInfoEditing(viewModel = viewModel, song = dialog.song, isEditorDraft = false)
-    if (metadata != null) {
-        val scrollState = rememberScrollState()
-        SongInfoBody(
-            modifier = Modifier
-                .weight(1f, fill = false)
-                .fadingVerticalEdges(scrollState)
-                .verticalScroll(scrollState)
-                .padding(contentPadding)
-                .padding(vertical = 8.dp),
-            metadata = metadata,
-            horizontalPadding = 16.dp,
-            editing = editing.takeUnless { isPerformanceModeEnabled },
-            onOpenLink = urlOpener,
-        )
+) {
+    val songs by viewModel.allSongs.collectAsStateWithLifecycle()
+    val song = songs.firstOrNull { it.fileName == dialog.song.fileName } ?: dialog.song
+    CampfireBottomSheet(
+        title = stringResource(Res.string.song_details_song_info),
+        subtitle = songLabel(song),
+        onDismiss = { viewModel.dismissSheet(dialog) },
+    ) { contentPadding ->
+        val songTexts by viewModel.songTexts.collectAsStateWithLifecycle()
+        val isPerformanceModeEnabled by viewModel.isPerformanceModeEnabled.collectAsStateWithLifecycle()
+        val text = songTexts[dialog.song.fileName]
+        val metadata = remember(text) { text?.let(viewModel::songMetadataOf) }
+        val editing = rememberSongInfoEditing(viewModel = viewModel, song = song, isEditorDraft = false)
+        if (metadata != null) {
+            val scrollState = rememberScrollState()
+            SongInfoBody(
+                modifier = Modifier
+                    .weight(1f, fill = false)
+                    .fadingVerticalEdges(scrollState)
+                    .verticalScroll(scrollState)
+                    .padding(contentPadding)
+                    .padding(vertical = 8.dp),
+                metadata = metadata,
+                horizontalPadding = 16.dp,
+                editing = editing.takeUnless { isPerformanceModeEnabled },
+                onOpenLink = urlOpener,
+            )
+        }
     }
 }
 
