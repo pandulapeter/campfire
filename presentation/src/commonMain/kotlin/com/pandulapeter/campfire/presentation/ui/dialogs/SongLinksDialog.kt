@@ -14,7 +14,6 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyListState
@@ -62,7 +61,7 @@ import com.pandulapeter.campfire.presentation.resources.song_details_link_name
 import com.pandulapeter.campfire.presentation.resources.song_details_link_remove
 import com.pandulapeter.campfire.presentation.resources.song_details_links_edit
 import com.pandulapeter.campfire.presentation.ui.CampfireViewModel
-import com.pandulapeter.campfire.presentation.ui.components.fadingVerticalEdges
+import com.pandulapeter.campfire.presentation.ui.components.fadingTopEdge
 import com.pandulapeter.campfire.presentation.ui.components.rememberClearTextButton
 import com.pandulapeter.campfire.presentation.ui.components.textResource
 import com.pandulapeter.campfire.presentation.ui.screens.songDetails.linkLabel
@@ -107,10 +106,12 @@ internal fun SongLinksDialog(
         onDismissRequest = { viewModel.dismissSheet(dialog) },
         title = stringResource(Res.string.song_details_links_edit),
         subtitle = songLabel(dialog.song),
-        text = {
+        retainHeight = true,
+        text = { contentPadding ->
             LazyColumn(
-                modifier = Modifier.fillMaxWidth().heightIn(max = 420.dp).fadingVerticalEdges(listState),
+                modifier = Modifier.fillMaxWidth().fadingTopEdge(listState),
                 state = listState,
+                contentPadding = contentPadding,
                 verticalArrangement = Arrangement.spacedBy(12.dp),
             ) {
                 item(key = HINT_KEY) {

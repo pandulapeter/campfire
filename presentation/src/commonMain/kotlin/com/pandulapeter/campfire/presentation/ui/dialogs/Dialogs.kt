@@ -781,9 +781,9 @@ private fun DeleteLibraryDialog(
     TextFieldBottomSheet(
         onDismissRequest = { viewModel.dismissSheet(CampfireViewModel.DialogType.DeleteLibrary) },
         title = stringResource(Res.string.settings_library_delete),
-        text = {
+        text = { contentPadding ->
             Column(
-                modifier = Modifier.fadingVerticalEdges(scrollState).verticalScroll(scrollState),
+                modifier = Modifier.fadingVerticalEdges(scrollState).verticalScroll(scrollState).padding(contentPadding),
                 verticalArrangement = Arrangement.spacedBy(16.dp),
             ) {
                 Text(stringResource(Res.string.settings_library_delete_confirmation))
@@ -914,8 +914,8 @@ private fun SetlistDetailsDialog(
         onDismissRequest = onDismiss,
         title = title,
         subtitle = subtitle,
-        text = {
-            Column(modifier = Modifier.fadingVerticalEdges(scrollState).verticalScroll(scrollState)) {
+        text = { contentPadding ->
+            Column(modifier = Modifier.fadingVerticalEdges(scrollState).verticalScroll(scrollState).padding(contentPadding)) {
                 OutlinedTextField(
                     modifier = Modifier.fillMaxWidth().focusRequester(focusRequester).onFocusChanged {
                         if (it.isFocused && !hasTitleBeenFocused) {
@@ -1152,9 +1152,9 @@ private fun NewSongDialog(
     TextFieldBottomSheet(
         onDismissRequest = onDismiss,
         title = stringResource(Res.string.songs_new_song),
-        text = {
+        text = { contentPadding ->
             Column(
-                modifier = Modifier.fadingVerticalEdges(scrollState).verticalScroll(scrollState),
+                modifier = Modifier.fadingVerticalEdges(scrollState).verticalScroll(scrollState).padding(contentPadding),
                 verticalArrangement = Arrangement.spacedBy(8.dp),
             ) {
                 field(Modifier.fillMaxWidth().focusRequester(focusRequester), Field.TITLE)
@@ -1242,13 +1242,14 @@ private fun SongTagsDialog(
         onDismissRequest = { viewModel.dismissSheet(dialog) },
         title = stringResource(Res.string.song_details_tags_manage),
         subtitle = songLabel(dialog.song),
+        retainHeight = true,
         startButton = {
             LabelSortingToggle(
                 sortingMode = sortingMode,
                 onSortingModeSelected = viewModel::setTagSortingMode,
             )
         },
-        text = {
+        text = { contentPadding ->
             Column {
                 OutlinedTextField(
                     modifier = Modifier.fillMaxWidth().focusRequester(focusRequester),
@@ -1280,8 +1281,9 @@ private fun SongTagsDialog(
                         modifier = Modifier
                             .padding(top = 8.dp)
                             .reachingDialogEdges()
-                            .heightIn(max = MAX_CHECKLIST_HEIGHT)
-                            .fadingVerticalEdges(listState),
+                            .weight(1f, fill = false)
+                            .fadingTopEdge(listState),
+                        contentPadding = contentPadding,
                         state = listState,
                     ) {
                         if (isCreatable) {
@@ -1391,13 +1393,14 @@ private fun SongLanguagesDialog(
         onDismissRequest = { viewModel.dismissSheet(dialog) },
         title = stringResource(Res.string.song_details_languages_edit),
         subtitle = songLabel(dialog.song),
+        retainHeight = true,
         startButton = {
             LabelSortingToggle(
                 sortingMode = sortingMode,
                 onSortingModeSelected = viewModel::setLanguageSortingMode,
             )
         },
-        text = {
+        text = { contentPadding ->
             Column {
                 OutlinedTextField(
                     modifier = Modifier.fillMaxWidth().focusRequester(focusRequester),
@@ -1429,8 +1432,9 @@ private fun SongLanguagesDialog(
                         modifier = Modifier
                             .padding(top = 8.dp)
                             .reachingDialogEdges()
-                            .heightIn(max = MAX_CHECKLIST_HEIGHT)
-                            .fadingVerticalEdges(listState),
+                            .weight(1f, fill = false)
+                            .fadingTopEdge(listState),
+                        contentPadding = contentPadding,
                         state = listState,
                     ) {
                         items(
@@ -1893,6 +1897,7 @@ private fun campfireBottomSheetContainerColor() = MaterialTheme.colorScheme.back
  *
  * @param title What the sheet is about, named in its [SheetHeader].
  * @param subtitle What the sheet acts on, under [title]: the song or the setlist it was opened for. Left out when blank.
+ * @param fadeBottomEdge Whether the short-window keyboard scroll fades at its bottom edge.
  * @param actions Buttons at the end of the [SheetHeader], across from the close button, such as the order of a list or
  *   the button that finishes what the sheet is for. They are handed the same close the header's close button runs.
  * @param onDismiss Has to dismiss this sheet's own dialog and nothing else (`CampfireViewModel.dismissSheet`): it is
@@ -1906,18 +1911,18 @@ internal fun CampfireBottomSheet(
     title: String,
     subtitle: String = "",
     sheetMaxWidth: Dp = BottomSheetDefaults.SheetMaxWidth,
+    fadeBottomEdge: Boolean = true,
     actions: (@Composable RowScope.(close: () -> Unit) -> Unit)? = null,
     onDismiss: () -> Unit,
     content: @Composable BottomSheetContentScope.(contentPadding: PaddingValues) -> Unit,
 ) {
-    // No partially expanded state: these sheets are short, and they open at their full height.
+    // Open at the content's full height: long lists can use the whole window, and short forms stay compact.
     val sheetState = rememberBottomSheetState(
         initialValue = SheetValue.Hidden,
         enabledValues = setOf(SheetValue.Hidden, SheetValue.Expanded),
     )
     val coroutineScope = rememberCoroutineScope()
     val windowHeight = LocalWindowInfo.current.containerDpSize.height
-    val isShortWindow = windowHeight < SHORT_WINDOW_HEIGHT
     val scrollState = rememberScrollState()
     ModalBottomSheet(
         onDismissRequest = onDismiss,
@@ -1927,7 +1932,8 @@ internal fun CampfireBottomSheet(
         dragHandle = null,
         contentWindowInsets = { WindowInsets.safeDrawing.only(WindowInsetsSides.Top) },
     ) {
-        CompactKeyboardEffect(isEnabled = isShortWindow && WindowInsets.ime.getBottom(LocalDensity.current) > 0)
+        val isCompactKeyboard = windowHeight < SHORT_WINDOW_HEIGHT && WindowInsets.ime.getBottom(LocalDensity.current) > 0
+        CompactKeyboardEffect(isEnabled = isCompactKeyboard)
         // Hiding the sheet by hand does not count as dismissing it, so the dialog state is cleared once it is gone: left
         // as it was, the invisible sheet's modal layer would stay over the screen, swallowing the next tap. Only a hide
         // that ran to its end counts: one cut short by a finger taking hold of the sheet leaves the sheet where Material
@@ -1939,14 +1945,16 @@ internal fun CampfireBottomSheet(
         // the lists in it that would otherwise be measured against an infinite one.
         Column(
             modifier = Modifier.fillMaxWidth().then(
-                if (isShortWindow) {
-                    Modifier.heightIn(max = windowHeight).imePadding().fadingVerticalEdges(scrollState).verticalScroll(scrollState)
+                if (isCompactKeyboard) {
+                    Modifier.heightIn(max = windowHeight).imePadding()
+                        .then(if (fadeBottomEdge) Modifier.fadingVerticalEdges(scrollState) else Modifier.fadingTopEdge(scrollState))
+                        .verticalScroll(scrollState)
                 } else {
                     Modifier
                 },
             ),
         ) {
-            Column(modifier = if (isShortWindow) Modifier.height(windowHeight) else Modifier) {
+            Column(modifier = if (isCompactKeyboard) Modifier.height(windowHeight) else Modifier) {
                 SheetHeader(
                     title = title,
                     subtitle = subtitle,
@@ -1954,7 +1962,7 @@ internal fun CampfireBottomSheet(
                     onClose = close,
                 )
                 // Read inside the sheet, which is a window of its own on Android and gets the insets of that window.
-                val bottomInset = (if (isShortWindow) WindowInsets.contentEdges else WindowInsets.safeDrawing)
+                val bottomInset = (if (isCompactKeyboard) WindowInsets.contentEdges else WindowInsets.safeDrawing)
                     .only(WindowInsetsSides.Bottom).asPaddingValues().calculateBottomPadding()
                 val topInset = WindowInsets.safeDrawing.only(WindowInsetsSides.Top)
                 val density = LocalDensity.current
@@ -2064,7 +2072,6 @@ private val MIN_DATE_ROW_WIDTH = 360.dp
 
 /** What Material's `OutlinedTextField` leaves above its border for the label that sits on it. */
 private val OUTLINED_FIELD_LABEL_ROOM = 8.dp
-private val MAX_CHECKLIST_HEIGHT = 320.dp
 
 /**
  * What Material's `AlertDialog` pads its content by on every side. Material narrows it for a precision pointer, but only

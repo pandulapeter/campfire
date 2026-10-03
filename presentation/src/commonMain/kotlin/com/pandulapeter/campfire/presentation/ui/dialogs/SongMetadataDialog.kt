@@ -13,7 +13,7 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.heightIn
+import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
@@ -48,7 +48,7 @@ import com.pandulapeter.campfire.presentation.resources.song_editor_insert_subti
 import com.pandulapeter.campfire.presentation.resources.song_editor_insert_title
 import com.pandulapeter.campfire.presentation.resources.song_editor_insert_year
 import com.pandulapeter.campfire.presentation.ui.CampfireViewModel
-import com.pandulapeter.campfire.presentation.ui.components.fadingVerticalEdges
+import com.pandulapeter.campfire.presentation.ui.components.fadingTopEdge
 import com.pandulapeter.campfire.presentation.ui.components.rememberClearTextButton
 import org.jetbrains.compose.resources.StringResource
 
@@ -78,9 +78,9 @@ internal fun SongMetadataDialog(
         onDismissRequest = { viewModel.dismissSheet(dialog) },
         title = stringResource(Res.string.song_details_metadata_edit),
         subtitle = songLabel(dialog.song),
-        text = {
+        text = { contentPadding ->
             Column(
-                modifier = Modifier.fillMaxWidth().heightIn(max = 420.dp).fadingVerticalEdges(scrollState).verticalScroll(scrollState),
+                modifier = Modifier.fillMaxWidth().fadingTopEdge(scrollState).verticalScroll(scrollState).padding(contentPadding),
                 verticalArrangement = Arrangement.spacedBy(8.dp),
             ) {
                 field(Modifier.fillMaxWidth(), Field.TITLE)
