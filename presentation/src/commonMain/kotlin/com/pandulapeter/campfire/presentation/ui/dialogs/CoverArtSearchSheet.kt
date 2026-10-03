@@ -21,9 +21,11 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.ime
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.grid.GridCells
@@ -57,6 +59,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.platform.LocalWindowInfo
 import androidx.compose.ui.semantics.Role
@@ -96,7 +99,6 @@ import com.pandulapeter.campfire.presentation.resources.song_editor_insert_album
 import com.pandulapeter.campfire.presentation.resources.songs_new_song_artist
 import com.pandulapeter.campfire.presentation.resources.songs_new_song_title
 import com.pandulapeter.campfire.presentation.ui.CampfireViewModel
-import com.pandulapeter.campfire.presentation.ui.components.SHORT_WINDOW_HEIGHT
 import com.pandulapeter.campfire.presentation.ui.components.CoverArt
 import com.pandulapeter.campfire.presentation.ui.components.HideKeyboardWhenScrolledDown
 import com.pandulapeter.campfire.presentation.ui.components.MAX_SEARCH_QUERY_LENGTH
@@ -182,7 +184,9 @@ internal fun CoverArtSearchSheet(
         },
         onDismiss = { viewModel.dismissSheet(dialog) },
     ) { contentPadding ->
-        val pinFields = LocalWindowInfo.current.containerDpSize.height >= SHORT_WINDOW_HEIGHT
+        val keyboardHeight = with(LocalDensity.current) { WindowInsets.ime.getBottom(this).toDp() }
+        val availableHeight = LocalWindowInfo.current.containerDpSize.height - keyboardHeight
+        val pinFields = availableHeight >= MIN_HEIGHT_FOR_PINNED_FIELDS
         val modeControls: @Composable () -> Unit = {
             SegmentedChoice(
                 modifier = Modifier.padding(top = if (pinFields) 8.dp else 0.dp),
@@ -731,6 +735,8 @@ private fun CoverArtAttribution(
 
 /** Wide enough for four or five covers side by side on a tablet or a desktop window, where a sheet is otherwise 640dp. */
 private val SHEET_MAX_WIDTH = 840.dp
+/** Height above the keyboard needed for the sheet header, mode controls, query rows and some results. */
+private val MIN_HEIGHT_FOR_PINNED_FIELDS = 360.dp
 private val TILE_MIN_WIDTH = 128.dp
 private val ADDRESS_PREVIEW_SIZE = 200.dp
 private val ADDRESS_PREVIEW_DELAY = 500.milliseconds
