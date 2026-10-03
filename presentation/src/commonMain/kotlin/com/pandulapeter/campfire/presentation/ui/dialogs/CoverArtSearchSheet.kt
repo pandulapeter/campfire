@@ -21,11 +21,9 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.ime
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.grid.GridCells
@@ -58,8 +56,11 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.input.nestedscroll.NestedScrollConnection
+import androidx.compose.ui.input.nestedscroll.NestedScrollSource
+import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.layout.ContentScale
-import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.platform.LocalWindowInfo
 import androidx.compose.ui.semantics.Role
@@ -100,7 +101,6 @@ import com.pandulapeter.campfire.presentation.resources.songs_new_song_artist
 import com.pandulapeter.campfire.presentation.resources.songs_new_song_title
 import com.pandulapeter.campfire.presentation.ui.CampfireViewModel
 import com.pandulapeter.campfire.presentation.ui.components.CoverArt
-import com.pandulapeter.campfire.presentation.ui.components.HideKeyboardWhenScrolledDown
 import com.pandulapeter.campfire.presentation.ui.components.MAX_SEARCH_QUERY_LENGTH
 import com.pandulapeter.campfire.presentation.ui.components.SegmentedChoice
 import com.pandulapeter.campfire.presentation.ui.components.fadingTopEdge
@@ -184,9 +184,11 @@ internal fun CoverArtSearchSheet(
         },
         onDismiss = { viewModel.dismissSheet(dialog) },
     ) { contentPadding ->
-        val keyboardHeight = with(LocalDensity.current) { WindowInsets.ime.getBottom(this).toDp() }
-        val availableHeight = LocalWindowInfo.current.containerDpSize.height - keyboardHeight
-        val pinFields = availableHeight >= MIN_HEIGHT_FOR_PINNED_FIELDS
+        // Choose the layout from the window, not the space above the keyboard. Moving a focused field between
+        // the pinned area and a lazy grid item disposes that input as the IME opens and ends its editing session.
+        // Small windows keep their fields in the scroll from the start; keyboard insets only change the padding.
+        val windowSize = LocalWindowInfo.current.containerDpSize
+        val pinFields = minOf(windowSize.width, windowSize.height) >= MIN_WINDOW_SIZE_FOR_PINNED_FIELDS
         val modeControls: @Composable () -> Unit = {
             SegmentedChoice(
                 modifier = Modifier.padding(top = if (pinFields) 8.dp else 0.dp),
@@ -263,7 +265,7 @@ private enum class CoverArtSheetMode {
  * The three things a record is found by. Artist and album share a row, since those two name a record, with the title
  * and the button under them, since the title is what is searched by only where the album is left empty.
  *
- * On taller windows they stay above the results. On short windows they scroll with the results so the fields can
+ * On larger windows they stay above the results. On small windows they scroll with the results so the fields can
  * move out of the way of the covers, especially while the keyboard is open.
  */
 @Composable
@@ -342,8 +344,8 @@ private fun CoverArtQueryField(
  * one after the other, so the grid is shown as soon as either has found something, the other's records joining it at
  * the end, with an indicator closing the grid for as long as one of them is still being waited for.
  *
- * The [fields] stay above the scrolling grid on taller windows and become its first full-width item on short ones.
- * The mode controls also scroll with the grid on short windows. The service credit and messages belong to the grid
+ * The [fields] stay above the scrolling grid on larger windows and become its first full-width item on small ones.
+ * The mode controls also scroll with the grid on small windows. The service credit and messages belong to the grid
  * in both layouts.
  */
 @Composable
@@ -371,13 +373,23 @@ private fun CoverArtResults(
         else -> ResultsContent.NO_RESULTS
     }
     val gridState = rememberLazyGridState()
-    HideKeyboardWhenScrolledDown(gridState)
+    val keyboardController = LocalSoftwareKeyboardController.current
+    val keyboardDismissal = remember(keyboardController) {
+        object : NestedScrollConnection {
+            override fun onPreScroll(available: Offset, source: NestedScrollSource): Offset {
+                // Bringing a focused field into view also scrolls the grid. Only a user scrolling towards the
+                // covers should dismiss the keyboard, never the automatic scroll caused by opening it.
+                if (source == NestedScrollSource.UserInput && available.y < 0f) keyboardController?.hide()
+                return Offset.Zero
+            }
+        }
+    }
     Column(modifier = modifier) {
         if (pinFields) {
             Box(modifier = Modifier.fillMaxWidth().padding(start = 16.dp, end = 16.dp, top = 16.dp)) { fields() }
         }
         LazyVerticalGrid(
-            modifier = Modifier.weight(1f).fillMaxWidth().fadingTopEdge {
+            modifier = Modifier.weight(1f).fillMaxWidth().nestedScroll(keyboardDismissal).fadingTopEdge {
                 if (gridState.firstVisibleItemIndex > 0) Int.MAX_VALUE else gridState.firstVisibleItemScrollOffset
             },
             state = gridState,
@@ -735,8 +747,8 @@ private fun CoverArtAttribution(
 
 /** Wide enough for four or five covers side by side on a tablet or a desktop window, where a sheet is otherwise 640dp. */
 private val SHEET_MAX_WIDTH = 840.dp
-/** Height above the keyboard needed for the sheet header, mode controls, query rows and some results. */
-private val MIN_HEIGHT_FOR_PINNED_FIELDS = 360.dp
+/** Small windows scroll the fields with the covers, even before the keyboard opens, so focusing never relocates them. */
+private val MIN_WINDOW_SIZE_FOR_PINNED_FIELDS = 600.dp
 private val TILE_MIN_WIDTH = 128.dp
 private val ADDRESS_PREVIEW_SIZE = 200.dp
 private val ADDRESS_PREVIEW_DELAY = 500.milliseconds
