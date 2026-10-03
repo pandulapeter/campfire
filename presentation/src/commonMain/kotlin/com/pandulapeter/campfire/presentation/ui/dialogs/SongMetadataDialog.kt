@@ -35,6 +35,7 @@ import androidx.compose.ui.unit.dp
 import com.pandulapeter.campfire.chordpro.ChordProMetadataFields.Field
 import com.pandulapeter.campfire.presentation.localization.stringResource
 import com.pandulapeter.campfire.presentation.resources.Res
+import com.pandulapeter.campfire.presentation.resources.done
 import com.pandulapeter.campfire.presentation.resources.optional_field_label
 import com.pandulapeter.campfire.presentation.resources.save
 import com.pandulapeter.campfire.presentation.resources.song_details_metadata_edit
@@ -103,7 +104,7 @@ internal fun SongMetadataDialog(
                     viewModel.setSongMetadata(fileName = dialog.song.fileName, isEditorDraft = dialog.isEditorDraft, values = values, offeredValues = dialog.values)
                     viewModel.dismissDialog()
                 },
-            ) { Text(stringResource(Res.string.save)) }
+            ) { Text(stringResource(if (dialog.isEditorDraft) Res.string.done else Res.string.save)) }
         },
     )
 }

@@ -8,28 +8,35 @@
  * https://mozilla.org/MPL/2.0/.
 -->
 # To do
+## Bugs
+- Issue on touchscreen devices, Edit song screen: after placing the cursor somewhere in the text then performing a scroll / fling gesture on mobile, the scroll position jumps back to caret position
 - Window inset handling issues related to bottom sheets
-- The Save button on the Song details / Manage tags / Manage languages / Manage links bottom sheets is misleading when opened from the Editor. In this case they should not update the file, just the version in the editor - and as such the button should say "Done" (but only in this case). Also, make sure that when opened, they use the most recent data from the Editor, not the saved file
+
+## Improvements
 - Maybe all bottom sheets with song names in their headers could show the cover art for the song
-- Add cover arts to the Song assignments bottom sheet
-- Edit song screen fling issue on mobile (scroll snaps back to caret position)
+- Add cover arts to the Song assignments bottom sheet list items
 - Cover art bottom sheet: do we even need search input fields here?
+- Rename master branch to main
+- Once the Mac App Store listing is approved, update included URL-s + this Readme
+
+## Features
 - Multi-select songs for bulk export or bulk edit (assign tags, languages, setlists)
 - Implement optionally auto-indexing similar sections within a song
 - Metronome: documentation/plans/metronome.md
+- Haptic effects, especially for the fast scroller
+
+## Ideas
 - Global sync status display ?
-- Rename master branch to main
 - Fast scroller on the song details screen ?
-- Optional close confirmation dialog on relevant platforms
-- Haptic effects
 - Simplify adding comments / annotations
-- External monitor support for lyrics only...? Maybe as a new window on desktop
+- Optional close confirmation dialog on relevant platforms
 - Add support for Latin and Nashville notations
 - Chord diagrams (guitar, ukulele, keyboard) - user library, variations
-- Once the Mac App Store listing is approved, update included URL-s + this Readme
+- External monitor support for lyrics only...? Maybe as a new window on desktop
+- Streaming zip writer on all platforms
+- First time user experience tutorial ?
+
+## Other
 - Test support with external control devices
 - Improve test coverage
-- Streaming zip writer on all platforms
 - Each top-level Composable should be defined in a separate file
-- Multi-cursor in editor ?
-- First time user experience tutorial ?

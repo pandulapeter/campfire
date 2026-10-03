@@ -327,7 +327,7 @@ private fun LoadedSongEditor(
     val text = remember(textFieldState) { derivedStateOf { textFieldState.text.toString() } }
     // Compare with the same formatted draft the action applies, so the option follows typing, undo and revert.
     val prettifiedText = remember(textFieldState, viewModel) { derivedStateOf { viewModel.prettifyText(text.value) } }
-    ReportDraft(viewModel = viewModel, fileName = destination.fileName, text = text)
+    ReportDraft(viewModel = viewModel, fileName = destination.fileName, text = text, textFieldState = textFieldState)
 
     val userPreferences by viewModel.userPreferences.collectAsStateWithLifecycle()
     val transpositions by viewModel.transpositions.collectAsStateWithLifecycle()
@@ -926,12 +926,17 @@ private fun ReportDraft(
     viewModel: CampfireViewModel,
     fileName: String,
     text: State<String>,
+    textFieldState: TextFieldState,
 ) {
     LaunchedEffect(text, fileName) {
         snapshotFlow { text.value }.collect { viewModel.onEditorTextChanged(fileName, it) }
     }
     // Whatever became of the text - saved, discarded, or the song deleted - there is no draft once the editor is gone.
-    DisposableEffect(fileName) { onDispose { viewModel.onEditorClosed(fileName) } }
+    DisposableEffect(fileName, textFieldState) {
+        // Metadata sheets read this field at the moment they open, including edits not yet reported as a draft.
+        viewModel.retainEditorField(fileName, textFieldState)
+        onDispose { viewModel.onEditorClosed(fileName) }
+    }
 }
 
 /**

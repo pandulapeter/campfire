@@ -90,6 +90,7 @@ import com.pandulapeter.campfire.presentation.resources.cover_art_search_hint
 import com.pandulapeter.campfire.presentation.resources.cover_art_search_loading
 import com.pandulapeter.campfire.presentation.resources.cover_art_search_no_results
 import com.pandulapeter.campfire.presentation.resources.cover_art_search_remove
+import com.pandulapeter.campfire.presentation.resources.done
 import com.pandulapeter.campfire.presentation.resources.ic_check
 import com.pandulapeter.campfire.presentation.resources.ic_delete
 import com.pandulapeter.campfire.presentation.resources.retry
@@ -161,6 +162,7 @@ internal fun CoverArtSearchSheet(
         fadeBottomEdge = false,
         actions = { close ->
             CoverArtSearchActions(
+                isEditorDraft = dialog.isEditorDraft,
                 canRemove = dialog.song.coverArtUrl != null,
                 canSave = when (mode) {
                     CoverArtSheetMode.SEARCH -> selectedUrl != null && selectedUrl != dialog.song.coverArtUrl
@@ -706,6 +708,7 @@ private fun CoverArtTile(
  */
 @Composable
 private fun CoverArtSearchActions(
+    isEditorDraft: Boolean,
     canRemove: Boolean,
     canSave: Boolean,
     onRemove: () -> Unit,
@@ -725,7 +728,7 @@ private fun CoverArtSearchActions(
         enabled = canSave,
         onClick = onSave,
     ) {
-        Text(stringResource(Res.string.save))
+        Text(stringResource(if (isEditorDraft) Res.string.done else Res.string.save))
     }
 }
 

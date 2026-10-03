@@ -42,6 +42,7 @@ import com.pandulapeter.campfire.data.model.domain.ImportedFile
 import com.pandulapeter.campfire.data.model.domain.Setlist
 import com.pandulapeter.campfire.data.model.domain.SongContent
 import com.pandulapeter.campfire.data.model.domain.Song
+import com.pandulapeter.campfire.data.model.domain.normalizedToNfc
 import com.pandulapeter.campfire.data.model.domain.SyncDeletionPolicy
 import com.pandulapeter.campfire.data.model.domain.SyncProgress
 import com.pandulapeter.campfire.data.model.domain.SyncProviderId
@@ -1698,6 +1699,23 @@ class CampfireViewModel(
         setChordProLanguages(text = text, codes = codes)
     }
 
+    /** Opens the label pickers on the current draft when invoked from the editor. */
+    fun showSongTagsDialog(song: Song, isEditorDraft: Boolean) {
+        val currentSong = songForLabelEditing(song, isEditorDraft) ?: return
+        showDialog(DialogType.SongTags(song = currentSong, isEditorDraft = isEditorDraft))
+    }
+
+    fun showSongLanguagesDialog(song: Song, isEditorDraft: Boolean) {
+        val currentSong = songForLabelEditing(song, isEditorDraft) ?: return
+        showDialog(DialogType.SongLanguages(song = currentSong, isEditorDraft = isEditorDraft))
+    }
+
+    private fun songForLabelEditing(song: Song, isEditorDraft: Boolean): Song? {
+        if (!isEditorDraft) return song
+        val metadata = parseChordPro(songTextOf(song.fileName, isEditorDraft = true) ?: return null).metadata
+        return song.copy(tags = metadata.tags.map { it.normalizedToNfc() }.distinctBy { it.lowercase() }, languages = metadata.languages)
+    }
+
     /**
      * Opens the metadata editor on the source text, since the album, the composer and the rest are not part of the
      * song list's lighter metadata, and the title there already has the subtitle in it.
@@ -1748,6 +1766,15 @@ class CampfireViewModel(
         }
     }
 
+    /** Opens the cover sheet with the cover currently declared in the editor's text. */
+    fun showSongCoverArtDialog(song: Song, isEditorDraft: Boolean) {
+        val currentSong = if (isEditorDraft) {
+            val metadata = parseChordPro(songTextOf(song.fileName, isEditorDraft = true) ?: return).metadata
+            song.copy(coverArtUrl = metadata.coverArt)
+        } else song
+        showDialog(DialogType.CoverArtSearch(song = currentSong, isEditorDraft = isEditorDraft))
+    }
+
     /**
      * Makes [url] the song's cover, or takes the cover off for null, from the cover search sheet. Written into the
      * file like a tag is, so that the cover travels with the song wherever it goes.
@@ -1795,7 +1822,8 @@ class CampfireViewModel(
      * that is what its edit is applied to, and the file's otherwise.
      */
     private fun songTextOf(fileName: String, isEditorDraft: Boolean) = if (isEditorDraft) {
-        _editorDraft.value?.takeIf { it.fileName == fileName }?.text
+        // Read the field itself: draft reporting runs asynchronously and can still be one edit behind a tap.
+        retainedEditorField(fileName)?.text?.toString() ?: _editorDraft.value?.takeIf { it.fileName == fileName }?.text
     } else {
         songTexts.value[fileName]
     }

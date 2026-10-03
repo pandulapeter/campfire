@@ -69,11 +69,11 @@ internal fun rememberSongInfoEditing(
     return remember(viewModel, isEditorDraft, isCoverArtEnabled) {
         SongInfoEditing(
             onEditCoverArt = if (isCoverArtEnabled) {
-                { viewModel.showDialog(CampfireViewModel.DialogType.CoverArtSearch(song = latestSong, isEditorDraft = isEditorDraft)) }
+                { viewModel.showSongCoverArtDialog(song = latestSong, isEditorDraft = isEditorDraft) }
             } else null,
             onEditMetadata = { viewModel.showSongMetadataDialog(song = latestSong, isEditorDraft = isEditorDraft) },
-            onEditTags = { viewModel.showDialog(CampfireViewModel.DialogType.SongTags(song = latestSong, isEditorDraft = isEditorDraft)) },
-            onEditLanguages = { viewModel.showDialog(CampfireViewModel.DialogType.SongLanguages(song = latestSong, isEditorDraft = isEditorDraft)) },
+            onEditTags = { viewModel.showSongTagsDialog(song = latestSong, isEditorDraft = isEditorDraft) },
+            onEditLanguages = { viewModel.showSongLanguagesDialog(song = latestSong, isEditorDraft = isEditorDraft) },
             onEditLinks = { viewModel.showSongLinksDialog(song = latestSong, isEditorDraft = isEditorDraft) },
         )
     }
@@ -123,7 +123,7 @@ internal fun coverArtAction(
     title = stringResource(if (song.coverArtUrl == null) Res.string.song_details_set_cover_art else Res.string.song_details_change_cover_art),
     icon = painterResource(Res.drawable.ic_album),
     isAlwaysInMenu = true,
-    onClick = { viewModel.showDialog(CampfireViewModel.DialogType.CoverArtSearch(song = song, isEditorDraft = isEditorDraft)) },
+    onClick = { viewModel.showSongCoverArtDialog(song = song, isEditorDraft = isEditorDraft) },
 )
 
 /**

@@ -45,6 +45,7 @@ import com.pandulapeter.campfire.chordpro.ChordProLinks
 import com.pandulapeter.campfire.chordpro.model.ChordProLink
 import com.pandulapeter.campfire.presentation.localization.stringResource
 import com.pandulapeter.campfire.presentation.resources.Res
+import com.pandulapeter.campfire.presentation.resources.done
 import com.pandulapeter.campfire.presentation.resources.ic_add
 import com.pandulapeter.campfire.presentation.resources.ic_delete
 import com.pandulapeter.campfire.presentation.resources.ic_move_down
@@ -154,7 +155,7 @@ internal fun SongLinksDialog(
                     viewModel.setSongLinks(fileName = dialog.song.fileName, isEditorDraft = dialog.isEditorDraft, links = links, offeredLinks = dialog.links)
                     viewModel.dismissDialog()
                 },
-            ) { Text(stringResource(Res.string.save)) }
+            ) { Text(stringResource(if (dialog.isEditorDraft) Res.string.done else Res.string.save)) }
         },
     )
 }

@@ -121,6 +121,7 @@ import com.pandulapeter.campfire.presentation.resources.cancel
 import com.pandulapeter.campfire.presentation.resources.close
 import com.pandulapeter.campfire.presentation.resources.create
 import com.pandulapeter.campfire.presentation.resources.delete
+import com.pandulapeter.campfire.presentation.resources.done
 import com.pandulapeter.campfire.presentation.resources.ic_add
 import com.pandulapeter.campfire.presentation.resources.ic_album
 import com.pandulapeter.campfire.presentation.resources.song_details_change_cover_art
@@ -1364,7 +1365,7 @@ private fun SongTagsDialog(
                     viewModel.setSongTags(fileName = dialog.song.fileName, isEditorDraft = dialog.isEditorDraft, tags = tagsToSave, offeredTags = offeredTags)
                     viewModel.dismissDialog()
                 },
-            ) { Text(stringResource(Res.string.save)) }
+            ) { Text(stringResource(if (dialog.isEditorDraft) Res.string.done else Res.string.save)) }
         },
     )
 }
@@ -1506,7 +1507,7 @@ private fun SongLanguagesDialog(
                     viewModel.setSongLanguages(fileName = dialog.song.fileName, isEditorDraft = dialog.isEditorDraft, codes = selectedCodes.toList())
                     viewModel.dismissDialog()
                 },
-            ) { Text(stringResource(Res.string.save)) }
+            ) { Text(stringResource(if (dialog.isEditorDraft) Res.string.done else Res.string.save)) }
         },
     )
 }
