@@ -40,6 +40,12 @@ direction.
   handover. `DismissLoadingScreen` in `CampfireWebApplication.kt` waits two frames before reporting ready —
   `withFrameNanos` resumes while its own frame is still being assembled — so the fade uncovers the app rather than an
   empty page. The webpack output is named `campfire.js` (`outputModuleName` + `commonWebpackConfig`).
+- **Every touch gesture is the app's**: `index.html` gives `#app` `touch-action: none`, overriding the `pan-x pan-y`
+  Compose puts on its canvas for a page it is nested in. With that, the browser takes over any drag Compose has not
+  consumed a move of by the first `touchmove` — one still inside Compose's touch slop, such as a drag starting on a
+  text field in a scrolling sheet — and cancels it for a page that cannot scroll. It is set on the container because
+  the canvas is inside Compose's shadow root, where no selector of the page reaches; the browser intersects the
+  `touch-action` of every element from the canvas up, across that boundary too.
 - **The keyboard is an inset, as on the native builds, wherever the browser says where it is.** Compose reports no
   IME inset on the web, so `ProvideKeyboardInsets` (in `:presentation`'s `wasmJsMain`) asks the browser to lay the
   keyboard over the page (the VirtualKeyboard API's `overlaysContent`: Chrome, Edge, Samsung Internet), reads its

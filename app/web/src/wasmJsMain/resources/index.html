@@ -243,10 +243,12 @@
            touch gesture to the browser whenever it reported a scroll by the first touchmove but moved nothing with it.
            A drag that sets off while a scroll is still settling reports an empty one as the finger lands, and the
            browser then cancels the whole gesture for a page that cannot scroll at all, so the drag is lost: the first
-           touch at the top of a song. This page is the app and nothing else, so every gesture is the app's.
-           Important, since Compose writes its value into the canvas' own style. */
-        #app canvas {
-            touch-action: none !important;
+           touch at the top of a song, or a drag that starts on a text field in a sheet. This page is the app and nothing
+           else, so every gesture is the app's. Set on the container rather than on the canvas: the canvas is inside the
+           shadow root Compose attaches, which no selector of this page reaches, and the browser allows a touch only
+           what every element from the canvas up allows, across that boundary too. */
+        #app {
+            touch-action: none;
         }
 
         #splash {
