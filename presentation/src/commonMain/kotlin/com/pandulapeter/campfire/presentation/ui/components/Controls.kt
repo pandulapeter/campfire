@@ -52,6 +52,7 @@ import androidx.compose.material3.LocalMinimumInteractiveComponentSize
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
+import androidx.compose.material3.VerticalDivider
 import androidx.compose.material3.ripple
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
@@ -622,7 +623,9 @@ internal fun LabelSortingToggle(
 internal fun <T : Any> SortableChipRow(
     modifier: Modifier = Modifier,
     items: List<T>,
-    key: (T) -> Any,
+    key: (T) -> String,
+    order: ChecklistOrder,
+    refreshKey: Any?,
     sortingMode: UserPreferences.LabelSortingMode,
     onSortingModeSelected: (UserPreferences.LabelSortingMode) -> Unit,
     chip: @Composable (T) -> Unit,
@@ -631,12 +634,16 @@ internal fun <T : Any> SortableChipRow(
     contentAlignment = Alignment.CenterStart,
 ) {
     val scrollState = rememberScrollState()
-    // Only a change of the order, never the first composition: the row may be composed again with the position it
-    // was saved at.
-    var scrolledToStartFor by remember { mutableStateOf(sortingMode) }
-    LaunchedEffect(sortingMode) {
-        if (sortingMode != scrolledToStartFor) {
-            scrolledToStartFor = sortingMode
+    val orderedItems = remember(items, order) { order.ordered(items, key) }
+    val leadingCount = order.leadingCount(orderedItems, key)
+    val selection = remember { ChecklistSelection(order.checkedKeys) }
+    val scrollRefreshKey = sortingMode to refreshKey
+    // Opening/restoring the row leaves its scroll position alone; selecting or refreshing animates to the start.
+    var scrolledToStartFor by remember { mutableStateOf(scrollRefreshKey) }
+    LaunchedEffect(scrollRefreshKey, order.checkedKeys) {
+        val hasNewSelection = selection.newlyCheckedIndex(order.checkedKeys, orderedItems.map(key)) != null
+        if (scrollRefreshKey != scrolledToStartFor || hasNewSelection) {
+            scrolledToStartFor = scrollRefreshKey
             scrollState.animateScrollTo(0)
         }
     }
@@ -653,8 +660,12 @@ internal fun <T : Any> SortableChipRow(
             Row(
                 modifier = Modifier.padding(start = toggleEnd + SORTING_TOGGLE_GAP, end = CONTROLS_PADDING),
                 horizontalArrangement = Arrangement.spacedBy(CHIP_GAP),
+                verticalAlignment = Alignment.CenterVertically,
             ) {
-                items.forEach { item ->
+                orderedItems.forEachIndexed { index, item ->
+                    if (index == leadingCount && leadingCount > 0) {
+                        VerticalDivider(modifier = Modifier.height(FilterChipDefaults.Height))
+                    }
                     key(key(item)) {
                         Box(modifier = Modifier.animateBounds(this@LookaheadScope)) { chip(item) }
                     }

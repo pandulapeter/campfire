@@ -100,6 +100,7 @@ import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.compose.ui.unit.offset
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigationevent.NavigationEventInfo
@@ -198,6 +199,11 @@ import com.pandulapeter.campfire.presentation.ui.components.LabelSortingToggle
 import com.pandulapeter.campfire.presentation.ui.components.MAX_SEARCH_QUERY_LENGTH
 import com.pandulapeter.campfire.presentation.ui.components.SHORT_WINDOW_HEIGHT
 import com.pandulapeter.campfire.presentation.ui.components.SortableChipRow
+import com.pandulapeter.campfire.presentation.ui.components.ScrollToNewlyCheckedItem
+import com.pandulapeter.campfire.presentation.ui.components.ChecklistOrder
+import com.pandulapeter.campfire.presentation.ui.components.checklistItems
+import com.pandulapeter.campfire.presentation.ui.components.rememberChecklistOrder
+import com.pandulapeter.campfire.presentation.ui.components.sortedAlphabeticallyBy
 import com.pandulapeter.campfire.presentation.ui.components.ScrollToStartWhenChanged
 import com.pandulapeter.campfire.presentation.ui.components.SetlistSortMenu
 import com.pandulapeter.campfire.presentation.ui.components.SongFilters
@@ -1183,8 +1189,8 @@ private fun NewSongDialog(
  * Every tag of a song, managed in one place: the library's tags as a checklist with the song's own ticked and at the
  * top, and a field that narrows the list and creates a tag the library does not have yet. As with the languages
  * ([SongLanguagesDialog]), the whole set is written when the dialog is confirmed, so a file the user owns is rewritten
- * once rather than once per checkbox, and the order is decided as the dialog opens rather than by what is ticked: a row
- * that moved under the finger that has just ticked it would be worse than a list that has to be scrolled.
+ * once rather than once per checkbox. Checked rows move to the leading group and are scrolled into view; unchecked
+ * rows stay in that group until the search or sorting changes.
  *
  * Offering the library's tags before anything is typed is the point of the list, because a library where the same idea
  * is filed under "christmas", "Christmas" and "xmas" is a library whose tags filter nothing. For the same reason what is
@@ -1206,17 +1212,22 @@ private fun SongTagsDialog(
     // Saved, since the dialog outlives a recreated Activity and Save writes whatever is ticked at that moment.
     var selectedTags by rememberSaveable(dialog.song.fileName, stateSaver = stringListSaver) { mutableStateOf(dialog.song.tags) }
     var createdTags by rememberSaveable(dialog.song.fileName, stateSaver = stringListSaver) { mutableStateOf(emptyList()) }
-    // The song's own tags first, in the order its file lists them, then the ones created here, then the rest of the
-    // library in the order the filter shows them. Two spellings of a tag are one tag, and the song's own spelling is the
-    // one kept.
+    // Keep the library's sorting order, using the song's spelling where the same tag differs only by case.
     val offeredTags = remember(dialog.song, createdTags, libraryTags, sortingMode) {
-        (dialog.song.tags + createdTags + libraryTags.orderedBy(sortingMode).map { it.name }).distinctBy { it.lowercase() }
+        val ownTags = dialog.song.tags + createdTags
+        val tags = (libraryTags.orderedBy(sortingMode).map { tag ->
+            ownTags.firstOrNull { it.equals(tag.name, ignoreCase = true) } ?: tag.name
+        } + ownTags).distinctBy { it.lowercase() }
+        if (sortingMode == UserPreferences.LabelSortingMode.ALPHABETICAL) tags.sortedAlphabeticallyBy { it } else tags
     }
     val searchableTags = remember(offeredTags) { offeredTags.map { it to viewModel.normalizeForSearch(it) } }
     val matches = remember(searchableTags, query) {
         val normalizedQuery = viewModel.normalizeForSearch(query)
         searchableTags.mapNotNull { (tag, name) -> tag.takeIf { normalizedQuery in name } }
     }
+    val checkedTagKeys = selectedTags.toSet()
+    val tagOrder = rememberChecklistOrder(checkedTagKeys, sortingMode to query)
+    val orderedMatches = remember(matches, tagOrder) { tagOrder.ordered(matches) { it } }
     val typedTag = query.trim()
     val spelledTag = offeredTags.firstOrNull { it.equals(typedTag, ignoreCase = true) }
     val focusRequester = rememberFirstFieldFocusRequester()
@@ -1278,8 +1289,14 @@ private fun SongTagsDialog(
                     HideKeyboardWhenScrolledDown(listState)
                     ScrollToStartWhenChanged(
                         listState = listState,
-                        key = sortingMode,
-                        contents = matches,
+                        key = sortingMode to query,
+                        contents = orderedMatches,
+                    )
+                    ScrollToNewlyCheckedItem(
+                        listState = listState,
+                        checkedKeys = checkedTagKeys,
+                        orderedKeys = orderedMatches,
+                        rowOffset = if (isCreatable) 1 else 0,
                     )
                     LazyColumn(
                         modifier = Modifier
@@ -1301,9 +1318,10 @@ private fun SongTagsDialog(
                                 )
                             }
                         }
-                        items(
-                            items = matches,
-                            key = { "tag:$it" },
+                        checklistItems(
+                            items = orderedMatches,
+                            order = tagOrder,
+                            key = { it },
                         ) { tag ->
                             CheckboxListItem(
                                 modifier = listItemAnimation(listState),
@@ -1342,8 +1360,8 @@ private fun SongTagsDialog(
  * file the user owns is rewritten once rather than once per checkbox.
  *
  * The list is ordered by the name the platform gives each language in the language the app is set to (see
- * [languageName]), with the ones the song already declares held at the top for as long as the dialog is open: a row
- * that reordered itself under the finger that has just ticked it would be worse than a list that has to be scrolled.
+ * [languageName]), with checked rows first. Newly checked rows are scrolled into view, and unchecked rows stay in
+ * the leading group until search or sorting changes.
  *
  * What is listed before anything is typed is what can be named, plus the languages the song and the library already
  * use. Ordered by usage, the library's come first, most used first: the next song to be filed is far likelier to be in
@@ -1372,11 +1390,9 @@ private fun SongLanguagesDialog(
         val declared = dialog.song.languages
         val libraryCodes = libraryLanguages.map { it.code }.filterNot { it == SongLanguage.UNKNOWN }
         val pickable = pickableLanguages(appLanguageCode = appLanguageCode, alsoOffer = declared + libraryCodes, normalize = viewModel::normalize)
-        // The song's own languages come first and stay there, in the order the file lists them, whichever order the
-        // rest are in.
         val leading = when (sortingMode) {
-            UserPreferences.LabelSortingMode.BY_USAGE -> (declared + libraryCodes).distinct()
-            UserPreferences.LabelSortingMode.ALPHABETICAL -> declared
+            UserPreferences.LabelSortingMode.BY_USAGE -> libraryCodes.distinct()
+            UserPreferences.LabelSortingMode.ALPHABETICAL -> emptyList()
         }
         leading.mapNotNull { code -> pickable.firstOrNull { it.code == code } } + pickable.filterNot { it.code in leading }
     }
@@ -1393,6 +1409,8 @@ private fun SongLanguagesDialog(
             languages.filter { it.code == queryCode || normalizedQuery in it.sortKey || it.code.startsWith(normalizedQuery) }
         }
     }
+    val languageOrder = rememberChecklistOrder(selectedCodes, listOf(sortingMode, query, appLanguageCode))
+    val orderedMatches = remember(matches, languageOrder) { languageOrder.ordered(matches) { it.code } }
     TextFieldBottomSheet(
         onDismissRequest = { viewModel.dismissSheet(dialog) },
         title = stringResource(Res.string.song_details_languages_edit),
@@ -1429,8 +1447,13 @@ private fun SongLanguagesDialog(
                     HideKeyboardWhenScrolledDown(listState)
                     ScrollToStartWhenChanged(
                         listState = listState,
-                        key = sortingMode,
-                        contents = matches,
+                        key = sortingMode to query,
+                        contents = orderedMatches,
+                    )
+                    ScrollToNewlyCheckedItem(
+                        listState = listState,
+                        checkedKeys = selectedCodes,
+                        orderedKeys = orderedMatches.map { it.code },
                     )
                     LazyColumn(
                         modifier = Modifier
@@ -1441,8 +1464,9 @@ private fun SongLanguagesDialog(
                         contentPadding = contentPadding,
                         state = listState,
                     ) {
-                        items(
-                            items = matches,
+                        checklistItems(
+                            items = orderedMatches,
+                            order = languageOrder,
                             key = { it.code },
                         ) { language ->
                             CheckboxListItem(
@@ -1490,11 +1514,15 @@ private fun SetlistPicker(
 ) {
     val setlists by viewModel.setlists.collectAsStateWithLifecycle()
     var query by rememberSaveable { mutableStateOf("") }
-    // An archived setlist has been put away, so it is not offered here - unless the song is in it already, which is
-    // the only thing this sheet could still have to say about one. In the order the setlists screen is sorted by,
-    // which the sheet's own sort button changes as well.
-    val pickableSetlists = remember(setlists, dialog.song.fileName) {
-        setlists.filter { setlist -> !setlist.isArchived || setlist.entries.any { it.songFileName == dialog.song.fileName } }
+    val userPreferences by viewModel.userPreferences.collectAsStateWithLifecycle()
+    val checkedSetlistKeys = setlists.filter { setlist -> setlist.entries.any { it.songFileName == dialog.song.fileName } }
+        .mapTo(mutableSetOf()) { it.fileName }
+    val refreshKey = userPreferences?.setlistSortingMode to query
+    val setlistOrder = rememberChecklistOrder(checkedSetlistKeys, refreshKey)
+    // Archived setlists are offered only while checked or retained after an uncheck. A refresh drops the latter,
+    // just as it returns the other unchecked rows to the regular sorting order.
+    val pickableSetlists = remember(setlists, setlistOrder) {
+        setlists.filter { setlist -> !setlist.isArchived || setlist.fileName in setlistOrder.heldKeys }
     }
     // Answered by the title or the description, the way the setlists screen's own search answers, but not by the
     // songs inside: the song this sheet is about is the only one that matters here.
@@ -1504,7 +1532,7 @@ private fun SetlistPicker(
             normalizedQuery in viewModel.normalizeForSearch(setlist.title) || normalizedQuery in viewModel.normalizeForSearch(setlist.description)
         }
     }
-    val userPreferences by viewModel.userPreferences.collectAsStateWithLifecycle()
+    val orderedMatches = remember(matches, setlistOrder) { setlistOrder.ordered(matches) { it.fileName } }
     val isCreatingFirstSetlist = rememberSaveable { setlists.isEmpty() }
     var isNamingNewSetlist by rememberSaveable { mutableStateOf(isCreatingFirstSetlist) }
     val closeNamingDialog = { if (isCreatingFirstSetlist) viewModel.dismissDialog() else isNamingNewSetlist = false }
@@ -1522,12 +1550,15 @@ private fun SetlistPicker(
             )
             PickerList(
                 contentPadding = contentPadding,
-                sortingMode = userPreferences?.setlistSortingMode,
-                contents = matches,
+                refreshKey = refreshKey,
+                contents = orderedMatches,
+                checkedKeys = checkedSetlistKeys,
+                orderedKeys = orderedMatches.map { it.fileName },
                 noResultsText = if (matches.isEmpty() && query.isNotBlank()) stringResource(Res.string.setlists_no_search_results) else null,
             ) { listState ->
-                items(
-                    items = matches,
+                checklistItems(
+                    items = orderedMatches,
+                    order = setlistOrder,
                     key = { it.fileName },
                 ) { setlist ->
                     CheckboxListItem(
@@ -1587,14 +1618,13 @@ private fun SetlistPicker(
  * here goes to the end of the setlist, so a setlist built from nothing is in the order its songs were picked, and an
  * entry whose file has gone missing stays in it, since it is not listed here to be unticked.
  *
- * The songs the setlist already holds come first, in the setlist's own order, and stay there for as long as the sheet
- * is open for the reason the language picker keeps its own at the top: a row that jumped away from under the finger
- * that had just ticked it would be worse than a list that has to be scrolled. The rest are in the order the songs screen
- * is sorted by, which the sheet's own sort button changes as well.
+ * Checked songs come first, with newly checked rows at the very start, most recent first, and an animated scroll
+ * bringing them into view. A divider separates that group from songs in the selected sorting order. Unchecked
+ * rows stay in the leading group until a search, sorting or filter change refreshes the order.
  *
  * The list can be narrowed by the library's languages and tags as well as by the search ([PickerFilters]). Those are
- * the picker's own and start empty every time rather than following the songs screen's filters: what that screen is
- * narrowed to is a view somebody set up to browse, and a setlist is filled from the whole library.
+ * the picker's own rather than following the songs screen's filters. Tag and language selections survive reopening
+ * the sheet for the current app run; search starts empty each time.
  */
 @Composable
 private fun SongPicker(
@@ -1610,16 +1640,13 @@ private fun SongPicker(
     val initialSongFileNames = rememberSaveable(setlist.fileName) { setlist.entries.map { it.songFileName }.distinct() }
     var selectedSongFileNames by rememberSaveable(setlist.fileName) { mutableStateOf(initialSongFileNames) }
     var query by rememberSaveable { mutableStateOf("") }
-    var selectedTags by rememberSaveable { mutableStateOf(emptyList<String>()) }
-    var selectedLanguages by rememberSaveable { mutableStateOf(emptyList<String>()) }
+    val selectedTags by viewModel.songPickerSelectedTags.collectAsStateWithLifecycle()
+    val selectedLanguages by viewModel.songPickerSelectedLanguages.collectAsStateWithLifecycle()
     // Sorted, normalized for the search and counted for the chips by the view model, once per library rather than as
     // the sheet opens or on every keystroke, since the search runs over every song on every character typed and the
     // sheet's first frames are its slide up.
     val pickerSongs by viewModel.pickerSongs.collectAsStateWithLifecycle()
-    val pickableSongs = remember(pickerSongs, initialSongFileNames) {
-        val initial = initialSongFileNames.toSet()
-        initialSongFileNames.mapNotNull { pickerSongs.byFileName[it] } + pickerSongs.list.filterNot { it.song.fileName in initial }
-    }
+    val pickableSongs = pickerSongs.list
     val filters by viewModel.songPickerFilters.collectAsStateWithLifecycle()
     val userPreferences by viewModel.userPreferences.collectAsStateWithLifecycle()
     // Only what the chips still offer narrows the list: a tag that left the library while the sheet was open would
@@ -1642,6 +1669,17 @@ private fun SongPicker(
                     (activeLanguages.isEmpty() || activeLanguages.any { it in pickableSong.languages })
         }
     }
+    val checkedSongKeys = selectedSongFileNames.toSet()
+    val refreshKey = listOf(userPreferences?.sortingMode, query, activeTags, activeLanguages)
+    val songOrder = rememberChecklistOrder(checkedSongKeys, refreshKey)
+    // Keep chip retention outside the lazy header, so changes reset it even while the header is off screen.
+    val chipRefreshKey = query to userPreferences?.sortingMode
+    val tagChipOrder = rememberChecklistOrder(activeTags, chipRefreshKey to userPreferences?.tagSortingMode)
+    val languageChipOrder = rememberChecklistOrder(
+        activeLanguages,
+        listOf(chipRefreshKey, userPreferences?.languageSortingMode, currentLanguage.value.code),
+    )
+    val orderedMatches = remember(matches, songOrder) { songOrder.ordered(matches) { it.song.fileName } }
     CampfireBottomSheet(
         title = stringResource(Res.string.setlists_song_assignments),
         subtitle = setlist.title,
@@ -1655,8 +1693,10 @@ private fun SongPicker(
         )
         PickerList(
             contentPadding = contentPadding,
-            sortingMode = userPreferences?.sortingMode,
-            contents = matches,
+            refreshKey = refreshKey,
+            contents = orderedMatches,
+            checkedKeys = checkedSongKeys,
+            orderedKeys = orderedMatches.map { it.song.fileName },
             noResultsText = when {
                 // Reached from an empty setlist's "Add songs" in an empty library, which the setlists screen lists as well.
                 songs.isEmpty() -> stringResource(Res.string.songs_empty_title)
@@ -1670,20 +1710,22 @@ private fun SongPicker(
                         filters = filters,
                         selectedTags = activeTags,
                         selectedLanguages = activeLanguages,
+                        tagOrder = tagChipOrder,
+                        languageOrder = languageChipOrder,
+                        refreshKey = chipRefreshKey,
                         tagSortingMode = userPreferences?.tagSortingMode ?: UserPreferences.LabelSortingMode.BY_USAGE,
                         languageSortingMode = userPreferences?.languageSortingMode ?: UserPreferences.LabelSortingMode.BY_USAGE,
-                        onTagClicked = { tag -> selectedTags = if (tag in activeTags) selectedTags - tag else selectedTags + tag },
-                        onLanguageClicked = { code ->
-                            selectedLanguages = if (code in activeLanguages) selectedLanguages - code else selectedLanguages + code
-                        },
+                        onTagClicked = viewModel::toggleSongPickerTag,
+                        onLanguageClicked = viewModel::toggleSongPickerLanguage,
                         onTagSortingModeSelected = viewModel::setTagSortingMode,
                         onLanguageSortingModeSelected = viewModel::setLanguageSortingMode,
                     )
                 }
             },
         ) { listState ->
-            items(
-                items = matches,
+            checklistItems(
+                items = orderedMatches,
+                order = songOrder,
                 key = { it.song.fileName },
             ) { pickableSong ->
                 val fileName = pickableSong.song.fileName
@@ -1713,10 +1755,9 @@ private fun SongPicker(
  * phone, the header, the field and two rows of chips held still left the list itself no room at all, and a chip is
  * picked once where the field is typed into throughout. A library with nothing to filter by gets neither row.
  *
- * Selected chips stay where they are rather than moving to the front, for the reason the picker's rows do: a chip that
- * jumped away from under the finger that had just tapped it would have to be found again to be turned off. The order
- * they are in is the one the songs screen's filters show them in, and each row starts with the same toggle that
- * switches it ([SortableChipRow]).
+ * Selected chips lead each row, newest first, with an animated scroll to the start. Deselected chips remain in
+ * that group until search or sorting changes. A divider separates it from the remaining chips in the selected
+ * sorting order, and each row starts with the toggle that switches that order ([SortableChipRow]).
  */
 @Composable
 private fun PickerFilters(
@@ -1724,6 +1765,9 @@ private fun PickerFilters(
     filters: PickerFilterOptions,
     selectedTags: Set<String>,
     selectedLanguages: Set<String>,
+    tagOrder: ChecklistOrder,
+    languageOrder: ChecklistOrder,
+    refreshKey: Any?,
     tagSortingMode: UserPreferences.LabelSortingMode,
     languageSortingMode: UserPreferences.LabelSortingMode,
     onTagClicked: (String) -> Unit,
@@ -1743,7 +1787,9 @@ private fun PickerFilters(
         if (filters.tags.isNotEmpty()) {
             SortableChipRow(
                 items = tags,
-                key = { "tag_${it.name.lowercase()}" },
+                key = { it.name.lowercase() },
+                order = tagOrder,
+                refreshKey = refreshKey,
                 sortingMode = tagSortingMode,
                 onSortingModeSelected = onTagSortingModeSelected,
             ) { tag ->
@@ -1760,7 +1806,9 @@ private fun PickerFilters(
         if (filters.languages.isNotEmpty()) {
             SortableChipRow(
                 items = languages,
-                key = { "language_${it.code}" },
+                key = { it.code },
+                order = languageOrder,
+                refreshKey = refreshKey to appLanguageCode,
                 sortingMode = languageSortingMode,
                 onSortingModeSelected = onLanguageSortingModeSelected,
             ) { language ->
@@ -1813,8 +1861,8 @@ private fun PickerSearchField(
  *
  * @param contentPadding What the sheet's content keeps clear at the bottom, applied inside the scroll so that the last
  *   rows pass under the navigation bar and the keyboard on their way up.
- * @param sortingMode The order the rows are in, a change of which sends the list back to its first row once the
- *   reordered [contents] arrive ([ScrollToStartWhenChanged]).
+ * @param refreshKey Search, sorting and filters; a change sends the list back to its first row once the
+ *   refreshed [contents] arrive ([ScrollToStartWhenChanged]).
  * @param noResultsText What to say in place of the rows, null while there is nothing to say.
  * @param header What the list starts with and scrolls away with the rows, above what it says in their place, so that a
  *   filter that left nothing can still be turned off.
@@ -1824,8 +1872,10 @@ private fun PickerSearchField(
 @Composable
 private fun ColumnScope.PickerList(
     contentPadding: PaddingValues,
-    sortingMode: Any?,
+    refreshKey: Any?,
     contents: Any?,
+    checkedKeys: Set<String>,
+    orderedKeys: List<String>,
     noResultsText: String?,
     revealRowsKey: Any? = null,
     header: (@Composable () -> Unit)? = null,
@@ -1843,8 +1893,14 @@ private fun ColumnScope.PickerList(
     HideKeyboardWhenScrolledDown(listState)
     ScrollToStartWhenChanged(
         listState = listState,
-        key = sortingMode,
+        key = refreshKey,
         contents = contents,
+    )
+    ScrollToNewlyCheckedItem(
+        listState = listState,
+        checkedKeys = checkedKeys,
+        orderedKeys = orderedKeys,
+        rowOffset = (if (hasHeader) 1 else 0) + (if (noResultsText != null) 1 else 0),
     )
     LazyColumn(
         modifier = Modifier
@@ -2063,7 +2119,14 @@ private fun SheetHeader(
             )
         }
     }
-    actions?.invoke(this, onClose)
+    if (actions != null) {
+        // Header actions need the same readable size as the title while retaining button label weight and spacing.
+        val typography = MaterialTheme.typography
+        val actionTypography = remember(typography) {
+            typography.copy(labelLarge = typography.labelLarge.copy(fontSize = 16.sp, lineHeight = 24.sp))
+        }
+        MaterialTheme(typography = actionTypography) { actions(onClose) }
+    }
 }
 
 private val SHEET_BOTTOM_PADDING = 16.dp

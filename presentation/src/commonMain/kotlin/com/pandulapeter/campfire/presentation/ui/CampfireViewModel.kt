@@ -248,6 +248,18 @@ class CampfireViewModel(
     )
     val songFilter = _songFilter.asStateFlow()
 
+    /** Assignment-sheet tags survive reopening the sheet, independently of the main Songs filter. Same run lifetime. */
+    private val _songPickerSelectedTags = MutableStateFlow<Set<String>>(
+        restore<List<String>>(SONG_PICKER_TAGS_KEY).orEmpty().mapTo(mutableSetOf()) { it.lowercase() }
+    )
+    internal val songPickerSelectedTags = _songPickerSelectedTags.asStateFlow()
+
+    /** Assignment-sheet languages have the same independent session lifetime as its tags. */
+    private val _songPickerSelectedLanguages = MutableStateFlow<Set<String>>(
+        restore<List<String>>(SONG_PICKER_LANGUAGES_KEY).orEmpty().toSet()
+    )
+    internal val songPickerSelectedLanguages = _songPickerSelectedLanguages.asStateFlow()
+
     /**
      * The single subscription to the domain layer: every state below maps over this instead of over
      * [GetScreenDataUseCase] directly, which would re-run the whole repository combine once per state. Started
@@ -1186,6 +1198,12 @@ class CampfireViewModel(
         }
         viewModelScope.launch {
             _songFilter.collect { persist(SONG_FILTER_KEY, SavedSongFilter(selectedTags = it.selectedTags.toList(), selectedLanguages = it.selectedLanguages.toList())) }
+        }
+        viewModelScope.launch {
+            _songPickerSelectedTags.collect { persist(SONG_PICKER_TAGS_KEY, it.toList()) }
+        }
+        viewModelScope.launch {
+            _songPickerSelectedLanguages.collect { persist(SONG_PICKER_LANGUAGES_KEY, it.toList()) }
         }
         listOf(SONGS_SEARCH_KEY to songsSearch, SETLISTS_SEARCH_KEY to setlistsSearch).forEach { (key, search) ->
             viewModelScope.launch {
@@ -3005,6 +3023,15 @@ class CampfireViewModel(
         filter.copy(selectedTags = if (without.size == filter.selectedTags.size) filter.selectedTags + tag else without)
     }
 
+    internal fun toggleSongPickerTag(tag: String) = _songPickerSelectedTags.update { selected ->
+        val key = tag.lowercase()
+        if (key in selected) selected - key else selected + key
+    }
+
+    internal fun toggleSongPickerLanguage(code: String) = _songPickerSelectedLanguages.update { selected ->
+        if (code in selected) selected - code else selected + code
+    }
+
     /** Only the tags the library still has are cleared: a selection this screen never showed is not a tap's to lose. */
     fun clearTagFilter() = _songFilter.update { filter ->
         val libraryTags = tags.value.mapTo(mutableSetOf()) { it.name.lowercase() }
@@ -3623,6 +3650,8 @@ class CampfireViewModel(
         private const val DEMO_LIBRARY_READ_TIMEOUT_MILLIS = 10_000L // Past the drawables' five seconds: it cuts short a first impression, not a frame.
         private const val MAX_SAVED_BACK_STACK_LENGTH = 100_000 // Characters of JSON, about 200 KB as the UTF-16 a Bundle writes.
         private const val SONG_FILTER_KEY = "songFilter"
+        private const val SONG_PICKER_TAGS_KEY = "songPickerTags"
+        private const val SONG_PICKER_LANGUAGES_KEY = "songPickerLanguages"
         private const val SONGS_SEARCH_KEY = "songsSearch"
         private const val SETLISTS_SEARCH_KEY = "setlistsSearch"
         private val MIN_RESCAN_INTERVAL = 10.seconds
