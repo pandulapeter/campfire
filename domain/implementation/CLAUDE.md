@@ -121,7 +121,7 @@ The ones that carry real logic:
   longer decodes — which the scan skips and leaves on disk as the user's to fix — is kept by the backup. What cannot
   be read, or is larger than a song or a setlist can be (and so is never opened), is named beside the archive. The
   view model says so after the save.
-- `CreateSongUseCaseImpl` — writes the new-song template (`{title}`, `{artist}`, `{key}` and an empty verse).
+- `CreateSongUseCaseImpl` — writes the new-song template (`{title}`, optional `{artist}`, `{key}` and an empty verse), adding any nonblank subtitle, album, composer, lyricist, year and duration from New song through `ChordProMetadataFields`. The title and artist arguments remain authoritative for the metadata and file naming; blank optional fields add no directives.
 - `TransposeChordProUseCaseImpl` / `TransposeChordProTextUseCaseImpl` / `ParseChordProUseCaseImpl` /
   `ConvertChordProNotationUseCaseImpl` / `ConvertChordProTextNotationUseCaseImpl` / `PrettifyChordProUseCaseImpl` — thin wrappers over `:chordpro`, so
   the presentation layer never calls the parser directly. `mapper/AccidentalsMappers.kt` and `mapper/NotationMappers.kt`

@@ -1576,8 +1576,13 @@ class CampfireViewModel(
     }
 
     /** Creates the file and opens it in the editor, which is the only useful thing to do with an empty song. */
-    fun createSong(title: String, artist: String) = launchLibraryChange {
-        openEditor(fileName = createSong.invoke(title = title, artist = artist).fileName, shouldStartInsideFirstSection = true)
+    fun createSong(values: Map<ChordProMetadataFields.Field, String>) = launchLibraryChange {
+        val song = createSong.invoke(
+            title = values[ChordProMetadataFields.Field.TITLE].orEmpty(),
+            artist = values[ChordProMetadataFields.Field.ARTIST].orEmpty(),
+            metadata = values,
+        )
+        openEditor(fileName = song.fileName, shouldStartInsideFirstSection = true)
     }
 
     /**

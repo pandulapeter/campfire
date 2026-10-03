@@ -47,7 +47,6 @@ import com.pandulapeter.campfire.chordpro.ChordProLinks
 import com.pandulapeter.campfire.chordpro.model.ChordProLink
 import com.pandulapeter.campfire.presentation.localization.stringResource
 import com.pandulapeter.campfire.presentation.resources.Res
-import com.pandulapeter.campfire.presentation.resources.cancel
 import com.pandulapeter.campfire.presentation.resources.ic_add
 import com.pandulapeter.campfire.presentation.resources.ic_delete
 import com.pandulapeter.campfire.presentation.resources.ic_move_down
@@ -102,9 +101,10 @@ internal fun SongLinksDialog(
     val links = rows.map { it.link }
     val urls = links.map { ChordProLinks.usableUrl(it.url) }
     val canSave = urls.all { it != null } && urls.distinct().size == urls.size
-    TextFieldDialog(
-        onDismissRequest = viewModel::dismissDialog,
-        title = { SubjectDialogTitle(title = stringResource(Res.string.song_details_links_edit), subtitle = songLabel(dialog.song)) },
+    TextFieldBottomSheet(
+        onDismissRequest = { viewModel.dismissSheet(dialog) },
+        title = stringResource(Res.string.song_details_links_edit),
+        subtitle = songLabel(dialog.song),
         text = {
             LazyColumn(
                 modifier = Modifier.fillMaxWidth().heightIn(max = 420.dp).fadingVerticalEdges(listState),
@@ -134,11 +134,13 @@ internal fun SongLinksDialog(
                 }
             }
         },
-        // Add link stands at the start of the button row, apart from the two that close the dialog.
+        // Keep Add link compact so the header has room for the song and Save.
         startButton = {
-            TextButton(onClick = ::add) {
-                Icon(painter = painterResource(Res.drawable.ic_add), contentDescription = null)
-                Text(modifier = Modifier.padding(start = 8.dp), text = stringResource(Res.string.song_details_link_add))
+            IconButton(onClick = ::add) {
+                Icon(
+                    painter = painterResource(Res.drawable.ic_add),
+                    contentDescription = stringResource(Res.string.song_details_link_add),
+                )
             }
         },
         confirmButton = {
@@ -150,7 +152,6 @@ internal fun SongLinksDialog(
                 },
             ) { Text(stringResource(Res.string.save)) }
         },
-        dismissButton = { TextButton(onClick = viewModel::dismissDialog) { Text(stringResource(Res.string.cancel)) } },
     )
 }
 

@@ -15,6 +15,7 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.OutlinedTextField
@@ -27,6 +28,7 @@ import androidx.compose.runtime.saveable.listSaver
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardCapitalization
 import androidx.compose.ui.text.input.KeyboardType
@@ -34,7 +36,7 @@ import androidx.compose.ui.unit.dp
 import com.pandulapeter.campfire.chordpro.ChordProMetadataFields.Field
 import com.pandulapeter.campfire.presentation.localization.stringResource
 import com.pandulapeter.campfire.presentation.resources.Res
-import com.pandulapeter.campfire.presentation.resources.cancel
+import com.pandulapeter.campfire.presentation.resources.optional_field_label
 import com.pandulapeter.campfire.presentation.resources.save
 import com.pandulapeter.campfire.presentation.resources.song_details_metadata_edit
 import com.pandulapeter.campfire.presentation.resources.song_editor_insert_album
@@ -72,9 +74,10 @@ internal fun SongMetadataDialog(
             onValueChange = { value -> values = values + (field to value) },
         )
     }
-    TextFieldDialog(
-        onDismissRequest = viewModel::dismissDialog,
-        title = { SubjectDialogTitle(title = stringResource(Res.string.song_details_metadata_edit), subtitle = songLabel(dialog.song)) },
+    TextFieldBottomSheet(
+        onDismissRequest = { viewModel.dismissSheet(dialog) },
+        title = stringResource(Res.string.song_details_metadata_edit),
+        subtitle = songLabel(dialog.song),
         text = {
             Column(
                 modifier = Modifier.fillMaxWidth().heightIn(max = 420.dp).fadingVerticalEdges(scrollState).verticalScroll(scrollState),
@@ -102,32 +105,41 @@ internal fun SongMetadataDialog(
                 },
             ) { Text(stringResource(Res.string.save)) }
         },
-        dismissButton = { TextButton(onClick = viewModel::dismissDialog) { Text(stringResource(Res.string.cancel)) } },
     )
 }
 
 @Composable
-private fun SongMetadataField(
+internal fun SongMetadataField(
     modifier: Modifier = Modifier,
     field: Field,
     value: String,
     onValueChange: (String) -> Unit,
-) = OutlinedTextField(
-    modifier = modifier,
-    value = value,
-    // A brace would end the directive early or open another one, and a line break would leave the rest of the value
-    // in the song as lyrics.
-    onValueChange = { newValue -> onValueChange(newValue.filterNot { it == '{' || it == '}' || it == '\n' || it == '\r' }) },
-    label = { Text(stringResource(field.label)) },
-    trailingIcon = rememberClearTextButton(isVisible = value.isNotEmpty(), onClear = { onValueChange("") }),
-    singleLine = true,
-    // Next walks the form in the order it is laid out, and the last field's Done puts the keyboard away.
-    keyboardOptions = KeyboardOptions(
-        capitalization = if (field == Field.YEAR) KeyboardCapitalization.None else KeyboardCapitalization.Sentences,
-        keyboardType = if (field == Field.YEAR) KeyboardType.Number else KeyboardType.Text,
-        imeAction = if (field == Field.entries.last()) ImeAction.Done else ImeAction.Next,
-    ),
-)
+    isOptional: Boolean = false,
+    maxLength: Int = Int.MAX_VALUE,
+    onDone: (() -> Unit)? = null,
+) {
+    val keyboardController = LocalSoftwareKeyboardController.current
+    OutlinedTextField(
+        modifier = modifier,
+        value = value,
+        // A brace would end the directive early or open another one, and a line break would leave the rest of the value
+        // in the song as lyrics.
+        onValueChange = { newValue -> onValueChange(newValue.filterNot { it == '{' || it == '}' || it == '\n' || it == '\r' }.take(maxLength)) },
+        label = {
+            val label = stringResource(field.label)
+            Text(if (isOptional) stringResource(Res.string.optional_field_label, label) else label)
+        },
+        trailingIcon = rememberClearTextButton(isVisible = value.isNotEmpty(), onClear = { onValueChange("") }),
+        singleLine = true,
+        // Next walks the form; the final Done confirms creation or puts the editing form's keyboard away.
+        keyboardActions = KeyboardActions(onDone = { if (onDone != null) onDone() else keyboardController?.hide() }),
+        keyboardOptions = KeyboardOptions(
+            capitalization = if (field == Field.YEAR) KeyboardCapitalization.None else KeyboardCapitalization.Sentences,
+            keyboardType = if (field == Field.YEAR) KeyboardType.Number else KeyboardType.Text,
+            imeAction = if (field == Field.entries.last()) ImeAction.Done else ImeAction.Next,
+        ),
+    )
+}
 
 private val Field.label: StringResource
     get() = when (this) {
@@ -141,7 +153,7 @@ private val Field.label: StringResource
         Field.DURATION -> Res.string.song_editor_insert_duration
     }
 
-private val songMetadataSaver = listSaver<Map<Field, String>, String>(
+internal val songMetadataSaver = listSaver<Map<Field, String>, String>(
     save = { values -> Field.entries.map { values[it].orEmpty() } },
     restore = { saved -> Field.entries.zip(saved).toMap() },
 )

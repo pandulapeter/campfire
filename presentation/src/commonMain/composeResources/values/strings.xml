@@ -122,6 +122,7 @@
     <string name="songs_empty_hint">Create a song, import songs, PDF or Word documents and zip archives, or add the demo songs.</string>
     <string name="songs_create_song">Create a song</string>
     <string name="songs_new_song">New song</string>
+    <string name="optional_field_label">%1$s (optional)</string>
     <string name="songs_new_song_title">Title</string>
     <string name="songs_new_song_artist">Artist</string>
     <string name="songs_artist_and_title">%1$s - %2$s</string>

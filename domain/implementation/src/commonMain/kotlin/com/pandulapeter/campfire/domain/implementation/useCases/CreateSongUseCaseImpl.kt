@@ -9,6 +9,8 @@
  */
 package com.pandulapeter.campfire.domain.implementation.useCases
 
+import com.pandulapeter.campfire.chordpro.ChordProMetadataFields
+import com.pandulapeter.campfire.chordpro.ChordProMetadataFields.Field
 import com.pandulapeter.campfire.data.repository.api.SongRepository
 import com.pandulapeter.campfire.domain.api.useCases.CreateSongUseCase
 import org.koin.core.annotation.Factory
@@ -22,18 +24,22 @@ class CreateSongUseCaseImpl internal constructor(
      * The new file holds what the user typed and the skeleton of a first verse, so that the editor opens on
      * something that is already shaped like a song rather than on an empty page.
      */
-    override suspend operator fun invoke(title: String, artist: String) = songRepository.createSong(
+    override suspend operator fun invoke(title: String, artist: String, metadata: Map<Field, String>) = songRepository.createSong(
         title = title.trim(),
         artist = artist.trim(),
-        text = buildString {
-            append("{title: ").append(title.trim()).append("}\n")
-            if (artist.isNotBlank()) append("{artist: ").append(artist.trim()).append("}\n")
-            append("{key: }\n")
-            append("\n")
-            append("{start_of_verse: Verse 1}\n")
-            // The blank line the editor puts the caret on.
-            append("\n")
-            append("{end_of_verse}\n")
-        },
+        text = ChordProMetadataFields.set(
+            text = buildString {
+                append("{title: ").append(title.trim()).append("}\n")
+                if (artist.isNotBlank()) append("{artist: ").append(artist.trim()).append("}\n")
+                append("{key: }\n")
+                append("\n")
+                append("{start_of_verse}\n")
+                // The blank line the editor puts the caret on.
+                append("\n")
+                append("{end_of_verse}\n")
+            },
+            // Title and artist also determine the file name, so those arguments remain authoritative.
+            values = metadata.filterKeys { it != Field.TITLE && it != Field.ARTIST },
+        ),
     )
 }

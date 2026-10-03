@@ -154,6 +154,14 @@ localized in both languages.
   nothing over a short gradient instead (`fadingTopEdge` / `fadingVerticalEdges` in `:presentation`'s
   `components/EdgeFade.kt`, and `ListTopFade` for the list screens' cards), and the bars stay flat in the background
   color. A new scrolling container gets the same treatment, not Material's scrolled-under elevation.
+- **Every modal with text inputs is a bottom sheet**, including the date picker, which can switch from a calendar
+  to typed date entry. Forms use `TextFieldBottomSheet` over `CampfireBottomSheet`; Save, Create, Done, Delete,
+  sorting and Add link actions sit in the header, whose close button cancels the draft. Keep each form's existing
+  first-field focus behavior. Both **Song assignments** and **Setlist assignments** open with search unfocused;
+  tapping their search field brings up the keyboard. New song offers subtitle, artist, album, composer, lyricist,
+  year and duration alongside the required title; each optional label uses the same parenthesized marker as setlist
+  description and link name. The date picker's Material container uses the shared sheet color, matching its header
+  and the other sheets in both themes.
 - **A sheet or a dialog holds as little still as it can, and the rest scrolls**: on a small phone with the keyboard
   up (360 × 640 dp leaves about 330 dp above it) every pinned row — a header, tabs, a field, a row of chips, a bar of
   buttons under the content — is taken from the one scrolling part, and a few of them leave it no room at all. What is
@@ -163,12 +171,10 @@ localized in both languages.
   stay pinned. Count the pinned height against that screen before adding anything that does not scroll.
 - **A short window gives the keyboard everything it can** (`SHORT_WINDOW_HEIGHT`, 480dp: a phone on its side, or the
   smallest one with the keyboard up). There a sheet's header and pinned controls scroll away with its content, above
-  the keyboard; a dialog that is typed into grows into its full screen form once what the bars and the keyboard leave
-  of the window is under 320dp, its content-of-its-own action (Add link) moving into its slimmer bar beside the
-  confirming one; the editor's second control row and Shortcuts leave while the keyboard is up, its title row is
-  48dp and its lines closer together, so three lines of text stay above a landscape keyboard; the song picker opens
-  without the keyboard; and the song details app bar hides as the song is scrolled down and comes back as it is
-  scrolled up. On Android, typing in a short window also takes the status bar away until the keyboard goes
+  the keyboard; forms with text inputs use the same sheet layout, with their actions in the header; the editor's
+  second control row and Shortcuts leave while the keyboard is up, its title row is 48dp and its lines closer together,
+  so three lines of text stay above a landscape keyboard; both assignment sheets open without the keyboard; and the
+  song details app bar hides as the song is scrolled down and comes back as it is scrolled up. On Android, typing in a short window also takes the status bar away until the keyboard goes
   (`CompactKeyboardEffect`, swiped back as a transient bar) — the only way a landscape keyboard leaves room for a
   field, a title row and three lines. A phone held upright gives song cards two title lines and narrower padding, and
   a setlist's description starts at two lines in a short window, opening on a tap. Song lists keep their 360dp
@@ -203,10 +209,10 @@ localized in both languages.
   optional sentence about what a setlist is for, shown under its header and read by the screen's search — lives in
   the file for the same reason, and so does the **date**: the day the setlist is for, an ISO date that starts as the
   day it was created here (an import dates a setlist that carries none the same way, the demo one included, unless it
-  replaces a library setlist, whose day it keeps) and is moved with a calendar in the dialog that names the setlist.
-  The same dialog's **Countdown** checkbox, off by default and in the file too, puts a subtitle under the setlist's
+  replaces a library setlist, whose day it keeps) and is moved with a calendar sheet opened from the sheet that names the setlist.
+  The setlist details sheet's **Countdown** checkbox, off by default and in the file too, puts a subtitle under the setlist's
   sticky header that says how far that day is ("In 5 days", "Today", "Yesterday") — the only place the date shows
-  outside the dialog, so the one way it can be seen in performance mode. Sorting by date puts the latest day on top, the setlists
+  outside the sheet, so the one way it can be seen in performance mode. Sorting by date puts the latest day on top, the setlists
   of one day by their title, and one written before there were dates after every dated one.
 - **Both list screens are searched from a button rather than from a field that is always there**: the app bar has
   no title — the list's pinned section header stands in its place — and the one search icon is the one close button (the mark morphs
@@ -219,7 +225,7 @@ localized in both languages.
 - **Tags are part of the song file**, not a store of their own: ChordPro `{tag}` directives, read by `:chordpro`
   into `Song.tags` at scan time and written back into the text the same way, so a tag travels with the file through
   an export, an import or a sync run. The library's set of tags is whatever the songs carry; the Songs screen's
-  filter offers them counted, most used first or alphabetically (a toggle next to the group's title, which the dialog
+  filter offers them counted, most used first or alphabetically (a toggle next to the group's title, which the sheet
   that puts them on or takes them off — opened from the song details' About the song sheet, the editor preview's card and a song card's menu on the Songs screen — shares; one preference per
   group, `UserPreferences.tagSortingMode` and `languageSortingMode`, the languages being ordered the same way).
 - **The language of a song is carried the same way, and is its own category rather than one more tag**: a
@@ -245,7 +251,7 @@ localized in both languages.
   performance mode, where the groups it has nothing for are one row of chips that add them; key, capo, tempo and time stay on the page as the song's first section. The editor's preview shows
   the same as a card that is the song's first section, flowing through its rows and columns and scaling with the
   lyrics, with the same edit buttons, which are entries of the editor's overflow menu while the preview is hidden.
-  Performance mode leaves that row out, and the button that opens it where all of them are empty. The Edit links dialog edits addresses and optional names together,
+  Performance mode leaves that row out, and the button that opens it where all of them are empty. The Edit links sheet edits addresses and optional names together,
   and their order, written once on Save; the links are shown in that order, where tags and languages are always
   shown alphabetically.
   From the editor those buttons change the text being typed rather than the file, which only Save writes.
@@ -599,7 +605,7 @@ the only possible one. The per-module `CLAUDE.md` files carry the detail; the sh
   with those files' index entries dropped, so they are new on the side that still has them and are copied back. An
   answer waives the guard of its own direction only, this device being asked about first. The answer belongs to that
   one run, and an ordinary run asks again for as long as the folder stays that way. The one run that starts with the
-  cloud folder's answer already given is the one Settings' library deletion starts, since typing `DELETE` in a dialog
+  cloud folder's answer already given is the one Settings' library deletion starts, since typing `DELETE` in a sheet
   that says the folder goes too is that answer.
 - A fresh installation never inherits a connection: a launch that finds no preferences document forgets whatever
   credentials a previous installation left in a store that outlived it (the iOS Keychain), locally and without a
@@ -654,10 +660,10 @@ the short version:
   out of every device backup and deleted after a library read that leaves no song naming it (`CoverArtRepository`).
   Settings → Library shows how much they take up, under the library's own size, once there is any, and tapping that
   row deletes them (`CoverArtRepository.clearCoverArtCache`) after a confirmation; the library's own row deletes every
-  song and setlist, after a dialog that wants `DELETE` typed, stops any run that is going and then starts a sync run
+  song and setlist, after a sheet that wants `DELETE` typed, stops any run that is going and then starts a sync run
   with the deletions allowed
   (`DeleteLibraryUseCase`), the typed word being the answer the run's guard would otherwise stop to ask for — so the
-  cloud folder and every device synced with it are emptied too, which the dialog says while an account is connected.
+  cloud folder and every device synced with it are emptied too, which the sheet says while an account is connected.
   Requests for one address share one download, only a few are made at a time, one nobody is waiting for any more by
   its turn is not made at all, and an address that failed is not asked again for the rest of the
   session (an answer that is not a cover) or for a minute (no answer at all).

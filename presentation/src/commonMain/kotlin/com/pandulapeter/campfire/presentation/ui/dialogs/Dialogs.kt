@@ -52,7 +52,6 @@ import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Checkbox
 import androidx.compose.material3.DatePicker
 import androidx.compose.material3.DatePickerDefaults
-import androidx.compose.material3.DatePickerDialog
 import androidx.compose.material3.DatePickerState
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
@@ -109,6 +108,7 @@ import com.pandulapeter.campfire.data.model.domain.SyncState
 import com.pandulapeter.campfire.data.model.domain.UserPreferences
 import com.pandulapeter.campfire.presentation.localization.currentLanguage
 import com.pandulapeter.campfire.presentation.localization.pluralStringResource
+import com.pandulapeter.campfire.chordpro.ChordProMetadataFields.Field
 import com.pandulapeter.campfire.presentation.localization.stringResource
 import com.pandulapeter.campfire.presentation.resources.Res
 import com.pandulapeter.campfire.presentation.resources.cover_art_search_remove
@@ -171,8 +171,6 @@ import com.pandulapeter.campfire.presentation.resources.songs_delete_song_confir
 import com.pandulapeter.campfire.presentation.resources.songs_empty_title
 import com.pandulapeter.campfire.presentation.resources.songs_filter
 import com.pandulapeter.campfire.presentation.resources.songs_new_song
-import com.pandulapeter.campfire.presentation.resources.songs_new_song_artist
-import com.pandulapeter.campfire.presentation.resources.songs_new_song_title
 import com.pandulapeter.campfire.presentation.resources.songs_no_search_results
 import com.pandulapeter.campfire.presentation.resources.songs_search
 import com.pandulapeter.campfire.presentation.resources.songs_setlist_assignments
@@ -252,7 +250,7 @@ internal fun CampfireDialogs(
         CampfireViewModel.DialogType.NewSetlist -> SetlistDetailsDialog(
             title = stringResource(Res.string.setlists_new_setlist),
             confirmLabel = stringResource(Res.string.create),
-            onDismiss = viewModel::dismissDialog,
+            onDismiss = { viewModel.dismissSheet(dialog) },
             // Dismissed before the setlist is created rather than after, since creating it is what opens the song
             // picker for it, and a dismissal arriving after that would close the picker instead.
             onConfirm = { setlistTitle, description, date, isCountdownShown ->
@@ -270,7 +268,7 @@ internal fun CampfireDialogs(
             initialDate = dialog.setlist.date,
             initialIsCountdownShown = dialog.setlist.isCountdownShown,
             confirmLabel = stringResource(Res.string.save),
-            onDismiss = viewModel::dismissDialog,
+            onDismiss = { viewModel.dismissSheet(dialog) },
             onConfirm = { setlistTitle, description, date, isCountdownShown ->
                 viewModel.editSetlist(
                     setlistFileName = dialog.setlist.fileName,
@@ -292,7 +290,7 @@ internal fun CampfireDialogs(
             initialDescription = dialog.setlist.description,
             initialIsCountdownShown = dialog.setlist.isCountdownShown,
             confirmLabel = stringResource(Res.string.setlists_duplicate),
-            onDismiss = viewModel::dismissDialog,
+            onDismiss = { viewModel.dismissSheet(dialog) },
             onConfirm = { setlistTitle, description, date, isCountdownShown ->
                 viewModel.duplicateSetlist(
                     setlist = dialog.setlist,
@@ -306,9 +304,9 @@ internal fun CampfireDialogs(
         )
 
         CampfireViewModel.DialogType.NewSong -> NewSongDialog(
-            onDismiss = viewModel::dismissDialog,
-            onCreate = { title, artist ->
-                viewModel.createSong(title = title, artist = artist)
+            onDismiss = { viewModel.dismissSheet(dialog) },
+            onCreate = { values ->
+                viewModel.createSong(values = values)
                 viewModel.dismissDialog()
             },
         )
@@ -779,9 +777,9 @@ private fun DeleteLibraryDialog(
             viewModel.dismissDialog()
         }
     }
-    TextFieldDialog(
-        onDismissRequest = viewModel::dismissDialog,
-        title = { Text(stringResource(Res.string.settings_library_delete)) },
+    TextFieldBottomSheet(
+        onDismissRequest = { viewModel.dismissSheet(CampfireViewModel.DialogType.DeleteLibrary) },
+        title = stringResource(Res.string.settings_library_delete),
         text = {
             Column(
                 modifier = Modifier.fadingVerticalEdges(scrollState).verticalScroll(scrollState),
@@ -825,9 +823,6 @@ private fun DeleteLibraryDialog(
                 onClick = deleteLibrary,
             ) { Text(stringResource(Res.string.delete)) }
         },
-        dismissButton = {
-            TextButton(onClick = viewModel::dismissDialog) { Text(stringResource(Res.string.cancel)) }
-        },
     )
 }
 
@@ -836,8 +831,8 @@ private fun DeleteLibraryDialog(
  * its first field rather than asking for one more tap, which on a touch platform is also what brings the keyboard
  * up with it - and every such dialog here holds that field as the first thing under the title, so there is only ever
  * the one field to open on. The forms that are opened to be looked over as much as to be typed into are the exception,
- * opening on none of their fields: the song metadata form, and a setlist's details being edited. The song picker's
- * sheet opens onto its search field the same way.
+ * opening on none of their fields: the song metadata form, and a setlist's details being edited. Both assignment
+ * sheets leave their search fields unfocused.
  *
  * @param isFocused Whether the field is given the caret as the dialog opens, for a dialog that does so only some of the
  *   ways it is opened.
@@ -914,9 +909,10 @@ private fun SetlistDetailsDialog(
     val scrollState = rememberScrollState()
     val focusRequester = rememberFirstFieldFocusRequester(isFocused = isTitleFocused)
     val confirmOnce = rememberSingleConfirmation()
-    TextFieldDialog(
+    TextFieldBottomSheet(
         onDismissRequest = onDismiss,
-        title = { if (subtitle.isBlank()) Text(title) else SubjectDialogTitle(title = title, subtitle = subtitle) },
+        title = title,
+        subtitle = subtitle,
         text = {
             Column(modifier = Modifier.fadingVerticalEdges(scrollState).verticalScroll(scrollState)) {
                 OutlinedTextField(
@@ -970,9 +966,6 @@ private fun SetlistDetailsDialog(
                 enabled = isValid,
                 onClick = { confirmOnce { onConfirm(setlistTitle.text, description, date, isCountdownShown) } },
             ) { Text(confirmLabel) }
-        },
-        dismissButton = {
-            TextButton(onClick = onDismiss) { Text(stringResource(Res.string.cancel)) }
         },
     )
 }
@@ -1086,9 +1079,10 @@ private fun SetlistDateField(
         LaunchedEffect(state) { snapshotFlow { state.selectedDateMillis }.collect { it?.let { millis -> selectedMillis = millis } } }
         val dateFormatter = remember { DatePickerDefaults.dateFormatter() }
         val dismiss = { isPickerVisible = false }
-        DatePickerDialog(
-            onDismissRequest = dismiss,
-            confirmButton = {
+        CampfireBottomSheet(
+            title = stringResource(Res.string.setlists_pick_date),
+            onDismiss = dismiss,
+            actions = {
                 TextButton(
                     enabled = state.selectedDateMillis != null,
                     onClick = {
@@ -1097,19 +1091,18 @@ private fun SetlistDateField(
                     },
                 ) { Text(stringResource(Res.string.done)) }
             },
-            dismissButton = {
-                TextButton(onClick = dismiss) { Text(stringResource(Res.string.cancel)) }
-            },
-        ) {
+        ) { contentPadding ->
+            val calendarScrollState = rememberScrollState()
             DatePicker(
+                modifier = Modifier
+                    .weight(1f, fill = false)
+                    .fadingVerticalEdges(calendarScrollState)
+                    .verticalScroll(calendarScrollState)
+                    .padding(bottom = contentPadding.calculateBottomPadding()),
                 state = state,
                 dateFormatter = dateFormatter,
-                title = {
-                    Text(
-                        modifier = Modifier.padding(PaddingValues(start = 24.dp, end = 12.dp, top = 16.dp)),
-                        text = stringResource(Res.string.setlists_pick_date),
-                    )
-                },
+                colors = DatePickerDefaults.colors(containerColor = campfireBottomSheetContainerColor()),
+                title = null,
                 // Material's own headline formats the day in the system's locale whatever the state's is, so it is
                 // drawn here in the calendar's, with the paddings and the color Material gives it.
                 headline = {
@@ -1131,60 +1124,52 @@ private fun SetlistDateField(
 
 private fun today() = Clock.System.todayIn(TimeZone.currentSystemDefault())
 
-/**
- * The title and the artist of a song about to be created. Only the title is required: it is what the file is named
- * after, and a song without a known artist is a normal thing to have.
- */
+/** A new song's metadata. Only its title is required; the optional values are written into its initial file. */
 @Composable
 private fun NewSongDialog(
     onDismiss: () -> Unit,
-    onCreate: (title: String, artist: String) -> Unit,
+    onCreate: (Map<Field, String>) -> Unit,
 ) {
-    var title by rememberSaveable { mutableStateOf("") }
-    var artist by rememberSaveable { mutableStateOf("") }
-    val isValid = title.isNotBlank()
+    var values by rememberSaveable(stateSaver = songMetadataSaver) { mutableStateOf(emptyMap<Field, String>()) }
+    val isValid = values[Field.TITLE].orEmpty().isNotBlank()
     val focusRequester = rememberFirstFieldFocusRequester()
     val keyboardController = LocalSoftwareKeyboardController.current
     val scrollState = rememberScrollState()
     val confirmOnce = rememberSingleConfirmation()
-    val create = { if (isValid) confirmOnce { onCreate(title, artist) } }
-    TextFieldDialog(
+    val create: () -> Unit = { if (isValid) confirmOnce { onCreate(values) } else keyboardController?.hide() }
+    val field: @Composable (Modifier, Field) -> Unit = { modifier, field ->
+        SongMetadataField(
+            modifier = modifier,
+            field = field,
+            value = values[field].orEmpty(),
+            onValueChange = { values = values + (field to it) },
+            isOptional = field != Field.TITLE,
+            maxLength = if (field == Field.TITLE || field == Field.ARTIST) MAX_TITLE_LENGTH else Int.MAX_VALUE,
+            onDone = create,
+        )
+    }
+    TextFieldBottomSheet(
         onDismissRequest = onDismiss,
-        title = { Text(stringResource(Res.string.songs_new_song)) },
+        title = stringResource(Res.string.songs_new_song),
         text = {
-            Column(modifier = Modifier.fadingVerticalEdges(scrollState).verticalScroll(scrollState)) {
-                OutlinedTextField(
-                    modifier = Modifier.fillMaxWidth().focusRequester(focusRequester),
-                    value = title,
-                    onValueChange = { title = it.asSingleLine().take(MAX_TITLE_LENGTH) },
-                    label = { Text(stringResource(Res.string.songs_new_song_title)) },
-                    trailingIcon = rememberClearTextButton(isVisible = title.isNotEmpty(), onClear = { title = "" }),
-                    singleLine = true,
-                    // Sentences rather than words for the title: only English capitalizes every word of one, and a
-                    // letter the keyboard raised is one more to correct in every other language. An artist is a name.
-                    keyboardOptions = KeyboardOptions(capitalization = KeyboardCapitalization.Sentences, imeAction = ImeAction.Next),
-                )
-                Spacer(modifier = Modifier.height(8.dp))
-                OutlinedTextField(
-                    modifier = Modifier.fillMaxWidth(),
-                    value = artist,
-                    onValueChange = { artist = it.asSingleLine().take(MAX_TITLE_LENGTH) },
-                    label = { Text(stringResource(Res.string.songs_new_song_artist)) },
-                    trailingIcon = rememberClearTextButton(isVisible = artist.isNotEmpty(), onClear = { artist = "" }),
-                    singleLine = true,
-                    keyboardOptions = KeyboardOptions(capitalization = KeyboardCapitalization.Words, imeAction = ImeAction.Done),
-                    keyboardActions = KeyboardActions(onDone = { if (isValid) create() else keyboardController?.hide() }),
-                )
+            Column(
+                modifier = Modifier.fadingVerticalEdges(scrollState).verticalScroll(scrollState),
+                verticalArrangement = Arrangement.spacedBy(8.dp),
+            ) {
+                field(Modifier.fillMaxWidth().focusRequester(focusRequester), Field.TITLE)
+                field(Modifier.fillMaxWidth(), Field.SUBTITLE)
+                field(Modifier.fillMaxWidth(), Field.ARTIST)
+                field(Modifier.fillMaxWidth(), Field.ALBUM)
+                field(Modifier.fillMaxWidth(), Field.COMPOSER)
+                field(Modifier.fillMaxWidth(), Field.LYRICIST)
+                Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                    field(Modifier.weight(1f), Field.YEAR)
+                    field(Modifier.weight(1f), Field.DURATION)
+                }
             }
         },
         confirmButton = {
-            TextButton(
-                enabled = isValid,
-                onClick = create,
-            ) { Text(stringResource(Res.string.create)) }
-        },
-        dismissButton = {
-            TextButton(onClick = onDismiss) { Text(stringResource(Res.string.cancel)) }
+            TextButton(enabled = isValid, onClick = create) { Text(stringResource(Res.string.create)) }
         },
     )
 }
@@ -1200,7 +1185,7 @@ private fun NewSongDialog(
  * is filed under "christmas", "Christmas" and "xmas" is a library whose tags filter nothing. For the same reason what is
  * typed ticks the tag it spells, whatever its case, and a tag is only created where there is none to tick.
  *
- * It names the song it tags under its title ([SubjectDialogTitle]) wherever it was opened from: a tag put on the row next
+ * It names the song it tags under its title ([SheetHeader]) wherever it was opened from: a tag put on the row next
  * to the one that was meant is a file quietly rewritten, and saying it over the song details screen as well keeps the
  * dialog reading the same from both places.
  */
@@ -1252,18 +1237,14 @@ private fun SongTagsDialog(
         }
         query = ""
     }
-    TextFieldDialog(
-        onDismissRequest = viewModel::dismissDialog,
-        title = {
-            SubjectDialogTitle(
-                title = stringResource(Res.string.song_details_tags_manage),
-                subtitle = songLabel(dialog.song),
-                action = {
-                    LabelSortingToggle(
-                        sortingMode = sortingMode,
-                        onSortingModeSelected = viewModel::setTagSortingMode,
-                    )
-                },
+    TextFieldBottomSheet(
+        onDismissRequest = { viewModel.dismissSheet(dialog) },
+        title = stringResource(Res.string.song_details_tags_manage),
+        subtitle = songLabel(dialog.song),
+        startButton = {
+            LabelSortingToggle(
+                sortingMode = sortingMode,
+                onSortingModeSelected = viewModel::setTagSortingMode,
             )
         },
         text = {
@@ -1346,38 +1327,7 @@ private fun SongTagsDialog(
                 },
             ) { Text(stringResource(Res.string.done)) }
         },
-        dismissButton = {
-            TextButton(onClick = viewModel::dismissDialog) { Text(stringResource(Res.string.cancel)) }
-        },
     )
-}
-
-/**
- * The title of a dialog about one song or one setlist, with that song or setlist named under it the way a sheet's
- * [SheetHeader] names it, wherever the dialog was opened from: one opened from a row of a list would otherwise not say
- * which row it is about. The title itself is the label of the entry that opened the dialog, so that what was tapped is
- * what comes up.
- *
- * @param subtitle What the dialog acts on: [songLabel], or the setlist's title.
- * @param action A small control about the dialog's list as a whole, at the end of the title's row.
- */
-@Composable
-internal fun SubjectDialogTitle(
-    title: String,
-    subtitle: String,
-    action: (@Composable () -> Unit)? = null,
-) = Row(verticalAlignment = Alignment.CenterVertically) {
-    Column(modifier = Modifier.weight(1f)) {
-        Text(title)
-        Text(
-            text = subtitle,
-            style = MaterialTheme.typography.bodyMedium,
-            color = MaterialTheme.colorScheme.onSurfaceVariant,
-            maxLines = 1,
-            overflow = TextOverflow.Ellipsis,
-        )
-    }
-    action?.invoke()
 }
 
 /**
@@ -1436,18 +1386,14 @@ private fun SongLanguagesDialog(
             languages.filter { it.code == queryCode || normalizedQuery in it.sortKey || it.code.startsWith(normalizedQuery) }
         }
     }
-    TextFieldDialog(
-        onDismissRequest = viewModel::dismissDialog,
-        title = {
-            SubjectDialogTitle(
-                title = stringResource(Res.string.song_details_languages_edit),
-                subtitle = songLabel(dialog.song),
-                action = {
-                    LabelSortingToggle(
-                        sortingMode = sortingMode,
-                        onSortingModeSelected = viewModel::setLanguageSortingMode,
-                    )
-                },
+    TextFieldBottomSheet(
+        onDismissRequest = { viewModel.dismissSheet(dialog) },
+        title = stringResource(Res.string.song_details_languages_edit),
+        subtitle = songLabel(dialog.song),
+        startButton = {
+            LabelSortingToggle(
+                sortingMode = sortingMode,
+                onSortingModeSelected = viewModel::setLanguageSortingMode,
             )
         },
         text = {
@@ -1513,9 +1459,6 @@ private fun SongLanguagesDialog(
                     viewModel.dismissDialog()
                 },
             ) { Text(stringResource(Res.string.done)) }
-        },
-        dismissButton = {
-            TextButton(onClick = viewModel::dismissDialog) { Text(stringResource(Res.string.cancel)) }
         },
     )
 }
@@ -1697,9 +1640,6 @@ private fun SongPicker(
         onDismiss = { viewModel.dismissSheet(dialog) },
     ) { contentPadding ->
         PickerSearchField(
-            modifier = Modifier.focusRequester(
-                rememberFirstFieldFocusRequester(isFocused = LocalWindowInfo.current.containerDpSize.height >= SHORT_WINDOW_HEIGHT),
-            ),
             query = query,
             placeholder = stringResource(Res.string.songs_search),
             onQueryChange = { query = it },
@@ -1827,13 +1767,7 @@ private fun PickerFilters(
     }
 }
 
-/**
- * The search field of a picker sheet. The setlist picker leaves it unfocused as the sheet opens, since the handful of
- * setlists under it is what that sheet is opened for and is ticked by sight. The song picker opens with the caret in
- * it, since a song is looked for in a library of hundreds by typing its name; the keyboard that comes up with it goes
- * away again as soon as the list is scrolled down ([HideKeyboardWhenScrolledDown] in [PickerList]). It does not in a
- * short window ([SHORT_WINDOW_HEIGHT]), where a keyboard nobody asked for would hide every row of the list.
- */
+/** Both assignment sheets open with their lists visible; tapping search brings up the keyboard. */
 @Composable
 private fun PickerSearchField(
     modifier: Modifier = Modifier,
@@ -1940,6 +1874,14 @@ private fun ColumnScope.PickerList(
     }
 }
 
+/** The same surface color for every sheet and any Material container drawn inside it, including the calendar. */
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+private fun campfireBottomSheetContainerColor() = MaterialTheme.colorScheme.background.let { background ->
+    // Dark sheets keep Material's lighter surface so they remain visible against the scrim.
+    if (background.luminance() < 0.5f) BottomSheetDefaults.ContainerColor else background
+}
+
 /**
  * Every sheet of the app, drawn edge to edge: the sheet runs down under the navigation bar and the keyboard instead
  * of stopping above them, and only its content is kept clear of them. [ModalBottomSheet] pads the whole content by
@@ -1980,13 +1922,7 @@ internal fun CampfireBottomSheet(
         onDismissRequest = onDismiss,
         sheetState = sheetState,
         sheetMaxWidth = sheetMaxWidth,
-        // In the light theme the screens' own background rather than Material's surface container, so a sheet reads as
-        // part of the app. In the dark one that background is too close to the scrim to tell the sheet from the screen
-        // it covers, so the sheet keeps Material's lighter container there. The scheme on screen is asked rather than the
-        // preference, so the sheet follows the theme's fade like everything else.
-        containerColor = MaterialTheme.colorScheme.background.let { background ->
-            if (background.luminance() < 0.5f) BottomSheetDefaults.ContainerColor else background
-        },
+        containerColor = campfireBottomSheetContainerColor(),
         dragHandle = null,
         contentWindowInsets = { WindowInsets.safeDrawing.only(WindowInsetsSides.Top) },
     ) {
