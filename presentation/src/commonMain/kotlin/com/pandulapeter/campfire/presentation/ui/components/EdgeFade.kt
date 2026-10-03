@@ -60,33 +60,66 @@ import androidx.compose.ui.unit.dp
 @Stable
 internal class ListTopFade(
     private val listState: LazyGridState,
-    val coveredHeightPx: Float,
+    private val coveredHeight: () -> Float,
     val fadeHeightPx: Float,
+    private val firstCardIndex: Int,
 ) {
 
     /** How far down from the top of the list the fade reaches. */
-    val heightPx = coveredHeightPx + fadeHeightPx
+    val coveredHeightPx: Float
+        get() = coveredHeight()
+
+    val heightPx: Float
+        get() = coveredHeightPx + fadeHeightPx
 
     /** Where the top of the list is in the window, which the cards place themselves against. */
     var viewportTop by mutableFloatStateOf(0f)
 
     /** How strong the fade is, which grows with how far the list has been scrolled from its top. */
     val strength: Float
-        get() = if (listState.firstVisibleItemIndex > 0) 1f else (listState.firstVisibleItemScrollOffset / fadeHeightPx).coerceIn(0f, 1f)
+        get() = listTopFadeStrength(
+            canScrollBackward = listState.canScrollBackward,
+            firstVisibleItemIndex = listState.firstVisibleItemIndex,
+            scrollOffset = listState.firstVisibleItemScrollOffset,
+            firstCardIndex = firstCardIndex,
+            coveredHeightPx = coveredHeightPx,
+            fadeHeightPx = fadeHeightPx,
+        )
 }
 
+/** The covered row recedes as the app bar takes its place; headerless lists fade directly below the bar. */
 @Composable
-internal fun rememberListTopFade(listState: LazyGridState): ListTopFade {
+internal fun rememberListTopFade(
+    listState: LazyGridState,
+    coveredHeightFraction: () -> Float = { 1f },
+    firstCardIndex: Int = 0,
+): ListTopFade {
     val density = LocalDensity.current
-    return remember(listState, density) {
+    return remember(listState, density, coveredHeightFraction, firstCardIndex) {
         with(density) {
             ListTopFade(
                 listState = listState,
-                coveredHeightPx = LIST_APP_BAR_HEIGHT.toPx(),
+                coveredHeight = { LIST_APP_BAR_HEIGHT.toPx() * coveredHeightFraction().coerceIn(0f, 1f) },
                 fadeHeightPx = EDGE_FADE_SIZE.toPx(),
+                firstCardIndex = firstCardIndex,
             )
         }
     }
+}
+
+/** Measures distance from the real start, including an expanded header but excluding collapsed header slots. */
+internal fun listTopFadeStrength(
+    canScrollBackward: Boolean,
+    firstVisibleItemIndex: Int,
+    scrollOffset: Int,
+    firstCardIndex: Int,
+    coveredHeightPx: Float,
+    fadeHeightPx: Float,
+): Float {
+    if (!canScrollBackward) return 0f
+    if (firstVisibleItemIndex > firstCardIndex) return 1f
+    val passedHeader = if (firstCardIndex > 0 && firstVisibleItemIndex == firstCardIndex) coveredHeightPx else 0f
+    return ((passedHeader + scrollOffset) / fadeHeightPx).coerceIn(0f, 1f)
 }
 
 /** Marks the list whose top [fade] is measured from. */

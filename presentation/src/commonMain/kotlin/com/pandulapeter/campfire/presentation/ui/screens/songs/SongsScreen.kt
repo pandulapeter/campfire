@@ -11,6 +11,7 @@ package com.pandulapeter.campfire.presentation.ui.screens.songs
 
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.Crossfade
+import androidx.compose.animation.core.VisibilityThreshold
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.scaleIn
@@ -19,6 +20,7 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.calculateEndPadding
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
@@ -36,6 +38,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.SideEffect
+import androidx.compose.runtime.snapshotFlow
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -43,11 +46,15 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
+import androidx.compose.ui.draw.clipToBounds
+import androidx.compose.ui.layout.layout
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalLayoutDirection
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.semantics.clearAndSetSemantics
 import androidx.compose.ui.unit.Dp
+import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.pandulapeter.campfire.data.model.domain.Song
@@ -73,6 +80,7 @@ import com.pandulapeter.campfire.presentation.ui.components.FAST_SCROLLER_WIDTH
 import com.pandulapeter.campfire.presentation.ui.components.FastScroller
 import com.pandulapeter.campfire.presentation.ui.components.HideKeyboardWhenScrolledDown
 import com.pandulapeter.campfire.presentation.ui.components.ListAnchor
+import com.pandulapeter.campfire.presentation.ui.components.LIST_APP_BAR_HEIGHT
 import com.pandulapeter.campfire.presentation.ui.components.ListLayout
 import com.pandulapeter.campfire.presentation.ui.components.ImportProgress
 import com.pandulapeter.campfire.presentation.ui.components.ListColumns
@@ -106,12 +114,15 @@ import com.pandulapeter.campfire.presentation.ui.components.rememberOverflowMenu
 import com.pandulapeter.campfire.presentation.ui.components.rememberRetainedLazyGridState
 import com.pandulapeter.campfire.presentation.ui.components.rememberSectionHeaderState
 import com.pandulapeter.campfire.presentation.ui.components.songCardPadding
+import com.pandulapeter.campfire.presentation.ui.components.searchTravelSpec
 import com.pandulapeter.campfire.presentation.ui.components.underAppBar
 import com.pandulapeter.campfire.presentation.ui.navigation.CampfireDestination
 import com.pandulapeter.campfire.presentation.ui.platform.LocalFilePicker
 import com.pandulapeter.campfire.presentation.ui.platform.isDesktopPlatform
 import com.pandulapeter.campfire.presentation.ui.screens.songDetails.songLabelActions
+import kotlinx.coroutines.flow.filter
 import kotlinx.coroutines.launch
+import kotlin.math.roundToInt
 import org.jetbrains.compose.resources.painterResource
 
 @Composable
@@ -121,6 +132,8 @@ internal fun SongsScreen(
     layout: ListLayout,
     contentPadding: PaddingValues,
 ) {
+    val isSearchOpen by viewModel.songsSearch.isOpen.collectAsStateWithLifecycle()
+    val songGroups by viewModel.songGroups.collectAsStateWithLifecycle()
     val isLoading by viewModel.isLoading.collectAsStateWithLifecycle()
     val placeholder by viewModel.songsPlaceholder.collectAsStateWithLifecycle()
     val isImporting by viewModel.isImporting.collectAsStateWithLifecycle()
@@ -152,12 +165,20 @@ internal fun SongsScreen(
     val appBarReveal = animateAppBarReveal(
         searchState = viewModel.songsSearch,
         // The ranked results of a search come in one group with no header, and a placeholder has none either.
-        isShownWithoutSearch = placeholder != null,
+        isShownWithoutSearch = placeholder != null || songGroups.groups.none { it.header != null },
     )
-    // Built lazily and read only while the lists lay out, so that the bar's spring moves the headers and the scroller
-    // without recomposing the list on every one of its frames.
-    val appBarOverlap: () -> AppBarOverlap = remember(appBarReveal) {
-        { AppBarOverlap.of(reach = appBarReach, appBarReveal = appBarReveal.value) }
+    // Loading can replace a headerless placeholder with the first section. Before search has ever opened,
+    // lay that section out fully expanded on its first frame so the grid cannot retain a collapsed first row.
+    var hasOpenedSearch by remember { mutableStateOf(isSearchOpen) }
+    SideEffect { if (isSearchOpen) hasOpenedSearch = true }
+    val isHeaderless = placeholder != null || songGroups.groups.none { it.header != null }
+    val appBarProgress = remember(appBarReveal, isSearchOpen, hasOpenedSearch, isHeaderless) {
+        { if (isSearchOpen || hasOpenedSearch) appBarReveal.value else if (isHeaderless) 1f else 0f }
+    }
+    // The list inset and header height read one spring. A scroll anchor compensates the inset exactly,
+    // keeping the active section's cards still as later sections close up around them.
+    val appBarOverlap: () -> AppBarOverlap = remember(appBarProgress) {
+        { AppBarOverlap.of(reach = appBarReach, appBarReveal = appBarProgress()) }
     }
     Box(modifier = modifier.fillMaxSize()) {
         Row {
@@ -167,10 +188,12 @@ internal fun SongsScreen(
                 modifier = Modifier.weight(1f).fillMaxHeight(),
                 list = {
                     SongList(
-                        modifier = Modifier.fillMaxSize().underAppBar { appBarReveal.value },
+                        modifier = Modifier.fillMaxSize().underAppBar { 1f - appBarOverlap().coverage },
                         viewModel = viewModel,
                         listState = listState,
                         placeholder = placeholder,
+                        isSearchOpen = isSearchOpen,
+                        songGroups = songGroups,
                         columnCount = columnCount,
                         hasLoadedLibrary = hasLoadedLibrary,
                         contentPadding = listContentPadding,
@@ -180,7 +203,7 @@ internal fun SongsScreen(
             ) {
                 SearchableTopAppBar(
                     contentPadding = listContentPadding,
-                    appBarReveal = { appBarReveal.value },
+                    appBarReveal = appBarProgress,
                     placeholder = stringResource(Res.string.songs_search),
                     searchState = viewModel.songsSearch,
                     onReachChanged = { appBarReach = it },
@@ -274,12 +297,28 @@ private fun SongList(
     viewModel: CampfireViewModel,
     listState: LazyGridState,
     placeholder: CampfireViewModel.Placeholder?,
+    isSearchOpen: Boolean,
+    songGroups: CampfireViewModel.SongGroups,
     columnCount: Int,
     hasLoadedLibrary: Boolean,
     contentPadding: PaddingValues,
     appBarOverlap: () -> AppBarOverlap,
 ) {
-    val songGroups by viewModel.songGroups.collectAsStateWithLifecycle()
+    // Keep section boundaries (including incomplete grid rows) while their header rows collapse. This makes
+    // opening and closing exact reverses and keeps every card in the active section in its original column.
+    val groups = songGroups.groups
+    val appBarHeightPx = with(LocalDensity.current) { LIST_APP_BAR_HEIGHT.toPx() }
+    val searchScroll = remember(listState, columnCount, appBarHeightPx) { SongSearchScrollAnchor(isSearchOpen) }
+    SideEffect {
+        searchScroll.update(isSearchOpen, songGroups, listState, (appBarHeightPx * (1f - appBarOverlap().coverage)).roundToInt())
+    }
+    LaunchedEffect(listState, searchScroll) {
+        snapshotFlow { listState.isScrollInProgress }.filter { it }.collect { searchScroll.cancel() }
+    }
+    val areHeadersCollapsing by remember(isSearchOpen, groups, appBarOverlap) {
+        derivedStateOf { groups.any { it.header != null } && (isSearchOpen || appBarOverlap().coverage < 1f) }
+    }
+    val itemPlacementSpec = searchTravelSpec(visibilityThreshold = IntOffset.VisibilityThreshold)
     val userPreferences by viewModel.userPreferences.collectAsStateWithLifecycle()
     val songFilter by viewModel.songFilter.collectAsStateWithLifecycle()
     val transpositions by viewModel.transpositions.collectAsStateWithLifecycle()
@@ -294,12 +333,29 @@ private fun SongList(
     val keyboardController = LocalSoftwareKeyboardController.current
     val coroutineScope = rememberCoroutineScope()
     // One boundary and label per group, in lazy-grid item coordinates, for the fast scroller and pushed header.
-    val sectionIndex = remember(songGroups) {
-        SongSectionIndex(songGroups.groups.map { SongSectionIndex.Group(songCount = it.songs.size, header = it.header) })
+    val sectionIndex = remember(groups) {
+        SongSectionIndex(groups.map { SongSectionIndex.Group(songCount = it.songs.size, header = it.header) })
     }
-    val topFade = rememberListTopFade(listState)
+    val coveredHeightFraction = remember(appBarOverlap) { { appBarOverlap().coverage } }
+    // Zero-height header slots are not scroll distance: the first card can be item 1 at the exact top.
+    val firstCardIndex = remember(groups, placeholder) {
+        var index = if (placeholder == null) 0 else 1
+        for (group in groups) {
+            if (group.header != null) index++
+            if (group.songs.isNotEmpty()) break
+        }
+        index
+    }
+    val topFade = rememberListTopFade(listState, coveredHeightFraction = coveredHeightFraction, firstCardIndex = firstCardIndex)
     // Remembered, since a new modifier every time the list recomposes would recompose the grid with it.
-    val gridModifier = remember(topFade) { Modifier.fillMaxSize().listTopFadeViewport(topFade) }
+    val gridModifier = remember(topFade, searchScroll, listState, appBarOverlap) {
+        Modifier.fillMaxSize().layout { measurable, constraints ->
+            val inset = LIST_APP_BAR_HEIGHT.toPx() * (1f - appBarOverlap().coverage)
+            searchScroll.keepCardInPlace(listState, inset.roundToInt())
+            val placeable = measurable.measure(constraints)
+            layout(placeable.width, placeable.height) { placeable.placeRelative(0, 0) }
+        }.listTopFadeViewport(topFade)
+    }
 
     // A tag or a language tapped on a row is one the song carries, so the list it filters to still holds that song,
     // and the song stays where the tap left it rather than the list going back to the top.
@@ -324,7 +380,7 @@ private fun SongList(
         key = songGroups.filterKey,
         contents = songGroups,
         anchor = filterAnchor,
-        itemIndex = { key -> songGroups.groups.itemIndexOf(key, hasPlaceholder = placeholder != null) },
+        itemIndex = { key -> groups.itemIndexOf(key, hasPlaceholder = placeholder != null) },
     )
 
     // A lazy grid holds on to the key of its first visible item across a change of its contents, which is right for
@@ -361,7 +417,7 @@ private fun SongList(
                     contentType = "placeholder",
                 ) {
                     ListPlaceholder(
-                        modifier = listItemAnimation(listState, hasLoadedLibrary).fillMaxWidth(),
+                        modifier = listItemAnimation(listState, hasLoadedLibrary, placementSpec = if (areHeadersCollapsing) null else itemPlacementSpec).fillMaxWidth(),
                         placeholder = it,
                         onRetry = viewModel::refresh,
                         onNewSong = if (isPerformanceModeEnabled) null else {
@@ -376,7 +432,7 @@ private fun SongList(
                     )
                 }
             }
-            songGroups.groups.forEach { group ->
+            groups.forEach { group ->
                 group.header?.let { header ->
                     stickyHeader(
                         key = "header_${header.key}",
@@ -384,13 +440,14 @@ private fun SongList(
                     ) { headerIndex ->
                         val headerState = rememberSectionHeaderState(listState, headerIndex)
                         SectionHeader(
-                            modifier = listItemAnimation(listState, hasLoadedLibrary)
-                                .anchoredTransition(filterAnchor, listState, "header_${header.key}"),
+                            modifier = listItemAnimation(listState, hasLoadedLibrary, placementSpec = if (areHeadersCollapsing) null else itemPlacementSpec)
+                                .anchoredTransition(filterAnchor, listState, "header_${header.key}")
+                                .collapseSearchHeader { appBarOverlap().coverage },
                             state = { headerState.value },
                             endPadding = headerEndPadding,
                             text = header.displayText(),
-                            onClick = { coroutineScope.launch { listState.animateScrollToItem(headerIndex) } },
-                            opacity = { if (headerState.value.visibleFraction < 1f) 0f else 1f },
+                            onClick = if (isSearchOpen) null else { { coroutineScope.launch { listState.animateScrollToItem(headerIndex) } } },
+                            opacity = { if (headerState.value.visibleFraction < 1f) 0f else appBarOverlap().coverage },
                             appBarOverlap = appBarOverlap,
                         )
                     }
@@ -414,7 +471,7 @@ private fun SongList(
                     // The placement animation changes as a scroll starts and ends, so it goes on a box of its own: on
                     // the row, it would be a new modifier each time, and the whole row would be composed again with it.
                     Box(
-                        modifier = listItemAnimation(listState, hasLoadedLibrary)
+                        modifier = listItemAnimation(listState, hasLoadedLibrary, placementSpec = if (areHeadersCollapsing) null else itemPlacementSpec)
                             .anchoredTransition(filterAnchor, listState, songItemKey(song)),
                     ) {
                         SongListItem(
@@ -475,6 +532,16 @@ private fun SongList(
                     }
                 }
             }
+            // Near the end, collapsing later headers can shorten the scroll range below the anchor's position.
+            // Keep just that lost tail space until the user scrolls or changes the search, or the headers return.
+            item(key = "search_anchor_space", span = { GridItemSpan(maxLineSpan) }, contentType = "search_anchor_space") {
+                Spacer(Modifier.fillMaxWidth().layout { measurable, constraints ->
+                    val removedHeight = (LIST_APP_BAR_HEIGHT.toPx() * (1f - appBarOverlap().coverage)).roundToInt()
+                    val height = searchScroll.trailingHeaderCount * removedHeight
+                    val placeable = measurable.measure(constraints.copy(minHeight = height, maxHeight = height))
+                    layout(placeable.width, height) { placeable.placeRelative(0, 0) }
+                })
+            }
         }
         // The grid clips at its top edge. Draw the outgoing header here while it is pushed, so its fade can continue
         // past that edge under the transparent app bar rather than ending at it; a bar that has filled in is drawn
@@ -488,7 +555,7 @@ private fun SongList(
         FastScroller(
             modifier = Modifier.align(Alignment.TopEnd).belowAppBarOverlap(appBarOverlap).padding(contentPadding.only(top = true, end = true, bottom = true)),
             gridState = listState,
-            labelForItem = sectionIndex::labelForItem,
+            labelForItem = { if (isSearchOpen) null else sectionIndex.labelForItem(it) },
         )
     }
 }
@@ -527,7 +594,7 @@ private fun PushedSongSectionHeader(
         state = { SectionHeaderState(visibleFraction = pushed.value?.visibleFraction ?: 0f, pinnedFraction = 1f) },
         endPadding = endPadding,
         onClick = null,
-        contentOpacity = { pushed.value?.visibleFraction ?: 0f },
+        contentOpacity = { (pushed.value?.visibleFraction ?: 0f) * appBarOverlap().coverage },
         pushedDistancePx = { pushed.value?.pushedDistance ?: 0 },
         appBarOverlap = appBarOverlap,
     )
@@ -587,3 +654,59 @@ private fun SongSection.Header.displayText(): String = when (this) {
 }
 
 private const val SYMBOLS_LABEL = "#"
+
+/** Measures a header at its normal height, then gives its row back on the very same frames the bar takes it. */
+private fun Modifier.collapseSearchHeader(fraction: () -> Float) = clipToBounds().layout { measurable, constraints ->
+    val placeable = measurable.measure(constraints)
+    // Subtract the exact rounded bar inset; independently rounding both halves can move the first row by a pixel.
+    val removedHeight = (LIST_APP_BAR_HEIGHT.toPx() * (1f - fraction().coerceIn(0f, 1f))).roundToInt()
+    val height = (placeable.height - removedHeight).coerceAtLeast(0)
+    layout(placeable.width, height) { placeable.placeRelative(0, 0) }
+}
+
+/** Holds a visible card in screen coordinates, rather than matching two independent placement springs. */
+private class SongSearchScrollAnchor(private var isOpen: Boolean) {
+    private var contents: CampfireViewModel.SongGroups? = null
+    private var index: Int? = null
+    private var screenTop = 0
+    private var originalPosition: Pair<Int, Int>? = null
+    private var lastInset: Int? = null
+    var trailingHeaderCount = 0
+        private set
+
+    fun update(open: Boolean, groups: CampfireViewModel.SongGroups, state: LazyGridState, inset: Int) {
+        if (contents != null && contents != groups) cancel()
+        if (open == isOpen) return
+        isOpen = open
+        if (index == null) {
+            val card = state.layoutInfo.visibleItemsInfo.firstOrNull { it.contentType == "song" } ?: return
+            index = card.index
+            screenTop = card.offset.y + inset
+            contents = groups
+            val activeGroup = groups.groups.indexOfFirst { group -> group.songs.any { songItemKey(it) == card.key } }
+            trailingHeaderCount = groups.groups.drop(activeGroup + 1).count { it.header != null }
+            originalPosition = if (open) state.firstVisibleItemIndex to state.firstVisibleItemScrollOffset else null
+        }
+        lastInset = null
+    }
+
+    fun keepCardInPlace(state: LazyGridState, inset: Int) {
+        val cardIndex = index ?: return
+        if (lastInset == inset || state.isScrollInProgress) return
+        lastInset = inset
+        val original = originalPosition
+        if (!isOpen && inset == 0 && original != null) {
+            state.requestScrollToItem(original.first, original.second)
+        } else {
+            state.requestScrollToItem(cardIndex, inset - screenTop)
+        }
+    }
+
+    fun cancel() {
+        contents = null
+        index = null
+        originalPosition = null
+        lastInset = null
+        trailingHeaderCount = 0
+    }
+}

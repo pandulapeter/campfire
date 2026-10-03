@@ -8,6 +8,13 @@
  * https://mozilla.org/MPL/2.0/.
 -->
 # To do
+- Triggering the search open / close transition while scrolling on the Songs screen makes the list jump
+- Edit setlist button is too prominent
+- Save / Create / CTA button on bottom sheets should match the look from the cover art bottom sheet
+- Metadata / tags / languages / links Save button is confusing in the Editor. Also, they should open with the most recent data from the Editor
+- Edit metadata icon could be moved to the header of the Song details bottom sheet, empty state would be simpler this way . Set cover art button as well, maybe the sheet could repeat the cover art
+- Maybe all bottom sheets with song names in their headers could show the thumbail
+- Add cover arts to the Song assignments bottom sheet
 - Edit song screen fling issue on mobile (scroll snaps back to caret position)
 - Cover art bottom sheet: do we even need search input fields here?
 - Multi-select songs for bulk export or bulk edit (assign tags, languages, setlists)

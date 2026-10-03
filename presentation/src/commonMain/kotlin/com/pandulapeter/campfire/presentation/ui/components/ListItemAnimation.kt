@@ -10,6 +10,7 @@
 package com.pandulapeter.campfire.presentation.ui.components
 
 import androidx.compose.animation.core.Animatable
+import androidx.compose.animation.core.FiniteAnimationSpec
 import androidx.compose.animation.core.Spring
 import androidx.compose.animation.core.VisibilityThreshold
 import androidx.compose.animation.core.spring
@@ -318,10 +319,11 @@ internal fun LazyGridItemScope.listItemAnimation(
     listState: ScrollableState,
     isEnabled: Boolean = true,
     isRearranging: Boolean = false,
+    placementSpec: FiniteAnimationSpec<IntOffset>? = ITEM_PLACEMENT_SPEC,
 ) = if (isEnabled) {
     Modifier.animateItem(
         fadeInSpec = ITEM_FADE_SPEC,
-        placementSpec = if (isRearranging || !listState.isScrollInProgress) ITEM_PLACEMENT_SPEC else null,
+        placementSpec = if (isRearranging || !listState.isScrollInProgress) placementSpec else null,
         fadeOutSpec = ITEM_FADE_SPEC,
     )
 } else {

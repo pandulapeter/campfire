@@ -860,7 +860,7 @@ private class SearchRecession {
  * damped rather than the theme's spatial spring, which overshoots: a button that travels past the start of the bar
  * and settles back reads as having bounced off the edge of the window.
  */
-private fun <T> searchTravelSpec(visibilityThreshold: T? = null) = spring(
+internal fun <T> searchTravelSpec(visibilityThreshold: T? = null) = spring(
     dampingRatio = Spring.DampingRatioNoBouncy,
     stiffness = Spring.StiffnessMediumLow,
     visibilityThreshold = visibilityThreshold,
