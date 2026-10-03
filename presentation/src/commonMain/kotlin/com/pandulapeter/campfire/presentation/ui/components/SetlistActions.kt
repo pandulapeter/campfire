@@ -33,10 +33,10 @@ import com.pandulapeter.campfire.presentation.ui.CampfireViewModel
 import org.jetbrains.compose.resources.painterResource
 
 /**
- * Everything that can be done to one setlist, at the end of its [SectionHeader]: "Edit" and "Song assignments" as
- * buttons where the header has the room for them, and the rest behind its overflow button ([ActionsMenu]) whatever the
- * room - duplicating, archiving and exporting are rarely wanted, and deleting is not to be ended up in by accident. They
- * start the way a song's actions do, with "Edit" and then the assignments, so that the two read alike. "Edit" is where
+ * Everything that can be done to one setlist, at the end of its [SectionHeader]: "Song assignments" as a button where
+ * the header has the room for it, followed by an overflow button ([ActionsMenu]) with "Edit" first, the way a song
+ * card puts its assignments before its menu and keeps its editor inside. When the header has no room for assignments,
+ * they follow "Edit" in the menu. Duplicating, archiving, exporting and deleting also stay in the menu. "Edit" is where
  * a setlist is renamed, and also the one place its description is written, since the two are the whole of what the
  * user gets to say about it.
  *
@@ -64,6 +64,7 @@ internal fun SetlistActions(
             ActionsMenuItem(
                 title = stringResource(Res.string.setlists_edit_details),
                 icon = painterResource(Res.drawable.ic_edit),
+                isAlwaysInMenu = true,
                 onClick = { viewModel.showDialog(CampfireViewModel.DialogType.EditSetlist(setlist)) },
             ),
             ActionsMenuItem(

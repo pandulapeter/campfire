@@ -9,10 +9,9 @@
 -->
 # To do
 - Window inset handling issues related to bottom sheets
-- Edit setlist button is too prominent
 - Metadata / tags / languages / links Save button is confusing in the Editor. Also, they should open with the most recent data from the Editor
 - Edit metadata icon could be moved to the header of the Song details bottom sheet, empty state would be simpler this way . Set cover art button as well, maybe the sheet could repeat the cover art
-- Maybe all bottom sheets with song names in their headers could show the thumbail
+- Maybe all bottom sheets with song names in their headers could show the thumbnail
 - Add cover arts to the Song assignments bottom sheet
 - Edit song screen fling issue on mobile (scroll snaps back to caret position)
 - Cover art bottom sheet: do we even need search input fields here?
