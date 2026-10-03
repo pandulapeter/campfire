@@ -16,6 +16,8 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ColumnScope
+import androidx.compose.foundation.layout.ExperimentalLayoutApi
+import androidx.compose.foundation.layout.MutableWindowInsets
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.RowScope
@@ -23,18 +25,22 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.WindowInsetsSides
 import androidx.compose.foundation.layout.asPaddingValues
+import androidx.compose.foundation.layout.exclude
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.ime
 import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.heightIn
+import androidx.compose.foundation.layout.onConsumedWindowInsetsChanged
 import androidx.compose.foundation.layout.only
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.safeDrawing
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.widthIn
+import androidx.compose.foundation.layout.windowInsetsPadding
+import androidx.compose.foundation.layout.wrapContentWidth
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyListScope
 import androidx.compose.foundation.lazy.LazyListState
@@ -79,6 +85,7 @@ import androidx.compose.runtime.snapshotFlow
 import androidx.compose.runtime.withFrameNanos
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.composed
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.onFocusChanged
@@ -192,7 +199,6 @@ import com.pandulapeter.campfire.presentation.resources.welcome_title
 import com.pandulapeter.campfire.presentation.resources.whats_new_title
 import com.pandulapeter.campfire.presentation.resources.whats_new_message
 import com.pandulapeter.campfire.presentation.CAMPFIRE_VERSION_NAME
-import com.pandulapeter.campfire.presentation.ui.contentEdges
 import com.pandulapeter.campfire.presentation.ui.CampfireViewModel
 import com.pandulapeter.campfire.presentation.ui.PickerFilterOptions
 import com.pandulapeter.campfire.presentation.ui.components.ActionListItem
@@ -221,6 +227,7 @@ import com.pandulapeter.campfire.presentation.ui.components.fadingVerticalEdges
 import com.pandulapeter.campfire.presentation.ui.components.languageLabel
 import com.pandulapeter.campfire.presentation.ui.components.languageName
 import com.pandulapeter.campfire.presentation.ui.components.listItemAnimation
+import com.pandulapeter.campfire.presentation.ui.components.only
 import com.pandulapeter.campfire.presentation.ui.components.orderedBy
 import com.pandulapeter.campfire.presentation.ui.components.pickableLanguages
 import com.pandulapeter.campfire.presentation.ui.components.rememberClearTextButton
@@ -1123,7 +1130,7 @@ private fun SetlistDateField(
                     .weight(1f, fill = false)
                     .fadingVerticalEdges(calendarScrollState)
                     .verticalScroll(calendarScrollState)
-                    .padding(bottom = contentPadding.calculateBottomPadding()),
+                    .padding(contentPadding.only(bottom = true)),
                 state = state,
                 dateFormatter = dateFormatter,
                 colors = DatePickerDefaults.colors(containerColor = campfireBottomSheetContainerColor()),
@@ -1927,10 +1934,7 @@ private fun ColumnScope.PickerList(
         state = listState,
         // The gap under the search field is the list's own content padding rather than a padding around the list, so
         // that a scrolled row goes under the field itself instead of being cut off a few pixels short of it.
-        contentPadding = PaddingValues(
-            top = PICKER_LIST_TOP_PADDING,
-            bottom = contentPadding.calculateBottomPadding(),
-        ),
+        contentPadding = contentPadding.only(bottom = true, extraTop = PICKER_LIST_TOP_PADDING),
     ) {
         if (header != null) {
             item(key = "header") {
@@ -1968,6 +1972,10 @@ private fun campfireBottomSheetContainerColor() = MaterialTheme.colorScheme.back
  * rather than scrolling on under it, so that inset is left out of the sheet's own insets and handed to the content
  * instead, as the `contentPadding` scrolling content applies inside its scroll and the rest leaves under its last row.
  * The top inset stays with the sheet, which only pads by it once it has been dragged up against the status bar.
+ * Horizontally, the whole sheet is centered between the safe edges, up to its maximum width. Side insets never
+ * become padding inside a narrow sheet that is already clear of those edges.
+ * Bottom padding excludes insets already consumed by the short-window keyboard scroll, and is read during layout
+ * so content follows the current keyboard animation frame.
  *
  * @param title What the sheet is about, named in its [SheetHeader].
  * @param subtitle What the sheet acts on, under [title]: the song or the setlist it was opened for. Left out when blank.
@@ -1979,7 +1987,7 @@ private fun campfireBottomSheetContainerColor() = MaterialTheme.colorScheme.back
  * @param content Can close the sheet the way its close button does ([BottomSheetContentScope.close]), for a sheet
  *   with a button of its own that is done with it.
  */
-@OptIn(ExperimentalMaterial3Api::class)
+@OptIn(ExperimentalLayoutApi::class, ExperimentalMaterial3Api::class)
 @Composable
 internal fun CampfireBottomSheet(
     title: String,
@@ -2000,6 +2008,14 @@ internal fun CampfireBottomSheet(
     val scrollState = rememberScrollState()
     ModalBottomSheet(
         onDismissRequest = onDismiss,
+        // Material applies sheetMaxWidth after this modifier. First reserve the safe horizontal span, then
+        // center the capped surface inside it. Resolve insets in the modal window's composition, not the
+        // activity behind it, and leave the inset gaps outside the sheet's background and gesture bounds.
+        modifier = Modifier.composed {
+            Modifier.fillMaxWidth()
+                .windowInsetsPadding(WindowInsets.safeDrawing.only(WindowInsetsSides.Horizontal))
+                .wrapContentWidth()
+        },
         sheetState = sheetState,
         sheetMaxWidth = sheetMaxWidth,
         containerColor = campfireBottomSheetContainerColor(),
@@ -2042,7 +2058,11 @@ internal fun CampfireBottomSheet(
                 },
             ),
         ) {
-            Column(modifier = if (isCompactKeyboard) Modifier.height(windowHeight) else Modifier) {
+            val consumedInsets = remember { MutableWindowInsets() }
+            Column(
+                modifier = (if (isCompactKeyboard) Modifier.height(windowHeight) else Modifier)
+                    .onConsumedWindowInsetsChanged { consumedInsets.insets = it },
+            ) {
                 SheetHeader(
                     title = title,
                     subtitle = subtitle,
@@ -2050,8 +2070,10 @@ internal fun CampfireBottomSheet(
                     onClose = close,
                 )
                 // Read inside the sheet, which is a window of its own on Android and gets the insets of that window.
-                val bottomInset = (if (isCompactKeyboard) WindowInsets.contentEdges else WindowInsets.safeDrawing)
-                    .only(WindowInsetsSides.Bottom).asPaddingValues().calculateBottomPadding()
+                // asPaddingValues alone ignores consumption. The compact scroll already pads above the IME,
+                // which also covers the navigation bar; reserve only the bottom space still left to this content.
+                val bottomPadding = WindowInsets.safeDrawing.exclude(consumedInsets)
+                    .only(WindowInsetsSides.Bottom).asPaddingValues()
                 val topInset = WindowInsets.safeDrawing.only(WindowInsetsSides.Top)
                 val density = LocalDensity.current
                 // Material pads the sheet by as much of the top inset as its offset has not taken up yet (an offset not
@@ -2066,7 +2088,7 @@ internal fun CampfireBottomSheet(
                     columnScope = this,
                     close = close,
                     uncoveredTopInset = { uncoveredTopInset.value },
-                ).content(PaddingValues(bottom = bottomInset + SHEET_BOTTOM_PADDING))
+                ).content(bottomPadding.only(bottom = true, extraBottom = SHEET_BOTTOM_PADDING))
             }
         }
     }

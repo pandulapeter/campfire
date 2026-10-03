@@ -9,7 +9,6 @@
 -->
 # To do
 ## Bugs
-- Window inset handling issues related to bottom sheets
 
 ## Improvements
 - Maybe all bottom sheets with song names in their headers could show the cover art for the song

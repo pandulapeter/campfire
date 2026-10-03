@@ -17,7 +17,7 @@ import androidx.compose.ui.unit.dp
 
 /**
  * Some of the sides of [source], each asked of it at the moment it is used rather than when this is made, with
- * [extraTop] added above, [extraEnd] at the end and [extraBottom] below.
+ * [extraStart] added at the start, [extraTop] above, [extraEnd] at the end and [extraBottom] below.
  *
  * The paddings the app hands its screens follow the keyboard (see `CampfireApp`), and they are only cheap for as
  * long as nobody takes them apart while composing: `PaddingValues(bottom = padding.calculateBottomPadding())`
@@ -31,6 +31,7 @@ private data class PaddingValuesSides(
     private val hasTop: Boolean,
     private val hasEnd: Boolean,
     private val hasBottom: Boolean,
+    private val extraStart: Dp,
     private val extraTop: Dp,
     private val extraEnd: Dp,
     private val extraBottom: Dp,
@@ -38,13 +39,13 @@ private data class PaddingValuesSides(
 
     override fun calculateLeftPadding(layoutDirection: LayoutDirection) =
         (if (if (layoutDirection == LayoutDirection.Ltr) hasStart else hasEnd) source.calculateLeftPadding(layoutDirection) else 0.dp) +
-            if (layoutDirection == LayoutDirection.Rtl) extraEnd else 0.dp
+            if (layoutDirection == LayoutDirection.Rtl) extraEnd else extraStart
 
     override fun calculateTopPadding() = (if (hasTop) source.calculateTopPadding() else 0.dp) + extraTop
 
     override fun calculateRightPadding(layoutDirection: LayoutDirection) =
         (if (if (layoutDirection == LayoutDirection.Ltr) hasEnd else hasStart) source.calculateRightPadding(layoutDirection) else 0.dp) +
-            if (layoutDirection == LayoutDirection.Ltr) extraEnd else 0.dp
+            if (layoutDirection == LayoutDirection.Ltr) extraEnd else extraStart
 
     override fun calculateBottomPadding() = (if (hasBottom) source.calculateBottomPadding() else 0.dp) + extraBottom
 }
@@ -55,6 +56,7 @@ internal fun PaddingValues.only(
     top: Boolean = false,
     end: Boolean = false,
     bottom: Boolean = false,
+    extraStart: Dp = 0.dp,
     extraTop: Dp = 0.dp,
     extraEnd: Dp = 0.dp,
     extraBottom: Dp = 0.dp,
@@ -64,6 +66,7 @@ internal fun PaddingValues.only(
     hasTop = top,
     hasEnd = end,
     hasBottom = bottom,
+    extraStart = extraStart,
     extraTop = extraTop,
     extraEnd = extraEnd,
     extraBottom = extraBottom,

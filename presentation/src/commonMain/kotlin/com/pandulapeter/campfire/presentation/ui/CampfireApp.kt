@@ -581,9 +581,10 @@ private fun CampfireScreens(
     // under the keyboard rather than resized by it, and a message sent while somebody is typing - a save that failed
     // in the editor - would otherwise time out behind it unseen.
     val messagesPadding: PaddingValues = KeyboardAwarePadding(
-        start = 0.dp,
-        end = 0.dp,
-        bottom = navigationBarHeight + systemBars.calculateBottomPadding(),
+        start = systemBars.calculateStartPadding(layoutDirection),
+        end = systemBars.calculateEndPadding(layoutDirection),
+        // The navigation chrome's measured height already includes its bottom system inset.
+        bottom = maxOf(navigationBarHeight, systemBars.calculateBottomPadding()),
         coveredHeight = 0.dp,
         ime = ime,
         density = density,
