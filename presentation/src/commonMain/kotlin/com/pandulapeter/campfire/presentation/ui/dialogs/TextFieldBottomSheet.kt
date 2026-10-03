@@ -11,7 +11,6 @@ package com.pandulapeter.campfire.presentation.ui.dialogs
 
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.PaddingValues
-import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ProvideTextStyle
@@ -21,8 +20,7 @@ import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.layout.onSizeChanged
-import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.layout.layout
 import androidx.compose.ui.unit.dp
 
 /**
@@ -33,7 +31,8 @@ import androidx.compose.ui.unit.dp
  * @param text Handed the sheet's `contentPadding`, which scrolling content applies inside its scroll, so that it scrolls on
  *   under the navigation bar, and anything else leaves under its last row.
  * @param retainHeight Keeps a list editor at its largest measured height while it is open, so filtering or removing
- *   rows does not move the header and search field. Small lists still open at their content's height.
+ *   rows does not move the header and search field. Keyboard and system-bar padding are not retained, so the sheet
+ *   returns to its content's height when the keyboard closes. Small lists still open at their content's height.
  */
 @Composable
 internal fun TextFieldBottomSheet(
@@ -53,15 +52,12 @@ internal fun TextFieldBottomSheet(
     },
     onDismiss = onDismissRequest,
 ) { contentPadding ->
-    val density = LocalDensity.current
-    var tallestHeight by remember { mutableIntStateOf(0) }
     Box(
         modifier = Modifier
             .weight(1f, fill = false)
             .then(
                 if (retainHeight) {
-                    Modifier.heightIn(min = with(density) { tallestHeight.toDp() })
-                        .onSizeChanged { tallestHeight = maxOf(tallestHeight, it.height) }
+                    Modifier.retainSheetContentHeight(contentPadding)
                 } else {
                     Modifier
                 },
@@ -70,5 +66,20 @@ internal fun TextFieldBottomSheet(
             .padding(top = 8.dp),
     ) {
         ProvideTextStyle(MaterialTheme.typography.bodyMedium) { text(contentPadding) }
+    }
+}
+
+/** Retain a list's height across filtering, without retaining the space occupied by the keyboard. */
+@Composable
+internal fun Modifier.retainSheetContentHeight(contentPadding: PaddingValues): Modifier {
+    var tallestContentHeight by remember { mutableIntStateOf(0) }
+    return layout { measurable, constraints ->
+        // Read the padding in the measure pass, alongside the content that applies it: IME insets change during
+        // layout, so a value captured during composition can belong to the preceding keyboard animation frame.
+        val bottomPadding = contentPadding.calculateBottomPadding().roundToPx()
+        val minimumHeight = (tallestContentHeight + bottomPadding).coerceIn(constraints.minHeight, constraints.maxHeight)
+        val placeable = measurable.measure(constraints.copy(minHeight = minimumHeight))
+        tallestContentHeight = maxOf(tallestContentHeight, placeable.height - bottomPadding)
+        layout(placeable.width, placeable.height) { placeable.placeRelative(0, 0) }
     }
 }

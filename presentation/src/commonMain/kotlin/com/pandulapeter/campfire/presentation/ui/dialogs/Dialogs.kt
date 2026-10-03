@@ -85,7 +85,6 @@ import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.graphics.luminance
 import androidx.compose.ui.layout.layout
-import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.ui.platform.LocalWindowInfo
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalFocusManager
@@ -1856,8 +1855,9 @@ private fun PickerSearchField(
  * The scrolling part of a picker sheet, which takes whatever height the sheet has left under its header rather than
  * the height of everything it could list - a library of songs is far taller than any screen.
  *
- * It never gets shorter while the sheet is open, only taller: narrowing the list by a search would otherwise shrink
- * the sheet with every character typed, moving the field being typed into down the screen along with it.
+ * Its content never gets shorter while the sheet is open, only taller: narrowing the list by a search would otherwise
+ * move the field being typed into down the screen along with it. The bottom inset is kept separately, so dismissing
+ * the keyboard returns the sheet to its content's height instead of retaining empty space below the rows.
  *
  * @param contentPadding What the sheet's content keeps clear at the bottom, applied inside the scroll so that the last
  *   rows pass under the navigation bar and the keyboard on their way up.
@@ -1881,8 +1881,6 @@ private fun ColumnScope.PickerList(
     header: (@Composable () -> Unit)? = null,
     content: LazyListScope.(LazyListState) -> Unit,
 ) {
-    val density = LocalDensity.current
-    var tallestHeight by remember { mutableIntStateOf(0) }
     val listState = rememberLazyListState()
     val hasHeader = header != null
     LaunchedEffect(revealRowsKey, hasHeader) {
@@ -1905,8 +1903,7 @@ private fun ColumnScope.PickerList(
     LazyColumn(
         modifier = Modifier
             .weight(1f, fill = false)
-            .heightIn(min = with(density) { tallestHeight.toDp() })
-            .onSizeChanged { tallestHeight = maxOf(tallestHeight, it.height) }
+            .retainSheetContentHeight(contentPadding)
             // The rows fade out as they scroll up under the search field, which is the edge between the two
             // everywhere else in the app too.
             .fadingTopEdge(listState),

@@ -8,7 +8,6 @@
  * https://mozilla.org/MPL/2.0/.
 -->
 # To do
-- Bottom sheet keyboard handling inconsistencies: when the keyboard disappears, some remain large (with empty space on the bottom), others shrink.
 - Edit song screen fling issue on mobile (scroll snaps back to caret position)
 - Cover art bottom sheet: do we even need search input fields here?
 - Multi-select songs for bulk export or bulk edit (assign tags, languages, setlists)
