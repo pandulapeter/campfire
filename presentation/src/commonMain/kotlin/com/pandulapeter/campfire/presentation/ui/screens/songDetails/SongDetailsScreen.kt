@@ -488,7 +488,6 @@ internal fun SongDetailsScreen(
                                 )
                             },
                         ),
-                        fileEditItems = if (isCoverArtEnabled) listOf(coverArtAction(viewModel = viewModel, song = song, isEditorDraft = false)) else emptyList(),
                         menuFooter = {
                             MenuStepperRow(label = stringResource(Res.string.song_details_text_size)) {
                                 LiveFontScaleControls(viewModel = viewModel)

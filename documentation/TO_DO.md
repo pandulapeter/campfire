@@ -9,9 +9,8 @@
 -->
 # To do
 - Window inset handling issues related to bottom sheets
-- Metadata / tags / languages / links Save button is confusing in the Editor. Also, they should open with the most recent data from the Editor
-- Edit metadata icon could be moved to the header of the Song details bottom sheet, empty state would be simpler this way . Set cover art button as well, maybe the sheet could repeat the cover art
-- Maybe all bottom sheets with song names in their headers could show the thumbnail
+- The Save button on the Song details / Manage tags / Manage languages / Manage links bottom sheets is misleading when opened from the Editor. In this case they should not update the file, just the version in the editor - and as such the button should say "Done" (but only in this case). Also, make sure that when opened, they use the most recent data from the Editor, not the saved file
+- Maybe all bottom sheets with song names in their headers could show the cover art for the song
 - Add cover arts to the Song assignments bottom sheet
 - Edit song screen fling issue on mobile (scroll snaps back to caret position)
 - Cover art bottom sheet: do we even need search input fields here?

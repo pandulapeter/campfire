@@ -16,6 +16,7 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.FlowRowScope
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.widthIn
@@ -39,6 +40,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.CompositingStrategy
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.graphics.painter.Painter
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.LayoutDirection
@@ -202,12 +204,17 @@ internal fun TagPill(
         else -> MaterialTheme.colorScheme.surfaceContainerHighest
     }
     val border = if (isAction) BorderStroke(width = 1.dp, color = MaterialTheme.colorScheme.outlineVariant) else null
+    val textStyle = MaterialTheme.typography.labelMedium.scaled(fontScale)
+    // All pills share the same height, including actions without an icon, at every text scale.
+    val chipHeight = with(LocalDensity.current) {
+        maxOf(TAG_ICON_SIZE * fontScale, textStyle.lineHeight.toDp() + TAG_TEXT_PADDING * 2)
+    }
     val content = @Composable {
         Row(
             // The tag dialog caps what is typed, but a tag that arrives in a file (written in the editor, imported or
             // synced) is as long as its author made it, and in the sideways scrolling row of a song list nothing else
             // would stop one from being wider than the screen.
-            modifier = Modifier.widthIn(max = TAG_MAX_WIDTH * fontScale).padding(
+            modifier = Modifier.height(chipHeight).widthIn(max = TAG_MAX_WIDTH * fontScale).padding(
                 start = if (leadingIcon == null) TAG_PADDING else TAG_ICON_INSET,
                 end = TAG_PADDING,
             ),
@@ -223,7 +230,7 @@ internal fun TagPill(
             Text(
                 modifier = Modifier.weight(1f, fill = false).padding(vertical = TAG_TEXT_PADDING),
                 text = text,
-                style = MaterialTheme.typography.labelMedium.scaled(fontScale),
+                style = textStyle,
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis,
             )

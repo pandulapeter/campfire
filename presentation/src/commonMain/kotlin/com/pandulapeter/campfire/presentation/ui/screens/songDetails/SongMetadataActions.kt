@@ -13,6 +13,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberUpdatedState
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.pandulapeter.campfire.data.model.domain.Song
 import com.pandulapeter.campfire.presentation.localization.stringResource
 import com.pandulapeter.campfire.presentation.resources.Res
@@ -51,7 +52,7 @@ internal fun songInfoAction(
 )
 
 /**
- * What the edit buttons of [SongInfoBody] open: the dialog of each group, on the song details screen's sheet and on the
+ * What the header and group edit buttons open: the dialog of each group, on the song details screen's sheet and on the
  * editor preview's card alike. From the editor ([isEditorDraft]) they edit the text being typed rather than the file,
  * see [CampfireViewModel.DialogType.SongEdit], and [song] is that text's description of the song, which follows every
  * keystroke, so the latest one is what a button opens its dialog on.
@@ -63,8 +64,13 @@ internal fun rememberSongInfoEditing(
     isEditorDraft: Boolean,
 ): SongInfoEditing {
     val latestSong by rememberUpdatedState(song)
-    return remember(viewModel, isEditorDraft) {
+    val userPreferences by viewModel.userPreferences.collectAsStateWithLifecycle()
+    val isCoverArtEnabled = userPreferences?.isCoverArtEnabled == true
+    return remember(viewModel, isEditorDraft, isCoverArtEnabled) {
         SongInfoEditing(
+            onEditCoverArt = if (isCoverArtEnabled) {
+                { viewModel.showDialog(CampfireViewModel.DialogType.CoverArtSearch(song = latestSong, isEditorDraft = isEditorDraft)) }
+            } else null,
             onEditMetadata = { viewModel.showSongMetadataDialog(song = latestSong, isEditorDraft = isEditorDraft) },
             onEditTags = { viewModel.showDialog(CampfireViewModel.DialogType.SongTags(song = latestSong, isEditorDraft = isEditorDraft)) },
             onEditLanguages = { viewModel.showDialog(CampfireViewModel.DialogType.SongLanguages(song = latestSong, isEditorDraft = isEditorDraft)) },
@@ -106,8 +112,7 @@ internal fun songInfoEditingActions(editing: SongInfoEditing): List<ActionsMenuI
 )
 
 /**
- * Opens the cover art sheet, from the song details overflow menu and from the editor's: the one metadata editor that
- * stays in those menus, since the cover is not part of [SongInfoBody].
+ * Opens the cover art sheet from the editor menu while the preview card is out of sight.
  */
 @Composable
 internal fun coverArtAction(

@@ -122,8 +122,12 @@ import com.pandulapeter.campfire.presentation.resources.close
 import com.pandulapeter.campfire.presentation.resources.create
 import com.pandulapeter.campfire.presentation.resources.delete
 import com.pandulapeter.campfire.presentation.resources.ic_add
+import com.pandulapeter.campfire.presentation.resources.ic_album
+import com.pandulapeter.campfire.presentation.resources.song_details_change_cover_art
+import com.pandulapeter.campfire.presentation.resources.song_details_set_cover_art
 import com.pandulapeter.campfire.presentation.resources.ic_calendar
 import com.pandulapeter.campfire.presentation.resources.ic_clear
+import com.pandulapeter.campfire.presentation.resources.ic_edit
 import com.pandulapeter.campfire.presentation.resources.ic_label
 import com.pandulapeter.campfire.presentation.resources.ic_language
 import com.pandulapeter.campfire.presentation.resources.ic_search
@@ -160,6 +164,7 @@ import com.pandulapeter.campfire.presentation.resources.song_details_languages_e
 import com.pandulapeter.campfire.presentation.resources.song_details_language_no_search_results
 import com.pandulapeter.campfire.presentation.resources.song_details_language_search
 import com.pandulapeter.campfire.presentation.resources.song_details_song_info
+import com.pandulapeter.campfire.presentation.resources.song_details_metadata_edit
 import com.pandulapeter.campfire.presentation.resources.song_details_tag_create
 import com.pandulapeter.campfire.presentation.resources.song_details_tags_manage
 import com.pandulapeter.campfire.presentation.resources.song_details_tags_search
@@ -223,6 +228,8 @@ import com.pandulapeter.campfire.presentation.ui.platform.calendarLocale
 import com.pandulapeter.campfire.presentation.ui.screens.settings.SettingsSubsection
 import com.pandulapeter.campfire.presentation.ui.screens.songDetails.SongInfoBody
 import com.pandulapeter.campfire.presentation.ui.screens.songDetails.rememberSongInfoEditing
+import com.pandulapeter.campfire.presentation.ui.components.ACTION_BUTTON_OVERLAP
+import com.pandulapeter.campfire.presentation.ui.components.overlappingAction
 import kotlinx.coroutines.launch
 import kotlinx.datetime.LocalDate
 import kotlinx.datetime.TimeZone
@@ -2188,9 +2195,9 @@ private fun Modifier.reachingDialogEdges() = layout { measurable, constraints ->
 }
 
 /**
- * What a song says about itself beyond how it is played, read from its text as it is now. Outside performance mode every
- * group is there with a button that edits it, which opens that group's dialog on top of the sheet; in performance
- * mode, which edits nothing, only what the song has.
+ * What a song says about itself beyond how it is played, read from its text as it is now. Outside performance mode the
+ * header edits details and cover art and the body edits tags, languages and links, opening their dialogs on top of the sheet;
+ * performance mode shows only what the song has, without editing controls.
  */
 @Composable
 private fun SongInfoSheet(
@@ -2200,16 +2207,40 @@ private fun SongInfoSheet(
 ) {
     val songs by viewModel.allSongs.collectAsStateWithLifecycle()
     val song = songs.firstOrNull { it.fileName == dialog.song.fileName } ?: dialog.song
+    val songTexts by viewModel.songTexts.collectAsStateWithLifecycle()
+    val isPerformanceModeEnabled by viewModel.isPerformanceModeEnabled.collectAsStateWithLifecycle()
+    val text = songTexts[dialog.song.fileName]
+    val metadata = remember(text) { text?.let(viewModel::songMetadataOf) }
+    val editing = rememberSongInfoEditing(viewModel = viewModel, song = song, isEditorDraft = false)
     CampfireBottomSheet(
         title = stringResource(Res.string.song_details_song_info),
         subtitle = songLabel(song),
+        actions = if (isPerformanceModeEnabled) null else {
+            {
+                editing.onEditCoverArt?.let { onEditCoverArt ->
+                    IconButton(onClick = onEditCoverArt, enabled = metadata != null) {
+                        Icon(
+                            painter = painterResource(Res.drawable.ic_album),
+                            contentDescription = stringResource(
+                                if (song.coverArtUrl == null) Res.string.song_details_set_cover_art else Res.string.song_details_change_cover_art,
+                            ),
+                        )
+                    }
+                }
+                IconButton(
+                    modifier = if (editing.onEditCoverArt != null) Modifier.overlappingAction(start = ACTION_BUTTON_OVERLAP, end = 0.dp) else Modifier,
+                    onClick = editing.onEditMetadata,
+                    enabled = metadata != null,
+                ) {
+                    Icon(
+                        painter = painterResource(Res.drawable.ic_edit),
+                        contentDescription = stringResource(Res.string.song_details_metadata_edit),
+                    )
+                }
+            }
+        },
         onDismiss = { viewModel.dismissSheet(dialog) },
     ) { contentPadding ->
-        val songTexts by viewModel.songTexts.collectAsStateWithLifecycle()
-        val isPerformanceModeEnabled by viewModel.isPerformanceModeEnabled.collectAsStateWithLifecycle()
-        val text = songTexts[dialog.song.fileName]
-        val metadata = remember(text) { text?.let(viewModel::songMetadataOf) }
-        val editing = rememberSongInfoEditing(viewModel = viewModel, song = song, isEditorDraft = false)
         if (metadata != null) {
             val scrollState = rememberScrollState()
             SongInfoBody(
