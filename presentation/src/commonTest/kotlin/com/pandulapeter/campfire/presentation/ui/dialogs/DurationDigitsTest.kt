@@ -12,6 +12,7 @@ package com.pandulapeter.campfire.presentation.ui.dialogs
 import com.pandulapeter.campfire.chordpro.ChordProMetadataFields.Field
 import kotlin.test.Test
 import kotlin.test.assertEquals
+import kotlin.test.assertTrue
 
 class DurationDigitsTest {
 
@@ -49,6 +50,19 @@ class DurationDigitsTest {
         assertEquals("1:15", durationTextOf("75"))
         assertEquals("1:00:30", durationTextOf("6030"))
         assertEquals("1:23:45", durationTextOf("12345"))
+    }
+
+    @Test
+    fun `the field never writes or opens with more than its six digits can show`() {
+        assertEquals("99:59:59", durationTextOf("999999"))
+        assertEquals("99:59:59", durationTextOf("995959"))
+        assertEquals("995959", durationDigitsOf("99:59:59"))
+        assertEquals("", durationDigitsOf("100:40:39"))
+        assertEquals("", durationDigitsOf("120:00:00"))
+        listOf("999999", "6030", "75").forEach { digits ->
+            assertTrue(durationDigitsOf(durationTextOf(digits)).length <= MAX_DURATION_DIGITS, digits)
+        }
+        assertEquals("", mapOf(Field.DURATION to "120:00:00").toSongMetadataDraft()[Field.DURATION])
     }
 
     @Test

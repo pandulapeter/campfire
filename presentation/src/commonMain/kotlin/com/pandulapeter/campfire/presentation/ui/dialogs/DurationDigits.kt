@@ -22,22 +22,30 @@ import kotlin.time.Duration.Companion.seconds
 /** How many digits the field takes: `hh:mm:ss`. */
 internal const val MAX_DURATION_DIGITS = 6
 
+/** The longest duration the field's six digits can show. */
+private val MAX_DURATION = 99.hours + 59.minutes + 59.seconds
+
 /** What may be kept of [text] typed into the duration field: its digits, without leading zeros, at most six of them. */
 internal fun durationDigitsTyped(text: String) = text.filter { it in '0'..'9' }.trimStart('0').take(MAX_DURATION_DIGITS)
 
-/** The digits the field shows for a song's `{duration}`, empty where there is none it can read. */
-internal fun durationDigitsOf(text: String?) = ChordProDuration.parse(text)?.let { duration ->
+/**
+ * The digits the field shows for a song's `{duration}`, empty where there is none it can read, or one longer than the
+ * field's six digits can show: a seventh digit would be cut off by the next one typed, and the value with it.
+ */
+internal fun durationDigitsOf(text: String?) = ChordProDuration.parse(text)?.takeIf { it <= MAX_DURATION }?.let { duration ->
     ChordProDuration.format(duration).filter { it != ':' }.trimStart('0')
 }.orEmpty()
 
 /**
  * The `{duration}` [digits] stand for, or an empty string for none. The last two digits are the seconds and the two
- * before them the minutes, and each may say more than its unit holds (`0:75`), as on a timer, which is carried over.
+ * before them the minutes, and each may say more than its unit holds (`0:75`), as on a timer, which is carried over -
+ * up to `99:59:59`, the most the field can show, so that what it writes it also opens with.
  */
 internal fun durationTextOf(digits: String): String {
     if (digits.isEmpty()) return ""
     val padded = digits.padStart(MAX_DURATION_DIGITS, '0')
-    val duration = padded.dropLast(4).toInt().hours + padded.takeLast(4).take(2).toInt().minutes + padded.takeLast(2).toInt().seconds
+    val duration = (padded.dropLast(4).toInt().hours + padded.takeLast(4).take(2).toInt().minutes + padded.takeLast(2).toInt().seconds)
+        .coerceAtMost(MAX_DURATION)
     return if (duration.isPositive()) ChordProDuration.format(duration) else ""
 }
 

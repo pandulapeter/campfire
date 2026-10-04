@@ -197,7 +197,8 @@ Everything else is `commonMain`:
   and the year and the duration side by side; the key, capo, tempo and time are left to the editor, since they are part of writing
   the song down — the year typed as four digits at most, and the duration as digits that fill in from the right like a
   timer's (`DurationDigits.kt`: `428` reads `4:28`, since a number pad has no colon), opened from what the file says
-  where `ChordProDuration` reads it, empty and left alone on Save where it does not, and written as `m:ss` —
+  where `ChordProDuration` reads it, empty and left alone on Save where it does not (or where it is longer than six digits
+  show), and written as `m:ss`, a typed value carried over no further than `99:59:59` —
   opening with no field focused, since it is a form to look over as much as to type into, fading at the top of its scroll, prefilled from the held text and written on Save
   through `SetChordProMetadataUseCase`, only the fields changed in it, so a field another device synced in meanwhile
   and left untouched here keeps that device's value. A blank field takes the directive off. A new title or artist is
