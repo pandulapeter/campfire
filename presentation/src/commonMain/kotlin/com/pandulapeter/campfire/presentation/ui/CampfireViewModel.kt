@@ -3020,18 +3020,27 @@ class CampfireViewModel(
      * [songFileNames] is the order the screen was showing, which a sync run or another write may have overtaken by the
      * time this one runs: an entry the drag never saw must not be moved by it, so the songs it did see are dealt back
      * into the slots they already occupied and everything else stays exactly where it is.
+     *
+     * [onNotWritten] is called when nothing was written: the write failed, the setlist is gone, or it is archived and
+     * so refused the order. A drag's screen holds the order it drew until the library agrees with it, which a write
+     * that never happened would leave it waiting for.
      */
-    fun reorderSetlist(setlistFileName: String, songFileNames: List<String>) = launchLibraryChange {
-        updateEditableSetlist(setlistFileName) { setlist ->
-            val reordered = songFileNames.mapNotNull { songFileName ->
-                setlist.entries.firstOrNull { it.songFileName == songFileName }
-            }.iterator()
-            val movedSongFileNames = songFileNames.toSet()
-            setlist.copy(
-                entries = setlist.entries.map { entry ->
-                    if (entry.songFileName in movedSongFileNames && reordered.hasNext()) reordered.next() else entry
-                },
-            )
+    fun reorderSetlist(setlistFileName: String, songFileNames: List<String>, onNotWritten: () -> Unit = {}) = launchLibraryChange {
+        var isWritten = false
+        try {
+            isWritten = updateEditableSetlist(setlistFileName) { setlist ->
+                val reordered = songFileNames.mapNotNull { songFileName ->
+                    setlist.entries.firstOrNull { it.songFileName == songFileName }
+                }.iterator()
+                val movedSongFileNames = songFileNames.toSet()
+                setlist.copy(
+                    entries = setlist.entries.map { entry ->
+                        if (entry.songFileName in movedSongFileNames && reordered.hasNext()) reordered.next() else entry
+                    },
+                )
+            }?.isArchived == false
+        } finally {
+            if (!isWritten) onNotWritten()
         }
     }
 

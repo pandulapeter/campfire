@@ -369,17 +369,27 @@ private fun SetlistList(
     // Written once the finger lifts rather than on every move, so that one drag is one write.
     val onDragStopped = {
         draggingSetlistFileName = null
-        draggedSetlist?.let { viewModel.reorderSetlist(setlistFileName = it.setlistFileName, songFileNames = it.songFileNames) }
+        draggedSetlist?.let { dragged ->
+            viewModel.reorderSetlist(
+                setlistFileName = dragged.setlistFileName,
+                songFileNames = dragged.songFileNames,
+                // Compared by identity: a later drag of the same setlist that ended on the same order is another drag,
+                // whose own write is still on its way.
+                onNotWritten = { if (draggedSetlist === dragged) draggedSetlist = null },
+            )
+        }
         Unit
     }
     // The drawn order is given up only once the library agrees with it, not the moment the finger lifts: the write
     // has to reach the disk and come back, and the rows would sit in their old order until it did. It is given up
     // just as readily when the setlist turns out to hold different songs than the drag was working from, which is
-    // what a removal or a sync landing mid drag looks like.
+    // what a removal or a sync landing mid drag looks like, and when it has been archived, since an archived setlist
+    // is never reordered and the drag will not be written. A write that fails is told by reorderSetlist instead.
     LaunchedEffect(setlistsWithSongs, draggedSetlist) {
         draggedSetlist?.let { dragged ->
-            val songFileNames = setlistsWithSongs.firstOrNull { it.setlist.fileName == dragged.setlistFileName }?.entries?.map { it.songFileName }
-            if (songFileNames == dragged.songFileNames || songFileNames?.toSet() != dragged.songFileNames.toSet()) {
+            val setlist = setlistsWithSongs.firstOrNull { it.setlist.fileName == dragged.setlistFileName }
+            val songFileNames = setlist?.entries?.map { it.songFileName }
+            if (setlist?.setlist?.isArchived == true || songFileNames == dragged.songFileNames || songFileNames?.toSet() != dragged.songFileNames.toSet()) {
                 draggedSetlist = null
             }
         }
