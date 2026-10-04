@@ -3217,7 +3217,8 @@ class CampfireViewModel(
         _underlyingSongInfo.value = (previousDialog as? DialogType.SongInfo)?.takeIf { parent ->
             dialogType is DialogType.SongEdit && !dialogType.isEditorDraft && dialogType.song.fileName == parent.song.fileName &&
                 (dialogType is DialogType.SongMetadata || dialogType is DialogType.SongTags ||
-                    dialogType is DialogType.SongLinks || dialogType is DialogType.SongLanguages)
+                    dialogType is DialogType.SongLinks || dialogType is DialogType.SongLanguages ||
+                    dialogType is DialogType.CoverArtSearch)
         }
         // However the export screen goes - closed, Escape, the web's Back, another dialog put over it - it stays drawn
         // while it slides away, so its own disposal would be too late: its options are saved and its drawing cancelled
