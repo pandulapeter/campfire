@@ -30,14 +30,11 @@ Campfire is free, open-source, and has no ads or tracking. Check out the [Privac
 The app is currently available for the following platforms:
 
 <a href="https://play.google.com/store/apps/details?id=com.pandulapeter.campfire"><img src="documentation/images/badge_android.png" alt="Campfire for Android" height="32px" /></a>
-<a href="https://apps.apple.com/app/id6815160850"><img src="documentation/images/badge_ios.png" alt="Campfire for iOS" height="32px" /></a>
+<a href="https://apps.apple.com/app/id6815160850"><img src="documentation/images/badge_ios.png" alt="Campfire for iOS and iPadOS" height="32px" /></a>
+<a href="https://apps.apple.com/app/id6815160850"><img src="documentation/images/badge_macos.png" alt="Campfire for macOS" height="32px" /></a>
 <a href="https://apps.microsoft.com/detail/9MSR62F288M1"><img src="documentation/images/badge_windows.png" alt="Campfire for Windows" height="32px" /></a>
 <a href="https://github.com/pandulapeter/campfire/releases/latest"><img src="documentation/images/badge_linux.png" alt="Campfire for Linux" height="32px" /></a>
 <a href="https://campfire-songbook.com/app/"><img src="documentation/images/badge_web.png" alt="Campfire in the browser" height="32px" /></a>
-
-macOS is coming really soon (under final review):
-
-<a href="https://campfire-songbook.com/#download"><img src="documentation/images/badge_macos.png" alt="Campfire for macOS" height="32px" /></a>
 
 ## Under the hood
 

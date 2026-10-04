@@ -85,6 +85,6 @@ internal enum class Distribution(
 ) {
     PLAY_STORE(listingUrl = "https://play.google.com/store/apps/details?id=com.pandulapeter.campfire"),
     APP_STORE(listingUrl = "https://apps.apple.com/app/id6815160850", isApple = true),
-    MAC_APP_STORE(listingUrl = null, isApple = true),
+    MAC_APP_STORE(listingUrl = "https://apps.apple.com/app/id6815160850", isApple = true),
     MICROSOFT_STORE(listingUrl = "https://apps.microsoft.com/detail/9MSR62F288M1"),
 }

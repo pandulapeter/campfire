@@ -15,7 +15,8 @@
 - Add cover arts to the Song assignments bottom sheet list items
 - Cover art bottom sheet: do we even need search input fields here?
 - Rename master branch to main
-- Once the Mac App Store listing is approved, update included URL-s + this Readme
+- Song search should also match by tag
+- Animate editor mode change (split)
 
 ## Features
 - Multi-select songs for bulk export or bulk edit (assign tags, languages, setlists)
@@ -33,6 +34,7 @@
 - External monitor support for lyrics only...? Maybe as a new window on desktop
 - Streaming zip writer on all platforms
 - First time user experience tutorial ?
+- Native iOS, macOS, feel (overscroll, touch feedback, Liquid Glass)
 
 ## Other
 - Test support with external control devices
