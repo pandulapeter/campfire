@@ -334,6 +334,13 @@ its `campfire.pdf` is also the document importer's positioned export/reimport fi
 
 ## Scrolling performance
 
+Overscroll is Compose's own: Android's stretch, iOS's bounce, and none on the desktop and the web, where Compose
+provides no effect. Foundation only applies it while there is something to scroll, so the scrolling containers that
+can be short — the list screens, the sheets, the settings, the song and the editor — also take
+`bounceScrollableContent` (`ui/platform/ContentOverscroll.kt`, or `bounceVerticalScroll` / `bounceHorizontalScroll`),
+which hands the drags of content that fits to the same effect, after offering them to the parents first, so a bottom
+sheet whose content fits is still dragged down by it.
+
 Before the first search interaction, Songs lays arriving section headers out fully expanded so loading cannot retain a collapsed first row as a scroll offset. `ListTopFade` treats leading collapsed header slots as zero scroll distance: its mask is absent at the real top and grows over the first 24dp of scrolling, including when the first card is item 1.
 
 `ListTopFade` caches an inverse gradient and uses `DstOut` inside its existing offscreen layer, translating the drawing

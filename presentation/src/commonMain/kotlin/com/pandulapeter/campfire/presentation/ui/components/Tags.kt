@@ -11,7 +11,6 @@ package com.pandulapeter.campfire.presentation.ui.components
 
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.ScrollState
-import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.FlowRowScope
@@ -53,6 +52,7 @@ import com.pandulapeter.campfire.data.model.domain.withoutAccent
 import com.pandulapeter.campfire.presentation.resources.Res
 import com.pandulapeter.campfire.presentation.resources.ic_label
 import com.pandulapeter.campfire.presentation.resources.ic_language
+import com.pandulapeter.campfire.presentation.ui.platform.bounceHorizontalScroll
 import com.pandulapeter.campfire.presentation.ui.screens.songDetails.scaled
 import org.jetbrains.compose.resources.painterResource
 
@@ -84,7 +84,7 @@ internal fun SongLabels(
     Row(
         modifier = modifier
             .horizontalFadingEdges(scrollState)
-            .horizontalScroll(scrollState),
+            .bounceHorizontalScroll(scrollState),
         horizontalArrangement = Arrangement.spacedBy(TAG_GAP),
     ) {
         sortedTags.forEach { tag ->

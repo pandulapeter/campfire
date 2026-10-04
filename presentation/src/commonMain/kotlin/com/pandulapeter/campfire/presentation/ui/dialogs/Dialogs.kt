@@ -50,7 +50,6 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.selection.toggleable
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
-import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.BottomSheetDefaults
 import androidx.compose.material3.Button
@@ -235,6 +234,8 @@ import com.pandulapeter.campfire.presentation.ui.components.orderedBy
 import com.pandulapeter.campfire.presentation.ui.components.pickableLanguages
 import com.pandulapeter.campfire.presentation.ui.components.rememberClearTextButton
 import com.pandulapeter.campfire.presentation.ui.components.textResource
+import com.pandulapeter.campfire.presentation.ui.platform.bounceScrollableContent
+import com.pandulapeter.campfire.presentation.ui.platform.bounceVerticalScroll
 import com.pandulapeter.campfire.presentation.ui.platform.calendarLocale
 import com.pandulapeter.campfire.presentation.ui.screens.settings.SettingsSubsection
 import com.pandulapeter.campfire.presentation.ui.screens.songDetails.SongInfoBody
@@ -526,7 +527,7 @@ private fun WhatsNewDialog(
                 .fillMaxWidth()
                 .heightIn(max = 420.dp)
                 .fadingVerticalEdges(scrollState)
-                .verticalScroll(scrollState)
+                .bounceVerticalScroll(scrollState)
                 .padding(vertical = 4.dp),
             verticalArrangement = Arrangement.spacedBy(16.dp),
         ) {
@@ -615,7 +616,7 @@ private fun WelcomeDialog(
                 title = { Text(stringResource(Res.string.welcome_title)) },
                 text = {
                     Column(
-                        modifier = Modifier.verticalScroll(rememberScrollState()),
+                        modifier = Modifier.bounceVerticalScroll(rememberScrollState()),
                     ) {
                         Text(
                             text = stringResource(Res.string.welcome_message),
@@ -685,7 +686,7 @@ private fun ColumnScope.WelcomeContent(
     onGetStarted: () -> Unit,
     onOpenSettings: () -> Unit,
 ) = Column(
-    modifier = Modifier.weight(1f, fill = false).verticalScroll(rememberScrollState()).padding(contentPadding),
+    modifier = Modifier.weight(1f, fill = false).bounceVerticalScroll(rememberScrollState()).padding(contentPadding),
 ) {
     val userPreferences by viewModel.userPreferences.collectAsStateWithLifecycle()
     Text(
@@ -818,7 +819,7 @@ private fun DeleteLibraryDialog(
         text = { contentPadding ->
             val closeSheet = { close() }
             Column(
-                modifier = Modifier.fadingVerticalEdges(scrollState).verticalScroll(scrollState).padding(contentPadding),
+                modifier = Modifier.fadingVerticalEdges(scrollState).bounceVerticalScroll(scrollState).padding(contentPadding),
                 verticalArrangement = Arrangement.spacedBy(16.dp),
             ) {
                 Text(stringResource(Res.string.settings_library_delete_confirmation))
@@ -961,7 +962,7 @@ private fun SetlistDetailsDialog(
         title = title,
         subtitle = subtitle,
         text = { contentPadding ->
-            Column(modifier = Modifier.fadingVerticalEdges(scrollState).verticalScroll(scrollState).padding(contentPadding)) {
+            Column(modifier = Modifier.fadingVerticalEdges(scrollState).bounceVerticalScroll(scrollState).padding(contentPadding)) {
                 OutlinedTextField(
                     modifier = Modifier.fillMaxWidth().focusRequester(focusRequester).onFocusChanged {
                         if (it.isFocused && !hasTitleBeenFocused) {
@@ -1150,7 +1151,7 @@ private fun SetlistDateField(
                 modifier = Modifier
                     .weight(1f, fill = false)
                     .fadingVerticalEdges(calendarScrollState)
-                    .verticalScroll(calendarScrollState)
+                    .bounceVerticalScroll(calendarScrollState)
                     .padding(contentPadding.only(bottom = true)),
                 state = state,
                 dateFormatter = dateFormatter,
@@ -1216,7 +1217,7 @@ private fun NewSongDialog(
                 )
             }
             Column(
-                modifier = Modifier.fadingVerticalEdges(scrollState).verticalScroll(scrollState).padding(contentPadding),
+                modifier = Modifier.fadingVerticalEdges(scrollState).bounceVerticalScroll(scrollState).padding(contentPadding),
                 verticalArrangement = Arrangement.spacedBy(8.dp),
             ) {
                 field(Modifier.fillMaxWidth().focusRequester(focusRequester), Field.TITLE)
@@ -1358,7 +1359,7 @@ private fun SongTagsDialog(
                         rowOffset = if (isCreatable) 1 else 0,
                     )
                     LazyColumn(
-                        modifier = Modifier
+                        modifier = Modifier.bounceScrollableContent(listState)
                             .padding(top = 8.dp)
                             .reachingDialogEdges()
                             .weight(1f, fill = false)
@@ -1509,7 +1510,7 @@ private fun SongLanguagesDialog(
                         orderedKeys = orderedMatches.map { it.code },
                     )
                     LazyColumn(
-                        modifier = Modifier
+                        modifier = Modifier.bounceScrollableContent(listState)
                             .padding(top = 8.dp)
                             .reachingDialogEdges()
                             .weight(1f, fill = false)
@@ -1955,7 +1956,7 @@ private fun ColumnScope.PickerList(
         rowOffset = (if (hasHeader) 1 else 0) + (if (noResultsText != null) 1 else 0),
     )
     LazyColumn(
-        modifier = Modifier
+        modifier = Modifier.bounceScrollableContent(listState)
             .weight(1f, fill = false)
             .retainSheetContentHeight(contentPadding)
             // The rows fade out as they scroll up under the search field, which is the edge between the two
@@ -2082,7 +2083,7 @@ internal fun CampfireBottomSheet(
                 if (isCompactKeyboard) {
                     Modifier.heightIn(max = windowHeight).imePadding()
                         .then(if (fadeBottomEdge) Modifier.fadingVerticalEdges(scrollState) else Modifier.fadingTopEdge(scrollState))
-                        .verticalScroll(scrollState)
+                        .bounceVerticalScroll(scrollState)
                 } else {
                     Modifier
                 },
@@ -2303,7 +2304,7 @@ private fun SongInfoSheet(
                 modifier = Modifier
                     .weight(1f, fill = false)
                     .fadingVerticalEdges(scrollState)
-                    .verticalScroll(scrollState)
+                    .bounceVerticalScroll(scrollState)
                     .padding(contentPadding)
                     .padding(vertical = 8.dp),
                 metadata = metadata,

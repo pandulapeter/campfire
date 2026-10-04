@@ -16,6 +16,7 @@ import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.rememberTransition
 import androidx.compose.foundation.ScrollState
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.gestures.Orientation
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
@@ -164,6 +165,7 @@ import com.pandulapeter.campfire.presentation.ui.platform.Distribution
 import com.pandulapeter.campfire.presentation.ui.platform.LibraryPersistence
 import com.pandulapeter.campfire.presentation.ui.platform.LocalFilePicker
 import com.pandulapeter.campfire.presentation.ui.platform.appIconSurface
+import com.pandulapeter.campfire.presentation.ui.platform.bounceScrollableContent
 import com.pandulapeter.campfire.presentation.ui.platform.canAskForDonations
 import com.pandulapeter.campfire.presentation.ui.platform.isAppAvailableOffline
 import com.pandulapeter.campfire.presentation.ui.platform.platformStore
@@ -404,7 +406,7 @@ private fun SettingsTabPager(
             if (isNavigationRailVisible && (pagerState.isScrollInProgress || pagerState.currentPageOffsetFraction != 0f)) 1f else 0f
         )
         HorizontalPager(
-            modifier = Modifier
+            modifier = Modifier.bounceScrollableContent(pagerState, Orientation.Horizontal)
                 .weight(1f)
                 .fillMaxWidth()
                 .fadingLeftEdge(fadeAlpha.value),

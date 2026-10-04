@@ -32,12 +32,12 @@ import androidx.compose.animation.shrinkVertically
 import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.focusable
+import androidx.compose.foundation.gestures.Orientation
 import androidx.compose.foundation.gestures.awaitEachGesture
 import androidx.compose.foundation.gestures.awaitFirstDown
 import androidx.compose.foundation.gestures.rememberTransformableState
 import androidx.compose.foundation.gestures.transformable
 import androidx.compose.foundation.gestures.waitForUpOrCancellation
-import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxWithConstraints
@@ -68,7 +68,6 @@ import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.selection.triStateToggleable
 import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.DatePickerDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -236,6 +235,9 @@ import com.pandulapeter.campfire.presentation.ui.components.fadingVerticalEdges
 import com.pandulapeter.campfire.presentation.ui.components.textResource
 import com.pandulapeter.campfire.presentation.ui.contentEdges
 import com.pandulapeter.campfire.presentation.ui.platform.LocalFilePicker
+import com.pandulapeter.campfire.presentation.ui.platform.bounceHorizontalScroll
+import com.pandulapeter.campfire.presentation.ui.platform.bounceScrollableContent
+import com.pandulapeter.campfire.presentation.ui.platform.bounceVerticalScroll
 import com.pandulapeter.campfire.presentation.ui.platform.calendarLocale
 import com.pandulapeter.campfire.presentation.ui.platform.isDesktopPlatform
 import com.pandulapeter.campfire.presentation.ui.platform.isLaunchScreenWholeStartup
@@ -906,7 +908,7 @@ private fun PrintOptions(
 ) {
     val state = rememberLazyListState()
     val isPdf = settings.format == PrintSettings.Format.PDF
-    LazyColumn(modifier.fadingVerticalEdges(state), state = state, contentPadding = PaddingValues(top = 8.dp, bottom = bottomPadding)) {
+    LazyColumn(modifier.bounceScrollableContent(state).fadingVerticalEdges(state), state = state, contentPadding = PaddingValues(top = 8.dp, bottom = bottomPadding)) {
         if (header != null) {
             item(key = "preview") { header() }
         }
@@ -1175,8 +1177,8 @@ private fun FilesPreview(
                 text = text,
                 modifier = modifier
                     .fadingTopEdge(scrollState, MaterialTheme.colorScheme.background)
-                    .verticalScroll(scrollState)
-                    .horizontalScroll(rememberScrollState())
+                    .bounceVerticalScroll(scrollState)
+                    .bounceHorizontalScroll(rememberScrollState())
                     .padding(start = 16.dp, end = 16.dp, top = 8.dp, bottom = bottomPadding),
                 style = MaterialTheme.typography.bodyMedium.copy(fontFamily = LocalMonospaceFontFamily.current),
                 softWrap = false,
@@ -1205,7 +1207,7 @@ private fun ZipContents(
     bottomPadding: Dp,
 ) {
     val state = rememberLazyListState()
-    LazyColumn(modifier.fadingVerticalEdges(state), state = state, contentPadding = PaddingValues(top = 8.dp, bottom = bottomPadding)) {
+    LazyColumn(modifier.bounceScrollableContent(state).fadingVerticalEdges(state), state = state, contentPadding = PaddingValues(top = 8.dp, bottom = bottomPadding)) {
         item {
             SettingsSectionTitle(text = stringResource(Res.string.print_zip_contents))
             ZipFileRow(
@@ -1443,7 +1445,7 @@ private fun PrintPages(
     ) {
         HorizontalPager(
             state = pagerState,
-            modifier = Modifier
+            modifier = Modifier.bounceScrollableContent(pagerState, Orientation.Horizontal)
                 .fillMaxSize()
                 .fadingVerticalEdges(
                     scrolledFromTop = ::pastTop,

@@ -144,6 +144,7 @@ import kotlinx.datetime.LocalDate
 import org.jetbrains.compose.resources.painterResource
 import sh.calvin.reorderable.ReorderableItem
 import sh.calvin.reorderable.rememberReorderableLazyGridState
+import com.pandulapeter.campfire.presentation.ui.platform.bounceScrollableContent
 
 @Composable
 internal fun SetlistsScreen(
@@ -380,7 +381,7 @@ private fun SetlistList(
     Box(modifier = modifier) {
         LazyVerticalGrid(
             columns = ListColumns(columnCount),
-            modifier = gridModifier,
+            modifier = gridModifier.bounceScrollableContent(listState),
             state = listState,
             contentPadding = contentPadding.only(start = true, end = true, bottom = true, extraEnd = FAST_SCROLLER_WIDTH, extraBottom = if (isReordering) 88.dp else 8.dp),
         ) {
