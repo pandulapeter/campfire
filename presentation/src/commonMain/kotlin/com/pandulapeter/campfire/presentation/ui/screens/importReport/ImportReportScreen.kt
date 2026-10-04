@@ -178,7 +178,7 @@ internal fun ImportReportScreen(
             is ImportReport.Finished -> shown.result?.let { importReportSections(it, songs, setlists) }.orEmpty()
         }
     }
-    val matchingSections = remember(sections, query) { sections.matching(query) }
+    val matchingSections = remember(sections, query) { sections.matching(query, viewModel::normalizeForSearch) }
     val isSearchAvailable = sections.isNotEmpty()
     val layoutDirection = LocalLayoutDirection.current
     val bottomPadding = contentPadding.calculateBottomPadding() + FLOATING_BUTTON_CLEARANCE

@@ -131,16 +131,18 @@ internal fun ImportResult.followingLibraryFileNames(fileName: (String) -> String
 )
 
 /**
- * The sections with only the rows whose file name, title or artist holds [query], ignoring case, and without the
- * sections that are left with none. A blank query is no filter at all.
+ * The sections with only the rows whose file name, title or artist holds [query], both folded by [normalize] the way
+ * the library's searches fold, so that case, accents, spaces and punctuation do not count, and without the sections
+ * that are left with none. A query that folds to nothing is no filter at all.
  */
-internal fun List<ImportReportSection>.matching(query: String): List<ImportReportSection> {
-    val trimmed = query.trim()
-    if (trimmed.isEmpty()) return this
+internal fun List<ImportReportSection>.matching(query: String, normalize: (String) -> String): List<ImportReportSection> {
+    val normalizedQuery = normalize(query)
+    // A query that folds to nothing (punctuation, symbols or emoji alone) is no search, as on the library's screens.
+    if (normalizedQuery.isEmpty()) return this
     return mapNotNull { section ->
         section.copy(
             rows = section.rows.filter { row ->
-                listOfNotNull(row.fileName, row.title, row.subtitle).any { it.contains(trimmed, ignoreCase = true) }
+                listOfNotNull(row.fileName, row.title, row.subtitle).any { normalizedQuery in normalize(it) }
             },
         ).takeIf { it.rows.isNotEmpty() }
     }

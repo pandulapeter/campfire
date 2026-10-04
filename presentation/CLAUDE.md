@@ -155,6 +155,7 @@ Everything else is `commonMain`:
   mode. The search is a field that is always there, a sticky item right above the files it narrows that pins at
   the top of the list once they scroll under it — the list's own fade at the bar giving way as the field arrives, and
   the field drawing the fade the rows pass under from then on — so the bar holds nothing but Close and the title. It
+  matches a row's file name, title and artist folded the way the library's searches fold (`ymca` finds `Y.M.C.A.`). It
   never takes the focus by itself, since a keyboard over the result is not what anybody opened it for; Ctrl / Cmd + F
   gives it the caret (`openCurrentSearch`, through `importReportSearch`, which stays open and is emptied as the screen
   is left), and Escape and Back go straight to leaving the screen. Leaving the screen while

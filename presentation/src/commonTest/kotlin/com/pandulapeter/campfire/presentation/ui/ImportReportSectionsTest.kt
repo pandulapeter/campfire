@@ -131,14 +131,34 @@ class ImportReportSectionsTest {
             songs = listOf(song("a", artist = "Queen"), song("b")),
             setlists = emptyList(),
         )
-        assertEquals(listOf("a.cho"), sections.matching("QUEEN").single().rows.map { it.fileName })
-        assertEquals(listOf("photo.png"), sections.matching(" photo ").single().rows.map { it.fileName })
-        assertEquals(sections, sections.matching("  "))
-        assertTrue(sections.matching("nothing like it").isEmpty())
+        assertEquals(listOf("a.cho"), sections.matching("QUEEN", fold).single().rows.map { it.fileName })
+        assertEquals(listOf("photo.png"), sections.matching(" photo ", fold).single().rows.map { it.fileName })
+        assertEquals(sections, sections.matching("  ", fold))
+        assertTrue(sections.matching("nothing like it", fold).isEmpty())
     }
 
-    private fun song(name: String, artist: String = "") = Song(
-        fileName = "$name.cho", title = "Title $name", artist = artist, key = null, transpose = 0,
+    @Test
+    fun aSearchIgnoresSpacesAndPunctuationTheWayTheLibrarySearchesDo() {
+        val sections = importReportSections(
+            result = ImportResult(
+                importedSongFileNames = listOf("a.cho", "b.cho"),
+                importedSetlistFileNames = emptyList(),
+                skippedFileNames = emptyList(),
+                duplicateFileNames = emptyList(),
+            ),
+            songs = listOf(song("a", title = "Y.M.C.A."), song("b")),
+            setlists = emptyList(),
+        )
+        assertEquals(listOf("Y.M.C.A."), sections.matching("ymca", fold).single().rows.map { it.title })
+        assertEquals(listOf("Y.M.C.A."), sections.matching("y m c a", fold).single().rows.map { it.title })
+        assertEquals(sections, sections.matching("...", fold))
+    }
+
+    /** A stand-in for the library's folding, which lives in the domain implementation this module cannot reach. */
+    private val fold: (String) -> String = { it.lowercase().filter(Char::isLetterOrDigit) }
+
+    private fun song(name: String, artist: String = "", title: String = "Title $name") = Song(
+        fileName = "$name.cho", title = title, artist = artist, key = null, transpose = 0,
         tags = emptyList(), languages = emptyList(), coverArtUrl = null, hasChords = false,
         canUpdateFileName = false, lastModified = 0L, size = 0L,
     )
