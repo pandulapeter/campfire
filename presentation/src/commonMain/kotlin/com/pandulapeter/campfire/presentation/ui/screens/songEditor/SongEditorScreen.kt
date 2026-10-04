@@ -71,6 +71,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
+import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.input.key.Key
 import androidx.compose.ui.input.key.KeyEventType
@@ -395,9 +396,17 @@ private fun LoadedSongEditor(
     // nor at all while the preview is the only pane - or after the panes change places, which composes the field
     // again. So the editor takes the focus itself as it opens and whenever the panes change, and the save shortcut
     // sits in its preview pass, where it hears the key wherever inside the editor the focus has gone since: the field
-    // once it is clicked, the preview, a button of the bar.
+    // once it is clicked, the preview, a button of the bar. A field that was being typed in when the panes changed
+    // without the user asking - a rotation or a resize across the width Split needs - gets the focus back instead,
+    // so the caret stays where it was and the keyboard stays up. Whether it had it is read in the composition that
+    // changes the panes, before the old field is disposed and reports losing it.
     val focusRequester = remember { FocusRequester() }
-    LaunchedEffect(panes) { focusRequester.requestFocus() }
+    val fieldFocusRequester = remember { FocusRequester() }
+    val fieldFocus = remember { FieldFocus() }
+    val wasFieldFocused = remember(panes) { fieldFocus.hasFocus }
+    LaunchedEffect(panes) {
+        if (wasFieldFocused && panes != EditorPanes.PREVIEW) fieldFocusRequester.requestFocus() else focusRequester.requestFocus()
+    }
 
     val layoutDirection = LocalLayoutDirection.current
     Column(
@@ -538,6 +547,9 @@ private fun LoadedSongEditor(
         val editor: @Composable (Modifier) -> Unit = { paneModifier ->
             ChordProTextField(
                 modifier = paneModifier,
+                fieldModifier = Modifier
+                    .focusRequester(fieldFocusRequester)
+                    .onFocusChanged { fieldFocus.hasFocus = it.hasFocus },
                 textFieldState = textFieldState,
                 isCompactTyping = isTypingInShortWindow,
                 scrollState = fieldScrollState,
@@ -690,12 +702,15 @@ private enum class EditorPanes {
  * screen, and a source file is read by its lines, which a wrapped one shows as two. A line wider than the pane is
  * scrolled to sideways instead.
  *
+ * @param fieldModifier Applied innermost, right over the field's own focus target: the sideways scrolling container
+ * around it is a focus group, so a focus callback or requester outside it would see that group rather than the field.
  * @param scrollState The field's own scroll position, hoisted so that it survives the pane being composed again.
  * @param horizontalScrollState How far the field is scrolled sideways, hoisted for the same reason.
  */
 @Composable
 private fun ChordProTextField(
     modifier: Modifier = Modifier,
+    fieldModifier: Modifier = Modifier,
     textFieldState: TextFieldState,
     isCompactTyping: Boolean,
     scrollState: ScrollState,
@@ -743,7 +758,8 @@ private fun ChordProTextField(
                     contentPadding = contentPadding,
                     endPadding = endPadding,
                 )
-            ),
+            )
+            .then(fieldModifier),
         state = textFieldState,
         // The landscape keyboard leaves the smallest phone about 150 dp, much of it taken by the 48 dp title row and the
         // field's padding: a tighter leading fits three lines in what is left without making the letters any smaller.
@@ -761,6 +777,14 @@ private fun ChordProTextField(
         // swallows the press that should have put the caret in it, and nothing can be typed at all.
         scrollState = scrollState,
     )
+}
+
+/**
+ * Whether the editor's field holds the focus, kept outside the snapshot system: it is only read at the moment the
+ * panes change, and state read there would compose the whole screen again on every focus change of the field.
+ */
+private class FieldFocus {
+    var hasFocus = false
 }
 
 /**
