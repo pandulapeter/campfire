@@ -242,6 +242,7 @@ import com.pandulapeter.campfire.presentation.ui.screens.songDetails.SongInfoBod
 import com.pandulapeter.campfire.presentation.ui.screens.songDetails.rememberSongInfoEditing
 import com.pandulapeter.campfire.presentation.ui.components.ACTION_BUTTON_OVERLAP
 import com.pandulapeter.campfire.presentation.ui.components.overlappingAction
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlinx.datetime.LocalDate
 import kotlinx.datetime.TimeZone
@@ -252,6 +253,7 @@ import kotlinx.datetime.todayIn
 import com.pandulapeter.campfire.presentation.ui.platform.CompactKeyboardEffect
 import org.jetbrains.compose.resources.painterResource
 import kotlin.time.Clock
+import kotlin.time.Duration.Companion.seconds
 import kotlin.time.Instant
 
 /**
@@ -489,9 +491,13 @@ internal fun CampfireDialogs(
         )
 
         CampfireViewModel.DialogType.WhatsNew -> {
-            // Here rather than where the dialog is asked for, since that can be long before it is on screen, or never
-            // (see CampfireViewModel.showWhatsNewOnVersionChange).
-            LaunchedEffect(Unit) { viewModel.onWhatsNewShown() }
+            // Only once it has stayed up for a moment: Play's answer can arrive after the app is on screen and cover the
+            // dialog with the update required screen, which takes it out of the composition and cancels this, and whose
+            // flow ends the process (see CampfireViewModel.showWhatsNewOnVersionChange).
+            LaunchedEffect(Unit) {
+                delay(WHATS_NEW_SEEN_DELAY)
+                viewModel.onWhatsNewShown()
+            }
             WhatsNewDialog(onDismiss = viewModel::dismissDialog)
         }
 
@@ -566,6 +572,9 @@ private fun WhatsNewDialog(
         Button(onClick = onDismiss) { Text(stringResource(Res.string.welcome_get_started)) }
     },
 )
+
+/** How long What's new has to stay uncovered before it counts as seen. */
+private val WHATS_NEW_SEEN_DELAY = 3.seconds
 
 private val WHATS_NEW_HEADLINE = Regex("""^\*\*(.+?)\*\*\s*(.*)$""")
 

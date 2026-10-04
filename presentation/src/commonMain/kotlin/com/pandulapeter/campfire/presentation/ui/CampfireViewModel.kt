@@ -2431,11 +2431,13 @@ class CampfireViewModel(
     /**
      * The first installed version belongs to the welcome, so it is recorded by [plantDemoLibraryOnFirstRun] instead.
      * Later versions wait for the app and for every import queued, running or reported on before opening (see
-     * [canShowWhatsNew]), and are recorded by [onWhatsNewShown] once the dialog is on screen rather than here as it is
-     * asked for: on Android it is not composed while the update required screen covers the app, and Play's answer
-     * right after an update can still be the update it just installed, which puts that screen up and starts its flow,
-     * which ends this process - a version recorded before anybody saw it would never be introduced. Recording it as it
-     * appears rather than as it closes still keeps a process ended with the dialog up from introducing it again.
+     * [canShowWhatsNew]), and are recorded by [onWhatsNewShown] once the dialog has stayed uncovered for a few seconds,
+     * or here as it closes, rather than as it is asked for or on its first frame: on Android it is not composed while
+     * the update required screen covers the app, and Play's answer right after an update can still be the update it
+     * just installed - arriving after the dialog opened, too - which puts that screen up and starts its flow, which
+     * ends this process; a version recorded before anybody saw it would never be introduced. Recording it once it has
+     * stayed up rather than only as it closes still keeps a process ended with the dialog up after that from
+     * introducing it again.
      * Keeping every introduced version also makes rolling back and returning to a version silent.
      * An empty release message is recorded at once, so a small release introduces nothing.
      */
@@ -2453,13 +2455,17 @@ class CampfireViewModel(
                     queuedImportCount = queuedImportCount,
                 )
             }.first { it }
-            _visibleDialog.compareAndSet(null, DialogType.WhatsNew)
+            if (_visibleDialog.compareAndSet(null, DialogType.WhatsNew)) {
+                // A close before the dialog's own delay ran out; being covered leaves the dialog where it is.
+                _visibleDialog.first { it != DialogType.WhatsNew }
+                recordWhatsNewVersion()
+            }
         } else {
             recordWhatsNewVersion()
         }
     }
 
-    /** What [DialogType.WhatsNew] calls as it is composed, see [showWhatsNewOnVersionChange]. */
+    /** What [DialogType.WhatsNew] calls once it has stayed on screen for a moment, see [showWhatsNewOnVersionChange]. */
     fun onWhatsNewShown() {
         viewModelScope.launch { recordWhatsNewVersion() }
     }
