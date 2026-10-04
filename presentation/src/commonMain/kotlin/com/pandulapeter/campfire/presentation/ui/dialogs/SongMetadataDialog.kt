@@ -97,12 +97,12 @@ internal fun SongMetadataDialog(
                 }
             }
         },
-        confirmButton = {
+        confirmButton = { close ->
             BottomSheetConfirmButton(
                 enabled = Field.entries.any { values[it].orEmpty().trim() != dialog.values[it].orEmpty().trim() },
                 onClick = {
                     viewModel.setSongMetadata(fileName = dialog.song.fileName, isEditorDraft = dialog.isEditorDraft, values = values, offeredValues = dialog.values)
-                    viewModel.dismissDialog()
+                    close()
                 },
             ) { Text(stringResource(if (dialog.isEditorDraft) Res.string.done else Res.string.save)) }
         },

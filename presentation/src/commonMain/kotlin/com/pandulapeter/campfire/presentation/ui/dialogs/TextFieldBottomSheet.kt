@@ -32,7 +32,10 @@ import androidx.compose.ui.unit.dp
  * handles short windows the same way as the assignment sheets.
  *
  * @param text Handed the sheet's `contentPadding`, which scrolling content applies inside its scroll, so that it scrolls on
- *   under the navigation bar, and anything else leaves under its last row.
+ *   under the navigation bar, and anything else leaves under its last row. A keyboard action that finishes the form
+ *   closes the sheet through its scope's `close`, as the confirm button does.
+ * @param confirmButton Handed the sheet's `close`, which a confirmation calls once it has written the draft, so that the
+ *   sheet slides away rather than being gone in one frame.
  * @param retainHeight Keeps a list editor at its largest measured height while it is open, so filtering or removing
  *   rows does not move the header and search field. Keyboard and system-bar padding are not retained, so the sheet
  *   returns to its content's height when the keyboard closes. Small lists still open at their content's height.
@@ -43,15 +46,15 @@ internal fun TextFieldBottomSheet(
     title: String,
     subtitle: String = "",
     retainHeight: Boolean = false,
-    text: @Composable (contentPadding: PaddingValues) -> Unit,
-    confirmButton: @Composable () -> Unit,
+    text: @Composable BottomSheetContentScope.(contentPadding: PaddingValues) -> Unit,
+    confirmButton: @Composable (close: () -> Unit) -> Unit,
     startButton: (@Composable () -> Unit)? = null,
 ) = CampfireBottomSheet(
     title = title,
     subtitle = subtitle,
-    actions = {
+    actions = { close ->
         startButton?.invoke()
-        confirmButton()
+        confirmButton(close)
     },
     onDismiss = onDismissRequest,
 ) { contentPadding ->
@@ -68,7 +71,7 @@ internal fun TextFieldBottomSheet(
             .padding(horizontal = 24.dp)
             .padding(top = 8.dp),
     ) {
-        ProvideTextStyle(MaterialTheme.typography.bodyMedium) { text(contentPadding) }
+        ProvideTextStyle(MaterialTheme.typography.bodyMedium) { this@CampfireBottomSheet.text(contentPadding) }
     }
 }
 

@@ -311,7 +311,6 @@ internal fun CampfireDialogs(
                     date = date,
                     isCountdownShown = isCountdownShown,
                 )
-                viewModel.dismissDialog()
             },
         )
 
@@ -333,16 +332,12 @@ internal fun CampfireDialogs(
                     date = date,
                     isCountdownShown = isCountdownShown,
                 )
-                viewModel.dismissDialog()
             },
         )
 
         CampfireViewModel.DialogType.NewSong -> NewSongDialog(
             onDismiss = { viewModel.dismissSheet(dialog) },
-            onCreate = { values ->
-                viewModel.createSong(values = values)
-                viewModel.dismissDialog()
-            },
+            onCreate = { values -> viewModel.createSong(values = values) },
         )
 
         CampfireViewModel.DialogType.SongFilters -> CampfireBottomSheet(
@@ -812,16 +807,17 @@ private fun DeleteLibraryDialog(
     val keyboardController = LocalSoftwareKeyboardController.current
     val scrollState = rememberScrollState()
     val confirmOnce = rememberSingleConfirmation()
-    val deleteLibrary = {
+    val deleteLibrary = { close: () -> Unit ->
         confirmOnce {
             viewModel.deleteLibrary()
-            viewModel.dismissDialog()
+            close()
         }
     }
     TextFieldBottomSheet(
         onDismissRequest = { viewModel.dismissSheet(CampfireViewModel.DialogType.DeleteLibrary) },
         title = stringResource(Res.string.settings_library_delete),
         text = { contentPadding ->
+            val closeSheet = { close() }
             Column(
                 modifier = Modifier.fadingVerticalEdges(scrollState).bounceVerticalScroll(scrollState).padding(contentPadding),
                 verticalArrangement = Arrangement.spacedBy(16.dp),
@@ -853,18 +849,18 @@ private fun DeleteLibraryDialog(
                         autoCorrectEnabled = false,
                         imeAction = ImeAction.Done,
                     ),
-                    keyboardActions = KeyboardActions(onDone = { if (isConfirmed) deleteLibrary() else keyboardController?.hide() }),
+                    keyboardActions = KeyboardActions(onDone = { if (isConfirmed) deleteLibrary(closeSheet) else keyboardController?.hide() }),
                 )
             }
         },
-        confirmButton = {
+        confirmButton = { close ->
             BottomSheetConfirmButton(
                 enabled = isConfirmed,
                 colors = ButtonDefaults.buttonColors(
                     containerColor = MaterialTheme.colorScheme.error,
                     contentColor = MaterialTheme.colorScheme.onError,
                 ),
-                onClick = deleteLibrary,
+                onClick = { deleteLibrary(close) },
             ) { Text(stringResource(Res.string.delete)) }
         },
     )
@@ -1013,10 +1009,15 @@ private fun SetlistDetailsDialog(
                 )
             }
         },
-        confirmButton = {
+        confirmButton = { close ->
             BottomSheetConfirmButton(
                 enabled = isValid && hasChanges,
-                onClick = { confirmOnce { onConfirm(setlistTitle.text, description, date, isCountdownShown) } },
+                onClick = {
+                    confirmOnce {
+                        onConfirm(setlistTitle.text, description, date, isCountdownShown)
+                        close()
+                    }
+                },
             ) { Text(confirmLabel) }
         },
     )
@@ -1189,22 +1190,32 @@ private fun NewSongDialog(
     val keyboardController = LocalSoftwareKeyboardController.current
     val scrollState = rememberScrollState()
     val confirmOnce = rememberSingleConfirmation()
-    val create: () -> Unit = { if (isValid) confirmOnce { onCreate(values) } else keyboardController?.hide() }
-    val field: @Composable (Modifier, Field) -> Unit = { modifier, field ->
-        SongMetadataField(
-            modifier = modifier,
-            field = field,
-            value = values[field].orEmpty(),
-            onValueChange = { values = values + (field to it) },
-            isOptional = field != Field.TITLE,
-            maxLength = if (field == Field.TITLE || field == Field.ARTIST) MAX_TITLE_LENGTH else Int.MAX_VALUE,
-            onDone = create,
-        )
+    val create = { close: () -> Unit ->
+        if (isValid) {
+            confirmOnce {
+                onCreate(values)
+                close()
+            }
+        } else {
+            keyboardController?.hide()
+        }
     }
     TextFieldBottomSheet(
         onDismissRequest = onDismiss,
         title = stringResource(Res.string.songs_new_song),
         text = { contentPadding ->
+            val closeSheet = { close() }
+            val field: @Composable (Modifier, Field) -> Unit = { modifier, field ->
+                SongMetadataField(
+                    modifier = modifier,
+                    field = field,
+                    value = values[field].orEmpty(),
+                    onValueChange = { values = values + (field to it) },
+                    isOptional = field != Field.TITLE,
+                    maxLength = if (field == Field.TITLE || field == Field.ARTIST) MAX_TITLE_LENGTH else Int.MAX_VALUE,
+                    onDone = { create(closeSheet) },
+                )
+            }
             Column(
                 modifier = Modifier.fadingVerticalEdges(scrollState).bounceVerticalScroll(scrollState).padding(contentPadding),
                 verticalArrangement = Arrangement.spacedBy(8.dp),
@@ -1221,8 +1232,8 @@ private fun NewSongDialog(
                 }
             }
         },
-        confirmButton = {
-            BottomSheetConfirmButton(enabled = isValid, onClick = create) { Text(stringResource(Res.string.create)) }
+        confirmButton = { close ->
+            BottomSheetConfirmButton(enabled = isValid, onClick = { create(close) }) { Text(stringResource(Res.string.create)) }
         },
     )
 }
@@ -1386,12 +1397,12 @@ private fun SongTagsDialog(
                 }
             }
         },
-        confirmButton = {
+        confirmButton = { close ->
             BottomSheetConfirmButton(
                 enabled = hasTagChanges,
                 onClick = {
                     viewModel.setSongTags(fileName = dialog.song.fileName, isEditorDraft = dialog.isEditorDraft, tags = tagsToSave, offeredTags = offeredTags)
-                    viewModel.dismissDialog()
+                    close()
                 },
             ) { Text(stringResource(if (dialog.isEditorDraft) Res.string.done else Res.string.save)) }
         },
@@ -1528,12 +1539,12 @@ private fun SongLanguagesDialog(
                 }
             }
         },
-        confirmButton = {
+        confirmButton = { close ->
             BottomSheetConfirmButton(
                 enabled = selectedCodes != dialog.song.languages.toSet(),
                 onClick = {
                     viewModel.setSongLanguages(fileName = dialog.song.fileName, isEditorDraft = dialog.isEditorDraft, codes = selectedCodes.toList())
-                    viewModel.dismissDialog()
+                    close()
                 },
             ) { Text(stringResource(if (dialog.isEditorDraft) Res.string.done else Res.string.save)) }
         },
@@ -1646,7 +1657,6 @@ private fun SetlistPicker(
                     isCountdownShown = isCountdownShown,
                     songFileName = dialog.song.fileName,
                 )
-                closeNamingDialog()
             },
         )
     }

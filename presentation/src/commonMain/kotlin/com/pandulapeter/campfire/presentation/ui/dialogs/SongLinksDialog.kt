@@ -149,12 +149,12 @@ internal fun SongLinksDialog(
                 )
             }
         },
-        confirmButton = {
+        confirmButton = { close ->
             BottomSheetConfirmButton(
                 enabled = canSave,
                 onClick = {
                     viewModel.setSongLinks(fileName = dialog.song.fileName, isEditorDraft = dialog.isEditorDraft, links = links, offeredLinks = dialog.links)
-                    viewModel.dismissDialog()
+                    close()
                 },
             ) { Text(stringResource(if (dialog.isEditorDraft) Res.string.done else Res.string.save)) }
         },
