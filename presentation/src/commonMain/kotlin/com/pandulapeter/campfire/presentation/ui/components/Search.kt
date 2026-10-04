@@ -67,6 +67,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.State
+import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.movableContentOf
 import androidx.compose.runtime.mutableIntStateOf
@@ -231,7 +232,10 @@ internal fun SearchableTopAppBar(
     }
     val layoutDirection = LocalLayoutDirection.current
     val density = LocalDensity.current
-    CompactKeyboardEffect(isEnabled = isOpen && LocalWindowInfo.current.containerDpSize.height < SHORT_WINDOW_HEIGHT && WindowInsets.ime.getBottom(density) > 0)
+    val ime = WindowInsets.ime
+    // Derived, so that the bar recomposes as the keyboard comes and goes rather than on every frame it slides.
+    val isKeyboardVisible by remember(ime, density) { derivedStateOf { ime.getBottom(density) > 0 } }
+    CompactKeyboardEffect(isEnabled = isOpen && LocalWindowInfo.current.containerDpSize.height < SHORT_WINDOW_HEIGHT && isKeyboardVisible)
     val endPadding = contentPadding.calculateEndPadding(layoutDirection) + APP_BAR_END_PADDING
     val containerColor = MaterialTheme.colorScheme.background
     val pillColor = MaterialTheme.colorScheme.surfaceContainerHigh
