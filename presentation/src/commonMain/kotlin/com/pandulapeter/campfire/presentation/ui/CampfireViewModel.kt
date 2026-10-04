@@ -3017,9 +3017,9 @@ class CampfireViewModel(
      * from [setlists], which only catches up once the previous write has been round tripped through the repository,
      * would be recomputed from an order one or more moves out of date.
      *
-     * [songFileNames] is what the screen was showing, which is not necessarily the whole setlist. The entries the
-     * filters hide cannot be dragged and must not be moved by a drag that could not see them, so the visible songs
-     * are dealt back into the slots visible songs already occupied and everything else stays exactly where it is.
+     * [songFileNames] is the order the screen was showing, which a sync run or another write may have overtaken by the
+     * time this one runs: an entry the drag never saw must not be moved by it, so the songs it did see are dealt back
+     * into the slots they already occupied and everything else stays exactly where it is.
      */
     fun reorderSetlist(setlistFileName: String, songFileNames: List<String>) = launchLibraryChange {
         updateEditableSetlist(setlistFileName) { setlist ->

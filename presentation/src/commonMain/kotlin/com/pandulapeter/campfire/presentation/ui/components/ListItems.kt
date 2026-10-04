@@ -1213,7 +1213,7 @@ private val EMPTY_STATE_ACTION_WIDTH = 280.dp
 /**
  * The x position the text of a [ListItem] starts at, before the card's own outer inset.
  */
-val LIST_ITEM_KEYLINE = 16.dp
+internal val LIST_ITEM_KEYLINE = 16.dp
 
 /** Below this window width a song card's text gets the narrower padding, the smaller dot and a second title line. */
 private val NARROW_SONG_CARD_WINDOW_WIDTH = 480.dp
