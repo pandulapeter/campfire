@@ -861,6 +861,12 @@ class CampfireViewModel(
     /** Whether the last change to [backStack] left [CampfireDestination.ImportReport] on it, see [onImportReportLeft]. */
     private var isImportReportOnBackStack = false
 
+    /**
+     * Counts the reports [showImportReport] has put up, so that a waiting one is pushed only if no later one replaced
+     * it. The value cannot be compared instead: [followReportedFileNames] rewrites a waiting report as the library moves.
+     */
+    private var importReportRequest = 0
+
     /** True from the moment the demo library is asked for until the offer has caught up with the outcome, see [importDemoLibrary]. */
     private val isAddingDemoLibrary = MutableStateFlow(false)
 
@@ -2665,12 +2671,13 @@ class CampfireViewModel(
      * can finish meanwhile.
      */
     private fun showImportReport(report: ImportReport) {
+        val request = ++importReportRequest
         _importReport.value = report
         viewModelScope.launch {
             combine(_visibleDialog, _editorDraft, _songTexts, snapshotFlow { backStack.toList() }) { dialog, _, _, stack ->
                 dialog == null && !(hasUnsavedEditorText() && stack.any { it is CampfireDestination.SongEditor })
             }.first { it }
-            if (_importReport.value == report && !isImportReportOnBackStack) {
+            if (importReportRequest == request && _importReport.value != null && !isImportReportOnBackStack) {
                 updateBackStack { add(CampfireDestination.ImportReport) }
             }
         }
