@@ -11,6 +11,9 @@ package com.pandulapeter.campfire.domain.implementation.useCases
 
 import com.pandulapeter.campfire.chordpro.ChordProMetadataFields
 import com.pandulapeter.campfire.chordpro.ChordProMetadataFields.Field
+import com.pandulapeter.campfire.chordpro.ChordProParser
+import com.pandulapeter.campfire.chordpro.model.displayTitle
+import com.pandulapeter.campfire.data.model.domain.Song
 import com.pandulapeter.campfire.data.repository.api.SongRepository
 import com.pandulapeter.campfire.domain.api.useCases.CreateSongUseCase
 import org.koin.core.annotation.Factory
@@ -24,10 +27,8 @@ class CreateSongUseCaseImpl internal constructor(
      * The new file holds what the user typed and the skeleton of a first verse, so that the editor opens on
      * something that is already shaped like a song rather than on an empty page.
      */
-    override suspend operator fun invoke(title: String, artist: String, metadata: Map<Field, String>) = songRepository.createSong(
-        title = title.trim(),
-        artist = artist.trim(),
-        text = ChordProMetadataFields.set(
+    override suspend operator fun invoke(title: String, artist: String, metadata: Map<Field, String>): Song {
+        val text = ChordProMetadataFields.set(
             text = buildString {
                 append("{title: ").append(title.trim()).append("}\n")
                 if (artist.isNotBlank()) append("{artist: ").append(artist.trim()).append("}\n")
@@ -40,6 +41,13 @@ class CreateSongUseCaseImpl internal constructor(
             },
             // Title and artist also determine the file name, so those arguments remain authoritative.
             values = metadata.filterKeys { it != Field.TITLE && it != Field.ARTIST },
-        ),
-    )
+        )
+        // Named by the title as the library shows it, the subtitle included, as an import of the same text would be:
+        // a file named by the title alone would be offered Update file name the moment it was created.
+        return songRepository.createSong(
+            title = ChordProParser.parseMetadata(text).displayTitle(fallback = title.trim()),
+            artist = artist.trim(),
+            text = text,
+        )
+    }
 }

@@ -50,7 +50,7 @@ class CreateSongUseCaseImplTest {
         assertEquals("Lyricist", metadata.lyricist)
         assertEquals("2026", metadata.year)
         assertEquals("3:45", metadata.duration)
-        assertEquals("Title" to "Artist", repository.name)
+        assertEquals("Title (Acoustic)" to "Artist", repository.name)
         assertTrue("{key: }\n" in repository.text)
         assertTrue(repository.text.endsWith("\n{start_of_verse}\n\n{end_of_verse}\n"))
     }
@@ -63,6 +63,7 @@ class CreateSongUseCaseImplTest {
         val original = repository.text
         create(title = "Title", artist = "", metadata = mapOf(Field.SUBTITLE to "", Field.ALBUM to "  "))
         assertEquals(original, repository.text)
+        assertEquals("Title" to "", repository.name)
         assertEquals("{title: Title}\n{key: }\n\n{start_of_verse}\n\n{end_of_verse}\n", repository.text)
     }
 
