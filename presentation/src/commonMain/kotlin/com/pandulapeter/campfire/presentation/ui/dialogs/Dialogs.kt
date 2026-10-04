@@ -1619,7 +1619,7 @@ private fun SetlistPicker(
     val orderedMatches = remember(matches, setlistOrder) { setlistOrder.ordered(matches) { it.fileName } }
     val isCreatingFirstSetlist = rememberSaveable { setlists.isEmpty() }
     var isNamingNewSetlist by rememberSaveable { mutableStateOf(isCreatingFirstSetlist) }
-    val closeNamingDialog = { if (isCreatingFirstSetlist) viewModel.dismissDialog() else isNamingNewSetlist = false }
+    val closeNamingDialog = { if (isCreatingFirstSetlist) viewModel.dismissSheet(dialog) else isNamingNewSetlist = false }
     if (!isCreatingFirstSetlist) {
         CampfireBottomSheet(
             title = stringResource(Res.string.songs_setlist_assignments),
