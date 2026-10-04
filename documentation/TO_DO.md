@@ -11,9 +11,7 @@
 ## Bugs / issues
 
 ## Improvements
-- Each setlist should display a total of the song durations for the setlist, right after the countdown if enabled (separated by a dot character), or instead of the countdown if it isn't. If some songs don't have a valid duration set, add a + sign after the total duration of the setlist to indicate that it's a minimum value. If none of the songs have valid durations set, don't display the total duration
-- The sort by popups on main screens (Songs and Setlists) should have titles above the radio buttons
-- Add cover arts to the Song assignments bottom sheet list items
+- Add small cover art thumbnails to the Song assignments bottom sheet list items (to the end of each item)
 - Maybe all bottom sheets with song names in their headers could show the cover art for the song
 - Cover art bottom sheet: do we even need search input fields here? Right now it has two primary actions (Search and Save / Done)
 - Rename master branch to main

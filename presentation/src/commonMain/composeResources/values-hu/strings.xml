@@ -191,6 +191,10 @@
         <item quantity="one">%1$d napja</item>
         <item quantity="other">%1$d napja</item>
     </plurals>
+    <!-- A setlist's total duration where some of its songs declare none, so the total is only the least it takes. -->
+    <string name="setlists_total_duration_minimum">%1$s+</string>
+    <!-- A setlist header's subtitle holding both the countdown and the total duration. -->
+    <string name="setlists_header_subtitle">%1$s · %2$s</string>
     <string name="setlists_duplicate">Megkettőzés</string>
     <string name="setlists_duplicate_setlist">Lista megkettőzése</string>
     <string name="setlists_duplicate_title">%1$s (másolat)</string>

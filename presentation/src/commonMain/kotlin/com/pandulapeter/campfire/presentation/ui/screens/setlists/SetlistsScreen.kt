@@ -66,6 +66,7 @@ import androidx.navigationevent.NavigationEventInfo
 import androidx.navigationevent.compose.NavigationBackHandler
 import androidx.navigationevent.compose.rememberNavigationEventState
 import com.pandulapeter.campfire.presentation.ui.components.isAnyOverflowMenuOpen
+import com.pandulapeter.campfire.chordpro.ChordProDuration
 import com.pandulapeter.campfire.data.model.domain.Setlist
 import com.pandulapeter.campfire.data.model.domain.UserPreferences
 import com.pandulapeter.campfire.presentation.resources.Res
@@ -82,6 +83,8 @@ import com.pandulapeter.campfire.presentation.resources.setlists_countdown_in_da
 import com.pandulapeter.campfire.presentation.resources.setlists_countdown_today
 import com.pandulapeter.campfire.presentation.resources.setlists_countdown_tomorrow
 import com.pandulapeter.campfire.presentation.resources.setlists_countdown_yesterday
+import com.pandulapeter.campfire.presentation.resources.setlists_header_subtitle
+import com.pandulapeter.campfire.presentation.resources.setlists_total_duration_minimum
 import com.pandulapeter.campfire.presentation.resources.setlists_create_setlist
 import com.pandulapeter.campfire.presentation.resources.setlists_done_reordering
 import com.pandulapeter.campfire.presentation.resources.setlists_move_down
@@ -451,7 +454,7 @@ private fun SetlistList(
                             backgroundColor = if (isReordering) MaterialTheme.colorScheme.background else Color.Transparent,
                             endPadding = headerEndPadding,
                             text = setlistWithSongs.setlist.title,
-                            subtitle = setlistWithSongs.setlist.countdownText(today),
+                            subtitle = setlistWithSongs.headerSubtitle(today),
                             // A setlist is only ever on this screen archived because the filter was asked to show them,
                             // so the mark is what tells it from the ones still in use.
                             icon = if (setlistWithSongs.setlist.isArchived) painterResource(Res.drawable.ic_archive) else null,
@@ -722,7 +725,7 @@ private fun PushedSetlistHeader(
     SectionHeader(
         modifier = Modifier.pushedSectionHeaderPlacement(pushed).clearAndSetSemantics {},
         text = setlist.title,
-        subtitle = setlist.countdownText(today),
+        subtitle = setlistWithSongs.headerSubtitle(today),
         // Pinned for as long as it is being pushed away: it keeps the width it had in the bar's place rather than
         // widening again as it leaves.
         state = { SectionHeaderState(visibleFraction = pushed.value?.visibleFraction ?: 0f, pinnedFraction = 1f) },
@@ -910,6 +913,23 @@ private class SetlistItemKey(val string: String?) {
     companion object {
         // Contains characters no normalized name can hold, so it can never occur inside a setlist's file name.
         private const val TOKEN = "#*#"
+    }
+}
+
+/**
+ * The subtitle of a setlist's header: its countdown where the user asked for one, then how long its songs take to play
+ * where any of them says, with a `+` where some do not ([SetlistTotalDuration.isMinimum]).
+ */
+@Composable
+private fun CampfireViewModel.SetlistWithSongs.headerSubtitle(today: LocalDate): String? {
+    val countdown = setlist.countdownText(today)
+    val duration = remember(entries) { totalDuration }?.let { duration ->
+        val total = ChordProDuration.format(duration.total)
+        if (duration.isMinimum) stringResource(Res.string.setlists_total_duration_minimum, total) else total
+    }
+    return when {
+        countdown != null && duration != null -> stringResource(Res.string.setlists_header_subtitle, countdown, duration)
+        else -> countdown ?: duration
     }
 }
 

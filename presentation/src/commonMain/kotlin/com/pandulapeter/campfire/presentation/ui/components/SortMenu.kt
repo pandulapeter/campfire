@@ -9,6 +9,7 @@
  */
 package com.pandulapeter.campfire.presentation.ui.components
 
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.width
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -42,7 +43,7 @@ internal fun SongSortMenu(
     val userPreferences by viewModel.userPreferences.collectAsStateWithLifecycle()
     SortMenu(
         modifier = modifier,
-        contentDescription = stringResource(Res.string.songs_sort),
+        title = stringResource(Res.string.songs_sort),
         options = listOf(
             UserPreferences.SortingMode.BY_ARTIST to stringResource(Res.string.songs_sorting_mode_by_artist),
             UserPreferences.SortingMode.BY_TITLE to stringResource(Res.string.songs_sorting_mode_by_title),
@@ -64,7 +65,7 @@ internal fun SetlistSortMenu(
     SortMenu(
         modifier = modifier,
         isEnabled = isEnabled,
-        contentDescription = stringResource(Res.string.setlists_sort),
+        title = stringResource(Res.string.setlists_sort),
         options = listOf(
             UserPreferences.SetlistSortingMode.BY_DATE to stringResource(Res.string.setlists_sorting_mode_by_date),
             UserPreferences.SetlistSortingMode.BY_TITLE to stringResource(Res.string.setlists_sorting_mode_by_title),
@@ -80,14 +81,16 @@ internal fun SetlistSortMenu(
 /**
  * The action of both list screens and both picker sheets that picks the order of the list, a popup of radio rows rather than a
  * section of a sheet: the order is one question with a handful of answers, and a choice is its whole answer, so the
- * menu closes with it.
+ * menu closes with it. The menu is headed by [title], since the labels of the options alone ("Title", "Date") read like
+ * headings of their own rather than like answers to a question nobody asked.
  *
+ * @param title What the menu decides, also the sort action's content description.
  * @param options Every order the list can come in, with its label, in the order they are offered.
  */
 @Composable
 internal fun <T> SortMenu(
     modifier: Modifier = Modifier,
-    contentDescription: String,
+    title: String,
     options: List<Pair<T, String>>,
     selected: T?,
     onSelected: (T) -> Unit,
@@ -98,11 +101,16 @@ internal fun <T> SortMenu(
         IconButton(onClick = open, enabled = isEnabled) {
             Icon(
                 painter = painterResource(Res.drawable.ic_sort),
-                contentDescription = contentDescription,
+                contentDescription = title,
             )
         }
     },
 ) { select ->
+    SettingsSectionTitle(
+        modifier = Modifier.width(SORT_MENU_WIDTH),
+        text = title,
+        contentPadding = PaddingValues(start = LIST_ITEM_KEYLINE, end = LIST_ITEM_KEYLINE, top = 8.dp, bottom = 4.dp),
+    )
     options.forEach { (option, label) ->
         RadioListItem(
             modifier = Modifier.width(SORT_MENU_WIDTH),

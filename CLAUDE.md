@@ -212,7 +212,8 @@ localized in both languages.
   replaces a library setlist, whose day it keeps) and is moved with a calendar sheet opened from the sheet that names the setlist.
   The setlist details sheet's **Countdown** checkbox, off by default and in the file too, puts a subtitle under the setlist's
   sticky header that says how far that day is ("In 5 days", "Today", "Yesterday") — the only place the date shows
-  outside the sheet, so the one way it can be seen in performance mode. Sorting by date puts the latest day on top, the setlists
+  outside the sheet, so the one way it can be seen in performance mode. The same subtitle carries how long the setlist's songs take, after the countdown or in its place,
+  added up from their `{duration}`s and marked with a `+` where some songs have none that can be read. Sorting by date puts the latest day on top, the setlists
   of one day by their title, and one written before there were dates after every dated one.
 - **Both list screens are searched from a button rather than from a field that is always there**: the app bar has
   no title — the list's pinned section header stands in its place — and the one search icon is the one close button (the mark morphs
