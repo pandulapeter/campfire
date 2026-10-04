@@ -176,7 +176,8 @@ Everything else is `commonMain`:
   whatever it holds, its title row carrying `ic_info` and following the lyrics' section titles,
   everything in it scaling with the lyrics — wherever the song names an album, a year, a composer, a lyricist, a
   duration, a tag, a language or a link. A song with only the line has the line alone, and nothing above the grid is ever
-  laid out outside a row. On the song details screen the same is the About the song sheet instead (`DialogType.SongInfo`,
+  laid out outside a row. The info section is emitted under one key whatever it says, so the cover in the editor
+  preview's card waits for the typing to pause rather than following every half-typed address. On the song details screen the same is the About the song sheet instead (`DialogType.SongInfo`,
   read live from the song's text and closed with the song like the other song sheets), opened by `songInfoAction`, the
   first thing in the app bar — Info, transposition, setlist assignments, then the overflow menu — a plain icon button
   like the setlist assignments one, so the transposition between them is spaced evenly, and the first entry of the

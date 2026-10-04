@@ -273,11 +273,15 @@ internal fun SongLyrics(
     // Each section is emitted under a key of its content, so a section inserted above the others does not hand each of
     // their nodes the section that used to be its neighbour. Equal sections are told apart by the order they come in.
     val sectionKeys = remember(sections) {
-        val occurrences = HashMap<RenderSection, Int>()
+        val occurrences = HashMap<Any, Int>()
         sections.map { section ->
-            val occurrence = (occurrences[section] ?: 0) + 1
-            occurrences[section] = occurrence
-            SectionKey(hash = section.hashCode(), occurrence = occurrence)
+            // The info section is the song's one header card: keyed by its content, every keystroke in a header directive
+            // would compose it afresh, and whatever it remembers (the cover waiting for the typing to pause, the cover's
+            // crossfade) would start over each time.
+            val identity: Any = if (section is RenderSection.Metadata) RenderSection.Metadata::class else section
+            val occurrence = (occurrences[identity] ?: 0) + 1
+            occurrences[identity] = occurrence
+            SectionKey(hash = identity.hashCode(), occurrence = occurrence)
         }
     }
     val unitKeys = remember(units, sectionKeys) {
