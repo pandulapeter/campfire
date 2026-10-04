@@ -43,6 +43,7 @@ class ImportFilesUseCaseImpl internal constructor(
     override suspend operator fun invoke(
         plan: ImportPlan,
         resolution: ImportConflictResolution,
+        isDatingUndatedSetlists: Boolean,
         onProgress: (ImportProgress) -> Unit,
     ): ImportResult {
         val importedSongs = mutableListOf<Song>()
@@ -139,8 +140,8 @@ class ImportFilesUseCaseImpl internal constructor(
 
             val librarySetlists = setlistRepository.loadSetlistsIfNeeded().orEmpty()
             // A setlist that arrives naming no day of its own is dated the way a new one is, by the day it was created
-            // here. The bundled demo setlist is one of them, so it is dated by the first run that plants it.
-            val today = Clock.System.todayIn(TimeZone.currentSystemDefault())
+            // here, unless the caller asked for it to stay undated (the bundled demo setlist, see ImportFilesUseCase).
+            val today = if (isDatingUndatedSetlists) Clock.System.todayIn(TimeZone.currentSystemDefault()) else null
             val replacedSetlistFileNames = mutableSetOf<String>()
             // Planned again on the names the songs actually got: a song kept next to the one it collided with is
             // numbered, and a setlist pointing at it is then no longer the library's setlist it was the same as.

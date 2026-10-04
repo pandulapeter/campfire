@@ -373,6 +373,32 @@ class ImportFilesUseCaseImplTest {
     }
 
     @Test
+    fun `an import asked not to date setlists leaves an undated one undated and a replaced one its day`() = runTest {
+        val planned = LocalDate(2026, 1, 10)
+        val library = setlist(entries = listOf("a.cho")).copy(fileName = "gig.setlist.json", title = "Gig", date = planned)
+        val setlists = FakeSetlistRepository().apply { files[library.fileName] = library }
+        val undated = setlist(entries = emptyList())
+        val replacing = library.copy(date = null, entries = listOf(Setlist.Entry("b.cho")))
+        val plan = ImportPlan(
+            setlists = ImportPlanner.planSetlists(
+                incoming = listOf(
+                    ImportPlanner.IncomingSetlist(undated, undated.fileName),
+                    ImportPlanner.IncomingSetlist(replacing, replacing.fileName),
+                ),
+                librarySetlists = listOf(library),
+                songFileNames = emptyMap(),
+            ),
+        )
+
+        ImportFilesUseCaseImpl(songRepository = FakeSongRepository(files = mutableMapOf()), setlistRepository = setlists)
+            .invoke(plan, ImportConflictResolution.REPLACE, isDatingUndatedSetlists = false)
+
+        assertEquals(null, setlists.files.getValue("set.setlist.json").date)
+        assertEquals(listOf(Setlist.Entry("b.cho")), setlists.files.getValue("gig.setlist.json").entries)
+        assertEquals(planned, setlists.files.getValue("gig.setlist.json").date)
+    }
+
+    @Test
     fun `an undated setlist that replaces a library one keeps its date and one kept next to it is dated today`() = runTest {
         val planned = LocalDate(2026, 1, 10)
         val today = Clock.System.todayIn(TimeZone.currentSystemDefault())
@@ -478,7 +504,7 @@ class ImportFilesUseCaseImplTest {
             ImportPlan.SongEntry("duplicate.cho", A, ImportPlan.Status.IDENTICAL, null),
             ImportPlan.SongEntry("conflict.cho", A, ImportPlan.Status.CONFLICTING, null),
         ))
-        val result = ImportFilesUseCaseImpl(songs, FakeSetlistRepository()).invoke(plan, ImportConflictResolution.SKIP, events::add)
+        val result = ImportFilesUseCaseImpl(songs, FakeSetlistRepository()).invoke(plan, ImportConflictResolution.SKIP, onProgress = events::add)
         val importing = events.filter { it.phase == ImportProgress.Phase.IMPORTING }
         assertEquals(listOf(0, 1, 2, 3), importing.map { it.completed })
         assertTrue(importing.all { it.total == 3 })

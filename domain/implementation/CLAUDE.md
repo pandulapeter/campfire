@@ -72,9 +72,10 @@ The ones that carry real logic:
   whole archive, which is the reason for the split — three hundred questions is not a choice. A song is compared by
   its text and a setlist by its fields, never by the stored document, and never by a date the incoming setlist does
   not carry — nor, then, by its countdown, which no file older than the date can say either (a replacement keeps the
-  library's) — since the import dates such a setlist itself with the day it is imported on (which is how the demo
-  setlist gets its date, and why asking for it again finds it unchanged), or, where it replaces a library setlist,
-  with the day that one had — and the entries as they will be written, each pointing where its song lands, so a setlist that
+  library's) — since the import dates such a setlist itself with the day it is imported on, or, where it replaces a
+  library setlist, with the day that one had; the demo library is imported with `isDatingUndatedSetlists` off, so its
+  setlist stays undated (every installation then holds the same file, and a sync run between two of them finds
+  nothing to keep side by side) and asking for it again finds it unchanged — and the entries as they will be written, each pointing where its song lands, so a setlist that
   names an incoming song is only the library's one when the song ends up where the library's points. `ImportPlanner` is
   covered by `commonTest`. Preparing runs on `Dispatchers.Default`, because decoding, splitting, header parsing and
   comparisons would otherwise occupy the view model's main thread, and yields between songs so the web can paint and

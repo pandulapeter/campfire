@@ -208,13 +208,15 @@ localized in both languages.
   preference, so it travels through an export, an import or a sync run the way a tag does. The **description** — an
   optional sentence about what a setlist is for, shown under its header and read by the screen's search — lives in
   the file for the same reason, and so does the **date**: the day the setlist is for, an ISO date that starts as the
-  day it was created here (an import dates a setlist that carries none the same way, the demo one included, unless it
-  replaces a library setlist, whose day it keeps) and is moved with a calendar sheet opened from the sheet that names the setlist.
+  day it was created here (an import dates a setlist that carries none the same way, unless it replaces a library
+  setlist, whose day it keeps — all but the demo one, which is planted undated from the first run and from Settings
+  alike, so that every installation holds the same file and two devices' first sync run does not keep both side by
+  side) and is moved with a calendar sheet opened from the sheet that names the setlist.
   The setlist details sheet's **Countdown** checkbox, off by default and in the file too, puts a subtitle under the setlist's
   sticky header that says how far that day is ("In 5 days", "Today", "Yesterday") — the only place the date shows
   outside the sheet, so the one way it can be seen in performance mode. The same subtitle carries how long the setlist's songs take, after the countdown or in its place,
   added up from their `{duration}`s and marked with a `+` where some songs have none that can be read. Sorting by date puts the latest day on top, the setlists
-  of one day by their title, and one written before there were dates after every dated one.
+  of one day by their title, and an undated one (written before there were dates, or the demo) after every dated one.
 - **Both list screens are searched from a button rather than from a field that is always there**: the app bar has
   no title — the list's pinned section header stands in its place — and the one search icon is the one close button (the mark morphs
   between the two as the button travels from the actions to the start of the bar, with the field after it, see
