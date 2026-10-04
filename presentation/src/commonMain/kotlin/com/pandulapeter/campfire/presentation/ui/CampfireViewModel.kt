@@ -2976,9 +2976,11 @@ class CampfireViewModel(
     fun duplicateSetlist(setlist: Setlist, title: String, description: String, date: LocalDate, isCountdownShown: Boolean) = launchLibraryChange {
         reorderingSetlistFileName = null
         // An archived setlist is copied too, since a set that has been played is the likeliest start for the next one.
-        if (setlists.value.none { it.fileName == setlist.fileName }) return@launchLibraryChange
+        // The sheet's copy is the setlist as it was when the sheet opened; a sync run or a song rename since then has moved
+        // the entries on, and the copy is made of the setlist as it is.
+        val current = setlists.value.firstOrNull { it.fileName == setlist.fileName } ?: return@launchLibraryChange
         val copy = createSetlist.invoke(title = title, description = description, date = date, isCountdownShown = isCountdownShown)
-        saveSetlist(copy.copy(entries = setlist.entries))
+        saveSetlist(copy.copy(entries = current.entries))
     }
 
     /** Archiving is the way a setlist that has been played is put away without the songs in it being lost. */
