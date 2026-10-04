@@ -103,7 +103,7 @@ fun main(args: Array<String>) {
         // process a little later: the sync run an edit made just before asked for, or one that is going, is let finish
         // first (CampfireViewModel.settleSynchronizationBeforeExit, bounded). From the moment the app decides to go,
         // another process's files are not accepted any more: this one would only acknowledge them and exit. The lock
-        // stays until the process is gone, so a newcomer waits for it (claimSingleInstance).
+        // stays until the process is gone, so a newcomer waits for it, for longer than this bounded wait (claimSingleInstance).
         val leave = { end: () -> Unit ->
             if (!isLeaving) {
                 isLeaving = true

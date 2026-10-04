@@ -33,7 +33,11 @@ join the ones from `args` and the macOS open-file handler, and the existing wind
 requires toggling `isAlwaysOnTop`, since `toFront()` alone can only flash the taskbar for a process that is not in the
 foreground. The check fails open when the lock cannot be asked for or the holder does not answer. The lock is asked for again
 before every hand-over attempt, so a process started while the previous one is still closing takes it over once it is
-free rather than starting without it; and an instance that has decided to exit stops listening
+free rather than starting without it: while the lock is held and `instance.endpoint` is gone, which is a closing holder,
+the newcomer waits up to 30 s - longer than the 15 + 2 s a quit gives a sync run in `settleSynchronizationBeforeExit` -
+and it gives up after about 5 s only when an endpoint file is there and does not answer. A holder whose listener could
+not start leaves an endpoint file that cannot be answered, so that newcomers take the short wait rather than the long
+one. And an instance that has decided to exit stops listening
 (`stopListeningForOtherInstances`, called before `exitApplication`) while keeping the lock until it is gone, so it never
 acknowledges files it will not open. It uses `java.base` only.
 

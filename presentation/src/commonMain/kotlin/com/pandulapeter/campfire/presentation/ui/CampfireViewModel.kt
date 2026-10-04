@@ -3792,7 +3792,12 @@ class CampfireViewModel(
         private const val SONGS_SEARCH_KEY = "songsSearch"
         private const val SETLISTS_SEARCH_KEY = "setlistsSearch"
         private val MIN_RESCAN_INTERVAL = 10.seconds
-        private val EXIT_SYNC_GRACE = 15.seconds // Long enough for the run an edit asks for, short enough to never look hung.
+        /**
+         * Long enough for the run an edit asks for, short enough to never look hung. The desktop's `SingleInstance.kt`
+         * waits `CLOSING_INSTANCE_WAIT_MILLIS` for a closing process, which has to stay above this and
+         * [EXIT_SYNC_STOP_GRACE] together, so raising either means raising that too.
+         */
+        private val EXIT_SYNC_GRACE = 15.seconds
         private val EXIT_SYNC_STOP_GRACE = 2.seconds
         private const val SEMITONES_PER_OCTAVE = 12
 

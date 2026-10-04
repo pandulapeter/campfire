@@ -42,12 +42,15 @@ import kotlin.concurrent.thread
  * @param paths Absolute paths: the two processes do not share a working directory.
  * @param onActivated Called on a background thread each time another process handed over, with the paths it was
  *   started with - none when it was started with none, which still means "come forward".
- * The lock is asked for again before every hand-over attempt, and the attempts are more than one, for two reasons.
- * The running instance may be one that started a moment ago - five files opened together are five processes, and the
- * four that lost the lock can be here before the winner has written its port, which is why the endpoint file is read
- * again each time too. And the holder may be a process that is closing: it has stopped listening but still holds the
- * lock, and once it is gone this process is the one that opens the library, with the lock and a listener of its own,
- * rather than one that starts next to whatever comes after it.
+ * The lock is asked for again before every hand-over attempt, and the attempts go on for as long as one of two budgets
+ * allows. The running instance may be one that started a moment ago - five files opened together are five processes,
+ * and the four that lost the lock can be here before the winner has written its port, which is why the endpoint file
+ * is read again each time too. And the holder may be a process that is closing: it has stopped listening and deleted
+ * its endpoint file but still holds the lock, and once it is gone this process is the one that opens the library, with
+ * the lock and a listener of its own, rather than one that starts next to it while it is still writing. So a holder
+ * with no endpoint file is waited for for [CLOSING_INSTANCE_WAIT_MILLIS], as long as a closing process can take, and
+ * one whose endpoint file is there but does not answer for [UNANSWERED_HAND_OVER_MILLIS], counted from when the file
+ * appeared; both end in starting next to it.
  *
  * @return False if the running instance took over and this process should exit. True means carry on starting,
  *   which is also the answer when the lock cannot be asked for at all (a read-only or a network home directory) or
@@ -59,7 +62,10 @@ internal fun claimSingleInstance(
     paths: List<String>,
     onActivated: (paths: List<String>) -> Unit,
 ): Boolean {
-    repeat(HAND_OVER_ATTEMPTS) {
+    val start = System.nanoTime()
+    var endpointSeenAt: Long? = null
+    var isWaitingForClosingInstance = false
+    while (true) {
         val lock = try {
             dataDirectory.mkdirs()
             val channel = FileChannel.open(File(dataDirectory, LOCK_FILE_NAME).toPath(), StandardOpenOption.CREATE, StandardOpenOption.WRITE)
@@ -77,6 +83,20 @@ internal fun claimSingleInstance(
             return true
         }
         if (sendPaths(dataDirectory, paths)) return false
+        val now = System.nanoTime()
+        val hasEndpoint = File(dataDirectory, ENDPOINT_FILE_NAME).exists()
+        endpointSeenAt = if (hasEndpoint) endpointSeenAt ?: now else null
+        if (!hasEndpoint && !isWaitingForClosingInstance) {
+            isWaitingForClosingInstance = true
+            // Logging is not set up this early, so this reaches the console only, which is enough to explain a slow start.
+            println("Waiting for the closing instance to exit.")
+        }
+        // The short budget counts from when the endpoint appeared, not from this process's start: a newcomer that waited
+        // twenty seconds for a closing holder must not give up on the next holder because it once read its endpoint file
+        // half written.
+        val isOverBudget = endpointSeenAt?.let { now - it >= UNANSWERED_HAND_OVER_MILLIS * NANOS_PER_MILLI }
+            ?: (now - start >= CLOSING_INSTANCE_WAIT_MILLIS * NANOS_PER_MILLI)
+        if (isOverBudget) break
         Thread.sleep(HAND_OVER_RETRY_MILLIS)
     }
     println("The running instance did not answer, starting next to it.")
@@ -86,7 +106,7 @@ internal fun claimSingleInstance(
 /**
  * Stops accepting other processes' files while keeping the lock, for an instance that has decided to exit: it would
  * only acknowledge them and go, and the file would be opened by nobody. The lock stays until the process is gone, so
- * that a newcomer waits for it (see [claimSingleInstance]) rather than reading the library while this process may
+ * that a newcomer waits for it, for up to [CLOSING_INSTANCE_WAIT_MILLIS] (see [claimSingleInstance]), rather than reading the library while this process may
  * still be writing it; releasing it by hand is left to the operating system for that reason.
  */
 internal fun stopListeningForOtherInstances() {
@@ -126,9 +146,18 @@ private fun startListening(dataDirectory: File, onActivated: (paths: List<String
         // A daemon, so that it is never the thread that keeps a closed application alive.
         thread(isDaemon = true, name = "campfire-single-instance") { serverSocket.serve(token, onActivated) }
     } catch (exception: Exception) {
-        // The lock is held all the same, so a later process finds nobody to talk to and starts next to this one.
+        // The lock is held all the same, so a later process finds nobody to talk to and starts next to this one. An
+        // endpoint file that cannot be answered is left in place of the real one, since a holder with none looks like
+        // one that is closing, which a newcomer waits for much longer; it is deleted with the listener's as this
+        // process starts closing, whose close is then waited for like any other.
         println("Could not listen for other instances: ${exception.message}")
         endpointFile.delete()
+        try {
+            endpointFile.writeForOwnerOnly("unavailable\n")
+            listeningEndpointFile = endpointFile
+        } catch (exception: Exception) {
+            println("Could not mark the endpoint as unavailable: ${exception.message}")
+        }
     }
 }
 
@@ -195,5 +224,14 @@ private const val BACKLOG = 16
 private const val TOKEN_BYTES = 32
 private const val MAX_REQUEST_BYTES = 1 shl 20
 private const val CONNECTION_TIMEOUT_MILLIS = 2_000
-private const val HAND_OVER_ATTEMPTS = 20
 private const val HAND_OVER_RETRY_MILLIS = 250L
+private const val UNANSWERED_HAND_OVER_MILLIS = 5_000L
+private const val NANOS_PER_MILLI = 1_000_000L
+
+/**
+ * How long a newcomer waits for a holder that has stopped listening, which is one that is closing. It has to exceed
+ * what a quit may still take once the window is gone - `CampfireViewModel.EXIT_SYNC_GRACE` and `EXIT_SYNC_STOP_GRACE`,
+ * 15 + 2 seconds of letting a sync run finish - plus the JVM's own shutdown, with a margin; raising those means
+ * raising this.
+ */
+private const val CLOSING_INSTANCE_WAIT_MILLIS = 30_000L
