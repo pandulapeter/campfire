@@ -51,6 +51,13 @@ class SectionNumberingTest {
     }
 
     @Test
+    fun `a recalled chorus that opens with a comment carries the number of the most recent one`() {
+        val blocks = ChordProParser.parse("{soc}\n{c: Softly}\na\n{eoc}\n{soc}\n{c: Loud}\nb\n{eoc}\n{chorus}").blocks.withNumberedSections(labels)
+        val recall = blocks.filterIsInstance<ChordProBlock.ChorusRecall>().single()
+        assertEquals(2, recall.blocks.filterIsInstance<ChordProBlock.Section>().first().number)
+    }
+
+    @Test
     fun `nothing changes when the setting is off`() {
         val blocks = ChordProParser.parse("{sov}\na\n{eov}\n{sov}\nb\n{eov}").blocks
         assertSame(blocks, blocks.withNumberedSections(labels.copy(shouldNumberSections = false)))

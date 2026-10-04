@@ -19,9 +19,10 @@ import com.pandulapeter.campfire.chordpro.model.SectionType
  * A kind is only numbered where the song has more than one section of it without a label: a lone verse is just
  * "Verse". A section with a label of its own keeps it and takes no number, a paragraph is not a kind, and the rest of
  * a section a comment cut in two is the section it continues. A `{chorus}` recall that names nothing is headed by the
- * chorus it repeats, so the recalled chorus carries the number of the most recent one. The number is a field of the section
- * ([ChordProBlock.Section.number]) rather than part of its label, which stays what the file wrote: the saved folds are
- * keyed by it, and they must not move when the setting is turned on or off.
+ * chorus it repeats, so the first section the recall repeats (its opening comments come before it) carries the
+ * number of the most recent one. The number is a field of the section ([ChordProBlock.Section.number]) rather than
+ * part of its label, which stays what the file wrote: the saved folds are keyed by it, and they must not move when the
+ * setting is turned on or off.
  */
 internal fun List<ChordProBlock>.withNumberedSections(labels: DefaultSectionLabels): List<ChordProBlock> {
     if (!labels.shouldNumberSections) return this
@@ -46,9 +47,10 @@ internal fun List<ChordProBlock>.withNumberedSections(labels: DefaultSectionLabe
             }
 
             block is ChordProBlock.ChorusRecall && block.label == null && lastChorusNumber != null -> {
-                val first = block.blocks.firstOrNull() as? ChordProBlock.Section
-                if (first?.label == null && first?.number == null) {
-                    block.copy(blocks = block.blocks.mapIndexed { index, piece -> if (index == 0 && piece is ChordProBlock.Section) piece.copy(number = lastChorusNumber) else piece })
+                val sectionIndex = block.blocks.indexOfFirst { it is ChordProBlock.Section }
+                val first = block.blocks.getOrNull(sectionIndex) as? ChordProBlock.Section
+                if (first != null && first.label == null && first.number == null) {
+                    block.copy(blocks = block.blocks.mapIndexed { index, piece -> if (index == sectionIndex) first.copy(number = lastChorusNumber) else piece })
                 } else {
                     block
                 }

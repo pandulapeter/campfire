@@ -2270,7 +2270,7 @@ private fun ChordProSong.toRenderSections(
             is ChordProBlock.ChorusRecall -> {
                 // The heading goes on the first piece of the chorus that is shown, and stays behind on its own when
                 // none is: a recall has always said where the chorus is sung, even with nothing under it.
-                val recalled = block.blocks.firstOrNull() as? ChordProBlock.Section
+                val recalled = block.blocks.firstOrNull { it is ChordProBlock.Section } as? ChordProBlock.Section
                 val label = block.label ?: recalled?.label
                 var header: String? = label ?: recalled?.takeIf { it.number != null }?.header(defaultLabels) ?: defaultLabels.chorus
                 // A recall is folded apart from the chorus it repeats, as the chorus it is, and whatever of it is

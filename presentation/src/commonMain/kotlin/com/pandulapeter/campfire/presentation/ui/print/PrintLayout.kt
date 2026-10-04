@@ -523,7 +523,7 @@ private class PrintLayouter(
      * its own when nothing is: a recall says where the chorus is sung, even with nothing under it.
      */
     private fun recallRows(recall: ChordProBlock.ChorusRecall, width: Float): List<Row> {
-        val recalled = recall.blocks.firstOrNull() as? ChordProBlock.Section
+        val recalled = recall.blocks.firstOrNull { it is ChordProBlock.Section } as? ChordProBlock.Section
         var header: String? = recall.label ?: recalled?.label ?: recalled?.takeIf { it.number != null }?.header(labels.sections) ?: labels.sections.chorus
         return recall.blocks.flatMapIndexed { index, piece ->
             val isPieceInChorus = recall.blocks.isInChorus(index)

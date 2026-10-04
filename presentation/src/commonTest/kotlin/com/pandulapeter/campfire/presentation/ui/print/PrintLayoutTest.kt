@@ -290,6 +290,15 @@ internal class PrintLayoutTest {
         assertTrue(texts.indexOf("Last time") > texts.indexOf("Chorus"))
     }
 
+    @Test fun aChorusRecallOpeningWithACommentIsHeadedByTheChorusLabel() = runTest {
+        val chorus = ChordProBlock.Section(SectionType.Chorus, "Refrain", lyrics(1))
+        val comment = ChordProBlock.Comment("x", CommentStyle.PLAIN, CommentPlacement.START_OF_SECTION)
+        val texts = layout(source(song(emptyList(), listOf(comment, chorus, ChordProBlock.ChorusRecall(null, listOf(comment, chorus))))))
+            .pages.flatMap { it.texts }.map { it.text }
+        assertEquals(2, texts.count { it == "Refrain" })
+        assertEquals(0, texts.count { it == "Chorus" })
+    }
+
     @Test fun aChorusRecallWithNothingToRecallPrintsItsHeading() = runTest {
         val texts = layout(source(song(emptyList(), listOf(ChordProBlock.ChorusRecall(null))))).pages.flatMap { it.texts }
         assertEquals(1, texts.count { it.text == "Chorus" && it.style.bold })

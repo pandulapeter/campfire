@@ -14,6 +14,7 @@ import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFalse
 import kotlin.test.assertNull
+import kotlin.test.assertTrue
 
 class RenderSectionsTest {
 
@@ -56,6 +57,29 @@ class RenderSectionsTest {
             listOf("Refrén: softly, lines, x2", "Refrén: softly, lines, x2"),
             shape("{soc}\n{c: softly}\nla\n{c: x2}\n{eoc}\n\n{chorus}"),
         )
+    }
+
+    @Test
+    fun `a numbered chorus recall that opens with a comment is headed by the chorus it repeats`() {
+        val sections = prepareSongLyrics(
+            song = ChordProParser.parse("{soc}\n{c: Softly}\na\n{eoc}\n{soc}\n{c: Loud}\nb\n{eoc}\n{chorus}"),
+            shouldShowChords = true,
+            labels = labels.copy(shouldNumberSections = true),
+        ).sections.filterIsInstance<RenderSection.Lines>()
+
+        assertEquals("Refrén 2", sections.last().header)
+    }
+
+    @Test
+    fun `a chorus recall that opens with a comment is headed and folded by the chorus label`() {
+        val sections = prepareSongLyrics(
+            song = ChordProParser.parse("{soc: Refrain}\n{c: x}\nla\n{eoc}\n\n{chorus}"),
+            shouldShowChords = true,
+            labels = labels,
+        ).sections.filterIsInstance<RenderSection.Lines>()
+
+        assertEquals(listOf("Refrain", "Refrain"), sections.map { it.header })
+        assertTrue(sections.last().foldKey.startsWith("Refrain#"))
     }
 
     @Test
