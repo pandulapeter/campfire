@@ -20,13 +20,12 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.layout.layout
 import com.pandulapeter.campfire.presentation.ui.LocalIsCoveredByRequiredUpdate
 import androidx.compose.foundation.layout.WindowInsets
-import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.ime
 import androidx.compose.foundation.layout.safeDrawing
 import androidx.compose.foundation.layout.union
-import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalWindowInfo
 
 /**
@@ -49,13 +48,11 @@ internal fun OverflowMenu(
 ) {
     // Read the app window before entering the popup: its scrolling content needs a finite height even when
     // the iOS popup layer supplies unbounded constraints after rotation. Overlapping keyboard and safe-area
-    // insets are counted once, and the limit follows window resizing and keyboard changes.
-    val density = LocalDensity.current
+    // insets are counted once, and the limit follows window resizing and keyboard changes. The inset values are read
+    // while the menu is measured rather than here, so the keyboard's animation relayouts an open menu instead of
+    // recomposing every closed one on screen, a song card's among them, on each of its frames.
     val windowHeight = LocalWindowInfo.current.containerSize.height
     val insets = WindowInsets.safeDrawing.union(WindowInsets.ime)
-    val availableHeight = with(density) {
-        (windowHeight - insets.getTop(this) - insets.getBottom(this)).coerceAtLeast(0).toDp()
-    }
     // A menu is a window of its own, which the update required screen cannot cover; it is left open in its state and
     // comes back if that screen ever goes, see LocalIsCoveredByRequiredUpdate.
     val isShown = state.isExpanded && !LocalIsCoveredByRequiredUpdate.current
@@ -70,7 +67,16 @@ internal fun OverflowMenu(
     Box(modifier = modifier) {
         button(state::open)
         DropdownMenu(
-            modifier = Modifier.heightIn(max = availableHeight),
+            modifier = Modifier.layout { measurable, constraints ->
+                val limit = (windowHeight - insets.getTop(this) - insets.getBottom(this)).coerceAtLeast(0)
+                val placeable = measurable.measure(
+                    constraints.copy(
+                        minHeight = minOf(constraints.minHeight, limit),
+                        maxHeight = minOf(constraints.maxHeight, limit),
+                    ),
+                )
+                layout(placeable.width, placeable.height) { placeable.placeRelative(0, 0) }
+            },
             expanded = isShown,
             onDismissRequest = state::dismiss,
         ) {
