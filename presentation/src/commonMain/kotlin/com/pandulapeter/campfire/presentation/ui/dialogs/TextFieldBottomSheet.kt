@@ -37,8 +37,9 @@ import androidx.compose.ui.unit.dp
  * @param confirmButton Handed the sheet's `close`, which a confirmation calls once it has written the draft, so that the
  *   sheet slides away rather than being gone in one frame.
  * @param retainHeight Keeps a list editor at its largest measured height while it is open, so filtering or removing
- *   rows does not move the header and search field. Keyboard and system-bar padding are not retained, so the sheet
- *   returns to its content's height when the keyboard closes. Small lists still open at their content's height.
+ *   rows does not move the header and search field. The navigation bar's padding is not retained, and the keyboard
+ *   pads the sheet outside it, so the sheet returns to its content's height when the keyboard closes. Small lists still
+ *   open at their content's height.
  */
 @Composable
 internal fun TextFieldBottomSheet(
@@ -75,13 +76,18 @@ internal fun TextFieldBottomSheet(
     }
 }
 
-/** Retain a list's height across filtering, without retaining the space occupied by the keyboard. */
+/**
+ * Retain a list's height across filtering, without retaining the bottom padding: that is the navigation bar's, which the
+ * keyboard covers while it is up, and the keyboard itself pads the sheet outside this content (`CampfireBottomSheet`), so
+ * it only ever shrinks the space offered here.
+ */
 @Composable
 internal fun Modifier.retainSheetContentHeight(contentPadding: PaddingValues): Modifier {
     var tallestContentHeight by remember { mutableIntStateOf(0) }
     return layout { measurable, constraints ->
-        // Read the padding in the measure pass, alongside the content that applies it: IME insets change during
-        // layout, so a value captured during composition can belong to the preceding keyboard animation frame.
+        // Read the padding in the measure pass, alongside the content that applies it: the navigation bar's share of it
+        // changes as the keyboard slides over it, during layout, so a value captured during composition can belong to
+        // the preceding keyboard animation frame.
         val bottomPadding = contentPadding.calculateBottomPadding().roundToPx()
         val minimumHeight = (tallestContentHeight + bottomPadding).coerceIn(constraints.minHeight, constraints.maxHeight)
         val placeable = measurable.measure(constraints.copy(minHeight = minimumHeight))

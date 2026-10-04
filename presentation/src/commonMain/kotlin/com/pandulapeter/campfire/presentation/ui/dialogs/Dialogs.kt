@@ -2008,15 +2008,18 @@ private fun campfireBottomSheetContainerColor() = MaterialTheme.colorScheme.back
 
 /**
  * Every sheet of the app, drawn edge to edge: the sheet runs down under the navigation bar and the keyboard instead
- * of stopping above them, and only its content is kept clear of them. [ModalBottomSheet] pads the whole content by
- * the bottom inset by default, which leaves a scrolling list ending on a band of the sheet's color above the bar
- * rather than scrolling on under it, so that inset is left out of the sheet's own insets and handed to the content
- * instead, as the `contentPadding` scrolling content applies inside its scroll and the rest leaves under its last row.
+ * of stopping above them, and only its content is kept clear of them. The keyboard's height pads the sheet's column
+ * outside the content's scroll, so that a focused field is brought above the keyboard rather than into a viewport
+ * running on under it. [ModalBottomSheet] pads the whole content by the bottom inset by default, which leaves a
+ * scrolling list ending on a band of the sheet's color above the bar rather than scrolling on under it, so that inset
+ * is left out of the sheet's own insets and handed to the content instead, as the `contentPadding` scrolling content
+ * applies inside its scroll and the rest leaves under its last row.
  * The top inset stays with the sheet, which only pads by it once it has been dragged up against the status bar.
  * Horizontally, the whole sheet is centered between the safe edges, up to its maximum width. Side insets never
  * become padding inside a narrow sheet that is already clear of those edges.
- * Bottom padding excludes insets already consumed by the short-window keyboard scroll, and is read during layout
- * so content follows the current keyboard animation frame.
+ * Bottom padding excludes the insets the keyboard's padding already consumed, which leaves the navigation bar with the
+ * keyboard down and nothing with it up, and is read during layout so content follows the current keyboard animation
+ * frame.
  *
  * @param title What the sheet is about, named in its [SheetHeader].
  * @param subtitle What the sheet acts on, under [title]: the song or the setlist it was opened for. Left out when blank.
@@ -2063,7 +2066,10 @@ internal fun CampfireBottomSheet(
         dragHandle = null,
         contentWindowInsets = { WindowInsets.safeDrawing.only(WindowInsetsSides.Top) },
     ) {
-        val isKeyboardVisible = WindowInsets.ime.getBottom(LocalDensity.current) > 0
+        val ime = WindowInsets.ime
+        val density = LocalDensity.current
+        // Derived, so that the sheet recomposes as the keyboard comes and goes rather than on every frame it slides.
+        val isKeyboardVisible by remember(ime, density) { derivedStateOf { ime.getBottom(density) > 0 } }
         val keyboardController = LocalSoftwareKeyboardController.current
         val focusManager = LocalFocusManager.current
         // Handle back inside this modal window, before Material starts hiding the sheet. Keep the handler registered
@@ -2095,7 +2101,10 @@ internal fun CampfireBottomSheet(
                         .then(if (fadeBottomEdge) Modifier.fadingVerticalEdges(scrollState) else Modifier.fadingTopEdge(scrollState))
                         .bounceVerticalScroll(scrollState)
                 } else {
-                    Modifier
+                    // Outside the content's own scroll, so that its viewport ends at the keyboard and a field focused
+                    // with Next is scrolled above it: padded inside the scroll, the viewport ran on under the keyboard,
+                    // where the field already counted as visible.
+                    Modifier.imePadding()
                 },
             ),
         ) {
@@ -2111,12 +2120,11 @@ internal fun CampfireBottomSheet(
                     onClose = close,
                 )
                 // Read inside the sheet, which is a window of its own on Android and gets the insets of that window.
-                // asPaddingValues alone ignores consumption. The compact scroll already pads above the IME,
-                // which also covers the navigation bar; reserve only the bottom space still left to this content.
+                // asPaddingValues alone ignores consumption. The column above already pads above the IME, which
+                // also covers the navigation bar; reserve only the bottom space still left to this content.
                 val bottomPadding = WindowInsets.safeDrawing.exclude(consumedInsets)
                     .only(WindowInsetsSides.Bottom).asPaddingValues()
                 val topInset = WindowInsets.safeDrawing.only(WindowInsetsSides.Top)
-                val density = LocalDensity.current
                 // Material pads the sheet by as much of the top inset as its offset has not taken up yet (an offset not
                 // decided yet takes up none of it).
                 val uncoveredTopInset = remember(sheetState, topInset, density) {
