@@ -37,9 +37,9 @@ import com.pandulapeter.campfire.presentation.ui.CampfireViewModel
 import org.jetbrains.compose.resources.painterResource
 
 /**
- * Everything that can be done to one setlist, at the end of its [SectionHeader]. Reordering and song assignments
- * appear as buttons when the header has room, otherwise they stay in the overflow menu. Reordering becomes
- * "Done reordering" while active. Editing, duplicating, archiving, exporting and deleting stay in the menu.
+ * Everything that can be done to one setlist, at the end of its [SectionHeader]. Song assignments appear as a
+ * button when the header has room, otherwise they stay in the overflow menu. Reordering stays in the menu and
+ * becomes "Done reordering" while active. Editing, duplicating, archiving, exporting and deleting stay there too.
  *
  * The whole of it is absent in performance mode, which the header decides: it is every way of changing a setlist in
  * one place, so there is nothing here to keep.
@@ -67,12 +67,14 @@ internal fun SetlistActions(
         items = listOfNotNull(
             ActionsMenuItem(
                 title = stringResource(Res.string.setlists_edit_details),
+                isVisible = !setlist.isArchived,
                 icon = painterResource(Res.drawable.ic_edit),
                 isAlwaysInMenu = true,
                 onClick = { viewModel.showDialog(CampfireViewModel.DialogType.EditSetlist(setlist)) },
             ),
             ActionsMenuItem(
                 title = stringResource(Res.string.setlists_song_assignments),
+                isVisible = !setlist.isArchived,
                 icon = painterResource(Res.drawable.ic_songs),
                 onClick = { viewModel.showDialog(CampfireViewModel.DialogType.SongPicker(setlist)) },
             ),
@@ -81,12 +83,15 @@ internal fun SetlistActions(
                     title = stringResource(if (isReordering) Res.string.setlists_done_reordering else Res.string.setlists_reorder),
                     icon = painterResource(if (isReordering) Res.drawable.ic_reorder_songs_done else Res.drawable.ic_reorder_songs),
                     key = "reorder_songs",
+                    isAlwaysInMenu = true,
+                    isVisible = !setlist.isArchived,
                     animateIconChange = true,
                     onClick = it,
                 )
             },
             ActionsMenuItem(
                 title = stringResource(Res.string.setlists_duplicate_setlist),
+                isVisible = !setlist.isArchived,
                 icon = painterResource(Res.drawable.ic_duplicate),
                 isAlwaysInMenu = true,
                 onClick = { viewModel.showDialog(CampfireViewModel.DialogType.DuplicateSetlist(setlist)) },
@@ -105,6 +110,7 @@ internal fun SetlistActions(
             ),
             ActionsMenuItem(
                 title = stringResource(Res.string.setlists_delete_setlist),
+                isVisible = !setlist.isArchived,
                 icon = painterResource(Res.drawable.ic_delete),
                 isAlwaysInMenu = true,
                 onClick = { viewModel.showDialog(CampfireViewModel.DialogType.DeleteSetlist(setlist)) },

@@ -373,7 +373,7 @@ class CampfireViewModel(
      * it, the way it keeps Escape from reaching it.
      */
     internal fun openCurrentSearch(): Boolean {
-        if (visibleDialog.value != null || isAnyOverflowMenuOpen) return false
+        if (visibleDialog.value != null || isAnyOverflowMenuOpen || isSetlistReordering) return false
         val search = currentSearch
             ?: importReportSearch.takeIf { backStack.lastOrNull() == CampfireDestination.ImportReport }
             ?: return false
@@ -2219,7 +2219,7 @@ class CampfireViewModel(
                 )
             }
         } else {
-            updateSetlist(setlistFileName) { setlist ->
+            updateEditableSetlist(setlistFileName) { setlist ->
                 setlist.copy(
                     entries = setlist.entries.map { entry ->
                         if (entry.songFileName == songFileName) {
@@ -2897,7 +2897,7 @@ class CampfireViewModel(
     }
 
     fun addSongToSetlist(songFileName: String, setlistFileName: String) = launchLibraryChange {
-        updateSetlist(setlistFileName) { setlist ->
+        updateEditableSetlist(setlistFileName) { setlist ->
             if (setlist.entries.none { it.songFileName == songFileName }) {
                 setlist.copy(entries = setlist.entries + Setlist.Entry(songFileName = songFileName))
             } else {
@@ -2921,7 +2921,7 @@ class CampfireViewModel(
      * recreates a setlist by changing it.
      */
     fun setSetlistSongs(setlistFileName: String, songFileNames: List<String>) = launchLibraryChange {
-        updateSetlist(setlistFileName) { setlist ->
+        updateEditableSetlist(setlistFileName) { setlist ->
             val entriesBySongFileName = setlist.entries.associateBy { it.songFileName }
             setlist.copy(entries = songFileNames.map { entriesBySongFileName[it] ?: Setlist.Entry(songFileName = it) })
         } ?: sendMessage(Message.OperationFailed)
@@ -2934,6 +2934,7 @@ class CampfireViewModel(
      * opened, and the rest of the setlist may have moved on since. One that is gone by now is not brought back.
      */
     fun editSetlist(setlistFileName: String, title: String, description: String, date: LocalDate, isCountdownShown: Boolean) = launchLibraryChange {
+        if (setlists.value.firstOrNull { it.fileName == setlistFileName }?.isArchived != false) return@launchLibraryChange
         editSetlist.invoke(
             fileName = setlistFileName,
             title = title,
@@ -2949,16 +2950,21 @@ class CampfireViewModel(
      * made to be worked on.
      */
     fun duplicateSetlist(setlist: Setlist, title: String, description: String, date: LocalDate, isCountdownShown: Boolean) = launchLibraryChange {
+        reorderingSetlistFileName = null
+        if (setlists.value.firstOrNull { it.fileName == setlist.fileName }?.isArchived != false) return@launchLibraryChange
         val copy = createSetlist.invoke(title = title, description = description, date = date, isCountdownShown = isCountdownShown)
         saveSetlist(copy.copy(entries = setlist.entries))
     }
 
     /** Archiving is the way a setlist that has been played is put away without the songs in it being lost. */
     fun setSetlistArchived(setlist: Setlist, isArchived: Boolean) = launchLibraryChange {
+        reorderingSetlistFileName = null
         updateSetlist(setlist.fileName) { it.copy(isArchived = isArchived) }
     }
 
     fun deleteSetlist(setlistFileName: String) = launchLibraryChange {
+        if (reorderingSetlistFileName == setlistFileName) reorderingSetlistFileName = null
+        if (setlists.value.firstOrNull { it.fileName == setlistFileName }?.isArchived != false) return@launchLibraryChange
         deleteSetlist.invoke(setlistFileName)
     }
 
@@ -2976,7 +2982,7 @@ class CampfireViewModel(
 
     /** The transposition of the song travels in the entry, so removing it takes the transposition with it. */
     fun removeSongFromSetlist(songFileName: String, setlistFileName: String) = launchLibraryChange {
-        updateSetlist(setlistFileName) { setlist -> setlist.copy(entries = setlist.entries.filterNot { it.songFileName == songFileName }) }
+        updateEditableSetlist(setlistFileName) { setlist -> setlist.copy(entries = setlist.entries.filterNot { it.songFileName == songFileName }) }
     }
 
     /**
@@ -2989,7 +2995,7 @@ class CampfireViewModel(
      * are dealt back into the slots visible songs already occupied and everything else stays exactly where it is.
      */
     fun reorderSetlist(setlistFileName: String, songFileNames: List<String>) = launchLibraryChange {
-        updateSetlist(setlistFileName) { setlist ->
+        updateEditableSetlist(setlistFileName) { setlist ->
             val reordered = songFileNames.mapNotNull { songFileName ->
                 setlist.entries.firstOrNull { it.songFileName == songFileName }
             }.iterator()
@@ -3001,6 +3007,16 @@ class CampfireViewModel(
             )
         }
     }
+
+    /** Read the current archived state inside the serialized update, including for already-open dialogs. */
+    private suspend fun updateEditableSetlist(fileName: String, transform: (Setlist) -> Setlist): Setlist? =
+        updateSetlist(fileName) { setlist ->
+            if (setlist.isArchived) setlist else transform(setlist)
+        }.also { setlist ->
+            if (reorderingSetlistFileName == fileName && (setlist == null || setlist.isArchived || setlist.entries.size < 2)) {
+                reorderingSetlistFileName = null
+            }
+        }
 
     // User preferences
 
@@ -3188,6 +3204,7 @@ class CampfireViewModel(
      * question over anything.
      */
     private fun setVisibleDialog(dialogType: DialogType?) {
+        if (dialogType is DialogType.Export || dialogType is DialogType.DuplicateSetlist) reorderingSetlistFileName = null
         // An exit the question was asked for and that is not being run is an exit that was cancelled: its caller
         // may be waiting to hear so (the macOS quit request is).
         if (dialogType != DialogType.UnsavedChanges) takePendingExit()?.onCancelled?.invoke()
@@ -3610,6 +3627,7 @@ class CampfireViewModel(
          */
         data class SongPicker(val setlist: Setlist) : DialogType
         data class DeleteSetlist(val setlist: Setlist) : DialogType
+        data class RemoveSongFromSetlist(val songFileName: String, val songTitle: String, val setlistFileName: String) : DialogType
         data class EditSetlist(val setlist: Setlist) : DialogType
         data class DuplicateSetlist(val setlist: Setlist) : DialogType
         data class DeleteSong(val song: Song) : DialogType

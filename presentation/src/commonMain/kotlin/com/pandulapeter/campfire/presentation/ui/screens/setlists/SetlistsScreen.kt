@@ -19,6 +19,7 @@ import androidx.compose.animation.shrinkHorizontally
 import androidx.compose.animation.animateContentSize
 import androidx.compose.animation.core.animateDpAsState
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.gestures.stopScroll
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Row
@@ -40,6 +41,8 @@ import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberUpdatedState
+import androidx.compose.runtime.snapshotFlow
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
@@ -48,6 +51,7 @@ import androidx.compose.ui.platform.LocalWindowInfo
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.semantics.CustomAccessibilityAction
@@ -135,6 +139,7 @@ import com.pandulapeter.campfire.presentation.ui.platform.LocalFilePicker
 import com.pandulapeter.campfire.presentation.localization.pluralStringResource
 import com.pandulapeter.campfire.presentation.localization.stringResource
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.flow.first
 import kotlinx.datetime.LocalDate
 import org.jetbrains.compose.resources.painterResource
 import sh.calvin.reorderable.ReorderableItem
@@ -209,6 +214,7 @@ internal fun SetlistsScreen(
             appBarReveal = { appBarReveal.value },
             placeholder = stringResource(Res.string.setlists_search),
             searchState = viewModel.setlistsSearch,
+            isSearchEnabled = !isReordering,
             onReachChanged = { appBarReach = it },
             areClosedSearchActionsShown = !isPerformanceModeEnabled && setlistsPlaceholder.allowsNewItemMenu,
             closedSearchActions = {
@@ -218,6 +224,7 @@ internal fun SetlistsScreen(
                     createLabel = stringResource(Res.string.setlists_create_setlist),
                     onCreate = { viewModel.showDialog(CampfireViewModel.DialogType.NewSetlist) },
                     onItemSelected = { viewModel.reorderingSetlistFileName = null },
+                    isEnabled = !isReordering,
                 )
             },
             actions = {
@@ -225,6 +232,7 @@ internal fun SetlistsScreen(
                     modifier = Modifier.overlappingAction(),
                     viewModel = viewModel,
                     onSortingModeChanged = { viewModel.reorderingSetlistFileName = null },
+                    isEnabled = !isReordering,
                 )
             },
         )
@@ -251,6 +259,31 @@ private fun SetlistList(
     onReorderingSetlistChanged: (String?) -> Unit,
 ) {
     val setlistsWithSongs by viewModel.setlistsWithSongs.collectAsStateWithLifecycle()
+    // Keep validation and writes tied to the full library; only the rendered list is narrowed by this mode.
+    val shownSetlists = remember(setlistsWithSongs, isReordering, reorderingSetlistFileName) {
+        if (isReordering) setlistsWithSongs.filter { it.setlist.fileName == reorderingSetlistFileName }
+        else setlistsWithSongs
+    }
+    val selectedSetlist by rememberUpdatedState(shownSetlists.singleOrNull())
+    LaunchedEffect(isReordering, reorderingSetlistFileName) {
+        if (isReordering) {
+            listState.stopScroll()
+            // LazyGridState still describes the full list until the restricted grid has been measured. Starting
+            // earlier animates towards an index from the old list, then jumps as the other setlists disappear.
+            snapshotFlow {
+                val selected = selectedSetlist
+                val layout = listState.layoutInfo
+                if (selected == null || selected.setlist.fileName != reorderingSetlistFileName) false else {
+                    val itemCount = 1 + selected.entries.size +
+                        (if (selected.setlist.description.isNotBlank()) 1 else 0) + 1 // Header, songs, description, Add songs.
+                    layout.totalItemsCount == itemCount && layout.visibleItemsInfo.any {
+                        it.index == 0 && it.key == "setlist_$reorderingSetlistFileName"
+                    }
+                }
+            }.first { it }
+            listState.animateScrollToItem(0)
+        }
+    }
     val setlists by viewModel.setlists.collectAsStateWithLifecycle()
     val userPreferences by viewModel.userPreferences.collectAsStateWithLifecycle()
     val transpositions by viewModel.transpositions.collectAsStateWithLifecycle()
@@ -267,7 +300,7 @@ private fun SetlistList(
     val setlistsPlaceholder = viewModel.setlistsPlaceholder.collectAsStateWithLifecycle().value
     LaunchedEffect(isScreenActive, isPerformanceModeEnabled, setlistsWithSongs) {
         if (!isScreenActive || isPerformanceModeEnabled ||
-            setlistsWithSongs.none { it.setlist.fileName == reorderingSetlistFileName && it.entries.size > 1 }
+            setlistsWithSongs.none { it.setlist.fileName == reorderingSetlistFileName && !it.setlist.isArchived && it.setlist.entries.size > 1 }
         ) {
             onReorderingSetlistChanged(null)
         }
@@ -376,15 +409,21 @@ private fun SetlistList(
                     )
                 }
 
-                else -> setlistsWithSongs.forEach { setlistWithSongs ->
+                else -> shownSetlists.forEach { setlistWithSongs ->
                     stickyHeader(
                         key = "setlist_${setlistWithSongs.setlist.fileName}",
                         contentType = "setlist_header",
                     ) { headerIndex ->
                         val headerState = rememberSectionHeaderState(listState, headerIndex)
                         SectionHeader(
-                            modifier = listItemAnimation(listState, hasLoadedLibrary),
+                            // Sticky placement belongs to the grid. Animating it as a regular item can briefly
+                            // pull an already-pinned header away when entering reorder mode changes the list,
+                            // before the scroll-to-top animation has started. Keep only its appearance fades.
+                            modifier = listItemAnimation(listState, hasLoadedLibrary, placementSpec = null),
                             state = { headerState.value },
+                            // The card fade and animated placement can settle on different frames near the top.
+                            // Keep the pinned row opaque throughout reordering, including the entry scroll.
+                            backgroundColor = if (isReordering) MaterialTheme.colorScheme.background else Color.Transparent,
                             endPadding = headerEndPadding,
                             text = setlistWithSongs.setlist.title,
                             subtitle = setlistWithSongs.setlist.countdownText(today),
@@ -451,7 +490,7 @@ private fun SetlistList(
                         val entry = row.entry
                         val key = SetlistItemKey(setlistFileName = setlistWithSongs.setlist.fileName, songFileName = entry.songFileName)
                         // Explicit move actions remain available while browsing; only drag gestures require the mode.
-                        val canMove = !isPerformanceModeEnabled && setlistWithSongs.entries.size > 1
+                        val canMove = !isPerformanceModeEnabled && !setlistWithSongs.setlist.isArchived && setlistWithSongs.entries.size > 1
                         val isReorderable = canMove && isReordering && reorderingSetlistFileName == setlistWithSongs.setlist.fileName
                         // The drag written as two steps, for whoever cannot drag: a screen reader, a keyboard. Each is the
                         // same single write a finished drag makes, and a row with nowhere to go in a direction is offered
@@ -495,28 +534,35 @@ private fun SetlistList(
                                 null
                             } else {
                                 {
-                                    Row(
-                                        verticalAlignment = Alignment.CenterVertically,
+                                    AnimatedVisibility(
+                                        visible = !setlistWithSongs.setlist.isArchived || entry is CampfireViewModel.SetlistWithSongs.Entry.Present,
+                                        enter = fadeIn() + expandHorizontally(),
+                                        exit = fadeOut() + shrinkHorizontally(),
                                     ) {
-                                        // The grip goes in front of the overflow button rather than after it, so that
-                                        // the button lands exactly where the songs screen has its own.
-                                        AnimatedVisibility(
-                                            visible = isReorderable,
-                                            enter = fadeIn() + expandHorizontally(),
-                                            exit = fadeOut() + shrinkHorizontally(),
+                                        Row(
+                                            verticalAlignment = Alignment.CenterVertically,
                                         ) {
-                                            DragHandle(
-                                                modifier = if (isReorderable) Modifier.draggableHandle(onDragStarted = onDragStarted, onDragStopped = onDragStopped)
-                                                else Modifier,
+                                            // The grip goes in front of the overflow button rather than after it, so that
+                                            // the button lands exactly where the songs screen has its own.
+                                            AnimatedVisibility(
+                                                visible = isReorderable,
+                                                enter = fadeIn() + expandHorizontally(),
+                                                exit = fadeOut() + shrinkHorizontally(),
+                                            ) {
+                                                DragHandle(
+                                                    modifier = if (isReorderable) Modifier.draggableHandle(onDragStarted = onDragStarted, onDragStopped = onDragStopped)
+                                                    else Modifier,
+                                                )
+                                            }
+                                            SetlistEntryActions(
+                                                viewModel = viewModel,
+                                                entry = entry,
+                                                setlistFileName = setlistWithSongs.setlist.fileName,
+                                                isArchived = setlistWithSongs.setlist.isArchived,
+                                                onMoveUp = onMoveUp,
+                                                onMoveDown = onMoveDown,
                                             )
                                         }
-                                        SetlistEntryActions(
-                                            viewModel = viewModel,
-                                            entry = entry,
-                                            setlistFileName = setlistWithSongs.setlist.fileName,
-                                            onMoveUp = onMoveUp,
-                                            onMoveDown = onMoveDown,
-                                        )
                                     }
                                 }
                             }
@@ -565,17 +611,19 @@ private fun SetlistList(
                             span = { GridItemSpan(maxLineSpan) },
                             contentType = "setlist_action",
                         ) {
-                            ActionListItem(
-                                modifier = listItemAnimation(listState, hasLoadedLibrary).fadingUnderListTop(topFade),
-                                title = stringResource(Res.string.setlists_add_songs),
-                                icon = painterResource(Res.drawable.ic_add),
-                                onClick = { viewModel.showDialog(CampfireViewModel.DialogType.SongPicker(setlistWithSongs.setlist)) },
-                            )
+                            AnimatedVisibility(visible = !setlistWithSongs.setlist.isArchived) {
+                                ActionListItem(
+                                    modifier = listItemAnimation(listState, hasLoadedLibrary).fadingUnderListTop(topFade),
+                                    title = stringResource(Res.string.setlists_add_songs),
+                                    icon = painterResource(Res.drawable.ic_add),
+                                    onClick = { viewModel.showDialog(CampfireViewModel.DialogType.SongPicker(setlistWithSongs.setlist)) },
+                                )
+                            }
                         }
                     }
                 }
             }
-            if (setlists.any { it.isArchived }) {
+            if (!isReordering && setlists.any { it.isArchived }) {
                 item(
                     key = "show_archived_setlists",
                     span = { GridItemSpan(maxLineSpan) },
@@ -594,7 +642,7 @@ private fun SetlistList(
         PushedSetlistHeader(
             viewModel = viewModel,
             listState = listState,
-            setlistsWithSongs = setlistsWithSongs,
+            setlistsWithSongs = shownSetlists,
             endPadding = headerEndPadding,
             isPerformanceModeEnabled = isPerformanceModeEnabled,
             reorderingSetlistFileName = reorderingSetlistFileName.takeIf { isReordering },
@@ -752,15 +800,25 @@ private fun SetlistEntryActions(
     viewModel: CampfireViewModel,
     entry: CampfireViewModel.SetlistWithSongs.Entry,
     setlistFileName: String,
+    isArchived: Boolean,
     onMoveUp: (() -> Unit)?,
     onMoveDown: (() -> Unit)?,
 ) {
-    val onRemove: () -> Unit = { viewModel.removeSongFromSetlist(songFileName = entry.songFileName, setlistFileName = setlistFileName) }
+    val onRemove: () -> Unit = {
+        viewModel.showDialog(
+            CampfireViewModel.DialogType.RemoveSongFromSetlist(
+                songFileName = entry.songFileName,
+                songTitle = (entry as? CampfireViewModel.SetlistWithSongs.Entry.Present)?.song?.title ?: entry.songFileName,
+                setlistFileName = setlistFileName,
+            ),
+        )
+    }
     when (entry) {
         is CampfireViewModel.SetlistWithSongs.Entry.Present -> SongActions(
             viewModel = viewModel,
             song = entry.song,
             isDeletable = false,
+            isEditAndExportOnly = isArchived,
             setlistFileName = setlistFileName,
             leadingItems = setlistRowActions(onMoveUp, onMoveDown, onRemove),
         )

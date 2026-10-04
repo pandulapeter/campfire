@@ -116,14 +116,15 @@ internal fun ActionsMenu(
 ) {
     val buttonWidth = actionButtonWidth()
     val slotCount = ((maxWidth - ACTION_BUTTON_OVERLAP) / (buttonWidth - ACTION_BUTTON_OVERLAP)).toInt().coerceAtLeast(1)
-    val expandableItems = if (isExpandable) items.filterNot { it.isAlwaysInMenu } else emptyList()
-    val buttonItems = if (menuFooter == null && expandableItems.size == items.size && items.size <= slotCount) {
-        items
+    val visibleItems = items.filter { it.isVisible }
+    val expandableItems = if (isExpandable) visibleItems.filterNot { it.isAlwaysInMenu } else emptyList()
+    val buttonItems = if (menuFooter == null && expandableItems.size == visibleItems.size && visibleItems.size <= slotCount) {
+        visibleItems
     } else {
         // The overflow button stays, so it takes one of the places.
         expandableItems.take(slotCount - 1)
     }
-    val menuItems = items.filterNot { it in buttonItems }
+    val menuItems = visibleItems.filterNot { it in buttonItems }
     val hasMenu = menuItems.isNotEmpty() || menuFooter != null
     // A menu the room has just emptied, or one a long press asked for with nothing left in it, would otherwise be left
     // open in its state and drop down on its own the next time the row narrows.
@@ -213,6 +214,7 @@ internal class ActionsMenuItem(
     val icon: Painter,
     val isEnabled: Boolean = true,
     val isAlwaysInMenu: Boolean = false,
+    val isVisible: Boolean = true,
     val key: String = title,
     val animateIconChange: Boolean = false,
     val onClick: () -> Unit,
@@ -307,6 +309,7 @@ internal fun SongActions(
     viewModel: CampfireViewModel,
     song: Song,
     isDeletable: Boolean,
+    isEditAndExportOnly: Boolean = false,
     setlistFileName: String? = null,
     leadingItems: List<ActionsMenuItem> = emptyList(),
     fileEditItems: List<ActionsMenuItem> = emptyList(),
@@ -316,17 +319,17 @@ internal fun SongActions(
         modifier = modifier,
         state = state,
         isExpandable = false,
-        menuFooter = menuFooter,
-        items = leadingItems + listOf(
+        menuFooter = menuFooter.takeUnless { isEditAndExportOnly },
+        items = leadingItems.takeUnless { isEditAndExportOnly }.orEmpty() + listOf(
             ActionsMenuItem(
                 title = stringResource(Res.string.songs_edit_song),
                 icon = painterResource(Res.drawable.ic_edit),
                 onClick = { viewModel.openEditor(song.fileName) },
             ),
-        ) + fileEditItems + listOfNotNull(
+        ) + fileEditItems.takeUnless { isEditAndExportOnly }.orEmpty() + listOfNotNull(
             // Only where it would do something: a file already named after its own metadata, or one with no title to
             // be named after, has nothing to update and the action would be an offer that never comes to anything.
-            if (song.canUpdateFileName) {
+            if (song.canUpdateFileName && !isEditAndExportOnly) {
                 ActionsMenuItem(
                     title = stringResource(Res.string.songs_update_file_name),
                     icon = painterResource(Res.drawable.ic_rename),
@@ -342,7 +345,7 @@ internal fun SongActions(
                 isAlwaysInMenu = true,
                 onClick = { viewModel.showDialog(CampfireViewModel.DialogType.Export(song = song, songSetlistFileName = setlistFileName)) },
             ),
-            if (isDeletable) {
+            if (isDeletable && !isEditAndExportOnly) {
                 ActionsMenuItem(
                     title = stringResource(Res.string.songs_delete_song),
                     icon = painterResource(Res.drawable.ic_delete),

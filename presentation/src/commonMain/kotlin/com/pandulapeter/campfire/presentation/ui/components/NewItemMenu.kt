@@ -48,11 +48,12 @@ internal fun NewItemMenu(
     createLabel: String,
     onCreate: () -> Unit,
     onItemSelected: () -> Unit = {},
+    isEnabled: Boolean = true,
 ) {
     val filePicker = LocalFilePicker.current
     OverflowMenu(
         button = { open ->
-            IconButton(onClick = open) {
+            IconButton(onClick = open, enabled = isEnabled) {
                 Icon(
                     painter = painterResource(Res.drawable.ic_add),
                     contentDescription = contentDescription,

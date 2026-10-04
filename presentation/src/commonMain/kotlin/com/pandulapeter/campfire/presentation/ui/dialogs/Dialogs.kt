@@ -143,6 +143,8 @@ import com.pandulapeter.campfire.presentation.resources.import_conflicts_replace
 import com.pandulapeter.campfire.presentation.resources.import_replace_title
 import com.pandulapeter.campfire.presentation.resources.save
 import com.pandulapeter.campfire.presentation.resources.setlists_delete_setlist
+import com.pandulapeter.campfire.presentation.resources.setlists_remove_song
+import com.pandulapeter.campfire.presentation.resources.setlists_remove_song_confirmation
 import com.pandulapeter.campfire.presentation.resources.setlists_delete_setlist_confirmation
 import com.pandulapeter.campfire.presentation.resources.setlists_countdown
 import com.pandulapeter.campfire.presentation.resources.setlists_date
@@ -199,6 +201,7 @@ import com.pandulapeter.campfire.presentation.resources.whats_new_title
 import com.pandulapeter.campfire.presentation.resources.whats_new_message
 import com.pandulapeter.campfire.presentation.CAMPFIRE_VERSION_NAME
 import com.pandulapeter.campfire.presentation.ui.CampfireViewModel
+import com.pandulapeter.campfire.presentation.ui.navigation.CampfireDestination
 import com.pandulapeter.campfire.presentation.ui.PickerFilterOptions
 import com.pandulapeter.campfire.presentation.ui.components.ActionListItem
 import com.pandulapeter.campfire.presentation.ui.components.CheckboxListItem
@@ -407,6 +410,17 @@ internal fun CampfireDialogs(
             onDismiss = viewModel::dismissDialog,
             onConfirm = {
                 viewModel.setSongCoverArt(fileName = dialog.song.fileName, isEditorDraft = dialog.isEditorDraft, url = null)
+                viewModel.dismissDialog()
+            },
+        )
+
+        is CampfireViewModel.DialogType.RemoveSongFromSetlist -> ConfirmationDialog(
+            title = stringResource(Res.string.setlists_remove_song),
+            text = textResource(Res.string.setlists_remove_song_confirmation, dialog.songTitle),
+            confirmLabel = stringResource(Res.string.setlists_remove_song),
+            onDismiss = viewModel::dismissDialog,
+            onConfirm = {
+                viewModel.removeSongFromSetlist(songFileName = dialog.songFileName, setlistFileName = dialog.setlistFileName)
                 viewModel.dismissDialog()
             },
         )
@@ -1589,7 +1603,7 @@ private fun SetlistPicker(
                         modifier = listItemAnimation(listState),
                         title = setlist.title,
                         isChecked = setlist.entries.any { it.songFileName == dialog.song.fileName },
-                        isEnabled = setlist.fileName != dialog.setlistFileName,
+                        isEnabled = !setlist.isArchived && setlist.fileName != dialog.setlistFileName,
                         onCheckedChange = { isChecked ->
                             if (isChecked) {
                                 viewModel.addSongToSetlist(songFileName = dialog.song.fileName, setlistFileName = setlist.fileName)
@@ -2233,13 +2247,16 @@ private fun SongInfoSheet(
     val song = songs.firstOrNull { it.fileName == dialog.song.fileName } ?: dialog.song
     val songTexts by viewModel.songTexts.collectAsStateWithLifecycle()
     val isPerformanceModeEnabled by viewModel.isPerformanceModeEnabled.collectAsStateWithLifecycle()
+    val setlists by viewModel.setlists.collectAsStateWithLifecycle()
+    val setlistFileName = (viewModel.backStack.lastOrNull() as? CampfireDestination.SongDetails)?.setlistFileName
+    val isReadOnly = isPerformanceModeEnabled || setlists.any { it.fileName == setlistFileName && it.isArchived }
     val text = songTexts[dialog.song.fileName]
     val metadata = remember(text) { text?.let(viewModel::songMetadataOf) }
     val editing = rememberSongInfoEditing(viewModel = viewModel, song = song, isEditorDraft = false)
     CampfireBottomSheet(
         title = stringResource(Res.string.song_details_song_info),
         subtitle = songLabel(song),
-        actions = if (isPerformanceModeEnabled) null else {
+        actions = if (isReadOnly) null else {
             {
                 editing.onEditCoverArt?.let { onEditCoverArt ->
                     IconButton(onClick = onEditCoverArt, enabled = metadata != null) {
@@ -2276,7 +2293,7 @@ private fun SongInfoSheet(
                     .padding(vertical = 8.dp),
                 metadata = metadata,
                 horizontalPadding = 16.dp,
-                editing = editing.takeUnless { isPerformanceModeEnabled },
+                editing = editing.takeUnless { isReadOnly },
                 onOpenLink = urlOpener,
             )
         }

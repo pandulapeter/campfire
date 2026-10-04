@@ -58,10 +58,12 @@ internal fun SetlistSortMenu(
     modifier: Modifier = Modifier,
     viewModel: CampfireViewModel,
     onSortingModeChanged: () -> Unit = {},
+    isEnabled: Boolean = true,
 ) {
     val userPreferences by viewModel.userPreferences.collectAsStateWithLifecycle()
     SortMenu(
         modifier = modifier,
+        isEnabled = isEnabled,
         contentDescription = stringResource(Res.string.setlists_sort),
         options = listOf(
             UserPreferences.SetlistSortingMode.BY_DATE to stringResource(Res.string.setlists_sorting_mode_by_date),
@@ -89,10 +91,11 @@ internal fun <T> SortMenu(
     options: List<Pair<T, String>>,
     selected: T?,
     onSelected: (T) -> Unit,
+    isEnabled: Boolean = true,
 ) = OverflowMenu(
     modifier = modifier,
     button = { open ->
-        IconButton(onClick = open) {
+        IconButton(onClick = open, enabled = isEnabled) {
             Icon(
                 painter = painterResource(Res.drawable.ic_sort),
                 contentDescription = contentDescription,

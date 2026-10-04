@@ -165,6 +165,7 @@
     <string name="setlists_new_setlist">Új lista</string>
     <string name="setlists_new_setlist_title">Lista címe</string>
     <string name="setlists_remove_song">Eltávolítás a listáról</string>
+    <string name="setlists_remove_song_confirmation">Eltávolítod a(z) „%1$s” dalt erről a listáról? A dal a könyvtárban és a többi listán megmarad.</string>
     <string name="setlists_reorder">Dalok átrendezése</string>
     <string name="setlists_done_reordering">Átrendezés befejezése</string>
     <string name="setlists_move_up">Mozgatás feljebb</string>

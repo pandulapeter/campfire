@@ -165,6 +165,7 @@
     <string name="setlists_new_setlist">New setlist</string>
     <string name="setlists_new_setlist_title">Setlist title</string>
     <string name="setlists_remove_song">Remove from setlist</string>
+    <string name="setlists_remove_song_confirmation">Remove \"%1$s\" from this setlist? The song stays in your library and other setlists.</string>
     <string name="setlists_reorder">Reorder songs</string>
     <string name="setlists_done_reordering">Done reordering</string>
     <string name="setlists_move_up">Move up</string>

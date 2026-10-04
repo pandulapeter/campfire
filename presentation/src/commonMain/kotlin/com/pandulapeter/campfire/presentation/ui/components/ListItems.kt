@@ -20,6 +20,7 @@ import androidx.compose.animation.shrinkHorizontally
 import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.background
 import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -620,6 +621,7 @@ internal fun rememberSectionHeaderState(listState: LazyGridState, headerIndex: I
  * Everything that follows the scroll position is handed over as a function and read only while the row is laid out
  * ([state]) or drawn ([opacity], [contentOpacity], [pushedDistancePx]), so that a scroll moving it recomposes nothing.
  *
+ * @param backgroundColor Optional backing for transitions in which cards' placement and fades can settle separately.
  * @param subtitle A second line under the name, in the type of the text under the header rather than the header's own:
  *   a setlist's countdown, which has to stay in sight wherever in the setlist the reader is. The pill is as tall as the
  *   bar's, which holds both lines, so a subtitle moves nothing around the header.
@@ -646,6 +648,7 @@ internal fun SectionHeader(
     contentOpacity: () -> Float = { 1f },
     pushedDistancePx: () -> Int = { 0 },
     appBarOverlap: () -> AppBarOverlap,
+    backgroundColor: Color = Color.Transparent,
 ) = Box(
     modifier = modifier
         .extendIntoEndPadding(endPadding)
@@ -654,6 +657,7 @@ internal fun SectionHeader(
             clip = false
         }
         .fillMaxWidth()
+        .background(backgroundColor)
         .defaultMinSize(minHeight = LIST_APP_BAR_HEIGHT),
     contentAlignment = Alignment.CenterStart,
 ) {

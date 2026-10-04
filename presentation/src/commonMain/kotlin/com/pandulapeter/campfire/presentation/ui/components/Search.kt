@@ -185,6 +185,7 @@ internal fun SearchableTopAppBar(
     placeholder: String,
     searchState: SearchState,
     onReachChanged: (Dp) -> Unit,
+    isSearchEnabled: Boolean = true,
     areClosedSearchActionsShown: Boolean = false,
     closedSearchActions: @Composable RowScope.() -> Unit = {},
     actions: @Composable RowScope.() -> Unit,
@@ -219,11 +220,12 @@ internal fun SearchableTopAppBar(
         BoundsTransform { _, _ -> if (searchTransition.currentState != searchTransition.targetState) travelSpec else snap() }
     }
     val searchAction = remember(searchState) {
-        movableContentOf { actionModifier: Modifier, actionPlaceholder: String ->
+        movableContentOf { actionModifier: Modifier, actionPlaceholder: String, isEnabled: Boolean ->
             SearchAction(
                 modifier = actionModifier,
                 searchState = searchState,
                 placeholder = actionPlaceholder,
+                isEnabled = isEnabled,
             )
         }
     }
@@ -284,7 +286,7 @@ internal fun SearchableTopAppBar(
                 isHoldingAction = { it },
             ) {
                 if (isOpen) {
-                    searchAction(actionModifier, placeholder)
+                    searchAction(actionModifier, placeholder, isSearchEnabled)
                 }
             }
             SearchFieldSlot(
@@ -323,7 +325,7 @@ internal fun SearchableTopAppBar(
                         isHoldingAction = { !it },
                     ) {
                         if (!isOpen) {
-                            searchAction(actionModifier, placeholder)
+                            searchAction(actionModifier, placeholder, isSearchEnabled)
                         }
                     }
                     actions()
@@ -630,11 +632,13 @@ private fun SearchAction(
     modifier: Modifier = Modifier,
     searchState: SearchState,
     placeholder: String,
+    isEnabled: Boolean = true,
 ) {
     val isOpen by searchState.isOpen.collectAsStateWithLifecycle()
     val keyboardController = LocalSoftwareKeyboardController.current
     IconButton(
         modifier = modifier,
+        enabled = isEnabled,
         colors = IconButtonDefaults.iconButtonColors(contentColor = MaterialTheme.colorScheme.onSurfaceVariant),
         onClick = {
             if (isOpen) {

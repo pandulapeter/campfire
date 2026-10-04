@@ -179,6 +179,7 @@ internal fun SongDetailsScreen(
     // Only what is drawn over the screen, which the keys are then meant for instead.
     val visibleDialog by viewModel.visibleDialog.collectAsStateWithLifecycle()
     val isPerformanceModeEnabled by viewModel.isPerformanceModeEnabled.collectAsStateWithLifecycle()
+    val isReadOnly = isPerformanceModeEnabled || setlists.any { it.fileName == destination.setlistFileName && it.isArchived }
     val songsBeingRenamed by viewModel.songsBeingRenamed.collectAsStateWithLifecycle()
     val songFileNamesInSetlists by viewModel.songFileNamesInSetlists.collectAsStateWithLifecycle()
     val songs = remember(destination, songsByFileName, songsBeingRenamed) {
@@ -237,15 +238,15 @@ internal fun SongDetailsScreen(
     // Performance mode edits nothing, so the sheet of what the song is is only offered there where it has something in it.
     val currentSongInfoAction = currentSong?.let { song ->
         val hasSongInfo = remember(currentSongText) { currentSongText?.let(viewModel::songMetadataOf)?.hasSongInfo == true }
-        if (isPerformanceModeEnabled && !hasSongInfo) null else songInfoAction(viewModel = viewModel, song = song, isEnabled = currentSongText != null)
+        if (isReadOnly && !hasSongInfo) null else songInfoAction(viewModel = viewModel, song = song, isEnabled = currentSongText != null)
     }
     val chordSpelling = userPreferences?.chordSpelling ?: UserPreferences.ChordSpelling.Default
     val layoutDirection = LocalLayoutDirection.current
     val appBarWidth = settledWidth - contentPadding.calculateStartPadding(layoutDirection) - contentPadding.calculateEndPadding(layoutDirection)
     // Decided from the settled width and for every song of the pager at once, like the song actions below, so that the
     // cover and the steppers do not come and go during a navigation transition or a page change.
-    val showsCoverInBar = isCoverArtEnabled && (!isPerformanceModeEnabled || showsCoverInPerformanceMode(appBarWidth))
-    val showsFontScaleInBar = isPerformanceModeEnabled && showsFontScaleInPerformanceBar(appBarWidth)
+    val showsCoverInBar = isCoverArtEnabled && (!isReadOnly || showsCoverInPerformanceMode(appBarWidth))
+    val showsFontScaleInBar = isReadOnly && showsFontScaleInPerformanceBar(appBarWidth)
     // Whatever else the bar holds: the back button with the bar's own start padding, the bar's end padding, the cover
     // in front of the title (reserved for every song of the pager, so that paging to a song without one does not move
     // the actions in and out of their menu) and the overflow button. The rest is shared out by appBarButtons. The
@@ -254,9 +255,9 @@ internal fun SongDetailsScreen(
     // navigation transition runs.
     val otherAppBarContentWidth = APP_BAR_NAVIGATION_WIDTH + APP_BAR_END_PADDING + APP_BAR_ACTION_WIDTH + if (showsCoverInBar && songs.any { it.coverArtUrl != null }) APP_BAR_COVER_SIZE + APP_BAR_COVER_GAP else 0.dp
     val appBarButtons = appBarButtons(appBarWidth = appBarWidth, otherContentWidth = otherAppBarContentWidth)
-    val showsSongInfoInBar = !isPerformanceModeEnabled && appBarButtons.isSongInfoShown
-    val showsSetlistAssignmentsInBar = !isPerformanceModeEnabled && appBarButtons.isSetlistAssignmentsShown
-    val showsTranspositionInBar = !isPerformanceModeEnabled && appBarButtons.isTranspositionShown
+    val showsSongInfoInBar = !isReadOnly && appBarButtons.isSongInfoShown
+    val showsSetlistAssignmentsInBar = !isReadOnly && appBarButtons.isSetlistAssignmentsShown
+    val showsTranspositionInBar = !isReadOnly && appBarButtons.isTranspositionShown
 
     val coroutineScope = rememberCoroutineScope()
     val pageStepper = remember(pagerState, coroutineScope) { PageStepper(pagerState, coroutineScope) }
@@ -400,7 +401,7 @@ internal fun SongDetailsScreen(
                 // Both are there, one leaving as the other arrives, so that a window resized across the width that
                 // decides it hands the stepper over the way the song's actions move in and out of their menu.
                 AnimatedVisibility(
-                    visible = isPerformanceModeEnabled && showsFontScaleInBar,
+                    visible = isReadOnly && showsFontScaleInBar,
                     enter = fadeIn() + expandHorizontally(),
                     exit = fadeOut() + shrinkHorizontally(),
                 ) {
@@ -413,7 +414,7 @@ internal fun SongDetailsScreen(
                     }
                 }
                 AnimatedVisibility(
-                    visible = isPerformanceModeEnabled && !showsFontScaleInBar,
+                    visible = isReadOnly && !showsFontScaleInBar,
                     enter = fadeIn() + expandHorizontally(),
                     exit = fadeOut() + shrinkHorizontally(),
                 ) {
@@ -478,6 +479,7 @@ internal fun SongDetailsScreen(
                         viewModel = viewModel,
                         song = song,
                         isDeletable = destination.setlistFileName == null,
+                        isEditAndExportOnly = isReadOnly,
                         setlistFileName = destination.setlistFileName,
                         fileEditItems = editingActions.take(1) + listOfNotNull(coverArtAction) + editingActions.drop(1),
                         leadingItems = listOfNotNull(

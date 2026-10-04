@@ -14,6 +14,7 @@
 - The cover art bottom sheet has two primary actions
 
 ## Improvements
+- Sort by popups on main screens should have titles
 - Add validators to input fields
 - Maybe all bottom sheets with song names in their headers could show the cover art for the song
 - Each setlist should display a total of the song durations for the setlist, right after the countdown if enabled (separated by a dot character), or instead of the countdown if it isn't. If some songs don't have a valid duration set, add a + sign after the total duration of the setlist to indicate that it's a minimum value. If none of the songs have valid durations set, don't display the total duration
@@ -26,7 +27,7 @@
 - Add overshoot effects on all platforms
 
 ## Features
-- Multi-select songs for bulk export or bulk edit (assign tags, languages, setlists)
+- Multi-select songs for bulk export or bulk edit (assign tags, languages, setlists) - rearrange mode in Setlists could be used for UX inspiration
 - Implement optionally auto-indexing similar sections within a song
 - Metronome: documentation/plans/metronome.md. Think about an always-present panel when the metronome is playing, no matter where the user is in the app and how changing the BPM affects the duration of a song
 - Haptic effects, especially for the fast scroller
