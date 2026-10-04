@@ -9,6 +9,8 @@
  */
 package com.pandulapeter.campfire.data.model.domain
 
+import kotlin.time.Duration
+
 /**
  * One `.cho` file in the library, as the song lists need it: the metadata read from its directives, without the text.
  * The text is loaded on demand, see `SongContentRepository`.
@@ -59,6 +61,9 @@ data class Song(
     val lastModified: Long,
     /** The bytes the file takes up, as the scan listed it, which is what the library's size on the settings screen adds up. */
     val size: Long,
-    /** `{duration}` as written, null if the song does not declare one. */
-    val duration: String? = null,
+    /**
+     * `{duration}`, null if the song does not declare one or declares something that is not a duration (see
+     * `ChordProDuration`), so that whatever adds these up never counts a value it had to guess at.
+     */
+    val duration: Duration? = null,
 )

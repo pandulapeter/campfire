@@ -22,6 +22,7 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.listSaver
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
@@ -30,6 +31,7 @@ import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardCapitalization
 import androidx.compose.ui.text.input.KeyboardType
+import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.unit.dp
 import com.pandulapeter.campfire.chordpro.ChordProMetadataFields.Field
 import com.pandulapeter.campfire.presentation.localization.stringResource
@@ -64,7 +66,10 @@ internal fun SongMetadataDialog(
     viewModel: CampfireViewModel,
     dialog: CampfireViewModel.DialogType.SongMetadata,
 ) {
-    var values by rememberSaveable(dialog.song.fileName, stateSaver = songMetadataSaver) { mutableStateOf(dialog.values) }
+    // Compared with the draft the form opened with rather than with the file's text, so that a duration the field
+    // could not show, and so opened empty, is only removed when the user typed into it.
+    val offeredValues = remember(dialog.values) { dialog.values.toSongMetadataDraft() }
+    var values by rememberSaveable(dialog.song.fileName, stateSaver = songMetadataSaver) { mutableStateOf(offeredValues) }
     val scrollState = rememberScrollState()
     val field: @Composable (Modifier, Field) -> Unit = { modifier, field ->
         SongMetadataField(
@@ -99,9 +104,14 @@ internal fun SongMetadataDialog(
         },
         confirmButton = { close ->
             BottomSheetConfirmButton(
-                enabled = Field.entries.any { values[it].orEmpty().trim() != dialog.values[it].orEmpty().trim() },
+                enabled = Field.entries.any { values[it].orEmpty().trim() != offeredValues[it].orEmpty().trim() },
                 onClick = {
-                    viewModel.setSongMetadata(fileName = dialog.song.fileName, isEditorDraft = dialog.isEditorDraft, values = values, offeredValues = dialog.values)
+                    viewModel.setSongMetadata(
+                        fileName = dialog.song.fileName,
+                        isEditorDraft = dialog.isEditorDraft,
+                        values = values.fromSongMetadataDraft(),
+                        offeredValues = offeredValues.fromSongMetadataDraft(),
+                    )
                     close()
                 },
             ) { Text(stringResource(if (dialog.isEditorDraft) Res.string.done else Res.string.save)) }
@@ -125,18 +135,27 @@ internal fun SongMetadataField(
         value = value,
         // A brace would end the directive early or open another one, and a line break would leave the rest of the value
         // in the song as lyrics.
-        onValueChange = { newValue -> onValueChange(newValue.filterNot { it == '{' || it == '}' || it == '\n' || it == '\r' }.take(maxLength)) },
+        onValueChange = { newValue ->
+            onValueChange(
+                when (field) {
+                    Field.YEAR -> newValue.filter { it in '0'..'9' }.take(YEAR_LENGTH)
+                    Field.DURATION -> durationDigitsTyped(newValue)
+                    else -> newValue.filterNot { it == '{' || it == '}' || it == '\n' || it == '\r' }.take(maxLength)
+                },
+            )
+        },
         label = {
             val label = stringResource(field.label)
             Text(if (isOptional) stringResource(Res.string.optional_field_label, label) else label)
         },
         trailingIcon = rememberClearTextButton(isVisible = value.isNotEmpty(), onClear = { onValueChange("") }),
         singleLine = true,
+        visualTransformation = if (field == Field.DURATION) DurationDigitsTransformation else VisualTransformation.None,
         // Next walks the form; the final Done confirms creation or puts the editing form's keyboard away.
         keyboardActions = KeyboardActions(onDone = { if (onDone != null) onDone() else keyboardController?.hide() }),
         keyboardOptions = KeyboardOptions(
-            capitalization = if (field == Field.YEAR) KeyboardCapitalization.None else KeyboardCapitalization.Sentences,
-            keyboardType = if (field == Field.YEAR) KeyboardType.Number else KeyboardType.Text,
+            capitalization = if (field.isNumeric) KeyboardCapitalization.None else KeyboardCapitalization.Sentences,
+            keyboardType = if (field.isNumeric) KeyboardType.Number else KeyboardType.Text,
             imeAction = if (field == Field.entries.last()) ImeAction.Done else ImeAction.Next,
         ),
     )
@@ -153,6 +172,11 @@ private val Field.label: StringResource
         Field.YEAR -> Res.string.song_editor_insert_year
         Field.DURATION -> Res.string.song_editor_insert_duration
     }
+
+/** The fields typed as digits alone: a year, and a duration through [DurationDigitsTransformation]. */
+private val Field.isNumeric get() = this == Field.YEAR || this == Field.DURATION
+
+private const val YEAR_LENGTH = 4
 
 internal val songMetadataSaver = listSaver<Map<Field, String>, String>(
     save = { values -> Field.entries.map { values[it].orEmpty() } },

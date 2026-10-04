@@ -82,6 +82,7 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.offset
+import com.pandulapeter.campfire.chordpro.ChordProDuration
 import com.pandulapeter.campfire.data.model.domain.Song
 import com.pandulapeter.campfire.domain.api.models.SongFilter
 import com.pandulapeter.campfire.presentation.localization.stringResource
@@ -122,6 +123,7 @@ import com.pandulapeter.campfire.presentation.ui.CampfireViewModel
 import com.pandulapeter.campfire.presentation.ui.theme.LocalSecondAccentColor
 import org.jetbrains.compose.resources.painterResource
 import kotlin.math.roundToInt
+import kotlin.time.Duration
 
 /**
  * @param index The song's place in the setlist it is listed in, prefixed to its title.
@@ -158,7 +160,7 @@ internal fun SongListItem(
     index: Int? = null,
     key: String? = null,
     shouldShowChords: Boolean = true,
-    duration: String? = null,
+    duration: Duration? = null,
     labelsOnEverySong: CampfireViewModel.LabelsOnEverySong,
     shouldShowLabels: Boolean = true,
     songFilter: SongFilter = SongFilter(),
@@ -172,7 +174,7 @@ internal fun SongListItem(
     onLongClick: (() -> Unit)? = null,
     actions: (@Composable () -> Unit)? = null,
 ) {
-    val displayedDuration = duration?.takeIf { it.isNotBlank() }
+    val displayedDuration = duration?.let(ChordProDuration::format)
     // Worked out before the row is laid out rather than inside it, because it is also one of the things that decide
     // whether the row has a second line at all: a song written in the app carries no artist, no language and no tag,
     // and its key is then the only thing there is to put under the title.

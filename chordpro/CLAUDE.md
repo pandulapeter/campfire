@@ -174,6 +174,9 @@ in `:domain:*`. `:data:source:local:implementation` uses it directly for the met
   earlier lines of the same field, writes a field the file lacks into the header by `metadataInsertionIndex`, and
   removes it for a blank value; editing the text for the reason `ChordProTags` does. `valueOf` reads a field back out
   of the model as text.
+- `ChordProDuration` — reads a `{duration}` value as seconds (`268`), `m:ss` or `h:mm:ss`, and anything else, zero
+  included, as no duration rather than a guess, so that a sum of durations is never off by a value somebody wrote in
+  words; `format` writes `m:ss`, or `h:mm:ss` from an hour on, which is what the app shows and what its forms write.
 - `ChordProHeader` — the block of directives a song opens with, for the editor, which writes into it while the caret
   is somewhere else entirely. ChordPro reads a `{title}` as the title from anywhere in the file, so a directive
   inserted at the caret is valid in the middle of a verse, invisible in the rendered song and nowhere near the rest

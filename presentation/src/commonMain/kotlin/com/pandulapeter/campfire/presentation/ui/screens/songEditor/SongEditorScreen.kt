@@ -11,8 +11,6 @@ package com.pandulapeter.campfire.presentation.ui.screens.songEditor
 
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.AnimatedVisibility
-import androidx.compose.animation.core.animateFloat
-import androidx.compose.animation.core.updateTransition
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.togetherWith
@@ -29,6 +27,7 @@ import androidx.compose.foundation.layout.ime
 import androidx.compose.foundation.layout.asPaddingValues
 import androidx.compose.foundation.layout.calculateEndPadding
 import androidx.compose.foundation.layout.calculateStartPadding
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
@@ -45,7 +44,6 @@ import androidx.compose.foundation.text.input.delete
 import androidx.compose.foundation.text.input.insert
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.material3.ButtonDefaults
-import androidx.compose.material3.DividerDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -71,7 +69,6 @@ import androidx.compose.runtime.setValue
 import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clipToBounds
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.graphics.SolidColor
@@ -83,14 +80,11 @@ import androidx.compose.ui.input.key.isMetaPressed
 import androidx.compose.ui.input.key.key
 import androidx.compose.ui.input.key.onPreviewKeyEvent
 import androidx.compose.ui.input.key.type
-import androidx.compose.ui.layout.Layout
-import androidx.compose.ui.layout.layoutId
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.platform.LocalWindowInfo
 import androidx.compose.ui.text.TextRange
 import androidx.compose.ui.text.style.TextOverflow
-import androidx.compose.ui.unit.Constraints
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.dp
@@ -164,7 +158,6 @@ import com.pandulapeter.campfire.presentation.ui.screens.songDetails.songInfoEdi
 import com.pandulapeter.campfire.presentation.ui.platform.CompactKeyboardEffect
 import com.pandulapeter.campfire.presentation.ui.theme.LocalMonospaceFontFamily
 import com.pandulapeter.campfire.presentation.ui.theme.LocalSecondAccentColor
-import kotlin.math.roundToInt
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.FlowPreview
@@ -320,9 +313,9 @@ private fun LoadedSongEditor(
         )
     }
     val textFieldState = editorField.textFieldState
-    // Owned here rather than by the panes, because a pane is let go of whenever it slides out of sight and composed
-    // again from scratch as it comes back, and a scroll position kept inside it would go back to the first line on
-    // every switch.
+    // Owned here rather than by the panes, because a pane is composed again from scratch whenever the layout changes -
+    // Edit and Preview are one AnimatedContent, Split is a Row - and a scroll position kept inside it would go back to
+    // the first line on every switch, rotation and resize across the split width.
     val fieldScrollState = rememberScrollState()
     val fieldHorizontalScrollState = rememberScrollState()
     val previewScrollState = rememberScrollState()
@@ -571,70 +564,22 @@ private fun LoadedSongEditor(
         // The panes take what the app bar and the toggle above them leave, rather than the whole window: a Column
         // measures a child that does not weigh anything against an unbounded height, and a song longer than the
         // screen then lays the field out past the bottom edge of it instead of scrolling inside it.
-        SlidingEditorPanes(
-            modifier = Modifier.weight(1f).fillMaxWidth(),
-            panes = panes,
-            editor = editor,
-            preview = preview,
-        )
-    }
-}
-
-/**
- * The field and the preview side by side, with the divider between them travelling across the width as the pane
- * choice changes: a pane coming into view slides in from its own edge and one leaving slides out to it, and Split is
- * the divider coming to rest half way.
- *
- * A pane that slides in or out keeps the width it has at the end of the move where it is shown, rather than being
- * squeezed into the room left beside the divider: between Edit and Preview each of them is the whole width and the
- * two move as one, and between Split and either of them the pane leaving keeps half of it. Only the pane that stays
- * in view is resized, the way a resized window resizes it. A pane is only composed while some of it can be seen, since
- * the preview lays the song out again after every pause in the typing and the field would hold the focus.
- */
-@Composable
-private fun SlidingEditorPanes(
-    modifier: Modifier = Modifier,
-    panes: EditorPanes,
-    editor: @Composable (Modifier) -> Unit,
-    preview: @Composable (Modifier) -> Unit,
-) {
-    val transition = updateTransition(targetState = panes)
-    val dividerPosition = transition.animateFloat(
-        transitionSpec = { MaterialTheme.motionScheme.defaultSpatialSpec() },
-    ) { it.dividerPosition }
-    val isSettled = transition.currentState == transition.targetState
-    val isSplitInvolved = transition.currentState == EditorPanes.SPLIT || transition.targetState == EditorPanes.SPLIT
-    Layout(
-        modifier = modifier.clipToBounds(),
-        content = {
-            if (!isSettled || panes != EditorPanes.PREVIEW) editor(Modifier.layoutId(EditorPaneSlot.EDITOR))
-            if (!isSettled || panes == EditorPanes.SPLIT) VerticalDivider(Modifier.layoutId(EditorPaneSlot.DIVIDER))
-            if (!isSettled || panes != EditorPanes.EDIT) preview(Modifier.layoutId(EditorPaneSlot.PREVIEW))
-        },
-    ) { measurables, constraints ->
-        val width = constraints.maxWidth
-        val height = constraints.maxHeight
-        val dividerThickness = DividerDefaults.Thickness.roundToPx()
-        // Read here rather than while composing, so that the move lays the panes out again on every frame without
-        // composing the editor again on every frame.
-        val dividerStart = (dividerPosition.value * (width + dividerThickness)).roundToInt() - dividerThickness
-        val leavingPaneWidth = if (isSplitInvolved) (width - dividerThickness) / 2 else width
-        val editorWidth = maxOf(dividerStart, leavingPaneWidth)
-        val previewWidth = maxOf(width - dividerStart - dividerThickness, leavingPaneWidth)
-        fun measure(slot: EditorPaneSlot, slotWidth: Int) = measurables.firstOrNull { it.layoutId == slot }?.measure(Constraints.fixed(slotWidth, height))
-        val editorPlaceable = measure(EditorPaneSlot.EDITOR, editorWidth)
-        val dividerPlaceable = measure(EditorPaneSlot.DIVIDER, dividerThickness)
-        val previewPlaceable = measure(EditorPaneSlot.PREVIEW, previewWidth)
-        layout(width, height) {
-            editorPlaceable?.placeRelative(dividerStart - editorWidth, 0)
-            dividerPlaceable?.placeRelative(dividerStart, 0)
-            previewPlaceable?.placeRelative(dividerStart + dividerThickness, 0)
+        if (hasSideBySidePreview) {
+            Row(modifier = Modifier.weight(1f).fillMaxWidth()) {
+                editor(Modifier.weight(1f).fillMaxHeight())
+                VerticalDivider()
+                preview(Modifier.weight(1f).fillMaxHeight())
+            }
+        } else {
+            AnimatedContent(
+                modifier = Modifier.weight(1f).fillMaxWidth(),
+                targetState = panes == EditorPanes.PREVIEW,
+                transitionSpec = { fadeIn() togetherWith fadeOut() },
+            ) { showPreview ->
+                if (showPreview) preview(Modifier.fillMaxSize()) else editor(Modifier.fillMaxSize())
+            }
         }
     }
-}
-
-private enum class EditorPaneSlot {
-    EDITOR, DIVIDER, PREVIEW,
 }
 
 /**
@@ -731,11 +676,8 @@ private fun EditorToolbarToggle(
  * Which of the two panes the editor shows. [SPLIT] needs a window wide enough for both and is the choice a window
  * that has the room opens with, since seeing the song take shape is the reason the preview exists at all.
  */
-private enum class EditorPanes(
-    /** Where the divider between the field and the preview stands, as a fraction of the width. */
-    val dividerPosition: Float,
-) {
-    EDIT(1f), PREVIEW(0f), SPLIT(0.5f);
+private enum class EditorPanes {
+    EDIT, PREVIEW, SPLIT;
 
     companion object {
         /** Saved by name rather than left to the automatic saver, which only stores what a platform can serialize. */

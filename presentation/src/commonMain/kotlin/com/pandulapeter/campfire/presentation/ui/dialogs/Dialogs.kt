@@ -1193,7 +1193,7 @@ private fun NewSongDialog(
     val create = { close: () -> Unit ->
         if (isValid) {
             confirmOnce {
-                onCreate(values)
+                onCreate(values.fromSongMetadataDraft())
                 close()
             }
         } else {
