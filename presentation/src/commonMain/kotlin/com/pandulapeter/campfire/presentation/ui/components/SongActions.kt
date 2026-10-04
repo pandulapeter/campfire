@@ -10,6 +10,7 @@
 package com.pandulapeter.campfire.presentation.ui.components
 
 import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.Crossfade
 import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.Easing
 import androidx.compose.animation.core.animateFloatAsState
@@ -28,6 +29,7 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.LocalMinimumInteractiveComponentSize
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.LocalContentColor
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.Immutable
@@ -40,6 +42,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.painter.Painter
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
@@ -134,7 +137,7 @@ internal fun ActionsMenu(
         items.forEach { item ->
             // Keyed by what the action is rather than by its place, since an action that comes and goes (Update file
             // name, Set cover art) moves every one after it along.
-            key(item.title) {
+            key(item.key) {
                 AnimatedVisibility(
                     modifier = Modifier.overlappingAction(),
                     visible = item in buttonItems,
@@ -144,6 +147,7 @@ internal fun ActionsMenu(
                     ActionButton(
                         modifier = buttonModifier,
                         icon = item.icon,
+                        animateIconChange = item.animateIconChange,
                         contentDescription = item.title,
                         isEnabled = item.isEnabled,
                         isDecorative = isDecorative,
@@ -182,7 +186,7 @@ internal fun ActionsMenu(
                     menuItems.forEach { item ->
                         DropdownMenuItem(
                             text = { Text(item.title) },
-                            leadingIcon = { Icon(painter = item.icon, contentDescription = null) },
+                            leadingIcon = { ActionIcon(icon = item.icon, contentDescription = null, animateIconChange = item.animateIconChange) },
                             enabled = item.isEnabled,
                             onClick = { select(item.onClick) },
                         )
@@ -198,6 +202,8 @@ internal fun ActionsMenu(
  * One action of an [ActionsMenu]: a button of its own wherever there is the room for it, and an entry of the menu
  * wherever there is not, so its [title] is both the entry's text and the button's content description.
  *
+ * @param key Stable identity for a toggle whose title changes along with its state.
+ * @param animateIconChange Crossfades icon changes while preserving the button's position.
  * @param isAlwaysInMenu Keeps the action in the menu however much room there is: one that deletes or throws something
  *   away, and one that is rarely wanted (archiving, duplicating, exporting), which a button would only advertise.
  */
@@ -207,6 +213,8 @@ internal class ActionsMenuItem(
     val icon: Painter,
     val isEnabled: Boolean = true,
     val isAlwaysInMenu: Boolean = false,
+    val key: String = title,
+    val animateIconChange: Boolean = false,
     val onClick: () -> Unit,
 )
 
@@ -222,6 +230,7 @@ private fun ActionButton(
     modifier: Modifier = Modifier,
     icon: Painter,
     contentDescription: String?,
+    animateIconChange: Boolean = false,
     isEnabled: Boolean = true,
     isDecorative: Boolean = false,
     size: Dp,
@@ -231,7 +240,7 @@ private fun ActionButton(
         modifier = modifier.size(size),
         contentAlignment = Alignment.Center,
     ) {
-        Icon(painter = icon, contentDescription = null, tint = MaterialTheme.colorScheme.onSurfaceVariant)
+        ActionIcon(icon = icon, contentDescription = null, animateIconChange = animateIconChange, tint = MaterialTheme.colorScheme.onSurfaceVariant)
     }
 } else {
     IconButton(
@@ -239,7 +248,24 @@ private fun ActionButton(
         enabled = isEnabled,
         onClick = onClick,
     ) {
-        Icon(painter = icon, contentDescription = contentDescription)
+        ActionIcon(icon = icon, contentDescription = contentDescription, animateIconChange = animateIconChange)
+    }
+}
+
+/** Keep a toggle's icon transition inside its stable button, including the decorative sticky-header copy. */
+@Composable
+private fun ActionIcon(
+    icon: Painter,
+    contentDescription: String?,
+    animateIconChange: Boolean,
+    tint: Color = LocalContentColor.current,
+) {
+    if (animateIconChange) {
+        Crossfade(targetState = icon) { painter ->
+            Icon(painter = painter, contentDescription = contentDescription, tint = tint)
+        }
+    } else {
+        Icon(painter = icon, contentDescription = contentDescription, tint = tint)
     }
 }
 

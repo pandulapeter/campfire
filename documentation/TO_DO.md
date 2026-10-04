@@ -9,13 +9,14 @@
 -->
 # To do
 ## Bugs / issues
-- It's too easy to accidentally change a setlist's order
 - Import multiple files -> see details -> open one and delete / edit it from menu -> return to import details screen to see an outdated state
 - The Setlist assignments bottom sheet has an overshoot efect that interferes with the bottom sheet's default drag handling, while the Song assignments bottom sheet doesn't. The Links sheet is also inconsistent - review, find all similar issues, and fix.
 - The cover art bottom sheet has two primary actions
 
 ## Improvements
+- Add validators to input fields
 - Maybe all bottom sheets with song names in their headers could show the cover art for the song
+- The Setlist screen should include song durations on the cards + a total for the setlist (right after the countdown if enabled, or instead of the countdown if it isn't). If some songs don't have a duration set / it's not a valid duration, add a + sign after the total duration of the setlist (if none are valid, don't display duration)
 - Reset all filters button
 - Add cover arts to the Song assignments bottom sheet list items
 - Cover art bottom sheet: do we even need search input fields here?
@@ -37,7 +38,7 @@
 - Optional close confirmation dialog on relevant platforms
 - Add support for Latin and Nashville notations
 - Chord diagrams (guitar, ukulele, keyboard) - user library, variations
-- External monitor support for lyrics only...? Maybe as a new window on desktop
+- External monitor support for lyrics only...? Maybe as a new window on desktop, lyric projection via AirPlay / Chromecast, etc
 - Streaming zip writer on all platforms
 - First time user experience tutorial ?
 - Native iOS, macOS, feel (overscroll, touch feedback, Liquid Glass)

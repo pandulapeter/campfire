@@ -140,6 +140,7 @@ fun CampfireViewModel.handleKeyEvent(keyEvent: KeyEvent, onExit: () -> Unit): Bo
         // this handler sees the key first and would consume it either way.
         val search = currentSearch
         when {
+            isSetlistReordering -> navigateBack()
             search?.isOpen?.value == true -> search.close()
             backStack.size > 1 -> navigateBack()
             else -> requestExit(onExit)

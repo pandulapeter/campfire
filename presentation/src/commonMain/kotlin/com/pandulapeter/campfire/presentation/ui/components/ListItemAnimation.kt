@@ -98,6 +98,7 @@ internal fun ScrollToTopWhenChanged(
     contents: Any?,
     anchor: ListAnchor? = null,
     itemIndex: (Any) -> Int? = { null },
+    scrollToTopOnKeyChange: Boolean = true,
 ) {
     var lastScrollToTopKey by rememberSaveable { mutableStateOf(key) }
     val heldTop = remember { HeldTop(contents) }
@@ -108,7 +109,8 @@ internal fun ScrollToTopWhenChanged(
         val hasKeyChanged = key != lastScrollToTopKey
         if (hasKeyChanged) {
             lastScrollToTopKey = key
-            heldTop.isHolding = true
+            // Opting out lets the grid retain its visible item by key when a filter is removed.
+            heldTop.isHolding = scrollToTopOnKeyChange
             heldTop.anchoredItem = anchor?.take()
         }
         val anchoredItem = heldTop.anchoredItem
@@ -123,7 +125,7 @@ internal fun ScrollToTopWhenChanged(
                     anchor?.animateFrom(anchoredItem.visibleOffsets, coroutineScope)
                 }
             }
-        } else if (hasKeyChanged) {
+        } else if (hasKeyChanged && scrollToTopOnKeyChange) {
             listState.requestScrollToItem(0)
         } else if (heldTop.isHolding && contents !== heldTop.contents && !listState.isScrollInProgress) {
             listState.requestScrollToItem(

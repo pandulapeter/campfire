@@ -38,6 +38,7 @@ import org.jetbrains.compose.resources.painterResource
  *
  * @param contentDescription What the button is called, since it is an icon.
  * @param createLabel The entry that makes the new thing here rather than importing it.
+ * @param onItemSelected Called before either menu action starts.
  * @param onCreate Opens the dialog of [createLabel], called once the menu is closed.
  */
 @Composable
@@ -46,6 +47,7 @@ internal fun NewItemMenu(
     contentDescription: String,
     createLabel: String,
     onCreate: () -> Unit,
+    onItemSelected: () -> Unit = {},
 ) {
     val filePicker = LocalFilePicker.current
     OverflowMenu(
@@ -61,12 +63,22 @@ internal fun NewItemMenu(
         DropdownMenuItem(
             text = { Text(createLabel) },
             leadingIcon = { Icon(painter = painterResource(Res.drawable.ic_edit), contentDescription = null) },
-            onClick = { select { onCreate() } },
+            onClick = {
+                select {
+                    onItemSelected()
+                    onCreate()
+                }
+            },
         )
         DropdownMenuItem(
             text = { Text(stringResource(Res.string.import_files)) },
             leadingIcon = { Icon(painter = painterResource(Res.drawable.ic_import), contentDescription = null) },
-            onClick = { select { viewModel.importFiles(filePicker) } },
+            onClick = {
+                select {
+                    onItemSelected()
+                    viewModel.importFiles(filePicker)
+                }
+            },
         )
     }
 }

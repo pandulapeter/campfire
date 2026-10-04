@@ -57,6 +57,7 @@ internal fun SongSortMenu(
 internal fun SetlistSortMenu(
     modifier: Modifier = Modifier,
     viewModel: CampfireViewModel,
+    onSortingModeChanged: () -> Unit = {},
 ) {
     val userPreferences by viewModel.userPreferences.collectAsStateWithLifecycle()
     SortMenu(
@@ -67,7 +68,10 @@ internal fun SetlistSortMenu(
             UserPreferences.SetlistSortingMode.BY_TITLE to stringResource(Res.string.setlists_sorting_mode_by_title),
         ),
         selected = userPreferences?.setlistSortingMode,
-        onSelected = viewModel::setSetlistSortingMode,
+        onSelected = {
+            if (it != userPreferences?.setlistSortingMode) onSortingModeChanged()
+            viewModel.setSetlistSortingMode(it)
+        },
     )
 }
 

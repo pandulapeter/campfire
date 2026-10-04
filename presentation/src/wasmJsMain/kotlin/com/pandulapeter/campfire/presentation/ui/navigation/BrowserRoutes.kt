@@ -56,6 +56,8 @@ internal object BrowserRoutes {
                 CampfireDestination.Setlists -> {
                     add(SETLISTS)
                     if (viewModel.setlistsSearch.isOpen.value) add("$SETLISTS/$SEARCH")
+                    // A transient step with the same address gives browser Back a mode to dismiss before the tab.
+                    if (viewModel.isSetlistReordering && !viewModel.setlistsSearch.isOpen.value) add(SETLISTS)
                 }
 
                 CampfireDestination.Settings -> {

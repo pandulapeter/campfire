@@ -18,6 +18,10 @@ import com.pandulapeter.campfire.presentation.resources.ic_archive
 import com.pandulapeter.campfire.presentation.resources.ic_delete
 import com.pandulapeter.campfire.presentation.resources.ic_duplicate
 import com.pandulapeter.campfire.presentation.resources.ic_edit
+import com.pandulapeter.campfire.presentation.resources.ic_reorder_songs
+import com.pandulapeter.campfire.presentation.resources.ic_reorder_songs_done
+import com.pandulapeter.campfire.presentation.resources.setlists_done_reordering
+import com.pandulapeter.campfire.presentation.resources.setlists_reorder
 import com.pandulapeter.campfire.presentation.resources.setlists_export
 import com.pandulapeter.campfire.presentation.resources.ic_export
 import com.pandulapeter.campfire.presentation.resources.ic_songs
@@ -33,12 +37,9 @@ import com.pandulapeter.campfire.presentation.ui.CampfireViewModel
 import org.jetbrains.compose.resources.painterResource
 
 /**
- * Everything that can be done to one setlist, at the end of its [SectionHeader]: "Song assignments" as a button where
- * the header has the room for it, followed by an overflow button ([ActionsMenu]) with "Edit" first, the way a song
- * card puts its assignments before its menu and keeps its editor inside. When the header has no room for assignments,
- * they follow "Edit" in the menu. Duplicating, archiving, exporting and deleting also stay in the menu. "Edit" is where
- * a setlist is renamed, and also the one place its description is written, since the two are the whole of what the
- * user gets to say about it.
+ * Everything that can be done to one setlist, at the end of its [SectionHeader]. Reordering and song assignments
+ * appear as buttons when the header has room, otherwise they stay in the overflow menu. Reordering becomes
+ * "Done reordering" while active. Editing, duplicating, archiving, exporting and deleting stay in the menu.
  *
  * The whole of it is absent in performance mode, which the header decides: it is every way of changing a setlist in
  * one place, so there is nothing here to keep.
@@ -46,6 +47,7 @@ import org.jetbrains.compose.resources.painterResource
  * @param modifier Put on the whole row of buttons, whose largest width is the room the actions may take.
  * @param buttonModifier Put on every button.
  * @param isDecorative Draws the icons alone, for the header's copy that is being pushed away.
+ * @param onReorder Toggles reordering mode when this setlist has enough songs to reorder.
  */
 @Composable
 internal fun SetlistActions(
@@ -54,13 +56,15 @@ internal fun SetlistActions(
     viewModel: CampfireViewModel,
     setlist: Setlist,
     isDecorative: Boolean = false,
+    onReorder: (() -> Unit)? = null,
+    isReordering: Boolean = false,
 ) {
     ActionsMenu(
         modifier = modifier,
         buttonModifier = buttonModifier,
         contentDescription = stringResource(Res.string.setlists_actions),
         isDecorative = isDecorative,
-        items = listOf(
+        items = listOfNotNull(
             ActionsMenuItem(
                 title = stringResource(Res.string.setlists_edit_details),
                 icon = painterResource(Res.drawable.ic_edit),
@@ -72,6 +76,15 @@ internal fun SetlistActions(
                 icon = painterResource(Res.drawable.ic_songs),
                 onClick = { viewModel.showDialog(CampfireViewModel.DialogType.SongPicker(setlist)) },
             ),
+            onReorder?.let {
+                ActionsMenuItem(
+                    title = stringResource(if (isReordering) Res.string.setlists_done_reordering else Res.string.setlists_reorder),
+                    icon = painterResource(if (isReordering) Res.drawable.ic_reorder_songs_done else Res.drawable.ic_reorder_songs),
+                    key = "reorder_songs",
+                    animateIconChange = true,
+                    onClick = it,
+                )
+            },
             ActionsMenuItem(
                 title = stringResource(Res.string.setlists_duplicate_setlist),
                 icon = painterResource(Res.drawable.ic_duplicate),

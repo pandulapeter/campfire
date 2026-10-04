@@ -9,6 +9,13 @@
  */
 package com.pandulapeter.campfire.presentation.ui.screens.setlists
 
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.expandHorizontally
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.scaleIn
+import androidx.compose.animation.scaleOut
+import androidx.compose.animation.shrinkHorizontally
 import androidx.compose.animation.animateContentSize
 import androidx.compose.animation.core.animateDpAsState
 import androidx.compose.foundation.clickable
@@ -23,6 +30,8 @@ import androidx.compose.foundation.lazy.grid.GridItemSpan
 import androidx.compose.foundation.lazy.grid.LazyGridState
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.itemsIndexed
+import androidx.compose.material3.ExtendedFloatingActionButton
+import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -40,6 +49,7 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.platform.LocalLayoutDirection
+import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.semantics.CustomAccessibilityAction
 import androidx.compose.ui.semantics.customActions
 import androidx.compose.ui.semantics.clearAndSetSemantics
@@ -47,10 +57,15 @@ import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.navigationevent.NavigationEventInfo
+import androidx.navigationevent.compose.NavigationBackHandler
+import androidx.navigationevent.compose.rememberNavigationEventState
+import com.pandulapeter.campfire.presentation.ui.components.isAnyOverflowMenuOpen
 import com.pandulapeter.campfire.data.model.domain.Setlist
 import com.pandulapeter.campfire.data.model.domain.UserPreferences
 import com.pandulapeter.campfire.presentation.resources.Res
 import com.pandulapeter.campfire.presentation.resources.ic_add
+import com.pandulapeter.campfire.presentation.resources.ic_reorder_songs_done
 import com.pandulapeter.campfire.presentation.resources.ic_archive
 import com.pandulapeter.campfire.presentation.resources.ic_move_down
 import com.pandulapeter.campfire.presentation.resources.ic_move_up
@@ -63,6 +78,7 @@ import com.pandulapeter.campfire.presentation.resources.setlists_countdown_today
 import com.pandulapeter.campfire.presentation.resources.setlists_countdown_tomorrow
 import com.pandulapeter.campfire.presentation.resources.setlists_countdown_yesterday
 import com.pandulapeter.campfire.presentation.resources.setlists_create_setlist
+import com.pandulapeter.campfire.presentation.resources.setlists_done_reordering
 import com.pandulapeter.campfire.presentation.resources.setlists_move_down
 import com.pandulapeter.campfire.presentation.resources.setlists_move_up
 import com.pandulapeter.campfire.presentation.resources.setlists_new_setlist
@@ -136,6 +152,19 @@ internal fun SetlistsScreen(
     val isPerformanceModeEnabled by viewModel.isPerformanceModeEnabled.collectAsStateWithLifecycle()
     val setlistsPlaceholder by viewModel.setlistsPlaceholder.collectAsStateWithLifecycle()
     val visibleDialog by viewModel.visibleDialog.collectAsStateWithLifecycle()
+    val keyboardController = LocalSoftwareKeyboardController.current
+    // Not saveable: returning to this screen always starts in browsing mode.
+    val reorderingSetlistFileName = viewModel.reorderingSetlistFileName
+    val isScreenActive = viewModel.backStack.lastOrNull() == CampfireDestination.Setlists
+    val isReordering = reorderingSetlistFileName != null && isScreenActive && !isPerformanceModeEnabled
+    val isSearchOpen by viewModel.setlistsSearch.isOpen.collectAsStateWithLifecycle()
+    val userPreferences by viewModel.userPreferences.collectAsStateWithLifecycle()
+    LaunchedEffect(isSearchOpen) {
+        if (isSearchOpen) viewModel.reorderingSetlistFileName = null
+    }
+    LaunchedEffect(userPreferences?.setlistSortingMode) {
+        viewModel.reorderingSetlistFileName = null
+    }
     val columnCount = layout.columnCount
     HideKeyboardWhenScrolledDown(listState, isEnabled = visibleDialog == null)
     LaunchedEffect(viewModel, listState) {
@@ -162,6 +191,16 @@ internal fun SetlistsScreen(
                 columnCount = columnCount,
                 contentPadding = contentPadding,
                 appBarOverlap = appBarOverlap,
+                reorderingSetlistFileName = reorderingSetlistFileName,
+                isReordering = isReordering,
+                isScreenActive = isScreenActive,
+                onReorderingSetlistChanged = {
+                    viewModel.reorderingSetlistFileName = it
+                    if (it != null) {
+                        keyboardController?.hide()
+                        viewModel.setlistsSearch.close()
+                    }
+                },
             )
         },
     ) {
@@ -178,16 +217,24 @@ internal fun SetlistsScreen(
                     contentDescription = stringResource(Res.string.setlists_new_setlist),
                     createLabel = stringResource(Res.string.setlists_create_setlist),
                     onCreate = { viewModel.showDialog(CampfireViewModel.DialogType.NewSetlist) },
+                    onItemSelected = { viewModel.reorderingSetlistFileName = null },
                 )
             },
             actions = {
                 SetlistSortMenu(
                     modifier = Modifier.overlappingAction(),
                     viewModel = viewModel,
+                    onSortingModeChanged = { viewModel.reorderingSetlistFileName = null },
                 )
             },
         )
     }
+    val backGesture = rememberNavigationEventState(currentInfo = NavigationEventInfo.None)
+    NavigationBackHandler(
+        state = backGesture,
+        isBackEnabled = isReordering && visibleDialog == null && !isAnyOverflowMenuOpen,
+        onBackCompleted = { viewModel.reorderingSetlistFileName = null },
+    )
 }
 
 @Composable
@@ -198,6 +245,10 @@ private fun SetlistList(
     columnCount: Int,
     contentPadding: PaddingValues,
     appBarOverlap: () -> AppBarOverlap,
+    reorderingSetlistFileName: String?,
+    isReordering: Boolean,
+    isScreenActive: Boolean,
+    onReorderingSetlistChanged: (String?) -> Unit,
 ) {
     val setlistsWithSongs by viewModel.setlistsWithSongs.collectAsStateWithLifecycle()
     val setlists by viewModel.setlists.collectAsStateWithLifecycle()
@@ -214,6 +265,13 @@ private fun SetlistList(
     val today by rememberToday()
     // Read once each, so that the branches below and the placeholders they render can never disagree about them.
     val setlistsPlaceholder = viewModel.setlistsPlaceholder.collectAsStateWithLifecycle().value
+    LaunchedEffect(isScreenActive, isPerformanceModeEnabled, setlistsWithSongs) {
+        if (!isScreenActive || isPerformanceModeEnabled ||
+            setlistsWithSongs.none { it.setlist.fileName == reorderingSetlistFileName && it.entries.size > 1 }
+        ) {
+            onReorderingSetlistChanged(null)
+        }
+    }
     // Lyrics only mode takes the chords out of the viewer, and the key is the shortest way of writing them down.
     val shouldShowChords = userPreferences?.isLyricsOnlyModeEnabled != true
     val isCoverArtEnabled = userPreferences?.isCoverArtEnabled == true
@@ -280,6 +338,8 @@ private fun SetlistList(
         // lives at the end and must stay within reach there.
         key = "$searchedQuery|${userPreferences?.setlistSortingMode?.name}",
         contents = setlistsWithSongs,
+        // Closing search to rearrange restores the full list around its visible item, not from the top.
+        scrollToTopOnKeyChange = !isReordering,
     )
 
     // The header row reaches through the grid's end padding to the edge the app bar's reach is measured from, while
@@ -290,7 +350,7 @@ private fun SetlistList(
             columns = ListColumns(columnCount),
             modifier = gridModifier.bounceScrollableContent(listState),
             state = listState,
-            contentPadding = contentPadding.only(start = true, end = true, bottom = true, extraEnd = FAST_SCROLLER_WIDTH, extraBottom = 8.dp),
+            contentPadding = contentPadding.only(start = true, end = true, bottom = true, extraEnd = FAST_SCROLLER_WIDTH, extraBottom = if (isReordering) 88.dp else 8.dp),
         ) {
             // The setlists are what this screen is about, and they are listed whenever there are any - an empty library
             // included, where they are simply empty and each offers to be filled. The library's own empty state belongs
@@ -340,6 +400,15 @@ private fun SetlistList(
                                         buttonModifier = buttonModifier,
                                         viewModel = viewModel,
                                         setlist = setlistWithSongs.setlist,
+                                        isReordering = isReordering && reorderingSetlistFileName == setlistWithSongs.setlist.fileName,
+                                        onReorder = if (setlistWithSongs.entries.size > 1) {
+                                            {
+                                                onReorderingSetlistChanged(
+                                                    if (reorderingSetlistFileName == setlistWithSongs.setlist.fileName) null
+                                                    else setlistWithSongs.setlist.fileName,
+                                                )
+                                            }
+                                        } else null,
                                     )
                                 }
                             },
@@ -381,16 +450,16 @@ private fun SetlistList(
                     ) { rowIndex, row ->
                         val entry = row.entry
                         val key = SetlistItemKey(setlistFileName = setlistWithSongs.setlist.fileName, songFileName = entry.songFileName)
-                        // A setlist of one song has no order to change, so its row offers no grip and no long press to
-                        // drag it by: a handle that can only put the row back where it was promises something it cannot do.
-                        val isReorderable = !isPerformanceModeEnabled && setlistWithSongs.entries.size > 1
+                        // Explicit move actions remain available while browsing; only drag gestures require the mode.
+                        val canMove = !isPerformanceModeEnabled && setlistWithSongs.entries.size > 1
+                        val isReorderable = canMove && isReordering && reorderingSetlistFileName == setlistWithSongs.setlist.fileName
                         // The drag written as two steps, for whoever cannot drag: a screen reader, a keyboard. Each is the
                         // same single write a finished drag makes, and a row with nowhere to go in a direction is offered
                         // no step that way.
-                        val onMoveUp: (() -> Unit)? = if (isReorderable && rowIndex > 0) {
+                        val onMoveUp: (() -> Unit)? = if (canMove && rowIndex > 0) {
                             { viewModel.reorderSetlist(setlistFileName = setlistWithSongs.setlist.fileName, songFileNames = songFileNames.movedOnePlace(rowIndex, by = -1)) }
                         } else null
-                        val onMoveDown: (() -> Unit)? = if (isReorderable && rowIndex < rows.lastIndex) {
+                        val onMoveDown: (() -> Unit)? = if (canMove && rowIndex < rows.lastIndex) {
                             { viewModel.reorderSetlist(setlistFileName = setlistWithSongs.setlist.fileName, songFileNames = songFileNames.movedOnePlace(rowIndex, by = 1)) }
                         } else null
                         val moveUpLabel = stringResource(Res.string.setlists_move_up)
@@ -420,10 +489,8 @@ private fun SetlistList(
                         ) { isBeingDragged ->
                             val elevation by animateDpAsState(if (isBeingDragged) 8.dp else 0.dp)
                             val containerColor = draggedListItemContainerColor(isBeingDragged)
-                            // The long press that reorders a row is the gesture the drag handle is there to
-                            // advertise, which leaves a touch platform no long press for the actions a song
-                            // list usually hides behind one - so the overflow button is shown on every
-                            // platform here rather than on the pointer driven ones alone.
+                            // Keep the overflow button available on touch platforms too, including while a
+                            // long press belongs to reordering rather than the song's actions.
                             val actions: (@Composable () -> Unit)? = if (isPerformanceModeEnabled) {
                                 null
                             } else {
@@ -433,8 +500,15 @@ private fun SetlistList(
                                     ) {
                                         // The grip goes in front of the overflow button rather than after it, so that
                                         // the button lands exactly where the songs screen has its own.
-                                        if (isReorderable) {
-                                            DragHandle(modifier = Modifier.draggableHandle(onDragStarted = onDragStarted, onDragStopped = onDragStopped))
+                                        AnimatedVisibility(
+                                            visible = isReorderable,
+                                            enter = fadeIn() + expandHorizontally(),
+                                            exit = fadeOut() + shrinkHorizontally(),
+                                        ) {
+                                            DragHandle(
+                                                modifier = if (isReorderable) Modifier.draggableHandle(onDragStarted = onDragStarted, onDragStopped = onDragStopped)
+                                                else Modifier,
+                                            )
                                         }
                                         SetlistEntryActions(
                                             viewModel = viewModel,
@@ -522,8 +596,23 @@ private fun SetlistList(
             setlistsWithSongs = setlistsWithSongs,
             endPadding = headerEndPadding,
             isPerformanceModeEnabled = isPerformanceModeEnabled,
+            reorderingSetlistFileName = reorderingSetlistFileName.takeIf { isReordering },
             appBarOverlap = appBarOverlap,
         )
+        AnimatedVisibility(
+            visible = isReordering,
+            modifier = Modifier.align(Alignment.BottomEnd)
+                .padding(contentPadding.only(end = true, bottom = true, extraEnd = FAST_SCROLLER_WIDTH))
+                .padding(16.dp),
+            enter = fadeIn() + scaleIn(),
+            exit = fadeOut() + scaleOut(),
+        ) {
+            ExtendedFloatingActionButton(
+                onClick = { onReorderingSetlistChanged(null) },
+                icon = { Icon(painterResource(Res.drawable.ic_reorder_songs_done), contentDescription = null) },
+                text = { Text(stringResource(Res.string.setlists_done_reordering)) },
+            )
+        }
         FastScroller(
             modifier = Modifier.align(Alignment.TopEnd).belowAppBarOverlap(appBarOverlap).padding(contentPadding.only(top = true, end = true, bottom = true)),
             gridState = listState,
@@ -542,12 +631,14 @@ private fun PushedSetlistHeader(
     setlistsWithSongs: List<CampfireViewModel.SetlistWithSongs>,
     endPadding: Dp,
     isPerformanceModeEnabled: Boolean,
+    reorderingSetlistFileName: String?,
     appBarOverlap: () -> AppBarOverlap,
 ) {
     val pushed = pushedSectionHeader(listState, contentType = "setlist_header")
     val key by remember(pushed) { derivedStateOf { pushed.value?.key } }
     val setlistsByKey = remember(setlistsWithSongs) { setlistsWithSongs.associateBy { "setlist_${it.setlist.fileName}" } }
-    val setlist = key?.let { setlistsByKey[it] }?.setlist ?: return
+    val setlistWithSongs = key?.let { setlistsByKey[it] } ?: return
+    val setlist = setlistWithSongs.setlist
     val today by rememberToday()
     SectionHeader(
         modifier = Modifier.pushedSectionHeaderPlacement(pushed).clearAndSetSemantics {},
@@ -566,6 +657,8 @@ private fun PushedSetlistHeader(
                     viewModel = viewModel,
                     setlist = setlist,
                     isDecorative = true,
+                    isReordering = reorderingSetlistFileName == setlist.fileName,
+                    onReorder = if (setlistWithSongs.entries.size > 1) ({}) else null,
                 )
             }
         },

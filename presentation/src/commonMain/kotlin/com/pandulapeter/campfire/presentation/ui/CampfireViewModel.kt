@@ -334,6 +334,12 @@ class CampfireViewModel(
     internal val songsSearch = restoreSearch(SONGS_SEARCH_KEY)
     internal val setlistsSearch = restoreSearch(SETLISTS_SEARCH_KEY)
 
+    /** Transient mode shared with desktop Escape and browser history; never restored after leaving the screen. */
+    internal var reorderingSetlistFileName by mutableStateOf<String?>(null)
+
+    internal val isSetlistReordering: Boolean
+        get() = backStack.lastOrNull() == CampfireDestination.Setlists && reorderingSetlistFileName != null
+
     /**
      * Open for good, since its field is part of the import screen's list rather than something the screen opens, and
      * emptied whenever that screen is left. Not restored, since the screen it belongs to never is, see [backStack].
@@ -1300,6 +1306,7 @@ class CampfireViewModel(
     private fun updateBackStack(update: SnapshotStateList<CampfireDestination>.() -> Unit) {
         if (isNavigationTransitionRunning) navigationGeneration++
         backStack.update()
+        if (backStack.lastOrNull() != CampfireDestination.Setlists) reorderingSetlistFileName = null
         if (backStack.none { it is CampfireDestination.SongEditor }) retainedEditorField = null
         songDetailsCurrentSongs.keys.retainAll(backStack.mapNotNullTo(mutableSetOf()) { (it as? CampfireDestination.SongDetails)?.id })
         val hadImportReport = isImportReportOnBackStack
@@ -1512,6 +1519,7 @@ class CampfireViewModel(
      */
     fun navigateBack() {
         when {
+            isSetlistReordering -> reorderingSetlistFileName = null
             hasUnsavedEditorChanges.value && backStack.lastOrNull() is CampfireDestination.SongEditor -> {
                 showDialog(DialogType.UnsavedChanges)
             }
