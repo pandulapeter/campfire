@@ -296,6 +296,7 @@ internal fun CampfireDialogs(
             title = stringResource(Res.string.setlists_edit_details),
             subtitle = dialog.setlist.title,
             isTitleFocused = false,
+            requiresChanges = true,
             initialTitle = dialog.setlist.title,
             initialDescription = dialog.setlist.description,
             initialDate = dialog.setlist.date,
@@ -920,12 +921,16 @@ private fun rememberSingleConfirmation(): (confirm: () -> Unit) -> Unit {
  * @param isTitleFocused Whether the dialog opens with the caret in the title. A new setlist and a copy are opened to be
  *   named, while an edit is as often opened to look the setlist's details over or to change its date, which a keyboard
  *   coming up over the dialog would only be in the way of.
+ * @param requiresChanges Whether the confirm button waits for something to be changed. Only an edit has nothing to
+ *   save as it opens; a copy and a setlist named after a search are opened on a title that is meant to be accepted as
+ *   it is.
  */
 @Composable
 private fun SetlistDetailsDialog(
     title: String,
     subtitle: String = "",
     isTitleFocused: Boolean = true,
+    requiresChanges: Boolean = false,
     initialTitle: String = "",
     initialDescription: String = "",
     initialDate: LocalDate? = null,
@@ -949,8 +954,9 @@ private fun SetlistDetailsDialog(
     val date = LocalDate.parse(dateText)
     var isCountdownShown by rememberSaveable { mutableStateOf(initialIsCountdownShown) }
     val isValid = setlistTitle.text.isNotBlank()
-    val hasChanges = setlistTitle.text.trim() != initialTitle.trim() || description.trim() != initialDescription.trim() ||
-        dateText != startingDateText || isCountdownShown != initialIsCountdownShown
+    val hasChanges = !requiresChanges || setlistTitle.text.trim() != initialTitle.trim() ||
+        description.trim() != initialDescription.trim() || dateText != startingDateText ||
+        isCountdownShown != initialIsCountdownShown
     var hasTitleBeenFocused by rememberSaveable { mutableStateOf(false) }
     val scrollState = rememberScrollState()
     val focusRequester = rememberFirstFieldFocusRequester(isFocused = isTitleFocused)
