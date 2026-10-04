@@ -662,14 +662,13 @@ private fun ExportScreen(
                             }
                         }
                     }
-                    if (content == PrintScreenContent.LOADED && !isFiles && hasPages) {
-                        PageButtons(
-                            modifier = Modifier.align(Alignment.TopEnd).padding(PAGE_MARGIN),
-                            page = pagerState.currentPage,
-                            pageCount = pageCount,
-                            onTurn = { target -> pageScope.launch { pagerState.animateScrollToPage(target.coerceIn(0, pageCount - 1)) } },
-                        )
-                    }
+                    PageButtons(
+                        modifier = Modifier.align(Alignment.TopEnd).padding(PAGE_MARGIN),
+                        isVisible = content == PrintScreenContent.LOADED && !isFiles && hasPages,
+                        page = pagerState.currentPage,
+                        pageCount = pageCount,
+                        onTurn = { target -> pageScope.launch { pagerState.animateScrollToPage(target.coerceIn(0, pageCount - 1)) } },
+                    )
                 }
             }
             SaveButton(
@@ -1500,15 +1499,28 @@ private fun PrintPages(
     }
 }
 
-/** The page buttons and the count between them, on a pill floating below the toolbar. */
+/**
+ * The page buttons and the count between them, on a pill floating below the toolbar, faded with the preview whose pages
+ * they turn, which crossfades to the files a change of the format shows.
+ */
 @Composable
 private fun PageButtons(
     modifier: Modifier,
+    isVisible: Boolean,
+    page: Int,
+    pageCount: Int,
+    onTurn: (Int) -> Unit,
+) = AnimatedVisibility(isVisible, modifier = modifier, enter = fadeIn(), exit = fadeOut()) {
+    PageButtonsPill(page = page, pageCount = pageCount, onTurn = onTurn)
+}
+
+@Composable
+private fun PageButtonsPill(
     page: Int,
     pageCount: Int,
     onTurn: (Int) -> Unit,
 ) = Surface(
-    modifier = modifier.height(PAGE_BUTTONS_HEIGHT),
+    modifier = Modifier.height(PAGE_BUTTONS_HEIGHT),
     shape = CircleShape,
     color = MaterialTheme.colorScheme.surfaceContainerHigh,
     shadowElevation = 6.dp,
