@@ -30,6 +30,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clipToBounds
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.input.nestedscroll.NestedScrollConnection
+import androidx.compose.ui.input.nestedscroll.NestedScrollDispatcher
 import androidx.compose.ui.input.nestedscroll.NestedScrollSource
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.input.pointer.PointerEvent
@@ -67,14 +68,22 @@ internal fun Modifier.bounceScrollableContent(state: ScrollableState, orientatio
     val scope = rememberCoroutineScope()
     val density = LocalDensity.current.density
     var bounds by remember { mutableStateOf(IntSize.Zero) }
-    val connection = remember(state, effect, orientation) {
+    val dispatcher = remember { NestedScrollDispatcher() }
+    val connection = remember(state, effect, orientation, dispatcher) {
         object : NestedScrollConnection {
             private var hasPulled = false
             override fun onPreScroll(available: Offset, source: NestedScrollSource): Offset {
                 if (state.canScrollForward || state.canScrollBackward || source != NestedScrollSource.UserInput) return Offset.Zero
                 val delta = if (orientation == Orientation.Vertical) Offset(0f, available.y) else Offset(available.x, 0f)
-                if (delta != Offset.Zero) hasPulled = true
-                effect.applyToScroll(delta, source) { Offset.Zero }
+                // The parents are offered the drag before it is taken for the stretch, as they would be offered what a
+                // list left over: a bottom sheet is dragged down by its content from its post-scroll, which runs only
+                // after this, and taking the whole drag here left a sheet whose content fits with no way to be pulled
+                // down but its handle.
+                val pull = delta - dispatcher.dispatchPostScroll(consumed = Offset.Zero, available = delta, source = source)
+                if (pull != Offset.Zero) {
+                    hasPulled = true
+                    effect.applyToScroll(pull, source) { Offset.Zero }
+                }
                 return delta
             }
 
@@ -88,7 +97,7 @@ internal fun Modifier.bounceScrollableContent(state: ScrollableState, orientatio
             }
         }
     }
-    val bounce = clipToBounds().overscroll(effect).nestedScroll(connection)
+    val bounce = clipToBounds().overscroll(effect).nestedScroll(connection, dispatcher)
     if (hasNativeOverscroll) return bounce
     return bounce.onSizeChanged { bounds = it }.pointerInput(state, effect, orientation, density) {
         var release: Job? = null
