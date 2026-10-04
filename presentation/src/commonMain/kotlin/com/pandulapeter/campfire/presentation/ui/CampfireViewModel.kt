@@ -2951,7 +2951,8 @@ class CampfireViewModel(
      */
     fun duplicateSetlist(setlist: Setlist, title: String, description: String, date: LocalDate, isCountdownShown: Boolean) = launchLibraryChange {
         reorderingSetlistFileName = null
-        if (setlists.value.firstOrNull { it.fileName == setlist.fileName }?.isArchived != false) return@launchLibraryChange
+        // An archived setlist is copied too, since a set that has been played is the likeliest start for the next one.
+        if (setlists.value.none { it.fileName == setlist.fileName }) return@launchLibraryChange
         val copy = createSetlist.invoke(title = title, description = description, date = date, isCountdownShown = isCountdownShown)
         saveSetlist(copy.copy(entries = setlist.entries))
     }

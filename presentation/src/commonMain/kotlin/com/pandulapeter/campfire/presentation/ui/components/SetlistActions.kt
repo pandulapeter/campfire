@@ -91,7 +91,6 @@ internal fun SetlistActions(
             },
             ActionsMenuItem(
                 title = stringResource(Res.string.setlists_duplicate_setlist),
-                isVisible = !setlist.isArchived,
                 icon = painterResource(Res.drawable.ic_duplicate),
                 isAlwaysInMenu = true,
                 onClick = { viewModel.showDialog(CampfireViewModel.DialogType.DuplicateSetlist(setlist)) },
