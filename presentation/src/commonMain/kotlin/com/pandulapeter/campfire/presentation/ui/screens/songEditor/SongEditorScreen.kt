@@ -366,9 +366,19 @@ private fun LoadedSongEditor(
     val windowContainerSize = LocalWindowInfo.current.containerSize
     val density = LocalDensity.current
     val isSmallScreen = with(density) { minOf(windowContainerSize.width, windowContainerSize.height).toDp() } < SMALL_SCREEN_SIZE
-    val imeHeight = with(density) { WindowInsets.ime.getBottom(this).toDp() }
-    val isKeyboardVisible = imeHeight > 0.dp
-    val isTypingInShortWindow = isKeyboardVisible && with(density) { windowContainerSize.height.toDp() } - imeHeight < SHORT_WINDOW_HEIGHT
+    // Derived rather than read here, so that the keyboard sliding in recomposes the editor only as it crosses a line
+    // these care about, not on every frame of its animation.
+    val ime = WindowInsets.ime
+    val windowHeight = with(density) { windowContainerSize.height.toDp() }
+    val isKeyboardVisibleState = remember(ime, density) { derivedStateOf { ime.getBottom(density) > 0 } }
+    val isTypingInShortWindowState = remember(ime, density, windowHeight) {
+        derivedStateOf {
+            val imeHeight = with(density) { ime.getBottom(this).toDp() }
+            imeHeight > 0.dp && windowHeight - imeHeight < SHORT_WINDOW_HEIGHT
+        }
+    }
+    val isKeyboardVisible by isKeyboardVisibleState
+    val isTypingInShortWindow by isTypingInShortWindowState
     CompactKeyboardEffect(isEnabled = isTypingInShortWindow && LocalWindowInfo.current.containerDpSize.height < SHORT_WINDOW_HEIGHT)
     var isToolbarExpanded by rememberSaveable {
         mutableStateOf(!isSmallScreen)
@@ -376,7 +386,11 @@ private fun LoadedSongEditor(
     // Collapse once when the keyboard appears. The user can reopen the shortcuts while typing, and closing
     // the keyboard leaves their current choice intact.
     LaunchedEffect(isKeyboardVisible) {
-        if (isKeyboardVisible && (isSmallScreen || isTypingInShortWindow)) isToolbarExpanded = false
+        if (!isKeyboardVisible) return@LaunchedEffect
+        // The keyboard's inset is animated, so its first frame is only a few pixels and a large window is not short
+        // yet: the rows are folded once the keyboard has grown far enough to make it so, if it ever does.
+        if (!isSmallScreen) snapshotFlow { isTypingInShortWindowState.value }.first { it }
+        isToolbarExpanded = false
     }
     // Key events only travel along the focus path, and nothing in the editor is focused until the text is clicked,
     // nor at all while the preview is the only pane - or after the panes change places, which composes the field
