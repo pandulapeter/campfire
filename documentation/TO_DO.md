@@ -11,7 +11,6 @@
 ## Bugs / issues
 
 ## Improvements
-- Add small cover art thumbnails to the Song assignments bottom sheet list items (to the end of each item)
 - Maybe all bottom sheets with song names in their headers could show the cover art for the song
 - Cover art bottom sheet: do we even need search input fields here? Right now it has two primary actions (Search and Save / Done)
 - Rename master branch to main

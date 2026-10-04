@@ -859,6 +859,8 @@ internal fun SwitchListItem(
  *   its checkbox up with that content.
  * @param isEnabled False for a box that cannot be changed from where the list was opened, which stays in its list,
  *   dimmed, showing what it holds.
+ * @param coverArtUrl The song's cover, drawn as a small thumbnail at the end of the row, after the text rather than
+ *   before it, where the checkbox already is.
  */
 @Composable
 internal fun CheckboxListItem(
@@ -868,6 +870,7 @@ internal fun CheckboxListItem(
     isChecked: Boolean,
     isEnabled: Boolean = true,
     horizontalInset: Dp = 0.dp,
+    coverArtUrl: String? = null,
     onCheckedChange: (Boolean) -> Unit,
 ) = ListItem(
     modifier = modifier
@@ -878,6 +881,15 @@ internal fun CheckboxListItem(
     headlineContent = { Text(title) },
     supportingContent = description?.let { { Text(it) } },
     leadingContent = { Checkbox(checked = isChecked, enabled = isEnabled, onCheckedChange = null) },
+    trailingContent = coverArtUrl?.let {
+        {
+            CoverArtImage(
+                modifier = Modifier.size(CHECKBOX_LIST_ITEM_COVER_SIZE),
+                url = it,
+                shape = MaterialTheme.shapes.small,
+            )
+        }
+    },
 )
 
 @Composable
@@ -1245,6 +1257,9 @@ private val SONG_CARD_LABELS_COVER_GAP = 8.dp
 
 /** The room between a card's cover and its text. */
 private val SONG_CARD_COVER_GAP = 12.dp
+
+/** A checklist row's cover as large as Material's leading avatar, which fits a row that is only a title. */
+private val CHECKBOX_LIST_ITEM_COVER_SIZE = 40.dp
 private val SONG_CARD_TWO_LINE_MIN_HEIGHT = 72.dp
 private val SONG_CARD_VERTICAL_CONTENT_PADDING = 12.dp
 

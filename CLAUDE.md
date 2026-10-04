@@ -651,7 +651,7 @@ the only possible one. The per-module `CLAUDE.md` files carry the detail; the sh
 ## Cover art
 
 A song names its cover in its own file (`{meta: cover …}`, see Conventions); the app shows it as a thumbnail at the start of
-the song cards, on the Songs and the Setlists screen alike, in the song details app bar before the title, and in the editor's, where it follows the text as it is typed, and keeps a copy of every one it has shown. The module `CLAUDE.md` files carry the detail;
+the song cards, on the Songs and the Setlists screen alike, at the end of the Song assignments sheet's rows, in the song details app bar before the title, and in the editor's, where it follows the text as it is typed, and keeps a copy of every one it has shown. The module `CLAUDE.md` files carry the detail;
 the short version:
 
 - **Every request is in `:data:source:remote`**, through the one Ktor client sync uses: `CoverArtRemoteSource`

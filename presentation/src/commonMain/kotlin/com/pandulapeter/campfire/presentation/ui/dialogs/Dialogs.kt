@@ -1788,6 +1788,7 @@ private fun SongPicker(
                     title = pickableSong.song.title,
                     description = pickableSong.song.artist.ifBlank { null },
                     isChecked = fileName in selectedSongFileNames,
+                    coverArtUrl = pickableSong.song.coverArtUrl?.takeIf { userPreferences?.isCoverArtEnabled == true },
                     onCheckedChange = { isChecked ->
                         selectedSongFileNames = if (isChecked) selectedSongFileNames + fileName else selectedSongFileNames - fileName
                         viewModel.setSetlistSongs(setlistFileName = setlist.fileName, songFileNames = selectedSongFileNames)
