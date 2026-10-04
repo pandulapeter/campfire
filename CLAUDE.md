@@ -21,9 +21,9 @@ loaded rather than a request about the user — see Web below. The Android build
 question is answered over IPC by the Play Store app; Campfire's own process makes no request — see Updates below.
 On Android and iOS the system's own device backup also carries the library and the settings — to the user's Google or
 iCloud backup, or straight to their next phone — but that is the operating system copying the app's files on the
-user's backup settings; Campfire's process makes no request for it, and the sync credentials and the sync index are
-not part of it on either (`app/android/src/main/res/xml`; on iOS a device-bound Keychain item and a file marked as
-excluded from backup).)
+user's backup settings; Campfire's process makes no request for it, and the sync credentials, the sync index, the editor
+draft and the cover copies are not part of it on either (`app/android/src/main/res/xml`; on iOS a device-bound Keychain
+item and files marked as excluded from backup).)
 
 ## Architecture
 

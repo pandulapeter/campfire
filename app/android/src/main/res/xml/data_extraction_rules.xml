@@ -13,12 +13,15 @@
   says the same for the versions before it, and the two have to be changed together.
 
   Each section is an allow-list - one <include> is enough to make it one - so whatever is not named here stays
-  behind, and that is how the two files that must not travel are kept out. sync-credentials.bin is encrypted with a
-  key that never leaves this device's Keystore, so a copy of it is noise anywhere else. sync-index.json records what
-  the last sync run saw from this device, and a copy that is days old, arriving on a device that has no account
-  connected, is a statement about a folder nobody can check: without it the first run on the new device compares the
-  two sides by content, which costs a listing and duplicates nothing. There are no <exclude> rules for them because
-  lint (FullBackupContent, fatal, so it fails a release build) rejects an exclude that is not inside an included path.
+  behind, and that is how everything else - the sync files, the editor draft and the cover copies - is kept out.
+  sync-credentials.bin is encrypted with a key that never leaves this device's Keystore, so a copy of it is noise
+  anywhere else. sync-index.json records what the last sync run saw from this device, and a copy that is days old,
+  arriving on a device that has no account connected, is a statement about a folder nobody can check: without it the
+  first run on the new device compares the two sides by content, which costs a listing and duplicates nothing.
+  editor-draft.json is a copy of unsaved text, which belongs to this device's session rather than to the library.
+  The covers/ copies are downloaded again from the address each song names. There are no <exclude> rules for them
+  because lint (FullBackupContent, fatal, so it fails a release build) rejects an exclude that is not inside an
+  included path.
 
   The paths are relative to Context.getFilesDir(), which is the root AndroidFileStorage hands to JvmFileStorage, and
   have to follow StorageDirectory.pathSegments and UserPreferencesLocalSourceImpl.FILE_NAME if those ever move.
