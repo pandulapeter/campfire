@@ -407,7 +407,8 @@ internal fun CampfireDialogs(
             title = stringResource(Res.string.cover_art_search_remove),
             text = textResource(Res.string.song_details_remove_cover_art_confirmation, dialog.song.title),
             confirmLabel = stringResource(Res.string.cover_art_search_remove),
-            onDismiss = viewModel::dismissDialog,
+            // Not removing the cover is not being done with it: the sheet the bin was tapped in comes back.
+            onDismiss = { viewModel.showDialog(CampfireViewModel.DialogType.CoverArtSearch(song = dialog.song, isEditorDraft = dialog.isEditorDraft)) },
             onConfirm = {
                 viewModel.setSongCoverArt(fileName = dialog.song.fileName, isEditorDraft = dialog.isEditorDraft, url = null)
                 viewModel.dismissDialog()

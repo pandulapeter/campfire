@@ -192,7 +192,7 @@ Everything else is `commonMain`:
   languages, Manage links, Set or Change cover art), which it goes back to once that is saved or closed. The song details
   overflow menu offers the same entries (`songInfoEditingActions`, then `SongMetadataActions.kt`'s `coverArtAction`). The editor preview's card has the same buttons, always, editing the text being typed. Links open
   their page in the sheet, named by their optional label or by the host without `www.`
-  (`linkLabel`), and are not followed from the editor's card. The cover art sheet's Remove cover asks for confirmation.
+  (`linkLabel`), and are not followed from the editor's card. The cover art sheet's Remove cover asks for confirmation, whose Cancel puts the cover art sheet back (searching again from the song's own fields).
   `SongMetadataDialog.kt` presents what the song is as a bottom-sheet form — title, subtitle, artist, album, composer, lyricist,
   and the year and the duration side by side; the key, capo, tempo and time are left to the editor, since they are part of writing
   the song down — the year typed as four digits at most, and the duration as digits that fill in from the right like a

@@ -3269,8 +3269,10 @@ class CampfireViewModel(
         if (dialogType !is DialogType.CoverArtSearch) clearCoverArtSearch()
         val previousDialog = _visibleDialog.value
         _underlyingSongInfo.value = when {
-            // The cover art sheet's Remove asks first, and the answer goes back to the sheet the cover art was opened from.
+            // The cover art sheet's Remove asks first, and either answer goes back to the sheet the cover art was opened
+            // from: Remove directly, Cancel through the cover art sheet it puts back.
             previousDialog is DialogType.CoverArtSearch && dialogType is DialogType.RemoveSongCoverArt -> _underlyingSongInfo.value
+            previousDialog is DialogType.RemoveSongCoverArt && dialogType is DialogType.CoverArtSearch -> _underlyingSongInfo.value
             else -> (previousDialog as? DialogType.SongInfo)
         }?.takeIf { parent ->
             dialogType is DialogType.SongEdit && !dialogType.isEditorDraft && dialogType.song.fileName == parent.song.fileName &&
