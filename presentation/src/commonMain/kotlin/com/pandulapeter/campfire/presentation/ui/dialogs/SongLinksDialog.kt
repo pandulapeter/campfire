@@ -102,9 +102,7 @@ internal fun SongLinksDialog(
     }
     val links = rows.map { it.link }
     val urls = links.map { ChordProLinks.usableUrl(it.url) }
-    val normalizedLinks = links.map { it.normalized() }
-    val canSave = urls.all { it != null } && urls.distinct().size == urls.size &&
-        normalizedLinks != dialog.links.map { it.normalized() }
+    val linksToSave = songLinksToSave(draft = links, offered = dialog.links)
     TextFieldBottomSheet(
         onDismissRequest = { viewModel.dismissSheet(dialog) },
         title = stringResource(Res.string.song_details_links_edit),
@@ -151,10 +149,12 @@ internal fun SongLinksDialog(
         },
         confirmButton = { close ->
             BottomSheetConfirmButton(
-                enabled = canSave,
+                enabled = linksToSave != null,
                 onClick = {
-                    viewModel.setSongLinks(fileName = dialog.song.fileName, isEditorDraft = dialog.isEditorDraft, links = links, offeredLinks = dialog.links)
-                    close()
+                    if (linksToSave != null) {
+                        viewModel.setSongLinks(fileName = dialog.song.fileName, isEditorDraft = dialog.isEditorDraft, links = linksToSave, offeredLinks = dialog.links)
+                        close()
+                    }
                 },
             ) { Text(stringResource(if (dialog.isEditorDraft) Res.string.done else Res.string.save)) }
         },
@@ -222,7 +222,8 @@ private fun SongLinkFields(
                 label = { Text(stringResource(Res.string.song_details_link_address)) },
                 trailingIcon = rememberClearTextButton(isVisible = link.url.isNotEmpty(), onClear = { onChange(link.copy(url = "")) }),
                 singleLine = true,
-                isError = isDuplicate || (link.url.isNotBlank() && ChordProLinks.usableUrl(link.url) == null),
+                isError = isDuplicate || (link.url.isNotBlank() && ChordProLinks.usableUrl(link.url) == null) ||
+                    (link.url.isBlank() && !link.name.isNullOrBlank()),
                 supportingText = if (isDuplicate) ({ Text(stringResource(Res.string.song_details_link_duplicate)) }) else null,
                 keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Uri, imeAction = ImeAction.Done),
                 keyboardActions = KeyboardActions(onDone = { keyboardController?.hide() }),
@@ -301,6 +302,19 @@ private val songLinkRowsSaver = listSaver<List<SongLinkRow>, String>(
     save = { rows -> rows.flatMap { listOf(it.link.url, it.link.name.orEmpty()) } },
     restore = { values -> values.chunked(2).map { ChordProLink(url = it[0], name = it[1].takeIf(String::isNotEmpty)) }.toRows() },
 )
+
+/**
+ * The links a Manage links draft writes, or null while Save has nothing valid to write. A row left wholly empty - the
+ * seeded one, or one added and never filled - is no link at all and is left out rather than blocking Save; a row with
+ * a name but no address, an address the file would not keep, or two rows with the same address block it, and so does
+ * a draft that writes what the song already has.
+ */
+internal fun songLinksToSave(draft: List<ChordProLink>, offered: List<ChordProLink>): List<ChordProLink>? {
+    val kept = draft.filterNot { it.url.isBlank() && it.name.isNullOrBlank() }
+    val urls = kept.map { ChordProLinks.usableUrl(it.url) }
+    if (urls.any { it == null } || urls.distinct().size != urls.size) return null
+    return kept.takeIf { links -> links.map { it.normalized() } != offered.map { it.normalized() } }
+}
 
 /** Compare the address and label as they will be written, keeping link order significant. */
 private fun ChordProLink.normalized() = copy(
