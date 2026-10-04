@@ -715,12 +715,13 @@ private fun ChordProTextField(
         )
     }
     val bodyLarge = MaterialTheme.typography.bodyLarge
-    val restingBottomInset = WindowInsets.contentEdges.asPaddingValues().calculateBottomPadding()
     // BasicTextField follows the caret whenever its viewport height changes. Keep the bottom spacing independent
     // of the scroll position: adding or removing it at the end of a touch drag resizes the focused field and sends
     // the scroll position back to the caret, interrupting the fling. Keyboard insets still resize it deliberately
-    // so that typing stays visible above the keyboard.
-    val endPadding = if (isCompactTyping) 0.dp else restingBottomInset + 32.dp
+    // so that typing stays visible above the keyboard. The field ends at the keyboard, or at the system bars where it
+    // is down, with room below the last line where the window has it: typing in a short window gives every line to
+    // the text, but none of the field may sit behind the keyboard.
+    val endPadding = if (isCompactTyping) 0.dp else 32.dp
     BasicTextField(
         modifier = modifier
             // The field only ever scrolls along one axis of its own, the vertical one when it holds more than a line,
@@ -732,15 +733,14 @@ private fun ChordProTextField(
             .fadingTopEdge(scrollState, MaterialTheme.colorScheme.background)
             .bounceHorizontalScroll(horizontalScrollState)
             // The keyboard reaches the field only through the content padding this screen was handed, see CampfireApp,
-            // and only the part of it that covers the field is applied, once: applying the whole inset a second time
-            // shrinks the field to a couple of lines as soon as the keyboard comes up. Top padding would sit outside
+            // and that padding is applied once, whole: applying the inset a second time shrinks the field to a couple
+            // of lines as soon as the keyboard comes up. Top padding would sit outside
             // the field's own scrolling, so the text would scroll under a strip of nothing below the toolbar rather
             // than up to its edge. The toolbar's own bottom
             // padding is the space between the two at rest.
             .padding(
                 EditorFieldPadding(
                     contentPadding = contentPadding,
-                    restingBottomInset = restingBottomInset,
                     endPadding = endPadding,
                 )
             ),
@@ -768,14 +768,11 @@ private fun ChordProTextField(
  * is composed: the bottom follows the keyboard, whose inset changes on every frame it slides for. Reading it while
  * composing would compose the whole field again on each of those frames. Scrolling does not change this padding,
  * so the field can keep its viewport height and let the caret move out of view during a drag or fling.
- *
- * Only the part of the handed padding that reaches higher than the resting inset is taken off the field, see
- * [ChordProTextField].
+ * The handed padding is applied once and whole, with [endPadding] below it, see [ChordProTextField].
  */
 @Stable
 private class EditorFieldPadding(
     private val contentPadding: PaddingValues,
-    private val restingBottomInset: Dp,
     private val endPadding: Dp,
 ) : PaddingValues {
 
@@ -785,8 +782,7 @@ private class EditorFieldPadding(
 
     override fun calculateRightPadding(layoutDirection: LayoutDirection) = contentPadding.calculateRightPadding(layoutDirection) + 16.dp
 
-    override fun calculateBottomPadding() = (contentPadding.calculateBottomPadding() - restingBottomInset).coerceAtLeast(0.dp) +
-            endPadding
+    override fun calculateBottomPadding() = contentPadding.calculateBottomPadding() + endPadding
 }
 
 /**
