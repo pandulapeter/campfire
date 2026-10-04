@@ -55,6 +55,7 @@ import com.pandulapeter.campfire.presentation.ui.components.fadingTopEdge
 import com.pandulapeter.campfire.presentation.ui.components.rememberClearTextButton
 import org.jetbrains.compose.resources.StringResource
 import com.pandulapeter.campfire.presentation.ui.platform.bounceVerticalScroll
+import com.pandulapeter.campfire.presentation.ui.platform.numericPlatformImeOptions
 
 /**
  * What a song is, as a form: every field is edited as a draft and only the ones changed are written, together, on Save.
@@ -158,6 +159,7 @@ internal fun SongMetadataField(
             capitalization = if (field.isNumeric) KeyboardCapitalization.None else KeyboardCapitalization.Sentences,
             keyboardType = if (field.isNumeric) KeyboardType.Number else KeyboardType.Text,
             imeAction = if (field == Field.entries.last()) ImeAction.Done else ImeAction.Next,
+            platformImeOptions = numericPlatformImeOptions.takeIf { field.isNumeric },
         ),
     )
 }
