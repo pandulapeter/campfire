@@ -111,12 +111,62 @@ class BaseLocalDataRepositoryTest {
         runCurrent()
 
         repository.add("x")
-        assertEquals(DataState.Idle(listOf("a", "x")), repository.states.last())
+        assertEquals(DataState.Loading(listOf("a", "x")), repository.states.last())
         load.cancelAndJoin()
 
         assertEquals(DataState.Loading<List<String>>(null), repository.states.last())
         repository.gate = null
         assertEquals(listOf("a", "b"), repository.load())
+    }
+
+    @Test
+    fun `a change during a first read is not published as the library`() = runTest {
+        val repository = TestRepository(backgroundScope, batches = listOf(listOf("a"), listOf("a", "b")))
+        val gate = CompletableDeferred<Unit>()
+        repository.gate = gate
+        launch { repository.load() }
+        runCurrent()
+
+        repository.add("x")
+        // The change is on disk by now, which is where the read that follows finds it.
+        repository.batches = listOf(listOf("a"), listOf("a", "b", "x"))
+        runCurrent()
+        assertTrue(repository.states.none { it is DataState.Idle })
+
+        gate.complete(Unit)
+        advanceUntilIdle()
+        assertEquals(DataState.Idle(listOf("a", "b", "x")), repository.states.last())
+    }
+
+    @Test
+    fun `a partial publish after a change keeps the change`() = runTest {
+        val repository = TestRepository(backgroundScope, batches = listOf(listOf("a"), listOf("a", "b"), listOf("a", "b", "c")))
+        val partialGate = CompletableDeferred<Unit>()
+        repository.partialGate = partialGate
+        launch { repository.load() }
+        runCurrent()
+        assertEquals(DataState.Loading(listOf("a")), repository.states.last())
+
+        repository.add("x")
+        val publishedAfterChange = repository.states.size - 1
+        partialGate.complete(Unit)
+        advanceUntilIdle()
+
+        // Up to the end of the first read: the re-read the change asks for reads the source, which the test never wrote "x" to.
+        val loadingStates = repository.states.drop(publishedAfterChange).takeWhile { it is DataState.Loading }
+        assertTrue(loadingStates.size >= 2)
+        assertTrue(loadingStates.all { it.data.orEmpty().count { item -> item == "x" } == 1 })
+    }
+
+    @Test
+    fun `a change before the first read is not passed off as the library`() = runTest {
+        val repository = TestRepository(backgroundScope, batches = listOf(listOf("a"), listOf("a", "b")))
+
+        repository.add("x")
+        assertEquals(DataState.Loading(listOf("x")), repository.states.last())
+
+        assertEquals(listOf("a", "b"), repository.load())
+        assertEquals(DataState.Idle(listOf("a", "b")), repository.states.last())
     }
 
     @Test
@@ -342,7 +392,11 @@ class BaseLocalDataRepositoryTest {
         /** Completed by the test to let a load past its partial publishes, so that it can be cancelled or changed under first. */
         var gate: CompletableDeferred<Unit>? = null
 
-        fun add(item: String) = updateData { it.orEmpty() + item }
+        /** A change the way real callers make one, safe to apply again: the entry is replaced rather than added twice. */
+        fun add(item: String) = updateData { it.orEmpty().filterNot { existing -> existing == item } + item }
+
+        /** Completed by the test to let a load past its first partial publish, so that a change can land between two. */
+        var partialGate: CompletableDeferred<Unit>? = null
 
         /** How many times the local source was read since [onRead] was last set. */
         var reads = 0
@@ -357,7 +411,10 @@ class BaseLocalDataRepositoryTest {
         override suspend fun loadDataFromLocalSource(): List<String> {
             reads++
             onRead?.invoke()
-            batches.dropLast(1).forEach { publishPartialData(it) }
+            batches.dropLast(1).forEachIndexed { index, batch ->
+                if (index == 1) partialGate?.await()
+                publishPartialData(batch)
+            }
             gate?.await()
             if (shouldFail) throw IllegalStateException("The local source could not be read.")
             return batches.last()

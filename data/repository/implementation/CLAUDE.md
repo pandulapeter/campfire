@@ -22,7 +22,9 @@ reimplement state handling. It owns a `MutableStateFlow<DataState<T>>` that star
 read yet is not an error), reads the local source on the first `loadDataIfNeeded()`, and guards that read with a
 `Mutex` so that the parallel loads in `LoadScreenDataUseCase` wait for each other instead of racing. A re-read keeps the
 data already on screen in the `Loading` state, so a refresh never blanks the list, and a failed read becomes
-`Failure(previous data)` rather than an empty list. A failure stays one through `updateData`, and the next
+`Failure(previous data)` rather than an empty list. A failure stays one through `updateData`, and so does a `Loading`
+— a change made while the first scan is going, or before it, is not the finished library, and an `Idle` is what the
+cover cache's prune and the launch's deep link wait for. The next
 `loadDataIfNeeded()` reads again even though a change since has put data in the cache — otherwise a song created after
 a failed scan would stand in for the whole library. A write that lands through `updateData` while a read is running
 makes that read go again once it has published, since its directory listing may predate the file — once: the changes
@@ -34,6 +36,8 @@ A load that arrives in pieces can publish them with `publishPartialData`, which 
 batches it has parsed — a library of thousands then fills the list as it is read instead of showing nothing
 until the last file. Partial data is only ever published while there is nothing on screen: during a re-read the
 previous library is up, and replacing it with a partial one would make the list shrink and fill again under the user.
+Every batch has the changes `updateData` recorded since the read started applied onto it, or a song changed while the
+list fills would revert on screen until the read ends.
 A read that fails or is cancelled falls back on the data from *before* it started rather than on whatever it had
 published, or half a library would sit there looking like the whole of it and nothing would ever read the rest.
 For a first read that is cancelled that is `Loading(null)`, the state the repository starts in, and

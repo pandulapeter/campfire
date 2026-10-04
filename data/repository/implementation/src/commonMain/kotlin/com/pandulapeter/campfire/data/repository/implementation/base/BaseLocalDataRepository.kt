@@ -96,11 +96,20 @@ internal abstract class BaseLocalDataRepository<T> {
      * earlier. [DataState.data] is null while nothing has been read yet.
      *
      * A [DataState.Failure] stays one: the change is applied, but the read it is applied to is still the one that
-     * failed, and the UI goes on reporting that.
+     * failed, and the UI goes on reporting that. A [DataState.Loading] stays one too: what it carries is however much
+     * of the library a read has got through, or nothing at all before the first one, and publishing that with the
+     * change as [DataState.Idle] would pass it off as the finished library to everyone who waits for one (the cover
+     * cache's prune, the launch's deep link, the end of the loading state).
      */
     protected fun updateData(transform: (T?) -> T) {
         transformsDuringRead.update { it?.plus(transform) }
-        _dataState.update { if (it is DataState.Failure) DataState.Failure(transform(it.data)) else DataState.Idle(transform(it.data)) }
+        _dataState.update {
+            when (it) {
+                is DataState.Failure -> DataState.Failure(transform(it.data))
+                is DataState.Loading -> DataState.Loading(transform(it.data))
+                else -> DataState.Idle(transform(it.data))
+            }
+        }
     }
 
     /**
@@ -110,9 +119,15 @@ internal abstract class BaseLocalDataRepository<T> {
      * Only ever published while there is nothing on screen: a re-read has the previous data up, and replacing that
      * with a partial one would make the list shrink and fill up again under the user. Half a library beats an empty
      * screen; it does not beat the library.
+     *
+     * The changes [updateData] recorded since the read started are applied onto every batch, since the read builds
+     * its batches without them and a change made to a song already on screen would otherwise vanish until the read
+     * ends. They are read inside the atomic update, so that a change landing between the two is not overwritten by a
+     * batch that lacks it: [updateData] records before it publishes, and the retry sees both.
      */
     protected fun publishPartialData(data: T) {
-        if (isPublishingPartialData) _dataState.value = DataState.Loading(data)
+        if (!isPublishingPartialData) return
+        _dataState.update { DataState.Loading(transformsDuringRead.value.orEmpty().fold(data) { result, transform -> transform(result) }) }
     }
 
     /**
