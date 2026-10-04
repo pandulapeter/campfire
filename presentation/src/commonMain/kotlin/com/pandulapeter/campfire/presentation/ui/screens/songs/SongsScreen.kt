@@ -121,7 +121,6 @@ import com.pandulapeter.campfire.presentation.ui.platform.LocalFilePicker
 import com.pandulapeter.campfire.presentation.ui.platform.bounceScrollableContent
 import com.pandulapeter.campfire.presentation.ui.platform.isDesktopPlatform
 import com.pandulapeter.campfire.presentation.ui.screens.songDetails.songLabelActions
-import kotlinx.coroutines.flow.filter
 import kotlinx.coroutines.launch
 import kotlin.math.roundToInt
 import org.jetbrains.compose.resources.painterResource
@@ -328,8 +327,16 @@ private fun SongList(
             }
         }
     }
+    // One collector both lets the anchor go and releases the room it kept: a flow of the spacer's visibility alone
+    // would not emit again for a spacer already out of sight when the scroll let go, and a second collector could run
+    // before the first in a frame, while the anchor still holds its position. Pairing the two re-evaluates at both ends
+    // of a scroll.
     LaunchedEffect(listState, searchScroll) {
-        snapshotFlow { listState.isScrollInProgress }.filter { it }.collect { searchScroll.cancel() }
+        snapshotFlow { listState.isScrollInProgress to listState.layoutInfo.visibleItemsInfo.any { it.key == SEARCH_ANCHOR_SPACE_KEY } }
+            .collect { (isScrolling, isSpaceVisible) ->
+                if (isScrolling) searchScroll.letGoForScroll()
+                searchScroll.releaseTrailingSpaceIfOutOfSight(isSpaceVisible)
+            }
     }
     val areHeadersCollapsing by remember(isSearchOpen, groups, appBarOverlap) {
         derivedStateOf { groups.any { it.header != null } && (isSearchOpen || appBarOverlap().coverage < 1f) }
@@ -551,8 +558,8 @@ private fun SongList(
                 }
             }
             // Near the end, collapsing later headers can shorten the scroll range below the anchor's position.
-            // Keep just that lost tail space until the user scrolls or changes the search, or the headers return.
-            item(key = "search_anchor_space", span = { GridItemSpan(maxLineSpan) }, contentType = "search_anchor_space") {
+            // Keep just that lost tail space until it has scrolled out of sight, or the search changes, or the headers return.
+            item(key = SEARCH_ANCHOR_SPACE_KEY, span = { GridItemSpan(maxLineSpan) }, contentType = "search_anchor_space") {
                 Spacer(Modifier.fillMaxWidth().layout { measurable, constraints ->
                     val removedHeight = (LIST_APP_BAR_HEIGHT.toPx() * (1f - appBarOverlap().coverage)).roundToInt()
                     val height = searchScroll.trailingHeaderCount * removedHeight
@@ -672,6 +679,9 @@ private fun SongSection.Header.displayText(): String = when (this) {
 }
 
 private const val SYMBOLS_LABEL = "#"
+
+/** The key of the spacer that keeps the room the search anchor needs at the end of the list. */
+private const val SEARCH_ANCHOR_SPACE_KEY = "search_anchor_space"
 
 /** Measures a header at its normal height, then gives its row back on the very same frames the bar takes it. */
 private fun Modifier.collapseSearchHeader(fraction: () -> Float) = clipToBounds().layout { measurable, constraints ->

@@ -41,7 +41,40 @@ class SongSearchScrollAnchorTest {
         assertEquals(SongSearchScrollAnchor.Position(9, 29), anchor.positionFor(10, isScrolling = false))
         assertNull(anchor.positionFor(20, isScrolling = true))
         assertNull(anchor.positionFor(56, isScrolling = false))
+        assertEquals(3, anchor.trailingHeaderCount)
+        anchor.releaseTrailingSpaceIfOutOfSight(isSpaceVisible = true)
+        assertEquals(3, anchor.trailingHeaderCount)
+        anchor.releaseTrailingSpaceIfOutOfSight(isSpaceVisible = false)
         assertEquals(0, anchor.trailingHeaderCount)
+    }
+
+    @Test
+    fun aScrollKeepsTheTailRoomUntilTheResultsChange() {
+        val anchor = SongSearchScrollAnchor(isOpen = false)
+        anchor.update(open = true, contents = contents, isScrolling = false, inset = 0) { snapshot }
+        assertNull(anchor.positionFor(10, isScrolling = true))
+        anchor.update(open = true, contents = contents, isScrolling = true, inset = 56) { fail("Must not capture during scrolling") }
+        assertEquals(3, anchor.trailingHeaderCount)
+        anchor.update(open = true, contents = "filtered results", isScrolling = false, inset = 56) { fail("Must not rearm for changed contents") }
+        assertEquals(0, anchor.trailingHeaderCount)
+    }
+
+    @Test
+    fun closingTheSearchAfterAScrollReleasesTheTailRoom() {
+        val anchor = SongSearchScrollAnchor(isOpen = false)
+        anchor.update(open = true, contents = contents, isScrolling = false, inset = 0) { snapshot }
+        assertNull(anchor.positionFor(10, isScrolling = true))
+        assertEquals(3, anchor.trailingHeaderCount)
+        anchor.update(open = false, contents = contents, isScrolling = true, inset = 56) { fail("Must not capture during scrolling") }
+        assertEquals(0, anchor.trailingHeaderCount)
+    }
+
+    @Test
+    fun theTailRoomIsNotReleasedWhileTheAnchorStillHoldsAPosition() {
+        val anchor = SongSearchScrollAnchor(isOpen = false)
+        anchor.update(open = true, contents = contents, isScrolling = false, inset = 0) { snapshot }
+        anchor.releaseTrailingSpaceIfOutOfSight(isSpaceVisible = false)
+        assertEquals(3, anchor.trailingHeaderCount)
     }
 
     @Test
