@@ -3218,11 +3218,15 @@ class CampfireViewModel(
         // service's one request a second.
         if (dialogType !is DialogType.CoverArtSearch) clearCoverArtSearch()
         val previousDialog = _visibleDialog.value
-        _underlyingSongInfo.value = (previousDialog as? DialogType.SongInfo)?.takeIf { parent ->
+        _underlyingSongInfo.value = when {
+            // The cover art sheet's Remove asks first, and the answer goes back to the sheet the cover art was opened from.
+            previousDialog is DialogType.CoverArtSearch && dialogType is DialogType.RemoveSongCoverArt -> _underlyingSongInfo.value
+            else -> (previousDialog as? DialogType.SongInfo)
+        }?.takeIf { parent ->
             dialogType is DialogType.SongEdit && !dialogType.isEditorDraft && dialogType.song.fileName == parent.song.fileName &&
                 (dialogType is DialogType.SongMetadata || dialogType is DialogType.SongTags ||
                     dialogType is DialogType.SongLinks || dialogType is DialogType.SongLanguages ||
-                    dialogType is DialogType.CoverArtSearch)
+                    dialogType is DialogType.CoverArtSearch || dialogType is DialogType.RemoveSongCoverArt)
         }
         // However the export screen goes - closed, Escape, the web's Back, another dialog put over it - it stays drawn
         // while it slides away, so its own disposal would be too late: its options are saved and its drawing cancelled
