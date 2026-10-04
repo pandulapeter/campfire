@@ -443,7 +443,7 @@
     <string name="cover_art_search_attribution">Kiadványok a MusicBrainzről és az iTunesból, borítók a Cover Art Archive-ból és az Apple-től</string>
     <string name="cover_art_address_mode">Webcím</string>
     <string name="cover_art_address">A kép webcíme</string>
-    <string name="cover_art_address_hint">Illeszd be egy weben elérhető kép címét, amely https://-sel kezdődik</string>
+    <string name="cover_art_address_hint">Illeszd be egy weben elérhető kép címét</string>
     <string name="cover_art_address_failed">Erről a címről nem sikerült képet betölteni</string>
     <string name="song_details_capo">Capo %1$d</string>
     <string name="song_details_tempo">%1$s BPM</string>

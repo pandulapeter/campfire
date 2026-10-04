@@ -47,10 +47,11 @@ object ChordProCoverArt {
 
     /**
      * [value] as the address [set] would write, or null where it would take the cover off instead: trimmed, and only an
-     * `http` or `https` address with no whitespace in it. What a field the user types an address into checks against,
-     * so that it never offers to save something the file would not keep.
+     * `http` or `https` address with no whitespace in it. An address typed without its scheme is taken as `https`, the
+     * way a link's is ([ChordProSyntax.typedWebUrl]), and [set] is handed the completed address. What a field the user
+     * types an address into checks against, so that it never offers to save something the file would not keep.
      */
-    fun usableUrl(value: String): String? = ChordProSyntax.webUrl(value)
+    fun usableUrl(value: String): String? = ChordProSyntax.typedWebUrl(value)
 
     /** Whether the line is a `{meta: cover …}` directive, usable or not. */
     private fun String.isCover() = ChordProSyntax.matchDirective(trim())?.let(ChordProSyntax::isCoverMeta) == true

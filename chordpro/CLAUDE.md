@@ -155,6 +155,8 @@ in `:domain:*`. `:data:source:local:implementation` uses it directly for the met
   has none (the cover sits between `album` and `year` in `metadataOrder`), or removes them all for null, editing the
   text for the reason `ChordProTags` does; a line that already names the address is left as it is written. It counts
   as declared metadata under `cover`, and a song has one, so the editor stops offering it once the file carries one.
+  `usableUrl` is what the cover sheet checks a typed address against, completing one typed without its scheme as
+  `https` the way `ChordProLinks.usableUrl` does (both are `ChordProSyntax.typedWebUrl`); reading a file stays strict.
 - `ChordProLinks` — pages about a song (a video, a recording, a tab), any site at all: one `{meta: link https://… Optional name}`
   line per link, read into `ChordProMetadata.links` as `ChordProLink(url, name)` in file order, each address once
   and keeping its first name, by the same address rule as the cover. An unnamed link has a null name. `addLink` writes a line after the last link, or into the header after the languages where there is none
@@ -164,7 +166,8 @@ in `:domain:*`. `:data:source:local:implementation` uses it directly for the met
   last of them — keeping an unchanged line that stays in its place in its original spelling and changing only the
   link lines; names are optional, trimmed, and cannot inject
   braces or line breaks. The serializer keeps the names too. `usableUrl` is what the dialog checks a typed address
-  against, and takes one typed without its scheme as `https`, the way a browser's address bar shows most of them —
+  against (`ChordProSyntax.typedWebUrl`, shared with the cover's), and takes one typed without its scheme as `https`,
+  the way a browser's address bar shows most of them —
   but only where it starts with a host (and perhaps a port), so `mailto:…`, `me@…` or a mistyped `https:/…` is refused
   rather than saved as an `https` address naming nothing.
 - `ChordProMetadataFields` — the directives that say what a song is (`title`, `subtitle`, `artist`, `composer`,

@@ -443,7 +443,7 @@
     <string name="cover_art_search_attribution">Records from MusicBrainz and iTunes, covers from the Cover Art Archive and Apple</string>
     <string name="cover_art_address_mode">Web address</string>
     <string name="cover_art_address">Image address</string>
-    <string name="cover_art_address_hint">Paste the address of an image on the web, starting with https://</string>
+    <string name="cover_art_address_hint">Paste the address of an image on the web</string>
     <string name="cover_art_address_failed">No image could be loaded from this address</string>
     <string name="song_details_capo">Capo %1$d</string>
     <string name="song_details_tempo">%1$s BPM</string>

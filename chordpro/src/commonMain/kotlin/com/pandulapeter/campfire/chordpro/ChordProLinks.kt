@@ -95,24 +95,9 @@ object ChordProLinks {
      * browser's address bar shows most of them, is taken as `https`, since a page that is only served over plain
      * `http` is rare enough to be typed out in full. That is only done where the text starts with a host, though: one
      * that starts with another scheme (`mailto:`), a mistyped one (`https:/`) or a user name (`me@`) would otherwise
-     * be written as an `https` address that names nothing the user meant. What a field the user types an address into
-     * checks against, so that it never offers to save something the file would not keep.
+     * be written as an `https` address that names nothing the user meant ([ChordProSyntax.typedWebUrl], which the cover
+     * art's address shares). What a field the user types an address into checks against, so that it never offers to
+     * save something the file would not keep.
      */
-    fun usableUrl(value: String): String? {
-        val trimmed = value.trim()
-        return ChordProSyntax.webUrl(trimmed) ?: trimmed.takeIf(::startsWithHost)?.let { ChordProSyntax.webUrl("https://$it") }
-    }
-
-    /**
-     * Whether what [value] holds before its path, query or fragment is a plain host with an optional port: letters,
-     * digits, `-` and `.`, with a dot somewhere other than at either end, then at most a `:` and a port number. Written
-     * out by hand rather than as a regex, whose character classes the JVM, Kotlin/Native and the browser read differently.
-     */
-    private fun startsWithHost(value: String): Boolean {
-        val authority = value.takeWhile { it != '/' && it != '?' && it != '#' }
-        val host = authority.substringBefore(':')
-        val port = authority.substringAfter(':', missingDelimiterValue = "")
-        if (':' in authority && (port.isEmpty() || !port.all { it in '0'..'9' })) return false
-        return host.all { it.isLetterOrDigit() || it == '-' || it == '.' } && host.indexOf('.') > 0 && host.lastIndexOf('.') < host.lastIndex
-    }
+    fun usableUrl(value: String): String? = ChordProSyntax.typedWebUrl(value)
 }

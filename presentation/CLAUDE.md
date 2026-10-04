@@ -101,7 +101,7 @@ Everything else is `commonMain`:
   crossfading from the hint while it slides — and afterwards only from the keyboard's search key or the button, never
   per keystroke, since MusicBrainz allows the whole app one request a second; and a grid of what MusicBrainz and iTunes
   found, each catalogue's records joining at the end as it answers, closed by an indicator while one is still pending.
-  **Web address**: a field for any `http`/`https` address (`ChordProCoverArt.usableUrl` decides what counts) and a
+  **Web address**: a field for any `http`/`https` address, typed with or without its `https://` (`ChordProCoverArt.usableUrl` decides what counts) and a
   preview of it, asked for once the typing has paused for 500 ms; one that does not load can still be saved, since a
   host may refuse only the web build. Save writes the pick or the address into the song (`setSongCoverArt`, through
   `SetChordProCoverArtUseCase`, the path a tag takes); Remove, here or in the overflow menu, asks the same confirmation before taking a cover off. A tile whose thumbnail does not load is

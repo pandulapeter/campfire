@@ -351,6 +351,32 @@ internal object ChordProSyntax {
                 url.substringAfter("//").isNotEmpty() && url.none { it.isWhitespace() }
     }
 
+    /**
+     * [value] as a web address the way a field the user types one into reads it: [webUrl] of the trimmed text, or, for
+     * text that starts with a host (and perhaps a port) but no scheme - how a browser's address bar shows most
+     * addresses - that text as `https`, since a page or a picture only served over plain `http` is rare enough to be
+     * typed out in full. Anything else (`mailto:`, `me@…`, a mistyped `https:/`) is null rather than an `https`
+     * address naming nothing the user meant. Files are read with [webUrl] alone: a scheme is only completed for what
+     * is being typed.
+     */
+    fun typedWebUrl(value: String): String? {
+        val trimmed = value.trim()
+        return webUrl(trimmed) ?: trimmed.takeIf(::startsWithHost)?.let { webUrl("https://$it") }
+    }
+
+    /**
+     * Whether what [value] holds before its path, query or fragment is a plain host with an optional port: letters,
+     * digits, `-` and `.`, with a dot somewhere other than at either end, then at most a `:` and a port number. Written
+     * out by hand rather than as a regex, whose character classes the JVM, Kotlin/Native and the browser read differently.
+     */
+    private fun startsWithHost(value: String): Boolean {
+        val authority = value.takeWhile { it != '/' && it != '?' && it != '#' }
+        val host = authority.substringBefore(':')
+        val port = authority.substringAfter(':', missingDelimiterValue = "")
+        if (':' in authority && (port.isEmpty() || !port.all { it in '0'..'9' })) return false
+        return host.all { it.isLetterOrDigit() || it == '-' || it == '.' } && host.indexOf('.') > 0 && host.lastIndexOf('.') < host.lastIndex
+    }
+
     /** True for a `{meta}` directive whose key names the cover image, whatever its value then turns out to be worth. */
     fun isCoverMeta(directive: Directive) = directive.name == META &&
             directive.value?.trim()?.substringBefore(' ')?.trim()?.equals(COVER_NAME, ignoreCase = true) == true

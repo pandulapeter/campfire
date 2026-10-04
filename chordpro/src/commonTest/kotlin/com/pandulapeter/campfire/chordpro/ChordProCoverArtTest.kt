@@ -27,9 +27,15 @@ class ChordProCoverArtTest {
     @Test
     fun `a typed address is usable only where the file would keep it`() {
         assertEquals(url, ChordProCoverArt.usableUrl("  $url \n"))
-        assertEquals(null, ChordProCoverArt.usableUrl("coverartarchive.org/release-group/abc/front-250"))
+        assertEquals(
+            "https://coverartarchive.org/release-group/abc/front-250",
+            ChordProCoverArt.usableUrl("coverartarchive.org/release-group/abc/front-250"),
+        )
+        assertEquals("https://picsum.photos/250", ChordProCoverArt.usableUrl("picsum.photos/250"))
         assertEquals(null, ChordProCoverArt.usableUrl("https://example.com/a b.jpg"))
         assertEquals(null, ChordProCoverArt.usableUrl("https://"))
+        assertEquals(null, ChordProCoverArt.usableUrl("mailto:me@example.com"))
+        assertEquals(null, ChordProCoverArt.usableUrl("me@host"))
     }
 
     @Test
