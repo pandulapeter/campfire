@@ -9,6 +9,7 @@
  */
 package com.pandulapeter.campfire.presentation.ui.components
 
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.SegmentedButton
@@ -27,8 +28,9 @@ import androidx.compose.ui.unit.dp
  * @param isEnabled False where the choice has no effect right now, in which case the row still shows which option
  *   is selected rather than disappearing: what it would go back to once it matters again is worth seeing.
  * @param isInline True where the choice shares a row with other controls, as in the editor's bar: it keeps a
- *   narrower gap from them than from the edges of a screen, and a selected segment has no check mark - its fill
- *   already marks it, and the mark's 26dp is most of what a label has there on a phone.
+ *   narrower gap from them than from the edges of a screen, a selected segment has no check mark - its fill
+ *   already marks it, and the mark's 26dp is most of what a label has there on a phone - and the labels are padded
+ *   less at their sides ([INLINE_CONTENT_PADDING]).
  */
 @Composable
 internal fun <T> SegmentedChoice(
@@ -49,6 +51,7 @@ internal fun <T> SegmentedChoice(
             enabled = isEnabled,
             shape = SegmentedButtonDefaults.itemShape(index = index, count = options.size),
             icon = if (isInline) ({}) else ({ SegmentedButtonDefaults.Icon(value == selected) }),
+            contentPadding = if (isInline) INLINE_CONTENT_PADDING else SegmentedButtonDefaults.ContentPadding,
             label = {
                 Text(
                     // Material measures the label at the whole width of the segment and then places it after the check
@@ -81,3 +84,14 @@ private fun Modifier.withoutCheckMarkWidth() = layout { measurable, constraints 
 }
 
 private val CHECK_MARK_SPACING = 8.dp
+
+/**
+ * Inline, the segments share a row with other controls on a phone, and Material's 12dp at each side of the label is
+ * what cut the editor's "Preview" short at 360dp. The vertical padding stays Material's, so the row keeps its height.
+ */
+private val INLINE_CONTENT_PADDING = PaddingValues(
+    start = 6.dp,
+    top = SegmentedButtonDefaults.ContentPadding.calculateTopPadding(),
+    end = 6.dp,
+    bottom = SegmentedButtonDefaults.ContentPadding.calculateBottomPadding(),
+)
