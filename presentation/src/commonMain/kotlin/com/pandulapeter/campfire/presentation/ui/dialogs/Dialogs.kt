@@ -1168,6 +1168,9 @@ private fun SetlistDateField(
                 dateFormatter = dateFormatter,
                 colors = DatePickerDefaults.colors(containerColor = campfireBottomSheetContainerColor()),
                 title = null,
+                // Typed entry is left out: its field's label, pattern and errors are Material's own strings, read in the
+                // system's language rather than the app's, and there is no parameter for any of them.
+                showModeToggle = false,
                 // Material's own headline formats the day in the system's locale whatever the state's is, so it is
                 // drawn here in the calendar's, with the paddings and the color Material gives it.
                 headline = {

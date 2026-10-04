@@ -154,8 +154,8 @@ localized in both languages.
   nothing over a short gradient instead (`fadingTopEdge` / `fadingVerticalEdges` in `:presentation`'s
   `components/EdgeFade.kt`, and `ListTopFade` for the list screens' cards), and the bars stay flat in the background
   color. A new scrolling container gets the same treatment, not Material's scrolled-under elevation.
-- **Every modal with text inputs is a bottom sheet**, including the date picker, which can switch from a calendar
-  to typed date entry. Forms use `TextFieldBottomSheet` over `CampfireBottomSheet`; Save, Create, Done, Delete,
+- **Every modal with text inputs is a bottom sheet**, and the date picker is one too, holding only a calendar (no
+  typed entry, whose strings Material draws in the system's language). Forms use `TextFieldBottomSheet` over `CampfireBottomSheet`; Save, Create, Done, Delete,
   sorting and Add link actions sit in the header, whose close button cancels the draft. Keep each form's existing
   first-field focus behavior. Both **Song assignments** and **Setlist assignments** open with search unfocused;
   tapping their search field brings up the keyboard. New song offers subtitle, artist, album, composer, lyricist,
