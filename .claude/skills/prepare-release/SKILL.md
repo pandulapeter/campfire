@@ -29,9 +29,12 @@ them. If a change has no effect a user could notice, it is not in the notes.
    land for a version that was never published, and a release is what the tag marks):
    ```bash
    grep -n 'campfire.versionName' gradle.properties
-   git tag --sort=-v:refname | head -3
+   git describe --tags --abbrev=0 --match '[0-9]*.[0-9]*.[0-9]*' --exclude "$(sed -n 's/^campfire\.versionName=//p' gradle.properties)"
+   git tag --list '[0-9]*.[0-9]*.[0-9]*' --sort=-v:refname | head -3
    ```
-   The range is `<last tag>..HEAD`, for the GitHub notes, the stores' blurb and the in-app message alike: every
+   The `git describe` line prints `<last tag>`: release tags are bare version numbers, so older `v`-prefixed tags
+   (`v1.0.0`) are never a boundary, and the version being prepared is excluded so that a run after that version was
+   already tagged (on HEAD or on a commit before it) still finds the release before it. The range is `<last tag>..HEAD`, for the GitHub notes, the stores' blurb and the in-app message alike: every
    change since the last published release is in scope, whatever else was prepared or reverted in between.
 
 3. **List the commits in the range and group them by feature.** Many commits usually build one feature (a PDF
