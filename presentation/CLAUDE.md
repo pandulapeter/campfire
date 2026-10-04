@@ -334,8 +334,6 @@ its `campfire.pdf` is also the document importer's positioned export/reimport fi
 
 ## Scrolling performance
 
-`LocalOverscrollFactory` keeps the native Android and iOS effects and is null on the desktop and the web, which have no overscroll effect yet (`rememberContentOverscrollFactory`). Explicit scrolling containers also use `bounceScrollableContent` to stretch content that fits, which Foundation leaves still; it offers each drag to the parents' post-scroll first, so a bottom sheet whose content fits is still dragged down by it. Desktop and web wheel events bypass Foundation's overscroll, so the bridge has a path for them at the boundaries, in the same system and browser units as Foundation's wheel scrolling, which runs once those platforms are given an effect. Events with room to scroll remain under Foundation, preserving sticky headers and nested bars. No artificial scroll range is added; the lyrics reader’s step snapping is unchanged. Browser OS detection cannot load UIKit or Android effects into a Wasm binary.
-
 Before the first search interaction, Songs lays arriving section headers out fully expanded so loading cannot retain a collapsed first row as a scroll offset. `ListTopFade` treats leading collapsed header slots as zero scroll distance: its mask is absent at the real top and grows over the first 24dp of scrolling, including when the first card is item 1.
 
 `ListTopFade` caches an inverse gradient and uses `DstOut` inside its existing offscreen layer, translating the drawing

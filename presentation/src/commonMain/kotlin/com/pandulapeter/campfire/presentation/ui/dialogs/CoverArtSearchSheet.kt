@@ -35,6 +35,7 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.selection.selectable
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Button
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
@@ -109,8 +110,6 @@ import com.pandulapeter.campfire.presentation.ui.components.rememberClearTextBut
 import kotlin.time.Duration.Companion.milliseconds
 import kotlinx.coroutines.delay
 import org.jetbrains.compose.resources.painterResource
-import com.pandulapeter.campfire.presentation.ui.platform.bounceScrollableContent
-import com.pandulapeter.campfire.presentation.ui.platform.bounceVerticalScroll
 
 /**
  * The cover search: the song's artist, album and title as fields, and under them the records MusicBrainz and iTunes
@@ -393,7 +392,7 @@ private fun CoverArtResults(
             Box(modifier = Modifier.fillMaxWidth().padding(start = 16.dp, end = 16.dp, top = 16.dp)) { fields() }
         }
         LazyVerticalGrid(
-            modifier = Modifier.bounceScrollableContent(gridState).weight(1f).fillMaxWidth().nestedScroll(keyboardDismissal).fadingTopEdge {
+            modifier = Modifier.weight(1f).fillMaxWidth().nestedScroll(keyboardDismissal).fadingTopEdge {
                 if (gridState.firstVisibleItemIndex > 0) Int.MAX_VALUE else gridState.firstVisibleItemScrollOffset
             },
             state = gridState,
@@ -542,7 +541,7 @@ private fun CoverArtAddress(
                 .weight(1f)
                 .fillMaxWidth()
                 .fadingTopEdge(scrollState)
-                .bounceVerticalScroll(scrollState)
+                .verticalScroll(scrollState)
                 .padding(start = 16.dp, end = 16.dp, top = 16.dp)
                 .padding(contentPadding),
             horizontalAlignment = Alignment.CenterHorizontally,

@@ -17,6 +17,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -50,7 +51,6 @@ import com.pandulapeter.campfire.presentation.ui.CampfireViewModel
 import com.pandulapeter.campfire.presentation.ui.components.fadingTopEdge
 import com.pandulapeter.campfire.presentation.ui.components.rememberClearTextButton
 import org.jetbrains.compose.resources.StringResource
-import com.pandulapeter.campfire.presentation.ui.platform.bounceVerticalScroll
 
 /**
  * What a song is, as a form: every field is edited as a draft and only the ones changed are written, together, on Save.
@@ -80,7 +80,7 @@ internal fun SongMetadataDialog(
         subtitle = songLabel(dialog.song),
         text = { contentPadding ->
             Column(
-                modifier = Modifier.fillMaxWidth().fadingTopEdge(scrollState).bounceVerticalScroll(scrollState).padding(contentPadding),
+                modifier = Modifier.fillMaxWidth().fadingTopEdge(scrollState).verticalScroll(scrollState).padding(contentPadding),
                 verticalArrangement = Arrangement.spacedBy(8.dp),
             ) {
                 field(Modifier.fillMaxWidth(), Field.TITLE)

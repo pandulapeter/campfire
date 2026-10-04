@@ -9,6 +9,7 @@
  */
 package com.pandulapeter.campfire.presentation.ui.screens.songEditor
 
+import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
@@ -75,7 +76,6 @@ import com.pandulapeter.campfire.presentation.resources.song_editor_section_pre_
 import com.pandulapeter.campfire.presentation.resources.song_editor_section_solo
 import com.pandulapeter.campfire.presentation.resources.song_editor_section_tab
 import com.pandulapeter.campfire.presentation.resources.song_editor_section_verse
-import com.pandulapeter.campfire.presentation.ui.platform.bounceHorizontalScroll
 
 /**
  * The insertion rows of the editor's app bar: a button for every directive the parser understands, so that a format
@@ -145,7 +145,7 @@ private fun EditorToolbarRow(
     Row(
         modifier = modifier
             .fillMaxWidth()
-            .bounceHorizontalScroll(rememberScrollState())
+            .horizontalScroll(rememberScrollState())
             .padding(
                 start = contentPadding.calculateStartPadding(layoutDirection) + TOOLBAR_PADDING,
                 end = contentPadding.calculateEndPadding(layoutDirection) + TOOLBAR_PADDING,

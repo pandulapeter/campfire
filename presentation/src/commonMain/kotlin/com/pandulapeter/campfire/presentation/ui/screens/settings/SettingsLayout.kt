@@ -27,6 +27,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.widthIn
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Badge
 import androidx.compose.material3.BadgedBox
 import androidx.compose.material3.MaterialTheme
@@ -48,7 +49,6 @@ import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.dp
 import com.pandulapeter.campfire.presentation.ui.components.THEME_COLOR_CHOICE_WIDTH
 import com.pandulapeter.campfire.presentation.ui.components.fadingTopEdge
-import com.pandulapeter.campfire.presentation.ui.platform.bounceVerticalScroll
 
 /**
  * The tabs of the settings screen, in the order they are read in: what the app looks like and lets its user do, then
@@ -200,7 +200,7 @@ internal fun SettingsPage(
         modifier = modifier
             .fillMaxSize()
             .fadingTopEdge(scrollState, MaterialTheme.colorScheme.background)
-            .bounceVerticalScroll(scrollState)
+            .verticalScroll(scrollState)
             .padding(
                 start = contentPadding.calculateStartPadding(layoutDirection),
                 top = PAGE_TOP_PADDING,

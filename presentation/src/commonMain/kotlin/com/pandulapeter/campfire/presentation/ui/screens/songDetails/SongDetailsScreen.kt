@@ -24,7 +24,6 @@ import androidx.compose.animation.shrinkHorizontally
 import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.ScrollState
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.gestures.Orientation
 import androidx.compose.foundation.gestures.animateScrollBy
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -46,6 +45,7 @@ import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.PagerState
 import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
@@ -136,8 +136,6 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import org.jetbrains.compose.resources.painterResource
-import com.pandulapeter.campfire.presentation.ui.platform.bounceScrollableContent
-import com.pandulapeter.campfire.presentation.ui.platform.bounceVerticalScroll
 
 /**
  * The lyrics (and chords) of a song, or of a setlist's songs in a pager. The transposition and the text size are
@@ -571,7 +569,7 @@ internal fun SongDetailsScreen(
                     ),
             ) {
                 HorizontalPager(
-                    modifier = Modifier.bounceScrollableContent(pagerState, Orientation.Horizontal)
+                    modifier = Modifier
                         .fillMaxSize()
                         .fontScaleGestures(
                             fontScale = { viewModel.fontScale },
@@ -887,7 +885,7 @@ private fun SongDetailsPage(
                 modifier = Modifier
                     .fillMaxSize()
                     .fadingTopEdge(scrollState, MaterialTheme.colorScheme.background)
-                    .bounceVerticalScroll(state = scrollState, flingBehavior = flingBehavior)
+                    .verticalScroll(state = scrollState, flingBehavior = flingBehavior)
                     .padding(
                         start = contentPadding.calculateStartPadding(layoutDirection) + 16.dp,
                         end = contentPadding.calculateEndPadding(layoutDirection) + 16.dp,
