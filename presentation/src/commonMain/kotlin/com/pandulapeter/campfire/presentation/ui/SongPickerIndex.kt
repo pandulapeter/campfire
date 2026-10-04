@@ -37,6 +37,31 @@ internal fun SearchableSong.toPickableSong() = PickableSong(
 )
 
 /**
+ * The songs of [songs] the song picker lists: the ones the active tag and language chips leave, narrowed like the
+ * songs screen's filters, and, for a non-empty [normalizedQuery], those that answer it, ranked the way the songs
+ * screen's search ranks them ([searchRank]) with ties in the order of the list. With nothing to search for, the list's
+ * own order.
+ */
+internal fun songPickerMatches(
+    songs: List<PickableSong>,
+    normalizedQuery: String,
+    activeTags: Set<String>,
+    activeLanguages: Set<String>,
+): List<PickableSong> {
+    val filtered = songs.filter { song ->
+        (activeTags.isEmpty() || activeTags.any { it in song.tags }) &&
+            (activeLanguages.isEmpty() || activeLanguages.any { it in song.languages })
+    }
+    if (normalizedQuery.isEmpty()) return filtered
+    val buckets = Array(SEARCH_RANK_COUNT) { mutableListOf<PickableSong>() }
+    for (song in filtered) {
+        val rank = searchRank(title = song.title, artist = song.artist, tags = song.searchableTags, query = normalizedQuery) ?: continue
+        buckets[rank] += song
+    }
+    return buildList { for (rank in buckets.indices.reversed()) addAll(buckets[rank]) }
+}
+
+/**
  * Every song of the library as the song picker lists it: in the songs screen's order in [list], and by file name in
  * [byFileName] for the songs a setlist already holds, which the picker puts first.
  */

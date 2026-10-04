@@ -63,6 +63,59 @@ class SongPickerIndexTest {
         )
     }
 
+    @Test
+    fun pickerMatchesAreRankedLikeTheSongsScreen() {
+        val songs = listOf(
+            pickable("ballad", title = "ballad", tags = listOf("love songs")),
+            pickable("other", title = "other", artist = "lovers"),
+            pickable("love", title = "love me do"),
+            pickable("miss", title = "miss"),
+        )
+        assertEquals(
+            listOf("love", "other", "ballad"),
+            songPickerMatches(songs, normalizedQuery = "love", activeTags = emptySet(), activeLanguages = emptySet()).map { it.song.title },
+        )
+        assertEquals(
+            songs,
+            songPickerMatches(songs, normalizedQuery = "", activeTags = emptySet(), activeLanguages = emptySet()),
+        )
+        assertEquals(
+            emptyList(),
+            songPickerMatches(songs, normalizedQuery = "nothing", activeTags = emptySet(), activeLanguages = emptySet()),
+        )
+    }
+
+    @Test
+    fun pickerChipsStillExcludeSongs() {
+        val songs = listOf(
+            pickable("ballad", title = "ballad", tags = listOf("love songs"), languages = listOf("en")),
+            pickable("love", title = "love me do", languages = listOf("hu")),
+        )
+        assertEquals(
+            listOf("ballad"),
+            songPickerMatches(songs, normalizedQuery = "love", activeTags = setOf("love songs"), activeLanguages = emptySet()).map { it.song.title },
+        )
+        assertEquals(
+            listOf("love"),
+            songPickerMatches(songs, normalizedQuery = "", activeTags = emptySet(), activeLanguages = setOf("hu")).map { it.song.title },
+        )
+    }
+
+    private fun pickable(
+        name: String,
+        title: String,
+        artist: String = "",
+        tags: List<String> = emptyList(),
+        languages: List<String> = emptyList(),
+    ) = PickableSong(
+        song = song(name, tags = tags, languages = languages),
+        title = title,
+        artist = artist,
+        tags = tags.mapTo(mutableSetOf()) { it.lowercase() },
+        searchableTags = tags,
+        languages = languages.ifEmpty { listOf(SongLanguage.UNKNOWN) }.toSet(),
+    )
+
     private fun song(name: String, tags: List<String> = emptyList(), languages: List<String> = emptyList()) = Song(
         fileName = "$name.cho", title = name, artist = "", key = null, transpose = 0,
         tags = tags, languages = languages, coverArtUrl = null, hasChords = false,

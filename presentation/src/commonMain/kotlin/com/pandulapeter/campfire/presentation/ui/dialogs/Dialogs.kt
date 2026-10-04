@@ -205,6 +205,7 @@ import com.pandulapeter.campfire.presentation.CAMPFIRE_VERSION_NAME
 import com.pandulapeter.campfire.presentation.ui.CampfireViewModel
 import com.pandulapeter.campfire.presentation.ui.navigation.CampfireDestination
 import com.pandulapeter.campfire.presentation.ui.PickerFilterOptions
+import com.pandulapeter.campfire.presentation.ui.songPickerMatches
 import com.pandulapeter.campfire.presentation.ui.components.ActionListItem
 import com.pandulapeter.campfire.presentation.ui.components.CheckboxListItem
 import com.pandulapeter.campfire.presentation.ui.components.CHIP_GAP
@@ -1742,13 +1743,12 @@ private fun SongPicker(
     // Several values of one group widen the list and the two groups narrow each other, which is what the songs
     // screen's filters do by default: "Hungarian or English, and Christmas".
     val matches = remember(pickableSongs, query, activeTags, activeLanguages) {
-        val normalizedQuery = viewModel.normalizeForSearch(query)
-        pickableSongs.filter { pickableSong ->
-            (normalizedQuery in pickableSong.title || normalizedQuery in pickableSong.artist ||
-                    pickableSong.searchableTags.any { normalizedQuery in it }) &&
-                    (activeTags.isEmpty() || activeTags.any { it in pickableSong.tags }) &&
-                    (activeLanguages.isEmpty() || activeLanguages.any { it in pickableSong.languages })
-        }
+        songPickerMatches(
+            songs = pickableSongs,
+            normalizedQuery = viewModel.normalizeForSearch(query),
+            activeTags = activeTags,
+            activeLanguages = activeLanguages,
+        )
     }
     val checkedSongKeys = selectedSongFileNames.toSet()
     val refreshKey = listOf(userPreferences?.sortingMode, query, activeTags, activeLanguages)

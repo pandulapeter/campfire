@@ -83,18 +83,28 @@ internal class SongSearchIndex(private val normalize: (String) -> String) {
  * dropped into its bucket as it is found instead of the matches being sorted afterwards.
  */
 internal fun rankSongs(songs: List<SearchableSong>, query: String): List<Song> {
-    val buckets = Array(8) { mutableListOf<Song>() }
+    val buckets = Array(SEARCH_RANK_COUNT) { mutableListOf<Song>() }
     for (song in songs) {
-        val titleHit = song.title.contains(query)
-        val artistHit = song.artist.contains(query)
-        if (!titleHit && !artistHit && song.tags.none { it.contains(query) }) continue
-        val rank = (if (song.title.startsWith(query)) 4 else 0) +
-            (if (song.artist.startsWith(query)) 2 else 0) +
-            (if (titleHit || artistHit) 1 else 0)
+        val rank = searchRank(title = song.title, artist = song.artist, tags = song.tags, query = query) ?: continue
         buckets[rank] += song.song
     }
     return buildList { for (rank in buckets.indices.reversed()) addAll(buckets[rank]) }
 }
+
+/**
+ * [rankSongs]' bucket for a song with these folded fields, higher being better, or null where [query] does not find
+ * it. Shared with the song picker ([songPickerMatches]), so that the same search over the same library answers the
+ * same way in both places.
+ */
+internal fun searchRank(title: String, artist: String, tags: List<String>, query: String): Int? {
+    val titleHit = title.contains(query)
+    val artistHit = artist.contains(query)
+    if (!titleHit && !artistHit && tags.none { it.contains(query) }) return null
+    return (if (title.startsWith(query)) 4 else 0) + (if (artist.startsWith(query)) 2 else 0) + (if (titleHit || artistHit) 1 else 0)
+}
+
+/** How many values [searchRank] has: its three keys have eight combinations. */
+internal const val SEARCH_RANK_COUNT = 8
 
 /**
  * What the song list shows for [normalizedQuery]: the [sections] as they are when there is nothing to search for, and

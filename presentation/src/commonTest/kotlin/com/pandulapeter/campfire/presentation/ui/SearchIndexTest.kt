@@ -13,6 +13,7 @@ import com.pandulapeter.campfire.data.model.domain.Song
 import com.pandulapeter.campfire.domain.api.models.SongSection
 import kotlin.test.Test
 import kotlin.test.assertEquals
+import kotlin.test.assertNull
 import kotlin.test.assertSame
 
 class SearchIndexTest {
@@ -29,6 +30,14 @@ class SearchIndexTest {
         )
         assertEquals(listOf("title", "title tie", "artist", "other", "tag"), rankSongs(songs, "love").map { it.title })
         assertEquals(songs.map { it.song }, rankSongs(songs, ""))
+    }
+
+    @Test
+    fun searchRankBucketsOneSong() {
+        assertNull(searchRank(title = "other", artist = "other", tags = listOf("rock"), query = "love"))
+        assertEquals(7, searchRank(title = "love song", artist = "lovers", tags = emptyList(), query = "love"))
+        assertEquals(1, searchRank(title = "beloved", artist = "else", tags = emptyList(), query = "love"))
+        assertEquals(0, searchRank(title = "else", artist = "else", tags = listOf("love songs"), query = "love"))
     }
 
     @Test
