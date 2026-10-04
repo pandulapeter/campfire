@@ -892,8 +892,8 @@ private fun DeleteLibraryDialog(
 /**
  * The [FocusRequester] of the field a dialog opens onto. A dialog that is there to be typed into puts the caret in
  * its first field rather than asking for one more tap, which on a touch platform is also what brings the keyboard
- * up with it - and every such dialog here holds that field as the first thing under the title, so there is only ever
- * the one field to open on. The forms that are opened to be looked over as much as to be typed into are the exception,
+ * up with it - and every such dialog here has one field that obviously comes first (its first field, or its only one,
+ * under whatever the dialog has to say before it), so there is only ever the one field to open on. The forms that are opened to be looked over as much as to be typed into are the exception,
  * opening on none of their fields: the song metadata form, and a setlist's details being edited. Both assignment
  * sheets leave their search fields unfocused.
  *
