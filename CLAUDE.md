@@ -249,10 +249,11 @@ localized in both languages.
   song details' About the song sheet shows each as a chip named by its optional name or its host, opening the page in
   the browser. The sheet is opened from the song details app bar — a button where there is room, the first entry of the
   overflow menu where not — and holds what the song says about itself, each group with an edit button outside
-  performance mode, where the groups it has nothing for are one row of chips that add them; key, capo, tempo and time stay on the page as the song's first section. The editor's preview shows
+  performance mode and outside an archived setlist, where the groups it has nothing for are one row of chips that add them; key, capo, tempo and time stay on the page as the song's first section. The editor's preview shows
   the same as a card that is the song's first section, flowing through its rows and columns and scaling with the
   lyrics, with the same edit buttons. The editor's overflow menu offers these actions in every pane, and the song
-  details overflow menu offers them outside performance mode, with cover art editing following the cover art setting.
+  details overflow menu offers them outside performance mode and for a song not opened from an archived setlist (which
+  leaves it Edit and Export, as an archived setlist's own song menus do), with cover art editing following the cover art setting.
   Performance mode leaves that row out, and the button that opens it where all of them are empty. The Manage links sheet edits addresses and optional names together,
   and their order, written once on Save; the links are shown in that order, where tags and languages are always
   shown alphabetically.

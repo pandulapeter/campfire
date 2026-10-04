@@ -863,9 +863,9 @@ private fun SongPreview(
 
 /**
  * The actions of the editor that are neither writing the file nor undoing a keystroke, behind the same overflow button
- * the song details screen uses: the metadata editors of [editingActions] while the preview's card that has them as
- * buttons is out of sight, including cover art where covers are on, prettifying, and the revert. They stay in the
- * menu however much room the bar has ([ActionsMenuItem.isAlwaysInMenu]), since throwing away everything typed since the last save is not
+ * the song details screen uses: the metadata editors of [editingActions] — in every pane, so they are a tap away also
+ * while the preview's card that has them as buttons is out of sight — with cover art next to Edit song details where
+ * covers are on, then prettifying and the revert. They stay in the menu however much room the bar has ([ActionsMenuItem.isAlwaysInMenu]), since throwing away everything typed since the last save is not
  * something to end up in by mistapping the button next to Save.
  */
 @Composable
