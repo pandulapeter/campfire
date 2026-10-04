@@ -1256,10 +1256,7 @@ private fun NewSongDialog(
                 field(Modifier.fillMaxWidth(), Field.ALBUM)
                 field(Modifier.fillMaxWidth(), Field.COMPOSER)
                 field(Modifier.fillMaxWidth(), Field.LYRICIST)
-                Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                    field(Modifier.weight(1f), Field.YEAR)
-                    field(Modifier.weight(1f), Field.DURATION)
-                }
+                SongMetadataShortFields(field)
             }
         },
         confirmButton = { close ->

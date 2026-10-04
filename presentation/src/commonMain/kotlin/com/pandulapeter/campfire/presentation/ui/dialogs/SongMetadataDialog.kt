@@ -11,7 +11,6 @@ package com.pandulapeter.campfire.presentation.ui.dialogs
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
@@ -27,11 +26,14 @@ import androidx.compose.runtime.saveable.listSaver
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.layout.Layout
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardCapitalization
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.VisualTransformation
+import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.unit.Constraints
 import androidx.compose.ui.unit.dp
 import com.pandulapeter.campfire.chordpro.ChordProMetadataFields.Field
 import com.pandulapeter.campfire.presentation.localization.stringResource
@@ -94,12 +96,7 @@ internal fun SongMetadataDialog(
                 field(Modifier.fillMaxWidth(), Field.ALBUM)
                 field(Modifier.fillMaxWidth(), Field.COMPOSER)
                 field(Modifier.fillMaxWidth(), Field.LYRICIST)
-                // The two short values share a row, each with room for its clear button and what it holds: next to the
-                // album, a year was left two digits' room once the button was there.
-                Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                    field(Modifier.weight(1f), Field.YEAR)
-                    field(Modifier.weight(1f), Field.DURATION)
-                }
+                SongMetadataShortFields(field)
             }
         },
         confirmButton = { close ->
@@ -146,7 +143,11 @@ internal fun SongMetadataField(
         },
         label = {
             val label = stringResource(field.label)
-            Text(if (isOptional) stringResource(Res.string.optional_field_label, label) else label)
+            Text(
+                text = if (isOptional) stringResource(Res.string.optional_field_label, label) else label,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis,
+            )
         },
         trailingIcon = rememberClearTextButton(isVisible = value.isNotEmpty(), onClear = { onValueChange("") }),
         singleLine = true,
@@ -160,6 +161,40 @@ internal fun SongMetadataField(
         ),
     )
 }
+
+/**
+ * The year and the duration, side by side where both labels fit on one line in either language, and one under the
+ * other on a phone, where half a sheet cuts "Duration (optional)" in two. The two short values share a row where they
+ * can, each with room for its clear button and what it holds: next to the album, a year was left two digits' room once
+ * the button was there. Which of the two it is is decided while measuring rather than by composing a row or a column,
+ * so that crossing the width (a rotation, a resized window) keeps the focused field, and the keyboard with it.
+ */
+@Composable
+internal fun SongMetadataShortFields(field: @Composable (Modifier, Field) -> Unit) = Layout(
+    content = {
+        field(Modifier.fillMaxWidth(), Field.YEAR)
+        field(Modifier.fillMaxWidth(), Field.DURATION)
+    },
+) { measurables, constraints ->
+    val gap = SHORT_FIELDS_GAP.roundToPx()
+    val isSideBySide = constraints.maxWidth >= MIN_SHORT_FIELDS_ROW_WIDTH.roundToPx()
+    val width = if (isSideBySide) (constraints.maxWidth - gap) / 2 else constraints.maxWidth
+    val (year, duration) = measurables.map { it.measure(Constraints.fixedWidth(width)) }
+    val height = if (isSideBySide) maxOf(year.height, duration.height) else year.height + gap + duration.height
+    layout(constraints.maxWidth, height) {
+        year.placeRelative(0, 0)
+        if (isSideBySide) duration.placeRelative(width + gap, 0) else duration.placeRelative(0, year.height + gap)
+    }
+}
+
+/**
+ * The narrowest form that puts the year and the duration side by side: each half has to hold the longer of the two
+ * languages' "Duration (optional)" on one line, next to the clear button once the field holds a value.
+ */
+private val MIN_SHORT_FIELDS_ROW_WIDTH = 480.dp
+
+/** The same gap the forms leave between their other fields. */
+private val SHORT_FIELDS_GAP = 8.dp
 
 private val Field.label: StringResource
     get() = when (this) {
