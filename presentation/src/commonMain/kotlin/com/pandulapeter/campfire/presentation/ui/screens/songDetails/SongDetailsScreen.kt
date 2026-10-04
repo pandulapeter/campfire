@@ -427,6 +427,8 @@ internal fun SongDetailsScreen(
                     )
                 }
                 currentSong?.takeIf { !isPerformanceModeEnabled }?.let { song ->
+                    val editingActions = songInfoEditingActions(rememberSongInfoEditing(viewModel = viewModel, song = song, isEditorDraft = false))
+                    val coverArtAction = if (isCoverArtEnabled) coverArtAction(viewModel = viewModel, song = song, isEditorDraft = false) else null
                     val isTranspositionShown = shouldShowChords && song.hasChords
                     val transposition = transpositions[song.fileName, destination.setlistFileName]
                     val isInSetlist = song.fileName in songFileNamesInSetlists
@@ -477,6 +479,7 @@ internal fun SongDetailsScreen(
                         song = song,
                         isDeletable = destination.setlistFileName == null,
                         setlistFileName = destination.setlistFileName,
+                        fileEditItems = editingActions.take(1) + listOfNotNull(coverArtAction) + editingActions.drop(1),
                         leadingItems = listOfNotNull(
                             currentSongInfoAction?.takeUnless { showsSongInfoInBar },
                             if (showsSetlistAssignmentsInBar) {

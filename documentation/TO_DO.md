@@ -28,7 +28,7 @@
 ## Features
 - Multi-select songs for bulk export or bulk edit (assign tags, languages, setlists)
 - Implement optionally auto-indexing similar sections within a song
-- Metronome: documentation/plans/metronome.md
+- Metronome: documentation/plans/metronome.md. Think about an always-present panel when the metronome is playing, no matter where the user is in the app and how changing the BPM affects the duration of a song
 - Haptic effects, especially for the fast scroller
 
 ## Ideas
@@ -40,8 +40,9 @@
 - Chord diagrams (guitar, ukulele, keyboard) - user library, variations
 - External monitor support for lyrics only...? Maybe as a new window on desktop, lyric projection via AirPlay / Chromecast, etc
 - Streaming zip writer on all platforms
+- Backing tracks?
 - First time user experience tutorial ?
-- Native iOS, macOS, feel (overscroll, touch feedback, Liquid Glass)
+- Native iOS, macOS, feel (overscroll, touch feedback, fonts, icons, colors, themes - Liquid Glass)
 
 ## Other
 - Test support with external control devices

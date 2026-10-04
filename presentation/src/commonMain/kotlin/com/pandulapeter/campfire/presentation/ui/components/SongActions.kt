@@ -296,8 +296,8 @@ private val ACTION_BUTTON_CONTAINER_SIZE = 40.dp
  * @param leadingItems Actions put before the song's own: the ones that belong to the row rather than to the song
  *   (moving a row of a setlist up or down, and taking it out of the setlist), and on the song details screen whichever
  *   of its bar's buttons the bar has no room for: the sheet of what the song is, and the setlist assignments.
- * @param fileEditItems Metadata editors, kept after the editor in the menu: tags and languages on a song card.
- *   The song details screen edits metadata and cover art from its song info sheet.
+ * @param fileEditItems Metadata editors, kept after the editor in the menu: tags and languages on a song card,
+ *   and all metadata and cover art editors on the song details screen.
  * @param menuFooter The song details screen's transposition and text size steppers, see [ActionsMenu].
  */
 @Composable

@@ -452,10 +452,8 @@ private fun LoadedSongEditor(
                 }
                 EditorMenu(
                     modifier = Modifier.overlappingAction(start = ACTION_BUTTON_OVERLAP, end = 0.dp),
-                    // What the song says about itself is edited from the preview's card, and from the menu only while
-                    // the preview is out of sight.
-                    editingActions = if (panes == EditorPanes.EDIT) songInfoEditingActions(songInfoEditing) else emptyList(),
-                    coverArtAction = if (panes == EditorPanes.EDIT && userPreferences?.isCoverArtEnabled == true) {
+                    editingActions = songInfoEditingActions(songInfoEditing),
+                    coverArtAction = if (userPreferences?.isCoverArtEnabled == true) {
                         coverArtAction(viewModel = viewModel, song = editorSong, isEditorDraft = true)
                     } else {
                         null

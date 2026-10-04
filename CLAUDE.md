@@ -250,7 +250,8 @@ localized in both languages.
   overflow menu where not — and holds what the song says about itself, each group with an edit button outside
   performance mode, where the groups it has nothing for are one row of chips that add them; key, capo, tempo and time stay on the page as the song's first section. The editor's preview shows
   the same as a card that is the song's first section, flowing through its rows and columns and scaling with the
-  lyrics, with the same edit buttons, which are entries of the editor's overflow menu while the preview is hidden.
+  lyrics, with the same edit buttons. The editor's overflow menu offers these actions in every pane, and the song
+  details overflow menu offers them outside performance mode, with cover art editing following the cover art setting.
   Performance mode leaves that row out, and the button that opens it where all of them are empty. The Edit links sheet edits addresses and optional names together,
   and their order, written once on Save; the links are shown in that order, where tags and languages are always
   shown alphabetically.

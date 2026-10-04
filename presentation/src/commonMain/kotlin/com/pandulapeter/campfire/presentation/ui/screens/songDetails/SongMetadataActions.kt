@@ -80,8 +80,8 @@ internal fun rememberSongInfoEditing(
 }
 
 /**
- * [SongInfoEditing] as entries of a menu, for the editor while its preview, and the card with the buttons on it, is out
- * of sight. In the order of the card's groups, and kept behind the overflow tap however much room the bar has.
+ * [SongInfoEditing] as entries of the editor and song details menus. In the order of the card's groups, and kept
+ * behind the overflow tap however much room the bar has.
  */
 @Composable
 internal fun songInfoEditingActions(editing: SongInfoEditing): List<ActionsMenuItem> = listOf(
@@ -112,7 +112,7 @@ internal fun songInfoEditingActions(editing: SongInfoEditing): List<ActionsMenuI
 )
 
 /**
- * Opens the cover art sheet from the editor menu while the preview card is out of sight.
+ * Opens the cover art sheet from the editor or song details menu.
  */
 @Composable
 internal fun coverArtAction(

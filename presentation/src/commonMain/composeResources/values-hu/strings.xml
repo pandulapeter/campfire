@@ -390,7 +390,7 @@
     <string name="song_details_section_collapse">Szakasz elrejtése</string>
     <string name="song_details_section_expand_starting">A „%1$s” kezdetű szakasz megjelenítése</string>
     <string name="song_details_section_collapse_starting">A „%1$s” kezdetű szakasz elrejtése</string>
-    <string name="song_details_tags_manage">Címkék szerkesztése</string>
+    <string name="song_details_tags_manage">Címkék kezelése</string>
     <string name="song_details_tags_search">Címke keresése vagy létrehozása</string>
     <string name="song_details_tag_create">A(z) „%1$s” címke létrehozása</string>
     <string name="song_details_metadata_edit">Daladatok szerkesztése</string>
@@ -410,10 +410,10 @@
         <item quantity="one">Hivatkozás</item>
         <item quantity="other">Hivatkozások</item>
     </plurals>
-    <string name="song_details_links_edit">Hivatkozások szerkesztése</string>
+    <string name="song_details_links_edit">Hivatkozások kezelése</string>
     <string name="song_details_link_name">Név (nem kötelező)</string>
     <string name="song_details_link_duplicate">Ez a webcím már szerepel a listában</string>
-    <string name="song_details_languages_edit">Nyelvek szerkesztése</string>
+    <string name="song_details_languages_edit">Nyelvek kezelése</string>
     <string name="song_details_remove_cover_art_confirmation">Eltávolítod a(z) %1$s dal borítóképét?</string>
     <string name="song_details_link_add">Hivatkozás hozzáadása</string>
     <string name="song_details_link_remove">A(z) %1$s oldalra mutató hivatkozás eltávolítása</string>
