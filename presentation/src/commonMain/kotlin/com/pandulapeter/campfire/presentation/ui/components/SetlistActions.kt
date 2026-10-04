@@ -109,7 +109,6 @@ internal fun SetlistActions(
             ),
             ActionsMenuItem(
                 title = stringResource(Res.string.setlists_delete_setlist),
-                isVisible = !setlist.isArchived,
                 icon = painterResource(Res.drawable.ic_delete),
                 isAlwaysInMenu = true,
                 onClick = { viewModel.showDialog(CampfireViewModel.DialogType.DeleteSetlist(setlist)) },

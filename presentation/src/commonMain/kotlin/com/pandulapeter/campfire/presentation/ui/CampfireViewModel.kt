@@ -2965,7 +2965,6 @@ class CampfireViewModel(
 
     fun deleteSetlist(setlistFileName: String) = launchLibraryChange {
         if (reorderingSetlistFileName == setlistFileName) reorderingSetlistFileName = null
-        if (setlists.value.firstOrNull { it.fileName == setlistFileName }?.isArchived != false) return@launchLibraryChange
         deleteSetlist.invoke(setlistFileName)
     }
 
