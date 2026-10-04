@@ -1588,11 +1588,12 @@ private fun SongLanguagesDialog(
  * on top of the sheet rather than instead of it: the setlist is only being created so that this song can go into it,
  * so the sheet staying where it is, with a ticked row appearing in it, is what says that it worked.
  *
- * A library that holds no setlists at all skips the sheet and asks for the name of the first one straight away,
- * since a sheet offering nothing to tick is one tap in the way of the only thing that can be done there. Whether
- * that is what happened is decided once, as the dialog opens ([isCreatingFirstSetlist]) rather than read from the
- * list as it stands: creating the setlist fills the list, and the sheet must not slide in behind a dialog that is
- * on its way out. It is also what the naming dialog is closed by, since there is nothing behind it to return to.
+ * A library with no setlist the song could be put in - none at all, or only archived ones it is not in - skips the
+ * sheet and asks for the name of a new one straight away, since a sheet offering nothing to tick is one tap in the way
+ * of the only thing that can be done there. Whether that is what happened is decided once, as the dialog opens
+ * ([isSkippingToNewSetlist], through [hasListableSetlist]) rather than read from the list as it stands: creating the
+ * setlist fills the list, and the sheet must not slide in behind a dialog that is on its way out. It is also what the
+ * naming dialog is closed by, since there is nothing behind it to return to.
  */
 @Composable
 private fun SetlistPicker(
@@ -1620,10 +1621,10 @@ private fun SetlistPicker(
         }
     }
     val orderedMatches = remember(matches, setlistOrder) { setlistOrder.ordered(matches) { it.fileName } }
-    val isCreatingFirstSetlist = rememberSaveable { setlists.isEmpty() }
-    var isNamingNewSetlist by rememberSaveable { mutableStateOf(isCreatingFirstSetlist) }
-    val closeNamingDialog = { if (isCreatingFirstSetlist) viewModel.dismissSheet(dialog) else isNamingNewSetlist = false }
-    if (!isCreatingFirstSetlist) {
+    val isSkippingToNewSetlist = rememberSaveable { !hasListableSetlist(setlists, dialog.song.fileName) }
+    var isNamingNewSetlist by rememberSaveable { mutableStateOf(isSkippingToNewSetlist) }
+    val closeNamingDialog = { if (isSkippingToNewSetlist) viewModel.dismissSheet(dialog) else isNamingNewSetlist = false }
+    if (!isSkippingToNewSetlist) {
         CampfireBottomSheet(
             title = stringResource(Res.string.songs_setlist_assignments),
             subtitle = songLabel(dialog.song),
