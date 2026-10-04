@@ -613,6 +613,7 @@ private fun ExportScreen(
                                                 selected = state.selected.orEmpty(),
                                                 // Beside the options the save button floats over the end of this pane.
                                                 bottomPadding = if (isSideBySide) bottomInset + SAVE_BUTTON_CLEARANCE else 8.dp,
+                                                isBottomAnchored = isSideBySide,
                                             )
                                         } else {
                                             val emptyMessage = when {
@@ -908,7 +909,7 @@ private fun PrintOptions(
 ) {
     val state = rememberLazyListState()
     val isPdf = settings.format == PrintSettings.Format.PDF
-    LazyColumn(modifier.bounceScrollableContent(state).fadingVerticalEdges(state), state = state, contentPadding = PaddingValues(top = 8.dp, bottom = bottomPadding)) {
+    LazyColumn(modifier.bounceScrollableContent(state).fadingTopEdge(state), state = state, contentPadding = PaddingValues(top = 8.dp, bottom = bottomPadding)) {
         if (header != null) {
             item(key = "preview") { header() }
         }
@@ -1160,6 +1161,7 @@ private fun FilesPreview(
     setlistFileName: String?,
     selected: Set<Int>,
     bottomPadding: Dp,
+    isBottomAnchored: Boolean,
 ) {
     val text = source.songs.firstOrNull()?.text
     when {
@@ -1169,6 +1171,7 @@ private fun FilesPreview(
             setlistFileName = setlistFileName.orEmpty(),
             songs = source.songs.filterIndexed { index, _ -> index in selected },
             bottomPadding = bottomPadding,
+            isBottomAnchored = isBottomAnchored,
         )
         text == null -> FilesPreviewMessage(modifier, stringResource(Res.string.print_missing))
         else -> {
@@ -1205,9 +1208,13 @@ private fun ZipContents(
     setlistFileName: String,
     songs: List<PrintSong>,
     bottomPadding: Dp,
+    isBottomAnchored: Boolean,
 ) {
     val state = rememberLazyListState()
-    LazyColumn(modifier.bounceScrollableContent(state).fadingVerticalEdges(state), state = state, contentPadding = PaddingValues(top = 8.dp, bottom = bottomPadding)) {
+    // Beside the options the list ends at the window's bottom, where nothing fades; above more options it is a list in
+    // the middle of something, which says it goes on at both ends.
+    val edgeFade = if (isBottomAnchored) Modifier.fadingTopEdge(state) else Modifier.fadingVerticalEdges(state)
+    LazyColumn(modifier.bounceScrollableContent(state).then(edgeFade), state = state, contentPadding = PaddingValues(top = 8.dp, bottom = bottomPadding)) {
         item {
             SettingsSectionTitle(text = stringResource(Res.string.print_zip_contents))
             ZipFileRow(
