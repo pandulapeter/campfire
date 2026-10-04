@@ -1132,6 +1132,9 @@ private fun SetlistDateField(
         // The picker counts in milliseconds of UTC midnights, whatever the device's time zone, so the day goes in and
         // comes out through UTC rather than through the local zone, which would move it by a day on one side of it.
         var selectedMillis by rememberSaveable { mutableStateOf(date.atStartOfDayIn(TimeZone.UTC).toEpochMilliseconds()) }
+        // The day the calendar was opened on: the form's date changes as Save is tapped, and the button sliding away with
+        // the sheet must not turn grey in its last frames.
+        val openedMillis = rememberSaveable { date.atStartOfDayIn(TimeZone.UTC).toEpochMilliseconds() }
         // The calendar is given the app's language rather than the system's, which is what rememberDatePickerState
         // would take. The state built here is not saveable, so the day picked but not yet confirmed is carried
         // through a rotation by selectedMillis instead.
@@ -1144,13 +1147,12 @@ private fun SetlistDateField(
         CampfireBottomSheet(
             title = stringResource(Res.string.setlists_pick_date),
             onDismiss = dismiss,
-            actions = {
+            actions = { close ->
                 BottomSheetConfirmButton(
-                    enabled = state.selectedDateMillis != null &&
-                        state.selectedDateMillis != date.atStartOfDayIn(TimeZone.UTC).toEpochMilliseconds(),
+                    enabled = state.selectedDateMillis != null && state.selectedDateMillis != openedMillis,
                     onClick = {
                         state.selectedDateMillis?.let { onDateChange(Instant.fromEpochMilliseconds(it).toLocalDateTime(TimeZone.UTC).date) }
-                        dismiss()
+                        close()
                     },
                 ) { Text(stringResource(Res.string.save)) }
             },
