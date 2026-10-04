@@ -3128,6 +3128,20 @@ class CampfireViewModel(
         filter.copy(selectedLanguages = filter.selectedLanguages.filterNotTo(mutableSetOf()) { it in libraryLanguages })
     }
 
+    /**
+     * Both groups at once, each as careful as its own clear action, so that what is reset is what [isSongFilterActive]
+     * counted. One update rather than the two clear actions in a row, which would filter the list twice and could show
+     * it with only the tags reset for a frame.
+     */
+    fun clearSongFilter() = _songFilter.update { filter ->
+        val libraryTags = tags.value.mapTo(mutableSetOf()) { it.name.lowercase() }
+        val libraryLanguages = languages.value.mapTo(mutableSetOf()) { it.code }
+        filter.copy(
+            selectedTags = filter.selectedTags.filterNotTo(mutableSetOf()) { it.lowercase() in libraryTags },
+            selectedLanguages = filter.selectedLanguages.filterNotTo(mutableSetOf()) { it in libraryLanguages },
+        )
+    }
+
     fun setUiMode(value: UserPreferences.UiMode) = changeUserPreferences { copy(uiMode = value) }
 
     fun setThemeColor(value: UserPreferences.ThemeColor) = changeUserPreferences { copy(themeColor = value) }

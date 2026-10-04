@@ -156,6 +156,7 @@
     <string name="songs_languages_match_mode_all">Every language</string>
     <string name="songs_labels_sorted_by_usage">Sorted by usage</string>
     <string name="songs_labels_sorted_alphabetically">Sorted alphabetically</string>
+    <string name="songs_filters_reset">Reset all filters</string>
 
     <!-- Setlists screen -->
     <string name="setlists">Setlists</string>

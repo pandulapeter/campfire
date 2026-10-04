@@ -48,6 +48,7 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.LocalMinimumInteractiveComponentSize
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.VerticalDivider
@@ -96,6 +97,7 @@ import com.pandulapeter.campfire.presentation.resources.songs_tags_match_mode
 import com.pandulapeter.campfire.presentation.resources.songs_tags_match_mode_all
 import com.pandulapeter.campfire.presentation.resources.songs_tags_match_mode_any
 import com.pandulapeter.campfire.presentation.resources.songs_filters_show_all
+import com.pandulapeter.campfire.presentation.resources.songs_filters_reset
 import com.pandulapeter.campfire.presentation.resources.songs_filters_show_less
 import com.pandulapeter.campfire.presentation.ui.CampfireViewModel
 import org.jetbrains.compose.resources.painterResource
@@ -231,6 +233,7 @@ internal fun SongFilters(
     val songFilter by viewModel.songFilter.collectAsStateWithLifecycle()
     val tags by viewModel.tags.collectAsStateWithLifecycle()
     val languages by viewModel.languages.collectAsStateWithLifecycle()
+    val isSongFilterActive by viewModel.isSongFilterActive.collectAsStateWithLifecycle()
     val scrollState = rememberScrollState()
     // The height of what the filters are shown in is only known outside the scroll, which measures its content
     // against an unbounded one.
@@ -269,6 +272,38 @@ internal fun SongFilters(
             onMatchModeSelected = viewModel::setLanguageMatchMode,
             onSortingModeSelected = viewModel::setLanguageSortingMode,
         )
+        ResetFiltersButton(
+            modifier = Modifier.layoutId(FilterSlot.TRANSIENT),
+            isVisible = isSongFilterActive,
+            onClick = viewModel::clearSongFilter,
+        )
+    }
+}
+
+/**
+ * Empties every group at once, under the last one. It is offered for exactly as long as the filter action carries its
+ * badge, since what it resets is the selection that badge points at, and it is left out of the sharing like the
+ * "any / every" choice, so its arrival takes no room from the chips that were just tapped.
+ */
+@Composable
+private fun ResetFiltersButton(
+    modifier: Modifier = Modifier,
+    isVisible: Boolean,
+    onClick: () -> Unit,
+) = AnimatedVisibility(
+    modifier = modifier,
+    visible = isVisible,
+    enter = expandVertically() + fadeIn(),
+    exit = shrinkVertically() + fadeOut(),
+) {
+    OutlinedButton(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(horizontal = CONTROLS_PADDING)
+            .padding(top = FILTER_GROUP_GAP * 2),
+        onClick = onClick,
+    ) {
+        Text(text = stringResource(Res.string.songs_filters_reset))
     }
 }
 

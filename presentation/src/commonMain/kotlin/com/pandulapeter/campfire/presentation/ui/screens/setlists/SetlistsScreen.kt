@@ -52,6 +52,7 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.semantics.CustomAccessibilityAction
@@ -259,15 +260,35 @@ private fun SetlistList(
     onReorderingSetlistChanged: (String?) -> Unit,
 ) {
     val setlistsWithSongs by viewModel.setlistsWithSongs.collectAsStateWithLifecycle()
-    // Keep validation and writes tied to the full library; only the rendered list is narrowed by this mode.
-    val shownSetlists = remember(setlistsWithSongs, isReordering, reorderingSetlistFileName) {
-        if (isReordering) setlistsWithSongs.filter { it.setlist.fileName == reorderingSetlistFileName }
+    // Keep validation and writes tied to the full library; only the rendered list is narrowed by this mode, and only
+    // once the setlist being reordered is the pinned one (see below), which can be a scroll later than the mode starts.
+    var narrowedSetlistFileName by remember { mutableStateOf<String?>(null) }
+    val shownSetlists = remember(setlistsWithSongs, narrowedSetlistFileName) {
+        if (narrowedSetlistFileName != null) setlistsWithSongs.filter { it.setlist.fileName == narrowedSetlistFileName }
         else setlistsWithSongs
     }
+    // Empty room under the full list's end while it scrolls the setlist being reordered up to be pinned, which a
+    // setlist near the end could not otherwise reach.
+    var roomToPin by remember { mutableStateOf(0.dp) }
+    val density = LocalDensity.current
     val selectedSetlist by rememberUpdatedState(shownSetlists.singleOrNull())
     LaunchedEffect(isReordering, reorderingSetlistFileName) {
-        if (isReordering) {
-            listState.stopScroll()
+        if (!isReordering) {
+            narrowedSetlistFileName = null
+            return@LaunchedEffect
+        }
+        listState.stopScroll()
+        try {
+            // A setlist further down is scrolled up in the full list first, so that its header pushes the pinned one
+            // out the way any scroll does. Narrowing the list first would take the pinned header away in one frame and
+            // drop the new one into its place, since a sticky header's placement is the grid's and not animated.
+            val headerIndex = listState.layoutInfo.visibleItemsInfo.firstOrNull { it.key == "setlist_$reorderingSetlistFileName" }?.index
+            if (narrowedSetlistFileName == null && headerIndex != null && headerIndex != listState.firstVisibleItemIndex) {
+                roomToPin = with(density) { listState.layoutInfo.viewportSize.height.toDp() }
+                snapshotFlow { listState.layoutInfo.let { it.afterContentPadding >= it.viewportSize.height } }.first { it }
+                listState.animateScrollToItem(headerIndex)
+            }
+            narrowedSetlistFileName = reorderingSetlistFileName
             // LazyGridState still describes the full list until the restricted grid has been measured. Starting
             // earlier animates towards an index from the old list, then jumps as the other setlists disappear.
             snapshotFlow {
@@ -281,8 +302,12 @@ private fun SetlistList(
                     }
                 }
             }.first { it }
-            listState.animateScrollToItem(0)
+        } finally {
+            // Given back only once the narrowed list is measured with its header at the top: taken away while the full
+            // list still stood scrolled into it, the room would have pulled the list back down in a single frame.
+            roomToPin = 0.dp
         }
+        listState.animateScrollToItem(0)
     }
     val setlists by viewModel.setlists.collectAsStateWithLifecycle()
     val userPreferences by viewModel.userPreferences.collectAsStateWithLifecycle()
@@ -383,7 +408,7 @@ private fun SetlistList(
             columns = ListColumns(columnCount),
             modifier = gridModifier.bounceScrollableContent(listState),
             state = listState,
-            contentPadding = contentPadding.only(start = true, end = true, bottom = true, extraEnd = FAST_SCROLLER_WIDTH, extraBottom = if (isReordering) 88.dp else 8.dp),
+            contentPadding = contentPadding.only(start = true, end = true, bottom = true, extraEnd = FAST_SCROLLER_WIDTH, extraBottom = roomToPin + if (isReordering) 88.dp else 8.dp),
         ) {
             // The setlists are what this screen is about, and they are listed whenever there are any - an empty library
             // included, where they are simply empty and each offers to be filled. The library's own empty state belongs
@@ -623,7 +648,7 @@ private fun SetlistList(
                     }
                 }
             }
-            if (!isReordering && setlists.any { it.isArchived }) {
+            if (narrowedSetlistFileName == null && setlists.any { it.isArchived }) {
                 item(
                     key = "show_archived_setlists",
                     span = { GridItemSpan(maxLineSpan) },
