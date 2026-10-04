@@ -636,9 +636,14 @@ private fun SetlistList(
                             span = { GridItemSpan(maxLineSpan) },
                             contentType = "setlist_action",
                         ) {
-                            AnimatedVisibility(visible = !setlistWithSongs.setlist.isArchived) {
+                            // The item animation goes on the item's root layout, the only one the grid animates, which
+                            // is the visibility wrapper here rather than the row inside it.
+                            AnimatedVisibility(
+                                modifier = listItemAnimation(listState, hasLoadedLibrary),
+                                visible = !setlistWithSongs.setlist.isArchived,
+                            ) {
                                 ActionListItem(
-                                    modifier = listItemAnimation(listState, hasLoadedLibrary).fadingUnderListTop(topFade),
+                                    modifier = Modifier.fadingUnderListTop(topFade),
                                     title = stringResource(Res.string.setlists_add_songs),
                                     icon = painterResource(Res.drawable.ic_add),
                                     onClick = { viewModel.showDialog(CampfireViewModel.DialogType.SongPicker(setlistWithSongs.setlist)) },
