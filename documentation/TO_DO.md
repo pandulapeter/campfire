@@ -8,15 +8,21 @@
  * https://mozilla.org/MPL/2.0/.
 -->
 # To do
-## Bugs
+## Bugs / issues
+- It's too easy to accidentally change a setlist's order
+- Import multiple files -> see details -> open one and delete / edit it from menu -> return to import details screen to see an outdated state
+- The Setlist assignments bottom sheet has an overshoot efect that interferes with the bottom sheet's default drag handling, while the Song assignments bottom sheet doesn't. The Links sheet is also inconsistent - review, find all similar issues, and fix.
+- The cover art bottom sheet has two primary actions
 
 ## Improvements
 - Maybe all bottom sheets with song names in their headers could show the cover art for the song
+- Reset all filters button
 - Add cover arts to the Song assignments bottom sheet list items
 - Cover art bottom sheet: do we even need search input fields here?
 - Rename master branch to main
 - Song search should also match by tag
 - Animate editor mode change (split)
+- Add overshoot effects on all platforms
 
 ## Features
 - Multi-select songs for bulk export or bulk edit (assign tags, languages, setlists)

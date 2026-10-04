@@ -333,6 +333,8 @@ its `campfire.pdf` is also the document importer's positioned export/reimport fi
 
 ## Scrolling performance
 
+`LocalOverscrollFactory` retains the native Android/iOS effects and supplies a pinned Apache-licensed port of Compose Foundation 1.12.1’s internal Cupertino effect on desktop/web. This covers all Foundation scroll containers, including long lists, Settings pages, text fields and pagers. Explicit scrolling containers also use `bounceScrollableContent` to handle content that fits. Desktop/web wheel events bypass Foundation overscroll, so the bridge handles boundary events in the same OS/browser units as Foundation and starts the upstream release spring immediately. Events with room to scroll remain under Foundation, preserving sticky headers and nested bars. No artificial scroll range is added; the lyrics reader’s step snapping is unchanged. Browser OS detection cannot load UIKit or Android effects into a Wasm binary.
+
 Before the first search interaction, Songs lays arriving section headers out fully expanded so loading cannot retain a collapsed first row as a scroll offset. `ListTopFade` treats leading collapsed header slots as zero scroll distance: its mask is absent at the real top and grows over the first 24dp of scrolling, including when the first card is item 1.
 
 `ListTopFade` caches an inverse gradient and uses `DstOut` inside its existing offscreen layer, translating the drawing

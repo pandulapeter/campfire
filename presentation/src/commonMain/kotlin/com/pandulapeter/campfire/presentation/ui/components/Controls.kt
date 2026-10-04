@@ -21,7 +21,6 @@ import androidx.compose.animation.shrinkHorizontally
 import androidx.compose.animation.shrinkVertically
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
-import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.indication
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
@@ -43,7 +42,6 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.selection.selectable
-import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.FilterChipDefaults
 import androidx.compose.material3.Icon
@@ -101,6 +99,8 @@ import com.pandulapeter.campfire.presentation.resources.songs_filters_show_all
 import com.pandulapeter.campfire.presentation.resources.songs_filters_show_less
 import com.pandulapeter.campfire.presentation.ui.CampfireViewModel
 import org.jetbrains.compose.resources.painterResource
+import com.pandulapeter.campfire.presentation.ui.platform.bounceHorizontalScroll
+import com.pandulapeter.campfire.presentation.ui.platform.bounceVerticalScroll
 
 /**
  * Whether the [ControlsSidePanel] fits into a screen of the given width: the list comes first, so the panel only gets
@@ -239,7 +239,7 @@ internal fun SongFilters(
         modifier = Modifier
             .fillMaxWidth()
             .fadingTopEdge(scrollState)
-            .verticalScroll(scrollState)
+            .bounceVerticalScroll(scrollState)
             .padding(contentPadding),
         availableHeight = availableHeight,
     ) {
@@ -654,7 +654,7 @@ internal fun <T : Any> SortableChipRow(
         modifier = Modifier
             .fillMaxWidth()
             .fadingUnderStartOverlay(scrolledFromStart = { scrollState.value }, overlayWidth = toggleEnd)
-            .horizontalScroll(scrollState),
+            .bounceHorizontalScroll(scrollState),
     ) {
         LookaheadScope {
             Row(

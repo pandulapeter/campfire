@@ -21,6 +21,13 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import com.pandulapeter.campfire.presentation.ui.LocalIsCoveredByRequiredUpdate
+import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.heightIn
+import androidx.compose.foundation.layout.ime
+import androidx.compose.foundation.layout.safeDrawing
+import androidx.compose.foundation.layout.union
+import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.platform.LocalWindowInfo
 
 /**
  * The popup behind app bar and overflow buttons, and the one place that knows whether one is open: a
@@ -40,6 +47,15 @@ internal fun OverflowMenu(
     button: @Composable (open: () -> Unit) -> Unit,
     content: @Composable (select: (action: () -> Unit) -> Unit) -> Unit,
 ) {
+    // Read the app window before entering the popup: its scrolling content needs a finite height even when
+    // the iOS popup layer supplies unbounded constraints after rotation. Overlapping keyboard and safe-area
+    // insets are counted once, and the limit follows window resizing and keyboard changes.
+    val density = LocalDensity.current
+    val windowHeight = LocalWindowInfo.current.containerSize.height
+    val insets = WindowInsets.safeDrawing.union(WindowInsets.ime)
+    val availableHeight = with(density) {
+        (windowHeight - insets.getTop(this) - insets.getBottom(this)).coerceAtLeast(0).toDp()
+    }
     // A menu is a window of its own, which the update required screen cannot cover; it is left open in its state and
     // comes back if that screen ever goes, see LocalIsCoveredByRequiredUpdate.
     val isShown = state.isExpanded && !LocalIsCoveredByRequiredUpdate.current
@@ -54,6 +70,7 @@ internal fun OverflowMenu(
     Box(modifier = modifier) {
         button(state::open)
         DropdownMenu(
+            modifier = Modifier.heightIn(max = availableHeight),
             expanded = isShown,
             onDismissRequest = state::dismiss,
         ) {

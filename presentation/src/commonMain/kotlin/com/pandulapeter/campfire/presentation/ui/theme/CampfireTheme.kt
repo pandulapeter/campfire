@@ -9,6 +9,7 @@
  */
 package com.pandulapeter.campfire.presentation.ui.theme
 
+import androidx.compose.foundation.LocalOverscrollFactory
 import androidx.compose.animation.core.Animatable
 import androidx.compose.material3.ColorScheme
 import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
@@ -29,6 +30,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.lerp
 import com.pandulapeter.campfire.data.model.domain.UserPreferences
 import com.pandulapeter.campfire.presentation.ui.platform.isStartupScreenHeldUntilAppReady
+import com.pandulapeter.campfire.presentation.ui.platform.rememberContentOverscrollFactory
 import kotlin.math.roundToInt
 
 /**
@@ -152,6 +154,7 @@ fun CampfireTheme(
         typography = typography ?: MaterialTheme.typography,
     ) {
         CompositionLocalProvider(
+            LocalOverscrollFactory provides rememberContentOverscrollFactory(),
             LocalMonospaceFontFamily provides monospaceFontFamily(),
             LocalSecondAccentColor provides lerp(secondAccentStart, secondAccentStop, steppedProgress),
         ) {

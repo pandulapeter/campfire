@@ -64,6 +64,7 @@ import com.pandulapeter.campfire.presentation.ui.CampfireViewModel
 import com.pandulapeter.campfire.presentation.ui.components.fadingTopEdge
 import com.pandulapeter.campfire.presentation.ui.components.rememberClearTextButton
 import com.pandulapeter.campfire.presentation.ui.components.textResource
+import com.pandulapeter.campfire.presentation.ui.platform.bounceScrollableContent
 import com.pandulapeter.campfire.presentation.ui.screens.songDetails.linkLabel
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
@@ -111,7 +112,7 @@ internal fun SongLinksDialog(
         retainHeight = true,
         text = { contentPadding ->
             LazyColumn(
-                modifier = Modifier.fillMaxWidth().fadingTopEdge(listState),
+                modifier = Modifier.bounceScrollableContent(listState).fillMaxWidth().fadingTopEdge(listState),
                 state = listState,
                 contentPadding = contentPadding,
                 verticalArrangement = Arrangement.spacedBy(12.dp),

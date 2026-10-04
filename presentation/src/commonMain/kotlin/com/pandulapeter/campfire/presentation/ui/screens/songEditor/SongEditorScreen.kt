@@ -42,9 +42,7 @@ import androidx.compose.foundation.text.input.TextFieldLineLimits
 import androidx.compose.foundation.text.input.TextFieldState
 import androidx.compose.foundation.text.input.delete
 import androidx.compose.foundation.text.input.insert
-import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
@@ -143,6 +141,8 @@ import com.pandulapeter.campfire.presentation.ui.components.overlappingAction
 import com.pandulapeter.campfire.presentation.ui.components.SegmentedChoice
 import com.pandulapeter.campfire.presentation.ui.components.WindowSize
 import com.pandulapeter.campfire.presentation.ui.navigation.CampfireDestination
+import com.pandulapeter.campfire.presentation.ui.platform.bounceHorizontalScroll
+import com.pandulapeter.campfire.presentation.ui.platform.bounceVerticalScroll
 import com.pandulapeter.campfire.presentation.ui.screens.songDetails.APP_BAR_COVER_GAP
 import com.pandulapeter.campfire.presentation.ui.screens.songDetails.APP_BAR_COVER_SIZE
 import com.pandulapeter.campfire.presentation.ui.screens.songDetails.SectionMotion
@@ -725,7 +725,7 @@ private fun ChordProTextField(
             // asks its ancestors to bring the caret into view as it moves, so this follows the typing on its own.
             // The fade goes outside that container, on the pane itself, so it stays at the pane's top edge.
             .fadingTopEdge(scrollState, MaterialTheme.colorScheme.background)
-            .horizontalScroll(horizontalScrollState)
+            .bounceHorizontalScroll(horizontalScrollState)
             // The keyboard reaches the field only through the content padding this screen was handed, see CampfireApp,
             // and only the part of it that covers the field is applied, once: applying the whole inset a second time
             // shrinks the field to a couple of lines as soon as the keyboard comes up. Top padding would sit outside
@@ -845,7 +845,7 @@ private fun SongPreview(
             modifier = Modifier
                 .fillMaxSize()
                 .fadingTopEdge(scrollState, MaterialTheme.colorScheme.background)
-                .verticalScroll(scrollState)
+                .bounceVerticalScroll(scrollState)
                 .padding(start = 16.dp, end = 16.dp, top = topPadding)
                 .padding(contentPadding.only(start = true, end = true, bottom = true, extraBottom = 32.dp)),
             model = preview.second,

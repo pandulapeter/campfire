@@ -118,6 +118,7 @@ import com.pandulapeter.campfire.presentation.ui.components.searchTravelSpec
 import com.pandulapeter.campfire.presentation.ui.components.underAppBar
 import com.pandulapeter.campfire.presentation.ui.navigation.CampfireDestination
 import com.pandulapeter.campfire.presentation.ui.platform.LocalFilePicker
+import com.pandulapeter.campfire.presentation.ui.platform.bounceScrollableContent
 import com.pandulapeter.campfire.presentation.ui.platform.isDesktopPlatform
 import com.pandulapeter.campfire.presentation.ui.screens.songDetails.songLabelActions
 import kotlinx.coroutines.flow.filter
@@ -423,7 +424,7 @@ private fun SongList(
     Box(modifier = modifier) {
         LazyVerticalGrid(
             columns = ListColumns(columnCount),
-            modifier = gridModifier,
+            modifier = gridModifier.bounceScrollableContent(listState),
             state = listState,
             contentPadding = contentPadding.only(start = true, end = true, bottom = true, extraEnd = FAST_SCROLLER_WIDTH, extraBottom = 8.dp),
         ) {

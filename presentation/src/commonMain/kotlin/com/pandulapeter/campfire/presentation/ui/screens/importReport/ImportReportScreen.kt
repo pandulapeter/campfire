@@ -138,6 +138,7 @@ import com.pandulapeter.campfire.presentation.ui.components.SearchState
 import com.pandulapeter.campfire.presentation.ui.components.TruncateSearchQuery
 import com.pandulapeter.campfire.presentation.ui.components.fadingTopEdge
 import com.pandulapeter.campfire.presentation.ui.dialogs.ImportProgressContent
+import com.pandulapeter.campfire.presentation.ui.platform.bounceScrollableContent
 import com.pandulapeter.campfire.presentation.ui.theme.LocalSecondAccentColor
 import org.jetbrains.compose.resources.StringResource
 import org.jetbrains.compose.resources.painterResource
@@ -447,7 +448,7 @@ private fun ReportList(
     val fadeHeight = with(LocalDensity.current) { EDGE_FADE_SIZE.roundToPx() }
     HideKeyboardWhenScrolledDown(listState)
     LazyColumn(
-        modifier = Modifier
+        modifier = Modifier.bounceScrollableContent(listState)
             .fillMaxSize()
             .fadingTopEdge {
                 val field = searchFieldIndex?.let { index -> listState.layoutInfo.visibleItemsInfo.firstOrNull { it.index == index } }
