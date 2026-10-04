@@ -252,7 +252,7 @@ localized in both languages.
   the same as a card that is the song's first section, flowing through its rows and columns and scaling with the
   lyrics, with the same edit buttons. The editor's overflow menu offers these actions in every pane, and the song
   details overflow menu offers them outside performance mode, with cover art editing following the cover art setting.
-  Performance mode leaves that row out, and the button that opens it where all of them are empty. The Edit links sheet edits addresses and optional names together,
+  Performance mode leaves that row out, and the button that opens it where all of them are empty. The Manage links sheet edits addresses and optional names together,
   and their order, written once on Save; the links are shown in that order, where tags and languages are always
   shown alphabetically.
   From the editor those buttons change the text being typed rather than the file, which only Save writes.
