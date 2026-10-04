@@ -19,11 +19,16 @@ object ChordProSplitter {
         var delegatedEnvironment: String? = null
         ChordProSyntax.splitLines(text.withoutByteOrderMarks()).forEach { rawLine ->
             val trimmedLine = rawLine.trim()
-            // Inside an environment handed to another program a `{ns}` is that program's text, as the parser reads it, and
-            // only its own end closes it; one the file never closes takes the rest of the file, which the parser does too.
+            // Inside an environment handed to another program a `{ns}` is that program's text, as the parser reads it. Any
+            // `{end_of_…}` closes it and any `{start_of_…}` written with a value moves it on, whichever environment they
+            // name, as they do for the parser; one the file never closes takes the rest of the file, which the parser does too.
             if (delegatedEnvironment != null) {
-                val end = ChordProSyntax.matchDelegatedDirective(trimmedLine)?.name?.let(ChordProSyntax::endOfEnvironment)
-                if (end == delegatedEnvironment) delegatedEnvironment = null
+                ChordProSyntax.matchDelegatedDirective(trimmedLine)?.name?.let { name ->
+                    ChordProSyntax.startOfEnvironment(name)?.let { environment ->
+                        delegatedEnvironment = environment.takeIf { it in ChordProSyntax.delegateEnvironments }
+                    }
+                    ChordProSyntax.endOfEnvironment(name)?.let { delegatedEnvironment = null }
+                }
                 parts.last() += rawLine
                 return@forEach
             }

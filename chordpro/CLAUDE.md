@@ -192,8 +192,9 @@ in `:domain:*`. `:data:source:local:implementation` uses it directly for the met
   its languages and its links — and everything else is a thing a song can only be one of, which is what lets an editor stop
   offering it.
 - `ChordProSplitter` — splits a file that holds several songs at `{new_song}` / `{ns}`, trimming the blank lines around
-  each; one inside a delegated environment is that environment's text, as the parser reads it, and an environment the
-  file never closes takes the rest of it. `comparable` folds a text the same way, line endings included, which is what an import compares a part
+  each; one inside a delegated environment is that environment's text, as the parser reads it — any `{end_of_…}` closes
+  the environment and any `{start_of_…: label}` moves it on, whichever one they name — and an environment the file
+  never closes takes the rest of it. `comparable` folds a text the same way, line endings included, which is what an import compares a part
   against the file already on disk with: the same song, tagged in the app or written by hand, is not a conflict. Both
   drop a byte order mark wherever it sits, since joining two files that each carry one leaves one in the middle, and
   U+FEFF is not whitespace to `trim`, so a `{title}` behind it would be read as lyrics.

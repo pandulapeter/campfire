@@ -114,4 +114,22 @@ class ChordProSplitterTest {
     fun `a German chart is the same song as its standard copy`() {
         assertEquals(ChordProSplitter.comparable("{title: T}\n[H7]a [B]b"), ChordProSplitter.comparable("{title: T}\n[B7]a [Bb]b"))
     }
+
+    @Test
+    fun `any end directive closes a delegated environment, as the parser reads it`() {
+        assertEquals(
+            listOf("{start_of_abc}\nX\n{end_of_verse}", "{title: B}\n[C]b"),
+            ChordProSplitter.split("{start_of_abc}\nX\n{end_of_verse}\n{ns}\n{title: B}\n[C]b"),
+        )
+    }
+
+    @Test
+    fun `a start directive with a value inside a delegated environment moves it on, as the parser reads it`() {
+        assertEquals(
+            listOf("{start_of_abc}\nX\n{start_of_verse: V}\na", "{title: B}\n[C]b"),
+            ChordProSplitter.split("{start_of_abc}\nX\n{start_of_verse: V}\na\n{ns}\n{title: B}\n[C]b"),
+        )
+        // Another delegated environment started inside one keeps the `{ns}` part of it.
+        assertEquals(1, ChordProSplitter.split("{start_of_abc}\n{start_of_ly: L}\n{ns}\nx").size)
+    }
 }
