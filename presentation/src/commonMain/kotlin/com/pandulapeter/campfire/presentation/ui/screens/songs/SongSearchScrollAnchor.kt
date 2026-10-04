@@ -9,6 +9,10 @@
  */
 package com.pandulapeter.campfire.presentation.ui.screens.songs
 
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
+import androidx.compose.runtime.setValue
+
 /** Holds a visible card in screen coordinates only while the search owns the scroll position. */
 internal class SongSearchScrollAnchor(private var isOpen: Boolean) {
     data class Position(val index: Int, val offset: Int)
@@ -25,7 +29,11 @@ internal class SongSearchScrollAnchor(private var isOpen: Boolean) {
     private var screenTop = 0
     private var originalPosition: Position? = null
     private var lastInset: Int? = null
-    var trailingHeaderCount = 0
+    /**
+     * State rather than a plain field, since the spacer at the end of the list reads it while it is measured: the anchor
+     * being let go of has to measure the spacer again, or the room it kept would stay at the end of the results.
+     */
+    var trailingHeaderCount by mutableIntStateOf(0)
         private set
 
     fun update(open: Boolean, contents: Any, isScrolling: Boolean, inset: Int, capture: () -> Snapshot?) {
