@@ -726,7 +726,8 @@ private fun CoverArtSearchActions(
     verticalAlignment = Alignment.CenterVertically,
 ) {
     if (canRemove) {
-        IconButton(onClick = onRemove) {
+        val isClosing = LocalIsSheetClosing.current
+        IconButton(onClick = { if (!isClosing()) onRemove() }) {
             Icon(
                 painter = painterResource(Res.drawable.ic_delete),
                 contentDescription = stringResource(Res.string.cover_art_search_remove),

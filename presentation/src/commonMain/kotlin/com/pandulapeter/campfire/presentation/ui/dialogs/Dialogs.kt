@@ -70,7 +70,9 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.rememberBottomSheetState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.compositionLocalOf
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
@@ -827,6 +829,7 @@ private fun DeleteLibraryDialog(
         title = stringResource(Res.string.settings_library_delete),
         text = { contentPadding ->
             val closeSheet = { close() }
+            val isClosing = LocalIsSheetClosing.current
             Column(
                 modifier = Modifier.fadingVerticalEdges(scrollState).bounceVerticalScroll(scrollState).padding(contentPadding),
                 verticalArrangement = Arrangement.spacedBy(16.dp),
@@ -858,7 +861,16 @@ private fun DeleteLibraryDialog(
                         autoCorrectEnabled = false,
                         imeAction = ImeAction.Done,
                     ),
-                    keyboardActions = KeyboardActions(onDone = { if (isConfirmed) deleteLibrary(closeSheet) else keyboardController?.hide() }),
+                    // The close button leaves the keyboard up, so a Done during the slide that follows it is dropped.
+                    keyboardActions = KeyboardActions(
+                        onDone = {
+                            when {
+                                isClosing() -> Unit
+                                isConfirmed -> deleteLibrary(closeSheet)
+                                else -> keyboardController?.hide()
+                            }
+                        },
+                    ),
                 )
             }
         },
@@ -898,7 +910,8 @@ internal fun rememberFirstFieldFocusRequester(isFocused: Boolean = true): FocusR
  * the tap but with the next frame, and until then its button and the keyboard's Done key are both still live: on a
  * frame that comes late a second tap lands on a dialog that has already been answered, and creates the song or
  * the setlist a second time. The state is written as the event is handled, so the second event of the same frame
- * already reads it.
+ * already reads it. That is the keyboard's Done and the button landing on the same frame; a Done that comes after the
+ * sheet has started closing is dropped by the form itself, through [LocalIsSheetClosing].
  */
 @Composable
 private fun rememberSingleConfirmation(): (confirm: () -> Unit) -> Unit {
@@ -1219,6 +1232,7 @@ private fun NewSongDialog(
         title = stringResource(Res.string.songs_new_song),
         text = { contentPadding ->
             val closeSheet = { close() }
+            val isClosing = LocalIsSheetClosing.current
             val field: @Composable (Modifier, Field) -> Unit = { modifier, field ->
                 SongMetadataField(
                     modifier = modifier,
@@ -1227,7 +1241,8 @@ private fun NewSongDialog(
                     onValueChange = { values = values + (field to it) },
                     isOptional = field != Field.TITLE,
                     maxLength = if (field == Field.TITLE || field == Field.ARTIST) MAX_TITLE_LENGTH else Int.MAX_VALUE,
-                    onDone = { create(closeSheet) },
+                    // The close button leaves the keyboard up, so a Done during the slide that follows it is dropped.
+                    onDone = { if (!isClosing()) create(closeSheet) },
                 )
             }
             Column(
@@ -2030,7 +2045,8 @@ private fun campfireBottomSheetContainerColor() = MaterialTheme.colorScheme.back
  * @param subtitle What the sheet acts on, under [title]: the song or the setlist it was opened for. Left out when blank.
  * @param fadeBottomEdge Whether the short-window keyboard scroll fades at its bottom edge.
  * @param actions Buttons at the end of the [SheetHeader], across from the close button, such as the order of a list or
- *   the button that finishes what the sheet is for. They are handed the same close the header's close button runs.
+ *   the button that finishes what the sheet is for. They are handed the same close the header's close button runs, and
+ *   the ones that write ([BottomSheetConfirmButton]) do nothing once the sheet has started closing ([LocalIsSheetClosing]).
  * @param onDismiss Has to dismiss this sheet's own dialog and nothing else (`CampfireViewModel.dismissSheet`): it is
  *   called from the end of a hide animation, by which time another dialog may have taken the sheet's place.
  * @param content Can close the sheet the way its close button does ([BottomSheetContentScope.close]), for a sheet
@@ -2094,7 +2110,22 @@ internal fun CampfireBottomSheet(
         // as it was, the invisible sheet's modal layer would stay over the screen, swallowing the next tap. Only a hide
         // that ran to its end counts: one cut short by a finger taking hold of the sheet leaves the sheet where Material
         // settles it, and one cut short by another dialog replacing the sheet has nothing left to dismiss.
-        val close = { coroutineScope.launch { sheetState.hide() }.invokeOnCompletion { cause -> if (cause == null) onDismiss() }; Unit }
+        // Set as the tap is handled, so the second tap of the same frame already reads it; Material's own hide (a swipe,
+        // the scrim) shows up as the sheet's target becoming Hidden while it is still on screen.
+        var isCloseRequested by remember { mutableStateOf(false) }
+        val isClosing = remember(sheetState) {
+            { isCloseRequested || (sheetState.targetValue == SheetValue.Hidden && sheetState.currentValue != SheetValue.Hidden) }
+        }
+        val close = {
+            if (!isCloseRequested) {
+                isCloseRequested = true
+                coroutineScope.launch { sheetState.hide() }.invokeOnCompletion { cause ->
+                    // A finger that took hold of the sheet keeps it, and its actions with it.
+                    if (cause == null) onDismiss() else isCloseRequested = false
+                }
+            }
+            Unit
+        }
         // A keyboard in a short window leaves less height than the header and a field take together, so there the
         // header and the pinned controls scroll with the rest, above the keyboard, and bringing the caret into view can
         // move them out of its way. The content keeps the window's height inside that scroll, which is what bounds
@@ -2118,35 +2149,45 @@ internal fun CampfireBottomSheet(
                 modifier = (if (isCompactKeyboard) Modifier.height(windowHeight) else Modifier)
                     .onConsumedWindowInsetsChanged { consumedInsets.insets = it },
             ) {
-                SheetHeader(
-                    title = title,
-                    subtitle = subtitle,
-                    actions = actions,
-                    onClose = close,
-                )
-                // Read inside the sheet, which is a window of its own on Android and gets the insets of that window.
-                // asPaddingValues alone ignores consumption. The column above already pads above the IME, which
-                // also covers the navigation bar; reserve only the bottom space still left to this content.
-                val bottomPadding = WindowInsets.safeDrawing.exclude(consumedInsets)
-                    .only(WindowInsetsSides.Bottom).asPaddingValues()
-                val topInset = WindowInsets.safeDrawing.only(WindowInsetsSides.Top)
-                // Material pads the sheet by as much of the top inset as its offset has not taken up yet (an offset not
-                // decided yet takes up none of it).
-                val uncoveredTopInset = remember(sheetState, topInset, density) {
-                    derivedStateOf {
-                        val offset = runCatching { sheetState.requireOffset() }.getOrDefault(0f)
-                        with(density) { offset.coerceIn(0f, topInset.getTop(density).toFloat()).toDp() }
+                CompositionLocalProvider(LocalIsSheetClosing provides isClosing) {
+                    SheetHeader(
+                        title = title,
+                        subtitle = subtitle,
+                        actions = actions,
+                        onClose = close,
+                    )
+                    // Read inside the sheet, which is a window of its own on Android and gets the insets of that window.
+                    // asPaddingValues alone ignores consumption. The column above already pads above the IME, which
+                    // also covers the navigation bar; reserve only the bottom space still left to this content.
+                    val bottomPadding = WindowInsets.safeDrawing.exclude(consumedInsets)
+                        .only(WindowInsetsSides.Bottom).asPaddingValues()
+                    val topInset = WindowInsets.safeDrawing.only(WindowInsetsSides.Top)
+                    // Material pads the sheet by as much of the top inset as its offset has not taken up yet (an offset not
+                    // decided yet takes up none of it).
+                    val uncoveredTopInset = remember(sheetState, topInset, density) {
+                        derivedStateOf {
+                            val offset = runCatching { sheetState.requireOffset() }.getOrDefault(0f)
+                            with(density) { offset.coerceIn(0f, topInset.getTop(density).toFloat()).toDp() }
+                        }
                     }
+                    BottomSheetContentScope(
+                        columnScope = this,
+                        close = close,
+                        uncoveredTopInset = { uncoveredTopInset.value },
+                    ).content(bottomPadding.only(bottom = true, extraBottom = SHEET_BOTTOM_PADDING))
                 }
-                BottomSheetContentScope(
-                    columnScope = this,
-                    close = close,
-                    uncoveredTopInset = { uncoveredTopInset.value },
-                ).content(bottomPadding.only(bottom = true, extraBottom = SHEET_BOTTOM_PADDING))
             }
         }
     }
 }
+
+/**
+ * Whether the [CampfireBottomSheet] around it has started closing - its close button, a Save that closes it, a swipe or
+ * the scrim. The sheet stays on screen and live for the length of its slide, and a Save tapped in it would write the
+ * draft the close button had just cancelled, so the actions that write ask this first. It is a function rather than a
+ * value, read at the tap, so that nothing recomposes on the frames of the slide.
+ */
+internal val LocalIsSheetClosing = compositionLocalOf<() -> Boolean> { { false } }
 
 /**
  * The column of a [CampfireBottomSheet], which its content can also close the sheet from.

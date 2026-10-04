@@ -96,16 +96,22 @@ internal fun Modifier.retainSheetContentHeight(contentPadding: PaddingValues): M
     }
 }
 
-/** The filled confirmation action shared by forms in a sheet's header. */
+/**
+ * The filled confirmation action shared by forms in a sheet's header. It does nothing once the sheet has started
+ * closing ([LocalIsSheetClosing]), and keeps its look while it slides away with it.
+ */
 @Composable
 internal fun BottomSheetConfirmButton(
     onClick: () -> Unit,
     enabled: Boolean = true,
     colors: ButtonColors = ButtonDefaults.buttonColors(),
     content: @Composable () -> Unit,
-) = Button(
-    modifier = Modifier.padding(start = 4.dp, end = 8.dp),
-    onClick = onClick,
-    enabled = enabled,
-    colors = colors,
-) { content() }
+) {
+    val isClosing = LocalIsSheetClosing.current
+    Button(
+        modifier = Modifier.padding(start = 4.dp, end = 8.dp),
+        onClick = { if (!isClosing()) onClick() },
+        enabled = enabled,
+        colors = colors,
+    ) { content() }
+}
