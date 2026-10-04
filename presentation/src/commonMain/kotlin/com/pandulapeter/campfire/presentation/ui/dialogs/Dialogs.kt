@@ -833,7 +833,7 @@ private fun DeleteLibraryDialog(
             val closeSheet = { close() }
             val isClosing = LocalIsSheetClosing.current
             Column(
-                modifier = Modifier.fadingVerticalEdges(scrollState).bounceVerticalScroll(scrollState).padding(contentPadding),
+                modifier = Modifier.fadingTopEdge(scrollState).bounceVerticalScroll(scrollState).padding(contentPadding),
                 verticalArrangement = Arrangement.spacedBy(16.dp),
             ) {
                 Text(stringResource(Res.string.settings_library_delete_confirmation))
@@ -986,7 +986,7 @@ private fun SetlistDetailsDialog(
         title = title,
         subtitle = subtitle,
         text = { contentPadding ->
-            Column(modifier = Modifier.fadingVerticalEdges(scrollState).bounceVerticalScroll(scrollState).padding(contentPadding)) {
+            Column(modifier = Modifier.fadingTopEdge(scrollState).bounceVerticalScroll(scrollState).padding(contentPadding)) {
                 OutlinedTextField(
                     modifier = Modifier.fillMaxWidth().focusRequester(focusRequester).onFocusChanged {
                         if (it.isFocused && !hasTitleBeenFocused) {
@@ -1176,7 +1176,7 @@ private fun SetlistDateField(
             DatePicker(
                 modifier = Modifier
                     .weight(1f, fill = false)
-                    .fadingVerticalEdges(calendarScrollState)
+                    .fadingTopEdge(calendarScrollState)
                     .bounceVerticalScroll(calendarScrollState)
                     .padding(contentPadding.only(bottom = true)),
                 state = state,
@@ -1248,7 +1248,7 @@ private fun NewSongDialog(
                 )
             }
             Column(
-                modifier = Modifier.fadingVerticalEdges(scrollState).bounceVerticalScroll(scrollState).padding(contentPadding),
+                modifier = Modifier.fadingTopEdge(scrollState).bounceVerticalScroll(scrollState).padding(contentPadding),
                 verticalArrangement = Arrangement.spacedBy(8.dp),
             ) {
                 field(Modifier.fillMaxWidth().focusRequester(focusRequester), Field.TITLE)
@@ -2041,7 +2041,6 @@ private fun campfireBottomSheetContainerColor() = MaterialTheme.colorScheme.back
  *
  * @param title What the sheet is about, named in its [SheetHeader].
  * @param subtitle What the sheet acts on, under [title]: the song or the setlist it was opened for. Left out when blank.
- * @param fadeBottomEdge Whether the short-window keyboard scroll fades at its bottom edge.
  * @param actions Buttons at the end of the [SheetHeader], across from the close button, such as the order of a list or
  *   the button that finishes what the sheet is for. They are handed the same close the header's close button runs, and
  *   the ones that write ([BottomSheetConfirmButton]) do nothing once the sheet has started closing ([LocalIsSheetClosing]).
@@ -2056,7 +2055,6 @@ internal fun CampfireBottomSheet(
     title: String,
     subtitle: String = "",
     sheetMaxWidth: Dp = BottomSheetDefaults.SheetMaxWidth,
-    fadeBottomEdge: Boolean = true,
     actions: (@Composable RowScope.(close: () -> Unit) -> Unit)? = null,
     onDismiss: () -> Unit,
     content: @Composable BottomSheetContentScope.(contentPadding: PaddingValues) -> Unit,
@@ -2132,7 +2130,7 @@ internal fun CampfireBottomSheet(
             modifier = Modifier.fillMaxWidth().then(
                 if (isCompactKeyboard) {
                     Modifier.heightIn(max = windowHeight).imePadding()
-                        .then(if (fadeBottomEdge) Modifier.fadingVerticalEdges(scrollState) else Modifier.fadingTopEdge(scrollState))
+                        .fadingTopEdge(scrollState)
                         .bounceVerticalScroll(scrollState)
                 } else {
                     // Outside the content's own scroll, so that its viewport ends at the keyboard and a field focused
@@ -2366,7 +2364,7 @@ private fun SongInfoSheet(
             SongInfoBody(
                 modifier = Modifier
                     .weight(1f, fill = false)
-                    .fadingVerticalEdges(scrollState)
+                    .fadingTopEdge(scrollState)
                     .bounceVerticalScroll(scrollState)
                     .padding(contentPadding)
                     .padding(vertical = 8.dp),

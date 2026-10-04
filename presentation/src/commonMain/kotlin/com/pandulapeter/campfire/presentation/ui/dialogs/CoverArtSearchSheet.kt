@@ -164,7 +164,6 @@ internal fun CoverArtSearchSheet(
         title = stringResource(if (dialog.song.coverArtUrl == null) Res.string.song_details_set_cover_art else Res.string.song_details_change_cover_art),
         subtitle = songLabel(dialog.song),
         sheetMaxWidth = SHEET_MAX_WIDTH,
-        fadeBottomEdge = false,
         actions = { close ->
             CoverArtSearchActions(
                 isEditorDraft = dialog.isEditorDraft,
