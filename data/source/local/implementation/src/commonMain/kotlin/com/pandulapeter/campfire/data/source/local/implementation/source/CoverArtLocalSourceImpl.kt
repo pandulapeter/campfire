@@ -33,15 +33,24 @@ internal class CoverArtLocalSourceImpl(
         }
     }
 
+    /**
+     * Only a name shaped like a key is deleted: the directory also holds the storage's own temporary file while a copy
+     * is being written, and on iOS whatever Foundation's atomic write puts beside it, and deleting that would fail the
+     * write in progress. A name that is not a key was not written by this class and is not this class's to delete; the
+     * JVM storage sweeps its own leftovers after an hour anyway.
+     */
     override suspend fun keepOnlyCoverArt(keys: Set<String>) {
         quietly {
             fileStorage.listNames(StorageDirectory.COVERS)
-                .filterNot { it in keys }
+                .filter { it.isCoverArtKey() && it !in keys }
                 .forEach { fileStorage.delete(StorageDirectory.COVERS, it) }
         }
     }
 
     override suspend fun getCoverArtCacheSize() = quietly { fileStorage.list(StorageDirectory.COVERS).sumOf { it.size } }
+
+    /** A key is the lowercase hexadecimal SHA-256 of the cover's address. */
+    private fun String.isCoverArtKey() = length == KEY_LENGTH && all { it in '0'..'9' || it in 'a'..'f' }
 
     /** Runs [action] with every failure but a cancellation logged and answered with null, see [CoverArtLocalSource]. */
     private suspend fun <T> quietly(action: suspend () -> T): T? = try {
@@ -51,5 +60,9 @@ internal class CoverArtLocalSourceImpl(
     } catch (exception: Exception) {
         println("Could not access the cover art cache: ${exception::class.simpleName}")
         null
+    }
+
+    private companion object {
+        const val KEY_LENGTH = 64
     }
 }

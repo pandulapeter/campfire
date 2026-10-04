@@ -126,7 +126,8 @@ holds the `@Module @ComponentScan object DataLocalSourceModule`, and every local
   the only copy. The two functions decide it with one predicate: a name one of them took for another file and the
   other for this one would be exactly that deletion.
 - **`source/`** — the local sources. `CoverArtLocalSourceImpl` is the plainest of them: bytes in `covers/` under the
-  key it is handed, every failure logged and answered with nothing. `SongLocalSourceImpl` reads the whole ChordPro family
+  key it is handed, every failure logged and answered with nothing. Its prune deletes only names shaped like a key
+  (64 lowercase hex digits), since the directory also holds the temporary file of a copy being written. `SongLocalSourceImpl` reads the whole ChordPro family
   (`LibraryFiles.SONG_EXTENSIONS`) — hidden files left out, by `LibraryFiles.isSongFileName`, the rule every listing
   of the folder shares — but writes only `.cho` — `importFileName` included, so a `.crd` that is imported
   is stored as the `.cho` it is written back as — and gets a song's title, artist, key, the `{transpose}` it opens with (which
