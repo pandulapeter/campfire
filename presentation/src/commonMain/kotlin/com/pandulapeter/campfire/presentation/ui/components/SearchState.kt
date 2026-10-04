@@ -70,13 +70,23 @@ internal class SearchState(
         if (isOpen) query else ""
     }
 
+    /**
+     * Whether the field still owes the latest opening the focus and the keyboard. The field takes it once
+     * ([takeFocusOnOpen]); a field composed again with the search still open — on the way back from a song, or to its
+     * tab — finds it taken, and leaves the keyboard the way the user left it. A plain field rather than state, since it
+     * is only read and written on the main thread and nothing has to recompose on it.
+     */
+    private var isFocusOwed = false
+
     /** Opens onto an empty field rather than onto the last search, which is a question the user has moved on from. */
     fun open() {
         textFieldState.clearText()
+        isFocusOwed = true
         _isOpen.value = true
     }
 
     fun close() {
+        isFocusOwed = false
         _isOpen.value = false
     }
 
@@ -85,8 +95,12 @@ internal class SearchState(
      * the browser's Forward returning to it. The search button asks [open] instead, since that is a new question.
      */
     fun reopen() {
+        isFocusOwed = true
         _isOpen.value = true
     }
+
+    /** True once per opening, for the field to take the focus and the keyboard with. */
+    fun takeFocusOnOpen(): Boolean = isFocusOwed.also { isFocusOwed = false }
 
     private val _focusRequests = MutableSharedFlow<Unit>(extraBufferCapacity = 1)
 

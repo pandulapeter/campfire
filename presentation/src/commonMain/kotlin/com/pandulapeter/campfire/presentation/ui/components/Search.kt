@@ -721,9 +721,11 @@ private fun SearchField(
         val focusRequester = remember { FocusRequester() }
         // Keyed on the search being opened rather than on the content arriving: a search opened again while it was
         // still closing never left the composition, and kept the focus while the keyboard had been put away - so the
-        // keyboard is asked for as well, since focusing a field that has the focus shows nothing.
+        // keyboard is asked for as well, since focusing a field that has the focus shows nothing. And only once per
+        // opening: the screen leaves the composition while a song covers it, and a search the user had put the keyboard
+        // away in must not bring it back on the way back.
         LaunchedEffect(isOpening) {
-            if (isOpening) {
+            if (isOpening && searchState.takeFocusOnOpen()) {
                 searchState.textFieldState.edit { placeCursorAtEnd() }
                 focusRequester.requestFocus()
                 keyboardController?.show()
