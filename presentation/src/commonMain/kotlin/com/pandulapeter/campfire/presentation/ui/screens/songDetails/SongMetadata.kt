@@ -9,6 +9,11 @@
  */
 package com.pandulapeter.campfire.presentation.ui.screens.songDetails
 
+import androidx.compose.animation.AnimatedContent
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.togetherWith
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -29,6 +34,8 @@ import androidx.compose.runtime.Immutable
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
@@ -66,6 +73,8 @@ import com.pandulapeter.campfire.presentation.resources.song_details_year
 import com.pandulapeter.campfire.presentation.resources.songs_key
 import com.pandulapeter.campfire.presentation.ui.components.TagFlowRow
 import com.pandulapeter.campfire.presentation.ui.components.ACTION_BUTTON_OVERLAP
+import com.pandulapeter.campfire.presentation.ui.components.CoverArtImage
+import com.pandulapeter.campfire.presentation.ui.components.rememberSettledCoverArtUrl
 import com.pandulapeter.campfire.presentation.ui.components.overlappingAction
 import com.pandulapeter.campfire.presentation.ui.components.TagPill
 import com.pandulapeter.campfire.presentation.ui.components.languageLabel
@@ -170,7 +179,8 @@ private fun SongPlayingMetadata(
 /**
  * The card of what the song is in the editor's preview, as wide as its column whatever it holds, so that its edit buttons
  * stay where they are as the groups fill up and empty. Its links are not followed, since the preview is there to show
- * what is being typed.
+ * what is being typed. Its cover follows the text the way the editor's title does, once the typing has paused, and only
+ * where the cover art setting gives the card its cover button, which is what tells the card that setting.
  */
 @Composable
 private fun SongInfoCard(
@@ -229,6 +239,7 @@ private fun SongInfoCard(
         SongInfoBody(
             modifier = Modifier.padding(bottom = 12.dp),
             metadata = metadata,
+            coverArtUrl = rememberSettledCoverArtUrl(metadata.coverArt.takeIf { editing?.onEditCoverArt != null }),
             fontScale = fontScale,
             horizontalPadding = 12.dp,
             editing = editing,
@@ -248,17 +259,20 @@ internal class SongInfoEditing(
 )
 
 /**
- * What the card and the sheet of what the song is hold: the album, the year and the people behind the song as small
- * label-over-value tiles, then a group of chips for each of its tags, its languages and its links. Where [editing]
- * is given, each category ends with a Manage chip, or an Add chip with a plus icon when empty. Details are edited from the
- * card or sheet header.
+ * What the card and the sheet of what the song is hold: the cover, then the album, the year and the people behind the
+ * song as small label-over-value tiles beside it, then a group of chips for each of its tags, its languages and its
+ * links. Where [editing] is given, each category ends with a Manage chip, or an Add chip with a plus icon when empty.
+ * Details are edited from the card or sheet header.
  *
+ * @param coverArtUrl The cover to draw at the start of the details, null where there is none or the cover art setting
+ * is off. It opens the cover search where [editing] has a way to it, the same as the header's cover button.
  * @param onOpenLink Follows a link; null leaves the links as plain chips.
  */
 @Composable
 internal fun SongInfoBody(
     modifier: Modifier = Modifier,
     metadata: ChordProMetadata,
+    coverArtUrl: String?,
     fontScale: Float = 1f,
     horizontalPadding: Dp,
     editing: SongInfoEditing?,
@@ -275,14 +289,25 @@ internal fun SongInfoBody(
         modifier = modifier,
         verticalArrangement = Arrangement.spacedBy(SONG_INFO_GROUP_GAP * fontScale),
     ) {
-        if (rows.isNotEmpty()) {
+        if (rows.isNotEmpty() || coverArtUrl != null) {
             SongInfoGroup(
                 title = stringResource(Res.string.song_details_info_details),
                 count = 0,
                 fontScale = fontScale,
                 horizontalPadding = horizontalPadding,
             ) {
-                MetadataTiles(rows = rows, fontScale = fontScale)
+                Row {
+                    SongInfoCover(
+                        url = coverArtUrl,
+                        fontScale = fontScale,
+                        onClick = editing?.onEditCoverArt,
+                    )
+                    MetadataTiles(
+                        modifier = Modifier.weight(1f),
+                        rows = rows,
+                        fontScale = fontScale,
+                    )
+                }
             }
         }
         if (metadata.tags.isNotEmpty() || editing != null) {
@@ -330,6 +355,41 @@ internal fun SongInfoBody(
                 }
             }
         }
+    }
+}
+
+/**
+ * The cover in front of the details, a shortcut to the cover search where [onClick] is given. Keyed on whether there is
+ * a cover rather than on its address, so that a new cover crossfades in place of the old one, while a cover being set or
+ * removed opens or closes its room.
+ */
+@Composable
+private fun SongInfoCover(
+    url: String?,
+    fontScale: Float,
+    onClick: (() -> Unit)?,
+) = AnimatedContent(
+    targetState = url,
+    transitionSpec = { fadeIn() togetherWith fadeOut() },
+    contentKey = { it != null },
+) { shownUrl ->
+    if (shownUrl != null) {
+        val shape = MaterialTheme.shapes.medium
+        CoverArtImage(
+            modifier = Modifier
+                .padding(end = 16.dp * fontScale)
+                .size(SONG_INFO_COVER_SIZE * fontScale)
+                .clip(shape)
+                .then(
+                    if (onClick == null) Modifier else Modifier.clickable(
+                        onClickLabel = stringResource(Res.string.song_details_change_cover_art),
+                        role = Role.Button,
+                        onClick = onClick,
+                    ),
+                ),
+            url = shownUrl,
+            shape = shape,
+        )
     }
 }
 
@@ -452,3 +512,6 @@ internal fun linkLabel(url: String): String = url
 private val EDIT_ICON_SIZE = 18.dp
 private val SONG_INFO_TITLE_HEIGHT = 32.dp
 private val SONG_INFO_GROUP_GAP = 16.dp
+
+/** As tall as two rows of detail tiles, which is what a song with a few details fills beside it. */
+private val SONG_INFO_COVER_SIZE = 96.dp

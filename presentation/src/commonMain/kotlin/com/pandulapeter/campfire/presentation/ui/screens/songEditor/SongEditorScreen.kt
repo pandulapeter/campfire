@@ -130,6 +130,7 @@ import com.pandulapeter.campfire.presentation.ui.components.ActionsMenu
 import com.pandulapeter.campfire.presentation.ui.components.ActionsMenuItem
 import com.pandulapeter.campfire.presentation.ui.components.CampfireTopAppBar
 import com.pandulapeter.campfire.presentation.ui.components.CoverArtImage
+import com.pandulapeter.campfire.presentation.ui.components.rememberSettledCoverArtUrl
 import com.pandulapeter.campfire.presentation.ui.components.DelayedLoadingIndicator
 import com.pandulapeter.campfire.presentation.ui.components.EmptyState
 import com.pandulapeter.campfire.presentation.ui.components.EmptyStateAction
@@ -161,7 +162,6 @@ import com.pandulapeter.campfire.presentation.ui.theme.LocalSecondAccentColor
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.FlowPreview
-import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.debounce
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.filter
@@ -171,7 +171,6 @@ import kotlinx.coroutines.flow.mapLatest
 import kotlinx.coroutines.flow.mapNotNull
 import kotlinx.coroutines.withContext
 import org.jetbrains.compose.resources.painterResource
-import kotlin.time.Duration.Companion.milliseconds
 
 /**
  * The raw ChordPro text of one song, with what it will look like next to it. Wide windows show both at once, narrow
@@ -586,10 +585,8 @@ private fun LoadedSongEditor(
  * The song as the text being typed names it, with its cover in front of the title the way the song details screen
  * draws it, so that an address written or changed by hand is seen before it is saved.
  *
- * The cover follows the text only once the typing has paused ([COVER_ART_DELAY]): every half-typed address that happens
- * to be a valid one would otherwise be a download of its own, and one that failed is not asked again for a while. A
- * cover taken out of the text goes at once, since that asks nothing. It takes no press: the cover search is in the
- * editor's menu, with the rest of what the song says about itself.
+ * The cover follows the text only once the typing has paused ([rememberSettledCoverArtUrl]). It takes no press: the
+ * cover search is in the editor's menu and on the preview's card, with the rest of what the song says about itself.
  */
 @Composable
 private fun EditorTitle(
@@ -599,11 +596,7 @@ private fun EditorTitle(
 ) = Row(
     verticalAlignment = Alignment.CenterVertically,
 ) {
-    var shownCoverArtUrl by remember { mutableStateOf(coverArtUrl) }
-    LaunchedEffect(coverArtUrl) {
-        if (coverArtUrl != null) delay(COVER_ART_DELAY)
-        shownCoverArtUrl = coverArtUrl
-    }
+    val shownCoverArtUrl = rememberSettledCoverArtUrl(coverArtUrl)
     // Keyed on whether there is a cover rather than on its address, so that one address changing to another is the
     // image crossfading in its place rather than the room for it closing and opening again.
     AnimatedContent(
@@ -1141,7 +1134,6 @@ private val PANE_CHOICE_MAX_WIDTH = 400.dp
 private val SMALL_SCREEN_SIZE = 600.dp
 private const val SECTION_START = "{start_of_"
 private const val PREVIEW_DELAY_MILLIS = 150L
-private val COVER_ART_DELAY = 500.milliseconds
 
 /**
  * What the editor takes for a long document: 100 KB as a saved state writes it, several times the longest song

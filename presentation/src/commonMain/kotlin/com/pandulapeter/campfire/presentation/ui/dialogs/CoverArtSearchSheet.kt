@@ -21,11 +21,13 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.GridItemSpan
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
@@ -35,7 +37,7 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.selection.selectable
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
-import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -92,6 +94,7 @@ import com.pandulapeter.campfire.presentation.resources.cover_art_search_remove
 import com.pandulapeter.campfire.presentation.resources.done
 import com.pandulapeter.campfire.presentation.resources.ic_check
 import com.pandulapeter.campfire.presentation.resources.ic_delete
+import com.pandulapeter.campfire.presentation.resources.ic_search
 import com.pandulapeter.campfire.presentation.resources.retry
 import com.pandulapeter.campfire.presentation.resources.save
 import com.pandulapeter.campfire.presentation.resources.song_details_change_cover_art
@@ -313,11 +316,20 @@ private fun CoverArtQueryFields(
             onValueChange = onTitleChange,
             onSearch = onSearch,
         )
-        Button(
+        // Outlined rather than filled: the header's Save is what finishes the sheet, and two filled buttons in sight
+        // left the reader to work out which of them was the one that wrote the cover.
+        OutlinedButton(
             modifier = Modifier.padding(top = 8.dp),
             enabled = canSearch,
+            contentPadding = ButtonDefaults.ButtonWithIconContentPadding,
             onClick = onSearch,
         ) {
+            Icon(
+                modifier = Modifier.size(ButtonDefaults.IconSize),
+                painter = painterResource(Res.drawable.ic_search),
+                contentDescription = null,
+            )
+            Spacer(modifier = Modifier.width(ButtonDefaults.IconSpacing))
             Text(stringResource(Res.string.cover_art_search))
         }
     }

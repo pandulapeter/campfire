@@ -15,6 +15,11 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -35,9 +40,11 @@ import coil3.request.crossfade
 import com.pandulapeter.campfire.domain.api.useCases.GetCoverArtUseCase
 import com.pandulapeter.campfire.presentation.resources.Res
 import com.pandulapeter.campfire.presentation.resources.ic_album
+import kotlinx.coroutines.delay
 import okio.Buffer
 import org.jetbrains.compose.resources.painterResource
 import org.koin.mp.KoinPlatform
+import kotlin.time.Duration.Companion.milliseconds
 
 /** What a cover image is asked of Coil by: the address a song names, fetched through [GetCoverArtUseCase]. */
 internal data class CoverArt(val url: String)
@@ -122,6 +129,24 @@ internal fun CoverArtImage(
         contentScale = ContentScale.Crop,
     )
 }
+
+/**
+ * A cover address from text that is being typed, following it only once the typing has paused
+ * ([COVER_ART_SETTLE_DELAY]): every half-typed address that happens to be a valid one would otherwise be a download of
+ * its own, and one that failed is not asked again for a while. A cover taken out of the text goes at once, since that
+ * asks nothing, and the first frame already has the address the text started with.
+ */
+@Composable
+internal fun rememberSettledCoverArtUrl(url: String?): String? {
+    var settledUrl by remember { mutableStateOf(url) }
+    LaunchedEffect(url) {
+        if (url != null) delay(COVER_ART_SETTLE_DELAY)
+        settledUrl = url
+    }
+    return settledUrl
+}
+
+private val COVER_ART_SETTLE_DELAY = 500.milliseconds
 
 /** How much of the placeholder's side its album icon takes up. */
 private const val COVER_ART_PLACEHOLDER_ICON_FRACTION = 0.5f

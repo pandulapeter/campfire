@@ -85,9 +85,13 @@ Everything else is `commonMain`:
   the song on screen, and counts it in the width the song's actions are let out of their menu by whenever any song of
   the pager has one; it is part of the title there, so a tap on it scrolls to the top like the rest of the bar, with no
   press drawn. The editor's bar draws it the same way, from the text as it is typed, so
-  a cover written or changed by hand is seen before it is saved: an address only once the typing has paused for 500 ms,
-  since every half-typed one that happens to be valid would be a download of its own, and with no press, since the
-  search is in the editor's menu. The lyrics' header and the editor's preview draw none. Both follow
+  a cover written or changed by hand is seen before it is saved: an address only once the typing has paused for 500 ms
+  (`rememberSettledCoverArtUrl`), since every half-typed one that happens to be valid would be a download of its own,
+  and with no press, since the search is in the editor's menu. The About the song sheet and the preview's card put it
+  at 96dp at the start of their Song details group, the detail tiles flowing beside it (the group is there for a cover
+  alone too), the card's following the text the same settled way; where the cover search is offered (outside
+  performance mode, cover art on) a tap on it opens that search, the same as the header's cover button. The lyrics'
+  header draws none. Both follow
   `UserPreferences.isCoverArtEnabled`, the Songs tab's "Cover art" switch, which leaves every cover unfetched and
   undrawn when it is off; performance mode keeps them, since a cover changes nothing.
 - `ui/dialogs/CoverArtSearchSheet.kt` — the cover search, opened from the song details overflow menu's "Set cover art"
@@ -109,7 +113,7 @@ Everything else is `commonMain`:
   clears it whenever the sheet stops being the dialog on screen. It says when MusicBrainz asked it to wait (only once
   nothing else is pending), when it failed (with a retry) and when it found nothing, and credits both catalogues at the
   end of the search tab. **Only the header and the tabs hold still on tall windows**: the search tab is one `LazyVerticalGrid` whose
-  first item is the three fields and the button and whose last is the credit, what stands in place of the records being
+  first item is the three fields and the button — outlined, so that the header's Save is the sheet's one filled action — and whose last is the credit, what stands in place of the records being
   an item between them, and Save and Remove (the bin, since it asks first anyway) sit at the end of the header
   (`CampfireBottomSheet`'s `actions`, which are handed the sheet's close) — a phone with the keyboard up otherwise left
   the covers no room at all. It goes through `CampfireBottomSheet` like every sheet, wider than the others (840dp)
@@ -179,7 +183,7 @@ Everything else is `commonMain`:
   overflow menu where the bar has no room for it (`appBarButtons`: the transposition leaves the bar first, then the
   setlist assignments, then Info); outside performance mode for every song, in it only where the sheet has something in it, next to the
   text size. The
-  card and the sheet share `SongInfoBody` and its edit buttons (`SongInfoEditing`, built by `rememberSongInfoEditing`): album, year, composer, lyricist and duration as label-over-value tiles flowing side by side, then a
+  card and the sheet share `SongInfoBody` and its edit buttons (`SongInfoEditing`, built by `rememberSongInfoEditing`): the cover, then album, year, composer, lyricist and duration as label-over-value tiles flowing side by side beside it, then a
   group of chips for each of the tags, the languages and the links the song has, titled in the singular or the plural
   (`<plurals>`) and counted where there are several. Outside performance mode the sheet passes `SongInfoEditing`: its header holds the cover art and Edit song details
   buttons, and each chip group ends in an outlined "Manage" chip (`TagPill`'s `isAction`), or "Add" with a plus where the

@@ -2269,6 +2269,7 @@ private fun SongInfoSheet(
     val isReadOnly = isPerformanceModeEnabled || setlists.any { it.fileName == setlistFileName && it.isArchived }
     val text = songTexts[dialog.song.fileName]
     val metadata = remember(text) { text?.let(viewModel::songMetadataOf) }
+    val userPreferences by viewModel.userPreferences.collectAsStateWithLifecycle()
     val editing = rememberSongInfoEditing(viewModel = viewModel, song = song, isEditorDraft = false)
     CampfireBottomSheet(
         title = stringResource(Res.string.song_details_song_info),
@@ -2309,6 +2310,7 @@ private fun SongInfoSheet(
                     .padding(contentPadding)
                     .padding(vertical = 8.dp),
                 metadata = metadata,
+                coverArtUrl = metadata.coverArt.takeIf { userPreferences?.isCoverArtEnabled == true },
                 horizontalPadding = 16.dp,
                 editing = editing.takeUnless { isReadOnly },
                 onOpenLink = urlOpener,
