@@ -78,4 +78,29 @@ class CollapsibleChipFlowTest {
     fun `every group keeps its minimum where even those do not fit`() {
         assertEquals(listOf(100, 120), chipBudgets(available = 50, natural = listOf(600, 800), minimum = listOf(100, 120)))
     }
+
+    @Test
+    fun `a chip wholly below the edge is invisible whatever the progress`() {
+        assertEquals(0f, chipTransitionAlpha(chipTop = 120, chipHeight = 32, edge = 100, progress = 1f, isEntering = true))
+    }
+
+    @Test
+    fun `a chip the edge has passed shows as far as the animation has come`() {
+        assertEquals(0.3f, chipTransitionAlpha(chipTop = 0, chipHeight = 32, edge = 200, progress = 0.3f, isEntering = true))
+    }
+
+    @Test
+    fun `a chip the edge has half passed at the end of the animation is half visible`() {
+        assertEquals(0.5f, chipTransitionAlpha(chipTop = 100, chipHeight = 32, edge = 116, progress = 1f, isEntering = true))
+    }
+
+    @Test
+    fun `leaving mirrors entering`() {
+        assertEquals(0.7f, chipTransitionAlpha(chipTop = 0, chipHeight = 32, edge = 200, progress = 0.3f, isEntering = false), 0.0001f)
+    }
+
+    @Test
+    fun `a chip with no height does not divide by zero`() {
+        assertEquals(1f, chipTransitionAlpha(chipTop = 0, chipHeight = 0, edge = 10, progress = 1f, isEntering = true))
+    }
 }

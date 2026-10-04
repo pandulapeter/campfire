@@ -9,8 +9,10 @@
  */
 package com.pandulapeter.campfire.presentation.ui.components
 
+import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.Crossfade
+import androidx.compose.animation.SizeTransform
 import androidx.compose.animation.animateBounds
 import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.expandHorizontally
@@ -19,6 +21,7 @@ import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.shrinkHorizontally
 import androidx.compose.animation.shrinkVertically
+import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.indication
@@ -229,26 +232,49 @@ internal fun SongFilters(
 ) = BoxWithConstraints(
     modifier = modifier.fillMaxWidth(),
 ) {
-    val userPreferences by viewModel.userPreferences.collectAsStateWithLifecycle()
-    val songFilter by viewModel.songFilter.collectAsStateWithLifecycle()
-    val tags by viewModel.tags.collectAsStateWithLifecycle()
-    val languages by viewModel.languages.collectAsStateWithLifecycle()
-    val isSongFilterActive by viewModel.isSongFilterActive.collectAsStateWithLifecycle()
     val scrollState = rememberScrollState()
     // The height of what the filters are shown in is only known outside the scroll, which measures its content
     // against an unbounded one.
     val availableHeight = maxHeight - uncoveredTopInset() - contentPadding.calculateTopPadding() - contentPadding.calculateBottomPadding()
-    FilterGroupsLayout(
+    Box(
         modifier = Modifier
             .fillMaxWidth()
             .fadingTopEdge(scrollState)
             .bounceVerticalScroll(scrollState)
             .padding(contentPadding),
+    ) {
+        // Inside the scroll: animateBounds follows positions in the scope, and a scope around the scroll would read
+        // every scrolled pixel as a move to animate.
+        LookaheadScope {
+            FilterGroups(
+                lookaheadScope = this,
+                availableHeight = availableHeight,
+                viewModel = viewModel,
+            )
+        }
+    }
+}
+
+/** The groups of [SongFilters], sharing the room between them, laid out in [lookaheadScope]. */
+@Composable
+private fun FilterGroups(
+    lookaheadScope: LookaheadScope,
+    availableHeight: Dp,
+    viewModel: CampfireViewModel,
+) {
+    val userPreferences by viewModel.userPreferences.collectAsStateWithLifecycle()
+    val songFilter by viewModel.songFilter.collectAsStateWithLifecycle()
+    val tags by viewModel.tags.collectAsStateWithLifecycle()
+    val languages by viewModel.languages.collectAsStateWithLifecycle()
+    val isSongFilterActive by viewModel.isSongFilterActive.collectAsStateWithLifecycle()
+    FilterGroupsLayout(
+        modifier = Modifier.fillMaxWidth(),
         availableHeight = availableHeight,
     ) {
         // A library nobody has tagged has nothing to offer here, and a section title above an empty row would only
         // ask a question the songs cannot answer yet.
         TagFilters(
+            lookaheadScope = lookaheadScope,
             isVisible = tags.isNotEmpty(),
             tags = tags,
             selectedTags = songFilter.selectedTags,
@@ -262,6 +288,7 @@ internal fun SongFilters(
         // A library that sings in one language has nothing to choose between, and the one group it would offer
         // ("Unknown", against the single language) is a question about a library nobody has filled in yet.
         LanguageFilters(
+            lookaheadScope = lookaheadScope,
             isVisible = languages.size > 1,
             languages = languages,
             selectedLanguages = songFilter.selectedLanguages,
@@ -321,6 +348,7 @@ private fun ResetFiltersButton(
  */
 @Composable
 private fun TagFilters(
+    lookaheadScope: LookaheadScope,
     isVisible: Boolean,
     tags: List<Tag>,
     selectedTags: Set<String>,
@@ -352,6 +380,7 @@ private fun TagFilters(
         )
     }
     FilterGroupChips(
+        lookaheadScope = lookaheadScope,
         isVisible = isVisible,
         items = orderedTags,
         key = { it.name.lowercase() },
@@ -385,6 +414,7 @@ private fun TagFilters(
  */
 @Composable
 private fun LanguageFilters(
+    lookaheadScope: LookaheadScope,
     isVisible: Boolean,
     languages: List<SongLanguage>,
     selectedLanguages: Set<String>,
@@ -415,6 +445,7 @@ private fun LanguageFilters(
         )
     }
     FilterGroupChips(
+        lookaheadScope = lookaheadScope,
         isVisible = isVisible,
         items = orderedLanguages,
         key = { it.code },
@@ -462,6 +493,7 @@ private fun FilterGroupPart(
  */
 @Composable
 private fun <T : Any> FilterGroupChips(
+    lookaheadScope: LookaheadScope,
     isVisible: Boolean,
     items: List<T>,
     key: (T) -> Any,
@@ -478,6 +510,7 @@ private fun <T : Any> FilterGroupChips(
         key = key,
         isExpanded = isExpanded,
         isPinned = isPinned,
+        lookaheadScope = lookaheadScope,
         horizontalPadding = CONTROLS_PADDING,
         gap = CHIP_GAP,
         toggle = {
@@ -485,13 +518,20 @@ private fun <T : Any> FilterGroupChips(
                 modifier = Modifier.padding(horizontal = CONTROLS_PADDING - BUTTON_INSET),
                 onClick = { onExpandedChanged(!isExpanded) },
             ) {
-                Text(
-                    text = if (isExpanded) {
-                        stringResource(Res.string.songs_filters_show_less)
-                    } else {
-                        stringResource(Res.string.songs_filters_show_all, items.size)
-                    }
-                )
+                // The button rides the group's edge while it opens or closes, so its label turns into the other one
+                // where it is rather than the button going and coming back.
+                AnimatedContent(
+                    targetState = isExpanded,
+                    transitionSpec = { fadeIn() togetherWith fadeOut() using SizeTransform(clip = false) },
+                ) { expanded ->
+                    Text(
+                        text = if (expanded) {
+                            stringResource(Res.string.songs_filters_show_less)
+                        } else {
+                            stringResource(Res.string.songs_filters_show_all, items.size)
+                        }
+                    )
+                }
             }
         },
         chip = chip,
