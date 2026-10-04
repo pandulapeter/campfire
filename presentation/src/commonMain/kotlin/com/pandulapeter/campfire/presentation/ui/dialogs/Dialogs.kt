@@ -628,8 +628,9 @@ private fun WelcomeDialog(
                 onDismissRequest = viewModel::dismissDialog,
                 title = { Text(stringResource(Res.string.welcome_title)) },
                 text = {
+                    val scrollState = rememberScrollState()
                     Column(
-                        modifier = Modifier.bounceVerticalScroll(rememberScrollState()),
+                        modifier = Modifier.fadingVerticalEdges(scrollState).bounceVerticalScroll(scrollState),
                     ) {
                         Text(
                             text = stringResource(Res.string.welcome_message),
@@ -698,47 +699,50 @@ private fun ColumnScope.WelcomeContent(
     contentPadding: PaddingValues,
     onGetStarted: () -> Unit,
     onOpenSettings: () -> Unit,
-) = Column(
-    modifier = Modifier.weight(1f, fill = false).bounceVerticalScroll(rememberScrollState()).padding(contentPadding),
 ) {
-    val userPreferences by viewModel.userPreferences.collectAsStateWithLifecycle()
-    Text(
-        modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp),
-        text = stringResource(Res.string.welcome_message),
-        style = MaterialTheme.typography.bodyLarge,
-    )
-    SettingsSubsection(
-        shouldApplyPadding = false,
+    val scrollState = rememberScrollState()
+    Column(
+        modifier = Modifier.weight(1f, fill = false).fadingTopEdge(scrollState).bounceVerticalScroll(scrollState).padding(contentPadding),
     ) {
-        UiModeChoice(
-            selected = userPreferences?.uiMode,
-            onSelected = viewModel::setUiMode,
+        val userPreferences by viewModel.userPreferences.collectAsStateWithLifecycle()
+        Text(
+            modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp),
+            text = stringResource(Res.string.welcome_message),
+            style = MaterialTheme.typography.bodyLarge,
         )
-    }
-    Spacer(
-        modifier = Modifier.height(8.dp),
-    )
-    SettingsSubsection(
-        shouldApplyPadding = false,
-    ) {
-        ThemeColorChoice(
-            uiMode = userPreferences?.uiMode,
-            selected = userPreferences?.themeColor,
-            onSelected = viewModel::setThemeColor,
+        SettingsSubsection(
+            shouldApplyPadding = false,
+        ) {
+            UiModeChoice(
+                selected = userPreferences?.uiMode,
+                onSelected = viewModel::setUiMode,
+            )
+        }
+        Spacer(
+            modifier = Modifier.height(8.dp),
         )
-    }
-    Text(
-        modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp),
-        text = stringResource(if (viewModel.syncProviders.isEmpty()) Res.string.welcome_settings_hint else Res.string.welcome_settings_hint_sync),
-        style = MaterialTheme.typography.bodyMedium,
-        color = MaterialTheme.colorScheme.onSurfaceVariant,
-    )
-    Row(
-        modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 8.dp),
-        horizontalArrangement = Arrangement.spacedBy(8.dp, Alignment.End),
-    ) {
-        OutlinedButton(onClick = onOpenSettings) { Text(stringResource(Res.string.welcome_open_settings)) }
-        Button(onClick = onGetStarted) { Text(stringResource(Res.string.welcome_get_started)) }
+        SettingsSubsection(
+            shouldApplyPadding = false,
+        ) {
+            ThemeColorChoice(
+                uiMode = userPreferences?.uiMode,
+                selected = userPreferences?.themeColor,
+                onSelected = viewModel::setThemeColor,
+            )
+        }
+        Text(
+            modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp),
+            text = stringResource(if (viewModel.syncProviders.isEmpty()) Res.string.welcome_settings_hint else Res.string.welcome_settings_hint_sync),
+            style = MaterialTheme.typography.bodyMedium,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+        )
+        Row(
+            modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 8.dp),
+            horizontalArrangement = Arrangement.spacedBy(8.dp, Alignment.End),
+        ) {
+            OutlinedButton(onClick = onOpenSettings) { Text(stringResource(Res.string.welcome_open_settings)) }
+            Button(onClick = onGetStarted) { Text(stringResource(Res.string.welcome_get_started)) }
+        }
     }
 }
 
