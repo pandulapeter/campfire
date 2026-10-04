@@ -130,6 +130,7 @@ import kotlin.math.roundToInt
  * @param shouldShowChords False under lyrics only mode, where the row says nothing about chords at all: not the
  *   key, and not the "Lyrics only" marker either, which only tells this song from the others while the others are
  *   showing chords.
+ * @param duration The song's duration, shown on the Setlists screen even in lyrics only mode.
  * @param labelsOnEverySong The tags and languages the row leaves off, because every song in the library carries
  *   them and a label that is on every row tells the reader nothing about this one.
  * @param shouldShowLabels False inside a setlist, which lists the songs somebody wrote down rather than a view of the
@@ -156,6 +157,7 @@ internal fun SongListItem(
     index: Int? = null,
     key: String? = null,
     shouldShowChords: Boolean = true,
+    duration: String? = null,
     labelsOnEverySong: CampfireViewModel.LabelsOnEverySong,
     shouldShowLabels: Boolean = true,
     songFilter: SongFilter = SongFilter(),
@@ -169,6 +171,7 @@ internal fun SongListItem(
     onLongClick: (() -> Unit)? = null,
     actions: (@Composable () -> Unit)? = null,
 ) {
+    val displayedDuration = duration?.takeIf { it.isNotBlank() }
     // Worked out before the row is laid out rather than inside it, because it is also one of the things that decide
     // whether the row has a second line at all: a song written in the app carries no artist, no language and no tag,
     // and its key is then the only thing there is to put under the title.
@@ -212,7 +215,7 @@ internal fun SongListItem(
             // here shares the title's line: a title is the longest thing on the row and the one that must never be
             // pushed out of sight, while the artist is short enough to leave the key room next to it. The languages and
             // tags go under both, since a row of those is as long as somebody chose to make it.
-            supportingContent = if (song.artist.isBlank() && note == null) {
+            supportingContent = if (song.artist.isBlank() && note == null && displayedDuration == null) {
                 null
             } else {
                 {
@@ -262,6 +265,20 @@ internal fun SongListItem(
                                     )
                                 }
                             }
+                        }
+                        if (displayedDuration != null) {
+                            if (song.artist.isNotBlank() || note != null) {
+                                Icon(
+                                    modifier = Modifier.size(if (isNarrowSongCardWindow) NARROW_DOT_SIZE else DOT_SIZE),
+                                    painter = painterResource(Res.drawable.ic_dot),
+                                    contentDescription = null,
+                                )
+                            }
+                            Text(
+                                text = displayedDuration,
+                                style = MaterialTheme.typography.labelMedium,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            )
                         }
                     }
                 }

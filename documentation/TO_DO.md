@@ -16,7 +16,7 @@
 ## Improvements
 - Add validators to input fields
 - Maybe all bottom sheets with song names in their headers could show the cover art for the song
-- The Setlist screen should include song durations on the cards + a total for the setlist (right after the countdown if enabled, or instead of the countdown if it isn't). If some songs don't have a duration set / it's not a valid duration, add a + sign after the total duration of the setlist (if none are valid, don't display duration)
+- Each setlist should display a total of the song durations for the setlist, right after the countdown if enabled (separated by a dot character), or instead of the countdown if it isn't. If some songs don't have a valid duration set, add a + sign after the total duration of the setlist to indicate that it's a minimum value. If none of the songs have valid durations set, don't display the total duration
 - Reset all filters button
 - Add cover arts to the Song assignments bottom sheet list items
 - Cover art bottom sheet: do we even need search input fields here?

@@ -534,6 +534,7 @@ private fun SetlistList(
                                         spelling = chordSpelling,
                                     ),
                                     shouldShowChords = shouldShowChords,
+                                    duration = entry.song.duration,
                                     coverArtUrl = entry.song.coverArtUrl?.takeIf { isCoverArtEnabled },
                                     labelsOnEverySong = labelsOnEverySong,
                                     shouldShowLabels = false,
