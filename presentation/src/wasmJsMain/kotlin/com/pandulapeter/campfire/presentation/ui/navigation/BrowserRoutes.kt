@@ -75,7 +75,11 @@ internal object BrowserRoutes {
         }
         // Without an entry of its own, a Back on a screen with nothing under it in the history leaves the page rather
         // than closing what is open over the screen. It keeps the screen's address, since nothing could open it again.
-        if (viewModel.visibleDialog.value != null || isAnyOverflowMenuOpen) lastOrNull()?.let(::add)
+        // The unsaved changes question gets none: it is asked in answer to a Back, whose entry is then gone forward to
+        // again, and an entry for it would be one more pushed on top of that without a user gesture, which Chrome's
+        // Back skips the entry under.
+        val dialog = viewModel.visibleDialog.value
+        if (dialog != null && dialog != CampfireViewModel.DialogType.UnsavedChanges || isAnyOverflowMenuOpen) lastOrNull()?.let(::add)
     }
 
     /**
