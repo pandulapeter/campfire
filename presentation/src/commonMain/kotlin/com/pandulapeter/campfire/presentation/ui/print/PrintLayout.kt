@@ -524,7 +524,7 @@ private class PrintLayouter(
      */
     private fun recallRows(recall: ChordProBlock.ChorusRecall, width: Float): List<Row> {
         val recalled = recall.blocks.firstOrNull { it is ChordProBlock.Section } as? ChordProBlock.Section
-        var header: String? = recall.label ?: recalled?.label ?: recalled?.takeIf { it.number != null }?.header(labels.sections) ?: labels.sections.chorus
+        var header: String? = recall.label ?: recalled?.header(labels.sections) ?: labels.sections.chorus
         return recall.blocks.flatMapIndexed { index, piece ->
             val isPieceInChorus = recall.blocks.isInChorus(index)
             if (piece is ChordProBlock.Section && header != null) {

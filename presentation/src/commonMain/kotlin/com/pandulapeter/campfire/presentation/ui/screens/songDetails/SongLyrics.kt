@@ -2078,7 +2078,7 @@ internal data class DefaultSectionLabels(
     val preChorus: String,
     val solo: String,
     val outro: String,
-    /** Whether the sections that have no label are numbered by their kind, see [withNumberedSections]. */
+    /** Whether the sections that have no label, or only their kind's name, are numbered, see [withNumberedSections]. */
     val shouldNumberSections: Boolean = false,
 )
 
@@ -2272,7 +2272,7 @@ private fun ChordProSong.toRenderSections(
                 // none is: a recall has always said where the chorus is sung, even with nothing under it.
                 val recalled = block.blocks.firstOrNull { it is ChordProBlock.Section } as? ChordProBlock.Section
                 val label = block.label ?: recalled?.label
-                var header: String? = label ?: recalled?.takeIf { it.number != null }?.header(defaultLabels) ?: defaultLabels.chorus
+                var header: String? = block.label ?: recalled?.header(defaultLabels) ?: defaultLabels.chorus
                 // A recall is folded apart from the chorus it repeats, as the chorus it is, and whatever of it is
                 // shown after its first piece is named after that piece.
                 val recallFoldKey = foldNameCounts.nextFoldKey(label ?: SectionType.Chorus.foldName)
@@ -2375,7 +2375,7 @@ private val SectionType.foldName
         is SectionType.Custom -> name
     }
 
-internal fun ChordProBlock.Section.header(defaultLabels: DefaultSectionLabels): String = label ?: when (val sectionType = type) {
+internal fun ChordProBlock.Section.header(defaultLabels: DefaultSectionLabels): String = (label ?: when (val sectionType = type) {
     SectionType.Verse -> defaultLabels.verse
     SectionType.Chorus -> defaultLabels.chorus
     SectionType.Bridge -> defaultLabels.bridge
@@ -2389,7 +2389,7 @@ internal fun ChordProBlock.Section.header(defaultLabels: DefaultSectionLabels): 
         lines.areAll<ChordProLine.Grid>() -> defaultLabels.grid
         else -> UNNAMED_SECTION_HEADER
     }
-}.withNumber(number)
+}).withNumber(number)
 
 /**
  * The header of a section the file gives no name and that has none of its own kind to fall back on — a paragraph of

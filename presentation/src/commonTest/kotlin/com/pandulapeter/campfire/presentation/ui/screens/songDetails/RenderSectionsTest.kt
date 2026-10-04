@@ -71,6 +71,17 @@ class RenderSectionsTest {
     }
 
     @Test
+    fun `a recall of a chorus labelled with the kind's bare name is numbered like it`() {
+        val sections = prepareSongLyrics(
+            song = ChordProParser.parse("{soc}\na\n{eoc}\n{soc: Refrén}\nb\n{eoc}\n{chorus}"),
+            shouldShowChords = true,
+            labels = labels.copy(shouldNumberSections = true),
+        ).sections.filterIsInstance<RenderSection.Lines>()
+
+        assertEquals("Refrén 2", sections.last().header)
+    }
+
+    @Test
     fun `a chorus recall that opens with a comment is headed and folded by the chorus label`() {
         val sections = prepareSongLyrics(
             song = ChordProParser.parse("{soc: Refrain}\n{c: x}\nla\n{eoc}\n\n{chorus}"),

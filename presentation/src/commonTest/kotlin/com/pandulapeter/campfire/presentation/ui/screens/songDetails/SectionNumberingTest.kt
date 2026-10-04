@@ -23,7 +23,7 @@ class SectionNumberingTest {
     )
 
     private fun headers(text: String, labels: DefaultSectionLabels = this.labels) =
-        ChordProParser.parse(text).blocks.withNumberedSections(labels).filterIsInstance<ChordProBlock.Section>().map { section -> section.label ?: section.number?.let { section.header(labels) } }
+        ChordProParser.parse(text).blocks.withNumberedSections(labels).filterIsInstance<ChordProBlock.Section>().map { section -> section.takeIf { it.label != null || it.number != null }?.header(labels) }
 
     @Test
     fun `sections of a kind that has several are numbered in order`() {
@@ -35,6 +35,44 @@ class SectionNumberingTest {
     fun `a labeled section keeps its label and takes no number`() {
         val text = "{sov: Intro words}\na\n{eov}\n{sov}\nb\n{eov}\n{sov}\nc\n{eov}"
         assertEquals(listOf("Intro words", "Verse 1", "Verse 2"), headers(text))
+    }
+
+    @Test
+    fun `a label naming the kind and a number reserves it`() {
+        val text = "{sov: Verse 1}\na\n{eov}\n{sov}\nb\n{eov}\n{sov}\nc\n{eov}"
+        assertEquals(listOf("Verse 1", "Verse 2", "Verse 3"), headers(text))
+    }
+
+    @Test
+    fun `a number reserved later is skipped`() {
+        val text = "{sov}\na\n{eov}\n{sov: Verse 2}\nb\n{eov}\n{sov}\nc\n{eov}"
+        assertEquals(listOf("Verse 1", "Verse 2", "Verse 3"), headers(text))
+    }
+
+    @Test
+    fun `a label that is just the kind's name is numbered with the others`() {
+        val text = "{sov: Verse}\na\n{eov}\n{sov}\nb\n{eov}"
+        assertEquals(listOf("Verse 1", "Verse 2"), headers(text))
+    }
+
+    @Test
+    fun `the kind's ChordPro name counts whatever the app's language`() {
+        val text = "{sov: verse 1}\na\n{eov}\n{sov}\nb\n{eov}"
+        assertEquals(listOf("verse 1", "Versszak 2"), headers(text, labels.copy(verse = "Versszak")))
+    }
+
+    @Test
+    fun `a recalled chorus with the kind's bare name carries its number`() {
+        val text = "{soc}\na\n{eoc}\n{soc: Chorus}\nb\n{eoc}\n{chorus}"
+        assertEquals(listOf("Chorus 1", "Chorus 2"), headers(text))
+        val recall = ChordProParser.parse(text).blocks.withNumberedSections(labels).filterIsInstance<ChordProBlock.ChorusRecall>().single()
+        assertEquals(2, recall.blocks.filterIsInstance<ChordProBlock.Section>().first().number)
+    }
+
+    @Test
+    fun `a kind label with an absurd number is just a label`() {
+        val text = "{sov: Verse 99999999999}\na\n{eov}\n{sov}\nb\n{eov}"
+        assertEquals(listOf("Verse 99999999999", null), headers(text))
     }
 
     @Test
