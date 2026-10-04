@@ -13,6 +13,7 @@ import com.pandulapeter.campfire.data.model.domain.ImportResult
 import com.pandulapeter.campfire.data.model.domain.Setlist
 import com.pandulapeter.campfire.data.model.domain.Song
 import com.pandulapeter.campfire.presentation.ui.screens.importReport.ImportReportSection.Kind
+import com.pandulapeter.campfire.presentation.ui.screens.importReport.followingLibraryFileNames
 import com.pandulapeter.campfire.presentation.ui.screens.importReport.importReportSections
 import com.pandulapeter.campfire.presentation.ui.screens.importReport.matching
 import kotlin.test.Test
@@ -72,6 +73,34 @@ class ImportReportSectionsTest {
         assertEquals(null, gone.title)
         assertFalse(gone.isSong)
         assertEquals("Summer", sections.first { it.kind == Kind.SETLISTS }.rows.single().title)
+    }
+
+    @Test
+    fun aDeletedOrRenamedLibraryFileIsFollowedAndWhatWasLeftOutIsNot() {
+        val result = ImportResult(
+            importedSongFileNames = listOf("a.cho", "deleted.cho"),
+            importedSetlistFileNames = listOf("deleted.setlist.json"),
+            skippedFileNames = listOf("deleted.cho"),
+            duplicateFileNames = listOf("a.cho"),
+            convertedSongFileNames = listOf("a.cho", "deleted.cho"),
+            convertedSongToOpen = "a.cho",
+        ).followingLibraryFileNames { fileName ->
+            when {
+                fileName.startsWith("deleted") -> null
+                fileName == "a.cho" -> "b.cho"
+                else -> fileName
+            }
+        }
+        assertEquals(
+            ImportResult(
+                importedSongFileNames = listOf("b.cho"),
+                skippedFileNames = listOf("deleted.cho"),
+                duplicateFileNames = listOf("b.cho"),
+                convertedSongFileNames = listOf("b.cho"),
+                convertedSongToOpen = "b.cho",
+            ),
+            result,
+        )
     }
 
     @Test

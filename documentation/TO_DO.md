@@ -9,8 +9,6 @@
 -->
 # To do
 ## Bugs / issues
-- Import multiple files -> see details -> open one and delete / edit it from menu -> return to import details screen to see an outdated state
-- Song search should also match by tag
 - Animate editor mode changes (Editor vs Preview vs Split) by sliding panels in/out
 - Look into adding overshoot effects on all platforms
 

@@ -62,8 +62,9 @@ internal fun importReportSections(summary: ImportPlan.Summary) = listOf(
 
 /**
  * What an import came to, every group that has any files in it. Songs and setlists are named the way the library
- * names them, read from [songs] and [setlists] as they are now: a file the import wrote and something has removed
- * since is listed by its file name, and cannot be opened.
+ * names them, read from [songs] and [setlists] as they are now: a file the import wrote and something outside the app
+ * has removed since (a sync run) is listed by its file name, and cannot be opened. What the app itself deletes or
+ * renames is followed in the result instead, see [followingLibraryFileNames].
  */
 internal fun importReportSections(
     result: ImportResult,
@@ -115,6 +116,19 @@ internal fun importReportSections(
         ),
     ).filter { it.rows.isNotEmpty() }
 }
+
+/**
+ * The result with every library file it names passed through [fileName]: the new name of a file that was renamed, or
+ * null for one that was deleted, which then leaves the result. Only the names of songs and setlists the import put in
+ * the library are touched; what it left out never became a library file, so nothing the library does can change it.
+ */
+internal fun ImportResult.followingLibraryFileNames(fileName: (String) -> String?) = copy(
+    importedSongFileNames = importedSongFileNames.mapNotNull(fileName),
+    importedSetlistFileNames = importedSetlistFileNames.mapNotNull(fileName),
+    duplicateFileNames = duplicateFileNames.mapNotNull(fileName),
+    convertedSongFileNames = convertedSongFileNames.mapNotNull(fileName),
+    convertedSongToOpen = convertedSongToOpen?.let(fileName),
+)
 
 /**
  * The sections with only the rows whose file name, title or artist holds [query], ignoring case, and without the

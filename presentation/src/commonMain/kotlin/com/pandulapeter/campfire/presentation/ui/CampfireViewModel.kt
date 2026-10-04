@@ -119,6 +119,7 @@ import com.pandulapeter.campfire.presentation.ui.navigation.NavigationState
 import com.pandulapeter.campfire.presentation.ui.platform.FilePicker
 import com.pandulapeter.campfire.presentation.ui.platform.LibraryPersistence
 import com.pandulapeter.campfire.presentation.ui.platform.requestLibraryPersistence
+import com.pandulapeter.campfire.presentation.ui.screens.importReport.followingLibraryFileNames
 import com.pandulapeter.campfire.presentation.ui.screens.settings.SettingsTab
 import com.pandulapeter.campfire.presentation.ui.screens.songDetails.FontScaleAccumulator
 import com.pandulapeter.campfire.presentation.ui.screens.songDetails.PINCH_SENSITIVITY
@@ -1657,6 +1658,7 @@ class CampfireViewModel(
                 }
             }
             songDetailsCurrentSongs.entries.filter { it.value == song.fileName }.forEach { songDetailsCurrentSongs[it.key] = fileName }
+            followReportedFileNames { if (it == song.fileName) fileName else it }
             persistBackStack()
             // Said after the screens have followed the file, which has moved whatever else could not be rewritten.
             if (!rename.haveReferencesFollowed) sendMessage(Message.SongFileRenamedPartly)
@@ -1677,6 +1679,7 @@ class CampfireViewModel(
             popBackStack()
         }
         _songTexts.update { it - fileName }
+        followReportedFileNames { it.takeUnless { it == fileName } }
         // Said once the screens have let go of the file, which is gone whatever else could not be rewritten.
         if (!haveReferencesBeenRemoved) sendMessage(Message.SongDeletedPartly)
     }
@@ -2673,6 +2676,14 @@ class CampfireViewModel(
         showImportReport(ImportReport.Finished(result))
     }
 
+    /**
+     * Keeps the import screen's result naming the files the library holds, so that coming back to it from a song opened
+     * from its list and deleted or renamed there shows the library as it now is rather than a row that no longer opens.
+     */
+    private fun followReportedFileNames(fileName: (String) -> String?) = _importReport.update { report ->
+        if (report is ImportReport.Finished && report.result != null) ImportReport.Finished(report.result.followingLibraryFileNames(fileName)) else report
+    }
+
     /** Takes the import screen off the back stack, with whatever is on top of it, see [onImportReportLeft]. */
     private fun closeImportReport() {
         val index = backStack.indexOf(CampfireDestination.ImportReport)
@@ -2966,6 +2977,7 @@ class CampfireViewModel(
     fun deleteSetlist(setlistFileName: String) = launchLibraryChange {
         if (reorderingSetlistFileName == setlistFileName) reorderingSetlistFileName = null
         deleteSetlist.invoke(setlistFileName)
+        followReportedFileNames { it.takeUnless { it == setlistFileName } }
     }
 
     /**
