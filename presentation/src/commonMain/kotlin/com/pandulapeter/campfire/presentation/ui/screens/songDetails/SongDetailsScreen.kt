@@ -413,8 +413,10 @@ internal fun SongDetailsScreen(
                         )
                     }
                 }
+                // A song read from an archived setlist keeps its own menu, so there the song's Edit and Export take these in
+                // rather than a second overflow button standing next to this one.
                 AnimatedVisibility(
-                    visible = isReadOnly && !showsFontScaleInBar,
+                    visible = isPerformanceModeEnabled && !showsFontScaleInBar,
                     enter = fadeIn() + expandHorizontally(),
                     exit = fadeOut() + shrinkHorizontally(),
                 ) {
@@ -482,32 +484,48 @@ internal fun SongDetailsScreen(
                         isEditAndExportOnly = isReadOnly,
                         setlistFileName = destination.setlistFileName,
                         fileEditItems = editingActions.take(1) + listOfNotNull(coverArtAction) + editingActions.drop(1),
-                        leadingItems = listOfNotNull(
-                            currentSongInfoAction?.takeUnless { showsSongInfoInBar },
-                            if (showsSetlistAssignmentsInBar) {
-                                null
-                            } else {
-                                setlistAssignmentsAction(
-                                    viewModel = viewModel,
-                                    song = song,
-                                    isInSetlist = isInSetlist,
-                                    setlistFileName = destination.setlistFileName,
-                                )
-                            },
-                        ),
-                        menuFooter = {
-                            MenuStepperRow(label = stringResource(Res.string.song_details_text_size)) {
-                                LiveFontScaleControls(viewModel = viewModel)
-                            }
-                            if (!showsTranspositionInBar && isTranspositionShown) {
-                                MenuStepperRow(label = stringResource(Res.string.song_details_transposition)) {
-                                    SongTranspositionControls(
+                        leadingItems = when {
+                            !isReadOnly -> listOfNotNull(
+                                currentSongInfoAction?.takeUnless { showsSongInfoInBar },
+                                if (showsSetlistAssignmentsInBar) {
+                                    null
+                                } else {
+                                    setlistAssignmentsAction(
                                         viewModel = viewModel,
                                         song = song,
+                                        isInSetlist = isInSetlist,
                                         setlistFileName = destination.setlistFileName,
-                                        transposition = transposition,
-                                        chordSpelling = chordSpelling,
                                     )
+                                },
+                            )
+                            showsFontScaleInBar -> emptyList()
+                            else -> listOfNotNull(currentSongInfoAction)
+                        },
+                        menuFooter = when {
+                            !isReadOnly -> {
+                                {
+                                    MenuStepperRow(label = stringResource(Res.string.song_details_text_size)) {
+                                        LiveFontScaleControls(viewModel = viewModel)
+                                    }
+                                    if (!showsTranspositionInBar && isTranspositionShown) {
+                                        MenuStepperRow(label = stringResource(Res.string.song_details_transposition)) {
+                                            SongTranspositionControls(
+                                                viewModel = viewModel,
+                                                song = song,
+                                                setlistFileName = destination.setlistFileName,
+                                                transposition = transposition,
+                                                chordSpelling = chordSpelling,
+                                            )
+                                        }
+                                    }
+                                }
+                            }
+                            showsFontScaleInBar -> null
+                            else -> {
+                                {
+                                    MenuStepperRow(label = stringResource(Res.string.song_details_text_size)) {
+                                        LiveFontScaleControls(viewModel = viewModel)
+                                    }
                                 }
                             }
                         },

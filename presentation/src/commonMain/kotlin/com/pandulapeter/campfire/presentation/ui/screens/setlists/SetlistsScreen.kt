@@ -820,7 +820,7 @@ private fun SetlistEntryActions(
             isDeletable = false,
             isEditAndExportOnly = isArchived,
             setlistFileName = setlistFileName,
-            leadingItems = setlistRowActions(onMoveUp, onMoveDown, onRemove),
+            leadingItems = if (isArchived) emptyList() else setlistRowActions(onMoveUp, onMoveDown, onRemove),
         )
 
         is CampfireViewModel.SetlistWithSongs.Entry.Missing -> ActionsMenu(

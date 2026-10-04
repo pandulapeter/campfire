@@ -319,8 +319,8 @@ internal fun SongActions(
         modifier = modifier,
         state = state,
         isExpandable = false,
-        menuFooter = menuFooter.takeUnless { isEditAndExportOnly },
-        items = leadingItems.takeUnless { isEditAndExportOnly }.orEmpty() + listOf(
+        menuFooter = menuFooter,
+        items = leadingItems + listOf(
             ActionsMenuItem(
                 title = stringResource(Res.string.songs_edit_song),
                 icon = painterResource(Res.drawable.ic_edit),
