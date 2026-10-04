@@ -57,6 +57,10 @@ test('the worker sends a screen\'s address to the form the site\'s 404 page prod
         action: 'redirect',
         location: `${SCOPE}?/setlist/s%C3%A9t.setlist.json/a.cho`,
     });
+    assert.deepEqual(plain(route(`${SCOPE}import`, 'navigate')), {
+        action: 'redirect',
+        location: `${SCOPE}?/import`,
+    });
 });
 
 test('the worker leaves alone what is not the app\'s', () => {

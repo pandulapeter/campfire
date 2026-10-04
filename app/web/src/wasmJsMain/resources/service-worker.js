@@ -25,7 +25,7 @@ var CACHE_NAME = 'campfire-web-app';
 
 // The first segments of the app's screens (BrowserRoutes in :presentation), as the development server's routes.js and
 // the site's 404.html know them.
-var ROUTES = ['search', 'setlists', 'settings', 'song', 'setlist'];
+var ROUTES = ['search', 'setlists', 'settings', 'song', 'setlist', 'import'];
 
 /**
  * What to do with a request: `{ action: 'page' }` answers with the kept page, `{ action: 'redirect', location }` sends

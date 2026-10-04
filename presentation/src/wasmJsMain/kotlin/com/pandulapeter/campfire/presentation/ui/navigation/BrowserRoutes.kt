@@ -39,6 +39,9 @@ import kotlin.js.ExperimentalWasmJsInterop
  *
  * A song is named by its file name without the `.cho` every song the app writes ends in, and a setlist without its
  * `.setlist.json`; a song file with one of the other extensions keeps it, since the name has to find the file again.
+ *
+ * A new first segment has to be added to `ROUTES` in `app/web`'s `service-worker.js` and `webpack.config.d/routes.js`
+ * too, or its address does not open offline or on the development server.
  */
 internal object BrowserRoutes {
 

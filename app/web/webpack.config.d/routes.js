@@ -18,7 +18,7 @@
     if (!config.devServer) {
         return;
     }
-    var ROUTES = ['search', 'setlists', 'settings', 'song', 'setlist'];
+    var ROUTES = ['search', 'setlists', 'settings', 'song', 'setlist', 'import'];
     var setupMiddlewares = config.devServer.setupMiddlewares;
     config.devServer.setupMiddlewares = function (middlewares, devServer) {
         var result = setupMiddlewares ? setupMiddlewares(middlewares, devServer) : middlewares;
