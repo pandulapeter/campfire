@@ -33,6 +33,7 @@ internal class UserPreferencesDocumentFormatTest {
             themeColor = "forest",
             isAppIconThemed = false,
             isCoverArtEnabled = false,
+            shouldNumberSections = false,
             language = "hu",
             accidentals = "flats",
             notation = "german",

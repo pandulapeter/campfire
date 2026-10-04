@@ -346,6 +346,7 @@ class GetScreenDataUseCaseImplTest {
             themeColor = UserPreferences.ThemeColor.CAMPFIRE,
             isAppIconThemed = true,
             isCoverArtEnabled = true,
+            shouldNumberSections = true,
             language = UserPreferences.Language.SYSTEM_DEFAULT,
             chordSpelling = UserPreferences.ChordSpelling.Default,
             transpositions = emptyMap(),

@@ -2051,7 +2051,7 @@ internal fun rememberSongLyricsModel(
 
 /** The fallback labels of the environments that have one, read here since they are string resources. */
 @Composable
-internal fun rememberDefaultSectionLabels() = DefaultSectionLabels(
+internal fun rememberDefaultSectionLabels(shouldNumberSections: Boolean = false) = DefaultSectionLabels(
     verse = stringResource(Res.string.song_editor_section_verse),
     chorus = stringResource(Res.string.song_details_section_chorus),
     bridge = stringResource(Res.string.song_details_section_bridge),
@@ -2061,6 +2061,7 @@ internal fun rememberDefaultSectionLabels() = DefaultSectionLabels(
     preChorus = stringResource(Res.string.song_editor_section_pre_chorus),
     solo = stringResource(Res.string.song_editor_section_solo),
     outro = stringResource(Res.string.song_editor_section_outro),
+    shouldNumberSections = shouldNumberSections,
 )
 
 /**
@@ -2077,6 +2078,8 @@ internal data class DefaultSectionLabels(
     val preChorus: String,
     val solo: String,
     val outro: String,
+    /** Whether the sections that have no label are numbered by their kind, see [withNumberedSections]. */
+    val shouldNumberSections: Boolean = false,
 )
 
 /**
@@ -2256,7 +2259,7 @@ private fun ChordProSong.toRenderSections(
         return true
     }
 
-    blocks.joinCutSections().forEach { pieces ->
+    blocks.withNumberedSections(defaultLabels).joinCutSections().forEach { pieces ->
         when (val block = pieces.firstSection()) {
             is ChordProBlock.Break -> Unit // The column layout makes its own breaks.
 
@@ -2267,8 +2270,9 @@ private fun ChordProSong.toRenderSections(
             is ChordProBlock.ChorusRecall -> {
                 // The heading goes on the first piece of the chorus that is shown, and stays behind on its own when
                 // none is: a recall has always said where the chorus is sung, even with nothing under it.
-                val label = block.label ?: (block.blocks.firstOrNull() as? ChordProBlock.Section)?.label
-                var header: String? = label ?: defaultLabels.chorus
+                val recalled = block.blocks.firstOrNull() as? ChordProBlock.Section
+                val label = block.label ?: recalled?.label
+                var header: String? = label ?: recalled?.takeIf { it.number != null }?.header(defaultLabels) ?: defaultLabels.chorus
                 // A recall is folded apart from the chorus it repeats, as the chorus it is, and whatever of it is
                 // shown after its first piece is named after that piece.
                 val recallFoldKey = foldNameCounts.nextFoldKey(label ?: SectionType.Chorus.foldName)
@@ -2371,7 +2375,7 @@ private val SectionType.foldName
         is SectionType.Custom -> name
     }
 
-private fun ChordProBlock.Section.header(defaultLabels: DefaultSectionLabels): String = label ?: when (val sectionType = type) {
+internal fun ChordProBlock.Section.header(defaultLabels: DefaultSectionLabels): String = label ?: when (val sectionType = type) {
     SectionType.Verse -> defaultLabels.verse
     SectionType.Chorus -> defaultLabels.chorus
     SectionType.Bridge -> defaultLabels.bridge
@@ -2385,7 +2389,7 @@ private fun ChordProBlock.Section.header(defaultLabels: DefaultSectionLabels): S
         lines.areAll<ChordProLine.Grid>() -> defaultLabels.grid
         else -> UNNAMED_SECTION_HEADER
     }
-}
+}.withNumber(number)
 
 /**
  * The header of a section the file gives no name and that has none of its own kind to fall back on — a paragraph of

@@ -3136,6 +3136,8 @@ class CampfireViewModel(
 
     fun setCoverArtEnabled(value: Boolean) = changeUserPreferences { copy(isCoverArtEnabled = value) }
 
+    fun setSectionNumberingEnabled(value: Boolean) = changeUserPreferences { copy(shouldNumberSections = value) }
+
     fun setLanguage(value: UserPreferences.Language) = changeUserPreferences { copy(language = value) }
 
     fun setAccidentals(value: UserPreferences.Accidentals) = changeUserPreferences { copy(chordSpelling = chordSpelling.copy(accidentals = value)) }

@@ -243,6 +243,8 @@
     <string name="settings_lyrics_only_mode_description">Az akkordok elrejtése, hogy csak a szöveg maradjon</string>
     <string name="settings_cover_art">Borítóképek</string>
     <string name="settings_cover_art_description">A dalokban megadott albumborítók megjelenítése, amelyeket az alkalmazás egyszer letölt, majd ezen az eszközön tárol</string>
+    <string name="settings_number_sections">Szakaszok számozása</string>
+    <string name="settings_number_sections_description">A saját névvel nem rendelkező szakaszok fejlécében a fajtájuk és egy sorszám jelenik meg, például Versszak 1 és Versszak 2, ha egy dalban több van belőle</string>
     <string name="settings_german_notation">Német hangjelölés</string>
     <string name="settings_german_notation_description">A B hangot H-ként, a Bb-t pedig B-ként írja, ahogy a közép-európai és skandináv akkordfüzetekben szokás. A szerkesztő is ezt használja, de a dalok mindig szabványos jelöléssel mentődnek, így minden alkalmazásban ugyanúgy olvashatók.</string>
     <string name="settings_accidentals">Módosítójelek</string>

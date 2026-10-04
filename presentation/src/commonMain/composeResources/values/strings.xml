@@ -243,6 +243,8 @@
     <string name="settings_lyrics_only_mode_description">Hide every chord and show the words on their own</string>
     <string name="settings_cover_art">Cover art</string>
     <string name="settings_cover_art_description">Show the album cover a song names next to it, downloading it once and keeping a copy on this device</string>
+    <string name="settings_number_sections">Number sections</string>
+    <string name="settings_number_sections_description">Head sections that have no name of their own with their kind and a number, such as Verse 1 and Verse 2, where a song has several of a kind</string>
     <string name="settings_german_notation">German notation</string>
     <string name="settings_german_notation_description">Writes the note called B as H, and the one called Bb as B, the way chord charts do in Central Europe and Scandinavia. The editor uses it too, but songs are always saved in standard notation, so they read the same in every app.</string>
     <string name="settings_accidentals">Accidentals</string>

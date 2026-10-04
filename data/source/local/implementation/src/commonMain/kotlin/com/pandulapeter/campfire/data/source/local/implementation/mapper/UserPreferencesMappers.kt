@@ -28,6 +28,7 @@ internal fun UserPreferencesDocument.toModel() = UserPreferences(
     themeColor = UserPreferences.ThemeColor.entries.firstOrNull { it.id == themeColor } ?: UserPreferences.ThemeColor.CAMPFIRE,
     isAppIconThemed = isAppIconThemed,
     isCoverArtEnabled = isCoverArtEnabled,
+    shouldNumberSections = shouldNumberSections,
     language = UserPreferences.Language.entries.firstOrNull { it.id == language } ?: UserPreferences.Language.SYSTEM_DEFAULT,
     chordSpelling = UserPreferences.ChordSpelling(
         accidentals = UserPreferences.Accidentals.entries.firstOrNull { it.id == accidentals } ?: UserPreferences.Accidentals.ORIGINAL,
@@ -55,6 +56,7 @@ internal fun UserPreferences.toDocument() = UserPreferencesDocument(
     themeColor = themeColor.id,
     isAppIconThemed = isAppIconThemed,
     isCoverArtEnabled = isCoverArtEnabled,
+    shouldNumberSections = shouldNumberSections,
     language = language.id,
     accidentals = chordSpelling.accidentals.id,
     notation = chordSpelling.notation.id,

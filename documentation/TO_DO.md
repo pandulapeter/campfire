@@ -11,25 +11,23 @@
 ## Bugs / issues
 - Import multiple files -> see details -> open one and delete / edit it from menu -> return to import details screen to see an outdated state
 - The Setlist assignments bottom sheet has an overshoot efect that interferes with the bottom sheet's default drag handling, while the Song assignments bottom sheet doesn't. The Links sheet is also inconsistent - review, find all similar issues, and fix.
-- The cover art bottom sheet has two primary actions
+- Song search should also match by tag
+- Animate editor mode changes (Editor vs Preview vs Split) by sliding panels in/out
+- Look into adding overshoot effects on all platforms
 
 ## Improvements
-- Sort by popups on main screens should have titles
-- Add validators to input fields
-- Maybe all bottom sheets with song names in their headers could show the cover art for the song
+- Add a Reset all filters button to the filtering panel / bottom sheet of the Songs screen
+- Add a validator to the duration input field - include it in the Prettify logic too
 - Each setlist should display a total of the song durations for the setlist, right after the countdown if enabled (separated by a dot character), or instead of the countdown if it isn't. If some songs don't have a valid duration set, add a + sign after the total duration of the setlist to indicate that it's a minimum value. If none of the songs have valid durations set, don't display the total duration
-- Reset all filters button
+- The sort by popups on main screens (Songs and Setlists) should have titles above the radio buttons
 - Add cover arts to the Song assignments bottom sheet list items
-- Cover art bottom sheet: do we even need search input fields here?
+- Maybe all bottom sheets with song names in their headers could show the cover art for the song
+- Cover art bottom sheet: do we even need search input fields here? Right now it has two primary actions (Search and Save / Done)
 - Rename master branch to main
-- Song search should also match by tag
-- Animate editor mode change (split)
-- Add overshoot effects on all platforms
 
 ## Features
 - Multi-select songs for bulk export or bulk edit (assign tags, languages, setlists) - rearrange mode in Setlists could be used for UX inspiration
-- Implement optionally auto-indexing similar sections within a song
-- Metronome: documentation/plans/metronome.md. Think about an always-present panel when the metronome is playing, no matter where the user is in the app and how changing the BPM affects the duration of a song
+- Metronome: documentation/plans/metronome.md. Also consider how changing the BPM affects the duration of a song
 - Haptic effects, especially for the fast scroller
 
 ## Ideas

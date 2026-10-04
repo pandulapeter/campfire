@@ -29,6 +29,7 @@ internal data class UserPreferencesDocument(
     val themeColor: String = "",
     val isAppIconThemed: Boolean = true,
     val isCoverArtEnabled: Boolean = true,
+    val shouldNumberSections: Boolean = true,
     val language: String = "",
     val accidentals: String = "",
     val notation: String = "",

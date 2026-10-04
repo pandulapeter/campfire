@@ -28,6 +28,12 @@ sealed interface ChordProBlock {
          * to show, and a recall of a chorus repeats it together with the part before it.
          */
         val isContinuation: Boolean = false,
+        /**
+         * Which of the unlabeled sections of its kind this is, for a viewer that heads those with their kind and a
+         * number. The parser never sets it, since the file does not say it: it is a way of showing the section, and the
+         * label stays what the file wrote.
+         */
+        val number: Int? = null,
     ) : ChordProBlock
 
     /**

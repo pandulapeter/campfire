@@ -19,6 +19,9 @@ import com.pandulapeter.campfire.chordpro.model.GridToken
 import com.pandulapeter.campfire.chordpro.model.SectionType
 import com.pandulapeter.campfire.data.model.domain.PrintSettings
 import com.pandulapeter.campfire.presentation.ui.screens.songDetails.DefaultSectionLabels
+import com.pandulapeter.campfire.presentation.ui.screens.songDetails.header
+import com.pandulapeter.campfire.presentation.ui.screens.songDetails.withNumber
+import com.pandulapeter.campfire.presentation.ui.screens.songDetails.withNumberedSections
 import com.pandulapeter.campfire.presentation.ui.screens.songDetails.alignedGridBars
 import com.pandulapeter.campfire.presentation.ui.screens.songDetails.areAll
 import com.pandulapeter.campfire.presentation.ui.screens.songDetails.labelOf
@@ -259,7 +262,7 @@ private class PrintLayouter(
         // that block whole where heading and block fit a column together, otherwise its first two rows, after which the
         // block flows on from under its heading. A break before that block is ignored, since the heading has just
         // started the song where it is.
-        val blocks = entry.song?.blocks.orEmpty()
+        val blocks = entry.song?.blocks.orEmpty().withNumberedSections(labels.sections)
         var firstIndex = -1
         var firstRows = if (entry.song == null) wrapped(labels.missing) else emptyList()
         blocks.forEachIndexed { index, block ->
@@ -350,7 +353,7 @@ private class PrintLayouter(
                 section.lines.areAll<ChordProLine.Grid>() -> labels.sections.grid
                 else -> null
             }
-        }
+        }?.withNumber(section.number)
         val lines = section.lines.flatMapIndexed { lineIndex, line ->
             when (line) {
                 is ChordProLine.Lyrics -> lyricsRows(line, lineWidth)
@@ -520,7 +523,8 @@ private class PrintLayouter(
      * its own when nothing is: a recall says where the chorus is sung, even with nothing under it.
      */
     private fun recallRows(recall: ChordProBlock.ChorusRecall, width: Float): List<Row> {
-        var header: String? = recall.label ?: (recall.blocks.firstOrNull() as? ChordProBlock.Section)?.label ?: labels.sections.chorus
+        val recalled = recall.blocks.firstOrNull() as? ChordProBlock.Section
+        var header: String? = recall.label ?: recalled?.label ?: recalled?.takeIf { it.number != null }?.header(labels.sections) ?: labels.sections.chorus
         return recall.blocks.flatMapIndexed { index, piece ->
             val isPieceInChorus = recall.blocks.isInChorus(index)
             if (piece is ChordProBlock.Section && header != null) {

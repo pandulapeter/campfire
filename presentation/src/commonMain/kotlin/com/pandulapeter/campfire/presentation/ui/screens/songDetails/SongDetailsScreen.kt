@@ -598,6 +598,7 @@ internal fun SongDetailsScreen(
                         hasFailed = song.fileName in failedSongFileNames,
                         transposition = transpositions[song.fileName, destination.setlistFileName],
                         shouldShowChords = shouldShowChords,
+                        shouldNumberSections = userPreferences?.shouldNumberSections == true,
                         fontScale = if (isFollowingGesture) ({ viewModel.fontScale }) else ({ viewModel.settledFontScale }),
                         // In a setlist the step buttons page to the songs beside every song, whether it scrolls or not.
                         keepsStepButtonInset = canPage,
@@ -775,6 +776,7 @@ private fun SongDetailsPage(
     hasFailed: Boolean,
     transposition: Int,
     shouldShowChords: Boolean,
+    shouldNumberSections: Boolean,
     fontScale: () -> Float,
     keepsStepButtonInset: Boolean,
     foldedSections: Set<String>,
@@ -808,7 +810,7 @@ private fun SongDetailsPage(
         }
     } else {
         val layoutDirection = LocalLayoutDirection.current
-        val labels = rememberDefaultSectionLabels()
+        val labels = rememberDefaultSectionLabels(shouldNumberSections)
         val model = rememberSongLyricsModel(
             inputs = SongLyricsInputs(
                 text = songText,

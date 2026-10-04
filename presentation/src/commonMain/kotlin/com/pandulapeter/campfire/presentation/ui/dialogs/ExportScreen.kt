@@ -383,7 +383,7 @@ private fun ExportScreen(
         tempo = stringResource(Res.string.song_editor_insert_tempo),
         time = stringResource(Res.string.print_time),
         missing = stringResource(Res.string.print_missing),
-        sections = rememberDefaultSectionLabels(),
+        sections = rememberDefaultSectionLabels(shouldNumberSections = preferences?.shouldNumberSections == true),
     )
     LaunchedEffect(dialog, state.attempt) {
         state.failed = false

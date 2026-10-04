@@ -42,6 +42,12 @@ data class UserPreferences(
      * asking any host a song's `{meta: cover …}` names for anything.
      */
     val isCoverArtEnabled: Boolean,
+    /**
+     * Whether the sections a song gives no name of their own are numbered by their kind where it has several of one
+     * ("Verse 1", "Verse 2"), the way the files of a library were once written by hand. Off, they are headed by the
+     * plain name of their kind.
+     */
+    val shouldNumberSections: Boolean,
     val language: Language,
     val chordSpelling: ChordSpelling, // How the chords of a song are written when it is displayed.
     /** Song file name to semitones, for songs opened from the library rather than from a setlist. */

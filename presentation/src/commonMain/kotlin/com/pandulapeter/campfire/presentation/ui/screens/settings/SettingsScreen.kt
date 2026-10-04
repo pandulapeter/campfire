@@ -128,6 +128,8 @@ import com.pandulapeter.campfire.presentation.resources.settings_library_storage
 import com.pandulapeter.campfire.presentation.resources.settings_library_summary
 import com.pandulapeter.campfire.presentation.resources.settings_lyrics_only_mode
 import com.pandulapeter.campfire.presentation.resources.settings_lyrics_only_mode_description
+import com.pandulapeter.campfire.presentation.resources.settings_number_sections
+import com.pandulapeter.campfire.presentation.resources.settings_number_sections_description
 import com.pandulapeter.campfire.presentation.resources.settings_performance_mode
 import com.pandulapeter.campfire.presentation.resources.settings_performance_mode_description
 import com.pandulapeter.campfire.presentation.resources.settings_privacy_policy
@@ -492,6 +494,12 @@ private fun SongDisplaySection(
         description = stringResource(Res.string.settings_cover_art_description),
         isChecked = userPreferences?.isCoverArtEnabled == true,
         onCheckedChange = viewModel::setCoverArtEnabled,
+    )
+    SwitchListItem(
+        title = stringResource(Res.string.settings_number_sections),
+        description = stringResource(Res.string.settings_number_sections_description),
+        isChecked = userPreferences?.shouldNumberSections == true,
+        onCheckedChange = viewModel::setSectionNumberingEnabled,
     )
     // Both of these only decide how a chord is written, so lyrics only mode leaves them with nothing to say. They
     // stay in the section rather than disappearing from it: what they are set to is still what the chords will look

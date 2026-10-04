@@ -804,7 +804,8 @@ private fun SongPreview(
     isSingleColumn: Boolean,
     songInfoEditing: SongInfoEditing,
 ) {
-    val labels = rememberDefaultSectionLabels()
+    val userPreferences by viewModel.userPreferences.collectAsStateWithLifecycle()
+    val labels = rememberDefaultSectionLabels(shouldNumberSections = userPreferences?.shouldNumberSections == true)
     val latestTransposition by rememberUpdatedState(transposition)
     val latestChordSpelling by rememberUpdatedState(chordSpelling)
     // Lyrics only mode is about how a song is read, and this preview is here to show what is being written: chords
