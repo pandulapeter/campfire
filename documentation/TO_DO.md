@@ -9,11 +9,8 @@
 -->
 # To do
 ## Bugs / issues
-- Animate editor mode changes (Editor vs Preview vs Split) by sliding panels in/out
-- Look into adding overshoot effects on all platforms
 
 ## Improvements
-- Add a validator to the duration input field - include it in the Prettify logic too
 - Each setlist should display a total of the song durations for the setlist, right after the countdown if enabled (separated by a dot character), or instead of the countdown if it isn't. If some songs don't have a valid duration set, add a + sign after the total duration of the setlist to indicate that it's a minimum value. If none of the songs have valid durations set, don't display the total duration
 - The sort by popups on main screens (Songs and Setlists) should have titles above the radio buttons
 - Add cover arts to the Song assignments bottom sheet list items
