@@ -270,7 +270,13 @@ internal fun SongListItem(
                             }
                         }
                         if (displayedDuration != null) {
-                            if (song.artist.isNotBlank() || note != null) {
+                            // Follows the note, which fades and closes up where it stands rather than leaving the line
+                            // in one frame, so the duration slides once instead of jumping and then sliding.
+                            AnimatedVisibility(
+                                visible = song.artist.isNotBlank() || note != null,
+                                enter = fadeIn() + expandHorizontally(),
+                                exit = fadeOut() + shrinkHorizontally(),
+                            ) {
                                 Icon(
                                     modifier = Modifier.size(if (isNarrowSongCardWindow) NARROW_DOT_SIZE else DOT_SIZE),
                                     painter = painterResource(Res.drawable.ic_dot),
