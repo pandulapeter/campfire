@@ -9,8 +9,30 @@
 -->
 # Metronome — implementation plan
 
-Written 2026-10-02 against `8c267e01a`. Nothing in the app plays a sound today, so this adds a new capability
-(audio output, background playback) as well as a new screen.
+Written 2026-10-02 against `8c267e01a`, reviewed against the code at `dc030813c` on 2026-10-04. Nothing in the app
+plays a sound today, so this adds a new capability (audio output, background playback) as well as a new screen.
+
+What the 2026-10-04 review changed, so that nobody has to diff it:
+
+- **The stop rule follows the song's back stack entry, not the top of the stack**: the editor is pushed on top of song
+  details (`CampfireViewModel.openSongEditor`), so "top is not `SongDetails`" would have stopped the click whenever the
+  user went to fix a chord. And the click remembers where it was started (`origin`), so a click from the Metronome tab
+  goes back to the tab's own tempo instead of stopping when a song it was lent to closes (default 6, §4).
+- **The Metronome tab's "song mode" is gone**: every way onto the tab (`selectTopLevelDestination`, its address)
+  clears the back stack, and the navigation chrome moves into the screens while a song covers them, so a song can
+  never be playing while the tab is shown.
+- **Audio focus, the iOS session and interruptions live in the audio output**, not in the shells, so a click cannot
+  start without focus (in a call) and the engine learns about a loss without a UI around (§6).
+- **No low-latency path; ~100 ms queued.** Latency is only felt at start and stop, the heard-time `beats` already
+  hide it from the flash, and a deeper queue is what keeps a locked phone and Kotlin/Native's GC from dropping
+  clicks (§2.2).
+- **One clock when audio is unavailable**: the engine keeps running the sequencer against the monotonic clock with
+  no output, so the UI has one source of beats either way (§2.2).
+- `Metronome.preview` for the sound chips; `beatLevels` stored as ids like the rest; a lenient serializer for the
+  setlist entry's `tempo` (a plain `Int?` would make one bad value fail the whole setlist); hold-to-repeat is new to
+  the shared `Stepper` rather than something it already does; the performance mode bar's width functions take the new
+  button; the web's scheduler worker ships as a file like `opfs-writer.js`; synthesizer goldens compare quantized
+  PCM; haptics only while the app is in front.
 
 ## 1. What is being built
 
@@ -44,12 +66,17 @@ Written 2026-10-02 against `8c267e01a`. Nothing in the app plays a sound today, 
    know where in the song the band is.
 5. **A retarget happens on the next click, which becomes beat one** of the new song's bar — not at the end of the
    old bar, which at 60 BPM in 4/4 could be four seconds away and would not read as "immediately".
-6. **Leaving the song details screen stops a click that was playing for a song.** Backgrounding the app does not.
-   A click started on the Metronome tab carries on across tabs; opening a song while it runs retargets it to the song.
+6. **A click follows the topmost song details entry on the back stack, wherever it was started from.** Opening a
+   song while a click runs retargets it to the song; the editor (or anything else) pushed on top of that song keeps
+   it playing in the song's tempo. When that entry leaves the back stack the click goes back to where it was started:
+   one started on a song **stops**, one started on the Metronome tab **returns to the tab's own tempo and signature**
+   and carries on (lending the tab's click to a song must not cost the user their practice click). Backgrounding the
+   app does neither. Which of the two it was is the click's `origin` (§2.1), kept in the engine, not the view model.
 7. **Performance mode keeps play/stop and hides the per-song tempo stepper**, as it hides the transposition. The
    Metronome tab stays fully usable there: it changes no song and no setlist.
 8. **The metronome takes the audio like any player** (audio focus on Android, a non-mixable session on iOS), which
-   is what the lock screen controls require. Clicking along with another app's backing track is a later switch
+   is what the lock screen controls require. A request that is refused (a call in progress) does not start the click;
+   the button says why in one line, as for an unavailable output. Clicking along with another app's backing track is a later switch
    ("Play alongside other audio"), see §12.
 9. **A setlist does not inherit the library override**: setlist entry → the file's `{tempo}` → 120. Verified
    against the code: `Transpositions[song, setlist]` reads only the setlist's entry when a setlist is given and
@@ -76,7 +103,8 @@ metronome:implementation   campfire-library + Koin compiler plugin; depends on :
   MetronomeSequencer       pure: where in the sample stream every click falls
   ClickSynthesizer         pure: the PCM of each sound
   ClickMixer               pure: sequencer ticks -> PCM chunks
-  AudioOutput              internal interface; one annotated class per platform source set
+  AudioOutput              internal interface; one annotated class per platform source set, which also owns
+                           audio focus / the audio session and reports their loss (§6)
   Module.kt                @Module @ComponentScan object MetronomeModule
 ```
 
@@ -84,17 +112,25 @@ metronome:implementation   campfire-library + Koin compiler plugin; depends on :
   `Metronome` injected. `:app:android` and `:app:ios` depend on it too, for the service and the Now Playing shell.
 - `:app:di` names `MetronomeModule` as the sixth module object of the `@KoinApplication`; `app/di/CLAUDE.md` and
   the root one say "six".
+- The Android output needs the `Context` (`AudioManager`, the focus request, the noisy receiver): `@Provided`, as
+  everywhere else it is injected, so the compile-time graph check still passes.
 - Settings do **not** flow into the module from the repositories: the view model reads `UserPreferences` and hands
   the engine a complete `MetronomePattern`. The module stays free of every other one.
 - `settings.gradle.kts` includes both; the convention plugin derives namespace and `archivesName` as for the rest.
 
 ```kotlin
 interface Metronome {
-    val playback: StateFlow<MetronomePlayback>      // Stopped | Playing(pattern) | Unavailable(reason)
+    val playback: StateFlow<MetronomePlayback>      // Stopped(reason?) | Playing(pattern, origin, audioIssue?)
     val beats: SharedFlow<MetronomeBeat>            // one per click, emitted when it is *heard*
-    fun start(pattern: MetronomePattern)
-    fun update(pattern: MetronomePattern, restartBar: Boolean)   // applied on the next click
+    fun start(pattern: MetronomePattern, origin: MetronomeOrigin)  // starting while playing = update + restartBar
+    fun update(pattern: MetronomePattern, restartBar: Boolean)   // applied on the next click; ignored when stopped
+    fun preview(sound: MetronomeSound, level: BeatLevel)        // the sound chips; mixed in while playing
     fun stop()
+}
+
+sealed interface MetronomeOrigin {                  // where the click was started, see default 6
+    data object Standalone : MetronomeOrigin
+    data class Song(val songFileName: String, val setlistFileName: String?) : MetronomeOrigin
 }
 
 data class MetronomePattern(
@@ -113,12 +149,19 @@ data class MetronomePattern(
 A `delay()` loop drifts and jitters audibly. Every click is placed **by sample count** in the output stream, so the
 tempo is exactly as accurate as the sound card's clock.
 
+- `Stopped(reason)` carries why a click ended on its own (focus lost, a call, headphones pulled, the output failing),
+  so the UI can say it in a snackbar rather than the button just going quiet. `audioIssue` on `Playing` is an output
+  that could not open (§ below). `origin` survives an Activity recreated or finished and reopened from the
+  notification: a fresh view model reads it from the singleton rather than guessing, and does **not** stop a song's
+  click just because its own back stack starts without a song (the stop rule fires on a back stack *change*, §4).
 - `MetronomeSequencer(sampleRate)` holds the position in frames and answers `ticksUntil(frame)`: a list of
   `Tick(frame, level, isSubdivision, beatIndex, barIndex)`. A pattern change replaces the pattern for every tick not
   yet handed out; `restartBar` makes the next beat boundary beat one. Pure, and the most tested class of the feature.
 - `ClickSynthesizer` renders each sound's three voices (accent, normal, subdivision) once per sample rate into a
-  `FloatArray`: 20–60 ms bursts of a decaying sine, filtered noise or two detuned partials. Sound sets for v1:
-  **Click**, **Woodblock**, **Beep**, **Sticks**, **Cowbell**. Deterministic, so golden-tested by checksum.
+  `FloatArray`: 20–60 ms bursts of a decaying sine, filtered noise (a seeded `Random`, the same generator on every
+  platform) or two detuned partials. Sound sets for v1: **Click**, **Woodblock**, **Beep**, **Sticks**, **Cowbell**.
+  Deterministic, so golden-tested — by checksum of the **16-bit** samples, never of the floats: the JVM's `Math.sin`
+  may differ by an ulp between the interpreter and the JIT.
 - `ClickMixer` asks the sequencer for the ticks of the next chunk and mixes the voices into a 16-bit PCM buffer,
   carrying a voice's tail across chunk boundaries.
 - Three platforms **push PCM** from one dedicated thread; the web **schedules events** on the audio clock (§6.4).
@@ -128,9 +171,16 @@ tempo is exactly as accurate as the sound card's clock.
   (`AudioTrack.getTimestamp`, `SourceDataLine.getLongFramePosition`, the player node's render time plus
   `outputLatency`, `AudioContext.currentTime` and `outputLatency`), and a small coroutine releases the queued ticks
   as that position passes them. The UI flash and the haptic tick are driven from this flow alone.
-- Chunk size ~20 ms and at most ~60 ms queued, so a tempo change or a stop is felt at once.
-- An output that cannot open (no audio device on a Linux box, a refused `AudioContext`) leaves the engine in
-  `Unavailable`; the UI offers the visual beat, driven by a monotonic-clock fallback, and says why in one line.
+- Chunk size ~20 ms and **~100 ms queued** on the PCM outputs. A pattern change is applied to ticks not yet handed
+  to the mixer, so a deeper queue only delays it by that much — and it is applied "on the next click" anyway, which at
+  300 BPM is 200 ms away. Stop flushes the queue (`AudioTrack.pause` + `flush`, `SourceDataLine.flush`,
+  `AVAudioPlayerNode.stop`) rather than playing it out. In exchange a locked phone, a busy desktop or a
+  Kotlin/Native collection have five chunks of slack instead of two.
+- An output that cannot open (no audio device on a Linux box, a refused `AudioContext`) does not leave a second
+  timing path in the UI: the engine swaps in a **silent output** that releases the same sequencer's ticks against
+  `TimeSource.Monotonic`, `playback` says `Playing(audioIssue = …)`, and the flash and the haptics carry on from
+  `beats` as they would with sound. The UI says why in one line. Mute uses the real output writing silence, so its
+  clock is the sound card's, the same as unmuted.
 
 ### 2.3 Tap tempo
 
@@ -169,8 +219,12 @@ data class MetronomeSettings(
     val isMuted: Boolean = false,
     val isVisualBeatEnabled: Boolean = true,
     val isHapticBeatEnabled: Boolean = false,
-    /** Accents the user drew for a signature, keyed "7/8": a song in 7/8 is clicked 2+2+3 if that was set once. */
-    val beatLevels: Map<String, List<BeatLevel>> = emptyMap(),
+    /**
+     * Accents the user drew for a signature, keyed "7/8": a song in 7/8 is clicked 2+2+3 if that was set once. Level
+     * ids ("accent", "normal", "muted"), like the other ids here; a list whose length is not the signature's beat
+     * count is ignored for the default.
+     */
+    val beatLevels: Map<String, List<String>> = emptyMap(),
     // The Metronome tab's own state
     val bpm: Int = 120,
     val timeSignature: String = "4/4",
@@ -186,7 +240,9 @@ data class MetronomeSettings(
 - `SetlistSongDocument.tempo: Int? = null`, mapped both ways in `SetlistMappers`. Check `SetlistDocumentFormat`'s
   encoder settings: a null tempo must be **left out** of the JSON rather than written as `"tempo": null`, so that a
   setlist nobody gave a tempo stays byte for byte what it was (no sync churn, the import's "same file" comparison
-  unaffected). Out-of-range or non-numeric values read as null, the way a bad `date` does.
+  unaffected). Out-of-range or non-numeric values read as null, the way a bad `date` does — which takes a
+  serializer of its own like `date`'s `OptionalTextSerializer`: `coerceInputValues` only covers a `null`, and a plain
+  `Int?` meeting `"fast"` or `96.5` throws, which fails the **whole setlist** rather than the one value.
 - An older installed version carries the unknown `tempo` member through its own saves (`unknownFields`), so a
   mixed-version set of devices does not lose it. Add a test that says so.
 - `UserPreferencesDocument`: `tempos` and a `MetronomeSettingsDocument`, every field defaulted, unknown ids falling
@@ -221,17 +277,25 @@ every setlist's entries that carry one. `isDefault` for the stepper is `source =
 - `stepTempo(songFileName, setlistFileName, delta)`, `setTempo(…, bpm)` (tap tempo), `resetTempo(…)` — one private
   `changeTempo` modelled on `changeTransposition`: applied to the stored value at the time of the write inside
   `launchLibraryChange`, a value equal to the song's own removes the override rather than storing it. The setlist
-  branch is a setlist write, so it schedules a sync run like a transposition does; the stepper's key repeat (hold
-  to run) must therefore write once when it settles, not once per step — keep the live value in the view model and
-  debounce the write (~500 ms), flushing on stop of interaction and in `onCleared`.
+  branch is a setlist write, so it schedules a sync run like a transposition does; the stepper's hold-to-repeat
+  must therefore write once when it settles, not once per step. The font scale already works this way
+  (`liveFontScale` / `unsavedFontScale`): keep a `pendingTempos` map in the view model, keyed like `Tempos`, that
+  overlays `tempos` for the stepper, the page and the click until the write has round-tripped through the repository;
+  the debounced write (~500 ms, flushed in `onCleared`) stores that **absolute** value. Unlike the transposition's
+  relative `change`, absolute is safe here, because while a value is pending nothing else reads the store's.
 - `metronomeSettings` updates: `updateMetronomeSettings { … }`, debounced the way `printSettings` is saved "once the
   options have settled", since a BPM dial moves on every frame.
 - **The context**: `metronomeContext: MetronomeContext` — `Standalone` or `Song(fileName, setlistFileName)`.
   - `onSongDetailsPageChanged(destination, songFileName)` (from the pager's **target** page, see §5.2) sets
     `Song(…)`; if `playback` is `Playing`, calls `metronome.update(patternOf(song), restartBar = true)`.
-  - A back stack whose top is no longer a `SongDetails` returns the context to `Standalone` and stops a click that
-    was playing for a song (default 6). Observed where the back stack changes, not from a screen's disposal — a
-    popped screen is composed for as long as its exit transition runs.
+  - The context is the **topmost `SongDetails` anywhere on the back stack** (its current page), not the top entry,
+    so the editor pushed over a song keeps it. One pure function, `metronomeContextOf(backStack, pages)`, tested.
+  - When a back stack change takes the context from a song to `Standalone`, the click goes back to its `origin`
+    (default 6): `stop()` for `Origin.Song`, `update(tabPattern, restartBar = true)` for `Origin.Standalone`.
+    Observed where the back stack changes, not from a screen's disposal — a popped screen is composed for as long as
+    its exit transition runs — and only on a change, never on the view model's first read of its stack.
+  - A song whose file is renamed while playing needs nothing: `RenameSongFileUseCase` rewrites the open screens, so
+    the derived context follows. A song deleted while playing leaves song details, and the rule above applies.
   - `toggleMetronome()` builds the pattern of the current context and starts, or stops.
   - A change of an effective tempo, of the settings or of a song's file (`{tempo}` saved in the editor, a sync run)
     while playing is pushed with `update(…, restartBar = false)` by one `combine` collector.
@@ -241,8 +305,8 @@ every setlist's entries that carry one. `isDefault` for the stepper is `source =
 - `handleKeyEvent` (desktop) and the web's key listener: **Space** toggles on the Metronome tab while nothing is
   open over it and no field is focused; **M** toggles on the song details screen. Pedals send only arrows, so this
   is for keyboards.
-- Saved state: the context is derived from the back stack, so nothing new is saved. Playback is not restored after
-  process death.
+- Saved state: the context is derived from the back stack and the origin is the engine's, so nothing new is saved.
+  Playback is not restored after process death.
 
 ## 5. UI
 
@@ -272,9 +336,10 @@ in a separate file"):
   Mute (visual only).
 - Narrow windows: one scrolling column, edge-to-edge with the bottom inset + 16 dp, `fadingTopEdge`. Wide windows:
   tempo and beat row on one side, options on the other, following `SettingsLayout`.
-- While a click is playing **for a song**, the tab shows that song's title and tempo read-only at the top with the
-  shared settings still editable; its own BPM comes back when the context does. (Reachable on wide layouts with the
-  rail, and on the web by address.)
+- The tab always shows and plays its own BPM and signature: every way onto it clears the back stack
+  (`selectTopLevelDestination`, the web address), and the navigation chrome is inside the screens while a song covers
+  them, so a song's click can never be running while the tab is visible. A click the tab lent to a song is back on
+  the tab's pattern by the time the tab is shown (default 6).
 - Keeps the screen on while playing (`keepScreenOn`, as the song details screen does).
 - Web: address `/metronome`, one history entry, in `BrowserRoutes` both ways; `404.html` in `campfire-website`
   needs nothing, it forwards every path under `app/`.
@@ -291,8 +356,14 @@ where not, never a sheet:
     while playing outranks one "set once for a song". Where it does not fit it is the first entry of the overflow
     menu: "Start metronome · 96 BPM" / "Stop metronome".
   - In performance mode it stays, next to the text size stepper (and in that mode's menu where the bar is too narrow).
+    `showsFontScaleInPerformanceBar` and `showsCoverInPerformanceMode` subtract its 48 dp, and the button goes into
+    the menu before the stepper does (the stepper is pinched as often as it is tapped; the button is tapped once).
 - **Tempo row** in the overflow menu's footer, under Transposition: `MenuStepperRow(label = Tempo)` holding a
-  `TempoControls` stepper (−1 / +1, hold to run, value "96") and a small **Tap** button.
+  `TempoControls` stepper (−1 / +1, value "96") and a small **Tap** button.
+  - **Hold-to-repeat is new**: the shared `Stepper` is plain `IconButton`s today, which is fine for ±1 semitone and
+    painful for 120 → 96 BPM. Add an opt-in `repeatsOnHold` to `StepperButton` (a press-and-hold that repeats after
+    ~400 ms and speeds up), used by `TempoControls` and the Metronome tab; transposition and text size keep tapping.
+    Tap tempo is the quick way to a far value; the stepper is for nudging.
   - **Reset is the transposition's, gesture for gesture**: `TempoControls` is the same shared `Stepper`
     (`SongDisplayControls.kt`), so the value is highlighted while the tempo is overridden (`isDefault` from §3.5) and
     **one tap on the value** puts it back to the file's tempo (120 where the file has none), with its own
@@ -328,9 +399,14 @@ where not, never a sheet:
 
 ### 6.1 Android
 
-- **Output**: `AudioTrack` in `MODE_STREAM`, `USAGE_MEDIA` / `CONTENT_TYPE_SONIFICATION`,
-  `PERFORMANCE_MODE_LOW_LATENCY`, the device's native sample rate (`AudioManager.PROPERTY_OUTPUT_SAMPLE_RATE`) so
-  the fast mixer path is taken; a writer thread at `THREAD_PRIORITY_URGENT_AUDIO`. No NDK, no Oboe.
+- **Output**: `AudioTrack` in `MODE_STREAM`, `USAGE_MEDIA` / `CONTENT_TYPE_SONIFICATION`, the default performance
+  mode (not `LOW_LATENCY`: the fast path buys nothing a metronome can hear, §2.2, and costs underruns and battery
+  with the screen off), the device's native sample rate (`AudioManager.PROPERTY_OUTPUT_SAMPLE_RATE`) so nothing is
+  resampled; a writer thread at `THREAD_PRIORITY_URGENT_AUDIO`. No NDK, no Oboe.
+- **Focus and noise belong to the output**, not to the service: it requests `AudioFocusRequest(AUDIOFOCUS_GAIN)`
+  before the track plays — a refusal (a call) fails the start with a reason — and registers the
+  `ACTION_AUDIO_BECOMING_NOISY` receiver while open. Both end in the engine's `Stopped(reason)`; the service only
+  follows `playback`.
 - **`CampfireMetronomeService`** in `:app:android`, `foregroundServiceType="mediaPlayback"` with
   `FOREGROUND_SERVICE_MEDIA_PLAYBACK`. Like `CampfireSyncService` it plays nothing itself — the engine is the Koin
   singleton — it keeps the process alive and owns the system-facing part:
@@ -339,15 +415,21 @@ where not, never a sheet:
   - a `Notification.MediaStyle` notification on its own low-importance channel, with Stop. Media session
     notifications are exempt from the Android 13 notification permission, so nothing new is asked;
   - started with `startForegroundService` from the activity when playback starts (always a tap in the foreground,
-    so the background-start restrictions do not apply) and stopped with playback;
+    so the background-start restrictions do not apply) and stopped with playback; Stop on the notification, pause on
+    the headset and the session's stop all mean `metronome.stop()`, which ends the session too — there is no paused
+    state to resume from the lock screen;
+  - the notification's content intent brings the existing task to the front (`singleTask`), which must not stop a
+    song's click on its own (§2.2, `origin`);
   - `stopWithTask="true"`, the opposite of the sync service: swiping Campfire away is a request for silence.
   - Recommendation over Media3's `MediaSessionService` + `SimpleBasePlayer`: the framework classes cover a
     play/stop session with no new dependency. Revisit if Android Auto or Wear control is ever wanted.
-- **Audio focus**: `AudioFocusRequest(AUDIOFOCUS_GAIN)` on start. Loss or transient loss (a call, another player)
-  **stops**; a metronome that comes back by itself after a phone call is a surprise. "Can duck" is left to the system.
-- **`ACTION_AUDIO_BECOMING_NOISY`** (headphones pulled) stops.
+- **Audio focus** (in the output, above): loss or transient loss (a call, another player) **stops**; a metronome that
+  comes back by itself after a phone call is a surprise. "Can duck" is left to the system.
+- **`ACTION_AUDIO_BECOMING_NOISY`** (headphones pulled) stops, from the output's receiver.
 - **Haptics**: `Vibrator` with `VibrationEffect.createPredefined(EFFECT_HEAVY_CLICK / EFFECT_CLICK)` for accent /
-  beat, from the `beats` flow; `VIBRATE` permission (normal, no prompt). Hidden where `hasVibrator()` is false.
+  beat, from the `beats` flow; `VIBRATE` permission (normal, no prompt). Hidden where `hasVibrator()` is false. Only
+  while the app is in front, as iOS allows no other: Android throttles a background app's vibrations, and the same
+  rule on both is easier to explain than a buzz that sometimes stops in a pocket.
 - **Activity recreation** (language, dark mode) does not touch the engine; the UI re-collects `playback`.
 - The in-app update gate: Restart for a flexible update should wait for a playing metronome, as it waits for a sync
   run; a required update does not.
@@ -358,11 +440,15 @@ where not, never a sheet:
 ### 6.2 iOS
 
 - **Output**: `AVAudioEngine` with an `AVAudioPlayerNode`, fed by `scheduleBuffer` with the ~20 ms chunks the
-  mixer renders on a Kotlin thread, two or three queued ahead and refilled from the completion callback.
+  mixer renders on a Kotlin thread, about five queued ahead (§2.2) and refilled from the completion callback, which
+  only signals the feeder thread rather than rendering on the system's queue.
   **Not** an `AVAudioSourceNode` render block: that would run Kotlin/Native on the real-time audio thread, where a
   GC pause is an audible dropout.
-- **Session**: `AVAudioSessionCategoryPlayback` (so the silent switch does not mute a metronome), activated on
-  start and deactivated with `notifyOthersOnDeactivation` on stop.
+- **Session**: `AVAudioSessionCategoryPlayback` (so the silent switch does not mute a metronome), activated by the
+  output on start — an activation refused during a call fails the start with a reason — and deactivated with
+  `notifyOthersOnDeactivation` on stop. The interruption, route change and reset observers below are the output's
+  too, so the engine stops whether or not `IosMetronomeNotifier` is around; the notifier only draws Now Playing and
+  answers the remote commands.
 - **Background**: `UIBackgroundModes: audio` in `app/ios/iosApp/iosApp/Info.plist`. The session is active only
   while a click plays, which is what App Review checks for.
 - **Lock screen / Control Center**: `MPNowPlayingInfoCenter` (title, "96 BPM · 4/4", rate) and
@@ -378,7 +464,7 @@ where not, never a sheet:
 
 - **Output**: `javax.sound.sampled.SourceDataLine` (part of `java.desktop`, already in the runtime image), 16-bit
   mono at 48 kHz, a small line buffer (~40 ms), a daemon writer thread at max priority.
-  `LineUnavailableException` → `Unavailable`.
+  `LineUnavailableException` → the silent output and an `audioIssue` (§2.2).
 - Lifecycle: nothing to keep alive. Closing the window stops the click before the "let a sync run finish" wait.
 - macOS sandbox: audio **output** needs no entitlement. ProGuard: `javax.sound` service providers are looked up by
   name — verify the release image actually clicks; the Linux, Windows and Mac start checks in CI will not catch a
@@ -390,10 +476,11 @@ where not, never a sheet:
 - **Output**: Web Audio, the standard "two clocks" scheduler: an `AudioContext`, each voice rendered once into an
   `AudioBuffer` (the Kotlin synthesizer's samples handed over in one crossing), and every tick within the next
   ~100 ms scheduled with `AudioBufferSourceNode.start(time)` on the context's clock.
-- **The scheduler's wake-up comes from a Web Worker timer** (an inline blob worker posting a message every 25 ms):
-  a hidden tab's `setTimeout` is throttled to once a second, a worker's is not, so the click survives a tab switch.
-  Check `index.html`'s policy allows a `blob:` worker; otherwise ship it as a file, which `finishWebDistribution`
-  then lists in `build.json` like the rest.
+- **The scheduler's wake-up comes from a Web Worker timer** (a worker posting a message every 25 ms): a hidden
+  tab's `setTimeout` is throttled to once a second, a worker's is not, so the click survives a tab switch. Ship it as
+  a file next to `opfs-writer.js` (`app/web/src/wasmJsMain/resources`), loaded through `window.campfireVersioned(…)`
+  the same way, so the build's digest list, the kept copy and the offline launch all cover it with no new rule. The
+  ~100 ms look-ahead plus the worker's 25 ms tick is the same slack the PCM outputs get.
 - **Autoplay policy**: the context must be created or resumed inside a user gesture, and Compose may handle a click
   after the DOM event has returned. A capture-phase `pointerdown` / `keydown` listener on the window resumes a
   suspended context on every gesture — registered through a `js(...)` block, as the other web listeners are.
@@ -409,11 +496,12 @@ Each phase builds and passes the desktop tests by itself; 1–3 are invisible to
 1. **Pure core** — the two modules, models, `MetronomeSequencer`, `ClickSynthesizer`, `ClickMixer`, `TapTempo`,
    `ChordProTempo` / `ChordProTime`, with tests. `tests.yml` and the root `CLAUDE.md`'s test command gain
    `:metronome:implementation:desktopTest` (and `:metronome:api:desktopTest`).
-2. **Engine and outputs** — `MetronomeImpl`, the four `AudioOutput`s, heard-time `beats`, `Unavailable`; Koin
+2. **Engine and outputs** — `MetronomeImpl`, the four `AudioOutput`s, heard-time `beats`, the silent fallback output, focus and session handling; Koin
    module, `:app:di`. Verified with a throwaway button on desktop first, then each platform.
 3. **Data** — `Song.tempo` / `time`, `Setlist.Entry.tempo`, `UserPreferences.tempos` and `metronomeSettings`,
    documents, mappers, `followSongReferences`, `DeleteLibrary`; mapper and format tests.
-4. **View model** — `Tempos`, `changeTempo`, context, `patternOf`, the debounced saves; `SongTempo` tests.
+4. **View model** — `Tempos`, `pendingTempos`, `changeTempo`, `metronomeContextOf` and the origin rule, `patternOf`,
+   the debounced saves; `SongTempo` and context tests.
 5. **Metronome tab** — destination, navigation chrome, screen, web route, key handling, strings.
 6. **Song details** — `MetronomeButton`, `appBarButtons`, the tempo row, the effective tempo line, paging retarget,
    leaving stops, performance mode; PDF tempo line.
@@ -428,11 +516,15 @@ Each phase builds and passes the desktop tests by itself; 1–3 are invisible to
 - `MetronomeSequencerTest`: tick frames for plain, compound and odd signatures; subdivisions; muted beats; a tempo
   change mid-bar lands on the next click; `restartBar`; no drift over ten thousand bars (integer frame error stays
   below one frame — accumulate in fractions, never in rounded frames).
-- `ClickSynthesizerTest`: lengths, peak below full scale, silence at the tail, checksums per sound.
+- `ClickSynthesizerTest`: lengths, peak below full scale, silence at the tail, checksums of the 16-bit samples per
+  sound.
 - `ClickMixerTest`: a voice crossing a chunk boundary is identical to the unchunked render.
 - `TapTempoTest`: two taps, a steady run, one outlier, the reset gap, the clamps.
 - `ChordProTempoTest` / `ChordProTimeTest`.
 - `SongTempoTest`: the four sources and their precedence; an override equal to the song's own is no override.
+- `metronomeContextOf`: the editor over a song keeps the song; two songs on the stack (the import report opened one)
+  take the upper; a stack without one is `Standalone`. And the origin rule: song → stop, tab → back to the tab.
+- `appBarButtons` / the performance mode width functions: where the metronome button goes into the menu.
 - `SetlistDocumentFormat`: `tempo` round-trips, is absent when null, bad values read as null, an unknown future
   member still survives beside it.
 - `UserPreferences` mappers: defaults, unknown ids.
@@ -441,6 +533,10 @@ Each phase builds and passes the desktop tests by itself; 1–3 are invisible to
 ## 9. Manual checks (to `release-check.md`)
 
 - Each platform clicks, in time against a reference metronome over five minutes at 120.
+- Start the click on a song, open the editor, fix a chord, save: it keeps playing (in the new `{tempo}` if that was
+  the change). Start it on the Metronome tab, open a song, go back: the tab's tempo again, still playing.
+- Android: start a song's click, leave the app with Back, reopen from the notification: still playing.
+- Start the click during a phone call (Android, iOS): it does not start, and says why.
 - Android: lock the screen, notification Stop, headset button, a phone call stops it, headphones pulled stops it,
   swipe the app away stops it, rotation and language change do not.
 - iOS: lock screen controls, silent switch ignored, Siri / a call interrupts, AirPods removed stops it.
@@ -470,13 +566,14 @@ Each phase builds and passes the desktop tests by itself; 1–3 are invisible to
 
 | Risk | Mitigation |
 | --- | --- |
-| Kotlin/Native GC pauses on the iOS feeder thread cause dropouts | Buffers are queued 40–60 ms ahead; the feeder allocates nothing per chunk (reused buffers). Measure on the oldest supported phone before phase 7. |
-| Android low-latency path not taken (wrong sample rate / buffer size) | Use the device's native rate and `getMinBufferSize`; log the track's `performanceMode` in debug builds. |
-| Web autoplay: first tap silent | The gesture-resume listener; the button shows `Unavailable` until the context runs. |
+| Kotlin/Native GC pauses on the iOS feeder thread cause dropouts | ~100 ms queued ahead; the feeder allocates nothing per chunk (reused buffers). Measure on the oldest supported phone before phase 7. |
+| Underruns on Android with the screen off | Default (not low-latency) track at the native rate, a buffer of at least `getMinBufferSize` and ~100 ms queued; count underruns (`getUnderrunCount`) in debug builds. |
+| Web autoplay: first tap silent | The gesture-resume listener; until the context runs, `playback` carries an `audioIssue` and the button says so. |
 | Bluetooth output latency makes flash and click disagree | `beats` is timed from the reported playback position, which includes the route's latency where the platform reports it; otherwise accept it. |
 | Setlist writes on every tempo tap churn sync | Debounced write (§4); the sync scheduler already folds bursts into one run. |
 | App Review asks why `audio` background mode | The session is active only while playing; say "metronome continues with the screen locked" in the review notes. |
-| A fourth tab crowds the bar on small phones | Material's bar holds three to five; check the Hungarian label ("Metronóm") at the largest font scale. |
+| A fourth tab crowds the bar on small phones | Material's bar holds three to five; check the Hungarian label ("Metronóm") at the largest font scale — and in the expanded rail, whose width `navigationChromeKind` assumes "the three labels" fit in `EXPANDED_NAVIGATION_RAIL_MIN_WIDTH`. |
+| A tab click lent to a song surprises the user when the song closes | Default 6: it goes back to the tab's tempo rather than stopping or staying on the song's. |
 
 ## 12. Deliberately left for later
 

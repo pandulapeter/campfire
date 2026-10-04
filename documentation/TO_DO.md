@@ -10,7 +10,6 @@
 # To do
 ## Bugs / issues
 - Import multiple files -> see details -> open one and delete / edit it from menu -> return to import details screen to see an outdated state
-- The Setlist assignments bottom sheet has an overshoot efect that interferes with the bottom sheet's default drag handling, while the Song assignments bottom sheet doesn't. The Links sheet is also inconsistent - review, find all similar issues, and fix.
 - Song search should also match by tag
 - Animate editor mode changes (Editor vs Preview vs Split) by sliding panels in/out
 - Look into adding overshoot effects on all platforms
@@ -27,7 +26,7 @@
 
 ## Features
 - Multi-select songs for bulk export or bulk edit (assign tags, languages, setlists) - rearrange mode in Setlists could be used for UX inspiration
-- Metronome: documentation/plans/metronome.md. Also consider how changing the BPM affects the duration of a song
+- Metronome: documentation/plans/metronome.md
 - Haptic effects, especially for the fast scroller
 
 ## Ideas
