@@ -3207,7 +3207,11 @@ class CampfireViewModel(
      * question over anything.
      */
     private fun setVisibleDialog(dialogType: DialogType?) {
-        if (dialogType is DialogType.Export || dialogType is DialogType.DuplicateSetlist) reorderingSetlistFileName = null
+        // Editing can rename the setlist's file, which is what the mode is keyed by, so it ends the mode as the other
+        // ways of leaving the rows do rather than losing it to a name that has stopped existing.
+        if (dialogType is DialogType.Export || dialogType is DialogType.DuplicateSetlist || dialogType is DialogType.EditSetlist) {
+            reorderingSetlistFileName = null
+        }
         // An exit the question was asked for and that is not being run is an exit that was cancelled: its caller
         // may be waiting to hear so (the macOS quit request is).
         if (dialogType != DialogType.UnsavedChanges) takePendingExit()?.onCancelled?.invoke()
