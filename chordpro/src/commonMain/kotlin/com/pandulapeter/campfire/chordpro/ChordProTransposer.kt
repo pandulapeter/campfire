@@ -120,8 +120,8 @@ object ChordProTransposer {
 
     /**
      * [rename] applied to a key: a chord name is renamed whole, and a key spelled out in words (`G major`, `A minor`,
-     * `Bb-Dur`) has its note renamed and its words kept. Anything else — `Dm (capo 2)` — is handed to [rename] as it
-     * is, which leaves what is not a chord name alone.
+     * `Bb-Dur`, `C-dúr`) has its note renamed and its words kept. Anything else — `Dm (capo 2)` — is handed to [rename]
+     * as it is, which leaves what is not a chord name alone.
      */
     internal fun renameKey(key: String, rename: (String) -> String): String {
         val noteLength = spelledOutKeyNoteLength(key) ?: return rename(key)
@@ -515,7 +515,7 @@ object ChordProTransposer {
     private const val BRACKET_OPEN = '['
     private const val BRACKET_CLOSE = ']'
     private val definitionDirectives = setOf("define", "chord")
-    private val keyWords = setOf("major", "minor", "maj", "min", "dur", "moll")
+    private val keyWords = setOf("major", "minor", "maj", "min", "dur", "dúr", "moll")
     private val sharpNames = listOf("C", "C#", "D", "D#", "E", "F", "F#", "G", "G#", "A", "A#", "B")
     private val flatNames = listOf("C", "Db", "D", "Eb", "E", "F", "Gb", "G", "Ab", "A", "Bb", "B")
     private val flatMajorKeys = setOf("C", "F", "Bb", "Eb", "Ab", "Db")

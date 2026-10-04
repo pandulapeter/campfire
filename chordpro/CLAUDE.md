@@ -199,8 +199,8 @@ in `:domain:*`. `:data:source:local:implementation` uses it directly for the met
   U+FEFF is not whitespace to `trim`, so a `{title}` behind it would be read as lyrics.
 - `ChordProTransposer` — moves chords by semitones, on the model (the viewer) or directly on the text keeping every
   byte of formatting (the editor's transpose action). Chooses sharps or flats from the song's key, follows the bass
-  note after `/`, understands German `H`, moves a key spelled out in words (`G major`, `A minor`, `Bb-Dur`) by its note
-  and keeps the words (`renameKey`), which is also what the notation and the library scan use for the key, and leaves
+  note after `/`, understands German `H`, moves a key spelled out in words (`G major`, `A minor`, `Bb-Dur`, `C-dúr`) by
+  its note and keeps the words (`renameKey`), which is also what the notation and the library scan use for the key, and leaves
   annotations alone. The brackets of a comment (`{comment}`, `{ci}`, `{cb}`, `{highlight}`) and of a label (a section's,
   a chorus recall's) are read as a line of lyrics and moved the same way on the model and in the text
   (`ChordProSyntax.hasChordsInValue` names those directives), since that is where an intro is written down as a row of

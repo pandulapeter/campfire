@@ -28,6 +28,13 @@ class ChordProNotationTest {
     }
 
     @Test
+    fun `a key spelled out in Hungarian is written in German notation`() {
+        assertEquals("B-dúr", ChordProParser.summarize("{key: H-dúr}\n[H]a").metadata.key)
+        assertEquals("B-dúr", ChordProParser.parse("{key: H-dúr}\n[H]a").metadata.key)
+        assertEquals("{key: H-dúr}\n[H]a", ChordProNotation.convertText("{key: B-dúr}\n[B]a", ChordNotation.STANDARD, ChordNotation.GERMAN))
+    }
+
+    @Test
     fun `accidental signs are folded wherever they stand in a name`() {
         assertEquals("Bbm7b5/C#", ChordProNotation.withAsciiAccidentals("B♭m7♭5/C♯"))
     }

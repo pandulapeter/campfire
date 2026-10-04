@@ -300,6 +300,13 @@ class ChordProTransposerTest {
     }
 
     @Test
+    fun `a key spelled out in Hungarian is transposed`() {
+        assertEquals("{key: D-dúr}\n[D]a", ChordProTransposer.transposeText("{key: C-dúr}\n[C]a", 2, preferFlats = false))
+        assertEquals("D-dúr", ChordProTransposer.transpose(ChordProParser.parse("{key: C-dúr}\n[C]a"), 2).metadata.key)
+        assertEquals("{key: C-Dúr}", ChordProTransposer.transposeText("{key: B-Dúr}", 1, preferFlats = false))
+    }
+
+    @Test
     fun `a key spelled out in words keeps choosing the spelling`() {
         assertTrue(ChordProTransposer.prefersFlats(ChordProParser.parse("{key: D minor}\n[Dm]a"), 0))
     }
