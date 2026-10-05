@@ -240,6 +240,20 @@ and a repository that has not been read yet rescans instead, since there is no l
   account. It deletes the index under the run lock, so that a run stopped a
   moment earlier has finished writing it, and a run only ever writes its outcome into a state that is still
   `Connected`: a run that outlived the account it ran against must not bring that account back on screen.
+  **`preferences.json` is settled after the files**, by `SyncedPreferencesSync`, and only after a run the engine
+  completed: the songs it may name are then the ones the run left on both sides. `SyncedPreferencesDocument` keeps it
+  as a JSON tree and merges it three ways, value by value, against the document the last run settled
+  (`SyncIndexDocument.syncedPreferences`, carried through every snapshot the engine hands out and dropped with the rest
+  of an index written for another account); this device's side is that base with this version's own fields replaced
+  by the preferences (`localDocument`), so whatever a later version writes passes through untouched. A song no longer
+  in the library — compared by case and Unicode form, the run's failed files counting as there — is dropped from the
+  merged document before it is applied. The preferences are changed before the upload, so a failed upload only leaves
+  the next run a change to carry; a value changed here while the merge ran is kept (`SyncedPreferences.applyTo`). A
+  conflict merges again against the document it lost to, once; a document that still cannot be settled, or any
+  failure but the authorization's, is reported as `SyncSummary.havePreferencesFailed` (which, like a failed file, keeps
+  the run from counting as the last successful one) and leaves the base where it was.
+  `localChanges` is what schedules a run when the three maps change, filtering out the values the step wrote itself.
+  `SyncedPreferencesTest` covers the merge, the document and the step against the fakes.
   `cancelConnection` is the way out of `Connecting` that does not need the `connect()` that got there to be running
   still — on the web it never is, and a page restored from the back/forward cache is otherwise connecting for good.
   `connect` never throws anything but a cancellation — every way out of it leaves `Connecting`, and every way out of it

@@ -528,7 +528,7 @@
 
     <!-- Settings screen: sync -->
     <string name="settings_sync_unavailable">This build of Campfire was made without sync credentials, so there is nothing to connect to.</string>
-    <string name="settings_sync_description">Keep the library the same on every device through a cloud folder you own. Campfire has no server: the files go straight between your devices and your own storage.</string>
+    <string name="settings_sync_description">Keep the library the same on every device through a cloud folder you own, along with how each song is transposed, capoed and played. Campfire has no server: the files go straight between your devices and your own storage.</string>
     <string name="settings_sync_connect_dropbox">Connect Dropbox</string>
     <string name="settings_sync_connecting">Waiting for the browser…</string>
     <string name="settings_sync_connection_failed_network">Could not reach the service. Check the internet connection and try again.</string>
@@ -564,6 +564,7 @@
         <item quantity="one">One file could not be synced: %2$s</item>
         <item quantity="other">%1$d files could not be synced. Among them: %2$s</item>
     </plurals>
+    <string name="settings_sync_preferences_failed">The song settings (transposition, capo and tempo) could not be synced. Campfire will try again next time.</string>
     <plurals name="settings_sync_conflicts">
         <item quantity="one">Kept both versions of a file that changed in two places: %2$s</item>
         <item quantity="other">Kept both versions of %1$d files that changed in two places. Among them: %2$s</item>

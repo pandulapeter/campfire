@@ -33,6 +33,7 @@ import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.Semaphore
 import kotlinx.coroutines.sync.withLock
 import kotlinx.coroutines.sync.withPermit
+import kotlinx.serialization.json.JsonObject
 
 /**
  * Gives a remote file the local spelling of its name where the two differ only by case.
@@ -127,6 +128,7 @@ internal class SyncEngine(
         // An index written for a different account describes a different remote folder, and acting on it would read
         // that folder's absent files as deletions of this one's songs.
         var index = document.takeIf { it.accountId == accountId }?.toIndex().orEmpty()
+        val syncedPreferences = document.syncedPreferences.takeIf { document.accountId == accountId }
         var summary = SyncSummary()
 
         // Two passes at most. A file that a second device changed between this run's listing and its upload comes
@@ -249,6 +251,7 @@ internal class SyncEngine(
                 onProgress = onProgress,
                 accountId = accountId,
                 lastSyncedAt = document.lastSyncedAt,
+                syncedPreferences = syncedPreferences,
                 onIndexChanged = onIndexChanged,
                 onLocalFileChanged = onLocalFileChanged,
             )
@@ -270,6 +273,7 @@ internal class SyncEngine(
                 accountId = accountId,
                 lastSyncedAt = document.lastSyncedAt,
                 index = index,
+                syncedPreferences = syncedPreferences,
             ),
         )
     }
@@ -350,6 +354,7 @@ internal class SyncEngine(
         onProgress: (SyncProgress) -> Unit,
         accountId: String,
         lastSyncedAt: Long,
+        syncedPreferences: JsonObject?,
         onIndexChanged: suspend (snapshot: () -> SyncIndexDocument) -> Unit,
         onLocalFileChanged: suspend (SyncKey) -> Unit,
     ): PassOutcome = coroutineScope {
@@ -375,6 +380,7 @@ internal class SyncEngine(
                     accountId = accountId,
                     lastSyncedAt = lastSyncedAt,
                     index = updated,
+                    syncedPreferences = syncedPreferences,
                 ).copy(isRunInProgress = true)
             }
         }

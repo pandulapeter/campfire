@@ -11,6 +11,7 @@ package com.pandulapeter.campfire.data.repository.implementation.sync
 
 import com.pandulapeter.campfire.data.model.domain.SyncAccount
 import kotlinx.serialization.Serializable
+import kotlinx.serialization.json.JsonObject
 
 /**
  * The on-disk shape of `sync-index.json`: what the last successful run saw, which is the only reason the next one
@@ -41,6 +42,11 @@ internal data class SyncIndexDocument(
     val isAutomaticRunInProgress: Boolean = false,
     /** Keyed by `songs/Artist - Title.cho`, see [SyncKey.path]. */
     val entries: Map<String, Entry> = emptyMap(),
+    /**
+     * `preferences.json` as the last run that settled it left it on both sides, the base its next three-way merge
+     * tells a change from a removal by (see [SyncedPreferencesDocument]), or null where no run has settled it yet.
+     */
+    val syncedPreferences: JsonObject? = null,
 ) {
 
     @Serializable
@@ -82,10 +88,12 @@ internal data class SyncIndexDocument(
             accountId: String,
             lastSyncedAt: Long,
             index: Map<SyncKey, SyncIndexEntry>,
+            syncedPreferences: JsonObject?,
         ) = SyncIndexDocument(
             providerId = providerId,
             accountId = accountId,
             lastSyncedAt = lastSyncedAt,
+            syncedPreferences = syncedPreferences,
             isRunInProgress = false,
             isAutomaticRunInProgress = false,
             entries = index.entries.associate { (key, entry) ->

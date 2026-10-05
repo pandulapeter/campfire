@@ -324,10 +324,10 @@ shared controls.
   across the range and tap tempo; the beat row (`BeatRow`, resting in fainter shades of the second accent color and lit
   from the heard beats in the full one — shades of one color, since every palette but the app's own has no second accent
   apart from the primary — a tap cycling a beat through accent, plain and muted, stored per signature); the time
-  signature (common ones as chips, two steppers for the rest), subdivision, sound (a tap previews it), volume — whose
-  zero is the mute, so there is no switch for one — and the
-  Flash and Vibrate (where `rememberBeatHaptics` has a vibrator) switches; and the line saying why nothing is
-  heard (`audioIssue`). Play and stop are `MetronomePlayButton`, one wide button standing at the bottom of the screen
+  signature (common ones as chips, two steppers for the rest), subdivision, sound (a tap previews it) and the Vibrate
+  switch (where `rememberBeatHaptics` has a vibrator); the volume — whose zero is the mute, so there is no switch for
+  one — and the Flash switch close the first section, under the beat row, so that the two columns end at about the
+  same height, followed by the line saying why nothing is heard (`audioIssue`). Play and stop are `MetronomePlayButton`, one wide button standing at the bottom of the screen
   rather than a row of the page, since the page is longer than a phone's screen and a metronome that has to be scrolled
   for before it can be stopped is no metronome; the page keeps `PLAY_BUTTON_CLEARANCE` of room under its last row so
   nothing is reached through it. It carries the morphing mark and the word for what it does, and its corners round into

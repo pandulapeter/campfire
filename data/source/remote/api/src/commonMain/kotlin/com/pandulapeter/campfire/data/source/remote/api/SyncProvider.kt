@@ -15,6 +15,7 @@ import com.pandulapeter.campfire.data.model.domain.SyncProviderId
 import com.pandulapeter.campfire.data.source.remote.api.model.RemoteAuthorizationRequest
 import com.pandulapeter.campfire.data.source.remote.api.model.RemoteAuthorizationResponse
 import com.pandulapeter.campfire.data.source.remote.api.model.RemoteDeletion
+import com.pandulapeter.campfire.data.source.remote.api.model.RemoteDocument
 import com.pandulapeter.campfire.data.source.remote.api.model.RemoteListing
 import com.pandulapeter.campfire.data.source.remote.api.model.RemoteWriteResult
 
@@ -131,6 +132,25 @@ interface SyncProvider {
      * Throws what the other calls throw for a run that cannot go on; one file's refusal is an entry in the answer.
      */
     suspend fun delete(deletions: List<RemoteDeletion>): Map<RemoteDeletion, String>
+
+    // Documents
+
+    /**
+     * A document of the folder's own, outside the two library folders and so never in [list], or null where there is
+     * none. Unlike a library file it is asked for by name alone and comes back with its revision, since it is read
+     * once per run rather than listed and compared.
+     */
+    suspend fun downloadDocument(name: String): RemoteDocument?
+
+    /**
+     * Writes a document of the folder's own, with the same rules as [upload]: a document that has moved on from
+     * [expectedRevision], or that exists although [expectedRevision] is null, is a [RemoteWriteResult.Conflict].
+     */
+    suspend fun uploadDocument(
+        name: String,
+        bytes: ByteArray,
+        expectedRevision: String?,
+    ): RemoteWriteResult
 }
 
 /** The credentials are gone, were refused or were revoked: only connecting again can fix it. */

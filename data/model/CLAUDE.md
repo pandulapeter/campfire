@@ -41,4 +41,5 @@ shared by the local listing and the sync engine. `SyncState` and the types aroun
 `SyncOutcome`, `SyncDeletionDirection`, `SyncSummary`, `SyncFailureReason`) are everything the UI needs to know about sync; `SyncState.Connected`
 carries the outcome of the last run rather than a message of its own, so a failure stays on screen until something
 replaces it instead of flashing past in a snackbar. `SyncSummary.failed` names the files a run that reached its end
-could not move, so that such a run is not reported as one that left the two sides in step.
+could not move, and `havePreferencesFailed` says the shared `preferences.json` could not be settled, so that such
+a run is not reported as one that left the two sides in step (`isComplete`).

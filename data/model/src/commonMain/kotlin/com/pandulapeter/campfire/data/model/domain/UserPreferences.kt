@@ -64,11 +64,15 @@ data class UserPreferences(
     val shouldNumberSections: Boolean,
     val language: Language,
     val chordSpelling: ChordSpelling, // How the chords of a song are written when it is displayed.
-    /** Song file name to semitones, for songs opened from the library rather than from a setlist. */
+    /**
+     * Song file name to semitones, for songs opened from the library rather than from a setlist. Never exported, but
+     * synced: with [tempos] and [capos] it is what every device connected to one cloud folder shares through its
+     * `preferences.json`, since it is how the band plays the song rather than how one reader reads it.
+     */
     val transpositions: Map<String, Int>,
     /**
      * Song file name to beats per minute, for songs opened from the library rather than from a setlist: the twin of
-     * [transpositions], and like it never exported or synced. A song opened from a setlist reads its entry's
+     * [transpositions], and like it never exported but synced. A song opened from a setlist reads its entry's
      * `Setlist.Entry.tempo` instead, never this.
      */
     val tempos: Map<String, Int> = emptyMap(),

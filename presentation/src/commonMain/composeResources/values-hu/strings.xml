@@ -528,7 +528,7 @@
 
     <!-- Settings screen: sync -->
     <string name="settings_sync_unavailable">Ez a Campfire build szinkronizálási azonosítók nélkül készült, így nincs mihez csatlakozni.</string>
-    <string name="settings_sync_description">Tartsd azonosan a könyvtárat minden eszközön egy saját felhőmappán keresztül. A Campfire-nek nincs szervere: a fájlok közvetlenül az eszközeid és a saját tárhelyed között mozognak.</string>
+    <string name="settings_sync_description">Tartsd azonosan a könyvtárat minden eszközön egy saját felhőmappán keresztül, azzal együtt, hogy melyik dalt hogyan transzponálod, hányadik bundon capózod és milyen tempóban játszod. A Campfire-nek nincs szervere: a fájlok közvetlenül az eszközeid és a saját tárhelyed között mozognak.</string>
     <string name="settings_sync_connect_dropbox">Dropbox csatlakoztatása</string>
     <string name="settings_sync_connecting">Várakozás a böngészőre…</string>
     <string name="settings_sync_connection_failed_network">A szolgáltatás nem érhető el. Ellenőrizd az internetkapcsolatot, és próbáld újra.</string>
@@ -564,6 +564,7 @@
         <item quantity="one">Egy fájlt nem sikerült szinkronizálni: %2$s</item>
         <item quantity="other">%1$d fájlt nem sikerült szinkronizálni. Köztük: %2$s</item>
     </plurals>
+    <string name="settings_sync_preferences_failed">A dalok beállításait (transzponálás, capo és tempó) nem sikerült szinkronizálni. A Campfire legközelebb újra megpróbálja.</string>
     <plurals name="settings_sync_conflicts">
         <item quantity="one">Két helyen is módosult fájl mindkét változata megmaradt: %2$s</item>
         <item quantity="other">%1$d fájl két helyen is módosult, mindkét változatuk megmaradt. Köztük: %2$s</item>

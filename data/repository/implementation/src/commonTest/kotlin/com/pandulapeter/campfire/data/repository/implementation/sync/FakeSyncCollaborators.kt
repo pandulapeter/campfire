@@ -14,8 +14,10 @@ import com.pandulapeter.campfire.data.model.domain.Setlist
 import com.pandulapeter.campfire.data.model.domain.Song
 import com.pandulapeter.campfire.data.model.domain.SongContent
 import com.pandulapeter.campfire.data.model.domain.SyncProviderId
+import com.pandulapeter.campfire.data.model.domain.UserPreferences
 import com.pandulapeter.campfire.data.repository.api.SetlistRepository
 import com.pandulapeter.campfire.data.repository.api.SongRepository
+import com.pandulapeter.campfire.data.repository.api.UserPreferencesRepository
 import com.pandulapeter.campfire.data.source.local.api.SyncStateLocalSource
 import com.pandulapeter.campfire.data.source.remote.api.PendingAuthorization
 import com.pandulapeter.campfire.data.source.remote.api.PendingAuthorizationStore
@@ -216,3 +218,57 @@ internal class RecordingSetlistRepository : SetlistRepository {
     override suspend fun deleteSetlist(fileName: String): Unit = throw UnsupportedOperationException()
     override suspend fun deleteAllSetlists(): Unit = throw UnsupportedOperationException()
 }
+
+/** The preferences held in memory, already read, as the app has them by the time a run starts. */
+internal class FakeUserPreferencesRepository(
+    preferences: UserPreferences = defaultUserPreferences(),
+) : UserPreferencesRepository {
+
+    private val state = MutableStateFlow<DataState<UserPreferences>>(DataState.Idle(preferences))
+
+    override val userPreferences: Flow<DataState<UserPreferences>> = state
+
+    val current get() = state.value.data!!
+
+    override suspend fun loadUserPreferencesIfNeeded() = state.value.data
+
+    override suspend fun saveUserPreferences(userPreferences: UserPreferences) {
+        state.value = DataState.Idle(userPreferences)
+    }
+
+    override suspend fun updateUserPreferences(transform: (UserPreferences) -> UserPreferences) {
+        state.value = DataState.Idle(transform(current))
+    }
+
+    override suspend fun hasStoredUserPreferences() = true
+}
+
+internal fun defaultUserPreferences(
+    transpositions: Map<String, Int> = emptyMap(),
+    tempos: Map<String, Int> = emptyMap(),
+    capos: Map<String, Int> = emptyMap(),
+) = UserPreferences(
+    isPerformanceModeEnabled = false,
+    shouldShowArchivedSetlists = false,
+    areChordsEnabled = true,
+    areSetlistsEnabled = true,
+    isMetronomeEnabled = true,
+    fontScale = UserPreferences.DEFAULT_FONT_SCALE,
+    sortingMode = UserPreferences.SortingMode.BY_TITLE,
+    setlistSortingMode = UserPreferences.SetlistSortingMode.BY_DATE,
+    uiMode = UserPreferences.UiMode.SYSTEM_DEFAULT,
+    themeColor = UserPreferences.ThemeColor.CAMPFIRE,
+    isAppIconThemed = true,
+    isCoverArtEnabled = true,
+    shouldNumberSections = true,
+    language = UserPreferences.Language.SYSTEM_DEFAULT,
+    chordSpelling = UserPreferences.ChordSpelling.Default,
+    transpositions = transpositions,
+    tempos = tempos,
+    capos = capos,
+    foldedSections = emptyMap(),
+    tagMatchMode = UserPreferences.MatchMode.ANY,
+    languageMatchMode = UserPreferences.MatchMode.ANY,
+    tagSortingMode = UserPreferences.LabelSortingMode.BY_USAGE,
+    languageSortingMode = UserPreferences.LabelSortingMode.BY_USAGE,
+)

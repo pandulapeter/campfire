@@ -11,18 +11,17 @@
 ## Bugs / issues
 - Overscroll bounce can make content on bottom sheets scroll underneath their header without fade
 - The Song details screen is still wasteful: too much padding. Even in one-column mode some sections could be displayed in two columns
-- Per-song preferences should be synced across devices (transposition, tempo, capo)
 
 ## Improvements
 - Support importing libraries from other apps
 - Rename master branch to main
 - Onboarding: integrate feature toggle-presets (singers, drummers, etc)
 - Settings: promote Dropbox sign-in
-- Duplicate song?
 
 ## Features
 - Multi-select songs for bulk export or bulk edit (assign tags, languages, setlists) - rearrange mode in Setlists could be used for UX inspiration
 - Haptic effects, especially for the fast scroller
+- Duplicate song button
 
 ## Ideas
 - Global sync status display ?

@@ -25,6 +25,7 @@ import com.pandulapeter.campfire.data.repository.implementation.sync.FakePending
 import com.pandulapeter.campfire.data.repository.implementation.sync.FakeSyncAuthenticator
 import com.pandulapeter.campfire.data.repository.implementation.sync.FakeSyncProvider
 import com.pandulapeter.campfire.data.repository.implementation.sync.FakeSyncStateLocalSource
+import com.pandulapeter.campfire.data.repository.implementation.sync.FakeUserPreferencesRepository
 import com.pandulapeter.campfire.data.repository.implementation.sync.RecordingSetlistRepository
 import com.pandulapeter.campfire.data.repository.implementation.sync.RecordingSongRepository
 import com.pandulapeter.campfire.data.repository.implementation.sync.SyncIndexDocument
@@ -298,6 +299,7 @@ class SyncRepositoryImplTest {
                     providerId = SyncProviderId.DROPBOX.id,
                     accountId = ACCOUNT.indexKey(),
                     lastSyncedAt = 1,
+                    syncedPreferences = null,
                     index = (1..10).associate {
                         song(it) to SyncIndexEntry(localHash = localContentHash("Song $it".encodeToByteArray()), remoteRevision = "r1")
                     },
@@ -346,6 +348,7 @@ class SyncRepositoryImplTest {
                     providerId = SyncProviderId.DROPBOX.id,
                     accountId = ACCOUNT.indexKey(),
                     lastSyncedAt = 1,
+                    syncedPreferences = null,
                     index = library.mapValues { (_, bytes) -> SyncIndexEntry(localHash = localContentHash(bytes), remoteRevision = "r1") },
                 ),
             ),
@@ -586,6 +589,7 @@ class SyncRepositoryImplTest {
                 providerId = SyncProviderId.DROPBOX.id,
                 accountId = ACCOUNT.indexKey(),
                 lastSyncedAt = 1,
+                syncedPreferences = null,
                 index = mapOf(
                     song(1) to SyncIndexEntry(localHash = localContentHash("One".encodeToByteArray()), remoteRevision = "r1"),
                 ),
@@ -961,6 +965,7 @@ class SyncRepositoryImplTest {
         libraryFileLocalSource: FakeLibraryFileLocalSource = FakeLibraryFileLocalSource(),
         songRepository: RecordingSongRepository = RecordingSongRepository(),
         setlistRepository: RecordingSetlistRepository = RecordingSetlistRepository(),
+        userPreferencesRepository: FakeUserPreferencesRepository = FakeUserPreferencesRepository(),
     ) = SyncRepositoryImpl(
         syncProviders = SyncProviders(listOf(provider)),
         authenticator = authenticator,
@@ -968,6 +973,7 @@ class SyncRepositoryImplTest {
         syncStateLocalSource = stateLocalSource,
         songRepository = songRepository,
         setlistRepository = setlistRepository,
+        userPreferencesRepository = userPreferencesRepository,
         libraryFileLocalSource = libraryFileLocalSource,
         libraryFileLock = LibraryFileLock(),
         libraryChanges = LibraryChanges(),

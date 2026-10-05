@@ -150,7 +150,8 @@ enum class SyncDeletionPolicy {
  * What one sync run did. [conflicts] holds the names the incoming copies landed under, so that the user can be told
  * where to look: a file changed on both sides is never merged, both versions are kept. [failed] holds the names of
  * the files that could not be moved: one of those does not end a run, but a run that has any is not one that left
- * the two sides in step, and must not be reported as if it were.
+ * the two sides in step, and must not be reported as if it were. [havePreferencesFailed] says the same of the
+ * preferences every device shares, which are not a library file and are named as what they are rather than as one.
  */
 data class SyncSummary(
     val downloaded: Int = 0,
@@ -159,7 +160,11 @@ data class SyncSummary(
     val deletedRemotely: Int = 0,
     val conflicts: List<String> = emptyList(),
     val failed: List<String> = emptyList(),
+    val havePreferencesFailed: Boolean = false,
 ) {
+
+    /** Whether the run left the two sides in step, which is what moves the time of the last successful one. */
+    val isComplete get() = failed.isEmpty() && !havePreferencesFailed
 
     val hasChanges get() = downloaded > 0 || uploaded > 0 || deletedLocally > 0 || deletedRemotely > 0
 }

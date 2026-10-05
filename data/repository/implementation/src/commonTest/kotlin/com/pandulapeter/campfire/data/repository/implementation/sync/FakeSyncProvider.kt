@@ -17,6 +17,7 @@ import com.pandulapeter.campfire.data.source.remote.api.hashing.localContentHash
 import com.pandulapeter.campfire.data.source.remote.api.model.RemoteAuthorizationRequest
 import com.pandulapeter.campfire.data.source.remote.api.model.RemoteAuthorizationResponse
 import com.pandulapeter.campfire.data.source.remote.api.model.RemoteDeletion
+import com.pandulapeter.campfire.data.source.remote.api.model.RemoteDocument
 import com.pandulapeter.campfire.data.source.remote.api.model.RemoteFile
 import com.pandulapeter.campfire.data.source.remote.api.model.RemoteListing
 import com.pandulapeter.campfire.data.source.remote.api.model.RemoteWriteResult
@@ -156,5 +157,25 @@ internal class FakeSyncProvider(
         val (refused, deleted) = deletions.partition { it.name in refusedDeletions }
         deleted.forEach { files -= stored(SyncKey(kind = it.kind, name = it.name)) }
         return refused.associateWith { "refused" }
+    }
+
+    /** The folder's own documents, by name, with their revisions. */
+    val documents = mutableMapOf<String, Pair<ByteArray, String>>()
+
+    /** Runs before a document upload answers, which is where a test writes the document "elsewhere" under it. */
+    var onUploadDocument: (String) -> Unit = {}
+
+    override suspend fun downloadDocument(name: String) = documents[name]?.let { (bytes, revision) -> RemoteDocument(bytes, revision) }
+
+    override suspend fun uploadDocument(
+        name: String,
+        bytes: ByteArray,
+        expectedRevision: String?,
+    ): RemoteWriteResult {
+        onUploadDocument(name)
+        if (documents[name]?.second != expectedRevision) return RemoteWriteResult.Conflict
+        val revision = "r${nextRevision++}"
+        documents[name] = bytes to revision
+        return RemoteWriteResult.Written(revision)
     }
 }

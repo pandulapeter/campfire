@@ -62,6 +62,7 @@ import com.pandulapeter.campfire.presentation.resources.settings_sync_deletions_
 import com.pandulapeter.campfire.presentation.resources.settings_sync_description
 import com.pandulapeter.campfire.presentation.resources.settings_sync_disconnect
 import com.pandulapeter.campfire.presentation.resources.settings_sync_files_failed
+import com.pandulapeter.campfire.presentation.resources.settings_sync_preferences_failed
 import com.pandulapeter.campfire.presentation.resources.settings_sync_failed_authorization
 import com.pandulapeter.campfire.presentation.resources.settings_sync_failed_network
 import com.pandulapeter.campfire.presentation.resources.settings_sync_failed_remote_full
@@ -302,6 +303,7 @@ private fun SyncState.Connected.statusText(): String = when (val current = progr
                     failed.take(MAXIMUM_NAMED_FILES).joinToString(),
                 )
             },
+            if (outcome.summary.havePreferencesFailed) stringResource(Res.string.settings_sync_preferences_failed) else null,
             // Capped like the failures: a first run on a device edited on both sides can keep hundreds of copies, and
             // this line is not the place to list them.
             outcome.summary.conflicts.takeIf { it.isNotEmpty() }?.let { conflicts ->

@@ -42,7 +42,10 @@ redirect URIs character for character, which is why the desktop port is fixed.
   and follow the part it saw without asking. A job takes the lock once and removes about seven files a second
   (measured: 314 files in 51 s). It is not atomic — the files disappear one after another while it runs — so the
   window is shorter, not gone. Entries it turns away as busy (or a whole job refused that way) are sent again after
-  the same back-off as any other write.
+  the same back-off as any other write. The library files are `/songs/<name>` and `/setlists/<name>`; a document of
+  the folder's own (`downloadDocument` / `uploadDocument`, so far only `preferences.json`) is at the top, `/<name>`,
+  which the listing never reports. Its revision comes back in the download's `Dropbox-API-Result` header, and a
+  `path/not_found` is no document rather than a failure.
 - The client bounds the time to connect (20 s) and the silence between two packets (60 s), and not a request as a
   whole: a `list_folder` page of a few thousand songs, or one long song, takes minutes on a 2G or congested link while
   data is arriving the whole time, and a total bound would end every run of such a library on such a link. The

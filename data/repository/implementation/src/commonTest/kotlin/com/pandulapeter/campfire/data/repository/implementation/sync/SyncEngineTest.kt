@@ -1535,6 +1535,7 @@ class SyncEngineTest {
             providerId = SyncProviderId.DROPBOX.id,
             accountId = ACCOUNT_ID,
             lastSyncedAt = 1,
+            syncedPreferences = null,
             index = mapOf(file.first to SyncIndexEntry(localHash = localContentHash(file.second), remoteRevision = revision)),
         )
 
@@ -1543,6 +1544,7 @@ class SyncEngineTest {
             providerId = SyncProviderId.DROPBOX.id,
             accountId = ACCOUNT_ID,
             lastSyncedAt = 1,
+            syncedPreferences = null,
             index = files.mapValues { (_, bytes) -> SyncIndexEntry(localHash = localContentHash(bytes), remoteRevision = "r1") },
         )
 
@@ -1550,6 +1552,7 @@ class SyncEngineTest {
             providerId = SyncProviderId.DROPBOX.id,
             accountId = ACCOUNT_ID,
             lastSyncedAt = 1,
+            syncedPreferences = null,
             index = files.associate { (key, bytes) ->
                 key to SyncIndexEntry(localHash = localContentHash(bytes), remoteRevision = "r0")
             },

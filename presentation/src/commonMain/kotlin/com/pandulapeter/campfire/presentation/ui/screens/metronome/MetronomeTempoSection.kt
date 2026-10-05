@@ -11,6 +11,7 @@ package com.pandulapeter.campfire.presentation.ui.screens.metronome
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.MaterialTheme
@@ -35,11 +36,14 @@ import com.pandulapeter.campfire.presentation.resources.metronome_accents
 import com.pandulapeter.campfire.presentation.resources.metronome_accents_hint
 import com.pandulapeter.campfire.presentation.resources.metronome_audio_unavailable
 import com.pandulapeter.campfire.presentation.resources.metronome_audio_waiting
+import com.pandulapeter.campfire.presentation.resources.metronome_flash
 import com.pandulapeter.campfire.presentation.resources.metronome_tempo_decrease
 import com.pandulapeter.campfire.presentation.resources.metronome_tempo_increase
 import com.pandulapeter.campfire.presentation.resources.metronome_tempo_slider
+import com.pandulapeter.campfire.presentation.resources.metronome_volume
 import com.pandulapeter.campfire.presentation.resources.song_details_tempo_reset
 import com.pandulapeter.campfire.presentation.ui.CampfireViewModel
+import com.pandulapeter.campfire.presentation.ui.components.SwitchListItem
 import com.pandulapeter.campfire.presentation.ui.metronome.TapTempoButton
 import com.pandulapeter.campfire.presentation.ui.metronome.beatLevelsOf
 import com.pandulapeter.campfire.presentation.ui.metronome.tempoMarking
@@ -55,8 +59,8 @@ import kotlin.math.roundToInt
 
 /**
  * The head of the instrument: the tempo itself, large and stepped, the marking it falls under, a slider across the
- * whole range and the tap button; then the beat row, which is where the accents are drawn, and the one line that says
- * why nothing can be heard where that is so. What the click is doing is the floating button's, see [MetronomeScreen].
+ * whole range and the tap button; then the beat row, which is where the accents are drawn, the volume, the flash switch
+ * and the one line that says why nothing can be heard where that is so. What the click is doing is the floating button's, see [MetronomeScreen].
  */
 @Composable
 internal fun MetronomeTempoSection(
@@ -119,6 +123,29 @@ internal fun MetronomeTempoSection(
             onBeatLevelsChanged = { levels -> viewModel.updateMetronomeSettings { withBeatLevels(timeSignature, levels) } },
         )
     }
+    SettingsSubsection(title = stringResource(Res.string.metronome_volume)) {
+        val volumeDescription = stringResource(Res.string.metronome_volume)
+        Row(
+            modifier = Modifier.padding(horizontal = 16.dp),
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            Slider(
+                modifier = Modifier.weight(1f).semantics { contentDescription = volumeDescription },
+                value = settings.volume,
+                onValueChange = { value -> viewModel.updateMetronomeSettings { copy(volume = value) } },
+            )
+            Text(
+                modifier = Modifier.padding(start = 16.dp),
+                text = "${(settings.volume * 100).roundToInt()}%",
+                style = MaterialTheme.typography.labelLarge,
+            )
+        }
+    }
+    SwitchListItem(
+        title = stringResource(Res.string.metronome_flash),
+        isChecked = settings.isVisualBeatEnabled,
+        onCheckedChange = { value -> viewModel.updateMetronomeSettings { copy(isVisualBeatEnabled = value) } },
+    )
     AnimatedSettingsRow(value = (playback as? MetronomePlayback.Playing)?.audioIssue) { issue ->
         SettingsMessage(
             text = stringResource(

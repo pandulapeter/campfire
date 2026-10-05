@@ -22,9 +22,12 @@ import com.pandulapeter.campfire.data.model.domain.SyncState
 import com.pandulapeter.campfire.data.repository.api.SetlistRepository
 import com.pandulapeter.campfire.data.repository.api.SongRepository
 import com.pandulapeter.campfire.data.repository.api.SyncRepository
+import com.pandulapeter.campfire.data.repository.api.UserPreferencesRepository
 import com.pandulapeter.campfire.data.repository.implementation.sync.SyncEngine
 import com.pandulapeter.campfire.data.repository.implementation.sync.SyncIndexDocument
 import com.pandulapeter.campfire.data.repository.implementation.sync.SyncKey
+import com.pandulapeter.campfire.data.repository.implementation.sync.SyncedPreferencesDocument
+import com.pandulapeter.campfire.data.repository.implementation.sync.SyncedPreferencesSync
 import com.pandulapeter.campfire.data.repository.implementation.sync.indexKey
 import com.pandulapeter.campfire.data.source.local.api.LibraryFileLocalSource
 import com.pandulapeter.campfire.data.source.local.api.LibraryStorageException
@@ -92,6 +95,7 @@ internal class SyncRepositoryImpl(
      */
     private val songRepository: SongRepository,
     private val setlistRepository: SetlistRepository,
+    userPreferencesRepository: UserPreferencesRepository,
     libraryFileLocalSource: LibraryFileLocalSource,
     libraryFileLock: LibraryFileLock,
     libraryChanges: LibraryChanges,
@@ -99,6 +103,7 @@ internal class SyncRepositoryImpl(
 
     private val providers = syncProviders.all
     private val engine = SyncEngine(libraryFileLocalSource, libraryFileLock)
+    private val syncedPreferencesSync = SyncedPreferencesSync(userPreferencesRepository, libraryFileLocalSource)
     private val _syncState = MutableStateFlow<SyncState>(SyncState.Disconnected)
     override val syncState = _syncState.asStateFlow()
     override val availableProviders = providers.map { it.id }
@@ -156,6 +161,7 @@ internal class SyncRepositoryImpl(
 
     init {
         scope.launch { libraryChanges.changes.collect { scheduleSynchronization() } }
+        scope.launch { syncedPreferencesSync.localChanges.collect { scheduleSynchronization() } }
         // collectLatest is the debounce: a request that arrives while the previous one is still waiting, or still waiting
         // for a run to end, moves the start instead of adding a second run.
         scope.launch {
@@ -554,22 +560,29 @@ internal class SyncRepositoryImpl(
                     }
 
                     is SyncEngine.Result.Completed -> {
+                        val syncedPreferences = synchronizePreferences(provider, result)
+                        val summary = result.summary.copy(havePreferencesFailed = syncedPreferences == null)
                         // Only a run that moved everything it set out to move is one the two sides were in step after.
                         // One with failures keeps the time of the last run that was, which is also what "Last synced
                         // successfully" goes on saying while the next run is going.
-                        val syncedAt = if (result.summary.failed.isEmpty()) {
+                        val syncedAt = if (summary.isComplete) {
                             Clock.System.now().toEpochMilliseconds()
                         } else {
                             result.index.lastSyncedAt
                         }
-                        saveIndex(result.index.copy(lastSyncedAt = syncedAt))
+                        saveIndex(
+                            result.index.copy(
+                                lastSyncedAt = syncedAt,
+                                syncedPreferences = syncedPreferences ?: result.index.syncedPreferences,
+                            ),
+                        )
                         // Reads only what the run changed, which for most runs is nothing.
                         refreshLibraryAfterRun()
                         updateConnected {
                             it.copy(
                                 progress = null,
                                 lastSyncedAt = syncedAt.takeIf { at -> at > 0 },
-                                lastOutcome = SyncOutcome.Success(result.summary),
+                                lastOutcome = SyncOutcome.Success(summary),
                             )
                         }
                     }
@@ -611,6 +624,27 @@ internal class SyncRepositoryImpl(
                 updateConnected { if (it.progress == null) it else it.copy(progress = null) }
             }
         }
+    }
+
+    /**
+     * Settles `preferences.json` once the library files have been, and answers the document to remember, or null where
+     * it could not be settled. Only the failures that end a run end this one too: anything else is the one document's
+     * problem, reported as [com.pandulapeter.campfire.data.model.domain.SyncSummary.havePreferencesFailed], and the
+     * next run tries again.
+     */
+    private suspend fun synchronizePreferences(provider: SyncProvider, result: SyncEngine.Result.Completed) = try {
+        syncedPreferencesSync.synchronize(
+            provider = provider,
+            base = result.index.syncedPreferences,
+            keptFileNames = result.summary.failed,
+        )
+    } catch (exception: CancellationException) {
+        throw exception
+    } catch (exception: SyncAuthorizationException) {
+        throw exception
+    } catch (exception: Exception) {
+        println("Could not sync ${SyncedPreferencesDocument.FILE_NAME}: ${exception.message}")
+        null
     }
 
     /**

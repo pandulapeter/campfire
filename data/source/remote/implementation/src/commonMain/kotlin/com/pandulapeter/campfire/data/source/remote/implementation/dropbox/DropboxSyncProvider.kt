@@ -21,6 +21,7 @@ import com.pandulapeter.campfire.data.source.remote.api.SyncRemoteStorageFullExc
 import com.pandulapeter.campfire.data.source.remote.api.model.RemoteAuthorizationRequest
 import com.pandulapeter.campfire.data.source.remote.api.model.RemoteAuthorizationResponse
 import com.pandulapeter.campfire.data.source.remote.api.model.RemoteDeletion
+import com.pandulapeter.campfire.data.source.remote.api.model.RemoteDocument
 import com.pandulapeter.campfire.data.source.remote.api.model.RemoteFile
 import com.pandulapeter.campfire.data.source.remote.api.model.RemoteListing
 import com.pandulapeter.campfire.data.source.remote.api.model.RemoteWriteResult
@@ -223,14 +224,30 @@ internal class DropboxSyncProvider(
     }
 
     override suspend fun download(kind: LibraryFileKind, name: String): ByteArray {
-        val response = request { accessToken ->
-            httpClient.post(DOWNLOAD_URL) {
-                header("Authorization", "Bearer $accessToken")
-                header("Dropbox-API-Arg", """{"path":${remotePath(kind, name).toAsciiJsonString()}}""")
-            }
-        }
+        val response = downloadResponse(remotePath(kind, name))
         response.ensureSuccessful()
         return transport { response.readRawBytes() }
+    }
+
+    override suspend fun downloadDocument(name: String): RemoteDocument? {
+        val response = downloadResponse(documentPath(name))
+        if (response.status == HttpStatusCode.Conflict && response.errorSummary().startsWith("path/not_found")) return null
+        response.ensureSuccessful()
+        // A download answers with the file itself, so its metadata - the revision the next upload has to name - comes
+        // in a header instead, which Dropbox also exposes to a page's script.
+        val metadata = try {
+            response.headers[DOWNLOAD_RESULT_HEADER]?.let { json.decodeFromString<DropboxFileMetadata>(it) }
+        } catch (exception: SerializationException) {
+            null
+        } ?: throw DropboxApiException(response.status.value, "the download named no revision")
+        return RemoteDocument(bytes = transport { response.readRawBytes() }, revision = metadata.rev)
+    }
+
+    private suspend fun downloadResponse(path: String) = request { accessToken ->
+        httpClient.post(DOWNLOAD_URL) {
+            header("Authorization", "Bearer $accessToken")
+            header("Dropbox-API-Arg", """{"path":${path.toAsciiJsonString()}}""")
+        }
     }
 
     override fun contentHashOf(bytes: ByteArray) = dropboxContentHash(bytes)
@@ -238,6 +255,18 @@ internal class DropboxSyncProvider(
     override suspend fun upload(
         kind: LibraryFileKind,
         name: String,
+        bytes: ByteArray,
+        expectedRevision: String?,
+    ) = upload(path = remotePath(kind, name), bytes = bytes, expectedRevision = expectedRevision)
+
+    override suspend fun uploadDocument(
+        name: String,
+        bytes: ByteArray,
+        expectedRevision: String?,
+    ) = upload(path = documentPath(name), bytes = bytes, expectedRevision = expectedRevision)
+
+    private suspend fun upload(
+        path: String,
         bytes: ByteArray,
         expectedRevision: String?,
     ): RemoteWriteResult {
@@ -253,7 +282,7 @@ internal class DropboxSyncProvider(
                 header("Authorization", "Bearer $accessToken")
                 header(
                     "Dropbox-API-Arg",
-                    """{"path":${remotePath(kind, name).toAsciiJsonString()},"mode":$mode,"autorename":false,"mute":true}""",
+                    """{"path":${path.toAsciiJsonString()},"mode":$mode,"autorename":false,"mute":true}""",
                 )
                 contentType(ContentType.Application.OctetStream)
                 setBody(bytes)
@@ -356,6 +385,9 @@ internal class DropboxSyncProvider(
     }
 
     private fun remotePath(kind: LibraryFileKind, name: String) = "/${kind.id}/$name"
+
+    /** At the top of the app folder, where [toRemoteFiles] never looks, beside the two library folders. */
+    private fun documentPath(name: String) = "/$name"
 
     // Requests
 
@@ -578,6 +610,7 @@ internal class DropboxSyncProvider(
         const val DELETE_BATCH_CHECK_URL = "https://api.dropboxapi.com/2/files/delete_batch/check"
         const val DOWNLOAD_URL = "https://content.dropboxapi.com/2/files/download"
         const val UPLOAD_URL = "https://content.dropboxapi.com/2/files/upload"
+        const val DOWNLOAD_RESULT_HEADER = "Dropbox-API-Result"
 
         /** How long disconnecting waits for Dropbox, first to renew the token and then to revoke it. */
         const val REVOKE_TIMEOUT_MILLIS = 10_000L

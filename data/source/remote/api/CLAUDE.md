@@ -26,6 +26,9 @@ and why each of them is load bearing, are spelled out in the KDoc of `SyncProvid
   duplicates has to resolve that inside its own `list`. `storedAccount` answers who is connected without a request,
   `loadAccount` with one. `disconnect` is the user's disconnect and revokes the token; `forgetStoredCredentials` only
   drops what is stored, telling the service nothing, for a fresh installation that found a previous one's credentials.
+  `downloadDocument` / `uploadDocument` reach a **document of the folder's own** by name alone — beside the library
+  folders, never in `list`, and coming back with its revision (`RemoteDocument`), since it is read once per run rather
+  than compared — and write it with the same conflict rule as `upload`. `preferences.json` is the one there is.
 - `SyncAuthenticator` — the platform half of the OAuth flow. The interface is shaped by the awkward platform rather
   than the easy ones: the web *navigates away* from the running app to ask for consent, so `authorize` returns an
   outcome (which may be `Redirected`) instead of a URL, and `consumePendingRedirect` picks the answer up at the next

@@ -73,7 +73,7 @@ preferences/preferences.json.bad     the last preferences document that did not 
 preferences/sync-credentials.json    the connected account's tokens, and an unfinished authorization, on desktop and
                                      the web; the Keystore (an encrypted sync-credentials.bin) and the Keychain on
                                      Android and iOS
-preferences/sync-index.json          what the last successful sync run saw
+preferences/sync-index.json          what the last successful sync run saw, `preferences.json` included
 preferences/sync-credentials-forget-pending   a previous installation's credentials a first launch could not forget yet
 preferences/editor-draft.json        the editor's unsaved text as the app last left the front, so that the system
                                      ending it in the background does not end the text too; gone once it is saved or
@@ -281,7 +281,7 @@ localized in both languages.
   rather than one band's reading of it, and it is what the click counts the bar by. **What the file declares for all
   four is edited in the Song defaults sheet**, an entry of the song details editing menu and of the About the song sheet's Song defaults group, and nowhere on the page: it opens with a line saying that the steppers
   change them for this setlist only, or, opened from the library, outside every setlist — never naming a device,
-  since preferences may be synced one day — then a card naming what is adjusted there, with a Reset, while there is any, then the key, capo, tempo and time signature fields, each optional, an
+  since the library's own overrides are synced (see Sync) — then a card naming what is adjusted there, with a Reset, while there is any, then the key, capo, tempo and time signature fields, each optional, an
   empty one leaving the default in force. A new song's template carries an empty `{key}`, `{capo}`, `{tempo}` and
   `{time}` line for them to be filled into. **Read only mode reads them
   instead**: performance mode and a song opened from an archived setlist get the same four as one line of accent
@@ -701,6 +701,18 @@ the only possible one. The per-module `CLAUDE.md` files carry the detail; the sh
   as ` (2)` — or the first number free both on this device and in the cloud folder, so that it never takes the name
   of a file still on its way down — a name of the other device's making, numbered the way any document is, rather
   than with the underscore a name the app derived itself collides with (`_2`).
+- **The library's per-song overrides travel too**: the transposition, tempo and capo of a song opened from the library
+  (`UserPreferences.transpositions`, `tempos`, `capos`; a setlist's own are in its file already) are one
+  `preferences.json` at the top of the cloud folder, beside `songs/` and `setlists/`, where the engine never looks:
+  `{"version": 1, "songs": {"<file name>": {"transposition": 2, "tempo": 92, "capo": 1}}}`, an entry only for a song
+  something is set for. Every run that completes ends by settling it (`SyncedPreferencesSync`) — a three-way merge,
+  value by value, of this device's, the folder's and the last synced one, which the index keeps — so two devices that
+  changed different songs or fields both keep their change, a change beats a removal, and two changes of one value
+  keep this device's. It is merged as a JSON tree and this version only writes the fields it knows, so settings that
+  have nothing to do with the songs can join `songs` at the top level later without an older version dropping them.
+  A song no longer in the library after the run takes its entry with it, here and in the folder, unless the run
+  failed to move it. A change to those three maps schedules a run like a change to a file does; the run's own write
+  does not.
 - Authorization is OAuth 2.0 with PKCE and no client secret, which is what lets this work with no backend. The four
   platforms get back from the consent page in four different ways, all behind `SyncAuthenticator`.
 
@@ -717,7 +729,7 @@ Nothing about it reaches the network. The module `CLAUDE.md` files carry the det
 - **Where a tempo lives mirrors the transposition**: a song opened from a setlist keeps an override in that setlist's
   entry (`Setlist.Entry.tempo`, a `tempo` member of the `*.setlist.json` song, left out where null, so it travels
   through an export, an import and a sync run), one opened from the library in `UserPreferences.tempos`, never exported
-  or synced; neither reads the other, and the song file's `{tempo}` (`Song.tempo`, read at scan time with `{time}` and
+  but synced (see Sync); neither reads the other, and the song file's `{tempo}` (`Song.tempo`, read at scan time with `{time}` and
   `{capo}`) is only changed in the editor and the Song defaults sheet. The capo is kept the same way (`Setlist.Entry.capo`, `UserPreferences.capos`,
   0 to 12 frets, a stored 0 being a capo this setlist takes off rather than no override at all), since one set is
   played capoed and the next in another key without. The first `{tempo}` and `{time}` count; the tempo counts the
