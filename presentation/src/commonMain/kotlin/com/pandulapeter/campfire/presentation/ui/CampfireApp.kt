@@ -657,7 +657,8 @@ private fun CampfireScreens(
                 .coveredScreenScrim(scrimColor) { exportTransition.progress.value }
                 .then(if (isExportCovering) Modifier.clearAndSetSemantics { } else Modifier),
             backStack = backStack,
-            onBack = viewModel::navigateBack,
+            // NavDisplay's own back handler is the system's back, which completes a predictive gesture as often as not.
+            onBack = { viewModel.navigateBack(isPredictiveBackCompleted = navigationScrim.isPredictiveBack) },
             // The same spec decides the direction for both parameters, see navigationTransition. Nothing is animated
             // while the launch screen still covers the app: a place the app was asked to open on (the web build's
             // address, Settings after a consent page) is put on the stack behind it, and a screen still sliding in as
@@ -1291,6 +1292,7 @@ private fun AnimatedContentTransitionScope<Scene<CampfireDestination>>.navigatio
 ): ContentTransform {
     val from = CampfireDestination.TopLevel.fromContentKey(initialState.entries.lastOrNull()?.contentKey)
     val to = CampfireDestination.TopLevel.fromContentKey(targetState.entries.lastOrNull()?.contentKey)
+    scrim.isPredictiveBack = false
     scrim.motion = when {
         from != null && to != null -> DeckMotion.None
         targetState.zIndex < initialState.zIndex -> DeckMotion.Pop
@@ -1305,6 +1307,7 @@ private fun AnimatedContentTransitionScope<Scene<CampfireDestination>>.navigatio
 
 /** What the back stack changes with while the launch screen still covers the app: nothing moves, nothing is darkened. */
 private fun instantTransition(scrim: NavigationScrim): ContentTransform {
+    scrim.isPredictiveBack = false
     scrim.motion = DeckMotion.None
     return ContentTransform(EnterTransition.None, ExitTransition.None)
 }
@@ -1388,6 +1391,7 @@ internal fun MotionScheme.slideFractionSpec() = when (val spec = defaultSpatialS
  */
 @OptIn(ExperimentalAnimationApi::class)
 private fun AnimatedContentTransitionScope<Scene<CampfireDestination>>.predictivePopTransition(scrim: NavigationScrim): ContentTransform {
+    scrim.isPredictiveBack = true
     if (CampfireDestination.TopLevel.fromContentKey(initialState.entries.lastOrNull()?.contentKey) != null &&
         CampfireDestination.TopLevel.fromContentKey(targetState.entries.lastOrNull()?.contentKey) != null
     ) {
@@ -1444,6 +1448,12 @@ private enum class DeckMotion {
 @Stable
 private class NavigationScrim {
     var motion by mutableStateOf(DeckMotion.None)
+
+    /**
+     * Whether the transition is following a back gesture, a tab swap's included. Read when the gesture completes, which
+     * is when the specs have last been asked about it, and plain rather than snapshot state, since nothing draws it.
+     */
+    var isPredictiveBack = false
 }
 
 /**

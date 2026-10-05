@@ -316,6 +316,12 @@ class CampfireViewModel(
      * the metadata of every entry, which makes the new scene differ from the one the running transition started
      * from: Navigation 3 then retargets the running animation instead of taking its "predictive back cancelled"
      * path, which cannot handle an interrupted animation and leaves the UI stuck halfway.
+     *
+     * Not bumped by the pop that completes a predictive back gesture, although the transition it seeked is running
+     * then: that path is the one Navigation 3 finishes such a gesture with, and only while the new scene is the very one
+     * the gesture seeked towards. A different one starts a second animation towards a scene of the same key, whose
+     * screens go from visible to visible - and whatever they animate on their own enter transition, the scrim of the
+     * screen being returned to among them, stays where the gesture left it.
      */
     var navigationGeneration by mutableIntStateOf(0)
         private set
@@ -1452,8 +1458,11 @@ class CampfireViewModel(
         }
     }
 
-    private fun updateBackStack(update: SnapshotStateList<CampfireDestination>.() -> Unit) {
-        if (isNavigationTransitionRunning) navigationGeneration++
+    private fun updateBackStack(
+        isPredictiveBackCompleted: Boolean = false,
+        update: SnapshotStateList<CampfireDestination>.() -> Unit,
+    ) {
+        if (isNavigationTransitionRunning && !isPredictiveBackCompleted) navigationGeneration++
         backStack.update()
         if (backStack.lastOrNull() != CampfireDestination.Setlists) reorderingSetlistFileName = null
         // The two screens that hold a metronome are the two it can be stopped from, so a click never outlives the one
@@ -1685,15 +1694,18 @@ class CampfireViewModel(
      * window's Escape key - which is why this is where the editor's unsaved text is caught: nothing the user typed
      * is thrown away without being asked about it first, and why a settings tab other than General goes back to that
      * one before the screen is left ([isSettingsBackToGeneral]).
+     *
+     * @param isPredictiveBackCompleted Whether this is the pop a predictive back gesture ends in, see
+     *   [navigationGeneration].
      */
-    fun navigateBack() {
+    fun navigateBack(isPredictiveBackCompleted: Boolean = false) {
         when {
             isSetlistReordering -> reorderingSetlistFileName = null
             hasUnsavedEditorChanges.value && backStack.lastOrNull() is CampfireDestination.SongEditor -> {
                 showDialog(DialogType.UnsavedChanges)
             }
             isSettingsBackToGeneral -> settingsTab = SettingsTab.GENERAL
-            else -> popBackStack()
+            else -> popBackStack(isPredictiveBackCompleted)
         }
     }
 
@@ -1751,9 +1763,9 @@ class CampfireViewModel(
     /** [hasUnsavedEditorChanges] as of this moment, for a decision taken right after a write rather than drawn. */
     private fun hasUnsavedEditorText() = _editorDraft.value?.let { it.text != _songTexts.value[it.fileName]?.let(::editorTextOf) } == true
 
-    private fun popBackStack() {
+    private fun popBackStack(isPredictiveBackCompleted: Boolean = false) {
         if (backStack.size > 1) {
-            updateBackStack { removeAt(lastIndex) }
+            updateBackStack(isPredictiveBackCompleted = isPredictiveBackCompleted) { removeAt(lastIndex) }
         }
     }
 
