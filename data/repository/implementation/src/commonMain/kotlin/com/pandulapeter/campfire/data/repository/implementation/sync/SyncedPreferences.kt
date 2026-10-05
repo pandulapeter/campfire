@@ -190,14 +190,23 @@ internal object SyncedPreferencesDocument {
         local == remote -> local
         local == base -> remote
         remote == base -> local
-        local is JsonObject && remote is JsonObject -> {
+        local.isObjectOrRemovedFrom(base) && remote.isObjectOrRemovedFrom(base) -> {
             val baseObject = base as? JsonObject
+            val localObject = local as? JsonObject ?: JsonObject(emptyMap())
+            val remoteObject = remote as? JsonObject ?: JsonObject(emptyMap())
             JsonObject(
-                (local.keys + remote.keys).mapNotNull { key ->
-                    mergeValue(baseObject?.get(key), local[key], remote[key])?.let { key to it }
+                (localObject.keys + remoteObject.keys).mapNotNull { key ->
+                    mergeValue(baseObject?.get(key), localObject[key], remoteObject[key])?.let { key to it }
                 }.toMap(),
             )
         }
         else -> local ?: remote
     }
+
+    /**
+     * An object, or one the base held and this side removed whole, which is merged as an empty object: a song reset on
+     * one side and changed on the other keeps only the other side's change, rather than everything the other side
+     * holds for it. Without a base object a removal cannot be told from never having had it, so the merge only adds.
+     */
+    private fun JsonElement?.isObjectOrRemovedFrom(base: JsonElement?) = this is JsonObject || (this == null && base is JsonObject)
 }

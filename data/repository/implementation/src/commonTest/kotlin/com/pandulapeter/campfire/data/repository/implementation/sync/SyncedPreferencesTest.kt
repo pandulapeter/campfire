@@ -94,6 +94,26 @@ class SyncedPreferencesTest {
         ),
     )
 
+    @Test
+    fun `a song reset here keeps the field another device changed`() = assertEquals(
+        document("""{"a":{"capo":3}}"""),
+        merge(
+            base = """{"a":{"transposition":2}}""",
+            local = """{}""",
+            remote = """{"a":{"transposition":2,"capo":3}}""",
+        ),
+    )
+
+    @Test
+    fun `a song reset elsewhere keeps the field changed here`() = assertEquals(
+        document("""{"a":{"capo":3}}"""),
+        merge(
+            base = """{"a":{"transposition":2}}""",
+            local = """{"a":{"transposition":2,"capo":3}}""",
+            remote = """{}""",
+        ),
+    )
+
     // The document
 
     @Test
