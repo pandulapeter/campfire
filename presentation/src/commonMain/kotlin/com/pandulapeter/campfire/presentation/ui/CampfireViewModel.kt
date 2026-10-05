@@ -2581,9 +2581,17 @@ class CampfireViewModel(
                 }
                 true
             } else {
+                // A song a sync run took out of the setlist while its screen stayed open has no entry to hold the value,
+                // and nothing would ever settle it. A reset has nothing left to clear there, so that one still counts.
+                var hasEntry = false
                 updateEditableSetlist(setlistFileName) { setlist ->
-                    setlist.copy(entries = setlist.entries.map { entry -> if (entry.songFileName == key.songFileName) entry.copy(tempo = bpm) else entry })
-                }?.takeUnless { it.isArchived } != null
+                    hasEntry = setlist.entries.any { it.songFileName == key.songFileName }
+                    if (hasEntry) {
+                        setlist.copy(entries = setlist.entries.map { entry -> if (entry.songFileName == key.songFileName) entry.copy(tempo = bpm) else entry })
+                    } else {
+                        setlist
+                    }
+                }?.takeUnless { it.isArchived } != null && (hasEntry || bpm == null)
             }
             if (isWritten) {
                 pendingTempos.update { pending ->
@@ -2645,9 +2653,17 @@ class CampfireViewModel(
                 }
                 true
             } else {
+                // A song a sync run took out of the setlist while its screen stayed open has no entry to hold the value,
+                // and nothing would ever settle it. A reset has nothing left to clear there, so that one still counts.
+                var hasEntry = false
                 updateEditableSetlist(setlistFileName) { setlist ->
-                    setlist.copy(entries = setlist.entries.map { entry -> if (entry.songFileName == key.songFileName) entry.copy(capo = fret) else entry })
-                }?.takeUnless { it.isArchived } != null
+                    hasEntry = setlist.entries.any { it.songFileName == key.songFileName }
+                    if (hasEntry) {
+                        setlist.copy(entries = setlist.entries.map { entry -> if (entry.songFileName == key.songFileName) entry.copy(capo = fret) else entry })
+                    } else {
+                        setlist
+                    }
+                }?.takeUnless { it.isArchived } != null && (hasEntry || fret == null)
             }
             if (isWritten) {
                 pendingCapos.update { pending ->
