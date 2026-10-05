@@ -30,6 +30,7 @@
 - Optional close confirmation dialog on relevant platforms
 - Add support for Latin and Nashville notations
 - Chord diagrams (guitar, ukulele, keyboard) - user library, variations
+- Grid formatting could be improved
 - External monitor support for lyrics only...? Maybe as a new window on desktop, lyric projection via AirPlay / Chromecast, etc
 - Streaming zip writer on all platforms
 - Backing tracks?
