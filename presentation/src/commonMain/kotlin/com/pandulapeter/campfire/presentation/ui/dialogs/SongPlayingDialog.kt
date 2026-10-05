@@ -216,8 +216,9 @@ internal class SongPlayingOverrides(
 
 /**
  * The overrides of [song] read through [setlistFileName], or in the library on this device where it is null. Only those
- * of the features switched on: the transposition and the capo go with the chords, the tempo with the metronome, and an
- * override nobody is shown is not one to be named or taken back either.
+ * of the features switched on: the transposition and the capo go with the chords, and the transposition with a song
+ * that has some, the tempo with the metronome, and an override nobody is shown is not one to be named or taken back
+ * either.
  */
 @Composable
 internal fun songPlayingOverrides(
@@ -231,7 +232,7 @@ internal fun songPlayingOverrides(
     val userPreferences by viewModel.userPreferences.collectAsStateWithLifecycle()
     val shouldShowChords = userPreferences?.areChordsEnabled != false
     val shouldShowTempo = userPreferences?.isMetronomeEnabled != false
-    val transposition = transpositions[song.fileName, setlistFileName].takeIf { shouldShowChords } ?: 0
+    val transposition = transpositions[song.fileName, setlistFileName].takeIf { shouldShowChords && song.hasChords } ?: 0
     val capo = effectiveCapo(song = song, setlistFileName = setlistFileName, capos = capos).takeIf { shouldShowChords }
     val tempo = effectiveTempo(song = song, setlistFileName = setlistFileName, tempos = tempos).takeIf { shouldShowTempo }
     val labels = listOfNotNull(
