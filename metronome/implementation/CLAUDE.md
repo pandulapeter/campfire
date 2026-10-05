@@ -47,7 +47,9 @@ locked phone, a busy desktop or a Kotlin/Native collection needs; a stop flushes
   up. `heardFrame` from `getTimestamp`, else the playback head.
 - **iOS** — `AVAudioEngine` with an `AVAudioPlayerNode` fed five buffers in flight from a Kotlin `NSThread`, the
   completion handler only signalling a semaphore (never an `AVAudioSourceNode`, which would run Kotlin/Native on the
-  real-time thread). It owns the session (playback category, so the silent switch does not mute it; activated on start,
+  real-time thread). The player starts once the first five buffers are queued, in `start` and never from the feed
+  thread, since `play()` on a stopped engine throws; `heardFrame` leaves out the frames the player ran with nothing
+  queued (counted per session by the feed thread), since its own time keeps running through them. It owns the session (playback category, so the silent switch does not mute it; activated on start,
   deactivated with `notifyOthersOnDeactivation`) and the interruption, route change (`OldDeviceUnavailable`), engine
   configuration change and media services reset observers, each of which stops the click with its reason.
 - **Desktop** — a `SourceDataLine` (16-bit mono, 48 kHz, its buffer the queue) fed from a daemon thread at max priority;
