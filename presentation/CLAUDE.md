@@ -295,7 +295,7 @@ shared controls.
   remembered, so a view model built again over a playing click does not stop it. `toggleMetronome` starts the context's
   pattern or stops it, and starting one over a song opens that screen's panel with it. A click that stops on its own is
   a `Message.MetronomeStopped` snackbar naming why. Space (on the tab) and M (on a song) toggle it on the desktop and
-  the web (`toggleMetronomeByKey`), under no dialog or menu. **Three rules stop a click outright**, and between them they
+  the web (`toggleMetronomeByKey`), under no dialog or menu, only on the first press of a held key. **Three rules stop a click outright**, and between them they
   are the whole of the lifecycle: `updateBackStack`, whenever what is on top is neither a song nor the Metronome tab -
   the editor opened over a song, a song closed or deleted, a tab selected - so that nothing plays under a screen with no
   way to stop it; `setVisibleDialog`, as the export screen is dealt in over the song, for the same reason, since it is a

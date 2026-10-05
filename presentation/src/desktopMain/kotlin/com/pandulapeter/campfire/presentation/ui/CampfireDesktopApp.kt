@@ -134,6 +134,9 @@ fun CampfireViewModel.handleKeyEvent(keyEvent: KeyEvent, onExit: () -> Unit): Bo
         keyEvent.type == KeyEventType.KeyDown && (keyEvent.key == Key.Spacebar || keyEvent.key == Key.M) &&
         !keyEvent.isCtrlPressed && !keyEvent.isMetaPressed && !keyEvent.isAltPressed
     ) {
+        // A held key repeats its key-down; only the first press is a request, the rest would start and stop the click
+        // thirty times a second.
+        if (isMetronomeKeyRepeat) return false
         return toggleMetronomeByKey(isSpace = keyEvent.key == Key.Spacebar)
     }
     if (keyEvent.type == KeyEventType.KeyDown && keyEvent.key == Key.Escape) {
@@ -165,10 +168,23 @@ fun CampfireViewModel.handleKeyEvent(keyEvent: KeyEvent, onExit: () -> Unit): Bo
  * app, and in the editor it opened and dismissed the unsaved changes question over and over.
  *
  * A release is recognised however it reaches the window, so a press that was consumed by something else still ends.
+ * It also notes whether a Space or an M is a held key's repeat, for [handleKeyEvent] to start or stop the metronome on
+ * the first press only, without consuming either here: a focused text field must still get a held Space's repeats.
+ *
  * Where the platform reports a repeat as a release and a press (X11 without detectable auto-repeat), a repeat looks
  * like a new press and nothing can be done about it here.
  */
 fun handlePreviewKeyEvent(keyEvent: KeyEvent): Boolean {
+    if (keyEvent.key == Key.Spacebar || keyEvent.key == Key.M) {
+        when (keyEvent.type) {
+            KeyEventType.KeyDown -> {
+                isMetronomeKeyRepeat = heldMetronomeKey == keyEvent.key
+                heldMetronomeKey = keyEvent.key
+            }
+            KeyEventType.KeyUp -> if (heldMetronomeKey == keyEvent.key) heldMetronomeKey = null
+        }
+        return false
+    }
     if (keyEvent.key != Key.Escape) return false
     return when (keyEvent.type) {
         KeyEventType.KeyDown -> isEscapeHeld.also { isEscapeHeld = true }
@@ -178,12 +194,19 @@ fun handlePreviewKeyEvent(keyEvent: KeyEvent): Boolean {
 }
 
 /**
- * Forgets a held Escape. A window that loses the focus while the key is down never gets its release, and without this
- * the first Escape after coming back would be taken for a repeat and swallowed.
+ * Forgets a held Escape, Space or M. A window that loses the focus while the key is down never gets its release, and
+ * without this the first press after coming back would be taken for a repeat and swallowed.
  */
 fun resetEscapeKey() {
     isEscapeHeld = false
+    heldMetronomeKey = null
 }
 
 /** One window, only ever touched on the AWT event thread, so a top-level flag is all the state [handlePreviewKeyEvent] needs. */
 private var isEscapeHeld = false
+
+/** The Space or M that is down, if any, kept the same way as [isEscapeHeld]. */
+private var heldMetronomeKey: Key? = null
+
+/** Whether the last Space or M key-down was a repeat of [heldMetronomeKey], read by [handleKeyEvent]. */
+private var isMetronomeKeyRepeat = false

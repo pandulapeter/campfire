@@ -151,6 +151,9 @@ private fun MetronomeShortcutEffect(viewModel: CampfireViewModel) = DisposableEf
             "KeyM" -> false
             else -> return@listener
         }
+        // A held key repeats its key-down; only the first press is a request, the rest would start and stop the click
+        // thirty times a second.
+        if (keyEvent.repeat) return@listener
         if (viewModel.toggleMetronomeByKey(isSpace)) keyEvent.preventDefault()
     }
     window.addEventListener(EVENT_KEY_DOWN, listener)
