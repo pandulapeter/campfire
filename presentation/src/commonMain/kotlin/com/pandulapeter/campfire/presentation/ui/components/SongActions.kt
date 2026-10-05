@@ -52,6 +52,7 @@ import com.pandulapeter.campfire.presentation.localization.stringResource
 import com.pandulapeter.campfire.presentation.resources.Res
 import com.pandulapeter.campfire.presentation.resources.ic_delete
 import com.pandulapeter.campfire.presentation.resources.ic_edit
+import com.pandulapeter.campfire.presentation.resources.song_details_editing_actions
 import com.pandulapeter.campfire.presentation.resources.songs_choose_setlists
 import com.pandulapeter.campfire.presentation.resources.songs_export_song
 import com.pandulapeter.campfire.presentation.resources.ic_export
@@ -100,6 +101,8 @@ import org.jetbrains.compose.resources.painterResource
  * @param menuFooter Drawn at the end of the menu, after its entries: controls that are adjusted rather than chosen, so
  *   they leave the menu open, and that have no button of their own however much room there is - which keeps the
  *   overflow button there for good.
+ * @param icon The overflow button's icon: the dots, unless the menu stands next to another one and has to say which of
+ *   the two it is, as the song details screen's editing menu does.
  */
 @Composable
 internal fun ActionsMenu(
@@ -107,6 +110,7 @@ internal fun ActionsMenu(
     buttonModifier: Modifier = Modifier,
     state: OverflowMenuState = rememberOverflowMenuState(),
     contentDescription: String = stringResource(Res.string.songs_actions),
+    icon: Painter = painterResource(Res.drawable.ic_more),
     items: List<ActionsMenuItem>,
     isExpandable: Boolean = true,
     isDecorative: Boolean = false,
@@ -166,7 +170,7 @@ internal fun ActionsMenu(
         ) {
             if (isDecorative) {
                 ActionButton(
-                    icon = painterResource(Res.drawable.ic_more),
+                    icon = icon,
                     contentDescription = null,
                     isDecorative = true,
                     size = buttonWidth,
@@ -177,7 +181,7 @@ internal fun ActionsMenu(
                     button = { open ->
                         ActionButton(
                             modifier = buttonModifier,
-                            icon = painterResource(Res.drawable.ic_more),
+                            icon = icon,
                             contentDescription = contentDescription,
                             size = buttonWidth,
                             onClick = open,
@@ -297,10 +301,11 @@ private val ACTION_BUTTON_CONTAINER_SIZE = 40.dp
  *   of it rather than removed from every setlist and the library at once.
  * @param leadingItems Actions put before the song's own: the ones that belong to the row rather than to the song
  *   (moving a row of a setlist up or down, and taking it out of the setlist), and on the song details screen whichever
- *   of its bar's buttons the bar has no room for: the sheet of what the song is, and the setlist assignments.
- * @param fileEditItems Metadata editors, kept after the editor in the menu: tags and languages on a song card,
- *   and all metadata and cover art editors on the song details screen.
- * @param menuFooter The song details screen's transposition and text size steppers, see [ActionsMenu].
+ *   of its bar's buttons the bar has no room for: the metronome and the setlist assignments.
+ * @param isEditShown False where the editor and [fileEditItems] have a menu of their own next to this one
+ *   ([SongEditingActions]), which leaves this one with what is done to the file as a whole.
+ * @param fileEditItems Metadata editors, kept after the editor in the menu: tags and languages on a song card.
+ * @param menuFooter The song details screen's text size stepper, see [ActionsMenu].
  */
 @Composable
 internal fun SongActions(
@@ -310,23 +315,19 @@ internal fun SongActions(
     song: Song,
     isDeletable: Boolean,
     isEditAndExportOnly: Boolean = false,
+    isEditShown: Boolean = true,
     setlistFileName: String? = null,
     leadingItems: List<ActionsMenuItem> = emptyList(),
     fileEditItems: List<ActionsMenuItem> = emptyList(),
     menuFooter: (@Composable () -> Unit)? = null,
 ) {
+    val editItems = if (isEditShown) listOf(editSongAction(viewModel = viewModel, song = song)) + fileEditItems.takeUnless { isEditAndExportOnly }.orEmpty() else emptyList()
     ActionsMenu(
         modifier = modifier,
         state = state,
         isExpandable = false,
         menuFooter = menuFooter,
-        items = leadingItems + listOf(
-            ActionsMenuItem(
-                title = stringResource(Res.string.songs_edit_song),
-                icon = painterResource(Res.drawable.ic_edit),
-                onClick = { viewModel.openEditor(song.fileName) },
-            ),
-        ) + fileEditItems.takeUnless { isEditAndExportOnly }.orEmpty() + listOfNotNull(
+        items = leadingItems + editItems + listOfNotNull(
             // Only where it would do something: a file already named after its own metadata, or one with no title to
             // be named after, has nothing to update and the action would be an offer that never comes to anything.
             if (song.canUpdateFileName && !isEditAndExportOnly) {
@@ -358,6 +359,39 @@ internal fun SongActions(
         ),
     )
 }
+
+/**
+ * Everything that writes the song's file from the song details screen, behind a button of its own next to
+ * [SongActions]: the editor, then the sheets that each write one part of what the song says about itself. Kept apart
+ * from the song's other actions because there are as many of them as of everything else together, and a reader looking
+ * for Export had to read past all of them; the pencil says which of the two menus is which. It never expands, since
+ * every entry opens a screen or a sheet that is visited rather than reached for while playing.
+ *
+ * @param fileEditItems The metadata and cover art editors, put after the editor.
+ */
+@Composable
+internal fun SongEditingActions(
+    modifier: Modifier = Modifier,
+    viewModel: CampfireViewModel,
+    song: Song,
+    fileEditItems: List<ActionsMenuItem>,
+) = ActionsMenu(
+    modifier = modifier,
+    contentDescription = stringResource(Res.string.song_details_editing_actions),
+    icon = painterResource(Res.drawable.ic_edit),
+    isExpandable = false,
+    items = listOf(editSongAction(viewModel = viewModel, song = song)) + fileEditItems,
+)
+
+@Composable
+private fun editSongAction(
+    viewModel: CampfireViewModel,
+    song: Song,
+) = ActionsMenuItem(
+    title = stringResource(Res.string.songs_edit_song),
+    icon = painterResource(Res.drawable.ic_edit),
+    onClick = { viewModel.openEditor(song.fileName) },
+)
 
 /**
  * The way into the setlist assignments sheet, put in front of [SongActions] on every row of the songs screen and on

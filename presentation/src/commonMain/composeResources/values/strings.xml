@@ -456,6 +456,7 @@
     <string name="song_details_tags_manage">Manage tags</string>
     <string name="song_details_tags_search">Find or create a tag</string>
     <string name="song_details_tag_create">Create the \"%1$s\" tag</string>
+    <string name="song_details_editing_actions">Edit</string>
     <string name="song_details_metadata_edit">Edit song details</string>
     <string name="song_details_song_info">About the song</string>
     <string name="song_details_info_details">Song details</string>

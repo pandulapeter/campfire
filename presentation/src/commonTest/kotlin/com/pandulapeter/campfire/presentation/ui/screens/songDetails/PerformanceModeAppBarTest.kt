@@ -55,23 +55,28 @@ class PerformanceModeAppBarTest {
     }
 
     @Test
-    fun `the setlist assignments leave the bar before the song info, and the song info before the metronome`() {
-        assertEquals(buttons(metronome = true, songInfo = true, setlistAssignments = true), appBarButtons(408.dp, 104.dp))
-        assertEquals(buttons(metronome = true, songInfo = true, setlistAssignments = false), appBarButtons(407.dp, 104.dp))
-        assertEquals(buttons(metronome = true, songInfo = true, setlistAssignments = false), appBarButtons(360.dp, 104.dp))
-        assertEquals(buttons(metronome = true, songInfo = false, setlistAssignments = false), appBarButtons(359.dp, 104.dp))
-        assertEquals(buttons(metronome = true, songInfo = false, setlistAssignments = false), appBarButtons(312.dp, 104.dp))
-        assertEquals(buttons(metronome = false, songInfo = false, setlistAssignments = false), appBarButtons(311.dp, 104.dp))
+    fun `the setlist assignments leave the bar before the cover`() {
+        // The back button, the bar's paddings, the metronome and the two menus take 176dp, the cover 52dp more, and
+        // the setlist assignments 36dp.
+        assertEquals(buttons(cover = true, setlistAssignments = true), appBarButtons(424.dp, hasCover = true))
+        assertEquals(buttons(cover = true, setlistAssignments = false), appBarButtons(423.dp, hasCover = true))
+        assertEquals(buttons(cover = true, setlistAssignments = false), appBarButtons(388.dp, hasCover = true))
+        assertEquals(buttons(cover = false, setlistAssignments = false), appBarButtons(387.dp, hasCover = true))
     }
 
     @Test
-    fun `a phone keeps all three of the bar's buttons`() {
-        assertEquals(buttons(metronome = true, songInfo = true, setlistAssignments = true), appBarButtons(411.dp, 104.dp))
+    fun `a pager without covers keeps no room for one`() {
+        assertEquals(buttons(cover = true, setlistAssignments = true), appBarButtons(372.dp, hasCover = false))
+        assertEquals(buttons(cover = true, setlistAssignments = false), appBarButtons(371.dp, hasCover = false))
     }
 
-    private fun buttons(metronome: Boolean, songInfo: Boolean, setlistAssignments: Boolean) = AppBarButtons(
-        isMetronomeShown = metronome,
-        isSongInfoShown = songInfo,
+    @Test
+    fun `the smallest supported phone still leaves the title its room`() {
+        assertEquals(buttons(cover = false, setlistAssignments = false), appBarButtons(360.dp, hasCover = true))
+    }
+
+    private fun buttons(cover: Boolean, setlistAssignments: Boolean) = AppBarButtons(
+        isCoverShown = cover,
         isSetlistAssignmentsShown = setlistAssignments,
     )
 }

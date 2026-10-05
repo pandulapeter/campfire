@@ -29,31 +29,12 @@ import com.pandulapeter.campfire.presentation.resources.song_details_languages_e
 import com.pandulapeter.campfire.presentation.resources.song_details_links_edit
 import com.pandulapeter.campfire.presentation.resources.song_details_metadata_edit
 import com.pandulapeter.campfire.presentation.resources.song_details_set_cover_art
-import com.pandulapeter.campfire.presentation.resources.song_details_song_info
 import com.pandulapeter.campfire.presentation.resources.song_details_tags_manage
 import com.pandulapeter.campfire.presentation.ui.CampfireViewModel
 import com.pandulapeter.campfire.presentation.ui.components.ActionsMenuItem
 import com.pandulapeter.campfire.presentation.ui.metronome.EffectiveTempo
 import com.pandulapeter.campfire.presentation.ui.metronome.timeSignatureOrDefault
 import org.jetbrains.compose.resources.painterResource
-
-/**
- * The way into the sheet of what the song is, on the song details screen: a button of its own wherever the app bar has
- * the room, and the first entry of its menu wherever it does not. Outside performance mode it is there for every song,
- * since the sheet is where what the song says about itself is edited from; in it, only where there is something to
- * read. [isEnabled] is whether the song's text, which the sheet is read from, is at hand.
- */
-@Composable
-internal fun songInfoAction(
-    viewModel: CampfireViewModel,
-    song: Song,
-    isEnabled: Boolean,
-) = ActionsMenuItem(
-    title = stringResource(Res.string.song_details_song_info),
-    icon = painterResource(Res.drawable.ic_info),
-    isEnabled = isEnabled,
-    onClick = { viewModel.showDialog(CampfireViewModel.DialogType.SongInfo(song)) },
-)
 
 /**
  * The controls of the four values a song is played by, for one page of the song details pager: built where that page

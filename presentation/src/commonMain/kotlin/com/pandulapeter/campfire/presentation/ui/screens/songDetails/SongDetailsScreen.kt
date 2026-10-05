@@ -13,6 +13,7 @@ import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.EnterExitState
 import androidx.compose.animation.core.Animatable
+import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.LinearEasing
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.expandHorizontally
@@ -24,6 +25,8 @@ import androidx.compose.animation.shrinkHorizontally
 import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.ScrollState
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.interaction.MutableInteractionSource
+import androidx.compose.foundation.interaction.collectIsPressedAsState
 import androidx.compose.foundation.gestures.Orientation
 import androidx.compose.foundation.gestures.animateScrollBy
 import androidx.compose.foundation.layout.Arrangement
@@ -74,6 +77,9 @@ import androidx.compose.ui.platform.LocalWindowInfo
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clipToBounds
 import androidx.compose.ui.draw.rotate
+import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.input.pointer.PointerIcon
+import androidx.compose.ui.input.pointer.pointerHoverIcon
 import androidx.compose.ui.focus.focusProperties
 import androidx.compose.ui.graphics.painter.Painter
 import androidx.compose.ui.keepScreenOn
@@ -100,6 +106,7 @@ import com.pandulapeter.campfire.presentation.resources.back
 import com.pandulapeter.campfire.presentation.resources.ic_back
 import com.pandulapeter.campfire.presentation.resources.ic_dot
 import com.pandulapeter.campfire.presentation.resources.ic_error
+import com.pandulapeter.campfire.presentation.resources.ic_expand
 import com.pandulapeter.campfire.presentation.resources.ic_move_down
 import com.pandulapeter.campfire.presentation.resources.ic_move_up
 import com.pandulapeter.campfire.presentation.resources.ic_songs
@@ -144,6 +151,7 @@ import com.pandulapeter.campfire.presentation.ui.components.fadingTopEdge
 import com.pandulapeter.campfire.presentation.ui.components.overlappingAction
 import com.pandulapeter.campfire.presentation.ui.components.SetlistAssignmentsButton
 import com.pandulapeter.campfire.presentation.ui.components.SongActions
+import com.pandulapeter.campfire.presentation.ui.components.SongEditingActions
 import com.pandulapeter.campfire.presentation.ui.components.setlistAssignmentsAction
 import com.pandulapeter.campfire.presentation.ui.components.textResource
 import com.pandulapeter.campfire.presentation.ui.navigation.CampfireDestination
@@ -264,28 +272,26 @@ internal fun SongDetailsScreen(
     val shouldShowChords = userPreferences?.isLyricsOnlyModeEnabled != true
     val isCoverArtEnabled = userPreferences?.isCoverArtEnabled == true
     val currentSongText = currentSong?.let { songTexts[it.fileName] }
-    // Performance mode edits nothing, so the sheet of what the song is is only offered there where it has something in it.
-    val currentSongInfoAction = currentSong?.let { song ->
+    // The sheet of what the song is, opened from the app bar's title. Performance mode edits nothing, so there it is only
+    // offered where it has something in it, and it is read from the song's text, so nowhere before that is at hand.
+    val openCurrentSongInfo = currentSong?.let { song ->
         val hasSongInfo = remember(currentSongText) { currentSongText?.let(viewModel::songMetadataOf)?.hasSongInfo == true }
-        if (isReadOnly && !hasSongInfo) null else songInfoAction(viewModel = viewModel, song = song, isEnabled = currentSongText != null)
+        if (currentSongText == null || (isReadOnly && !hasSongInfo)) null else { { viewModel.showDialog(CampfireViewModel.DialogType.SongInfo(song)) } }
     }
     val chordSpelling = userPreferences?.chordSpelling ?: UserPreferences.ChordSpelling.Default
     val layoutDirection = LocalLayoutDirection.current
     val appBarWidth = settledWidth - contentPadding.calculateStartPadding(layoutDirection) - contentPadding.calculateEndPadding(layoutDirection)
     // Decided from the settled width and for every song of the pager at once, like the song actions below, so that the
-    // cover and the steppers do not come and go during a navigation transition or a page change.
-    val showsCoverInBar = isCoverArtEnabled && (!isReadOnly || showsCoverInPerformanceMode(appBarWidth))
+    // cover and the steppers do not come and go during a navigation transition or a page change. The cover's room is
+    // reserved for every song of the pager, so that paging to a song without one does not move the star in and out of
+    // the menu.
+    val appBarButtons = appBarButtons(appBarWidth = appBarWidth, hasCover = isCoverArtEnabled && songs.any { it.coverArtUrl != null })
+    val showsCoverInBar = isCoverArtEnabled && if (isReadOnly) showsCoverInPerformanceMode(appBarWidth) else appBarButtons.isCoverShown
     val showsFontScaleInBar = isReadOnly && showsFontScaleInPerformanceBar(appBarWidth)
-    // Whatever else the bar holds: the back button with the bar's own start padding, the bar's end padding, the cover
-    // in front of the title (reserved for every song of the pager, so that paging to a song without one does not move
-    // the actions in and out of their menu) and the overflow button. The rest is shared out by appBarButtons. Decided
-    // from the settled width, so that nothing comes and goes while a navigation transition runs.
-    val otherAppBarContentWidth = APP_BAR_NAVIGATION_WIDTH + APP_BAR_END_PADDING + APP_BAR_ACTION_WIDTH + if (showsCoverInBar && songs.any { it.coverArtUrl != null }) APP_BAR_COVER_SIZE + APP_BAR_COVER_GAP else 0.dp
-    val appBarButtons = appBarButtons(appBarWidth = appBarWidth, otherContentWidth = otherAppBarContentWidth)
-    val showsSongInfoInBar = !isReadOnly && appBarButtons.isSongInfoShown
     val showsSetlistAssignmentsInBar = !isReadOnly && appBarButtons.isSetlistAssignmentsShown
-    // Read only, the button stands next to the text size stepper, which is all that bar holds.
-    val showsMetronomeInBar = if (isReadOnly) showsMetronomeInPerformanceBar(appBarWidth) else appBarButtons.isMetronomeShown
+    // Read only, the button stands next to the text size stepper, which is all that bar holds; otherwise it is always
+    // in the bar, see appBarButtons.
+    val showsMetronomeInBar = !isReadOnly || showsMetronomeInPerformanceBar(appBarWidth)
     val tempos by viewModel.tempos.collectAsStateWithLifecycle()
     val capos by viewModel.capos.collectAsStateWithLifecycle()
     val metronomePlayback by viewModel.metronomePlayback.collectAsStateWithLifecycle()
@@ -408,19 +414,25 @@ internal fun SongDetailsScreen(
                 // once there is nothing left to scroll back to. The scroll is read here rather than in the screen's
                 // own body, so that passing the top recomposes the bar's title alone.
                 val isScrolledToTop by remember { derivedStateOf { (currentPageScrollState?.value ?: 0) == 0 } }
-                val songInfoAtTop = currentSongInfoAction?.takeIf { isScrolledToTop && it.isEnabled }
+                val openSongInfoAtTop = openCurrentSongInfo?.takeIf { isScrolledToTop }
+                val titleInteractionSource = remember { MutableInteractionSource() }
+                val isTitlePressed by titleInteractionSource.collectIsPressedAsState()
+                val titleAlpha by animateFloatAsState(if (isTitlePressed) PRESSED_TITLE_ALPHA else 1f)
                 AnimatedContent(
-                    modifier = Modifier.titleTouchTarget(
-                        isEnabled = currentSong != null && (songInfoAtTop != null || !isScrolledToTop),
-                        onClickLabel = stringResource(if (songInfoAtTop == null) Res.string.song_details_scroll_to_top else Res.string.song_details_song_info),
-                        onClick = {
-                            if (songInfoAtTop == null) {
-                                currentPageScrollState?.let { coroutineScope.launch { it.animateScrollTo(0) } }
-                            } else {
-                                songInfoAtTop.onClick()
-                            }
-                        },
-                    ),
+                    modifier = Modifier
+                        .titleTouchTarget(
+                            isEnabled = currentSong != null && (openSongInfoAtTop != null || !isScrolledToTop),
+                            interactionSource = titleInteractionSource,
+                            onClickLabel = stringResource(if (openSongInfoAtTop == null) Res.string.song_details_scroll_to_top else Res.string.song_details_song_info),
+                            onClick = {
+                                if (openSongInfoAtTop == null) {
+                                    currentPageScrollState?.let { coroutineScope.launch { it.animateScrollTo(0) } }
+                                } else {
+                                    openSongInfoAtTop()
+                                }
+                            },
+                        )
+                        .graphicsLayer { alpha = titleAlpha },
                     targetState = currentSong,
                     transitionSpec = { fadeIn() togetherWith fadeOut() },
                 ) { song ->
@@ -461,12 +473,37 @@ internal fun SongDetailsScreen(
                             }
                         }
                         Column {
-                            Text(
-                                text = song?.title.orEmpty(),
-                                style = MaterialTheme.typography.titleMedium,
-                                maxLines = 1,
-                                overflow = TextOverflow.Ellipsis,
-                            )
+                            Row(
+                                verticalAlignment = Alignment.CenterVertically,
+                            ) {
+                                Text(
+                                    modifier = Modifier.weight(1f, fill = false),
+                                    text = song?.title.orEmpty(),
+                                    style = MaterialTheme.typography.titleMedium,
+                                    maxLines = 1,
+                                    overflow = TextOverflow.Ellipsis,
+                                )
+                                // What says that the title opens the sheet, shown only while a tap does: scrolled down,
+                                // a tap scrolls back to the top instead. Its room is kept while it is hidden wherever the
+                                // sheet is offered at all, so that a long title is not cut off afresh every time the
+                                // song passes its top.
+                                if (openCurrentSongInfo != null) {
+                                    val chevronAlpha by animateFloatAsState(if (openSongInfoAtTop != null) 1f else 0f)
+                                    Icon(
+                                        modifier = Modifier
+                                            .padding(start = APP_BAR_TITLE_CHEVRON_GAP)
+                                            .size(APP_BAR_TITLE_CHEVRON_SIZE)
+                                            .graphicsLayer {
+                                                alpha = chevronAlpha
+                                                scaleX = chevronAlpha
+                                                scaleY = chevronAlpha
+                                            },
+                                        painter = painterResource(Res.drawable.ic_expand),
+                                        contentDescription = null,
+                                        tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                                    )
+                                }
+                            }
                             Row(
                                 verticalAlignment = Alignment.CenterVertically,
                             ) {
@@ -514,7 +551,7 @@ internal fun SongDetailsScreen(
                     exit = fadeOut() + shrinkHorizontally(),
                 ) {
                     Row(verticalAlignment = Alignment.CenterVertically) {
-                        ActionsMenu(items = listOfNotNull(metronomeAction.takeUnless { showsMetronomeInBar || !isPerformanceModeEnabled }, currentSongInfoAction))
+                        ActionsMenu(items = listOfNotNull(metronomeAction.takeUnless { showsMetronomeInBar || !isPerformanceModeEnabled }))
                         AnimatedVisibility(
                             visible = showsMetronomeInBar,
                             enter = fadeIn() + expandHorizontally(),
@@ -536,7 +573,7 @@ internal fun SongDetailsScreen(
                     exit = fadeOut() + shrinkHorizontally(),
                 ) {
                     ActionsMenu(
-                        items = listOfNotNull(metronomeAction, currentSongInfoAction),
+                        items = listOf(metronomeAction),
                         menuFooter = {
                             MenuStepperRow(label = stringResource(Res.string.song_details_text_size)) {
                                 LiveFontScaleControls(viewModel = viewModel)
@@ -549,29 +586,14 @@ internal fun SongDetailsScreen(
                     val coverArtAction = if (isCoverArtEnabled) coverArtAction(viewModel = viewModel, song = song, isEditorDraft = false) else null
                     val isInSetlist = song.fileName in songFileNamesInSetlists
                     AnimatedVisibility(
-                        visible = !isReadOnly && showsMetronomeInBar,
+                        visible = !isReadOnly,
                         enter = fadeIn() + expandHorizontally(),
                         exit = fadeOut() + shrinkHorizontally(),
                     ) {
                         metronomeButton()
                     }
-                    // A plain icon button like the setlist assignments one, so that the transposition between the two is
-                    // kept off each by the same touch target margin.
                     AnimatedVisibility(
-                        visible = showsSongInfoInBar && currentSongInfoAction != null,
-                        enter = fadeIn() + expandHorizontally(),
-                        exit = fadeOut() + shrinkHorizontally(),
-                    ) {
-                        currentSongInfoAction?.let { action ->
-                            IconButton(
-                                enabled = action.isEnabled,
-                                onClick = action.onClick,
-                            ) {
-                                Icon(painter = action.icon, contentDescription = action.title)
-                            }
-                        }
-                    }
-                    AnimatedVisibility(
+                        modifier = Modifier.overlappingAction(start = ACTION_BUTTON_OVERLAP, end = 0.dp),
                         visible = showsSetlistAssignmentsInBar,
                         enter = fadeIn() + expandHorizontally(),
                         exit = fadeOut() + shrinkHorizontally(),
@@ -583,18 +605,30 @@ internal fun SongDetailsScreen(
                             setlistFileName = destination.setlistFileName,
                         )
                     }
+                    // An archived setlist's song keeps the editor alone, which is no menu of its own, so it stays in
+                    // the one menu next to Export.
+                    AnimatedVisibility(
+                        modifier = Modifier.overlappingAction(start = ACTION_BUTTON_OVERLAP, end = 0.dp),
+                        visible = !isReadOnly,
+                        enter = fadeIn() + expandHorizontally(),
+                        exit = fadeOut() + shrinkHorizontally(),
+                    ) {
+                        SongEditingActions(
+                            viewModel = viewModel,
+                            song = song,
+                            fileEditItems = editingActions.take(1) + listOfNotNull(coverArtAction) + editingActions.drop(1),
+                        )
+                    }
                     SongActions(
                         modifier = Modifier.overlappingAction(start = ACTION_BUTTON_OVERLAP, end = 0.dp),
                         viewModel = viewModel,
                         song = song,
                         isDeletable = destination.setlistFileName == null,
                         isEditAndExportOnly = isReadOnly,
+                        isEditShown = isReadOnly,
                         setlistFileName = destination.setlistFileName,
-                        fileEditItems = editingActions.take(1) + listOfNotNull(coverArtAction) + editingActions.drop(1),
                         leadingItems = when {
                             !isReadOnly -> listOfNotNull(
-                                metronomeAction.takeUnless { showsMetronomeInBar },
-                                currentSongInfoAction?.takeUnless { showsSongInfoInBar },
                                 if (showsSetlistAssignmentsInBar) {
                                     null
                                 } else {
@@ -607,7 +641,7 @@ internal fun SongDetailsScreen(
                                 },
                             )
                             showsFontScaleInBar -> listOfNotNull(metronomeAction.takeUnless { showsMetronomeInBar })
-                            else -> listOfNotNull(metronomeAction, currentSongInfoAction)
+                            else -> listOf(metronomeAction)
                         },
                         // The transposition, the capo and the tempo are set in the song's own first section now; what
                         // is left for the menu is the text size, which belongs to the reader rather than to the song.
@@ -1252,11 +1286,16 @@ private fun SongHeaderNote(
  * at either end and centers the title in its height, and the target reaches out over both while reporting only the room
  * itself, so the bar lays out the back button, the title and the actions exactly as it would without it. The outset
  * stops where the touch targets of the back button and the actions begin: the bar places the title after the back
- * button, so a target reaching any further would take its presses from it. It draws no indication, since a press
- * lighting up most of the bar reads as the bar itself reacting rather than as a button.
+ * button, so a target reaching any further would take its presses from it.
+ *
+ * It draws no indication: a press lighting up most of the bar reads as the bar itself reacting rather than as a button,
+ * and a highlight around the title alone would need room the bar does not leave it, starting 4dp after the back
+ * button's target. The caller dims the title through [interactionSource] instead, the way a text button on iOS answers
+ * a press, which needs no room around it at all; a pointer is shown the hand over it while a click does anything.
  */
 private fun Modifier.titleTouchTarget(
     isEnabled: Boolean,
+    interactionSource: MutableInteractionSource,
     onClickLabel: String,
     onClick: () -> Unit,
 ) = layout { measurable, constraints ->
@@ -1267,8 +1306,9 @@ private fun Modifier.titleTouchTarget(
         placeable.placeRelative(-horizontalOutset, -verticalOutset)
     }
 }
+    .then(if (isEnabled) Modifier.pointerHoverIcon(PointerIcon.Hand) else Modifier)
     .clickable(
-        interactionSource = null,
+        interactionSource = interactionSource,
         indication = null,
         enabled = isEnabled,
         onClickLabel = onClickLabel,
@@ -1358,26 +1398,25 @@ internal fun showsCoverInPerformanceMode(appBarWidth: Dp) = showsMetronomeInPerf
     appBarWidth - APP_BAR_NAVIGATION_WIDTH - APP_BAR_END_PADDING - STEPPER_WIDTH - APP_BAR_STEPPER_END_PADDING -
     APP_BAR_ACTION_WIDTH - APP_BAR_COVER_SIZE - APP_BAR_COVER_GAP >= MIN_TITLE_WIDTH
 
-/** Which of the song details app bar's own buttons it has the room for outside performance mode, see [appBarButtons]. */
+/** What the song details app bar has the room for outside read only mode, see [appBarButtons]. */
 internal data class AppBarButtons(
-    val isMetronomeShown: Boolean,
-    val isSongInfoShown: Boolean,
+    val isCoverShown: Boolean,
     val isSetlistAssignmentsShown: Boolean,
 )
 
 /**
- * Which buttons the app bar of a screen [appBarWidth] wide has the room for, next to [otherContentWidth] of everything
- * else it always holds. They go into the overflow menu one at a time as the bar narrows, each needing the title left
- * [MIN_TITLE_WIDTH]: the setlist assignments first, then the way into the sheet of what the song is, and the metronome
- * last - a control reached for while a song plays outranks one tapped once. Each is laid out after the ones that
- * leave after it, so it is only there while they are.
+ * What the app bar of a screen [appBarWidth] wide has the room for besides what it always holds: the back button, the
+ * metronome, the editing menu and the overflow button ([APP_BAR_FIXED_CONTENT_WIDTH]), which stay whatever the width,
+ * since the click and the way into the editor are what the screen is opened for. The rest leaves one at a time as the
+ * bar narrows, each needing the title left [MIN_TITLE_WIDTH]: the setlist assignments first, into the overflow menu,
+ * and then the cover in front of the title, which only decorates it - where [hasCover] says no song of the pager has
+ * one, it takes no room. The setlist assignments are only there while the cover is.
  */
-internal fun appBarButtons(appBarWidth: Dp, otherContentWidth: Dp): AppBarButtons {
-    val room = appBarWidth - otherContentWidth
+internal fun appBarButtons(appBarWidth: Dp, hasCover: Boolean): AppBarButtons {
+    val room = appBarWidth - APP_BAR_FIXED_CONTENT_WIDTH - if (hasCover) APP_BAR_COVER_SIZE + APP_BAR_COVER_GAP else 0.dp
     return AppBarButtons(
-        isMetronomeShown = room - APP_BAR_ACTION_WIDTH >= MIN_TITLE_WIDTH,
-        isSongInfoShown = room - APP_BAR_ACTION_WIDTH * 2 >= MIN_TITLE_WIDTH,
-        isSetlistAssignmentsShown = room - APP_BAR_ACTION_WIDTH * 3 >= MIN_TITLE_WIDTH,
+        isCoverShown = room >= MIN_TITLE_WIDTH,
+        isSetlistAssignmentsShown = room - APP_BAR_OVERLAPPING_ACTION_WIDTH >= MIN_TITLE_WIDTH,
     )
 }
 
@@ -1399,6 +1438,13 @@ private val APP_BAR_NAVIGATION_WIDTH = 52.dp // The 48dp button and the 4dp the 
 private val APP_BAR_END_PADDING = 4.dp
 private val APP_BAR_ACTION_WIDTH = 48.dp
 
+/** What one more button adds to a row of them, which reach into each other's touch targets (see [ACTION_BUTTON_OVERLAP]). */
+private val APP_BAR_OVERLAPPING_ACTION_WIDTH = APP_BAR_ACTION_WIDTH - ACTION_BUTTON_OVERLAP
+
+/** The back button, the bar's paddings, the metronome, the editing menu and the overflow button. */
+private val APP_BAR_FIXED_CONTENT_WIDTH = APP_BAR_NAVIGATION_WIDTH + APP_BAR_END_PADDING + APP_BAR_ACTION_WIDTH +
+    APP_BAR_OVERLAPPING_ACTION_WIDTH * 2
+
 /** As tall as the title and the artist next to it: a titleMedium and a bodySmall line. The editor's bar shares it. */
 internal val APP_BAR_COVER_SIZE = 40.dp
 internal val APP_BAR_COVER_GAP = 12.dp
@@ -1407,6 +1453,9 @@ internal val APP_BAR_COVER_GAP = 12.dp
 private val APP_BAR_NOTE_DOT_SIZE = 16.dp
 private val MIN_TITLE_WIDTH = 160.dp // Enough of a title to tell which song is up.
 private val TITLE_TOUCH_HORIZONTAL_OUTSET = 4.dp // The padding the bar puts around its title.
+private const val PRESSED_TITLE_ALPHA = 0.5f
+private val APP_BAR_TITLE_CHEVRON_SIZE = 20.dp // A little under the titleMedium line it follows.
+private val APP_BAR_TITLE_CHEVRON_GAP = 2.dp // The chevron's own artwork leaves the rest of the gap after the title.
 private val TITLE_TOUCH_VERTICAL_OUTSET = 12.dp // From the two lines of title, 40dp, to the bar's 64dp.
 private const val KEY_SCROLL_STEP_FRACTION = 0.1f // Of the height of the scrolling viewport.
 private const val KEY_SCROLL_STEP_DURATION = 120
