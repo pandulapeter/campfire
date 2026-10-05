@@ -13,10 +13,12 @@ The contract of the click, and nothing else: depends on nothing but coroutines (
 `:chordpro` depends on nothing, so that no data or domain type leaks into it and the engine reads no settings of its own.
 
 - `Metronome` — the one stateful interface: `playback` (`Stopped(reason?)` or `Playing(pattern, audioIssue?)`),
-  `beats` (one `MetronomeBeat` per click, emitted when it is *heard*, subdivisions flagged), `start`, `update`
-  (timing changes from the next beat, `restartBar` making it beat one; the sound, volume and accents from the next
-  click), `preview` (one click of a sound, mixed into a playing click or on its own) and `stop`. Every call returns at
-  once and never throws: a start that cannot happen ends in `Stopped(reason)`.
+  `beats` (one `MetronomeBeat` per click, emitted when it is *heard*, subdivisions flagged), `start`, `update` (timing
+  changes from the next beat, `restartBar` making it beat one; the sound, volume and accents from the next click),
+  `preview` (one click of a sound, mixed into a playing click or on its own), `stop` and `setStartable` (whether a
+  screen that can start a click is showing, which only the web's output uses, to listen for the gesture its audio
+  needs only there). Every call returns at once and never throws: a start that cannot happen ends in
+  `Stopped(reason)`.
 - `model/` — `MetronomePattern` (complete: tempo within `BPM_RANGE` 30–300, `TimeSignature`, one `BeatLevel` per
   beat, `Subdivision`, `MetronomeSound`, volume — at 0 the click runs on silently, for the visual beat alone, which is
   why there is no mute of its own), `TimeSignature` (1–16 beats over 1/2/4/8/16, written and

@@ -42,6 +42,12 @@ internal interface AudioOutput {
     /** Stops at once, dropping what is queued, and gives the audio back. Does nothing when not started. */
     fun stop()
 
+    /**
+     * Whether to listen for the presses that allow a page's audio to start, which is what `Metronome.setStartable` says.
+     * Only the web has such a rule, so every other output ignores it.
+     */
+    fun setGestureListening(isEnabled: Boolean) = Unit
+
     companion object {
         const val CHUNK_SECONDS = 0.02
         const val QUEUED_SECONDS = 0.1

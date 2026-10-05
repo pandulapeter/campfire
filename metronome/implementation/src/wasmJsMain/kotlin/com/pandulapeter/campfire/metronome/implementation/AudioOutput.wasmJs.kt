@@ -33,8 +33,9 @@ import kotlin.js.Promise
  * A page may only start its audio inside a user gesture, and Compose handles a click after the DOM event that caused
  * it has returned, so a capture-phase listener resumes a suspended context on every press and key (creating it on the
  * first), which happens before Compose sees the tap that starts the click. Until the context runs the click reports
- * [MetronomeAudioIssue.WAITING_FOR_GESTURE]. An idle context is suspended again shortly after, so that a page nobody
- * clicks a metronome on keeps no audio device open.
+ * [MetronomeAudioIssue.WAITING_FOR_GESTURE]. The listener is only there while the UI reports a screen that can start a
+ * click ([setGestureListening]), so that tapping around the rest of the app never opens the audio device, and an idle
+ * context is suspended again shortly after the last press.
  */
 @Single
 internal class WebAudioOutput : AudioOutput {
@@ -44,12 +45,9 @@ internal class WebAudioOutput : AudioOutput {
     private var sampleRate = 0
     private var startTime = 0.0
 
-    init {
-        installAudio()
-    }
-
     override fun start(isPreview: Boolean, createStream: (sampleRate: Int) -> ClickStream, listener: AudioOutputListener): AudioOutputStart {
         stop()
+        installAudio()
         if (!openContext()) return AudioOutputStart.Unavailable
         sampleRate = contextSampleRate()
         // A little later than now, so that the first click is not scheduled in the past by the time it reaches the
@@ -87,6 +85,12 @@ internal class WebAudioOutput : AudioOutput {
         closeContext()
     }
 
+    /** Disarming leaves a playing click's context alone: the listener only ever resumes, and a stop suspends as before. */
+    override fun setGestureListening(isEnabled: Boolean) {
+        installAudio()
+        if (isEnabled) armGestures() else disarmGestures()
+    }
+
     private fun voiceKey(sound: MetronomeSound, voice: ClickVoice) = "${sound.id}-${voice.name}"
 
     /**
@@ -106,9 +110,9 @@ internal class WebAudioOutput : AudioOutput {
 private fun installAudio(): Unit = js(
     """{
         if (window.__campfireMetronome) return;
-        var metronome = window.__campfireMetronome = { context: null, buffers: {}, sources: new Set(), isActive: false, timer: null, waiting: null, idleTimeout: 0 };
+        var metronome = window.__campfireMetronome = { context: null, buffers: {}, sources: new Set(), isActive: false, timer: null, waiting: null, idleTimeout: 0, onGesture: null, isArmed: false };
         var AudioContextType = window.AudioContext || window.webkitAudioContext;
-        function onGesture() {
+        metronome.onGesture = function () {
             if (!AudioContextType) return;
             try {
                 if (!metronome.context) metronome.context = new AudioContextType({ latencyHint: 'playback' });
@@ -120,8 +124,25 @@ private fun installAudio(): Unit = js(
             metronome.idleTimeout = setTimeout(function () {
                 if (!metronome.isActive && metronome.context && metronome.context.state === 'running') metronome.context.suspend().catch(function () {});
             }, 3000);
-        }
-        ['pointerdown', 'pointerup', 'touchend', 'keydown'].forEach(function (type) { window.addEventListener(type, onGesture, true); });
+        };
+    }"""
+)
+
+private fun armGestures(): Unit = js(
+    """{
+        var metronome = window.__campfireMetronome;
+        if (metronome.isArmed) return;
+        metronome.isArmed = true;
+        ['pointerdown', 'pointerup', 'touchend', 'keydown'].forEach(function (type) { window.addEventListener(type, metronome.onGesture, true); });
+    }"""
+)
+
+private fun disarmGestures(): Unit = js(
+    """{
+        var metronome = window.__campfireMetronome;
+        if (!metronome.isArmed) return;
+        metronome.isArmed = false;
+        ['pointerdown', 'pointerup', 'touchend', 'keydown'].forEach(function (type) { window.removeEventListener(type, metronome.onGesture, true); });
     }"""
 )
 

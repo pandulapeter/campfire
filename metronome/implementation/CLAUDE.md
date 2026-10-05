@@ -55,12 +55,14 @@ locked phone, a busy desktop or a Kotlin/Native collection needs; a stop flushes
 - **Desktop** — a `SourceDataLine` (16-bit mono, 48 kHz, its buffer the queue) fed from a daemon thread at max priority;
   `LineUnavailableException` and friends are `Unavailable`. No focus, no media keys.
 - **Web** — the two clocks: clicks within the next 100 ms scheduled with `AudioBufferSourceNode.start(time)` on the
-  `AudioContext`'s clock, woken every 25 ms by `metronome-timer.js` in `:app:web` (a worker's timer is not throttled in a
-  hidden tab), each wake-up a promise awaited in a loop since a Kotlin lambda cannot be handed to a `js(...)` block. A
-  capture-phase listener resumes (creating on the first) the context on every press and key, which is before Compose
-  sees the tap; until it runs, `audioIssue = WAITING_FOR_GESTURE`. A start always resumes the context, whatever its state reads, since a
-  suspend from the previous session's stop may still be in flight. Voices are copied into `AudioBuffer`s a sample at a
-  time, once each. An idle context is suspended again three seconds after the last gesture.
+  `AudioContext`'s clock, woken every 25 ms by `metronome-timer.js` in `:app:web` (a worker's timer is not throttled
+  in a hidden tab), each wake-up a promise awaited in a loop since a Kotlin lambda cannot be handed to a `js(...)`
+  block. A capture-phase listener resumes (creating on the first) the context on every press and key, which is before
+  Compose sees the tap; it is installed only while the UI reports a screen that can start a click
+  (`Metronome.setStartable`), so the rest of the app never opens the audio device; until the context runs,
+  `audioIssue = WAITING_FOR_GESTURE`. A start always resumes the context, whatever its state reads, since a suspend from the
+  previous session's stop may still be in flight. Voices are copied into `AudioBuffer`s a sample at a time, once each.
+  An idle context is suspended again three seconds after the last gesture.
 
 Tests (`desktopTest`): `MetronomeSequencerTest`, `ClickSynthesizerTest`, `ClickMixerTest`; `TapTempoTest` and
 `TimeSignatureTest` in `:metronome:api`.

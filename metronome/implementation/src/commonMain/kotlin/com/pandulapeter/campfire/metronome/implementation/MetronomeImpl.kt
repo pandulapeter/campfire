@@ -123,6 +123,8 @@ internal class MetronomeImpl(private val output: AudioOutput) : Metronome {
         _playback.value = MetronomePlayback.Stopped()
     }
 
+    override fun setStartable(isStartable: Boolean) = onEngine { output.setGestureListening(isStartable) }
+
     private fun onEngine(action: () -> Unit) {
         scope.launch(confined) { action() }
     }

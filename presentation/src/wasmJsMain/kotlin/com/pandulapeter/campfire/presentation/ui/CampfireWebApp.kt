@@ -17,9 +17,12 @@ import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.graphics.toArgb
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.pandulapeter.campfire.metronome.api.Metronome
 import com.pandulapeter.campfire.presentation.ui.navigation.BrowserHistoryEffect
+import com.pandulapeter.campfire.presentation.ui.navigation.CampfireDestination
 import com.pandulapeter.campfire.presentation.ui.navigation.navigateToBrowserAddress
 import com.pandulapeter.campfire.presentation.ui.platform.LocalFilePicker
 import com.pandulapeter.campfire.presentation.ui.platform.LocalMetronomeNotifier
@@ -32,6 +35,9 @@ import com.pandulapeter.campfire.presentation.ui.platform.droppedFiles
 import com.pandulapeter.campfire.presentation.ui.theme.colorSchemePair
 import com.pandulapeter.campfire.presentation.ui.theme.isDarkTheme
 import kotlinx.browser.window
+import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.distinctUntilChanged
+import kotlinx.coroutines.flow.map
 import org.w3c.dom.AddEventListenerOptions
 import org.w3c.dom.events.Event
 import org.w3c.dom.events.KeyboardEvent
@@ -39,6 +45,7 @@ import org.w3c.dom.events.WheelEvent
 import kotlin.js.ExperimentalWasmJsInterop
 import kotlin.js.unsafeCast
 import kotlin.math.exp
+import org.koin.compose.koinInject
 import org.koin.compose.viewmodel.koinViewModel
 
 /**
@@ -76,6 +83,7 @@ fun CampfireWebApp(
     BrowserHistoryEffect(viewModel)
     SearchShortcutEffect(viewModel)
     MetronomeShortcutEffect(viewModel)
+    MetronomeStartableEffect(viewModel)
     LaunchedEffect(viewModel) { WebMetronomeNotifier.forEachStopRequest(viewModel::stopMetronome) }
     SongTextZoomEffect(viewModel)
     BrowserThemeColorEffect(viewModel)
@@ -133,6 +141,25 @@ private fun SearchShortcutEffect(viewModel: CampfireViewModel) = DisposableEffec
     }
     window.addEventListener(EVENT_KEY_DOWN, listener, true)
     onDispose { window.removeEventListener(EVENT_KEY_DOWN, listener, true) }
+}
+
+/**
+ * Tells the metronome whether a screen that can start a click is on top - the Metronome tab or a song, with the feature
+ * on - which is where its output listens for the presses that allow a page's audio to start, so that tapping around the
+ * rest of the app never opens the audio device. The screen composes before the tap that starts a click, so the listener
+ * is there in time.
+ */
+@Composable
+private fun MetronomeStartableEffect(viewModel: CampfireViewModel) {
+    val metronome = koinInject<Metronome>()
+    LaunchedEffect(viewModel, metronome) {
+        snapshotFlow { viewModel.backStack.lastOrNull() }
+            .combine(viewModel.userPreferences.map { it?.isMetronomeEnabled != false }) { top, isEnabled ->
+                isEnabled && (top == CampfireDestination.Metronome || top is CampfireDestination.SongDetails)
+            }
+            .distinctUntilChanged()
+            .collect(metronome::setStartable)
+    }
 }
 
 /**

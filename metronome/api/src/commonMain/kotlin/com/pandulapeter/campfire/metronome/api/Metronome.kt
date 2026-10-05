@@ -64,4 +64,11 @@ interface Metronome {
 
     /** Stops the click at once, dropping whatever was queued for the output rather than letting it play out. */
     fun stop()
+
+    /**
+     * Whether a screen from which a click can be started is showing. Only the web uses it: a page may only start its
+     * audio inside a user gesture, so the output listens for presses while this is true and leaves the audio device
+     * alone otherwise. Elsewhere it does nothing.
+     */
+    fun setStartable(isStartable: Boolean)
 }
