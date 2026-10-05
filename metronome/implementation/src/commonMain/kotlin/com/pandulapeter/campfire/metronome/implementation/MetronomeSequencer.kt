@@ -22,7 +22,7 @@ import com.pandulapeter.campfire.metronome.api.model.MetronomeSound
  * off however long it runs.
  *
  * A pattern change replaces the pattern of every tick not yet handed out. What sounds - the levels, the sound, the
- * volume, mute - changes from the next tick; what places the ticks - the tempo, the signature, the subdivision - from
+ * volume - changes from the next tick; what places the ticks - the tempo, the signature, the subdivision - from
  * the next beat, so that a subdivided beat is never cut in two different lengths, and the timing restarts there,
  * counted from that beat's frame as the old timing placed it.
  */
@@ -61,7 +61,6 @@ internal class MetronomeSequencer(
                 isSubdivision = subdivisionIndex != 0,
                 sound = pattern.sound,
                 volume = pattern.volume,
-                isMuted = pattern.isMuted,
             )
             ticksSinceAnchor++
             subdivisionIndex++
@@ -108,12 +107,11 @@ internal class MetronomeSequencer(
         val isSubdivision: Boolean,
         val sound: MetronomeSound,
         val volume: Float,
-        val isMuted: Boolean,
     ) {
         /** The voice that sounds, or null for a click that only counts. */
         val voice
             get() = when {
-                isMuted || level == BeatLevel.MUTED -> null
+                level == BeatLevel.MUTED -> null
                 isSubdivision -> ClickVoice.SUBDIVISION
                 level == BeatLevel.ACCENT -> ClickVoice.ACCENT
                 else -> ClickVoice.NORMAL

@@ -42,7 +42,6 @@ internal fun metronomePatternOf(
         subdivision = settings.subdivision,
         sound = settings.sound,
         volume = settings.volume,
-        isMuted = settings.isMuted,
     )
 }
 

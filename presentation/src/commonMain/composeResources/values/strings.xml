@@ -349,8 +349,6 @@
     <string name="metronome_volume">Volume</string>
     <string name="metronome_flash">Flash on the beat</string>
     <string name="metronome_vibrate">Vibrate on the beat</string>
-    <string name="metronome_mute">Mute</string>
-    <string name="metronome_mute_description">The beat is only shown, nothing sounds.</string>
     <string name="metronome_audio_unavailable">There is no sound output, so the beat is only shown.</string>
     <string name="metronome_audio_waiting">Tap anywhere to let the browser play the sound.</string>
     <string name="metronome_stopped_refused">The metronome could not play sound right now, maybe because of a call.</string>

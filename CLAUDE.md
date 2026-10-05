@@ -718,8 +718,9 @@ Nothing about it reaches the network. The module `CLAUDE.md` files carry the det
   click runs, since a page longer than the screen must not have to be scrolled to stop a click and the one control the
   whole screen is played from has to be found at a glance from a music stand.
 - Performance mode keeps the play button, and the panel has no tempo stepper to hide; the song's own line of text says
-  the tempo there, as it says the transposition. The tab stays fully usable. Settings (sound, subdivision, accents per signature, volume, flash, vibrate, mute) are
-  `UserPreferences.metronomeSettings`.
+  the tempo there, as it says the transposition. The tab stays fully usable. Settings (sound, subdivision, accents per signature, volume, flash, vibrate) are
+  `UserPreferences.metronomeSettings`; there is no mute of its own, since a volume of zero leaves the click running
+  with nothing sounding.
 
 ## Cover art
 

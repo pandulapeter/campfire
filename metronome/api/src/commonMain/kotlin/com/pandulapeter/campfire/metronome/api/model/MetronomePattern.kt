@@ -15,8 +15,8 @@ package com.pandulapeter.campfire.metronome.api.model
  * @param bpm Clicks of the bar per minute, within [BPM_RANGE].
  * @param beatLevels One per beat of [timeSignature]; a list of another length is padded or cut to fit it, the padding
  *   taken from the signature's defaults.
- * @param volume From 0 to 1, on top of the system's own volume.
- * @param isMuted Keeps the clock and the beats going with nothing sounding, for the visual beat alone.
+ * @param volume From 0 to 1, on top of the system's own volume; at 0 the clock and the beats go on with nothing
+ *   sounding, for the visual beat alone.
  */
 data class MetronomePattern(
     val bpm: Int,
@@ -25,7 +25,6 @@ data class MetronomePattern(
     val subdivision: Subdivision = Subdivision.NONE,
     val sound: MetronomeSound = MetronomeSound.CLICK,
     val volume: Float = 1f,
-    val isMuted: Boolean = false,
 ) {
 
     /** The level of the beat at [index] of the bar, whatever the length of [beatLevels]. */

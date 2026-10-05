@@ -52,7 +52,7 @@ interface Metronome {
     /**
      * Replaces the pattern of a playing click; ignored when it is stopped. What decides the timing - the tempo, the
      * time signature and the subdivision - changes on the next beat, which [restartBar] makes beat one of a new bar;
-     * the sound, the volume, the accents and mute change from the next click.
+     * the sound, the volume and the accents change from the next click.
      */
     fun update(pattern: MetronomePattern, restartBar: Boolean)
 

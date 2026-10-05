@@ -72,7 +72,6 @@ internal data class MetronomeSettingsDocument(
     val sound: String = "click",
     val volume: Float = 1f,
     val subdivision: String = "none",
-    val isMuted: Boolean = false,
     val isVisualBeatEnabled: Boolean = true,
     val isHapticBeatEnabled: Boolean = false,
     val beatLevels: Map<String, List<String>> = emptyMap(),

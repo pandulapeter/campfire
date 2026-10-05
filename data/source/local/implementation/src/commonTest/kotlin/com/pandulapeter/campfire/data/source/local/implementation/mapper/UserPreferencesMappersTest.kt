@@ -99,7 +99,7 @@ internal class UserPreferencesMappersTest {
 
     @Test
     fun metronomeSettingsAndTemposSurviveSavingAndReloading() {
-        val settings = MetronomeSettings(soundId = "cowbell", volume = 0.5f, subdivisionId = "triplets", isMuted = true, isVisualBeatEnabled = false,
+        val settings = MetronomeSettings(soundId = "cowbell", volume = 0.5f, subdivisionId = "triplets", isVisualBeatEnabled = false,
             isHapticBeatEnabled = true, beatLevels = mapOf("7/8" to listOf("accent", "normal", "accent", "normal", "accent", "normal", "normal")),
             bpm = 96, timeSignature = "7/8")
         val preferences = UserPreferencesDocument().toModel().copy(metronomeSettings = settings, tempos = mapOf("a.cho" to 96))

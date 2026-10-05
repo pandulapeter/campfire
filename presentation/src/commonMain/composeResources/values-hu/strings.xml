@@ -349,8 +349,6 @@
     <string name="metronome_volume">Hangerő</string>
     <string name="metronome_flash">Villanás ütésre</string>
     <string name="metronome_vibrate">Rezgés ütésre</string>
-    <string name="metronome_mute">Némítás</string>
-    <string name="metronome_mute_description">Az ütés csak látható, nem szól semmi.</string>
     <string name="metronome_audio_unavailable">Nincs hangkimenet, ezért az ütés csak látható.</string>
     <string name="metronome_audio_waiting">Koppints bárhová, hogy a böngésző lejátszhassa a hangot.</string>
     <string name="metronome_stopped_refused">A metronóm most nem tud hangot adni, talán egy hívás miatt.</string>

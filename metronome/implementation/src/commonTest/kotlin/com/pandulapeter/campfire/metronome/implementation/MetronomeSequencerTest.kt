@@ -11,6 +11,7 @@ package com.pandulapeter.campfire.metronome.implementation
 
 import com.pandulapeter.campfire.metronome.api.model.BeatLevel
 import com.pandulapeter.campfire.metronome.api.model.MetronomePattern
+import com.pandulapeter.campfire.metronome.api.model.MetronomeSound
 import com.pandulapeter.campfire.metronome.api.model.Subdivision
 import com.pandulapeter.campfire.metronome.api.model.TimeSignature
 import kotlin.test.Test
@@ -81,8 +82,8 @@ class MetronomeSequencerTest {
     fun aSoundChangeLandsOnTheNextClick() {
         val sequencer = sequencer(MetronomePattern(bpm = 60, subdivision = Subdivision.EIGHTHS))
         sequencer.ticksUntil(1L)
-        sequencer.update(MetronomePattern(bpm = 60, subdivision = Subdivision.EIGHTHS, isMuted = true), restartBar = false)
-        assertTrue(sequencer.ticksUntil(SAMPLE_RATE * 1L).single().isMuted)
+        sequencer.update(MetronomePattern(bpm = 60, subdivision = Subdivision.EIGHTHS, sound = MetronomeSound.COWBELL), restartBar = false)
+        assertEquals(MetronomeSound.COWBELL, sequencer.ticksUntil(SAMPLE_RATE * 1L).single().sound)
     }
 
     @Test

@@ -33,8 +33,6 @@ import com.pandulapeter.campfire.metronome.api.model.TimeSignature
 import com.pandulapeter.campfire.presentation.localization.stringResource
 import com.pandulapeter.campfire.presentation.resources.Res
 import com.pandulapeter.campfire.presentation.resources.metronome_flash
-import com.pandulapeter.campfire.presentation.resources.metronome_mute
-import com.pandulapeter.campfire.presentation.resources.metronome_mute_description
 import com.pandulapeter.campfire.presentation.resources.metronome_sound
 import com.pandulapeter.campfire.presentation.resources.metronome_sound_beep
 import com.pandulapeter.campfire.presentation.resources.metronome_sound_click
@@ -63,7 +61,7 @@ import kotlin.math.roundToInt
 
 /**
  * How the click is counted and how it sounds: the time signature (the common ones as chips, any other with the two
- * steppers under them), the subdivision, the sound (a tap on one plays it), the volume and the three switches. Only
+ * steppers under them), the subdivision, the sound (a tap on one plays it), the volume and the two switches. Only
  * the time signature is the tab's own; everything else is how every click sounds, a song's included.
  */
 @OptIn(ExperimentalLayoutApi::class)
@@ -141,12 +139,6 @@ internal fun MetronomeOptionsSection(
             onCheckedChange = { value -> viewModel.updateMetronomeSettings { copy(isHapticBeatEnabled = value) } },
         )
     }
-    SwitchListItem(
-        title = stringResource(Res.string.metronome_mute),
-        description = stringResource(Res.string.metronome_mute_description),
-        isChecked = settings.isMuted,
-        onCheckedChange = { value -> viewModel.updateMetronomeSettings { copy(isMuted = value) } },
-    )
 }
 
 @Composable
