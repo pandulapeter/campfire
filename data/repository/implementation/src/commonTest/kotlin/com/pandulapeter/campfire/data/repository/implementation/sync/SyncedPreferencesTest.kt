@@ -11,6 +11,8 @@ package com.pandulapeter.campfire.data.repository.implementation.sync
 
 import com.pandulapeter.campfire.data.model.domain.LibraryFileKind
 import com.pandulapeter.campfire.data.source.remote.api.model.RemoteWriteResult
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.test.UnconfinedTestDispatcher
 import kotlinx.coroutines.test.runTest
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonObject
@@ -296,6 +298,24 @@ class SyncedPreferencesTest {
         sync(preferences, library("a.cho")).synchronize(provider, base = document("""{}"""), keptFileNames = emptyList())
         assertEquals(mapOf("a.cho" to 2), preferences.current.capos)
         assertEquals(mapOf("a.cho" to 2), SyncedPreferencesDocument.preferencesOf(remoteDocumentOf(provider)).capos)
+    }
+
+    @Test
+    fun `a return to the values the run wrote is a change again`() = runTest {
+        val provider = FakeSyncProvider()
+        provider.documents[SyncedPreferencesDocument.FILE_NAME] = encoded("""{"a.cho":{"capo":3}}""") to "r1"
+        val preferences = FakeUserPreferencesRepository()
+        val step = sync(preferences, library("a.cho"))
+        var changes = 0
+        backgroundScope.launch(UnconfinedTestDispatcher(testScheduler)) { step.localChanges.collect { changes++ } }
+        val synced = step.synchronize(provider, base = null, keptFileNames = emptyList())
+        assertEquals(mapOf("a.cho" to 3), preferences.current.capos)
+        assertEquals(0, changes)
+        preferences.updateUserPreferences { it.copy(capos = mapOf("a.cho" to 4)) }
+        assertEquals(1, changes)
+        step.synchronize(provider, base = synced, keptFileNames = emptyList())
+        preferences.updateUserPreferences { it.copy(capos = mapOf("a.cho" to 3)) }
+        assertEquals(2, changes)
     }
 
     private fun assertUnreadableDocumentIsReplaced(bytes: ByteArray) = runTest {

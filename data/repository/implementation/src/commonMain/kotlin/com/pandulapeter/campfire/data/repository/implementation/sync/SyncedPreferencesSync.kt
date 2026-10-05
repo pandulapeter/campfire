@@ -42,7 +42,10 @@ internal class SyncedPreferencesSync(
     private val libraryFileLocalSource: LibraryFileLocalSource,
 ) {
 
-    /** What [synchronize] last wrote into the preferences, which is not a change for [localChanges] to report. */
+    /**
+     * What [synchronize] last wrote into the preferences, which is not a change for [localChanges] to report - until the
+     * next emission has been seen, whichever it is, so that a later return to the same values is reported again.
+     */
     @Volatile
     private var writtenBySync: SyncedPreferences? = null
 
@@ -54,7 +57,13 @@ internal class SyncedPreferencesSync(
         .mapNotNull { it.data?.let(SyncedPreferences::of) }
         .distinctUntilChanged()
         .drop(1)
-        .filter { it != writtenBySync }
+        .filter { synced ->
+            // Cleared by any emission, not only by its own: where the state conflated the run's write away under a
+            // change the user made right after it, the user's value arrives instead and must not leave the marker set.
+            val isOwnWrite = synced == writtenBySync
+            writtenBySync = null
+            !isOwnWrite
+        }
         .map { }
 
     /**
@@ -99,7 +108,14 @@ internal class SyncedPreferencesSync(
             val mergedPreferences = SyncedPreferencesDocument.preferencesOf(merged)
             if (mergedPreferences != snapshot) {
                 userPreferencesRepository.updateUserPreferences { preferences ->
-                    mergedPreferences.applyTo(preferences, since = snapshot).also { writtenBySync = SyncedPreferences.of(it) }
+                    mergedPreferences.applyTo(preferences, since = snapshot).also { updated ->
+                        // Marked only when the write is the run's alone. One that changes nothing synced emits nothing,
+                        // and its marker would swallow the next emission, which can be a change of the user's the
+                        // collector has not seen yet; one that kept a value changed here during the merge is what
+                        // carries that change, which a conflating state may deliver in place of the user's own emission.
+                        val written = SyncedPreferences.of(updated)
+                        writtenBySync = written.takeIf { it != SyncedPreferences.of(preferences) && it == mergedPreferences }
+                    }
                 }
             }
             if (merged == remoteDocument) return merged
