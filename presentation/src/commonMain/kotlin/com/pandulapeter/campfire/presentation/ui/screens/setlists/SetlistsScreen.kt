@@ -19,7 +19,6 @@ import androidx.compose.animation.shrinkHorizontally
 import androidx.compose.animation.animateContentSize
 import androidx.compose.animation.core.animateDpAsState
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.gestures.stopScroll
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Row
@@ -41,7 +40,6 @@ import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.snapshotFlow
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.rememberCoroutineScope
@@ -52,7 +50,6 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.semantics.CustomAccessibilityAction
@@ -76,8 +73,8 @@ import com.pandulapeter.campfire.presentation.resources.ic_archive
 import com.pandulapeter.campfire.presentation.resources.ic_move_down
 import com.pandulapeter.campfire.presentation.resources.ic_move_up
 import com.pandulapeter.campfire.presentation.resources.ic_setlists_remove
-import com.pandulapeter.campfire.presentation.resources.setlists_add_songs
 import com.pandulapeter.campfire.presentation.resources.setlists_archived
+import com.pandulapeter.campfire.presentation.resources.setlists_choose_songs
 import com.pandulapeter.campfire.presentation.resources.setlists_countdown_days_ago
 import com.pandulapeter.campfire.presentation.resources.setlists_countdown_in_days
 import com.pandulapeter.campfire.presentation.resources.setlists_countdown_today
@@ -272,47 +269,25 @@ private fun SetlistList(
         if (narrowedSetlistFileName != null) setlistsWithSongs.filter { it.setlist.fileName == narrowedSetlistFileName }
         else setlistsWithSongs
     }
-    // Empty room under the full list's end while it scrolls the setlist being reordered up to be pinned, which a
-    // setlist near the end could not otherwise reach.
-    var roomToPin by remember { mutableStateOf(0.dp) }
-    val density = LocalDensity.current
-    val selectedSetlist by rememberUpdatedState(shownSetlists.singleOrNull())
     LaunchedEffect(isReordering, reorderingSetlistFileName) {
         if (!isReordering) {
             narrowedSetlistFileName = null
             return@LaunchedEffect
         }
-        listState.stopScroll()
-        try {
-            // A setlist further down is scrolled up in the full list first, so that its header pushes the pinned one
-            // out the way any scroll does. Narrowing the list first would take the pinned header away in one frame and
-            // drop the new one into its place, since a sticky header's placement is the grid's and not animated.
-            val headerIndex = listState.layoutInfo.visibleItemsInfo.firstOrNull { it.key == "setlist_$reorderingSetlistFileName" }?.index
-            if (narrowedSetlistFileName == null && headerIndex != null && headerIndex != listState.firstVisibleItemIndex) {
-                roomToPin = with(density) { listState.layoutInfo.viewportSize.height.toDp() }
-                snapshotFlow { listState.layoutInfo.let { it.afterContentPadding >= it.viewportSize.height } }.first { it }
-                listState.animateScrollToItem(headerIndex)
-            }
-            narrowedSetlistFileName = reorderingSetlistFileName
-            // LazyGridState still describes the full list until the restricted grid has been measured. Starting
-            // earlier animates towards an index from the old list, then jumps as the other setlists disappear.
-            snapshotFlow {
-                val selected = selectedSetlist
-                val layout = listState.layoutInfo
-                if (selected == null || selected.setlist.fileName != reorderingSetlistFileName) false else {
-                    val itemCount = 1 + selected.entries.size +
-                        (if (selected.setlist.description.isNotBlank()) 1 else 0) + 1 // Header, songs, description, Add songs.
-                    layout.totalItemsCount == itemCount && layout.visibleItemsInfo.any {
-                        it.index == 0 && it.key == "setlist_$reorderingSetlistFileName"
-                    }
-                }
-            }.first { it }
-        } finally {
-            // Given back only once the narrowed list is measured with its header at the top: taken away while the full
-            // list still stood scrolled into it, the room would have pulled the list back down in a single frame.
-            roomToPin = 0.dp
+        // The list is never scrolled for the mode: it waits for the setlist to be the one the list starts at, already
+        // or after the user's own scroll, and narrows then. The grid keeps its first visible item by key, so the other
+        // setlists leave without anything on screen moving, where narrowing a setlist that starts lower down would take
+        // everything above it away and drop its header into the pinned place in one frame. One too close to the end
+        // to be pinned is reordered in the full list.
+        snapshotFlow {
+            listState.layoutInfo.visibleItemsInfo.firstOrNull { it.index == listState.firstVisibleItemIndex }?.key
+        }.first { key ->
+            key == "setlist_$reorderingSetlistFileName" ||
+                key == "description_$reorderingSetlistFileName" ||
+                key == "choose_songs_$reorderingSetlistFileName" ||
+                SetlistItemKey(key as? String).setlistFileName == reorderingSetlistFileName
         }
-        listState.animateScrollToItem(0)
+        narrowedSetlistFileName = reorderingSetlistFileName
     }
     val setlists by viewModel.setlists.collectAsStateWithLifecycle()
     val userPreferences by viewModel.userPreferences.collectAsStateWithLifecycle()
@@ -425,7 +400,7 @@ private fun SetlistList(
             columns = ListColumns(columnCount),
             modifier = gridModifier.bounceScrollableContent(listState),
             state = listState,
-            contentPadding = contentPadding.only(start = true, end = true, bottom = true, extraEnd = FAST_SCROLLER_WIDTH, extraBottom = roomToPin + if (isReordering) 88.dp else 8.dp),
+            contentPadding = contentPadding.only(start = true, end = true, bottom = true, extraEnd = FAST_SCROLLER_WIDTH, extraBottom = if (isReordering) 88.dp else 8.dp),
         ) {
             // The setlists are what this screen is about, and they are listed whenever there are any - an empty library
             // included, where they are simply empty and each offers to be filled. The library's own empty state belongs
@@ -459,12 +434,12 @@ private fun SetlistList(
                         val headerState = rememberSectionHeaderState(listState, headerIndex)
                         SectionHeader(
                             // Sticky placement belongs to the grid. Animating it as a regular item can briefly
-                            // pull an already-pinned header away when entering reorder mode changes the list,
-                            // before the scroll-to-top animation has started. Keep only its appearance fades.
+                            // pull an already-pinned header away when entering reorder mode changes the list.
+                            // Keep only its appearance fades.
                             modifier = listItemAnimation(listState, hasLoadedLibrary, placementSpec = null),
                             state = { headerState.value },
                             // The card fade and animated placement can settle on different frames near the top.
-                            // Keep the pinned row opaque throughout reordering, including the entry scroll.
+                            // Keep the pinned row opaque throughout reordering.
                             backgroundColor = if (isReordering) MaterialTheme.colorScheme.background else Color.Transparent,
                             endPadding = headerEndPadding,
                             text = setlistWithSongs.setlist.title,
@@ -660,7 +635,7 @@ private fun SetlistList(
                     // header, so the way to them is where the songs will be rather than behind the header's menu.
                     if (!isPerformanceModeEnabled) {
                         item(
-                            key = "add_songs_${setlistWithSongs.setlist.fileName}",
+                            key = "choose_songs_${setlistWithSongs.setlist.fileName}",
                             span = { GridItemSpan(maxLineSpan) },
                             contentType = "setlist_action",
                         ) {
@@ -672,7 +647,7 @@ private fun SetlistList(
                             ) {
                                 ActionListItem(
                                     modifier = Modifier.fadingUnderListTop(topFade),
-                                    title = stringResource(Res.string.setlists_add_songs),
+                                    title = stringResource(Res.string.setlists_choose_songs),
                                     icon = painterResource(Res.drawable.ic_add),
                                     onClick = { viewModel.showDialog(CampfireViewModel.DialogType.SongPicker(setlistWithSongs.setlist)) },
                                 )

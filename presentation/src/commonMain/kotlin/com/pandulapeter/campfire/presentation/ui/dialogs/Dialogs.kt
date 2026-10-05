@@ -1789,7 +1789,7 @@ private fun SongPicker(
             checkedKeys = checkedSongKeys,
             orderedKeys = orderedMatches.map { it.song.fileName },
             noResultsText = when {
-                // Reached from an empty setlist's "Add songs" in an empty library, which the setlists screen lists as well.
+                // Reached from an empty setlist's "Choose songs" in an empty library, which the setlists screen lists as well.
                 songs.isEmpty() -> stringResource(Res.string.songs_empty_title)
                 matches.isEmpty() && (query.isNotBlank() || isFiltered) -> stringResource(Res.string.songs_no_search_results)
                 else -> null

@@ -174,7 +174,7 @@
     <string name="setlists_actions">Műveletek</string>
     <string name="setlists_edit_details">Lista szerkesztése</string>
     <string name="setlists_song_assignments">Dalok hozzárendelése</string>
-    <string name="setlists_add_songs">Dalok hozzáadása</string>
+    <string name="setlists_choose_songs">Dalok kiválasztása</string>
     <string name="setlists_description">Leírás (nem kötelező)</string>
     <string name="setlists_date">Dátum</string>
     <string name="setlists_date_value">%1$s. %2$s. %3$s.</string>

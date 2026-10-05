@@ -174,7 +174,7 @@
     <string name="setlists_actions">Setlist actions</string>
     <string name="setlists_edit_details">Edit setlist</string>
     <string name="setlists_song_assignments">Song assignments</string>
-    <string name="setlists_add_songs">Add songs</string>
+    <string name="setlists_choose_songs">Choose songs</string>
     <string name="setlists_description">Description (optional)</string>
     <string name="setlists_date">Date</string>
     <string name="setlists_date_value">%1$s-%2$s-%3$s</string>
