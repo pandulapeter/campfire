@@ -21,6 +21,7 @@ import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.graphics.toArgb
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.pandulapeter.campfire.metronome.api.Metronome
+import com.pandulapeter.campfire.metronome.api.model.MetronomePlayback
 import com.pandulapeter.campfire.presentation.ui.navigation.BrowserHistoryEffect
 import com.pandulapeter.campfire.presentation.ui.navigation.CampfireDestination
 import com.pandulapeter.campfire.presentation.ui.navigation.navigateToBrowserAddress
@@ -85,6 +86,11 @@ fun CampfireWebApp(
     MetronomeShortcutEffect(viewModel)
     MetronomeStartableEffect(viewModel)
     LaunchedEffect(viewModel) { WebMetronomeNotifier.forEachStopRequest(viewModel::stopMetronome) }
+    // The composition stops collecting while the tab is hidden (Compose moves the lifecycle to CREATED), and a hidden tab
+    // is when the browser's media controls are used: the session follows the engine itself, as Android's service does.
+    LaunchedEffect(viewModel) {
+        viewModel.metronomePlayback.collect { if (it !is MetronomePlayback.Playing) WebMetronomeNotifier.onMetronomeNotificationChanged(null) }
+    }
     SongTextZoomEffect(viewModel)
     BrowserThemeColorEffect(viewModel)
     FaviconEffect(viewModel)
