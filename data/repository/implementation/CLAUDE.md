@@ -253,7 +253,10 @@ and a repository that has not been read yet rescans instead, since there is no l
   than this version's (`isNewerFormat`) is neither applied nor written over, and the step answers the base it was
   given (an empty one where there was none), so the run still counts as successful. A song no longer
   in the library — compared by case and Unicode form, the run's failed files counting as there — is dropped from the
-  merged document before it is applied. The preferences are changed before the upload, so a failed upload only leaves
+  merged document before it is applied. Entries are matched to songs by case and Unicode form too, and applied under
+  this device's spelling of the file, which is the one its screens read; the document keeps one spelling per song,
+  the first in sort order of those the folder's document (then the base) already holds, all three sides being put on
+  it before the merge, so two devices that spell one file differently share its overrides. The preferences are changed before the upload, so a failed upload only leaves
   the next run a change to carry; a value changed here while the merge ran is kept (`SyncedPreferences.applyTo`). A
   conflict merges again against the document it lost to, once; a document that still cannot be settled, or any
   failure but the authorization's, is reported as `SyncSummary.havePreferencesFailed` (which, like a failed file, keeps

@@ -40,6 +40,21 @@ internal data class SyncedPreferences(
         capos = preferences.capos.updated(from = since.capos, to = capos),
     )
 
+    /**
+     * These preferences with every song under the name [spelling] gives it. Where two names of one song both hold a
+     * value for one field, the one under a name [isPreferred] says yes to wins, and failing that the first in sort order.
+     */
+    fun respelled(spelling: (String) -> String, isPreferred: (String) -> Boolean = { false }) = SyncedPreferences(
+        transpositions = transpositions.respelled(spelling, isPreferred),
+        tempos = tempos.respelled(spelling, isPreferred),
+        capos = capos.respelled(spelling, isPreferred),
+    )
+
+    private fun Map<String, Int>.respelled(spelling: (String) -> String, isPreferred: (String) -> Boolean) =
+        entries.groupBy { spelling(it.key) }.mapValues { (_, entries) ->
+            (entries.firstOrNull { isPreferred(it.key) } ?: entries.minBy { it.key }).value
+        }
+
     private fun Map<String, Int>.updated(from: Map<String, Int>, to: Map<String, Int>): Map<String, Int> {
         val result = toMutableMap()
         (from.keys + to.keys).filter { this[it] == from[it] }.forEach { key ->
@@ -169,6 +184,25 @@ internal object SyncedPreferencesDocument {
             tempos = field(TEMPO, MetronomeSettings.TEMPO_RANGE),
             capos = field(CAPO, Song.CAPO_RANGE),
         )
+    }
+
+    /** The names of the songs [document] holds an entry for. */
+    fun songNamesOf(document: JsonObject?) = (document?.get(SONGS) as? JsonObject)?.keys.orEmpty()
+
+    /**
+     * [document] with every song under the name [spelling] gives it. Two entries of one song are collapsed field by
+     * field: the fields of the one already under that name win, and among the others those of the first in sort order.
+     */
+    fun withSongsSpelled(document: JsonObject, spelling: (String) -> String): JsonObject {
+        val songs = document[SONGS] as? JsonObject ?: return document
+        val respelled = songs.entries.groupBy { spelling(it.key) }.mapValues { (name, entries) ->
+            entries.singleOrNull()?.value ?: JsonObject(
+                entries
+                    .sortedWith(compareBy<Map.Entry<String, JsonElement>> { it.key == name }.thenByDescending { it.key })
+                    .fold(emptyMap<String, JsonElement>()) { fields, entry -> fields + (entry.value as? JsonObject).orEmpty() },
+            )
+        }
+        return JsonObject(document + (SONGS to JsonObject(respelled)))
     }
 
     /**

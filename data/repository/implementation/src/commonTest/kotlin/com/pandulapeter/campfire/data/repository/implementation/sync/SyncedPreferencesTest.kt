@@ -214,7 +214,7 @@ class SyncedPreferencesTest {
         provider.documents[SyncedPreferencesDocument.FILE_NAME] = encoded("""{"Big.cho":{"tempo":140}}""") to "r1"
         val preferences = FakeUserPreferencesRepository()
         sync(preferences, library()).synchronize(provider, base = null, keptFileNames = listOf("big.cho"))
-        assertEquals(mapOf("Big.cho" to 140), preferences.current.tempos)
+        assertEquals(mapOf("big.cho" to 140), preferences.current.tempos)
     }
 
     @Test
@@ -316,6 +316,39 @@ class SyncedPreferencesTest {
         step.synchronize(provider, base = synced, keptFileNames = emptyList())
         preferences.updateUserPreferences { it.copy(capos = mapOf("a.cho" to 3)) }
         assertEquals(2, changes)
+    }
+
+    @Test
+    fun `an entry spelled differently in the folder applies to this device's file`() = runTest {
+        val provider = FakeSyncProvider()
+        provider.documents[SyncedPreferencesDocument.FILE_NAME] = encoded("""{"Foo.cho":{"capo":3}}""") to "r1"
+        val preferences = FakeUserPreferencesRepository(defaultUserPreferences(transpositions = mapOf("foo.cho" to 2)))
+        sync(preferences, library("foo.cho")).synchronize(provider, base = null, keptFileNames = emptyList())
+        assertEquals(SyncedPreferences(transpositions = mapOf("foo.cho" to 2), capos = mapOf("foo.cho" to 3)), SyncedPreferences.of(preferences.current))
+        assertEquals(document("""{"Foo.cho":{"capo":3,"transposition":2}}"""), remoteDocumentOf(provider))
+    }
+
+    @Test
+    fun `two spellings of one song in the folder are collapsed`() = runTest {
+        val provider = FakeSyncProvider()
+        provider.documents[SyncedPreferencesDocument.FILE_NAME] = encoded("""{"Foo.cho":{"capo":3},"foo.cho":{"tempo":90}}""") to "r1"
+        val preferences = FakeUserPreferencesRepository()
+        sync(preferences, library("foo.cho")).synchronize(provider, base = null, keptFileNames = emptyList())
+        assertEquals(SyncedPreferences(tempos = mapOf("foo.cho" to 90), capos = mapOf("foo.cho" to 3)), SyncedPreferences.of(preferences.current))
+        assertEquals(document("""{"Foo.cho":{"capo":3,"tempo":90}}"""), remoteDocumentOf(provider))
+    }
+
+    @Test
+    fun `a value already stored under the folder's spelling moves onto this device's file`() = runTest {
+        val provider = FakeSyncProvider()
+        val stored = """{"Foo.cho":{"capo":3},"foo.cho":{"transposition":2}}"""
+        provider.documents[SyncedPreferencesDocument.FILE_NAME] = encoded(stored) to "r1"
+        val preferences = FakeUserPreferencesRepository(
+            defaultUserPreferences(transpositions = mapOf("foo.cho" to 2), capos = mapOf("Foo.cho" to 3)),
+        )
+        sync(preferences, library("foo.cho")).synchronize(provider, base = document(stored), keptFileNames = emptyList())
+        assertEquals(SyncedPreferences(transpositions = mapOf("foo.cho" to 2), capos = mapOf("foo.cho" to 3)), SyncedPreferences.of(preferences.current))
+        assertEquals(document("""{"Foo.cho":{"capo":3,"transposition":2}}"""), remoteDocumentOf(provider))
     }
 
     private fun assertUnreadableDocumentIsReplaced(bytes: ByteArray) = runTest {

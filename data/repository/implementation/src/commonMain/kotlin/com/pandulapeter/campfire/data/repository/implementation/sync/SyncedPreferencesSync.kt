@@ -77,11 +77,15 @@ internal class SyncedPreferencesSync(
      */
     suspend fun synchronize(provider: SyncProvider, base: JsonObject?, keptFileNames: Collection<String>): JsonObject? {
         if (userPreferencesRepository.loadUserPreferencesIfNeeded() == null) return null
-        val songNames = libraryFileLocalSource.loadLibraryFiles()
+        // Folded name to this device's spelling, which is the one its screens read the preferences under. Two names of
+        // one song only exist on a file system that tells case apart, and the service refuses one of them anyway; the
+        // first in sort order is taken, which the descending order leaves last for associateBy to keep.
+        val localNames = libraryFileLocalSource.loadLibraryFiles()
             .filter { it.kind == LibraryFileKind.SONG }
             .map { it.name }
             .plus(keptFileNames)
-            .mapTo(mutableSetOf()) { it.folded() }
+            .sortedDescending()
+            .associateBy { it.folded() }
         var previous = base
         repeat(MAXIMUM_ATTEMPTS) {
             val remote = provider.downloadDocument(SyncedPreferencesDocument.FILE_NAME)
@@ -97,15 +101,32 @@ internal class SyncedPreferencesSync(
             // rather than as one that removed everything: this device's values stay, and are uploaded in its place.
             val effectiveRemote = remoteDocument?.takeIf(SyncedPreferencesDocument::isReadable) ?: previous
             val snapshot = userPreferencesRepository.userPreferences.first().data?.let(SyncedPreferences::of) ?: return null
+            // Each device keeps its own spelling of a file that differs only by case or Unicode form, so all three sides
+            // are put on one spelling per song before they are merged, or the merge would read one song as two. The
+            // folder's spelling comes first, since every device reads the same folder and so settles on the same one.
+            val spellings = buildMap {
+                SyncedPreferencesDocument.songNamesOf(effectiveRemote).sorted().forEach { putIfAbsent(it.folded(), it) }
+                SyncedPreferencesDocument.songNamesOf(previous).sorted().forEach { putIfAbsent(it.folded(), it) }
+                localNames.forEach { (folded, name) -> putIfAbsent(folded, name) }
+            }
+            val spelling = { name: String -> spellings[name.folded()] ?: name }
+            val canonicalBase = previous?.let { SyncedPreferencesDocument.withSongsSpelled(it, spelling) }
             val merged = SyncedPreferencesDocument.withSongsWhere(
                 document = SyncedPreferencesDocument.merge(
-                    base = previous,
-                    local = SyncedPreferencesDocument.localDocument(base = previous, preferences = snapshot),
-                    remote = effectiveRemote,
+                    base = canonicalBase,
+                    local = SyncedPreferencesDocument.localDocument(
+                        base = canonicalBase,
+                        // A value left under the folder's spelling beside the one under this device's is a leftover
+                        // no screen here reads, so the one the user set wins.
+                        preferences = snapshot.respelled(spelling, isPreferred = { localNames[it.folded()] == it }),
+                    ),
+                    remote = effectiveRemote?.let { SyncedPreferencesDocument.withSongsSpelled(it, spelling) },
                 ),
-                isKept = { it.folded() in songNames },
+                isKept = { it.folded() in localNames },
             )
-            val mergedPreferences = SyncedPreferencesDocument.preferencesOf(merged)
+            // Applied over the snapshot as it was read, so that a value under any other spelling of a song is removed
+            // here: compared with a respelled one, such a leftover would look like the merged value and stay.
+            val mergedPreferences = SyncedPreferencesDocument.preferencesOf(merged).respelled({ localNames[it.folded()] ?: it })
             if (mergedPreferences != snapshot) {
                 userPreferencesRepository.updateUserPreferences { preferences ->
                     mergedPreferences.applyTo(preferences, since = snapshot).also { updated ->
@@ -135,7 +156,7 @@ internal class SyncedPreferencesSync(
         return null
     }
 
-    /** See `foldRemoteNamesOntoLocal`: a song's entry stays as long as either spelling of its file is in the library. */
+    /** See `foldRemoteNamesOntoLocal`: a song's entry is the same song's under any spelling of its file. */
     private fun String.folded() = normalizedToNfc().lowercase()
 
     private companion object {
